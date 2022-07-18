@@ -12,6 +12,7 @@ func TestEmptyKeyMerkleMap(t *testing.T) {
 	db := newMerkleMap()
 	require.Panics(t, func() { db.set("", []byte("value")) }, "setting an empty key should panic")
 }
+
 func TestMerkleMap(t *testing.T) {
 	tests := []struct {
 		keys   []string
@@ -59,6 +60,7 @@ func TestEmptyKeySimpleMap(t *testing.T) {
 	db := newSimpleMap()
 	require.Panics(t, func() { db.Set("", []byte("value")) }, "setting an empty key should panic")
 }
+
 func TestSimpleMap(t *testing.T) {
 	tests := []struct {
 		keys   []string

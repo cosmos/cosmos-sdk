@@ -231,7 +231,8 @@ var _ orm.Validateable = GroupPolicyInfo{}
 
 // NewGroupPolicyInfo creates a new GroupPolicyInfo instance
 func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata string,
-	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time) (GroupPolicyInfo, error) {
+	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time,
+) (GroupPolicyInfo, error) {
 	p := GroupPolicyInfo{
 		Address:   address.String(),
 		GroupId:   group,
@@ -297,10 +298,8 @@ func (g GroupInfo) ValidateBasic() error {
 }
 
 func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
-	addr, err := sdk.AccAddressFromBech32(g.Address)
-	if err != nil {
-		panic(err)
-	}
+	addr := sdk.MustAccAddressFromBech32(g.Address)
+
 	return []interface{}{addr.Bytes()}
 }
 
@@ -336,10 +335,8 @@ func (g GroupPolicyInfo) ValidateBasic() error {
 }
 
 func (g GroupMember) PrimaryKeyFields() []interface{} {
-	addr, err := sdk.AccAddressFromBech32(g.Member.Address)
-	if err != nil {
-		panic(err)
-	}
+	addr := sdk.MustAccAddressFromBech32(g.Member.Address)
+
 	return []interface{}{g.GroupId, addr.Bytes()}
 }
 
@@ -361,40 +358,39 @@ func (g GroupMember) ValidateBasic() error {
 // since it cannot be set as part of requests.
 func MemberToMemberRequest(m *Member) MemberRequest {
 	return MemberRequest{
-		Address: m.Address,
-		Weight: m.Weight,
+		Address:  m.Address,
+		Weight:   m.Weight,
 		Metadata: m.Metadata,
 	}
 }
 
-func (p Proposal) ValidateBasic() error {
-
-	if p.Id == 0 {
+func (g Proposal) ValidateBasic() error {
+	if g.Id == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
 	}
-	_, err := sdk.AccAddressFromBech32(p.GroupPolicyAddress)
+	_, err := sdk.AccAddressFromBech32(g.GroupPolicyAddress)
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal group policy address")
 	}
-	if p.GroupVersion == 0 {
+	if g.GroupVersion == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group version")
 	}
-	if p.GroupPolicyVersion == 0 {
+	if g.GroupPolicyVersion == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group policy version")
 	}
-	_, err = p.FinalTallyResult.GetYesCount()
+	_, err = g.FinalTallyResult.GetYesCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult yes count")
 	}
-	_, err = p.FinalTallyResult.GetNoCount()
+	_, err = g.FinalTallyResult.GetNoCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult no count")
 	}
-	_, err = p.FinalTallyResult.GetAbstainCount()
+	_, err = g.FinalTallyResult.GetAbstainCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult abstain count")
 	}
-	_, err = p.FinalTallyResult.GetNoWithVetoCount()
+	_, err = g.FinalTallyResult.GetNoWithVetoCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult veto count")
 	}
@@ -402,17 +398,14 @@ func (p Proposal) ValidateBasic() error {
 }
 
 func (v Vote) PrimaryKeyFields() []interface{} {
-	addr, err := sdk.AccAddressFromBech32(v.Voter)
-	if err != nil {
-		panic(err)
-	}
+	addr := sdk.MustAccAddressFromBech32(v.Voter)
+
 	return []interface{}{v.ProposalId, addr.Bytes()}
 }
 
 var _ orm.Validateable = Vote{}
 
 func (v Vote) ValidateBasic() error {
-
 	_, err := sdk.AccAddressFromBech32(v.Voter)
 	if err != nil {
 		return sdkerrors.Wrap(err, "voter")

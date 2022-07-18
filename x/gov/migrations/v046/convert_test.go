@@ -171,5 +171,4 @@ func TestConvertToLegacyDeposit(t *testing.T) {
 	require.Equal(t, v1beta1Deposit.ProposalId, deposit.ProposalId)
 	require.Equal(t, v1beta1Deposit.Depositor, deposit.Depositor)
 	require.Equal(t, v1beta1Deposit.Amount[0], deposit.Amount[0])
-
 }

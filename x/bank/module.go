@@ -7,13 +7,21 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	"cosmossdk.io/depinject"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/tendermint/tendermint/crypto"
+
+	"cosmossdk.io/core/appmodule"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -61,7 +69,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the bank module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -105,6 +113,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/bank from version 2 to 3: %v", err))
+	}
+
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/bank from version 3 to 4: %v", err))
 	}
 }
 
@@ -158,7 +170,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 3 }
+func (AppModule) ConsensusVersion() uint64 { return 4 }
 
 // BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
@@ -194,4 +206,56 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc, am.accountKeeper, am.keeper,
 	)
+}
+
+// New App Wiring Setup
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule))
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type bankInputs struct {
+	depinject.In
+
+	Config        *modulev1.Module
+	AccountKeeper types.AccountKeeper
+	Cdc           codec.Codec
+	Subspace      paramtypes.Subspace
+	Key           *store.KVStoreKey
+}
+
+type bankOutputs struct {
+	depinject.Out
+
+	BankKeeper keeper.BaseKeeper
+	Module     runtime.AppModuleWrapper
+}
+
+func provideModule(in bankInputs) bankOutputs {
+	// configure blocked module accounts.
+	//
+	// default behavior for blockedAddresses is to regard any module mentioned in AccountKeeper's module account
+	// permissions as blocked.
+	blockedAddresses := make(map[string]bool)
+	if len(in.Config.BlockedModuleAccountsOverride) != 0 {
+		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
+			addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
+			blockedAddresses[addr.String()] = true
+		}
+	} else {
+		for _, permission := range in.AccountKeeper.GetModulePermissions() {
+			blockedAddresses[permission.GetAddress().String()] = true
+		}
+	}
+
+	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, blockedAddresses)
+	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
+	return bankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
 }

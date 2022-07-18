@@ -6,14 +6,19 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"cosmossdk.io/core/appmodule"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	modulev1 "cosmossdk.io/api/cosmos/capability/module/v1"
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -68,7 +73,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the capability module.
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.ServeMux) {
 }
 
 // GetTxCmd returns the capability module's root tx command.
@@ -86,12 +91,15 @@ type AppModule struct {
 	AppModuleBasic
 
 	keeper keeper.Keeper
+
+	sealKeeper bool
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sealKeeper bool) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
+		sealKeeper:     sealKeeper,
 	}
 }
 
@@ -146,6 +154,10 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	am.keeper.InitMemStore(ctx)
+
+	if am.sealKeeper && !am.keeper.IsSealed() {
+		am.keeper.Seal()
+	}
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
@@ -177,4 +189,47 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return nil
+}
+
+//
+// New App Wiring Setup
+//
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+		))
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type capabilityInputs struct {
+	depinject.In
+
+	Config *modulev1.Module
+
+	KvStoreKey  *store.KVStoreKey
+	MemStoreKey *store.MemoryStoreKey
+	Cdc         codec.Codec
+}
+
+type capabilityOutputs struct {
+	depinject.Out
+
+	CapabilityKeeper *keeper.Keeper
+	Module           runtime.AppModuleWrapper
+}
+
+func provideModule(in capabilityInputs) capabilityOutputs {
+	k := keeper.NewKeeper(in.Cdc, in.KvStoreKey, in.MemStoreKey)
+	m := NewAppModule(in.Cdc, *k, in.Config.SealKeeper)
+
+	return capabilityOutputs{
+		CapabilityKeeper: k,
+		Module:           runtime.WrapAppModule(m),
+	}
 }

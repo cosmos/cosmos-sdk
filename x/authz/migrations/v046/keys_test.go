@@ -10,9 +10,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var granter = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-var grantee = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-var msgType = bank.SendAuthorization{}.MsgTypeURL()
+var (
+	granter = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+	grantee = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+	msgType = bank.SendAuthorization{}.MsgTypeURL()
+)
 
 func TestGrantkey(t *testing.T) {
 	require := require.New(t)

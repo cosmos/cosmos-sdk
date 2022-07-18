@@ -6,8 +6,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // ConvertToLegacyProposal takes a new proposal and attempts to convert it to the
@@ -142,14 +142,17 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1.Votes, error) {
 		// - if only Options is set, or both Option & Options are set, we read from Options,
 		// - if Options is not set, and Option is set, we read from Option,
 		// - if none are set, we throw error.
-		if oldVote.Options != nil {
+		switch {
+		case oldVote.Options != nil:
 			newWVOs = make([]*v1.WeightedVoteOption, len(oldVote.Options))
 			for j, oldWVO := range oldVote.Options {
 				newWVOs[j] = v1.NewWeightedVoteOption(v1.VoteOption(oldWVO.Option), oldWVO.Weight)
 			}
-		} else if oldVote.Option != v1beta1.OptionEmpty {
+
+		case oldVote.Option != v1beta1.OptionEmpty:
 			newWVOs = v1.NewNonSplitVoteOption(v1.VoteOption(oldVote.Option))
-		} else {
+
+		default:
 			return nil, fmt.Errorf("vote does not have neither Options nor Option")
 		}
 

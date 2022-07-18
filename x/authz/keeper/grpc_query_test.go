@@ -69,7 +69,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			func(require *require.Assertions, res *authz.QueryGrantsResponse) {
 				var auth authz.Authorization
 				require.Equal(1, len(res.Grants))
-				err := suite.app.InterfaceRegistry().UnpackAny(res.Grants[0].Authorization, &auth)
+				err := suite.interfaceRegistry.UnpackAny(res.Grants[0].Authorization, &auth)
 				require.NoError(err)
 				require.NotNil(auth)
 				require.Equal(auth.String(), expAuthorization.String())
@@ -135,7 +135,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 			func(res *authz.QueryGrantsResponse) {
 				var auth authz.Authorization
 				suite.Require().Equal(1, len(res.Grants))
-				err := suite.app.InterfaceRegistry().UnpackAny(res.Grants[0].Authorization, &auth)
+				err := suite.interfaceRegistry.UnpackAny(res.Grants[0].Authorization, &auth)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(auth)
 				suite.Require().Equal(auth.String(), expAuthorization.String())
@@ -198,7 +198,8 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 		},
 		{
 			"valid case, pagination",
-			func() {},
+			func() {
+			},
 			false,
 			authz.QueryGranterGrantsRequest{
 				Granter: addrs[0].String(),
@@ -254,6 +255,15 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 			1,
 		},
 		{
+			"valid case, no authorization found",
+			func() {},
+			false,
+			authz.QueryGranteeGrantsRequest{
+				Grantee: addrs[2].String(),
+			},
+			0,
+		},
+		{
 			"valid case, multiple authorization",
 			func() {
 				suite.createSendAuthorization(addrs[0], addrs[2])
@@ -296,7 +306,7 @@ func (suite *TestSuite) createSendAuthorization(a1, a2 sdk.AccAddress) authz.Aut
 	exp := suite.ctx.BlockHeader().Time.Add(time.Hour)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
-	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, a1, a2, authorization, &exp)
+	err := suite.authzKeeper.SaveGrant(suite.ctx, a1, a2, authorization, &exp)
 	suite.Require().NoError(err)
 	return authorization
 }

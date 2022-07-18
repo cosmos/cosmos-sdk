@@ -9,7 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
@@ -153,7 +154,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 		return func() {}, nil
 	}
 
-	fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return func() {}, err
 	}
@@ -224,7 +225,6 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 		txCfg := clientCtx.TxConfig
 		txBuilder, err := txCfg.WrapTxBuilder(newTx)
 		if err != nil {
@@ -244,13 +244,38 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		overwrite, _ := f.GetBool(flagOverwrite)
 		if multisig != "" {
-			multisigAddr, err := sdk.AccAddressFromBech32(multisig)
+			// Bech32 decode error, maybe it's a name, we try to fetch from keyring
+			multisigAddr, multisigName, _, err := client.GetFromFields(clientCtx, txF.Keybase(), multisig)
 			if err != nil {
-				// Bech32 decode error, maybe it's a name, we try to fetch from keyring
-				multisigAddr, _, _, err = client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
-				if err != nil {
-					return fmt.Errorf("error getting account from keybase: %w", err)
+				return fmt.Errorf("error getting account from keybase: %w", err)
+			}
+			multisigkey, err := getMultisigRecord(clientCtx, multisigName)
+			if err != nil {
+				return err
+			}
+			multisigPubKey, err := multisigkey.GetPubKey()
+			if err != nil {
+				return err
+			}
+			multisigLegacyPub := multisigPubKey.(*kmultisig.LegacyAminoPubKey)
+
+			fromRecord, err := clientCtx.Keyring.Key(fromName)
+			if err != nil {
+				return fmt.Errorf("error getting account from keybase: %w", err)
+			}
+			fromPubKey, err := fromRecord.GetPubKey()
+			if err != nil {
+				return err
+			}
+
+			var found bool
+			for _, pubkey := range multisigLegacyPub.GetPubKeys() {
+				if pubkey.Equals(fromPubKey) {
+					found = true
 				}
+			}
+			if !found {
+				return fmt.Errorf("signing key is not a part of multisig key")
 			}
 			err = authclient.SignTxWithSignerAddress(
 				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
@@ -302,7 +327,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 
-		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 		if err != nil {
 			return err
 		}

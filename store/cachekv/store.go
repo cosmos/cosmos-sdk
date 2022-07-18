@@ -15,14 +15,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
-// If value is nil but deleted is false, it means the parent doesn't have the
-// key.  (No need to delete upon Write())
+// cValue represents a cached value.
+// If dirty is true, it indicates the cached value is different from the underlying value.
 type cValue struct {
 	value []byte
 	dirty bool
 }
 
 // Store wraps an in-memory cache around an underlying types.KVStore.
+// If a cached value is nil but deleted is defined for the corresponding key,
+// it means the parent doesn't have the key. (No need to delete upon Write())
 type Store struct {
 	mtx           sync.Mutex
 	cache         map[string]*cValue
@@ -98,6 +100,11 @@ func (store *Store) Delete(key []byte) {
 func (store *Store) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+
+	if len(store.cache) == 0 && len(store.deleted) == 0 && len(store.unsortedCache) == 0 {
+		store.sortedCache = dbm.NewMemDB()
+		return
+	}
 
 	// We need a copy of all of the keys.
 	// Not the best, but probably not a bottleneck depending.

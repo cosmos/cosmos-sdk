@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 	"math/rand"
+	"strings"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -292,7 +293,7 @@ func maxuint(i1, i2 uint64) uint64 {
 }
 
 func TestRoundTripMarshalToUint(t *testing.T) {
-	var values = []uint64{
+	values := []uint64{
 		0,
 		1,
 		1 << 10,
@@ -300,6 +301,7 @@ func TestRoundTripMarshalToUint(t *testing.T) {
 		1<<63 - 1,
 		1<<32 - 7,
 		1<<22 - 8,
+		math.MaxUint64,
 	}
 
 	for _, value := range values {
@@ -321,5 +323,41 @@ func TestRoundTripMarshalToUint(t *testing.T) {
 				t.Fatalf("roundtrip=%q != original=%q", rt, uv)
 			}
 		})
+	}
+}
+
+func TestWeakUnmarshalNegativeSign(t *testing.T) {
+	neg10, _ := new(big.Int).SetString("-10", 0)
+	blob, err := neg10.MarshalText()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ui := new(sdkmath.Uint)
+	err = ui.Unmarshal(blob)
+	if err == nil {
+		t.Fatal("Failed to catch the negative value")
+	}
+	if errStr := err.Error(); !strings.Contains(errStr, "non-positive") {
+		t.Fatalf("negative value not reported, got instead %q", errStr)
+	}
+}
+
+func TestWeakUnmarshalOverflow(t *testing.T) {
+	exp := new(big.Int).SetUint64(256)
+	pos10, _ := new(big.Int).SetString("10", 0)
+	exp10Pow256 := new(big.Int).Exp(pos10, exp, nil)
+	blob, err := exp10Pow256.MarshalText()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ui := new(sdkmath.Uint)
+	err = ui.Unmarshal(blob)
+	if err == nil {
+		t.Fatal("Failed to catch the overflowed value")
+	}
+	if errStr := err.Error(); !strings.Contains(errStr, "out of range") {
+		t.Fatalf("out of range value not reported, got instead %q", errStr)
 	}
 }

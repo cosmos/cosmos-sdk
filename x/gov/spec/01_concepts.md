@@ -118,22 +118,22 @@ option that casts a `NoWithVeto` vote._
 
 ### Weighted Votes
 
-[ADR-037](../../../docs/architecture/adr-037-gov-split-vote.md) introduces the weighted vote feature which allows a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
+[ADR-037](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-037-gov-split-vote.md) introduces the weighted vote feature which allows a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
 
 Often times the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
 
 To represent weighted vote on chain, we use the following Protobuf message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L32-L40
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L33-L43
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L126-L137
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L136-L150
 
 For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 
 ### Quorum
 
 Quorum is defined as the minimum percentage of voting power that needs to be
-casted on a proposal for the result to be valid.
+cast on a proposal for the result to be valid.
 
 ### Threshold
 
@@ -177,7 +177,7 @@ Later, we may add permissioned keys that could only sign txs from certain module
 
 If proposals are of type `SoftwareUpgradeProposal`, then nodes need to upgrade
 their software to the new version that was voted. This process is divided into
-two steps.
+two steps:
 
 ### Signal
 
@@ -200,4 +200,4 @@ Once a block contains more than 2/3rd _precommits_ where a common
 nodes, non-validating full nodes and light-nodes) are expected to switch to the
 new version of the software.
 
-_Note: Not clear how the flip is handled programmatically._
+Validators and full nodes can use an automation tool, such as [Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/main/cosmovisor/README.md), for automatically switching version of the chain.

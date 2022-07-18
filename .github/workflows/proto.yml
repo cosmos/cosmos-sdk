@@ -5,28 +5,26 @@ on:
   pull_request:
     paths:
       - "proto/**"
-  push:
-    branches:
-      - main
-    paths:
-      - "proto/**"
+
+permissions:
+  contents: read
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-    - uses: actions/checkout@v3
-    - uses: bufbuild/buf-setup-action@v1.4.0
-    - uses: bufbuild/buf-lint-action@v1
-      with:
-        input: 'proto'
+      - uses: actions/checkout@v3
+      - uses: bufbuild/buf-setup-action@v1.6.0
+      - uses: bufbuild/buf-lint-action@v1
+        with:
+          input: "proto"
 
   break-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: bufbuild/buf-setup-action@v1.4.0
+      - uses: bufbuild/buf-setup-action@v1.6.0
       - uses: bufbuild/buf-breaking-action@v1
         with:
           input: "proto"

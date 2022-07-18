@@ -106,8 +106,6 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	tx.SetFeeGranter(clientCtx.GetFeeGranterAddress())
-	tx.SetFeePayer(clientCtx.GetFeePayerAddress())
 	err = Sign(txf, clientCtx.GetFromName(), tx, true)
 	if err != nil {
 		return err
@@ -288,7 +286,8 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 	if overwriteSig {
 		sigs = []signing.SignatureV2{sig}
 	} else {
-		sigs = append(prevSignatures, sig)
+		sigs = append(sigs, prevSignatures...)
+		sigs = append(sigs, sig)
 	}
 	if err := txBuilder.SetSignatures(sigs...); err != nil {
 		return err

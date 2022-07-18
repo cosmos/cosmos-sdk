@@ -18,11 +18,11 @@ When a transaction is relayed from the underlying consensus engine to the Cosmos
 
 ### `Msg` Services
 
-Starting from v0.40, defining Protobuf `Msg` services is the recommended way to handle messages. A Protobuf `Msg` service should be created for each module, typically in `tx.proto` (see more info about [conventions and naming](../core/encoding.md#faq)). It must have an RPC service method defined for each message in the module.
+Defining Protobuf `Msg` services is the recommended way to handle messages. A Protobuf `Msg` service should be created for each module, typically in `tx.proto` (see more info about [conventions and naming](../core/encoding.md#faq)). It must have an RPC service method defined for each message in the module.
 
 See an example of a `Msg` service definition from `x/bank` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L12-L19
 
 Each `Msg` service method must have exactly one argument, which must implement the `sdk.Msg` interface, and a Protobuf response. The naming convention is to call the RPC argument `Msg<service-rpc-name>` and the RPC response `Msg<service-rpc-name>Response`. For example:
 
@@ -49,39 +49,41 @@ Amino `LegacyMsg`s can be defined as protobuf messages. The messages definition 
 
 A `LegacyMsg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./module-interfaces.md). `message`s also need to implement the `sdk.Msg` interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/4a1b2fba43b1052ca162b3a1e0b6db6db9c26656/types/tx_msg.go#L10-L33
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/tx_msg.go#L10-L22
 
 It extends `proto.Message` and contains the following methods:
 
 * `Route() string`: Name of the route for this message. Typically all `message`s in a module have the same route, which is most often the module's name.
-* `Type() string`: Type of the message, used primarly in [events](../core/events.md). This should return a message-specific `string`, typically the denomination of the message itself.
+* `Type() string`: Type of the message, used primarily in [events](../core/events.md). This should return a message-specific `string`, typically the denomination of the message itself.
 * [`ValidateBasic() error`](../basics/tx-lifecycle.md#ValidateBasic).
 * `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature.
 * `GetSigners() []AccAddress`: Return the list of signers. The Cosmos SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method.
 
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/auth/migrations/legacytx/stdsign.go#L20-L36
+
 See an example implementation of a `message` from the `gov` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/gov/types/msgs.go#L77-L125
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/gov/types/v1/msgs.go#L106-L138
 
 ## Queries
 
-A `query` is a request for information made by end-users of applications through an interface and processed by a full-node. A `query` is received by a full-node through its consensus engine and relayed to the application via the ABCI. It is then routed to the appropriate module via `BaseApp`'s `queryrouter` so that it can be processed by the module's query service (./query-services.md). For a deeper look at the lifecycle of a `query`, click [here](../basics/query-lifecycle.md).
+A `query` is a request for information made by end-users of applications through an interface and processed by a full-node. A `query` is received by a full-node through its consensus engine and relayed to the application via the ABCI. It is then routed to the appropriate module via `BaseApp`'s `QueryRouter` so that it can be processed by the module's query service (./query-services.md). For a deeper look at the lifecycle of a `query`, click [here](../basics/query-lifecycle.md).
 
 ### gRPC Queries
 
-Starting from v0.40, the prefered way to define queries is by using [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services). A `Query` service should be created per module in `query.proto`. This service lists endpoints starting with `rpc`.
+Queries should be defined using [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services). A `Query` service should be created per module in `query.proto`. This service lists endpoints starting with `rpc`.
 
 Here's an example of such a `Query` service definition:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/auth/v1beta1/query.proto#L12-L23
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/auth/v1beta1/query.proto#L13-L59
 
-As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer).
+As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://pkg.go.dev/fmt#Stringer).
 
 A `RegisterQueryServer` method is also generated and should be used to register the module's query server in the `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
 
 ### Legacy Queries
 
-Before the introduction of Protobuf and gRPC in the Cosmos SDK, there was usually no specific `query` object defined by module developers, contrary to `message`s. Instead, the Cosmos SDK took the simpler approach of using a simple `path` to define each `query`. The `path` contains the `query` type and all the arguments needed in order to process it. For most module queries, the `path` should look like the following:
+Before the introduction of Protobuf and gRPC in the Cosmos SDK, there was usually no specific `query` object defined by module developers, contrary to `message`s. Instead, the Cosmos SDK took the simpler approach of using a simple `path` to define each `query`. The `path` contains the `query` type and all the arguments needed to process it. For most module queries, the `path` should look like the following:
 
 ```text
 queryCategory/queryRoute/queryType/arg1/arg2/...
@@ -98,7 +100,7 @@ The `path` for each `query` must be defined by the module developer in the modul
 
 * A [`querier`](./query-services.md#legacy-queriers), to process the `query` once it has been [routed to the module](../core/baseapp.md#query-routing).
 * [Query commands](./module-interfaces.md#query-commands) in the module's CLI file, where the `path` for each `query` is specified.
-* `query` return types. Typically defined in a file `types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer).
+* `query` return types. Typically defined in a file `types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://pkg.go.dev/fmt#Stringer).
 
 ### Store Queries
 
@@ -106,9 +108,7 @@ Store queries query directly for store keys. They use `clientCtx.QueryABCI(req a
 
 See following examples:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/080fcf1df25ccdf97f3029b6b6f83caaf5a235e4/x/ibc/core/client/query.go#L36-L46
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/080fcf1df25ccdf97f3029b6b6f83caaf5a235e4/baseapp/abci.go#L722-L749
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/baseapp/abci.go#L756-L777
 
 ## Next {hide}
 

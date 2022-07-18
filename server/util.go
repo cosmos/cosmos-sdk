@@ -96,7 +96,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 		}
 	})
 
-	return
+	return err
 }
 
 // InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
@@ -283,6 +283,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		tmcmd.ResetAllCmd,
 		tmcmd.ResetStateCmd,
 		tmcmd.InspectCmd,
+		makeKeyMigrateCmd(),
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)
@@ -364,9 +365,7 @@ func WaitForQuitSignals() ErrorCode {
 // GetAppDBBackend gets the backend type to use for the application DBs.
 func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	rv := cast.ToString(opts.Get("app-db-backend"))
-	if len(rv) == 0 {
-		rv = sdk.DBBackend
-	}
+
 	if len(rv) == 0 {
 		rv = cast.ToString(opts.Get("db-backend"))
 	}
@@ -412,6 +411,6 @@ func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {
 	return os.OpenFile(
 		traceWriterFile,
 		os.O_WRONLY|os.O_APPEND|os.O_CREATE,
-		0666,
+		0o666,
 	)
 }

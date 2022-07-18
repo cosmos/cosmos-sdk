@@ -39,55 +39,50 @@ func (q Keeper) Proposal(c context.Context, req *v1.QueryProposalRequest) (*v1.Q
 
 // Proposals implements the Query/Proposals gRPC method
 func (q Keeper) Proposals(c context.Context, req *v1.QueryProposalsRequest) (*v1.QueryProposalsResponse, error) {
-	var filteredProposals []*v1.Proposal
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(q.storeKey)
 	proposalStore := prefix.NewStore(store, types.ProposalsKeyPrefix)
 
-	pageRes, err := query.FilteredPaginate(proposalStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var p v1.Proposal
-		if err := q.cdc.Unmarshal(value, &p); err != nil {
-			return false, status.Error(codes.Internal, err.Error())
-		}
+	filteredProposals, pageRes, err := query.GenericFilteredPaginate(
+		q.cdc,
+		proposalStore,
+		req.Pagination,
+		func(key []byte, p *v1.Proposal) (*v1.Proposal, error) {
+			matchVoter, matchDepositor, matchStatus := true, true, true
 
-		matchVoter, matchDepositor, matchStatus := true, true, true
-
-		// match status (if supplied/valid)
-		if v1.ValidProposalStatus(req.ProposalStatus) {
-			matchStatus = p.Status == req.ProposalStatus
-		}
-
-		// match voter address (if supplied)
-		if len(req.Voter) > 0 {
-			voter, err := sdk.AccAddressFromBech32(req.Voter)
-			if err != nil {
-				return false, err
+			// match status (if supplied/valid)
+			if v1.ValidProposalStatus(req.ProposalStatus) {
+				matchStatus = p.Status == req.ProposalStatus
 			}
 
-			_, matchVoter = q.GetVote(ctx, p.Id, voter)
-		}
+			// match voter address (if supplied)
+			if len(req.Voter) > 0 {
+				voter, err := sdk.AccAddressFromBech32(req.Voter)
+				if err != nil {
+					return nil, err
+				}
 
-		// match depositor (if supplied)
-		if len(req.Depositor) > 0 {
-			depositor, err := sdk.AccAddressFromBech32(req.Depositor)
-			if err != nil {
-				return false, err
-			}
-			_, matchDepositor = q.GetDeposit(ctx, p.Id, depositor)
-		}
-
-		if matchVoter && matchDepositor && matchStatus {
-			if accumulate {
-				filteredProposals = append(filteredProposals, &p)
+				_, matchVoter = q.GetVote(ctx, p.Id, voter)
 			}
 
-			return true, nil
-		}
+			// match depositor (if supplied)
+			if len(req.Depositor) > 0 {
+				depositor, err := sdk.AccAddressFromBech32(req.Depositor)
+				if err != nil {
+					return nil, err
+				}
+				_, matchDepositor = q.GetDeposit(ctx, p.Id, depositor)
+			}
 
-		return false, nil
-	})
+			if matchVoter && matchDepositor && matchStatus {
+				return p, nil
+			}
 
+			return nil, nil
+		}, func() *v1.Proposal {
+			return &v1.Proposal{}
+		})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -149,7 +144,6 @@ func (q Keeper) Votes(c context.Context, req *v1.QueryVotesRequest) (*v1.QueryVo
 		votes = append(votes, &vote)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -238,7 +232,6 @@ func (q Keeper) Deposits(c context.Context, req *v1.QueryDepositsRequest) (*v1.Q
 		deposits = append(deposits, &deposit)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -283,10 +276,10 @@ func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) 
 var _ v1beta1.QueryServer = legacyQueryServer{}
 
 type legacyQueryServer struct {
-	keeper Keeper
+	keeper *Keeper
 }
 
-func NewLegacyQueryServer(k Keeper) v1beta1.QueryServer {
+func NewLegacyQueryServer(k *Keeper) v1beta1.QueryServer {
 	return &legacyQueryServer{keeper: k}
 }
 

@@ -63,6 +63,7 @@ func (msg *TestMsg) GetSignBytes() []byte {
 	}
 	return sdk.MustSortJSON(bz)
 }
+
 func (msg *TestMsg) GetSigners() []sdk.AccAddress {
 	signers := make([]sdk.AccAddress, 0, len(msg.Signers))
 	for _, addr := range msg.Signers {
@@ -71,6 +72,7 @@ func (msg *TestMsg) GetSigners() []sdk.AccAddress {
 	}
 	return signers
 }
+
 func (msg *TestMsg) ValidateBasic() error {
 	for _, addr := range msg.Signers {
 		if _, err := sdk.AccAddressFromBech32(addr); err != nil {

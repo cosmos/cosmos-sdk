@@ -76,7 +76,6 @@ func (it *paginationIterator) Next() bool {
 				// so the index == total entries.
 				it.pageRes.Total = uint64(it.i)
 			}
-
 		}
 		return false
 	}

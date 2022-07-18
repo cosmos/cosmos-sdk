@@ -6,12 +6,13 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -25,11 +26,11 @@ type GRPCQueryTestSuite struct {
 func (s *GRPCQueryTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := network.DefaultConfig()
+	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
+	s.Require().NoError(err)
 	cfg.NumValidators = 1
 	s.cfg = cfg
 
-	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err)
 
@@ -115,7 +116,7 @@ func (s *GRPCQueryTestSuite) TestQueryOutstandingRewardsGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			if tc.expErr {
 				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
@@ -169,7 +170,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommissionGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			if tc.expErr {
 				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
@@ -303,7 +304,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
@@ -452,7 +453,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommunityPoolGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 
 		s.Run(tc.name, func() {
 			if tc.expErr {

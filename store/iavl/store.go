@@ -380,7 +380,7 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto
 
 //----------------------------------------
 
-// Implements types.Iterator.
+// iavlIterator implements types.Iterator.
 type iavlIterator struct {
 	*iavl.Iterator
 }

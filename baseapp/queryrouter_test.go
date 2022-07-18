@@ -1,4 +1,4 @@
-package baseapp_test
+package baseapp
 
 import (
 	"testing"
@@ -7,7 +7,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -16,7 +15,7 @@ var testQuerier = func(_ sdk.Context, _ []string, _ abci.RequestQuery) ([]byte, 
 }
 
 func TestQueryRouter(t *testing.T) {
-	qr := baseapp.NewQueryRouter()
+	qr := NewQueryRouter()
 
 	// require panic on invalid route
 	require.Panics(t, func() {

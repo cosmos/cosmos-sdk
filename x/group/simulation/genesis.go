@@ -147,7 +147,6 @@ func getVoteOption(index int) group.VoteOption {
 
 // RandomizedGenState generates a random GenesisState for the group module.
 func RandomizedGenState(simState *module.SimulationState) {
-
 	// groups
 	var groups []*group.GroupInfo
 	simState.AppParams.GetOrGenerate(

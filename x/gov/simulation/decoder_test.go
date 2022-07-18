@@ -27,7 +27,8 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	endTime := time.Now().UTC()
-	content := v1beta1.ContentFromProposalType("test", "test", v1beta1.ProposalTypeText)
+	content, ok := v1beta1.ContentFromProposalType("test", "test", v1beta1.ProposalTypeText)
+	require.True(t, ok)
 	proposalA, err := v1beta1.NewProposal(content, 1, endTime, endTime.Add(24*time.Hour))
 	require.NoError(t, err)
 	proposalB, err := v1beta1.NewProposal(content, 2, endTime, endTime.Add(24*time.Hour))

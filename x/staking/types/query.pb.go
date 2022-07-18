@@ -189,7 +189,7 @@ func (m *QueryValidatorRequest) GetValidatorAddr() string {
 
 // QueryValidatorResponse is response type for the Query/Validator RPC method
 type QueryValidatorResponse struct {
-	// validator defines the the validator info.
+	// validator defines the validator info.
 	Validator Validator `protobuf:"bytes,1,opt,name=validator,proto3" json:"validator"`
 }
 
@@ -988,7 +988,7 @@ var xxx_messageInfo_QueryDelegatorValidatorsRequest proto.InternalMessageInfo
 // QueryDelegatorValidatorsResponse is response type for the
 // Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsResponse struct {
-	// validators defines the the validators' info of a delegator.
+	// validators defines the validators' info of a delegator.
 	Validators []Validator `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -1086,7 +1086,7 @@ var xxx_messageInfo_QueryDelegatorValidatorRequest proto.InternalMessageInfo
 // QueryDelegatorValidatorResponse response type for the
 // Query/DelegatorValidator RPC method.
 type QueryDelegatorValidatorResponse struct {
-	// validator defines the the validator info.
+	// validator defines the validator info.
 	Validator Validator `protobuf:"bytes,1,opt,name=validator,proto3" json:"validator"`
 }
 

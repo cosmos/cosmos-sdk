@@ -62,7 +62,8 @@ func (r Adr050) init() {
 	}
 }
 
+// DefineScalar adds a value renderer to the given Cosmos scalar.
 func (r Adr050) DefineScalar(scalar string, vr ValueRenderer) {
 	r.init()
-
+	r.scalars[scalar] = vr
 }

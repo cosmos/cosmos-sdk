@@ -182,6 +182,7 @@ func (suite *SubspaceTestSuite) TestGetParamSetIfExists() {
 	suite.Require().Equal(a.MaxValidators, b.MaxValidators)
 	suite.Require().Equal(a.BondDenom, b.BondDenom)
 	suite.Require().Zero(b.MaxRedelegationEntries)
+	suite.Require().False(suite.ss.Has(suite.ctx, keyMaxRedelegationEntries), "key from the new param version should not yet exist")
 }
 
 func (suite *SubspaceTestSuite) TestSetParamSet() {

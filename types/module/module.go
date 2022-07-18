@@ -171,13 +171,13 @@ type AppModule interface {
 	ConsensusVersion() uint64
 }
 
-// BeginBlockAppModule is an extension interface that contains information about the AppModule and BeginBlock
+// BeginBlockAppModule is an extension interface that contains information about the AppModule and BeginBlock.
 type BeginBlockAppModule interface {
 	AppModule
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
 }
 
-// EndBlockAppModule is an extension interface that contains information about the AppModule and EndBlock
+// EndBlockAppModule is an extension interface that contains information about the AppModule and EndBlock.
 type EndBlockAppModule interface {
 	AppModule
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
@@ -477,10 +477,9 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 
 	for _, moduleName := range m.OrderBeginBlockers {
 		module, ok := m.Modules[moduleName].(BeginBlockAppModule)
-		if !ok {
-			return abci.ResponseBeginBlock{}
+		if ok {
+			module.BeginBlock(ctx, req)
 		}
-		module.BeginBlock(ctx, req)
 	}
 
 	return abci.ResponseBeginBlock{
@@ -498,7 +497,7 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 	for _, moduleName := range m.OrderEndBlockers {
 		module, ok := m.Modules[moduleName].(EndBlockAppModule)
 		if !ok {
-			return abci.ResponseEndBlock{}
+			continue
 		}
 		moduleValUpdates := module.EndBlock(ctx, req)
 

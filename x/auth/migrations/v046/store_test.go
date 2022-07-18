@@ -5,20 +5,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	v2 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v2"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	v4 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v4"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type mockSubspace struct {
@@ -38,14 +38,12 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := sdk.NewKVStoreKey(v2.ModuleName)
+	storeKey := sdk.NewKVStoreKey(v4.ModuleName)
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
 
-	var (
-		accountKeeper keeper.AccountKeeper
-	)
+	var accountKeeper keeper.AccountKeeper
 
 	app, err := simtestutil.Setup(
 		authtestutil.AppConfig,
@@ -54,7 +52,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	require.NoError(t, err)
 
 	legacySubspace := newMockSubspace(authtypes.DefaultParams())
-	require.NoError(t, v2.Migrate(ctx, store, legacySubspace, cdc))
+	require.NoError(t, v4.Migrate(ctx, store, legacySubspace, cdc))
 
 	// new base account
 	senderPrivKey := secp256k1.GenPrivKey()

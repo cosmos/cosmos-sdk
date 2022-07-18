@@ -3,8 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -26,7 +27,6 @@ type Keeper struct {
 
 // NewKeeper creates a slashing keeper
 func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key storetypes.StoreKey, sk types.StakingKeeper, authority string) Keeper {
-
 	return Keeper{
 		storeKey:    key,
 		cdc:         cdc,

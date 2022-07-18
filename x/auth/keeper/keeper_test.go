@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -14,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 const (
@@ -139,7 +140,6 @@ func (suite *KeeperTestSuite) TestGetSetParams() {
 }
 
 func (suite *KeeperTestSuite) TestSupply_ValidatePermissions() {
-
 	err := suite.accountKeeper.ValidatePermissions(multiPermAcc)
 	suite.Require().NoError(err)
 

@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/kv"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
-var (
-	// This is set at compile time. Could be cleveldb, defaults is goleveldb.
-	backend = dbm.GoLevelDBBackend
-)
+// This is set at compile time. Could be cleveldb, defaults is goleveldb.
+var backend = dbm.GoLevelDBBackend
 
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
 // are removed.

@@ -3,14 +3,12 @@ package keeper
 import (
 	"github.com/gogo/protobuf/grpc"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	v043 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v043"
 	v046 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v046"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	v4 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	v2 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v2"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -58,7 +56,7 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 // and managed by the x/params modules and stores them directly into the x/auth
 // module state.
 func (m Migrator) Migrate3to4(ctx sdk.Context) error {
-	return v2.Migrate(ctx, ctx.KVStore(m.keeper.storeKey), m.legacySubspace, m.keeper.cdc)
+	return v4.Migrate(ctx, ctx.KVStore(m.keeper.storeKey), m.legacySubspace, m.keeper.cdc)
 }
 
 // V45_SetAccount implements V45_SetAccount

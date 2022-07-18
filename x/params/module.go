@@ -14,6 +14,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -213,7 +214,7 @@ type subspaceInputs struct {
 
 func provideSubspace(in subspaceInputs) types.Subspace {
 	moduleName := in.Key.Name()
-	var kt, exists = in.KeyTables[moduleName]
+	kt, exists := in.KeyTables[moduleName]
 	if !exists {
 		return in.Keeper.Subspace(moduleName)
 	} else {

@@ -24,23 +24,21 @@ func (s *IntegrationTestSuite) TestCmdParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"voting_params":{"voting_period":"172800000000000"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800000000000"}}`,
+			`{"params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s","voting_period":"172800s","quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"}}`,
 		},
 		{
 			"text output",
 			[]string{},
 			`
-deposit_params:
-  max_deposit_period: "172800000000000"
+params:
+  max_deposit_period: 172800s
   min_deposit:
   - amount: "10000000"
     denom: stake
-tally_params:
   quorum: "0.334000000000000000"
   threshold: "0.500000000000000000"
   veto_threshold: "0.334000000000000000"
-voting_params:
-  voting_period: "172800000000000"
+  voting_period: 172800s
 	`,
 		},
 	}
@@ -58,54 +56,6 @@ voting_params:
 		})
 	}
 }
-
-// func (s *IntegrationTestSuite) TestCmdParam() {
-// 	val := s.network.Validators[0]
-
-// 	testCases := []struct {
-// 		name           string
-// 		args           []string
-// 		expectedOutput string
-// 	}{
-// 		{
-// 			"voting params",
-// 			[]string{
-// 				"voting",
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 			`{"voting_period":"172800000000000"}`,
-// 		},
-// 		{
-// 			"tally params",
-// 			[]string{
-// 				"tallying",
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 			`{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"}`,
-// 		},
-// 		{
-// 			"deposit params",
-// 			[]string{
-// 				"deposit",
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 			`{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800000000000"}`,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		tc := tc
-
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdQueryParam()
-// 			clientCtx := val.ClientCtx
-
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			s.Require().NoError(err)
-// 			s.Require().Equal(strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(out.String()))
-// 		})
-// 	}
-// }
 
 func (s *IntegrationTestSuite) TestCmdProposer() {
 	val := s.network.Validators[0]

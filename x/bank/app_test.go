@@ -56,13 +56,13 @@ var (
 			types.NewOutput(addr3, halfCoins),
 		},
 	}
-	multiSendMsg4 = &types.MsgMultiSend{
+	multiSendMsg3 = &types.MsgMultiSend{
 		Input: types.NewInput(addr2, coins),
 		Outputs: []types.Output{
 			types.NewOutput(addr1, coins),
 		},
 	}
-	multiSendMsg5 = &types.MsgMultiSend{
+	multiSendMsg4 = &types.MsgMultiSend{
 		Input: types.NewInput(addr1, coins),
 		Outputs: []types.Output{
 			types.NewOutput(moduleAccAddr, coins),
@@ -147,7 +147,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 		},
 		{
 			desc:       "wrong accSeq should not pass Simulate",
-			msgs:       []sdk.Msg{multiSendMsg5},
+			msgs:       []sdk.Msg{multiSendMsg4},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0}, // wrong account sequence
 			expSimPass: false,
@@ -246,7 +246,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 			},
 		},
 		{
-			msgs:       []sdk.Msg{multiSendMsg4},
+			msgs:       []sdk.Msg{multiSendMsg3},
 			accNums:    []uint64{1},
 			accSeqs:    []uint64{0},
 			expSimPass: true,

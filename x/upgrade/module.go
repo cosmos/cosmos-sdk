@@ -130,7 +130,62 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(am.keeper, ctx, req)
 }
 
+<<<<<<< HEAD
 // EndBlock does nothing
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+=======
+//
+// New App Wiring Setup
+//
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(provideModuleBasic, provideModule),
+	)
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type upgradeInputs struct {
+	depinject.In
+
+	Config *modulev1.Module
+	Key    *store.KVStoreKey
+	Cdc    codec.Codec
+
+	AppOpts servertypes.AppOptions `optional:"true"`
+}
+
+type upgradeOutputs struct {
+	depinject.Out
+
+	UpgradeKeeper keeper.Keeper
+	Module        runtime.AppModuleWrapper
+	GovHandler    govv1beta1.HandlerRoute
+}
+
+func provideModule(in upgradeInputs) upgradeOutputs {
+	var (
+		homePath           string
+		skipUpgradeHeights = make(map[int64]bool)
+	)
+
+	if in.AppOpts != nil {
+		for _, h := range cast.ToIntSlice(in.AppOpts.Get(server.FlagUnsafeSkipUpgrades)) {
+			skipUpgradeHeights[int64(h)] = true
+		}
+
+		homePath = cast.ToString(in.AppOpts.Get(flags.FlagHome))
+	}
+
+	// set the governance module account as the authority for conducting upgrades
+	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	m := NewAppModule(k)
+	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
+
+	return upgradeOutputs{UpgradeKeeper: k, Module: runtime.WrapAppModule(m), GovHandler: gh}
+>>>>>>> b65f3fe07 (feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces (#12603))
 }

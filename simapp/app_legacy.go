@@ -488,7 +488,6 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
 	)
-
 	if err != nil {
 		panic(err)
 	}

@@ -65,7 +65,7 @@ func GetKey(allkeys [][]byte, loc tmproofs.Where) []byte {
 		return allkeys[len(allkeys)-1]
 	}
 	// select a random index between 1 and allkeys-2
-	idx := rand.Int()%(len(allkeys)-2) + 1
+	idx := rand.NewRand().Int()%(len(allkeys)-2) + 1
 	return allkeys[idx]
 }
 

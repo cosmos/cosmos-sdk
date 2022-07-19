@@ -162,50 +162,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(ctx, am.keeper)
 }
 
-<<<<<<< HEAD
-// EndBlock does nothing
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-=======
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
-		),
-	)
-}
-
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type authzInputs struct {
-	depinject.In
-
-	Key              *store.KVStoreKey
-	Cdc              codec.Codec
-	AccountKeeper    authz.AccountKeeper
-	BankKeeper       authz.BankKeeper
-	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter *baseapp.MsgServiceRouter
-}
-
-type authzOutputs struct {
-	depinject.Out
-
-	AuthzKeeper keeper.Keeper
-	Module      runtime.AppModuleWrapper
-}
-
-func provideModule(in authzInputs) authzOutputs {
-	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return authzOutputs{AuthzKeeper: k, Module: runtime.WrapAppModule(m)}
->>>>>>> b65f3fe07 (feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces (#12603))
-}
-
 // ____________________________________________________________________________
 
 // AppModuleSimulation functions

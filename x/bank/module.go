@@ -8,7 +8,7 @@ import (
 	"time"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
-	"github.com/cosmos/cosmos-sdk/depinject"
+	"cosmossdk.io/depinject"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -114,6 +114,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/bank from version 2 to 3: %v", err))
 	}
+
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/bank from version 3 to 4: %v", err))
+	}
 }
 
 // NewAppModule creates a new AppModule object
@@ -166,7 +170,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 3 }
+func (AppModule) ConsensusVersion() uint64 { return 4 }
 
 // BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
@@ -204,7 +208,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 }
 
-// App Wiring
+// New App Wiring Setup
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
@@ -221,7 +225,7 @@ type bankInputs struct {
 	depinject.In
 
 	Config        *modulev1.Module
-	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	AccountKeeper types.AccountKeeper
 	Cdc           codec.Codec
 	Subspace      paramtypes.Subspace
 	Key           *store.KVStoreKey
@@ -230,7 +234,7 @@ type bankInputs struct {
 type bankOutputs struct {
 	depinject.Out
 
-	BankKeeper keeper.Keeper `key:"cosmos.bank.v1.Keeper"`
+	BankKeeper keeper.BaseKeeper
 	Module     runtime.AppModuleWrapper
 }
 

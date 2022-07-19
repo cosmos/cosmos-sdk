@@ -1,6 +1,8 @@
 package client
 
 import (
+	"encoding/base64"
+
 	"github.com/spf13/pflag"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
@@ -75,4 +77,38 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 // JSON RPC and WebSockets
 func NewClientFromNode(nodeURI string) (*rpchttp.HTTP, error) {
 	return rpchttp.New(nodeURI)
+}
+
+// FlagSetWithPageKeyDecoded returns the provided flagSet with the page-key value base64 decoded (if it exists).
+// This is for when the page-key is provided as a base64 string (e.g. from the CLI).
+// ReadPageRequest expects it to be the raw bytes.
+//
+// Common usage:
+// fs, err := client.FlagSetWithPageKeyDecoded(cmd.Flags())
+// pageReq, err := client.ReadPageRequest(fs)
+func FlagSetWithPageKeyDecoded(flagSet *pflag.FlagSet) (*pflag.FlagSet, error) {
+	encoded, err := flagSet.GetString(flags.FlagPageKey)
+	if err != nil {
+		return flagSet, err
+	}
+	if len(encoded) > 0 {
+		var raw []byte
+		raw, err = base64.StdEncoding.DecodeString(encoded)
+		if err != nil {
+			return flagSet, err
+		}
+		_ = flagSet.Set(flags.FlagPageKey, string(raw))
+	}
+	return flagSet, nil
+}
+
+// MustFlagSetWithPageKeyDecoded calls FlagSetWithPageKeyDecoded and panics on error.
+//
+// Common usage: pageReq, err := client.ReadPageRequest(client.MustFlagSetWithPageKeyDecoded(cmd.Flags()))
+func MustFlagSetWithPageKeyDecoded(flagSet *pflag.FlagSet) *pflag.FlagSet {
+	rv, err := FlagSetWithPageKeyDecoded(flagSet)
+	if err != nil {
+		panic(err.Error())
+	}
+	return rv
 }

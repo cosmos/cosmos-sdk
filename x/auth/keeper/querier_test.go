@@ -2,11 +2,8 @@ package keeper_test
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-
-	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -15,9 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func TestQueryAccount(t *testing.T) {
-	app, ctx := createTestApp(t, true)
-	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+func (suite *KeeperTestSuite) TestQueryAccount() {
+	ctx := suite.ctx
+	legacyQuerierCdc := codec.NewAminoCodec(suite.legacyAmino)
 
 	req := abci.RequestQuery{
 		Path: "",
@@ -25,41 +22,41 @@ func TestQueryAccount(t *testing.T) {
 	}
 
 	path := []string{types.QueryAccount}
-	querier := keep.NewQuerier(app.AccountKeeper, legacyQuerierCdc.LegacyAmino)
+	querier := keep.NewQuerier(suite.accountKeeper, legacyQuerierCdc.LegacyAmino)
 
 	bz, err := querier(ctx, []string{"other"}, req)
-	require.Error(t, err)
-	require.Nil(t, bz)
+	suite.Require().Error(err)
+	suite.Require().Nil(bz)
 
 	req = abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAccount),
 		Data: []byte{},
 	}
 	res, err := querier(ctx, path, req)
-	require.Error(t, err)
-	require.Nil(t, res)
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
 
 	req.Data = legacyQuerierCdc.MustMarshalJSON(&types.QueryAccountRequest{Address: ""})
 	res, err = querier(ctx, path, req)
-	require.Error(t, err)
-	require.Nil(t, res)
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
 
 	_, _, addr := testdata.KeyTestPubAddr()
 	req.Data = legacyQuerierCdc.MustMarshalJSON(&types.QueryAccountRequest{Address: addr.String()})
 	res, err = querier(ctx, path, req)
-	require.Error(t, err)
-	require.Nil(t, res)
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
 
-	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addr))
+	suite.accountKeeper.SetAccount(ctx, suite.accountKeeper.NewAccountWithAddress(ctx, addr))
 	res, err = querier(ctx, path, req)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
 
 	res, err = querier(ctx, path, req)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
 
 	var account types.AccountI
 	err2 := legacyQuerierCdc.LegacyAmino.UnmarshalJSON(res, &account)
-	require.Nil(t, err2)
+	suite.Require().Nil(err2)
 }

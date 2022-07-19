@@ -1,18 +1,17 @@
-//go:build norace
-// +build norace
-
 package client_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,12 +33,30 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(2)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
+}
+
+func (s *IntegrationTestSuite) TestStatusCommand() {
+	val0 := s.network.Validators[0]
+	cmd := rpc.StatusCommand()
+
+	out, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cmd, []string{})
+	s.Require().NoError(err)
+
+	// Make sure the output has the validator moniker.
+	s.Require().Contains(out.String(), fmt.Sprintf("\"moniker\":\"%s\"", val0.Moniker))
+}
+
+func (s *IntegrationTestSuite) TestCLIQueryConn() {
+	testClient := testdata.NewQueryClient(s.network.Validators[0].ClientCtx)
+	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
+	s.Require().NoError(err)
+	s.Require().Equal("hello", res.Message)
 }
 
 func (s *IntegrationTestSuite) TestGRPCQuery() {

@@ -91,8 +91,7 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 		maccPerms, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	keeper := keeper.NewBaseKeeper(
-		appCodec, app.GetKey(types.StoreKey), authKeeper,
-		app.GetSubspace(types.ModuleName), blockedAddrs,
+		appCodec, app.GetKey(types.StoreKey), authKeeper, blockedAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	return authKeeper, keeper
@@ -102,8 +101,8 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	app := simapp.Setup(suite.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 
-	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	app.BankKeeper.SetParams(ctx, types.DefaultParams())
+	suite.Require().NoError(app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams()))
+	suite.Require().NoError(app.BankKeeper.SetParams(ctx, types.DefaultParams()))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
@@ -496,7 +495,7 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 	params := types.DefaultParams()
 	suite.Require().Equal(enabled, params.DefaultSendEnabled)
 
-	app.BankKeeper.SetParams(ctx, params)
+	suite.Require().NoError(app.BankKeeper.SetParams(ctx, params))
 
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
 	fooCoin := sdk.NewCoin("foocoin", sdk.OneInt())
@@ -512,7 +511,7 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 
 	// Set default send_enabled to !enabled, add a foodenom that overrides default as enabled
 	params.DefaultSendEnabled = !enabled
-	app.BankKeeper.SetParams(ctx, params)
+	suite.Require().NoError(app.BankKeeper.SetParams(ctx, params))
 	app.BankKeeper.SetSendEnabled(ctx, fooCoin.Denom, enabled)
 
 	// Expect our specific override to be enabled, others to be !enabled.
@@ -596,7 +595,7 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	app, ctx := suite.app, suite.ctx
 
-	app.BankKeeper.SetParams(ctx, types.DefaultParams())
+	suite.Require().NoError(app.BankKeeper.SetParams(ctx, types.DefaultParams()))
 
 	addr := sdk.AccAddress([]byte("addr1_______________"))
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
@@ -1055,7 +1054,7 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 	)
 
 	suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
-		suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil,
+		suite.app.AccountKeeper, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// set account with multiple permissions
@@ -1218,7 +1217,7 @@ func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
 
 	for _, test := range tests {
 		suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
-			suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil,
+			suite.app.AccountKeeper, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		).WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
 		for _, testCase := range test.testCases {
 			if testCase.expectPass {
@@ -1273,7 +1272,7 @@ func (suite *IntegrationTestSuite) TestIsSendEnabledDenom() {
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		bankKeeper.SetParams(ctx, params)
+		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 		for _, tc := range tests {
 			suite.T().Run(fmt.Sprintf("%s default %t", tc.denom, def), func(t *testing.T) {
 				actual := suite.app.BankKeeper.IsSendEnabledDenom(suite.ctx, tc.denom)
@@ -1378,7 +1377,7 @@ func (suite *IntegrationTestSuite) TestSetSendEnabled() {
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		bankKeeper.SetParams(ctx, params)
+		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 		for _, tc := range tests {
 			suite.T().Run(fmt.Sprintf("%s default %t", tc.name, def), func(t *testing.T) {
 				bankKeeper.SetSendEnabled(ctx, tc.denom, tc.value)
@@ -1448,7 +1447,7 @@ func (suite *IntegrationTestSuite) TestSetAllSendEnabled() {
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		bankKeeper.SetParams(ctx, params)
+		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 		for _, tc := range tests {
 			suite.T().Run(fmt.Sprintf("%s default %t", tc.name, def), func(t *testing.T) {
 				bankKeeper.SetAllSendEnabled(ctx, tc.sendEnableds)
@@ -1466,7 +1465,7 @@ func (suite *IntegrationTestSuite) TestDeleteSendEnabled() {
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		bankKeeper.SetParams(ctx, params)
+		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 		suite.T().Run(fmt.Sprintf("default %t", def), func(t *testing.T) {
 			denom := fmt.Sprintf("somerand%tcoin", !def)
 			bankKeeper.SetSendEnabled(ctx, denom, !def)
@@ -1500,7 +1499,7 @@ func (suite *IntegrationTestSuite) TestIterateSendEnabledEntries() {
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		bankKeeper.SetParams(ctx, params)
+		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 		var seen []string
 		suite.T().Run(fmt.Sprintf("all denoms have expected values default %t", def), func(t *testing.T) {
 			bankKeeper.IterateSendEnabledEntries(ctx, func(denom string, sendEnabled bool) (stop bool) {
@@ -1551,7 +1550,7 @@ func (suite *IntegrationTestSuite) TestGetAllSendEnabledEntries() {
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		bankKeeper.SetParams(ctx, params)
+		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 		var seen []string
 		suite.T().Run(fmt.Sprintf("all denoms have expected values default %t", def), func(t *testing.T) {
 			actual := bankKeeper.GetAllSendEnabledEntries(ctx)
@@ -1584,7 +1583,7 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		bankKeeper.SetParams(ctx, params)
+		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 		suite.T().Run(fmt.Sprintf("default %t does not change", def), func(t *testing.T) {
 			migrator := keeper.NewMigrator(bankKeeper.(keeper.BaseKeeper))
 			require.NoError(t, migrator.Migrate3to4(ctx))
@@ -1600,7 +1599,7 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 				{fmt.Sprintf("falsecoin%t", def), false},
 			},
 		}
-		bankKeeper.SetParams(ctx, params)
+		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 		suite.T().Run(fmt.Sprintf("default %t send enabled info moved to store", def), func(t *testing.T) {
 			migrator := keeper.NewMigrator(bankKeeper.(keeper.BaseKeeper))
 			require.NoError(t, migrator.Migrate3to4(ctx))
@@ -1621,7 +1620,7 @@ func (suite *IntegrationTestSuite) TestSetParams() {
 		{"paramscointrue", true},
 		{"paramscoinfalse", false},
 	}
-	bankKeeper.SetParams(ctx, params)
+	suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 
 	suite.Run("stored params are as expected", func() {
 		actual := bankKeeper.GetParams(ctx)

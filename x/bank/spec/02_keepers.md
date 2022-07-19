@@ -108,7 +108,7 @@ type SendKeeper interface {
     SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
     GetParams(ctx sdk.Context) types.Params
-    SetParams(ctx sdk.Context, params types.Params)
+    SetParams(ctx sdk.Context, params types.Params) error
 
     IsSendEnabledDenom(ctx sdk.Context, denom string) bool
     SetSendEnabled(ctx sdk.Context, denom string, value bool)

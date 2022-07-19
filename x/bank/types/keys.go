@@ -32,6 +32,9 @@ var (
 
 	// SendEnabledPrefix is the prefix for the SendDisabled flags for a Denom.
 	SendEnabledPrefix = []byte{0x04}
+
+	// ParamsKey is the prefix for x/bank parameters
+	ParamsKey = []byte{0x51}
 )
 
 const (

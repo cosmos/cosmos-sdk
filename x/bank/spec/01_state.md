@@ -4,11 +4,12 @@ order: 1
 
 # State
 
-The `x/bank` module keeps state of three primary objects:
+The `x/bank` module keeps state of the following primary objects:
 
 1. Account balances
 2. Denomination metadata
 3. The total supply of all balances
+4. Information on which denominations are allowed to be sent.
 
 In addition, the `x/bank` module keeps the following indexes to manage the
 aforementioned state:

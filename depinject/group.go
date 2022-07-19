@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 // ManyPerContainerType marks a type which automatically gets grouped together. For an ManyPerContainerType T,
@@ -36,6 +36,10 @@ type groupResolver struct {
 	resolved     bool
 	values       reflect.Value
 	graphNode    *graphviz.Node
+}
+
+func (g *groupResolver) getType() reflect.Type {
+	return g.sliceType
 }
 
 type sliceGroupResolver struct {

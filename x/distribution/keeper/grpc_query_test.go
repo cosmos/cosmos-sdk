@@ -9,12 +9,17 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -22,31 +27,45 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app         *simapp.SimApp
 	ctx         sdk.Context
 	queryClient types.QueryClient
 	addrs       []sdk.AccAddress
 	valAddrs    []sdk.ValAddress
+
+	interfaceRegistry codectypes.InterfaceRegistry
+	bankKeeper        bankkeeper.Keeper
+	distrKeeper       keeper.Keeper
+	stakingKeeper     *stakingkeeper.Keeper
+	msgServer         types.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
+	app, err := simtestutil.Setup(testutil.AppConfig,
+		&suite.interfaceRegistry,
+		&suite.bankKeeper,
+		&suite.distrKeeper,
+		&suite.stakingKeeper,
+	)
+	suite.NoError(err)
+
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, suite.interfaceRegistry)
+	types.RegisterQueryServer(queryHelper, suite.distrKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	suite.app = app
 	suite.ctx = ctx
 	suite.queryClient = queryClient
 
-	suite.addrs = simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
-	suite.valAddrs = simapp.ConvertAddrsToValAddrs(suite.addrs)
+	suite.addrs = simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
+	suite.valAddrs = simtestutil.ConvertAddrsToValAddrs(suite.addrs)
+
+	suite.NoError(suite.distrKeeper.SetParams(suite.ctx, types.DefaultParams()))
+	suite.msgServer = keeper.NewMsgServerImpl(suite.distrKeeper)
 }
 
 func (suite *KeeperTestSuite) TestGRPCParams() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+	ctx, queryClient := suite.ctx, suite.queryClient
 
 	var (
 		params    types.Params
@@ -77,7 +96,7 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 					WithdrawAddrEnabled: true,
 				}
 
-				app.DistrKeeper.SetParams(ctx, params)
+				suite.NoError(suite.distrKeeper.SetParams(ctx, params))
 				req = &types.QueryParamsRequest{}
 				expParams = params
 			},
@@ -103,7 +122,7 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCValidatorOutstandingRewards() {
-	app, ctx, queryClient, valAddrs := suite.app, suite.ctx, suite.queryClient, suite.valAddrs
+	ctx, queryClient, valAddrs := suite.ctx, suite.queryClient, suite.valAddrs
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5000)),
@@ -111,8 +130,8 @@ func (suite *KeeperTestSuite) TestGRPCValidatorOutstandingRewards() {
 	}
 
 	// set outstanding rewards
-	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddrs[0], types.ValidatorOutstandingRewards{Rewards: valCommission})
-	rewards := app.DistrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[0])
+	suite.distrKeeper.SetValidatorOutstandingRewards(ctx, valAddrs[0], types.ValidatorOutstandingRewards{Rewards: valCommission})
+	rewards := suite.distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[0])
 
 	var req *types.QueryValidatorOutstandingRewardsRequest
 
@@ -155,10 +174,10 @@ func (suite *KeeperTestSuite) TestGRPCValidatorOutstandingRewards() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCValidatorCommission() {
-	app, ctx, queryClient, valAddrs := suite.app, suite.ctx, suite.queryClient, suite.valAddrs
+	ctx, queryClient, valAddrs := suite.ctx, suite.queryClient, suite.valAddrs
 
 	commission := sdk.DecCoins{{Denom: "token1", Amount: sdk.NewDec(4)}, {Denom: "token2", Amount: sdk.NewDec(2)}}
-	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddrs[0], types.ValidatorAccumulatedCommission{Commission: commission})
+	suite.distrKeeper.SetValidatorAccumulatedCommission(ctx, valAddrs[0], types.ValidatorAccumulatedCommission{Commission: commission})
 
 	var req *types.QueryValidatorCommissionRequest
 
@@ -202,7 +221,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorCommission() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
-	app, ctx, queryClient, valAddrs := suite.app, suite.ctx, suite.queryClient, suite.valAddrs
+	ctx, queryClient, valAddrs := suite.ctx, suite.queryClient, suite.valAddrs
 
 	slashes := []types.ValidatorSlashEvent{
 		types.NewValidatorSlashEvent(3, sdk.NewDecWithPrec(5, 1)),
@@ -212,7 +231,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 	}
 
 	for i, slash := range slashes {
-		app.DistrKeeper.SetValidatorSlashEvent(ctx, valAddrs[0], uint64(i+2), 0, slash)
+		suite.distrKeeper.SetValidatorSlashEvent(ctx, valAddrs[0], uint64(i+2), 0, slash)
 	}
 
 	var (
@@ -340,24 +359,24 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
-	app, ctx, addrs, valAddrs := suite.app, suite.ctx, suite.addrs, suite.valAddrs
+	ctx, addrs, valAddrs := suite.ctx, suite.addrs, suite.valAddrs
 
-	tstaking := teststaking.NewHelper(suite.T(), ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.stakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 
-	staking.EndBlocker(ctx, app.StakingKeeper)
+	staking.EndBlocker(ctx, suite.stakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, suite.interfaceRegistry)
+	types.RegisterQueryServer(queryHelper, suite.distrKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
+	val := suite.stakingKeeper.Validator(ctx, valAddrs[0])
 
 	initial := int64(10)
 	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial)}}
-	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+	suite.distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// test command delegation rewards grpc
 	var (
@@ -554,9 +573,9 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCDelegatorWithdrawAddress() {
-	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
+	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
 
-	err := app.DistrKeeper.SetWithdrawAddr(ctx, addrs[0], addrs[1])
+	err := suite.distrKeeper.SetWithdrawAddr(ctx, addrs[0], addrs[1])
 	suite.Require().Nil(err)
 
 	var req *types.QueryDelegatorWithdrawAddressRequest
@@ -600,9 +619,9 @@ func (suite *KeeperTestSuite) TestGRPCDelegatorWithdrawAddress() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
-	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
+	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
 	// reset fee pool
-	app.DistrKeeper.SetFeePool(ctx, types.InitialFeePool())
+	suite.distrKeeper.SetFeePool(ctx, types.InitialFeePool())
 
 	var (
 		req     *types.QueryCommunityPoolRequest
@@ -626,9 +645,9 @@ func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
 			"valid request",
 			func() {
 				amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-				suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addrs[0], amount))
+				suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, addrs[0], amount))
 
-				err := app.DistrKeeper.FundCommunityPool(ctx, amount, addrs[0])
+				err := suite.distrKeeper.FundCommunityPool(ctx, amount, addrs[0])
 				suite.Require().Nil(err)
 				req = &types.QueryCommunityPoolRequest{}
 

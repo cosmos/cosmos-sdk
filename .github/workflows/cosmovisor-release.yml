@@ -4,9 +4,14 @@ on:
   push:
     tags:
       - "cosmovisor/v*.*.*"
+permissions:
+  contents: read
+
 jobs:
   goreleaser:
-    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # for goreleaser/goreleaser-action to create a GitHub release
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: actions/checkout@v3
         with:

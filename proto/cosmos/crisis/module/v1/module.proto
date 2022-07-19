@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package cosmos.crisis.module.v1;
+
+import "cosmos/app/v1alpha1/module.proto";
+
+// Module is the config object of the crisis module.
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "github.com/cosmos/cosmos-sdk/x/crisis"
+  };
+
+  string fee_collector_name = 1;
+}

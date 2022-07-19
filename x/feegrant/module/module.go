@@ -12,10 +12,10 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 
+	"cosmossdk.io/depinject"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -209,8 +209,8 @@ type feegrantInputs struct {
 
 	Key           *store.KVStoreKey
 	Cdc           codec.Codec
-	AccountKeeper feegrant.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	BankKeeper    feegrant.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
+	AccountKeeper feegrant.AccountKeeper
+	BankKeeper    feegrant.BankKeeper
 	Registry      cdctypes.InterfaceRegistry
 }
 
@@ -246,6 +246,6 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // WeightedOperations returns all the feegrant module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
+		am.registry, simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
 	)
 }

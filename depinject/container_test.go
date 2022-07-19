@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 
-	"github.com/cosmos/cosmos-sdk/depinject"
+	"cosmossdk.io/depinject"
 )
 
 type KVStoreKey struct {
@@ -633,46 +633,4 @@ func TestConditionalDebugging(t *testing.T) {
 	))
 	require.Empty(t, logs)
 	require.True(t, success)
-}
-
-type Duck interface {
-	quack()
-}
-
-type AlsoDuck interface {
-	quack()
-}
-
-type Mallard struct{}
-
-func (duck Mallard) quack() {}
-
-type KeyedOutput struct {
-	depinject.Out
-	Duck Duck `key:"foo"`
-}
-
-type KeyedInput struct {
-	depinject.In
-	AlsoDuck AlsoDuck `key:"foo"`
-}
-
-type Pond struct {
-	Duck AlsoDuck
-}
-
-func TestKeyedInputOutput(t *testing.T) {
-	var pond Pond
-
-	require.NoError(t,
-		depinject.Inject(
-			depinject.Provide(
-				func() KeyedOutput { return KeyedOutput{Duck: Mallard{}} },
-				func(in KeyedInput) Pond {
-					require.NotNil(t, in.AlsoDuck)
-					return Pond{Duck: in.AlsoDuck}
-				}),
-			&pond))
-
-	require.NotNil(t, pond)
 }

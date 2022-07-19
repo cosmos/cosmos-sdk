@@ -133,8 +133,3 @@ func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(am.keeper, ctx, req)
 }
-
-// EndBlock does nothing
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}

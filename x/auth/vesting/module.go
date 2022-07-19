@@ -111,14 +111,6 @@ func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMess
 	return []abci.ValidatorUpdate{}
 }
 
-// BeginBlock performs a no-op.
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
-// EndBlock performs a no-op.
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
 // ExportGenesis is always empty, as InitGenesis does nothing either.
 func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	return am.DefaultGenesis(cdc)

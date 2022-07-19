@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* (upgrade) [#12603](https://github.com/cosmos/cosmos-sdk/pull/12603) feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces
+
+### Features
+
 ## [v0.46.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0-rc3) - 2022-07-18
 
 ### Features

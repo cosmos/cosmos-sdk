@@ -9,6 +9,7 @@ import (
 	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
@@ -42,18 +43,33 @@ type Store struct {
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load, or if called with a positive version on an empty tree.
-func LoadStore(db dbm.DB, id types.CommitID, lazyLoading bool, cacheSize int) (types.CommitKVStore, error) {
-	return LoadStoreWithInitialVersion(db, id, lazyLoading, 0, cacheSize)
+func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, lazyLoading bool, cacheSize int) (types.CommitKVStore, error) {
+	return LoadStoreWithInitialVersion(db, logger, key, id, lazyLoading, 0, cacheSize)
 }
 
 // LoadStoreWithInitialVersion returns an IAVL Store as a CommitKVStore setting its initialVersion
 // to the one given. Internally, it will load the store's version (id) from the
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
-func LoadStoreWithInitialVersion(db dbm.DB, id types.CommitID, lazyLoading bool, initialVersion uint64, cacheSize int) (types.CommitKVStore, error) {
+func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, lazyLoading bool, initialVersion uint64, cacheSize int) (types.CommitKVStore, error) {
 	tree, err := iavl.NewMutableTreeWithOpts(db, cacheSize, &iavl.Options{InitialVersion: initialVersion})
 	if err != nil {
 		return nil, err
+	}
+
+	isUpgradeable, err := tree.IsUpgradeable()
+	if err != nil {
+		return nil, err
+	}
+
+	if isUpgradeable && logger != nil {
+		logger.Info(
+			"Upgrading IAVL storage for faster queries + execution on live state. This may take a while",
+			"store_key", key.String(),
+			"version", initialVersion,
+			"commit", fmt.Sprintf("%X", id),
+			"is_lazy", lazyLoading,
+		)
 	}
 
 	if lazyLoading {
@@ -64,6 +80,10 @@ func LoadStoreWithInitialVersion(db dbm.DB, id types.CommitID, lazyLoading bool,
 
 	if err != nil {
 		return nil, err
+	}
+
+	if logger != nil {
+		logger.Debug("Finished loading IAVL tree")
 	}
 
 	return &Store{

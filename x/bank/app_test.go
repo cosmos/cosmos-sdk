@@ -46,28 +46,24 @@ var (
 	sendMsg1 = types.NewMsgSend(addr1, addr2, coins)
 
 	multiSendMsg1 = &types.MsgMultiSend{
-		Inputs:  []types.Input{types.NewInput(addr1, coins)},
+		Input:   types.NewInput(addr1, coins),
 		Outputs: []types.Output{types.NewOutput(addr2, coins)},
 	}
 	multiSendMsg2 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr1, coins)},
+		Input: types.NewInput(addr1, coins),
 		Outputs: []types.Output{
 			types.NewOutput(addr2, halfCoins),
 			types.NewOutput(addr3, halfCoins),
 		},
 	}
 	multiSendMsg4 = &types.MsgMultiSend{
-		Inputs: []types.Input{
-			types.NewInput(addr2, coins),
-		},
+		Input: types.NewInput(addr2, coins),
 		Outputs: []types.Output{
 			types.NewOutput(addr1, coins),
 		},
 	}
 	multiSendMsg5 = &types.MsgMultiSend{
-		Inputs: []types.Input{
-			types.NewInput(addr1, coins),
-		},
+		Input: types.NewInput(addr1, coins),
 		Outputs: []types.Output{
 			types.NewOutput(moduleAccAddr, coins),
 		},

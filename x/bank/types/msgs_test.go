@@ -70,7 +70,7 @@ func TestMsgMultiSendRoute(t *testing.T) {
 	addr2 := sdk.AccAddress([]byte("output"))
 	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
 	msg := MsgMultiSend{
-		Inputs:  []Input{NewInput(addr1, coins)},
+		Input:   NewInput(addr1, coins),
 		Outputs: []Output{NewOutput(addr2, coins)},
 	}
 
@@ -164,16 +164,17 @@ func TestOutputValidation(t *testing.T) {
 func TestMsgMultiSendValidation(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("_______alice________"))
 	addr2 := sdk.AccAddress([]byte("________bob_________"))
+	addr3 := sdk.AccAddress([]byte("_______addr3________"))
 	atom123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	atom124 := sdk.NewCoins(sdk.NewInt64Coin("atom", 124))
-	eth123 := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	atom123eth123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 123))
+	atom246 := sdk.NewCoins(sdk.NewInt64Coin("atom", 246))
 
 	input1 := NewInput(addr1, atom123)
-	input2 := NewInput(addr1, eth123)
+	input2 := NewInput(addr1, atom246)
 	output1 := NewOutput(addr2, atom123)
 	output2 := NewOutput(addr2, atom124)
-	outputMulti := NewOutput(addr2, atom123eth123)
+	output3 := NewOutput(addr2, atom123)
+	output4 := NewOutput(addr3, atom123)
 
 	var emptyAddr sdk.AccAddress
 
@@ -182,13 +183,13 @@ func TestMsgMultiSendValidation(t *testing.T) {
 		tx        MsgMultiSend
 		expErrMsg string
 	}{
-		{false, MsgMultiSend{}, "no inputs to send transaction"},                           // no input or output
-		{false, MsgMultiSend{Inputs: []Input{input1}}, "no outputs to send transaction"},   // just input
-		{false, MsgMultiSend{Outputs: []Output{output1}}, "no inputs to send transaction"}, // just output
+		{false, MsgMultiSend{}, "invalid input address"},                           // no input or output
+		{false, MsgMultiSend{Input: input1}, "no outputs to send transaction"},     // just input
+		{false, MsgMultiSend{Outputs: []Output{output1}}, "invalid input address"}, // just output
 		{
 			false,
 			MsgMultiSend{
-				Inputs:  []Input{NewInput(emptyAddr, atom123)}, // invalid input
+				Input:   NewInput(emptyAddr, atom123), // invalid input
 				Outputs: []Output{output1},
 			},
 			"invalid input address",
@@ -196,7 +197,7 @@ func TestMsgMultiSendValidation(t *testing.T) {
 		{
 			false,
 			MsgMultiSend{
-				Inputs:  []Input{input1},
+				Input:   input1,
 				Outputs: []Output{{emptyAddr.String(), atom123}}, // invalid output
 			},
 			"invalid output address",
@@ -204,7 +205,7 @@ func TestMsgMultiSendValidation(t *testing.T) {
 		{
 			false,
 			MsgMultiSend{
-				Inputs:  []Input{input1},
+				Input:   input1,
 				Outputs: []Output{output2}, // amounts don't match
 			},
 			"sum inputs != sum outputs",
@@ -212,23 +213,23 @@ func TestMsgMultiSendValidation(t *testing.T) {
 		{
 			true,
 			MsgMultiSend{
-				Inputs:  []Input{input1},
+				Input:   input1,
 				Outputs: []Output{output1},
 			},
 			"",
 		},
 		{
-			false,
+			true,
 			MsgMultiSend{
-				Inputs:  []Input{input1, input2},
-				Outputs: []Output{outputMulti},
+				Input:   input2,
+				Outputs: []Output{output3, output4},
 			},
-			"multiple senders not allowed",
+			"",
 		},
 		{
 			true,
 			MsgMultiSend{
-				Inputs:  []Input{NewInput(addr2, atom123.MulInt(sdk.NewInt(2)))},
+				Input:   NewInput(addr2, atom123.MulInt(sdk.NewInt(2))),
 				Outputs: []Output{output1, output1},
 			},
 			"",
@@ -252,29 +253,22 @@ func TestMsgMultiSendGetSignBytes(t *testing.T) {
 	addr2 := sdk.AccAddress([]byte("output"))
 	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
 	msg := MsgMultiSend{
-		Inputs:  []Input{NewInput(addr1, coins)},
+		Input:   NewInput(addr1, coins),
 		Outputs: []Output{NewOutput(addr2, coins)},
 	}
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"cosmos-sdk/MsgMultiSend","value":{"inputs":[{"address":"cosmos1d9h8qat57ljhcm","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmos1da6hgur4wsmpnjyg","coins":[{"amount":"10","denom":"atom"}]}]}}`
+	expected := `{"type":"cosmos-sdk/MsgMultiSend","value":{"input":{"address":"cosmos1d9h8qat57ljhcm","coins":[{"amount":"10","denom":"atom"}]},"outputs":[{"address":"cosmos1da6hgur4wsmpnjyg","coins":[{"amount":"10","denom":"atom"}]}]}}`
 	require.Equal(t, expected, string(res))
 }
 
 func TestMsgMultiSendGetSigners(t *testing.T) {
-	addrs := make([]string, 3)
-	inputs := make([]Input, 3)
-	for i, v := range []string{"input111111111111111", "input222222222222222", "input333333333333333"} {
-		addr := sdk.AccAddress([]byte(v))
-		inputs[i] = NewInput(addr, nil)
-		addrs[i] = addr.String()
-	}
-	msg := NewMsgMultiSend(inputs, nil)
-
+	addr := sdk.AccAddress([]byte("input111111111111111"))
+	input := NewInput(addr, nil)
+	msg := NewMsgMultiSend(input, nil)
 	res := msg.GetSigners()
-	for i, signer := range res {
-		require.Equal(t, signer.String(), addrs[i])
-	}
+	require.Equal(t, 1, len(res))
+	require.True(t, addr.Equals(res[0]))
 }
 
 func TestMsgSendGetSigners(t *testing.T) {

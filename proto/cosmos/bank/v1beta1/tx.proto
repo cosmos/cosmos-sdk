@@ -40,10 +40,9 @@ message MsgMultiSend {
 
   option (gogoproto.equal) = false;
 
-  Input  input  = 1 [(gogoproto.nullable) = false];
+  Input           input   = 1 [(gogoproto.nullable) = false];
   repeated Output outputs = 2 [(gogoproto.nullable) = false];
 }
 
 // MsgMultiSendResponse defines the Msg/MultiSend response type.
 message MsgMultiSendResponse {}
-

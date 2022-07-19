@@ -16,6 +16,40 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
+type mockSubspace struct {
+	dp v1.DepositParams
+	vp v1.VotingParams
+	tp v1.TallyParams
+}
+
+func newMockSubspace(p v1.Params) mockSubspace {
+	return mockSubspace{
+		dp: v1.DepositParams{
+			MinDeposit:       p.MinDeposit,
+			MaxDepositPeriod: p.MaxDepositPeriod,
+		},
+		vp: v1.VotingParams{
+			VotingPeriod: p.VotingPeriod,
+		},
+		tp: v1.TallyParams{
+			Quorum:        p.Quorum,
+			Threshold:     p.Threshold,
+			VetoThreshold: p.VetoThreshold,
+		},
+	}
+}
+
+func (ms mockSubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
+	switch string(key) {
+	case string(v1.ParamStoreKeyDepositParams):
+		*ptr.(*v1.DepositParams) = ms.dp
+	case string(v1.ParamStoreKeyVotingParams):
+		*ptr.(*v1.VotingParams) = ms.vp
+	case string(v1.ParamStoreKeyTallyParams):
+		*ptr.(*v1.TallyParams) = ms.tp
+	}
+}
+
 func TestMigrateStore(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig().Codec
 	govKey := sdk.NewKVStoreKey("gov")
@@ -39,8 +73,9 @@ func TestMigrateStore(t *testing.T) {
 	store.Set(v042gov.ProposalKey(prop1.ProposalId), prop1Bz)
 	store.Set(v042gov.ProposalKey(prop2.ProposalId), prop2Bz)
 
+	legacySubspace := newMockSubspace(v1.DefaultParams())
 	// Run migrations.
-	err = v046gov.MigrateStore(ctx, govKey, cdc)
+	err = v046gov.MigrateStore(ctx, govKey, legacySubspace, cdc)
 	require.NoError(t, err)
 
 	var newProp1 v1.Proposal
@@ -52,6 +87,17 @@ func TestMigrateStore(t *testing.T) {
 	err = cdc.Unmarshal(store.Get(v042gov.ProposalKey(prop2.ProposalId)), &newProp2)
 	require.NoError(t, err)
 	compareProps(t, prop2, newProp2)
+
+	var params v1.Params
+	bz := store.Get(v046gov.ParamsKey)
+	require.NoError(t, cdc.Unmarshal(bz, &params))
+	require.NotNil(t, params)
+	require.Equal(t, legacySubspace.dp.MinDeposit, params.MinDeposit)
+	require.Equal(t, legacySubspace.dp.MaxDepositPeriod, params.MaxDepositPeriod)
+	require.Equal(t, legacySubspace.vp.VotingPeriod, params.VotingPeriod)
+	require.Equal(t, legacySubspace.tp.Quorum, params.Quorum)
+	require.Equal(t, legacySubspace.tp.Threshold, params.Threshold)
+	require.Equal(t, legacySubspace.tp.VetoThreshold, params.VetoThreshold)
 }
 
 func compareProps(t *testing.T, oldProp v1beta1.Proposal, newProp v1.Proposal) {

@@ -35,3 +35,36 @@ const (
 func (ip IntProto) String() string {
 	return ip.Int.String()
 }
+
+var _ CustomProtobufType = (*Dec)(nil)
+
+type (
+	Dec = sdkmath.Dec
+)
+
+const (
+	Precision            = sdkmath.Precision
+	DecimalPrecisionBits = sdkmath.DecimalPrecisionBits
+)
+
+var (
+	ZeroDec                  = sdkmath.ZeroDec
+	OneDec                   = sdkmath.OneDec
+	SmallestDec              = sdkmath.SmallestDec
+	NewDec                   = sdkmath.NewDec
+	NewDecWithPrec           = sdkmath.NewDecWithPrec
+	NewDecFromBigInt         = sdkmath.NewDecFromBigInt
+	NewDecFromBigIntWithPrec = sdkmath.NewDecFromBigIntWithPrec
+	NewDecFromInt            = sdkmath.NewDecFromInt
+	NewDecFromIntWithPrec    = sdkmath.NewDecFromIntWithPrec
+	NewDecFromStr            = sdkmath.NewDecFromStr
+	MustNewDecFromStr        = sdkmath.MustNewDecFromStr
+	MaxSortableDec           = sdkmath.MaxSortableDec
+	ValidSortableDec         = sdkmath.ValidSortableDec
+	SortableDecBytes         = sdkmath.SortableDecBytes
+	DecsEqual                = sdkmath.DecsEqual
+	MinDec                   = sdkmath.MinDec
+	MaxDec                   = sdkmath.MaxDec
+	DecEq                    = sdkmath.DecEq
+	DecApproxEq              = sdkmath.DecApproxEq
+)

@@ -144,7 +144,7 @@ func (s *coinTestSuite) TestCoinsDenoms() {
 		expectedOutput := tc.coins.Denoms()
 		count := 0
 		if len(expectedOutput) == len(tc.testOutput) {
-			for k, _ := range tc.testOutput {
+			for k := range tc.testOutput {
 				if tc.testOutput[k] != expectedOutput[k] {
 					count += 1
 					break

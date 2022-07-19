@@ -129,6 +129,35 @@ func (s *coinTestSuite) TestCustomValidation() {
 	sdk.SetCoinDenomRegex(sdk.DefaultCoinDenomRegex)
 }
 
+func (s *coinTestSuite) TestCoinsDenoms() {
+
+	cases := []struct {
+		coins      sdk.Coins
+		testOutput []string
+		expectPass bool
+	}{
+		{sdk.NewCoins(sdk.Coin{"ATOM", sdk.NewInt(1)}, sdk.Coin{"JUNO", sdk.NewInt(1)}, sdk.Coin{"OSMO", sdk.NewInt(1)}, sdk.Coin{"RAT", sdk.NewInt(1)}), []string{"ATOM", "JUNO", "OSMO", "RAT"}, true},
+		{sdk.NewCoins(sdk.Coin{"ATOM", sdk.NewInt(1)}, sdk.Coin{"JUNO", sdk.NewInt(1)}), []string{"ATOM"}, false},
+	}
+
+	for i, tc := range cases {
+		expectedOutput := tc.coins.Denoms()
+		count := 0
+		if len(expectedOutput) == len(tc.testOutput) {
+			for k := range tc.testOutput {
+				if tc.testOutput[k] != expectedOutput[k] {
+					count += 1
+					break
+				}
+			}
+		} else {
+			count += 1
+		}
+		s.Require().Equal(count == 0, tc.expectPass, "unexpected result for coins.Denoms, tc #%d", i)
+	}
+
+}
+
 func (s *coinTestSuite) TestAddCoin() {
 	cases := []struct {
 		inputOne    sdk.Coin

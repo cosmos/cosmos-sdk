@@ -213,14 +213,23 @@ func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
 			return !hasGenesis
 		}
 
-		if _, hasABCIGenesis := module.(HasABCIGenesis); hasABCIGenesis {
-			return !hasABCIGenesis
-		}
+	// ConsensusVersion is a sequence number for state-breaking change of the
+	// module. It should be incremented on each consensus-breaking change
+	// introduced by the module. To avoid wrong/empty versions, the initial version
+	// should be set to 1.
+	ConsensusVersion() uint64
+}
 
-		_, hasGenesis := module.(HasGenesis)
-		return !hasGenesis
-	})
-	m.OrderExportGenesis = moduleNames
+// BeginBlockAppModule is an extension interface that contains information about the AppModule and BeginBlock.
+type BeginBlockAppModule interface {
+	AppModule
+	BeginBlock(sdk.Context, abci.RequestBeginBlock)
+}
+
+// EndBlockAppModule is an extension interface that contains information about the AppModule and EndBlock.
+type EndBlockAppModule interface {
+	AppModule
+	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
 // SetOrderPreBlockers sets the order of set pre-blocker calls
@@ -697,10 +706,9 @@ func (m *Manager) PreBlock(ctx sdk.Context) error {
 func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	for _, moduleName := range m.OrderBeginBlockers {
-		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if err := module.BeginBlock(ctx); err != nil {
-				return sdk.BeginBlock{}, err
-			}
+		module, ok := m.Modules[moduleName].(BeginBlockAppModule)
+		if ok {
+			module.BeginBlock(ctx, req)
 		}
 	}
 
@@ -721,22 +729,11 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
-		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
-			err := module.EndBlock(ctx)
-			if err != nil {
-				return sdk.EndBlock{}, err
-			}
-		} else if module, ok := m.Modules[moduleName].(HasABCIEndBlock); ok {
-			moduleValUpdates, err := module.EndBlock(ctx)
-			if err != nil {
-				return sdk.EndBlock{}, err
-			}
-			// use these validator updates if provided, the module manager assumes
-			// only one module will update the validator set
-			if len(moduleValUpdates) > 0 {
-				if len(validatorUpdates) > 0 {
-					return sdk.EndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
-				}
+		module, ok := m.Modules[moduleName].(EndBlockAppModule)
+		if !ok {
+			continue
+		}
+		moduleValUpdates := module.EndBlock(ctx, req)
 
 				validatorUpdates = append(validatorUpdates, moduleValUpdates...)
 			}

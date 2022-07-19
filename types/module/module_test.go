@@ -56,10 +56,8 @@ func TestAssertNoForgottenModules(t *testing.T) {
 		mm.SetOrderExportGenesis("module1")
 	})
 
-	require.Equal(t, []string{"module1", "module3"}, mm.OrderEndBlockers)
-	require.PanicsWithValue(t, "all modules must be defined when setting SetOrderEndBlockers, missing: [module1]", func() {
-		mm.SetOrderEndBlockers("module3")
-	})
+	// no-op
+	goam.RegisterInvariants(mockInvariantRegistry)
 }
 
 func TestManagerOrderSetters(t *testing.T) {

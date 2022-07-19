@@ -143,7 +143,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // PreBlock calls the upgrade module hooks
 //
-// CONTRACT: this is called *before* all other modules' BeginBlock functions
-func (am AppModule) PreBlock(ctx context.Context) error {
-	return am.keeper.PreBlocker(ctx)
+// CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions
+func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
+	BeginBlocker(am.keeper, ctx, req)
 }

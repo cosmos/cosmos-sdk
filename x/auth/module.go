@@ -170,18 +170,6 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
 	}
 
-	for _, validator := range validators {
-		if err := validator.ValidateTx(ctx, sdkTx); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// ConsensusVersion implements appmodule.HasConsensusVersion
-func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
-
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the auth module

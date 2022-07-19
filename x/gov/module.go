@@ -198,9 +198,11 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
-// EndBlock returns the end blocker for the gov module.
-func (am AppModule) EndBlock(ctx context.Context) error {
-	return am.keeper.EndBlocker(ctx)
+// EndBlock returns the end blocker for the gov module. It returns no validator
+// updates.
+func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	EndBlocker(ctx, am.keeper)
+	return []abci.ValidatorUpdate{}
 }
 
 // AppModuleSimulation functions

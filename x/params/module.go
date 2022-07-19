@@ -76,8 +76,5 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-// RegisterStoreDecoder doesn't register any type.
-func (AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {}
-
-// ConsensusVersion implements HasConsensusVersion
-func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }

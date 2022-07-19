@@ -54,15 +54,9 @@ func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMess
 	return []abci.ValidatorUpdate{}
 }
 
-// RegisterLegacyAminoCodec registers the module's types with the given codec.
-func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
-	types.RegisterLegacyAminoCodec(registrar)
-}
-
-// RegisterInterfaces registers the module's interfaces and implementations with
-// the given interface registry.
-func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
-	types.RegisterInterfaces(registrar)
+// ExportGenesis is always empty, as InitGenesis does nothing either.
+func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+	return am.DefaultGenesis(cdc)
 }
 
 // ConsensusVersion implements HasConsensusVersion.

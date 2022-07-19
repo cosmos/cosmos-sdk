@@ -79,11 +79,16 @@ var initGenesisOrder = []string{
 	"vesting",
 }
 
-type ModuleOption func(options map[string]*appv1alpha1.ModuleConfig)
+type appConfig struct {
+	moduleConfigs  map[string]*appv1alpha1.ModuleConfig
+	setInitGenesis bool
+}
+
+type ModuleOption func(config *appConfig)
 
 func BankModule() ModuleOption {
-	return func(options map[string]*appv1alpha1.ModuleConfig) {
-		options["bank"] = &appv1alpha1.ModuleConfig{
+	return func(config *appConfig) {
+		config.moduleConfigs["bank"] = &appv1alpha1.ModuleConfig{
 			Name:   "bank",
 			Config: appconfig.WrapAny(&bankmodulev1.Module{}),
 		}
@@ -91,8 +96,8 @@ func BankModule() ModuleOption {
 }
 
 func AuthModule() ModuleOption {
-	return func(options map[string]*appv1alpha1.ModuleConfig) {
-		options["auth"] = &appv1alpha1.ModuleConfig{
+	return func(config *appConfig) {
+		config.moduleConfigs["auth"] = &appv1alpha1.ModuleConfig{
 			Name: "auth",
 			Config: appconfig.WrapAny(&authmodulev1.Module{
 				Bech32Prefix: "cosmos",
@@ -109,8 +114,8 @@ func AuthModule() ModuleOption {
 }
 
 func ParamsModule() ModuleOption {
-	return func(options map[string]*appv1alpha1.ModuleConfig) {
-		options["params"] = &appv1alpha1.ModuleConfig{
+	return func(config *appConfig) {
+		config.moduleConfigs["params"] = &appv1alpha1.ModuleConfig{
 			Name:   "params",
 			Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
 		}
@@ -118,8 +123,8 @@ func ParamsModule() ModuleOption {
 }
 
 func TxModule() ModuleOption {
-	return func(options map[string]*appv1alpha1.ModuleConfig) {
-		options["tx"] = &appv1alpha1.ModuleConfig{
+	return func(config *appConfig) {
+		config.moduleConfigs["tx"] = &appv1alpha1.ModuleConfig{
 			Name:   "tx",
 			Config: appconfig.WrapAny(&txmodulev1.Module{}),
 		}
@@ -127,8 +132,8 @@ func TxModule() ModuleOption {
 }
 
 func StakingModule() ModuleOption {
-	return func(options map[string]*appv1alpha1.ModuleConfig) {
-		options["staking"] = &appv1alpha1.ModuleConfig{
+	return func(config *appConfig) {
+		config.moduleConfigs["staking"] = &appv1alpha1.ModuleConfig{
 			Name:   "staking",
 			Config: appconfig.WrapAny(&stakingmodulev1.Module{}),
 		}
@@ -136,8 +141,8 @@ func StakingModule() ModuleOption {
 }
 
 func GenutilModule() ModuleOption {
-	return func(options map[string]*appv1alpha1.ModuleConfig) {
-		options["genutil"] = &appv1alpha1.ModuleConfig{
+	return func(config *appConfig) {
+		config.moduleConfigs["genutil"] = &appv1alpha1.ModuleConfig{
 			Name:   "genutil",
 			Config: appconfig.WrapAny(&genutilmodulev1.Module{}),
 		}
@@ -145,8 +150,8 @@ func GenutilModule() ModuleOption {
 }
 
 func DistributionModule() ModuleOption {
-	return func(options map[string]*appv1alpha1.ModuleConfig) {
-		options["distribution"] = &appv1alpha1.ModuleConfig{
+	return func(config *appConfig) {
+		config.moduleConfigs["distribution"] = &appv1alpha1.ModuleConfig{
 			Name:   "distribution",
 			Config: appconfig.WrapAny(&distrmodulev1.Module{}),
 		}
@@ -154,8 +159,8 @@ func DistributionModule() ModuleOption {
 }
 
 func FeegrantModule() ModuleOption {
-	return func(options map[string]*appv1alpha1.ModuleConfig) {
-		options["feegrant"] = &appv1alpha1.ModuleConfig{
+	return func(config *appConfig) {
+		config.moduleConfigs["feegrant"] = &appv1alpha1.ModuleConfig{
 			Name:   "feegrant",
 			Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
 		}
@@ -163,18 +168,27 @@ func FeegrantModule() ModuleOption {
 }
 
 func VestingModule() ModuleOption {
-	return func(options map[string]*appv1alpha1.ModuleConfig) {
-		options["vesting"] = &appv1alpha1.ModuleConfig{
+	return func(config *appConfig) {
+		config.moduleConfigs["vesting"] = &appv1alpha1.ModuleConfig{
 			Name:   "vesting",
 			Config: appconfig.WrapAny(&vestingmodulev1.Module{}),
 		}
 	}
 }
 
+func OmitInitGenesis() ModuleOption {
+	return func(config *appConfig) {
+		config.setInitGenesis = false
+	}
+}
+
 func NewAppConfig(opts ...ModuleOption) depinject.Config {
-	options := make(map[string]*appv1alpha1.ModuleConfig)
+	cfg := &appConfig{
+		moduleConfigs:  make(map[string]*appv1alpha1.ModuleConfig),
+		setInitGenesis: true,
+	}
 	for _, opt := range opts {
-		opt(options)
+		opt(cfg)
 	}
 
 	beginBlockers := make([]string, 0)
@@ -183,41 +197,43 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 	overrides := make([]*runtimev1alpha1.StoreKeyConfig, 0)
 
 	for _, s := range beginBlockOrder {
-		if _, ok := options[s]; ok {
+		if _, ok := cfg.moduleConfigs[s]; ok {
 			beginBlockers = append(beginBlockers, s)
 		}
 	}
 
 	for _, s := range endBlockersOrder {
-		if _, ok := options[s]; ok {
+		if _, ok := cfg.moduleConfigs[s]; ok {
 			endBlockers = append(endBlockers, s)
 		}
 	}
 
 	for _, s := range initGenesisOrder {
-		if _, ok := options[s]; ok {
+		if _, ok := cfg.moduleConfigs[s]; ok {
 			initGenesis = append(initGenesis, s)
 		}
 	}
 
-	if _, ok := options["auth"]; ok {
+	if _, ok := cfg.moduleConfigs["auth"]; ok {
 		overrides = append(overrides, &runtimev1alpha1.StoreKeyConfig{ModuleName: "auth", KvStoreKey: "acc"})
 	}
 
-	modules := []*appv1alpha1.ModuleConfig{
-		{
-			Name: "runtime",
-			Config: appconfig.WrapAny(&runtimev1alpha1.Module{
-				AppName:           "TestApp",
-				BeginBlockers:     beginBlockers,
-				EndBlockers:       endBlockers,
-				InitGenesis:       initGenesis,
-				OverrideStoreKeys: overrides,
-			}),
-		},
+	runtimeConfig := &runtimev1alpha1.Module{
+		AppName:           "TestApp",
+		BeginBlockers:     beginBlockers,
+		EndBlockers:       endBlockers,
+		OverrideStoreKeys: overrides,
+	}
+	if cfg.setInitGenesis {
+		runtimeConfig.InitGenesis = initGenesis
 	}
 
-	for _, m := range options {
+	modules := []*appv1alpha1.ModuleConfig{{
+		Name:   "runtime",
+		Config: appconfig.WrapAny(runtimeConfig),
+	}}
+
+	for _, m := range cfg.moduleConfigs {
 		modules = append(modules, m)
 	}
 

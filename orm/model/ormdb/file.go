@@ -2,7 +2,6 @@ package ormdb
 
 import (
 	"bytes"
-	"context"
 	"encoding/binary"
 	"math"
 
@@ -20,12 +19,11 @@ import (
 )
 
 type fileDescriptorDBOptions struct {
-	Prefix         []byte
-	ID             uint32
-	TypeResolver   ormtable.TypeResolver
-	JSONValidator  func(proto.Message) error
-	GetBackend     func(context.Context) (ormtable.Backend, error)
-	GetReadBackend func(context.Context) (ormtable.ReadBackend, error)
+	Prefix          []byte
+	ID              uint32
+	TypeResolver    ormtable.TypeResolver
+	JSONValidator   func(proto.Message) error
+	BackendResolver ormtable.BackendResolver
 }
 
 type fileDescriptorDB struct {
@@ -63,12 +61,11 @@ func newFileDescriptorDB(fileDescriptor protoreflect.FileDescriptor, options fil
 		}
 
 		table, err := ormtable.Build(ormtable.Options{
-			Prefix:         prefix,
-			MessageType:    messageType,
-			TypeResolver:   resolver,
-			JSONValidator:  options.JSONValidator,
-			GetReadBackend: options.GetReadBackend,
-			GetBackend:     options.GetBackend,
+			Prefix:          prefix,
+			MessageType:     messageType,
+			TypeResolver:    resolver,
+			JSONValidator:   options.JSONValidator,
+			BackendResolver: options.BackendResolver,
 		})
 		if err != nil {
 			return nil, err

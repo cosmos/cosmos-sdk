@@ -12,7 +12,7 @@ A user can query and interact with the `distribution` module using the CLI.
 
 The `query` commands allow users to query `distribution` state.
 
-```
+```sh
 simd query distribution --help
 ```
 
@@ -20,19 +20,19 @@ simd query distribution --help
 
 The `commission` command allows users to query validator commission rewards by address.
 
-```
+```sh
 simd query distribution commission [address] [flags]
 ```
 
 Example:
 
-```
+```sh
 simd query distribution commission cosmosvaloper1..
 ```
 
 Example Output:
 
-```
+```yml
 commission:
 - amount: "1000000.000000000000000000"
   denom: stake
@@ -42,19 +42,19 @@ commission:
 
 The `community-pool` command allows users to query all coin balances within the community pool.
 
-```
+```sh
 simd query distribution community-pool [flags]
 ```
 
 Example:
 
-```
+```sh
 simd query distribution community-pool
 ```
 
 Example Output:
 
-```
+```yml
 pool:
 - amount: "1000000.000000000000000000"
   denom: stake
@@ -64,19 +64,19 @@ pool:
 
 The `params` command allows users to query the parameters of the `distribution` module.
 
-```
+```sh
 simd query distribution params [flags]
 ```
 
 Example:
 
-```
+```sh
 simd query distribution params
 ```
 
 Example Output:
 
-```
+```yml
 base_proposer_reward: "0.010000000000000000"
 bonus_proposer_reward: "0.040000000000000000"
 community_tax: "0.020000000000000000"
@@ -87,19 +87,19 @@ withdraw_addr_enabled: true
 
 The `rewards` command allows users to query delegator rewards. Users can optionally include the validator address to query rewards earned from a specific validator.
 
-```
+```sh
 simd query distribution rewards [delegator-addr] [validator-addr] [flags]
 ```
 
 Example:
 
-```
+```sh
 simd query distribution rewards cosmos1..
 ```
 
 Example Output:
 
-```
+```yml
 rewards:
 - reward:
   - amount: "1000000.000000000000000000"
@@ -114,19 +114,19 @@ total:
 
 The `slashes` command allows users to query all slashes for a given block range.
 
-```
+```sh
 simd query distribution slashes [validator] [start-height] [end-height] [flags]
 ```
 
 Example:
 
-```
+```sh
 simd query distribution slashes cosmosvaloper1.. 1 1000
 ```
 
 Example Output:
 
-```
+```yml
 pagination:
   next_key: null
   total: "0"
@@ -139,19 +139,19 @@ slashes:
 
 The `validator-outstanding-rewards` command allows users to query all outstanding (un-withdrawn) rewards for a validator and all their delegations.
 
-```
+```sh
 simd query distribution validator-outstanding-rewards [validator] [flags]
 ```
 
 Example:
 
-```
+```sh
 simd query distribution validator-outstanding-rewards cosmosvaloper1..
 ```
 
 Example Output:
 
-```
+```yml
 rewards:
 - amount: "1000000.000000000000000000"
   denom: stake
@@ -161,7 +161,7 @@ rewards:
 
 The `tx` commands allow users to interact with the `distribution` module.
 
-```
+```sh
 simd tx distribution --help
 ```
 
@@ -169,13 +169,13 @@ simd tx distribution --help
 
 The `fund-community-pool` command allows users to send funds to the community pool.
 
-```
+```sh
 simd tx distribution fund-community-pool [amount] [flags]
 ```
 
 Example:
 
-```
+```sh
 simd tx distribution fund-community-pool 100stake --from cosmos1..
 ```
 
@@ -183,13 +183,13 @@ simd tx distribution fund-community-pool 100stake --from cosmos1..
 
 The `set-withdraw-addr` command allows users to set the withdraw address for rewards associated with a delegator address.
 
-```
+```sh
 simd tx distribution set-withdraw-addr [withdraw-addr] [flags]
 ```
 
 Example:
 
-```
+```sh
 simd tx distribution set-withdraw-addr cosmos1.. --from cosmos1..
 ```
 
@@ -197,13 +197,13 @@ simd tx distribution set-withdraw-addr cosmos1.. --from cosmos1..
 
 The `withdraw-all-rewards` command allows users to withdraw all rewards for a delegator.
 
-```
+```sh
 simd tx distribution withdraw-all-rewards [flags]
 ```
 
 Example:
 
-```
+```sh
 simd tx distribution withdraw-all-rewards --from cosmos1..
 ```
 
@@ -212,13 +212,13 @@ simd tx distribution withdraw-all-rewards --from cosmos1..
 The `withdraw-rewards` command allows users to withdraw all rewards from a given delegation address,
 and optionally withdraw validator commission if the delegation address given is a validator operator and the user proves the `--commision` flag.
 
-```
+```sh
 simd tx distribution withdraw-rewards [validator-addr] [flags]
 ```
 
 Example:
 
-```
+```sh
 simd tx distribution withdraw-rewards cosmosvaloper1.. --from cosmos1.. --commision
 ```
 
@@ -232,7 +232,7 @@ The `Params` endpoint allows users to query parameters of the `distribution` mod
 
 Example:
 
-```
+```sh
 grpcurl -plaintext \
     localhost:9090 \
     cosmos.distribution.v1beta1.Query/Params
@@ -240,7 +240,7 @@ grpcurl -plaintext \
 
 Example Output:
 
-```
+```json
 {
   "params": {
     "communityTax": "20000000000000000",
@@ -257,7 +257,7 @@ The `ValidatorOutstandingRewards` endpoint allows users to query rewards of a va
 
 Example:
 
-```
+```sh
 grpcurl -plaintext \
     -d '{"validator_address":"cosmosvalop1.."}' \
     localhost:9090 \
@@ -266,7 +266,7 @@ grpcurl -plaintext \
 
 Example Output:
 
-```
+```json
 {
   "rewards": {
     "rewards": [
@@ -285,7 +285,7 @@ The `ValidatorCommission` endpoint allows users to query accumulated commission 
 
 Example:
 
-```
+```sh
 grpcurl -plaintext \
     -d '{"validator_address":"cosmosvalop1.."}' \
     localhost:9090 \
@@ -294,7 +294,7 @@ grpcurl -plaintext \
 
 Example Output:
 
-```
+```json
 {
   "commission": {
     "commission": [
@@ -313,7 +313,7 @@ The `ValidatorSlashes` endpoint allows users to query slash events of a validato
 
 Example:
 
-```
+```sh
 grpcurl -plaintext \
     -d '{"validator_address":"cosmosvalop1.."}' \
     localhost:9090 \
@@ -322,7 +322,7 @@ grpcurl -plaintext \
 
 Example Output:
 
-```
+```json
 {
   "slashes": [
     {
@@ -342,7 +342,7 @@ The `DelegationRewards` endpoint allows users to query the total rewards accrued
 
 Example:
 
-```
+```sh
 grpcurl -plaintext \
     -d '{"delegator_address":"cosmos1..","validator_address":"cosmosvalop1.."}' \
     localhost:9090 \
@@ -351,7 +351,7 @@ grpcurl -plaintext \
 
 Example Output:
 
-```
+```json
 {
   "rewards": [
     {
@@ -368,7 +368,7 @@ The `DelegationTotalRewards` endpoint allows users to query the total rewards ac
 
 Example:
 
-```
+```sh
 grpcurl -plaintext \
     -d '{"delegator_address":"cosmos1.."}' \
     localhost:9090 \
@@ -377,7 +377,7 @@ grpcurl -plaintext \
 
 Example Output:
 
-```
+```json
 {
   "rewards": [
     {
@@ -405,7 +405,7 @@ The `DelegatorValidators` endpoint allows users to query all validators for give
 
 Example:
 
-```
+```sh
 grpcurl -plaintext \
     -d '{"delegator_address":"cosmos1.."}' \
     localhost:9090 \
@@ -414,7 +414,7 @@ grpcurl -plaintext \
 
 Example Output:
 
-```
+```json
 {
   "validators": [
     "cosmosvaloper1.."
@@ -428,7 +428,7 @@ The `DelegatorWithdrawAddress` endpoint allows users to query the withdraw addre
 
 Example:
 
-```
+```sh
 grpcurl -plaintext \
     -d '{"delegator_address":"cosmos1.."}' \
     localhost:9090 \
@@ -437,7 +437,7 @@ grpcurl -plaintext \
 
 Example Output:
 
-```
+```json
 {
   "withdrawAddress": "cosmos1.."
 }
@@ -449,7 +449,7 @@ The `CommunityPool` endpoint allows users to query the community pool coins.
 
 Example:
 
-```
+```sh
 grpcurl -plaintext \
     localhost:9090 \
     cosmos.distribution.v1beta1.Query/CommunityPool
@@ -457,7 +457,7 @@ grpcurl -plaintext \
 
 Example Output:
 
-```
+```json
 {
   "pool": [
     {

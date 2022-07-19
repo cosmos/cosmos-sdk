@@ -10,11 +10,9 @@ const (
 	TypeMsgSend = "send"
 )
 
-var (
-	_ sdk.Msg = &MsgSend{}
-)
+var _ sdk.Msg = &MsgSend{}
 
-// GetSigners implements the Msg.ValidateBasic method.
+// ValidateBasic implements the Msg.ValidateBasic method.
 func (m MsgSend) ValidateBasic() error {
 	if err := ValidateClassID(m.ClassId); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidID, "Invalid class id (%s)", m.ClassId)

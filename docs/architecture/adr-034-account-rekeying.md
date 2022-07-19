@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 30-09-2020: Initial Draft
+* 30-09-2020: Initial Draft
 
 ## Status
 
@@ -73,4 +73,4 @@ Breaks the current assumed relationship between address and pubkeys as H(pubkey)
 
 ## References
 
-+ https://www.algorand.com/resources/blog/announcing-rekeying
+* https://www.algorand.com/resources/blog/announcing-rekeying

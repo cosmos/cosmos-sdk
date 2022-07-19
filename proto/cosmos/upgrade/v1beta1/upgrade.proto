@@ -43,7 +43,10 @@ message Plan {
 
 // SoftwareUpgradeProposal is a gov Content type for initiating a software
 // upgrade.
+// Deprecated: This legacy proposal is deprecated in favor of Msg-based gov
+// proposals, see MsgSoftwareUpgrade.
 message SoftwareUpgradeProposal {
+  option deprecated                   = true;
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
@@ -54,7 +57,10 @@ message SoftwareUpgradeProposal {
 
 // CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
 // upgrade.
+// Deprecated: This legacy proposal is deprecated in favor of Msg-based gov
+// proposals, see MsgCancelUpgrade.
 message CancelSoftwareUpgradeProposal {
+  option deprecated                   = true;
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 

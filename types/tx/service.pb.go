@@ -8,10 +8,9 @@ import (
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
-	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
-	golang_proto "github.com/golang/protobuf/proto"
+	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -23,7 +22,6 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
-var _ = golang_proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
@@ -109,9 +107,15 @@ func (BroadcastMode) EnumDescriptor() ([]byte, []int) {
 type GetTxsEventRequest struct {
 	// events is the list of transaction event type.
 	Events []string `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
-	// pagination defines an pagination for the request.
-	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines a pagination for the request.
+	// Deprecated post v0.46.x: use page and limit instead.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"` // Deprecated: Do not use.
 	OrderBy    OrderBy            `protobuf:"varint,3,opt,name=order_by,json=orderBy,proto3,enum=cosmos.tx.v1beta1.OrderBy" json:"order_by,omitempty"`
+	// page is the page number to query, starts at 1. If not provided, will default to first page.
+	Page uint64 `protobuf:"varint,4,opt,name=page,proto3" json:"page,omitempty"`
+	// limit is the total number of results to be returned in the result page.
+	// If left empty it will default to a value to be set by each app.
+	Limit uint64 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
 }
 
 func (m *GetTxsEventRequest) Reset()         { *m = GetTxsEventRequest{} }
@@ -154,6 +158,7 @@ func (m *GetTxsEventRequest) GetEvents() []string {
 	return nil
 }
 
+// Deprecated: Do not use.
 func (m *GetTxsEventRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
@@ -168,6 +173,20 @@ func (m *GetTxsEventRequest) GetOrderBy() OrderBy {
 	return OrderBy_ORDER_BY_UNSPECIFIED
 }
 
+func (m *GetTxsEventRequest) GetPage() uint64 {
+	if m != nil {
+		return m.Page
+	}
+	return 0
+}
+
+func (m *GetTxsEventRequest) GetLimit() uint64 {
+	if m != nil {
+		return m.Limit
+	}
+	return 0
+}
+
 // GetTxsEventResponse is the response type for the Service.TxsByEvents
 // RPC method.
 type GetTxsEventResponse struct {
@@ -175,8 +194,11 @@ type GetTxsEventResponse struct {
 	Txs []*Tx `protobuf:"bytes,1,rep,name=txs,proto3" json:"txs,omitempty"`
 	// tx_responses is the list of queried TxResponses.
 	TxResponses []*types.TxResponse `protobuf:"bytes,2,rep,name=tx_responses,json=txResponses,proto3" json:"tx_responses,omitempty"`
-	// pagination defines an pagination for the response.
-	Pagination *query.PageResponse `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines a pagination for the response.
+	// Deprecated post v0.46.x: use total instead.
+	Pagination *query.PageResponse `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"` // Deprecated: Do not use.
+	// total is total number of results available
+	Total uint64 `protobuf:"varint,4,opt,name=total,proto3" json:"total,omitempty"`
 }
 
 func (m *GetTxsEventResponse) Reset()         { *m = GetTxsEventResponse{} }
@@ -226,11 +248,19 @@ func (m *GetTxsEventResponse) GetTxResponses() []*types.TxResponse {
 	return nil
 }
 
+// Deprecated: Do not use.
 func (m *GetTxsEventResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
+}
+
+func (m *GetTxsEventResponse) GetTotal() uint64 {
+	if m != nil {
+		return m.Total
+	}
+	return 0
 }
 
 // BroadcastTxRequest is the request type for the Service.BroadcastTxRequest
@@ -553,88 +583,219 @@ func (m *GetTxResponse) GetTxResponse() *types.TxResponse {
 	return nil
 }
 
+// GetBlockWithTxsRequest is the request type for the Service.GetBlockWithTxs
+// RPC method.
+//
+// Since: cosmos-sdk 0.45.2
+type GetBlockWithTxsRequest struct {
+	// height is the height of the block to query.
+	Height int64 `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
+	// pagination defines a pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *GetBlockWithTxsRequest) Reset()         { *m = GetBlockWithTxsRequest{} }
+func (m *GetBlockWithTxsRequest) String() string { return proto.CompactTextString(m) }
+func (*GetBlockWithTxsRequest) ProtoMessage()    {}
+func (*GetBlockWithTxsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{8}
+}
+func (m *GetBlockWithTxsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetBlockWithTxsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetBlockWithTxsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetBlockWithTxsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetBlockWithTxsRequest.Merge(m, src)
+}
+func (m *GetBlockWithTxsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetBlockWithTxsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetBlockWithTxsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetBlockWithTxsRequest proto.InternalMessageInfo
+
+func (m *GetBlockWithTxsRequest) GetHeight() int64 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
+}
+
+func (m *GetBlockWithTxsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// GetBlockWithTxsResponse is the response type for the Service.GetBlockWithTxs method.
+//
+// Since: cosmos-sdk 0.45.2
+type GetBlockWithTxsResponse struct {
+	// txs are the transactions in the block.
+	Txs     []*Tx           `protobuf:"bytes,1,rep,name=txs,proto3" json:"txs,omitempty"`
+	BlockId *types1.BlockID `protobuf:"bytes,2,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
+	Block   *types1.Block   `protobuf:"bytes,3,opt,name=block,proto3" json:"block,omitempty"`
+	// pagination defines a pagination for the response.
+	Pagination *query.PageResponse `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *GetBlockWithTxsResponse) Reset()         { *m = GetBlockWithTxsResponse{} }
+func (m *GetBlockWithTxsResponse) String() string { return proto.CompactTextString(m) }
+func (*GetBlockWithTxsResponse) ProtoMessage()    {}
+func (*GetBlockWithTxsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{9}
+}
+func (m *GetBlockWithTxsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetBlockWithTxsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetBlockWithTxsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetBlockWithTxsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetBlockWithTxsResponse.Merge(m, src)
+}
+func (m *GetBlockWithTxsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetBlockWithTxsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetBlockWithTxsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetBlockWithTxsResponse proto.InternalMessageInfo
+
+func (m *GetBlockWithTxsResponse) GetTxs() []*Tx {
+	if m != nil {
+		return m.Txs
+	}
+	return nil
+}
+
+func (m *GetBlockWithTxsResponse) GetBlockId() *types1.BlockID {
+	if m != nil {
+		return m.BlockId
+	}
+	return nil
+}
+
+func (m *GetBlockWithTxsResponse) GetBlock() *types1.Block {
+	if m != nil {
+		return m.Block
+	}
+	return nil
+}
+
+func (m *GetBlockWithTxsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterEnum("cosmos.tx.v1beta1.OrderBy", OrderBy_name, OrderBy_value)
-	golang_proto.RegisterEnum("cosmos.tx.v1beta1.OrderBy", OrderBy_name, OrderBy_value)
 	proto.RegisterEnum("cosmos.tx.v1beta1.BroadcastMode", BroadcastMode_name, BroadcastMode_value)
-	golang_proto.RegisterEnum("cosmos.tx.v1beta1.BroadcastMode", BroadcastMode_name, BroadcastMode_value)
 	proto.RegisterType((*GetTxsEventRequest)(nil), "cosmos.tx.v1beta1.GetTxsEventRequest")
-	golang_proto.RegisterType((*GetTxsEventRequest)(nil), "cosmos.tx.v1beta1.GetTxsEventRequest")
 	proto.RegisterType((*GetTxsEventResponse)(nil), "cosmos.tx.v1beta1.GetTxsEventResponse")
-	golang_proto.RegisterType((*GetTxsEventResponse)(nil), "cosmos.tx.v1beta1.GetTxsEventResponse")
 	proto.RegisterType((*BroadcastTxRequest)(nil), "cosmos.tx.v1beta1.BroadcastTxRequest")
-	golang_proto.RegisterType((*BroadcastTxRequest)(nil), "cosmos.tx.v1beta1.BroadcastTxRequest")
 	proto.RegisterType((*BroadcastTxResponse)(nil), "cosmos.tx.v1beta1.BroadcastTxResponse")
-	golang_proto.RegisterType((*BroadcastTxResponse)(nil), "cosmos.tx.v1beta1.BroadcastTxResponse")
 	proto.RegisterType((*SimulateRequest)(nil), "cosmos.tx.v1beta1.SimulateRequest")
-	golang_proto.RegisterType((*SimulateRequest)(nil), "cosmos.tx.v1beta1.SimulateRequest")
 	proto.RegisterType((*SimulateResponse)(nil), "cosmos.tx.v1beta1.SimulateResponse")
-	golang_proto.RegisterType((*SimulateResponse)(nil), "cosmos.tx.v1beta1.SimulateResponse")
 	proto.RegisterType((*GetTxRequest)(nil), "cosmos.tx.v1beta1.GetTxRequest")
-	golang_proto.RegisterType((*GetTxRequest)(nil), "cosmos.tx.v1beta1.GetTxRequest")
 	proto.RegisterType((*GetTxResponse)(nil), "cosmos.tx.v1beta1.GetTxResponse")
-	golang_proto.RegisterType((*GetTxResponse)(nil), "cosmos.tx.v1beta1.GetTxResponse")
+	proto.RegisterType((*GetBlockWithTxsRequest)(nil), "cosmos.tx.v1beta1.GetBlockWithTxsRequest")
+	proto.RegisterType((*GetBlockWithTxsResponse)(nil), "cosmos.tx.v1beta1.GetBlockWithTxsResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/tx/v1beta1/service.proto", fileDescriptor_e0b00a618705eca7) }
-func init() {
-	golang_proto.RegisterFile("cosmos/tx/v1beta1/service.proto", fileDescriptor_e0b00a618705eca7)
-}
 
 var fileDescriptor_e0b00a618705eca7 = []byte{
-	// 831 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0x41, 0x8f, 0xdb, 0x44,
-	0x14, 0x5e, 0x3b, 0x65, 0x93, 0xbe, 0x64, 0x4b, 0x3a, 0xbb, 0x14, 0x93, 0x82, 0x37, 0x75, 0xc9,
-	0x36, 0x44, 0xc2, 0x56, 0x03, 0x48, 0x08, 0x71, 0x89, 0x93, 0x74, 0x59, 0x41, 0x9b, 0x6a, 0xb2,
-	0x08, 0x15, 0x21, 0x45, 0x4e, 0x32, 0xf5, 0x5a, 0x6c, 0x3c, 0x59, 0xcf, 0x64, 0xe5, 0xa8, 0xad,
-	0x90, 0x38, 0x72, 0x42, 0xe2, 0x67, 0xf0, 0x27, 0x38, 0x72, 0x5c, 0x89, 0x0b, 0x47, 0xb4, 0xe1,
-	0x47, 0x70, 0x44, 0x1e, 0x4f, 0x12, 0x27, 0xeb, 0x74, 0x11, 0xa7, 0xbc, 0xc9, 0x7c, 0xef, 0x7b,
-	0xdf, 0xfb, 0xe6, 0xcd, 0x18, 0xf6, 0x07, 0x94, 0x8d, 0x28, 0xb3, 0x78, 0x68, 0x9d, 0x3f, 0xec,
-	0x13, 0xee, 0x3c, 0xb4, 0x18, 0x09, 0xce, 0xbd, 0x01, 0x31, 0xc7, 0x01, 0xe5, 0x14, 0xdd, 0x8e,
-	0x01, 0x26, 0x0f, 0x4d, 0x09, 0x28, 0xbd, 0xeb, 0x52, 0xea, 0x9e, 0x12, 0xcb, 0x19, 0x7b, 0x96,
-	0xe3, 0xfb, 0x94, 0x3b, 0xdc, 0xa3, 0x3e, 0x8b, 0x13, 0x4a, 0xf7, 0x25, 0x63, 0xdf, 0x61, 0xc4,
-	0x72, 0xfa, 0x03, 0x6f, 0x41, 0x1c, 0x2d, 0x24, 0xa8, 0x74, 0xb5, 0x2c, 0x0f, 0xe5, 0xde, 0x9e,
-	0x4b, 0x5d, 0x2a, 0x42, 0x2b, 0x8a, 0xe4, 0xbf, 0xb5, 0x24, 0xed, 0xd9, 0x84, 0x04, 0xd3, 0x45,
-	0xe6, 0xd8, 0x71, 0x3d, 0x5f, 0x68, 0x88, 0xb1, 0xc6, 0xaf, 0x0a, 0xa0, 0x43, 0xc2, 0x8f, 0x43,
-	0xd6, 0x3e, 0x27, 0x3e, 0xc7, 0xe4, 0x6c, 0x42, 0x18, 0x47, 0x77, 0x60, 0x9b, 0x44, 0x6b, 0xa6,
-	0x29, 0xe5, 0x4c, 0xf5, 0x26, 0x96, 0x2b, 0xf4, 0x08, 0x60, 0x49, 0xa1, 0xa9, 0x65, 0xa5, 0x9a,
-	0xaf, 0x1f, 0x98, 0xb2, 0xef, 0xa8, 0x9e, 0x29, 0xea, 0xcd, 0xfb, 0x37, 0x9f, 0x3a, 0x2e, 0x91,
-	0x9c, 0x38, 0x91, 0x89, 0x3e, 0x81, 0x1c, 0x0d, 0x86, 0x24, 0xe8, 0xf5, 0xa7, 0x5a, 0xa6, 0xac,
-	0x54, 0x6f, 0xd5, 0x4b, 0xe6, 0x15, 0xf7, 0xcc, 0x4e, 0x04, 0xb1, 0xa7, 0x38, 0x4b, 0xe3, 0xc0,
-	0xb8, 0x50, 0x60, 0x77, 0x45, 0x2d, 0x1b, 0x53, 0x9f, 0x11, 0xf4, 0x00, 0x32, 0x3c, 0x8c, 0xb5,
-	0xe6, 0xeb, 0x6f, 0xa5, 0x30, 0x1d, 0x87, 0x38, 0x42, 0xa0, 0x43, 0x28, 0xf0, 0xb0, 0x17, 0xc8,
-	0x3c, 0xa6, 0xa9, 0x22, 0xe3, 0xfd, 0x95, 0x0e, 0x84, 0xf7, 0x89, 0x44, 0x09, 0xc6, 0x79, 0xbe,
-	0x88, 0x23, 0xa2, 0xa4, 0x11, 0x19, 0x61, 0xc4, 0x83, 0x6b, 0x8d, 0x90, 0x4c, 0x89, 0x54, 0x83,
-	0x00, 0xb2, 0x03, 0xea, 0x0c, 0x07, 0x0e, 0xe3, 0x51, 0xb1, 0xd8, 0xff, 0x77, 0x20, 0xc7, 0xc3,
-	0x5e, 0x7f, 0xca, 0x49, 0xd4, 0x95, 0x52, 0x2d, 0xe0, 0x2c, 0x0f, 0xed, 0x68, 0x89, 0x3e, 0x86,
-	0x1b, 0x23, 0x3a, 0x24, 0xc2, 0xfc, 0x5b, 0xf5, 0x72, 0x4a, 0xb3, 0x0b, 0xbe, 0xc7, 0x74, 0x48,
-	0xb0, 0x40, 0x1b, 0xdf, 0xc1, 0xee, 0x4a, 0x19, 0x69, 0x5c, 0x1b, 0xf2, 0x09, 0x3f, 0x44, 0xa9,
-	0xff, 0x6a, 0x07, 0x2c, 0xed, 0x30, 0xbe, 0x81, 0x37, 0xbb, 0xde, 0x68, 0x72, 0xea, 0xf0, 0xf9,
-	0x69, 0xa3, 0x0f, 0x40, 0xe5, 0xa1, 0x24, 0x4c, 0x3f, 0x11, 0x5b, 0xd5, 0x14, 0xac, 0xf2, 0x70,
-	0xa5, 0x59, 0x75, 0xa5, 0x59, 0xe3, 0x27, 0x05, 0x8a, 0x4b, 0x66, 0x29, 0xfa, 0x73, 0xc8, 0xb9,
-	0x0e, 0xeb, 0x79, 0xfe, 0x73, 0x2a, 0x0b, 0xdc, 0xdb, 0xac, 0xf8, 0xd0, 0x61, 0x47, 0xfe, 0x73,
-	0x8a, 0xb3, 0x6e, 0x1c, 0xa0, 0x4f, 0x61, 0x3b, 0x20, 0x6c, 0x72, 0xca, 0xe5, 0xf8, 0x96, 0x37,
-	0xe7, 0x62, 0x81, 0xc3, 0x12, 0x6f, 0x18, 0x50, 0x10, 0xc3, 0x37, 0x6f, 0x11, 0xc1, 0x8d, 0x13,
-	0x87, 0x9d, 0x08, 0x0d, 0x37, 0xb1, 0x88, 0x8d, 0x57, 0xb0, 0x23, 0x31, 0x52, 0x6c, 0xe5, 0x5a,
-	0x1f, 0x84, 0x07, 0x6b, 0x07, 0xa1, 0xfe, 0xbf, 0x83, 0xa8, 0x7d, 0x01, 0x59, 0x79, 0x69, 0x90,
-	0x06, 0x7b, 0x1d, 0xdc, 0x6a, 0xe3, 0x9e, 0xfd, 0xac, 0xf7, 0xf5, 0x93, 0xee, 0xd3, 0x76, 0xf3,
-	0xe8, 0xd1, 0x51, 0xbb, 0x55, 0xdc, 0x42, 0x45, 0x28, 0x2c, 0x76, 0x1a, 0xdd, 0x66, 0x51, 0x41,
-	0xb7, 0x61, 0x67, 0xf1, 0x4f, 0xab, 0xdd, 0x6d, 0x16, 0xd5, 0xda, 0x4b, 0xd8, 0x59, 0x99, 0x23,
-	0xa4, 0x43, 0xc9, 0xc6, 0x9d, 0x46, 0xab, 0xd9, 0xe8, 0x1e, 0xf7, 0x1e, 0x77, 0x5a, 0xed, 0x35,
-	0x56, 0x0d, 0xf6, 0xd6, 0xf6, 0xed, 0xaf, 0x3a, 0xcd, 0x2f, 0x8b, 0x0a, 0x7a, 0x1b, 0x76, 0xd7,
-	0x76, 0xba, 0xcf, 0x9e, 0x34, 0x8b, 0x6a, 0x4a, 0x4a, 0x43, 0xec, 0x64, 0xea, 0xff, 0x64, 0x20,
-	0xdb, 0x8d, 0x1f, 0x57, 0xf4, 0x02, 0x72, 0xf3, 0x11, 0x40, 0x46, 0x8a, 0x83, 0x6b, 0x93, 0x57,
-	0xba, 0xff, 0x5a, 0x8c, 0x9c, 0xd8, 0x83, 0x1f, 0xff, 0xf8, 0xfb, 0x17, 0xb5, 0x6c, 0xdc, 0xb5,
-	0x52, 0x5e, 0x75, 0x09, 0xfe, 0x4c, 0xa9, 0xa1, 0x33, 0x78, 0x43, 0x9c, 0x27, 0xda, 0x4f, 0x61,
-	0x4d, 0x4e, 0x43, 0xa9, 0xbc, 0x19, 0x20, 0x6b, 0x56, 0x44, 0xcd, 0x7d, 0xf4, 0x9e, 0x95, 0xf6,
-	0xa4, 0x33, 0xeb, 0x45, 0x34, 0x41, 0xaf, 0xd0, 0x0f, 0x90, 0x4f, 0x5c, 0x55, 0x54, 0x79, 0xdd,
-	0x0d, 0x5f, 0x96, 0x3f, 0xb8, 0x0e, 0x26, 0x45, 0xdc, 0x13, 0x22, 0xee, 0x1a, 0x77, 0xd2, 0x45,
-	0x44, 0x3d, 0xbf, 0x84, 0x7c, 0xe2, 0x91, 0x4d, 0x15, 0x70, 0xf5, 0x93, 0x91, 0x2a, 0x20, 0xe5,
-	0xad, 0x36, 0x74, 0x21, 0x40, 0x43, 0x1b, 0x04, 0xd8, 0xcd, 0xdf, 0x2f, 0x75, 0xe5, 0xe2, 0x52,
-	0x57, 0xfe, 0xba, 0xd4, 0x95, 0x9f, 0x67, 0xfa, 0xd6, 0x6f, 0x33, 0x5d, 0xb9, 0x98, 0xe9, 0x5b,
-	0x7f, 0xce, 0xf4, 0xad, 0x6f, 0x2b, 0xae, 0xc7, 0x4f, 0x26, 0x7d, 0x73, 0x40, 0x47, 0xf3, 0xfc,
-	0xf8, 0xe7, 0x43, 0x36, 0xfc, 0xde, 0xe2, 0xd3, 0x31, 0x89, 0x08, 0xfb, 0xdb, 0xe2, 0xeb, 0xf6,
-	0xd1, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xe4, 0x86, 0xcd, 0x5c, 0xb4, 0x07, 0x00, 0x00,
+	// 1008 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0xcf, 0x6f, 0x1a, 0xc7,
+	0x17, 0xf7, 0x2e, 0x60, 0xc8, 0xc3, 0x4e, 0xc8, 0xd8, 0x5f, 0x7b, 0x43, 0xf2, 0xc5, 0x64, 0x53,
+	0x6c, 0x82, 0xe4, 0x5d, 0x85, 0xa6, 0x52, 0x55, 0x55, 0xaa, 0xcc, 0x8f, 0x50, 0x9a, 0x26, 0x44,
+	0x8b, 0xab, 0x28, 0x55, 0x25, 0xb4, 0xc0, 0x04, 0x56, 0x81, 0x1d, 0xcc, 0x0c, 0xd6, 0x22, 0xc7,
+	0xaa, 0xd4, 0x63, 0x4f, 0x55, 0x7b, 0xe8, 0xbf, 0xd4, 0x63, 0xa4, 0x5e, 0xda, 0x5b, 0x65, 0xf7,
+	0xd4, 0x53, 0xff, 0x84, 0x6a, 0x67, 0x07, 0x58, 0x60, 0x89, 0x93, 0x5c, 0xec, 0x19, 0xe6, 0xf3,
+	0xde, 0xfb, 0xbc, 0xcf, 0x9b, 0xf7, 0x66, 0x61, 0xaf, 0x45, 0x68, 0x9f, 0x50, 0x9d, 0x39, 0xfa,
+	0xe9, 0x83, 0x26, 0x66, 0xe6, 0x03, 0x9d, 0xe2, 0xe1, 0xa9, 0xd5, 0xc2, 0xda, 0x60, 0x48, 0x18,
+	0x41, 0x37, 0x3d, 0x80, 0xc6, 0x1c, 0x4d, 0x00, 0x92, 0x77, 0x3a, 0x84, 0x74, 0x7a, 0x58, 0x37,
+	0x07, 0x96, 0x6e, 0xda, 0x36, 0x61, 0x26, 0xb3, 0x88, 0x4d, 0x3d, 0x83, 0xe4, 0x3d, 0xe1, 0xb1,
+	0x69, 0x52, 0xac, 0x9b, 0xcd, 0x96, 0x35, 0x75, 0xec, 0x6e, 0x04, 0x28, 0xb9, 0x1c, 0x96, 0x39,
+	0xe2, 0x2c, 0xe7, 0x77, 0x70, 0x32, 0xc2, 0xc3, 0xf1, 0x14, 0x33, 0x30, 0x3b, 0x96, 0xcd, 0xa3,
+	0x09, 0xec, 0x1d, 0x86, 0xed, 0x36, 0x1e, 0xf6, 0x2d, 0x9b, 0xe9, 0x6c, 0x3c, 0xc0, 0x54, 0x6f,
+	0xf6, 0x48, 0xeb, 0xd5, 0xca, 0x53, 0xfe, 0xd7, 0x3b, 0x55, 0xff, 0x94, 0x00, 0x55, 0x30, 0x3b,
+	0x76, 0x68, 0xf9, 0x14, 0xdb, 0xcc, 0xc0, 0x27, 0x23, 0x4c, 0x19, 0xda, 0x81, 0x75, 0xec, 0xee,
+	0xa9, 0x22, 0xa5, 0x43, 0xd9, 0x6b, 0x86, 0xd8, 0xa1, 0xaf, 0x00, 0x66, 0xe1, 0x15, 0x39, 0x2d,
+	0x65, 0xe3, 0xf9, 0x7d, 0x4d, 0xa8, 0xe3, 0x72, 0xd5, 0x38, 0xd7, 0x89, 0x4a, 0xda, 0x33, 0xb3,
+	0x83, 0x85, 0xcf, 0x82, 0xac, 0x48, 0x86, 0xcf, 0x1a, 0x7d, 0x02, 0x31, 0x32, 0x6c, 0xe3, 0x61,
+	0xa3, 0x39, 0x56, 0x42, 0x69, 0x29, 0x7b, 0x3d, 0x9f, 0xd4, 0x96, 0x74, 0xd6, 0x6a, 0x2e, 0xa4,
+	0x30, 0x36, 0xa2, 0xc4, 0x5b, 0x20, 0x04, 0xe1, 0x81, 0xd9, 0xc1, 0x4a, 0x38, 0x2d, 0x65, 0xc3,
+	0x06, 0x5f, 0xa3, 0x6d, 0x88, 0xf4, 0xac, 0xbe, 0xc5, 0x94, 0x08, 0xff, 0xd1, 0xdb, 0xa8, 0xff,
+	0x48, 0xb0, 0x35, 0x97, 0x1b, 0x1d, 0x10, 0x9b, 0x62, 0x74, 0x00, 0x21, 0xe6, 0x78, 0x99, 0xc5,
+	0xf3, 0xff, 0x0b, 0x88, 0x79, 0xec, 0x18, 0x2e, 0x02, 0x55, 0x60, 0x83, 0x39, 0x8d, 0xa1, 0xb0,
+	0xa3, 0x8a, 0xcc, 0x2d, 0x3e, 0x9a, 0xcb, 0x97, 0xd7, 0xd3, 0x67, 0x28, 0xc0, 0x46, 0x9c, 0x4d,
+	0xd7, 0x14, 0x3d, 0x9e, 0x93, 0x2d, 0xc4, 0x65, 0x3b, 0xb8, 0x52, 0x36, 0xcf, 0x7a, 0x49, 0xb7,
+	0x6d, 0x88, 0x30, 0xc2, 0xcc, 0x9e, 0x50, 0xc0, 0xdb, 0xa8, 0x18, 0x50, 0x61, 0x48, 0xcc, 0x76,
+	0xcb, 0xa4, 0xcc, 0xa5, 0xe1, 0xd5, 0xf1, 0x16, 0xc4, 0x98, 0xd3, 0x68, 0x8e, 0x19, 0x76, 0xf3,
+	0x95, 0xb2, 0x1b, 0x46, 0x94, 0x39, 0x05, 0x77, 0x8b, 0x1e, 0x42, 0xb8, 0x4f, 0xda, 0x98, 0x17,
+	0xf1, 0x7a, 0x3e, 0x1d, 0x20, 0xc3, 0xd4, 0xdf, 0x13, 0xd2, 0xc6, 0x06, 0x47, 0xab, 0xdf, 0xc1,
+	0xd6, 0x5c, 0x18, 0x21, 0x69, 0x19, 0xe2, 0x3e, 0xa5, 0x78, 0xa8, 0x77, 0x15, 0x0a, 0x66, 0x42,
+	0xa9, 0xcf, 0xe1, 0x46, 0xdd, 0xea, 0x8f, 0x7a, 0x26, 0x9b, 0xdc, 0x1a, 0x74, 0x1f, 0x64, 0xe6,
+	0x08, 0x87, 0xc1, 0xb5, 0xe2, 0x02, 0xc9, 0xcc, 0x99, 0x4b, 0x56, 0x9e, 0x4b, 0x56, 0xfd, 0x51,
+	0x82, 0xc4, 0xcc, 0xb3, 0x20, 0xfd, 0x39, 0xc4, 0x3a, 0x26, 0x6d, 0x58, 0xf6, 0x4b, 0x22, 0x02,
+	0xdc, 0x5d, 0xcd, 0xb8, 0x62, 0xd2, 0xaa, 0xfd, 0x92, 0x18, 0xd1, 0x8e, 0xb7, 0x40, 0x9f, 0xc2,
+	0xfa, 0x10, 0xd3, 0x51, 0x8f, 0x89, 0x36, 0x48, 0xaf, 0xb6, 0x35, 0x38, 0xce, 0x10, 0x78, 0x55,
+	0x85, 0x0d, 0x7e, 0x2d, 0x27, 0x29, 0x22, 0x08, 0x77, 0x4d, 0xda, 0xe5, 0x1c, 0xae, 0x19, 0x7c,
+	0xad, 0x9e, 0xc3, 0xa6, 0xc0, 0x08, 0xb2, 0x99, 0x2b, 0x75, 0xe0, 0x1a, 0x2c, 0x14, 0x42, 0xfe,
+	0xc0, 0x42, 0x38, 0xb0, 0x53, 0xc1, 0xac, 0xe0, 0x8e, 0x91, 0xe7, 0x16, 0xeb, 0x1e, 0x3b, 0xd4,
+	0x37, 0x19, 0xba, 0xd8, 0xea, 0x74, 0x19, 0xe7, 0x12, 0x32, 0xc4, 0x0e, 0x3d, 0xfa, 0xf0, 0xc9,
+	0xe0, 0xbf, 0xdd, 0xea, 0xbf, 0x12, 0xec, 0x2e, 0x85, 0x7e, 0xdf, 0xc6, 0x7d, 0x08, 0x31, 0x3e,
+	0x02, 0x1b, 0x56, 0x5b, 0x50, 0xb9, 0xa5, 0xcd, 0xc6, 0xa0, 0xe6, 0x0d, 0x40, 0x1e, 0xa2, 0x5a,
+	0x32, 0xa2, 0x1c, 0x5a, 0x6d, 0xa3, 0x43, 0x88, 0xf0, 0xa5, 0x68, 0xd0, 0xdd, 0x15, 0x26, 0x86,
+	0x87, 0x42, 0x95, 0xb9, 0x8c, 0xc3, 0xef, 0xd5, 0xd4, 0xfe, 0x94, 0x73, 0x5f, 0x42, 0x54, 0x4c,
+	0x39, 0xa4, 0xc0, 0x76, 0xcd, 0x28, 0x95, 0x8d, 0x46, 0xe1, 0x45, 0xe3, 0x9b, 0xa7, 0xf5, 0x67,
+	0xe5, 0x62, 0xf5, 0x51, 0xb5, 0x5c, 0x4a, 0xac, 0xa1, 0x04, 0x6c, 0x4c, 0x4f, 0x8e, 0xea, 0xc5,
+	0x84, 0x84, 0x6e, 0xc2, 0xe6, 0xf4, 0x97, 0x52, 0xb9, 0x5e, 0x4c, 0xc8, 0xb9, 0xd7, 0xb0, 0x39,
+	0xd7, 0xb4, 0x28, 0x05, 0xc9, 0x82, 0x51, 0x3b, 0x2a, 0x15, 0x8f, 0xea, 0xc7, 0x8d, 0x27, 0xb5,
+	0x52, 0x79, 0xc1, 0xab, 0x02, 0xdb, 0x0b, 0xe7, 0x85, 0xaf, 0x6b, 0xc5, 0xc7, 0x09, 0x09, 0xed,
+	0xc2, 0xd6, 0xc2, 0x49, 0xfd, 0xc5, 0xd3, 0x62, 0x42, 0x0e, 0x30, 0x39, 0xe2, 0x27, 0xa1, 0xfc,
+	0xcf, 0x11, 0x88, 0xd6, 0xbd, 0x77, 0x13, 0x9d, 0x41, 0x6c, 0xd2, 0x6f, 0x48, 0x0d, 0xa8, 0xd4,
+	0x42, 0x9b, 0x27, 0xef, 0xbd, 0x15, 0x23, 0x6e, 0xe5, 0xfe, 0x0f, 0xbf, 0xff, 0xfd, 0x8b, 0x9c,
+	0x56, 0x6f, 0xeb, 0x01, 0x0f, 0xb6, 0x00, 0x7f, 0x26, 0xe5, 0xd0, 0x09, 0x44, 0x78, 0xf3, 0xa0,
+	0xbd, 0x00, 0xaf, 0xfe, 0xd6, 0x4b, 0xa6, 0x57, 0x03, 0x44, 0xcc, 0x0c, 0x8f, 0xb9, 0x87, 0xfe,
+	0xaf, 0x07, 0xbd, 0xd6, 0x54, 0x3f, 0x73, 0xdb, 0xf5, 0x1c, 0x7d, 0x0f, 0x71, 0xdf, 0x5c, 0x44,
+	0x99, 0xb7, 0x8d, 0xd3, 0x59, 0xf8, 0xfd, 0xab, 0x60, 0x82, 0xc4, 0x5d, 0x4e, 0xe2, 0xb6, 0xba,
+	0x13, 0x4c, 0xc2, 0xcd, 0xf9, 0x35, 0xc4, 0x7d, 0x6f, 0x5d, 0x20, 0x81, 0xe5, 0x77, 0x3e, 0x90,
+	0x40, 0xc0, 0x93, 0xa9, 0xa6, 0x38, 0x01, 0x05, 0xad, 0x20, 0x80, 0x7e, 0x95, 0xe0, 0xc6, 0x42,
+	0xd7, 0xa2, 0xfb, 0xc1, 0xbe, 0x03, 0x86, 0x4a, 0x32, 0xf7, 0x2e, 0x50, 0x41, 0xe5, 0x90, 0x53,
+	0x39, 0x40, 0x99, 0x15, 0x05, 0xe1, 0xcd, 0xa9, 0x9f, 0x79, 0x63, 0xe9, 0xbc, 0xf0, 0xc5, 0x6f,
+	0x17, 0x29, 0xe9, 0xcd, 0x45, 0x4a, 0xfa, 0xeb, 0x22, 0x25, 0xfd, 0x74, 0x99, 0x5a, 0x7b, 0x73,
+	0x99, 0x5a, 0xfb, 0xe3, 0x32, 0xb5, 0xf6, 0x6d, 0xa6, 0x63, 0xb1, 0xee, 0xa8, 0xa9, 0xb5, 0x48,
+	0x7f, 0xe2, 0xca, 0xfb, 0x77, 0x48, 0xdb, 0xaf, 0x26, 0x9f, 0x4a, 0x4e, 0x73, 0x9d, 0x7f, 0x28,
+	0x7d, 0xfc, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd1, 0x12, 0x2b, 0xbc, 0x25, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -657,6 +818,10 @@ type ServiceClient interface {
 	BroadcastTx(ctx context.Context, in *BroadcastTxRequest, opts ...grpc.CallOption) (*BroadcastTxResponse, error)
 	// GetTxsEvent fetches txs by event.
 	GetTxsEvent(ctx context.Context, in *GetTxsEventRequest, opts ...grpc.CallOption) (*GetTxsEventResponse, error)
+	// GetBlockWithTxs fetches a block with decoded txs.
+	//
+	// Since: cosmos-sdk 0.45.2
+	GetBlockWithTxs(ctx context.Context, in *GetBlockWithTxsRequest, opts ...grpc.CallOption) (*GetBlockWithTxsResponse, error)
 }
 
 type serviceClient struct {
@@ -703,6 +868,15 @@ func (c *serviceClient) GetTxsEvent(ctx context.Context, in *GetTxsEventRequest,
 	return out, nil
 }
 
+func (c *serviceClient) GetBlockWithTxs(ctx context.Context, in *GetBlockWithTxsRequest, opts ...grpc.CallOption) (*GetBlockWithTxsResponse, error) {
+	out := new(GetBlockWithTxsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/GetBlockWithTxs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceServer is the server API for Service service.
 type ServiceServer interface {
 	// Simulate simulates executing a transaction for estimating gas usage.
@@ -713,6 +887,10 @@ type ServiceServer interface {
 	BroadcastTx(context.Context, *BroadcastTxRequest) (*BroadcastTxResponse, error)
 	// GetTxsEvent fetches txs by event.
 	GetTxsEvent(context.Context, *GetTxsEventRequest) (*GetTxsEventResponse, error)
+	// GetBlockWithTxs fetches a block with decoded txs.
+	//
+	// Since: cosmos-sdk 0.45.2
+	GetBlockWithTxs(context.Context, *GetBlockWithTxsRequest) (*GetBlockWithTxsResponse, error)
 }
 
 // UnimplementedServiceServer can be embedded to have forward compatible implementations.
@@ -730,6 +908,9 @@ func (*UnimplementedServiceServer) BroadcastTx(ctx context.Context, req *Broadca
 }
 func (*UnimplementedServiceServer) GetTxsEvent(ctx context.Context, req *GetTxsEventRequest) (*GetTxsEventResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTxsEvent not implemented")
+}
+func (*UnimplementedServiceServer) GetBlockWithTxs(ctx context.Context, req *GetBlockWithTxsRequest) (*GetBlockWithTxsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBlockWithTxs not implemented")
 }
 
 func RegisterServiceServer(s grpc1.Server, srv ServiceServer) {
@@ -808,6 +989,24 @@ func _Service_GetTxsEvent_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Service_GetBlockWithTxs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBlockWithTxsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).GetBlockWithTxs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.tx.v1beta1.Service/GetBlockWithTxs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).GetBlockWithTxs(ctx, req.(*GetBlockWithTxsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Service_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.tx.v1beta1.Service",
 	HandlerType: (*ServiceServer)(nil),
@@ -827,6 +1026,10 @@ var _Service_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTxsEvent",
 			Handler:    _Service_GetTxsEvent_Handler,
+		},
+		{
+			MethodName: "GetBlockWithTxs",
+			Handler:    _Service_GetBlockWithTxs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -853,6 +1056,16 @@ func (m *GetTxsEventRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Limit != 0 {
+		i = encodeVarintService(dAtA, i, uint64(m.Limit))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.Page != 0 {
+		i = encodeVarintService(dAtA, i, uint64(m.Page))
+		i--
+		dAtA[i] = 0x20
+	}
 	if m.OrderBy != 0 {
 		i = encodeVarintService(dAtA, i, uint64(m.OrderBy))
 		i--
@@ -902,6 +1115,11 @@ func (m *GetTxsEventResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Total != 0 {
+		i = encodeVarintService(dAtA, i, uint64(m.Total))
+		i--
+		dAtA[i] = 0x20
+	}
 	if m.Pagination != nil {
 		{
 			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
@@ -1181,6 +1399,119 @@ func (m *GetTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *GetBlockWithTxsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetBlockWithTxsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetBlockWithTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintService(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Height != 0 {
+		i = encodeVarintService(dAtA, i, uint64(m.Height))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetBlockWithTxsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetBlockWithTxsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetBlockWithTxsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintService(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.Block != nil {
+		{
+			size, err := m.Block.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintService(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.BlockId != nil {
+		{
+			size, err := m.BlockId.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintService(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Txs) > 0 {
+		for iNdEx := len(m.Txs) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Txs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintService(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintService(dAtA []byte, offset int, v uint64) int {
 	offset -= sovService(v)
 	base := offset
@@ -1211,6 +1542,12 @@ func (m *GetTxsEventRequest) Size() (n int) {
 	if m.OrderBy != 0 {
 		n += 1 + sovService(uint64(m.OrderBy))
 	}
+	if m.Page != 0 {
+		n += 1 + sovService(uint64(m.Page))
+	}
+	if m.Limit != 0 {
+		n += 1 + sovService(uint64(m.Limit))
+	}
 	return n
 }
 
@@ -1235,6 +1572,9 @@ func (m *GetTxsEventResponse) Size() (n int) {
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
 		n += 1 + l + sovService(uint64(l))
+	}
+	if m.Total != 0 {
+		n += 1 + sovService(uint64(m.Total))
 	}
 	return n
 }
@@ -1327,6 +1667,49 @@ func (m *GetTxResponse) Size() (n int) {
 	}
 	if m.TxResponse != nil {
 		l = m.TxResponse.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *GetBlockWithTxsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Height != 0 {
+		n += 1 + sovService(uint64(m.Height))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *GetBlockWithTxsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Txs) > 0 {
+		for _, e := range m.Txs {
+			l = e.Size()
+			n += 1 + l + sovService(uint64(l))
+		}
+	}
+	if m.BlockId != nil {
+		l = m.BlockId.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	if m.Block != nil {
+		l = m.Block.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
 		n += 1 + l + sovService(uint64(l))
 	}
 	return n
@@ -1450,6 +1833,44 @@ func (m *GetTxsEventRequest) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.OrderBy |= OrderBy(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Page", wireType)
+			}
+			m.Page = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Page |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Limit", wireType)
+			}
+			m.Limit = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Limit |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1608,6 +2029,25 @@ func (m *GetTxsEventResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Total", wireType)
+			}
+			m.Total = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Total |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipService(dAtA[iNdEx:])
@@ -2240,6 +2680,303 @@ func (m *GetTxResponse) Unmarshal(dAtA []byte) error {
 				m.TxResponse = &types.TxResponse{}
 			}
 			if err := m.TxResponse.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetBlockWithTxsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetBlockWithTxsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetBlockWithTxsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			m.Height = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Height |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetBlockWithTxsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetBlockWithTxsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetBlockWithTxsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Txs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Txs = append(m.Txs, &Tx{})
+			if err := m.Txs[len(m.Txs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BlockId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.BlockId == nil {
+				m.BlockId = &types1.BlockID{}
+			}
+			if err := m.BlockId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Block", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Block == nil {
+				m.Block = &types1.Block{}
+			}
+			if err := m.Block.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

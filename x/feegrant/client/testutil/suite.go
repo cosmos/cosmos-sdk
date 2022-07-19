@@ -21,8 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	govv1beta2 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
 )
 
 const (
@@ -316,7 +316,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 	alreadyExistedGrantee := s.addedGrantee
 	clientCtx := val.ClientCtx
 
-	fromAddr, fromName, _, err := client.GetFromFields(clientCtx.Keyring, granter.String(), clientCtx.GenerateOnly)
+	fromAddr, fromName, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, granter.String())
 	s.Require().Equal(fromAddr, granter)
 	s.Require().NoError(err)
 
@@ -663,7 +663,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				},
 				commonFlags...,
 			),
-			false, 4, &sdk.TxResponse{},
+			false, 38, &sdk.TxResponse{},
 		},
 		{
 			"Valid revoke",
@@ -713,6 +713,8 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 }
 
 func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
+	s.T().Skip() // TODO to re-enable in #12274
+
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	granter := val.Address
@@ -750,20 +752,60 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	// granted fee allowance for an account which is not in state and creating
-	// any tx with it by using --fee-account shouldn't fail
-	out, err := govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
-		"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
-	)
+	testcases := []struct {
+		name       string
+		from       string
+		flags      []string
+		expErrCode uint32
+	}{
+		{
+			name:  "granted fee allowance for an account which is not in state and creating any tx with it by using --fee-granter shouldn't fail",
+			from:  grantee.String(),
+			flags: []string{fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String())},
+		},
+		{
+			name:       "--fee-payer should also sign the tx (direct)",
+			from:       grantee.String(),
+			flags:      []string{fmt.Sprintf("--%s=%s", flags.FlagFeePayer, granter.String())},
+			expErrCode: 4,
+		},
+		{
+			name: "--fee-payer should also sign the tx (amino-json)",
+			from: grantee.String(),
+			flags: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, granter.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+			},
+			expErrCode: 4,
+		},
+		{
+			name: "use --fee-payer and --fee-granter together works",
+			from: grantee.String(),
+			flags: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
+			},
+		},
+	}
 
-	s.Require().NoError(err)
-	var resp sdk.TxResponse
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-	s.Require().Equal(uint32(0), resp.Code)
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			out, err := govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, tc.from,
+				"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
+				tc.flags...,
+			)
+			s.Require().NoError(err)
+
+			var resp sdk.TxResponse
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			s.Require().Equal(tc.expErrCode, resp.Code, resp)
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
+	s.T().Skip() // TODO to re-enable in #12274
+
 	val := s.network.Validators[0]
 
 	granter := val.Address
@@ -782,7 +824,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	}
 	spendLimit := sdk.NewCoin("stake", sdk.NewInt(1000))
 
-	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1beta2.MsgVoteWeighted{})}, ",")
+	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1.MsgVoteWeighted{})}, ",")
 
 	testCases := []struct {
 		name         string
@@ -892,7 +934,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 		{
 			"valid proposal tx",
 			func() (testutil.BufferWriter, error) {
-				return govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
+				return govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, grantee.String(),
 					"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
 					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
@@ -912,28 +954,24 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 			&sdk.TxResponse{},
 			2,
 		},
-		/* TODO(#10559): This case times out after TM v0.35.
-		   Figure out why and fix it.
-
-				{
-					"should fail with unauthorized msgs",
-					func() (testutil.BufferWriter, error) {
-						args := append(
-							[]string{
-								grantee.String(),
-								"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
-								fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
-								fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter),
-							},
-							commonFlags...,
-						)
-						cmd := cli.NewCmdFeeGrant()
-						return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		{
+			"should fail with unauthorized msgs",
+			func() (testutil.BufferWriter, error) {
+				args := append(
+					[]string{
+						grantee.String(),
+						"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
+						fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+						fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter),
 					},
-					&sdk.TxResponse{},
-					7,
-				},
-		*/
+					commonFlags...,
+				)
+				cmd := cli.NewCmdFeeGrant()
+				return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			},
+			&sdk.TxResponse{},
+			7,
+		},
 	}
 
 	for _, tc := range cases {

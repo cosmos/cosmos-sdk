@@ -75,6 +75,13 @@ func TestDec(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, res.IsEqual(minusFivePointZero))
 
+	_, err = four.Quo(zero)
+	require.Error(t, err)
+
+	res, err = four.Quo(two)
+	require.NoError(t, err)
+	require.True(t, res.IsEqual(two))
+
 	require.False(t, zero.IsNegative())
 	require.False(t, one.IsNegative())
 	require.True(t, minusOne.IsNegative())

@@ -35,6 +35,13 @@ service Query {
   rpc ModuleVersions(QueryModuleVersionsRequest) returns (QueryModuleVersionsResponse) {
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/module_versions";
   }
+
+  // Returns the account with authority to conduct upgrades
+  //
+  // Since: cosmos-sdk 0.46
+  rpc Authority(QueryAuthorityRequest) returns (QueryAuthorityResponse) {
+    option (google.api.http).get = "/cosmos/upgrade/v1beta1/authority";
+  }
 }
 
 // QueryCurrentPlanRequest is the request type for the Query/CurrentPlan RPC
@@ -100,4 +107,16 @@ message QueryModuleVersionsRequest {
 message QueryModuleVersionsResponse {
   // module_versions is a list of module names with their consensus versions.
   repeated ModuleVersion module_versions = 1;
+}
+
+// QueryAuthorityRequest is the request type for Query/Authority
+//
+// Since: cosmos-sdk 0.46
+message QueryAuthorityRequest {}
+
+// QueryAuthorityResponse is the response type for Query/Authority
+//
+// Since: cosmos-sdk 0.46
+message QueryAuthorityResponse {
+  string address = 1;
 }

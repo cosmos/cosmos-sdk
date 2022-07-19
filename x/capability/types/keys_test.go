@@ -16,7 +16,7 @@ func TestRevCapabilityKey(t *testing.T) {
 
 func TestFwdCapabilityKey(t *testing.T) {
 	cap := types.NewCapability(23)
-	expected := []byte(fmt.Sprintf("bank/fwd/%p", cap))
+	expected := []byte(fmt.Sprintf("bank/fwd/%#016p", cap))
 	require.Equal(t, expected, types.FwdCapabilityKey("bank", cap))
 }
 

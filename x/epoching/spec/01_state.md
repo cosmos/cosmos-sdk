@@ -52,7 +52,7 @@ We execute epoch after execution of genesis transactions to see the changes inst
 
 ## Execution on epochs
 
-- Try executing the message for the epoch
-- If success, make changes as it is
-- If failure, try making revert extra actions done on handlers (e.g. EpochDelegationPool deposit)
-- If revert fail, panic
+* Try executing the message for the epoch
+* If success, make changes as it is
+* If failure, try making revert extra actions done on handlers (e.g. EpochDelegationPool deposit)
+* If revert fail, panic

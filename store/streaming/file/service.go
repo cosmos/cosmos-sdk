@@ -39,7 +39,7 @@ type IntermediateWriter struct {
 	outChan chan<- []byte
 }
 
-// NewIntermediateWriter create an instance of an intermediateWriter that sends to the provided channel
+// NewIntermediateWriter create an instance of an IntermediateWriter that sends to the provided channel
 func NewIntermediateWriter(outChan chan<- []byte) *IntermediateWriter {
 	return &IntermediateWriter{
 		outChan: outChan,
@@ -62,7 +62,7 @@ func NewStreamingService(writeDir, filePrefix string, storeKeys []types.StoreKey
 	for _, key := range storeKeys {
 		listeners[key] = append(listeners[key], listener)
 	}
-	// check that the writeDir exists and is writeable so that we can catch the error here at initialization if it is not
+	// check that the writeDir exists and is writable so that we can catch the error here at initialization if it is not
 	// we don't open a dstFile until we receive our first ABCI message
 	if err := isDirWriteable(writeDir); err != nil {
 		return nil, err
@@ -88,12 +88,19 @@ func (fss *StreamingService) Listeners() map[types.StoreKey][]types.WriteListene
 // ListenBeginBlock satisfies the baseapp.ABCIListener interface
 // It writes the received BeginBlock request and response and the resulting state changes
 // out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) (rerr error) {
 	// generate the new file
 	dstFile, err := fss.openBeginBlockFile(req)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		cerr := dstFile.Close()
+		if rerr == nil {
+			rerr = cerr
+		}
+	}()
+
 	// write req to file
 	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
 	if err != nil {
@@ -119,11 +126,8 @@ func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestB
 	if err != nil {
 		return err
 	}
-	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
-		return err
-	}
-	// close file
-	return dstFile.Close()
+	_, err = dstFile.Write(lengthPrefixedResBytes)
+	return err
 }
 
 func (fss *StreamingService) openBeginBlockFile(req abci.RequestBeginBlock) (*os.File, error) {
@@ -133,18 +137,25 @@ func (fss *StreamingService) openBeginBlockFile(req abci.RequestBeginBlock) (*os
 	if fss.filePrefix != "" {
 		fileName = fmt.Sprintf("%s-%s", fss.filePrefix, fileName)
 	}
-	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
+	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0o600)
 }
 
 // ListenDeliverTx satisfies the baseapp.ABCIListener interface
 // It writes the received DeliverTx request and response and the resulting state changes
 // out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) (rerr error) {
 	// generate the new file
 	dstFile, err := fss.openDeliverTxFile()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		cerr := dstFile.Close()
+		if rerr == nil {
+			rerr = cerr
+		}
+	}()
+
 	// write req to file
 	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
 	if err != nil {
@@ -170,11 +181,8 @@ func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDe
 	if err != nil {
 		return err
 	}
-	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
-		return err
-	}
-	// close file
-	return dstFile.Close()
+	_, err = dstFile.Write(lengthPrefixedResBytes)
+	return err
 }
 
 func (fss *StreamingService) openDeliverTxFile() (*os.File, error) {
@@ -183,18 +191,25 @@ func (fss *StreamingService) openDeliverTxFile() (*os.File, error) {
 		fileName = fmt.Sprintf("%s-%s", fss.filePrefix, fileName)
 	}
 	fss.currentTxIndex++
-	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
+	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0o600)
 }
 
 // ListenEndBlock satisfies the baseapp.ABCIListener interface
 // It writes the received EndBlock request and response and the resulting state changes
 // out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) (rerr error) {
 	// generate the new file
 	dstFile, err := fss.openEndBlockFile()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		cerr := dstFile.Close()
+		if rerr == nil {
+			rerr = cerr
+		}
+	}()
+
 	// write req to file
 	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
 	if err != nil {
@@ -220,11 +235,8 @@ func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEnd
 	if err != nil {
 		return err
 	}
-	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
-		return err
-	}
-	// close file
-	return dstFile.Close()
+	_, err = dstFile.Write(lengthPrefixedResBytes)
+	return err
 }
 
 func (fss *StreamingService) openEndBlockFile() (*os.File, error) {
@@ -232,7 +244,7 @@ func (fss *StreamingService) openEndBlockFile() (*os.File, error) {
 	if fss.filePrefix != "" {
 		fileName = fmt.Sprintf("%s-%s", fss.filePrefix, fileName)
 	}
-	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
+	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0o600)
 }
 
 // Stream satisfies the baseapp.StreamingService interface
@@ -272,7 +284,7 @@ func (fss *StreamingService) Close() error {
 // to dir. It returns nil if dir is writable.
 func isDirWriteable(dir string) error {
 	f := path.Join(dir, ".touch")
-	if err := ioutil.WriteFile(f, []byte(""), 0600); err != nil {
+	if err := ioutil.WriteFile(f, []byte(""), 0o600); err != nil {
 		return err
 	}
 	return os.Remove(f)

@@ -15,8 +15,15 @@ service Msg {
   // CreateVestingAccount defines a method that enables creating a vesting
   // account.
   rpc CreateVestingAccount(MsgCreateVestingAccount) returns (MsgCreateVestingAccountResponse);
+  // CreatePermanentLockedAccount defines a method that enables creating a permanent
+  // locked account.
+  //
+  // Since: cosmos-sdk 0.46
+  rpc CreatePermanentLockedAccount(MsgCreatePermanentLockedAccount) returns (MsgCreatePermanentLockedAccountResponse);
   // CreatePeriodicVestingAccount defines a method that enables creating a
   // periodic vesting account.
+  //
+  // Since: cosmos-sdk 0.46
   rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreatePeriodicVestingAccountResponse);
 }
 
@@ -39,8 +46,28 @@ message MsgCreateVestingAccount {
 // MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
 message MsgCreateVestingAccountResponse {}
 
+// MsgCreatePermanentLockedAccount defines a message that enables creating a permanent
+// locked account.
+//
+// Since: cosmos-sdk 0.46
+message MsgCreatePermanentLockedAccount {
+  option (gogoproto.equal) = true;
+
+  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
+  string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// MsgCreatePermanentLockedAccountResponse defines the Msg/CreatePermanentLockedAccount response type.
+//
+// Since: cosmos-sdk 0.46
+message MsgCreatePermanentLockedAccountResponse {}
+
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
+//
+// Since: cosmos-sdk 0.46
 message MsgCreatePeriodicVestingAccount {
   option (cosmos.msg.v1.signer) = "from_address";
 
@@ -54,4 +81,6 @@ message MsgCreatePeriodicVestingAccount {
 
 // MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
 // response type.
+//
+// Since: cosmos-sdk 0.46
 message MsgCreatePeriodicVestingAccountResponse {}

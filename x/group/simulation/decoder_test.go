@@ -6,20 +6,24 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/simulation"
+	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	var cdc codec.Codec
+	err := depinject.Inject(grouptestutil.AppConfig, &cdc)
+	require.NoError(t, err)
 	dec := simulation.NewDecodeStore(cdc)
 
-	g := group.GroupInfo{GroupId: 1}
+	g := group.GroupInfo{Id: 1}
 	groupBz, err := cdc.Marshal(&g)
 	require.NoError(t, err)
 
@@ -35,7 +39,7 @@ func TestDecodeStore(t *testing.T) {
 	accBz, err := cdc.Marshal(&acc)
 	require.NoError(t, err)
 
-	proposal := group.Proposal{ProposalId: 1}
+	proposal := group.Proposal{Id: 1}
 	proposalBz, err := cdc.Marshal(&proposal)
 	require.NoError(t, err)
 

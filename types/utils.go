@@ -6,20 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	dbm "github.com/tendermint/tm-db"
 )
 
-var (
-	// This is set at compile time. Could be cleveldb, defaults is goleveldb.
-	DBBackend = ""
-	backend   = dbm.GoLevelDBBackend
-)
-
-func init() {
-	if len(DBBackend) != 0 {
-		backend = dbm.BackendType(DBBackend)
-	}
-}
+// This is set at compile time. Could be cleveldb, defaults is goleveldb.
+var backend = dbm.GoLevelDBBackend
 
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
 // are removed.
@@ -85,6 +77,8 @@ func ParseTimeBytes(bz []byte) (time.Time, error) {
 }
 
 // NewLevelDB instantiate a new LevelDB instance according to DBBackend.
+//
+// Deprecated: Use NewDB (from "github.com/tendermint/tm-db") instead. Suggested backendType is tendermint config's DBBackend value.
 func NewLevelDB(name, dir string) (db dbm.DB, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -103,4 +97,31 @@ func CopyBytes(bz []byte) (ret []byte) {
 	ret = make([]byte, len(bz))
 	copy(ret, bz)
 	return ret
+}
+
+// AppendLengthPrefixedBytes combines the slices of bytes to one slice of bytes.
+func AppendLengthPrefixedBytes(args ...[]byte) []byte {
+	length := 0
+	for _, v := range args {
+		length += len(v)
+	}
+	res := make([]byte, length)
+
+	length = 0
+	for _, v := range args {
+		copy(res[length:length+len(v)], v)
+		length += len(v)
+	}
+
+	return res
+}
+
+// ParseLengthPrefixedBytes panics when store key length is not equal to the given length.
+func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]byte, int) {
+	neededLength := startIndex + sliceLength
+	endIndex := neededLength - 1
+	kv.AssertKeyAtLeastLength(key, neededLength)
+	byteSlice := key[startIndex:neededLength]
+
+	return byteSlice, endIndex
 }

@@ -3,9 +3,10 @@ package authz
 import (
 	"time"
 
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -28,7 +29,7 @@ var (
 
 // NewMsgGrant creates a new MsgGrant
 //nolint:interfacer
-func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration time.Time) (*MsgGrant, error) {
+func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration *time.Time) (*MsgGrant, error) {
 	m := &MsgGrant{
 		Granter: granter.String(),
 		Grantee: grantee.String(),
@@ -59,7 +60,7 @@ func (msg MsgGrant) ValidateBasic() error {
 	}
 
 	if granter.Equals(grantee) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "granter and grantee cannot be same")
+		return ErrGranteeIsGranter
 	}
 	return msg.Grant.ValidateBasic()
 }
@@ -76,11 +77,11 @@ func (msg MsgGrant) Route() string {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgGrant) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
-func (msg *MsgGrant) GetAuthorization() Authorization {
+func (msg *MsgGrant) GetAuthorization() (Authorization, error) {
 	return msg.Grant.GetAuthorization()
 }
 
@@ -88,7 +89,7 @@ func (msg *MsgGrant) GetAuthorization() Authorization {
 func (msg *MsgGrant) SetAuthorization(a Authorization) error {
 	m, ok := a.(proto.Message)
 	if !ok {
-		return sdkerrors.Wrapf(sdkerrors.ErrPackAny, "can't proto marshal %T", m)
+		return sdkerrors.ErrPackAny.Wrapf("can't proto marshal %T", m)
 	}
 	any, err := cdctypes.NewAnyWithValue(m)
 	if err != nil {
@@ -144,11 +145,11 @@ func (msg MsgRevoke) ValidateBasic() error {
 	}
 
 	if granter.Equals(grantee) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "granter and grantee cannot be same")
+		return ErrGranteeIsGranter
 	}
 
 	if msg.MsgTypeUrl == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing method name")
+		return sdkerrors.ErrInvalidRequest.Wrap("missing method name")
 	}
 
 	return nil
@@ -166,7 +167,7 @@ func (msg MsgRevoke) Route() string {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgRevoke) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // NewMsgExec creates a new MsgExecAuthorized
@@ -194,7 +195,7 @@ func (msg MsgExec) GetMessages() ([]sdk.Msg, error) {
 	for i, msgAny := range msg.Msgs {
 		msg, ok := msgAny.GetCachedValue().(sdk.Msg)
 		if !ok {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages contains %T which is not a sdk.MsgRequest", msgAny)
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("messages contains %T which is not a sdk.MsgRequest", msgAny)
 		}
 		msgs[i] = msg
 	}
@@ -215,7 +216,17 @@ func (msg MsgExec) ValidateBasic() error {
 	}
 
 	if len(msg.Msgs) == 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages cannot be empty")
+		return sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
+	}
+
+	msgs, err := msg.GetMessages()
+	if err != nil {
+		return err
+	}
+	for _, msg := range msgs {
+		if err = msg.ValidateBasic(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -233,5 +244,5 @@ func (msg MsgExec) Route() string {
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgExec) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
 }

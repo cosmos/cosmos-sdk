@@ -16,7 +16,7 @@ in this testnet.
     `simd` binary inside a new `build` directory. The following instructions are run from inside
     the `build` directory.
 2. If you've run `simd` before, you may need to reset your database before starting a new
-    testnet. You can reset your database with the following command: `$ ./simd unsafe-reset-all`.
+    testnet. You can reset your database with the following command: `$ ./simd tendermint unsafe-reset-all`.
 3. `$ ./simd init [moniker] --chain-id [chain-id]`. This will initialize a new working directory
     at the default location `~/.simapp`. You need to provide a "moniker" and a "chain id". These
     two names can be anything, but you will need to use the same "chain id" in the following steps.
@@ -37,7 +37,7 @@ in this testnet.
 9. Modify your `config/config.toml` (in the simapp working directory) to include the other participants as
     persistent peers:
 
-    ```
+    ```text
     # Comma separated list of nodes to keep persistent connections to
     persistent_peers = "[validator_address]@[ip_address]:[port],[validator_address]@[ip_address]:[port]"
     ```

@@ -1,16 +1,18 @@
-package baseapp_test
+package baseapp
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestGetBlockRentionHeight(t *testing.T) {
@@ -18,82 +20,85 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
 
+	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
+	require.NoError(t, err)
+
 	testCases := map[string]struct {
-		bapp         *baseapp.BaseApp
+		bapp         *BaseApp
 		maxAgeBlocks int64
 		commitHeight int64
 		expected     int64
 	}{
 		"defaults": {
-			bapp:         baseapp.NewBaseApp(name, logger, db),
+			bapp:         NewBaseApp(name, logger, db, nil),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     0,
 		},
 		"pruning unbonding time only": {
-			bapp:         baseapp.NewBaseApp(name, logger, db, baseapp.SetMinRetainBlocks(1)),
+			bapp:         NewBaseApp(name, logger, db, nil, SetMinRetainBlocks(1)),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     136120,
 		},
 		"pruning iavl snapshot only": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db,
-				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
-				baseapp.SetMinRetainBlocks(1),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
+				SetMinRetainBlocks(1),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(10000, 1)),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
-			expected:     490000,
+			expected:     489000,
 		},
 		"pruning state sync snapshot only": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db,
-				baseapp.SetSnapshotInterval(50000),
-				baseapp.SetSnapshotKeepRecent(3),
-				baseapp.SetMinRetainBlocks(1),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+				SetMinRetainBlocks(1),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     349000,
 		},
 		"pruning min retention only": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db,
-				baseapp.SetMinRetainBlocks(400000),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetMinRetainBlocks(400000),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     99000,
 		},
 		"pruning all conditions": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db,
-				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
-				baseapp.SetMinRetainBlocks(400000),
-				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
+				SetMinRetainBlocks(400000),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     99000,
 		},
 		"no pruning due to no persisted state": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db,
-				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
-				baseapp.SetMinRetainBlocks(400000),
-				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
+				SetMinRetainBlocks(400000),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 10000,
 			expected:     0,
 		},
 		"disable pruning": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db,
-				baseapp.SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
-				baseapp.SetMinRetainBlocks(0),
-				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
+				SetMinRetainBlocks(0),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
@@ -119,24 +124,44 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	}
 }
 
-// Test and ensure that negative heights always cause errors.
-// See issue https://github.com/cosmos/cosmos-sdk/issues/7662.
-func TestBaseAppCreateQueryContextRejectsNegativeHeights(t *testing.T) {
+// Test and ensure that invalid block heights always cause errors.
+// See issues:
+// - https://github.com/cosmos/cosmos-sdk/issues/11220
+// - https://github.com/cosmos/cosmos-sdk/issues/7662
+func TestBaseAppCreateQueryContext(t *testing.T) {
 	t.Parallel()
 
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db)
+	app := NewBaseApp(name, logger, db, nil)
 
-	proves := []bool{
-		false, true,
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	app.Commit()
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+	app.Commit()
+
+	testCases := []struct {
+		name   string
+		height int64
+		prove  bool
+		expErr bool
+	}{
+		{"valid height", 2, true, false},
+		{"future height", 10, true, true},
+		{"negative height, prove=true", -1, true, true},
+		{"negative height, prove=false", -1, false, true},
 	}
-	for _, prove := range proves {
-		t.Run(fmt.Sprintf("prove=%t", prove), func(t *testing.T) {
-			sctx, err := app.CreateQueryContext(-10, true)
-			require.Error(t, err)
-			require.Equal(t, sctx, sdk.Context{})
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := app.createQueryContext(tc.height, tc.prove)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

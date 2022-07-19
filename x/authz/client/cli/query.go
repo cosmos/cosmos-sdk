@@ -28,6 +28,7 @@ func GetQueryCmd() *cobra.Command {
 	authorizationQueryCmd.AddCommand(
 		GetCmdQueryGrants(),
 		GetQueryGranterGrants(),
+		GetQueryGranteeGrants(),
 	)
 
 	return authorizationQueryCmd
@@ -64,7 +65,7 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 			if err != nil {
 				return err
 			}
-			var msgAuthorized = ""
+			msgAuthorized := ""
 			if len(args) >= 3 {
 				msgAuthorized = args[2]
 			}
@@ -79,7 +80,8 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 					Granter:    granter.String(),
 					Grantee:    grantee.String(),
 					MsgTypeUrl: msgAuthorized,
-					Pagination: pageReq},
+					Pagination: pageReq,
+				},
 			)
 			if err != nil {
 				return err
@@ -93,15 +95,16 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 	return cmd
 }
 
+// GetQueryGranterGrants returns cmd to query for all grants for a granter.
 func GetQueryGranterGrants() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "granter-grants [granter-addr]",
+		Use:   "grants-by-granter [granter-addr]",
 		Args:  cobra.ExactArgs(1),
 		Short: "query authorization grants granted by granter",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query authorization grants granted by granter.
 Examples:
-$ %s q %s granter-grants cosmos1skj..
+$ %s q %s grants-by-granter cosmos1skj..
 `,
 				version.AppName, authz.ModuleName),
 		),
@@ -138,5 +141,54 @@ $ %s q %s granter-grants cosmos1skj..
 	}
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "granter-grants")
+	return cmd
+}
+
+// GetQueryGranteeGrants returns cmd to query for all grants for a grantee.
+func GetQueryGranteeGrants() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "grants-by-grantee [grantee-addr]",
+		Args:  cobra.ExactArgs(1),
+		Short: "query authorization grants granted to a grantee",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query authorization grants granted to a grantee.
+Examples:
+$ %s q %s grants-by-grantee cosmos1skj..
+`,
+				version.AppName, authz.ModuleName),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			grantee, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := authz.NewQueryClient(clientCtx)
+			res, err := queryClient.GranteeGrants(
+				cmd.Context(),
+				&authz.QueryGranteeGrantsRequest{
+					Grantee:    grantee.String(),
+					Pagination: pageReq,
+				},
+			)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "grantee-grants")
 	return cmd
 }

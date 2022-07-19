@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,11 +15,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta2"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
-// Abonormal scenarios are not tested here.
+// Abnormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
@@ -32,13 +33,13 @@ func TestRandomizedGenState(t *testing.T) {
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: 1000,
+		InitialStake: sdkmath.NewInt(1000),
 		GenState:     make(map[string]json.RawMessage),
 	}
 
 	simulation.RandomizedGenState(&simState)
 
-	var govGenesis v1beta2.GenesisState
+	var govGenesis v1.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
 
 	dec1, _ := sdk.NewDecFromStr("0.361000000000000000")
@@ -52,9 +53,9 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, dec2.String(), govGenesis.TallyParams.Threshold)
 	require.Equal(t, dec3.String(), govGenesis.TallyParams.VetoThreshold)
 	require.Equal(t, uint64(0x28), govGenesis.StartingProposalId)
-	require.Equal(t, []*v1beta2.Deposit{}, govGenesis.Deposits)
-	require.Equal(t, []*v1beta2.Vote{}, govGenesis.Votes)
-	require.Equal(t, []*v1beta2.Proposal{}, govGenesis.Proposals)
+	require.Equal(t, []*v1.Deposit{}, govGenesis.Deposits)
+	require.Equal(t, []*v1.Vote{}, govGenesis.Votes)
+	require.Equal(t, []*v1.Proposal{}, govGenesis.Proposals)
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

@@ -49,7 +49,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 			true,
 			func(res *types.QueryEvidenceResponse) {
 				var evi exported.Evidence
-				err := suite.app.InterfaceRegistry().UnpackAny(res.Evidence, &evi)
+				err := suite.interfaceRegistry.UnpackAny(res.Evidence, &evi)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(evi)
 				suite.Require().Equal(evi, evidence[0])
@@ -80,9 +80,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 }
 
 func (suite *KeeperTestSuite) TestQueryAllEvidence() {
-	var (
-		req *types.QueryAllEvidenceRequest
-	)
+	var req *types.QueryAllEvidenceRequest
 
 	testCases := []struct {
 		msg       string

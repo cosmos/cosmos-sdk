@@ -7,6 +7,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 type errorsTestSuite struct {
@@ -113,8 +115,8 @@ func (s *errorsTestSuite) TestIsOf() {
 	require := s.Require()
 
 	var errNil *Error
-	var err = ErrInvalidAddress
-	var errW = Wrap(ErrLogic, "more info")
+	err := ErrInvalidAddress
+	errW := Wrap(ErrLogic, "more info")
 
 	require.False(IsOf(errNil), "nil error should always have no causer")
 	require.False(IsOf(errNil, err), "nil error should always have no causer")
@@ -126,12 +128,11 @@ func (s *errorsTestSuite) TestIsOf() {
 	require.True(IsOf(errW, ErrLogic))
 	require.True(IsOf(errW, err, ErrLogic))
 	require.True(IsOf(errW, nil, errW), "error should much itself")
-	var err2 = errors.New("other error")
+	err2 := errors.New("other error")
 	require.True(IsOf(err2, nil, err2), "error should much itself")
 }
 
-type customError struct {
-}
+type customError struct{}
 
 func (customError) Error() string {
 	return "custom error"
@@ -168,35 +169,35 @@ func (s *errorsTestSuite) TestWrappedIs() {
 }
 
 func (s *errorsTestSuite) TestWrappedIsMultiple() {
-	var errTest = errors.New("test error")
-	var errTest2 = errors.New("test error 2")
+	errTest := errors.New("test error")
+	errTest2 := errors.New("test error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	s.Require().True(stdlib.Is(err, errTest2))
 }
 
 func (s *errorsTestSuite) TestWrappedIsFail() {
-	var errTest = errors.New("test error")
-	var errTest2 = errors.New("test error 2")
+	errTest := errors.New("test error")
+	errTest2 := errors.New("test error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	s.Require().False(stdlib.Is(err, errTest))
 }
 
 func (s *errorsTestSuite) TestWrappedUnwrap() {
-	var errTest = errors.New("test error")
+	errTest := errors.New("test error")
 	err := Wrap(errTest, "some random description")
 	s.Require().Equal(errTest, stdlib.Unwrap(err))
 }
 
 func (s *errorsTestSuite) TestWrappedUnwrapMultiple() {
-	var errTest = errors.New("test error")
-	var errTest2 = errors.New("test error 2")
+	errTest := errors.New("test error")
+	errTest2 := errors.New("test error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	s.Require().Equal(errTest2, stdlib.Unwrap(err))
 }
 
 func (s *errorsTestSuite) TestWrappedUnwrapFail() {
-	var errTest = errors.New("test error")
-	var errTest2 = errors.New("test error 2")
+	errTest := errors.New("test error")
+	errTest2 := errors.New("test error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	s.Require().NotEqual(errTest, stdlib.Unwrap(err))
 }
@@ -204,6 +205,23 @@ func (s *errorsTestSuite) TestWrappedUnwrapFail() {
 func (s *errorsTestSuite) TestABCIError() {
 	s.Require().Equal("custom: tx parse error", ABCIError(testCodespace, 2, "custom").Error())
 	s.Require().Equal("custom: unknown", ABCIError("unknown", 1, "custom").Error())
+}
+
+func (s *errorsTestSuite) TestGRPCStatus() {
+	s.Require().Equal(codes.Unknown, grpcstatus.Code(errInternal))
+	s.Require().Equal(codes.NotFound, grpcstatus.Code(ErrNotFound))
+
+	status, ok := grpcstatus.FromError(ErrNotFound)
+	s.Require().True(ok)
+	s.Require().Equal("codespace testtesttest code 38: not found", status.Message())
+
+	// test wrapping
+	s.Require().Equal(codes.Unimplemented, grpcstatus.Code(ErrNotSupported.Wrap("test")))
+	s.Require().Equal(codes.FailedPrecondition, grpcstatus.Code(ErrConflict.Wrapf("test %s", "foo")))
+
+	status, ok = grpcstatus.FromError(ErrNotFound.Wrap("test"))
+	s.Require().True(ok)
+	s.Require().Equal("codespace testtesttest code 38: not found: test", status.Message())
 }
 
 func ExampleWrap() {
@@ -254,8 +272,8 @@ var (
 	ErrUnknownExtensionOptions = Register(testCodespace, 31, "unknown extension options")
 	ErrPackAny                 = Register(testCodespace, 33, "failed packing protobuf message to Any")
 	ErrLogic                   = Register(testCodespace, 35, "internal logic error")
-	ErrConflict                = Register(testCodespace, 36, "conflict")
-	ErrNotSupported            = Register(testCodespace, 37, "feature not supported")
-	ErrNotFound                = Register(testCodespace, 38, "not found")
+	ErrConflict                = RegisterWithGRPCCode(testCodespace, 36, codes.FailedPrecondition, "conflict")
+	ErrNotSupported            = RegisterWithGRPCCode(testCodespace, 37, codes.Unimplemented, "feature not supported")
+	ErrNotFound                = RegisterWithGRPCCode(testCodespace, 38, codes.NotFound, "not found")
 	ErrIO                      = Register(testCodespace, 39, "Internal IO error")
 )

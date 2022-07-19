@@ -32,6 +32,7 @@ func QueryCmd(name string) *cobra.Command {
 		QueryVotesByProposalCmd(),
 		QueryVotesByVoterCmd(),
 		QueryGroupsByMemberCmd(),
+		QueryTallyResultCmd(),
 	)
 
 	return queryCmd
@@ -419,6 +420,41 @@ func QueryVotesByProposalCmd() *cobra.Command {
 			res, err := queryClient.VotesByProposal(cmd.Context(), &group.QueryVotesByProposalRequest{
 				ProposalId: proposalID,
 				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// QueryVotesByProposalCmd creates a CLI command for Query/TallyResult.
+func QueryTallyResultCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "tally-result [proposal-id]",
+		Short: "Query tally result of proposal",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			queryClient := group.NewQueryClient(clientCtx)
+
+			res, err := queryClient.TallyResult(cmd.Context(), &group.QueryTallyResultRequest{
+				ProposalId: proposalID,
 			})
 			if err != nil {
 				return err

@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/kv"
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
@@ -22,34 +22,46 @@ type autoIncrementTable struct {
 	seqCodec     *ormkv.SeqCodec
 }
 
+func (t autoIncrementTable) InsertReturningPKey(ctx context.Context, message proto.Message) (newPK uint64, err error) {
+	backend, err := t.getWriteBackend(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return t.save(ctx, backend, message, saveModeInsert)
+}
+
 func (t autoIncrementTable) Save(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
 
-	return t.save(backend, message, saveModeDefault)
+	_, err = t.save(ctx, backend, message, saveModeDefault)
+	return err
 }
 
 func (t autoIncrementTable) Insert(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
 
-	return t.save(backend, message, saveModeInsert)
+	_, err = t.save(ctx, backend, message, saveModeInsert)
+	return err
 }
 
 func (t autoIncrementTable) Update(ctx context.Context, message proto.Message) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
 
-	return t.save(backend, message, saveModeUpdate)
+	_, err = t.save(ctx, backend, message, saveModeUpdate)
+	return err
 }
 
-func (t *autoIncrementTable) save(backend Backend, message proto.Message, mode saveMode) error {
+func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message proto.Message, mode saveMode) (newPK uint64, err error) {
 	messageRef := message.ProtoReflect()
 	val := messageRef.Get(t.autoIncField).Uint()
 	writer := newBatchIndexCommitmentWriter(backend)
@@ -57,25 +69,25 @@ func (t *autoIncrementTable) save(backend Backend, message proto.Message, mode s
 
 	if val == 0 {
 		if mode == saveModeUpdate {
-			return ormerrors.PrimaryKeyInvalidOnUpdate
+			return 0, ormerrors.PrimaryKeyInvalidOnUpdate
 		}
 
 		mode = saveModeInsert
-		key, err := t.nextSeqValue(writer.IndexStore())
+		newPK, err = t.nextSeqValue(writer.IndexStore())
 		if err != nil {
-			return err
+			return 0, err
 		}
 
-		messageRef.Set(t.autoIncField, protoreflect.ValueOfUint64(key))
+		messageRef.Set(t.autoIncField, protoreflect.ValueOfUint64(newPK))
 	} else {
 		if mode == saveModeInsert {
-			return ormerrors.AutoIncrementKeyAlreadySet
+			return 0, ormerrors.AutoIncrementKeyAlreadySet
 		}
 
 		mode = saveModeUpdate
 	}
 
-	return t.tableImpl.doSave(writer, message, mode)
+	return newPK, t.tableImpl.doSave(ctx, writer, message, mode)
 }
 
 func (t *autoIncrementTable) curSeqValue(kv kv.ReadonlyStore) (uint64, error) {
@@ -109,11 +121,12 @@ func (t autoIncrementTable) EncodeEntry(entry ormkv.Entry) (k, v []byte, err err
 }
 
 func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
-	return t.decodeAutoIncJson(nil, reader, func(message proto.Message, maxID uint64) error {
+	return t.decodeAutoIncJson(nil, reader, func(message proto.Message, maxSeq uint64) error {
 		messageRef := message.ProtoReflect()
-		id := messageRef.Get(t.autoIncField).Uint()
-		if id > maxID {
-			return fmt.Errorf("invalid ID %d, expected a value <= %d", id, maxID)
+		pkey := messageRef.Get(t.autoIncField).Uint()
+		if pkey > maxSeq {
+			return fmt.Errorf("invalid auto increment primary key %d, expected a value <= %d, the highest "+
+				"sequence number", pkey, maxSeq)
 		}
 
 		if t.customJSONValidator != nil {
@@ -125,27 +138,29 @@ func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
 }
 
 func (t autoIncrementTable) ImportJSON(ctx context.Context, reader io.Reader) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
 
-	return t.decodeAutoIncJson(backend, reader, func(message proto.Message, maxID uint64) error {
+	return t.decodeAutoIncJson(backend, reader, func(message proto.Message, maxSeq uint64) error {
 		messageRef := message.ProtoReflect()
-		id := messageRef.Get(t.autoIncField).Uint()
-		if id == 0 {
-			// we don't have an ID in the JSON, so we call Save to insert and
+		pkey := messageRef.Get(t.autoIncField).Uint()
+		if pkey == 0 {
+			// we don't have a primary key in the JSON, so we call Save to insert and
 			// generate one
-			return t.save(backend, message, saveModeInsert)
+			_, err = t.save(ctx, backend, message, saveModeInsert)
+			return err
 		} else {
-			if id > maxID {
-				return fmt.Errorf("invalid ID %d, expected a value <= %d", id, maxID)
+			if pkey > maxSeq {
+				return fmt.Errorf("invalid auto increment primary key %d, expected a value <= %d, the highest "+
+					"sequence number", pkey, maxSeq)
 			}
-			// we do have an ID and calling Save will fail because it expects
-			// either no ID or SAVE_MODE_UPDATE. So instead we drop one level
+			// we do have a primary key and calling Save will fail because it expects
+			// either no primary key or SAVE_MODE_UPDATE. So instead we drop one level
 			// down and insert using tableImpl which doesn't know about
-			// auto-incrementing IDs
-			return t.tableImpl.save(backend, message, saveModeInsert)
+			// auto-incrementing primary keys.
+			return t.tableImpl.save(ctx, backend, message, saveModeInsert)
 		}
 	})
 }
@@ -200,19 +215,27 @@ func (t autoIncrementTable) ExportJSON(ctx context.Context, writer io.Writer) er
 		return err
 	}
 
-	bz, err := json.Marshal(seq)
-	if err != nil {
-		return err
-	}
-	_, err = writer.Write(bz)
-	if err != nil {
-		return err
+	start := true
+	if seq != 0 {
+		start = false
+		bz, err := json.Marshal(seq)
+		if err != nil {
+			return err
+		}
+		_, err = writer.Write(bz)
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err = writer.Write([]byte(",\n"))
-	if err != nil {
-		return err
-	}
-
-	return t.doExportJSON(ctx, writer)
+	return t.doExportJSON(ctx, writer, start)
 }
+
+func (t *autoIncrementTable) GetTable(message proto.Message) Table {
+	if message.ProtoReflect().Descriptor().FullName() == t.MessageType().Descriptor().FullName() {
+		return t
+	}
+	return nil
+}
+
+var _ AutoIncrementTable = &autoIncrementTable{}

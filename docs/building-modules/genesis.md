@@ -8,8 +8,8 @@ Modules generally handle a subset of the state and, as such, they need to define
 
 ## Pre-requisite Readings
 
-- [Module Manager](./module-manager.md) {prereq}
-- [Keepers](./keeper.md) {prereq}
+* [Module Manager](./module-manager.md) {prereq}
+* [Keepers](./keeper.md) {prereq}
 
 ## Type Definition
 
@@ -17,7 +17,7 @@ The subset of the genesis state defined from a given module is generally defined
 
 See an example of `GenesisState` protobuf message definition from the `auth` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/a9547b54ffac9729fe1393651126ddfc0d236cff/proto/cosmos/auth/v1beta1/genesis.proto
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/auth/v1beta1/genesis.proto
 
 Next we present the main genesis-related methods that need to be implemented by module developers in order for their module to be used in Cosmos SDK applications.
 
@@ -25,13 +25,13 @@ Next we present the main genesis-related methods that need to be implemented by 
 
 The `DefaultGenesis()` method is a simple method that calls the constructor function for `GenesisState` with the default value for each parameter. See an example from the `auth` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/module.go#L48-L52
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/auth/module.go#L45-L49
 
 ### `ValidateGenesis`
 
-The `ValidateGenesis(genesisState GenesisState)` method is called to verify that the provided `genesisState` is correct. It should perform validity checks on each of the parameters listed in `GenesisState`. See an example from the `auth` module:
+The `ValidateGenesis(data GenesisState)` method is called to verify that the provided `genesisState` is correct. It should perform validity checks on each of the parameters listed in `GenesisState`. See an example from the `auth` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/types/genesis.go#L57-L70
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/auth/types/genesis.go#L61-L74
 
 ## Other Genesis Methods
 
@@ -45,7 +45,7 @@ The [module manager](./module-manager.md#manager) of the application is responsi
 
 See an example of `InitGenesis` from the `auth` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/genesis.go#L13-L28
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/auth/keeper/genesis.go#L8-L27
 
 ### `ExportGenesis`
 
@@ -53,7 +53,7 @@ The `ExportGenesis` method is executed whenever an export of the state is made. 
 
 See an example of `ExportGenesis` from the `auth` module.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/genesis.go#L31-L42
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/auth/keeper/genesis.go#L29-L41
 
 ## Next {hide}
 

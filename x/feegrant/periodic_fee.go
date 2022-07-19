@@ -30,13 +30,13 @@ func (a *PeriodicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) 
 
 	// deduct from both the current period and the max amount
 	var isNeg bool
-	a.PeriodCanSpend, isNeg = a.PeriodCanSpend.SafeSub(fee)
+	a.PeriodCanSpend, isNeg = a.PeriodCanSpend.SafeSub(fee...)
 	if isNeg {
 		return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "period limit")
 	}
 
 	if a.Basic.SpendLimit != nil {
-		a.Basic.SpendLimit, isNeg = a.Basic.SpendLimit.SafeSub(fee)
+		a.Basic.SpendLimit, isNeg = a.Basic.SpendLimit.SafeSub(fee...)
 		if isNeg {
 			return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "absolute limit")
 		}
@@ -59,7 +59,7 @@ func (a *PeriodicAllowance) tryResetPeriod(blockTime time.Time) {
 	}
 
 	// set PeriodCanSpend to the lesser of Basic.SpendLimit and PeriodSpendLimit
-	if _, isNeg := a.Basic.SpendLimit.SafeSub(a.PeriodSpendLimit); isNeg && !a.Basic.SpendLimit.Empty() {
+	if _, isNeg := a.Basic.SpendLimit.SafeSub(a.PeriodSpendLimit...); isNeg && !a.Basic.SpendLimit.Empty() {
 		a.PeriodCanSpend = a.Basic.SpendLimit
 	} else {
 		a.PeriodCanSpend = a.PeriodSpendLimit
@@ -104,4 +104,8 @@ func (a PeriodicAllowance) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+func (a PeriodicAllowance) ExpiresAt() (*time.Time, error) {
+	return a.Basic.ExpiresAt()
 }

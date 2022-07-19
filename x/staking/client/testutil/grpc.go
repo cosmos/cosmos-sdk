@@ -348,7 +348,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryUnbondingDelegation() {
 				s.Require().NoError(err)
 				s.Require().Equal(ubd.Unbond.DelegatorAddress, val.Address.String())
 				s.Require().Equal(ubd.Unbond.ValidatorAddress, val.ValAddress.String())
-				s.Require().Len(ubd.Unbond.Entries, 1)
+				s.Require().Len(ubd.Unbond.Entries, 2)
 			}
 		})
 	}

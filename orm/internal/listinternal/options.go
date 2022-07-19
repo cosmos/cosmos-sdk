@@ -3,23 +3,23 @@ package listinternal
 import (
 	"fmt"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/proto"
 )
 
 // Options is the internal list options struct.
 type Options struct {
-	Start, End, Prefix []protoreflect.Value
-	Reverse            bool
-	Cursor             []byte
+	Reverse, CountTotal         bool
+	Offset, Limit, DefaultLimit uint64
+	Cursor                      []byte
+	Filter                      func(proto.Message) bool
 }
 
 func (o Options) Validate() error {
-	if o.Start != nil || o.End != nil {
-		if o.Prefix != nil {
-			return fmt.Errorf("can either use Start/End or Prefix, not both")
+	if len(o.Cursor) != 0 {
+		if o.Offset > 0 {
+			return fmt.Errorf("can only specify one of cursor or offset")
 		}
 	}
-
 	return nil
 }
 

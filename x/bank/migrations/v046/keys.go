@@ -1,8 +1,6 @@
 package v046
 
-var (
-	DenomAddressPrefix = []byte{0x03}
-)
+var DenomAddressPrefix = []byte{0x03}
 
 // CreateDenomAddressPrefix creates a prefix for a reverse index of denomination
 // to account balance for that denomination.

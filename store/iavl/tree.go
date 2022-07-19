@@ -31,6 +31,7 @@ type (
 		GetVersionedWithProof(key []byte, version int64) ([]byte, *iavl.RangeProof, error)
 		GetImmutable(version int64) (*iavl.ImmutableTree, error)
 		SetInitialVersion(version uint64)
+		AvailableVersions() []int
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree
@@ -91,4 +92,8 @@ func (it *immutableTree) GetImmutable(version int64) (*iavl.ImmutableTree, error
 	}
 
 	return it.ImmutableTree, nil
+}
+
+func (it *immutableTree) AvailableVersions() []int {
+	return []int{}
 }

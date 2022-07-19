@@ -7,11 +7,16 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
+
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -21,12 +26,17 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	app := simapp.Setup(t, false)
-	cdc := simapp.MakeTestEncodingConfig().Codec
-	acc := types.NewBaseAccountWithAddress(delAddr1)
-	dec := simulation.NewDecodeStore(app.AccountKeeper)
+	var (
+		cdc           codec.Codec
+		accountKeeper authkeeper.AccountKeeper
+	)
+	err := depinject.Inject(testutil.AppConfig, &cdc, &accountKeeper)
+	require.NoError(t, err)
 
-	accBz, err := app.AccountKeeper.MarshalAccount(acc)
+	acc := types.NewBaseAccountWithAddress(delAddr1)
+	dec := simulation.NewDecodeStore(accountKeeper)
+
+	accBz, err := accountKeeper.MarshalAccount(acc)
 	require.NoError(t, err)
 
 	globalAccNumber := gogotypes.UInt64Value{Value: 10}

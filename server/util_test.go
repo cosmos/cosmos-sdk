@@ -12,11 +12,13 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	tmcfg "github.com/tendermint/tendermint/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -27,7 +29,7 @@ var cancelledInPreRun = errors.New("Cancelled in prerun")
 // Used in each test to run the function under test via Cobra
 // but to always halt the command
 func preRunETestImpl(cmd *cobra.Command, args []string) error {
-	err := server.InterceptConfigsPreRunHandler(cmd, "", nil)
+	err := server.InterceptConfigsPreRunHandler(cmd, "", nil, tmcfg.DefaultConfig())
 	if err != nil {
 		return err
 	}
@@ -213,9 +215,9 @@ func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 	basename = strings.ReplaceAll(basename, ".", "_")
 	// This is added by tendermint
 	envVarName := fmt.Sprintf("%s_RPC_LADDR", strings.ToUpper(basename))
-	os.Setenv(envVarName, testAddr)
+	require.NoError(t, os.Setenv(envVarName, testAddr))
 	t.Cleanup(func() {
-		os.Unsetenv(envVarName)
+		require.NoError(t, os.Unsetenv(envVarName))
 	})
 
 	cmd.PreRunE = preRunETestImpl
@@ -300,7 +302,7 @@ func (v precedenceCommon) setAll(t *testing.T, setFlag *string, setEnvVar *strin
 	}
 
 	if setEnvVar != nil {
-		os.Setenv(v.envVarName, *setEnvVar)
+		require.NoError(t, os.Setenv(v.envVarName, *setEnvVar))
 	}
 
 	if setConfigFile != nil {
@@ -390,7 +392,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 	tempDir := t.TempDir()
 	subDir := filepath.Join(tempDir, "nonPerms")
-	if err := os.Mkdir(subDir, 0600); err != nil {
+	if err := os.Mkdir(subDir, 0o600); err != nil {
 		t.Fatalf("Failed to create sub directory: %v", err)
 	}
 	cmd := server.StartCmd(nil, "/foobar")
@@ -432,8 +434,16 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	// Run StartCmd.
 	cmd = server.StartCmd(nil, tempDir)
 	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
-		return server.InterceptConfigsPreRunHandler(cmd, "", nil)
+		return server.InterceptConfigsPreRunHandler(cmd, "", nil, tmcfg.DefaultConfig())
 	}
 	err = cmd.ExecuteContext(ctx)
 	require.Errorf(t, err, sdkerrors.ErrAppConfig.Error())
 }
+
+type mapGetter map[string]interface{}
+
+func (m mapGetter) Get(key string) interface{} {
+	return m[key]
+}
+
+var _ servertypes.AppOptions = mapGetter{}

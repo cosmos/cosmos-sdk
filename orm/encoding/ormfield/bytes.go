@@ -2,11 +2,10 @@ package ormfield
 
 import (
 	"bytes"
+	"encoding/binary"
 	"io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
 // BytesCodec encodes bytes as raw bytes. It errors if the byte array is longer
@@ -17,17 +16,13 @@ func (b BytesCodec) FixedBufferSize() int {
 	return -1
 }
 
+// ComputeBufferSize returns the bytes size of the value.
 func (b BytesCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
-	return bytesSize(value)
+	return bytesSize(value), nil
 }
 
-func bytesSize(value protoreflect.Value) (int, error) {
-	bz := value.Bytes()
-	n := len(bz)
-	if n > 255 {
-		return -1, ormerrors.BytesFieldTooLong
-	}
-	return n, nil
+func bytesSize(value protoreflect.Value) int {
+	return len(value.Bytes())
 }
 
 func (b BytesCodec) IsOrdered() bool {
@@ -56,9 +51,17 @@ func (b NonTerminalBytesCodec) FixedBufferSize() int {
 	return -1
 }
 
+// ComputeBufferSize returns the bytes size of the value plus the length of the
+// varint length-prefix.
 func (b NonTerminalBytesCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
-	n, err := bytesSize(value)
-	return n + 1, err
+	n := bytesSize(value)
+	prefixLen := 1
+	// we use varint, if the first bit of a byte is 1 then we need to signal continuation
+	for n >= 0x80 {
+		prefixLen++
+		n >>= 7
+	}
+	return n + prefixLen, nil
 }
 
 func (b NonTerminalBytesCodec) IsOrdered() bool {
@@ -70,7 +73,7 @@ func (b NonTerminalBytesCodec) Compare(v1, v2 protoreflect.Value) int {
 }
 
 func (b NonTerminalBytesCodec) Decode(r Reader) (protoreflect.Value, error) {
-	n, err := r.ReadByte()
+	n, err := binary.ReadUvarint(r)
 	if err != nil {
 		return protoreflect.Value{}, err
 	}
@@ -87,10 +90,9 @@ func (b NonTerminalBytesCodec) Decode(r Reader) (protoreflect.Value, error) {
 func (b NonTerminalBytesCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	bz := value.Bytes()
 	n := len(bz)
-	if n > 255 {
-		return ormerrors.BytesFieldTooLong
-	}
-	_, err := w.Write([]byte{byte(n)})
+	var prefix [binary.MaxVarintLen64]byte
+	prefixLen := binary.PutUvarint(prefix[:], uint64(n))
+	_, err := w.Write(prefix[:prefixLen])
 	if err != nil {
 		return err
 	}

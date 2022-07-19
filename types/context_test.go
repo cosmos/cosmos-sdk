@@ -220,4 +220,9 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 
 	ctx = context.Background()
 	s.Require().Panics(func() { types.UnwrapSDKContext(ctx) })
+
+	// test unwrapping when we've used context.WithValue
+	ctx = context.WithValue(sdkCtx, "foo", "bar")
+	sdkCtx2 = types.UnwrapSDKContext(ctx)
+	s.Require().Equal(sdkCtx, sdkCtx2)
 }

@@ -18,6 +18,8 @@
   - x/genutil/**/*
 "C:x/gov":
   - x/gov/**/*
+"C:x/group":
+  - x/group/**/*
 "C:x/mint":
   - x/mint/**/*
 "C:x/nft":

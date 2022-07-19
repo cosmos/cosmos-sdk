@@ -86,7 +86,6 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 		grants = append(grants, &grant)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -107,25 +106,19 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var grants []*feegrant.Grant
-
 	store := ctx.KVStore(q.storeKey)
-	pageRes, err := query.Paginate(store, req.Pagination, func(key []byte, value []byte) error {
-		var grant feegrant.Grant
-
-		granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(key)
+	prefixStore := prefix.NewStore(store, feegrant.FeeAllowanceKeyPrefix)
+	grants, pageRes, err := query.GenericFilteredPaginate(q.cdc, prefixStore, req.Pagination, func(key []byte, grant *feegrant.Grant) (*feegrant.Grant, error) {
+		// ParseAddressesFromFeeAllowanceKey expects the full key including the prefix.
+		granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(append(feegrant.FeeAllowanceKeyPrefix, key...))
 		if !granter.Equals(granterAddr) {
-			return nil
+			return nil, nil
 		}
 
-		if err := q.cdc.Unmarshal(value, &grant); err != nil {
-			return err
-		}
-
-		grants = append(grants, &grant)
-		return nil
+		return grant, nil
+	}, func() *feegrant.Grant {
+		return &feegrant.Grant{}
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

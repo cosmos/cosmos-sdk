@@ -2,14 +2,14 @@
 
 ## Changelog
 
-- 28/10/2020 - Initial draft
+* 28/10/2020 - Initial draft
 
 ## Authors
 
-- Antoine Herzog (@antoineherzog)
-- Zaki Manian (@zmanian)
-- Aleksandr Bezobchuk (alexanderbez) [1]
-- Frojdi Dymylja (@fdymylja)
+* Antoine Herzog (@antoineherzog)
+* Zaki Manian (@zmanian)
+* Aleksandr Bezobchuk (alexanderbez) [1]
+* Frojdi Dymylja (@fdymylja)
 
 ## Status
 
@@ -41,11 +41,11 @@ Create the `offchain` proto definitions, we extend the auth module with `offchai
 
 An offchain transaction follows these rules:
 
-- the memo must be empty
-- nonce, sequence number must be equal to 0
-- chain-id must be equal to “”
-- fee gas must be equal to 0
-- fee amount must be an empty array
+* the memo must be empty
+* nonce, sequence number must be equal to 0
+* chain-id must be equal to “”
+* fee gas must be equal to 0
+* fee amount must be an empty array
 
 Verification of an offchain transaction follows the same rules as an onchain one, except for the spec differences highlighted above.
 
@@ -110,19 +110,19 @@ Backwards compatibility is maintained as this is a new message spec definition.
 
 ### Positive
 
-- A common format that can be used by multiple applications to sign and verify off-chain messages.
-- The specification is primitive which means it can cover every use case without limiting what is possible to fit inside it.
-- It gives room for other off-chain messages specifications that aim to target more specific and common use cases such as off-chain-based authN/authZ layers [2].
+* A common format that can be used by multiple applications to sign and verify off-chain messages.
+* The specification is primitive which means it can cover every use case without limiting what is possible to fit inside it.
+* It gives room for other off-chain messages specifications that aim to target more specific and common use cases such as off-chain-based authN/authZ layers [2].
 
 ### Negative
 
-- Current proposal requires a fixed relationship between an account address and a public key.
-- Doesn't work with multisig accounts.
+* Current proposal requires a fixed relationship between an account address and a public key.
+* Doesn't work with multisig accounts.
 
 ## Further discussion
 
-- Regarding security in `MsgSignData`, the developer using `MsgSignData` is in charge of making the content laying in `Data` non-replayable when, and if, needed.
-- the offchain package will be further extended with extra messages that target specific use cases such as, but not limited to, authentication in applications, payment channels, L2 solutions in general.
+* Regarding security in `MsgSignData`, the developer using `MsgSignData` is in charge of making the content laying in `Data` non-replayable when, and if, needed.
+* the offchain package will be further extended with extra messages that target specific use cases such as, but not limited to, authentication in applications, payment channels, L2 solutions in general.
 
 ## References
 

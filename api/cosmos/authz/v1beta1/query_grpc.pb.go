@@ -24,8 +24,14 @@ const _ = grpc.SupportPackageIsVersion7
 type QueryClient interface {
 	// Returns list of `Authorization`, granted to the grantee by the granter.
 	Grants(ctx context.Context, in *QueryGrantsRequest, opts ...grpc.CallOption) (*QueryGrantsResponse, error)
-	// GranterGrants returns list of `Authorization`, granted by granter.
+	// GranterGrants returns list of `GrantAuthorization`, granted by granter.
+	//
+	// Since: cosmos-sdk 0.46
 	GranterGrants(ctx context.Context, in *QueryGranterGrantsRequest, opts ...grpc.CallOption) (*QueryGranterGrantsResponse, error)
+	// GranteeGrants returns a list of `GrantAuthorization` by grantee.
+	//
+	// Since: cosmos-sdk 0.46
+	GranteeGrants(ctx context.Context, in *QueryGranteeGrantsRequest, opts ...grpc.CallOption) (*QueryGranteeGrantsResponse, error)
 }
 
 type queryClient struct {
@@ -54,14 +60,29 @@ func (c *queryClient) GranterGrants(ctx context.Context, in *QueryGranterGrantsR
 	return out, nil
 }
 
+func (c *queryClient) GranteeGrants(ctx context.Context, in *QueryGranteeGrantsRequest, opts ...grpc.CallOption) (*QueryGranteeGrantsResponse, error) {
+	out := new(QueryGranteeGrantsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Query/GranteeGrants", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
 	// Returns list of `Authorization`, granted to the grantee by the granter.
 	Grants(context.Context, *QueryGrantsRequest) (*QueryGrantsResponse, error)
-	// GranterGrants returns list of `Authorization`, granted by granter.
+	// GranterGrants returns list of `GrantAuthorization`, granted by granter.
+	//
+	// Since: cosmos-sdk 0.46
 	GranterGrants(context.Context, *QueryGranterGrantsRequest) (*QueryGranterGrantsResponse, error)
+	// GranteeGrants returns a list of `GrantAuthorization` by grantee.
+	//
+	// Since: cosmos-sdk 0.46
+	GranteeGrants(context.Context, *QueryGranteeGrantsRequest) (*QueryGranteeGrantsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -74,6 +95,9 @@ func (UnimplementedQueryServer) Grants(context.Context, *QueryGrantsRequest) (*Q
 }
 func (UnimplementedQueryServer) GranterGrants(context.Context, *QueryGranterGrantsRequest) (*QueryGranterGrantsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GranterGrants not implemented")
+}
+func (UnimplementedQueryServer) GranteeGrants(context.Context, *QueryGranteeGrantsRequest) (*QueryGranteeGrantsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GranteeGrants not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -124,6 +148,24 @@ func _Query_GranterGrants_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GranteeGrants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGranteeGrantsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GranteeGrants(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.authz.v1beta1.Query/GranteeGrants",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GranteeGrants(ctx, req.(*QueryGranteeGrantsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -138,6 +180,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GranterGrants",
 			Handler:    _Query_GranterGrants_Handler,
+		},
+		{
+			MethodName: "GranteeGrants",
+			Handler:    _Query_GranteeGrants_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

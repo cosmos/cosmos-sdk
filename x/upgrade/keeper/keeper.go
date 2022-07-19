@@ -14,7 +14,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -36,6 +35,7 @@ type Keeper struct {
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
+	authority          string                          // the address capable of executing and cancelling an upgrade. Usually the gov module account
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -44,7 +44,7 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) Keeper {
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -52,7 +52,17 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, 
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
 		versionSetter:      vs,
+		authority:          authority,
 	}
+}
+
+// SetVersionSetter sets the interface implemented by baseapp which allows setting baseapp's protocol version field
+func (k *Keeper) SetVersionSetter(vs xp.ProtocolVersionSetter) {
+	k.versionSetter = vs
+}
+
+func (k *Keeper) GetVersionSetter() xp.ProtocolVersionSetter {
+	return k.versionSetter
 }
 
 // SetUpgradeHandler sets an UpgradeHandler for the upgrade specified by name. This handler will be called when the upgrade
@@ -165,14 +175,16 @@ func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
 // If there is another Plan already scheduled, it will cancel and overwrite it.
-// ScheduleUpgrade will also write the upgraded client to the upgraded client path
-// if an upgraded client is specified in the plan
+// ScheduleUpgrade will also write the upgraded IBC ClientState to the upgraded client
+// path if it is specified in the plan.
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	if err := plan.ValidateBasic(); err != nil {
 		return err
 	}
 
-	if plan.Height <= ctx.BlockHeight() {
+	// NOTE: allow for the possibility of chains to schedule upgrades in begin block of the same block
+	// as a strategy for emergency hard fork recoveries
+	if plan.Height < ctx.BlockHeight() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 	}
 
@@ -235,28 +247,43 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
+
 	if iter.Valid() {
-		return parseDoneKey(iter.Key()), int64(binary.BigEndian.Uint64(iter.Value()))
+		return parseDoneKey(iter.Key())
 	}
 
 	return "", 0
 }
 
-// parseDoneKey - split upgrade name from the done key
-func parseDoneKey(key []byte) string {
-	kv.AssertKeyAtLeastLength(key, 2)
-	return string(key[1:])
+// parseDoneKey - split upgrade name and height from the done key
+func parseDoneKey(key []byte) (string, int64) {
+	// 1 byte for the DoneByte + 8 bytes height + at least 1 byte for the name
+	kv.AssertKeyAtLeastLength(key, 10)
+	height := binary.BigEndian.Uint64(key[1:9])
+	return string(key[9:]), int64(height)
+}
+
+// encodeDoneKey - concatenate DoneByte, height and upgrade name to form the done key
+func encodeDoneKey(name string, height int64) []byte {
+	key := make([]byte, 9+len(name)) // 9 = donebyte + uint64 len
+	key[0] = types.DoneByte
+	binary.BigEndian.PutUint64(key[1:9], uint64(height))
+	copy(key[9:], name)
+	return key
 }
 
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
-	bz := store.Get(conv.UnsafeStrToBytes(name))
-	if len(bz) == 0 {
-		return 0
-	}
+	iter := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+	defer iter.Close()
 
-	return int64(binary.BigEndian.Uint64(bz))
+	for ; iter.Valid(); iter.Next() {
+		upgradeName, height := parseDoneKey(iter.Key())
+		if upgradeName == name {
+			return height
+		}
+	}
+	return 0
 }
 
 // ClearIBCState clears any planned IBC state
@@ -299,10 +326,8 @@ func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool)
 
 // setDone marks this upgrade name as being done so the name can't be reused accidentally
 func (k Keeper) setDone(ctx sdk.Context, name string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
-	bz := make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, uint64(ctx.BlockHeight()))
-	store.Set([]byte(name), bz)
+	store := ctx.KVStore(k.storeKey)
+	store.Set(encodeDoneKey(name, ctx.BlockHeight()), []byte{1})
 }
 
 // HasHandler returns true iff there is a handler registered for this name
@@ -362,7 +387,7 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 		return err
 	}
 
-	return os.WriteFile(upgradeInfoFilePath, info, 0600)
+	return os.WriteFile(upgradeInfoFilePath, info, 0o600)
 }
 
 // GetUpgradeInfoPath returns the upgrade info file path

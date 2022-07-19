@@ -31,6 +31,10 @@ func GetAuxToFeeCommand() *cobra.Command {
 				return err
 			}
 
+			if auxSignerData.SignDoc.ChainId != clientCtx.ChainID {
+				return fmt.Errorf("expected chain-id %s, got %s in aux signer data", clientCtx.ChainID, auxSignerData.SignDoc.ChainId)
+			}
+
 			f := clienttx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 			txBuilder := clientCtx.TxConfig.NewTxBuilder()
@@ -72,6 +76,7 @@ func GetAuxToFeeCommand() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
 	return cmd
 }
 

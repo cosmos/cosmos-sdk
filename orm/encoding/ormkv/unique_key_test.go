@@ -5,18 +5,36 @@ import (
 	"fmt"
 	"testing"
 
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
 func TestUniqueKeyCodec(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
 		keyCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "keyCodec").(testutil.TestKeyCodec)
 		pkCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "primaryKeyCodec").(testutil.TestKeyCodec)
+
+		// check if we have a trivial unique index where all of the fields
+		// in the primary key are in the unique key, we should expect an
+		// error in this case
+		isInPk := map[protoreflect.Name]bool{}
+		for _, spec := range pkCodec.KeySpecs {
+			isInPk[spec.FieldName] = true
+		}
+		numPkFields := 0
+		for _, spec := range keyCodec.KeySpecs {
+			if isInPk[spec.FieldName] {
+				numPkFields++
+			}
+		}
+		isTrivialUniqueKey := numPkFields == len(pkCodec.KeySpecs)
+
 		messageType := (&testpb.ExampleTable{}).ProtoReflect().Type()
 		uniqueKeyCdc, err := ormkv.NewUniqueKeyCodec(
 			keyCodec.Codec.Prefix(),
@@ -24,7 +42,14 @@ func TestUniqueKeyCodec(t *testing.T) {
 			keyCodec.Codec.GetFieldNames(),
 			pkCodec.Codec.GetFieldNames(),
 		)
-		assert.NilError(t, err)
+
+		if isTrivialUniqueKey {
+			assert.ErrorContains(t, err, "no new uniqueness constraint")
+			return
+		} else {
+			assert.NilError(t, err)
+		}
+
 		for i := 0; i < 100; i++ {
 			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.ExampleTable)
 			key := keyCodec.Codec.GetKeyValues(a.ProtoReflect())
@@ -59,4 +84,10 @@ func TestUniqueKeyCodec(t *testing.T) {
 			assert.Equal(t, 0, pkCodec.Codec.CompareKeys(pk, pk2))
 		}
 	})
+}
+
+func TestTrivialUnique(t *testing.T) {
+	_, err := ormkv.NewUniqueKeyCodec(nil, (&testpb.ExampleTable{}).ProtoReflect().Type(),
+		[]protoreflect.Name{"u32", "str"}, []protoreflect.Name{"str", "u32"})
+	assert.ErrorIs(t, err, ormerrors.InvalidTableDefinition)
 }

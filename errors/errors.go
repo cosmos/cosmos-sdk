@@ -5,6 +5,8 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 // UndefinedCodespace when we explicitly declare no codespace
@@ -14,8 +16,7 @@ var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors
 	errInternal = Register(UndefinedCodespace, 1, "internal")
 
-	// ErrPanic is only set when we recover from a panic, so we know to
-	// redact potentially sensitive system info
+	// ErrPanic should only be set when we recovering from a panic
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
 )
 
@@ -28,12 +29,18 @@ var (
 //
 // Use this function only during a program startup phase.
 func Register(codespace string, code uint32, description string) *Error {
+	return RegisterWithGRPCCode(codespace, code, grpccodes.Unknown, description)
+}
+
+// RegisterWithGRPCCode is a version of Register that associates a gRPC error
+// code with a registered error.
+func RegisterWithGRPCCode(codespace string, code uint32, grpcCode grpccodes.Code, description string) *Error {
 	// TODO - uniqueness is (codespace, code) combo
 	if e := getUsed(codespace, code); e != nil {
 		panic(fmt.Sprintf("error with code %d is already registered: %q", code, e.desc))
 	}
 
-	err := New(codespace, code, description)
+	err := &Error{codespace: codespace, code: code, desc: description, grpcCode: grpcCode}
 	setUsed(err)
 
 	return err
@@ -68,7 +75,7 @@ func ABCIError(codespace string, code uint32, log string) error {
 	}
 	// This is a unique error, will never match on .Is()
 	// Use Wrap here to get a stack trace
-	return Wrap(New(codespace, code, "unknown"), log)
+	return Wrap(&Error{codespace: codespace, code: code, desc: "unknown"}, log)
 }
 
 // Error represents a root error.
@@ -84,10 +91,12 @@ type Error struct {
 	codespace string
 	code      uint32
 	desc      string
+	grpcCode  grpccodes.Code
 }
 
+// New is an alias for Register.
 func New(codespace string, code uint32, desc string) *Error {
-	return &Error{codespace: codespace, code: code, desc: desc}
+	return Register(codespace, code, desc)
 }
 
 func (e Error) Error() string {
@@ -141,6 +150,10 @@ func (e *Error) Wrap(desc string) error { return Wrap(e, desc) }
 // Wrapf extends this error with an additional information.
 // It's a handy function to call Wrapf with sdk errors.
 func (e *Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
+
+func (e *Error) GRPCStatus() *grpcstatus.Status {
+	return grpcstatus.Newf(e.grpcCode, "codespace %s code %d: %s", e.codespace, e.code, e.desc)
+}
 
 func isNilErr(err error) bool {
 	// Reflect usage is necessary to correctly compare with
@@ -228,6 +241,27 @@ func (e *wrappedError) Is(target error) bool {
 // Unwrap implements the built-in errors.Unwrap
 func (e *wrappedError) Unwrap() error {
 	return e.parent
+}
+
+// GRPCStatus gets the gRPC status from the wrapped error or returns an unknown gRPC status.
+func (e *wrappedError) GRPCStatus() *grpcstatus.Status {
+	w := e.Cause()
+	for {
+		if hasStatus, ok := w.(interface {
+			GRPCStatus() *grpcstatus.Status
+		}); ok {
+			status := hasStatus.GRPCStatus()
+			return grpcstatus.New(status.Code(), fmt.Sprintf("%s: %s", status.Message(), e.msg))
+		}
+
+		x, ok := w.(causer)
+		if ok {
+			w = x.Cause()
+		}
+		if x == nil {
+			return grpcstatus.New(grpccodes.Unknown, e.msg)
+		}
+	}
 }
 
 // Recover captures a panic and stop its propagation. If panic happens it is

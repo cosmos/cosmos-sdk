@@ -15,12 +15,12 @@ validators are also returned back to Tendermint for inclusion in the Tendermint
 validator set which is responsible for validating Tendermint messages at the
 consensus layer. Operations are as following:
 
-- the new validator set is taken as the top `params.MaxValidators` number of
+* the new validator set is taken as the top `params.MaxValidators` number of
   validators retrieved from the `ValidatorsByPower` index
-- the previous validator set is compared with the new validator set:
-    - missing validators begin unbonding and their `Tokens` are transferred from the
+* the previous validator set is compared with the new validator set:
+    * missing validators begin unbonding and their `Tokens` are transferred from the
     `BondedPool` to the `NotBondedPool` `ModuleAccount`
-    - new validators are instantly bonded and their `Tokens` are transferred from the
+    * new validators are instantly bonded and their `Tokens` are transferred from the
     `NotBondedPool` to the `BondedPool` `ModuleAccount`
 
 In all cases, any validators leaving or entering the bonded validator set or
@@ -62,9 +62,9 @@ switched from `types.Unbonding` to
 Complete the unbonding of all mature `UnbondingDelegations.Entries` within the
 `UnbondingDelegations` queue with the following procedure:
 
-- transfer the balance coins to the delegator's wallet address
-- remove the mature entry from `UnbondingDelegation.Entries`
-- remove the `UnbondingDelegation` object from the store if there are no
+* transfer the balance coins to the delegator's wallet address
+* remove the mature entry from `UnbondingDelegation.Entries`
+* remove the `UnbondingDelegation` object from the store if there are no
   remaining entries.
 
 ### Redelegations
@@ -72,6 +72,6 @@ Complete the unbonding of all mature `UnbondingDelegations.Entries` within the
 Complete the unbonding of all mature `Redelegation.Entries` within the
 `Redelegations` queue with the following procedure:
 
-- remove the mature entry from `Redelegation.Entries`
-- remove the `Redelegation` object from the store if there are no
+* remove the mature entry from `Redelegation.Entries`
+* remove the `Redelegation` object from the store if there are no
   remaining entries.

@@ -76,19 +76,19 @@ The first validator node is now running in-process, which means the test network
 
 Check the status of the first validator node:
 
-```
+```sh
 simd status
 ```
 
 Import the key from the provided mnemonic:
 
-```
+```sh
 simd keys add test --recover --keyring-backend test
 ```
 
 Check the balance of the account address:
 
-```
+```sh
 simd q bank balances [address]
 ```
 

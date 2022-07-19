@@ -98,6 +98,15 @@ func (ctx Context) BroadcastTxCommit(txBytes []byte) (*sdk.TxResponse, error) {
 		return sdk.NewResponseFormatBroadcastTxCommit(res), nil
 	}
 
+	// with these changes(https://github.com/tendermint/tendermint/pull/7683)
+	// in tendermint, we receive both an error and a non-empty res from TM. Here
+	// we handle the case where both are relevant. Note: without this edge-case handling,
+	// CLI is breaking (for few transactions ex: executing unathorized messages in feegrant)
+	// this check is added to tackle the particular case.
+	if strings.Contains(err.Error(), "transaction encountered error") {
+		return sdk.NewResponseFormatBroadcastTxCommit(res), nil
+	}
+
 	if errRes := CheckTendermintError(err, txBytes); errRes != nil {
 		return errRes, nil
 	}

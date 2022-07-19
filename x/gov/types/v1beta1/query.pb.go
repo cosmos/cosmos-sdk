@@ -226,7 +226,7 @@ func (m *QueryProposalsResponse) GetPagination() *query.PageResponse {
 type QueryVoteRequest struct {
 	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	// voter defines the oter address for the proposals.
+	// voter defines the voter address for the proposals.
 	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
 }
 

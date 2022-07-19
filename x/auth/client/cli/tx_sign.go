@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
@@ -53,8 +55,9 @@ account key. It implies --signature-only.
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().Bool(flagSigOnly, true, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
-	cmd.MarkFlagRequired(flags.FlagFrom)
 	flags.AddTxFlagsToCmd(cmd)
+
+	cmd.MarkFlagRequired(flags.FlagFrom)
 
 	return cmd
 }
@@ -105,7 +108,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			}
 			if ms == "" {
 				from, _ := cmd.Flags().GetString(flags.FlagFrom)
-				_, fromName, _, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
+				_, fromName, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), from)
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
@@ -114,7 +117,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 					return err
 				}
 			} else {
-				multisigAddr, _, _, err := client.GetFromFields(txFactory.Keybase(), ms, clientCtx.GenerateOnly)
+				multisigAddr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), ms)
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
@@ -151,7 +154,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 		return func() {}, nil
 	}
 
-	fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return func() {}, err
 	}
@@ -191,8 +194,9 @@ be generated via the 'multisign' command.
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
 	cmd.Flags().Bool(flagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
-	cmd.MarkFlagRequired(flags.FlagFrom)
 	flags.AddTxFlagsToCmd(cmd)
+
+	cmd.MarkFlagRequired(flags.FlagFrom)
 
 	return cmd
 }
@@ -221,7 +225,6 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 		txCfg := clientCtx.TxConfig
 		txBuilder, err := txCfg.WrapTxBuilder(newTx)
 		if err != nil {
@@ -234,16 +237,45 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		from, _ := cmd.Flags().GetString(flags.FlagFrom)
-		_, fromName, _, err := client.GetFromFields(txF.Keybase(), from, clientCtx.GenerateOnly)
+		_, fromName, _, err := client.GetFromFields(clientCtx, txF.Keybase(), from)
 		if err != nil {
 			return fmt.Errorf("error getting account from keybase: %w", err)
 		}
 
 		overwrite, _ := f.GetBool(flagOverwrite)
 		if multisig != "" {
-			multisigAddr, _, _, err := client.GetFromFields(txFactory.Keybase(), multisig, clientCtx.GenerateOnly)
+			// Bech32 decode error, maybe it's a name, we try to fetch from keyring
+			multisigAddr, multisigName, _, err := client.GetFromFields(clientCtx, txF.Keybase(), multisig)
 			if err != nil {
 				return fmt.Errorf("error getting account from keybase: %w", err)
+			}
+			multisigkey, err := getMultisigRecord(clientCtx, multisigName)
+			if err != nil {
+				return err
+			}
+			multisigPubKey, err := multisigkey.GetPubKey()
+			if err != nil {
+				return err
+			}
+			multisigLegacyPub := multisigPubKey.(*kmultisig.LegacyAminoPubKey)
+
+			fromRecord, err := clientCtx.Keyring.Key(fromName)
+			if err != nil {
+				return fmt.Errorf("error getting account from keybase: %w", err)
+			}
+			fromPubKey, err := fromRecord.GetPubKey()
+			if err != nil {
+				return err
+			}
+
+			var found bool
+			for _, pubkey := range multisigLegacyPub.GetPubKeys() {
+				if pubkey.Equals(fromPubKey) {
+					found = true
+				}
+			}
+			if !found {
+				return fmt.Errorf("signing key is not a part of multisig key")
 			}
 			err = authclient.SignTxWithSignerAddress(
 				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
@@ -295,7 +327,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 
-		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 		if err != nil {
 			return err
 		}

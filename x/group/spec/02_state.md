@@ -80,10 +80,12 @@ The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 `proposalByGroupPolicyIndex` allows to retrieve proposals by group policy account address:
 `0x32 | len([]byte(account.Address)) | []byte(account.Address) | BigEndian(ProposalId) -> []byte()`.
 
-### proposalByProposerIndex
+### ProposalsByVotingPeriodEndIndex
 
-`proposalByProposerIndex` allows to retrieve proposals by proposer address:
-`0x33 | len([]byte(proposer.Address)) |  []byte(proposer.Address) | BigEndian(ProposalId) -> []byte()`.
+`proposalsByVotingPeriodEndIndex` allows to retrieve proposals sorted by chronological `voting_period_end`:
+`0x33 | sdk.FormatTimeBytes(proposal.VotingPeriodEnd) | BigEndian(ProposalId) -> []byte()`.
+
+This index is used when tallying the proposal votes at the end of the voting period, and for pruning proposals at `VotingPeriodEnd + MaxExecutionPeriod`.
 
 ## Vote Table
 

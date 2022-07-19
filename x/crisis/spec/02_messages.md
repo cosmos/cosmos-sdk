@@ -11,12 +11,12 @@ corresponding updates to the state.
 
 Blockchain invariants can be checked using the `MsgVerifyInvariant` message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc7/proto/cosmos/crisis/v1beta1/tx.proto#L14-L22
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/crisis/v1beta1/tx.proto#L16-L26
 
 This message is expected to fail if:
 
-- the sender does not have enough coins for the constant fee
-- the invariant route is not registered
+* the sender does not have enough coins for the constant fee
+* the invariant route is not registered
 
 This message checks the invariant provided, and if the invariant is broken it
 panics, halting the blockchain. If the invariant is broken, the constant fee is

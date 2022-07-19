@@ -4,4 +4,4 @@ order: 0
 
 # Params
 
-- [Params](spec/README.md) - Globally available parameter store.
+* [Params](spec/README.md) - Globally available parameter store.

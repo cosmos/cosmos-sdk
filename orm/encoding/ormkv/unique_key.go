@@ -64,6 +64,13 @@ func NewUniqueKeyCodec(prefix []byte, messageType protoreflect.MessageType, inde
 		}
 	}
 
+	// if there is nothing in the value we have a trivial unique index
+	// which shouldn't actually be a unique index at all
+	if len(valueFields) == 0 {
+		return nil, ormerrors.InvalidTableDefinition.Wrapf("unique index %s on table %s introduces no new uniqueness constraint not already in the primary key and should not be marked as unique",
+			indexFields, messageType.Descriptor().FullName())
+	}
+
 	valueCodec, err := NewKeyCodec(nil, messageType, valueFields)
 	if err != nil {
 		return nil, err

@@ -4,10 +4,12 @@ package tx_test
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -28,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -40,6 +43,7 @@ type IntegrationTestSuite struct {
 	cfg     network.Config
 	network *network.Network
 
+	txHeight    int64
 	queryClient tx.ServiceClient
 	txRes       sdk.TxResponse
 }
@@ -78,14 +82,108 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &s.txRes))
-	s.Require().Equal(uint32(0), s.txRes.Code)
+	s.Require().Equal(uint32(0), s.txRes.Code, s.txRes)
+
+	out, err = bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=2", flags.FlagSequence),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+		fmt.Sprintf("--%s=foobar", flags.FlagNote),
+	)
+	s.Require().NoError(err)
+	var tr sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
+	s.Require().Equal(uint32(0), tr.Code)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
+	height, err := s.network.LatestHeight()
+	s.Require().NoError(err)
+	s.txHeight = height
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
+}
+
+func (s *IntegrationTestSuite) TestQueryBySig() {
+	// broadcast tx
+	txb := s.mkTxBuilder()
+	txbz, err := s.cfg.TxConfig.TxEncoder()(txb.GetTx())
+	s.Require().NoError(err)
+	_, err = s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txbz, Mode: tx.BroadcastMode_BROADCAST_MODE_BLOCK})
+	s.Require().NoError(err)
+
+	// get the signature out of the builder
+	sigs, err := txb.GetTx().GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Len(sigs, 1)
+	sig, ok := sigs[0].Data.(*signing.SingleSignatureData)
+	s.Require().True(ok)
+
+	// encode, format, query
+	b64Sig := base64.StdEncoding.EncodeToString(sig.Signature)
+	sigFormatted := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, b64Sig)
+	res, err := s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{
+		Events:  []string{sigFormatted},
+		OrderBy: 0,
+		Page:    0,
+		Limit:   10,
+	})
+	s.Require().NoError(err)
+	s.Require().Len(res.Txs, 1)
+	s.Require().Len(res.Txs[0].Signatures, 1)
+	s.Require().Equal(res.Txs[0].Signatures[0], sig.Signature)
+
+	// bad format should error
+	_, err = s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{Events: []string{"tx.foo.bar='baz'"}})
+	s.Require().ErrorContains(err, "invalid event;")
+}
+
+func TestEventRegex(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name  string
+		event string
+		match bool
+	}{
+		{
+			name:  "valid: with quotes",
+			event: "tx.message='something'",
+			match: true,
+		},
+		{
+			name:  "valid: no quotes",
+			event: "tx.message=something",
+			match: true,
+		},
+		{
+			name:  "invalid: too many separators",
+			event: "tx.message.foo='bar'",
+			match: false,
+		},
+		{
+			name:  "valid: symbols ok",
+			event: "tx.signature='foobar/baz123=='",
+			match: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			match := authtx.EventRegex.Match([]byte(tc.event))
+			require.Equal(t, tc.match, match)
+		})
+	}
 }
 
 func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
@@ -128,10 +226,8 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 				// - tx.* events: tx.fee, tx.acc_seq, tx.signature
 				// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
 				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend
-				s.Require().Equal(len(res.GetResult().GetEvents()), 13)
-				s.Require().Len(res.GetResult().MsgResponses, 1)
-				// Check the result and gas used are correct.
-				s.Require().True(res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
+				s.Require().Equal(len(res.GetResult().GetEvents()), 13) // 1 coin recv 1 coin spent, 1 transfer, 3 messages.
+				s.Require().True(res.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, just check it's not empty.
 			}
 		})
 	}
@@ -171,9 +267,9 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
-				s.Require().Equal(len(result.GetResult().GetEvents()), 13) // See TestSimulateTx_GRPC for the 13 events.
 				s.Require().Len(result.GetResult().MsgResponses, 1)
-				s.Require().True(result.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
+				s.Require().Equal(len(result.GetResult().GetEvents()), 13) // See TestSimulateTx_GRPC for the 13 events.
+				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, jus
 			}
 		})
 	}
@@ -185,21 +281,22 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 		req       *tx.GetTxsEventRequest
 		expErr    bool
 		expErrMsg string
+		expLen    int
 	}{
 		{
 			"nil request",
 			nil,
-			true, "request cannot be nil",
+			true, "request cannot be nil", 0,
 		},
 		{
 			"empty request",
 			&tx.GetTxsEventRequest{},
-			true, "must declare at least one event to search",
+			true, "must declare at least one event to search", 0,
 		},
 		{
 			"request with dummy event",
 			&tx.GetTxsEventRequest{Events: []string{"foobar"}},
-			true, "event foobar should be of the format: {eventType}.{eventAttribute}={value}",
+			true, "event foobar should be of the format: {eventType}.{eventAttribute}={value}", 0,
 		},
 		{
 			"request with order-by",
@@ -207,33 +304,30 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 				Events:  []string{bankMsgSendEventAction},
 				OrderBy: tx.OrderBy_ORDER_BY_ASC,
 			},
-			false, "",
+			false, "", 3,
 		},
 		{
 			"without pagination",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction},
 			},
-			false, "",
+			false, "", 3,
 		},
 		{
 			"with pagination",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction},
-				Pagination: &query.PageRequest{
-					CountTotal: false,
-					Offset:     0,
-					Limit:      1,
-				},
+				Page:   2,
+				Limit:  2,
 			},
-			false, "",
+			false, "", 1,
 		},
 		{
 			"with multi events",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction, "message.module='bank'"},
 			},
-			false, "",
+			false, "", 3,
 		},
 	}
 	for _, tc := range testCases {
@@ -247,7 +341,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 				s.Require().NoError(err)
 				s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
 				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
-
+				s.Require().Equal(len(grpcRes.Txs), tc.expLen)
 				// Make sure fields are populated.
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681
@@ -265,54 +359,55 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 		url       string
 		expErr    bool
 		expErrMsg string
+		expLen    int
 	}{
 		{
 			"empty params",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress),
 			true,
-			"must declare at least one event to search",
+			"must declare at least one event to search", 0,
 		},
 		{
 			"without pagination",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, bankMsgSendEventAction),
 			false,
-			"",
+			"", 3,
 		},
 		{
 			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, bankMsgSendEventAction, 0, 10),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 2, 2),
 			false,
-			"",
+			"", 1,
 		},
 		{
 			"valid request: order by asc",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_ASC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
-			"",
+			"", 3,
 		},
 		{
 			"valid request: order by desc",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_DESC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
-			"",
+			"", 3,
 		},
 		{
 			"invalid request: invalid order by",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=invalid_order", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			true,
-			"is not a valid tx.OrderBy",
+			"is not a valid tx.OrderBy", 0,
 		},
 		{
 			"expect pass with multiple-events",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
-			"",
+			"", 3,
 		},
 		{
 			"expect pass with escape event",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
 			false,
-			"",
+			"", 3,
 		},
 	}
 	for _, tc := range testCases {
@@ -328,6 +423,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 				s.Require().GreaterOrEqual(len(result.Txs), 1)
 				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
 				s.Require().NotZero(result.TxResponses[0].Height)
+				s.Require().Equal(len(result.Txs), tc.expLen)
 			}
 		})
 	}
@@ -586,6 +682,85 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 
 	// make sure gas was used
 	s.Require().Greater(res.GasInfo.GasUsed, uint64(0))
+}
+
+func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
+	testCases := []struct {
+		name      string
+		req       *tx.GetBlockWithTxsRequest
+		expErr    bool
+		expErrMsg string
+		expTxsLen int
+	}{
+		{"nil request", nil, true, "request cannot be nil", 0},
+		{"empty request", &tx.GetBlockWithTxsRequest{}, true, "height must not be less than 1 or greater than the current height", 0},
+		{"bad height", &tx.GetBlockWithTxsRequest{Height: 99999999}, true, "height must not be less than 1 or greater than the current height", 0},
+		{"bad pagination", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 1000, Limit: 100}}, true, "out of range", 0},
+		{"good request", &tx.GetBlockWithTxsRequest{Height: s.txHeight}, false, "", 1},
+		{"with pagination request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 1}}, false, "", 1},
+		{"page all request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 1},
+		{"block with 0 tx", &tx.GetBlockWithTxsRequest{Height: s.txHeight - 1, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 0},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Query the tx via gRPC.
+			grpcRes, err := s.queryClient.GetBlockWithTxs(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				if tc.expTxsLen > 0 {
+					s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+				}
+				s.Require().Equal(grpcRes.Block.Header.Height, tc.req.Height)
+				if tc.req.Pagination != nil {
+					s.Require().LessOrEqual(len(grpcRes.Txs), int(tc.req.Pagination.Limit))
+				}
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPCGateway() {
+	val := s.network.Validators[0]
+	testCases := []struct {
+		name      string
+		url       string
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			"empty params",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/0", val.APIAddress),
+			true, "height must not be less than 1 or greater than the current height",
+		},
+		{
+			"bad height",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/%d", val.APIAddress, 9999999),
+			true, "height must not be less than 1 or greater than the current height",
+		},
+		{
+			"good request",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/%d", val.APIAddress, s.txHeight),
+			false, "",
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			res, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.GetBlockWithTxsResponse
+				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
+				s.Require().Equal(result.Block.Header.Height, s.txHeight)
+			}
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

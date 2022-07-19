@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // singleton implements a Table instance for singletons.
@@ -42,7 +43,7 @@ func (t singleton) ValidateJSON(reader io.Reader) error {
 }
 
 func (t singleton) ImportJSON(ctx context.Context, reader io.Reader) error {
-	backend, err := t.getBackend(ctx)
+	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return err
 	}
@@ -58,7 +59,7 @@ func (t singleton) ImportJSON(ctx context.Context, reader io.Reader) error {
 		return err
 	}
 
-	return t.save(backend, msg, saveModeDefault)
+	return t.save(ctx, backend, msg, saveModeDefault)
 }
 
 func (t singleton) ExportJSON(ctx context.Context, writer io.Writer) error {
@@ -90,4 +91,11 @@ func (t singleton) jsonMarshalOptions() protojson.MarshalOptions {
 		EmitUnpopulated: true,
 		Resolver:        t.typeResolver,
 	}
+}
+
+func (t *singleton) GetTable(message proto.Message) Table {
+	if message.ProtoReflect().Descriptor().FullName() == t.MessageType().Descriptor().FullName() {
+		return t
+	}
+	return nil
 }

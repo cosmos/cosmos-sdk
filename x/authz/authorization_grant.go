@@ -9,28 +9,28 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// NewGrant returns new Grant
-func NewGrant(a Authorization, expiration time.Time) (Grant, error) {
-	g := Grant{
-		Expiration: expiration,
+// NewGrant returns new Grant. Expiration is optional and noop if null.
+// It returns an error if the expiration is before the current block time,
+// which is passed into the `blockTime` arg.
+func NewGrant(blockTime time.Time, a Authorization, expiration *time.Time) (Grant, error) {
+	if expiration != nil && !expiration.After(blockTime) {
+		return Grant{}, sdkerrors.Wrapf(ErrInvalidExpirationTime, "expiration must be after the current block time (%v), got %v", blockTime.Format(time.RFC3339), expiration.Format(time.RFC3339))
 	}
 	msg, ok := a.(proto.Message)
 	if !ok {
-		return Grant{}, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", a)
+		return Grant{}, sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", a)
 	}
-
 	any, err := cdctypes.NewAnyWithValue(msg)
 	if err != nil {
 		return Grant{}, err
 	}
-	g.Authorization = any
-
-	return g, nil
+	return Grant{
+		Expiration:    expiration,
+		Authorization: any,
+	}, nil
 }
 
-var (
-	_ cdctypes.UnpackInterfacesMessage = &Grant{}
-)
+var _ cdctypes.UnpackInterfacesMessage = &Grant{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (g Grant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
@@ -39,26 +39,23 @@ func (g Grant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 }
 
 // GetAuthorization returns the cached value from the Grant.Authorization if present.
-func (g Grant) GetAuthorization() Authorization {
+func (g Grant) GetAuthorization() (Authorization, error) {
 	if g.Authorization == nil {
-		return nil
+		return nil, sdkerrors.ErrInvalidType.Wrap("authorization is nil")
 	}
-	a, ok := g.Authorization.GetCachedValue().(Authorization)
-	if !ok {
-		return nil
-	}
-	return a
-}
-
-func (g Grant) ValidateBasic() error {
-	if g.Expiration.Unix() < time.Now().Unix() {
-		return sdkerrors.Wrap(ErrInvalidExpirationTime, "Time can't be in the past")
-	}
-
 	av := g.Authorization.GetCachedValue()
 	a, ok := av.(Authorization)
 	if !ok {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (Authorization)(nil), av)
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (Authorization)(nil), av)
+	}
+	return a, nil
+}
+
+func (g Grant) ValidateBasic() error {
+	av := g.Authorization.GetCachedValue()
+	a, ok := av.(Authorization)
+	if !ok {
+		return sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (Authorization)(nil), av)
 	}
 	return a.ValidateBasic()
 }

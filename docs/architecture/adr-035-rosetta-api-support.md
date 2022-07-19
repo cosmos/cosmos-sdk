@@ -2,14 +2,14 @@
 
 ## Authors
 
-- Jonathan Gimeno (@jgimeno)
-- David Grierson (@senormonito)
-- Alessio Treglia (@alessio)
-- Frojdy Dymylja (@fdymylja)
+* Jonathan Gimeno (@jgimeno)
+* David Grierson (@senormonito)
+* Alessio Treglia (@alessio)
+* Frojdy Dymylja (@fdymylja)
 
 ## Changelog
 
-- 2021-05-12: the external library  [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) has been moved within the Cosmos SDK.
+* 2021-05-12: the external library  [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) has been moved within the Cosmos SDK.
 
 ## Context
 
@@ -203,9 +203,9 @@ Proposed
 
 ### Positive
 
-- Out-of-the-box Rosetta API support within Cosmos SDK.
-- Blockchain interface standardisation
+* Out-of-the-box Rosetta API support within Cosmos SDK.
+* Blockchain interface standardisation
 
 ## References
 
-- https://www.rosetta-api.org/
+* https://www.rosetta-api.org/

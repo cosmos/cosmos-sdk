@@ -4,8 +4,11 @@ managed:
   go_package_prefix:
     default: github.com/cosmos/cosmos-sdk/orm/internal
     override:
-      buf.build/cosmos/cosmos-sdk: github.com/cosmos/cosmos-sdk/api
+      buf.build/cosmos/cosmos-sdk: cosmossdk.io/api
 plugins:
   - name: go-pulsar
+    out: .
+    opt: paths=source_relative
+  - name: go-cosmos-orm
     out: .
     opt: paths=source_relative

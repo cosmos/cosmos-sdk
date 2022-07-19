@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- 2019 July 31: Initial draft
-- 2019 October 24: Initial implementation
+* 2019 July 31: Initial draft
+* 2019 October 24: Initial implementation
 
 ## Status
 
@@ -27,14 +27,14 @@ chain so that the equivocating validator(s) can be slashed.
 We will implement an evidence module in the Cosmos SDK supporting the following
 functionality:
 
-- Provide developers with the abstractions and interfaces necessary to define
+* Provide developers with the abstractions and interfaces necessary to define
   custom evidence messages, message handlers, and methods to slash and penalize
   accordingly for misbehavior.
-- Support the ability to route evidence messages to handlers in any module to
+* Support the ability to route evidence messages to handlers in any module to
   determine the validity of submitted misbehavior.
-- Support the ability, through governance, to modify slashing penalties of any
+* Support the ability, through governance, to modify slashing penalties of any
   evidence type.
-- Querier implementation to support querying params, evidence types, params, and
+* Querier implementation to support querying params, evidence types, params, and
   all submitted valid misbehavior.
 
 ### Types
@@ -160,23 +160,23 @@ type GenesisState struct {
 
 ### Positive
 
-- Allows the state machine to process misbehavior submitted on-chain and penalize
+* Allows the state machine to process misbehavior submitted on-chain and penalize
   validators based on agreed upon slashing parameters.
-- Allows evidence types to be defined and handled by any module. This further allows
+* Allows evidence types to be defined and handled by any module. This further allows
   slashing and jailing to be defined by more complex mechanisms.
-- Does not solely rely on Tendermint to submit evidence.
+* Does not solely rely on Tendermint to submit evidence.
 
 ### Negative
 
-- No easy way to introduce new evidence types through governance on a live chain
+* No easy way to introduce new evidence types through governance on a live chain
   due to the inability to introduce the new evidence type's corresponding handler
 
 ### Neutral
 
-- Should we persist infractions indefinitely? Or should we rather rely on events?
+* Should we persist infractions indefinitely? Or should we rather rely on events?
 
 ## References
 
-- [ICS](https://github.com/cosmos/ics)
-- [IBC Architecture](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_ARCHITECTURE.md)
-- [Tendermint Fork Accountability](https://github.com/tendermint/spec/blob/7b3138e69490f410768d9b1ffc7a17abc23ea397/spec/consensus/fork-accountability.md)
+* [ICS](https://github.com/cosmos/ics)
+* [IBC Architecture](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_ARCHITECTURE.md)
+* [Tendermint Fork Accountability](https://github.com/tendermint/spec/blob/7b3138e69490f410768d9b1ffc7a17abc23ea397/spec/consensus/fork-accountability.md)

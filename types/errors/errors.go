@@ -1,21 +1,17 @@
-//Package errors provides a shared set of errors for use in the SDK,
-//aliases functionality in the github.com/cosmos/cosmos-sdk/errors module
-//that used to be in this package, and provides some helpers for converting
-//errors to ABCI response code.
-//
-//New code should generally import github.com/cosmos/cosmos-sdk/errors directly
-//and define a custom set of errors in custom codespace, rather than importing
-//this package.
 package errors
 
 import (
-	errorsmod "github.com/cosmos/cosmos-sdk/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
+// Type Aliases to errors module
+//
+// Deprecated: functionality of this package has been moved to it's own module:
+//    cosmossdk.io/errors
+// Please use the above module instead of this package.
 var (
 	SuccessABCICode    = errorsmod.SuccessABCICode
 	ABCIInfo           = errorsmod.ABCIInfo
-	Redact             = errorsmod.Redact
 	UndefinedCodespace = errorsmod.UndefinedCodespace
 	Register           = errorsmod.Register
 	ABCIError          = errorsmod.ABCIError
@@ -28,9 +24,11 @@ var (
 	AssertNil          = errorsmod.AssertNil
 )
 
-type (
-	Error = errorsmod.Error
-)
+// Error type alias for errorsmod.Error
+//
+// Deprecated: the type has been moved to cosmossdk.io/errors
+// module. Please use the above module instead of this package.
+type Error = errorsmod.Error
 
 // RootCodespace is the codespace for all errors defined in this package
 const RootCodespace = "sdk"
@@ -163,7 +161,10 @@ var (
 	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
 	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
 
-	// ErrPanic is only set when we recover from a panic, so we know to
-	// redact potentially sensitive system info
+	// ErrInvalidGasLimit defines an error when an invalid GasWanted value is
+	// supplied.
+	ErrInvalidGasLimit = Register(RootCodespace, 41, "invalid gas limit")
+
+	// ErrPanic should only be set when we recovering from a panic
 	ErrPanic = errorsmod.ErrPanic
 )

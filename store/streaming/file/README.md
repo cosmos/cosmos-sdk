@@ -31,7 +31,7 @@ In order to expose *all* KVStores, we can include `*` in this list. An empty lis
 3. `streamers.file.prefix` contains an optional prefix to prepend to the output files to prevent potential collisions
 with other App `StreamingService` output files.
 
-##### Encoding
+### Encoding
 
 For each pair of `BeginBlock` requests and responses, a file is created and named `block-{N}-begin`, where N is the block number.
 At the head of this file the length-prefixed protobuf encoded `BeginBlock` request is written.
@@ -55,7 +55,7 @@ In between these two encoded messages, the state changes that occurred due to th
 a series of length-prefixed protobuf encoded `StoreKVPair`s representing `Set` and `Delete` operations within the KVStores the service
 is configured to listen to.
 
-##### Decoding
+### Decoding
 
 To decode the files written in the above format we read all the bytes from a given file into memory and segment them into proto
 messages based on the length-prefixing of each message. Once segmented, it is known that the first message is the ABCI request,

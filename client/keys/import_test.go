@@ -11,14 +11,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runImportCmd(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := clienttestutil.MakeTestCodec(t)
 	testCases := []struct {
 		name           string
 		keyringBackend string
@@ -91,13 +91,10 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 				WithCodec(cdc)
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-			t.Cleanup(func() {
-				kb.Delete("keyname1") // nolint:errcheck
-			})
+			t.Cleanup(cleanupKeys(t, kb, "keyname1"))
 
 			keyfile := filepath.Join(kbHome, "key.asc")
-
-			require.NoError(t, os.WriteFile(keyfile, []byte(armoredKey), 0644))
+			require.NoError(t, os.WriteFile(keyfile, []byte(armoredKey), 0o644))
 
 			defer func() {
 				_ = os.RemoveAll(kbHome)

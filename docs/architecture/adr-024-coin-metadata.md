@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 05/19/2020: Initial draft
+* 05/19/2020: Initial draft
 
 ## Status
 
@@ -93,9 +93,9 @@ As an example, the ATOM's metadata can be defined as follows:
 
 Given the above metadata, a client may infer the following things:
 
-- 4.3atom = 4.3 * (10^6) = 4,300,000uatom
-- The string "atom" can be used as a display name in a list of tokens.
-- The balance 4300000 can be displayed as 4,300,000uatom or 4,300matom or 4.3atom.
+* 4.3atom = 4.3 * (10^6) = 4,300,000uatom
+* The string "atom" can be used as a display name in a list of tokens.
+* The balance 4300000 can be displayed as 4,300,000uatom or 4,300matom or 4.3atom.
   The `display` denomination 4.3atom is a good default if the authors of the client don't make
   an explicit decision to choose a different representation.
 
@@ -124,13 +124,13 @@ via an endpoint, we may consider supporting automatic conversion of a given unit
 
 ### Positive
 
-- Provides clients, wallet providers and block explorers with additional data on
+* Provides clients, wallet providers and block explorers with additional data on
   asset denomination to improve UX and remove any need to make assumptions on
   denomination units.
 
 ### Negative
 
-- A small amount of required additional storage in the `x/bank` module. The amount
+* A small amount of required additional storage in the `x/bank` module. The amount
   of additional storage should be minimal as the amount of total assets should not
   be large.
 

@@ -15,14 +15,17 @@ Both `simd-env` and `simd-dlv` work and run the same, except that `simd-dlv` use
 ## How to use
 
 The command to start a local network in debug mode is:
+
 ```shell
 # make localnet-debug
 ```
 
 The command to stop the local network and destroy its containers is:
+
 ```shell
 # make localnet-stop
 ```
+
 __note: this works the same for both `localnet-start` and `localnet-debug`__
 
 Now, by default only `simdnode0` is run in debug mode, but you can run any of the other nodes in debug mode by changing the `DEBUG` environment variable to `1` in `docker-compose.yml`.

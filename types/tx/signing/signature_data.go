@@ -16,7 +16,7 @@ type SingleSignatureData struct {
 	// SignMode represents the SignMode of the signature
 	SignMode SignMode
 
-	// SignMode represents the SignMode of the signature
+	// Signature is the raw signature.
 	Signature []byte
 }
 

@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- Sep 22, 2021: Initial Draft
+* Sep 22, 2021: Initial Draft
 
 ## Status
 
@@ -156,20 +156,20 @@ module may be removed entirely in a future release.
 
 ### Positive
 
-- Module parameters are serialized more efficiently
-- Modules are able to react on parameters changes and perform additional actions.
-- Special events can be emitted, allowing hooks to be triggered.
+* Module parameters are serialized more efficiently
+* Modules are able to react on parameters changes and perform additional actions.
+* Special events can be emitted, allowing hooks to be triggered.
 
 ### Negative
 
-- Module parameters becomes slightly more burdensome for module developers:
-    - Modules are now responsible for persisting and retrieving parameter state
-    - Modules are now required to have unique message handlers to handle parameter
+* Module parameters becomes slightly more burdensome for module developers:
+    * Modules are now responsible for persisting and retrieving parameter state
+    * Modules are now required to have unique message handlers to handle parameter
       changes per unique parameter data structure.
 
 ### Neutral
 
-- Requires [#9810](https://github.com/cosmos/cosmos-sdk/pull/9810) to be reviewed
+* Requires [#9810](https://github.com/cosmos/cosmos-sdk/pull/9810) to be reviewed
   and merged.
 
 <!-- ## Further Discussions
@@ -179,6 +179,6 @@ Later, this section can optionally list ideas or improvements the author or revi
 
 ## References
 
-- https://github.com/cosmos/cosmos-sdk/pull/9810
-- https://github.com/cosmos/cosmos-sdk/issues/9438
-- https://github.com/cosmos/cosmos-sdk/discussions/9913
+* https://github.com/cosmos/cosmos-sdk/pull/9810
+* https://github.com/cosmos/cosmos-sdk/issues/9438
+* https://github.com/cosmos/cosmos-sdk/discussions/9913

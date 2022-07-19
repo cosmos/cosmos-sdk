@@ -2,6 +2,7 @@ package valuerenderer
 
 import (
 	"context"
+	"io"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -11,16 +12,17 @@ type intValueRenderer struct{}
 
 var _ ValueRenderer = intValueRenderer{}
 
-func (r intValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]string, error) {
+func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.Writer) error {
 	formatted, err := formatInteger(v.String())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return []string{formatted}, nil
+	_, err = w.Write([]byte(formatted))
+	return err
 }
 
-func (r intValueRenderer) Parse(_ context.Context, s []string) (protoreflect.Value, error) {
+func (vr intValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
 	panic("implement me")
 }
 

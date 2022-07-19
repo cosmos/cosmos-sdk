@@ -3,6 +3,7 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -14,16 +15,17 @@ type decValueRenderer struct{}
 
 var _ ValueRenderer = decValueRenderer{}
 
-func (r decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]string, error) {
+func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.Writer) error {
 	formatted, err := formatDecimal(v.String())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return []string{formatted}, nil
+	_, err = w.Write([]byte(formatted))
+	return err
 }
 
-func (r decValueRenderer) Parse(_ context.Context, s []string) (protoreflect.Value, error) {
+func (vr decValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
 	panic("implement me")
 }
 

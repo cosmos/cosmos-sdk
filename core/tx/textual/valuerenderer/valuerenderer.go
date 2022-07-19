@@ -54,7 +54,7 @@ func (r Adr050) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer
 	}
 }
 
-func (r Adr050) init() {
+func (r *Adr050) init() {
 	if r.scalars == nil {
 		r.scalars = map[string]ValueRenderer{}
 		r.scalars["cosmos.Int"] = intValueRenderer{}
@@ -63,7 +63,7 @@ func (r Adr050) init() {
 }
 
 // DefineScalar adds a value renderer to the given Cosmos scalar.
-func (r Adr050) DefineScalar(scalar string, vr ValueRenderer) {
+func (r *Adr050) DefineScalar(scalar string, vr ValueRenderer) {
 	r.init()
 	r.scalars[scalar] = vr
 }

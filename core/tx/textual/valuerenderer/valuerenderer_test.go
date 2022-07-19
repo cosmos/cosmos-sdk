@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,36 +28,37 @@ func TestFormatInteger(t *testing.T) {
 
 	for _, tc := range testcases {
 		// Parse test case strings as protobuf uint64
-		b, err := strconv.ParseUint(tc[0], 10, 64)
+		i, err := strconv.ParseUint(tc[0], 10, 64)
 		if err == nil {
-			r, err := getVRFromGoType(b)
+			r, err := valueRendererOf(i)
 			require.NoError(t, err)
-			output, err := r.Format(context.Background(), protoreflect.ValueOf(b))
+			b := new(strings.Builder)
+			err = r.Format(context.Background(), protoreflect.ValueOf(i), b)
 			require.NoError(t, err)
 
-			require.Equal(t, []string{tc[1]}, output)
+			require.Equal(t, tc[1], b.String())
 		}
 
 		// Parse test case strings as protobuf uint32
-		b, err = strconv.ParseUint(tc[0], 10, 32)
+		i, err = strconv.ParseUint(tc[0], 10, 32)
 		if err == nil {
-			r, err := getVRFromGoType(b)
-			require.NoError(t, err)
-			output, err := r.Format(context.Background(), protoreflect.ValueOf(b))
+			r, err := valueRendererOf(i)
+			b := new(strings.Builder)
+			err = r.Format(context.Background(), protoreflect.ValueOf(i), b)
 			require.NoError(t, err)
 
-			require.Equal(t, []string{tc[1]}, output)
+			require.Equal(t, tc[1], b.String())
 		}
 
 		// Parse test case strings as sdk.Ints
-		i, ok := math.NewIntFromString(tc[0])
+		sdkInt, ok := math.NewIntFromString(tc[0])
 		if ok {
-			r, err := getVRFromGoType(b)
-			require.NoError(t, err)
-			output, err := r.Format(context.Background(), protoreflect.ValueOf(i))
+			r, err := valueRendererOf(sdkInt)
+			b := new(strings.Builder)
+			err = r.Format(context.Background(), protoreflect.ValueOf(i), b)
 			require.NoError(t, err)
 
-			require.Equal(t, []string{tc[1]}, output)
+			require.Equal(t, tc[1], b.String())
 		}
 	}
 }
@@ -72,12 +74,13 @@ func TestFormatDecimal(t *testing.T) {
 	for _, tc := range testcases {
 		d, err := sdk.NewDecFromStr(tc[0])
 		require.NoError(t, err)
-		r, err := getVRFromGoType(d)
+		r, err := valueRendererOf(d)
 		require.NoError(t, err)
-		output, err := r.Format(context.Background(), protoreflect.ValueOf(tc[0]))
+		b := new(strings.Builder)
+		err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
 		require.NoError(t, err)
 
-		require.Equal(t, []string{tc[1]}, output)
+		require.Equal(t, tc[1], b.String())
 	}
 }
 
@@ -98,7 +101,7 @@ func TestGetADR050ValueRenderer(t *testing.T) {
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := getVRFromGoType(tc.v)
+			_, err := valueRendererOf(tc.v)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
@@ -108,9 +111,9 @@ func TestGetADR050ValueRenderer(t *testing.T) {
 	}
 }
 
-// getVRFromGoType is like GetADR050ValueRenderer, but taking a Go type
+// valueRendererOf is like GetADR050ValueRenderer, but taking a Go type
 // as input instead of a protoreflect.FieldDescriptor.
-func getVRFromGoType(v interface{}) (valuerenderer.ValueRenderer, error) {
+func valueRendererOf(v interface{}) (valuerenderer.ValueRenderer, error) {
 	a, b := (&testpb.A{}).ProtoReflect().Descriptor().Fields(), (&testpb.B{}).ProtoReflect().Descriptor().Fields()
 
 	adr050 := valuerenderer.NewAdr050()

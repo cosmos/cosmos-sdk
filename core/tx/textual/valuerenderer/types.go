@@ -2,6 +2,7 @@ package valuerenderer
 
 import (
 	"context"
+	"io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -14,6 +15,6 @@ import (
 // here, so that optionally more value renderers could be built, for example, a
 // separate one for a different language.
 type ValueRenderer interface {
-	Format(context.Context, protoreflect.Value) ([]string, error)
-	Parse(context.Context, []string) (protoreflect.Value, error)
+	Format(context.Context, protoreflect.Value, io.Writer) error
+	Parse(context.Context, io.Reader) (protoreflect.Value, error)
 }

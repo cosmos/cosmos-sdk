@@ -54,7 +54,7 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
-	github.com/tendermint/tendermint v0.35.6
+	github.com/tendermint/tendermint v0.35.8
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	golang.org/x/exp v0.0.0-20220428152302-39d4317da171
@@ -82,8 +82,6 @@ require (
 	github.com/GaijinEntertainment/go-exhaustruct/v2 v2.2.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/OpenPeeDeeP/depguard v1.1.0 // indirect
-	github.com/Workiva/go-datastructures v1.0.53 // indirect
-	github.com/adlio/schema v1.3.3 // indirect
 	github.com/alexkohler/prealloc v1.0.0 // indirect
 	github.com/alingse/asasalint v0.0.10 // indirect
 	github.com/ashanbrown/forbidigo v1.3.0 // indirect

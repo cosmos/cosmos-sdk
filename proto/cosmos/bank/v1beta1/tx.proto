@@ -34,13 +34,13 @@ message MsgSend {
 // MsgSendResponse defines the Msg/Send response type.
 message MsgSendResponse {}
 
-// MsgMultiSend represents an arbitrary multi-in, multi-out send message.
+// MsgMultiSend represents a single input, multi-out send message.
 message MsgMultiSend {
-  option (cosmos.msg.v1.signer) = "inputs";
+  option (cosmos.msg.v1.signer) = "input";
 
   option (gogoproto.equal) = false;
 
-  repeated Input  inputs  = 1 [(gogoproto.nullable) = false];
+  Input  input  = 1 [(gogoproto.nullable) = false];
   repeated Output outputs = 2 [(gogoproto.nullable) = false];
 }
 

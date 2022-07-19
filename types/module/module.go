@@ -234,6 +234,12 @@ type EndBlockAppModule interface {
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
+// EndBlockAppModule is an extension interface that contains information about the AppModule and EndBlock.
+type EndBlockAppModule interface {
+	AppModule
+	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
+}
+
 // SetOrderPreBlockers sets the order of set pre-blocker calls
 func (m *Manager) SetOrderPreBlockers(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderPreBlockers", moduleNames,

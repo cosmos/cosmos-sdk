@@ -141,7 +141,7 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
+func (AppModule) ConsensusVersion() uint64 { return 2 }
 
 // EndBlock returns the end blocker for the feegrant module. It returns no validator
 // updates.

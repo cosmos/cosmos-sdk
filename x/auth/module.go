@@ -156,14 +156,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 3 }
 
-// BeginBlock returns the begin blocker for the auth module.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
-	sdkTx, ok := tx.(sdk.Tx)
-	if !ok {
-		return fmt.Errorf("invalid tx type %T, expected sdk.Tx", tx)
-	}
-
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the auth module

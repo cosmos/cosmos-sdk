@@ -128,13 +128,13 @@ func (am AppModule) DefaultGenesis() json.RawMessage {
 	return am.cdc.MustMarshalJSON(group.NewGenesisState())
 }
 
-// ValidateGenesis performs genesis state validation for the group module.
-func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
-	var data group.GenesisState
-	if err := am.cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", group.ModuleName, err)
-	}
-	return data.Validate()
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// EndBlock implements the group module's EndBlock.
+func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	EndBlocker(ctx, am.keeper)
+	return []abci.ValidatorUpdate{}
 }
 
 // InitGenesis performs genesis initialization for the group module.

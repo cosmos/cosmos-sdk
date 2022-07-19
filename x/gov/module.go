@@ -195,8 +195,8 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 	return am.cdc.MarshalJSON(gs)
 }
 
-// ConsensusVersion implements HasConsensusVersion
-func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 3 }
 
 // EndBlock returns the end blocker for the gov module. It returns no validator
 // updates.

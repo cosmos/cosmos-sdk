@@ -153,7 +153,7 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return 3 }
 
 // AppModuleSimulation functions
 

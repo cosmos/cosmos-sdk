@@ -40,6 +40,10 @@ Since **v0.45.15**, the v0.45.x line of the Cosmos SDK has reached end-of-life.
 Any release after **v0.45.15** is a security release that contains security fixes.
 It is strongly recommended to upgrade to these releases as well.
 
+* (upgrade) [#12603](https://github.com/cosmos/cosmos-sdk/pull/12603) feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces
+
+### Features
+
 ## [v0.46.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0-rc3) - 2022-07-18
 
 ### Features

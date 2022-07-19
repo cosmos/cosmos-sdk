@@ -98,26 +98,7 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 	return nft.ValidateGenesis(data, am.accountKeeper.AddressCodec())
 }
 
-// InitGenesis performs genesis initialization for the nft module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error {
-	var genesisState nft.GenesisState
-	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
-		return err
-	}
-	return am.keeper.InitGenesis(ctx, &genesisState)
-}
-
-// ExportGenesis returns the exported genesis state as raw bytes for the nft module.
-func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
-	gs, err := am.keeper.ExportGenesis(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return am.cdc.MarshalJSON(gs)
-}
-
-// ConsensusVersion implements HasConsensusVersion
-func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+// ____________________________________________________________________________
 
 // AppModuleSimulation functions
 

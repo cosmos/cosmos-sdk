@@ -141,9 +141,6 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 	return am.cdc.MarshalJSON(gs)
 }
 
-// ConsensusVersion implements HasConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
-
 // ____________________________________________________________________________
 
 // AppModuleSimulation functions

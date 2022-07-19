@@ -785,177 +785,138 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 	}
 }
 
-// func (suite *KeeperTestSuite) TestGRPCQueryParams() {
-// 	queryClient := suite.queryClient
+func (suite *KeeperTestSuite) TestGRPCQueryParams() {
+	queryClient := suite.queryClient
 
-// 	var (
-// 		req    *v1.QueryParamsRequest
-// 		expRes *v1.QueryParamsResponse
-// 	)
+	var (
+		req    *v1.QueryParamsRequest
+		expRes *v1.QueryParamsResponse
+	)
 
-// 	testCases := []struct {
-// 		msg      string
-// 		malleate func()
-// 		expPass  bool
-// 	}{
-// 		{
-// 			"empty request",
-// 			func() {
-// 				req = &v1.QueryParamsRequest{}
-// 			},
-// 			false,
-// 		},
-// 		{
-// 			"deposit params request",
-// 			func() {
-// 				req = &v1.QueryParamsRequest{ParamsType: v1.ParamDeposit}
-// 				depositParams := v1.DefaultDepositParams()
-// 				expRes = &v1.QueryParamsResponse{
-// 					DepositParams: &depositParams,
-// 				}
-// 			},
-// 			true,
-// 		},
-// 		{
-// 			"voting params request",
-// 			func() {
-// 				req = &v1.QueryParamsRequest{ParamsType: v1.ParamVoting}
-// 				votingParams := v1.DefaultVotingParams()
-// 				expRes = &v1.QueryParamsResponse{
-// 					VotingParams: &votingParams,
-// 				}
-// 			},
-// 			true,
-// 		},
-// 		{
-// 			"tally params request",
-// 			func() {
-// 				req = &v1.QueryParamsRequest{ParamsType: v1.ParamTallying}
-// 				tallyParams := v1.DefaultTallyParams()
-// 				expRes = &v1.QueryParamsResponse{
-// 					TallyParams: &tallyParams,
-// 				}
-// 			},
-// 			true,
-// 		},
-// 		{
-// 			"invalid request",
-// 			func() {
-// 				req = &v1.QueryParamsRequest{ParamsType: "wrongPath"}
-// 				expRes = &v1.QueryParamsResponse{}
-// 			},
-// 			false,
-// 		},
-// 	}
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &v1.QueryParamsRequest{}
+				params := v1.DefaultParams()
+				expRes = &v1.QueryParamsResponse{
+					Params: &params,
+				}
+			},
+			true,
+		},
+	}
 
-// 	for _, testCase := range testCases {
-// 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-// 			testCase.malleate()
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
 
-// 			params, err := queryClient.Params(gocontext.Background(), req)
+			params, err := queryClient.Params(gocontext.Background(), req)
 
-// 			if testCase.expPass {
-// 				suite.Require().NoError(err)
-// 				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams())
-// 				suite.Require().Equal(expRes.GetVotingParams(), params.GetVotingParams())
-// 				suite.Require().Equal(expRes.GetTallyParams(), params.GetTallyParams())
-// 			} else {
-// 				suite.Require().Error(err)
-// 				suite.Require().Nil(params)
-// 			}
-// 		})
-// 	}
-// }
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expRes, params)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(params)
+			}
+		})
+	}
+}
 
-// func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
-// 	queryClient := suite.legacyQueryClient
+func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
+	queryClient := suite.legacyQueryClient
 
-// 	var (
-// 		req    *v1beta1.QueryParamsRequest
-// 		expRes *v1beta1.QueryParamsResponse
-// 	)
+	var (
+		req    *v1beta1.QueryParamsRequest
+		expRes *v1beta1.QueryParamsResponse
+	)
 
-// 	defaultTallyParams := v1beta1.TallyParams{
-// 		Quorum:        sdk.NewDec(0),
-// 		Threshold:     sdk.NewDec(0),
-// 		VetoThreshold: sdk.NewDec(0),
-// 	}
+	defaultTallyParams := v1beta1.TallyParams{
+		Quorum:        sdk.NewDec(0),
+		Threshold:     sdk.NewDec(0),
+		VetoThreshold: sdk.NewDec(0),
+	}
 
-// 	testCases := []struct {
-// 		msg      string
-// 		malleate func()
-// 		expPass  bool
-// 	}{
-// 		{
-// 			"empty request",
-// 			func() {
-// 				req = &v1beta1.QueryParamsRequest{}
-// 			},
-// 			false,
-// 		},
-// 		{
-// 			"deposit params request",
-// 			func() {
-// 				req = &v1beta1.QueryParamsRequest{ParamsType: v1beta1.ParamDeposit}
-// 				depositParams := v1beta1.DefaultDepositParams()
-// 				expRes = &v1beta1.QueryParamsResponse{
-// 					DepositParams: depositParams,
-// 					TallyParams:   defaultTallyParams,
-// 				}
-// 			},
-// 			true,
-// 		},
-// 		{
-// 			"voting params request",
-// 			func() {
-// 				req = &v1beta1.QueryParamsRequest{ParamsType: v1beta1.ParamVoting}
-// 				votingParams := v1beta1.DefaultVotingParams()
-// 				expRes = &v1beta1.QueryParamsResponse{
-// 					VotingParams: votingParams,
-// 					TallyParams:  defaultTallyParams,
-// 				}
-// 			},
-// 			true,
-// 		},
-// 		{
-// 			"tally params request",
-// 			func() {
-// 				req = &v1beta1.QueryParamsRequest{ParamsType: v1beta1.ParamTallying}
-// 				tallyParams := v1beta1.DefaultTallyParams()
-// 				expRes = &v1beta1.QueryParamsResponse{
-// 					TallyParams: tallyParams,
-// 				}
-// 			},
-// 			true,
-// 		},
-// 		{
-// 			"invalid request",
-// 			func() {
-// 				req = &v1beta1.QueryParamsRequest{ParamsType: "wrongPath"}
-// 				expRes = &v1beta1.QueryParamsResponse{}
-// 			},
-// 			false,
-// 		},
-// 	}
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &v1beta1.QueryParamsRequest{}
+			},
+			false,
+		},
+		{
+			"deposit params request",
+			func() {
+				req = &v1beta1.QueryParamsRequest{ParamsType: v1beta1.ParamDeposit}
+				depositParams := v1beta1.DefaultDepositParams()
+				expRes = &v1beta1.QueryParamsResponse{
+					DepositParams: depositParams,
+					TallyParams:   defaultTallyParams,
+				}
+			},
+			true,
+		},
+		{
+			"voting params request",
+			func() {
+				req = &v1beta1.QueryParamsRequest{ParamsType: v1beta1.ParamVoting}
+				votingParams := v1beta1.DefaultVotingParams()
+				expRes = &v1beta1.QueryParamsResponse{
+					VotingParams: votingParams,
+					TallyParams:  defaultTallyParams,
+				}
+			},
+			true,
+		},
+		{
+			"tally params request",
+			func() {
+				req = &v1beta1.QueryParamsRequest{ParamsType: v1beta1.ParamTallying}
+				tallyParams := v1beta1.DefaultTallyParams()
+				expRes = &v1beta1.QueryParamsResponse{
+					TallyParams: tallyParams,
+				}
+			},
+			true,
+		},
+		{
+			"invalid request",
+			func() {
+				req = &v1beta1.QueryParamsRequest{ParamsType: "wrongPath"}
+				expRes = &v1beta1.QueryParamsResponse{}
+			},
+			false,
+		},
+	}
 
-// 	for _, testCase := range testCases {
-// 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-// 			testCase.malleate()
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
 
-// 			params, err := queryClient.Params(gocontext.Background(), req)
+			params, err := queryClient.Params(gocontext.Background(), req)
 
-// 			if testCase.expPass {
-// 				suite.Require().NoError(err)
-// 				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams())
-// 				suite.Require().Equal(expRes.GetVotingParams(), params.GetVotingParams())
-// 				suite.Require().Equal(expRes.GetTallyParams(), params.GetTallyParams())
-// 			} else {
-// 				suite.Require().Error(err)
-// 				suite.Require().Nil(params)
-// 			}
-// 		})
-// 	}
-// }
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams())
+				suite.Require().Equal(expRes.GetVotingParams(), params.GetVotingParams())
+				suite.Require().Equal(expRes.GetTallyParams(), params.GetTallyParams())
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(params)
+			}
+		})
+	}
+}
 
 func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs

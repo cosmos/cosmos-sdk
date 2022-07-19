@@ -42,6 +42,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (telemetry) [#12405](https://github.com/cosmos/cosmos-sdk/pull/12405) Add _query_ calls metric to telemetry.
+<<<<<<< HEAD
+=======
+* (sdk.Coins) [#12627](https://github.com/cosmos/cosmos-sdk/pull/12627) Make a Denoms method on sdk.Coins.
+* (upgrade) [#12603](https://github.com/cosmos/cosmos-sdk/pull/12603) feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces
+>>>>>>> b65f3fe07 (feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces (#12603))
 
 ### Improvements
 

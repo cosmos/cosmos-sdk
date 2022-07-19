@@ -160,12 +160,65 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(ctx, req, am.keeper)
 }
 
+<<<<<<< HEAD
 // EndBlock returns the end blocker for the slashing module. It returns no validator
 // updates.
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
+=======
+// _____________________________________________________________________________________
+
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+		),
+	)
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type slashingInputs struct {
+	depinject.In
+
+	Key           *store.KVStoreKey
+	Cdc           codec.Codec
+	LegacyAmino   *codec.LegacyAmino
+	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
+	BankKeeper    types.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
+	StakingKeeper types.StakingKeeper `key:"cosmos.staking.v1.Keeper"`
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	LegacySubspace exported.Subspace
+}
+
+type slashingOutputs struct {
+	depinject.Out
+
+	Keeper keeper.Keeper
+	Module runtime.AppModuleWrapper
+	Hooks  staking.StakingHooksWrapper
+}
+
+func provideModule(in slashingInputs) slashingOutputs {
+	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.Key, in.StakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
+	return slashingOutputs{
+		Keeper: k,
+		Module: runtime.WrapAppModule(m),
+		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
+	}
+}
+
+// _____________________________________________________________________________________
+
+>>>>>>> b65f3fe07 (feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces (#12603))
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the slashing module.

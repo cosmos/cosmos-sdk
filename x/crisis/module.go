@@ -29,10 +29,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// ConsensusVersion defines the current x/params module consensus version.
+// ConsensusVersion defines the current x/crisis module consensus version.
 const ConsensusVersion = 2
 
 var (
@@ -198,12 +197,15 @@ func init() {
 type crisisInputs struct {
 	depinject.In
 
-	Config     *modulev1.Module
-	Key        *store.KVStoreKey
-	Cdc        codec.Codec
-	AppOpts    servertypes.AppOptions `optional:"true"`
-	Subspace   paramstypes.Subspace
+	Config  *modulev1.Module
+	Key     *store.KVStoreKey
+	Cdc     codec.Codec
+	AppOpts servertypes.AppOptions `optional:"true"`
+
 	BankKeeper types.SupplyKeeper
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	LegacySubspace exported.Subspace
 }
 
 type crisisOutputs struct {
@@ -236,7 +238,7 @@ func provideModule(in crisisInputs) crisisOutputs {
 
 	skipGenesisInvariants := cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
 
-	m := NewAppModule(k, skipGenesisInvariants, in.Subspace)
+	m := NewAppModule(k, skipGenesisInvariants, in.LegacySubspace)
 
 	return crisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
 }

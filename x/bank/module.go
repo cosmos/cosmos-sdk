@@ -29,7 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	bankv1 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
+	v1bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -95,7 +95,7 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 	types.RegisterInterfaces(registry)
 
 	// Register legacy interfaces for migration scripts.
-	bankv1.RegisterInterfaces(registry)
+	v1bank.RegisterInterfaces(registry)
 }
 
 // AppModule implements an application module for the bank module.

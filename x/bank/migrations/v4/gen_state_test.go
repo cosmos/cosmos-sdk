@@ -1,4 +1,4 @@
-package v4
+package v4_test
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v4 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -80,16 +81,16 @@ func TestMigrateGenState(t *testing.T) {
 			oldState: &types.GenesisState{
 				Params: types.Params{
 					SendEnabled: []*types.SendEnabled{
-						{"movecointrue", true},
-						{"movecoinfalse", false},
+						{Denom: "movecointrue", Enabled: true},
+						{Denom: "movecoinfalse", Enabled: false},
 					},
 				},
 			},
 			newState: &types.GenesisState{
 				Params: types.Params{},
 				SendEnabled: []types.SendEnabled{
-					{"movecointrue", true},
-					{"movecoinfalse", false},
+					{Denom: "movecointrue", Enabled: true},
+					{Denom: "movecoinfalse", Enabled: false},
 				},
 			},
 		},
@@ -98,20 +99,20 @@ func TestMigrateGenState(t *testing.T) {
 			oldState: &types.GenesisState{
 				Params: types.Params{
 					SendEnabled: []*types.SendEnabled{
-						{"movecointrue", true},
-						{"movecoinfalse", false},
+						{Denom: "movecointrue", Enabled: true},
+						{Denom: "movecoinfalse", Enabled: false},
 					},
 				},
 				SendEnabled: []types.SendEnabled{
-					{"staycoin", true},
+					{Denom: "staycoin", Enabled: true},
 				},
 			},
 			newState: &types.GenesisState{
 				Params: types.Params{},
 				SendEnabled: []types.SendEnabled{
-					{"staycoin", true},
-					{"movecointrue", true},
-					{"movecoinfalse", false},
+					{Denom: "staycoin", Enabled: true},
+					{Denom: "movecointrue", Enabled: true},
+					{Denom: "movecoinfalse", Enabled: false},
 				},
 			},
 		},
@@ -120,17 +121,17 @@ func TestMigrateGenState(t *testing.T) {
 			oldState: &types.GenesisState{
 				Params: types.Params{
 					SendEnabled: []*types.SendEnabled{
-						{"staycoin", false},
+						{Denom: "staycoin", Enabled: false},
 					},
 				},
 				SendEnabled: []types.SendEnabled{
-					{"staycoin", true},
+					{Denom: "staycoin", Enabled: true},
 				},
 			},
 			newState: &types.GenesisState{
 				Params: types.Params{},
 				SendEnabled: []types.SendEnabled{
-					{"staycoin", true},
+					{Denom: "staycoin", Enabled: true},
 				},
 			},
 		},
@@ -138,7 +139,7 @@ func TestMigrateGenState(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := MigrateGenState(tc.oldState)
+			actual := v4.MigrateGenState(tc.oldState)
 			assert.Equal(t, tc.newState, actual)
 		})
 	}
@@ -147,12 +148,12 @@ func TestMigrateGenState(t *testing.T) {
 		origState := types.GenesisState{
 			Params: types.Params{
 				SendEnabled: []*types.SendEnabled{
-					{"movecointrue", true},
-					{"movecoinfalse", false},
+					{Denom: "movecointrue", Enabled: true},
+					{Denom: "movecoinfalse", Enabled: false},
 				},
 			},
 		}
-		_ = MigrateGenState(&origState)
+		_ = v4.MigrateGenState(&origState)
 		assert.Len(t, origState.Params.SendEnabled, 2)
 	})
 }

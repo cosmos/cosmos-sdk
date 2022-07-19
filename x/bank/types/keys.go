@@ -34,7 +34,7 @@ var (
 	SendEnabledPrefix = []byte{0x04}
 
 	// ParamsKey is the prefix for x/bank parameters
-	ParamsKey = []byte{0x51}
+	ParamsKey = []byte{0x05}
 )
 
 const (

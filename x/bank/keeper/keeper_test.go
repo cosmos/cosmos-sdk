@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -74,6 +75,7 @@ type IntegrationTestSuite struct {
 	app         *simapp.SimApp
 	ctx         sdk.Context
 	queryClient types.QueryClient
+	msgServer   types.MsgServer
 }
 
 func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) (authkeeper.AccountKeeper, keeper.BaseKeeper) {
@@ -111,6 +113,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.app = app
 	suite.ctx = ctx
 	suite.queryClient = queryClient
+	suite.msgServer = keeper.NewMsgServerImpl(app.BankKeeper)
 }
 
 func (suite *IntegrationTestSuite) TestSupply() {
@@ -1147,9 +1150,9 @@ func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
 			Symbol:      "ATOM",
 			Description: "The native staking token of the Cosmos Hub.",
 			DenomUnits: []*types.DenomUnit{
-				{"uatom", uint32(0), []string{"microatom"}},
-				{"matom", uint32(3), []string{"milliatom"}},
-				{"atom", uint32(6), nil},
+				{Denom: "uatom", Exponent: uint32(0), Aliases: []string{"microatom"}},
+				{Denom: "matom", Exponent: uint32(3), Aliases: []string{"milliatom"}},
+				{Denom: "atom", Exponent: uint32(6), Aliases: nil},
 			},
 			Base:    "uatom",
 			Display: "atom",
@@ -1159,9 +1162,9 @@ func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
 			Symbol:      "TOKEN",
 			Description: "The native staking token of the Token Hub.",
 			DenomUnits: []*types.DenomUnit{
-				{"1token", uint32(5), []string{"decitoken"}},
-				{"2token", uint32(4), []string{"centitoken"}},
-				{"3token", uint32(7), []string{"dekatoken"}},
+				{Denom: "1token", Exponent: uint32(5), Aliases: []string{"decitoken"}},
+				{Denom: "2token", Exponent: uint32(4), Aliases: []string{"centitoken"}},
+				{Denom: "3token", Exponent: uint32(7), Aliases: []string{"dekatoken"}},
 			},
 			Base:    "utoken",
 			Display: "token",
@@ -1194,7 +1197,7 @@ func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
 	}{
 		{
 			"restriction",
-			func(ctx sdk.Context, coins sdk.Coins) error {
+			func(_ sdk.Context, coins sdk.Coins) error {
 				for _, coin := range coins {
 					if coin.Denom != fooDenom {
 						return fmt.Errorf("Module %s only has perms for minting %s coins, tried minting %s coins", types.ModuleName, fooDenom, coin.Denom)
@@ -1406,41 +1409,41 @@ func (suite *IntegrationTestSuite) TestSetAllSendEnabled() {
 		{
 			name: "one true",
 			sendEnableds: []*types.SendEnabled{
-				{"aonecoin", true},
+				{Denom: "aonecoin", Enabled: true},
 			},
 		},
 		{
 			name: "one false",
 			sendEnableds: []*types.SendEnabled{
-				{"bonecoin", false},
+				{Denom: "bonecoin", Enabled: false},
 			},
 		},
 		{
 			name: "two true",
 			sendEnableds: []*types.SendEnabled{
-				{"conecoin", true},
-				{"ctwocoin", true},
+				{Denom: "conecoin", Enabled: true},
+				{Denom: "ctwocoin", Enabled: true},
 			},
 		},
 		{
 			name: "two true false",
 			sendEnableds: []*types.SendEnabled{
-				{"donecoin", true},
-				{"dtwocoin", false},
+				{Denom: "donecoin", Enabled: true},
+				{Denom: "dtwocoin", Enabled: false},
 			},
 		},
 		{
 			name: "two false true",
 			sendEnableds: []*types.SendEnabled{
-				{"eonecoin", false},
-				{"etwocoin", true},
+				{Denom: "eonecoin", Enabled: false},
+				{Denom: "etwocoin", Enabled: true},
 			},
 		},
 		{
 			name: "two false",
 			sendEnableds: []*types.SendEnabled{
-				{"fonecoin", false},
-				{"ftwocoin", false},
+				{Denom: "fonecoin", Enabled: false},
+				{Denom: "ftwocoin", Enabled: false},
 			},
 		},
 	}
@@ -1481,7 +1484,7 @@ func (suite *IntegrationTestSuite) TestIterateSendEnabledEntries() {
 
 	suite.T().Run("no entries to iterate", func(t *testing.T) {
 		count := 0
-		bankKeeper.IterateSendEnabledEntries(ctx, func(denom string, sendEnabled bool) (stop bool) {
+		bankKeeper.IterateSendEnabledEntries(ctx, func(_ string, _ bool) (stop bool) {
 			count++
 			return false
 		})
@@ -1523,7 +1526,7 @@ func (suite *IntegrationTestSuite) TestIterateSendEnabledEntries() {
 
 	suite.T().Run("no entries to iterate again after deleting all of them", func(t *testing.T) {
 		count := 0
-		bankKeeper.IterateSendEnabledEntries(ctx, func(denom string, sendEnabled bool) (stop bool) {
+		bankKeeper.IterateSendEnabledEntries(ctx, func(_ string, _ bool) (stop bool) {
 			count++
 			return false
 		})
@@ -1585,7 +1588,7 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 		params := types.Params{DefaultSendEnabled: def}
 		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 		suite.T().Run(fmt.Sprintf("default %t does not change", def), func(t *testing.T) {
-			migrator := keeper.NewMigrator(bankKeeper.(keeper.BaseKeeper))
+			migrator := keeper.NewMigrator(bankKeeper.(keeper.BaseKeeper), suite.app.GetSubspace(banktypes.ModuleName))
 			require.NoError(t, migrator.Migrate3to4(ctx))
 			actual := bankKeeper.GetParams(ctx)
 			assert.Equal(t, params.DefaultSendEnabled, actual.DefaultSendEnabled)
@@ -1595,13 +1598,13 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 	for _, def := range []bool{true, false} {
 		params := types.Params{
 			SendEnabled: []*types.SendEnabled{
-				{fmt.Sprintf("truecoin%t", def), true},
-				{fmt.Sprintf("falsecoin%t", def), false},
+				{Denom: fmt.Sprintf("truecoin%t", def), Enabled: true},
+				{Denom: fmt.Sprintf("falsecoin%t", def), Enabled: false},
 			},
 		}
 		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 		suite.T().Run(fmt.Sprintf("default %t send enabled info moved to store", def), func(t *testing.T) {
-			migrator := keeper.NewMigrator(bankKeeper.(keeper.BaseKeeper))
+			migrator := keeper.NewMigrator(bankKeeper.(keeper.BaseKeeper), suite.app.GetSubspace(banktypes.ModuleName))
 			require.NoError(t, migrator.Migrate3to4(ctx))
 			newParams := bankKeeper.GetParams(ctx)
 			assert.Len(t, newParams.SendEnabled, 0)
@@ -1617,8 +1620,8 @@ func (suite *IntegrationTestSuite) TestSetParams() {
 	ctx, bankKeeper := suite.ctx, suite.app.BankKeeper
 	params := types.NewParams(true)
 	params.SendEnabled = []*types.SendEnabled{
-		{"paramscointrue", true},
-		{"paramscoinfalse", false},
+		{Denom: "paramscointrue", Enabled: true},
+		{Denom: "paramscoinfalse", Enabled: false},
 	}
 	suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 

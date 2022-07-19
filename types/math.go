@@ -36,8 +36,6 @@ func (ip IntProto) String() string {
 	return ip.Int.String()
 }
 
-var _ CustomProtobufType = (*Dec)(nil)
-
 type (
 	Dec = sdkmath.Dec
 )
@@ -68,3 +66,9 @@ var (
 	DecEq                    = sdkmath.DecEq
 	DecApproxEq              = sdkmath.DecApproxEq
 )
+
+var _ CustomProtobufType = (*Dec)(nil)
+
+func (dp DecProto) String() string {
+	return dp.Dec.String()
+}

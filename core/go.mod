@@ -23,7 +23,6 @@ require (
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd // indirect
 	google.golang.org/grpc v1.48.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	pgregory.net/rapid v0.4.8 // indirect
 )
 
 replace (

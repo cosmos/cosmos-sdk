@@ -367,8 +367,9 @@ func (k Keeper) DeleteValidatorQueueTimeSlice(ctx sdk.Context, endTime time.Time
 
 // DeleteValidatorQueue removes a validator by address from the unbonding queue
 // indexed by a given height and time.
-func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
-	addrs := k.GetUnbondingValidators(ctx, val.UnbondingTime, val.UnbondingHeight)
+func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator,
+	unbondingTime time.Time, unbondingHeight int64) {
+	addrs := k.GetUnbondingValidators(ctx, unbondingTime, unbondingHeight)
 	newAddrs := []string{}
 
 	for _, addr := range addrs {
@@ -378,14 +379,14 @@ func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
 	}
 
 	if len(newAddrs) == 0 {
-		k.DeleteValidatorQueueTimeSlice(ctx, val.UnbondingTime, val.UnbondingHeight)
+		k.DeleteValidatorQueueTimeSlice(ctx, unbondingTime, unbondingHeight)
 	} else {
-		k.SetUnbondingValidatorsQueue(ctx, val.UnbondingTime, val.UnbondingHeight, newAddrs)
+		k.SetUnbondingValidatorsQueue(ctx, unbondingTime, unbondingHeight, newAddrs)
 	}
 }
 
 // ValidatorQueueIterator returns an interator ranging over validators that are
-// unbonding whose unbonding completion occurs at the given height and time.
+// unbonding whose unbonding completion occurs not before a given time.
 func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time, endHeight int64) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return store.Iterator(types.ValidatorQueueKey, sdk.InclusiveEndBytes(types.GetValidatorQueueKey(endTime, endHeight)))
@@ -409,7 +410,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 
 	for ; unbondingValIterator.Valid(); unbondingValIterator.Next() {
 		key := unbondingValIterator.Key()
-		keyTime, keyHeight, err := types.ParseValidatorQueueKey(key)
+		keyTime, _, err := types.ParseValidatorQueueKey(key)
 		if err != nil {
 			panic(fmt.Errorf("failed to parse unbonding key: %w", err))
 		}
@@ -417,7 +418,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 		// All addresses for the given key have the same unbonding height and time.
 		// We only unbond if the height and time are less than the current height
 		// and time.
-		if keyHeight <= blockHeight && (keyTime.Before(blockTime) || keyTime.Equal(blockTime)) {
+		if keyTime.Before(blockTime) || keyTime.Equal(blockTime) {
 			addrs := types.ValAddresses{}
 			k.cdc.MustUnmarshal(unbondingValIterator.Value(), &addrs)
 
@@ -432,6 +433,8 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 				}
 
 				if !val.IsUnbonding() {
+					fmt.Println("status is ", val.Status)
+
 					panic("unexpected validator in unbonding queue; status was not unbonding")
 				}
 				if !val.UnbondingOnHold {

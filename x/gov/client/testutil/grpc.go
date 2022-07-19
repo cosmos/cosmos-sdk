@@ -3,8 +3,6 @@ package testutil
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -354,62 +352,62 @@ func (s *IntegrationTestSuite) TestGetTallyGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetParamsGRPC() {
-	val := s.network.Validators[0]
+// func (s *IntegrationTestSuite) TestGetParamsGRPC() {
+// 	val := s.network.Validators[0]
 
-	dp := v1.DefaultDepositParams()
-	vp := v1.DefaultVotingParams()
-	tp := v1.DefaultTallyParams()
+// 	dp := v1.DefaultDepositParams()
+// 	vp := v1.DefaultVotingParams()
+// 	tp := v1.DefaultTallyParams()
 
-	testCases := []struct {
-		name       string
-		url        string
-		expErr     bool
-		respType   proto.Message
-		expectResp proto.Message
-	}{
-		{
-			"request params with empty params type",
-			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, ""),
-			true, nil, nil,
-		},
-		{
-			"get deposit params",
-			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamDeposit),
-			false,
-			&v1.QueryParamsResponse{},
-			&v1.QueryParamsResponse{DepositParams: &dp},
-		},
-		{
-			"get vote params",
-			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamVoting),
-			false,
-			&v1.QueryParamsResponse{},
-			&v1.QueryParamsResponse{VotingParams: &vp},
-		},
-		{
-			"get tally params",
-			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamTallying),
-			false,
-			&v1.QueryParamsResponse{},
-			&v1.QueryParamsResponse{TallyParams: &tp},
-		},
-	}
+// 	testCases := []struct {
+// 		name       string
+// 		url        string
+// 		expErr     bool
+// 		respType   proto.Message
+// 		expectResp proto.Message
+// 	}{
+// 		{
+// 			"request params with empty params type",
+// 			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, ""),
+// 			true, nil, nil,
+// 		},
+// 		{
+// 			"get deposit params",
+// 			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamDeposit),
+// 			false,
+// 			&v1.QueryParamsResponse{},
+// 			&v1.QueryParamsResponse{DepositParams: &dp},
+// 		},
+// 		{
+// 			"get vote params",
+// 			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamVoting),
+// 			false,
+// 			&v1.QueryParamsResponse{},
+// 			&v1.QueryParamsResponse{VotingParams: &vp},
+// 		},
+// 		{
+// 			"get tally params",
+// 			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamTallying),
+// 			false,
+// 			&v1.QueryParamsResponse{},
+// 			&v1.QueryParamsResponse{TallyParams: &tp},
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
-			s.Require().NoError(err)
+// 	for _, tc := range testCases {
+// 		tc := tc
+// 		s.Run(tc.name, func() {
+// 			resp, err := rest.GetRequest(tc.url)
+// 			s.Require().NoError(err)
 
-			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
+// 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
 
-			if tc.expErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectResp.String(), tc.respType.String())
-			}
-		})
-	}
-}
+// 			if tc.expErr {
+// 				s.Require().Error(err)
+// 			} else {
+// 				s.Require().NoError(err)
+// 				s.Require().Equal(tc.expectResp.String(), tc.respType.String())
+// 			}
+// 		})
+// 	}
+// }

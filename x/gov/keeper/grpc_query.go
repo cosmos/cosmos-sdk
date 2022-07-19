@@ -158,24 +158,11 @@ func (q Keeper) Params(c context.Context, req *v1.QueryParamsRequest) (*v1.Query
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-
-	switch req.ParamsType {
-	case v1.ParamDeposit:
-		depositParmas := q.GetDepositParams(ctx)
-		return &v1.QueryParamsResponse{DepositParams: &depositParmas}, nil
-
-	case v1.ParamVoting:
-		votingParmas := q.GetVotingParams(ctx)
-		return &v1.QueryParamsResponse{VotingParams: &votingParmas}, nil
-
-	case v1.ParamTallying:
-		tallyParams := q.GetTallyParams(ctx)
-		return &v1.QueryParamsResponse{TallyParams: &tallyParams}, nil
-
-	default:
-		return nil, status.Errorf(codes.InvalidArgument,
-			"%s is not a valid parameter type", req.ParamsType)
-	}
+	params := q.GetParams(ctx)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	return &v1.QueryParamsResponse{Params: &params}, nil
 }
 
 // Deposit queries single deposit information based on proposalID, depositAddr.
@@ -365,8 +352,8 @@ func (q legacyQueryServer) Votes(c context.Context, req *v1beta1.QueryVotesReque
 }
 
 func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
-	resp, err := q.keeper.Params(c, &v1.QueryParamsRequest{
-		ParamsType: req.ParamsType,
+	_, err := q.keeper.Params(c, &v1.QueryParamsRequest{
+		// ParamsType: req.ParamsType,
 	})
 	if err != nil {
 		return nil, err
@@ -374,31 +361,31 @@ func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsReq
 
 	response := &v1beta1.QueryParamsResponse{}
 
-	if resp.DepositParams != nil {
-		minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)
-		response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod)
-	}
+	// if resp.DepositParams != nil {
+	// 	minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)
+	// 	response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod)
+	// }
 
-	if resp.VotingParams != nil {
-		response.VotingParams = v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod)
-	}
+	// if resp.VotingParams != nil {
+	// 	response.VotingParams = v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod)
+	// }
 
-	if resp.TallyParams != nil {
-		quorum, err := sdk.NewDecFromStr(resp.TallyParams.Quorum)
-		if err != nil {
-			return nil, err
-		}
-		threshold, err := sdk.NewDecFromStr(resp.TallyParams.Threshold)
-		if err != nil {
-			return nil, err
-		}
-		vetoThreshold, err := sdk.NewDecFromStr(resp.TallyParams.VetoThreshold)
-		if err != nil {
-			return nil, err
-		}
+	// if resp.TallyParams != nil {
+	// 	quorum, err := sdk.NewDecFromStr(resp.TallyParams.Quorum)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	threshold, err := sdk.NewDecFromStr(resp.TallyParams.Threshold)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	vetoThreshold, err := sdk.NewDecFromStr(resp.TallyParams.VetoThreshold)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
 
-		response.TallyParams = v1beta1.NewTallyParams(quorum, threshold, vetoThreshold)
-	}
+	// 	response.TallyParams = v1beta1.NewTallyParams(quorum, threshold, vetoThreshold)
+	// }
 
 	return response, nil
 }

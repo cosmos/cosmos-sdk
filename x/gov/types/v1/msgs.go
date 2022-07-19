@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	_, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}
-	_, _          codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
+	_, _, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}, &MsgUpdateParams{}
+	_, _             codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -259,4 +259,61 @@ func (c MsgExecLegacyContent) ValidateBasic() error {
 func (c MsgExecLegacyContent) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var content v1beta1.Content
 	return unpacker.UnpackAny(c.Content, &content)
+}
+
+// Route implements Msg
+func (msg MsgUpdateParams) Route() string { return types.RouterKey }
+
+// Type implements Msg
+func (msg MsgUpdateParams) Type() string { return sdk.MsgTypeURL(&msg) }
+
+// ValidateBasic implements Msg
+func (msg MsgUpdateParams) ValidateBasic() error {
+	// if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
+	// 	return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
+	// }
+	// if len(msg.Options) == 0 {
+	// 	return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
+	// }
+
+	// totalWeight := sdk.NewDec(0)
+	// usedOptions := make(map[VoteOption]bool)
+	// for _, option := range msg.Options {
+	// 	if !ValidWeightedVoteOption(option) {
+	// 		return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
+	// 	}
+	// 	totalWeight = totalWeight.Add(option.Weight)
+	// 	if usedOptions[option.Option] {
+	// 		return sdkerrors.Wrap(types.ErrInvalidVote, "Duplicated vote option")
+	// 	}
+	// 	usedOptions[option.Option] = true
+	// }
+
+	// if totalWeight.GT(sdk.NewDec(1)) {
+	// 	return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight overflow 1.00")
+	// }
+
+	// if totalWeight.LT(sdk.NewDec(1)) {
+	// 	return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight lower than 1.00")
+	// }
+
+	return nil
+}
+
+// // String implements the Stringer interface
+// func (msg MsgUpdateParams) String() string {
+// 	out, _ := yaml.Marshal(msg)
+// 	return string(out)
+// }
+
+// GetSignBytes implements Msg
+func (msg MsgUpdateParams) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners implements Msg
+func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
 }

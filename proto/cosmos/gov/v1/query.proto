@@ -34,7 +34,7 @@ service Query {
 
   // Params queries all parameters of the gov module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/params/{params_type}";
+    option (google.api.http).get = "/cosmos/gov/v1/params";
   }
 
   // Deposit queries single deposit information based proposalID, depositAddr.
@@ -122,20 +122,12 @@ message QueryVotesResponse {
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
-message QueryParamsRequest {
-  // params_type defines which parameters to query for, can be one of "voting",
-  // "tallying" or "deposit".
-  string params_type = 1;
-}
+message QueryParamsRequest {}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
-  // voting_params defines the parameters related to voting.
-  VotingParams voting_params = 1;
-  // deposit_params defines the parameters related to deposit.
-  DepositParams deposit_params = 2;
-  // tally_params defines the parameters related to tally.
-  TallyParams tally_params = 3;
+  // params defines all the paramaters of x/gov module.
+  Params params = 5;
 }
 
 // QueryDepositRequest is the request type for the Query/Deposit RPC method.

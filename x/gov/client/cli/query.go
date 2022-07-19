@@ -32,7 +32,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryProposals(),
 		GetCmdQueryVote(),
 		GetCmdQueryVotes(),
-		GetCmdQueryParam(),
+		// GetCmdQueryParam(),
 		GetCmdQueryParams(),
 		GetCmdQueryProposer(),
 		GetCmdQueryDeposit(),
@@ -532,91 +532,15 @@ $ %s query gov params
 
 			// Query store for all 3 params
 			ctx := cmd.Context()
-			votingRes, err := queryClient.Params(
-				ctx,
-				&v1.QueryParamsRequest{ParamsType: "voting"},
-			)
-			if err != nil {
-				return err
-			}
-
-			tallyRes, err := queryClient.Params(
-				ctx,
-				&v1.QueryParamsRequest{ParamsType: "tallying"},
-			)
-			if err != nil {
-				return err
-			}
-
-			depositRes, err := queryClient.Params(
-				ctx,
-				&v1.QueryParamsRequest{ParamsType: "deposit"},
-			)
-			if err != nil {
-				return err
-			}
-
-			params := v1.NewParams(
-				*votingRes.GetVotingParams(),
-				*tallyRes.GetTallyParams(),
-				*depositRes.GetDepositParams(),
-			)
-
-			return clientCtx.PrintObjectLegacy(params)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetCmdQueryParam implements the query param command.
-func GetCmdQueryParam() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "param [param-type]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Query the parameters (voting|tallying|deposit) of the governance process",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the all the parameters for the governance process.
-
-Example:
-$ %s query gov param voting
-$ %s query gov param tallying
-$ %s query gov param deposit
-`,
-				version.AppName, version.AppName, version.AppName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := v1.NewQueryClient(clientCtx)
-
-			// Query store
 			res, err := queryClient.Params(
-				cmd.Context(),
-				&v1.QueryParamsRequest{ParamsType: args[0]},
+				ctx,
+				&v1.QueryParamsRequest{},
 			)
 			if err != nil {
 				return err
 			}
 
-			var out fmt.Stringer
-			switch args[0] {
-			case "voting":
-				out = res.GetVotingParams()
-			case "tallying":
-				out = res.GetTallyParams()
-			case "deposit":
-				out = res.GetDepositParams()
-			default:
-				return fmt.Errorf("argument must be one of (voting|tallying|deposit), was %s", args[0])
-			}
-
-			return clientCtx.PrintObjectLegacy(out)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -624,6 +548,60 @@ $ %s query gov param deposit
 
 	return cmd
 }
+
+// // GetCmdQueryParam implements the query param command.
+// func GetCmdQueryParam() *cobra.Command {
+// 	cmd := &cobra.Command{
+// 		Use:   "param [param-type]",
+// 		Args:  cobra.ExactArgs(1),
+// 		Short: "Query the parameters (voting|tallying|deposit) of the governance process",
+// 		Long: strings.TrimSpace(
+// 			fmt.Sprintf(`Query the all the parameters for the governance process.
+
+// Example:
+// $ %s query gov param voting
+// $ %s query gov param tallying
+// $ %s query gov param deposit
+// `,
+// 				version.AppName, version.AppName, version.AppName,
+// 			),
+// 		),
+// 		RunE: func(cmd *cobra.Command, args []string) error {
+// 			clientCtx, err := client.GetClientQueryContext(cmd)
+// 			if err != nil {
+// 				return err
+// 			}
+// 			queryClient := v1.NewQueryClient(clientCtx)
+
+// 			// Query store
+// 			res, err := queryClient.Params(
+// 				cmd.Context(),
+// 				&v1.QueryParamsRequest{ParamsType: args[0]},
+// 			)
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			var out fmt.Stringer
+// 			switch args[0] {
+// 			case "voting":
+// 				out = res.GetVotingParams()
+// 			case "tallying":
+// 				out = res.GetTallyParams()
+// 			case "deposit":
+// 				out = res.GetDepositParams()
+// 			default:
+// 				return fmt.Errorf("argument must be one of (voting|tallying|deposit), was %s", args[0])
+// 			}
+
+// 			return clientCtx.PrintObjectLegacy(out)
+// 		},
+// 	}
+
+// 	flags.AddQueryFlagsToCmd(cmd)
+
+// 	return cmd
+// }
 
 // GetCmdQueryProposer implements the query proposer command.
 func GetCmdQueryProposer() *cobra.Command {

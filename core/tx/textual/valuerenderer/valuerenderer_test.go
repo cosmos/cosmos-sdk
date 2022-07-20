@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/core/tx/textual/internal/testpb"
 	"cosmossdk.io/core/tx/textual/valuerenderer"
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestFormatInteger(t *testing.T) {
@@ -72,7 +71,7 @@ func TestFormatDecimal(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, tc := range testcases {
-		d, err := sdk.NewDecFromStr(tc[0])
+		d, err := math.LegacyNewDecFromStr(tc[0])
 		require.NoError(t, err)
 		r, err := valueRendererOf(d)
 		require.NoError(t, err)
@@ -93,7 +92,7 @@ func TestGetADR050ValueRenderer(t *testing.T) {
 		{"uint32", uint32(1), false},
 		{"uint64", uint64(1), false},
 		{"sdk.Int", math.NewInt(1), false},
-		{"sdk.Dec", sdk.NewDec(1), false},
+		{"sdk.Dec", math.LegacyNewDec(1), false},
 		{"float32", float32(1), true},
 		{"float64", float64(1), true},
 	}
@@ -129,7 +128,7 @@ func valueRendererOf(v interface{}) (valuerenderer.ValueRenderer, error) {
 		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("INT64")))
 	case math.Int:
 		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("SDKINT")))
-	case sdk.Dec:
+	case math.LegacyDec:
 		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("SDKDEC")))
 
 	// Invalid types for SIGN_MODE_TEXTUAL

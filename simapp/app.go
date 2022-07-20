@@ -203,7 +203,7 @@ func NewSimApp(
 				// for providing a custom inflaction function for x/mint
 				// just add your custom function that follows the minttypes.InflationCalculationFn interface here.
 
-				// for providing a custom authority to a module simply add it below
+				// for providing a custom authority to a module simply add it below. By default the governance module is the default authority.
 				// e.g minttypes.Authority(authtypes.NewModuleAddress(govtypes.ModuleName))
 			),
 		)

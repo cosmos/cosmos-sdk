@@ -4,6 +4,7 @@ package cosmos.upgrade.v1beta1;
 import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package                      = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -47,6 +48,7 @@ message Plan {
 // proposals, see MsgSoftwareUpgrade.
 message SoftwareUpgradeProposal {
   option deprecated                   = true;
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
@@ -61,6 +63,7 @@ message SoftwareUpgradeProposal {
 // proposals, see MsgCancelUpgrade.
 message CancelSoftwareUpgradeProposal {
   option deprecated                   = true;
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 

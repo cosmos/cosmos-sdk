@@ -283,6 +283,7 @@ replace (
 	cosmossdk.io/api => ./api
 	cosmossdk.io/core => ./core
 	cosmossdk.io/depinject => ./depinject
+	cosmossdk.io/math => ./math
 	github.com/cosmos/cosmos-sdk/db => ./db
 	github.com/cosmos/cosmos-sdk/store/tools/ics23 => ./store/tools/ics23
 

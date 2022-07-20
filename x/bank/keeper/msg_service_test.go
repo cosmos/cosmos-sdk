@@ -33,8 +33,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams() {
 					},
 				},
 			},
-			expErr:    true,
-			expErrMsg: "use of send_enabled in params is no longer supported",
+			expErr: false,
 		},
 		{
 			name: "all good",

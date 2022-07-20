@@ -33,19 +33,7 @@ func ValidateGenesis(data *GenesisState) error {
 		return errors.New("starting proposal id must be greater than 0")
 	}
 
-	// if err := validateTallyParams(*data.TallyParams); err != nil {
-	// 	return fmt.Errorf("invalid tally params: %w", err)
-	// }
-
-	// if err := validateVotingParams(*data.VotingParams); err != nil {
-	// 	return fmt.Errorf("invalid voting params: %w", err)
-	// }
-
-	// if err := validateDepositParams(*data.DepositParams); err != nil {
-	// 	return fmt.Errorf("invalid deposit params: %w", err)
-	// }
-
-	return nil
+	return data.Params.ValidateBasic()
 }
 
 var _ types.UnpackInterfacesMessage = GenesisState{}

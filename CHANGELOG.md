@@ -40,7 +40,13 @@ Since **v0.45.15**, the v0.45.x line of the Cosmos SDK has reached end-of-life.
 Any release after **v0.45.15** is a security release that contains security fixes.
 It is strongly recommended to upgrade to these releases as well.
 
+### Features
+
 * (upgrade) [#12603](https://github.com/cosmos/cosmos-sdk/pull/12603) feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces
+
+### Improvements
+
+* [#12649](https://github.com/cosmos/cosmos-sdk/pull/12649) Bump tendermint to v0.34.20.
 
 ### Features
 

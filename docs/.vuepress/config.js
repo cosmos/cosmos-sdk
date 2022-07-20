@@ -5,15 +5,6 @@ module.exports = {
     "/": {
       lang: "en-US"
     },
-    ko: {
-      lang: "ko"
-    },
-    ru: {
-      lang: "ru"
-    },
-    zh: {
-      lang: "zh-CN"
-    }
   },
   base: process.env.VUEPRESS_BASE || "/",
   head: [
@@ -29,6 +20,7 @@ module.exports = {
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
     docsRepo: "cosmos/cosmos-sdk",
+    docsBranch: "release/v0.46.x",
     docsDir: "docs",
     editLinks: true,
     label: "sdk",
@@ -146,16 +138,11 @@ module.exports = {
           url: "https://www.youtube.com/c/CosmosProject"
         }
       ],
-      smallprint:
-        "This website is maintained by Tendermint Inc. The contents and opinions of this website are those of Tendermint Inc.",
+      smallprint: "The development of the Cosmos SDK is led primarily by [Interchain Core Teams](https://interchain.io/ecosystem). Funding for this development comes primarily from the Interchain Foundation, a Swiss non-profit.",
       links: [
         {
           title: "Documentation",
           children: [
-            {
-              title: "Cosmos SDK",
-              url: "https://docs.cosmos.network"
-            },
             {
               title: "Cosmos Hub",
               url: "https://hub.cosmos.network"
@@ -163,7 +150,11 @@ module.exports = {
             {
               title: "Tendermint Core",
               url: "https://docs.tendermint.com"
-            }
+            },
+            {
+              title: "IBC-Go",
+              url: "https://ibc.cosmos.network"
+            },
           ]
         },
         {

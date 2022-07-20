@@ -5,12 +5,15 @@ on:
   push:
     branches:
       - main
+      - "release/**"
     paths:
       - "docs/**"
       - "x/**/*.md"
 
 jobs:
   build-and-deploy:
+    permissions:
+      contents: write # for JamesIves/github-pages-deploy-action to push changes in repo
     runs-on: ubuntu-latest
     container:
       image: tendermintdev/docker-website-deployment

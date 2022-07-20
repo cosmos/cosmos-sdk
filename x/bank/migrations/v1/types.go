@@ -60,7 +60,7 @@ type SupplyI interface {
 	proto.Message
 }
 
-// RegisterInterfaces registers interfaces required for the v0.40 migrations.
+// RegisterInterfaces registers interfaces required for the v1 migrations.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"cosmos.bank.v1beta1.SupplyI",

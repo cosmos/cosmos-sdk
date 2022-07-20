@@ -269,42 +269,8 @@ func (msg MsgUpdateParams) Type() string { return sdk.MsgTypeURL(&msg) }
 
 // ValidateBasic implements Msg
 func (msg MsgUpdateParams) ValidateBasic() error {
-	// if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
-	// 	return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
-	// }
-	// if len(msg.Options) == 0 {
-	// 	return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
-	// }
-
-	// totalWeight := sdk.NewDec(0)
-	// usedOptions := make(map[VoteOption]bool)
-	// for _, option := range msg.Options {
-	// 	if !ValidWeightedVoteOption(option) {
-	// 		return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
-	// 	}
-	// 	totalWeight = totalWeight.Add(option.Weight)
-	// 	if usedOptions[option.Option] {
-	// 		return sdkerrors.Wrap(types.ErrInvalidVote, "Duplicated vote option")
-	// 	}
-	// 	usedOptions[option.Option] = true
-	// }
-
-	// if totalWeight.GT(sdk.NewDec(1)) {
-	// 	return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight overflow 1.00")
-	// }
-
-	// if totalWeight.LT(sdk.NewDec(1)) {
-	// 	return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight lower than 1.00")
-	// }
-
-	return nil
+	return msg.Params.ValidateBasic()
 }
-
-// // String implements the Stringer interface
-// func (msg MsgUpdateParams) String() string {
-// 	out, _ := yaml.Marshal(msg)
-// 	return string(out)
-// }
 
 // GetSignBytes implements Msg
 func (msg MsgUpdateParams) GetSignBytes() []byte {

@@ -11,9 +11,6 @@ func NewGenesisState(startingProposalID uint64, params Params) *GenesisState {
 	return &GenesisState{
 		StartingProposalId: startingProposalID,
 		Params:             &params,
-		// DepositParams:      &dp,
-		// VotingParams:       &vp,
-		// TallyParams:        &tp,
 	}
 }
 
@@ -27,10 +24,7 @@ func DefaultGenesisState() *GenesisState {
 
 // Empty returns true if a GenesisState is empty
 func (data GenesisState) Empty() bool {
-	return data.StartingProposalId == 0 ||
-		data.Params == nil
-	// data.VotingParams == nil ||
-	// data.TallyParams == nil
+	return data.StartingProposalId == 0 || data.Params == nil
 }
 
 // ValidateGenesis checks if parameters are within valid ranges

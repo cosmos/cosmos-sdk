@@ -12,9 +12,6 @@ import (
 // InitGenesis - store genesis parameters
 func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) {
 	k.SetProposalID(ctx, data.StartingProposalId)
-	// k.SetDepositParams(ctx, *data.DepositParams)
-	// k.SetVotingParams(ctx, *data.VotingParams)
-	// k.SetTallyParams(ctx, *data.TallyParams)
 	k.SetParams(ctx, *data.Params)
 
 	// check if the deposits pool account exists
@@ -58,9 +55,6 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 // ExportGenesis - output genesis parameters
 func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v1.GenesisState {
 	startingProposalID, _ := k.GetProposalID(ctx)
-	// depositParams := k.GetDepositParams(ctx)
-	// votingParams := k.GetVotingParams(ctx)
-	// tallyParams := k.GetTallyParams(ctx)
 	proposals := k.GetProposals(ctx)
 	params := k.GetParams(ctx)
 

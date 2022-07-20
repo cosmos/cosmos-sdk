@@ -21,6 +21,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -100,20 +101,19 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	suite.app = simapp.Setup(suite.T(), false)
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 
-	suite.Require().NoError(app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams()))
-	suite.Require().NoError(app.BankKeeper.SetParams(ctx, types.DefaultParams()))
+	suite.Require().NoError(suite.app.AccountKeeper.SetParams(suite.ctx, authtypes.DefaultParams()))
+	suite.Require().NoError(suite.app.BankKeeper.SetParams(suite.ctx, types.DefaultParams()))
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, suite.app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
+	types.RegisterInterfaces(suite.app.InterfaceRegistry())
 
-	suite.app = app
-	suite.ctx = ctx
 	suite.queryClient = queryClient
-	suite.msgServer = keeper.NewMsgServerImpl(app.BankKeeper)
+	suite.msgServer = keeper.NewMsgServerImpl(suite.app.BankKeeper)
 }
 
 func (suite *IntegrationTestSuite) TestSupply() {
@@ -1581,6 +1581,14 @@ func (suite *IntegrationTestSuite) TestGetAllSendEnabledEntries() {
 	})
 }
 
+type mockSubspace struct {
+	ps banktypes.Params
+}
+
+func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
+	*ps.(*banktypes.Params) = ms.ps
+}
+
 func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 	ctx, bankKeeper := suite.ctx, suite.app.BankKeeper
 
@@ -1588,7 +1596,10 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 		params := types.Params{DefaultSendEnabled: def}
 		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 		suite.T().Run(fmt.Sprintf("default %t does not change", def), func(t *testing.T) {
-			migrator := keeper.NewMigrator(bankKeeper.(keeper.BaseKeeper), suite.app.GetSubspace(banktypes.ModuleName))
+			legacySubspace := func(ps types.Params) mockSubspace {
+				return mockSubspace{ps: ps}
+			}(banktypes.NewParams(def))
+			migrator := keeper.NewMigrator(bankKeeper.(keeper.BaseKeeper), legacySubspace)
 			require.NoError(t, migrator.Migrate3to4(ctx))
 			actual := bankKeeper.GetParams(ctx)
 			assert.Equal(t, params.DefaultSendEnabled, actual.DefaultSendEnabled)
@@ -1604,7 +1615,10 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 		}
 		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
 		suite.T().Run(fmt.Sprintf("default %t send enabled info moved to store", def), func(t *testing.T) {
-			migrator := keeper.NewMigrator(bankKeeper.(keeper.BaseKeeper), suite.app.GetSubspace(banktypes.ModuleName))
+			legacySubspace := func(ps types.Params) mockSubspace {
+				return mockSubspace{ps: ps}
+			}(banktypes.NewParams(def))
+			migrator := keeper.NewMigrator(bankKeeper.(keeper.BaseKeeper), legacySubspace)
 			require.NoError(t, migrator.Migrate3to4(ctx))
 			newParams := bankKeeper.GetParams(ctx)
 			assert.Len(t, newParams.SendEnabled, 0)

@@ -100,8 +100,12 @@ func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 
 // SetParams sets the total set of bank parameters.
 func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
-	if err := params.Validate(); err != nil {
-		return err
+	// normally SendEnabled is deprecated but we still support it for backwards compatibility
+	// using params.Validate() would fail due to the SendEnabled deprecation
+	if len(params.SendEnabled) > 0 {
+		k.SetAllSendEnabled(ctx, params.SendEnabled)
+		// override params without SendEnabled
+		params = types.NewParams(params.DefaultSendEnabled)
 	}
 
 	store := ctx.KVStore(k.storeKey)

@@ -6,6 +6,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
+// TODO: Revisit this once we have propoer gas fee framework.
+// Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
+const gasCostPerIteration = uint64(10)
+
 var _ authz.Authorization = &SendAuthorization{}
 
 // NewSendAuthorization creates a new SendAuthorization object.
@@ -15,10 +19,16 @@ func NewSendAuthorization(allowed []sdk.AccAddress, spendLimit sdk.Coins) (*Send
 		return nil, err
 	}
 
-	return &SendAuthorization{
-		AllowList:  allowedAddrs,
-		SpendLimit: spendLimit,
-	}, nil
+	a := SendAuthorization{}
+	if allowedAddrs != nil {
+		a.AllowList = allowedAddrs
+	}
+
+	if spendLimit != nil {
+		a.SpendLimit = spendLimit
+	}
+
+	return &a, nil
 }
 
 // MsgTypeURL implements Authorization.MsgTypeURL.
@@ -28,10 +38,12 @@ func (a SendAuthorization) MsgTypeURL() string {
 
 // Accept implements Authorization.Accept.
 func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
+	var toAddr string
 	mSend, ok := msg.(*MsgSend)
 	if !ok {
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
 	}
+	toAddr = mSend.ToAddress
 	limitLeft, isNegative := a.SpendLimit.SafeSub(mSend.Amount...)
 	if isNegative {
 		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
@@ -40,7 +52,21 @@ func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRes
 		return authz.AcceptResponse{Accept: true, Delete: true}, nil
 	}
 
-	return authz.AcceptResponse{Accept: true, Delete: false, Updated: &SendAuthorization{SpendLimit: limitLeft}}, nil
+	isAddrExists := false
+	allowedList := a.GetAllowList()
+
+	for _, addr := range allowedList {
+		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "send authorization")
+		if addr == toAddr {
+			isAddrExists = true
+			break
+		}
+	}
+
+	if len(allowedList) > 0 && !isAddrExists {
+		return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot send to %s address", toAddr)
+	}
+	return authz.AcceptResponse{Accept: true, Delete: false, Updated: &SendAuthorization{SpendLimit: limitLeft, AllowList: allowedList}}, nil
 }
 
 // ValidateBasic implements Authorization.ValidateBasic.

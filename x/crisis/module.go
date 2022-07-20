@@ -197,10 +197,11 @@ func init() {
 type crisisInputs struct {
 	depinject.In
 
-	Config  *modulev1.Module
-	Key     *store.KVStoreKey
-	Cdc     codec.Codec
-	AppOpts servertypes.AppOptions `optional:"true"`
+	Config    *modulev1.Module
+	Key       *store.KVStoreKey
+	Cdc       codec.Codec
+	AppOpts   servertypes.AppOptions `optional:"true"`
+	Authority types.Authority        `optional:"true"`
 
 	BankKeeper types.SupplyKeeper
 
@@ -227,13 +228,19 @@ func provideModule(in crisisInputs) crisisOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
+	authority := in.Authority
+	if authority == nil || len(authority) == 0 {
+		// default to governance authority if not provided
+		authority = types.Authority(authtypes.NewModuleAddress(govtypes.ModuleName))
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Key,
 		invalidCheckPeriod,
 		in.BankKeeper,
 		feeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority.String(),
 	)
 
 	skipGenesisInvariants := cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))

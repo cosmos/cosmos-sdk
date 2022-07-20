@@ -194,7 +194,14 @@ func NewSimApp(
 		appBuilder *runtime.AppBuilder
 
 		// merge the app.yaml and the appOpts in one config
-		appConfig = depinject.Configs(AppConfig, depinject.Supply(appOpts))
+		appConfig = depinject.Configs(
+			AppConfig,
+			depinject.Supply(
+				appOpts,
+				// for providing a custom inflaction function for x/mint
+				// just add your custom function that follows the minttypes.InflationCalculationFn interface here
+			),
+		)
 	)
 
 	if err := depinject.Inject(appConfig,

@@ -172,7 +172,8 @@ type upgradeInputs struct {
 	Key    *store.KVStoreKey
 	Cdc    codec.Codec
 
-	AppOpts servertypes.AppOptions `optional:"true"`
+	AppOpts   servertypes.AppOptions `optional:"true"`
+	Authority types.Authority        `optional:"true"`
 }
 
 type upgradeOutputs struct {
@@ -197,8 +198,14 @@ func provideModule(in upgradeInputs) upgradeOutputs {
 		homePath = cast.ToString(in.AppOpts.Get(flags.FlagHome))
 	}
 
+	authority := in.Authority
+	if authority == nil || len(authority) == 0 {
+		// default to governance authority if not provided
+		authority = types.Authority(authtypes.NewModuleAddress(govtypes.ModuleName))
+	}
+
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String())
 	m := NewAppModule(k)
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 

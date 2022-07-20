@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// MigrateStore performs in-place store migrations from v0.43/v0.44/v0.45 to v0.46.
+// MigrateStore performs in-place store migrations from v3 to v4.
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
 	store := ctx.KVStore(storeKey)
 	var legacyParams types.Params

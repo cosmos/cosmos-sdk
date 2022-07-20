@@ -46,8 +46,7 @@ func (k Keeper) PowerReduction(ctx sdk.Context) math.Int {
 
 // MinCommissionRate - Minimum validator commission rate
 func (k Keeper) MinCommissionRate(ctx sdk.Context) sdk.Dec {
-	params := k.GetParams(ctx)
-	return params.MinCommissionRate
+	return k.GetParams(ctx).MinCommissionRate
 }
 
 // SetParams sets the x/staking module parameters.

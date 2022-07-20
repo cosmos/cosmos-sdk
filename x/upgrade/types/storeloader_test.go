@@ -29,7 +29,7 @@ func defaultLogger() log.Logger {
 	}
 }
 
-func initStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, key storetypes.StoreKey, k, v []byte) {
+func initStore(t *testing.T, db dbm.Connection, config multi.StoreParams, key storetypes.StoreKey, k, v []byte) {
 	rs, err := multi.NewV1MultiStoreAsV2(db, config)
 	require.NoError(t, err)
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
@@ -44,7 +44,7 @@ func initStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, key 
 	require.NoError(t, rs.Close())
 }
 
-func checkStore(t *testing.T, db dbm.DBConnection, config multi.StoreParams, ver int64, key storetypes.StoreKey, k, v []byte) {
+func checkStore(t *testing.T, db dbm.Connection, config multi.StoreParams, ver int64, key storetypes.StoreKey, k, v []byte) {
 	rs, err := multi.NewV1MultiStoreAsV2(db, config)
 	require.NoError(t, err)
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))

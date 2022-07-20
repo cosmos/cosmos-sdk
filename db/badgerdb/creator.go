@@ -1,4 +1,4 @@
-//go:build badgerdb
+// Enabled by default
 
 package badgerdb
 

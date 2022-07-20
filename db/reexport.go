@@ -1,9 +1,9 @@
 package db
 
 import (
-	"github.com/cosmos/cosmos-sdk/db/types"
-
 	_ "github.com/cosmos/cosmos-sdk/db/internal/backends"
+	"github.com/cosmos/cosmos-sdk/db/memdb"
+	"github.com/cosmos/cosmos-sdk/db/types"
 )
 
 type (
@@ -27,4 +27,6 @@ var (
 	NewDB              = types.NewDB
 	ReaderAsReadWriter = types.ReaderAsReadWriter
 	NewVersionManager  = types.NewVersionManager
+
+	NewMemDB = memdb.NewDB
 )

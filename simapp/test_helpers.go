@@ -41,7 +41,7 @@ import (
 // SetupOptions defines arguments that are passed into `Simapp` constructor.
 type SetupOptions struct {
 	Logger    log.Logger
-	DB        *dbm.MemDB
+	DB        *memdb.MemDB
 	EncConfig simappparams.EncodingConfig
 	AppOpts   types.AppOptions
 }
@@ -53,7 +53,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	appOptions[flags.FlagHome] = DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = invCheckPeriod
 
-	app := NewSimApp(log.NewNopLogger(), memdb.NewDB(), nil, true, encCdc, appOptions)
+	app := NewSimApp(log.NewNopLogger(), memdb.NewDB(), nil, encCdc, appOptions)
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Codec)
 	}
@@ -79,7 +79,9 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 
-	app := NewSimApp(options.Logger, options.DB, nil, true, options.EncConfig, options.AppOpts)
+	app := NewSimApp(options.Logger, options.DB, nil, options.EncConfig, options.AppOpts)
+	app.SetParamStore(mock.NewParamStore(memdb.NewDB()))
+	require.NoError(t, app.Init())
 	genesisState := NewDefaultGenesisState(app.appCodec)
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 	require.NoError(t, err)
@@ -366,13 +368,15 @@ func NewTestNetworkFixture() network.TestFixture {
 		InterfaceRegistry: encodingCfg.InterfaceRegistry,
 	}
 	appCtr := func(val testutil.Validator) servertypes.Application {
-		return NewSimApp(
-			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
+		app := NewSimApp(
+			val.GetCtx().Logger, memdb.NewDB(), nil,
 			encodingCfg,
 			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
 			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 		)
+		// app.SetParamStore(mock.NewParamStore(memdb.NewDB()))
+		return app
 	}
 
 	return network.TestFixture{

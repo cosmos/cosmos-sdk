@@ -75,7 +75,7 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 }
 
 // Load finishes all initialization operations and loads the app.
-func (a *App) Load(loadLatest bool) error {
+func (a *App) Load() error {
 	a.configurator = module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
 	a.ModuleManager.RegisterServices(a.configurator)
 
@@ -98,12 +98,6 @@ func (a *App) Load(loadLatest bool) error {
 	if len(a.config.EndBlockers) != 0 {
 		a.ModuleManager.SetOrderEndBlockers(a.config.EndBlockers...)
 		a.SetEndBlocker(a.EndBlocker)
-	}
-
-	if loadLatest {
-		if err := a.LoadLatestVersion(); err != nil {
-			return err
-		}
 	}
 
 	return nil

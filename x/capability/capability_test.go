@@ -7,7 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	ba "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -34,10 +34,7 @@ func (suite *CapabilityTestSuite) SetupTest() {
 	suite.memKey = storetypes.NewMemoryStoreKey("testingkey")
 
 	app, err := simtestutil.SetupWithBaseAppOption(testutil.AppConfig,
-		func(ba *baseapp.BaseApp) {
-			ba.MountStores(suite.memKey)
-		},
-		&suite.cdc,
+		ba.SetSubstores(suite.memKey).Apply, &suite.cdc,
 		&suite.keeper,
 	)
 	suite.Require().NoError(err)

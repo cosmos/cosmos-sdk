@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	group "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	// nft "github.com/cosmos/cosmos-sdk/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -60,7 +61,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 
 	logger2, _ := log.NewDefaultLogger("plain", "info", false)
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewSimApp(logger2, db, nil, true, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
+	app2 := NewSimApp(logger2, db, nil, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 	require.NoError(t, app2.Init())
 	_, err := app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
@@ -74,7 +75,7 @@ func TestGetMaccPerms(t *testing.T) {
 func TestRunMigrations(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	logger, _ := log.NewDefaultLogger("plain", "info", false)
-	app := NewSimApp(logger, memdb.NewDB(), nil, true, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
+	app := NewSimApp(logger, memdb.NewDB(), nil, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 
 	// Create a new baseapp and configurator for the purpose of this test.
 	bApp := baseapp.NewBaseApp(app.Name(), logger, memdb.NewDB(), encCfg.TxConfig.TxDecoder())
@@ -208,7 +209,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	db := memdb.NewDB()
 	encCfg := MakeTestEncodingConfig()
 	logger, _ := log.NewDefaultLogger("plain", "info", false)
-	app := NewSimApp(logger, db, nil, true, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
+	app := NewSimApp(logger, db, nil, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 	require.NoError(t, app.Init())
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
@@ -244,6 +245,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 			"crisis":       crisis.AppModule{}.ConsensusVersion(),
 			"genutil":      genutil.AppModule{}.ConsensusVersion(),
 			"capability":   capability.AppModule{}.ConsensusVersion(),
+			// "nft":          nft.AppModule{}.ConsensusVersion(),
 		},
 	)
 	require.NoError(t, err)

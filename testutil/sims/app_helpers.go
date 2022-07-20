@@ -11,14 +11,15 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -107,13 +108,14 @@ func SetupWithConfiguration(appConfig depinject.Config, validatorSet func() (*tm
 	}
 
 	if baseAppOption != nil {
-		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil, baseAppOption)
+		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil, baseapp.AppOptionFunc(baseAppOption))
 	} else {
 		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
 	}
-	if err := app.Load(true); err != nil {
+	if err := app.Load(); err != nil {
 		return nil, fmt.Errorf("failed to load app: %w", err)
 	}
+	app.SetParamStore(mock.NewParamStore(dbm.NewMemDB()))
 
 	// create validator set
 	valSet, err := validatorSet()

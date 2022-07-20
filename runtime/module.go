@@ -23,6 +23,10 @@ type BaseAppOption func(*baseapp.BaseApp)
 // IsManyPerContainerType indicates that this is a depinject.ManyPerContainerType.
 func (b BaseAppOption) IsManyPerContainerType() {}
 
+// // Implement base
+// func (opt BaseAppOption) Apply(app *baseapp.BaseApp) { opt(app) }
+// func (opt BaseAppOption) Order() baseapp.OptionOrder { return baseapp.OptionOrderDefault }
+
 // appWrapper is used to pass around an instance of *App internally between
 // runtime dependency inject providers that is partially constructed (no
 // baseapp yet).

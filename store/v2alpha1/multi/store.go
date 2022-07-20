@@ -211,7 +211,7 @@ func readSavedSchema(bucket dbm.Reader) (*SchemaBuilder, error) {
 
 // NewStore constructs a MultiStore directly from a database.
 // Creates a new store if no data exists; otherwise loads existing data.
-func NewStore(db dbm.DBConnection, opts StoreParams) (ret *Store, err error) {
+func NewStore(db dbm.Connection, opts StoreParams) (ret *Store, err error) {
 	pruningManager := pruning.NewManager()
 	pruningManager.SetOptions(opts.Pruning)
 	{ // load any pruned heights we missed from disk to be pruned on the next run
@@ -600,7 +600,7 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	}
 	// Update substore Merkle roots
 	for key, storeHash := range storeHashes {
-		w := prefixdb.NewPrefixReadWriter(s.stateTxn, substorePrefix(key))
+		w := prefixdb.NewReadWriter(s.stateTxn, substorePrefix(key))
 		if err = w.Set(substoreMerkleRootKey, storeHash); err != nil {
 			return
 		}
@@ -922,12 +922,12 @@ func (pr *SchemaBuilder) migrateSchema(upgrades types.StoreUpgrades) error {
 func (reg *SchemaBuilder) storeInfo(key string) (sst types.StoreType, ix int, err error) {
 	ix, has := binarySearch(reg.reserved, key)
 	if !has {
-		err = fmt.Errorf("prefix does not exist: %v", key)
+		err = fmt.Errorf("name does not exist: %v", key)
 		return
 	}
 	sst, has = reg.StoreSchema[key]
 	if !has {
-		err = fmt.Errorf("prefix is registered but not in schema: %v", key)
+		err = fmt.Errorf("name is registered but not in schema: %v", key)
 	}
 
 	return
@@ -938,14 +938,15 @@ func (reg *SchemaBuilder) registerName(key string, typ types.StoreType) error {
 	// Find the neighboring reserved prefix, and check for duplicates and conflicts
 	i, has := binarySearch(reg.reserved, key)
 	if has {
-		return fmt.Errorf("prefix already exists: %v", key)
+		return fmt.Errorf("name already exists: %v", key)
 	}
-	if i > 0 && strings.HasPrefix(key, reg.reserved[i-1]) {
-		return fmt.Errorf("prefix conflict: '%v' exists, cannot add '%v'", reg.reserved[i-1], key)
-	}
-	if i < len(reg.reserved) && strings.HasPrefix(reg.reserved[i], key) {
-		return fmt.Errorf("prefix conflict: '%v' exists, cannot add '%v'", reg.reserved[i], key)
-	}
+	// TODO auth vs authz ?
+	// if i > 0 && strings.HasPrefix(key, reg.reserved[i-1]) {
+	// 	return fmt.Errorf("name conflict: '%v' exists, cannot add '%v'", reg.reserved[i-1], key)
+	// }
+	// if i < len(reg.reserved) && strings.HasPrefix(reg.reserved[i], key) {
+	// 	return fmt.Errorf("name conflict: '%v' exists, cannot add '%v'", reg.reserved[i], key)
+	// }
 	reserved := reg.reserved[:i]
 	reserved = append(reserved, key)
 	reg.reserved = append(reserved, reg.reserved[i:]...)

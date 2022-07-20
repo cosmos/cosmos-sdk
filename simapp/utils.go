@@ -8,7 +8,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	db "github.com/cosmos/cosmos-sdk/db"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -19,7 +19,7 @@ import (
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db instantiation or temp dir creation.
-func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DBConnection, string, log.Logger, bool, error) {
+func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, db.Connection, string, log.Logger, bool, error) {
 	if !FlagEnabledValue {
 		return simtypes.Config{}, nil, "", nil, true, nil
 	}
@@ -105,7 +105,7 @@ func CheckExportSimulation(
 
 // PrintStats prints the corresponding statistics from the app DB.
 // TODO: implement stats collection for DBConnection
-func PrintStats(db dbm.Connection) {
+func PrintStats(db db.Connection) {
 	// stats := db.Stats()
 	fmt.Println("\nDB Stats: not available")
 }

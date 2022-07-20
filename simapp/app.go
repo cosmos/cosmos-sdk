@@ -4,7 +4,6 @@ package simapp
 
 import (
 	_ "embed"
-	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -25,13 +24,13 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
+	// "github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -191,7 +190,7 @@ func init() {
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger,
-	db dbm.DBConnection,
+	db dbm.Connection,
 	traceStore io.Writer,
 	encodingConfig simappparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
@@ -310,10 +309,9 @@ func NewSimApp(
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 
-	if err := app.Load(loadLatest); err != nil {
+	if err := app.Load(); err != nil {
 		panic(err)
 	}
-
 	return app
 }
 

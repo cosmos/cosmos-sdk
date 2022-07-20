@@ -26,7 +26,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	appOptions[flags.FlagHome] = simapp.DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = 5
 
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, encCdc, appOptions)
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, encCdc, appOptions)
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
 	stateBytes, err := tmjson.Marshal(genesisState)

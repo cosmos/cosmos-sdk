@@ -435,11 +435,6 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 	return upgradeInfo, nil
 }
 
-// SetVersionSetter upgrades versionSetter.
-func (k *Keeper) SetVersionSetter(vs xp.ProtocolVersionSetter) {
-	k.versionSetter = vs
-}
-
 // SetDowngradeVerified updates downgradeVerified.
 func (k *Keeper) SetDowngradeVerified(v bool) {
 	k.downgradeVerified = v

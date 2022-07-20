@@ -29,6 +29,7 @@ import (
 	stypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -44,54 +45,12 @@ var (
 	testTxPriority = int64(42)
 )
 
-type paramStore struct {
-	db *memdb.MemDB
-	rw dbm.DBReadWriter
-}
-
-func newParamStore(db *memdb.MemDB) *paramStore {
-	return &paramStore{db: db, rw: db.ReadWriter()}
-}
-
 type setupConfig struct {
 	blocks             uint64
 	blockTxs           int
 	snapshotInterval   uint64
 	snapshotKeepRecent uint32
 	pruningOpts        pruningtypes.PruningOptions
-}
-
-func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
-	bz, err := json.Marshal(value)
-	if err != nil {
-		panic(err)
-	}
-
-	ps.rw.Set(key, bz)
-}
-
-func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
-	ok, err := ps.rw.Has(key)
-	if err != nil {
-		panic(err)
-	}
-
-	return ok
-}
-
-func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
-	bz, err := ps.rw.Get(key)
-	if err != nil {
-		panic(err)
-	}
-
-	if len(bz) == 0 {
-		return
-	}
-
-	if err := json.Unmarshal(bz, ptr); err != nil {
-		panic(err)
-	}
 }
 
 func defaultLogger() log.Logger {
@@ -132,7 +91,7 @@ func setupBaseApp(t *testing.T, options ...AppOption) *BaseApp {
 	app := newBaseApp(t.Name(), options...)
 	require.Equal(t, t.Name(), app.Name())
 
-	app.SetParamStore(newParamStore(memdb.NewDB()))
+	app.SetParamStore(mock.NewParamStore(memdb.NewDB()))
 
 	// stores are mounted
 	err := app.Init()
@@ -254,7 +213,7 @@ func TestLoadVersion(t *testing.T) {
 	testLoadVersionHelper(t, app, int64(2), commitID2)
 }
 
-func initStore(t *testing.T, db dbm.DBConnection, storeKey string, k, v []byte) {
+func initStore(t *testing.T, db dbm.Connection, storeKey string, k, v []byte) {
 	key := sdk.NewKVStoreKey(storeKey)
 	opts := multi.DefaultStoreParams()
 	opts.Pruning = pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)
@@ -272,7 +231,7 @@ func initStore(t *testing.T, db dbm.DBConnection, storeKey string, k, v []byte) 
 	require.NoError(t, rs.Close())
 }
 
-func checkStore(t *testing.T, db dbm.DBConnection, ver int64, storeKey string, k, v []byte) {
+func checkStore(t *testing.T, db dbm.Connection, ver int64, storeKey string, k, v []byte) {
 	opts := multi.DefaultStoreParams()
 	opts.Pruning = pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)
 	key := sdk.NewKVStoreKey(storeKey)
@@ -2015,7 +1974,7 @@ func TestBaseApp_EndBlock(t *testing.T) {
 	}
 
 	app := NewBaseApp(name, logger, db, nil)
-	app.SetParamStore(newParamStore(memdb.NewDB()))
+	app.SetParamStore(mock.NewParamStore(memdb.NewDB()))
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,
 	})
@@ -2146,10 +2105,10 @@ func TestBaseApp_Init(t *testing.T) {
 		},
 		"error custom pruning too small keep recent": {
 			NewBaseApp(name, logger, db, nil,
-				SetPruning(pruningtypes.NewCustomPruningOptions(9, 10)),
+				SetPruning(pruningtypes.NewCustomPruningOptions(1, 10)),
 				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(1500, 2)),
 			),
-			pruningtypes.NewCustomPruningOptions(9, 10),
+			pruningtypes.NewCustomPruningOptions(1, 10),
 			snapshottypes.NewSnapshotOptions(1500, 2),
 			pruningtypes.ErrPruningKeepRecentTooSmall,
 		},

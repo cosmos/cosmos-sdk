@@ -35,6 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/db"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -158,13 +159,13 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 		}
 		app := appBuilder.Build(
 			val.GetCtx().Logger,
-			dbm.NewMemDB(),
+			db.NewMemDB(),
 			nil,
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 		)
 
-		if err := app.Load(true); err != nil {
+		if err := app.Load(); err != nil {
 			panic(err)
 		}
 

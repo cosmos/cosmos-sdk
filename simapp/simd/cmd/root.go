@@ -248,7 +248,7 @@ type appCreator struct {
 // newApp is an appCreator
 func (a appCreator) newApp(
 	logger log.Logger,
-	db dbm.DBConnection,
+	db dbm.Connection,
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
@@ -284,7 +284,7 @@ func (a appCreator) newApp(
 	)
 
 	return simapp.NewSimApp(
-		logger, db, traceStore, true,
+		logger, db, traceStore,
 		a.encCfg,
 		appOpts,
 		baseapp.SetPruning(pruningOpts),
@@ -302,7 +302,7 @@ func (a appCreator) newApp(
 // appExport creates a new simapp (optionally at a given height)
 // and exports state.
 func (a appCreator) appExport(
-	logger log.Logger, db dbm.DBConnection, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOpts servertypes.AppOptions,
+	logger log.Logger, db dbm.Connection, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOpts servertypes.AppOptions,
 ) (servertypes.ExportedApp, error) {
 	var simApp *simapp.SimApp
 
@@ -322,7 +322,7 @@ func (a appCreator) appExport(
 	viperAppOpts.Set(server.FlagInvCheckPeriod, 1)
 	appOpts = viperAppOpts
 
-	simApp = simapp.NewSimApp(logger, db, traceStore, true, a.encCfg, appOpts)
+	simApp = simapp.NewSimApp(logger, db, traceStore, a.encCfg, appOpts)
 	if height != -1 {
 		return simApp.ExportAppStateAndValidatorsAt(forZeroHeight, jailAllowedAddrs, height)
 	}

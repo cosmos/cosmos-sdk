@@ -13,7 +13,7 @@ import (
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
-	"github.com/cosmos/cosmos-sdk/store"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,7 +39,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	ms, err := multi.NewV1MultiStoreAsV2(db, config)
 	suite.NoError(err)
 
-	err := depinject.Inject(testutil.AppConfig,
+	err = depinject.Inject(testutil.AppConfig,
 		&suite.cdc,
 		&suite.amino,
 	)

@@ -34,6 +34,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	app := cfg.AppConstructor(*val)
+	// app.SetParamStore()
 
 	genDoc, err := types.GenesisDocFromFile(tmCfg.GenesisFile())
 	if err != nil {

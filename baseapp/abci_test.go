@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 )
 
 func TestGetBlockRentionHeight(t *testing.T) {
@@ -108,7 +109,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 
-		tc.bapp.SetParamStore(newParamStore(memdb.NewDB()))
+		tc.bapp.SetParamStore(mock.NewParamStore(memdb.NewDB()))
 		tc.bapp.InitChain(abci.RequestInitChain{
 			ConsensusParams: &tmprototypes.ConsensusParams{
 				Evidence: &tmprototypes.EvidenceParams{

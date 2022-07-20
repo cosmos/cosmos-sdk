@@ -192,8 +192,7 @@ func NewBaseApp(
 		}
 	}
 
-	err := app.loadStore()
-	if err != nil {
+	if err := app.loadStore(); err != nil {
 		panic(err)
 	}
 	for _, option := range afterStoreOpts {
@@ -238,7 +237,9 @@ func (app *BaseApp) loadStore() error {
 	latest := versions.Last()
 	config := multi.DefaultStoreParams()
 	for _, opt := range app.storeOpts {
-		opt(&config, latest)
+		if err = opt(&config, latest); err != nil {
+			return err
+		}
 	}
 	app.store, err = multi.NewV1MultiStoreAsV2(app.db, config)
 	if err != nil {

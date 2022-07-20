@@ -1,4 +1,4 @@
-package v046
+package v3
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -6,7 +6,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	v043 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
+	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -27,7 +27,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 }
 
 func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
-	oldBalancesStore := prefix.NewStore(store, v043.BalancesPrefix)
+	oldBalancesStore := prefix.NewStore(store, v2.BalancesPrefix)
 
 	oldBalancesIter := oldBalancesStore.Iterator(nil, nil)
 	defer oldBalancesIter.Close()
@@ -40,7 +40,7 @@ func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
 			return err
 		}
 
-		addr, err := v043.AddressFromBalancesStore(oldBalancesIter.Key())
+		addr, err := v2.AddressFromBalancesStore(oldBalancesIter.Key())
 		if err != nil {
 			return err
 		}
@@ -73,7 +73,7 @@ func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
 }
 
 func migrateDenomMetadata(store sdk.KVStore) error {
-	oldDenomMetaDataStore := prefix.NewStore(store, v043.DenomMetadataPrefix)
+	oldDenomMetaDataStore := prefix.NewStore(store, v2.DenomMetadataPrefix)
 
 	oldDenomMetaDataIter := oldDenomMetaDataStore.Iterator(nil, nil)
 	defer oldDenomMetaDataIter.Close()

@@ -1,4 +1,4 @@
-package v043_test
+package v2_test
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v043bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
+	v2bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -41,7 +41,7 @@ func TestMigrateJSON(t *testing.T) {
 		},
 	}
 
-	migrated := v043bank.MigrateJSON(bankGenState)
+	migrated := v2bank.MigrateJSON(bankGenState)
 
 	bz, err := clientCtx.Codec.MarshalJSON(migrated)
 	require.NoError(t, err)

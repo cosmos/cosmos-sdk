@@ -1,62 +1,12 @@
 version: 2
 updates:
-- package-ecosystem: github-actions
-  directory: "/"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-- package-ecosystem: npm
-  directory: "/docs"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  reviewers:
-  - fadeev
-- package-ecosystem: gomod
-  directory: "/"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies
-- package-ecosystem: gomod
-  directory: "/db"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies
-- package-ecosystem: gomod
-  directory: "/api"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies
-- package-ecosystem: gomod
-  directory: "/orm"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies
-- package-ecosystem: gomod
-  directory: "/container"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies
-- package-ecosystem: gomod
-  directory: "/cosmovisor"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    labels:
+      - automerge
+      - dependencies
+    allow:
+      - dependency-name: "*/celestiaorg/*"

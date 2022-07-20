@@ -24,6 +24,9 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/math"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -32,16 +35,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/db/memdb"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -55,19 +54,13 @@ var lock = new(sync.Mutex)
 
 // AppConstructor defines a function which accepts a network configuration and
 // creates an ABCI Application to provide to Tendermint.
-type AppConstructor = func(val Validator) servertypes.Application
+type AppConstructor = func(val moduletestutil.Validator) servertypes.Application
+type TestFixtureFactory = func() TestFixture
 
-// NewAppConstructor returns a new simapp AppConstructor
-func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
-	return func(val Validator) servertypes.Application {
-		return simapp.NewSimApp(
-			val.Ctx.Logger, memdb.NewDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-			encodingCfg,
-			simapp.EmptyAppOptions{},
-			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
-		)
-	}
+type TestFixture struct {
+	AppConstructor AppConstructor
+	GenesisState   map[string]json.RawMessage
+	EncodingConfig moduletestutil.TestEncodingConfig
 }
 
 // Config defines the necessary configuration used to bootstrap and start an
@@ -103,17 +96,17 @@ type Config struct {
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
 // testing requirements.
-func DefaultConfig() Config {
-	encCfg := simapp.MakeTestEncodingConfig()
+func DefaultConfig(factory TestFixtureFactory) Config {
+	fixture := factory()
 
 	return Config{
-		Codec:             encCfg.Codec,
-		TxConfig:          encCfg.TxConfig,
-		LegacyAmino:       encCfg.Amino,
-		InterfaceRegistry: encCfg.InterfaceRegistry,
+		Codec:             fixture.EncodingConfig.Codec,
+		TxConfig:          fixture.EncodingConfig.TxConfig,
+		LegacyAmino:       fixture.EncodingConfig.Amino,
+		InterfaceRegistry: fixture.EncodingConfig.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    NewAppConstructor(encCfg),
-		GenesisState:      simapp.ModuleBasics.DefaultGenesis(encCfg.Codec),
+		AppConstructor:    fixture.AppConstructor,
+		GenesisState:      fixture.GenesisState,
 		TimeoutCommit:     2 * time.Second,
 		ChainID:           "chain-" + tmrand.Str(6),
 		NumValidators:     4,
@@ -131,41 +124,44 @@ func DefaultConfig() Config {
 }
 
 func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
-	cfg := DefaultConfig()
-
 	var (
 		appBuilder        *runtime.AppBuilder
-		msgServiceRouter  *baseapp.MsgServiceRouter
 		txConfig          client.TxConfig
 		legacyAmino       *codec.LegacyAmino
-		codec             codec.Codec
+		cdc               codec.Codec
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
 
 	if err := depinject.Inject(appConfig,
 		&appBuilder,
-		&msgServiceRouter,
 		&txConfig,
-		&codec,
+		&cdc,
 		&legacyAmino,
 		&interfaceRegistry,
 	); err != nil {
 		return Config{}, err
 	}
 
-	cfg.Codec = codec
+	cfg := DefaultConfig(func() TestFixture {
+		return TestFixture{}
+	})
+	cfg.Codec = cdc
 	cfg.TxConfig = txConfig
 	cfg.LegacyAmino = legacyAmino
 	cfg.InterfaceRegistry = interfaceRegistry
 	cfg.GenesisState = appBuilder.DefaultGenesis()
-	cfg.AppConstructor = func(val Validator) servertypes.Application {
+	cfg.AppConstructor = func(val moduletestutil.Validator) servertypes.Application {
+		// we build a unique app instance for every validator here
+		var appBuilder *runtime.AppBuilder
+		if err := depinject.Inject(appConfig, &appBuilder); err != nil {
+			panic(err)
+		}
 		app := appBuilder.Build(
-			val.Ctx.Logger,
+			val.GetCtx().Logger,
 			dbm.NewMemDB(),
 			nil,
-			msgServiceRouter,
-			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
+			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 		)
 
 		if err := app.Load(true); err != nil {
@@ -230,9 +226,18 @@ type Logger interface {
 }
 
 var (
-	_ Logger = (*testing.T)(nil)
-	_ Logger = (*CLILogger)(nil)
+	_ Logger                   = (*testing.T)(nil)
+	_ Logger                   = (*CLILogger)(nil)
+	_ moduletestutil.Validator = Validator{}
 )
+
+func (v Validator) GetCtx() *server.Context {
+	return v.Ctx
+}
+
+func (v Validator) GetAppConfig() *srvconfig.Config {
+	return v.AppConfig
+}
 
 // CLILogger wraps a cobra.Command and provides command logging methods.
 type CLILogger struct {

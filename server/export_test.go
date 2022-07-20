@@ -130,7 +130,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	logger, _ := log.NewDefaultLogger("plain", "info", false)
 	db := memdb.NewDB()
 	encCfg := simapp.MakeTestEncodingConfig()
-	app := simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, tempDir, 0, encCfg, simapp.EmptyAppOptions{})
+	app := simapp.NewSimApp(logger, db, nil, true, encCfg, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
 	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
@@ -156,10 +156,10 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	app.Commit()
 
 	cmd := server.ExportCmd(
-		func(_ log.Logger, _ dbm.DBConnection, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptons types.AppOptions) (types.ExportedApp, error) {
+		func(_ log.Logger, _ dbm.Connection, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions) (types.ExportedApp, error) {
 			require.NoError(t, app.CloseStore())
 			encCfg := simapp.MakeTestEncodingConfig()
-			simApp := simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, "", 0, encCfg, appOptons)
+			simApp := simapp.NewSimApp(logger, db, nil, false, encCfg, appOptions)
 			require.NoError(t, simApp.Init())
 
 			return simApp.ExportAppStateAndValidatorsAt(forZeroHeight, jailAllowedAddrs, height)

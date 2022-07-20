@@ -3,10 +3,8 @@ package tx
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
-
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/golang/protobuf/proto" // nolint: staticcheck
@@ -15,9 +13,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	pagination "github.com/cosmos/cosmos-sdk/types/query"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
@@ -40,21 +40,33 @@ func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interface
 	}
 }
 
-var _ txtypes.ServiceServer = txServer{}
+var (
+	_ txtypes.ServiceServer = txServer{}
+
+	// EventRegex checks that an event string is formatted with {alphabetic}.{alphabetic}={value}
+	EventRegex = regexp.MustCompile(`^[a-zA-Z]+\.[a-zA-Z]+=\S+$`)
+)
 
 const (
 	eventFormat = "{eventType}.{eventAttribute}={value}"
 )
 
-// TxsByEvents implements the ServiceServer.TxsByEvents RPC method.
+// GetTxsEvent implements the ServiceServer.TxsByEvents RPC method.
 func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
 
-	page, limit, err := pagination.ParsePagination(req.Pagination)
-	if err != nil {
-		return nil, err
+	page := int(req.Page)
+	// Tendermint node.TxSearch that is used for querying txs defines pages starting from 1,
+	// so we default to 1 if not provided in the request.
+	if page == 0 {
+		page = 1
+	}
+
+	limit := int(req.Limit)
+	if limit == 0 {
+		limit = query.DefaultLimit
 	}
 	orderBy := parseOrderBy(req.OrderBy)
 
@@ -63,7 +75,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	}
 
 	for _, event := range req.Events {
-		if !strings.Contains(event, "=") || strings.Count(event, "=") > 1 {
+		if !EventRegex.Match([]byte(event)) {
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
 		}
 	}
@@ -88,9 +100,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	return &txtypes.GetTxsEventResponse{
 		Txs:         txsList,
 		TxResponses: result.Txs,
-		Pagination: &pagination.PageResponse{
-			Total: result.TotalCount,
-		},
+		Total:       result.TotalCount,
 	}, nil
 }
 
@@ -192,7 +202,7 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		limit = req.Pagination.Limit
 	} else {
 		offset = 0
-		limit = pagination.DefaultLimit
+		limit = query.DefaultLimit
 	}
 
 	blockTxs := block.Data.Txs
@@ -232,7 +242,7 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		Txs:     txs,
 		BlockId: &blockID,
 		Block:   block,
-		Pagination: &pagination.PageResponse{
+		Pagination: &query.PageResponse{
 			Total: blockTxsLn,
 		},
 	}, nil

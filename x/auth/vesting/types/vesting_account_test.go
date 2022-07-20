@@ -10,10 +10,12 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
@@ -25,15 +27,15 @@ var (
 type VestingAccountTestSuite struct {
 	suite.Suite
 
-	app *simapp.SimApp
-	ctx sdk.Context
+	ctx           sdk.Context
+	accountKeeper keeper.AccountKeeper
 }
 
 func (s *VestingAccountTestSuite) SetupTest() {
-	checkTx := false
-	s.app = simapp.Setup(s.T(), checkTx)
+	app, err := simtestutil.Setup(testutil.AppConfig, &s.accountKeeper)
+	require.NoError(s.T(), err)
 
-	s.ctx = s.app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
+	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 }
 
 func TestGetVestedCoinsContVestingAcc(t *testing.T) {
@@ -754,79 +756,75 @@ func TestGenesisAccountValidate(t *testing.T) {
 }
 
 func (s *VestingAccountTestSuite) TestContinuousVestingAccountMarshal() {
-	app := s.app
 	require := s.Require()
 	baseAcc, coins := initBaseAccount()
 	baseVesting := types.NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
 	acc := types.NewContinuousVestingAccountRaw(baseVesting, baseVesting.EndTime)
 
-	bz, err := app.AccountKeeper.MarshalAccount(acc)
+	bz, err := s.accountKeeper.MarshalAccount(acc)
 	require.Nil(err)
 
-	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
+	acc2, err := s.accountKeeper.UnmarshalAccount(bz)
 	require.Nil(err)
 	require.IsType(&types.ContinuousVestingAccount{}, acc2)
 	require.Equal(acc.String(), acc2.String())
 
 	// error on bad bytes
-	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
+	_, err = s.accountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(err)
 }
 
 func (s *VestingAccountTestSuite) TestPeriodicVestingAccountMarshal() {
-	app := s.app
 	require := s.Require()
 	baseAcc, coins := initBaseAccount()
 	acc := types.NewPeriodicVestingAccount(baseAcc, coins, time.Now().Unix(), types.Periods{types.Period{3600, coins}})
 
-	bz, err := app.AccountKeeper.MarshalAccount(acc)
+	bz, err := s.accountKeeper.MarshalAccount(acc)
 	require.Nil(err)
 
-	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
+	acc2, err := s.accountKeeper.UnmarshalAccount(bz)
 	require.Nil(err)
 	require.IsType(&types.PeriodicVestingAccount{}, acc2)
 	require.Equal(acc.String(), acc2.String())
 
 	// error on bad bytes
-	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
+	_, err = s.accountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(err)
 }
 
 func (s *VestingAccountTestSuite) TestDelayedVestingAccountMarshal() {
-	app := s.app
 	require := s.Require()
 	baseAcc, coins := initBaseAccount()
 	acc := types.NewDelayedVestingAccount(baseAcc, coins, time.Now().Unix())
 
-	bz, err := app.AccountKeeper.MarshalAccount(acc)
+	bz, err := s.accountKeeper.MarshalAccount(acc)
 	require.Nil(err)
 
-	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
+	acc2, err := s.accountKeeper.UnmarshalAccount(bz)
 	require.Nil(err)
 	require.IsType(&types.DelayedVestingAccount{}, acc2)
 	require.Equal(acc.String(), acc2.String())
 
 	// error on bad bytes
-	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
+	_, err = s.accountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(err)
 }
 
 func (s *VestingAccountTestSuite) TestPermanentLockedAccountMarshal() {
-	app := s.app
 	require := s.Require()
 	baseAcc, coins := initBaseAccount()
 	acc := types.NewPermanentLockedAccount(baseAcc, coins)
 
-	bz, err := app.AccountKeeper.MarshalAccount(acc)
+	bz, err := s.accountKeeper.MarshalAccount(acc)
 	require.Nil(err)
 
-	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
+	acc2, err := s.accountKeeper.UnmarshalAccount(bz)
 	require.Nil(err)
 	require.IsType(&types.PermanentLockedAccount{}, acc2)
 	require.Equal(acc.String(), acc2.String())
 
 	// error on bad bytes
-	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
+	_, err = s.accountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(err)
 }
 

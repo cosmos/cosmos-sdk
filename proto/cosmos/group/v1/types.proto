@@ -28,7 +28,6 @@ message Member {
   google.protobuf.Timestamp added_at = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
-
 // MemberRequest represents a group member to be used in Msg server requests.
 // Contrary to `Member`, it doesn't have any `added_at` field
 // since this field cannot be set as part of requests.

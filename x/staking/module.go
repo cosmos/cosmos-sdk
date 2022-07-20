@@ -5,24 +5,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sort"
+
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"github.com/cosmos/cosmos-sdk/depinject"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -182,10 +183,8 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
-		),
+		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Invoke(invokeSetStakingHooks),
 	)
 }
 
@@ -216,6 +215,45 @@ func provideModule(in stakingInputs) stakingOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper, in.BankKeeper, in.Subspace)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
 	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
+}
+
+func invokeSetStakingHooks(
+	config *modulev1.Module,
+	keeper *keeper.Keeper,
+	stakingHooks map[string]types.StakingHooksWrapper,
+) error {
+	// all arguments to invokers are optional
+	if keeper == nil || config == nil {
+		return nil
+	}
+
+	modNames := maps.Keys(stakingHooks)
+	order := config.HooksOrder
+	if len(order) == 0 {
+		order = modNames
+		sort.Strings(order)
+	}
+
+	if len(order) != len(modNames) {
+		return fmt.Errorf("len(hooks_order: %v) != len(hooks modules: %v)", order, modNames)
+	}
+
+	if len(modNames) == 0 {
+		return nil
+	}
+
+	var multiHooks types.MultiStakingHooks
+	for _, modName := range order {
+		hook, ok := stakingHooks[modName]
+		if !ok {
+			return fmt.Errorf("can't find staking hooks for module %s", modName)
+		}
+
+		multiHooks = append(multiHooks, hook)
+	}
+
+	keeper.SetHooks(multiHooks)
+	return nil
 }
 
 // AppModuleSimulation functions

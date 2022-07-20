@@ -6,13 +6,19 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"cosmossdk.io/core/appmodule"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -82,7 +88,7 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the group module.
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
 	if err := group.RegisterQueryHandlerClient(context.Background(), mux, group.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -147,12 +153,55 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
-
 // EndBlock implements the group module's EndBlock.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
+}
+
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(
+			provideModuleBasic,
+			provideModule,
+		),
+	)
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type groupInputs struct {
+	depinject.In
+
+	Config           *modulev1.Module
+	Key              *store.KVStoreKey
+	Cdc              codec.Codec
+	AccountKeeper    group.AccountKeeper
+	BankKeeper       group.BankKeeper
+	Registry         cdctypes.InterfaceRegistry
+	MsgServiceRouter *baseapp.MsgServiceRouter
+}
+
+type groupOutputs struct {
+	depinject.Out
+
+	GroupKeeper keeper.Keeper
+	Module      runtime.AppModuleWrapper
+}
+
+func provideModule(in groupInputs) groupOutputs {
+	/*
+		Example of setting group params:
+		in.Config.MaxMetadataLen = 1000
+		in.Config.MaxExecutionPeriod = "1209600s"
+	*/
+
+	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
+	return groupOutputs{GroupKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 
 // ____________________________________________________________________________
@@ -183,6 +232,7 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
+		am.registry,
 		simState.AppParams, simState.Cdc,
 		am.accKeeper, am.bankKeeper, am.keeper, am.cdc,
 	)

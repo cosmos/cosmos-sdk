@@ -73,8 +73,8 @@ func TestImportExportQueues(t *testing.T) {
 		panic(err)
 	}
 
-	db := memdb.NewDB()
-	app2 := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig(), simapp.EmptyAppOptions{})
+	db := dbm.NewMemDB()
+	app2 := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, simapp.MakeTestEncodingConfig(), simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
 
 	app2.InitChain(
 		abci.RequestInitChain{

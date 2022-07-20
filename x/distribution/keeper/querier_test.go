@@ -9,12 +9,15 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -112,21 +115,33 @@ func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmi
 }
 
 func TestQueries(t *testing.T) {
+	var (
+		bankKeeper    bankkeeper.Keeper
+		distrKeeper   keeper.Keeper
+		stakingKeeper *stakingkeeper.Keeper
+	)
+
+	app, err := simtestutil.Setup(testutil.AppConfig,
+		&bankKeeper,
+		&distrKeeper,
+		&stakingKeeper,
+	)
+	require.NoError(t, err)
+
 	cdc := codec.NewLegacyAmino()
 	types.RegisterLegacyAminoCodec(cdc)
 	banktypes.RegisterLegacyAminoCodec(cdc)
 
-	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// reset fee pool
-	app.DistrKeeper.SetFeePool(ctx, types.InitialFeePool())
+	distrKeeper.SetFeePool(ctx, types.InitialFeePool())
 
-	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
+	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, sdk.NewInt(1000000000))
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 	valOpAddr1 := valAddrs[0]
 
-	querier := keeper.NewQuerier(app.DistrKeeper, cdc)
+	querier := keeper.NewQuerier(distrKeeper, cdc)
 
 	// test param queries
 	params := types.Params{
@@ -136,7 +151,7 @@ func TestQueries(t *testing.T) {
 		WithdrawAddrEnabled: true,
 	}
 
-	app.DistrKeeper.SetParams(ctx, params)
+	require.NoError(t, distrKeeper.SetParams(ctx, params))
 
 	paramsRes := getQueriedParams(t, ctx, cdc, querier)
 	require.Equal(t, params.CommunityTax, paramsRes.CommunityTax)
@@ -146,13 +161,13 @@ func TestQueries(t *testing.T) {
 
 	// test outstanding rewards query
 	outstandingRewards := sdk.DecCoins{{Denom: "mytoken", Amount: sdk.NewDec(3)}, {Denom: "myothertoken", Amount: sdk.NewDecWithPrec(3, 7)}}
-	app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valOpAddr1, types.ValidatorOutstandingRewards{Rewards: outstandingRewards})
+	distrKeeper.SetValidatorOutstandingRewards(ctx, valOpAddr1, types.ValidatorOutstandingRewards{Rewards: outstandingRewards})
 	retOutstandingRewards := getQueriedValidatorOutstandingRewards(t, ctx, cdc, querier, valOpAddr1)
 	require.Equal(t, outstandingRewards, retOutstandingRewards)
 
 	// test validator commission query
 	commission := sdk.DecCoins{{Denom: "token1", Amount: sdk.NewDec(4)}, {Denom: "token2", Amount: sdk.NewDec(2)}}
-	app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valOpAddr1, types.ValidatorAccumulatedCommission{Commission: commission})
+	distrKeeper.SetValidatorAccumulatedCommission(ctx, valOpAddr1, types.ValidatorAccumulatedCommission{Commission: commission})
 	retCommission := getQueriedValidatorCommission(t, ctx, cdc, querier, valOpAddr1)
 	require.Equal(t, commission, retCommission)
 
@@ -163,8 +178,8 @@ func TestQueries(t *testing.T) {
 	// test validator slashes query with height range
 	slashOne := types.NewValidatorSlashEvent(3, sdk.NewDecWithPrec(5, 1))
 	slashTwo := types.NewValidatorSlashEvent(7, sdk.NewDecWithPrec(6, 1))
-	app.DistrKeeper.SetValidatorSlashEvent(ctx, valOpAddr1, 3, 0, slashOne)
-	app.DistrKeeper.SetValidatorSlashEvent(ctx, valOpAddr1, 7, 0, slashTwo)
+	distrKeeper.SetValidatorSlashEvent(ctx, valOpAddr1, 3, 0, slashOne)
+	distrKeeper.SetValidatorSlashEvent(ctx, valOpAddr1, 7, 0, slashTwo)
 	slashes := getQueriedValidatorSlashes(t, ctx, cdc, querier, valOpAddr1, 0, 2)
 	require.Equal(t, 0, len(slashes))
 	slashes = getQueriedValidatorSlashes(t, ctx, cdc, querier, valOpAddr1, 0, 5)
@@ -173,19 +188,19 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, []types.ValidatorSlashEvent{slashOne, slashTwo}, slashes)
 
 	// test delegation rewards query
-	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	tstaking.CreateValidator(valOpAddr1, valConsPk1, sdk.NewInt(100), true)
 
-	staking.EndBlocker(ctx, app.StakingKeeper)
+	staking.EndBlocker(ctx, stakingKeeper)
 
-	val := app.StakingKeeper.Validator(ctx, valOpAddr1)
+	val := stakingKeeper.Validator(ctx, valOpAddr1)
 	rewards := getQueriedDelegationRewards(t, ctx, cdc, querier, sdk.AccAddress(valOpAddr1), valOpAddr1)
 	require.True(t, rewards.IsZero())
 	initial := int64(10)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial)}}
-	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 	rewards = getQueriedDelegationRewards(t, ctx, cdc, querier, sdk.AccAddress(valOpAddr1), valOpAddr1)
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, rewards)
 

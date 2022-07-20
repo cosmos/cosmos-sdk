@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -60,7 +61,7 @@ func TestLoadStreamingServices(t *testing.T) {
 		activeStreamersLen int
 	}{
 		"empty app options": {
-			appOpts: simapp.EmptyAppOptions{},
+			appOpts: simtestutil.EmptyAppOptions{},
 		},
 		"all StoreKeys exposed": {
 			appOpts:            streamingAppOptions{keys: []string{"*"}},

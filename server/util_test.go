@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmcfg "github.com/tendermint/tendermint/config"
 
@@ -22,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
@@ -450,76 +448,3 @@ func (m mapGetter) Get(key string) interface{} {
 }
 
 var _ servertypes.AppOptions = mapGetter{}
-
-func TestGetAppDBBackend(t *testing.T) {
-	origDBBackend := types.DBBackend
-	defer func() {
-		types.DBBackend = origDBBackend
-	}()
-	tests := []struct {
-		name   string
-		dbBack string
-		opts   mapGetter
-		exp    dbm.BackendType
-	}{
-		{
-			name:   "nothing set",
-			dbBack: "",
-			opts:   mapGetter{},
-			exp:    dbm.BadgerDBBackend,
-		},
-
-		{
-			name:   "only db-backend set",
-			dbBack: "",
-			opts:   mapGetter{"db-backend": "db-backend value 1"},
-			exp:    dbm.BackendType("db-backend value 1"),
-		},
-		{
-			name:   "only DBBackend set",
-			dbBack: "DBBackend value 2",
-			opts:   mapGetter{},
-			exp:    dbm.BackendType("DBBackend value 2"),
-		},
-		{
-			name:   "only app-db-backend set",
-			dbBack: "",
-			opts:   mapGetter{"app-db-backend": "app-db-backend value 3"},
-			exp:    dbm.BackendType("app-db-backend value 3"),
-		},
-
-		{
-			name:   "app-db-backend and db-backend set",
-			dbBack: "",
-			opts:   mapGetter{"db-backend": "db-backend value 4", "app-db-backend": "app-db-backend value 5"},
-			exp:    dbm.BackendType("app-db-backend value 5"),
-		},
-		{
-			name:   "app-db-backend and DBBackend set",
-			dbBack: "DBBackend value 6",
-			opts:   mapGetter{"app-db-backend": "app-db-backend value 7"},
-			exp:    dbm.BackendType("app-db-backend value 7"),
-		},
-		{
-			name:   "db-backend and DBBackend set",
-			dbBack: "DBBackend value 8",
-			opts:   mapGetter{"db-backend": "db-backend value 9"},
-			exp:    dbm.BackendType("DBBackend value 8"),
-		},
-
-		{
-			name:   "all of app-db-backend db-backend DBBackend set",
-			dbBack: "DBBackend value 10",
-			opts:   mapGetter{"db-backend": "db-backend value 11", "app-db-backend": "app-db-backend value 12"},
-			exp:    dbm.BackendType("app-db-backend value 12"),
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(st *testing.T) {
-			types.DBBackend = tc.dbBack
-			act := server.GetAppDBBackend(tc.opts)
-			assert.Equal(st, tc.exp, act)
-		})
-	}
-}

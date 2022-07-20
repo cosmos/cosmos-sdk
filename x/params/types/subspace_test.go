@@ -6,23 +6,25 @@ import (
 	"testing"
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params/testutil"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type SubspaceTestSuite struct {
 	suite.Suite
 
-	cdc   codec.BinaryCodec
+	cdc   codec.Codec
 	amino *codec.LegacyAmino
 	ctx   sdk.Context
 	ss    types.Subspace
@@ -37,11 +39,13 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	ms, err := multi.NewV1MultiStoreAsV2(db, config)
 	suite.NoError(err)
 
-	encCfg := simapp.MakeTestEncodingConfig()
-	ss := types.NewSubspace(encCfg.Codec, encCfg.Amino, key, tkey, "testsubspace")
+	err := depinject.Inject(testutil.AppConfig,
+		&suite.cdc,
+		&suite.amino,
+	)
+	suite.NoError(err)
 
-	suite.cdc = encCfg.Codec
-	suite.amino = encCfg.Amino
+	ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace")
 	suite.ctx = sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
 	suite.ss = ss.WithKeyTable(paramKeyTable())
 }

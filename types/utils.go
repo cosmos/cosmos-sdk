@@ -9,17 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
-var (
-	// This is set at compile time. Could be cleveldb, defaults is goleveldb.
-	DBBackend = "" // Deprecated: Use tendermint config's DBBackend value instead.
-	backend   = db.BadgerDBBackend
-)
-
-func init() {
-	if len(DBBackend) != 0 {
-		backend = db.BackendType(DBBackend)
-	}
-}
+// This is set at compile time. Could be memdb, badgerdb, rocksdb. Default is badgerdb.
+var backend = db.BadgerDBBackend
 
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
 // are removed.

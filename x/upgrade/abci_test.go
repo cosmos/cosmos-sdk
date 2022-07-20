@@ -9,22 +9,26 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"golang.org/x/exp/maps"
 
-	"github.com/cosmos/cosmos-sdk/db/memdb"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/testutil"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type TestSuite struct {
-	module  module.AppModule
+	module  module.BeginBlockAppModule
 	keeper  keeper.Keeper
 	querier sdk.Querier
 	handler govtypes.Handler
@@ -34,22 +38,23 @@ type TestSuite struct {
 var s TestSuite
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
-	db := memdb.NewDB()
-	app := simapp.NewSimappWithCustomOptions(t, false, simapp.SetupOptions{
-		Logger:             log.NewNopLogger(),
-		SkipUpgradeHeights: skip,
-		DB:                 db,
-		InvCheckPeriod:     0,
-		HomePath:           simapp.DefaultNodeHome,
-		EncConfig:          simapp.MakeTestEncodingConfig(),
-		AppOpts:            simapp.EmptyAppOptions{},
-	})
+	var (
+		legacyAmino *codec.LegacyAmino
+		appOptions  = make(simtestutil.AppOptionsMap, 0)
+	)
 
-	s.keeper = app.UpgradeKeeper
+	appOptions[server.FlagUnsafeSkipUpgrades] = maps.Keys(skip)
+	appOptions[flags.FlagHome] = t.TempDir()
+
+	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(appOptions))
+	app, err := simtestutil.Setup(appConfig, &s.keeper, &legacyAmino)
+	s.keeper.SetVersionSetter(app.BaseApp)
+	require.NoError(t, err)
+
 	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: height, Time: time.Now()})
 
 	s.module = upgrade.NewAppModule(s.keeper)
-	s.querier = s.module.LegacyQuerierHandler(app.LegacyAmino())
+	s.querier = s.module.LegacyQuerierHandler(legacyAmino)
 	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
 	return s
 }

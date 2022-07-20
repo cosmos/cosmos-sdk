@@ -1,3 +1,5 @@
+//go:build !legacy_simapp
+
 package simapp
 
 import (
@@ -11,14 +13,11 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
-	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 
-	"cosmossdk.io/core/appconfig"
-	"github.com/cosmos/cosmos-sdk/depinject"
-
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -71,8 +70,6 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
@@ -86,7 +83,6 @@ import (
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -101,8 +97,6 @@ import (
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
-
-const appName = "SimApp"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -160,12 +154,8 @@ type SimApp struct {
 	appCodec          codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
 
-	invCheckPeriod uint
-
 	// keys to access the substores
-	keys    map[string]*storetypes.KVStoreKey
-	tkeys   map[string]*storetypes.TransientStoreKey
-	memKeys map[string]*storetypes.MemoryStoreKey
+	keys map[string]*storetypes.KVStoreKey
 
 	// keepers
 	AccountKeeper    authkeeper.AccountKeeper
@@ -175,8 +165,8 @@ type SimApp struct {
 	SlashingKeeper   slashingkeeper.Keeper
 	MintKeeper       mintkeeper.Keeper
 	DistrKeeper      distrkeeper.Keeper
-	GovKeeper        govkeeper.Keeper
-	CrisisKeeper     crisiskeeper.Keeper
+	GovKeeper        *govkeeper.Keeper
+	CrisisKeeper     *crisiskeeper.Keeper
 	UpgradeKeeper    upgradekeeper.Keeper
 	ParamsKeeper     paramskeeper.Keeper
 	AuthzKeeper      authzkeeper.Keeper
@@ -198,69 +188,55 @@ func init() {
 	DefaultNodeHome = filepath.Join(userHomeDir, ".simapp")
 }
 
-//go:embed app.yaml
-var appConfigYaml []byte
-
-var AppConfig = appconfig.LoadYAML(appConfigYaml)
-
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger,
 	db dbm.DBConnection,
 	traceStore io.Writer,
-	loadLatest bool,
-	skipUpgradeHeights map[int64]bool,
-	homePath string,
-	invCheckPeriod uint,
 	encodingConfig simappparams.EncodingConfig,
-	appOpts servertypes.AppOptions, baseAppOptions ...baseapp.AppOption,
+	appOpts servertypes.AppOptions,
+	baseAppOptions ...baseapp.AppOption,
 ) *SimApp {
-	app := &SimApp{
-		invCheckPeriod: invCheckPeriod,
-	}
+	var (
+		app        = &SimApp{}
+		appBuilder *runtime.AppBuilder
 
-	var appBuilder *runtime.AppBuilder
-	var msgServiceRouter *baseapp.MsgServiceRouter
+		// merge the app.yaml and the appOpts in one config
+		appConfig = depinject.Configs(AppConfig, depinject.Supply(appOpts))
+	)
 
-	if err := depinject.Inject(AppConfig,
+	if err := depinject.Inject(appConfig,
 		&appBuilder,
-		&app.ParamsKeeper,
-		&app.CapabilityKeeper,
 		&app.appCodec,
 		&app.legacyAmino,
 		&app.interfaceRegistry,
 		&app.AccountKeeper,
 		&app.BankKeeper,
-		&app.AuthzKeeper,
-		&app.FeeGrantKeeper,
+		&app.CapabilityKeeper,
 		&app.StakingKeeper,
-		&app.NFTKeeper,
 		&app.SlashingKeeper,
 		&app.MintKeeper,
+		&app.DistrKeeper,
+		&app.GovKeeper,
+		&app.CrisisKeeper,
+		&app.UpgradeKeeper,
+		&app.ParamsKeeper,
+		&app.AuthzKeeper,
 		&app.EvidenceKeeper,
-		&msgServiceRouter,
+		&app.FeeGrantKeeper,
+		&app.GroupKeeper,
+		&app.NFTKeeper,
 	); err != nil {
 		panic(err)
 	}
 
-	app.keys = sdk.NewKVStoreKeys(
-		distrtypes.StoreKey,
-		govtypes.StoreKey,
-		upgradetypes.StoreKey,
-		group.StoreKey,
-	)
-	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
-	// not include this key.
-	app.memKeys = sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
-	baseAppOptions = append(baseAppOptions, baseapp.SetSubstoresFromMaps(keys, tkeys, memKeys))
+	// // set the governance module account as the authority for conducting upgrades
+	// upgradeKeeper := upgradekeeper.NewKeeper(skipUpgradeHeights, app.keys[upgradetypes.StoreKey], app.appCodec, homePath, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	// if upgradeOpt := GetUpgradeStoreOption(upgradeKeeper); upgradeOpt != nil {
+	// 	baseAppOptions = append(baseAppOptions, upgradeOpt)
+	// }
 
-	// set the governance module account as the authority for conducting upgrades
-	upgradeKeeper := upgradekeeper.NewKeeper(skipUpgradeHeights, app.keys[upgradetypes.StoreKey], app.appCodec, homePath, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	if upgradeOpt := GetUpgradeStoreOption(upgradeKeeper); upgradeOpt != nil {
-		baseAppOptions = append(baseAppOptions, upgradeOpt)
-	}
-
-	app.App = appBuilder.Build(logger, db, traceStore, msgServiceRouter, baseAppOptions...)
+	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	// configure state listening capabilities using AppOptions
 	// we are doing nothing with the returned streamingServices and waitGroup in this case
@@ -268,70 +244,14 @@ func NewSimApp(
 		tmos.Exit(err.Error())
 	}
 
-	initParamsKeeper(app.ParamsKeeper)
-
-	app.DistrKeeper = distrkeeper.NewKeeper(
-		app.appCodec, app.keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		app.StakingKeeper, authtypes.FeeCollectorName,
-	)
-	app.CrisisKeeper = crisiskeeper.NewKeeper(
-		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
-	)
-
-	app.StakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
-	)
-
-	groupConfig := group.DefaultConfig()
-	/*
-		Example of setting group params:
-		groupConfig.MaxMetadataLen = 1000
-	*/
-	app.GroupKeeper = groupkeeper.NewKeeper(app.keys[group.StoreKey], app.appCodec, app.MsgServiceRouter(), app.AccountKeeper, groupConfig)
-
-	// register the proposal types
-	govRouter := govv1beta1.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper))
-	govConfig := govtypes.DefaultConfig()
-	/*
-		Example of setting gov params:
-		govConfig.MaxMetadataLen = 10000
-	*/
-	govKeeper := govkeeper.NewKeeper(
-		app.appCodec, app.keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		app.StakingKeeper, govRouter, app.MsgServiceRouter(), govConfig,
-	)
-
-	app.GovKeeper = *govKeeper.SetHooks(
-		govtypes.NewMultiGovHooks(
-		// register the governance hooks
-		),
-	)
-	// set the governance module account as the authority for conducting upgrades
-	upgradeKeeper.SetVersionSetter(app.BaseApp)
-	app.UpgradeKeeper = upgradeKeeper
+	// // set the governance module account as the authority for conducting upgrades
+	// upgradeKeeper.SetVersionSetter(app.BaseApp)
+	// app.UpgradeKeeper = upgradeKeeper
 
 	/****  Module Options ****/
 
-	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
-	// we prefer to be more strict in what arguments the modules expect.
-	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
-
-	// NOTE: Any module instantiated in the module manager that is later modified
-	// must be passed by reference here.
-	if err := app.RegisterModules(
-		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
-		gov.NewAppModule(app.appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		distr.NewAppModule(app.appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		upgrade.NewAppModule(app.UpgradeKeeper),
-		groupmodule.NewAppModule(app.appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-	); err != nil {
-		panic(err)
-	}
+	// Sets the version setter for the upgrade module
+	app.UpgradeKeeper.SetVersionSetter(app.BaseApp)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -350,13 +270,13 @@ func NewSimApp(
 	app.ModuleManager.SetOrderExportGenesis(genesisModuleOrder...)
 
 	// Uncomment if you want to set a custom migration order here.
-	// app.mm.SetOrderMigrations(custom order)
+	// app.ModuleManager.SetOrderMigrations(custom order)
 
-	app.ModuleManager.RegisterInvariants(&app.CrisisKeeper)
+	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 	app.ModuleManager.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
-	// Make sure it's called after `app.mm` and `app.configurator` are set.
+	// Make sure it's called after `app.ModuleManager` and `app.configurator` are set.
 	app.RegisterUpgradeHandlers()
 
 	// add test gRPC service for testing gRPC queries in isolation
@@ -367,7 +287,7 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
+		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 
@@ -435,31 +355,6 @@ func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {
 	return kvStoreKey
 }
 
-// GetTKey returns the TransientStoreKey for the provided store key.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *SimApp) GetTKey(storeKey string) *storetypes.TransientStoreKey {
-	return app.tkeys[storeKey]
-}
-
-// GetMemKey returns the MemStoreKey for the provided mem key.
-//
-// NOTE: This is solely used for testing purposes.
-func (app *SimApp) GetMemKey(storeKey string) *storetypes.MemoryStoreKey {
-	msk := app.memKeys[storeKey]
-	if msk != nil {
-		return msk
-	}
-
-	sk := app.UnsafeFindStoreKey(storeKey)
-	memStoreKey, ok := sk.(*storetypes.MemoryStoreKey)
-	if !ok {
-		return nil
-	}
-
-	return memStoreKey
-}
-
 // GetSubspace returns a param subspace for a given module name.
 //
 // NOTE: This is solely to be used for testing purposes.
@@ -502,11 +397,4 @@ func GetMaccPerms() map[string][]string {
 		dupMaccPerms[k] = v
 	}
 	return dupMaccPerms
-}
-
-// initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(paramsKeeper paramskeeper.Keeper) {
-	paramsKeeper.Subspace(distrtypes.ModuleName)
-	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
-	paramsKeeper.Subspace(crisistypes.ModuleName)
 }

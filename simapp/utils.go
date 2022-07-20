@@ -9,8 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/db/badgerdb"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -26,7 +25,7 @@ func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DBConnectio
 	}
 
 	config := NewConfigFromFlags()
-	config.ChainID = helpers.SimAppChainID
+	config.ChainID = simtestutil.SimAppChainID
 
 	var logger log.Logger
 	if FlagVerboseValue {
@@ -40,7 +39,7 @@ func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DBConnectio
 		return simtypes.Config{}, nil, "", nil, false, err
 	}
 
-	db, err := badgerdb.NewDB(dir)
+	db, err := db.NewDB("sim_db", db.BadgerDBBackend, dir)
 	if err != nil {
 		return simtypes.Config{}, nil, "", nil, false, err
 	}
@@ -106,7 +105,7 @@ func CheckExportSimulation(
 
 // PrintStats prints the corresponding statistics from the app DB.
 // TODO: implement stats collection for DBConnection
-func PrintStats(db dbm.DBConnection) {
+func PrintStats(db dbm.Connection) {
 	// stats := db.Stats()
 	fmt.Println("\nDB Stats: not available")
 }

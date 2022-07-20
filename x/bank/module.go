@@ -8,7 +8,7 @@ import (
 	"time"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
-	"github.com/cosmos/cosmos-sdk/depinject"
+	"cosmossdk.io/depinject"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -172,15 +172,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 4 }
 
-// BeginBlock performs a no-op.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
-// EndBlock returns the end blocker for the bank module. It returns no validator
-// updates.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the bank module.
@@ -208,7 +199,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 }
 
-// App Wiring
+// New App Wiring Setup
 
 func init() {
 	appmodule.Register(&modulev1.Module{},

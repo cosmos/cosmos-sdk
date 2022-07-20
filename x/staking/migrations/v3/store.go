@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// subspace contains the method needed for migrations of the
+// legacy Params subspace
 type subspace interface {
 	GetParamSet(ctx sdk.Context, ps paramtypes.ParamSet)
 	HasKeyTable() bool

@@ -18,21 +18,6 @@ type mockSubspace struct {
 	ps types.Params
 }
 
-func (ms mockSubspace) HasKeyTable() bool {
-	//Method just to implement the interface
-	panic("implement me")
-}
-
-func (ms mockSubspace) WithKeyTable(table paramtypes.KeyTable) paramtypes.Subspace {
-	//Method just to implement the interface
-	panic("implement me")
-}
-
-func (ms mockSubspace) Set(ctx sdk.Context, key []byte, value interface{}) {
-	//Method just to implement the interface
-	panic("implement me")
-}
-
 func newMockSubspace(ps types.Params) mockSubspace {
 	return mockSubspace{ps: ps}
 }

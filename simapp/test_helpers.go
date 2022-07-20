@@ -22,12 +22,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -38,7 +42,7 @@ import (
 type SetupOptions struct {
 	Logger    log.Logger
 	DB        *dbm.MemDB
-	EncConfig params.EncodingConfig
+	EncConfig simappparams.EncodingConfig
 	AppOpts   types.AppOptions
 }
 
@@ -351,4 +355,30 @@ func ModuleAccountAddrs() map[string]bool {
 		panic("unable to load DI container")
 	}
 	return bk.GetBlockedAddresses()
+}
+
+// NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests
+func NewTestNetworkFixture() network.TestFixture {
+	encodingCfg := MakeTestEncodingConfig()
+	cfg := testutil.TestEncodingConfig{
+		TxConfig:          encodingCfg.TxConfig,
+		Codec:             encodingCfg.Codec,
+		Amino:             encodingCfg.Amino,
+		InterfaceRegistry: encodingCfg.InterfaceRegistry,
+	}
+	appCtr := func(val testutil.Validator) servertypes.Application {
+		return NewSimApp(
+			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
+			encodingCfg,
+			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
+			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
+			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
+		)
+	}
+
+	return network.TestFixture{
+		AppConstructor: appCtr,
+		GenesisState:   ModuleBasics.DefaultGenesis(cfg.Codec),
+		EncodingConfig: cfg,
+	}
 }

@@ -102,7 +102,7 @@ message GetBlockByHeightResponse {
   .tendermint.types.BlockID block_id = 1;
 
   // Deprecated: please use `sdk_block` instead
-  .tendermint.types.Block   block    = 2;
+  .tendermint.types.Block block = 2;
 
   // Since: cosmos-sdk 0.47
   Block sdk_block = 3;
@@ -116,7 +116,7 @@ message GetLatestBlockResponse {
   .tendermint.types.BlockID block_id = 1;
 
   // Deprecated: please use `sdk_block` instead
-  .tendermint.types.Block   block    = 2;
+  .tendermint.types.Block block = 2;
 
   // Since: cosmos-sdk 0.47
   Block sdk_block = 3;

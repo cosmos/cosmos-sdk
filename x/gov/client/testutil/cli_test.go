@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
@@ -12,7 +13,7 @@ import (
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
-	cfg := network.DefaultConfig()
+	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
 	suite.Run(t, NewIntegrationTestSuite(cfg))
 

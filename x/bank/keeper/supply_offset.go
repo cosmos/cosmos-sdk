@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -29,7 +30,13 @@ func (k BaseViewKeeper) GetSupplyOffset(ctx sdk.Context, denom string) sdk.Int {
 }
 
 // setSupplyOffset sets the supply offset for the given denom
-func (k BaseKeeper) setSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int) {
+func (k BaseKeeper) setSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int) error {
+
+	supplyWithoutOffset := k.GetSupply(ctx, denom)
+	if supplyWithoutOffset.Amount.Add(offsetAmount).IsNegative() {
+		return errors.New("supplyWithOffset cannot be negative")
+	}
+
 	intBytes, err := offsetAmount.Marshal()
 	if err != nil {
 		panic(fmt.Errorf("unable to marshal amount value %v", err))
@@ -44,11 +51,13 @@ func (k BaseKeeper) setSupplyOffset(ctx sdk.Context, denom string, offsetAmount 
 	} else {
 		supplyOffsetStore.Set([]byte(denom), intBytes)
 	}
+
+	return nil
 }
 
 // AddSupplyOffset adjusts the current supply offset of a denom by the inputted offsetAmount
-func (k BaseKeeper) AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int) {
-	k.setSupplyOffset(ctx, denom, k.GetSupplyOffset(ctx, denom).Add(offsetAmount))
+func (k BaseKeeper) AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int) error {
+	return k.setSupplyOffset(ctx, denom, k.GetSupplyOffset(ctx, denom).Add(offsetAmount))
 }
 
 // GetSupplyWithOffset retrieves the Supply of a denom and offsets it by SupplyOffset

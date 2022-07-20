@@ -184,4 +184,4 @@ The params are updated through a governance proposal where the signer is the gov
 
 The message handling can fail if:
 
-* signer is not the gov module account address.
+* signer is not the authority defined in the staking keeper (usually the gov module account).

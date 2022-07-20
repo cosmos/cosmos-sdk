@@ -193,8 +193,17 @@ func NewSimApp(
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
 
+		// authorities definition
+		bankAuthority = banktypes.Authority(authtypes.NewModuleAddress(govtypes.ModuleName))
+
 		// merge the app.yaml and the appOpts in one config
-		appConfig = depinject.Configs(AppConfig, depinject.Supply(appOpts))
+		appConfig = depinject.Configs(
+			AppConfig,
+			depinject.Supply(
+				appOpts,
+				bankAuthority,
+			),
+		)
 	)
 
 	if err := depinject.Inject(appConfig,

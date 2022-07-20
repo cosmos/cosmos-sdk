@@ -198,6 +198,8 @@ github.com/coreos/pkg v0.0.0-20160727233714-3ac0863d7acf/go.mod h1:E3G3o1h8I7cfc
 github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
 github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20220719225934-818da709f20f h1:3Sk4HaKMs97IxbqBR6STdAh8waOyg6xaFLaNdq2lR98=
 github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20220719225934-818da709f20f/go.mod h1:9SZsFPFUAW0x/IW22X7Lxs2GLM1dqNP5KKTCKpordUk=
+github.com/cosmos/cosmos-sdk v0.46.0-rc3 h1:BWU0YJ1RXUCYUmKY8k3kH/yEavMF/7y81Sjd+2otZpY=
+github.com/cosmos/cosmos-sdk v0.46.0-rc3/go.mod h1:fWrmJ90UcB11LoaaTtF/qsqkA8HusUc8+XARAdnJfmA=
 github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4Y=
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
 github.com/cosmos/iavl v0.18.0 h1:02ur4vnalMR2GuWCFNkuseUcl/BCVmg9tOeHOGiZOkE=

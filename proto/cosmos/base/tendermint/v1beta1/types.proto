@@ -41,7 +41,7 @@ message Header {
   bytes last_results_hash    = 12; // root hash of all results from the txs from the previous block
 
   // consensus info
-  bytes  evidence_hash    = 13; // evidence included in the block
+  bytes evidence_hash = 13; // evidence included in the block
 
   // proposer_address is the original block proposer address, formatted as a Bech32 string.
   // In Tendermint, this type is `bytes`, but in the SDK, we convert it to a Bech32 string

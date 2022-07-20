@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
@@ -34,11 +32,15 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 
 // Migrate3to4 migrates x/bank storage from version 3 to 4.
 func (m Migrator) Migrate3to4(ctx sdk.Context) error {
+	if err := v4.MigrateStore(ctx, m.keeper.storeKey, m.legacySubspace, m.keeper.cdc); err != nil {
+		return err
+	}
+
 	oldParams := m.keeper.GetParams(ctx)
 	m.keeper.SetAllSendEnabled(ctx, oldParams.GetSendEnabled())
 	if err := m.keeper.SetParams(ctx, banktypes.NewParams(oldParams.DefaultSendEnabled)); err != nil {
-		return fmt.Errorf("failed to set params: %w", err)
+		return err
 	}
 
-	return v4.MigrateStore(ctx, m.keeper.storeKey, m.legacySubspace, m.keeper.cdc)
+	return nil
 }

@@ -180,12 +180,6 @@ func ValidateInputsOutputs(input Input, outputs []Output) error {
 	return nil
 }
 
-// Route returns the MsgUpdateParams message route.
-func (msg MsgUpdateParams) Route() string { return ModuleName }
-
-// Type returns the MsgUpdateParams message type.
-func (msg MsgUpdateParams) Type() string { return TypeMsgUpdateParams }
-
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes.
 func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {

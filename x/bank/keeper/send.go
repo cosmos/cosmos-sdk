@@ -104,13 +104,8 @@ func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 		return err
 	}
 
-	if len(params.SendEnabled) > 0 {
-		k.SetAllSendEnabled(ctx, params.SendEnabled)
-	}
-
-	p := types.NewParams(params.DefaultSendEnabled)
 	store := ctx.KVStore(k.storeKey)
-	bz, err := k.cdc.Marshal(&p)
+	bz, err := k.cdc.Marshal(&params)
 	if err != nil {
 		return err
 	}

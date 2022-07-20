@@ -1,15 +1,23 @@
+//go:build norace
+// +build norace
+
 package rpc_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
 type IntegrationTestSuite struct {
@@ -42,6 +50,19 @@ func (s *IntegrationTestSuite) TestStatusCommand() {
 
 	// Make sure the output has the validator moniker.
 	s.Require().Contains(out.String(), fmt.Sprintf("\"moniker\":\"%s\"", val0.Moniker))
+}
+
+func (s *IntegrationTestSuite) TestCLIQueryConn() {
+	var header metadata.MD
+
+	testClient := testdata.NewQueryClient(s.network.Validators[0].ClientCtx)
+	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"}, grpc.Header(&header))
+	s.NoError(err)
+
+	blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
+	s.Require().Equal([]string{"1"}, blockHeight)
+
+	s.Equal("hello", res.Message)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

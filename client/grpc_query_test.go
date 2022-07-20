@@ -1,6 +1,3 @@
-//go:build norace
-// +build norace
-
 package client_test
 
 import (
@@ -94,6 +91,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		ValidatorsHash:     valSet.Hash(),
 		NextValidatorsHash: valSet.Hash(),
 	}})
+
+	// end of app init
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)

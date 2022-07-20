@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -125,9 +126,11 @@ func (s *TestSuite) TestKeeperIter() {
 	granteeAddr := addrs[1]
 	granter2Addr := addrs[2]
 	e := ctx.BlockTime().AddDate(1, 0, 0)
+	sendAuthz, err := banktypes.NewSendAuthorization([]sdk.AccAddress{}, coins100)
+	require.NoError(s.T(), err)
 
-	s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, banktypes.NewSendAuthorization(coins100), &e)
-	s.authzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, banktypes.NewSendAuthorization(coins100), &e)
+	s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAuthz, &e)
+	s.authzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, sendAuthz, &e)
 
 	s.authzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
 		s.Require().Equal(granteeAddr, grantee)
@@ -144,7 +147,8 @@ func (s *TestSuite) TestDispatchAction() {
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
-	a := banktypes.NewSendAuthorization(coins100)
+	a, err := banktypes.NewSendAuthorization([]sdk.AccAddress{}, coins100)
+	require.NoError(err)
 
 	require.NoError(banktestutil.FundAccount(s.bankKeeper, s.ctx, granterAddr, coins1000))
 

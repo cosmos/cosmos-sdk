@@ -26,6 +26,7 @@ const (
 	FlagExpiration        = "expiration"
 	FlagAllowedValidators = "allowed-validators"
 	FlagDenyValidators    = "deny-validators"
+	FlagAllowList         = "allow-list"
 	delegate              = "delegate"
 	redelegate            = "redelegate"
 	unbond                = "unbond"
@@ -93,7 +94,21 @@ Examples:
 					return fmt.Errorf("spend-limit should be greater than zero")
 				}
 
-				authorization = bank.NewSendAuthorization(spendLimit)
+				allowList, err := cmd.Flags().GetStringSlice(FlagAllowList)
+				if err != nil {
+					return err
+				}
+
+				allowed, err := bech32toAccountAddresses(allowList)
+				if err != nil {
+					return err
+				}
+
+				authorization, err = bank.NewSendAuthorization(allowed, spendLimit)
+				if err != nil {
+					return err
+				}
+
 			case "generic":
 				msgType, err := cmd.Flags().GetString(FlagMsgType)
 				if err != nil {
@@ -184,6 +199,7 @@ Examples:
 	cmd.Flags().String(FlagSpendLimit, "", "SpendLimit for Send Authorization, an array of Coins allowed spend")
 	cmd.Flags().StringSlice(FlagAllowedValidators, []string{}, "Allowed validators addresses separated by ,")
 	cmd.Flags().StringSlice(FlagDenyValidators, []string{}, "Deny validators addresses separated by ,")
+	cmd.Flags().StringSlice(FlagAllowList, []string{}, "Allowed addresses grantee is allowed to send funds separated by ,")
 	cmd.Flags().Int64(FlagExpiration, 0, "Expire time as Unix timestamp. Set zero (0) for no expiry. Default is 0.")
 	return cmd
 }
@@ -283,4 +299,16 @@ func bech32toValidatorAddresses(validators []string) ([]sdk.ValAddress, error) {
 		vals[i] = addr
 	}
 	return vals, nil
+}
+
+func bech32toAccountAddresses(accAddrs []string) ([]sdk.AccAddress, error) {
+	addrs := make([]sdk.AccAddress, len(accAddrs))
+	for i, addr := range accAddrs {
+		accAddr, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return nil, err
+		}
+		addrs[i] = accAddr
+	}
+	return addrs, nil
 }

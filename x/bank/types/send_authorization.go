@@ -9,10 +9,16 @@ import (
 var _ authz.Authorization = &SendAuthorization{}
 
 // NewSendAuthorization creates a new SendAuthorization object.
-func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
-	return &SendAuthorization{
-		SpendLimit: spendLimit,
+func NewSendAuthorization(allowed []sdk.AccAddress, spendLimit sdk.Coins) (*SendAuthorization, error) {
+	allowedAddrs, err := validateAllowedAddresses(allowed)
+	if err != nil {
+		return nil, err
 	}
+
+	return &SendAuthorization{
+		AllowList:  allowedAddrs,
+		SpendLimit: spendLimit,
+	}, nil
 }
 
 // MsgTypeURL implements Authorization.MsgTypeURL.
@@ -46,4 +52,16 @@ func (a SendAuthorization) ValidateBasic() error {
 		return sdkerrors.ErrInvalidCoins.Wrapf("spend limit must be positive")
 	}
 	return nil
+}
+
+func validateAllowedAddresses(allowed []sdk.AccAddress) ([]string, error) {
+	if len(allowed) == 0 {
+		return nil, nil
+	}
+
+	allowedAddrs := make([]string, len(allowed))
+	for i, addr := range allowed {
+		allowedAddrs[i] = addr.String()
+	}
+	return allowedAddrs, nil
 }

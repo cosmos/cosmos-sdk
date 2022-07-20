@@ -3,26 +3,27 @@ package keeper_test
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	evidencetestutil "github.com/cosmos/cosmos-sdk/x/evidence/testutil"
+	"github.com/golang/mock/gomock"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/testutil"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -94,21 +95,34 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	var (
-		legacyAmino    *codec.LegacyAmino
-		evidenceKeeper keeper.Keeper
+	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	tkey := sdk.NewTransientStoreKey("evidence_transient_store")
+	testCtx := testutil.DefaultContext(key, tkey)
+	suite.ctx = testCtx
+
+	ctrl := gomock.NewController(suite.T())
+
+	stakingkeeper := evidencetestutil.NewMockStakingKeeper(ctrl)
+	slashingkeeper := evidencetestutil.NewMockSlashingKeeper(ctrl)
+
+	evidenceKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		key,
+		stakingkeeper,
+		slashingkeeper,
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&legacyAmino,
-		&evidenceKeeper,
-		&suite.interfaceRegistry,
-		&suite.accountKeeper,
-		&suite.bankKeeper,
-		&suite.slashingKeeper,
-		&suite.stakingKeeper,
-	)
-	require.NoError(suite.T(), err)
+	//app, err := simtestutil.Setup(evidencetestutil.AppConfig,
+	//	&legacyAmino,
+	//	&evidenceKeeper,
+	//	&suite.interfaceRegistry,
+	//	&suite.accountKeeper,
+	//	&suite.bankKeeper,
+	//	&suite.slashingKeeper,
+	//	&suite.stakingKeeper,
+	//)
+	//require.NoError(suite.T(), err)
 
 	router := types.NewRouter()
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))

@@ -75,12 +75,12 @@ func main() {
 		fmt.Println("Usage: testgen-iavl [exist|nonexist] [left|right|middle] <size>")
 		os.Exit(1)
 	}
-	root := tree.WorkingHash()
+	root, _ := tree.WorkingHash()
 
 	var key, value []byte
 	if exist {
 		key = helpers.GetKey(allkeys, loc)
-		_, value = tree.Get(key)
+		value, _ = tree.Get(key)
 	} else {
 		key = helpers.GetNonKey(allkeys, loc)
 	}
@@ -132,14 +132,20 @@ func doBatch(args []string) error {
 	if err != nil {
 		return err
 	}
-	root := tree.WorkingHash()
+	root, err := tree.WorkingHash()
+	if err != nil {
+		return err
+	}
 
 	items := []item{}
 	proofs := []*ics23.CommitmentProof{}
 
 	for i := 0; i < exist; i++ {
 		key := []byte(helpers.GetKey(allkeys, tmproofs.Middle))
-		_, value := tree.Get(key)
+		value, err := tree.Get(key)
+		if err != nil {
+			return err
+		}
 		proof, err := iavlproofs.CreateMembershipProof(tree, key)
 		if err != nil {
 			return fmt.Errorf("create proof: %+v", err)

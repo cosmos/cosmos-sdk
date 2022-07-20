@@ -12,11 +12,8 @@ on:
 
 jobs:
   build-and-deploy:
-<<<<<<< HEAD
-=======
     permissions:
       contents: write # for JamesIves/github-pages-deploy-action to push changes in repo
->>>>>>> 987959c54 (docs: improve docs (#12647))
     runs-on: ubuntu-latest
     container:
       image: tendermintdev/docker-website-deployment

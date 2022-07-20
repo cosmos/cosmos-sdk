@@ -20,7 +20,7 @@ module.exports = {
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
     docsRepo: "cosmos/cosmos-sdk",
-    docsBranch: "main",
+    docsBranch: "release/v0.46.x",
     docsDir: "docs",
     editLinks: true,
     label: "sdk",

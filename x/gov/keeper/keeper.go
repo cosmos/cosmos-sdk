@@ -49,6 +49,11 @@ type Keeper struct {
 	authority string
 }
 
+// GetAuthority returns the x/distribution module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
+}
+
 // NewKeeper returns a governance keeper. It handles:
 // - submitting governance proposals
 // - depositing funds into proposals, and activating upon sufficient funds being deposited

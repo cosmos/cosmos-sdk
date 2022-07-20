@@ -269,6 +269,10 @@ func (msg MsgUpdateParams) Type() string { return sdk.MsgTypeURL(&msg) }
 
 // ValidateBasic implements Msg
 func (msg MsgUpdateParams) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+	}
+
 	return msg.Params.ValidateBasic()
 }
 

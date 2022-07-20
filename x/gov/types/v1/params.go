@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -55,10 +54,16 @@ func DefaultParams() Params {
 
 func (p Params) ValidateBasic() error {
 
-	if !sdk.Coins(p.MinDeposit).IsValid() {
-		return fmt.Errorf("invalid minimum deposit: %s", p.MinDeposit)
+	sdk.Coins(p.MinDeposit).Empty()
+	if minDeposit := sdk.Coins(p.MinDeposit); minDeposit.Empty() || !minDeposit.IsValid() {
+		return fmt.Errorf("invalid minimum deposit: %s", minDeposit)
 	}
-	if p.MaxDepositPeriod == nil || p.MaxDepositPeriod.Seconds() <= 0 {
+
+	if p.MaxDepositPeriod == nil {
+		return fmt.Errorf("maximum deposit period must not be nil: %d", p.MaxDepositPeriod)
+	}
+
+	if p.MaxDepositPeriod.Seconds() <= 0 {
 		return fmt.Errorf("maximum deposit period must be positive: %d", p.MaxDepositPeriod)
 	}
 
@@ -96,7 +101,7 @@ func (p Params) ValidateBasic() error {
 	}
 
 	if p.VotingPeriod == nil {
-		return errors.New("voting period must not be nil")
+		return fmt.Errorf("voting period must not be nil: %d", p.VotingPeriod)
 	}
 
 	if p.VotingPeriod.Seconds() <= 0 {

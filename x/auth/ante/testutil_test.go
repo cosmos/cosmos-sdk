@@ -254,10 +254,20 @@ type TestCase struct {
 
 type NewTestCase struct {
 	desc     string
-	malleate func(*NewAnteTestSuite)
+	malleate func(*NewAnteTestSuite) TestCaseArgs
 	simulate bool
 	expPass  bool
 	expErr   error
+}
+
+type TestCaseArgs struct {
+	chainID   string
+	accNums   []uint64
+	accSeqs   []uint64
+	feeAmount sdk.Coins
+	gasLimit  uint64
+	msgs      []sdk.Msg
+	privs     []cryptotypes.PrivKey
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
@@ -308,15 +318,15 @@ func (suite *NewAnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.Pri
 	return suite.anteHandler(suite.ctx, tx, simulate)
 }
 
-func (suite *NewAnteTestSuite) RunTestCase(t *testing.T, privs []cryptotypes.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, tc NewTestCase) {
-	require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
+func (suite *NewAnteTestSuite) RunTestCase(t *testing.T, tc NewTestCase, args TestCaseArgs) {
+	require.NoError(t, suite.txBuilder.SetMsgs(args.msgs...))
+	suite.txBuilder.SetFeeAmount(args.feeAmount)
+	suite.txBuilder.SetGasLimit(args.gasLimit)
 
 	// Theoretically speaking, ante handler unit tests should only test
 	// ante handlers, but here we sometimes also test the tx creation
 	// process.
-	tx, txErr := suite.CreateTestTx(privs, accNums, accSeqs, chainID)
+	tx, txErr := suite.CreateTestTx(args.privs, args.accNums, args.accSeqs, args.chainID)
 	newCtx, anteErr := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 	if tc.expPass {

@@ -1,16 +1,12 @@
 package ante_test
 
 import (
-	"testing"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
 )
 
 func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
@@ -47,72 +43,72 @@ func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
 	s.Require().NoError(err)
 }
 
-func TestEnsureMempoolFees(t *testing.T) {
-	s := SetupTestSuite(t, true) // setup
-	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
+// func TestEnsureMempoolFees(t *testing.T) {
+// 	s := SetupTestSuite(t, true) // setup
+// 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, s.feeGrantKeeper, nil)
-	antehandler := sdk.ChainAnteDecorators(mfd)
+// 	mfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, s.feeGrantKeeper, nil)
+// 	antehandler := sdk.ChainAnteDecorators(mfd)
 
-	// keys and addresses
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	s.accountKeeper.SetAccount(s.ctx, s.accountKeeper.NewAccountWithAddress(s.ctx, addr1))
-	// coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
-	// testutil.FundAccount(s.bankKeeper, s.ctx, addr1, coins)
+// 	// keys and addresses
+// 	priv1, _, addr1 := testdata.KeyTestPubAddr()
+// 	s.accountKeeper.SetAccount(s.ctx, s.accountKeeper.NewAccountWithAddress(s.ctx, addr1))
+// 	// coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
+// 	// testutil.FundAccount(s.bankKeeper, s.ctx, addr1, coins)
 
-	// msg and signatures
-	msg := testdata.NewTestMsg(addr1)
-	feeAmount := testdata.NewTestFeeAmount()
-	gasLimit := testdata.NewTestGasLimit()
-	require.NoError(t, s.txBuilder.SetMsgs(msg))
-	s.txBuilder.SetFeeAmount(feeAmount)
-	s.txBuilder.SetGasLimit(gasLimit)
+// 	// msg and signatures
+// 	msg := testdata.NewTestMsg(addr1)
+// 	feeAmount := testdata.NewTestFeeAmount()
+// 	gasLimit := testdata.NewTestGasLimit()
+// 	require.NoError(t, s.txBuilder.SetMsgs(msg))
+// 	s.txBuilder.SetFeeAmount(feeAmount)
+// 	s.txBuilder.SetGasLimit(gasLimit)
 
-	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, authtypes.FeeCollectorName, feeAmount).Return(nil)
-	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, authtypes.FeeCollectorName, feeAmount).Return(nil)
-	s.accountKeeper.SetAccount(s.ctx, s.accountKeeper.NewAccountWithAddress(s.ctx, addr1))
+// 	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, authtypes.FeeCollectorName, feeAmount).Return(nil)
+// 	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, authtypes.FeeCollectorName, feeAmount).Return(nil)
+// 	s.accountKeeper.SetAccount(s.ctx, s.accountKeeper.NewAccountWithAddress(s.ctx, addr1))
 
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
-	require.NoError(t, err)
+// 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+// 	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+// 	require.NoError(t, err)
 
-	// Set high gas price so standard test fee fails
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(200).Quo(sdk.NewDec(100000)))
-	highGasPrice := []sdk.DecCoin{atomPrice}
-	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
+// 	// Set high gas price so standard test fee fails
+// 	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(200).Quo(sdk.NewDec(100000)))
+// 	highGasPrice := []sdk.DecCoin{atomPrice}
+// 	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 
-	// Set IsCheckTx to true
-	s.ctx = s.ctx.WithIsCheckTx(true)
+// 	// Set IsCheckTx to true
+// 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	// antehandler errors with insufficient fees
-	_, err = antehandler(s.ctx, tx, false)
-	require.NotNil(t, err, "Decorator should have errored on too low fee for local gasPrice")
+// 	// antehandler errors with insufficient fees
+// 	_, err = antehandler(s.ctx, tx, false)
+// 	require.NotNil(t, err, "Decorator should have errored on too low fee for local gasPrice")
 
-	// antehandler should not error since we do not check minGasPrice in simulation mode
-	cacheCtx, _ := s.ctx.CacheContext()
-	_, err = antehandler(cacheCtx, tx, true)
-	s.Require().Nil(err, "Decorator should not have errored in simulation mode")
+// 	// antehandler should not error since we do not check minGasPrice in simulation mode
+// 	cacheCtx, _ := s.ctx.CacheContext()
+// 	_, err = antehandler(cacheCtx, tx, true)
+// 	s.Require().Nil(err, "Decorator should not have errored in simulation mode")
 
-	// Set IsCheckTx to false
-	s.ctx = s.ctx.WithIsCheckTx(false)
+// 	// Set IsCheckTx to false
+// 	s.ctx = s.ctx.WithIsCheckTx(false)
 
-	// antehandler should not error since we do not check minGasPrice in DeliverTx
-	_, err = antehandler(s.ctx, tx, false)
-	require.Nil(t, err, "MempoolFeeDecorator returned error in DeliverTx")
+// 	// antehandler should not error since we do not check minGasPrice in DeliverTx
+// 	_, err = antehandler(s.ctx, tx, false)
+// 	require.Nil(t, err, "MempoolFeeDecorator returned error in DeliverTx")
 
-	// Set IsCheckTx back to true for testing sufficient mempool fee
-	s.ctx = s.ctx.WithIsCheckTx(true)
+// 	// Set IsCheckTx back to true for testing sufficient mempool fee
+// 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	atomPrice = sdk.NewDecCoinFromDec("atom", sdk.NewDec(0).Quo(sdk.NewDec(100000)))
-	lowGasPrice := []sdk.DecCoin{atomPrice}
-	s.ctx = s.ctx.WithMinGasPrices(lowGasPrice)
+// 	atomPrice = sdk.NewDecCoinFromDec("atom", sdk.NewDec(0).Quo(sdk.NewDec(100000)))
+// 	lowGasPrice := []sdk.DecCoin{atomPrice}
+// 	s.ctx = s.ctx.WithMinGasPrices(lowGasPrice)
 
-	newCtx, err := antehandler(s.ctx, tx, false)
-	require.Nil(t, err, "Decorator should not have errored on fee higher than local gasPrice")
-	// Priority is the smallest amount in any denom. Since we have only 1 fee
-	// of 150atom, the priority here is 150.
-	require.Equal(t, feeAmount.AmountOf("atom").Int64(), newCtx.Priority())
-}
+// 	newCtx, err := antehandler(s.ctx, tx, false)
+// 	require.Nil(t, err, "Decorator should not have errored on fee higher than local gasPrice")
+// 	// Priority is the smallest amount in any denom. Since we have only 1 fee
+// 	// of 150atom, the priority here is 150.
+// 	require.Equal(t, feeAmount.AmountOf("atom").Int64(), newCtx.Priority())
+// }
 
 func (s *AnteTestSuite) TestDeductFees() {
 	s.SetupTest(false) // setup

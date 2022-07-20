@@ -1,4 +1,4 @@
-package v043
+package v2
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -6,7 +6,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
-	v042bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v042"
+	v1 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -15,14 +15,14 @@ import (
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7092
 func migrateSupply(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	// Old supply was stored as a single blob under the SupplyKey.
-	var oldSupplyI v042bank.SupplyI
-	err := cdc.UnmarshalInterface(store.Get(v042bank.SupplyKey), &oldSupplyI)
+	var oldSupplyI v1.SupplyI
+	err := cdc.UnmarshalInterface(store.Get(v1.SupplyKey), &oldSupplyI)
 	if err != nil {
 		return err
 	}
 
 	// We delete the single key holding the whole blob.
-	store.Delete(v042bank.SupplyKey)
+	store.Delete(v1.SupplyKey)
 
 	if oldSupplyI == nil {
 		return nil
@@ -54,13 +54,13 @@ func migrateBalanceKeys(store sdk.KVStore) {
 	// prefix ("balances") || addrBytes (20 bytes) || denomBytes
 	// new key is of format
 	// prefix (0x02) || addrLen (1 byte) || addrBytes || denomBytes
-	oldStore := prefix.NewStore(store, v042bank.BalancesPrefix)
+	oldStore := prefix.NewStore(store, v1.BalancesPrefix)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
-		addr := v042bank.AddressFromBalancesStore(oldStoreIter.Key())
+		addr := v1.AddressFromBalancesStore(oldStoreIter.Key())
 		denom := oldStoreIter.Key()[v042auth.AddrLen:]
 		newStoreKey := append(CreateAccountBalancesPrefix(addr), denom...)
 

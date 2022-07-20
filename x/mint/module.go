@@ -239,7 +239,7 @@ type mintInputs struct {
 	Config                 *modulev1.Module
 	Key                    *store.KVStoreKey
 	Cdc                    codec.Codec
-	Authority              types.Authority              `optional:"true"`
+	Authority              types.MintAuthority          `optional:"true"`
 	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
@@ -266,7 +266,7 @@ func provideModule(in mintInputs) mintOutputs {
 	authority := in.Authority
 	if authority == nil || len(authority) == 0 {
 		// default to governance authority if not provided
-		authority = types.Authority(authtypes.NewModuleAddress(govtypes.ModuleName))
+		authority = types.MintAuthority(authtypes.NewModuleAddress(govtypes.ModuleName))
 	}
 
 	k := keeper.NewKeeper(

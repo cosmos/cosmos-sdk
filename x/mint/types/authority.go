@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type Authority sdk.AccAddress
+type MintAuthority sdk.AccAddress
 
-func (a Authority) String() string {
+func (a MintAuthority) String() string {
 	return sdk.AccAddress(a).String()
 }

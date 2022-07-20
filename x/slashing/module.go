@@ -238,7 +238,7 @@ type slashingInputs struct {
 	Key         *store.KVStoreKey
 	Cdc         codec.Codec
 	LegacyAmino *codec.LegacyAmino
-	Authority   types.Authority `optional:"true"`
+	Authority   types.SlashingAuthority `optional:"true"`
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -260,7 +260,7 @@ func provideModule(in slashingInputs) slashingOutputs {
 	authority := in.Authority
 	if authority == nil || len(authority) == 0 {
 		// default to governance authority if not provided
-		authority = types.Authority(authtypes.NewModuleAddress(govtypes.ModuleName))
+		authority = types.SlashingAuthority(authtypes.NewModuleAddress(govtypes.ModuleName))
 	}
 
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.Key, in.StakingKeeper, authority.String())

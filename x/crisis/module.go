@@ -201,7 +201,7 @@ type crisisInputs struct {
 	Key       *store.KVStoreKey
 	Cdc       codec.Codec
 	AppOpts   servertypes.AppOptions `optional:"true"`
-	Authority types.Authority        `optional:"true"`
+	Authority types.CrisisAuthority  `optional:"true"`
 
 	BankKeeper types.SupplyKeeper
 
@@ -231,7 +231,7 @@ func provideModule(in crisisInputs) crisisOutputs {
 	authority := in.Authority
 	if authority == nil || len(authority) == 0 {
 		// default to governance authority if not provided
-		authority = types.Authority(authtypes.NewModuleAddress(govtypes.ModuleName))
+		authority = types.CrisisAuthority(authtypes.NewModuleAddress(govtypes.ModuleName))
 	}
 
 	k := keeper.NewKeeper(

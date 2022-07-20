@@ -240,7 +240,7 @@ type distrInputs struct {
 	Config    *modulev1.Module
 	Key       *store.KVStoreKey
 	Cdc       codec.Codec
-	Authority types.Authority `optional:"true"`
+	Authority types.DistrAuthority `optional:"true"`
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -268,7 +268,7 @@ func provideModule(in distrInputs) distrOutputs {
 	authority := in.Authority
 	if authority == nil || len(authority) == 0 {
 		// default to governance authority if not provided
-		authority = types.Authority(authtypes.NewModuleAddress(govtypes.ModuleName))
+		authority = types.DistrAuthority(authtypes.NewModuleAddress(govtypes.ModuleName))
 	}
 
 	k := keeper.NewKeeper(

@@ -173,7 +173,7 @@ type upgradeInputs struct {
 	Cdc    codec.Codec
 
 	AppOpts   servertypes.AppOptions `optional:"true"`
-	Authority types.Authority        `optional:"true"`
+	Authority types.UpgradeAuthority `optional:"true"`
 }
 
 type upgradeOutputs struct {
@@ -201,7 +201,7 @@ func provideModule(in upgradeInputs) upgradeOutputs {
 	authority := in.Authority
 	if authority == nil || len(authority) == 0 {
 		// default to governance authority if not provided
-		authority = types.Authority(authtypes.NewModuleAddress(govtypes.ModuleName))
+		authority = types.UpgradeAuthority(authtypes.NewModuleAddress(govtypes.ModuleName))
 	}
 
 	// set the governance module account as the authority for conducting upgrades

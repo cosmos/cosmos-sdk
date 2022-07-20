@@ -47,18 +47,23 @@ If the key exists in the tree, this will return an error.
 */
 func CreateNonMembershipProof(tree *iavl.MutableTree, key []byte) (*ics23.CommitmentProof, error) {
 	// idx is one node right of what we want....
-	idx, val := tree.Get(key)
+	idx, val, err := tree.GetWithIndex(key)
+	if err != nil {
+		return nil, err
+	}
 	if val != nil {
 		return nil, fmt.Errorf("Cannot create NonExistanceProof when Key in State")
 	}
 
-	var err error
 	nonexist := &ics23.NonExistenceProof{
 		Key: key,
 	}
 
 	if idx >= 1 {
-		leftkey, _ := tree.GetByIndex(idx - 1)
+		leftkey, _, err := tree.GetByIndex(idx - 1)
+		if err != nil {
+			return nil, err
+		}
 		nonexist.Left, err = createExistenceProof(tree, leftkey)
 		if err != nil {
 			return nil, err
@@ -66,7 +71,10 @@ func CreateNonMembershipProof(tree *iavl.MutableTree, key []byte) (*ics23.Commit
 	}
 
 	// this will be nil if nothing right of the queried key
-	rightkey, _ := tree.GetByIndex(idx)
+	rightkey, _, err := tree.GetByIndex(idx)
+	if err != nil {
+		return nil, err
+	}
 	if rightkey != nil {
 		nonexist.Right, err = createExistenceProof(tree, rightkey)
 		if err != nil {

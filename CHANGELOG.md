@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (query) [#12253](https://github.com/cosmos/cosmos-sdk/pull/12253) Add `GenericFilteredPaginate` to the `query` package to improve UX.
 * (telemetry) [#12405](https://github.com/cosmos/cosmos-sdk/pull/12405) Add _query_ calls metric to telemetry.
 * (sdk.Coins) [#12627](https://github.com/cosmos/cosmos-sdk/pull/12627) Make a Denoms method on sdk.Coins.
+* (upgrade) [#12603](https://github.com/cosmos/cosmos-sdk/pull/12603) feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces
 
 ### Improvements
 

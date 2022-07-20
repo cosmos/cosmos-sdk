@@ -1,0 +1,37 @@
+name: Deploy docs
+# This job builds and deploys documenation to github pages.
+# It runs on every push to main with a change in the docs folder.
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+    paths:
+      - "docs/**"
+      - "x/**/*.md"
+
+jobs:
+  build-and-deploy:
+    permissions:
+      contents: write # for JamesIves/github-pages-deploy-action to push changes in repo
+    runs-on: ubuntu-latest
+    container:
+      image: tendermintdev/docker-website-deployment
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install and Build 🔧
+        run: |
+          apk add rsync
+          make build-docs LEDGER_ENABLED=false
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        with:
+          branch: gh-pages
+          folder: ~/output
+          single-commit: true

@@ -74,10 +74,8 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// NOTE: totalIn == totalOut should already have been checked
-	for _, in := range msg.Inputs {
-		if err := k.IsSendEnabledCoins(ctx, in.Coins...); err != nil {
-			return nil, err
-		}
+	if err := k.IsSendEnabledCoins(ctx, msg.Input.Coins...); err != nil {
+		return nil, err
 	}
 
 	for _, out := range msg.Outputs {
@@ -88,7 +86,7 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 		}
 	}
 
-	err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
+	err := k.InputOutputCoins(ctx, msg.Input, msg.Outputs)
 	if err != nil {
 		return nil, err
 	}

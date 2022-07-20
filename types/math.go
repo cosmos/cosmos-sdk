@@ -37,34 +37,34 @@ func (ip IntProto) String() string {
 }
 
 type (
-	Dec = sdkmath.Dec
+	Dec = sdkmath.LegacyDec
 )
 
 const (
-	Precision            = sdkmath.Precision
-	DecimalPrecisionBits = sdkmath.DecimalPrecisionBits
+	Precision            = sdkmath.LegacyPrecision
+	DecimalPrecisionBits = sdkmath.LegacyDecimalPrecisionBits
 )
 
 var (
-	ZeroDec                  = sdkmath.ZeroDec
-	OneDec                   = sdkmath.OneDec
-	SmallestDec              = sdkmath.SmallestDec
-	NewDec                   = sdkmath.NewDec
-	NewDecWithPrec           = sdkmath.NewDecWithPrec
-	NewDecFromBigInt         = sdkmath.NewDecFromBigInt
-	NewDecFromBigIntWithPrec = sdkmath.NewDecFromBigIntWithPrec
-	NewDecFromInt            = sdkmath.NewDecFromInt
-	NewDecFromIntWithPrec    = sdkmath.NewDecFromIntWithPrec
-	NewDecFromStr            = sdkmath.NewDecFromStr
-	MustNewDecFromStr        = sdkmath.MustNewDecFromStr
-	MaxSortableDec           = sdkmath.MaxSortableDec
-	ValidSortableDec         = sdkmath.ValidSortableDec
-	SortableDecBytes         = sdkmath.SortableDecBytes
-	DecsEqual                = sdkmath.DecsEqual
-	MinDec                   = sdkmath.MinDec
-	MaxDec                   = sdkmath.MaxDec
-	DecEq                    = sdkmath.DecEq
-	DecApproxEq              = sdkmath.DecApproxEq
+	ZeroDec                  = sdkmath.LegacyZeroDec
+	OneDec                   = sdkmath.LegacyOneDec
+	SmallestDec              = sdkmath.LegacySmallestDec
+	NewDec                   = sdkmath.LegacyNewDec
+	NewDecWithPrec           = sdkmath.LegacyNewDecWithPrec
+	NewDecFromBigInt         = sdkmath.LegacyNewDecFromBigInt
+	NewDecFromBigIntWithPrec = sdkmath.LegacyNewDecFromBigIntWithPrec
+	NewDecFromInt            = sdkmath.LegacyNewDecFromInt
+	NewDecFromIntWithPrec    = sdkmath.LegacyNewDecFromIntWithPrec
+	NewDecFromStr            = sdkmath.LegacyNewDecFromStr
+	MustNewDecFromStr        = sdkmath.LegacyMustNewDecFromStr
+	MaxSortableDec           = sdkmath.LegacyMaxSortableDec
+	ValidSortableDec         = sdkmath.LegacyValidSortableDec
+	SortableDecBytes         = sdkmath.LegacySortableDecBytes
+	DecsEqual                = sdkmath.LegacyDecsEqual
+	MinDec                   = sdkmath.LegacyMinDec
+	MaxDec                   = sdkmath.LegacyMaxDec
+	DecEq                    = sdkmath.LegacyDecEq
+	DecApproxEq              = sdkmath.LegacyDecApproxEq
 )
 
 var _ CustomProtobufType = (*Dec)(nil)

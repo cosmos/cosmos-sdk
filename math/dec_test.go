@@ -25,30 +25,30 @@ func TestDecimalTestSuite(t *testing.T) {
 
 func TestDecApproxEq(t *testing.T) {
 	// d1 = 0.55, d2 = 0.6, tol = 0.1
-	d1 := math.NewDecWithPrec(55, 2)
-	d2 := math.NewDecWithPrec(6, 1)
-	tol := math.NewDecWithPrec(1, 1)
+	d1 := math.LegacyNewDecWithPrec(55, 2)
+	d2 := math.LegacyNewDecWithPrec(6, 1)
+	tol := math.LegacyNewDecWithPrec(1, 1)
 
-	require.True(math.DecApproxEq(t, d1, d2, tol))
+	require.True(math.LegacyDecApproxEq(t, d1, d2, tol))
 
 	// d1 = 0.55, d2 = 0.6, tol = 1E-5
-	d1 = math.NewDecWithPrec(55, 2)
-	d2 = math.NewDecWithPrec(6, 1)
-	tol = math.NewDecWithPrec(1, 5)
+	d1 = math.LegacyNewDecWithPrec(55, 2)
+	d2 = math.LegacyNewDecWithPrec(6, 1)
+	tol = math.LegacyNewDecWithPrec(1, 5)
 
-	require.False(math.DecApproxEq(t, d1, d2, tol))
+	require.False(math.LegacyDecApproxEq(t, d1, d2, tol))
 
 	// d1 = 0.6, d2 = 0.61, tol = 0.01
-	d1 = math.NewDecWithPrec(6, 1)
-	d2 = math.NewDecWithPrec(61, 2)
-	tol = math.NewDecWithPrec(1, 2)
+	d1 = math.LegacyNewDecWithPrec(6, 1)
+	d2 = math.LegacyNewDecWithPrec(61, 2)
+	tol = math.LegacyNewDecWithPrec(1, 2)
 
-	require.True(math.DecApproxEq(t, d1, d2, tol))
+	require.True(math.LegacyDecApproxEq(t, d1, d2, tol))
 }
 
 // create a decimal from a decimal string (ex. "1234.5678")
-func (s *decimalTestSuite) mustNewDecFromStr(str string) (d math.Dec) {
-	d, err := math.NewDecFromStr(str)
+func (s *decimalTestSuite) mustNewDecFromStr(str string) (d math.LegacyDec) {
+	d, err := math.LegacyNewDecFromStr(str)
 	s.Require().NoError(err)
 
 	return d
@@ -67,38 +67,38 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 	tests := []struct {
 		decimalStr string
 		expErr     bool
-		exp        math.Dec
+		exp        math.LegacyDec
 	}{
-		{"", true, math.Dec{}},
-		{"0.-75", true, math.Dec{}},
-		{"0", false, math.NewDec(0)},
-		{"1", false, math.NewDec(1)},
-		{"1.1", false, math.NewDecWithPrec(11, 1)},
-		{"0.75", false, math.NewDecWithPrec(75, 2)},
-		{"0.8", false, math.NewDecWithPrec(8, 1)},
-		{"0.11111", false, math.NewDecWithPrec(11111, 5)},
-		{"314460551102969.3144278234343371835", true, math.NewDec(3141203149163817869)},
+		{"", true, math.LegacyDec{}},
+		{"0.-75", true, math.LegacyDec{}},
+		{"0", false, math.LegacyNewDec(0)},
+		{"1", false, math.LegacyNewDec(1)},
+		{"1.1", false, math.LegacyNewDecWithPrec(11, 1)},
+		{"0.75", false, math.LegacyNewDecWithPrec(75, 2)},
+		{"0.8", false, math.LegacyNewDecWithPrec(8, 1)},
+		{"0.11111", false, math.LegacyNewDecWithPrec(11111, 5)},
+		{"314460551102969.3144278234343371835", true, math.LegacyNewDec(3141203149163817869)},
 		{
 			"314460551102969314427823434337.1835718092488231350",
-			true, math.NewDecFromBigIntWithPrec(largeBigInt, 4),
+			true, math.LegacyNewDecFromBigIntWithPrec(largeBigInt, 4),
 		},
 		{
 			"314460551102969314427823434337.1835",
-			false, math.NewDecFromBigIntWithPrec(largeBigInt, 4),
+			false, math.LegacyNewDecFromBigIntWithPrec(largeBigInt, 4),
 		},
-		{".", true, math.Dec{}},
-		{".0", true, math.NewDec(0)},
-		{"1.", true, math.NewDec(1)},
-		{"foobar", true, math.Dec{}},
-		{"0.foobar", true, math.Dec{}},
-		{"0.foobar.", true, math.Dec{}},
-		{"8888888888888888888888888888888888888888888888888888888888888888888844444440", false, math.NewDecFromBigInt(largerBigInt)},
-		{"33499189745056880149688856635597007162669032647290798121690100488888732861290.034376435130433535", false, math.NewDecFromBigIntWithPrec(largestBigInt, 18)},
-		{"133499189745056880149688856635597007162669032647290798121690100488888732861291", true, math.Dec{}},
+		{".", true, math.LegacyDec{}},
+		{".0", true, math.LegacyNewDec(0)},
+		{"1.", true, math.LegacyNewDec(1)},
+		{"foobar", true, math.LegacyDec{}},
+		{"0.foobar", true, math.LegacyDec{}},
+		{"0.foobar.", true, math.LegacyDec{}},
+		{"8888888888888888888888888888888888888888888888888888888888888888888844444440", false, math.LegacyNewDecFromBigInt(largerBigInt)},
+		{"33499189745056880149688856635597007162669032647290798121690100488888732861290.034376435130433535", false, math.LegacyNewDecFromBigIntWithPrec(largestBigInt, 18)},
+		{"133499189745056880149688856635597007162669032647290798121690100488888732861291", true, math.LegacyDec{}},
 	}
 
 	for tcIndex, tc := range tests {
-		res, err := math.NewDecFromStr(tc.decimalStr)
+		res, err := math.LegacyNewDecFromStr(tc.decimalStr)
 		if tc.expErr {
 			s.Require().NotNil(err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
@@ -107,12 +107,12 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 		}
 
 		// negative tc
-		res, err = math.NewDecFromStr("-" + tc.decimalStr)
+		res, err = math.LegacyNewDecFromStr("-" + tc.decimalStr)
 		if tc.expErr {
 			s.Require().NotNil(err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
 			s.Require().Nil(err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
-			exp := tc.exp.Mul(math.NewDec(-1))
+			exp := tc.exp.Mul(math.LegacyNewDec(-1))
 			s.Require().True(res.Equal(exp), "equality was incorrect, res %v, exp %v, tc %v", res, exp, tcIndex)
 		}
 	}
@@ -120,17 +120,17 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 
 func (s *decimalTestSuite) TestDecString() {
 	tests := []struct {
-		d    math.Dec
+		d    math.LegacyDec
 		want string
 	}{
-		{math.NewDec(0), "0.000000000000000000"},
-		{math.NewDec(1), "1.000000000000000000"},
-		{math.NewDec(10), "10.000000000000000000"},
-		{math.NewDec(12340), "12340.000000000000000000"},
-		{math.NewDecWithPrec(12340, 4), "1.234000000000000000"},
-		{math.NewDecWithPrec(12340, 5), "0.123400000000000000"},
-		{math.NewDecWithPrec(12340, 8), "0.000123400000000000"},
-		{math.NewDecWithPrec(1009009009009009009, 17), "10.090090090090090090"},
+		{math.LegacyNewDec(0), "0.000000000000000000"},
+		{math.LegacyNewDec(1), "1.000000000000000000"},
+		{math.LegacyNewDec(10), "10.000000000000000000"},
+		{math.LegacyNewDec(12340), "12340.000000000000000000"},
+		{math.LegacyNewDecWithPrec(12340, 4), "1.234000000000000000"},
+		{math.LegacyNewDecWithPrec(12340, 5), "0.123400000000000000"},
+		{math.LegacyNewDecWithPrec(12340, 8), "0.000123400000000000"},
+		{math.LegacyNewDecWithPrec(1009009009009009009, 17), "10.090090090090090090"},
 	}
 	for tcIndex, tc := range tests {
 		s.Require().Equal(tc.want, tc.d.String(), "bad String(), index: %v", tcIndex)
@@ -139,17 +139,17 @@ func (s *decimalTestSuite) TestDecString() {
 
 func (s *decimalTestSuite) TestDecFloat64() {
 	tests := []struct {
-		d    math.Dec
+		d    math.LegacyDec
 		want float64
 	}{
-		{math.NewDec(0), 0.000000000000000000},
-		{math.NewDec(1), 1.000000000000000000},
-		{math.NewDec(10), 10.000000000000000000},
-		{math.NewDec(12340), 12340.000000000000000000},
-		{math.NewDecWithPrec(12340, 4), 1.234000000000000000},
-		{math.NewDecWithPrec(12340, 5), 0.123400000000000000},
-		{math.NewDecWithPrec(12340, 8), 0.000123400000000000},
-		{math.NewDecWithPrec(1009009009009009009, 17), 10.090090090090090090},
+		{math.LegacyNewDec(0), 0.000000000000000000},
+		{math.LegacyNewDec(1), 1.000000000000000000},
+		{math.LegacyNewDec(10), 10.000000000000000000},
+		{math.LegacyNewDec(12340), 12340.000000000000000000},
+		{math.LegacyNewDecWithPrec(12340, 4), 1.234000000000000000},
+		{math.LegacyNewDecWithPrec(12340, 5), 0.123400000000000000},
+		{math.LegacyNewDecWithPrec(12340, 8), 0.000123400000000000},
+		{math.LegacyNewDecWithPrec(1009009009009009009, 17), 10.090090090090090090},
 	}
 	for tcIndex, tc := range tests {
 		value, err := tc.d.Float64()
@@ -161,31 +161,31 @@ func (s *decimalTestSuite) TestDecFloat64() {
 
 func (s *decimalTestSuite) TestEqualities() {
 	tests := []struct {
-		d1, d2     math.Dec
+		d1, d2     math.LegacyDec
 		gt, lt, eq bool
 	}{
-		{math.NewDec(0), math.NewDec(0), false, false, true},
-		{math.NewDecWithPrec(0, 2), math.NewDecWithPrec(0, 4), false, false, true},
-		{math.NewDecWithPrec(100, 0), math.NewDecWithPrec(100, 0), false, false, true},
-		{math.NewDecWithPrec(-100, 0), math.NewDecWithPrec(-100, 0), false, false, true},
-		{math.NewDecWithPrec(-1, 1), math.NewDecWithPrec(-1, 1), false, false, true},
-		{math.NewDecWithPrec(3333, 3), math.NewDecWithPrec(3333, 3), false, false, true},
+		{math.LegacyNewDec(0), math.LegacyNewDec(0), false, false, true},
+		{math.LegacyNewDecWithPrec(0, 2), math.LegacyNewDecWithPrec(0, 4), false, false, true},
+		{math.LegacyNewDecWithPrec(100, 0), math.LegacyNewDecWithPrec(100, 0), false, false, true},
+		{math.LegacyNewDecWithPrec(-100, 0), math.LegacyNewDecWithPrec(-100, 0), false, false, true},
+		{math.LegacyNewDecWithPrec(-1, 1), math.LegacyNewDecWithPrec(-1, 1), false, false, true},
+		{math.LegacyNewDecWithPrec(3333, 3), math.LegacyNewDecWithPrec(3333, 3), false, false, true},
 
-		{math.NewDecWithPrec(0, 0), math.NewDecWithPrec(3333, 3), false, true, false},
-		{math.NewDecWithPrec(0, 0), math.NewDecWithPrec(100, 0), false, true, false},
-		{math.NewDecWithPrec(-1, 0), math.NewDecWithPrec(3333, 3), false, true, false},
-		{math.NewDecWithPrec(-1, 0), math.NewDecWithPrec(100, 0), false, true, false},
-		{math.NewDecWithPrec(1111, 3), math.NewDecWithPrec(100, 0), false, true, false},
-		{math.NewDecWithPrec(1111, 3), math.NewDecWithPrec(3333, 3), false, true, false},
-		{math.NewDecWithPrec(-3333, 3), math.NewDecWithPrec(-1111, 3), false, true, false},
+		{math.LegacyNewDecWithPrec(0, 0), math.LegacyNewDecWithPrec(3333, 3), false, true, false},
+		{math.LegacyNewDecWithPrec(0, 0), math.LegacyNewDecWithPrec(100, 0), false, true, false},
+		{math.LegacyNewDecWithPrec(-1, 0), math.LegacyNewDecWithPrec(3333, 3), false, true, false},
+		{math.LegacyNewDecWithPrec(-1, 0), math.LegacyNewDecWithPrec(100, 0), false, true, false},
+		{math.LegacyNewDecWithPrec(1111, 3), math.LegacyNewDecWithPrec(100, 0), false, true, false},
+		{math.LegacyNewDecWithPrec(1111, 3), math.LegacyNewDecWithPrec(3333, 3), false, true, false},
+		{math.LegacyNewDecWithPrec(-3333, 3), math.LegacyNewDecWithPrec(-1111, 3), false, true, false},
 
-		{math.NewDecWithPrec(3333, 3), math.NewDecWithPrec(0, 0), true, false, false},
-		{math.NewDecWithPrec(100, 0), math.NewDecWithPrec(0, 0), true, false, false},
-		{math.NewDecWithPrec(3333, 3), math.NewDecWithPrec(-1, 0), true, false, false},
-		{math.NewDecWithPrec(100, 0), math.NewDecWithPrec(-1, 0), true, false, false},
-		{math.NewDecWithPrec(100, 0), math.NewDecWithPrec(1111, 3), true, false, false},
-		{math.NewDecWithPrec(3333, 3), math.NewDecWithPrec(1111, 3), true, false, false},
-		{math.NewDecWithPrec(-1111, 3), math.NewDecWithPrec(-3333, 3), true, false, false},
+		{math.LegacyNewDecWithPrec(3333, 3), math.LegacyNewDecWithPrec(0, 0), true, false, false},
+		{math.LegacyNewDecWithPrec(100, 0), math.LegacyNewDecWithPrec(0, 0), true, false, false},
+		{math.LegacyNewDecWithPrec(3333, 3), math.LegacyNewDecWithPrec(-1, 0), true, false, false},
+		{math.LegacyNewDecWithPrec(100, 0), math.LegacyNewDecWithPrec(-1, 0), true, false, false},
+		{math.LegacyNewDecWithPrec(100, 0), math.LegacyNewDecWithPrec(1111, 3), true, false, false},
+		{math.LegacyNewDecWithPrec(3333, 3), math.LegacyNewDecWithPrec(1111, 3), true, false, false},
+		{math.LegacyNewDecWithPrec(-1111, 3), math.LegacyNewDecWithPrec(-3333, 3), true, false, false},
 	}
 
 	for tcIndex, tc := range tests {
@@ -197,65 +197,65 @@ func (s *decimalTestSuite) TestEqualities() {
 
 func (s *decimalTestSuite) TestDecsEqual() {
 	tests := []struct {
-		d1s, d2s []math.Dec
+		d1s, d2s []math.LegacyDec
 		eq       bool
 	}{
-		{[]math.Dec{math.NewDec(0)}, []math.Dec{math.NewDec(0)}, true},
-		{[]math.Dec{math.NewDec(0)}, []math.Dec{math.NewDec(1)}, false},
-		{[]math.Dec{math.NewDec(0)}, []math.Dec{}, false},
-		{[]math.Dec{math.NewDec(0), math.NewDec(1)}, []math.Dec{math.NewDec(0), math.NewDec(1)}, true},
-		{[]math.Dec{math.NewDec(1), math.NewDec(0)}, []math.Dec{math.NewDec(1), math.NewDec(0)}, true},
-		{[]math.Dec{math.NewDec(1), math.NewDec(0)}, []math.Dec{math.NewDec(0), math.NewDec(1)}, false},
-		{[]math.Dec{math.NewDec(1), math.NewDec(0)}, []math.Dec{math.NewDec(1)}, false},
-		{[]math.Dec{math.NewDec(1), math.NewDec(2)}, []math.Dec{math.NewDec(2), math.NewDec(4)}, false},
-		{[]math.Dec{math.NewDec(3), math.NewDec(18)}, []math.Dec{math.NewDec(1), math.NewDec(6)}, false},
+		{[]math.LegacyDec{math.LegacyNewDec(0)}, []math.LegacyDec{math.LegacyNewDec(0)}, true},
+		{[]math.LegacyDec{math.LegacyNewDec(0)}, []math.LegacyDec{math.LegacyNewDec(1)}, false},
+		{[]math.LegacyDec{math.LegacyNewDec(0)}, []math.LegacyDec{}, false},
+		{[]math.LegacyDec{math.LegacyNewDec(0), math.LegacyNewDec(1)}, []math.LegacyDec{math.LegacyNewDec(0), math.LegacyNewDec(1)}, true},
+		{[]math.LegacyDec{math.LegacyNewDec(1), math.LegacyNewDec(0)}, []math.LegacyDec{math.LegacyNewDec(1), math.LegacyNewDec(0)}, true},
+		{[]math.LegacyDec{math.LegacyNewDec(1), math.LegacyNewDec(0)}, []math.LegacyDec{math.LegacyNewDec(0), math.LegacyNewDec(1)}, false},
+		{[]math.LegacyDec{math.LegacyNewDec(1), math.LegacyNewDec(0)}, []math.LegacyDec{math.LegacyNewDec(1)}, false},
+		{[]math.LegacyDec{math.LegacyNewDec(1), math.LegacyNewDec(2)}, []math.LegacyDec{math.LegacyNewDec(2), math.LegacyNewDec(4)}, false},
+		{[]math.LegacyDec{math.LegacyNewDec(3), math.LegacyNewDec(18)}, []math.LegacyDec{math.LegacyNewDec(1), math.LegacyNewDec(6)}, false},
 	}
 
 	for tcIndex, tc := range tests {
-		s.Require().Equal(tc.eq, math.DecsEqual(tc.d1s, tc.d2s), "equality of decional arrays is incorrect, tc %d", tcIndex)
-		s.Require().Equal(tc.eq, math.DecsEqual(tc.d2s, tc.d1s), "equality of decional arrays is incorrect (converse), tc %d", tcIndex)
+		s.Require().Equal(tc.eq, math.LegacyDecsEqual(tc.d1s, tc.d2s), "equality of decional arrays is incorrect, tc %d", tcIndex)
+		s.Require().Equal(tc.eq, math.LegacyDecsEqual(tc.d2s, tc.d1s), "equality of decional arrays is incorrect (converse), tc %d", tcIndex)
 	}
 }
 
 func (s *decimalTestSuite) TestArithmetic() {
 	tests := []struct {
-		d1, d2                                math.Dec
-		expMul, expMulTruncate                math.Dec
-		expQuo, expQuoRoundUp, expQuoTruncate math.Dec
-		expAdd, expSub                        math.Dec
+		d1, d2                                math.LegacyDec
+		expMul, expMulTruncate                math.LegacyDec
+		expQuo, expQuoRoundUp, expQuoTruncate math.LegacyDec
+		expAdd, expSub                        math.LegacyDec
 	}{
 		//  d1         d2         MUL    MulTruncate    QUO    QUORoundUp QUOTrunctate  ADD         SUB
-		{math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0)},
-		{math.NewDec(1), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(1), math.NewDec(1)},
-		{math.NewDec(0), math.NewDec(1), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(1), math.NewDec(-1)},
-		{math.NewDec(0), math.NewDec(-1), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(-1), math.NewDec(1)},
-		{math.NewDec(-1), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(0), math.NewDec(-1), math.NewDec(-1)},
+		{math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0)},
+		{math.LegacyNewDec(1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(1), math.LegacyNewDec(1)},
+		{math.LegacyNewDec(0), math.LegacyNewDec(1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(1), math.LegacyNewDec(-1)},
+		{math.LegacyNewDec(0), math.LegacyNewDec(-1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(-1), math.LegacyNewDec(1)},
+		{math.LegacyNewDec(-1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(-1), math.LegacyNewDec(-1)},
 
-		{math.NewDec(1), math.NewDec(1), math.NewDec(1), math.NewDec(1), math.NewDec(1), math.NewDec(1), math.NewDec(1), math.NewDec(2), math.NewDec(0)},
-		{math.NewDec(-1), math.NewDec(-1), math.NewDec(1), math.NewDec(1), math.NewDec(1), math.NewDec(1), math.NewDec(1), math.NewDec(-2), math.NewDec(0)},
-		{math.NewDec(1), math.NewDec(-1), math.NewDec(-1), math.NewDec(-1), math.NewDec(-1), math.NewDec(-1), math.NewDec(-1), math.NewDec(0), math.NewDec(2)},
-		{math.NewDec(-1), math.NewDec(1), math.NewDec(-1), math.NewDec(-1), math.NewDec(-1), math.NewDec(-1), math.NewDec(-1), math.NewDec(0), math.NewDec(-2)},
+		{math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(2), math.LegacyNewDec(0)},
+		{math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(-2), math.LegacyNewDec(0)},
+		{math.LegacyNewDec(1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(0), math.LegacyNewDec(2)},
+		{math.LegacyNewDec(-1), math.LegacyNewDec(1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(-1), math.LegacyNewDec(0), math.LegacyNewDec(-2)},
 
 		{
-			math.NewDec(3), math.NewDec(7), math.NewDec(21), math.NewDec(21),
-			math.NewDecWithPrec(428571428571428571, 18), math.NewDecWithPrec(428571428571428572, 18), math.NewDecWithPrec(428571428571428571, 18),
-			math.NewDec(10), math.NewDec(-4),
+			math.LegacyNewDec(3), math.LegacyNewDec(7), math.LegacyNewDec(21), math.LegacyNewDec(21),
+			math.LegacyNewDecWithPrec(428571428571428571, 18), math.LegacyNewDecWithPrec(428571428571428572, 18), math.LegacyNewDecWithPrec(428571428571428571, 18),
+			math.LegacyNewDec(10), math.LegacyNewDec(-4),
 		},
 		{
-			math.NewDec(2), math.NewDec(4), math.NewDec(8), math.NewDec(8), math.NewDecWithPrec(5, 1), math.NewDecWithPrec(5, 1), math.NewDecWithPrec(5, 1),
-			math.NewDec(6), math.NewDec(-2),
+			math.LegacyNewDec(2), math.LegacyNewDec(4), math.LegacyNewDec(8), math.LegacyNewDec(8), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
+			math.LegacyNewDec(6), math.LegacyNewDec(-2),
 		},
 
-		{math.NewDec(100), math.NewDec(100), math.NewDec(10000), math.NewDec(10000), math.NewDec(1), math.NewDec(1), math.NewDec(1), math.NewDec(200), math.NewDec(0)},
+		{math.LegacyNewDec(100), math.LegacyNewDec(100), math.LegacyNewDec(10000), math.LegacyNewDec(10000), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(200), math.LegacyNewDec(0)},
 
 		{
-			math.NewDecWithPrec(15, 1), math.NewDecWithPrec(15, 1), math.NewDecWithPrec(225, 2), math.NewDecWithPrec(225, 2),
-			math.NewDec(1), math.NewDec(1), math.NewDec(1), math.NewDec(3), math.NewDec(0),
+			math.LegacyNewDecWithPrec(15, 1), math.LegacyNewDecWithPrec(15, 1), math.LegacyNewDecWithPrec(225, 2), math.LegacyNewDecWithPrec(225, 2),
+			math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(1), math.LegacyNewDec(3), math.LegacyNewDec(0),
 		},
 		{
-			math.NewDecWithPrec(3333, 4), math.NewDecWithPrec(333, 4), math.NewDecWithPrec(1109889, 8), math.NewDecWithPrec(1109889, 8),
-			math.MustNewDecFromStr("10.009009009009009009"), math.MustNewDecFromStr("10.009009009009009010"), math.MustNewDecFromStr("10.009009009009009009"),
-			math.NewDecWithPrec(3666, 4), math.NewDecWithPrec(3, 1),
+			math.LegacyNewDecWithPrec(3333, 4), math.LegacyNewDecWithPrec(333, 4), math.LegacyNewDecWithPrec(1109889, 8), math.LegacyNewDecWithPrec(1109889, 8),
+			math.LegacyMustNewDecFromStr("10.009009009009009009"), math.LegacyMustNewDecFromStr("10.009009009009009010"), math.LegacyMustNewDecFromStr("10.009009009009009009"),
+			math.LegacyNewDecWithPrec(3666, 4), math.LegacyNewDecWithPrec(3, 1),
 		},
 	}
 
@@ -289,7 +289,7 @@ func (s *decimalTestSuite) TestArithmetic() {
 
 func (s *decimalTestSuite) TestBankerRoundChop() {
 	tests := []struct {
-		d1  math.Dec
+		d1  math.LegacyDec
 		exp int64
 	}{
 		{s.mustNewDecFromStr("0.25"), 0},
@@ -315,7 +315,7 @@ func (s *decimalTestSuite) TestBankerRoundChop() {
 
 func (s *decimalTestSuite) TestTruncate() {
 	tests := []struct {
-		d1  math.Dec
+		d1  math.LegacyDec
 		exp int64
 	}{
 		{s.mustNewDecFromStr("0"), 0},
@@ -341,9 +341,9 @@ func (s *decimalTestSuite) TestTruncate() {
 
 func (s *decimalTestSuite) TestStringOverflow() {
 	// two random 64 bit primes
-	dec1, err := math.NewDecFromStr("51643150036226787134389711697696177267")
+	dec1, err := math.LegacyNewDecFromStr("51643150036226787134389711697696177267")
 	s.Require().NoError(err)
-	dec2, err := math.NewDecFromStr("-31798496660535729618459429845579852627")
+	dec2, err := math.LegacyNewDecFromStr("-31798496660535729618459429845579852627")
 	s.Require().NoError(err)
 	dec3 := dec1.Add(dec2)
 	s.Require().Equal(
@@ -354,14 +354,14 @@ func (s *decimalTestSuite) TestStringOverflow() {
 
 func (s *decimalTestSuite) TestDecMulInt() {
 	tests := []struct {
-		sdkDec math.Dec
+		sdkDec math.LegacyDec
 		sdkInt math.Int
-		want   math.Dec
+		want   math.LegacyDec
 	}{
-		{math.NewDec(10), math.NewInt(2), math.NewDec(20)},
-		{math.NewDec(1000000), math.NewInt(100), math.NewDec(100000000)},
-		{math.NewDecWithPrec(1, 1), math.NewInt(10), math.NewDec(1)},
-		{math.NewDecWithPrec(1, 5), math.NewInt(20), math.NewDecWithPrec(2, 4)},
+		{math.LegacyNewDec(10), math.NewInt(2), math.LegacyNewDec(20)},
+		{math.LegacyNewDec(1000000), math.NewInt(100), math.LegacyNewDec(100000000)},
+		{math.LegacyNewDecWithPrec(1, 1), math.NewInt(10), math.LegacyNewDec(1)},
+		{math.LegacyNewDecWithPrec(1, 5), math.NewInt(20), math.LegacyNewDecWithPrec(2, 4)},
 	}
 	for i, tc := range tests {
 		got := tc.sdkDec.MulInt(tc.sdkInt)
@@ -371,17 +371,17 @@ func (s *decimalTestSuite) TestDecMulInt() {
 
 func (s *decimalTestSuite) TestDecCeil() {
 	testCases := []struct {
-		input    math.Dec
-		expected math.Dec
+		input    math.LegacyDec
+		expected math.LegacyDec
 	}{
-		{math.NewDecWithPrec(1000000000000000, math.Precision), math.NewDec(1)},      // 0.001 => 1.0
-		{math.NewDecWithPrec(-1000000000000000, math.Precision), math.ZeroDec()},     // -0.001 => 0.0
-		{math.ZeroDec(), math.ZeroDec()},                                             // 0.0 => 0.0
-		{math.NewDecWithPrec(900000000000000000, math.Precision), math.NewDec(1)},    // 0.9 => 1.0
-		{math.NewDecWithPrec(4001000000000000000, math.Precision), math.NewDec(5)},   // 4.001 => 5.0
-		{math.NewDecWithPrec(-4001000000000000000, math.Precision), math.NewDec(-4)}, // -4.001 => -4.0
-		{math.NewDecWithPrec(4700000000000000000, math.Precision), math.NewDec(5)},   // 4.7 => 5.0
-		{math.NewDecWithPrec(-4700000000000000000, math.Precision), math.NewDec(-4)}, // -4.7 => -4.0
+		{math.LegacyNewDecWithPrec(1000000000000000, math.LegacyPrecision), math.LegacyNewDec(1)},      // 0.001 => 1.0
+		{math.LegacyNewDecWithPrec(-1000000000000000, math.LegacyPrecision), math.LegacyZeroDec()},     // -0.001 => 0.0
+		{math.LegacyZeroDec(), math.LegacyZeroDec()},                                                   // 0.0 => 0.0
+		{math.LegacyNewDecWithPrec(900000000000000000, math.LegacyPrecision), math.LegacyNewDec(1)},    // 0.9 => 1.0
+		{math.LegacyNewDecWithPrec(4001000000000000000, math.LegacyPrecision), math.LegacyNewDec(5)},   // 4.001 => 5.0
+		{math.LegacyNewDecWithPrec(-4001000000000000000, math.LegacyPrecision), math.LegacyNewDec(-4)}, // -4.001 => -4.0
+		{math.LegacyNewDecWithPrec(4700000000000000000, math.LegacyPrecision), math.LegacyNewDec(5)},   // 4.7 => 5.0
+		{math.LegacyNewDecWithPrec(-4700000000000000000, math.LegacyPrecision), math.LegacyNewDec(-4)}, // -4.7 => -4.0
 	}
 
 	for i, tc := range testCases {
@@ -392,26 +392,26 @@ func (s *decimalTestSuite) TestDecCeil() {
 
 func (s *decimalTestSuite) TestPower() {
 	testCases := []struct {
-		input    math.Dec
+		input    math.LegacyDec
 		power    uint64
-		expected math.Dec
+		expected math.LegacyDec
 	}{
-		{math.NewDec(100), 0, math.OneDec()},                                                  // 10 ^ (0) => 1.0
-		{math.OneDec(), 10, math.OneDec()},                                                    // 1.0 ^ (10) => 1.0
-		{math.NewDecWithPrec(5, 1), 2, math.NewDecWithPrec(25, 2)},                            // 0.5 ^ 2 => 0.25
-		{math.NewDecWithPrec(2, 1), 2, math.NewDecWithPrec(4, 2)},                             // 0.2 ^ 2 => 0.04
-		{math.NewDecFromInt(math.NewInt(3)), 3, math.NewDecFromInt(math.NewInt(27))},          // 3 ^ 3 => 27
-		{math.NewDecFromInt(math.NewInt(-3)), 4, math.NewDecFromInt(math.NewInt(81))},         // -3 ^ 4 = 81
-		{math.NewDecWithPrec(1414213562373095049, 18), 2, math.NewDecFromInt(math.NewInt(2))}, // 1.414213562373095049 ^ 2 = 2
+		{math.LegacyNewDec(100), 0, math.LegacyOneDec()},                                                  // 10 ^ (0) => 1.0
+		{math.LegacyOneDec(), 10, math.LegacyOneDec()},                                                    // 1.0 ^ (10) => 1.0
+		{math.LegacyNewDecWithPrec(5, 1), 2, math.LegacyNewDecWithPrec(25, 2)},                            // 0.5 ^ 2 => 0.25
+		{math.LegacyNewDecWithPrec(2, 1), 2, math.LegacyNewDecWithPrec(4, 2)},                             // 0.2 ^ 2 => 0.04
+		{math.LegacyNewDecFromInt(math.NewInt(3)), 3, math.LegacyNewDecFromInt(math.NewInt(27))},          // 3 ^ 3 => 27
+		{math.LegacyNewDecFromInt(math.NewInt(-3)), 4, math.LegacyNewDecFromInt(math.NewInt(81))},         // -3 ^ 4 = 81
+		{math.LegacyNewDecWithPrec(1414213562373095049, 18), 2, math.LegacyNewDecFromInt(math.NewInt(2))}, // 1.414213562373095049 ^ 2 = 2
 	}
 
 	for i, tc := range testCases {
 		res := tc.input.Power(tc.power)
-		s.Require().True(tc.expected.Sub(res).Abs().LTE(math.SmallestDec()), "unexpected result for test case %d, normal power, input: %v", i, tc.input)
+		s.Require().True(tc.expected.Sub(res).Abs().LTE(math.LegacySmallestDec()), "unexpected result for test case %d, normal power, input: %v", i, tc.input)
 
 		mutableInput := tc.input
 		mutableInput.PowerMut(tc.power)
-		s.Require().True(tc.expected.Sub(mutableInput).Abs().LTE(math.SmallestDec()),
+		s.Require().True(tc.expected.Sub(mutableInput).Abs().LTE(math.LegacySmallestDec()),
 			"unexpected result for test case %d, input %v", i, tc.input)
 		s.Require().True(res.Equal(tc.input), "unexpected result for test case %d, mutable power, input: %v", i, tc.input)
 	}
@@ -419,21 +419,21 @@ func (s *decimalTestSuite) TestPower() {
 
 func (s *decimalTestSuite) TestApproxRoot() {
 	testCases := []struct {
-		input    math.Dec
+		input    math.LegacyDec
 		root     uint64
-		expected math.Dec
+		expected math.LegacyDec
 	}{
-		{math.OneDec(), 10, math.OneDec()},                                                       // 1.0 ^ (0.1) => 1.0
-		{math.NewDecWithPrec(25, 2), 2, math.NewDecWithPrec(5, 1)},                               // 0.25 ^ (0.5) => 0.5
-		{math.NewDecWithPrec(4, 2), 2, math.NewDecWithPrec(2, 1)},                                // 0.04 ^ (0.5) => 0.2
-		{math.NewDecFromInt(math.NewInt(27)), 3, math.NewDecFromInt(math.NewInt(3))},             // 27 ^ (1/3) => 3
-		{math.NewDecFromInt(math.NewInt(-81)), 4, math.NewDecFromInt(math.NewInt(-3))},           // -81 ^ (0.25) => -3
-		{math.NewDecFromInt(math.NewInt(2)), 2, math.NewDecWithPrec(1414213562373095049, 18)},    // 2 ^ (0.5) => 1.414213562373095049
-		{math.NewDecWithPrec(1005, 3), 31536000, math.MustNewDecFromStr("1.000000000158153904")}, // 1.005 ^ (1/31536000) ≈ 1.00000000016
-		{math.SmallestDec(), 2, math.NewDecWithPrec(1, 9)},                                       // 1e-18 ^ (0.5) => 1e-9
-		{math.SmallestDec(), 3, math.MustNewDecFromStr("0.000000999999999997")},                  // 1e-18 ^ (1/3) => 1e-6
-		{math.NewDecWithPrec(1, 8), 3, math.MustNewDecFromStr("0.002154434690031900")},           // 1e-8 ^ (1/3) ≈ 0.00215443469
-		{math.MustNewDecFromStr("9000002314687921634000000000000000000021394871242000000000000000"), 2, math.MustNewDecFromStr("94868342004527103646332858502867.899477053226766107")},
+		{math.LegacyOneDec(), 10, math.LegacyOneDec()},                                                       // 1.0 ^ (0.1) => 1.0
+		{math.LegacyNewDecWithPrec(25, 2), 2, math.LegacyNewDecWithPrec(5, 1)},                               // 0.25 ^ (0.5) => 0.5
+		{math.LegacyNewDecWithPrec(4, 2), 2, math.LegacyNewDecWithPrec(2, 1)},                                // 0.04 ^ (0.5) => 0.2
+		{math.LegacyNewDecFromInt(math.NewInt(27)), 3, math.LegacyNewDecFromInt(math.NewInt(3))},             // 27 ^ (1/3) => 3
+		{math.LegacyNewDecFromInt(math.NewInt(-81)), 4, math.LegacyNewDecFromInt(math.NewInt(-3))},           // -81 ^ (0.25) => -3
+		{math.LegacyNewDecFromInt(math.NewInt(2)), 2, math.LegacyNewDecWithPrec(1414213562373095049, 18)},    // 2 ^ (0.5) => 1.414213562373095049
+		{math.LegacyNewDecWithPrec(1005, 3), 31536000, math.LegacyMustNewDecFromStr("1.000000000158153904")}, // 1.005 ^ (1/31536000) ≈ 1.00000000016
+		{math.LegacySmallestDec(), 2, math.LegacyNewDecWithPrec(1, 9)},                                       // 1e-18 ^ (0.5) => 1e-9
+		{math.LegacySmallestDec(), 3, math.LegacyMustNewDecFromStr("0.000000999999999997")},                  // 1e-18 ^ (1/3) => 1e-6
+		{math.LegacyNewDecWithPrec(1, 8), 3, math.LegacyMustNewDecFromStr("0.002154434690031900")},           // 1e-8 ^ (1/3) ≈ 0.00215443469
+		{math.LegacyMustNewDecFromStr("9000002314687921634000000000000000000021394871242000000000000000"), 2, math.LegacyMustNewDecFromStr("94868342004527103646332858502867.899477053226766107")},
 	}
 
 	// In the case of 1e-8 ^ (1/3), the result repeats every 5 iterations starting from iteration 24
@@ -443,21 +443,21 @@ func (s *decimalTestSuite) TestApproxRoot() {
 	for i, tc := range testCases {
 		res, err := tc.input.ApproxRoot(tc.root)
 		s.Require().NoError(err)
-		s.Require().True(tc.expected.Sub(res).Abs().LTE(math.SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
+		s.Require().True(tc.expected.Sub(res).Abs().LTE(math.LegacySmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
 	}
 }
 
 func (s *decimalTestSuite) TestApproxSqrt() {
 	testCases := []struct {
-		input    math.Dec
-		expected math.Dec
+		input    math.LegacyDec
+		expected math.LegacyDec
 	}{
-		{math.OneDec(), math.OneDec()},                                                     // 1.0 => 1.0
-		{math.NewDecWithPrec(25, 2), math.NewDecWithPrec(5, 1)},                            // 0.25 => 0.5
-		{math.NewDecWithPrec(4, 2), math.NewDecWithPrec(2, 1)},                             // 0.09 => 0.3
-		{math.NewDecFromInt(math.NewInt(9)), math.NewDecFromInt(math.NewInt(3))},           // 9 => 3
-		{math.NewDecFromInt(math.NewInt(-9)), math.NewDecFromInt(math.NewInt(-3))},         // -9 => -3
-		{math.NewDecFromInt(math.NewInt(2)), math.NewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
+		{math.LegacyOneDec(), math.LegacyOneDec()},                                                     // 1.0 => 1.0
+		{math.LegacyNewDecWithPrec(25, 2), math.LegacyNewDecWithPrec(5, 1)},                            // 0.25 => 0.5
+		{math.LegacyNewDecWithPrec(4, 2), math.LegacyNewDecWithPrec(2, 1)},                             // 0.09 => 0.3
+		{math.LegacyNewDecFromInt(math.NewInt(9)), math.LegacyNewDecFromInt(math.NewInt(3))},           // 9 => 3
+		{math.LegacyNewDecFromInt(math.NewInt(-9)), math.LegacyNewDecFromInt(math.NewInt(-3))},         // -9 => -3
+		{math.LegacyNewDecFromInt(math.NewInt(2)), math.LegacyNewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
 	}
 
 	for i, tc := range testCases {
@@ -469,27 +469,27 @@ func (s *decimalTestSuite) TestApproxSqrt() {
 
 func (s *decimalTestSuite) TestDecSortableBytes() {
 	tests := []struct {
-		d    math.Dec
+		d    math.LegacyDec
 		want []byte
 	}{
-		{math.NewDec(0), []byte("000000000000000000.000000000000000000")},
-		{math.NewDec(1), []byte("000000000000000001.000000000000000000")},
-		{math.NewDec(10), []byte("000000000000000010.000000000000000000")},
-		{math.NewDec(12340), []byte("000000000000012340.000000000000000000")},
-		{math.NewDecWithPrec(12340, 4), []byte("000000000000000001.234000000000000000")},
-		{math.NewDecWithPrec(12340, 5), []byte("000000000000000000.123400000000000000")},
-		{math.NewDecWithPrec(12340, 8), []byte("000000000000000000.000123400000000000")},
-		{math.NewDecWithPrec(1009009009009009009, 17), []byte("000000000000000010.090090090090090090")},
-		{math.NewDecWithPrec(-1009009009009009009, 17), []byte("-000000000000000010.090090090090090090")},
-		{math.NewDec(1000000000000000000), []byte("max")},
-		{math.NewDec(-1000000000000000000), []byte("--")},
+		{math.LegacyNewDec(0), []byte("000000000000000000.000000000000000000")},
+		{math.LegacyNewDec(1), []byte("000000000000000001.000000000000000000")},
+		{math.LegacyNewDec(10), []byte("000000000000000010.000000000000000000")},
+		{math.LegacyNewDec(12340), []byte("000000000000012340.000000000000000000")},
+		{math.LegacyNewDecWithPrec(12340, 4), []byte("000000000000000001.234000000000000000")},
+		{math.LegacyNewDecWithPrec(12340, 5), []byte("000000000000000000.123400000000000000")},
+		{math.LegacyNewDecWithPrec(12340, 8), []byte("000000000000000000.000123400000000000")},
+		{math.LegacyNewDecWithPrec(1009009009009009009, 17), []byte("000000000000000010.090090090090090090")},
+		{math.LegacyNewDecWithPrec(-1009009009009009009, 17), []byte("-000000000000000010.090090090090090090")},
+		{math.LegacyNewDec(1000000000000000000), []byte("max")},
+		{math.LegacyNewDec(-1000000000000000000), []byte("--")},
 	}
 	for tcIndex, tc := range tests {
-		s.Require().Equal(tc.want, math.SortableDecBytes(tc.d), "bad String(), index: %v", tcIndex)
+		s.Require().Equal(tc.want, math.LegacySortableDecBytes(tc.d), "bad String(), index: %v", tcIndex)
 	}
 
-	s.Require().Panics(func() { math.SortableDecBytes(math.NewDec(1000000000000000001)) })
-	s.Require().Panics(func() { math.SortableDecBytes(math.NewDec(-1000000000000000001)) })
+	s.Require().Panics(func() { math.LegacySortableDecBytes(math.LegacyNewDec(1000000000000000001)) })
+	s.Require().Panics(func() { math.LegacySortableDecBytes(math.LegacyNewDec(-1000000000000000001)) })
 }
 
 func (s *decimalTestSuite) TestDecEncoding() {
@@ -504,54 +504,54 @@ func (s *decimalTestSuite) TestDecEncoding() {
 	s.Require().True(ok)
 
 	testCases := []struct {
-		input   math.Dec
+		input   math.LegacyDec
 		rawBz   string
 		jsonStr string
 		yamlStr string
 	}{
 		{
-			math.NewDec(0), "30",
+			math.LegacyNewDec(0), "30",
 			"\"0.000000000000000000\"",
 			"\"0.000000000000000000\"\n",
 		},
 		{
-			math.NewDecWithPrec(4, 2),
+			math.LegacyNewDecWithPrec(4, 2),
 			"3430303030303030303030303030303030",
 			"\"0.040000000000000000\"",
 			"\"0.040000000000000000\"\n",
 		},
 		{
-			math.NewDecWithPrec(-4, 2),
+			math.LegacyNewDecWithPrec(-4, 2),
 			"2D3430303030303030303030303030303030",
 			"\"-0.040000000000000000\"",
 			"\"-0.040000000000000000\"\n",
 		},
 		{
-			math.NewDecWithPrec(1414213562373095049, 18),
+			math.LegacyNewDecWithPrec(1414213562373095049, 18),
 			"31343134323133353632333733303935303439",
 			"\"1.414213562373095049\"",
 			"\"1.414213562373095049\"\n",
 		},
 		{
-			math.NewDecWithPrec(-1414213562373095049, 18),
+			math.LegacyNewDecWithPrec(-1414213562373095049, 18),
 			"2D31343134323133353632333733303935303439",
 			"\"-1.414213562373095049\"",
 			"\"-1.414213562373095049\"\n",
 		},
 		{
-			math.NewDecFromBigIntWithPrec(largestBigInt, 18),
+			math.LegacyNewDecFromBigIntWithPrec(largestBigInt, 18),
 			"3333343939313839373435303536383830313439363838383536363335353937303037313632363639303332363437323930373938313231363930313030343838383838373332383631323930303334333736343335313330343333353335",
 			"\"33499189745056880149688856635597007162669032647290798121690100488888732861290.034376435130433535\"",
 			"\"33499189745056880149688856635597007162669032647290798121690100488888732861290.034376435130433535\"\n",
 		},
 		{
-			math.NewDecFromBigIntWithPrec(smallestBigInt, 18),
+			math.LegacyNewDecFromBigIntWithPrec(smallestBigInt, 18),
 			"2D3333343939313839373435303536383830313439363838383536363335353937303037313632363639303332363437323930373938313231363930313030343838383838373332383631323930303334333736343335313330343333353335",
 			"\"-33499189745056880149688856635597007162669032647290798121690100488888732861290.034376435130433535\"",
 			"\"-33499189745056880149688856635597007162669032647290798121690100488888732861290.034376435130433535\"\n",
 		},
 		{
-			math.NewDecFromBigIntWithPrec(maxInt, 18),
+			math.LegacyNewDecFromBigIntWithPrec(maxInt, 18),
 			"3636373439353934383732353238343430303734383434343238333137373938353033353831333334353136333233363435333939303630383435303530323434343434333636343330363435303137313838323137353635323136373637",
 			"\"66749594872528440074844428317798503581334516323645399060845050244444366430645.017188217565216767\"",
 			"\"66749594872528440074844428317798503581334516323645399060845050244444366430645.017188217565216767\"\n",
@@ -563,7 +563,7 @@ func (s *decimalTestSuite) TestDecEncoding() {
 		s.Require().NoError(err)
 		s.Require().Equal(tc.rawBz, fmt.Sprintf("%X", bz))
 
-		var other math.Dec
+		var other math.LegacyDec
 		s.Require().NoError((&other).Unmarshal(bz))
 		s.Require().True(tc.input.Equal(other))
 
@@ -581,26 +581,26 @@ func (s *decimalTestSuite) TestDecEncoding() {
 
 // Showcase that different orders of operations causes different results.
 func (s *decimalTestSuite) TestOperationOrders() {
-	n1 := math.NewDec(10)
-	n2 := math.NewDec(1000000010)
-	s.Require().Equal(n1.Mul(n2).Quo(n2), math.NewDec(10))
+	n1 := math.LegacyNewDec(10)
+	n2 := math.LegacyNewDec(1000000010)
+	s.Require().Equal(n1.Mul(n2).Quo(n2), math.LegacyNewDec(10))
 	s.Require().NotEqual(n1.Mul(n2).Quo(n2), n1.Quo(n2).Mul(n2))
 }
 
 func BenchmarkMarshalTo(b *testing.B) {
 	b.ReportAllocs()
 	bis := []struct {
-		in   math.Dec
+		in   math.LegacyDec
 		want []byte
 	}{
 		{
-			math.NewDec(1e8), []byte{
+			math.LegacyNewDec(1e8), []byte{
 				0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
 				0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
 				0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
 			},
 		},
-		{math.NewDec(0), []byte{0x30}},
+		{math.LegacyNewDec(0), []byte{0x30}},
 	}
 	data := make([]byte, 100)
 

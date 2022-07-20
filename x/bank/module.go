@@ -233,7 +233,7 @@ type bankInputs struct {
 	Key    *store.KVStoreKey
 
 	AccountKeeper types.AccountKeeper
-	Authority     types.Authority `optional:"true"`
+	Authority     types.BankAuthority `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -266,7 +266,7 @@ func provideModule(in bankInputs) bankOutputs {
 	authority := in.Authority
 	if authority == nil || len(authority) == 0 {
 		// default to governance authority if not provided
-		authority = types.Authority(authtypes.NewModuleAddress(govtypes.ModuleName))
+		authority = types.BankAuthority(authtypes.NewModuleAddress(govtypes.ModuleName))
 	}
 
 	bankKeeper := keeper.NewBaseKeeper(

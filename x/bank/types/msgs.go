@@ -10,9 +10,14 @@ const (
 	TypeMsgSend           = "send"
 	TypeMsgMultiSend      = "multisend"
 	TypeMsgSetSendEnabled = "set-send-enabled"
+	TypeMsgUpdateParams   = "update_params"
 )
 
-var _ sdk.Msg = &MsgSend{}
+var (
+	_ sdk.Msg = &MsgSend{}
+	_ sdk.Msg = &MsgMultiSend{}
+	_ sdk.Msg = &MsgUpdateParams{}
+)
 
 // NewMsgSend - construct a msg to send coins from one account to another.
 //nolint:interfacer
@@ -58,11 +63,9 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{fromAddress}
 }
 
-var _ sdk.Msg = &MsgMultiSend{}
-
 // NewMsgMultiSend - construct arbitrary multi-in, multi-out send msg.
-func NewMsgMultiSend(in []Input, out []Output) *MsgMultiSend {
-	return &MsgMultiSend{Inputs: in, Outputs: out}
+func NewMsgMultiSend(in Input, out []Output) *MsgMultiSend {
+	return &MsgMultiSend{Input: in, Outputs: out}
 }
 
 // Route Implements Msg
@@ -73,17 +76,18 @@ func (msg MsgMultiSend) Type() string { return TypeMsgMultiSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgMultiSend) ValidateBasic() error {
-	// this just makes sure all the inputs and outputs are properly formatted,
+	// this just makes sure the input and all the outputs are properly formatted,
 	// not that they actually have the money inside
-	if len(msg.Inputs) == 0 {
-		return ErrNoInputs
+
+	if err := msg.Input.ValidateBasic(); err != nil {
+		return err
 	}
 
 	if len(msg.Outputs) == 0 {
 		return ErrNoOutputs
 	}
 
-	return ValidateInputsOutputs(msg.Inputs, msg.Outputs)
+	return ValidateInputsOutputs(msg.Input, msg.Outputs)
 }
 
 // GetSignBytes Implements Msg.
@@ -93,13 +97,8 @@ func (msg MsgMultiSend) GetSignBytes() []byte {
 
 // GetSigners Implements Msg.
 func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
-	addrs := make([]sdk.AccAddress, len(msg.Inputs))
-	for i, in := range msg.Inputs {
-		inAddr, _ := sdk.AccAddressFromBech32(in.Address)
-		addrs[i] = inAddr
-	}
-
-	return addrs
+	addrs, _ := sdk.AccAddressFromBech32(msg.Input.Address)
+	return []sdk.AccAddress{addrs}
 }
 
 // ValidateBasic - validate transaction input
@@ -156,16 +155,14 @@ func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
 
 // ValidateInputsOutputs validates that each respective input and output is
 // valid and that the sum of inputs is equal to the sum of outputs.
-func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
+func ValidateInputsOutputs(input Input, outputs []Output) error {
 	var totalIn, totalOut sdk.Coins
 
-	for _, in := range inputs {
-		if err := in.ValidateBasic(); err != nil {
-			return err
-		}
-
-		totalIn = totalIn.Add(in.Coins...)
+	if err := input.ValidateBasic(); err != nil {
+		return err
 	}
+
+	totalIn = totalIn.Add(input.Coins...)
 
 	for _, out := range outputs {
 		if err := out.ValidateBasic(); err != nil {
@@ -181,4 +178,23 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 	}
 
 	return nil
+}
+
+// GetSigners returns the signer addresses that are expected to sign the result
+// of GetSignBytes.
+func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
+}
+
+// GetSignBytes returns the raw bytes for a MsgUpdateParams message that
+// the expected signer needs to sign.
+func (msg MsgUpdateParams) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic performs basic MsgUpdateParams message validation.
+func (msg MsgUpdateParams) ValidateBasic() error {
+	return msg.Params.Validate()
 }

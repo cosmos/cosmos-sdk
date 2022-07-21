@@ -288,6 +288,15 @@ func (coins Coins) IsValid() bool {
 	return coins.Validate() == nil
 }
 
+// Denoms returns all denoms associated with a Coins object
+func (coins Coins) Denoms() []string {
+	res := make([]string, len(coins))
+	for i, coin := range coins {
+		res[i] = coin.Denom
+	}
+	return res
+}
+
 // Add adds two sets of coins.
 //
 // e.g.

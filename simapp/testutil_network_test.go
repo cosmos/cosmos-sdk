@@ -1,7 +1,7 @@
 //go:build norace
 // +build norace
 
-package network_test
+package simapp_test
 
 import (
 	"testing"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 )
 
@@ -22,7 +23,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), network.DefaultConfig())
+	s.network, err = network.New(s.T(), s.T().TempDir(), network.DefaultConfig(simapp.NewTestNetworkFixture))
 	s.Require().NoError(err)
 
 	h, err := s.network.WaitForHeight(1)

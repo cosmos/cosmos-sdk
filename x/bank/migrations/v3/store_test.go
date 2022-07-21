@@ -1,4 +1,4 @@
-package v046_test
+package v3_test
 
 import (
 	"testing"
@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	v043 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
-	v046 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v046"
+	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
+	v3 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -22,7 +22,7 @@ func TestMigrateStore(t *testing.T) {
 	store := ctx.KVStore(bankKey)
 
 	addr := sdk.AccAddress([]byte("addr________________"))
-	prefixAccStore := prefix.NewStore(store, v043.CreateAccountBalancesPrefix(addr))
+	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
 
 	balances := sdk.NewCoins(
 		sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -36,7 +36,7 @@ func TestMigrateStore(t *testing.T) {
 		prefixAccStore.Set([]byte(b.Denom), bz)
 	}
 
-	require.NoError(t, v046.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
 
 	for _, b := range balances {
 		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
@@ -47,7 +47,7 @@ func TestMigrateStore(t *testing.T) {
 	}
 
 	for _, b := range balances {
-		denomPrefixStore := prefix.NewStore(store, v046.CreateDenomAddressPrefix(b.Denom))
+		denomPrefixStore := prefix.NewStore(store, v3.CreateDenomAddressPrefix(b.Denom))
 		bz := denomPrefixStore.Get(address.MustLengthPrefix(addr))
 		require.NotNil(t, bz)
 	}
@@ -84,10 +84,10 @@ func TestMigrateDenomMetaData(t *testing.T) {
 			Display: "token",
 		},
 	}
-	denomMetadataStore := prefix.NewStore(store, v043.DenomMetadataPrefix)
+	denomMetadataStore := prefix.NewStore(store, v2.DenomMetadataPrefix)
 
 	for i := range []int{0, 1} {
-		key := append(v043.DenomMetadataPrefix, []byte(metaData[i].Base)...)
+		key := append(v2.DenomMetadataPrefix, []byte(metaData[i].Base)...)
 		// keys before 0.45 had denom two times in the key
 		key = append(key, []byte(metaData[i].Base)...)
 		bz, err := encCfg.Codec.Marshal(&metaData[i])
@@ -95,9 +95,9 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		denomMetadataStore.Set(key, bz)
 	}
 
-	require.NoError(t, v046.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
 
-	denomMetadataStore = prefix.NewStore(store, v043.DenomMetadataPrefix)
+	denomMetadataStore = prefix.NewStore(store, v2.DenomMetadataPrefix)
 	denomMetadataIter := denomMetadataStore.Iterator(nil, nil)
 	defer denomMetadataIter.Close()
 	for i := 0; denomMetadataIter.Valid(); denomMetadataIter.Next() {

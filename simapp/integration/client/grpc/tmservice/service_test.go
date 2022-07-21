@@ -1,3 +1,6 @@
+//go:build norace
+// +build norace
+
 package tmservice_test
 
 import (
@@ -10,12 +13,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	"github.com/cosmos/cosmos-sdk/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
+	_ "github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 type IntegrationTestSuite struct {
@@ -27,7 +31,7 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	t.Skip() // to be re-enabled in https://github.com/cosmos/cosmos-sdk/pull/12482/
+	//t.Skip() // to be re-enabled in https://github.com/cosmos/cosmos-sdk/pull/12482/
 
 	suite.Run(t, new(IntegrationTestSuite))
 }
@@ -35,12 +39,21 @@ func TestIntegrationTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
+	appConfig := configurator.NewAppConfig(
+		configurator.AuthModule(),
+		configurator.ParamsModule(),
+		configurator.BankModule(),
+		configurator.GenutilModule(),
+		configurator.StakingModule(),
+		configurator.GovModule(),
+		configurator.TxModule())
+
+	cfg, err := network.DefaultConfigWithAppConfig(appConfig)
+	s.NoError(err)
 	cfg.NumValidators = 1
 
 	s.cfg = cfg
 
-	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 

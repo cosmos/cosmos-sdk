@@ -19,8 +19,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
@@ -413,14 +414,14 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	tempDir := t.TempDir()
 	err := os.Mkdir(filepath.Join(tempDir, "config"), os.ModePerm)
 	require.NoError(t, err)
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := testutil.MakeTestEncodingConfig()
 
 	// Run InitCmd to create necessary config files.
 	clientCtx := client.Context{}.WithHomeDir(tempDir).WithCodec(encCfg.Codec)
 	serverCtx := server.NewDefaultContext()
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	cmd := genutilcli.InitCmd(simapp.ModuleBasics, tempDir)
+	cmd := genutilcli.InitCmd(module.NewBasicManager(), tempDir)
 	cmd.SetArgs([]string{"appnode-test"})
 	err = cmd.ExecuteContext(ctx)
 	require.NoError(t, err)

@@ -8,6 +8,7 @@ import (
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
+	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
@@ -107,6 +108,7 @@ func AuthModule() ModuleOption {
 					{Account: "mint", Permissions: []string{"minter"}},
 					{Account: "bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
+					{Account: "gov", Permissions: []string{"burner"}},
 				},
 			}),
 		}
@@ -172,6 +174,15 @@ func VestingModule() ModuleOption {
 		config.moduleConfigs["vesting"] = &appv1alpha1.ModuleConfig{
 			Name:   "vesting",
 			Config: appconfig.WrapAny(&vestingmodulev1.Module{}),
+		}
+	}
+}
+
+func GovModule() ModuleOption {
+	return func(config *appConfig) {
+		config.moduleConfigs["gov"] = &appv1alpha1.ModuleConfig{
+			Name:   "gov",
+			Config: appconfig.WrapAny(&govmodulev1.Module{}),
 		}
 	}
 }

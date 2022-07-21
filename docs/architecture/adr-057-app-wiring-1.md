@@ -35,6 +35,7 @@ designs led to the current solution described here.
 
 In order to improve the current situation, a new "app wiring" paradigm has been designed to replace `app.go` which
 involves:
+
 * declaration configuration of the modules in an app which can be serialized to JSON or YAML
 * a dependency-injection (DI) framework for instantiating apps from the that configuration
 
@@ -50,6 +51,7 @@ We explored several existing DI solutions in golang and felt that the reflection
 was closest to what we needed but not quite there. Assessing what we needed for the SDK, we designed and built
 the Cosmos SDK [depinject module](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/depinject), which has the following
 features:
+
 * dependency resolution and provision through functional constructors, ex: `func(need SomeDep) (AnotherDep, error)`
 * dependency injection `In` and `Out` structs which support `optional` dependencies
 * grouped-dependencies (many-per-container) through the `AutoGroupType` tag interface
@@ -58,6 +60,7 @@ features:
 * sophisticated debugging information and container visualization via GraphViz
 
 Here are some examples of how these would be used in an SDK module:
+
 * `StoreKey` could be a module-scoped dependency which is unique per module
 * a module's `AppModule` instance (or the equivalent) could be a `OnePerModuleType`
 * CLI commands could be provided with `AutoGroupType`s
@@ -94,6 +97,7 @@ to share resources across different versions of the same module which might have
 versions (ex. `cosmos.bank.module.v2.Module`).
 
 An example app config in YAML might look like this:
+
 ```yaml
 modules:
   - name: baseapp
@@ -135,6 +139,7 @@ protobuf types need to be explicitly registered. Given that the app config itsel
 uses protobuf `Any` types, protobuf registration needs to happen before the app config itself can be decoded. Because
 we don't know which protobuf `Any` types will be needed a priori and modules themselves define those types, we need
 to decode the app config in separate phases:
+
 1. parse app config JSON/YAML as raw JSON and collect required module type URLs (without doing proto JSON decoding)
 2. build a [protobuf type registry](https://pkg.go.dev/google.golang.org/protobuf@v1.28.0/reflect/protoregistry) based
    on file descriptors and types provided by each required module
@@ -170,6 +175,7 @@ func Types(types ...TypeInfo) Option { ... }
 ```
 
 Ex:
+
 ```go
 func init() {
 	module.Register("cosmos.bank.module.v1.Module",
@@ -222,10 +228,10 @@ import (
 )
 
 // go:embed app.yaml
-var appConfigYaml []byte
+var appConfigYAML []byte
 
 func main() {
-	app.Run(app.ParseYamlConfig(appConfigYaml))
+	app.Run(app.LoadYAML(appConfigYAML))
 }
 ```
 
@@ -234,6 +240,7 @@ func main() {
 So far we have described a system which is largely agnostic to the specifics of the SDK such as store keys, `AppModule`,
 `BaseApp`, etc. A second app wiring ADR will be created which outlines the details of how this app wiring system will
 be applied to the existing SDK in a way that:
+
 1. is as easy to apply to existing modules as possible,
 2. while also making it possible to improve existing APIs and minimize long-term technical debt
 
@@ -253,7 +260,9 @@ registration paradigms. These two methods can live side-by-side for as long as i
 * easier plugin integration
 * easier way to manage app construction for tools like Ignite CLI
 * dependency injection framework provides more automated reasoning about dependencies in the project, with a graph visualization.
+
 ### Negative
+
 * it may be confusing when a dependency is missing although error messages, the GraphViz visualization, and global
   module registration may help with that
 
@@ -271,5 +280,6 @@ into here. Further discussions will also happen within the Cosmos SDK Framework 
 * https://github.com/cosmos/cosmos-sdk/blob/c3edbb22cab8678c35e21fe0253919996b780c01/simapp/app.go
 * https://github.com/allinbits/cosmos-sdk-poc
 * https://github.com/uber-go/dig
+* https://github.com/google/wire
 * https://pkg.go.dev/github.com/cosmos/cosmos-sdk/container
 * https://github.com/cosmos/cosmos-sdk/pull/11802

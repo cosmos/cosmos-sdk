@@ -32,6 +32,7 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
+	ctx                   sdk.Context
 	genesisAccount        *authtypes.BaseAccount
 	bankClient            types.QueryClient
 	testClient            testdata.QueryClient
@@ -94,8 +95,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// end of app init
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
+	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, bankKeeper)
 	testdata.RegisterQueryServer(queryHelper, testdata.QueryImpl{})
 	s.bankClient = types.NewQueryClient(queryHelper)

@@ -169,7 +169,7 @@ func makeKeyMigrateCmd() *cobra.Command {
 					return fmt.Errorf("constructing database handle: %w", err)
 				}
 
-				if err = keymigrate.Migrate(ctx, db); err != nil {
+				if err = keymigrate.Migrate(ctx, dbctx, db); err != nil {
 					return fmt.Errorf("running migration for context %q: %w",
 						dbctx, err)
 				}

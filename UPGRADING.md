@@ -70,3 +70,20 @@ Additionally, new packages have been introduced in order to further split the co
 #### PostHandler
 
 `postHandler` is like an `antehandler`, but is run _after_ the `runMsgs` execution. It is in the same store branch that `runMsgs`, meaning that both `runMsgs` and `postHandler`. This allows to run a custom logic after the execution of the messages.
+
+### IAVL
+
+v0.19.0 IAVL introduces a new "fast" index. This index represents the latest state of the
+IAVL laid out in a format that preserves data locality by key. As a result, it allows for faster queries and iterations
+since data can now be read in lexicographical order that is frequent for Cosmos-SDK chains.
+
+The first time the chain is started after the upgrade, the aforementioned index is created. The creation process
+might take time and depends on the size of the latest state of the chain. For example, Osmosis takes around 15 minutes to rebuild the index.
+
+While the index is being created, node operators can observe the following in the logs:
+"Upgrading IAVL storage for faster queries + execution on the live state. This may take a while". The store
+key is appended to the message. The message is printed for every module that has a non-transient store.
+As a result, it gives a good indication of the progress of the upgrade.
+
+There is also downgrade and re-upgrade protection. If a node operator chooses to downgrade to IAVL pre-fast index, and then upgrade again, the index is rebuilt from scratch. This implementation detail should not be relevant in most cases. It was added as a safeguard against operator
+mistakes.

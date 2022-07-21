@@ -250,7 +250,9 @@ registration paradigms. These two methods can live side-by-side for as long as i
 * it will be easier to develop and test standalone SDK modules without needing to replicate all of simapp
 * it may be possible to dynamically load modules and upgrade chains without needing to do a coordinated stop and binary
   upgrade using this mechanism
-
+* easier plugin integration
+* easier way to manage app construction for tools like Ignite CLI
+* dependency injection framework provides more automated reasoning about dependencies in the project, with a graph visualization.
 ### Negative
 * it may be confusing when a dependency is missing although error messages, the GraphViz visualization, and global
   module registration may help with that

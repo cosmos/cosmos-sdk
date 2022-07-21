@@ -1,7 +1,10 @@
 package types_test
 
 import (
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -194,6 +197,156 @@ func TestMsgUndelegate(t *testing.T) {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
 			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+		}
+	}
+}
+
+func TestMsgUpdateParams(t *testing.T) {
+	msg := types.MsgUpdateParams{
+		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Params:    types.DefaultParams(),
+	}
+
+	require.Equal(t, []sdk.AccAddress{authtypes.NewModuleAddress(govtypes.ModuleName)}, msg.GetSigners())
+}
+
+func TestMsgUpdateParamsValidateBasic(t *testing.T) {
+	tests := []struct {
+		name            string
+		msgUpdateParams types.MsgUpdateParams
+		expFail         bool
+		expError        string
+	}{
+		{
+			"valid msg",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params:    types.DefaultParams(),
+			},
+			false,
+			"",
+		},
+		{
+			"negative unbounding time",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3 * -1,
+					MaxEntries:        types.DefaultMaxEntries,
+					MaxValidators:     types.DefaultMaxValidators,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					BondDenom:         "denom",
+				},
+			},
+			true,
+			"unbonding time must be positive:",
+		},
+		{
+			"cero value max validator",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3,
+					MaxEntries:        types.DefaultMaxEntries,
+					MaxValidators:     0,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					BondDenom:         "denom",
+				},
+			},
+			true,
+			"max validators must be positive:",
+		},
+		{
+			"cero value max validator",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3,
+					MaxEntries:        0,
+					MaxValidators:     types.DefaultMaxValidators,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					BondDenom:         "denom",
+				},
+			},
+			true,
+			"max entries must be positive:",
+		},
+		{
+			"negative commission rate",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3,
+					MaxEntries:        types.DefaultMaxEntries,
+					MaxValidators:     types.DefaultMaxValidators,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: sdk.NewDec(-1),
+					BondDenom:         "denom",
+				},
+			},
+			true,
+			"minimum commission rate cannot be negative:",
+		},
+		{
+			"negative commission rate",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3,
+					MaxEntries:        types.DefaultMaxEntries,
+					MaxValidators:     types.DefaultMaxValidators,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: sdk.NewDec(2),
+					BondDenom:         "denom",
+				},
+			},
+			true,
+			"minimum commission rate cannot be greater than 100",
+		},
+		{
+			"blank bonddenom",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3,
+					MaxEntries:        types.DefaultMaxEntries,
+					MaxValidators:     types.DefaultMaxValidators,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					BondDenom:         "",
+				},
+			},
+			true,
+			"bond denom cannot be blank",
+		},
+		{
+			"Invalid authority",
+			types.MsgUpdateParams{
+				Authority: "invalid",
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3,
+					MaxEntries:        types.DefaultMaxEntries,
+					MaxValidators:     types.DefaultMaxValidators,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					BondDenom:         "denom",
+				},
+			},
+			true,
+			"invalid authority address",
+		},
+	}
+
+	for _, tc := range tests {
+		err := tc.msgUpdateParams.ValidateBasic()
+		if tc.expFail {
+			require.Error(t, err)
+			require.Contains(t, err.Error(), tc.expError)
+		} else {
+			require.NoError(t, err)
 		}
 	}
 }

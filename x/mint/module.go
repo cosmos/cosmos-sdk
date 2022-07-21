@@ -236,9 +236,12 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type mintInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	ModuleKey              depinject.OwnModuleKey
+	Config                 *modulev1.Module
+	Key                    *store.KVStoreKey
+	Cdc                    codec.Codec
+	Authority              map[string]sdk.AccAddress    `optional:"true"`
+	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -261,6 +264,12 @@ func provideModule(in mintInputs) mintOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
+	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+	if !ok {
+		// default to governance authority if not provided
+		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Key,
@@ -268,11 +277,11 @@ func provideModule(in mintInputs) mintOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		feeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority.String(),
 	)
 
-	// TODO: allow to set inflation calculation function
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil, in.LegacySubspace)
+	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn, in.LegacySubspace)
 
 	return mintOutputs{MintKeeper: k, Module: runtime.WrapAppModule(m)}
 }

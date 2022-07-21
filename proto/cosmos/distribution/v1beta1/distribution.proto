@@ -99,9 +99,9 @@ message FeePool {
 // together with how many coins are proposed to be spent, and to which
 // recipient account.
 message CommunityPoolSpendProposal {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.equal)                   = false;
+  option (gogoproto.goproto_getters)         = false;
+  option (gogoproto.goproto_stringer)        = false;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
 
   string   title                           = 1;
@@ -142,8 +142,8 @@ message DelegationDelegatorReward {
 // CommunityPoolSpendProposalWithDeposit defines a CommunityPoolSpendProposal
 // with a deposit
 message CommunityPoolSpendProposalWithDeposit {
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters)         = false;
+  option (gogoproto.goproto_stringer)        = true;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
 
   string title       = 1;

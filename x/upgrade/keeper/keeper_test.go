@@ -3,21 +3,21 @@ package keeper_test
 import (
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/testutil"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtime "github.com/tendermint/tendermint/libs/time"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type KeeperTestSuite struct {
@@ -29,29 +29,47 @@ type KeeperTestSuite struct {
 	ctx           sdk.Context
 	msgSrvr       types.MsgServer
 	addrs         []sdk.AccAddress
+	encCfg        moduletestutil.TestEncodingConfig
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	var (
-		bankKeeper    bankkeeper.Keeper
-		stakingKeeper *stakingkeeper.Keeper
-	)
+	// var (
+	// 	bankKeeper    bankkeeper.Keeper
+	// 	stakingKeeper *stakingkeeper.Keeper
+	// )
 
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
-	appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.NewAppOptionsWithFlagHome(homeDir)))
-	app, err := simtestutil.Setup(appConfig, &s.upgradeKeeper, &bankKeeper, &stakingKeeper)
-	s.NoError(err)
-	s.upgradeKeeper.SetVersionSetter(app.BaseApp)
+	// appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.NewAppOptionsWithFlagHome(homeDir)))
+	// app, err := simtestutil.Setup(appConfig, &s.upgradeKeeper, &bankKeeper, &stakingKeeper)
+	// s.NoError(err)
+
+	// var interfaceRegistry codectypes.InterfaceRegistry
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	s.ctx = testCtx.Ctx
+	s.baseApp = baseapp.NewBaseApp(
+		"upgrade",
+		log.NewNopLogger(),
+		testCtx.DB,
+		s.encCfg.TxConfig.TxDecoder(),
+	)
+
+	s.baseApp.SetCMS(testCtx.CMS)
+
+	s.baseApp.SetInterfaceRegistry(s.encCfg.InterfaceRegistry)
+	s.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now(), Height: 10})
+	s.upgradeKeeper.SetVersionSetter(s.baseApp)
 
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
-	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{
-		Time:   time.Now(),
-		Height: 10,
-	})
+
 	s.msgSrvr = keeper.NewMsgServerImpl(s.upgradeKeeper)
-	s.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, s.ctx, 1, sdk.NewInt(30000000))
-	s.baseApp = app.BaseApp
+
+	// s.upgradeKeeper = keeper.NewKeeper(s)
+
+	// suite setup
+	s.addrs = simtestutil.CreateIncrementalAccounts(1)
 }
 
 func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {

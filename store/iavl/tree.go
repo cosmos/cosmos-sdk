@@ -33,7 +33,7 @@ type (
 		GetImmutable(version int64) (*iavl.ImmutableTree, error)
 		SetInitialVersion(version uint64)
 		Iterator(start, end []byte, ascending bool) (types.Iterator, error)
-		LoadVersionForOverwriting(targetVersion int64) (int64, error)
+		AvailableVersions() []int
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree

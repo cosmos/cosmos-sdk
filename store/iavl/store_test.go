@@ -108,17 +108,17 @@ func TestLoadStore(t *testing.T) {
 	require.Equal(t, string(hcStore.Get([]byte("hello"))), "ciao")
 
 	// Querying a new store at some previous non-pruned height H
-	newHStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDH, false, DefaultIAVLCacheSize, false)
+	newHStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDH, false, DefaultIAVLCacheSize)
 	require.NoError(t, err)
 	require.Equal(t, string(newHStore.Get([]byte("hello"))), "hallo")
 
 	// Querying a new store at some previous pruned height Hp
-	newHpStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHp, false, DefaultIAVLCacheSize, false)
+	newHpStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHp, false, DefaultIAVLCacheSize)
 	require.NoError(t, err)
 	require.Equal(t, string(newHpStore.Get([]byte("hello"))), "hola")
 
 	// Querying a new store at current height H
-	newHcStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHc, false, DefaultIAVLCacheSize, false)
+	newHcStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHc, false, DefaultIAVLCacheSize)
 	require.NoError(t, err)
 	require.Equal(t, string(newHcStore.Get([]byte("hello"))), "ciao")
 }

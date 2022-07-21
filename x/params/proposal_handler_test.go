@@ -1,6 +1,7 @@
 package params_test
 
 import (
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -15,7 +16,6 @@ import (
 	paramstestutil "github.com/cosmos/cosmos-sdk/x/params/testutil"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // StakingKeeper defines the expected staking keeper
@@ -78,23 +78,23 @@ func (suite *HandlerTestSuite) TestProposalHandler() {
 			func() {},
 			true,
 		},
-		// {
-		// 	"omit empty fields",
-		// 	testProposal(proposal.ParamChange{
-		// 		Subspace: govtypes.ModuleName,
-		// 		Key:      string(govv1.ParamStoreKeyDepositParams),
-		// 		Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}], "max_deposit_period": "172800000000000"}`,
-		// 	}),
-		// 	func() {
-		// 		depositParams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
-		// 		defaultPeriod := govv1.DefaultPeriod
-		// 		suite.Require().Equal(govv1.DepositParams{
-		// 			MinDeposit:       sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(64000000))),
-		// 			MaxDepositPeriod: &defaultPeriod,
-		// 		}, depositParams)
-		// 	},
-		// 	false,
-		// },
+		//{
+		//	"omit empty fields",
+		//	testProposal(proposal.ParamChange{
+		//		Subspace: govtypes.ModuleName,
+		//		Key:      string(govv1.ParamStoreKeyDepositParams),
+		//		Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}], "max_deposit_period": "172800000000000"}`,
+		//	}),
+		//	func() {
+		//		depositParams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
+		//		defaultPeriod := govv1.DefaultPeriod
+		//		suite.Require().Equal(govv1.DepositParams{
+		//			MinDeposit:       sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(64000000))),
+		//			MaxDepositPeriod: &defaultPeriod,
+		//		}, depositParams)
+		//	},
+		//	false,
+		//},
 	}
 
 	for _, tc := range testCases {

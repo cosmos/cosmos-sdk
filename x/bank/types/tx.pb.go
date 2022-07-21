@@ -111,6 +111,8 @@ var xxx_messageInfo_MsgSendResponse proto.InternalMessageInfo
 
 // MsgMultiSend represents an arbitrary multi-in, multi-out send message.
 type MsgMultiSend struct {
+	// Inputs, despite being `repeated`, only allows one sender input. This is
+	// checked in MsgMultiSend's ValidateBasic.
 	Inputs  []Input  `protobuf:"bytes,1,rep,name=inputs,proto3" json:"inputs"`
 	Outputs []Output `protobuf:"bytes,2,rep,name=outputs,proto3" json:"outputs"`
 }

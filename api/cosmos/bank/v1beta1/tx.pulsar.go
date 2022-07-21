@@ -2935,6 +2935,8 @@ type MsgMultiSend struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Inputs, despite being `repeated`, only allows one sender input. This is
+	// checked in MsgMultiSend's ValidateBasic.
 	Inputs  []*Input  `protobuf:"bytes,1,rep,name=inputs,proto3" json:"inputs,omitempty"`
 	Outputs []*Output `protobuf:"bytes,2,rep,name=outputs,proto3" json:"outputs,omitempty"`
 }

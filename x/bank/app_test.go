@@ -68,6 +68,10 @@ var (
 			types.NewOutput(moduleAccAddr, coins),
 		},
 	}
+	invalidMultiSendMsg = &types.MsgMultiSend{
+		Inputs:  []types.Input{types.NewInput(addr1, coins), types.NewInput(addr2, coins)},
+		Outputs: []types.Output{},
+	}
 )
 
 func TestSendNotEnoughBalance(t *testing.T) {
@@ -150,6 +154,15 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			msgs:       []sdk.Msg{multiSendMsg4},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0}, // wrong account sequence
+			expSimPass: false,
+			expPass:    false,
+			privKeys:   []cryptotypes.PrivKey{priv1},
+		},
+		{
+			desc:       "multiple inputs not allowed",
+			msgs:       []sdk.Msg{invalidMultiSendMsg},
+			accNums:    []uint64{0},
+			accSeqs:    []uint64{0},
 			expSimPass: false,
 			expPass:    false,
 			privKeys:   []cryptotypes.PrivKey{priv1},

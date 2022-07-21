@@ -11,6 +11,41 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestSetup(t *testing.T) {
+	suite := SetupTestSuite(t, true)
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+
+	// msg and signatures
+	msg := testdata.NewTestMsg(addr1)
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+	require.NoError(t, suite.txBuilder.SetMsgs(msg))
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	require.NoError(t, err)
+
+	sud := ante.NewSetUpContextDecorator()
+	antehandler := sdk.ChainAnteDecorators(sud)
+
+	// Set height to non-zero value for GasMeter to be set
+	suite.ctx = suite.ctx.WithBlockHeight(1).WithGasMeter(sdk.NewGasMeter(0))
+
+	// Context GasMeter Limit not set
+	require.Equal(t, uint64(0), suite.ctx.GasMeter().Limit(), "GasMeter set with limit before setup")
+
+	newCtx, err := antehandler(suite.ctx, tx, false)
+	require.Nil(t, err, "SetUpContextDecorator returned error")
+
+	// Context GasMeter Limit should be set after SetUpContextDecorator runs
+	require.Equal(t, gasLimit, newCtx.GasMeter().Limit(), "GasMeter not set correctly")
+}
+
 func TestRecoverPanic(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()

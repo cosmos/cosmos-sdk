@@ -39,9 +39,9 @@ On top of Buf's recommendations we add the following guidelines that are specifi
 
 ### Updating Protobuf Definition Without Bumping Version
 
-#### 1. Protobuf definitions MAY have new messages, fields or RPCs, but MUST add a `Since:` comment
+#### 1. Module developers MAY add new Protobuf definitions
 
-Module developers MAY add new messages, new `Service`s, new `rpc` endpoints, and new fields to existing messages. This recommendation follows the Protobuf specification, but is added in this document for clarity, as the SDK requires one additional change.
+Module developers MAY add new `message`s, new `Service`s, new `rpc` endpoints, and new fields to existing messages. This recommendation follows the Protobuf specification, but is added in this document for clarity, as the SDK requires one additional change.
 
 The SDK requires the Protobuf comment of the new addition to contain one line with the following format:
 

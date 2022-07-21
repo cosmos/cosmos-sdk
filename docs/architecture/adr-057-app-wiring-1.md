@@ -48,7 +48,7 @@ and the container will figure out how to provide it.
 
 We explored several existing DI solutions in golang and felt that the reflection-based approach in [uber/dig](https://github.com/uber-go/dig)
 was closest to what we needed but not quite there. Assessing what we needed for the SDK, we designed and built
-the Cosmos SDK [container module](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/container), which has the following
+the Cosmos SDK [depinject module](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/depinject), which has the following
 features:
 * dependency resolution and provision through functional constructors, ex: `func(need SomeDep) (AnotherDep, error)`
 * dependency injection `In` and `Out` structs which support `optional` dependencies

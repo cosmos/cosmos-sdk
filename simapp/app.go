@@ -206,7 +206,6 @@ func NewSimApp(
 				// for providing a custom authority to a module simply add it below. By default the governance module is the default authority.
 				// map[string]sdk.AccAddress{
 				// 	minttypes.ModuleName: authtypes.NewModuleAddress(authtypes.ModuleName),
-				// 	// ...
 				// },
 			),
 		)

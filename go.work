@@ -1,0 +1,11 @@
+go 1.18
+
+use (
+	./api
+	./client/v2
+	./cosmovisor
+	./db
+	./depinject
+	./math
+	./store/tools/ics23
+)

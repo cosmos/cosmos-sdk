@@ -17,6 +17,17 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 	if err != nil {
 		return nil, err
 	}
+<<<<<<< HEAD
+=======
+
+	// create the account if it is not in account state
+	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
+	if granteeAcc == nil {
+		granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
+		k.authKeeper.SetAccount(ctx, granteeAcc)
+	}
+
+>>>>>>> afab2f348 (feat: add message index event attribute to authz message execution (#12668))
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
 		return nil, err
@@ -26,6 +37,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 	if authorization == nil {
 		return nil, sdkerrors.ErrUnpackAny.Wrap("Authorization is not present in the msg")
 	}
+
 	t := authorization.MsgTypeURL()
 	if k.router.HandlerByTypeURL(t) == nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%s doesn't exist.", t)
@@ -66,13 +78,16 @@ func (k Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecR
 	if err != nil {
 		return nil, err
 	}
+
 	msgs, err := msg.GetMessages()
 	if err != nil {
 		return nil, err
 	}
+
 	results, err := k.DispatchActions(ctx, grantee, msgs)
 	if err != nil {
 		return nil, err
 	}
+
 	return &authz.MsgExecResponse{Results: results}, nil
 }

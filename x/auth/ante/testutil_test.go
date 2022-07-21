@@ -1,8 +1,6 @@
 package ante_test
 
 import (
-	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -47,24 +45,9 @@ type AnteTestSuite struct {
 	encCfg         moduletestutil.TestEncodingConfig
 }
 
-func TestAnteTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
-}
-
-type NewAnteTestSuite struct {
-	anteHandler    sdk.AnteHandler
-	ctx            sdk.Context
-	clientCtx      client.Context
-	txBuilder      client.TxBuilder
-	accountKeeper  keeper.AccountKeeper
-	bankKeeper     *authtestutil.MockBankKeeper
-	feeGrantKeeper *antetestutil.MockFeegrantKeeper
-	encCfg         moduletestutil.TestEncodingConfig
-}
-
 // SetupTest setups a new test, with new app, context, and anteHandler.
-func SetupTestSuite(t *testing.T, isCheckTx bool) *NewAnteTestSuite {
-	suite := &NewAnteTestSuite{}
+func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
+	suite := &AnteTestSuite{}
 	ctrl := gomock.NewController(t)
 	suite.bankKeeper = authtestutil.NewMockBankKeeper(ctrl)
 
@@ -116,73 +99,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *NewAnteTestSuite {
 	return suite
 }
 
-// SetupTest setups a new test, with new app, context, and anteHandler.
-func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
-	ctrl := gomock.NewController(suite.T())
-	suite.bankKeeper = authtestutil.NewMockBankKeeper(ctrl)
-
-	suite.feeGrantKeeper = antetestutil.NewMockFeegrantKeeper(ctrl)
-
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1) //app.BaseApp.NewContext(isCheckTx, tmproto.Header{}).WithBlockHeight(1)
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
-
-	maccPerms := map[string][]string{
-		"fee_collector":          nil,
-		"mint":                   {"minter"},
-		"bonded_tokens_pool":     {"burner", "staking"},
-		"not_bonded_tokens_pool": {"burner", "staking"},
-		"multiPerm":              {"burner", "minter", "staking"},
-		"random":                 {"random"},
-	}
-
-	suite.accountKeeper = keeper.NewAccountKeeper(
-		suite.encCfg.Codec, key, types.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
-	)
-	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
-	err := suite.accountKeeper.SetParams(suite.ctx, types.DefaultParams())
-	suite.Require().NoError(err)
-
-	// We're using TestMsg encoding in some tests, so register it here.
-	suite.encCfg.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
-	testdata.RegisterInterfaces(suite.encCfg.InterfaceRegistry)
-
-	suite.clientCtx = client.Context{}.
-		WithTxConfig(suite.encCfg.TxConfig)
-
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
-			AccountKeeper:   suite.accountKeeper,
-			BankKeeper:      suite.bankKeeper,
-			FeegrantKeeper:  suite.feeGrantKeeper,
-			SignModeHandler: suite.encCfg.TxConfig.SignModeHandler(),
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		},
-	)
-
-	suite.Require().NoError(err)
-	suite.anteHandler = anteHandler
-}
-
-// CreateTestAccounts creates `numAccs` accounts, and return all relevant
-// information about them including their private keys.
 func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
-	var accounts []TestAccount
-
-	for i := 0; i < numAccs; i++ {
-		priv, _, addr := testdata.KeyTestPubAddr()
-		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		err := acc.SetAccountNumber(uint64(i))
-		suite.Require().NoError(err)
-		suite.accountKeeper.SetAccount(suite.ctx, acc)
-		accounts = append(accounts, TestAccount{acc, priv})
-	}
-
-	return accounts
-}
-
-func (suite *NewAnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 	var accounts []TestAccount
 
 	for i := 0; i < numAccs; i++ {
@@ -196,65 +113,10 @@ func (suite *NewAnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 	return accounts
 }
 
-// CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
-	// First round: we gather all the signer infos. We use the "set empty
-	// signature" hack to do that.
-	var sigsV2 []signing.SignatureV2
-	for i, priv := range privs {
-		sigV2 := signing.SignatureV2{
-			PubKey: priv.PubKey(),
-			Data: &signing.SingleSignatureData{
-				SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
-				Signature: nil,
-			},
-			Sequence: accSeqs[i],
-		}
-
-		sigsV2 = append(sigsV2, sigV2)
-	}
-	err := suite.txBuilder.SetSignatures(sigsV2...)
-	if err != nil {
-		return nil, err
-	}
-
-	// Second round: all signer infos are set, so each signer can sign.
-	sigsV2 = []signing.SignatureV2{}
-	for i, priv := range privs {
-		signerData := xauthsigning.SignerData{
-			ChainID:       chainID,
-			AccountNumber: accNums[i],
-			Sequence:      accSeqs[i],
-		}
-		sigV2, err := tx.SignWithPrivKey(
-			suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
-			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
-		if err != nil {
-			return nil, err
-		}
-
-		sigsV2 = append(sigsV2, sigV2)
-	}
-	err = suite.txBuilder.SetSignatures(sigsV2...)
-	if err != nil {
-		return nil, err
-	}
-
-	return suite.txBuilder.GetTx(), nil
-}
-
 // TestCase represents a test case used in test tables.
 type TestCase struct {
 	desc     string
-	malleate func()
-	simulate bool
-	expPass  bool
-	expErr   error
-}
-
-type NewTestCase struct {
-	desc     string
-	malleate func(*NewAnteTestSuite) TestCaseArgs
+	malleate func(*AnteTestSuite) TestCaseArgs
 	simulate bool
 	expPass  bool
 	expErr   error
@@ -270,45 +132,9 @@ type TestCaseArgs struct {
 	privs     []cryptotypes.PrivKey
 }
 
-// CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) RunTestCase(privs []cryptotypes.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, tc TestCase) {
-	suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-		suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
-		suite.txBuilder.SetFeeAmount(feeAmount)
-		suite.txBuilder.SetGasLimit(gasLimit)
-
-		// Theoretically speaking, ante handler unit tests should only test
-		// ante handlers, but here we sometimes also test the tx creation
-		// process.
-		tx, txErr := suite.CreateTestTx(privs, accNums, accSeqs, chainID)
-		newCtx, anteErr := suite.anteHandler(suite.ctx, tx, tc.simulate)
-
-		if tc.expPass {
-			suite.Require().NoError(txErr)
-			suite.Require().NoError(anteErr)
-			suite.Require().NotNil(newCtx)
-
-			suite.ctx = newCtx
-		} else {
-			switch {
-			case txErr != nil:
-				suite.Require().Error(txErr)
-				suite.Require().True(errors.Is(txErr, tc.expErr))
-
-			case anteErr != nil:
-				suite.Require().Error(anteErr)
-				suite.Require().True(errors.Is(anteErr, tc.expErr))
-
-			default:
-				suite.Fail("expected one of txErr,anteErr to be an error")
-			}
-		}
-	})
-}
-
 // DeliverMsgs constructs a tx and runs it through the ante handler. This is used to set the context for a test case, for
 // example to test for replay protection.
-func (suite *NewAnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, simulate bool) (sdk.Context, error) {
+func (suite *AnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, simulate bool) (sdk.Context, error) {
 	require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
@@ -318,7 +144,7 @@ func (suite *NewAnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.Pri
 	return suite.anteHandler(suite.ctx, tx, simulate)
 }
 
-func (suite *NewAnteTestSuite) RunTestCase(t *testing.T, tc NewTestCase, args TestCaseArgs) {
+func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCaseArgs) {
 	require.NoError(t, suite.txBuilder.SetMsgs(args.msgs...))
 	suite.txBuilder.SetFeeAmount(args.feeAmount)
 	suite.txBuilder.SetGasLimit(args.gasLimit)
@@ -352,7 +178,7 @@ func (suite *NewAnteTestSuite) RunTestCase(t *testing.T, tc NewTestCase, args Te
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *NewAnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
+func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2

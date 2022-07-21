@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/cosmos/cosmos-sdk/client/rpc"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -44,7 +45,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestStatusCommand() {
 	val0 := s.network.Validators[0]
-	cmd := StatusCommand()
+	cmd := rpc.StatusCommand()
 
 	out, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cmd, []string{})
 	s.Require().NoError(err)

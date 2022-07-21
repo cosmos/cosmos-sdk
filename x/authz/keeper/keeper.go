@@ -151,7 +151,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 			e := event
 			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: "authz_msg_index", Value: strconv.Itoa(i)})
 
-			sdkEvents = append(sdkEvents, sdk.Event(event))
+			sdkEvents = append(sdkEvents, sdk.Event(e))
 		}
 
 		ctx.EventManager().EmitEvents(sdkEvents)

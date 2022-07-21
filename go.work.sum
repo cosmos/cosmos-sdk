@@ -1,2 +1,6 @@
+github.com/DataDog/zstd v1.5.2/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=
+github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c/go.mod h1:Yg+htXGokKKdzcwhuNDwVvN+uBxDGXJ7G/VN1d8fa64=
+github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4/go.mod h1:5tD+neXqOorC30/tWg0LCSkrqj/AR6gu8yY8/fpw1q0=
+github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
+github.com/oasisprotocol/curve25519-voi v0.0.0-20210609091139-0a56a4bca00b h1:MKwruh+HeCSKWphkxuzvRzU4QzDkg7yiPkDVV0cDFgI=
 gotest.tools v2.2.0+incompatible h1:VsBPFP1AI068pPrMxtb/S8Zkgf9xEmTLJjfM+P5UIEo=
-pgregory.net/rapid v0.4.8 h1:d+5SGZWUbJPbl3ss6tmPFqnNeQR6VDOFly+eTjwPiEw=

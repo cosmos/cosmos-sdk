@@ -169,7 +169,9 @@ func makeKeyMigrateCmd() *cobra.Command {
 					return fmt.Errorf("constructing database handle: %w", err)
 				}
 
-				if err = keymigrate.Migrate(ctx, db); err != nil {
+				// Note storeName argument has been added in TM v0.35.9
+				// I have set it to "" - please verify if correct
+				if err = keymigrate.Migrate(ctx, "", db); err != nil {
 					return fmt.Errorf("running migration for context %q: %w",
 						dbctx, err)
 				}

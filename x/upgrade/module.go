@@ -168,12 +168,13 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type upgradeInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	ModuleKey depinject.OwnModuleKey
+	Config    *modulev1.Module
+	Key       *store.KVStoreKey
+	Cdc       codec.Codec
 
-	AppOpts   servertypes.AppOptions `optional:"true"`
-	Authority types.UpgradeAuthority `optional:"true"`
+	AppOpts   servertypes.AppOptions    `optional:"true"`
+	Authority map[string]sdk.AccAddress `optional:"true"`
 }
 
 type upgradeOutputs struct {
@@ -198,10 +199,10 @@ func provideModule(in upgradeInputs) upgradeOutputs {
 		homePath = cast.ToString(in.AppOpts.Get(flags.FlagHome))
 	}
 
-	authority := in.Authority
-	if authority == nil || len(authority) == 0 {
+	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+	if !ok {
 		// default to governance authority if not provided
-		authority = types.UpgradeAuthority(authtypes.NewModuleAddress(govtypes.ModuleName))
+		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
 	}
 
 	// set the governance module account as the authority for conducting upgrades

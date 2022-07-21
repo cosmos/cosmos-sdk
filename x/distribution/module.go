@@ -237,10 +237,11 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type distrInputs struct {
 	depinject.In
 
+	ModuleKey depinject.OwnModuleKey
 	Config    *modulev1.Module
 	Key       *store.KVStoreKey
 	Cdc       codec.Codec
-	Authority types.DistrAuthority `optional:"true"`
+	Authority map[string]sdk.AccAddress `optional:"true"`
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -265,10 +266,10 @@ func provideModule(in distrInputs) distrOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	authority := in.Authority
-	if authority == nil || len(authority) == 0 {
+	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+	if !ok {
 		// default to governance authority if not provided
-		authority = types.DistrAuthority(authtypes.NewModuleAddress(govtypes.ModuleName))
+		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
 	}
 
 	k := keeper.NewKeeper(

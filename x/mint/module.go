@@ -236,10 +236,11 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type mintInputs struct {
 	depinject.In
 
+	ModuleKey              depinject.OwnModuleKey
 	Config                 *modulev1.Module
 	Key                    *store.KVStoreKey
 	Cdc                    codec.Codec
-	Authority              types.MintAuthority          `optional:"true"`
+	Authority              map[string]sdk.AccAddress    `optional:"true"`
 	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
@@ -263,10 +264,10 @@ func provideModule(in mintInputs) mintOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	authority := in.Authority
-	if authority == nil || len(authority) == 0 {
+	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+	if !ok {
 		// default to governance authority if not provided
-		authority = types.MintAuthority(authtypes.NewModuleAddress(govtypes.ModuleName))
+		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
 	}
 
 	k := keeper.NewKeeper(

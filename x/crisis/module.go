@@ -197,11 +197,12 @@ func init() {
 type crisisInputs struct {
 	depinject.In
 
+	ModuleKey depinject.OwnModuleKey
 	Config    *modulev1.Module
 	Key       *store.KVStoreKey
 	Cdc       codec.Codec
-	AppOpts   servertypes.AppOptions `optional:"true"`
-	Authority types.CrisisAuthority  `optional:"true"`
+	AppOpts   servertypes.AppOptions    `optional:"true"`
+	Authority map[string]sdk.AccAddress `optional:"true"`
 
 	BankKeeper types.SupplyKeeper
 
@@ -228,10 +229,10 @@ func provideModule(in crisisInputs) crisisOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	authority := in.Authority
-	if authority == nil || len(authority) == 0 {
+	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+	if !ok {
 		// default to governance authority if not provided
-		authority = types.CrisisAuthority(authtypes.NewModuleAddress(govtypes.ModuleName))
+		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
 	}
 
 	k := keeper.NewKeeper(

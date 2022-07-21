@@ -12,8 +12,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -29,8 +27,11 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), network.DefaultConfig(simapp.NewTestNetworkFixture))
+	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
+
+	s.NoError(err)
+
+	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -43,7 +44,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestStatusCommand() {
 	val0 := s.network.Validators[0]
-	cmd := rpc.StatusCommand()
+	cmd := StatusCommand()
 
 	out, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cmd, []string{})
 	s.Require().NoError(err)

@@ -25,6 +25,8 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
 	"cosmossdk.io/depinject"
@@ -44,9 +46,14 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	_ "github.com/cosmos/cosmos-sdk/x/params"
+	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -124,6 +131,16 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 	}
 }
 
+func MinimumAppConfig() depinject.Config {
+	return configurator.NewAppConfig(
+		configurator.AuthModule(),
+		configurator.ParamsModule(),
+		configurator.BankModule(),
+		configurator.GenutilModule(),
+		configurator.StakingModule(),
+		configurator.TxModule())
+}
+
 func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	var (
 		appBuilder        *runtime.AppBuilder
@@ -164,6 +181,8 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 		)
+
+		testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
 
 		if err := app.Load(true); err != nil {
 			panic(err)

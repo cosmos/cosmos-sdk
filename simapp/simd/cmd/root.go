@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/db/badgerdb"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -269,7 +268,7 @@ func (a appCreator) newApp(
 	}
 
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
-	snapshotDB, err := badgerdb.NewDB(filepath.Join(snapshotDir, "metadata"))
+	snapshotDB, err := dbm.NewDB("metadata", dbm.BadgerDBBackend, snapshotDir)
 	if err != nil {
 		panic(err)
 	}

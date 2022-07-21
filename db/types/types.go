@@ -50,7 +50,6 @@ type Connection interface {
 	// SaveNextVersion saves the current contents of the database and returns the next version ID,
 	// which will be `Versions().Last()+1`.
 	// Returns an error if any open Writer transactions exist.
-	// TODO: rename to something more descriptive?
 	SaveNextVersion() (uint64, error)
 
 	// SaveVersion attempts to save database at a specific version ID, which must be greater than or

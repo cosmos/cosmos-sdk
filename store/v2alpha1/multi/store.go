@@ -68,7 +68,7 @@ type StoreParams struct {
 	// Contains the store schema and methods to modify it
 	SchemaBuilder
 	storeKeys
-	// Inter-block persistent cache to use. TODO: not implemented
+	// Inter-block persistent cache to use. TODO: not used/impl'd
 	PersistentCache types.MultiStorePersistentCache
 	// Any pending upgrades to apply on loading.
 	Upgrades *types.StoreUpgrades
@@ -940,7 +940,7 @@ func (reg *SchemaBuilder) registerName(key string, typ types.StoreType) error {
 	if has {
 		return fmt.Errorf("name already exists: %v", key)
 	}
-	// TODO auth vs authz ?
+	// // Prefix conflict check: disabled; obviated by varint encoding
 	// if i > 0 && strings.HasPrefix(key, reg.reserved[i-1]) {
 	// 	return fmt.Errorf("name conflict: '%v' exists, cannot add '%v'", reg.reserved[i-1], key)
 	// }

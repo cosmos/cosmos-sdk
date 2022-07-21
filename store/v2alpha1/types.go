@@ -104,5 +104,5 @@ type CacheMultiStore interface {
 }
 
 // MultiStorePersistentCache provides inter-block (persistent) caching capabilities for a CommitMultiStore.
-// TODO: placeholder. Implement and redefine this
+// TODO: placeholder, not implemented yet, nor used in store
 type MultiStorePersistentCache = v1.MultiStorePersistentCache

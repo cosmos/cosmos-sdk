@@ -232,8 +232,8 @@ func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottyp
 		app.snapshotManager = nil
 		return
 	}
-	app.store.SetSnapshotInterval(opts.Interval)
-	app.snapshotManager = snapshots.NewManager(snapshotStore, opts, app.store, nil, app.logger)
+	app.cms.SetSnapshotInterval(opts.Interval)
+	app.snapshotManager = snapshots.NewManager(snapshotStore, opts, app.cms, nil, app.logger)
 }
 
 // SetInterfaceRegistry sets the InterfaceRegistry.
@@ -247,7 +247,7 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 func (app *BaseApp) SetStreamingService(s StreamingService) {
 	// add the listeners for each StoreKey
 	for key, lis := range s.Listeners() {
-		app.store.AddListeners(key, lis)
+		app.cms.AddListeners(key, lis)
 	}
 	// register the StreamingService within the BaseApp
 	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context

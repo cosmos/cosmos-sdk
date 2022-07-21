@@ -79,13 +79,14 @@ func TestStoreParams(t *testing.T) {
 	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeTransient))
 	require.NoError(t, opts.RegisterSubstore(skey_mem1, types.StoreTypeMemory))
 	require.NoError(t, opts.RegisterSubstore(skey_tran1, types.StoreTypeTransient))
-	// Ensure that no prefix conflicts are allowed
+	// Unambiguous prefixes are valid
 	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
 	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypePersistent))
 	require.NoError(t, opts.RegisterSubstore(skey_3b, types.StoreTypePersistent))
-	require.Error(t, opts.RegisterSubstore(skey_1b, types.StoreTypePersistent))
-	require.Error(t, opts.RegisterSubstore(skey_2b, types.StoreTypePersistent))
-	require.Error(t, opts.RegisterSubstore(skey_3, types.StoreTypePersistent))
+	// Prefix conflicts are allowed
+	// require.Error(t, opts.RegisterSubstore(skey_1b, types.StoreTypePersistent))
+	// require.Error(t, opts.RegisterSubstore(skey_2b, types.StoreTypePersistent))
+	// require.Error(t, opts.RegisterSubstore(skey_3, types.StoreTypePersistent))
 }
 
 func TestMultiStoreBasic(t *testing.T) {

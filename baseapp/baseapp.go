@@ -67,7 +67,7 @@ type BaseApp struct { // nolint: maligned
 	name              string // application name from abci.Info
 	db                dbm.Connection
 	storeOpts         []StoreOption        // options to configure root store
-	store             sdk.CommitMultiStore // Main (uncached) state
+	cms               sdk.CommitMultiStore // Main (uncached) state
 	router            sdk.Router           // handle any kind of legacy message
 	queryRouter       sdk.QueryRouter      // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
@@ -241,7 +241,7 @@ func (app *BaseApp) loadStore() error {
 			return err
 		}
 	}
-	app.store, err = multi.NewV1MultiStoreAsV2(app.db, config)
+	app.cms, err = multi.NewV1MultiStoreAsV2(app.db, config)
 	if err != nil {
 		return fmt.Errorf("failed to load store: %w", err)
 	}
@@ -257,17 +257,17 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 }
 
 func (app *BaseApp) CloseStore() error {
-	return app.store.Close()
+	return app.cms.Close()
 }
 
 // LastCommitID returns the last CommitID of the multistore.
 func (app *BaseApp) LastCommitID() stypes.CommitID {
-	return app.store.LastCommitID()
+	return app.cms.LastCommitID()
 }
 
 // LastBlockHeight returns the last committed block height.
 func (app *BaseApp) LastBlockHeight() int64 {
-	return app.store.LastCommitID().Version
+	return app.cms.LastCommitID().Version
 }
 
 // Init initializes the app. It seals the app, preventing any
@@ -282,7 +282,7 @@ func (app *BaseApp) Init() error {
 	// needed for the export command which inits from store but never calls initchain
 	app.setCheckState(tmproto.Header{})
 	app.Seal()
-	return app.store.GetPruning().Validate()
+	return app.cms.GetPruning().Validate()
 }
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
@@ -338,7 +338,7 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // provided header, and minimum gas prices set. It is set on InitChain and reset
 // on Commit.
 func (app *BaseApp) setCheckState(header tmproto.Header) {
-	ms := app.store.CacheWrap()
+	ms := app.cms.CacheWrap()
 	app.checkState = &state{
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
@@ -350,7 +350,7 @@ func (app *BaseApp) setCheckState(header tmproto.Header) {
 // and provided header. It is set on InitChain and BeginBlock and set to nil on
 // Commit.
 func (app *BaseApp) setDeliverState(header tmproto.Header) {
-	ms := app.store.CacheWrap()
+	ms := app.cms.CacheWrap()
 	app.deliverState = &state{
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.logger),

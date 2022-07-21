@@ -8,7 +8,7 @@ package db
 import (
 	"errors"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	dbm "github.com/cosmos/cosmos-sdk/db/types"
 
 	tmdb "github.com/tendermint/tm-db"
 )

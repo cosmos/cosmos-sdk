@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/db/memdb"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -59,7 +58,7 @@ func defaultLogger() log.Logger {
 
 func newBaseApp(name string, options ...AppOption) *BaseApp {
 	logger := defaultLogger()
-	db := memdb.NewDB()
+	db := dbm.NewMemDB()
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	return NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
@@ -91,7 +90,7 @@ func setupBaseApp(t *testing.T, options ...AppOption) *BaseApp {
 	app := newBaseApp(t.Name(), options...)
 	require.Equal(t, t.Name(), app.Name())
 
-	app.SetParamStore(mock.NewParamStore(memdb.NewDB()))
+	app.SetParamStore(mock.NewParamStore(dbm.NewMemDB()))
 
 	// stores are mounted
 	err := app.Init()
@@ -106,13 +105,13 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*BaseApp, err
 	routerOpt := func(bapp *BaseApp) {
 		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			kv := msg.(*msgKeyValue)
-			bapp.store.GetKVStore(capKey2).Set(kv.Key, kv.Value)
+			bapp.cms.GetKVStore(capKey2).Set(kv.Key, kv.Value)
 			return &sdk.Result{}, nil
 		}))
 	}
 
 	snapshotTimeout := 1 * time.Minute
-	snapshotStore, err := snapshots.NewStore(memdb.NewDB(), testutil.GetTempDir(t))
+	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
 
 	app := setupBaseApp(t,
@@ -168,9 +167,9 @@ func TestMountStores(t *testing.T) {
 	app := setupBaseApp(t)
 
 	// check both stores
-	store1 := app.store.GetKVStore(capKey1)
+	store1 := app.cms.GetKVStore(capKey1)
 	require.NotNil(t, store1)
-	store2 := app.store.GetKVStore(capKey2)
+	store2 := app.cms.GetKVStore(capKey2)
 	require.NotNil(t, store2)
 }
 
@@ -178,7 +177,7 @@ func TestMountStores(t *testing.T) {
 func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
 	pruningOpt := SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
-	db := memdb.NewDB()
+	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
 
@@ -250,7 +249,7 @@ func checkStore(t *testing.T, db dbm.Connection, ver int64, storeKey string, k, 
 func TestVersionSetterGetter(t *testing.T) {
 	logger := defaultLogger()
 	pruningOpt := SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
-	db := memdb.NewDB()
+	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
 	require.Equal(t, "", app.Version())
@@ -272,7 +271,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	pruningOpt := SetPruning(pruningOptions)
 	capKey := sdk.NewKVStoreKey("key1")
 	schemaOpt := SetSubstores(capKey)
-	db := memdb.NewDB()
+	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
 
@@ -300,12 +299,14 @@ func TestLoadVersionPruning(t *testing.T) {
 	// TODO: behavior change -
 	// CacheMultiStoreWithVersion returned no error on missing version (?)
 	for _, v := range []int64{1, 2, 4} {
-		_, err = app.store.GetVersion(v)
+		s, err := app.cms.GetVersion(v)
+		require.NotNil(t, s)
 		require.NoError(t, err, "version=%v", v)
 	}
 
 	for _, v := range []int64{3, 5, 6, 7} {
-		_, err = app.store.GetVersion(v)
+		s, err := app.cms.GetVersion(v)
+		require.NotNil(t, s)
 		require.NoError(t, err, "version=%v", v)
 	}
 	require.NoError(t, app.CloseStore())
@@ -327,7 +328,7 @@ func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, exp
 
 func TestOptionFunction(t *testing.T) {
 	logger := defaultLogger()
-	db := memdb.NewDB()
+	db := dbm.NewMemDB()
 	bap := NewBaseApp("starting name", logger, db, nil, testChangeNameHelper("new name"))
 	require.Equal(t, "new name", bap.Name(), "BaseApp should have had name changed via option function")
 }
@@ -416,7 +417,7 @@ func TestInitChainer(t *testing.T) {
 	name := t.Name()
 	// keep the db and logger ourselves so
 	// we can reload the same  app later
-	db := memdb.NewDB()
+	db := dbm.NewMemDB()
 	logger := defaultLogger()
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
@@ -497,7 +498,7 @@ func TestInitChainer(t *testing.T) {
 
 func TestInitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
-	db := memdb.NewDB()
+	db := dbm.NewMemDB()
 	logger := defaultLogger()
 	app := NewBaseApp(name, logger, db, nil)
 
@@ -513,7 +514,7 @@ func TestInitChain_WithInitialHeight(t *testing.T) {
 
 func TestBeginBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
-	db := memdb.NewDB()
+	db := dbm.NewMemDB()
 	logger := defaultLogger()
 	app := NewBaseApp(name, logger, db, nil)
 
@@ -1963,7 +1964,7 @@ func TestWithRouter(t *testing.T) {
 }
 
 func TestBaseApp_EndBlock(t *testing.T) {
-	db := memdb.NewDB()
+	db := dbm.NewMemDB()
 	name := t.Name()
 	logger := defaultLogger()
 
@@ -1974,7 +1975,7 @@ func TestBaseApp_EndBlock(t *testing.T) {
 	}
 
 	app := NewBaseApp(name, logger, db, nil)
-	app.SetParamStore(mock.NewParamStore(memdb.NewDB()))
+	app.SetParamStore(mock.NewParamStore(dbm.NewMemDB()))
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,
 	})
@@ -1995,11 +1996,11 @@ func TestBaseApp_EndBlock(t *testing.T) {
 }
 
 func TestBaseApp_Init(t *testing.T) {
-	db := memdb.NewDB()
+	db := dbm.NewMemDB()
 	name := t.Name()
 	logger := defaultLogger()
 
-	snapshotStore, err := snapshots.NewStore(memdb.NewDB(), testutil.GetTempDir(t))
+	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
@@ -2140,7 +2141,7 @@ func TestBaseApp_Init(t *testing.T) {
 		}
 
 		// Check that settings were set correctly
-		actualPruning := tc.bapp.store.GetPruning()
+		actualPruning := tc.bapp.cms.GetPruning()
 		require.Equal(t, tc.expectedPruning, actualPruning)
 
 		if tc.expectedSnapshot.Interval == snapshottypes.SnapshotIntervalOff {

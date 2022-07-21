@@ -14,7 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/db/memdb"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -119,7 +118,7 @@ func TestSetLoader(t *testing.T) {
 			require.NoError(t, loadConfig.RegisterSubstore(tc.loadStoreKey, storetypes.StoreTypePersistent))
 
 			// prepare a db with some data
-			db := memdb.NewDB()
+			db := dbm.NewMemDB()
 			initStore(t, db, origConfig, tc.origStoreKey, k, v)
 
 			// load the app with the existing db

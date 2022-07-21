@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -128,7 +127,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	}
 
 	logger, _ := log.NewDefaultLogger("plain", "info", false)
-	db := memdb.NewDB()
+	db := dbm.NewMemDB()
 	encCfg := simapp.MakeTestEncodingConfig()
 	app := simapp.NewSimApp(logger, db, nil, encCfg, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 

@@ -44,7 +44,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	if req.InitialHeight > 1 {
 		app.initialHeight = req.InitialHeight
 		initHeader = tmproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
-		err := app.store.SetInitialVersion(uint64(req.InitialHeight))
+		err := app.cms.SetInitialVersion(uint64(req.InitialHeight))
 		if err != nil {
 			panic(err)
 		}
@@ -114,7 +114,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 // Info implements the ABCI interface.
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
-	lastCommitID := app.store.LastCommitID()
+	lastCommitID := app.cms.LastCommitID()
 
 	return abci.ResponseInfo{
 		Data:             app.name,
@@ -146,8 +146,8 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 
-	if app.store.TracingEnabled() {
-		app.store.SetTracingContext(sdk.TraceContext(
+	if app.cms.TracingEnabled() {
+		app.cms.SetTracingContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
 		))
 	}
@@ -313,9 +313,9 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 	// Write the DeliverTx state into branched storage and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
-	// MultiStore (app.store) so when Commit() is called it persists those values.
+	// MultiStore (app.cms) so when Commit() is called it persists those values.
 	app.deliverState.ms.Write()
-	commitID := app.store.Commit()
+	commitID := app.cms.Commit()
 	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
 
 	// Reset the Check state to the latest committed.
@@ -624,7 +624,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 			)
 	}
 
-	version, err := app.store.GetVersion(height)
+	version, err := app.cms.GetVersion(height)
 	if err != nil {
 		return sdk.Context{},
 			sdkerrors.Wrapf(
@@ -778,12 +778,12 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 
 func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
 	// "/store" prefix for store queries
-	queryable, ok := app.store.(sdk.Queryable)
+	queryable, ok := app.cms.(sdk.Queryable)
 	if !ok {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "multistore doesn't support queries"), app.trace)
 	}
 
-	req.Path = "/" + strings.Join(path[1:], "/") // = /store/main/key -> /main/key
+	req.Path = "/" + strings.Join(path[1:], "/")
 
 	if req.Height <= 1 && req.Prove {
 		return sdkerrors.QueryResult(

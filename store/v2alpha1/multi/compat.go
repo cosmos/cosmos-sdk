@@ -104,8 +104,7 @@ func (st *compatStore) LoadVersionAndUpgrade(ver int64, upgrades *v1.StoreUpgrad
 }
 
 func (st *compatStore) LoadVersion(ver int64) error {
-	// TODO
-	// cache a viewStore representing "current" version?
+	// TODO: could cache a viewStore representing "current" version
 	panic("unsupported: LoadVersion")
 }
 

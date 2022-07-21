@@ -81,6 +81,7 @@ func (k Keeper) updateGrant(ctx context.Context, grantee, granter sdk.AccAddress
 // grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
 	results := make([][]byte, len(msgs))
+	now := ctx.BlockTime()
 
 	for i, msg := range msgs {
 		signers, _, err := k.cdc.GetMsgSigners(msg)

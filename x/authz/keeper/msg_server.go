@@ -19,7 +19,14 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
+		return nil, err
+	}
+
+	// create the account if it is not in account state
+	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
+	if granteeAcc == nil {
+		granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
+		k.authKeeper.SetAccount(ctx, granteeAcc)
 	}
 
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
@@ -105,10 +112,6 @@ func (k Keeper) Exec(ctx context.Context, msg *authz.MsgExec) (*authz.MsgExecRes
 	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
-	}
-
-	if len(msg.Msgs) == 0 {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
 	}
 
 	msgs, err := msg.GetMessages()

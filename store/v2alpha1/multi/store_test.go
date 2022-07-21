@@ -74,7 +74,7 @@ func TestStoreParams(t *testing.T) {
 	// Fail with invalid type enum
 	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeDB))
 	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeSMT))
-	// Mem & tranient stores require a bespoke concrete type
+	// Mem & tranient stores need corresponding concrete type
 	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeMemory))
 	require.Error(t, opts.RegisterSubstore(skey_1, types.StoreTypeTransient))
 	require.NoError(t, opts.RegisterSubstore(skey_mem1, types.StoreTypeMemory))
@@ -83,10 +83,10 @@ func TestStoreParams(t *testing.T) {
 	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
 	require.NoError(t, opts.RegisterSubstore(skey_2, types.StoreTypePersistent))
 	require.NoError(t, opts.RegisterSubstore(skey_3b, types.StoreTypePersistent))
-	// Prefix conflicts are allowed
-	// require.Error(t, opts.RegisterSubstore(skey_1b, types.StoreTypePersistent))
-	// require.Error(t, opts.RegisterSubstore(skey_2b, types.StoreTypePersistent))
-	// require.Error(t, opts.RegisterSubstore(skey_3, types.StoreTypePersistent))
+	// Prefixes with conflicts are also allowed
+	require.NoError(t, opts.RegisterSubstore(skey_1b, types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_2b, types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_3, types.StoreTypePersistent))
 }
 
 func TestMultiStoreBasic(t *testing.T) {
@@ -95,8 +95,7 @@ func TestMultiStoreBasic(t *testing.T) {
 
 func doTestMultiStoreBasic(t *testing.T, ctor storeConstructor) {
 	opts := DefaultStoreParams()
-	err := opts.RegisterSubstore(skey_1, types.StoreTypePersistent)
-	require.NoError(t, err)
+	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
 	store, err := ctor(memdb.NewDB(), opts)
 	require.NoError(t, err)
 
@@ -112,6 +111,37 @@ func doTestMultiStoreBasic(t *testing.T, ctor storeConstructor) {
 	store_1.Delete([]byte{0})
 	val = store_1.Get([]byte{0})
 	require.Equal(t, []byte(nil), val)
+}
+
+func TestSubstoreBasic(t *testing.T) {
+	badkey := skey_1.Name() + string(dataPrefix)
+	skey_bad := types.NewKVStoreKey(badkey)
+
+	opts := DefaultStoreParams()
+	require.NoError(t, opts.RegisterSubstore(skey_1, types.StoreTypePersistent))
+	require.NoError(t, opts.RegisterSubstore(skey_bad, types.StoreTypePersistent))
+	store, err := NewStore(memdb.NewDB(), opts)
+	require.NoError(t, err)
+
+	// Test that substores do not leak into those with conflicting prefixes
+	// i.e., some unambiguous encoding of store keys is used
+	store_bad := store.GetKVStore(skey_bad)
+	require.NotNil(t, store_bad)
+	store_bad.Set([]byte("1bad"), []byte{0x1b})
+	require.Equal(t, []byte{0x1b}, store_bad.Get([]byte("1bad")))
+
+	store_1 := store.GetKVStore(skey_1)
+	require.NotNil(t, store_1)
+	store_1.Set([]byte{0}, []byte{0})
+
+	count := 0
+	it := store_1.Iterator(nil, nil)
+	for ; it.Valid(); it.Next() {
+		require.Equal(t, []byte{0}, it.Key())
+		count++
+	}
+	require.NoError(t, it.Close())
+	require.Equal(t, 1, count)
 }
 
 func TestGetSetHasDelete(t *testing.T) {
@@ -253,7 +283,7 @@ func TestConstructors(t *testing.T) {
 		require.NoError(t, store.Close())
 		// ...whether because root is misssing
 		w = db.Writer()
-		s1RootKey := append(contentPrefix, substorePrefix(skey_1.Name())...)
+		s1RootKey := append(contentPrefix, prefixSubstore(skey_1.Name())...)
 		s1RootKey = append(s1RootKey, merkleRootKey...)
 		w.Delete(s1RootKey)
 		w.Commit()

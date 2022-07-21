@@ -55,7 +55,7 @@ func (s *viewStore) getSubstore(key string) (*viewSubstore, error) {
 	if cached, has := s.substoreCache[key]; has {
 		return cached, nil
 	}
-	pfx := substorePrefix(key)
+	pfx := prefixSubstore(key)
 	stateR := prefixdb.NewReader(s.stateView, pfx)
 	stateCommitmentR := prefixdb.NewReader(s.stateCommitmentView, pfx)
 	rootHash, err := stateR.Get(merkleRootKey)

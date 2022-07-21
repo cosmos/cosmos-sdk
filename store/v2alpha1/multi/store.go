@@ -1,6 +1,7 @@
 package multi
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -47,9 +48,8 @@ var (
 
 	// Per-substore prefixes
 	substoreMerkleRootKey = []byte{0} // Key for root hashes of Merkle trees
-	dataPrefix            = []byte{1} // Prefix for state mappings
-	indexPrefix           = []byte{2} // Prefix for Store reverse index
-	smtPrefix             = []byte{3} // Prefix for SMT data
+	dataPrefix            = []byte{1} // Prefix for store data
+	smtPrefix             = []byte{2} // Prefix for tree data
 )
 
 func ErrStoreNotFound(key string) error {
@@ -371,14 +371,16 @@ func migrateData(store *Store, upgrades types.StoreUpgrades) error {
 	}
 
 	for _, key := range upgrades.Deleted {
-		pfx := substorePrefix(key)
+		pfx := prefixSubstore(key)
 		subReader := prefixdb.NewReader(reader, pfx)
 		it, err := subReader.Iterator(nil, nil)
 		if err != nil {
 			return err
 		}
 		for it.Next() {
-			store.stateTxn.Delete(it.Key())
+			if err = store.stateTxn.Delete(it.Key()); err != nil {
+				return err
+			}
 		}
 		it.Close()
 		if store.StateCommitmentDB != nil {
@@ -390,12 +392,14 @@ func migrateData(store *Store, upgrades types.StoreUpgrades) error {
 			for it.Next() {
 				store.stateCommitmentTxn.Delete(it.Key())
 			}
-			it.Close()
+			if err = it.Close(); err != nil {
+				return err
+			}
 		}
 	}
 	for _, rename := range upgrades.Renamed {
-		oldPrefix := substorePrefix(rename.OldKey)
-		newPrefix := substorePrefix(rename.NewKey)
+		oldPrefix := prefixSubstore(rename.OldKey)
+		newPrefix := prefixSubstore(rename.NewKey)
 		subReader := prefixdb.NewReader(reader, oldPrefix)
 		subWriter := prefixdb.NewWriter(store.stateTxn, newPrefix)
 		it, err := subReader.Iterator(nil, nil)
@@ -405,7 +409,9 @@ func migrateData(store *Store, upgrades types.StoreUpgrades) error {
 		for it.Next() {
 			subWriter.Set(it.Key(), it.Value())
 		}
-		it.Close()
+		if it.Close(); err != nil {
+			return err
+		}
 		if store.StateCommitmentDB != nil {
 			subReader = prefixdb.NewReader(scReader, oldPrefix)
 			subWriter = prefixdb.NewWriter(store.stateCommitmentTxn, newPrefix)
@@ -416,14 +422,30 @@ func migrateData(store *Store, upgrades types.StoreUpgrades) error {
 			for it.Next() {
 				subWriter.Set(it.Key(), it.Value())
 			}
-			it.Close()
+			if it.Close(); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
-func substorePrefix(key string) []byte {
-	return append(contentPrefix, key...)
+// encode key length as varint
+func varintLen(l int) []byte {
+	buf := make([]byte, binary.MaxVarintLen64)
+	n := binary.PutUvarint(buf, uint64(l))
+	return buf[:n]
+}
+
+func prefixSubstore(key string) []byte {
+	lv := varintLen(len(key))
+	ret := append(lv, key...)
+	return append(contentPrefix, ret...)
+}
+
+func prefixNonpersistent(key string) []byte {
+	lv := varintLen(len(key))
+	return append(lv, key...)
 }
 
 // GetKVStore implements MultiStore.
@@ -443,9 +465,10 @@ func (s *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	default:
 		panic(fmt.Errorf("StoreType not supported: %v", typ)) // should never happen
 	}
+
 	var ret types.KVStore
 	if parent != nil { // store is non-persistent
-		ret = prefix.NewStore(parent, []byte(key))
+		ret = prefix.NewStore(parent, prefixNonpersistent(key))
 	} else { // store is persistent
 		sub, err := s.getSubstore(key)
 		if err != nil {
@@ -471,7 +494,7 @@ func (s *Store) getSubstore(key string) (*substore, error) {
 	if cached, has := s.substoreCache[key]; has {
 		return cached, nil
 	}
-	pfx := substorePrefix(key)
+	pfx := prefixSubstore(key)
 	stateRW := prefixdb.NewReadWriter(s.stateTxn, pfx)
 	stateCommitmentRW := prefixdb.NewReadWriter(s.stateCommitmentTxn, pfx)
 	var stateCommitmentStore *smt.Store
@@ -497,7 +520,7 @@ func (s *Store) getSubstore(key string) (*substore, error) {
 
 // Resets a substore's state after commit (because root stateTxn has been discarded)
 func (s *substore) refresh(rootHash []byte) {
-	pfx := substorePrefix(s.name)
+	pfx := prefixSubstore(s.name)
 	stateRW := prefixdb.NewReadWriter(s.root.stateTxn, pfx)
 	stateCommitmentRW := prefixdb.NewReadWriter(s.root.stateCommitmentTxn, pfx)
 	s.dataBucket = prefixdb.NewReadWriter(stateRW, dataPrefix)
@@ -600,7 +623,7 @@ func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	}
 	// Update substore Merkle roots
 	for key, storeHash := range storeHashes {
-		w := prefixdb.NewReadWriter(s.stateTxn, substorePrefix(key))
+		w := prefixdb.NewReadWriter(s.stateTxn, prefixSubstore(key))
 		if err = w.Set(substoreMerkleRootKey, storeHash); err != nil {
 			return
 		}
@@ -940,7 +963,7 @@ func (reg *SchemaBuilder) registerName(key string, typ types.StoreType) error {
 	if has {
 		return fmt.Errorf("name already exists: %v", key)
 	}
-	// // Prefix conflict check: disabled; obviated by varint encoding
+	// TODO auth vs authz ?
 	// if i > 0 && strings.HasPrefix(key, reg.reserved[i-1]) {
 	// 	return fmt.Errorf("name conflict: '%v' exists, cannot add '%v'", reg.reserved[i-1], key)
 	// }

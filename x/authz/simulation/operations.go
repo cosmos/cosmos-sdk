@@ -249,7 +249,7 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "not a send authorization"), nil, nil
 		}
 
-		if sendAuth.SpendLimit.IsAllLTE(coins) {
+		if !sendAuth.SpendLimit.IsAllGTE(coins) || !coins.DenomsSubsetOf(sendAuth.SpendLimit) {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "over spend limit"), nil, nil
 		}
 

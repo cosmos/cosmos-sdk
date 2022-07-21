@@ -13,8 +13,10 @@ import (
 )
 
 // SimAppChainID hardcoded chainID for simulation
+// TODO: Implement a tool to check for gas growth. For now,
+// we must increase this across the board for longer runs to work
 const (
-	DefaultGenTxGas = 1000000
+	DefaultGenTxGas = 2000000
 	SimAppChainID   = "simulation-app"
 )
 

@@ -26,3 +26,13 @@ The message will fail under the following conditions:
 * Any of the `to` addresses are restricted
 * Any of the coins are locked
 * The inputs and outputs do not correctly correspond to one another
+
+## MsgUpdateParams
+
+The `bank` module params can be updated through `MsgUpdateParams`, which can be done using governance proposal. The signer will always be the `gov` module account address. 
+
++++ https://github.com/cosmos/cosmos-sdk/blob/e167855c9b99c4e58c1455533c6f88af5ff78ae1/proto/cosmos/bank/v1beta1/tx.proto#L56-L69
+
+The message handling can fail if:
+
+* signer is not the gov module account address.

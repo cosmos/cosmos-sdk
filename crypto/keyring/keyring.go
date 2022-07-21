@@ -156,7 +156,7 @@ func NewInMemory(cdc codec.Codec, opts ...Option) Keyring {
 // NewInMemoryWithKeyring returns an in memory keyring using the specified keyring.Keyring
 // as the backing keyring.
 func NewInMemoryWithKeyring(kr keyring.Keyring, cdc codec.Codec, opts ...Option) Keyring {
-	return newKeystore(kr, cdc, BackendMemory, opts...)
+	return NewKeystore(kr, cdc, BackendMemory, opts...)
 }
 
 // New creates a new instance of a keyring.
@@ -191,7 +191,7 @@ func New(
 		return nil, err
 	}
 
-	return newKeystore(db, cdc, backend, opts...), nil
+	return NewKeystore(db, cdc, backend, opts...), nil
 }
 
 type keystore struct {
@@ -201,7 +201,7 @@ type keystore struct {
 	options Options
 }
 
-func newKeystore(kr keyring.Keyring, cdc codec.Codec, backend string, opts ...Option) keystore {
+func NewKeystore(kr keyring.Keyring, cdc codec.Codec, backend string, opts ...Option) keystore {
 	// Default options for keybase, these can be overwritten using the
 	// Option function
 	options := Options{

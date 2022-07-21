@@ -206,7 +206,6 @@ func (suite *AnteTestSuite) TestSigVerification() {
 // In the meantime, we want to make double-sure amino compatibility works.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7229
 func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
-
 	// Set up TxConfig.
 	aminoCdc := codec.NewLegacyAmino()
 	// We're using TestMsg amino encoding in some tests, so register it here.
@@ -319,7 +318,8 @@ func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs 
 
 	// Make block-height non-zero to include accNum in SignBytes
 	suite.ctx = suite.ctx.WithBlockHeight(1)
-	suite.accountKeeper.SetParams(suite.ctx, params)
+	err := suite.accountKeeper.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	msgs := make([]sdk.Msg, len(privs))
 	accNums := make([]uint64, len(privs))

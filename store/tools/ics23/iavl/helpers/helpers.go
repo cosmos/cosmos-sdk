@@ -45,7 +45,7 @@ func GenerateIavlResult(size int, loc tmproofs.Where) (*IavlResult, error) {
 	if len(proof.Leaves) != 1 {
 		return nil, fmt.Errorf("GetWithProof returned %d leaves", len(proof.Leaves))
 	}
-	root := tree.WorkingHash()
+	root, _ := tree.WorkingHash()
 
 	res := &IavlResult{
 		Key:      key,

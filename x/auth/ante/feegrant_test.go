@@ -14,7 +14,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -162,7 +161,8 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}
 
-			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, simtestutil.DefaultGenTxGas, suite.ctx.ChainID(), accNums, seqs, feeAcc, privs...)
+			var defaultGenTxGas uint64 = 10000000
+			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, defaultGenTxGas, suite.ctx.ChainID(), accNums, seqs, feeAcc, privs...)
 			require.NoError(t, err)
 			_, err = feeAnteHandler(suite.ctx, tx, false) // tests only feegrant ante
 			if tc.valid {

@@ -86,7 +86,7 @@ type Keeper interface {
     DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
     UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
 
-    // GetAuthority Gets the address capable of executing governance proposal messages. Usually the gov module account.
+    // GetAuthority gets the address capable of executing governance proposal messages. Usually the gov module account.
     GetAuthority() string
 
     types.QueryServer
@@ -108,7 +108,7 @@ type SendKeeper interface {
     SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
     GetParams(ctx sdk.Context) types.Params
-    SetParams(ctx sdk.Context, params types.Params)
+    SetParams(ctx sdk.Context, params types.Params) error
 
     IsSendEnabledDenom(ctx sdk.Context, denom string) bool
     SetSendEnabled(ctx sdk.Context, denom string, value bool)

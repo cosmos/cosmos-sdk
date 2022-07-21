@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.grantee[2] = s.createAccount("grantee3")
 
 	// grant send authorization to grantee3
-	out, err = CreateGrant(val, []string{
+	_, err = CreateGrant(val, []string{
 		s.grantee[2].String(),
 		"send",
 		fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
@@ -444,6 +444,23 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			0,
 			false,
 			"",
+		},
+		{
+			"Invalid tx send authorization with duplicate allow list",
+			[]string{
+				grantee.String(),
+				"send",
+				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowList, fmt.Sprintf("%s,%s", s.grantee[1], s.grantee[1])),
+			},
+			0,
+			true,
+			"duplicate entry",
 		},
 		{
 			"Valid tx generic authorization",

@@ -470,8 +470,8 @@ func (suite *IntegrationTestSuite) TestQuerySendEnabled() {
 			req:  &types.QuerySendEnabledRequest{Denoms: []string{}},
 			exp: &types.QuerySendEnabledResponse{
 				SendEnabled: []*types.SendEnabled{
-					{"falsestcoin", false},
-					{"truestcoin", true},
+					{Denom: "falsestcoin", Enabled: false},
+					{Denom: "truestcoin", Enabled: true},
 				},
 				Pagination: &query.PageResponse{
 					NextKey: nil,
@@ -484,8 +484,8 @@ func (suite *IntegrationTestSuite) TestQuerySendEnabled() {
 			req:  &types.QuerySendEnabledRequest{Denoms: []string{}},
 			exp: &types.QuerySendEnabledResponse{
 				SendEnabled: []*types.SendEnabled{
-					{"falsestcoin", false},
-					{"truestcoin", true},
+					{Denom: "falsestcoin", Enabled: false},
+					{Denom: "truestcoin", Enabled: true},
 				},
 				Pagination: &query.PageResponse{
 					NextKey: nil,
@@ -503,7 +503,7 @@ func (suite *IntegrationTestSuite) TestQuerySendEnabled() {
 			},
 			exp: &types.QuerySendEnabledResponse{
 				SendEnabled: []*types.SendEnabled{
-					{"falsestcoin", false},
+					{Denom: "falsestcoin", Enabled: false},
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("truestcoin"),
@@ -516,7 +516,7 @@ func (suite *IntegrationTestSuite) TestQuerySendEnabled() {
 			req:  &types.QuerySendEnabledRequest{Denoms: []string{"truestcoin"}},
 			exp: &types.QuerySendEnabledResponse{
 				SendEnabled: []*types.SendEnabled{
-					{"truestcoin", true},
+					{Denom: "truestcoin", Enabled: true},
 				},
 				Pagination: nil,
 			},
@@ -526,7 +526,7 @@ func (suite *IntegrationTestSuite) TestQuerySendEnabled() {
 			req:  &types.QuerySendEnabledRequest{Denoms: []string{"falsestcoin"}},
 			exp: &types.QuerySendEnabledResponse{
 				SendEnabled: []*types.SendEnabled{
-					{"falsestcoin", false},
+					{Denom: "falsestcoin", Enabled: false},
 				},
 				Pagination: nil,
 			},
@@ -544,8 +544,8 @@ func (suite *IntegrationTestSuite) TestQuerySendEnabled() {
 			req:  &types.QuerySendEnabledRequest{Denoms: []string{"truestcoin", "falsestcoin"}},
 			exp: &types.QuerySendEnabledResponse{
 				SendEnabled: []*types.SendEnabled{
-					{"truestcoin", true},
-					{"falsestcoin", false},
+					{Denom: "truestcoin", Enabled: true},
+					{Denom: "falsestcoin", Enabled: false},
 				},
 				Pagination: nil,
 			},
@@ -555,8 +555,8 @@ func (suite *IntegrationTestSuite) TestQuerySendEnabled() {
 			req:  &types.QuerySendEnabledRequest{Denoms: []string{"truestcoin", "falsestcoin", "unknownestcoin"}},
 			exp: &types.QuerySendEnabledResponse{
 				SendEnabled: []*types.SendEnabled{
-					{"truestcoin", true},
-					{"falsestcoin", false},
+					{Denom: "truestcoin", Enabled: true},
+					{Denom: "falsestcoin", Enabled: false},
 				},
 				Pagination: nil,
 			},

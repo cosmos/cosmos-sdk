@@ -131,7 +131,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 				amount = coins.MulInt(totalAddrs)
 			}
 
-			msg := types.NewMsgMultiSend(types.NewInput(clientCtx.FromAddress, amount), output)
+			msg := types.NewMsgMultiSend([]types.Input{types.NewInput(clientCtx.FromAddress, amount)}, output)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

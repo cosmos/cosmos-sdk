@@ -237,9 +237,11 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type distrInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	ModuleKey depinject.OwnModuleKey
+	Config    *modulev1.Module
+	Key       *store.KVStoreKey
+	Cdc       codec.Codec
+	Authority map[string]sdk.AccAddress `optional:"true"`
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -264,6 +266,12 @@ func provideModule(in distrInputs) distrOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
+	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+	if !ok {
+		// default to governance authority if not provided
+		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Key,
@@ -271,7 +279,7 @@ func provideModule(in distrInputs) distrOutputs {
 		in.BankKeeper,
 		in.StakingKeeper,
 		feeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority.String(),
 	)
 
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)

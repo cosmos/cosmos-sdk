@@ -228,12 +228,13 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type bankInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Cdc    codec.Codec
-	Key    *store.KVStoreKey
+	ModuleKey depinject.OwnModuleKey
+	Config    *modulev1.Module
+	Cdc       codec.Codec
+	Key       *store.KVStoreKey
 
 	AccountKeeper types.AccountKeeper
-	Authority     types.BankAuthority `optional:"true"`
+	Authority     map[string]sdk.AccAddress `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -263,10 +264,10 @@ func provideModule(in bankInputs) bankOutputs {
 		}
 	}
 
-	authority := in.Authority
-	if authority == nil || len(authority) == 0 {
+	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+	if !ok {
 		// default to governance authority if not provided
-		authority = types.BankAuthority(authtypes.NewModuleAddress(govtypes.ModuleName))
+		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
 	}
 
 	bankKeeper := keeper.NewBaseKeeper(

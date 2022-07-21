@@ -21,10 +21,10 @@ func NewAdr050() Adr050 {
 func (r Adr050) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
 	// Scalars, such as sdk.Int and sdk.Dec.
-	case proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != nil:
+	case fd.Kind() == protoreflect.StringKind && proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "":
 		{
 			scalar, ok := proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar).(string)
-			if !ok {
+			if !ok || scalar == "" {
 				return nil, fmt.Errorf("got extension option %s of type %T", scalar, scalar)
 			}
 

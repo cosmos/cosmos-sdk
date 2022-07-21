@@ -42,6 +42,7 @@ func TestFormatInteger(t *testing.T) {
 		i, err = strconv.ParseUint(tc[0], 10, 32)
 		if err == nil {
 			r, err := valueRendererOf(i)
+			require.NoError(t, err)
 			b := new(strings.Builder)
 			err = r.Format(context.Background(), protoreflect.ValueOf(i), b)
 			require.NoError(t, err)
@@ -53,8 +54,9 @@ func TestFormatInteger(t *testing.T) {
 		sdkInt, ok := math.NewIntFromString(tc[0])
 		if ok {
 			r, err := valueRendererOf(sdkInt)
+			require.NoError(t, err)
 			b := new(strings.Builder)
-			err = r.Format(context.Background(), protoreflect.ValueOf(i), b)
+			err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
 			require.NoError(t, err)
 
 			require.Equal(t, tc[1], b.String())

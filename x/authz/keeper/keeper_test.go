@@ -417,7 +417,7 @@ func (s *TestSuite) TestDispatchedEvents() {
 	events := s.ctx.EventManager().Events()
 
 	// get last 5 events (events that occur *after* the grant)
-	events = events[len(events)-2:]
+	events = events[len(events)-5:]
 
 	requiredEvents := map[string]bool{
 		"cosmos.authz.v1beta1.EventGrant":  true,

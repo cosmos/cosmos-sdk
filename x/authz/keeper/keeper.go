@@ -4,16 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
-
-	"cosmossdk.io/core/appmodule"
-	corecontext "cosmossdk.io/core/context"
-	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/authz"
+	"github.com/gogo/protobuf/proto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -85,6 +81,7 @@ func (k Keeper) updateGrant(ctx context.Context, grantee, granter sdk.AccAddress
 // grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
 	results := make([][]byte, len(msgs))
+
 	for i, msg := range msgs {
 		signers, _, err := k.cdc.GetMsgSigners(msg)
 		if err != nil {
@@ -99,13 +96,10 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 
 		// If granter != grantee then check authorization.Accept, otherwise we
 		// implicitly accept.
-		if !bytes.Equal(granter, grantee) {
-			skey := grantStoreKey(grantee, granter, sdk.MsgTypeURL(msg))
-
-			grant, found := k.getGrant(ctx, skey)
-			if !found {
-				return nil, errorsmod.Wrapf(authz.ErrNoAuthorizationFound,
-					"failed to get grant with given granter: %s, grantee: %s & msgType: %s ", sdk.AccAddress(granter), grantee, sdk.MsgTypeURL(msg))
+		if !granter.Equals(grantee) {
+			authorization, _ := k.GetCleanAuthorization(ctx, grantee, granter, sdk.MsgTypeURL(msg))
+			if authorization == nil {
+				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization not found")
 			}
 
 			if grant.Expiration != nil && grant.Expiration.Before(now) {
@@ -154,10 +148,19 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 			return nil, fmt.Errorf("failed to create any for response %d; message %s: %w", i, gogoproto.MessageName(msg), err)
 		}
 
-		results[i], err = gogoproto.Marshal(msgRespAny)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal response %d; message %s: %w", i, gogoproto.MessageName(msg), err)
+		results[i] = msgResp.Data
+
+		// emit the events from the dispatched actions
+		events := msgResp.Events
+		sdkEvents := make([]sdk.Event, 0, len(events))
+		for _, event := range events {
+			e := event
+			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: []byte("authz_msg_index"), Value: []byte(strconv.Itoa(i))})
+
+			sdkEvents = append(sdkEvents, sdk.Event(e))
 		}
+
+		ctx.EventManager().EmitEvents(sdkEvents)
 	}
 
 	return results, nil

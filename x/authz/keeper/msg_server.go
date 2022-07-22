@@ -22,7 +22,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
 	}
 
-	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
+	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid granter address: %s", err)
 	}
@@ -113,10 +113,6 @@ func (k Keeper) Exec(ctx context.Context, msg *authz.MsgExec) (*authz.MsgExecRes
 
 	msgs, err := msg.GetMessages()
 	if err != nil {
-		return nil, err
-	}
-
-	if err := validateMsgs(msgs); err != nil {
 		return nil, err
 	}
 

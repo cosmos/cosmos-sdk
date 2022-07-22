@@ -26,6 +26,30 @@ func (p Params) Equal(p2 Params) bool {
 		p.VotingPeriod == p2.VotingPeriod
 }
 
+// NewDepositParams creates a new DepositParams object
+func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod *time.Duration) DepositParams {
+	return DepositParams{
+		MinDeposit:       minDeposit,
+		MaxDepositPeriod: maxDepositPeriod,
+	}
+}
+
+// NewTallyParams creates a new TallyParams object
+func NewTallyParams(quorum, threshold, vetoThreshold string) TallyParams {
+	return TallyParams{
+		Quorum:        quorum,
+		Threshold:     threshold,
+		VetoThreshold: vetoThreshold,
+	}
+}
+
+// NewVotingParams creates a new VotingParams object
+func NewVotingParams(votingPeriod *time.Duration) VotingParams {
+	return VotingParams{
+		VotingPeriod: votingPeriod,
+	}
+}
+
 func NewParams(
 	minDeposit sdk.Coins, maxDepositPeriod time.Duration, votingPeriod time.Duration,
 	quorum string, threshold string, vetoThreshold string,

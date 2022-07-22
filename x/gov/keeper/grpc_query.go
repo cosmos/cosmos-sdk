@@ -160,6 +160,27 @@ func (q Keeper) Params(c context.Context, req *v1.QueryParamsRequest) (*v1.Query
 	ctx := sdk.UnwrapSDKContext(c)
 	params := q.GetParams(ctx)
 
+	response := &v1.QueryParamsResponse{}
+
+	switch req.ParamsType {
+	case v1.ParamDeposit:
+		depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
+		response.DepositParams = &depositParams
+
+	case v1.ParamVoting:
+		votingParams := v1.NewVotingParams(params.VotingPeriod)
+		response.VotingParams = &votingParams
+
+	case v1.ParamTallying:
+		tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
+		response.TallyParams = &tallyParams
+	default:
+		return nil, status.Errorf(codes.InvalidArgument,
+			"%s is not a valid parameter type", req.ParamsType)
+
+	}
+	response.Params = &params
+
 	return &v1.QueryParamsResponse{Params: &params}, nil
 }
 
@@ -350,41 +371,40 @@ func (q legacyQueryServer) Votes(c context.Context, req *v1beta1.QueryVotesReque
 }
 
 func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
-	p, err := q.keeper.Params(c, &v1.QueryParamsRequest{})
+	resp, err := q.keeper.Params(c, &v1.QueryParamsRequest{
+		ParamsType: req.ParamsType,
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
 	response := &v1beta1.QueryParamsResponse{}
 
-	switch req.ParamsType {
-	case v1.ParamDeposit:
-		response.DepositParams = v1beta1.NewDepositParams(p.Params.MinDeposit, *p.Params.MaxDepositPeriod)
+	if resp.DepositParams != nil {
+		minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)
+		response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod)
+	}
 
-	case v1.ParamVoting:
-		response.VotingParams = v1beta1.NewVotingParams(*p.Params.VotingPeriod)
+	if resp.VotingParams != nil {
+		response.VotingParams = v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod)
+	}
 
-	case v1.ParamTallying:
-		quorum, err := sdk.NewDecFromStr(p.Params.Quorum)
+	if resp.TallyParams != nil {
+		quorum, err := sdk.NewDecFromStr(resp.TallyParams.Quorum)
 		if err != nil {
 			return nil, err
 		}
-
-		threshold, err := sdk.NewDecFromStr(p.Params.Threshold)
+		threshold, err := sdk.NewDecFromStr(resp.TallyParams.Threshold)
 		if err != nil {
 			return nil, err
 		}
-
-		vetoThreshold, err := sdk.NewDecFromStr(p.Params.VetoThreshold)
+		vetoThreshold, err := sdk.NewDecFromStr(resp.TallyParams.VetoThreshold)
 		if err != nil {
 			return nil, err
 		}
 
 		response.TallyParams = v1beta1.NewTallyParams(quorum, threshold, vetoThreshold)
-	default:
-		return nil, status.Errorf(codes.InvalidArgument,
-			"%s is not a valid parameter type", req.ParamsType)
-
 	}
 
 	return response, nil

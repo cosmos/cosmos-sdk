@@ -58,6 +58,10 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v1.GenesisState {
 	proposals := k.GetProposals(ctx)
 	params := k.GetParams(ctx)
 
+	depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
+	votingParams := v1.NewVotingParams(params.VotingPeriod)
+	tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
+
 	var proposalsDeposits v1.Deposits
 	var proposalsVotes v1.Votes
 	for _, proposal := range proposals {
@@ -73,6 +77,9 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v1.GenesisState {
 		Deposits:           proposalsDeposits,
 		Votes:              proposalsVotes,
 		Proposals:          proposals,
+		DepositParams:      &depositParams,
+		VotingParams:       &votingParams,
+		TallyParams:        &tallyParams,
 		Params:             &params,
 	}
 }

@@ -35,7 +35,7 @@ type UpgradeTestSuite struct {
 }
 
 func (suite *UpgradeTestSuite) SetupTest() {
-	// var interfaceRegistry codectypes.InterfaceRegistry
+
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := sdk.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
@@ -177,37 +177,36 @@ func (suite *UpgradeTestSuite) TestModuleVersions() {
 		mockBankModule,
 	)
 	suite.manager = mm
-	// suite.manager.Modules["bank"] = mockBankModule
 	suite.Require().NotNil(mm)
 	suite.Require().Equal(1, len(mm.Modules))
 
 	suite.upgradeKeeper.SetVersionSetter(suite.baseApp)
 	suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, suite.manager.GetVersionMap())
-	// suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, suite.upgradeKeeper.GetModuleVersionMap(suite.ctx))
+
 	testCases := []struct {
 		msg     string
 		req     types.QueryModuleVersionsRequest
 		single  bool
 		expPass bool
 	}{
-		// {
-		// 	msg:     "test full query",
-		// 	req:     types.QueryModuleVersionsRequest{},
-		// 	single:  false,
-		// 	expPass: true,
-		// },
+		{
+			msg:     "test full query",
+			req:     types.QueryModuleVersionsRequest{},
+			single:  false,
+			expPass: true,
+		},
 		{
 			msg:     "test single module",
 			req:     types.QueryModuleVersionsRequest{ModuleName: "bank"},
 			single:  true,
 			expPass: true,
 		},
-		// {
-		// 	msg:     "test non-existent module",
-		// 	req:     types.QueryModuleVersionsRequest{ModuleName: "abcdefg"},
-		// 	single:  true,
-		// 	expPass: false,
-		// },
+		{
+			msg:     "test non-existent module",
+			req:     types.QueryModuleVersionsRequest{ModuleName: "abcdefg"},
+			single:  true,
+			expPass: false,
+		},
 	}
 
 	vm := suite.upgradeKeeper.GetModuleVersionMap(suite.ctx)

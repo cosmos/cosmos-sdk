@@ -33,17 +33,9 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	// var (
-	// 	bankKeeper    bankkeeper.Keeper
-	// 	stakingKeeper *stakingkeeper.Keeper
-	// )
 
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
-	// appConfig := depinject.Configs(testutil.AppConfig, depinject.Supply(simtestutil.NewAppOptionsWithFlagHome(homeDir)))
-	// app, err := simtestutil.Setup(appConfig, &s.upgradeKeeper, &bankKeeper, &stakingKeeper)
-	// s.NoError(err)
 
-	// var interfaceRegistry codectypes.InterfaceRegistry
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := sdk.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
@@ -65,8 +57,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.homeDir = homeDir
 
 	s.msgSrvr = keeper.NewMsgServerImpl(s.upgradeKeeper)
-
-	// s.upgradeKeeper = keeper.NewKeeper(s)
 
 	// suite setup
 	s.addrs = simtestutil.CreateIncrementalAccounts(1)

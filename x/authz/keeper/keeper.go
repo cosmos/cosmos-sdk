@@ -75,11 +75,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 // grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
 	results := make([][]byte, len(msgs))
-<<<<<<< HEAD
-=======
-	now := ctx.BlockTime()
 
->>>>>>> afab2f348 (feat: add message index event attribute to authz message execution (#12668))
 	for i, msg := range msgs {
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
@@ -87,13 +83,9 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		}
 
 		granter := signers[0]
-<<<<<<< HEAD
-		// if granter != grantee then check authorization.Accept, otherwise we implicitly accept.
-=======
 
 		// If granter != grantee then check authorization.Accept, otherwise we
 		// implicitly accept.
->>>>>>> afab2f348 (feat: add message index event attribute to authz message execution (#12668))
 		if !granter.Equals(grantee) {
 			authorization, _ := k.GetCleanAuthorization(ctx, grantee, granter, sdk.MsgTypeURL(msg))
 			if authorization == nil {
@@ -135,7 +127,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		sdkEvents := make([]sdk.Event, 0, len(events))
 		for _, event := range events {
 			e := event
-			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: "authz_msg_index", Value: strconv.Itoa(i)})
+			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: []byte("authz_msg_index"), Value: []byte(strconv.Itoa(i))})
 
 			sdkEvents = append(sdkEvents, sdk.Event(e))
 		}

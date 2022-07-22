@@ -87,8 +87,12 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 		return Event{}, err
 	}
 
+	// sort the keys to ensure the order is always the same
+	keys := orderedKeys(attrMap)
+
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
-	for k, v := range attrMap {
+	for _, k := range keys {
+		v := attrMap[k]
 		attrs = append(attrs, abci.EventAttribute{
 			Key:   k,
 			Value: string(v),
@@ -99,6 +103,15 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 		Type:       evtType,
 		Attributes: attrs,
 	}, nil
+}
+
+func orderedKeys(m map[string]json.RawMessage) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // ParseTypedEvent converts abci.Event back to typed event

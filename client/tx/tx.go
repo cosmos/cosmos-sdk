@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -221,66 +220,14 @@ func WriteGeneratedTxResponse(
 // transaction is initially created via the provided factory's generator. Once
 // created, the fee, memo, and messages are set.
 func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
-	if txf.chainID == "" {
-		return nil, fmt.Errorf("chain ID required but not specified")
-	}
-
-	fees := txf.fees
-
-	if !txf.gasPrices.IsZero() {
-		if !fees.IsZero() {
-			return nil, errors.New("cannot provide both fees and gas prices")
-		}
-
-		glDec := sdk.NewDec(int64(txf.gas))
-
-		// Derive the fees based on the provided gas prices, where
-		// fee = ceil(gasPrice * gasLimit).
-		fees = make(sdk.Coins, len(txf.gasPrices))
-
-		for i, gp := range txf.gasPrices {
-			fee := gp.Amount.Mul(glDec)
-			fees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
-		}
-	}
-
-	tx := txf.txConfig.NewTxBuilder()
-
-	if err := tx.SetMsgs(msgs...); err != nil {
-		return nil, err
-	}
-
-	tx.SetMemo(txf.memo)
-	tx.SetFeeAmount(fees)
-	tx.SetGasLimit(txf.gas)
-	tx.SetTimeoutHeight(txf.TimeoutHeight())
-
-	return tx, nil
+	return txf.BuildUnsignedTx(msgs...)
 }
 
 // BuildSimTx creates an unsigned tx with an empty single signature and returns
 // the encoded transaction or an error if the unsigned transaction cannot be
 // built.
 func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
-	txb, err := BuildUnsignedTx(txf, msgs...)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create an empty signature literal as the ante handler will populate with a
-	// sentinel pubkey.
-	sig := signing.SignatureV2{
-		PubKey: &secp256k1.PubKey{},
-		Data: &signing.SingleSignatureData{
-			SignMode: txf.signMode,
-		},
-		Sequence: txf.Sequence(),
-	}
-	if err := txb.SetSignatures(sig); err != nil {
-		return nil, err
-	}
-
-	return txf.txConfig.TxEncoder()(txb.GetTx())
+	return txf.BuildSimTx(msgs...)
 }
 
 // CalculateGas simulates the execution of a transaction and returns the

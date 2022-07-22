@@ -3,15 +3,17 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
+	"time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
-
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func (suite *IntegrationTestSuite) TestQueryBalance() {
@@ -84,6 +86,56 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Equal(res.Balances.Len(), 1)
 	suite.Nil(res.Pagination.NextKey)
+}
+
+func (suite *IntegrationTestSuite) TestSpendableBalances() {
+	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+	_, _, addr := testdata.KeyTestPubAddr()
+	ctx = ctx.WithBlockTime(time.Now())
+
+	_, err := queryClient.SpendableBalances(sdk.WrapSDKContext(ctx), &types.QuerySpendableBalancesRequest{})
+	suite.Require().Error(err)
+
+	pageReq := &query.PageRequest{
+		Key:        nil,
+		Limit:      2,
+		CountTotal: false,
+	}
+	req := types.NewQuerySpendableBalancesRequest(addr, pageReq)
+
+	res, err := queryClient.SpendableBalances(sdk.WrapSDKContext(ctx), req)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.True(res.Balances.IsZero())
+
+	fooCoins := newFooCoin(50)
+	barCoins := newBarCoin(30)
+
+	origCoins := sdk.NewCoins(fooCoins, barCoins)
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+	acc = vestingtypes.NewContinuousVestingAccount(
+		acc.(*authtypes.BaseAccount),
+		sdk.NewCoins(fooCoins),
+		ctx.BlockTime().Unix(),
+		ctx.BlockTime().Add(time.Hour).Unix(),
+	)
+
+	app.AccountKeeper.SetAccount(ctx, acc)
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
+
+	// move time forward for some tokens to vest
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	queryClient = types.NewQueryClient(queryHelper)
+
+	res, err = queryClient.SpendableBalances(sdk.WrapSDKContext(ctx), req)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.Equal(2, res.Balances.Len())
+	suite.Nil(res.Pagination.NextKey)
+	suite.EqualValues(30, res.Balances[0].Amount.Int64())
+	suite.EqualValues(25, res.Balances[1].Amount.Int64())
 }
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupply() {

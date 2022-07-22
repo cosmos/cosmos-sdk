@@ -65,7 +65,9 @@ func (s *paginationTestSuite) SetupTest() {
 		configurator.NewAppConfig(
 			configurator.AuthModule(),
 			configurator.BankModule(),
-			configurator.ParamsModule()),
+			configurator.ParamsModule(),
+			configurator.OmitInitGenesis(),
+		),
 		&bankKeeper, &accountKeeper, &reg, &cdc)
 
 	s.NoError(err)

@@ -5,7 +5,6 @@ package rest_test
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -237,7 +236,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 
 func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 	val := s.network.Validators[0]
-	grantee := s.grantee[1]
+	grantee := s.grantee
 	require := s.Require()
 
 	testCases := []struct {
@@ -290,7 +289,7 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 
 func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
 	val := s.network.Validators[0]
-	grantee := s.grantee[1]
+	grantee := s.grantee
 	require := s.Require()
 
 	testCases := []struct {

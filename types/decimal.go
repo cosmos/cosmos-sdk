@@ -179,8 +179,8 @@ func NewDecFromStr(str string) (Dec, error) {
 	if !ok {
 		return Dec{}, fmt.Errorf("failed to set decimal string: %s", combinedStr)
 	}
-	if combined.BitLen() > maxBitLen {
-		return Dec{}, fmt.Errorf("decimal out of range; bitLen: got %d, max %d", combined.BitLen(), maxBitLen)
+	if combined.BitLen() > maxDecBitLen {
+		return Dec{}, fmt.Errorf("decimal out of range; bitLen: got %d, max %d", combined.BitLen(), maxDecBitLen)
 	}
 	if neg {
 		combined = new(big.Int).Neg(combined)
@@ -744,8 +744,8 @@ func (d *Dec) Unmarshal(data []byte) error {
 		return err
 	}
 
-	if d.i.BitLen() > maxBitLen {
-		return fmt.Errorf("decimal out of range; got: %d, max: %d", d.i.BitLen(), maxBitLen)
+	if d.i.BitLen() > maxDecBitLen {
+		return fmt.Errorf("decimal out of range; got: %d, max: %d", d.i.BitLen(), maxDecBitLen)
 	}
 
 	return nil

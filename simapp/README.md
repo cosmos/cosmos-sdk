@@ -16,7 +16,7 @@ in this testnet.
     `simd` binary inside a new `build` directory. The following instructions are run from inside
     the `build` directory.
 2. If you've run `simd` before, you may need to reset your database before starting a new
-    testnet. You can reset your database with the following command: `$ ./simd unsafe-reset-all`.
+    testnet. You can reset your database with the following command: `$ ./simd tendermint unsafe-reset-all`.
 3. `$ ./simd init [moniker] --chain-id [chain-id]`. This will initialize a new working directory
     at the default location `~/.simapp`. You need to provide a "moniker" and a "chain id". These
     two names can be anything, but you will need to use the same "chain id" in the following steps.

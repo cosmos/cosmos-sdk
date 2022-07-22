@@ -17,8 +17,8 @@ Store entries prefixed with "Last" must remain unchanged until EndBlock.
 
 ## Params
 
-staking module stores it's params in state with the prefix of `0x51`,
-it can only be updated with governance.
+The staking module stores it's params in state with the prefix of `0x51`,
+it can be updated with governance or the address with authority.
 
 * Params: `0x51 | ProtocolBuffer(Params)`
 

@@ -19,7 +19,7 @@ const (
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
 
-	// ModuleQueryPath defines the path of the module
+	// ModuleQueryPath defines the ABCI query path of the module
 	ModuleQueryPath = "store/bank/key"
 )
 

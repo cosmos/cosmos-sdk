@@ -30,8 +30,18 @@ func (app *SimApp) ExportAppStateAndValidators(
 		app.prepForZeroHeightGenesis(ctx, jailAllowedAddrs)
 	}
 
-	genState := app.ModuleManager.ExportGenesis(ctx, app.appCodec)
-	appState, err := json.MarshalIndent(genState, "", "  ")
+	genState := app.ModuleManager.ExportGenesis(ctx)
+
+	genStateJson := map[string]json.RawMessage{}
+	for k, v := range genState {
+		if v != nil {
+			genStateJson[k] = app.appCodec.MustMarshalJSON(v)
+		} else {
+			genStateJson[k] = nil // probably unnecessary?
+		}
+	}
+
+	appState, err := json.MarshalIndent(genStateJson, "", "  ")
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}

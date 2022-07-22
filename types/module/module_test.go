@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -16,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -227,24 +229,31 @@ func TestManager_ExportGenesis(t *testing.T) {
 	require.Equal(t, 2, len(mm.Modules))
 
 	ctx := sdk.Context{}
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
-	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key1": "value1"}`))
-	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key2": "value2"}`))
 
-	want := map[string]json.RawMessage{
-		"module1": json.RawMessage(`{"key1": "value1"}`),
-		"module2": json.RawMessage(`{"key2": "value2"}`),
+	gen1 := &testdata.AnyWithExtra{B: 111}
+	gen2 := &testdata.AnyWithExtra{B: 222}
+
+	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx)).Times(1).Return(gen1)
+	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx)).Times(1).Return(gen2)
+
+	want := map[string]proto.Message{
+		"module1": gen1,
+		"module2": gen2,
 	}
-	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
+
+	exportedGen := mm.ExportGenesis(ctx)
+	require.Equal(t, want, exportedGen)
+
+	require.Equal(t, int64(111), (exportedGen["module1"]).(*testdata.AnyWithExtra).B)
+	require.Equal(t, int64(222), (exportedGen["module2"]).(*testdata.AnyWithExtra).B)
 }
 
 func TestManager_BeginBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
-	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule1 := mocks.NewMockBeginBlockAppModule(mockCtrl)
+	mockAppModule2 := mocks.NewMockBeginBlockAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2)
@@ -262,8 +271,8 @@ func TestManager_EndBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
-	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule1 := mocks.NewMockEndBlockAppModule(mockCtrl)
+	mockAppModule2 := mocks.NewMockEndBlockAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2)

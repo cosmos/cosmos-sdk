@@ -6,6 +6,8 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/core/appmodule"
+
+	"github.com/gogo/protobuf/proto"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -170,13 +172,13 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.Ra
 
 // ExportGenesis returns the exported genesis state as raw bytes for the feegrant
 // module.
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx sdk.Context) proto.Message {
 	gs, err := am.keeper.ExportGenesis(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	return cdc.MustMarshalJSON(gs)
+	return gs
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

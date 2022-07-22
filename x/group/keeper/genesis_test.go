@@ -165,7 +165,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		s.Require().Equal(votesRes.Votes[0], genesisState.Votes[0])
 	}
 
-	exported := s.keeper.ExportGenesis(sdkCtx, cdc)
+	exported := s.keeper.ExportGenesis(sdkCtx)
 	bz, err := cdc.MarshalJSON(exported)
 	s.Require().NoError(err)
 

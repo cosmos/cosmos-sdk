@@ -33,6 +33,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -142,7 +143,7 @@ type AppModuleGenesis interface {
 	AppModuleBasic
 
 	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
-	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
+	ExportGenesis(sdk.Context) proto.Message
 }
 
 // AppModule is the standard form for an application module
@@ -342,10 +343,10 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 }
 
 // ExportGenesis performs export genesis functionality for modules
-func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string]json.RawMessage {
-	genesisData := make(map[string]json.RawMessage)
+func (m *Manager) ExportGenesis(ctx sdk.Context) map[string]proto.Message {
+	genesisData := make(map[string]proto.Message)
 	for _, moduleName := range m.OrderExportGenesis {
-		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
+		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx)
 	}
 
 	return genesisData

@@ -54,8 +54,8 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 	},
 }
 
-// createDefaultRandomValidatorSet creates a validator set with one random validator
-func createDefaultRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
+// CreateRandomValidatorSet creates a validator set with one random validator
+func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey(context.TODO())
 	if err != nil {
@@ -71,19 +71,19 @@ func createDefaultRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 // Setup initializes a new runtime.App and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, nil, false, extraOutputs...)
+	return SetupWithConfiguration(appConfig, CreateRandomValidatorSet, nil, false, extraOutputs...)
 }
 
 // SetupAtGenesis initializes a new runtime.App at genesis and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, nil, true, extraOutputs...)
+	return SetupWithConfiguration(appConfig, CreateRandomValidatorSet, nil, true, extraOutputs...)
 }
 
 // SetupWithBaseAppOption initializes a new runtime.App and can inject values into extraOutputs.
 // With specific baseApp options. It uses SetupWithConfiguration under the hood.
 func SetupWithBaseAppOption(appConfig depinject.Config, baseAppOption runtime.BaseAppOption, extraOutputs ...interface{}) (*runtime.App, error) {
-	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, baseAppOption, false, extraOutputs...)
+	return SetupWithConfiguration(appConfig, CreateRandomValidatorSet, baseAppOption, false, extraOutputs...)
 }
 
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.

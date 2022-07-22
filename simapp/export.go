@@ -37,7 +37,7 @@ func (app *SimApp) ExportAppStateAndValidators(
 		if v != nil {
 			genStateJson[k] = app.appCodec.MustMarshalJSON(v)
 		} else {
-			genStateJson[k] = nil // probably unnecessary?
+			genStateJson[k] = []byte("{}")
 		}
 	}
 

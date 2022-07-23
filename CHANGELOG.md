@@ -36,6 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+* (protos) [#12701](https://github.com/cosmos/cosmos-sdk/pull/12701) Fix tendermint and ics23 versions used in Makefile.  Run "make proto-gen".
 
 ### Features
 
@@ -64,6 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/group) [#12551](https://github.com/cosmos/cosmos-sdk/pull/12551) read the decision policy from disk in group CLI commands.
 
 ### Bug Fixes
+
 
 * (testutil/sims) [#12374](https://github.com/cosmos/cosmos-sdk/pull/12374) fix the non-determinstic behavior in simulations caused by `GenSignedMockTx` and check empty coins slice before it is used to create `banktype.MsgSend`.
 * [#12448](https://github.com/cosmos/cosmos-sdk/pull/12448) Start telemetry independently from the API server.

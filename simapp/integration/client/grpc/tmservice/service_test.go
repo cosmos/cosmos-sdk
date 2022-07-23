@@ -31,7 +31,7 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	//t.Skip() // to be re-enabled in https://github.com/cosmos/cosmos-sdk/pull/12482/
+	// t.Skip() // to be re-enabled in https://github.com/cosmos/cosmos-sdk/pull/12482/
 
 	suite.Run(t, new(IntegrationTestSuite))
 }

@@ -40,7 +40,7 @@ the code.
 
 ### How we process Tx parameters
 
-* Integer operations on tx parameters, especially `sdk.Int` / `sdk.Dec`
+* Integer operations on tx parameters, especially `math.Int` / `sdk.Dec`
 * Gas calculation & parameter choices
 * Tx signature verification (see [`x/auth/ante`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/ante))
 * Possible Node DoS vectors (perhaps due to gas weighting / non constant timing)

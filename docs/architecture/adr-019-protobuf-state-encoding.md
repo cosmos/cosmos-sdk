@@ -301,7 +301,7 @@ unmarshaling isn't needed to read it again.
 `GetEvidence` as follows:
 
 ```go
-func (msg MsgSubmitEvidence) UnpackInterfaces(ctx sdk.InterfaceRegistry) error {
+func (msg MsgSubmitEvidence) UnpackInterfaces(ctx math.InterfaceRegistry) error {
   var evi eviexported.Evidence
   return ctx.UnpackAny(msg.Evidence, *evi)
 }

@@ -25,7 +25,7 @@ The slashing module emits the following events:
 | slash | power         | {validatorPower}            |
 | slash | reason        | {slashReason}               |
 | slash | jailed [0]    | {validatorConsensusAddress} |
-| slash | burned coins  | {sdk.Int}                   |
+| slash | burned coins  | {math.Int}                   |
 
 * [0] Only included if the validator is jailed.
 

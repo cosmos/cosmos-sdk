@@ -9,6 +9,7 @@ import (
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	"github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
@@ -44,16 +45,21 @@ type Store struct {
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load, or if called with a positive version on an empty tree.
-func LoadStore(db dbm.DB, id types.CommitID, lazyLoading bool, cacheSize int) (types.CommitKVStore, error) {
-	return LoadStoreWithInitialVersion(db, id, lazyLoading, 0, cacheSize)
+func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, lazyLoading bool, cacheSize int) (types.CommitKVStore, error) {
+	return LoadStoreWithInitialVersion(db, logger, key, id, lazyLoading, 0, cacheSize)
 }
 
 // LoadStoreWithInitialVersion returns an IAVL Store as a CommitKVStore setting its initialVersion
 // to the one given. Internally, it will load the store's version (id) from the
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
-func LoadStoreWithInitialVersion(db dbm.DB, id types.CommitID, lazyLoading bool, initialVersion uint64, cacheSize int) (types.CommitKVStore, error) {
+func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, lazyLoading bool, initialVersion uint64, cacheSize int) (types.CommitKVStore, error) {
 	tree, err := iavl.NewMutableTreeWithOpts(db, cacheSize, &iavl.Options{InitialVersion: initialVersion})
+	if err != nil {
+		return nil, err
+	}
+
+	isUpgradeable, err := tree.IsUpgradeable()
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +70,14 @@ func LoadStoreWithInitialVersion(db dbm.DB, id types.CommitID, lazyLoading bool,
 			"store_key", key.String(),
 			"version", initialVersion,
 			"commit", fmt.Sprintf("%X", id),
+			"is_lazy", lazyLoading,
 		)
+	}
+
+	if lazyLoading {
+		_, err = tree.LazyLoadVersion(id.Version)
+	} else {
+		_, err = tree.LoadVersion(id.Version)
 	}
 
 	_, err = tree.LoadVersion(id.Version)
@@ -140,9 +153,14 @@ func (st *Store) WorkingHash() []byte {
 
 // LastCommitID implements Committer.
 func (st *Store) LastCommitID() types.CommitID {
+	hash, err := st.tree.Hash()
+	if err != nil {
+		panic(err)
+	}
+
 	return types.CommitID{
 		Version: st.tree.Version(),
-		Hash:    st.tree.Hash(),
+		Hash:    hash,
 	}
 }
 
@@ -204,7 +222,7 @@ func (st *Store) Set(key, value []byte) {
 
 // Get implements types.KVStore.
 func (st *Store) Get(key []byte) []byte {
-	defer st.metrics.MeasureSince("store", "iavl", "get")
+	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "get")
 	value, err := st.tree.Get(key)
 	if err != nil {
 		panic(err)
@@ -214,7 +232,7 @@ func (st *Store) Get(key []byte) []byte {
 
 // Has implements types.KVStore.
 func (st *Store) Has(key []byte) (exists bool) {
-	defer st.metrics.MeasureSince("store", "iavl", "has")
+	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "has")
 	has, err := st.tree.Has(key)
 	if err != nil {
 		panic(err)
@@ -238,13 +256,7 @@ func (st *Store) DeleteVersionsTo(version int64) error {
 	return st.tree.DeleteVersionsTo(version)
 }
 
-// LoadVersionForOverwriting attempts to load a tree at a previously committed
-// version. Any versions greater than targetVersion will be deleted.
-func (st *Store) LoadVersionForOverwriting(targetVersion int64) error {
-	return st.tree.LoadVersionForOverwriting(targetVersion)
-}
-
-// Iterator implements types.KVStore.
+// Implements types.KVStore.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
 	iterator, err := st.tree.Iterator(start, end, true)
 	if err != nil {
@@ -428,7 +440,7 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *cmtproto
 
 // Implements types.Iterator.
 type iavlIterator struct {
-	*iavl.Iterator
+	dbm.Iterator
 }
 
 var _ types.Iterator = (*iavlIterator)(nil)
@@ -437,8 +449,12 @@ var _ types.Iterator = (*iavlIterator)(nil)
 // CONTRACT: Caller must release the iavlIterator, as each one creates a new
 // goroutine.
 func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool) *iavlIterator {
+	iterator, err := tree.Iterator(start, end, ascending)
+	if err != nil {
+		panic(err)
+	}
 	iter := &iavlIterator{
-		Iterator: tree.Iterator(start, end, ascending),
+		Iterator: iterator,
 	}
 	return iter
 }

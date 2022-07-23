@@ -17,6 +17,7 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -56,6 +57,7 @@ func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 // the CommitMultiStore interface.
 type Store struct {
 	db             dbm.DB
+	logger         log.Logger
 	lastCommitInfo *types.CommitInfo
 	pruningOpts    types.PruningOptions
 	iavlCacheSize  int
@@ -84,9 +86,10 @@ var (
 // store will be created with a PruneNothing pruning strategy by default. After
 // a store is created, KVStores must be mounted and finally LoadLatestVersion or
 // LoadVersion must be called.
-func NewStore(db corestore.KVStoreWithBatch, logger iavltree.Logger, metricGatherer metrics.StoreMetrics) *Store {
+func NewStore(db dbm.DB, logger log.Logger) *Store {
 	return &Store{
 		db:            db,
+		logger:        logger,
 		pruningOpts:   types.PruneNothing,
 		iavlCacheSize: iavl.DefaultIAVLCacheSize,
 		storesParams:  make(map[types.StoreKey]storeParams),
@@ -972,9 +975,9 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var err error
 
 		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, id, rs.lazyLoading, rs.iavlCacheSize)
+			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize)
 		} else {
-			store, err = iavl.LoadStoreWithInitialVersion(db, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
+			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
 		}
 
 		if err != nil {

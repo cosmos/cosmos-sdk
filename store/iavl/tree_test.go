@@ -14,16 +14,10 @@ func TestImmutableTreePanics(t *testing.T) {
 	t.Parallel()
 	immTree := iavl.NewImmutableTree(coretesting.NewMemDB(), 100, false, log.NewNopLogger())
 	it := &immutableTree{immTree}
-	require.Panics(t, func() {
-		_, err := it.Set([]byte{}, []byte{})
-		require.NoError(t, err)
-	})
-	require.Panics(t, func() {
-		_, _, err := it.Remove([]byte{})
-		require.NoError(t, err)
-	})
-	require.Panics(t, func() { _, _, _ = it.SaveVersion() })
-	require.Panics(t, func() { _ = it.DeleteVersionsTo(int64(1)) })
+	require.Panics(t, func() { it.Set([]byte{}, []byte{}) })
+	require.Panics(t, func() { it.Remove([]byte{}) })
+	require.Panics(t, func() { it.SaveVersion() })           // nolint:errcheck
+	require.Panics(t, func() { it.DeleteVersion(int64(1)) }) // nolint:errcheck
 
 	val, err := it.GetVersioned(nil, 1)
 	require.Error(t, err)

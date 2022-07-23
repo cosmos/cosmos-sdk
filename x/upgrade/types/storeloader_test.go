@@ -20,12 +20,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-func initStore(t *testing.T, db corestore.KVStoreWithBatch, storeKey string, k, v []byte) {
-	t.Helper()
-	rs := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
-	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
-	key := storetypes.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
+func useUpgradeLoader(height int64, upgrades *store.StoreUpgrades) func(*baseapp.BaseApp) {
+	return func(app *baseapp.BaseApp) {
+		app.SetStoreLoader(UpgradeStoreLoader(height, upgrades))
+	}
+}
+
+func defaultLogger() log.Logger {
+	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+}
+
+func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
+	rs.SetPruning(store.PruneNothing)
+	key := sdk.NewKVStoreKey(storeKey)
+	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, int64(0), rs.LastCommitID().Version)
@@ -38,12 +47,11 @@ func initStore(t *testing.T, db corestore.KVStoreWithBatch, storeKey string, k, 
 	require.Equal(t, int64(1), commitID.Version)
 }
 
-func checkStore(t *testing.T, db corestore.KVStoreWithBatch, ver int64, storeKey string, k, v []byte) {
-	t.Helper()
-	rs := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
-	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
-	key := storetypes.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
+func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
+	rs.SetPruning(store.PruneNothing)
+	key := sdk.NewKVStoreKey(storeKey)
+	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, ver, rs.LastCommitID().Version)

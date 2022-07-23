@@ -10,6 +10,9 @@ import (
 
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
@@ -105,17 +108,17 @@ func TestLoadStore(t *testing.T) {
 	require.Equal(t, string(hcStore.Get([]byte("hello"))), "ciao")
 
 	// Querying a new store at some previous non-pruned height H
-	newHStore, err := LoadStore(db, cIDH, false, DefaultIAVLCacheSize)
+	newHStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDH, false, DefaultIAVLCacheSize)
 	require.NoError(t, err)
 	require.Equal(t, string(newHStore.Get([]byte("hello"))), "hallo")
 
 	// Querying a new store at some previous pruned height Hp
-	newHpStore, err := LoadStore(db, cIDHp, false, DefaultIAVLCacheSize)
+	newHpStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHp, false, DefaultIAVLCacheSize)
 	require.NoError(t, err)
 	require.Equal(t, string(newHpStore.Get([]byte("hello"))), "hola")
 
 	// Querying a new store at current height H
-	newHcStore, err := LoadStore(db, cIDHc, false, DefaultIAVLCacheSize)
+	newHcStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHc, false, DefaultIAVLCacheSize)
 	require.NoError(t, err)
 	require.Equal(t, string(newHcStore.Get([]byte("hello"))), "ciao")
 }
@@ -126,7 +129,6 @@ func TestGetImmutable(t *testing.T) {
 	store := UnsafeNewStore(tree)
 
 	updated, err := tree.Set([]byte("hello"), []byte("adios"))
-	require.NoError(t, err)
 	require.True(t, updated)
 	hash, ver, err := tree.SaveVersion()
 	cID := types.CommitID{Version: ver, Hash: hash}

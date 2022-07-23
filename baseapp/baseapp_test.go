@@ -304,13 +304,31 @@ func TestSetLoader(t *testing.T) {
 		app.SetStoreLoader(baseapp.DefaultStoreLoader)
 	}
 
-	initStore := func(t *testing.T, db corestore.KVStoreWithBatch, storeKey string, k, v []byte) {
-		t.Helper()
-		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
+	rs.SetPruning(store.PruneNothing)
+	key := sdk.NewKVStoreKey(storeKey)
+	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
+	err := rs.LoadLatestVersion()
+	require.Nil(t, err)
+	require.Equal(t, int64(0), rs.LastCommitID().Version)
 
-		key := storetypes.NewKVStoreKey(storeKey)
-		rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
+	// write some data in substore
+	kv, _ := rs.GetStore(key).(store.KVStore)
+	require.NotNil(t, kv)
+	kv.Set(k, v)
+	commitID := rs.Commit()
+	require.Equal(t, int64(1), commitID.Version)
+}
+
+func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
+	rs.SetPruning(store.PruneDefault)
+	key := sdk.NewKVStoreKey(storeKey)
+	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
+	err := rs.LoadLatestVersion()
+	require.Nil(t, err)
+	require.Equal(t, ver, rs.LastCommitID().Version)
 
 		err := rs.LoadLatestVersion()
 		require.Nil(t, err)

@@ -3,6 +3,7 @@ package iavl
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/iavl"
 
 	corestore "cosmossdk.io/core/store"
@@ -23,21 +24,15 @@ type (
 		Get(key []byte) ([]byte, error)
 		Set(key, value []byte) (bool, error)
 		Remove(key []byte) ([]byte, bool, error)
-		SetCommitting()
-		UnsetCommitting()
 		SaveVersion() ([]byte, int64, error)
 		Version() int64
-		Hash() []byte
-		WorkingHash() []byte
+		Hash() ([]byte, error)
 		VersionExists(version int64) bool
-		DeleteVersionsTo(version int64) error
 		GetVersioned(key []byte, version int64) ([]byte, error)
+		GetVersionedWithProof(key []byte, version int64) ([]byte, *iavl.RangeProof, error)
 		GetImmutable(version int64) (*iavl.ImmutableTree, error)
 		SetInitialVersion(version uint64)
-		Iterator(start, end []byte, ascending bool) (corestore.Iterator, error)
-		AvailableVersions() []int
-		LoadVersionForOverwriting(targetVersion int64) error
-		TraverseStateChanges(startVersion, endVersion int64, fn func(version int64, changeSet *iavl.ChangeSet) error) error
+		Iterator(start, end []byte, ascending bool) (types.Iterator, error)
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree

@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -22,7 +23,7 @@ import (
 )
 
 func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *rootmulti.Store {
-	multiStore := rootmulti.NewStore(db)
+	multiStore := rootmulti.NewStore(db, log.NewNopLogger())
 	r := rand.New(rand.NewSource(49872768940)) // Fixed seed for deterministic tests
 
 	keys := []*types.KVStoreKey{}
@@ -54,7 +55,7 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 }
 
 func newMultiStoreWithMixedMounts(db dbm.DB) *rootmulti.Store {
-	store := rootmulti.NewStore(db)
+	store := rootmulti.NewStore(db, log.NewNopLogger())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl3"), types.StoreTypeIAVL, nil)
@@ -233,7 +234,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		target := rootmulti.NewStore(dbm.NewMemDB())
+		target := rootmulti.NewStore(dbm.NewMemDB(), log.NewNopLogger())
 		for key := range source.GetStores() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		}
@@ -268,7 +269,7 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		target := rootmulti.NewStore(dbm.NewMemDB())
+		target := rootmulti.NewStore(dbm.NewMemDB(), log.NewNopLogger())
 		for key := range source.GetStores() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		}

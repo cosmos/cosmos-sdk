@@ -1,4 +1,4 @@
-package v043_test
+package v2_test
 
 import (
 	"bytes"
@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v042staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v042"
-	v043staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v043"
+	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
+	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -41,77 +41,77 @@ func TestStoreMigration(t *testing.T) {
 	}{
 		{
 			"LastValidatorPowerKey",
-			v042staking.GetLastValidatorPowerKey(valAddr1),
+			v1.GetLastValidatorPowerKey(valAddr1),
 			types.GetLastValidatorPowerKey(valAddr1),
 		},
 		{
 			"LastTotalPowerKey",
-			v042staking.LastTotalPowerKey,
+			v1.LastTotalPowerKey,
 			types.LastTotalPowerKey,
 		},
 		{
 			"ValidatorsKey",
-			v042staking.GetValidatorKey(valAddr1),
+			v1.GetValidatorKey(valAddr1),
 			types.GetValidatorKey(valAddr1),
 		},
 		{
 			"ValidatorsByConsAddrKey",
-			v042staking.GetValidatorByConsAddrKey(consAddr),
+			v1.GetValidatorByConsAddrKey(consAddr),
 			types.GetValidatorByConsAddrKey(consAddr),
 		},
 		{
 			"ValidatorsByPowerIndexKey",
-			v042staking.GetValidatorsByPowerIndexKey(val),
+			v1.GetValidatorsByPowerIndexKey(val),
 			types.GetValidatorsByPowerIndexKey(val, sdk.DefaultPowerReduction),
 		},
 		{
 			"DelegationKey",
-			v042staking.GetDelegationKey(addr4, valAddr1),
+			v1.GetDelegationKey(addr4, valAddr1),
 			types.GetDelegationKey(addr4, valAddr1),
 		},
 		{
 			"UnbondingDelegationKey",
-			v042staking.GetUBDKey(addr4, valAddr1),
+			v1.GetUBDKey(addr4, valAddr1),
 			types.GetUBDKey(addr4, valAddr1),
 		},
 		{
 			"UnbondingDelegationByValIndexKey",
-			v042staking.GetUBDByValIndexKey(addr4, valAddr1),
+			v1.GetUBDByValIndexKey(addr4, valAddr1),
 			types.GetUBDByValIndexKey(addr4, valAddr1),
 		},
 		{
 			"RedelegationKey",
-			v042staking.GetREDKey(addr4, valAddr1, valAddr2),
+			v1.GetREDKey(addr4, valAddr1, valAddr2),
 			types.GetREDKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"RedelegationByValSrcIndexKey",
-			v042staking.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
+			v1.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
 			types.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"RedelegationByValDstIndexKey",
-			v042staking.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
+			v1.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
 			types.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
 		},
 		{
 			"UnbondingQueueKey",
-			v042staking.GetUnbondingDelegationTimeKey(now),
+			v1.GetUnbondingDelegationTimeKey(now),
 			types.GetUnbondingDelegationTimeKey(now),
 		},
 		{
 			"RedelegationQueueKey",
-			v042staking.GetRedelegationTimeKey(now),
+			v1.GetRedelegationTimeKey(now),
 			types.GetRedelegationTimeKey(now),
 		},
 		{
 			"ValidatorQueueKey",
-			v042staking.GetValidatorQueueKey(now, 4),
+			v1.GetValidatorQueueKey(now, 4),
 			types.GetValidatorQueueKey(now, 4),
 		},
 		{
 			"HistoricalInfoKey",
-			v042staking.GetHistoricalInfoKey(4),
+			v1.GetHistoricalInfoKey(4),
 			types.GetHistoricalInfoKey(4),
 		},
 	}
@@ -122,7 +122,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v043staking.MigrateStore(ctx, stakingKey)
+	err := v2.MigrateStore(ctx, stakingKey)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

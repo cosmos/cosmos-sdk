@@ -7,31 +7,33 @@ import "google/protobuf/duration.proto";
 import "cosmos/orm/v1/orm.proto";
 
 message ExampleTable {
+  // clang-format off
   option (cosmos.orm.v1.table) = {
     id: 1;
-primary_key: {
-fields:
-  "u32,i64,str"
-}
-index: {
-id:
-  1;
-fields:
-  "u64,str" unique: true
-}
-index: {
-id:
-  2;
-fields:
-  "str,u32"
-}
-index: {
-id:
-  3;
-fields:
-  "bz,str"
-}
-};
+    primary_key: {
+      fields:
+          "u32,i64,str"
+    }
+    index: {
+      id:
+          1;
+      fields:
+          "u64,str" unique: true
+    }
+    index: {
+      id:
+          2;
+      fields:
+          "str,u32"
+    }
+    index: {
+      id:
+          3;
+      fields:
+          "bz,str"
+    }
+  };
+// clang-format on
 
 // Valid key fields:
 uint32                    u32  = 1;

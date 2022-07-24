@@ -6,21 +6,40 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/bytes"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"github.com/tendermint/tendermint/rpc/coretypes"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// TODO: TendermintRPC ...
+type TendermintRPC interface {
+	rpcclient.ABCIClient
+
+	Validators(ctx context.Context, height *int64, page, perPage *int) (*coretypes.ResultValidators, error)
+	Status(context.Context) (*coretypes.ResultStatus, error)
+	Block(ctx context.Context, height *int64) (*coretypes.ResultBlock, error)
+	BlockchainInfo(ctx context.Context, minHeight, maxHeight int64) (*coretypes.ResultBlockchainInfo, error)
+	Tx(ctx context.Context, hash bytes.HexBytes, prove bool) (*coretypes.ResultTx, error)
+	TxSearch(
+		ctx context.Context,
+		query string,
+		prove bool,
+		page, perPage *int,
+		orderBy string,
+	) (*coretypes.ResultTxSearch, error)
+}
+
 // GetNode returns an RPC client. If the context's client is not defined, an
 // error is returned.
-func (ctx Context) GetNode() (rpcclient.Client, error) {
+func (ctx Context) GetNode() (TendermintRPC, error) {
 	if ctx.Client == nil {
 		return nil, errors.New("no RPC client is defined in offline mode")
 	}

@@ -532,13 +532,20 @@ $ %s query gov params
 
 			// Query store for all 3 params
 			ctx := cmd.Context()
+
 			res, err := queryClient.Params(
 				ctx,
-				&v1.QueryParamsRequest{},
+				&v1.QueryParamsRequest{ParamsType: "deposit"},
 			)
 			if err != nil {
 				return err
 			}
+
+			vp := v1.NewVotingParams(res.Params.VotingPeriod)
+			res.VotingParams = &vp
+
+			tp := v1.NewTallyParams(res.Params.Quorum, res.Params.Threshold, res.Params.VetoThreshold)
+			res.TallyParams = &tp
 
 			return clientCtx.PrintProto(res)
 		},

@@ -677,3 +677,29 @@ func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey 
 	cache.Add(cacheKey, bech32Addr)
 	return bech32Addr
 }
+
+// Bech32toValidatorAddresses returns []ValAddress from a list of Bech32 string addresses.
+func Bech32toValidatorAddresses(validators []string) ([]ValAddress, error) {
+	vals := make([]ValAddress, len(validators))
+	for i, validator := range validators {
+		addr, err := ValAddressFromBech32(validator)
+		if err != nil {
+			return nil, err
+		}
+		vals[i] = addr
+	}
+	return vals, nil
+}
+
+// Bech32toAccAddresses returns []AccAddress from a list of Bech32 string addresses.
+func Bech32toAccAddresses(accAddrs []string) ([]AccAddress, error) {
+	addrs := make([]AccAddress, len(accAddrs))
+	for i, addr := range accAddrs {
+		accAddr, err := AccAddressFromBech32(addr)
+		if err != nil {
+			return nil, err
+		}
+		addrs[i] = accAddr
+	}
+	return addrs, nil
+}

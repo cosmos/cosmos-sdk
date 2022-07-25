@@ -298,32 +298,6 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
-// Bech32toValidatorAddresses returns []ValAddress from a list of Bech32 string addresses.
-func Bech32toValidatorAddresses(validators []string) ([]sdk.ValAddress, error) {
-	vals := make([]sdk.ValAddress, len(validators))
-	for i, validator := range validators {
-		addr, err := sdk.ValAddressFromBech32(validator)
-		if err != nil {
-			return nil, err
-		}
-		vals[i] = addr
-	}
-	return vals, nil
-}
-
-// Bech32toAccAddresses returns []AccAddress from a list of Bech32 string addresses.
-func Bech32toAccAddresses(accAddrs []string) ([]sdk.AccAddress, error) {
-	addrs := make([]sdk.AccAddress, len(accAddrs))
-	for i, addr := range accAddrs {
-		accAddr, err := sdk.AccAddressFromBech32(addr)
-		if err != nil {
-			return nil, err
-		}
-		addrs[i] = accAddr
-	}
-	return addrs, nil
-}
-
 // AccountI is an interface used to store coins at a given address within state.
 // It presumes a notion of sequence numbers for replay protection,
 // a notion of account numbers for replay protection for previously pruned accounts,

@@ -14,7 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -100,7 +99,7 @@ Examples:
 					return err
 				}
 
-				allowed, err := authtypes.Bech32toAccAddresses(allowList)
+				allowed, err := sdk.Bech32toAccAddresses(allowList)
 				if err != nil {
 					return err
 				}
@@ -156,12 +155,12 @@ Examples:
 					delegateLimit = &spendLimit
 				}
 
-				allowed, err := authtypes.Bech32toValidatorAddresses(allowValidators)
+				allowed, err := sdk.Bech32toValidatorAddresses(allowValidators)
 				if err != nil {
 					return err
 				}
 
-				denied, err := authtypes.Bech32toValidatorAddresses(denyValidators)
+				denied, err := sdk.Bech32toValidatorAddresses(denyValidators)
 				if err != nil {
 					return err
 				}

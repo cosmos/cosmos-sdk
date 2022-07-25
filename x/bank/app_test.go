@@ -46,27 +46,31 @@ var (
 	sendMsg1 = types.NewMsgSend(addr1, addr2, coins)
 
 	multiSendMsg1 = &types.MsgMultiSend{
-		Input:   types.NewInput(addr1, coins),
+		Inputs:  []types.Input{types.NewInput(addr1, coins)},
 		Outputs: []types.Output{types.NewOutput(addr2, coins)},
 	}
 	multiSendMsg2 = &types.MsgMultiSend{
-		Input: types.NewInput(addr1, coins),
+		Inputs: []types.Input{types.NewInput(addr1, coins)},
 		Outputs: []types.Output{
 			types.NewOutput(addr2, halfCoins),
 			types.NewOutput(addr3, halfCoins),
 		},
 	}
 	multiSendMsg3 = &types.MsgMultiSend{
-		Input: types.NewInput(addr2, coins),
+		Inputs: []types.Input{types.NewInput(addr2, coins)},
 		Outputs: []types.Output{
 			types.NewOutput(addr1, coins),
 		},
 	}
 	multiSendMsg4 = &types.MsgMultiSend{
-		Input: types.NewInput(addr1, coins),
+		Inputs: []types.Input{types.NewInput(addr1, coins)},
 		Outputs: []types.Output{
 			types.NewOutput(moduleAccAddr, coins),
 		},
+	}
+	invalidMultiSendMsg = &types.MsgMultiSend{
+		Inputs:  []types.Input{types.NewInput(addr1, coins), types.NewInput(addr2, coins)},
+		Outputs: []types.Output{},
 	}
 )
 
@@ -150,6 +154,15 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			msgs:       []sdk.Msg{multiSendMsg4},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0}, // wrong account sequence
+			expSimPass: false,
+			expPass:    false,
+			privKeys:   []cryptotypes.PrivKey{priv1},
+		},
+		{
+			desc:       "multiple inputs not allowed",
+			msgs:       []sdk.Msg{invalidMultiSendMsg},
+			accNums:    []uint64{0},
+			accSeqs:    []uint64{0},
 			expSimPass: false,
 			expPass:    false,
 			privKeys:   []cryptotypes.PrivKey{priv1},

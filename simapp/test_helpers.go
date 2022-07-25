@@ -87,7 +87,16 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
-		stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+		genStateJson := map[string]json.RawMessage{}
+		for k, v := range genesisState {
+			if v != nil {
+				genStateJson[k] = app.appCodec.MustMarshalJSON(v)
+			} else {
+				genStateJson[k] = []byte("{}")
+			}
+		}
+
+		stateBytes, err := tmjson.MarshalIndent(genStateJson, "", "  ")
 		require.NoError(t, err)
 
 		// Initialize the chain
@@ -139,7 +148,16 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	genesisState, err := simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, genAccs, balances...)
 	require.NoError(t, err)
 
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	genStateJson := map[string]json.RawMessage{}
+	for k, v := range genesisState {
+		if v != nil {
+			genStateJson[k] = app.appCodec.MustMarshalJSON(v)
+		} else {
+			genStateJson[k] = []byte("{}")
+		}
+	}
+
+	stateBytes, err := tmjson.MarshalIndent(genStateJson, "", "  ")
 	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts
@@ -378,7 +396,7 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	return network.TestFixture{
 		AppConstructor: appCtr,
-		GenesisState:   ModuleBasics.DefaultGenesis(cfg.Codec),
+		GenesisState:   ModuleBasics.DefaultGenesis(),
 		EncodingConfig: cfg,
 	}
 }

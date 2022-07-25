@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -23,8 +22,6 @@ func TestIntegrationTestSuite(t *testing.T) {
 	genesisState := v1.DefaultGenesisState()
 	genesisState.DepositParams = &dp
 	genesisState.VotingParams = &vp
-	bz, err := cfg.Codec.MarshalJSON(genesisState)
-	require.NoError(t, err)
-	cfg.GenesisState["gov"] = bz
+	cfg.GenesisState["gov"] = genesisState
 	suite.Run(t, NewDepositTestSuite(cfg))
 }

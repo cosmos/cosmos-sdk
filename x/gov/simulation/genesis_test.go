@@ -1,10 +1,10 @@
 package simulation_test
 
 import (
-	"encoding/json"
 	"math/rand"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
@@ -34,13 +34,13 @@ func TestRandomizedGenState(t *testing.T) {
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
 		InitialStake: sdkmath.NewInt(1000),
-		GenState:     make(map[string]json.RawMessage),
+		GenState:     make(map[string]proto.Message),
 	}
 
 	simulation.RandomizedGenState(&simState)
 
-	var govGenesis v1.GenesisState
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
+	govGenesis, ok := simState.GenState[types.ModuleName].(*v1.GenesisState)
+	require.True(t, ok)
 
 	dec1, _ := sdk.NewDecFromStr("0.361000000000000000")
 	dec2, _ := sdk.NewDecFromStr("0.512000000000000000")
@@ -53,9 +53,9 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, dec2.String(), govGenesis.TallyParams.Threshold)
 	require.Equal(t, dec3.String(), govGenesis.TallyParams.VetoThreshold)
 	require.Equal(t, uint64(0x28), govGenesis.StartingProposalId)
-	require.Equal(t, []*v1.Deposit{}, govGenesis.Deposits)
-	require.Equal(t, []*v1.Vote{}, govGenesis.Votes)
-	require.Equal(t, []*v1.Proposal{}, govGenesis.Proposals)
+	require.Equal(t, []*v1.Deposit(nil), govGenesis.Deposits)
+	require.Equal(t, []*v1.Vote(nil), govGenesis.Votes)
+	require.Equal(t, []*v1.Proposal(nil), govGenesis.Proposals)
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

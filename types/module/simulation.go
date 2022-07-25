@@ -1,7 +1,6 @@
 package module
 
 import (
-	"encoding/json"
 	"math/rand"
 	"sort"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/gogo/protobuf/proto"
 )
 
 // AppModuleSimulation defines the standard functions that every module should expose
@@ -134,7 +134,7 @@ type SimulationState struct {
 	AppParams    simulation.AppParams
 	Cdc          codec.JSONCodec                      // application codec
 	Rand         *rand.Rand                           // random number
-	GenState     map[string]json.RawMessage           // genesis state
+	GenState     map[string]proto.Message             // genesis state
 	Accounts     []simulation.Account                 // simulation accounts
 	InitialStake sdkmath.Int                          // initial coins per account
 	NumBonded    int64                                // number of initially bonded accounts

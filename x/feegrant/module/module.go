@@ -79,8 +79,8 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant
 // module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(feegrant.DefaultGenesisState())
+func (AppModuleBasic) DefaultGenesis() proto.Message {
+	return feegrant.DefaultGenesisState()
 }
 
 // ValidateGenesis performs genesis state validation for the feegrant module.
@@ -159,11 +159,9 @@ func (AppModule) QuerierRoute() string {
 
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
-	var gs feegrant.GenesisState
-	cdc.MustUnmarshalJSON(bz, &gs)
-
-	err := am.keeper.InitGenesis(ctx, &gs)
+func (am AppModule) InitGenesis(ctx sdk.Context, bz proto.Message) []abci.ValidatorUpdate {
+	gs := bz.(*feegrant.GenesisState)
+	err := am.keeper.InitGenesis(ctx, gs)
 	if err != nil {
 		panic(err)
 	}

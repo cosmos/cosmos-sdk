@@ -70,8 +70,8 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 
 // DefaultGenesis returns default genesis state as raw bytes for the authz
 // module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(authz.DefaultGenesisState())
+func (AppModuleBasic) DefaultGenesis() proto.Message {
+	return authz.DefaultGenesisState()
 }
 
 // ValidateGenesis performs genesis state validation for the authz module.
@@ -148,10 +148,10 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 
 // InitGenesis performs genesis initialization for the authz module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState authz.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
-	am.keeper.InitGenesis(ctx, &genesisState)
+func (am AppModule) InitGenesis(ctx sdk.Context, data proto.Message) []abci.ValidatorUpdate {
+	genesisState := &authz.GenesisState{}
+	genesisState = data.(*authz.GenesisState)
+	am.keeper.InitGenesis(ctx, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

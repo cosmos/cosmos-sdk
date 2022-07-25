@@ -51,7 +51,7 @@ type AppModuleBasic interface {
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(codectypes.InterfaceRegistry)
 
-	DefaultGenesis(codec.JSONCodec) json.RawMessage
+	DefaultGenesis() proto.Message
 	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
 
 	// client functionality
@@ -87,10 +87,10 @@ func (bm BasicManager) RegisterInterfaces(registry codectypes.InterfaceRegistry)
 }
 
 // DefaultGenesis provides default genesis information for all modules
-func (bm BasicManager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
-	genesis := make(map[string]json.RawMessage)
+func (bm BasicManager) DefaultGenesis() map[string]proto.Message {
+	genesis := make(map[string]proto.Message)
 	for _, b := range bm {
-		genesis[b.Name()] = b.DefaultGenesis(cdc)
+		genesis[b.Name()] = b.DefaultGenesis()
 	}
 
 	return genesis
@@ -142,7 +142,7 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 type AppModuleGenesis interface {
 	AppModuleBasic
 
-	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
+	InitGenesis(sdk.Context, proto.Message) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context) proto.Message
 }
 
@@ -320,7 +320,14 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 		}
 		ctx.Logger().Debug("running initialization for module", "module", moduleName)
 
-		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, cdc, genesisData[moduleName])
+		// TODO: Is this the best way to get the module's genesis type?
+		moduleGenesis := m.Modules[moduleName].DefaultGenesis()
+		if moduleGenesis != nil {
+			if err := cdc.UnmarshalJSON(genesisData[moduleName], moduleGenesis); err != nil {
+				panic(fmt.Sprintf("failed to parse %s genesis state: %s", moduleName, err))
+			}
+		}
+		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, moduleGenesis)
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
@@ -456,7 +463,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 			}
 		} else {
 			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+			moduleValUpdates := module.InitGenesis(ctx, module.DefaultGenesis())
 			// The module manager assumes only one module will update the
 			// validator set, and it can't be a new module.
 			if len(moduleValUpdates) > 0 {

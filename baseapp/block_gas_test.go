@@ -1,6 +1,7 @@
 package baseapp_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"testing"
@@ -109,8 +110,19 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				&testdata.TestMsg{},
 			)
 			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
-			stateBytes, err := tmjson.MarshalIndent(genState, "", " ")
+
+			genStateJson := map[string]json.RawMessage{}
+			for k, v := range genState {
+				if v != nil {
+					genStateJson[k] = cdc.MustMarshalJSON(v)
+				} else {
+					genStateJson[k] = []byte("{}")
+				}
+			}
+
+			stateBytes, err := tmjson.MarshalIndent(genStateJson, "", "  ")
 			require.NoError(t, err)
+
 			bapp.InitChain(abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: simtestutil.DefaultConsensusParams,

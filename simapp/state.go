@@ -215,9 +215,9 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 		panic(err)
 	}
 
-	var authGenesis authtypes.GenesisState
+	var authGenesis *authtypes.GenesisState
 	if appState[authtypes.ModuleName] != nil {
-		cdc.MustUnmarshalJSON(appState[authtypes.ModuleName], &authGenesis)
+		authGenesis = appState[authtypes.ModuleName].(*authtypes.GenesisState)
 	}
 
 	newAccs := make([]simtypes.Account, len(authGenesis.Accounts))

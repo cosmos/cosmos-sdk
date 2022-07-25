@@ -42,8 +42,8 @@ func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the genutil
 // module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+func (AppModuleBasic) DefaultGenesis() proto.Message {
+	return types.DefaultGenesisState()
 }
 
 // ValidateGenesis performs genesis state validation for the genutil module.
@@ -92,10 +92,9 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 
 // InitGenesis performs genesis initialization for the genutil module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
-	validators, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
+func (am AppModule) InitGenesis(ctx sdk.Context, data proto.Message) []abci.ValidatorUpdate {
+	genesisState := (data).(*types.GenesisState)
+	validators, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, *genesisState, am.txEncodingConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -105,7 +104,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil
 // module.
 func (am AppModule) ExportGenesis(_ sdk.Context) proto.Message {
-	return types.DefaultGenesisState() // TODO: am.DefaultGenesis(cdc)
+	return am.DefaultGenesis()
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

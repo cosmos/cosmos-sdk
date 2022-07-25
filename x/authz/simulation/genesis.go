@@ -62,5 +62,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	authzGrantsGenesis := authz.NewGenesisState(grants)
 
-	simState.GenState[authz.ModuleName] = simState.Cdc.MustMarshalJSON(authzGrantsGenesis)
+	simState.GenState[authz.ModuleName] = authzGrantsGenesis
 }

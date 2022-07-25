@@ -67,11 +67,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { feegrants = genFeeGrants(r, simState.Accounts) },
 	)
 
-	feegrantGenesis := feegrant.NewGenesisState(feegrants)
-	bz, err := simState.Cdc.MarshalJSON(feegrantGenesis)
-	if err != nil {
-		panic(err)
-	}
-
-	simState.GenState[feegrant.ModuleName] = bz
+	simState.GenState[feegrant.ModuleName] = feegrant.NewGenesisState(feegrants)
 }

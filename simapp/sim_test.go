@@ -162,7 +162,8 @@ func TestAppImportExport(t *testing.T) {
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, MakeTestEncodingConfig(), appOptions, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
 
-	var genesisState GenesisState
+	// var genesisState GenesisState
+	var genesisState map[string]json.RawMessage
 	err = json.Unmarshal(exported.AppState, &genesisState)
 	require.NoError(t, err)
 

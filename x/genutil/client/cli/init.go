@@ -75,7 +75,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.Codec
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -121,24 +120,14 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
 
-			appGenState := mbm.DefaultGenesis(cdc)
+			appGenState := mbm.DefaultGenesis()
 
 			if stakingBondDenom != "" {
-				var stakingGenesis stakingtypes.GenesisState
-
-				stakingRaw := appGenState[stakingtypes.ModuleName]
-				err := clientCtx.Codec.UnmarshalJSON(stakingRaw, &stakingGenesis)
-				if err != nil {
-					return err
-				}
+				stakingGenesis := appGenState[stakingtypes.ModuleName].(*stakingtypes.GenesisState)
 
 				stakingGenesis.Params.BondDenom = stakingBondDenom
-				modifiedStakingStr, err := clientCtx.Codec.MarshalJSON(&stakingGenesis)
-				if err != nil {
-					return err
-				}
 
-				appGenState[stakingtypes.ModuleName] = modifiedStakingStr
+				appGenState[stakingtypes.ModuleName] = stakingGenesis
 			}
 
 			appState, err := json.MarshalIndent(appGenState, "", " ")

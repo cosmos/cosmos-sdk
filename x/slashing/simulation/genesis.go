@@ -92,5 +92,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 	fmt.Printf("Selected randomly generated slashing parameters:\n%s\n", bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(slashingGenesis)
+	simState.GenState[types.ModuleName] = slashingGenesis
 }

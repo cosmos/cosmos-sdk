@@ -49,8 +49,8 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 }
 
 // DefaultGenesis returns the module's default genesis state as raw bytes.
-func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
-	return []byte("{}")
+func (AppModuleBasic) DefaultGenesis() proto.Message {
+	return nil
 }
 
 // ValidateGenesis performs genesis state validation. Currently, this is a no-op.
@@ -112,7 +112,7 @@ func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 }
 
 // InitGenesis performs a no-op.
-func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(_ sdk.Context, _ proto.Message) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 

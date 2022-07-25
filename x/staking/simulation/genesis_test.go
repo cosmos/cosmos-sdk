@@ -1,10 +1,10 @@
 package simulation_test
 
 import (
-	"encoding/json"
 	"math/rand"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
@@ -34,13 +34,13 @@ func TestRandomizedGenState(t *testing.T) {
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
 		InitialStake: sdkmath.NewInt(1000),
-		GenState:     make(map[string]json.RawMessage),
+		GenState:     make(map[string]proto.Message),
 	}
 
 	simulation.RandomizedGenState(&simState)
 
-	var stakingGenesis types.GenesisState
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &stakingGenesis)
+	stakingGenesis, ok := simState.GenState[types.ModuleName].(*types.GenesisState)
+	require.True(t, ok)
 
 	require.Equal(t, uint32(207), stakingGenesis.Params.MaxValidators)
 	require.Equal(t, uint32(7), stakingGenesis.Params.MaxEntries)
@@ -96,7 +96,7 @@ func TestRandomizedGenState1(t *testing.T) {
 				NumBonded:    4,
 				Accounts:     simtypes.RandomAccounts(r, 3),
 				InitialStake: sdkmath.NewInt(1000),
-				GenState:     make(map[string]json.RawMessage),
+				GenState:     make(map[string]proto.Message),
 			}, "invalid memory address or nil pointer dereference",
 		},
 	}

@@ -1,11 +1,11 @@
 package staking_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
@@ -29,7 +29,17 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, encCdc, appOptions)
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
-	stateBytes, err := tmjson.Marshal(genesisState)
+
+	genStateJson := map[string]json.RawMessage{}
+	for k, v := range genesisState {
+		if v != nil {
+			genStateJson[k] = app.AppCodec().MustMarshalJSON(v)
+		} else {
+			genStateJson[k] = []byte("{}")
+		}
+	}
+
+	stateBytes, err := json.MarshalIndent(genStateJson, "", "  ")
 	require.NoError(t, err)
 
 	app.InitChain(

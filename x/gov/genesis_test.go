@@ -2,10 +2,12 @@ package gov_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
@@ -62,13 +64,25 @@ func TestImportExportQueues(t *testing.T) {
 	govGenState := gov.ExportGenesis(ctx, app.GovKeeper)
 	genesisState := simapp.NewDefaultGenesisState(app.AppCodec())
 
-	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenState)
-	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenState)
-	genesisState[types.ModuleName] = app.AppCodec().MustMarshalJSON(govGenState)
-	genesisState[stakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(stakingGenState)
-	genesisState[distributiontypes.ModuleName] = app.AppCodec().MustMarshalJSON(distributionGenState)
+	genesisState[authtypes.ModuleName] = authGenState
+	genesisState[banktypes.ModuleName] = bankGenState
+	genesisState[types.ModuleName] = govGenState
+	genesisState[stakingtypes.ModuleName] = stakingGenState
+	genesisState[distributiontypes.ModuleName] = distributionGenState
 
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	genStateJson := map[string]json.RawMessage{}
+	for k, v := range genesisState {
+		if v != nil {
+			genStateJson[k], err = app.AppCodec().MarshalJSON(v)
+			if err != nil {
+				panic(fmt.Sprintf("failed to marshal %s: %v", k, err))
+			}
+		} else {
+			genStateJson[k] = []byte("{}")
+		}
+	}
+
+	stateBytes, err := tmjson.MarshalIndent(genStateJson, "", " ")
 	if err != nil {
 		panic(err)
 	}

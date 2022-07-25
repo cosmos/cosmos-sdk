@@ -35,8 +35,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	genesisState := s.cfg.GenesisState
-	var bankGenesis types.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[types.ModuleName], &bankGenesis))
+	bankGenesis, ok := genesisState[types.ModuleName].(*types.GenesisState)
+	s.Require().True(ok)
 
 	bankGenesis.DenomMetadata = []types.Metadata{
 		{
@@ -78,11 +78,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		},
 	}
 
-	bankGenesisBz, err := s.cfg.Codec.MarshalJSON(&bankGenesis)
-	s.Require().NoError(err)
-	genesisState[types.ModuleName] = bankGenesisBz
+	genesisState[types.ModuleName] = bankGenesis
 	s.cfg.GenesisState = genesisState
 
+	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 

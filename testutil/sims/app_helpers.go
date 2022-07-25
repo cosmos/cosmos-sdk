@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
@@ -135,7 +136,19 @@ func SetupWithConfiguration(appConfig depinject.Config, validatorSet func() (*tm
 	}
 
 	// init chain must be called to stop deliverState from being nil
-	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+	genStateJson := map[string]json.RawMessage{}
+	for k, v := range genesisState {
+		if v != nil {
+			genStateJson[k], err = codec.MarshalJSON(v)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal %s: %w", k, err)
+			}
+		} else {
+			genStateJson[k] = []byte("{}")
+		}
+	}
+
+	stateBytes, err := tmjson.MarshalIndent(genStateJson, "", " ")
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal default genesis state: %w", err)
 	}
@@ -164,13 +177,13 @@ func SetupWithConfiguration(appConfig depinject.Config, validatorSet func() (*tm
 }
 
 // GenesisStateWithValSet returns a new genesis state with the validator set
-func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawMessage,
+func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]proto.Message,
 	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
-) (map[string]json.RawMessage, error) {
+) (map[string]proto.Message, error) {
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
-	genesisState[authtypes.ModuleName] = codec.MustMarshalJSON(authGenesis)
+	genesisState[authtypes.ModuleName] = authGenesis
 
 	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
 	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
@@ -207,7 +220,7 @@ func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawM
 	}
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
-	genesisState[stakingtypes.ModuleName] = codec.MustMarshalJSON(stakingGenesis)
+	genesisState[stakingtypes.ModuleName] = stakingGenesis
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {
@@ -228,7 +241,7 @@ func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawM
 
 	// update total supply
 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
-	genesisState[banktypes.ModuleName] = codec.MustMarshalJSON(bankGenesis)
+	genesisState[banktypes.ModuleName] = bankGenesis
 
 	return genesisState, nil
 }

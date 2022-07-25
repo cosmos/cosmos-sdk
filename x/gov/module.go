@@ -70,8 +70,8 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // DefaultGenesis returns default genesis state as raw bytes for the gov
 // module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(v1.DefaultGenesisState())
+func (AppModuleBasic) DefaultGenesis() proto.Message {
+	return v1.DefaultGenesisState()
 }
 
 // ValidateGenesis performs genesis state validation for the gov module.
@@ -278,10 +278,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // InitGenesis performs genesis initialization for the gov module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState v1.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, &genesisState)
+func (am AppModule) InitGenesis(ctx sdk.Context, data proto.Message) []abci.ValidatorUpdate {
+	genesisState := &v1.GenesisState{}
+	genesisState = data.(*v1.GenesisState)
+
+	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

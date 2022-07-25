@@ -123,13 +123,13 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades
-func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(_ sdk.Context, _ proto.Message) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
 // DefaultGenesis is an empty object
-func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
-	return []byte("{}")
+func (AppModuleBasic) DefaultGenesis() proto.Message {
+	return nil
 }
 
 // ValidateGenesis is always successful, as we ignore the value

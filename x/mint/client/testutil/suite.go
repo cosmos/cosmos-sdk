@@ -31,19 +31,18 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	genesisState := s.cfg.GenesisState
 
-	var mintData minttypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
+	mintData, ok := genesisState[minttypes.ModuleName].(*minttypes.GenesisState)
+	s.Require().True(ok)
 
 	inflation := sdk.MustNewDecFromStr("1.0")
 	mintData.Minter.Inflation = inflation
 	mintData.Params.InflationMin = inflation
 	mintData.Params.InflationMax = inflation
 
-	mintDataBz, err := s.cfg.Codec.MarshalJSON(&mintData)
-	s.Require().NoError(err)
-	genesisState[minttypes.ModuleName] = mintDataBz
+	genesisState[minttypes.ModuleName] = mintData
 	s.cfg.GenesisState = genesisState
 
+	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 

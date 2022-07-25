@@ -3,6 +3,7 @@ package server_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -132,7 +133,17 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	app := simapp.NewSimApp(logger, db, nil, true, encCfg, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
-	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+
+	genStateJson := map[string]json.RawMessage{}
+	for k, v := range genesisState {
+		if v != nil {
+			genStateJson[k] = encCfg.Codec.MustMarshalJSON(v)
+		} else {
+			genStateJson[k] = []byte("{}")
+		}
+	}
+
+	stateBytes, err := tmjson.MarshalIndent(genStateJson, "", "  ")
 	require.NoError(t, err)
 
 	serverCtx := server.NewDefaultContext()

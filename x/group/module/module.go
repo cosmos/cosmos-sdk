@@ -66,8 +66,8 @@ func (AppModuleBasic) Name() string {
 
 // DefaultGenesis returns default genesis state as raw bytes for the group
 // module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(group.NewGenesisState())
+func (AppModuleBasic) DefaultGenesis() proto.Message {
+	return group.NewGenesisState()
 }
 
 // ValidateGenesis performs genesis state validation for the group module.
@@ -133,8 +133,8 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 
 // InitGenesis performs genesis initialization for the group module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	am.keeper.InitGenesis(ctx, cdc, data)
+func (am AppModule) InitGenesis(ctx sdk.Context, data proto.Message) []abci.ValidatorUpdate {
+	am.keeper.InitGenesis(ctx, data)
 	return []abci.ValidatorUpdate{}
 }
 

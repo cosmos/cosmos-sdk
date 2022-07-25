@@ -354,11 +354,10 @@ func initGenFiles(
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, numValidators int,
 ) error {
-	appGenState := mbm.DefaultGenesis(clientCtx.Codec)
+	appGenState := mbm.DefaultGenesis()
 
 	// set the accounts in the genesis state
-	var authGenState authtypes.GenesisState
-	clientCtx.Codec.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
+	authGenState := appGenState[authtypes.ModuleName].(*authtypes.GenesisState)
 
 	accounts, err := authtypes.PackAccounts(genAccounts)
 	if err != nil {
@@ -366,22 +365,27 @@ func initGenFiles(
 	}
 
 	authGenState.Accounts = accounts
-	appGenState[authtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&authGenState)
+	appGenState[authtypes.ModuleName] = authGenState
 
 	// set the balances in the genesis state
-	var bankGenState banktypes.GenesisState
-	clientCtx.Codec.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
+	bankGenState := appGenState[banktypes.ModuleName].(*banktypes.GenesisState)
 
 	bankGenState.Balances = banktypes.SanitizeGenesisBalances(genBalances)
 	for _, bal := range bankGenState.Balances {
 		bankGenState.Supply = bankGenState.Supply.Add(bal.Coins...)
 	}
-	appGenState[banktypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankGenState)
+	appGenState[banktypes.ModuleName] = bankGenState
 
-	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
-	if err != nil {
-		return err
+	genStateJson := map[string]json.RawMessage{}
+	for k, v := range appGenState {
+		if v != nil {
+			genStateJson[k] = clientCtx.Codec.MustMarshalJSON(v)
+		} else {
+			genStateJson[k] = []byte("{}")
+		}
 	}
+
+	appGenStateJSON, err := json.MarshalIndent(genStateJson, "", "  ")
 
 	genDoc := types.GenesisDoc{
 		ChainID:    chainID,

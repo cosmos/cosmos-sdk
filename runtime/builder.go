@@ -1,9 +1,9 @@
 package runtime
 
 import (
-	"encoding/json"
 	"io"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
@@ -20,8 +20,8 @@ type AppBuilder struct {
 
 // DefaultGenesis returns a default genesis from the registered
 // AppModuleBasic's.
-func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
-	return a.app.basicManager.DefaultGenesis(a.app.cdc)
+func (a *AppBuilder) DefaultGenesis() map[string]proto.Message {
+	return a.app.basicManager.DefaultGenesis()
 }
 
 // Build builds an *App instance.

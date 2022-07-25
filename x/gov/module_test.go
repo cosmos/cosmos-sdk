@@ -1,6 +1,8 @@
 package gov_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,7 +31,20 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, encCdc, appOptions)
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
-	stateBytes, err := tmjson.Marshal(genesisState)
+	var err error
+	genStateJson := map[string]json.RawMessage{}
+	for k, v := range genesisState {
+		if v != nil {
+			genStateJson[k], err = encCdc.Codec.MarshalJSON(v)
+			if err != nil {
+				panic(fmt.Sprintf("failed to marshal %s: %v", k, err))
+			}
+		} else {
+			genStateJson[k] = []byte("{}")
+		}
+	}
+
+	stateBytes, err := tmjson.Marshal(genStateJson)
 	require.NoError(t, err)
 
 	app.InitChain(

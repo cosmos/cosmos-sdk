@@ -95,5 +95,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", paramsBytes)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&bankGenesis)
+	simState.GenState[types.ModuleName] = &bankGenesis
 }

@@ -106,5 +106,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(stakingGenesis)
+	simState.GenState[types.ModuleName] = stakingGenesis
 }

@@ -75,10 +75,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}},
 	}
 
-	nftDataBz, err := s.cfg.Codec.MarshalJSON(&nftGenesis)
-	s.Require().NoError(err)
-	genesisState[nft.ModuleName] = nftDataBz
+	genesisState[nft.ModuleName] = &nftGenesis
 	s.cfg.GenesisState = genesisState
+
+	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 

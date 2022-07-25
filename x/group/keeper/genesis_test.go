@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 	"time"
 
@@ -118,14 +117,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		Proposals:      []*group.Proposal{proposal},
 		Votes:          []*group.Vote{{ProposalId: proposal.Id, Voter: memberAddr.String(), SubmitTime: submittedAt, Option: group.VOTE_OPTION_YES}},
 	}
-	genesisBytes, err := cdc.MarshalJSON(genesisState)
-	s.Require().NoError(err)
 
-	genesisData := map[string]json.RawMessage{
-		group.ModuleName: genesisBytes,
-	}
-
-	s.keeper.InitGenesis(sdkCtx, cdc, genesisData[group.ModuleName])
+	s.keeper.InitGenesis(sdkCtx, genesisState)
 
 	for i, g := range genesisState.Groups {
 		res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{

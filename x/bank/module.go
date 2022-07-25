@@ -60,8 +60,8 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // DefaultGenesis returns default genesis state as raw bytes for the bank
 // module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+func (AppModuleBasic) DefaultGenesis() proto.Message {
+	return types.DefaultGenesisState()
 }
 
 // ValidateGenesis performs genesis state validation for the bank module.
@@ -162,13 +162,13 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 
 // InitGenesis performs genesis initialization for the bank module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, data proto.Message) []abci.ValidatorUpdate {
 	start := time.Now()
-	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
+	genesisState := &types.GenesisState{}
+	genesisState = data.(*types.GenesisState)
 	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
 
-	am.keeper.InitGenesis(ctx, &genesisState)
+	am.keeper.InitGenesis(ctx, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

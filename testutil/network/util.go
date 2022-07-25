@@ -153,8 +153,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 
 func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance, genFiles []string) error {
 	// set the accounts in the genesis state
-	var authGenState authtypes.GenesisState
-	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[authtypes.ModuleName], &authGenState)
+	authGenState := cfg.GenesisState[authtypes.ModuleName].(*authtypes.GenesisState)
 
 	accounts, err := authtypes.PackAccounts(genAccounts)
 	if err != nil {
@@ -162,16 +161,24 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 	}
 
 	authGenState.Accounts = append(authGenState.Accounts, accounts...)
-	cfg.GenesisState[authtypes.ModuleName] = cfg.Codec.MustMarshalJSON(&authGenState)
+	cfg.GenesisState[authtypes.ModuleName] = authGenState
 
 	// set the balances in the genesis state
-	var bankGenState banktypes.GenesisState
-	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[banktypes.ModuleName], &bankGenState)
+	bankGenState := cfg.GenesisState[banktypes.ModuleName].(*banktypes.GenesisState)
 
 	bankGenState.Balances = append(bankGenState.Balances, genBalances...)
-	cfg.GenesisState[banktypes.ModuleName] = cfg.Codec.MustMarshalJSON(&bankGenState)
+	cfg.GenesisState[banktypes.ModuleName] = bankGenState
 
-	appGenStateJSON, err := json.MarshalIndent(cfg.GenesisState, "", "  ")
+	genStateJson := map[string]json.RawMessage{}
+	for k, v := range cfg.GenesisState {
+		if v != nil {
+			genStateJson[k] = cfg.Codec.MustMarshalJSON(v)
+		} else {
+			genStateJson[k] = []byte("{}")
+		}
+	}
+
+	appGenStateJSON, err := json.MarshalIndent(genStateJson, "", "  ")
 	if err != nil {
 		return err
 	}

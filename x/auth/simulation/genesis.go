@@ -130,5 +130,5 @@ func RandomizedGenState(simState *module.SimulationState, randGenAccountsFn type
 		panic(err)
 	}
 	fmt.Printf("Selected randomly generated auth parameters:\n%s\n", bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(authGenesis)
+	simState.GenState[types.ModuleName] = authGenesis
 }

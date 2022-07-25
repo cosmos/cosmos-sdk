@@ -1,10 +1,10 @@
 package simulation_test
 
 import (
-	"encoding/json"
 	"math/rand"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -32,13 +32,13 @@ func TestRandomizedGenState(t *testing.T) {
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
 		InitialStake: sdkmath.NewInt(1000),
-		GenState:     make(map[string]json.RawMessage),
+		GenState:     make(map[string]proto.Message),
 	}
 
 	simulation.RandomizedGenState(&simState)
 
-	var bankGenesis types.GenesisState
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &bankGenesis)
+	bankGenesis, ok := simState.GenState[types.ModuleName].(*types.GenesisState)
+	require.True(t, ok)
 
 	assert.Equal(t, true, bankGenesis.Params.GetDefaultSendEnabled(), "Params.GetDefaultSendEnabled")
 	assert.Len(t, bankGenesis.Params.GetSendEnabled(), 0, "Params.GetSendEnabled")

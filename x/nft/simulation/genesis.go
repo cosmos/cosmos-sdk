@@ -63,5 +63,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		Classes: classes,
 		Entries: entries,
 	}
-	simState.GenState[nft.ModuleName] = simState.Cdc.MustMarshalJSON(nftGenesis)
+	simState.GenState[nft.ModuleName] = nftGenesis
 }

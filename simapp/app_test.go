@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -14,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -60,7 +60,8 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	logger2, _ := log.NewDefaultLogger("plain", "info", false)
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := NewSimApp(logger2, db, nil, true, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
-	_, err := app2.ExportAppStateAndValidators(false, []string{})
+	exportedApp, err := app2.ExportAppStateAndValidators(false, []string{})
+	println(string(exportedApp.AppState))
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
 
@@ -214,9 +215,10 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 	mockModule := mocks.NewMockAppModule(mockCtrl)
-	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
-	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
-	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1).Return(nil)
+	mockDefaultGenesis := &testdata.AnyWithExtra{B: 111}
+
+	mockModule.EXPECT().DefaultGenesis().Times(1).Return(mockDefaultGenesis)
+	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(mockDefaultGenesis)).Times(1).Return(nil)
 	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
 	app.ModuleManager.Modules["mock"] = mockModule

@@ -66,8 +66,8 @@ func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) 
 
 // DefaultGenesis returns default genesis state as raw bytes for the slashing
 // module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+func (AppModuleBasic) DefaultGenesis() proto.Message {
+	return types.DefaultGenesisState()
 }
 
 // ValidateGenesis performs genesis state validation for the slashing module.
@@ -164,10 +164,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // InitGenesis performs genesis initialization for the slashing module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
-	am.keeper.InitGenesis(ctx, am.stakingKeeper, &genesisState)
+func (am AppModule) InitGenesis(ctx sdk.Context, data proto.Message) []abci.ValidatorUpdate {
+	genesisState := &types.GenesisState{}
+	genesisState = data.(*types.GenesisState)
+	am.keeper.InitGenesis(ctx, am.stakingKeeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

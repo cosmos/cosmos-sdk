@@ -193,5 +193,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		Votes:          votes,
 	}
 
-	simState.GenState[group.ModuleName] = simState.Cdc.MustMarshalJSON(&groupGenesis)
+	simState.GenState[group.ModuleName] = &groupGenesis
 }

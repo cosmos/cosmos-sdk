@@ -63,8 +63,8 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // DefaultGenesis returns the evidence module's default genesis state.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+func (AppModuleBasic) DefaultGenesis() proto.Message {
+	return types.DefaultGenesisState()
 }
 
 // ValidateGenesis performs genesis state validation for the evidence module.
@@ -153,14 +153,13 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
-	var gs types.GenesisState
-	err := cdc.UnmarshalJSON(bz, &gs)
-	if err != nil {
-		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", types.ModuleName, err))
+func (am AppModule) InitGenesis(ctx sdk.Context, bz proto.Message) []abci.ValidatorUpdate {
+	gs, ok := bz.(*types.GenesisState)
+	if !ok {
+		panic(fmt.Sprintf("failed to unmarshal %s genesis state.", types.ModuleName))
 	}
 
-	InitGenesis(ctx, am.keeper, &gs)
+	InitGenesis(ctx, am.keeper, gs)
 	return []abci.ValidatorUpdate{}
 }
 

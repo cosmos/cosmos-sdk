@@ -1,11 +1,11 @@
 package simulation_test
 
 import (
-	"encoding/json"
 	"math/rand"
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
@@ -37,13 +37,13 @@ func TestRandomizedGenState(t *testing.T) {
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
 		InitialStake: sdkmath.NewInt(1000),
-		GenState:     make(map[string]json.RawMessage),
+		GenState:     make(map[string]proto.Message),
 	}
 
 	simulation.RandomizedGenState(&simState)
 
-	var slashingGenesis types.GenesisState
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &slashingGenesis)
+	slashingGenesis, ok := simState.GenState[types.ModuleName].(*types.GenesisState)
+	require.True(t, ok)
 
 	dec1, _ := sdk.NewDecFromStr("0.600000000000000000")
 	dec2, _ := sdk.NewDecFromStr("0.022222222222222222")

@@ -2,6 +2,7 @@ package client_test
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -73,7 +74,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState, err := sims.GenesisStateWithValSet(cdc, appBuilder.DefaultGenesis(), valSet, []authtypes.GenesisAccount{acc}, balance)
 	s.NoError(err)
 
-	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+	genStateJson := map[string]json.RawMessage{}
+	for k, v := range genesisState {
+		if v != nil {
+			genStateJson[k] = cdc.MustMarshalJSON(v)
+		} else {
+			genStateJson[k] = []byte("{}")
+		}
+	}
+
+	stateBytes, err := tmjson.MarshalIndent(genStateJson, "", "  ")
 	s.NoError(err)
 
 	// init chain will set the validator set and initialize the genesis accounts

@@ -91,5 +91,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 	fmt.Printf("Selected randomly generated minting parameters:\n%s\n", bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(mintGenesis)
+	simState.GenState[types.ModuleName] = mintGenesis
 }

@@ -678,8 +678,8 @@ func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey 
 	return bech32Addr
 }
 
-// Bech32toValidatorAddresses returns []ValAddress from a list of Bech32 string addresses.
-func Bech32toValidatorAddresses(validators []string) ([]ValAddress, error) {
+// Bech32toValAddresses returns []ValAddress from a list of Bech32 string addresses.
+func Bech32toValAddresses(validators []string) ([]ValAddress, error) {
 	vals := make([]ValAddress, len(validators))
 	for i, validator := range validators {
 		addr, err := ValAddressFromBech32(validator)

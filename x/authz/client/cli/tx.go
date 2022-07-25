@@ -155,12 +155,12 @@ Examples:
 					delegateLimit = &spendLimit
 				}
 
-				allowed, err := sdk.Bech32toValidatorAddresses(allowValidators)
+				allowed, err := sdk.Bech32toValAddresses(allowValidators)
 				if err != nil {
 					return err
 				}
 
-				denied, err := sdk.Bech32toValidatorAddresses(denyValidators)
+				denied, err := sdk.Bech32toValAddresses(denyValidators)
 				if err != nil {
 					return err
 				}

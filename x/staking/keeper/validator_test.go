@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -259,7 +260,7 @@ func TestValidatorBasics(t *testing.T) {
 	for i, power := range powers {
 		validators[i] = teststaking.NewValidator(t, addrVals[i], PKs[i])
 		validators[i].Status = types.Unbonded
-		validators[i].Tokens = sdk.ZeroInt()
+		validators[i].Tokens = math.ZeroInt()
 		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, power)
 
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
@@ -296,7 +297,7 @@ func TestValidatorBasics(t *testing.T) {
 	require.Equal(t, 1, len(resVals))
 	assert.True(ValEq(t, validators[0], resVals[0]))
 	assert.Equal(t, types.Bonded, validators[0].Status)
-	assert.True(sdk.IntEq(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 9), validators[0].BondedTokens()))
+	assert.True(math.IntEq(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 9), validators[0].BondedTokens()))
 
 	// modify a records, save, and retrieve
 	validators[0].Status = types.Bonded
@@ -341,7 +342,7 @@ func TestValidatorBasics(t *testing.T) {
 		"attempting to remove a validator which still contains tokens",
 		func() { app.StakingKeeper.RemoveValidator(ctx, validators[1].GetOperator()) })
 
-	validators[1].Tokens = sdk.ZeroInt()                                // ...remove all tokens
+	validators[1].Tokens = math.ZeroInt()                               // ...remove all tokens
 	app.StakingKeeper.SetValidator(ctx, validators[1])                  // ...set the validator
 	app.StakingKeeper.RemoveValidator(ctx, validators[1].GetOperator()) // Now it can be removed.
 	_, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
@@ -353,7 +354,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
 
 	// initialize some validators into the state
-	amts := []sdk.Int{
+	amts := []math.Int{
 		sdk.NewIntFromUint64(0),
 		app.StakingKeeper.PowerReduction(ctx).MulRaw(100),
 		app.StakingKeeper.PowerReduction(ctx),
@@ -447,7 +448,7 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// initialize some validators into the state
-	amts := []sdk.Int{
+	amts := []math.Int{
 		sdk.NewIntFromUint64(0),
 		app.StakingKeeper.PowerReduction(ctx).MulRaw(100),
 		app.StakingKeeper.PowerReduction(ctx),

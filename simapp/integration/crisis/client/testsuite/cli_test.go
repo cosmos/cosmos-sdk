@@ -1,7 +1,7 @@
 //go:build norace
 // +build norace
 
-package testutil
+package testsuite
 
 import (
 	"testing"
@@ -10,10 +10,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/x/crisis/client/testsuite"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
-	suite.Run(t, NewIntegrationTestSuite(cfg))
+	suite.Run(t, testutil.NewIntegrationTestSuite(cfg))
 }

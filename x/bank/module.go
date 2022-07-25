@@ -240,9 +240,6 @@ type bankInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-// Authority is a typed string so that it can be injected
-type Authority string
-
 type bankOutputs struct {
 	depinject.Out
 

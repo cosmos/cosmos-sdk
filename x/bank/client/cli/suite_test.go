@@ -40,7 +40,12 @@ func (s *CLITestSuite) SetupSuite() {
 func (s *CLITestSuite) createKeyringRecords(num int) []*keyring.Record {
 	records := make([]*keyring.Record, num)
 	for i := range records {
-		record, _, err := s.kr.NewMnemonic(fmt.Sprint("key-%d", i), keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		record, _, err := s.kr.NewMnemonic(
+			fmt.Sprint("key-%d", i),
+			keyring.English,
+			sdk.FullFundraiserPath,
+			keyring.DefaultBIP39Passphrase,
+			hd.Secp256k1)
 		s.Require().NoError(err)
 
 		records[i] = record

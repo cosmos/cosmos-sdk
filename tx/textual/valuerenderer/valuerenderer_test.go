@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/core/tx/textual/internal/testpb"
-	"cosmossdk.io/core/tx/textual/valuerenderer"
 	"cosmossdk.io/math"
+	"cosmossdk.io/tx/textual/internal/testpb"
+	"cosmossdk.io/tx/textual/valuerenderer"
 )
 
 func TestFormatInteger(t *testing.T) {
@@ -117,27 +117,27 @@ func TestGetADR050ValueRenderer(t *testing.T) {
 func valueRendererOf(v interface{}) (valuerenderer.ValueRenderer, error) {
 	a, b := (&testpb.A{}).ProtoReflect().Descriptor().Fields(), (&testpb.B{}).ProtoReflect().Descriptor().Fields()
 
-	adr050 := valuerenderer.NewAdr050()
+	textual := valuerenderer.NewTextual()
 	switch v := v.(type) {
 	// Valid types for SIGN_MODE_TEXTUAL
 	case uint32:
-		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("UINT32")))
+		return textual.GetValueRenderer(a.ByName(protoreflect.Name("UINT32")))
 	case uint64:
-		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("UINT64")))
+		return textual.GetValueRenderer(a.ByName(protoreflect.Name("UINT64")))
 	case int32:
-		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("INT32")))
+		return textual.GetValueRenderer(a.ByName(protoreflect.Name("INT32")))
 	case int64:
-		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("INT64")))
+		return textual.GetValueRenderer(a.ByName(protoreflect.Name("INT64")))
 	case math.Int:
-		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("SDKINT")))
+		return textual.GetValueRenderer(a.ByName(protoreflect.Name("SDKINT")))
 	case math.LegacyDec:
-		return adr050.GetValueRenderer(a.ByName(protoreflect.Name("SDKDEC")))
+		return textual.GetValueRenderer(a.ByName(protoreflect.Name("SDKDEC")))
 
 	// Invalid types for SIGN_MODE_TEXTUAL
 	case float32:
-		return adr050.GetValueRenderer(b.ByName(protoreflect.Name("FLOAT")))
+		return textual.GetValueRenderer(b.ByName(protoreflect.Name("FLOAT")))
 	case float64:
-		return adr050.GetValueRenderer(b.ByName(protoreflect.Name("FLOAT")))
+		return textual.GetValueRenderer(b.ByName(protoreflect.Name("FLOAT")))
 
 	default:
 		return nil, fmt.Errorf("value %s of type %T not recognized", v, v)

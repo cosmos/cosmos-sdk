@@ -109,7 +109,7 @@ func (k Keeper) AllocateTokens(
 		if valAddr == BLACKLISTED_VAL_ADDR {
 			reward = sdk.DecCoins{}
 		}
-		k.Logger(ctx).Info(fmt.Sprintf("AllocateTokensToValidator: staking reward for %s to %v (note: %s is blacklisted)", valAddr, reward, BLACKLISTED))
+		k.Logger(ctx).Info(fmt.Sprintf("AllocateTokensToValidator: staking reward for %s to %v (note: %s is blacklisted)", valAddr, reward, BLACKLISTED_VAL_ADDR))
 
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)

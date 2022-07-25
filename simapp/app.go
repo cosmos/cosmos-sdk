@@ -193,8 +193,22 @@ func NewSimApp(
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
 
-		// merge the app.yaml and the appOpts in one config
-		appConfig = depinject.Configs(AppConfig, depinject.Supply(appOpts))
+		// merge the AppConfig and other configuration in one config
+		appConfig = depinject.Configs(
+			AppConfig,
+			depinject.Supply(
+				// supply the application options
+				appOpts,
+
+				// for providing a custom inflaction function for x/mint
+				// add here your custom function that implements the minttypes.InflationCalculationFn interface.
+
+				// for providing a custom authority to a module simply add it below. By default the governance module is the default authority.
+				// map[string]sdk.AccAddress{
+				// 	minttypes.ModuleName: authtypes.NewModuleAddress(authtypes.ModuleName),
+				// },
+			),
+		)
 	)
 
 	if err := depinject.Inject(appConfig,

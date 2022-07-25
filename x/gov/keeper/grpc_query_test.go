@@ -788,6 +788,8 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	queryClient := suite.queryClient
 
+	params := v1.DefaultParams()
+
 	var (
 		req    *v1.QueryParamsRequest
 		expRes *v1.QueryParamsResponse
@@ -802,12 +804,49 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			"empty request",
 			func() {
 				req = &v1.QueryParamsRequest{}
-				params := v1.DefaultParams()
+			},
+			false,
+		},
+		{
+			"deposit params request",
+			func() {
+				req = &v1.QueryParamsRequest{ParamsType: v1.ParamDeposit}
+				depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
 				expRes = &v1.QueryParamsResponse{
-					Params: &params,
+					DepositParams: &depositParams,
 				}
 			},
 			true,
+		},
+		{
+			"voting params request",
+			func() {
+				req = &v1.QueryParamsRequest{ParamsType: v1.ParamVoting}
+				votingParams := v1.NewVotingParams(params.VotingPeriod)
+				expRes = &v1.QueryParamsResponse{
+					VotingParams: &votingParams,
+				}
+			},
+			true,
+		},
+		{
+			"tally params request",
+			func() {
+				req = &v1.QueryParamsRequest{ParamsType: v1.ParamTallying}
+				tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
+				expRes = &v1.QueryParamsResponse{
+					TallyParams: &tallyParams,
+				}
+			},
+			true,
+		},
+		{
+			"invalid request",
+			func() {
+				req = &v1.QueryParamsRequest{ParamsType: "wrongPath"}
+				expRes = &v1.QueryParamsResponse{}
+			},
+			false,
 		},
 	}
 
@@ -819,7 +858,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(expRes, params)
+				suite.Require().Equal(expRes.GetDepositParams(), params.GetDepositParams())
+				suite.Require().Equal(expRes.GetVotingParams(), params.GetVotingParams())
+				suite.Require().Equal(expRes.GetTallyParams(), params.GetTallyParams())
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(params)

@@ -33,6 +33,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryVote(),
 		GetCmdQueryVotes(),
 		GetCmdQueryParams(),
+		GetCmdQueryParam(),
 		GetCmdQueryProposer(),
 		GetCmdQueryDeposit(),
 		GetCmdQueryDeposits(),
@@ -540,6 +541,59 @@ $ %s query gov params
 			}
 
 			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryParam implements the query param command.
+func GetCmdQueryParam() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "param [param-type]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query the parameters (voting|tallying|deposit) of the governance process",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the all the parameters for the governance process.
+Example:
+$ %s query gov param voting
+$ %s query gov param tallying
+$ %s query gov param deposit
+`,
+				version.AppName, version.AppName, version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := v1.NewQueryClient(clientCtx)
+
+			// Query store
+			res, err := queryClient.Params(
+				cmd.Context(),
+				&v1.QueryParamsRequest{ParamsType: args[0]},
+			)
+			if err != nil {
+				return err
+			}
+
+			var out fmt.Stringer
+			switch args[0] {
+			case "voting":
+				out = res.GetVotingParams()
+			case "tallying":
+				out = res.GetTallyParams()
+			case "deposit":
+				out = res.GetDepositParams()
+			default:
+				return fmt.Errorf("argument must be one of (voting|tallying|deposit), was %s", args[0])
+			}
+
+			return clientCtx.PrintObjectLegacy(out)
 		},
 	}
 

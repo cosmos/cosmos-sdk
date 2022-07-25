@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -174,6 +175,7 @@ func (q Keeper) Params(c context.Context, req *v1.QueryParamsRequest) (*v1.Query
 	case v1.ParamTallying:
 		tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
 		response.TallyParams = &tallyParams
+
 	default:
 		return nil, status.Errorf(codes.InvalidArgument,
 			"%s is not a valid parameter type", req.ParamsType)
@@ -181,7 +183,7 @@ func (q Keeper) Params(c context.Context, req *v1.QueryParamsRequest) (*v1.Query
 	}
 	response.Params = &params
 
-	return &v1.QueryParamsResponse{Params: &params}, nil
+	return response, nil
 }
 
 // Deposit queries single deposit information based on proposalID, depositAddr.
@@ -379,6 +381,7 @@ func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsReq
 		return nil, err
 	}
 
+	fmt.Printf("resp: %v\n", resp)
 	response := &v1beta1.QueryParamsResponse{}
 
 	if resp.DepositParams != nil {

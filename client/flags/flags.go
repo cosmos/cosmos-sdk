@@ -125,6 +125,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagFeeGranter, "", "Fee granter grants fees for the transaction")
 	cmd.Flags().String(FlagTip, "", "Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator")
 	cmd.Flags().Bool(FlagAux, false, "Generate aux signer data instead of sending a tx")
+	cmd.Flags().String(FlagChainID, "", "The network chain ID")
 
 	// --gas can accept integers and "auto"
 	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))

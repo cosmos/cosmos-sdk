@@ -125,17 +125,7 @@ func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Respo
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-	// genState := map[string]proto.Message{}
-	// for k, v := range genesisState {
-	// 	if v == nil {
-	// 		continue
-	// 	}
-	// 	m := &distributiontypes.GenesisState{}
-	// 	if err := a.cdc.UnmarshalJSON(v, m); err != nil {
-	// 		panic(fmt.Sprintf("failed to unmarshal %s: %v", k, err))
-	// 	}
-	// 	genState[k] = m
-	// }
+
 	return a.ModuleManager.InitGenesis(ctx, a.cdc, genesisState)
 }
 

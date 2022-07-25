@@ -6,10 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -20,7 +18,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/golang/mock/gomock"
 )
 
 type UpgradeTestSuite struct {
@@ -29,9 +26,7 @@ type UpgradeTestSuite struct {
 	upgradeKeeper keeper.Keeper
 	ctx           sdk.Context
 	queryClient   types.QueryClient
-	baseApp       *baseapp.BaseApp
 	encCfg        moduletestutil.TestEncodingConfig
-	manager       *module.Manager
 }
 
 func (suite *UpgradeTestSuite) SetupTest() {
@@ -41,16 +36,13 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx
 
-	suite.baseApp = baseapp.NewBaseApp(
-		"upgrade",
-		log.NewNopLogger(),
-		testCtx.DB,
-		suite.encCfg.TxConfig.TxDecoder(),
-	)
-
 	skipUpgradeHeights := make(map[int64]bool)
 
 	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, key, suite.encCfg.Codec, "", nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
+		"bank": 0,
+	})
+
 	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, suite.encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, suite.upgradeKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
@@ -166,23 +158,6 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 }
 
 func (suite *UpgradeTestSuite) TestModuleVersions() {
-
-	mockCtrl := gomock.NewController(suite.T())
-	suite.T().Cleanup(mockCtrl.Finish)
-
-	mockBankModule := mocks.NewMockAppModule(mockCtrl)
-	mockBankModule.EXPECT().Name().Times(3).Return("bank")
-	mockBankModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
-	mm := module.NewManager(
-		mockBankModule,
-	)
-	suite.manager = mm
-	suite.Require().NotNil(mm)
-	suite.Require().Equal(1, len(mm.Modules))
-
-	suite.upgradeKeeper.SetVersionSetter(suite.baseApp)
-	suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, suite.manager.GetVersionMap())
-
 	testCases := []struct {
 		msg     string
 		req     types.QueryModuleVersionsRequest

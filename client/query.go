@@ -19,7 +19,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// TODO: TendermintRPC ...
+// TendermintRPC defines the interface of a Tendermint RPC client needed for
+// queries and transaction handling.
 type TendermintRPC interface {
 	rpcclient.ABCIClient
 

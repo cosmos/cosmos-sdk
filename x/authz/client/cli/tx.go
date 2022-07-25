@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -99,7 +100,7 @@ Examples:
 					return err
 				}
 
-				allowed, err := bech32toAccAddresses(allowList)
+				allowed, err := authtypes.Bech32toAccAddresses(allowList)
 				if err != nil {
 					return err
 				}
@@ -155,12 +156,12 @@ Examples:
 					delegateLimit = &spendLimit
 				}
 
-				allowed, err := bech32toValidatorAddresses(allowValidators)
+				allowed, err := authtypes.Bech32toValidatorAddresses(allowValidators)
 				if err != nil {
 					return err
 				}
 
-				denied, err := bech32toValidatorAddresses(denyValidators)
+				denied, err := authtypes.Bech32toValidatorAddresses(denyValidators)
 				if err != nil {
 					return err
 				}
@@ -287,28 +288,4 @@ Example:
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
-}
-
-func bech32toValidatorAddresses(validators []string) ([]sdk.ValAddress, error) {
-	vals := make([]sdk.ValAddress, len(validators))
-	for i, validator := range validators {
-		addr, err := sdk.ValAddressFromBech32(validator)
-		if err != nil {
-			return nil, err
-		}
-		vals[i] = addr
-	}
-	return vals, nil
-}
-
-func bech32toAccAddresses(accAddrs []string) ([]sdk.AccAddress, error) {
-	addrs := make([]sdk.AccAddress, len(accAddrs))
-	for i, addr := range accAddrs {
-		accAddr, err := sdk.AccAddressFromBech32(addr)
-		if err != nil {
-			return nil, err
-		}
-		addrs[i] = accAddr
-	}
-	return addrs, nil
 }

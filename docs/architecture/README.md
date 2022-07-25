@@ -79,6 +79,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 039: Epoched Staking](./adr-039-epoched-staking.md)
 * [ADR 040: Storage and SMT State Commitments](./adr-040-storage-and-smt-state-commitments.md)
 * [ADR 046: Module Params](./adr-046-module-params.md)
+* [ADR 057: App Wiring Part I](./adr-057-app-wiring-1.md)
 
 ### Draft
 

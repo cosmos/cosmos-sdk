@@ -27,19 +27,13 @@ func TestValidateGenesis(t *testing.T) {
 		{
 			name: "valid",
 			genesisState: func() *v1.GenesisState {
-				return &v1.GenesisState{
-					StartingProposalId: v1.DefaultStartingProposalID,
-					Params:             &params,
-				}
+				return v1.NewGenesisState(v1.DefaultStartingProposalID, params)
 			},
 		},
 		{
 			name: "invalid StartingProposalId",
 			genesisState: func() *v1.GenesisState {
-				return &v1.GenesisState{
-					StartingProposalId: 0,
-					Params:             &params,
-				}
+				return v1.NewGenesisState(0, params)
 			},
 			expErr: true,
 		},
@@ -52,10 +46,7 @@ func TestValidateGenesis(t *testing.T) {
 					Amount: sdk.NewInt(-100),
 				}}
 
-				return &v1.GenesisState{
-					StartingProposalId: 0,
-					Params:             &params1,
-				}
+				return v1.NewGenesisState(0, params1)
 			},
 			expErr: true,
 		},
@@ -64,10 +55,8 @@ func TestValidateGenesis(t *testing.T) {
 			genesisState: func() *v1.GenesisState {
 				params1 := params
 				params1.MaxDepositPeriod = nil
-				return &v1.GenesisState{
-					StartingProposalId: 0,
-					Params:             &params1,
-				}
+
+				return v1.NewGenesisState(0, params1)
 			},
 			expErr: true,
 		},
@@ -76,10 +65,8 @@ func TestValidateGenesis(t *testing.T) {
 			genesisState: func() *v1.GenesisState {
 				params1 := params
 				params1.Quorum = "2"
-				return &v1.GenesisState{
-					StartingProposalId: 0,
-					Params:             &params1,
-				}
+
+				return v1.NewGenesisState(0, params1)
 			},
 			expErr: true,
 		},
@@ -88,10 +75,8 @@ func TestValidateGenesis(t *testing.T) {
 			genesisState: func() *v1.GenesisState {
 				params1 := params
 				params1.Threshold = "2"
-				return &v1.GenesisState{
-					StartingProposalId: 0,
-					Params:             &params1,
-				}
+
+				return v1.NewGenesisState(0, params1)
 			},
 			expErr: true,
 		},
@@ -100,10 +85,8 @@ func TestValidateGenesis(t *testing.T) {
 			genesisState: func() *v1.GenesisState {
 				params1 := params
 				params1.VetoThreshold = "2"
-				return &v1.GenesisState{
-					StartingProposalId: 0,
-					Params:             &params1,
-				}
+
+				return v1.NewGenesisState(0, params1)
 			},
 			expErr: true,
 		},

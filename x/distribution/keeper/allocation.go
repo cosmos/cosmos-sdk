@@ -20,6 +20,16 @@ func (k Keeper) AllocateTokens(
 
 	logger := k.Logger(ctx)
 
+	// deduct the power of the blacklisted validator from the total power (so that the others are upscaled proportionally!)
+	blacklisted_ValAddr, error := sdk.ValAddressFromBech32("stridevaloper1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrgpwsqm")
+	if error != nil {
+		panic(error)
+	}
+	blacklisted_validator := k.stakingKeeper.Validator(ctx, blacklisted_ValAddr)
+	// TODO get this dynamically (copied from https://github.com/cosmos/cosmos-sdk/blob/main/types/staking.go)
+	DefaultPowerReduction := sdk.NewInt(1000000)
+	blacklisted_val_power := blacklisted_validator.GetConsensusPower(DefaultPowerReduction)
+
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
@@ -90,8 +100,16 @@ func (k Keeper) AllocateTokens(
 
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower))
+		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower - blacklisted_val_power))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
+
+		BLACKLISTED := "stridevaloper1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrgpwsqm"
+		valAddr := validator.GetOperator().String()
+		if valAddr == BLACKLISTED {
+			reward = sdk.DecCoins{}
+		}
+		k.Logger(ctx).Info(fmt.Sprintf("AllocateTokensToValidator: staking reward for %s to %v (note: %s is blacklisted)", valAddr, reward, BLACKLISTED))
+
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
 	}

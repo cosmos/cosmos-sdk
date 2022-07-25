@@ -25,7 +25,7 @@ func RandomGenesisSendEnabled(r *rand.Rand) []types.SendEnabled {
 	if r.Int63n(100) < 60 {
 		// 75% of the those times, set send enabled to true.
 		bondEnabled := r.Int63n(100) < 75
-		rv = append(rv, types.SendEnabled{sdk.DefaultBondDenom, bondEnabled})
+		rv = append(rv, types.SendEnabled{Denom: sdk.DefaultBondDenom, Enabled: bondEnabled})
 	}
 	// Probabilities:
 	//   P(a)    = 60.0% = There's SendEnable entry for the bond denom = .600
@@ -71,7 +71,6 @@ func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 
 // RandomizedGenState generates a random GenesisState for bank
 func RandomizedGenState(simState *module.SimulationState) {
-
 	var defaultSendEnabledParam bool
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, string(types.KeyDefaultSendEnabled), &defaultSendEnabledParam, simState.Rand,

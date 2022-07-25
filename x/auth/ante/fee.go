@@ -37,9 +37,26 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 }
 
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	fee, priority, err := dfd.txFeeChecker(ctx, tx)
-	if err != nil {
-		return ctx, err
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
+	if !simulate && ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
+	}
+
+	var (
+	  priority int64
+	  err error
+	)
+	
+	fee := feeTx.GetFee()
+	if !simulate {
+		fee, priority, err = dfd.txFeeChecker(ctx, tx)
+		if err != nil {
+			return ctx, err
+		}
 	}
 	if err := dfd.checkDeductFee(ctx, tx, fee); err != nil {
 		return ctx, err

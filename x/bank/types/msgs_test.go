@@ -167,32 +167,35 @@ func TestOutputValidation(t *testing.T) {
 func TestMsgMultiSendValidation(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("_______alice________"))
 	addr2 := sdk.AccAddress([]byte("________bob_________"))
+	addr3 := sdk.AccAddress([]byte("_______addr3________"))
 	atom123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	atom124 := sdk.NewCoins(sdk.NewInt64Coin("atom", 124))
-	eth123 := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	atom123eth123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 123))
+	atom246 := sdk.NewCoins(sdk.NewInt64Coin("atom", 246))
 
 	input1 := NewInput(addr1, atom123)
-	input2 := NewInput(addr1, eth123)
+	input2 := NewInput(addr1, atom246)
 	output1 := NewOutput(addr2, atom123)
 	output2 := NewOutput(addr2, atom124)
-	outputMulti := NewOutput(addr2, atom123eth123)
+	output3 := NewOutput(addr2, atom123)
+	output4 := NewOutput(addr3, atom123)
 
 	var emptyAddr sdk.AccAddress
 
 	cases := []struct {
-		valid bool
-		tx    MsgMultiSend
+		valid     bool
+		tx        MsgMultiSend
+		expErrMsg string
 	}{
-		{false, MsgMultiSend{}},                           // no input or output
-		{false, MsgMultiSend{Inputs: []Input{input1}}},    // just input
-		{false, MsgMultiSend{Outputs: []Output{output1}}}, // just output
+		{false, MsgMultiSend{}, "no inputs to send transaction"},                           // no input or output
+		{false, MsgMultiSend{Inputs: []Input{input1}}, "no outputs to send transaction"},   // just input
+		{false, MsgMultiSend{Outputs: []Output{output1}}, "no inputs to send transaction"}, // just output
 		{
 			false,
 			MsgMultiSend{
 				Inputs:  []Input{NewInput(emptyAddr, atom123)}, // invalid input
 				Outputs: []Output{output1},
 			},
+			"invalid input address",
 		},
 		{
 			false,
@@ -200,13 +203,15 @@ func TestMsgMultiSendValidation(t *testing.T) {
 				Inputs:  []Input{input1},
 				Outputs: []Output{{emptyAddr.String(), atom123}}, // invalid output
 			},
+			"invalid output address",
 		},
 		{
 			false,
 			MsgMultiSend{
 				Inputs:  []Input{input1},
-				Outputs: []Output{output2}, // amounts dont match
+				Outputs: []Output{output2}, // amounts don't match
 			},
+			"sum inputs != sum outputs",
 		},
 		{
 			true,
@@ -214,13 +219,15 @@ func TestMsgMultiSendValidation(t *testing.T) {
 				Inputs:  []Input{input1},
 				Outputs: []Output{output1},
 			},
+			"",
 		},
 		{
-			true,
+			false,
 			MsgMultiSend{
 				Inputs:  []Input{input1, input2},
-				Outputs: []Output{outputMulti},
+				Outputs: []Output{output3, output4},
 			},
+			"multiple senders not allowed",
 		},
 		{
 			true,
@@ -228,6 +235,7 @@ func TestMsgMultiSendValidation(t *testing.T) {
 				Inputs:  []Input{NewInput(addr2, atom123.MulInt(sdk.NewInt(2)))},
 				Outputs: []Output{output1, output1},
 			},
+			"",
 		},
 	}
 
@@ -235,8 +243,10 @@ func TestMsgMultiSendValidation(t *testing.T) {
 		err := tc.tx.ValidateBasic()
 		if tc.valid {
 			require.Nil(t, err, "%d: %+v", i, err)
+			require.Nil(t, err)
 		} else {
 			require.NotNil(t, err, "%d", i)
+			require.Contains(t, err.Error(), tc.expErrMsg)
 		}
 	}
 }

@@ -21,9 +21,14 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Slashing](slashing/spec/README.md) - Validator punishment mechanisms.
 * [Staking](staking/spec/README.md) - Proof-of-Stake layer for public blockchains.
 * [Upgrade](upgrade/spec/README.md) - Software upgrades handling and coordination.
+* [Nft](nft/spec/README.md) - NFT module implemented based on [ADR43](https://docs.cosmos.network/master/architecture/adr-043-nft-module.html).
 
 To learn more about the process of building modules, visit the [building modules reference documentation](../docs/building-modules/README.md).
 
 ## IBC
 
 The IBC module for the SDK has moved to its [own repository](https://github.com/cosmos/ibc-go).
+
+## CosmWasm
+
+The CosmWasm module enables smart contracts, and has its [own repository](https://github.com/CosmWasm/cosmwasm) and [documentation site](https://docs.cosmwasm.com/docs/1.0).

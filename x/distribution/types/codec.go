@@ -18,6 +18,9 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgWithdrawValidatorCommission{}, "cosmos-sdk/MsgWithdrawValCommission")
 	legacy.RegisterAminoMsg(cdc, &MsgSetWithdrawAddress{}, "cosmos-sdk/MsgModifyWithdrawAddress")
 	legacy.RegisterAminoMsg(cdc, &MsgFundCommunityPool{}, "cosmos-sdk/MsgFundCommunityPool")
+	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/distribution/MsgUpdateParams")
+
+	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/distribution/Params", nil)
 	cdc.RegisterConcrete(&CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal", nil)
 }
 
@@ -28,6 +31,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgWithdrawValidatorCommission{},
 		&MsgSetWithdrawAddress{},
 		&MsgFundCommunityPool{},
+		&MsgUpdateParams{},
 	)
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),

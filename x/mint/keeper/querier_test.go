@@ -3,17 +3,21 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	keep "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	"github.com/cosmos/cosmos-sdk/x/mint/testutil"
+	minttestutil "github.com/cosmos/cosmos-sdk/x/mint/testutil"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -26,15 +30,31 @@ type MintKeeperTestSuite struct {
 }
 
 func (suite *MintKeeperTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&suite.legacyAmino,
-		&suite.mintKeeper,
+	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	suite.ctx = testCtx.Ctx
+
+	// gomock initializations
+	ctrl := gomock.NewController(suite.T())
+	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
+	bankKeeper := minttestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := minttestutil.NewMockStakingKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(sdk.AccAddress{})
+
+	suite.mintKeeper = keeper.NewKeeper(
+		encCfg.Codec,
+		key,
+		stakingKeeper,
+		accountKeeper,
+		bankKeeper,
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+
+	err := suite.mintKeeper.SetParams(suite.ctx, types.DefaultParams())
 	suite.Require().NoError(err)
-
-	suite.ctx = app.BaseApp.NewContext(true, tmproto.Header{})
-
-	suite.mintKeeper.SetParams(suite.ctx, types.DefaultParams())
 	suite.mintKeeper.SetMinter(suite.ctx, types.DefaultInitialMinter())
 }
 

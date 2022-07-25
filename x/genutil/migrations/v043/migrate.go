@@ -2,8 +2,8 @@ package v043
 
 import (
 	"github.com/cosmos/cosmos-sdk/client"
-	v042bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v042"
-	v043bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
+	v1bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
+	v2bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v042gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v042"
@@ -27,17 +27,17 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 		appState[v043gov.ModuleName] = clientCtx.Codec.MustMarshalJSON(v043gov.MigrateJSON(&oldGovState))
 	}
 
-	if appState[v042bank.ModuleName] != nil {
+	if appState[v1bank.ModuleName] != nil {
 		// unmarshal relative source genesis application state
 		var oldBankState bank.GenesisState
-		clientCtx.Codec.MustUnmarshalJSON(appState[v042bank.ModuleName], &oldBankState)
+		clientCtx.Codec.MustUnmarshalJSON(appState[v1bank.ModuleName], &oldBankState)
 
 		// delete deprecated x/bank genesis state
-		delete(appState, v042bank.ModuleName)
+		delete(appState, v1bank.ModuleName)
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
-		appState[v043bank.ModuleName] = clientCtx.Codec.MustMarshalJSON(v043bank.MigrateJSON(&oldBankState))
+		appState[v2bank.ModuleName] = clientCtx.Codec.MustMarshalJSON(v2bank.MigrateJSON(&oldBankState))
 	}
 
 	return appState

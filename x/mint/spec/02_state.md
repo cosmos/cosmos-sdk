@@ -14,7 +14,8 @@ The minter is a space for holding current inflation information.
 
 ## Params
 
-Minting params are held in the global params store.
+The mint module stores it's params in state with the prefix of `0x01`,
+it can be updated with governance or the address with authority.
 
 * Params: `mint/params -> legacy_amino(params)`
 

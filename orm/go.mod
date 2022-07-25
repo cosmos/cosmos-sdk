@@ -10,12 +10,12 @@ require (
 	github.com/google/go-cmp v0.5.8
 	github.com/iancoleman/strcase v0.2.0
 	github.com/regen-network/gocuke v0.6.2
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.8.0
 	github.com/tendermint/tm-db v0.6.7
-	google.golang.org/grpc v1.47.0
+	google.golang.org/grpc v1.48.0
 	google.golang.org/protobuf v1.28.0
-	gotest.tools/v3 v3.2.0
-	pgregory.net/rapid v0.4.7
+	gotest.tools/v3 v3.3.0
+	pgregory.net/rapid v0.4.8
 )
 
 require (

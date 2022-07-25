@@ -304,12 +304,6 @@ func TestMsgSendGetSigners(t *testing.T) {
 	require.True(t, from.Equals(res[0]))
 }
 
-func TestMsgSetSendEnabledRouteAndType(t *testing.T) {
-	msg := NewMsgSetSendEnabled("", nil, nil, false, false)
-	assert.Equal(t, RouterKey, msg.Route(), "route")
-	assert.Equal(t, TypeMsgSetSendEnabled, msg.Type(), "type")
-}
-
 func TestMsgSetSendEnabledGetSignBytes(t *testing.T) {
 	msg := NewMsgSetSendEnabled("cartman", []*SendEnabled{{"casafiestacoin", false}, {"kylecoin", true}}, nil, false, false)
 	expected := `{"authority":"cartman","send_enabled":[{"denom":"casafiestacoin"},{"denom":"kylecoin","enabled":true}]}`

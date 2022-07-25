@@ -222,12 +222,6 @@ func NewMsgSetSendEnabled(authority string, sendEnabled []*SendEnabled, useDefau
 	}
 }
 
-// Route implements the LegacyMsg interface.
-func (msg MsgSetSendEnabled) Route() string { return RouterKey }
-
-// Type implements the LegacyMsg interface.
-func (msg MsgSetSendEnabled) Type() string { return TypeMsgSetSendEnabled }
-
 // GetSignBytes implements the LegacyMsg interface.
 func (msg MsgSetSendEnabled) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))

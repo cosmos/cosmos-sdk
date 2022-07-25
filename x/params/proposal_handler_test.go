@@ -1,8 +1,9 @@
 package params_test
 
 import (
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"testing"
+
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"

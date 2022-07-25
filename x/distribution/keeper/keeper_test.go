@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -169,7 +170,7 @@ func TestFundCommunityPool(t *testing.T) {
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, types.InitialFeePool())
 
-	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.ZeroInt())
+	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, math.ZeroInt())
 
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	require.NoError(t, banktestutil.FundAccount(bankKeeper, ctx, addr[0], amount))

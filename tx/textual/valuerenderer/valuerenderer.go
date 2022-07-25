@@ -9,16 +9,16 @@ import (
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
-type Adr050 struct {
+type Textual struct {
 	scalars map[string]ValueRenderer
 }
 
-func NewAdr050() Adr050 {
-	return Adr050{}
+func NewTextual() Textual {
+	return Textual{}
 }
 
 // GetValueRenderer returns the value renderer for the given FieldDescriptor.
-func (r Adr050) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
+func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
 	// Scalars, such as sdk.Int and sdk.Dec.
 	case fd.Kind() == protoreflect.StringKind && proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "":
@@ -54,7 +54,7 @@ func (r Adr050) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer
 	}
 }
 
-func (r *Adr050) init() {
+func (r *Textual) init() {
 	if r.scalars == nil {
 		r.scalars = map[string]ValueRenderer{}
 		r.scalars["cosmos.Int"] = intValueRenderer{}
@@ -63,7 +63,7 @@ func (r *Adr050) init() {
 }
 
 // DefineScalar adds a value renderer to the given Cosmos scalar.
-func (r *Adr050) DefineScalar(scalar string, vr ValueRenderer) {
+func (r *Textual) DefineScalar(scalar string, vr ValueRenderer) {
 	r.init()
 	r.scalars[scalar] = vr
 }

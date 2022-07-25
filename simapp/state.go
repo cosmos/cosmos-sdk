@@ -186,7 +186,16 @@ func AppStateRandomizedFn(
 
 	simManager.GenerateGenesisStates(simState)
 
-	appState, err := json.Marshal(genesisState)
+	genStateJson := map[string]json.RawMessage{}
+	for k, v := range genesisState {
+		if v != nil {
+			genStateJson[k] = cdc.MustMarshalJSON(v)
+		} else {
+			genStateJson[k] = []byte("{}")
+		}
+	}
+
+	appState, err := tmjson.Marshal(genStateJson)
 	if err != nil {
 		panic(err)
 	}

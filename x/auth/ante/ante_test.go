@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
@@ -486,7 +487,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 				modAcc := suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
 				suite.Require().True(suite.bankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).Empty())
-				require.True(sdk.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(149)))
+				require.True(math.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(149)))
 
 				err := testutil.FundAccount(suite.bankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)))
 				suite.Require().NoError(err)
@@ -500,8 +501,8 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 			func() {
 				modAcc := suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
-				require.True(sdk.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).AmountOf("atom"), sdk.NewInt(150)))
-				require.True(sdk.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(0)))
+				require.True(math.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).AmountOf("atom"), sdk.NewInt(150)))
+				require.True(math.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(0)))
 			},
 			false,
 			false,

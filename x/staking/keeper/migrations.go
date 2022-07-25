@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
-	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
-	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v3"
+	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
+	v3 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v3"
 	v4 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v4"
 )
 

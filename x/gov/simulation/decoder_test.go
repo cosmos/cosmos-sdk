@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -36,7 +37,7 @@ func TestDecodeStore(t *testing.T) {
 
 	proposalIDBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(proposalIDBz, 1)
-	deposit := v1beta1.NewDeposit(1, delAddr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())))
+	deposit := v1beta1.NewDeposit(1, delAddr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())))
 	vote := v1beta1.NewVote(1, delAddr1, v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes))
 
 	proposalBzA, err := cdc.Marshal(&proposalA)

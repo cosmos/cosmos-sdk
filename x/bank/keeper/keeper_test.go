@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -514,9 +515,9 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 
 	suite.Require().NoError(app.BankKeeper.SetParams(ctx, params))
 
-	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
-	fooCoin := sdk.NewCoin("foocoin", sdk.OneInt())
-	barCoin := sdk.NewCoin("barcoin", sdk.OneInt())
+	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())
+	fooCoin := sdk.NewCoin("foocoin", math.OneInt())
+	barCoin := sdk.NewCoin("barcoin", math.OneInt())
 
 	// assert with default (all denom) send enabled both Bar and Bond Denom are enabled
 	suite.Require().Equal(enabled, app.BankKeeper.IsSendEnabledCoin(ctx, barCoin))
@@ -628,8 +629,9 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
 	input := []types.Input{
-		{Address: addr.String(),
-			Coins: coins,
+		{
+			Address: addr.String(),
+			Coins:   coins,
 		},
 	}
 	outputs := []types.Output{

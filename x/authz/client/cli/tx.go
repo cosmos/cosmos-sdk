@@ -99,7 +99,7 @@ Examples:
 					return err
 				}
 
-				allowed, err := bech32toAccountAddresses(allowList)
+				allowed, err := bech32toAccAddresses(allowList)
 				if err != nil {
 					return err
 				}
@@ -301,7 +301,7 @@ func bech32toValidatorAddresses(validators []string) ([]sdk.ValAddress, error) {
 	return vals, nil
 }
 
-func bech32toAccountAddresses(accAddrs []string) ([]sdk.AccAddress, error) {
+func bech32toAccAddresses(accAddrs []string) ([]sdk.AccAddress, error) {
 	addrs := make([]sdk.AccAddress, len(accAddrs))
 	for i, addr := range accAddrs {
 		accAddr, err := sdk.AccAddressFromBech32(addr)

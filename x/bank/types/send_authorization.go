@@ -14,10 +14,7 @@ var _ authz.Authorization = &SendAuthorization{}
 
 // NewSendAuthorization creates a new SendAuthorization object.
 func NewSendAuthorization(allowed []sdk.AccAddress, spendLimit sdk.Coins) (*SendAuthorization, error) {
-	allowedAddrs, err := validateAllowedAddresses(allowed)
-	if err != nil {
-		return nil, err
-	}
+	allowedAddrs := toBech32Addresses(allowed)
 
 	a := SendAuthorization{}
 	if allowedAddrs != nil {
@@ -82,21 +79,20 @@ func (a SendAuthorization) ValidateBasic() error {
 	for i := 0; i < len(a.AllowList); i++ {
 		if found[a.AllowList[i]] {
 			return ErrDuplicateEntry
-		} else {
-			found[a.AllowList[i]] = true
 		}
+		found[a.AllowList[i]] = true
 	}
 	return nil
 }
 
-func validateAllowedAddresses(allowed []sdk.AccAddress) ([]string, error) {
+func toBech32Addresses(allowed []sdk.AccAddress) []string {
 	if len(allowed) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	allowedAddrs := make([]string, len(allowed))
 	for i, addr := range allowed {
 		allowedAddrs[i] = addr.String()
 	}
-	return allowedAddrs, nil
+	return allowedAddrs
 }

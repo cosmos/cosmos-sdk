@@ -323,10 +323,10 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			},
 			accSeqs: []uint64{0},
 			expInError: []string{
-				"incorrect authority",
-				`"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"`,
-				`"` + addr1Str + `"`,
-				"tx intended signer does not match the given signer",
+				"invalid authority",
+				"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+				addr1Str,
+				"expected gov account as only signer for proposal message",
 			},
 		},
 		{

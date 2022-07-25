@@ -34,7 +34,7 @@ service Query {
 
   // Params queries all parameters of the gov module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/params";
+    option (google.api.http).get = "/cosmos/gov/v1/params/{params_type}";
   }
 
   // Deposit queries single deposit information based proposalID, depositAddr.

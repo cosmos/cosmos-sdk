@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -381,7 +380,6 @@ func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsReq
 		return nil, err
 	}
 
-	fmt.Printf("resp: %v\n", resp)
 	response := &v1beta1.QueryParamsResponse{}
 
 	if resp.DepositParams != nil {

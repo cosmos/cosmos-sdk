@@ -87,7 +87,7 @@ func TestBlockProvision(t *testing.T) {
 }
 
 // Benchmarking :)
-// previously using sdk.Int operations:
+// previously using math.Int operations:
 // BenchmarkBlockProvision-4 5000000 220 ns/op
 //
 // using sdk.Dec operations: (current implementation)

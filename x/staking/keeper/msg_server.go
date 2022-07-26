@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"context"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strconv"
 	"time"
+
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

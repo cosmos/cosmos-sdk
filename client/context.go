@@ -54,6 +54,9 @@ type Context struct {
 	FeePayer          sdk.AccAddress
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
+	GasSetting        GasSetting
+	GasAdjustment     float64
+	GasPrices         sdk.DecCoins
 
 	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
 	IsAux bool
@@ -257,6 +260,24 @@ func (ctx Context) WithViper(prefix string) Context {
 	v.SetEnvPrefix(prefix)
 	v.AutomaticEnv()
 	ctx.Viper = v
+	return ctx
+}
+
+// WithInterfaceRegistry returns the context with an updated Gas
+func (ctx Context) WithGasSetting(gasSetting GasSetting) Context {
+	ctx.GasSetting = gasSetting
+	return ctx
+}
+
+// WithInterfaceRegistry returns the context with an updated GasAdjustment
+func (ctx Context) WithGasAdjustment(gasAdj float64) Context {
+	ctx.GasAdjustment = gasAdj
+	return ctx
+}
+
+// WithInterfaceRegistry returns the context with an updated GasPrices
+func (ctx Context) WithGasPrices(gasPrices sdk.DecCoins) Context {
+	ctx.GasPrices = gasPrices
 	return ctx
 }
 

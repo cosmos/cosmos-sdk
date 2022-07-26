@@ -57,14 +57,31 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		signMode = signing.SignMode_SIGN_MODE_EIP_191
 	}
 
+	gasAdj, err := flagSet.GetFloat64(flags.FlagGasAdjustment)
+	if err != nil {
+		gasAdj = clientCtx.GasAdjustment
+	}
+
+	var gasSetting client.GasSetting
+	gasStr, err := flagSet.GetString(flags.FlagGas)
+	if err != nil {
+		gasSetting = clientCtx.GasSetting
+	} else {
+		gasSetting, _ = client.ParseGasSetting(gasStr)
+	}
+
+	var gasPrices sdk.DecCoins
+	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
+	if err != nil {
+		gasPrices = clientCtx.GasPrices
+	} else {
+		gasPrices, _ = sdk.ParseDecCoins(gasPricesStr)
+	}
+
 	accNum, _ := flagSet.GetUint64(flags.FlagAccountNumber)
 	accSeq, _ := flagSet.GetUint64(flags.FlagSequence)
-	gasAdj, _ := flagSet.GetFloat64(flags.FlagGasAdjustment)
 	memo, _ := flagSet.GetString(flags.FlagNote)
 	timeoutHeight, _ := flagSet.GetUint64(flags.FlagTimeoutHeight)
-
-	gasStr, _ := flagSet.GetString(flags.FlagGas)
-	gasSetting, _ := flags.ParseGasSetting(gasStr)
 
 	f := Factory{
 		txConfig:           clientCtx.TxConfig,
@@ -83,6 +100,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		signMode:           signMode,
 		feeGranter:         clientCtx.FeeGranter,
 		feePayer:           clientCtx.FeePayer,
+		gasPrices:          gasPrices,
 	}
 
 	feesStr, _ := flagSet.GetString(flags.FlagFees)
@@ -92,9 +110,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	// Add tips to factory. The tipper is necessarily the Msg signer, i.e.
 	// the from address.
 	f = f.WithTips(tipsStr, clientCtx.FromAddress.String())
-
-	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
-	f = f.WithGasPrices(gasPricesStr)
 
 	return f
 }

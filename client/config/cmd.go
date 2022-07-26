@@ -58,6 +58,12 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			cmd.Println(conf.Node)
 		case flags.FlagBroadcastMode:
 			cmd.Println(conf.BroadcastMode)
+		case flags.FlagGas:
+			cmd.Println(conf.Gas)
+		case flags.FlagGasAdjustment:
+			cmd.Println(conf.GasAdjustment)
+		case flags.FlagGasPrices:
+			cmd.Println(conf.GasPrices)
 		default:
 			err := errUnknownConfigKey(key)
 			return fmt.Errorf("couldn't get the value for the key: %v, error:  %v", key, err)
@@ -78,6 +84,12 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			conf.SetNode(value)
 		case flags.FlagBroadcastMode:
 			conf.SetBroadcastMode(value)
+		case flags.FlagGas:
+			conf.SetGas(value)
+		case flags.FlagGasAdjustment:
+			conf.SetGasAdjustment(value)
+		case flags.FlagGasPrices:
+			conf.SetGasPrices(value)
 		default:
 			return errUnknownConfigKey(key)
 		}

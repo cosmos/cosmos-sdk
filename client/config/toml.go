@@ -25,6 +25,12 @@ output = "{{ .Output }}"
 node = "{{ .Node }}"
 # Transaction broadcasting mode (sync|async|block)
 broadcast-mode = "{{ .BroadcastMode }}"
+# Gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically
+gas = "{{ .Gas }}"
+# Adjustment factor to be multiplied against the estimate returned by the tx simulation
+gas-adjustment = "{{ .GasAdjustment }}"
+# Gas prices in decimal format to determine the transaction fee
+gas-prices = "{{ .GasPrices }}"
 `
 
 // writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to

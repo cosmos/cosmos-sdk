@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -101,7 +102,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 		baseDenom, _ := sdk.GetBaseDenom()
 		rewards = sdk.Coins{sdk.Coin{
 			Denom:  baseDenom,
-			Amount: sdk.ZeroInt(),
+			Amount: math.ZeroInt(),
 		}}
 	}
 

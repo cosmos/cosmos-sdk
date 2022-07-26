@@ -66,8 +66,8 @@ type DelegationDistInfo struct {
 
 ## Params
 
-distribution module stores it's params in state with the prefix of `0x09`, 
-it can only updated with governance.
+The distribution module stores it's params in state with the prefix of `0x09`, 
+it can be updated with governance or the address with authority.
 
 * Params: `0x09 | ProtocolBuffer(Params)`
 

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -9,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // SendKeeper defines a module interface that facilitates the transfer of coins
@@ -21,7 +22,7 @@ type SendKeeper interface {
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
 	GetParams(ctx sdk.Context) types.Params
-	SetParams(ctx sdk.Context, params types.Params)
+	SetParams(ctx sdk.Context, params types.Params) error
 
 	IsSendEnabledDenom(ctx sdk.Context, denom string) bool
 	GetSendEnabledEntry(ctx sdk.Context, denom string) (types.SendEnabled, bool)
@@ -36,6 +37,8 @@ type SendKeeper interface {
 
 	BlockedAddr(addr sdk.AccAddress) bool
 	GetBlockedAddresses() map[string]bool
+
+	GetAuthority() string
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -45,44 +48,74 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 type BaseSendKeeper struct {
 	BaseViewKeeper
 
-	cdc        codec.BinaryCodec
-	ak         types.AccountKeeper
-	storeKey   storetypes.StoreKey
-	paramSpace paramtypes.Subspace
+	cdc      codec.BinaryCodec
+	ak       types.AccountKeeper
+	storeKey storetypes.StoreKey
 
 	// list of addresses that are restricted from receiving transactions
 	blockedAddrs map[string]bool
+
+	// the address capable of executing a MsgUpdateParams message. Typically, this
+	// should be the x/gov module account.
+	authority string
 }
 
 func NewBaseSendKeeper(
-	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
+	cdc codec.BinaryCodec,
+	storeKey storetypes.StoreKey,
+	ak types.AccountKeeper,
+	blockedAddrs map[string]bool,
+	authority string,
 ) BaseSendKeeper {
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Errorf("invalid bank authority address: %w", err))
+	}
+
 	return BaseSendKeeper{
 		BaseViewKeeper: NewBaseViewKeeper(cdc, storeKey, ak),
 		cdc:            cdc,
 		ak:             ak,
 		storeKey:       storeKey,
-		paramSpace:     paramSpace,
 		blockedAddrs:   blockedAddrs,
+		authority:      authority,
 	}
+}
+
+// GetAuthority returns the x/bank module's authority.
+func (k BaseSendKeeper) GetAuthority() string {
+	return k.authority
 }
 
 // GetParams returns the total set of bank parameters.
 func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
-	k.paramSpace.GetParamSet(ctx, &params)
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.ParamsKey)
+	if bz == nil {
+		return params
+	}
+
+	k.cdc.MustUnmarshal(bz, &params)
 	return params
 }
 
 // SetParams sets the total set of bank parameters.
-//
-// nolint:staticcheck
-func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) {
+//nolint:staticcheck // params.SendEnabled is deprecated but it should be here regardless.
+func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
+	// normally SendEnabled is deprecated but we still support it for backwards compatibility
+	// using params.Validate() would fail due to the SendEnabled deprecation
 	if len(params.SendEnabled) > 0 {
 		k.SetAllSendEnabled(ctx, params.SendEnabled)
+		// override params without SendEnabled
+		params = types.NewParams(params.DefaultSendEnabled)
 	}
 
-	p := types.NewParams(params.DefaultSendEnabled)
-	k.paramSpace.SetParamSet(ctx, &p)
+	store := ctx.KVStore(k.storeKey)
+	bz, err := k.cdc.Marshal(&params)
+	if err != nil {
+		return err
+	}
+	store.Set(types.ParamsKey, bz)
+	return nil
 }
 
 // InputOutputCoins performs multi-send functionality. It accepts a series of
@@ -105,7 +138,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		if err != nil {
 			return err
 		}
-
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				sdk.EventTypeMessage,

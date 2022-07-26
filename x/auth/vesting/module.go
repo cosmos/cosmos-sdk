@@ -118,7 +118,7 @@ func (am AppModule) InitGenesis(_ sdk.Context, _ proto.Message) []abci.Validator
 
 // ExportGenesis is always empty, as InitGenesis does nothing either.
 func (am AppModule) ExportGenesis(_ sdk.Context) proto.Message {
-	return nil
+	return am.DefaultGenesis()
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

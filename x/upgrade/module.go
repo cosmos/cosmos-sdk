@@ -139,7 +139,7 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodin
 
 // ExportGenesis is always empty, as InitGenesis does nothing either
 func (am AppModule) ExportGenesis(_ sdk.Context) proto.Message {
-	return nil // TODO: fix am.DefaultGenesis(cdc)
+	return am.DefaultGenesis()
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

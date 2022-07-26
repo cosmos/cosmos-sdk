@@ -64,16 +64,9 @@ jobs:
             ~/.cache/golangci-lint
             ~/.cache/go-build
           key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
-      - uses: actions/download-artifact@v3
-        if: env.GIT_DIFF
-        with:
-          name: "${{ github.sha }}-${{ matrix.part }}"
-      - name: test & coverage report creation
+      - name: e2e tests
         if: env.GIT_DIFF
         run: |
           cd tests/e2e && go test ./... -mod=readonly -timeout 30m -race
       - uses: actions/upload-artifact@v3
         if: env.GIT_DIFF
-        with:
-          name: "${{ github.sha }}-${{ matrix.part }}-race-output"
-          path: ./${{ matrix.part }}-race-output.txt

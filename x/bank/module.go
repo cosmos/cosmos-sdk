@@ -7,36 +7,23 @@ import (
 	"math/rand"
 	"time"
 
-	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
-	"cosmossdk.io/depinject"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/tendermint/tendermint/crypto"
-
-	"cosmossdk.io/core/appmodule"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	v1bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
+	v040 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
-
-// ConsensusVersion defines the current x/bank module consensus version.
-const ConsensusVersion = 4
 
 var (
 	_ module.AppModule           = AppModule{}
@@ -74,7 +61,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the bank module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -95,7 +82,7 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 	types.RegisterInterfaces(registry)
 
 	// Register legacy interfaces for migration scripts.
-	v1bank.RegisterInterfaces(registry)
+	v040.RegisterInterfaces(registry)
 }
 
 // AppModule implements an application module for the bank module.
@@ -104,9 +91,6 @@ type AppModule struct {
 
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
-
-	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace exported.Subspace
 }
 
 // RegisterServices registers module services.
@@ -114,7 +98,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
-	m := keeper.NewMigrator(am.keeper.(keeper.BaseKeeper), am.legacySubspace)
+	m := keeper.NewMigrator(am.keeper.(keeper.BaseKeeper))
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/bank from version 1 to 2: %v", err))
 	}
@@ -122,19 +106,14 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/bank from version 2 to 3: %v", err))
 	}
-
-	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/bank from version 3 to 4: %v", err))
-	}
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper, ss exported.Subspace) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
-		legacySubspace: ss,
 	}
 }
 
@@ -179,7 +158,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+func (AppModule) ConsensusVersion() uint64 { return 3 }
 
 // AppModuleSimulation functions
 
@@ -193,13 +172,9 @@ func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedP
 	return nil
 }
 
-// RandomizedParams creates randomized distribution param changes for the simulator.
-
-// TODO: Returns an empty slice which will make parameter changes a no-op during
-// simulations. Once all modules are migrated, remove RandomizedParams from
-// the simulation interface.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
+// RandomizedParams creates randomized bank param changes for the simulator.
+func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+	return simulation.ParamChanges(r)
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
@@ -210,74 +185,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc, am.accountKeeper, am.keeper,
 	)
-}
-
-// New App Wiring Setup
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
-			provideModuleBasic,
-			provideModule))
-}
-
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type bankInputs struct {
-	depinject.In
-
-	ModuleKey depinject.OwnModuleKey
-	Config    *modulev1.Module
-	Cdc       codec.Codec
-	Key       *store.KVStoreKey
-
-	AccountKeeper types.AccountKeeper
-	Authority     map[string]sdk.AccAddress `optional:"true"`
-
-	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
-}
-
-type bankOutputs struct {
-	depinject.Out
-
-	BankKeeper keeper.BaseKeeper
-	Module     runtime.AppModuleWrapper
-}
-
-func provideModule(in bankInputs) bankOutputs {
-	// configure blocked module accounts.
-	//
-	// default behavior for blockedAddresses is to regard any module mentioned in AccountKeeper's module account
-	// permissions as blocked.
-	blockedAddresses := make(map[string]bool)
-	if len(in.Config.BlockedModuleAccountsOverride) != 0 {
-		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
-			addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
-			blockedAddresses[addr.String()] = true
-		}
-	} else {
-		for _, permission := range in.AccountKeeper.GetModulePermissions() {
-			blockedAddresses[permission.GetAddress().String()] = true
-		}
-	}
-
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		// default to governance authority if not provided
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
-	}
-
-	bankKeeper := keeper.NewBaseKeeper(
-		in.Cdc,
-		in.Key,
-		in.AccountKeeper,
-		blockedAddresses,
-		authority.String(),
-	)
-	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper, in.LegacySubspace)
-
-	return bankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
 }

@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func (suite *IntegrationTestSuite) TestMsgUpdateParams() {
+func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 	// default params
 	params := types.DefaultParams()
 
@@ -26,7 +26,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams() {
 		{
 			name: "send enabled param",
 			input: &types.MsgUpdateParams{
-				Authority: suite.app.BankKeeper.GetAuthority(),
+				Authority: suite.keeper.GetAuthority(),
 				Params: types.Params{
 					SendEnabled: []*types.SendEnabled{
 						{Denom: "foo", Enabled: true},
@@ -38,7 +38,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams() {
 		{
 			name: "all good",
 			input: &types.MsgUpdateParams{
-				Authority: suite.app.BankKeeper.GetAuthority(),
+				Authority: suite.keeper.GetAuthority(),
 				Params:    params,
 			},
 			expErr: false,

@@ -1,4 +1,4 @@
-name: Tests Race
+name: Tests E2E
 #  Tests Race workflow runs unit tests with the race detector
 #  This workflow is run on pushes to main & every Pull Requests where a .go, .mod, .sum have been changed
 on:

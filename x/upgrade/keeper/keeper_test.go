@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
 
 	s.baseApp = baseapp.NewBaseApp(
-		"nft",
+		"upgrade",
 		log.NewNopLogger(),
 		testCtx.DB,
 		s.encCfg.TxConfig.TxDecoder(),

@@ -59,7 +59,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
 
 	s.baseApp = baseapp.NewBaseApp(
-		"nft",
+		"upgrade",
 		log.NewNopLogger(),
 		testCtx.DB,
 		s.encCfg.TxConfig.TxDecoder(),

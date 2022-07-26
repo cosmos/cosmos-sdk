@@ -173,7 +173,7 @@ empty coins slice before it is used to create `banktype.MsgSend`.
 * (authz)[\#11060](https://github.com/cosmos/cosmos-sdk/pull/11060) Support grant with no expire time.
 * (rosetta) [\#11590](https://github.com/cosmos/cosmos-sdk/pull/11590) Add fee suggestion for rosetta and enable offline mode. Also force set events about Fees to Success to pass reconciliation test.
 * (types) [\#11959](https://github.com/cosmos/cosmos-sdk/pull/11959) Added `sdk.Coins.Find` helper method to find a coin by denom.
-* (x/bank) [\#11859](https://github.com/cosmos/cosmos-sdk/pull/11859) Create the `SetSendEnabled` endpoint for managing the bank's SendEnabled settings.
+* (x/bank) [\#11981](https://github.com/cosmos/cosmos-sdk/pull/11981) Create the `SetSendEnabled` endpoint for managing the bank's SendEnabled settings.
 
 ### API Breaking Changes
 

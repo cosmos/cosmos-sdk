@@ -118,10 +118,8 @@ func SimulateMsgGrant(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ba
 		if !t1.Before(ctx.BlockTime()) {
 			expiration = &t1
 		}
-		randomAuthz, err := generateRandomAuthorization(r, spendLimit)
-		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "unable to generate random authorization"), nil, err
-		}
+		randomAuthz := generateRandomAuthorization(r, spendLimit)
+
 		msg, err := authz.NewMsgGrant(granter.Address, grantee.Address, randomAuthz, expiration)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
@@ -150,13 +148,13 @@ func SimulateMsgGrant(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ba
 	}
 }
 
-func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) (authz.Authorization, error) {
+func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) authz.Authorization {
 	authorizations := make([]authz.Authorization, 2)
 	sendAuthz := banktype.NewSendAuthorization(spendLimit, nil)
 	authorizations[0] = sendAuthz
 	authorizations[1] = authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktype.MsgSend{}))
 
-	return authorizations[r.Intn(len(authorizations))], nil
+	return authorizations[r.Intn(len(authorizations))]
 }
 
 // SimulateMsgRevoke generates a MsgRevoke with random values.

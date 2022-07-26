@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/params) [#12724](https://github.com/cosmos/cosmos-sdk/pull/12724) Add `GetParamSetIfExists` function to params `Subspace` to prevent panics on breaking changes.
 * [#12668](https://github.com/cosmos/cosmos-sdk/pull/12668) Add `authz_msg_index` event attribute to message events emitted when executing via `MsgExec` through `x/authz`.
 * [#12697](https://github.com/cosmos/cosmos-sdk/pull/12697) Upgrade IAVL to v0.19.0 with fast index and error propagation. NOTE: first start will take a while to propagate into new model.
 

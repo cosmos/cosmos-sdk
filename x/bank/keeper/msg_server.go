@@ -141,5 +141,13 @@ func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEn
 		k.SetParams(ctx, types.NewParams(msg.DefaultSendEnabled))
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Authority),
+		),
+	)
+
 	return &types.MsgSetSendEnabledResponse{}, nil
 }

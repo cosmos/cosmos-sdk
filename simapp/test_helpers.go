@@ -25,7 +25,6 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -366,7 +365,7 @@ func NewTestNetworkFixture() network.TestFixture {
 		Amino:             encodingCfg.Amino,
 		InterfaceRegistry: encodingCfg.InterfaceRegistry,
 	}
-	appCtr := func(val testutil.Validator) servertypes.Application {
+	appCtr := func(val testutil.Validator) types.Application {
 		return NewSimApp(
 			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
 			encodingCfg,

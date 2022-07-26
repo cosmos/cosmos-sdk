@@ -15,13 +15,14 @@ import (
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 )
 
-const mockCoinMetadataKey = "mockCoinMetadataKey"
+func mockCoinMetadataKey(denom string) string {
+	return fmt.Sprintf("%s-%s", "coin-metadata", denom)
+}
 
 // mockCoinMetadataQuerier is a mock querier for coin metadata used for test
 // purposes.
 func mockCoinMetadataQuerier(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
-	v := ctx.Value(fmt.Sprintf("%s-%s", mockCoinMetadataKey, denom))
-
+	v := ctx.Value(mockCoinMetadataKey(denom))
 	if v == nil {
 		return nil, nil
 	}
@@ -41,7 +42,7 @@ func TestFormatCoin(t *testing.T) {
 			Display:    tc.metadata.Denom,
 			DenomUnits: []*bankv1beta1.DenomUnit{{Denom: tc.coin.Denom, Exponent: 0}, {Denom: tc.metadata.Denom, Exponent: tc.metadata.Exponent}},
 		}
-		ctx := context.WithValue(context.Background(), fmt.Sprintf("%s-%s", mockCoinMetadataKey, tc.metadata.Denom), metadata)
+		ctx := context.WithValue(context.Background(), mockCoinMetadataKey(tc.coin.Denom), metadata)
 
 		r, err := valueRendererOf(tc.coin)
 		require.NoError(t, err)
@@ -68,29 +69,3 @@ func (t *coinTest) UnmarshalJSON(b []byte) error {
 	a := []interface{}{&t.coin, &t.metadata, &t.expRes}
 	return json.Unmarshal(b, &a)
 }
-
-// func TestFormatCoins(t *testing.T) {
-// 	var testcases []coinsTest
-// 	raw, err := ioutil.ReadFile("../internal/testdata/coins.json")
-// 	require.NoError(t, err)
-// 	err = json.Unmarshal(raw, &testcases)
-// 	require.NoError(t, err)
-
-// 	for _, tc := range testcases {
-// 		// Create the metadata array to pass into formatCoins
-// 		metadatas := make([]*bankv1beta1.Metadata, len(tc.coins))
-
-// 		for i, coin := range tc.coins {
-// 			m := tc.metadataMap[coin.Denom]
-// 			metadatas[i] = &bankv1beta1.Metadata{
-// 				Display:    m.Denom,
-// 				DenomUnits: []*bankv1beta1.DenomUnit{{Denom: coin.Denom, Exponent: 0}, {Denom: m.Denom, Exponent: m.Exponent}},
-// 			}
-// 		}
-
-// 		output, err := formatCoins(tc.coins, metadatas)
-// 		require.NoError(t, err)
-
-// 		require.Equal(t, tc.expRes, output)
-// 	}
-// }

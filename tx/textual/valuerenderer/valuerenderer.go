@@ -12,6 +12,8 @@ import (
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
+// CoinMetadataQueryFn defines a function that queries state for the coin denom
+// metadata. It is meant to be passed as an argument into `NewTextual`.
 type CoinMetadataQueryFn func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error)
 
 type Textual struct {
@@ -30,7 +32,7 @@ func NewTextual(q CoinMetadataQueryFn) Textual {
 // GetValueRenderer returns the value renderer for the given FieldDescriptor.
 func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
-	// Scalars, such as sdk.Int and sdk.Dec.
+	// Scalars, such as math.Int and math.Dec.
 	case fd.Kind() == protoreflect.StringKind && proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "":
 		{
 			scalar, ok := proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar).(string)

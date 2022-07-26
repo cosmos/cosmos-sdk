@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -74,8 +75,7 @@ func (s *paginationTestSuite) SetupTest() {
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 
-	s.ctx, s.bankKeeper, s.accountKeeper, s.cdc, s.app, s.interfaceReg =
-		ctx, bankKeeper, accountKeeper, cdc, app, reg
+	s.ctx, s.bankKeeper, s.accountKeeper, s.cdc, s.app, s.interfaceReg = ctx, bankKeeper, accountKeeper, cdc, app, reg
 }
 
 func (s *paginationTestSuite) TestParsePagination() {
@@ -352,7 +352,7 @@ func (s *paginationTestSuite) TestPaginate() {
 	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
-		var amount sdk.Int
+		var amount math.Int
 		err := amount.Unmarshal(value)
 		if err != nil {
 			return err

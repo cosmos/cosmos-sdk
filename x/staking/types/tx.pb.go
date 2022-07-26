@@ -751,7 +751,7 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.46
 	CancelUnbondingDelegation(ctx context.Context, in *MsgCancelUnbondingDelegation, opts ...grpc.CallOption) (*MsgCancelUnbondingDelegationResponse, error)
-	// UpdateParams defines a operation for updating the x/staking module
+	// UpdateParams defines an operation for updating the x/staking module
 	// parameters.
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
@@ -848,7 +848,7 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.46
 	CancelUnbondingDelegation(context.Context, *MsgCancelUnbondingDelegation) (*MsgCancelUnbondingDelegationResponse, error)
-	// UpdateParams defines a operation for updating the x/staking module
+	// UpdateParams defines an operation for updating the x/staking module
 	// parameters.
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)

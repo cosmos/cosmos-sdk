@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 	origCoins := sdk.NewCoins(newFooCoin(50), newBarCoin(30))
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.keeper, ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, origCoins))
 
 	res, err = queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	origCoins := sdk.NewCoins(fooCoins, barCoins)
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.keeper, ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, origCoins))
 
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -121,7 +121,7 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	)
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.keeper, suite.ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, suite.ctx, addr, origCoins))
 
 	// move time forward for some tokens to vest
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
@@ -147,7 +147,7 @@ func (suite *KeeperTestSuite) TestQueryTotalSupply() {
 	suite.mockMintCoins(mintAcc)
 	suite.
 		Require().
-		NoError(suite.keeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
+		NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
 
 	res, err = queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
@@ -168,7 +168,7 @@ func (suite *KeeperTestSuite) TestQueryTotalSupplyOf() {
 	suite.mockMintCoins(mintAcc)
 	suite.
 		Require().
-		NoError(suite.keeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
+		NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
 
 	_, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{})
 	suite.Require().Error(err)
@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) TestQueryParams() {
 	res, err := suite.queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	suite.Require().Equal(suite.keeper.GetParams(suite.ctx), res.GetParams())
+	suite.Require().Equal(suite.bankKeeper.GetParams(suite.ctx), res.GetParams())
 }
 
 func (suite *KeeperTestSuite) QueryDenomsMetadataRequest() {
@@ -255,8 +255,8 @@ func (suite *KeeperTestSuite) QueryDenomsMetadataRequest() {
 					Display: "eth",
 				}
 
-				suite.keeper.SetDenomMetaData(suite.ctx, metadataAtom)
-				suite.keeper.SetDenomMetaData(suite.ctx, metadataEth)
+				suite.bankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
+				suite.bankKeeper.SetDenomMetaData(suite.ctx, metadataEth)
 				expMetadata = []types.Metadata{metadataAtom, metadataEth}
 				req = &types.QueryDenomsMetadataRequest{
 					Pagination: &query.PageRequest{
@@ -337,7 +337,7 @@ func (suite *KeeperTestSuite) QueryDenomMetadataRequest() {
 					Display: "atom",
 				}
 
-				suite.keeper.SetDenomMetaData(suite.ctx, expMetadata)
+				suite.bankKeeper.SetDenomMetaData(suite.ctx, expMetadata)
 				req = &types.QueryDenomMetadataRequest{
 					Denom: expMetadata.Base,
 				}
@@ -369,7 +369,7 @@ func (suite *KeeperTestSuite) QueryDenomMetadataRequest() {
 func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 	ctx := suite.ctx
 
-	keeper := suite.keeper
+	keeper := suite.bankKeeper
 
 	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
@@ -458,7 +458,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 }
 
 func (suite *KeeperTestSuite) TestQuerySendEnabled() {
-	ctx, bankKeeper := suite.ctx, suite.keeper
+	ctx, bankKeeper := suite.ctx, suite.bankKeeper
 
 	bankKeeper.SetSendEnabled(ctx, "falsestcoin", false)
 	bankKeeper.SetSendEnabled(ctx, "truestcoin", true)

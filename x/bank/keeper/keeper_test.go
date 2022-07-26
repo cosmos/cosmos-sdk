@@ -25,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -76,7 +75,7 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx        sdk.Context
-	keeper     keeper.BaseKeeper
+	bankKeeper keeper.BaseKeeper
 	authKeeper *banktestutil.MockAccountKeeper
 
 	queryClient banktypes.QueryClient
@@ -97,7 +96,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.ctx = ctx
 	suite.authKeeper = authKeeper
-	suite.keeper = keeper.NewBaseKeeper(
+	suite.bankKeeper = keeper.NewBaseKeeper(
 		encCfg.Codec,
 		key,
 		suite.authKeeper,
@@ -108,17 +107,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	banktypes.RegisterQueryServer(queryHelper, suite.keeper)
+	banktypes.RegisterQueryServer(queryHelper, suite.bankKeeper)
 	queryClient := banktypes.NewQueryClient(queryHelper)
 
 	suite.queryClient = queryClient
-	suite.msgServer = keeper.NewMsgServerImpl(suite.keeper)
+	suite.msgServer = keeper.NewMsgServerImpl(suite.bankKeeper)
 	suite.encCfg = encCfg
 }
 
 func (suite *KeeperTestSuite) mockQueryClient(ctx sdk.Context) banktypes.QueryClient {
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, suite.encCfg.InterfaceRegistry)
-	banktypes.RegisterQueryServer(queryHelper, suite.keeper)
+	banktypes.RegisterQueryServer(queryHelper, suite.bankKeeper)
 	return banktypes.NewQueryClient(queryHelper)
 }
 
@@ -197,7 +196,7 @@ func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc authtypes
 func (suite *KeeperTestSuite) TestSupply() {
 	ctx := suite.ctx
 	require := suite.Require()
-	keeper := suite.keeper
+	keeper := suite.bankKeeper
 
 	// add module accounts to supply keeper
 	genesisSupply, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
@@ -232,7 +231,7 @@ func (suite *KeeperTestSuite) TestSupply() {
 func (suite *KeeperTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {
 	ctx := suite.ctx
 	require := suite.Require()
-	keeper := suite.keeper
+	keeper := suite.bankKeeper
 
 	suite.mockMintCoins(mintAcc)
 	require.NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
@@ -246,7 +245,7 @@ func (suite *KeeperTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {
 func (suite *KeeperTestSuite) TestSupply_SendCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
-	authKeeper, keeper := suite.authKeeper, suite.keeper
+	authKeeper, keeper := suite.authKeeper, suite.bankKeeper
 
 	// set initial balances
 	suite.mockMintCoins(mintAcc)
@@ -301,22 +300,22 @@ func (suite *KeeperTestSuite) TestSupply_SendCoins() {
 func (suite *KeeperTestSuite) TestSupply_MintCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
-	authKeeper, keeper := suite.authKeeper, suite.keeper
+	authKeeper, keeper := suite.authKeeper, suite.bankKeeper
 
 	initialSupply, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
-	require.Panics(func() { keeper.MintCoins(ctx, "", initCoins) }, "no module account") // nolint:errcheck
+	require.Panics(func() { _ = keeper.MintCoins(ctx, "", initCoins) }, "no module account") // nolint:errcheck
 
 	suite.mockMintCoins(burnerAcc)
-	require.Panics(func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }, "invalid permission") // nolint:errcheck
+	require.Panics(func() { _ = keeper.MintCoins(ctx, authtypes.Burner, initCoins) }, "invalid permission") // nolint:errcheck
 
 	suite.mockMintCoins(minterAcc)
 	require.Error(keeper.MintCoins(ctx, authtypes.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewInt(-10)}}), "insufficient coins")
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, randomPerm).Return(nil)
-	require.Panics(func() { keeper.MintCoins(ctx, randomPerm, initCoins) }) // nolint:errcheck
+	require.Panics(func() { _ = keeper.MintCoins(ctx, randomPerm, initCoins) }) // nolint:errcheck
 
 	suite.mockMintCoins(minterAcc)
 	require.NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
@@ -343,7 +342,7 @@ func (suite *KeeperTestSuite) TestSupply_MintCoins() {
 func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	ctx := suite.ctx
 	require := suite.Require()
-	authKeeper, keeper := suite.authKeeper, suite.keeper
+	authKeeper, keeper := suite.authKeeper, suite.bankKeeper
 
 	// set burnerAcc balance
 	suite.mockMintCoins(minterAcc)
@@ -360,13 +359,13 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 	require.NoError(err)
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, "").Return(nil)
-	require.Panics(func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account") // nolint:errcheck
+	require.Panics(func() { _ = keeper.BurnCoins(ctx, "", initCoins) }, "no module account") // nolint:errcheck
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, minterAcc.Name).Return(nil)
-	require.Panics(func() { keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission") // nolint:errcheck
+	require.Panics(func() { _ = keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission") // nolint:errcheck
 
 	authKeeper.EXPECT().GetModuleAccount(ctx, randomPerm).Return(nil)
-	require.Panics(func() { keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }, "random permission") // nolint:errcheck
+	require.Panics(func() { _ = keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }, "random permission") // nolint:errcheck
 
 	suite.mockBurnCoins(burnerAcc)
 	require.Error(keeper.BurnCoins(ctx, authtypes.Burner, supplyAfterInflation), "insufficient coins")
@@ -404,21 +403,21 @@ func (suite *KeeperTestSuite) TestSendCoinsNewAccount() {
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], balances))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], balances))
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
-	acc1Balances := suite.keeper.GetAllBalances(ctx, accAddrs[0])
+	acc1Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[0])
 	require.Equal(balances, acc1Balances)
 
-	suite.keeper.GetAllBalances(ctx, accAddrs[1])
-	require.Empty(suite.keeper.GetAllBalances(ctx, accAddrs[1]))
+	suite.bankKeeper.GetAllBalances(ctx, accAddrs[1])
+	require.Empty(suite.bankKeeper.GetAllBalances(ctx, accAddrs[1]))
 
 	sendAmt := sdk.NewCoins(newFooCoin(50), newBarCoin(50))
 	suite.mockSendCoins(ctx, acc0, accAddrs[1])
-	require.NoError(suite.keeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt))
+	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt))
 
-	acc2Balances := suite.keeper.GetAllBalances(ctx, accAddrs[1])
-	acc1Balances = suite.keeper.GetAllBalances(ctx, accAddrs[0])
+	acc2Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[1])
+	acc1Balances = suite.bankKeeper.GetAllBalances(ctx, accAddrs[0])
 	require.Equal(sendAmt, acc2Balances)
 	updatedAcc1Bal := balances.Sub(sendAmt...)
 	require.Len(acc1Balances, len(updatedAcc1Bal))
@@ -432,25 +431,25 @@ func (suite *KeeperTestSuite) TestInputOutputNewAccount() {
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], balances))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], balances))
 
-	acc1Balances := suite.keeper.GetAllBalances(ctx, accAddrs[0])
+	acc1Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[0])
 	require.Equal(balances, acc1Balances)
 
-	require.Empty(suite.keeper.GetAllBalances(ctx, accAddrs[1]))
+	require.Empty(suite.bankKeeper.GetAllBalances(ctx, accAddrs[1]))
 
 	suite.mockInputOutputCoins(authtypes.NewBaseAccountWithAddress(accAddrs[0]), []sdk.AccAddress{accAddrs[1]})
-	inputs := []types.Input{
+	inputs := []banktypes.Input{
 		{Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 	outputs := []banktypes.Output{
 		{Address: accAddrs[1].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
-	require.NoError(suite.keeper.InputOutputCoins(ctx, inputs, outputs))
+	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
-	acc2Balances := suite.keeper.GetAllBalances(ctx, accAddrs[1])
+	acc2Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[1])
 	require.Equal(expected, acc2Balances)
 }
 
@@ -468,13 +467,13 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 		{Address: accAddrs[2].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
-	require.Error(suite.keeper.InputOutputCoins(ctx, inputs, []banktypes.Output{}))
+	require.Error(suite.bankKeeper.InputOutputCoins(ctx, inputs, []banktypes.Output{}))
 
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(acc0)
-	require.Error(suite.keeper.InputOutputCoins(ctx, inputs, outputs))
+	require.Error(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], balances))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], balances))
 
 	insufficientInputs := []banktypes.Input{
 		{
@@ -487,19 +486,19 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 		{Address: accAddrs[2].String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
 	}
 
-	require.Error(suite.keeper.InputOutputCoins(ctx, insufficientInputs, insufficientOutputs))
+	require.Error(suite.bankKeeper.InputOutputCoins(ctx, insufficientInputs, insufficientOutputs))
 
 	suite.mockInputOutputCoins(acc0, accAddrs[1:3])
-	require.NoError(suite.keeper.InputOutputCoins(ctx, inputs, outputs))
+	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
-	acc1Balances := suite.keeper.GetAllBalances(ctx, accAddrs[0])
+	acc1Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[0])
 	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
 	require.Equal(expected, acc1Balances)
 
-	acc2Balances := suite.keeper.GetAllBalances(ctx, accAddrs[1])
+	acc2Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[1])
 	require.Equal(expected, acc2Balances)
 
-	acc3Balances := suite.keeper.GetAllBalances(ctx, accAddrs[2])
+	acc3Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[2])
 	require.Equal(expected, acc3Balances)
 }
 
@@ -511,28 +510,28 @@ func (suite *KeeperTestSuite) TestSendCoins() {
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
 	suite.mockFundAccount(accAddrs[1])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[1], balances))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[1], balances))
 
 	sendAmt := sdk.NewCoins(newFooCoin(50), newBarCoin(25))
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(acc0)
-	require.Error(suite.keeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt))
+	require.Error(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt))
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], balances))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], balances))
 	suite.mockSendCoins(ctx, acc0, accAddrs[1])
-	require.NoError(suite.keeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt))
+	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt))
 
-	acc1Balances := suite.keeper.GetAllBalances(ctx, accAddrs[0])
+	acc1Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[0])
 	expected := sdk.NewCoins(newFooCoin(50), newBarCoin(25))
 	require.Equal(expected, acc1Balances)
 
-	acc2Balances := suite.keeper.GetAllBalances(ctx, accAddrs[1])
+	acc2Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[1])
 	expected = sdk.NewCoins(newFooCoin(150), newBarCoin(75))
 	require.Equal(expected, acc2Balances)
 
 	// we sent all foo coins to acc2, so foo balance should be deleted for acc1 and bar should be still there
 	var coins []sdk.Coin
-	suite.keeper.IterateAccountBalances(ctx, accAddrs[0], func(c sdk.Coin) (stop bool) {
+	suite.bankKeeper.IterateAccountBalances(ctx, accAddrs[0], func(c sdk.Coin) (stop bool) {
 		coins = append(coins, c)
 		return true
 	})
@@ -548,23 +547,23 @@ func (suite *KeeperTestSuite) TestValidateBalance() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(nil)
-	require.Error(suite.keeper.ValidateBalance(ctx, accAddrs[0]))
+	require.Error(suite.bankKeeper.ValidateBalance(ctx, accAddrs[0]))
 
 	balances := sdk.NewCoins(newFooCoin(100))
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], balances))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], balances))
 
 	suite.mockValidateBalance(acc0)
-	require.NoError(suite.keeper.ValidateBalance(ctx, accAddrs[0]))
+	require.NoError(suite.bankKeeper.ValidateBalance(ctx, accAddrs[0]))
 
 	acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
 	vacc := vesting.NewContinuousVestingAccount(acc1, balances.Add(balances...), now.Unix(), endTime.Unix())
 
 	suite.mockFundAccount(accAddrs[1])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[1], balances))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[1], balances))
 
 	suite.mockValidateBalance(vacc)
-	require.Error(suite.keeper.ValidateBalance(ctx, accAddrs[1]))
+	require.Error(suite.bankKeeper.ValidateBalance(ctx, accAddrs[1]))
 }
 
 func (suite *KeeperTestSuite) TestSendEnabled() {
@@ -574,40 +573,40 @@ func (suite *KeeperTestSuite) TestSendEnabled() {
 	params := banktypes.DefaultParams()
 	require.Equal(enabled, params.DefaultSendEnabled)
 
-	require.NoError(suite.keeper.SetParams(ctx, params))
+	require.NoError(suite.bankKeeper.SetParams(ctx, params))
 
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())
 	fooCoin := sdk.NewCoin("foocoin", math.OneInt())
 	barCoin := sdk.NewCoin("barcoin", math.OneInt())
 
 	// assert with default (all denom) send enabled both Bar and Bond Denom are enabled
-	require.Equal(enabled, suite.keeper.IsSendEnabledCoin(ctx, barCoin))
-	require.Equal(enabled, suite.keeper.IsSendEnabledCoin(ctx, bondCoin))
+	require.Equal(enabled, suite.bankKeeper.IsSendEnabledCoin(ctx, barCoin))
+	require.Equal(enabled, suite.bankKeeper.IsSendEnabledCoin(ctx, bondCoin))
 
 	// Both coins should be send enabled.
-	err := suite.keeper.IsSendEnabledCoins(ctx, fooCoin, bondCoin)
+	err := suite.bankKeeper.IsSendEnabledCoins(ctx, fooCoin, bondCoin)
 	require.NoError(err)
 
 	// Set default send_enabled to !enabled, add a foodenom that overrides default as enabled
 	params.DefaultSendEnabled = !enabled
-	require.NoError(suite.keeper.SetParams(ctx, params))
-	suite.keeper.SetSendEnabled(ctx, fooCoin.Denom, enabled)
+	require.NoError(suite.bankKeeper.SetParams(ctx, params))
+	suite.bankKeeper.SetSendEnabled(ctx, fooCoin.Denom, enabled)
 
 	// Expect our specific override to be enabled, others to be !enabled.
-	require.Equal(enabled, suite.keeper.IsSendEnabledCoin(ctx, fooCoin))
-	require.Equal(!enabled, suite.keeper.IsSendEnabledCoin(ctx, barCoin))
-	require.Equal(!enabled, suite.keeper.IsSendEnabledCoin(ctx, bondCoin))
+	require.Equal(enabled, suite.bankKeeper.IsSendEnabledCoin(ctx, fooCoin))
+	require.Equal(!enabled, suite.bankKeeper.IsSendEnabledCoin(ctx, barCoin))
+	require.Equal(!enabled, suite.bankKeeper.IsSendEnabledCoin(ctx, bondCoin))
 
 	// Foo coin should be send enabled.
-	err = suite.keeper.IsSendEnabledCoins(ctx, fooCoin)
+	err = suite.bankKeeper.IsSendEnabledCoins(ctx, fooCoin)
 	require.NoError(err)
 
 	// Expect an error when one coin is not send enabled.
-	err = suite.keeper.IsSendEnabledCoins(ctx, fooCoin, bondCoin)
+	err = suite.bankKeeper.IsSendEnabledCoins(ctx, fooCoin, bondCoin)
 	require.Error(err)
 
 	// Expect an error when all coins are not send enabled.
-	err = suite.keeper.IsSendEnabledCoins(ctx, bondCoin, barCoin)
+	err = suite.bankKeeper.IsSendEnabledCoins(ctx, bondCoin, barCoin)
 	require.Error(err)
 }
 
@@ -616,13 +615,13 @@ func (suite *KeeperTestSuite) TestHasBalance() {
 	require := suite.Require()
 
 	balances := sdk.NewCoins(newFooCoin(100))
-	require.False(suite.keeper.HasBalance(ctx, accAddrs[0], newFooCoin(99)))
+	require.False(suite.bankKeeper.HasBalance(ctx, accAddrs[0], newFooCoin(99)))
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], balances))
-	require.False(suite.keeper.HasBalance(ctx, accAddrs[0], newFooCoin(101)))
-	require.True(suite.keeper.HasBalance(ctx, accAddrs[0], newFooCoin(100)))
-	require.True(suite.keeper.HasBalance(ctx, accAddrs[0], newFooCoin(1)))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], balances))
+	require.False(suite.bankKeeper.HasBalance(ctx, accAddrs[0], newFooCoin(101)))
+	require.True(suite.bankKeeper.HasBalance(ctx, accAddrs[0], newFooCoin(100)))
+	require.True(suite.bankKeeper.HasBalance(ctx, accAddrs[0], newFooCoin(1)))
 }
 
 func (suite *KeeperTestSuite) TestMsgSendEvents() {
@@ -632,10 +631,10 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], newCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], newCoins))
 
 	suite.mockSendCoins(ctx, acc0, accAddrs[1])
-	require.NoError(suite.keeper.SendCoins(ctx, accAddrs[0], accAddrs[1], newCoins))
+	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], newCoins))
 	event1 := sdk.Event{
 		Type:       banktypes.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
@@ -674,7 +673,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	require := suite.Require()
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
-	require.NoError(suite.keeper.SetParams(ctx, banktypes.DefaultParams()))
+	require.NoError(suite.bankKeeper.SetParams(ctx, banktypes.DefaultParams()))
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
@@ -690,17 +689,17 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	}
 
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(acc0)
-	require.Error(suite.keeper.InputOutputCoins(ctx, inputs, outputs))
+	require.Error(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events := ctx.EventManager().ABCIEvents()
 	require.Equal(0, len(events))
 
 	// Set addr's coins but not accAddrs[1]'s coins
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))))
 
 	suite.mockInputOutputCoins(acc0, accAddrs[2:4])
-	require.NoError(suite.keeper.InputOutputCoins(ctx, inputs, outputs))
+	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
 	require.Equal(12, len(events)) // 9 events because account funding causes extra minting + coin_spent + coin_recv events
@@ -717,15 +716,15 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 
 	// Set addr's coins and accAddrs[1]'s coins
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
 	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))))
 	newCoins2 = sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
 
 	suite.mockInputOutputCoins(acc0, accAddrs[2:4])
-	require.NoError(suite.keeper.InputOutputCoins(ctx, inputs, outputs))
+	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
 	require.Equal(30, len(events)) // 27 due to account funding + coin_spent + coin_recv events
@@ -773,23 +772,23 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], origCoins))
 
 	suite.mockFundAccount(accAddrs[1])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[1], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[1], origCoins))
 
 	suite.mockSpendableCoins(ctx, acc1)
-	require.Equal(origCoins, suite.keeper.SpendableCoins(ctx, accAddrs[1]))
+	require.Equal(origCoins, suite.bankKeeper.SpendableCoins(ctx, accAddrs[1]))
 
 	suite.mockSpendableCoins(ctx, acc1)
-	require.Equal(origCoins[0], suite.keeper.SpendableCoin(ctx, accAddrs[1], "stake"))
+	require.Equal(origCoins[0], suite.bankKeeper.SpendableCoin(ctx, accAddrs[1], "stake"))
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 	suite.mockSpendableCoins(ctx, vacc)
-	require.Equal(origCoins.Sub(lockedCoins...), suite.keeper.SpendableCoins(ctx, accAddrs[0]))
+	require.Equal(origCoins.Sub(lockedCoins...), suite.bankKeeper.SpendableCoins(ctx, accAddrs[0]))
 
 	suite.mockSpendableCoins(ctx, vacc)
-	require.Equal(origCoins.Sub(lockedCoins...)[0], suite.keeper.SpendableCoin(ctx, accAddrs[0], "stake"))
+	require.Equal(origCoins.Sub(lockedCoins...)[0], suite.bankKeeper.SpendableCoin(ctx, accAddrs[0], "stake"))
 }
 
 func (suite *KeeperTestSuite) TestVestingAccountSend() {
@@ -805,20 +804,20 @@ func (suite *KeeperTestSuite) TestVestingAccountSend() {
 	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], origCoins))
 
 	// require that no coins be sendable at the beginning of the vesting schedule
 	suite.authKeeper.EXPECT().GetAccount(ctx, accAddrs[0]).Return(vacc)
-	require.Error(suite.keeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendCoins))
+	require.Error(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendCoins))
 
 	// receive some coins
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], sendCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], sendCoins))
 	// require that all vested coins are spendable plus any received
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 	suite.mockSendCoins(ctx, vacc, accAddrs[1])
-	require.NoError(suite.keeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendCoins))
-	require.Equal(origCoins, suite.keeper.GetAllBalances(ctx, accAddrs[0]))
+	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendCoins))
+	require.Equal(origCoins, suite.bankKeeper.GetAllBalances(ctx, accAddrs[0]))
 }
 
 func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
@@ -838,21 +837,21 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountSend() {
 	vacc := vesting.NewPeriodicVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), periods)
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], origCoins))
 
 	// require that no coins be sendable at the beginning of the vesting schedule
 	suite.authKeeper.EXPECT().GetAccount(ctx, accAddrs[0]).Return(vacc)
-	require.Error(suite.keeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendCoins))
+	require.Error(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendCoins))
 
 	// receive some coins
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], sendCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], sendCoins))
 
 	// require that all vested coins are spendable plus any received
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 	suite.mockSendCoins(ctx, vacc, accAddrs[1])
-	require.NoError(suite.keeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendCoins))
-	require.Equal(origCoins, suite.keeper.GetAllBalances(ctx, accAddrs[0]))
+	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendCoins))
+	require.Equal(origCoins, suite.bankKeeper.GetAllBalances(ctx, accAddrs[0]))
 }
 
 func (suite *KeeperTestSuite) TestVestingAccountReceive() {
@@ -869,17 +868,17 @@ func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], origCoins))
 
 	suite.mockFundAccount(accAddrs[1])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[1], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[1], origCoins))
 
 	// send some coins to the vesting account
 	suite.mockSendCoins(ctx, acc1, accAddrs[0])
-	require.NoError(suite.keeper.SendCoins(ctx, accAddrs[1], accAddrs[0], sendCoins))
+	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[1], accAddrs[0], sendCoins))
 
 	// require the coins are spendable
-	balances := suite.keeper.GetAllBalances(ctx, accAddrs[0])
+	balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[0])
 	require.Equal(origCoins.Add(sendCoins...), balances)
 	require.Equal(balances.Sub(vacc.LockedCoins(now)...), sendCoins)
 
@@ -906,17 +905,17 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 	vacc := vesting.NewPeriodicVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), periods)
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], origCoins))
 
 	suite.mockFundAccount(accAddrs[1])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[1], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[1], origCoins))
 
 	// send some coins to the vesting account
 	suite.mockSendCoins(ctx, acc1, accAddrs[0])
-	require.NoError(suite.keeper.SendCoins(ctx, accAddrs[1], accAddrs[0], sendCoins))
+	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[1], accAddrs[0], sendCoins))
 
 	// require the coins are spendable
-	balances := suite.keeper.GetAllBalances(ctx, accAddrs[0])
+	balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[0])
 	require.Equal(origCoins.Add(sendCoins...), balances)
 	require.Equal(balances.Sub(vacc.LockedCoins(now)...), sendCoins)
 
@@ -938,23 +937,23 @@ func (suite *KeeperTestSuite) TestDelegateCoins() {
 	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], origCoins))
 
 	suite.mockFundAccount(accAddrs[1])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[1], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[1], origCoins))
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
 	suite.mockDelegateCoins(ctx, acc1, holderAcc)
-	require.NoError(suite.keeper.DelegateCoins(ctx, accAddrs[1], holderAcc.GetAddress(), delCoins))
-	require.Equal(origCoins.Sub(delCoins...), suite.keeper.GetAllBalances(ctx, accAddrs[1]))
-	require.Equal(delCoins, suite.keeper.GetAllBalances(ctx, holderAcc.GetAddress()))
+	require.NoError(suite.bankKeeper.DelegateCoins(ctx, accAddrs[1], holderAcc.GetAddress(), delCoins))
+	require.Equal(origCoins.Sub(delCoins...), suite.bankKeeper.GetAllBalances(ctx, accAddrs[1]))
+	require.Equal(delCoins, suite.bankKeeper.GetAllBalances(ctx, holderAcc.GetAddress()))
 
 	// require the ability for a vesting account to delegate
 	suite.mockDelegateCoins(ctx, vacc, holderAcc)
-	require.NoError(suite.keeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
-	require.Equal(delCoins, suite.keeper.GetAllBalances(ctx, accAddrs[0]))
+	require.NoError(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
+	require.Equal(delCoins, suite.bankKeeper.GetAllBalances(ctx, accAddrs[0]))
 
 	// require that delegated vesting amount is equal to what was delegated with DelegateCoins
 	require.Equal(delCoins, vacc.GetDelegatedVesting())
@@ -968,17 +967,17 @@ func (suite *KeeperTestSuite) TestDelegateCoins_Invalid() {
 	delCoins := sdk.NewCoins(newFooCoin(50))
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(nil)
-	require.Error(suite.keeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
+	require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
 	invalidCoins := sdk.Coins{sdk.Coin{Denom: "fooDenom", Amount: sdk.NewInt(-50)}}
-	require.Error(suite.keeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), invalidCoins))
+	require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), invalidCoins))
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
-	require.Error(suite.keeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
+	require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
-	require.Error(suite.keeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), origCoins.Add(origCoins...)))
+	require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), origCoins.Add(origCoins...)))
 }
 
 func (suite *KeeperTestSuite) TestUndelegateCoins() {
@@ -995,40 +994,40 @@ func (suite *KeeperTestSuite) TestUndelegateCoins() {
 	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], origCoins))
 
 	suite.mockFundAccount(accAddrs[1])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[1], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[1], origCoins))
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
 	suite.mockDelegateCoins(ctx, acc1, holderAcc)
-	require.NoError(suite.keeper.DelegateCoins(ctx, accAddrs[1], holderAcc.GetAddress(), delCoins))
+	require.NoError(suite.bankKeeper.DelegateCoins(ctx, accAddrs[1], holderAcc.GetAddress(), delCoins))
 
-	require.Equal(origCoins.Sub(delCoins...), suite.keeper.GetAllBalances(ctx, accAddrs[1]))
-	require.Equal(delCoins, suite.keeper.GetAllBalances(ctx, holderAcc.GetAddress()))
+	require.Equal(origCoins.Sub(delCoins...), suite.bankKeeper.GetAllBalances(ctx, accAddrs[1]))
+	require.Equal(delCoins, suite.bankKeeper.GetAllBalances(ctx, holderAcc.GetAddress()))
 
 	// require the ability for a non-vesting account to undelegate
 	suite.mockUnDelegateCoins(ctx, acc1, holderAcc)
-	require.NoError(suite.keeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[1], delCoins))
+	require.NoError(suite.bankKeeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[1], delCoins))
 
-	require.Equal(origCoins, suite.keeper.GetAllBalances(ctx, accAddrs[1]))
-	require.True(suite.keeper.GetAllBalances(ctx, holderAcc.GetAddress()).Empty())
+	require.Equal(origCoins, suite.bankKeeper.GetAllBalances(ctx, accAddrs[1]))
+	require.True(suite.bankKeeper.GetAllBalances(ctx, holderAcc.GetAddress()).Empty())
 
 	// require the ability for a vesting account to delegate
 	suite.mockDelegateCoins(ctx, acc0, holderAcc)
-	require.NoError(suite.keeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
+	require.NoError(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
 
-	require.Equal(origCoins.Sub(delCoins...), suite.keeper.GetAllBalances(ctx, accAddrs[0]))
-	require.Equal(delCoins, suite.keeper.GetAllBalances(ctx, holderAcc.GetAddress()))
+	require.Equal(origCoins.Sub(delCoins...), suite.bankKeeper.GetAllBalances(ctx, accAddrs[0]))
+	require.Equal(delCoins, suite.bankKeeper.GetAllBalances(ctx, holderAcc.GetAddress()))
 
 	// require the ability for a vesting account to undelegate
 	suite.mockUnDelegateCoins(ctx, vacc, holderAcc)
-	require.NoError(suite.keeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], delCoins))
+	require.NoError(suite.bankKeeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], delCoins))
 
-	require.Equal(origCoins, suite.keeper.GetAllBalances(ctx, accAddrs[0]))
-	require.True(suite.keeper.GetAllBalances(ctx, holderAcc.GetAddress()).Empty())
+	require.Equal(origCoins, suite.bankKeeper.GetAllBalances(ctx, accAddrs[0]))
+	require.True(suite.bankKeeper.GetAllBalances(ctx, holderAcc.GetAddress()).Empty())
 
 	// require that delegated vesting amount is completely empty, since they were completely undelegated
 	require.Empty(vacc.GetDelegatedVesting())
@@ -1044,22 +1043,22 @@ func (suite *KeeperTestSuite) TestUndelegateCoins_Invalid() {
 	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(nil)
-	require.Error(suite.keeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], delCoins))
+	require.Error(suite.bankKeeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], delCoins))
 
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(suite.keeper, ctx, accAddrs[0], origCoins))
+	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], origCoins))
 
 	suite.mockDelegateCoins(ctx, acc0, holderAcc)
-	require.NoError(suite.keeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
+	require.NoError(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc0.GetAddress()).Return(nil)
-	require.Error(suite.keeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], delCoins))
+	require.Error(suite.bankKeeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], delCoins))
 
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
 	suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
-	require.Error(suite.keeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], origCoins))
+	require.Error(suite.bankKeeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], origCoins))
 }
 
 func (suite *KeeperTestSuite) TestSetDenomMetaData() {
@@ -1069,12 +1068,12 @@ func (suite *KeeperTestSuite) TestSetDenomMetaData() {
 	metadata := suite.getTestMetadata()
 
 	for i := range []int{1, 2} {
-		suite.keeper.SetDenomMetaData(ctx, metadata[i])
+		suite.bankKeeper.SetDenomMetaData(ctx, metadata[i])
 	}
 
-	actualMetadata, found := suite.keeper.GetDenomMetaData(ctx, metadata[1].Base)
+	actualMetadata, found := suite.bankKeeper.GetDenomMetaData(ctx, metadata[1].Base)
 	require.True(found)
-	found = suite.keeper.HasDenomMetaData(ctx, metadata[1].Base)
+	found = suite.bankKeeper.HasDenomMetaData(ctx, metadata[1].Base)
 	require.True(found)
 	require.Equal(metadata[1].GetBase(), actualMetadata.GetBase())
 	require.Equal(metadata[1].GetDisplay(), actualMetadata.GetDisplay())
@@ -1091,11 +1090,11 @@ func (suite *KeeperTestSuite) TestIterateAllDenomMetaData() {
 	expectedMetadata := suite.getTestMetadata()
 	// set metadata
 	for i := range []int{1, 2} {
-		suite.keeper.SetDenomMetaData(ctx, expectedMetadata[i])
+		suite.bankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])
 	}
 	// retrieve metadata
 	actualMetadata := make([]banktypes.Metadata, 0)
-	suite.keeper.IterateAllDenomMetaData(ctx, func(metadata banktypes.Metadata) bool {
+	suite.bankKeeper.IterateAllDenomMetaData(ctx, func(metadata banktypes.Metadata) bool {
 		actualMetadata = append(actualMetadata, metadata)
 		return false
 	})
@@ -1116,7 +1115,7 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 	// mint coins
 	suite.mockMintCoins(multiPermAcc)
 	require.NoError(
-		suite.keeper.MintCoins(
+		suite.bankKeeper.MintCoins(
 			suite.ctx,
 			multiPermAcc.Name,
 			sdk.NewCoins(sdk.NewCoin("utxo", sdk.NewInt(100000)))),
@@ -1124,7 +1123,7 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 	// send coins to address
 	suite.mockSendCoinsFromModuleToAccount(multiPermAcc, accAddrs[0])
 	require.NoError(
-		suite.keeper.SendCoinsFromModuleToAccount(
+		suite.bankKeeper.SendCoinsFromModuleToAccount(
 			suite.ctx,
 			multiPermAcc.Name,
 			accAddrs[0],
@@ -1135,7 +1134,7 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 	// burn coins from module account
 	suite.mockBurnCoins(multiPermAcc)
 	require.NoError(
-		suite.keeper.BurnCoins(
+		suite.bankKeeper.BurnCoins(
 			suite.ctx,
 			multiPermAcc.Name,
 			sdk.NewCoins(sdk.NewInt64Coin("utxo", 1000)),
@@ -1176,12 +1175,12 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 	}
 
 	// check balance and supply tracking
-	require.True(suite.keeper.HasSupply(suite.ctx, "utxo"))
-	savedSupply := suite.keeper.GetSupply(suite.ctx, "utxo")
+	require.True(suite.bankKeeper.HasSupply(suite.ctx, "utxo"))
+	savedSupply := suite.bankKeeper.GetSupply(suite.ctx, "utxo")
 	utxoSupply := savedSupply
 	require.Equal(utxoSupply.Amount, supply.AmountOf("utxo"))
 	// iterate accounts and check balances
-	suite.keeper.IterateAllBalances(suite.ctx, func(address sdk.AccAddress, coin sdk.Coin) (stop bool) {
+	suite.bankKeeper.IterateAllBalances(suite.ctx, func(address sdk.AccAddress, coin sdk.Coin) (stop bool) {
 		// if it's not utxo coin then skip
 		if coin.Denom != "utxo" {
 			return false
@@ -1263,7 +1262,7 @@ func (suite *KeeperTestSuite) TestMintCoinRestrictions() {
 	}
 
 	for _, test := range tests {
-		keeper := suite.keeper.WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
+		keeper := suite.bankKeeper.WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
 		for _, testCase := range test.testCases {
 			if testCase.expectPass {
 				suite.mockMintCoins(multiPermAcc)
@@ -1288,7 +1287,7 @@ func (suite *KeeperTestSuite) TestMintCoinRestrictions() {
 }
 
 func (suite *KeeperTestSuite) TestIsSendEnabledDenom() {
-	ctx, bankKeeper := suite.ctx, suite.keeper
+	ctx, bankKeeper := suite.ctx, suite.bankKeeper
 	require := suite.Require()
 
 	defaultCoin := "defaultCoin"
@@ -1322,7 +1321,7 @@ func (suite *KeeperTestSuite) TestIsSendEnabledDenom() {
 		require.NoError(bankKeeper.SetParams(ctx, params))
 		for _, tc := range tests {
 			suite.T().Run(fmt.Sprintf("%s default %t", tc.denom, def), func(t *testing.T) {
-				actual := suite.keeper.IsSendEnabledDenom(suite.ctx, tc.denom)
+				actual := suite.bankKeeper.IsSendEnabledDenom(suite.ctx, tc.denom)
 				exp := tc.exp
 				if tc.expDef {
 					exp = def
@@ -1334,7 +1333,7 @@ func (suite *KeeperTestSuite) TestIsSendEnabledDenom() {
 }
 
 func (suite *KeeperTestSuite) TestGetSendEnabledEntry() {
-	ctx, bankKeeper := suite.ctx, suite.keeper
+	ctx, bankKeeper := suite.ctx, suite.bankKeeper
 
 	bankKeeper.SetAllSendEnabled(ctx, []*banktypes.SendEnabled{
 		{Denom: "gettruecoin", Enabled: true},
@@ -1373,7 +1372,7 @@ func (suite *KeeperTestSuite) TestGetSendEnabledEntry() {
 }
 
 func (suite *KeeperTestSuite) TestSetSendEnabled() {
-	ctx, bankKeeper := suite.ctx, suite.keeper
+	ctx, bankKeeper := suite.ctx, suite.bankKeeper
 	require := suite.Require()
 
 	tests := []struct {
@@ -1437,7 +1436,7 @@ func (suite *KeeperTestSuite) TestSetSendEnabled() {
 }
 
 func (suite *KeeperTestSuite) TestSetAllSendEnabled() {
-	ctx, bankKeeper := suite.ctx, suite.keeper
+	ctx, bankKeeper := suite.ctx, suite.bankKeeper
 	require := suite.Require()
 
 	tests := []struct {
@@ -1510,7 +1509,7 @@ func (suite *KeeperTestSuite) TestSetAllSendEnabled() {
 }
 
 func (suite *KeeperTestSuite) TestDeleteSendEnabled() {
-	ctx, bankKeeper := suite.ctx, suite.keeper
+	ctx, bankKeeper := suite.ctx, suite.bankKeeper
 	require := suite.Require()
 
 	for _, def := range []bool{true, false} {
@@ -1527,7 +1526,7 @@ func (suite *KeeperTestSuite) TestDeleteSendEnabled() {
 }
 
 func (suite *KeeperTestSuite) TestIterateSendEnabledEntries() {
-	ctx, bankKeeper := suite.ctx, suite.keeper
+	ctx, bankKeeper := suite.ctx, suite.bankKeeper
 	require := suite.Require()
 
 	suite.T().Run("no entries to iterate", func(t *testing.T) {
@@ -1583,7 +1582,7 @@ func (suite *KeeperTestSuite) TestIterateSendEnabledEntries() {
 }
 
 func (suite *KeeperTestSuite) TestGetAllSendEnabledEntries() {
-	ctx, bankKeeper := suite.ctx, suite.keeper
+	ctx, bankKeeper := suite.ctx, suite.bankKeeper
 	require := suite.Require()
 
 	suite.T().Run("no entries", func(t *testing.T) {
@@ -1639,7 +1638,7 @@ func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
 }
 
 func (suite *KeeperTestSuite) TestMigrator_Migrate3to4() {
-	ctx, bankKeeper := suite.ctx, suite.keeper
+	ctx, bankKeeper := suite.ctx, suite.bankKeeper
 	require := suite.Require()
 
 	for _, def := range []bool{true, false} {
@@ -1681,7 +1680,7 @@ func (suite *KeeperTestSuite) TestMigrator_Migrate3to4() {
 }
 
 func (suite *KeeperTestSuite) TestSetParams() {
-	ctx, bankKeeper := suite.ctx, suite.keeper
+	ctx, bankKeeper := suite.ctx, suite.bankKeeper
 	require := suite.Require()
 	params := banktypes.NewParams(true)
 	params.SendEnabled = []*banktypes.SendEnabled{

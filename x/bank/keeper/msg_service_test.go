@@ -26,7 +26,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "send enabled param",
 			input: &types.MsgUpdateParams{
-				Authority: suite.keeper.GetAuthority(),
+				Authority: suite.bankKeeper.GetAuthority(),
 				Params: types.Params{
 					SendEnabled: []*types.SendEnabled{
 						{Denom: "foo", Enabled: true},
@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "all good",
 			input: &types.MsgUpdateParams{
-				Authority: suite.keeper.GetAuthority(),
+				Authority: suite.bankKeeper.GetAuthority(),
 				Params:    params,
 			},
 			expErr: false,

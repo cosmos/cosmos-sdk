@@ -22,7 +22,7 @@ func (suite *KeeperTestSuite) TestQuerier_QueryBalance() {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(suite.keeper, legacyAmino)
+	querier := keeper.NewQuerier(suite.bankKeeper, legacyAmino)
 
 	res, err := querier(ctx, []string{types.QueryBalance}, req)
 	suite.Require().NotNil(err)
@@ -40,7 +40,7 @@ func (suite *KeeperTestSuite) TestQuerier_QueryBalance() {
 	origCoins := sdk.NewCoins(newFooCoin(50), newBarCoin(30))
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.keeper, ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, origCoins))
 
 	res, err = querier(ctx, []string{types.QueryBalance}, req)
 	suite.Require().NoError(err)
@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestQuerier_QueryAllBalances() {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(suite.keeper, legacyAmino)
+	querier := keeper.NewQuerier(suite.bankKeeper, legacyAmino)
 
 	res, err := querier(ctx, []string{types.QueryAllBalances}, req)
 	suite.Require().NotNil(err)
@@ -75,7 +75,7 @@ func (suite *KeeperTestSuite) TestQuerier_QueryAllBalances() {
 	origCoins := sdk.NewCoins(newFooCoin(50), newBarCoin(30))
 
 	suite.mockFundAccount(addr)
-	suite.Require().NoError(testutil.FundAccount(suite.keeper, ctx, addr, origCoins))
+	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, origCoins))
 	res, err = querier(ctx, []string{types.QueryAllBalances}, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -86,7 +86,7 @@ func (suite *KeeperTestSuite) TestQuerier_QueryAllBalances() {
 func (suite *KeeperTestSuite) TestQuerier_QueryTotalSupply() {
 	ctx, legacyAmino := suite.ctx, suite.encCfg.Amino
 
-	genesisSupply, _, err := suite.keeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
+	genesisSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
 	suite.Require().NoError(err)
 
 	testCoins := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
@@ -94,14 +94,14 @@ func (suite *KeeperTestSuite) TestQuerier_QueryTotalSupply() {
 	suite.mockMintCoins(mintAcc)
 	suite.
 		Require().
-		NoError(suite.keeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
+		NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
 
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/%s", types.ModuleName, types.QueryTotalSupply),
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(suite.keeper, legacyAmino)
+	querier := keeper.NewQuerier(suite.bankKeeper, legacyAmino)
 
 	res, err := querier(ctx, []string{types.QueryTotalSupply}, req)
 	suite.Require().NotNil(err)
@@ -130,14 +130,14 @@ func (suite *KeeperTestSuite) TestQuerier_QueryTotalSupplyOf() {
 	suite.mockMintCoins(mintAcc)
 	suite.
 		Require().
-		NoError(suite.keeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
+		NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
 
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/%s", types.ModuleName, types.QuerySupplyOf),
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(suite.keeper, legacyAmino)
+	querier := keeper.NewQuerier(suite.bankKeeper, legacyAmino)
 
 	res, err := querier(ctx, []string{types.QuerySupplyOf}, req)
 	suite.Require().NotNil(err)
@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) TestQuerierRouteNotFound() {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(suite.keeper, legacyAmino)
+	querier := keeper.NewQuerier(suite.bankKeeper, legacyAmino)
 	_, err := querier(ctx, []string{"invalid"}, req)
 	suite.Error(err)
 }

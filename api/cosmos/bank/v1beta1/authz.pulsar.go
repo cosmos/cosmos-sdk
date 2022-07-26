@@ -656,8 +656,10 @@ type SendAuthorization struct {
 	unknownFields protoimpl.UnknownFields
 
 	SpendLimit []*v1beta1.Coin `protobuf:"bytes,1,rep,name=spend_limit,json=spendLimit,proto3" json:"spend_limit,omitempty"`
-	// allow_list specifies the list of addresses to whom the grantee can send tokens on behalf of granter's
-	// account.
+	// allow_list specifies an optional list of addresses to whom the grantee can send tokens on behalf of the
+	// granter. If omitted, any recipient is allowed.
+	//
+	// Since: cosmos-sdk 0.47
 	AllowList []string `protobuf:"bytes,2,rep,name=allow_list,json=allowList,proto3" json:"allow_list,omitempty"`
 }
 

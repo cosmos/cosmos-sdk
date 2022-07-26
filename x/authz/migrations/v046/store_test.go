@@ -35,8 +35,7 @@ func TestMigration(t *testing.T) {
 	blockTime := ctx.BlockTime()
 	oneDay := blockTime.AddDate(0, 0, 1)
 	oneYear := blockTime.AddDate(1, 0, 0)
-	sendAuthz, err := banktypes.NewSendAuthorization([]sdk.AccAddress{}, coins100)
-	require.NoError(t, err)
+	sendAuthz := banktypes.NewSendAuthorization(coins100, nil)
 
 	grants := []struct {
 		granter       sdk.AccAddress

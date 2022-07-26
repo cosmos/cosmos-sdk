@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"math/rand"
-	"testing"
 	"time"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -12,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/stretchr/testify/require"
 )
 
 // genGrant returns a slice of authorization grants.
@@ -26,8 +24,7 @@ func genGrant(r *rand.Rand, accounts []simtypes.Account, genT time.Time) []authz
 			e := genT.AddDate(1, 0, 0)
 			expiration = &e
 		}
-		grant, err := generateRandomGrant(r)
-		require.NoError(&testing.T{}, err)
+		grant := generateRandomGrant(r)
 		authorizations[i] = authz.GrantAuthorization{
 			Granter:       granter.Address.String(),
 			Grantee:       grantee.Address.String(),
@@ -39,16 +36,13 @@ func genGrant(r *rand.Rand, accounts []simtypes.Account, genT time.Time) []authz
 	return authorizations
 }
 
-func generateRandomGrant(r *rand.Rand) (*codectypes.Any, error) {
+func generateRandomGrant(r *rand.Rand) *codectypes.Any {
 	authorizations := make([]*codectypes.Any, 2)
-	sendAuthz, err := banktypes.NewSendAuthorization([]sdk.AccAddress{}, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000))))
-	if err != nil {
-		return nil, err
-	}
+	sendAuthz := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000))), nil)
 	authorizations[0] = newAnyAuthorization(sendAuthz)
 	authorizations[1] = newAnyAuthorization(authz.NewGenericAuthorization(sdk.MsgTypeURL(&v1.MsgSubmitProposal{})))
 
-	return authorizations[r.Intn(len(authorizations))], nil
+	return authorizations[r.Intn(len(authorizations))]
 }
 
 func newAnyAuthorization(a authz.Authorization) *codectypes.Any {

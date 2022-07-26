@@ -32,8 +32,10 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Since: cosmos-sdk 0.43
 type SendAuthorization struct {
 	SpendLimit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=spend_limit,json=spendLimit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"spend_limit"`
-	// allow_list specifies the list of addresses to whom the grantee can send tokens on behalf of granter's
-	// account.
+	// allow_list specifies an optional list of addresses to whom the grantee can send tokens on behalf of the
+	// granter. If omitted, any recipient is allowed.
+	//
+	// Since: cosmos-sdk 0.47
 	AllowList []string `protobuf:"bytes,2,rep,name=allow_list,json=allowList,proto3" json:"allow_list,omitempty"`
 }
 

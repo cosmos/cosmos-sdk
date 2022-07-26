@@ -13,19 +13,17 @@ const gasCostPerIteration = uint64(10)
 var _ authz.Authorization = &SendAuthorization{}
 
 // NewSendAuthorization creates a new SendAuthorization object.
-func NewSendAuthorization(allowed []sdk.AccAddress, spendLimit sdk.Coins) (*SendAuthorization, error) {
+func NewSendAuthorization(spendLimit sdk.Coins, allowed []sdk.AccAddress) *SendAuthorization {
 	allowedAddrs := toBech32Addresses(allowed)
 
 	a := SendAuthorization{}
-	if allowedAddrs != nil {
-		a.AllowList = allowedAddrs
-	}
+	a.AllowList = allowedAddrs
 
 	if spendLimit != nil {
 		a.SpendLimit = spendLimit
 	}
 
-	return &a, nil
+	return &a
 }
 
 // MsgTypeURL implements Authorization.MsgTypeURL.
@@ -35,12 +33,11 @@ func (a SendAuthorization) MsgTypeURL() string {
 
 // Accept implements Authorization.Accept.
 func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
-	var toAddr string
 	mSend, ok := msg.(*MsgSend)
 	if !ok {
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
 	}
-	toAddr = mSend.ToAddress
+	toAddr := mSend.ToAddress
 	limitLeft, isNegative := a.SpendLimit.SafeSub(mSend.Amount...)
 	if isNegative {
 		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")

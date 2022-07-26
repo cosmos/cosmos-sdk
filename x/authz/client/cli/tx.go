@@ -99,15 +99,12 @@ Examples:
 					return err
 				}
 
-				allowed, err := sdk.Bech32toAccAddresses(allowList)
+				allowed, err := bech32toAccAddresses(allowList)
 				if err != nil {
 					return err
 				}
 
-				authorization, err = bank.NewSendAuthorization(allowed, spendLimit)
-				if err != nil {
-					return err
-				}
+				authorization = bank.NewSendAuthorization(spendLimit, allowed)
 
 			case "generic":
 				msgType, err := cmd.Flags().GetString(FlagMsgType)
@@ -155,12 +152,12 @@ Examples:
 					delegateLimit = &spendLimit
 				}
 
-				allowed, err := sdk.Bech32toValAddresses(allowValidators)
+				allowed, err := bech32toValAddresses(allowValidators)
 				if err != nil {
 					return err
 				}
 
-				denied, err := sdk.Bech32toValAddresses(denyValidators)
+				denied, err := bech32toValAddresses(denyValidators)
 				if err != nil {
 					return err
 				}
@@ -287,4 +284,30 @@ Example:
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// bech32toValAddresses returns []ValAddress from a list of Bech32 string addresses.
+func bech32toValAddresses(validators []string) ([]sdk.ValAddress, error) {
+	vals := make([]sdk.ValAddress, len(validators))
+	for i, validator := range validators {
+		addr, err := sdk.ValAddressFromBech32(validator)
+		if err != nil {
+			return nil, err
+		}
+		vals[i] = addr
+	}
+	return vals, nil
+}
+
+// bech32toAccAddresses returns []AccAddress from a list of Bech32 string addresses.
+func bech32toAccAddresses(accAddrs []string) ([]sdk.AccAddress, error) {
+	addrs := make([]sdk.AccAddress, len(accAddrs))
+	for i, addr := range accAddrs {
+		accAddr, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return nil, err
+		}
+		addrs[i] = accAddr
+	}
+	return addrs, nil
 }

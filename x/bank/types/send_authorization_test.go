@@ -21,8 +21,7 @@ var (
 func TestSendAuthorization(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	authorization, err := types.NewSendAuthorization([]sdk.AccAddress{}, coins1000)
-	require.NoError(t, err)
+	authorization := types.NewSendAuthorization(coins1000, nil)
 
 	t.Log("verify authorization returns valid method name")
 	require.Equal(t, authorization.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
@@ -37,8 +36,7 @@ func TestSendAuthorization(t *testing.T) {
 	require.True(t, resp.Delete)
 	require.Nil(t, resp.Updated)
 
-	authorization, err = types.NewSendAuthorization([]sdk.AccAddress{}, coins1000)
-	require.NoError(t, err)
+	authorization = types.NewSendAuthorization(coins1000, nil)
 	require.Equal(t, authorization.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
 	require.NoError(t, authorization.ValidateBasic())
 	send = types.NewMsgSend(fromAddr, toAddr, coins500)
@@ -49,8 +47,7 @@ func TestSendAuthorization(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, resp.Delete)
 	require.NotNil(t, resp.Updated)
-	sendAuth, err := types.NewSendAuthorization([]sdk.AccAddress{}, coins500)
-	require.NoError(t, err)
+	sendAuth := types.NewSendAuthorization(coins500, nil)
 	require.Equal(t, sendAuth.String(), resp.Updated.String())
 
 	t.Log("expect updated authorization nil after spending remaining amount")

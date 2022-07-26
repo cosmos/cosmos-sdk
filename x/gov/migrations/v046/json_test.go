@@ -73,6 +73,7 @@ func TestMigrateJSON(t *testing.T) {
 	// Make sure about:
 	// - Proposals use MsgExecLegacyContent
 	expected := `{
+	"deposit_params": null,
 	"deposits": [],
 	"params": {
 		"max_deposit_period": "172800s",
@@ -122,6 +123,7 @@ func TestMigrateJSON(t *testing.T) {
 		}
 	],
 	"starting_proposal_id": "1",
+	"tally_params": null,
 	"votes": [
 		{
 			"metadata": "",
@@ -145,7 +147,8 @@ func TestMigrateJSON(t *testing.T) {
 			"proposal_id": "2",
 			"voter": "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
 		}
-	]
+	],
+	"voting_params": null
 }`
 
 	require.Equal(t, expected, string(indentedBz))

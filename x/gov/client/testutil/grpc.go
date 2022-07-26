@@ -357,6 +357,9 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 	val := s.network.Validators[0]
 
 	params := v1.DefaultParams()
+	dp := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
+	vp := v1.NewVotingParams(params.VotingPeriod)
+	tp := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
 
 	testCases := []struct {
 		name       string
@@ -366,11 +369,30 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 		expectResp proto.Message
 	}{
 		{
+			"request params with empty params type",
+			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, ""),
+			true, nil, nil,
+		},
+		{
 			"get deposit params",
-			fmt.Sprintf("%s/cosmos/gov/v1/params", val.APIAddress),
+			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamDeposit),
 			false,
 			&v1.QueryParamsResponse{},
-			&v1.QueryParamsResponse{Params: &params},
+			&v1.QueryParamsResponse{DepositParams: &dp, Params: &params},
+		},
+		{
+			"get vote params",
+			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamVoting),
+			false,
+			&v1.QueryParamsResponse{},
+			&v1.QueryParamsResponse{VotingParams: &vp, Params: &params},
+		},
+		{
+			"get tally params",
+			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamTallying),
+			false,
+			&v1.QueryParamsResponse{},
+			&v1.QueryParamsResponse{TallyParams: &tp, Params: &params},
 		},
 	}
 

@@ -665,6 +665,8 @@ func (m *TallyParams) GetVetoThreshold() string {
 }
 
 // Params defines the parameters for the x/gov module.
+//
+// Since: cosmos-sdk 0.47
 type Params struct {
 	//  Minimum deposit for a proposal to enter voting period.
 	MinDeposit []types.Coin `protobuf:"bytes,1,rep,name=min_deposit,json=minDeposit,proto3" json:"min_deposit,omitempty"`

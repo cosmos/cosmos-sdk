@@ -132,6 +132,8 @@ message TallyParams {
 }
 
 // Params defines the parameters for the x/gov module.
+//
+// Since: cosmos-sdk 0.47
 message Params {
   //  Minimum deposit for a proposal to enter voting period.
   repeated cosmos.base.v1beta1.Coin min_deposit = 1

@@ -6580,6 +6580,8 @@ func (x *TallyParams) GetVetoThreshold() string {
 }
 
 // Params defines the parameters for the x/gov module.
+//
+// Since: cosmos-sdk 0.47
 type Params struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

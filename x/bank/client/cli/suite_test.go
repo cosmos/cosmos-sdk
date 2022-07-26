@@ -29,6 +29,11 @@ func (_ mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*corety
 	return &coretypes.ResultBroadcastTx{Code: 0}, nil
 }
 
+type account struct {
+	name    string
+	address sdk.AccAddress
+}
+
 type CLITestSuite struct {
 	suite.Suite
 
@@ -53,9 +58,9 @@ func (s *CLITestSuite) SetupSuite() {
 		WithOutput(io.Discard)
 }
 
-func (s *CLITestSuite) createKeyringRecords(num int) []*keyring.Record {
-	records := make([]*keyring.Record, num)
-	for i := range records {
+func (s *CLITestSuite) createKeyringRecords(num int) []account {
+	accounts := make([]account, num)
+	for i := range accounts {
 		record, _, err := s.kr.NewMnemonic(
 			fmt.Sprintf("key-%d", i),
 			keyring.English,
@@ -64,8 +69,11 @@ func (s *CLITestSuite) createKeyringRecords(num int) []*keyring.Record {
 			hd.Secp256k1)
 		s.Require().NoError(err)
 
-		records[i] = record
+		addr, err := record.GetAddress()
+		s.Require().NoError(err)
+
+		accounts[i] = account{name: record.Name, address: addr}
 	}
 
-	return records
+	return accounts
 }

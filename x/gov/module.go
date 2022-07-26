@@ -167,10 +167,13 @@ type govInputs struct {
 	Config           *modulev1.Module
 	Cdc              codec.Codec
 	Key              *store.KVStoreKey
+	ModuleKey        depinject.OwnModuleKey
 	MsgServiceRouter *baseapp.MsgServiceRouter
-	AccountKeeper    types.AccountKeeper
-	BankKeeper       types.BankKeeper
-	StakingKeeper    types.StakingKeeper
+	Authority        map[string]sdk.AccAddress `optional:"true"`
+
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+	StakingKeeper types.StakingKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace types.ParamSubspace
@@ -190,6 +193,11 @@ func provideModule(in govInputs) govOutputs {
 		kConfig.MaxMetadataLen = in.Config.MaxMetadataLen
 	}
 
+	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+	if !ok {
+		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Key,
@@ -198,7 +206,7 @@ func provideModule(in govInputs) govOutputs {
 		in.StakingKeeper,
 		in.MsgServiceRouter,
 		kConfig,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority.String(),
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: types.RouterKey}

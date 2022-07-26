@@ -10,12 +10,13 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/x/params/testutil"
+	clienttestutil "github.com/cosmos/cosmos-sdk/x/nft/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/nft/testutil"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
 	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
 	require.NoError(t, err)
 	cfg.NumValidators = 1
-	suite.Run(t, NewIntegrationTestSuite(cfg))
+	suite.Run(t, clienttestutil.NewIntegrationTestSuite(cfg))
 }

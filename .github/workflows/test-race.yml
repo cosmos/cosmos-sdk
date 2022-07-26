@@ -19,21 +19,6 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
 
-  install-tparse:
-    runs-on: buildjet-4vcpu-ubuntu-2004
-    steps:
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
-      - name: install tparse
-        run: go install github.com/mfridman/tparse@v0.8.3
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-tparse-binary
-
   build:
     runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
@@ -62,46 +47,10 @@ jobs:
         if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
 
-      - name: Build cosmovisor
-        if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
 
-  split-test-files:
-    runs-on: buildjet-4vcpu-ubuntu-2004
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.18
-      - name: Create a file with all core Cosmos SDK pkgs
-        run: go list ./... > pkgs.txt
-      - name: Split pkgs into 4 files
-        run: split -d -n l/4 pkgs.txt pkgs.txt.part.
-      # cache multiple
-      - uses: actions/upload-artifact@v3
-        with:
-          name: "${{ github.sha }}-00"
-          path: ./pkgs.txt.part.00
-      - uses: actions/upload-artifact@v3
-        with:
-          name: "${{ github.sha }}-01"
-          path: ./pkgs.txt.part.01
-      - uses: actions/upload-artifact@v3
-        with:
-          name: "${{ github.sha }}-02"
-          path: ./pkgs.txt.part.02
-      - uses: actions/upload-artifact@v3
-        with:
-          name: "${{ github.sha }}-03"
-          path: ./pkgs.txt.part.03
-
-  test-race:
+  test-e2e:
     runs-on: buildjet-4vcpu-ubuntu-2004
     needs: split-test-files
-    strategy:
-      fail-fast: false
-      matrix:
-        part: ["00", "01", "02", "03"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -130,7 +79,7 @@ jobs:
       - name: test & coverage report creation
         if: env.GIT_DIFF
         run: |
-          xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock'
+          cd tests/e2e && go test ./... -mod=readonly -timeout 30m -race
       - uses: actions/upload-artifact@v3
         if: env.GIT_DIFF
         with:

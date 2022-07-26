@@ -14,7 +14,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 type (
@@ -294,7 +294,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
 	addr1Str := addr1.String()
 	govAddr := app.BankKeeper.GetAuthority()
-	goodGovProp, err := govtypesv1.NewMsgSubmitProposal(
+	goodGovProp, err := govv1.NewMsgSubmitProposal(
 		[]sdk.Msg{
 			types.NewMsgSetSendEnabled(govAddr, nil, nil, true, true),
 		},
@@ -303,7 +303,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		"set default send enabled to true",
 	)
 	require.NoError(t, err, "making goodGovProp")
-	badGovProp, err := govtypesv1.NewMsgSubmitProposal(
+	badGovProp, err := govv1.NewMsgSubmitProposal(
 		[]sdk.Msg{
 			types.NewMsgSetSendEnabled(govAddr, []*types.SendEnabled{{"bad coin name!", true}}, nil, true, true),
 		},

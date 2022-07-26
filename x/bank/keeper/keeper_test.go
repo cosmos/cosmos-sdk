@@ -118,17 +118,29 @@ func (suite *IntegrationTestSuite) SetupTest() {
 }
 
 func (suite *IntegrationTestSuite) TestGetAuthority() {
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
+		return keeper.NewBaseKeeper(
+			simapp.MakeTestEncodingConfig().Codec,
+			suite.app.GetKey(types.StoreKey),
+			nil,
+			nil,
+			authority,
+		)
+	}
 
-	kpr := keeper.NewBaseKeeper(
-		simapp.MakeTestEncodingConfig().Codec,
-		suite.app.GetKey(types.StoreKey),
-		nil,
-		nil,
-		authority,
-	)
-	actual := kpr.GetAuthority()
-	suite.Assert().Equal(authority, actual)
+	tests := map[string]string{
+		"some random account":    "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+		"gov module account":     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		"another module account": authtypes.NewModuleAddress(minttypes.ModuleName).String(),
+	}
+
+	for name, expected := range tests {
+		suite.T().Run(name, func(t *testing.T) {
+			kpr := NewKeeperWithAuthority(expected)
+			actual := kpr.GetAuthority()
+			assert.Equal(t, expected, actual)
+		})
+	}
 }
 
 func (suite *IntegrationTestSuite) TestSupply() {

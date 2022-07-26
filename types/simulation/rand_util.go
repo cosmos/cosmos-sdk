@@ -42,13 +42,13 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 
 // RandPositiveInt get a rand positive math.Int
 func RandPositiveInt(r *rand.Rand, max math.Int) (math.Int, error) {
-	if !max.GTE(sdk.OneInt()) {
+	if !max.GTE(math.OneInt()) {
 		return math.Int{}, errors.New("max too small")
 	}
 
-	max = max.Sub(sdk.OneInt())
+	max = max.Sub(math.OneInt())
 
-	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdk.OneInt()), nil
+	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(math.OneInt()), nil
 }
 
 // RandomAmount generates a random amount

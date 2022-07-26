@@ -35,6 +35,8 @@ type MsgClient interface {
 	// on any number of Denoms. Only the entries to add or update should be
 	// included. Entries that already exist in the store, but that aren't
 	// included in this message, will be left unchanged.
+	//
+	// Since: cosmos-sdk 0.47
 	SetSendEnabled(ctx context.Context, in *MsgSetSendEnabled, opts ...grpc.CallOption) (*MsgSetSendEnabledResponse, error)
 }
 
@@ -99,6 +101,8 @@ type MsgServer interface {
 	// on any number of Denoms. Only the entries to add or update should be
 	// included. Entries that already exist in the store, but that aren't
 	// included in this message, will be left unchanged.
+	//
+	// Since: cosmos-sdk 0.47
 	SetSendEnabled(context.Context, *MsgSetSendEnabled) (*MsgSetSendEnabledResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

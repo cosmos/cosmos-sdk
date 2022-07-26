@@ -27,6 +27,8 @@ service Msg {
   // on any number of Denoms. Only the entries to add or update should be
   // included. Entries that already exist in the store, but that aren't
   // included in this message, will be left unchanged.
+  //
+  // Since: cosmos-sdk 0.47
   rpc SetSendEnabled(MsgSetSendEnabled) returns (MsgSetSendEnabledResponse);
 }
 
@@ -87,6 +89,8 @@ message MsgUpdateParamsResponse {}
 // Only entries to add/update/delete need to be included.
 // Existing SendEnabled entries that are not included in this
 // message are left unchanged.
+//
+// Since: cosmos-sdk 0.47
 message MsgSetSendEnabled {
   option (cosmos.msg.v1.signer) = "authority";
 
@@ -115,4 +119,6 @@ message MsgSetSendEnabled {
 }
 
 // MsgSetSendEnabledResponse defines the Msg/SetSendEnabled response type.
+//
+// Since: cosmos-sdk 0.47
 message MsgSetSendEnabledResponse {}

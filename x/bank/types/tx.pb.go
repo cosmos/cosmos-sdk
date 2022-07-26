@@ -305,6 +305,8 @@ var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 // Only entries to add/update/delete need to be included.
 // Existing SendEnabled entries that are not included in this
 // message are left unchanged.
+//
+// Since: cosmos-sdk 0.47
 type MsgSetSendEnabled struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// send_enabled is the list of entries to add or update.
@@ -395,6 +397,8 @@ func (m *MsgSetSendEnabled) GetDefaultSendEnabled() bool {
 }
 
 // MsgSetSendEnabledResponse defines the Msg/SetSendEnabled response type.
+//
+// Since: cosmos-sdk 0.47
 type MsgSetSendEnabledResponse struct {
 }
 
@@ -515,6 +519,8 @@ type MsgClient interface {
 	// on any number of Denoms. Only the entries to add or update should be
 	// included. Entries that already exist in the store, but that aren't
 	// included in this message, will be left unchanged.
+	//
+	// Since: cosmos-sdk 0.47
 	SetSendEnabled(ctx context.Context, in *MsgSetSendEnabled, opts ...grpc.CallOption) (*MsgSetSendEnabledResponse, error)
 }
 
@@ -577,6 +583,8 @@ type MsgServer interface {
 	// on any number of Denoms. Only the entries to add or update should be
 	// included. Entries that already exist in the store, but that aren't
 	// included in this message, will be left unchanged.
+	//
+	// Since: cosmos-sdk 0.47
 	SetSendEnabled(context.Context, *MsgSetSendEnabled) (*MsgSetSendEnabledResponse, error)
 }
 

@@ -4233,6 +4233,8 @@ func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
 // Only entries to add/update/delete need to be included.
 // Existing SendEnabled entries that are not included in this
 // message are left unchanged.
+//
+// Since: cosmos-sdk 0.47
 type MsgSetSendEnabled struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -4314,6 +4316,8 @@ func (x *MsgSetSendEnabled) GetDefaultSendEnabled() bool {
 }
 
 // MsgSetSendEnabledResponse defines the Msg/SetSendEnabled response type.
+//
+// Since: cosmos-sdk 0.47
 type MsgSetSendEnabledResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

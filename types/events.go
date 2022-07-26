@@ -3,6 +3,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 	"reflect"
 	"sort"
 	"strings"
@@ -88,7 +90,8 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 	}
 
 	// sort the keys to ensure the order is always the same
-	keys := orderedKeys(attrMap)
+	keys := maps.Keys(attrMap)
+	slices.Sort(keys)
 
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
 	for _, k := range keys {
@@ -103,15 +106,6 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 		Type:       evtType,
 		Attributes: attrs,
 	}, nil
-}
-
-func orderedKeys(m map[string]json.RawMessage) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }
 
 // ParseTypedEvent converts abci.Event back to typed event

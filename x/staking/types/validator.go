@@ -51,13 +51,13 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		ConsensusPubkey:   pkAny,
 		Jailed:            false,
 		Status:            Unbonded,
-		Tokens:            sdk.ZeroInt(),
+		Tokens:            math.ZeroInt(),
 		DelegatorShares:   sdk.ZeroDec(),
 		Description:       description,
 		UnbondingHeight:   int64(0),
 		UnbondingTime:     time.Unix(0, 0).UTC(),
 		Commission:        NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-		MinSelfDelegation: sdk.OneInt(),
+		MinSelfDelegation: math.OneInt(),
 	}, nil
 }
 
@@ -352,7 +352,7 @@ func (v Validator) BondedTokens() math.Int {
 		return v.Tokens
 	}
 
-	return sdk.ZeroInt()
+	return math.ZeroInt()
 }
 
 // ConsensusPower gets the consensus-engine power. Aa reduction of 10^6 from
@@ -424,7 +424,7 @@ func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, math.Int) {
 	if remainingShares.IsZero() {
 		// last delegation share gets any trimmings
 		issuedTokens = v.Tokens
-		v.Tokens = sdk.ZeroInt()
+		v.Tokens = math.ZeroInt()
 	} else {
 		// leave excess tokens in the validator
 		// however fully use all the delegator shares

@@ -37,6 +37,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 <!-- NOTE: when creating a new release, update cosmovisor/cmd/cosmovisor/cmd/version.go:Version -->
 
+## v1.2.0 2022-07-26
+
 ### Features
 
 * [\#12464](https://github.com/cosmos/cosmos-sdk/pull/12464) Create the `cosmovisor init` command.
@@ -52,7 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [\#12188](https://github.com/cosmos/cosmos-sdk/pull/12188) Remove the possibility to set a time with only a number. `DAEMON_POLL_INTERVAL` env variable now only supports a duration (e.g. `100ms`, `30s`, `20m`).
 
-## v1.1.0 2022-10-02
+## v1.1.0 2022-02-10
 
 ### Features
 

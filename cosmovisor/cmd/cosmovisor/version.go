@@ -17,7 +17,7 @@ func init() {
 
 var (
 	// Version represents Cosmovisor version value. Overwritten during build
-	Version = "1.1.0"
+	Version = "1.2.0"
 	// OutputFlag defines the output format flag
 	OutputFlag = "output"
 )

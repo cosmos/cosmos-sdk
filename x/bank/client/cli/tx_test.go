@@ -4,41 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
-	"github.com/tendermint/tendermint/rpc/coretypes"
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
-
-var _ client.AccountRetriever = (*mockAccountRetriever)(nil)
-
-type mockAccountRetriever struct{}
-
-func (mar mockAccountRetriever) GetAccount(_ client.Context, _ sdk.AccAddress) (client.Account, error) {
-	return nil, nil
-}
-func (mar mockAccountRetriever) GetAccountWithHeight(_ client.Context, _ sdk.AccAddress) (client.Account, int64, error) {
-	return nil, 0, nil
-}
-func (mar mockAccountRetriever) EnsureExists(_ client.Context, _ sdk.AccAddress) error { return nil }
-func (mar mockAccountRetriever) GetAccountNumberSequence(_ client.Context, _ sdk.AccAddress) (uint64, uint64, error) {
-	return 0, 0, nil
-}
-
-var _ client.TendermintRPC = (*mockTendermintRPC)(nil)
-
-type mockTendermintRPC struct {
-	rpcclientmock.Client
-}
-
-func (_ mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
-	return &coretypes.ResultBroadcastTx{Code: 0}, nil
-}
 
 func (s *CLITestSuite) TestSendTxCmd() {
 	records := s.createKeyringRecords(1)
@@ -57,9 +28,7 @@ func (s *CLITestSuite) TestSendTxCmd() {
 		{
 			"valid transaction",
 			func() client.Context {
-				return s.baseCtx.
-					WithAccountRetriever(mockAccountRetriever{}).
-					WithClient(mockTendermintRPC{Client: rpcclientmock.New()})
+				return s.baseCtx
 			},
 			addr1,
 			addr1,

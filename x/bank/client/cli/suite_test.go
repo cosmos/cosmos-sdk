@@ -1,11 +1,15 @@
 package cli_test
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
+	"github.com/tendermint/tendermint/rpc/coretypes"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -14,6 +18,16 @@ import (
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
+
+var _ client.TendermintRPC = (*mockTendermintRPC)(nil)
+
+type mockTendermintRPC struct {
+	rpcclientmock.Client
+}
+
+func (_ mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+	return &coretypes.ResultBroadcastTx{Code: 0}, nil
+}
 
 type CLITestSuite struct {
 	suite.Suite
@@ -34,6 +48,8 @@ func (s *CLITestSuite) SetupSuite() {
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
+		WithClient(mockTendermintRPC{Client: rpcclientmock.New()}).
+		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard)
 }
 

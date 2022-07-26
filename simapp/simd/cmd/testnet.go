@@ -387,6 +387,9 @@ func initGenFiles(
 	}
 
 	appGenStateJSON, err := json.MarshalIndent(genStateJson, "", "  ")
+	if err != nil {
+		return err
+	}
 
 	genDoc := types.GenesisDoc{
 		ChainID:    chainID,

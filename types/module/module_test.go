@@ -7,12 +7,12 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/mock/gomock"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
@@ -28,21 +28,20 @@ func TestBasicManager(t *testing.T) {
 	t.Cleanup(mockCtrl.Finish)
 	legacyAmino := codec.NewLegacyAmino()
 	interfaceRegistry := types.NewInterfaceRegistry()
-	// cdc := codec.NewProtoCodec(interfaceRegistry)
+	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithLegacyAmino(legacyAmino)
 	wantDefaultGenesis := map[string]proto.Message{"mockAppModuleBasic1": &testdata.AnyWithExtra{B: 111}}
+	wantDefaultGenesisJSON := map[string]json.RawMessage{"mockAppModuleBasic1": []byte(`{"b":111}`)}
 
 	mockAppModuleBasic1 := mocks.NewMockAppModuleBasic(mockCtrl)
 
 	mockAppModuleBasic1.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic1")
 	mockAppModuleBasic1.EXPECT().DefaultGenesis().Times(1).Return(&testdata.AnyWithExtra{B: 111})
-	// mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
+	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(wantDefaultGenesisJSON["mockAppModuleBasic1"])).Times(1).Return(errFoo)
 	mockAppModuleBasic1.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
-	// mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
-	// mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
+	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
+	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
 	mm := module.NewBasicManager(mockAppModuleBasic1)
 	require.Equal(t, mm["mockAppModuleBasic1"], mockAppModuleBasic1)
@@ -55,16 +54,15 @@ func TestBasicManager(t *testing.T) {
 	var data map[string]string
 	require.Equal(t, map[string]string(nil), data)
 
-	// TODO: RE-ENABLE THIS TEST
-	// require.True(t, errors.Is(errFoo, mm.ValidateGenesis(cdc, nil, wantDefaultGenesis)))
+	require.True(t, errors.Is(errFoo, mm.ValidateGenesis(cdc, nil, wantDefaultGenesisJSON)))
 
-	// mockCmd := &cobra.Command{Use: "root"}
-	// mm.AddTxCommands(mockCmd)
+	mockCmd := &cobra.Command{Use: "root"}
+	mm.AddTxCommands(mockCmd)
 
-	// mm.AddQueryCommands(mockCmd)
+	mm.AddQueryCommands(mockCmd)
 
-	// // validate genesis returns nil
-	// require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, wantDefaultGenesis))
+	// validate genesis returns nil
+	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, wantDefaultGenesisJSON))
 }
 
 func TestGenesisOnlyAppModule(t *testing.T) {

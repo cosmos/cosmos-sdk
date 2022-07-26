@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/math"
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -297,7 +298,7 @@ func initTestnetFiles(
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-			sdk.OneInt(),
+			math.OneInt(),
 		)
 		if err != nil {
 			return err

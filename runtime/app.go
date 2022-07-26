@@ -125,7 +125,6 @@ func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Respo
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-
 	return a.ModuleManager.InitGenesis(ctx, a.cdc, genesisState)
 }
 

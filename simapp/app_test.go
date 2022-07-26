@@ -60,8 +60,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	logger2, _ := log.NewDefaultLogger("plain", "info", false)
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := NewSimApp(logger2, db, nil, true, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
-	exportedApp, err := app2.ExportAppStateAndValidators(false, []string{})
-	println(string(exportedApp.AppState))
+	_, err := app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
 

@@ -143,7 +143,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 			},
 			false,
 			&sdk.Coin{},
-			NewCoin("foobar", sdk.ZeroInt()),
+			NewCoin("foobar", math.ZeroInt()),
 		},
 	}
 
@@ -213,7 +213,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 			respType: &sdk.Coin{},
 			expected: &sdk.Coin{
 				Denom:  "foobar",
-				Amount: sdk.ZeroInt(),
+				Amount: math.ZeroInt(),
 			},
 		},
 	}

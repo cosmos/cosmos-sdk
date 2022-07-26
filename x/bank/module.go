@@ -164,8 +164,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data proto.Message) []abci.ValidatorUpdate {
 	start := time.Now()
-	genesisState := &types.GenesisState{}
-	genesisState = data.(*types.GenesisState)
+	genesisState := data.(*types.GenesisState)
 	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
 
 	am.keeper.InitGenesis(ctx, genesisState)

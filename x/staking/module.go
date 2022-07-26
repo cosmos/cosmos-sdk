@@ -174,9 +174,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // InitGenesis performs genesis initialization for the staking module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data proto.Message) []abci.ValidatorUpdate {
-	genesisState := &types.GenesisState{}
-	genesisState = data.(*types.GenesisState)
-
+	genesisState := data.(*types.GenesisState)
 	return am.keeper.InitGenesis(ctx, genesisState)
 }
 

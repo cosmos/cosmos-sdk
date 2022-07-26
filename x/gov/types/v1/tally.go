@@ -49,7 +49,7 @@ func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
 
 // EmptyTallyResult returns an empty TallyResult.
 func EmptyTallyResult() TallyResult {
-	return NewTallyResult(sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt())
+	return NewTallyResult(math.ZeroInt(), math.ZeroInt(), math.ZeroInt(), math.ZeroInt())
 }
 
 // Equals returns if two tally results are equal.

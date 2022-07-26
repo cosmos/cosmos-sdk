@@ -14,6 +14,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -199,7 +200,7 @@ func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawM
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
 			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-			MinSelfDelegation: sdk.ZeroInt(),
+			MinSelfDelegation: math.ZeroInt(),
 		}
 		validators = append(validators, validator)
 		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))

@@ -16,7 +16,6 @@ import (
 var addr1 = sdk.AccAddress([]byte("addr1"))
 
 func (s *paginationTestSuite) TestFilteredPaginations() {
-
 	var balances sdk.Coins
 	for i := 0; i < numBalances; i++ {
 		denom := fmt.Sprintf("foo%ddenom", i)
@@ -248,7 +247,6 @@ func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec 
 }
 
 func (s *paginationTestSuite) TestFilteredPaginationsNextKey() {
-
 	var balances sdk.Coins
 
 	for i := 1; i <= 10; i++ {

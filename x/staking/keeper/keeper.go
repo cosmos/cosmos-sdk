@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+
+	"cosmossdk.io/math"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -47,7 +48,7 @@ func NewKeeper(
 
 	// ensure that authority is a valid AccAddress
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
-		panic(fmt.Sprintf("authority is not a valid acc address"))
+		panic(("authority is not a valid acc address"))
 	}
 
 	return &Keeper{
@@ -80,7 +81,7 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) math.Int {
 	bz := store.Get(types.LastTotalPowerKey)
 
 	if bz == nil {
-		return sdk.ZeroInt()
+		return math.ZeroInt()
 	}
 
 	ip := sdk.IntProto{}

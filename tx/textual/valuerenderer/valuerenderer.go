@@ -1,20 +1,30 @@
 package valuerenderer
 
 import (
+	"context"
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
+type CoinMetadataQueryFn func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error)
+
 type Textual struct {
+	// coinMetadataQuerier defines a function to query the coin metadata from
+	// state.
+	coinMetadataQuerier CoinMetadataQueryFn
+	// scalars defines a registry for Cosmos scalars.
 	scalars map[string]ValueRenderer
 }
 
-func NewTextual() Textual {
-	return Textual{}
+// NewTextual creates a new SIGN_MODE_TEXTUAL renderer.
+func NewTextual(q CoinMetadataQueryFn) Textual {
+	return Textual{coinMetadataQuerier: q}
 }
 
 // GetValueRenderer returns the value renderer for the given FieldDescriptor.
@@ -47,6 +57,16 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 		fd.Kind() == protoreflect.Int64Kind:
 		{
 			return intValueRenderer{}, nil
+		}
+
+	// Coin and Coins
+	case fd.Kind() == protoreflect.MessageKind && (&basev1beta1.Coin{}).ProtoReflect().Descriptor() == fd.Message():
+		{
+			if fd.Cardinality() == protoreflect.Repeated {
+				return coinsValueRenderer{r.coinMetadataQuerier}, nil
+			} else {
+				return coinValueRenderer{r.coinMetadataQuerier}, nil
+			}
 		}
 
 	default:

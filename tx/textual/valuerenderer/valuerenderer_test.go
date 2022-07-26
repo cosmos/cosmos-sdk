@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/math"
 	"cosmossdk.io/tx/textual/internal/testpb"
 	"cosmossdk.io/tx/textual/valuerenderer"
@@ -117,7 +118,7 @@ func TestGetADR050ValueRenderer(t *testing.T) {
 func valueRendererOf(v interface{}) (valuerenderer.ValueRenderer, error) {
 	a, b := (&testpb.A{}).ProtoReflect().Descriptor().Fields(), (&testpb.B{}).ProtoReflect().Descriptor().Fields()
 
-	textual := valuerenderer.NewTextual()
+	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
 	switch v := v.(type) {
 	// Valid types for SIGN_MODE_TEXTUAL
 	case uint32:
@@ -132,6 +133,10 @@ func valueRendererOf(v interface{}) (valuerenderer.ValueRenderer, error) {
 		return textual.GetValueRenderer(a.ByName(protoreflect.Name("SDKINT")))
 	case math.LegacyDec:
 		return textual.GetValueRenderer(a.ByName(protoreflect.Name("SDKDEC")))
+	case *basev1beta1.Coin:
+		return textual.GetValueRenderer(a.ByName(protoreflect.Name("COIN")))
+	case []*basev1beta1.Coin:
+		return textual.GetValueRenderer(a.ByName(protoreflect.Name("COINS")))
 
 	// Invalid types for SIGN_MODE_TEXTUAL
 	case float32:

@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -24,7 +23,7 @@ func TestGRPCQueryRouter(t *testing.T) {
 	qr := baseapp.NewGRPCQueryRouter()
 	interfaceRegistry := testdata.NewTestInterfaceRegistry()
 	qr.SetInterfaceRegistry(interfaceRegistry)
-	testdata_pulsar.RegisterQueryServer(qr, testdata_pulsar.QueryImpl{})
+	testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
 	helper := &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: qr,
 		Ctx:             sdk.Context{}.WithContext(context.Background()),

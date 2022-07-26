@@ -234,8 +234,8 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 			"with pagination",
 			&tx.GetTxsEventRequest{
 				Events: []string{bankMsgSendEventAction},
-				Page: 2,
-				Limit: 2,
+				Page:   2,
+				Limit:  2,
 			},
 			false, "", 1,
 		},
@@ -298,13 +298,13 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 		},
 		{
 			"valid request: order by asc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_ASC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=1", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"", 3,
 		},
 		{
 			"valid request: order by desc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_DESC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=2", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"", 3,
 		},
@@ -312,7 +312,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 			"invalid request: invalid order by",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=invalid_order", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			true,
-			"is not a valid tx.OrderBy", 0,
+			"invalid syntax", 0,
 		},
 		{
 			"expect pass with multiple-events",

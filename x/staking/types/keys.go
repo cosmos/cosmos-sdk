@@ -50,6 +50,8 @@ var (
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
 	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
+
+	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 )
 
 // GetValidatorKey creates the key for the validator with address

@@ -10,9 +10,11 @@ message Module {
     go_import: "github.com/cosmos/cosmos-sdk/x/auth/tx"
   };
 
-  // skip_ante_handler defines whether the ante handler registration should be skipped in case an app wants to override this functionality.
+  // skip_ante_handler defines whether the ante handler registration should be skipped in case an app wants to override
+  // this functionality.
   bool skip_ante_handler = 1;
 
-  // skip_post_handler defines whether the post handler registration should be skipped in case an app wants to override this functionality.
+  // skip_post_handler defines whether the post handler registration should be skipped in case an app wants to override
+  // this functionality.
   bool skip_post_handler = 2;
 }

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -807,7 +808,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	zeroRewards := sdk.Coins{
 		sdk.Coin{
 			Denom:  denom,
-			Amount: sdk.ZeroInt(),
+			Amount: math.ZeroInt(),
 		},
 	}
 	require.True(t, rewards.IsEqual(zeroRewards))

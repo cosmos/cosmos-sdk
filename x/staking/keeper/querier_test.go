@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -25,7 +26,7 @@ func TestNewQuerier(t *testing.T) {
 	addrVal1, _ := sdk.ValAddress(addrs[0]), sdk.ValAddress(addrs[1])
 
 	// Create Validators
-	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8)}
+	amts := []math.Int{sdk.NewInt(9), sdk.NewInt(8)}
 	var validators [2]types.Validator
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
@@ -144,7 +145,7 @@ func TestQueryValidators(t *testing.T) {
 	addrs := simapp.AddTestAddrs(app, ctx, 500, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 
 	// Create Validators
-	amts := []sdk.Int{sdk.NewInt(8), sdk.NewInt(7)}
+	amts := []math.Int{sdk.NewInt(8), sdk.NewInt(7)}
 	status := []types.BondStatus{types.Unbonded, types.Unbonding}
 	var validators [2]types.Validator
 	for i, amt := range amts {

@@ -7,6 +7,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/bytes"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 	"github.com/tendermint/tendermint/rpc/coretypes"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -23,10 +26,24 @@ var _ client.TendermintRPC = (*mockTendermintRPC)(nil)
 
 type mockTendermintRPC struct {
 	rpcclientmock.Client
+
+	responseQuery abci.ResponseQuery
+}
+
+func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
+	return mockTendermintRPC{responseQuery: respQuery}
 }
 
 func (_ mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return &coretypes.ResultBroadcastTx{Code: 0}, nil
+}
+
+func (m mockTendermintRPC) ABCIQueryWithOptions(
+	_ context.Context,
+	_ string, _ bytes.HexBytes,
+	_ rpcclient.ABCIQueryOptions,
+) (*coretypes.ResultABCIQuery, error) {
+	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
 }
 
 type account struct {
@@ -58,7 +75,7 @@ func (s *CLITestSuite) SetupSuite() {
 		WithOutput(io.Discard)
 }
 
-func (s *CLITestSuite) createKeyringRecords(num int) []account {
+func (s *CLITestSuite) createKeyringAccounts(num int) []account {
 	accounts := make([]account, num)
 	for i := range accounts {
 		record, _, err := s.kr.NewMnemonic(

@@ -109,6 +109,8 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 		return result.Response, nil
 	}
 
+	// TODO: What happened to proof verification????
+
 	return result.Response, nil
 }
 

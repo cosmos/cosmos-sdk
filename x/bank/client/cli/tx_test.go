@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"io"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (s *CLITestSuite) TestSendTxCmd() {
-	accounts := s.createKeyringRecords(1)
+	accounts := s.createKeyringAccounts(1)
 	cmd := cli.NewSendTxCmd()
 	cmd.SetOutput(io.Discard)
 
@@ -95,7 +98,7 @@ func (s *CLITestSuite) TestSendTxCmd() {
 }
 
 func (s *CLITestSuite) TestMultiSendTxCmd() {
-	records := s.createKeyringRecords(3)
+	accounts := s.createKeyringAccounts(3)
 
 	cmd := cli.NewMultiSendTxCmd()
 	cmd.SetOutput(io.Discard)
@@ -122,10 +125,10 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 			func() client.Context {
 				return s.baseCtx
 			},
-			records[0].address.String(),
+			accounts[0].address.String(),
 			[]string{
-				records[1].address.String(),
-				records[2].address.String(),
+				accounts[1].address.String(),
+				accounts[2].address.String(),
 			},
 			sdk.NewCoins(
 				sdk.NewCoin("stake", sdk.NewInt(10)),
@@ -141,8 +144,8 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 			},
 			"foo",
 			[]string{
-				records[1].address.String(),
-				records[2].address.String(),
+				accounts[1].address.String(),
+				accounts[2].address.String(),
 			},
 			sdk.NewCoins(
 				sdk.NewCoin("stake", sdk.NewInt(10)),
@@ -156,9 +159,9 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 			func() client.Context {
 				return s.baseCtx
 			},
-			records[0].address.String(),
+			accounts[0].address.String(),
 			[]string{
-				records[1].address.String(),
+				accounts[1].address.String(),
 				"bar",
 			},
 			sdk.NewCoins(
@@ -173,10 +176,10 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 			func() client.Context {
 				return s.baseCtx
 			},
-			records[0].address.String(),
+			accounts[0].address.String(),
 			[]string{
-				records[1].address.String(),
-				records[2].address.String(),
+				accounts[1].address.String(),
+				accounts[2].address.String(),
 			},
 			nil,
 			extraArgs,
@@ -197,6 +200,89 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 
 			cmd.SetContext(ctx)
 			cmd.SetArgs(args)
+
+			s.Require().NoError(client.SetCmdClientContextHandler(tc.ctxGen(), cmd))
+
+			err := cmd.Execute()
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
+func (s *CLITestSuite) TestGetBalancesCmd() {
+	accounts := s.createKeyringAccounts(1)
+
+	cmd := cli.GetBalancesCmd()
+	cmd.SetOutput(io.Discard)
+
+	testCases := []struct {
+		name      string
+		ctxGen    func() client.Context
+		args      []string
+		expectErr bool
+	}{
+		{
+			"valid query",
+			func() client.Context {
+				return s.baseCtx
+			},
+			[]string{
+				accounts[0].address.String(),
+			},
+			false,
+		},
+		{
+			"valid query with denom",
+			func() client.Context {
+				bz, _ := s.encCfg.Codec.Marshal(&types.QueryBalanceResponse{
+					Balance: &sdk.Coin{},
+				})
+				c := newMockTendermintRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return s.baseCtx.WithClient(c)
+			},
+			[]string{
+				accounts[0].address.String(),
+				fmt.Sprintf("--%s=photon", cli.FlagDenom),
+			},
+			false,
+		},
+		{
+			"invalid address",
+			func() client.Context {
+				return s.baseCtx
+			},
+			[]string{
+				"foo",
+			},
+			true,
+		},
+		{
+			"invalid denom",
+			func() client.Context {
+				return s.baseCtx
+			},
+			[]string{
+				accounts[0].address.String(),
+				fmt.Sprintf("--%s=1.4", cli.FlagDenom),
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			cmd.SetContext(ctx)
+			cmd.SetArgs(tc.args)
 
 			s.Require().NoError(client.SetCmdClientContextHandler(tc.ctxGen(), cmd))
 

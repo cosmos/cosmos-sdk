@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -361,15 +362,14 @@ func (suite *IntegrationTestSuite) TestInputOutputNewAccount() {
 	suite.Require().Nil(app.AccountKeeper.GetAccount(ctx, addr2))
 	suite.Require().Empty(app.BankKeeper.GetAllBalances(ctx, addr2))
 
-	input := types.Input{
-		Address: addr1.String(),
-		Coins:   sdk.NewCoins(newFooCoin(30), newBarCoin(10)),
+	inputs := []types.Input{
+		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 	outputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
-	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, input, outputs))
+	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
 	acc2Balances := app.BankKeeper.GetAllBalances(ctx, addr2)
@@ -393,9 +393,8 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
 	app.AccountKeeper.SetAccount(ctx, acc3)
 
-	input := types.Input{
-		Address: addr1.String(),
-		Coins:   sdk.NewCoins(newFooCoin(60), newBarCoin(20)),
+	input := []types.Input{
+		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20))},
 	}
 	outputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
@@ -407,9 +406,11 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 
 	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr1, balances))
 
-	insufficientInput := types.Input{
-		Address: addr1.String(),
-		Coins:   sdk.NewCoins(newFooCoin(300), newBarCoin(100)),
+	insufficientInput := []types.Input{
+		{
+			Address: addr1.String(),
+			Coins:   sdk.NewCoins(newFooCoin(300), newBarCoin(100)),
+		},
 	}
 	insufficientOutputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
@@ -500,9 +501,9 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 
 	suite.Require().NoError(app.BankKeeper.SetParams(ctx, params))
 
-	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
-	fooCoin := sdk.NewCoin("foocoin", sdk.OneInt())
-	barCoin := sdk.NewCoin("barcoin", sdk.OneInt())
+	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())
+	fooCoin := sdk.NewCoin("foocoin", math.OneInt())
+	barCoin := sdk.NewCoin("barcoin", math.OneInt())
 
 	// assert with default (all denom) send enabled both Bar and Bond Denom are enabled
 	suite.Require().Equal(enabled, app.BankKeeper.IsSendEnabledCoin(ctx, barCoin))
@@ -613,9 +614,11 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	coins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
-	input := types.Input{
-		Address: addr.String(),
-		Coins:   coins,
+	input := []types.Input{
+		{
+			Address: addr.String(),
+			Coins:   coins,
+		},
 	}
 	outputs := []types.Output{
 		{Address: addr3.String(), Coins: newCoins},

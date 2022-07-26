@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/confio/ics23/go v0.7.0
-	github.com/cosmos/cosmos-sdk v0.46.0-rc3
+	github.com/cosmos/cosmos-sdk v0.46.0
 	github.com/cosmos/iavl v0.19.0
 	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
 	github.com/tendermint/tendermint v0.35.9

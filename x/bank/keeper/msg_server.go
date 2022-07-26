@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -42,7 +41,7 @@ func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 	}
 
 	if k.BlockedAddr(to) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+		return nil, errors.Wrapf(errors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
 	err = k.SendCoins(ctx, from, to, msg.Amount)
@@ -76,19 +75,21 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// NOTE: totalIn == totalOut should already have been checked
-	if err := k.IsSendEnabledCoins(ctx, msg.Input.Coins...); err != nil {
-		return nil, err
+	for _, in := range msg.Inputs {
+		if err := k.IsSendEnabledCoins(ctx, in.Coins...); err != nil {
+			return nil, err
+		}
 	}
 
 	for _, out := range msg.Outputs {
 		accAddr := sdk.MustAccAddressFromBech32(out.Address)
 
 		if k.BlockedAddr(accAddr) {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", out.Address)
+			return nil, errors.Wrapf(errors.ErrUnauthorized, "%s is not allowed to receive transactions", out.Address)
 		}
 	}
 
-	err := k.InputOutputCoins(ctx, msg.Input, msg.Outputs)
+	err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
 	if err != nil {
 		return nil, err
 	}

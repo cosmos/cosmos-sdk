@@ -176,25 +176,40 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// random number of outputs between [1, 3]
+		// random number of inputs/outputs between [1, 3]
+		inputs := make([]types.Input, r.Intn(1)+1) //nolint:staticcheck // SA4030: (*math/rand.Rand).Intn(n) generates a random value 0 <= x < n; that is, the generated values don't include n; r.Intn(1) therefore always returns 0
 		outputs := make([]types.Output, r.Intn(3)+1)
 
+		// collect signer privKeys
+		privs := make([]cryptotypes.PrivKey, len(inputs))
+
+		// use map to check if address already exists as input
+		usedAddrs := make(map[string]bool)
+
 		var totalSentCoins sdk.Coins
-		// generate random input fields, ignore to address
-		from, _, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
+		for i := range inputs {
+			// generate random input fields, ignore to address
+			from, _, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
-		// if coins slice is empty, we can not create valid types.MsgMultiSend
-		if len(coins) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "empty coins slice"), nil, nil
+			// make sure account is fresh and not used in previous input
+			for usedAddrs[from.Address.String()] {
+				from, _, coins, skip = randomSendFields(r, ctx, accs, bk, ak)
+			}
+
+			if skip {
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "skip all transfers"), nil, nil
+			}
+
+			// set input address in used address map
+			usedAddrs[from.Address.String()] = true
+
+			// set signer privkey
+			privs[i] = from.PrivKey
+
+			// set next input and accumulate total sent coins
+			inputs[i] = types.NewInput(from.Address, coins)
+			totalSentCoins = totalSentCoins.Add(coins...)
 		}
-
-		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "skip all transfers"), nil, nil
-		}
-
-		// set next input and accumulate total sent coins
-		input := types.NewInput(from.Address, coins)
-		totalSentCoins = totalSentCoins.Add(coins...)
 
 		// Check send_enabled status of each sent coin denom
 		if err := bk.IsSendEnabledCoins(ctx, totalSentCoins...); err != nil {
@@ -231,10 +246,10 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		}
 
 		msg := &types.MsgMultiSend{
-			Input:   input,
+			Inputs:  inputs,
 			Outputs: outputs,
 		}
-		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
+		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
@@ -249,20 +264,22 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		inputs := make([]types.Input, 2)
 		outputs := make([]types.Output, moduleAccCount)
-
+		// collect signer privKeys
+		privs := make([]cryptotypes.PrivKey, len(inputs))
 		var totalSentCoins sdk.Coins
-
-		sender := accs[0]
-		spendable := bk.SpendableCoins(ctx, sender.Address)
-		coins := simtypes.RandSubsetCoins(r, spendable)
-		input := types.NewInput(sender.Address, coins)
-		totalSentCoins = totalSentCoins.Add(coins...)
-
+		for i := range inputs {
+			sender := accs[i]
+			privs[i] = sender.PrivKey
+			spendable := bk.SpendableCoins(ctx, sender.Address)
+			coins := simtypes.RandSubsetCoins(r, spendable)
+			inputs[i] = types.NewInput(sender.Address, coins)
+			totalSentCoins = totalSentCoins.Add(coins...)
+		}
 		if err := bk.IsSendEnabledCoins(ctx, totalSentCoins...); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, err.Error()), nil, nil
 		}
-
 		moduleAccounts := getModuleAccounts(ak, ctx, moduleAccCount)
 		for i := range outputs {
 			var outCoins sdk.Coins
@@ -275,12 +292,9 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 				outCoins = simtypes.RandSubsetCoins(r, totalSentCoins)
 				totalSentCoins = totalSentCoins.Sub(outCoins...)
 			}
-
 			outputs[i] = types.NewOutput(moduleAccounts[i].Address, outCoins)
 		}
-
 		// remove any output that has no coins
-
 		for i := 0; i < len(outputs); {
 			if outputs[i].Coins.Empty() {
 				outputs[i] = outputs[len(outputs)-1]
@@ -290,16 +304,14 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 				i++
 			}
 		}
-
 		msg := &types.MsgMultiSend{
-			Input:   input,
+			Inputs:  inputs,
 			Outputs: outputs,
 		}
-		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{sender.PrivKey})
+		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
-
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
 	}
 }
@@ -310,27 +322,29 @@ func sendMsgMultiSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
 	msg *types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,
 ) error {
-
-	addr := sdk.MustAccAddressFromBech32(msg.Input.Address)
-	acc := ak.GetAccount(ctx, addr)
-
+	accountNumbers := make([]uint64, len(msg.Inputs))
+	sequenceNumbers := make([]uint64, len(msg.Inputs))
+	for i := 0; i < len(msg.Inputs); i++ {
+		addr := sdk.MustAccAddressFromBech32(msg.Inputs[i].Address)
+		acc := ak.GetAccount(ctx, addr)
+		accountNumbers[i] = acc.GetAccountNumber()
+		sequenceNumbers[i] = acc.GetSequence()
+	}
 	var (
 		fees sdk.Coins
 		err  error
 	)
-
+	addr := sdk.MustAccAddressFromBech32(msg.Inputs[0].Address)
 	// feePayer is the first signer, i.e. first input address
 	feePayer := ak.GetAccount(ctx, addr)
 	spendable := bk.SpendableCoins(ctx, feePayer.GetAddress())
-
-	coins, hasNeg := spendable.SafeSub(msg.Input.Coins...)
+	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins...)
 	if !hasNeg {
 		fees, err = simtypes.RandomFees(r, ctx, coins)
 		if err != nil {
 			return err
 		}
 	}
-
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
@@ -339,19 +353,17 @@ func sendMsgMultiSend(
 		fees,
 		simtestutil.DefaultGenTxGas,
 		chainID,
-		[]uint64{acc.GetAccountNumber()},
-		[]uint64{acc.GetSequence()},
+		accountNumbers,
+		sequenceNumbers,
 		privkeys...,
 	)
 	if err != nil {
 		return err
 	}
-
 	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

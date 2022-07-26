@@ -360,7 +360,7 @@ func TestMsgSetSendEnabledValidateBasic(t *testing.T) {
 					{"somecoinb", false},
 				},
 			},
-			exp: "decoding bech32 failed: invalid bech32 string length 5",
+			exp: "invalid authority address: decoding bech32 failed: invalid bech32 string length 5: invalid address",
 		},
 		{
 			name: "bad first denom name",
@@ -371,7 +371,7 @@ func TestMsgSetSendEnabledValidateBasic(t *testing.T) {
 					{"somecoinb", false},
 				},
 			},
-			exp: "invalid denom: Not A Denom",
+			exp: `invalid SendEnabled denom "Not A Denom": invalid denom: Not A Denom: invalid request`,
 		},
 		{
 			name: "bad second denom",
@@ -382,7 +382,7 @@ func TestMsgSetSendEnabledValidateBasic(t *testing.T) {
 					{"", false},
 				},
 			},
-			exp: "invalid denom: ",
+			exp: `invalid SendEnabled denom "": invalid denom: : invalid request`,
 		},
 		{
 			name: "duplicate denom",
@@ -393,7 +393,7 @@ func TestMsgSetSendEnabledValidateBasic(t *testing.T) {
 					{"copycoin", false},
 				},
 			},
-			exp: "duplicate denom entries found for \"copycoin\"",
+			exp: `duplicate denom entries found for "copycoin": invalid request`,
 		},
 		{
 			name: "bad denom to delete",
@@ -401,7 +401,7 @@ func TestMsgSetSendEnabledValidateBasic(t *testing.T) {
 				Authority:     govModuleAddr,
 				UseDefaultFor: []string{"very \t bad denom string~~~!"},
 			},
-			exp: "invalid denom: very \t bad denom string~~~!",
+			exp: "invalid UseDefaultFor denom \"very \\t bad denom string~~~!\": invalid denom: very \t bad denom string~~~!: invalid request",
 		},
 	}
 

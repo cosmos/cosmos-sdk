@@ -1,8 +1,6 @@
 package types
 
 import (
-	fmt "fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -235,26 +233,25 @@ func (msg MsgSetSendEnabled) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic runs basic validation on this MsgSetSendEnabled.
 func (msg MsgSetSendEnabled) ValidateBasic() error {
-	var err error
 	if len(msg.Authority) > 0 {
-		_, err = sdk.AccAddressFromBech32(msg.Authority)
+		_, err := sdk.AccAddressFromBech32(msg.Authority)
 		if err != nil {
-			return err
+			return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
 		}
 	}
 	seen := map[string]bool{}
 	for _, se := range msg.SendEnabled {
 		if _, alreadySeen := seen[se.Denom]; alreadySeen {
-			return fmt.Errorf("duplicate denom entries found for %q", se.Denom)
+			return sdkerrors.ErrInvalidRequest.Wrapf("duplicate denom entries found for %q", se.Denom)
 		}
 		seen[se.Denom] = true
-		if err = se.Validate(); err != nil {
-			return err
+		if err := se.Validate(); err != nil {
+			return sdkerrors.ErrInvalidRequest.Wrapf("invalid SendEnabled denom %q: %s", se.Denom, err)
 		}
 	}
 	for _, denom := range msg.UseDefaultFor {
-		if err = sdk.ValidateDenom(denom); err != nil {
-			return err
+		if err := sdk.ValidateDenom(denom); err != nil {
+			return sdkerrors.ErrInvalidRequest.Wrapf("invalid UseDefaultFor denom %q: %s", denom, err)
 		}
 	}
 	return nil

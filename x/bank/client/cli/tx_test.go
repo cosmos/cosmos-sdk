@@ -13,6 +13,9 @@ import (
 )
 
 func (s *CLITestSuite) TestSendTxCmd() {
+	cmd := cli.NewSendTxCmd()
+	cmd.SetOutput(io.Discard)
+
 	records := s.createKeyringRecords(1)
 
 	addr1, err := records[0].GetAddress()
@@ -88,10 +91,8 @@ func (s *CLITestSuite) TestSendTxCmd() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := cli.NewSendTxCmd()
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
-			cmd.SetOutput(io.Discard)
 			cmd.SetContext(ctx)
 			cmd.SetArgs(append([]string{tc.from.String(), tc.to.String(), tc.amount.String()}, tc.extraArgs...))
 

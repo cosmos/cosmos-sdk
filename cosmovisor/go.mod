@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/cosmovisor
 go 1.18
 
 require (
-	github.com/cosmos/cosmos-sdk v0.46.0-rc3
+	github.com/cosmos/cosmos-sdk v0.46.0
 	github.com/hashicorp/go-getter v1.6.2
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.27.0
@@ -16,7 +16,6 @@ require (
 	cloud.google.com/go/compute v1.6.1 // indirect
 	cloud.google.com/go/iam v0.3.0 // indirect
 	cloud.google.com/go/storage v1.14.0 // indirect
-	cosmossdk.io/api v0.1.1-0.20220719182652-282b3be2dc2b // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/math v1.0.0-beta.2 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect

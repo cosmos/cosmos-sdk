@@ -21,14 +21,15 @@ import (
 
 // Flag names and values
 const (
-	FlagSpendLimit        = "spend-limit"
-	FlagMsgType           = "msg-type"
-	FlagExpiration        = "expiration"
-	FlagAllowedValidators = "allowed-validators"
-	FlagDenyValidators    = "deny-validators"
-	delegate              = "delegate"
-	redelegate            = "redelegate"
-	unbond                = "unbond"
+	FlagSpendLimit            = "spend-limit"
+	FlagMsgType               = "msg-type"
+	FlagExpiration            = "expiration"
+	FlagAllowedValidators     = "allowed-validators"
+	FlagDenyValidators        = "deny-validators"
+	FlagAllowedAuthorizations = "allowed-authorizations"
+	delegate                  = "delegate"
+	redelegate                = "redelegate"
+	unbond                    = "unbond"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -54,7 +55,7 @@ func GetTxCmd() *cobra.Command {
 // NewCmdGrantAuthorization returns a CLI command handler for creating a MsgGrant transaction.
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
+		Use:   "grant <grantee> <authorization_type=\"count\"|\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
 		Short: "Grant authorization to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`create a new grant authorization to an address to execute a transaction on your behalf:
@@ -78,6 +79,22 @@ Examples:
 
 			var authorization authz.Authorization
 			switch args[1] {
+			case "count":
+				msgType, err := cmd.Flags().GetString(FlagMsgType)
+				if err != nil {
+					return err
+				}
+
+				allowedAuthorizations, err := cmd.Flags().GetInt32(FlagAllowedAuthorizations)
+				if err != nil {
+					return err
+				}
+
+				if allowedAuthorizations <= 0 {
+					return fmt.Errorf("allowed-authorizations must be greater than 0")
+				}
+
+				authorization = authz.NewCountAuthorization(msgType, allowedAuthorizations)
 			case "send":
 				limit, err := cmd.Flags().GetString(FlagSpendLimit)
 				if err != nil {
@@ -185,6 +202,7 @@ Examples:
 	cmd.Flags().StringSlice(FlagAllowedValidators, []string{}, "Allowed validators addresses separated by ,")
 	cmd.Flags().StringSlice(FlagDenyValidators, []string{}, "Deny validators addresses separated by ,")
 	cmd.Flags().Int64(FlagExpiration, 0, "Expire time as Unix timestamp. Set zero (0) for no expiry. Default is 0.")
+	cmd.Flags().Int32(FlagAllowedAuthorizations, 0, "Allowed authorizations for a Count Authorization")
 	return cmd
 }
 

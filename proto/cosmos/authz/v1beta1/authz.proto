@@ -19,6 +19,18 @@ message GenericAuthorization {
   string msg = 1;
 }
 
+// CountAuthorization gives the grantee unrestricted permissions to execute
+// the provided method on behalf of the granter's account up to the allowed authorizations count.
+message CountAuthorization {
+  option (cosmos_proto.implements_interface) = "Authorization";
+
+  // Msg, identified by it's type URL, to grant unrestricted permissions to execute
+  string msg = 1;
+
+  // Allowed number of authorizations assigned to grantee
+  int32 allowed_authorizations = 2;
+}
+
 // Grant gives permissions to execute
 // the provide method with expiration time.
 message Grant {

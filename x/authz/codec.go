@@ -32,6 +32,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		"cosmos.v1beta1.Authorization",
 		(*Authorization)(nil),
 		&GenericAuthorization{},
+		&CountAuthorization{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, MsgServiceDesc())

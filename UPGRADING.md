@@ -2,7 +2,7 @@
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
 
-## Unreleased
+## [Unreleased]
 
 ### SimApp
 
@@ -14,7 +14,7 @@ The constructor, `NewSimApp` has been simplified:
         - `NewSimApp` does not take encoding parameters (`encodingConfig`) as input, instead the encoding paramaters are injected (when using app wiring), or directly created in the constuctor. Instead, we can instantiate `SimApp` for getting the encoding configuration.
         - `NewSimApp` now uses `AppOptions` for getting the home path (`homePath`) and the invariant checks period (`invCheckPeriod`). These were uncessary given as arguments, while already present in the `AppOptions`.
 
-## v0.46
+## [v0.46.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0)
 
 ### Client Changes
 

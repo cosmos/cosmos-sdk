@@ -18,10 +18,7 @@ func NewSendAuthorization(spendLimit sdk.Coins, allowed []sdk.AccAddress) *SendA
 
 	a := SendAuthorization{}
 	a.AllowList = allowedAddrs
-
-	if spendLimit != nil {
-		a.SpendLimit = spendLimit
-	}
+	a.SpendLimit = spendLimit
 
 	return &a
 }
@@ -60,6 +57,7 @@ func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRes
 	if len(allowedList) > 0 && !isAddrExists {
 		return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot send to %s address", toAddr)
 	}
+
 	return authz.AcceptResponse{Accept: true, Delete: false, Updated: &SendAuthorization{SpendLimit: limitLeft, AllowList: allowedList}}, nil
 }
 

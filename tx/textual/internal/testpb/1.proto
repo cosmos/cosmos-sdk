@@ -21,6 +21,7 @@ message A {
   string                   SDKDEC         = 6 [(cosmos_proto.scalar) = "cosmos.Dec"];
   cosmos.base.v1beta1.Coin COIN           = 7;
   repeated cosmos.base.v1beta1.Coin COINS = 8;
+  bytes                             BYTES = 9;
 }
 
 // B contains fields that are not parseable by SIGN_MODE_TEXTUAL, some fields

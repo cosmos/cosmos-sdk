@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#12717](https://github.com/cosmos/cosmos-sdk/pull/12717) Use injected encoding params in simapp.
 * [#12702](https://github.com/cosmos/cosmos-sdk/pull/12702) Linting and tidiness, fixed two minor security warnings. 
 * [#12634](https://github.com/cosmos/cosmos-sdk/pull/12634) Move `sdk.Dec` to math package.
 * [#12596](https://github.com/cosmos/cosmos-sdk/pull/12596) Remove all imports of the non-existent gogo/protobuf v1.3.3 to ease downstream use and go workspaces. 

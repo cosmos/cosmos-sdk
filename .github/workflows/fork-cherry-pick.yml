@@ -1,3 +1,4 @@
+name: Cherry pick fork PR
 on:
   #Set to trigger on every merge to main, not just a closed PR.
   workflow_dispatch:

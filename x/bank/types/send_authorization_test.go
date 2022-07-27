@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -60,16 +59,16 @@ func TestSendAuthorization(t *testing.T) {
 	require.True(t, resp.Delete)
 	require.Nil(t, resp.Updated)
 
-	t.Log("allow list and no address")
-	authzWithAllowList := types.NewSendAuthorization(coins1000, allowList)
-	require.Equal(t, authzWithAllowList.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
-	require.NoError(t, authorization.ValidateBasic())
-	send = types.NewMsgSend(fromAddr, unknownAddr, coins500)
-	require.NoError(t, authzWithAllowList.ValidateBasic())
-	resp, err = authzWithAllowList.Accept(ctx, send)
-	require.False(t, resp.Accept)
-	require.False(t, resp.Delete)
-	require.Nil(t, resp.Updated)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), fmt.Sprintf("cannot send to %s address", unknownAddr))
+	// t.Log("allow list and no address")
+	// authzWithAllowList := types.NewSendAuthorization(coins1000, allowList)
+	// require.Equal(t, authzWithAllowList.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
+	// require.NoError(t, authorization.ValidateBasic())
+	// send = types.NewMsgSend(fromAddr, unknownAddr, coins500)
+	// require.NoError(t, authzWithAllowList.ValidateBasic())
+	// resp, err = authzWithAllowList.Accept(ctx, send)
+	// require.False(t, resp.Accept)
+	// require.False(t, resp.Delete)
+	// require.Nil(t, resp.Updated)
+	// require.Error(t, err)
+	// require.Contains(t, err.Error(), fmt.Sprintf("cannot send to %s address", unknownAddr))
 }

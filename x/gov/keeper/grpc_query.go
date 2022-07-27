@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -298,7 +298,7 @@ func (q legacyQueryServer) Proposal(c context.Context, req *v1beta1.QueryProposa
 		return nil, err
 	}
 
-	proposal, err := v046.ConvertToLegacyProposal(*resp.Proposal)
+	proposal, err := v3.ConvertToLegacyProposal(*resp.Proposal)
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +319,7 @@ func (q legacyQueryServer) Proposals(c context.Context, req *v1beta1.QueryPropos
 
 	legacyProposals := make([]v1beta1.Proposal, len(resp.Proposals))
 	for idx, proposal := range resp.Proposals {
-		legacyProposals[idx], err = v046.ConvertToLegacyProposal(*proposal)
+		legacyProposals[idx], err = v3.ConvertToLegacyProposal(*proposal)
 		if err != nil {
 			return nil, err
 		}
@@ -340,7 +340,7 @@ func (q legacyQueryServer) Vote(c context.Context, req *v1beta1.QueryVoteRequest
 		return nil, err
 	}
 
-	vote, err := v046.ConvertToLegacyVote(*resp.Vote)
+	vote, err := v3.ConvertToLegacyVote(*resp.Vote)
 	if err != nil {
 		return nil, err
 	}
@@ -359,7 +359,7 @@ func (q legacyQueryServer) Votes(c context.Context, req *v1beta1.QueryVotesReque
 
 	votes := make([]v1beta1.Vote, len(resp.Votes))
 	for i, v := range resp.Votes {
-		votes[i], err = v046.ConvertToLegacyVote(*v)
+		votes[i], err = v3.ConvertToLegacyVote(*v)
 		if err != nil {
 			return nil, err
 		}
@@ -420,7 +420,7 @@ func (q legacyQueryServer) Deposit(c context.Context, req *v1beta1.QueryDepositR
 		return nil, err
 	}
 
-	deposit := v046.ConvertToLegacyDeposit(resp.Deposit)
+	deposit := v3.ConvertToLegacyDeposit(resp.Deposit)
 	return &v1beta1.QueryDepositResponse{Deposit: deposit}, nil
 }
 
@@ -434,7 +434,7 @@ func (q legacyQueryServer) Deposits(c context.Context, req *v1beta1.QueryDeposit
 	}
 	deposits := make([]v1beta1.Deposit, len(resp.Deposits))
 	for idx, deposit := range resp.Deposits {
-		deposits[idx] = v046.ConvertToLegacyDeposit(deposit)
+		deposits[idx] = v3.ConvertToLegacyDeposit(deposit)
 	}
 
 	return &v1beta1.QueryDepositsResponse{Deposits: deposits, Pagination: resp.Pagination}, nil
@@ -448,7 +448,7 @@ func (q legacyQueryServer) TallyResult(c context.Context, req *v1beta1.QueryTall
 		return nil, err
 	}
 
-	tally, err := v046.ConvertToLegacyTallyResult(resp.Tally)
+	tally, err := v3.ConvertToLegacyTallyResult(resp.Tally)
 	if err != nil {
 		return nil, err
 	}

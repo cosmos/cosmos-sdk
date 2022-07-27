@@ -1,4 +1,4 @@
-package v046_test
+package v3_test
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -51,7 +51,7 @@ func TestMigrateJSON(t *testing.T) {
 		v1beta1.Vote{ProposalId: 2, Voter: voter.String(), Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionNo)},
 	}
 
-	migrated, err := v046.MigrateJSON(govGenState)
+	migrated, err := v3.MigrateJSON(govGenState)
 	require.NoError(t, err)
 
 	// Make sure the migrated proposal's Msg signer is the gov acct.

@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -131,7 +131,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 				suite.Require().NoError(err)
 				suite.Require().NotEmpty(submittedProposal)
 
-				expProposal, err = v046.ConvertToLegacyProposal(submittedProposal)
+				expProposal, err = v3.ConvertToLegacyProposal(submittedProposal)
 				suite.Require().NoError(err)
 			},
 			true,

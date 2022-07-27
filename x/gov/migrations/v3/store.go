@@ -1,4 +1,4 @@
-package v046
+package v3
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -6,15 +6,15 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/exported"
-	v042 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v042"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v1"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // migrateProposals migrates all legacy proposals into MsgExecLegacyContent
 // proposals.
 func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
-	propStore := prefix.NewStore(store, v042.ProposalsKeyPrefix)
+	propStore := prefix.NewStore(store, v1.ProposalsKeyPrefix)
 
 	iter := propStore.Iterator(nil, nil)
 	defer iter.Close()
@@ -45,14 +45,14 @@ func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.ParamSubspace, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 
-	dp := v1.DepositParams{}
-	vp := v1.VotingParams{}
-	tp := v1.TallyParams{}
-	legacySubspace.Get(ctx, v1.ParamStoreKeyDepositParams, &dp)
-	legacySubspace.Get(ctx, v1.ParamStoreKeyVotingParams, &vp)
-	legacySubspace.Get(ctx, v1.ParamStoreKeyTallyParams, &tp)
+	dp := govv1.DepositParams{}
+	vp := govv1.VotingParams{}
+	tp := govv1.TallyParams{}
+	legacySubspace.Get(ctx, govv1.ParamStoreKeyDepositParams, &dp)
+	legacySubspace.Get(ctx, govv1.ParamStoreKeyVotingParams, &vp)
+	legacySubspace.Get(ctx, govv1.ParamStoreKeyTallyParams, &tp)
 
-	params := v1.NewParams(
+	params := govv1.NewParams(
 		dp.MinDeposit,
 		*dp.MaxDepositPeriod,
 		*vp.VotingPeriod,

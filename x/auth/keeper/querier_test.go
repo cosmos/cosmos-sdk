@@ -14,7 +14,7 @@ import (
 
 func (suite *KeeperTestSuite) TestQueryAccount() {
 	ctx := suite.ctx
-	legacyQuerierCdc := codec.NewAminoCodec(suite.legacyAmino)
+	legacyQuerierCdc := codec.NewAminoCodec(suite.encCfg.Amino)
 
 	req := abci.RequestQuery{
 		Path: "",

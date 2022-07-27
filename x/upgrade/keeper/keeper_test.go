@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	skipUpgradeHeights := make(map[int64]bool)
 
-	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, key, s.encCfg.Codec, "", nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, key, s.encCfg.Codec, homeDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	s.upgradeKeeper.SetVersionSetter(s.baseApp)
 
 	s.T().Log("home dir:", homeDir)

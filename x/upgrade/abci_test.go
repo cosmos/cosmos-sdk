@@ -11,13 +11,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -47,12 +43,6 @@ type TestSuite struct {
 var s TestSuite
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
-	var (
-		appOptions = make(simtestutil.AppOptionsMap, 0)
-	)
-
-	appOptions[server.FlagUnsafeSkipUpgrades] = maps.Keys(skip)
-	appOptions[flags.FlagHome] = t.TempDir()
 
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := sdk.NewKVStoreKey(types.StoreKey)
@@ -65,7 +55,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
 		s.encCfg.TxConfig.TxDecoder(),
 	)
 
-	s.keeper = keeper.NewKeeper(skip, key, s.encCfg.Codec, "", nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	s.keeper = keeper.NewKeeper(skip, key, s.encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	s.keeper.SetVersionSetter(s.baseApp)
 
 	s.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now(), Height: height})

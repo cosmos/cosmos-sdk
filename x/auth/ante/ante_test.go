@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
@@ -486,7 +487,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 				modAcc := suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
 				suite.Require().True(suite.bankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).Empty())
-				require.True(sdk.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(149)))
+				require.True(math.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(149)))
 
 				err := testutil.FundAccount(suite.bankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)))
 				suite.Require().NoError(err)
@@ -500,8 +501,8 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 			func() {
 				modAcc := suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
-				require.True(sdk.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).AmountOf("atom"), sdk.NewInt(150)))
-				require.True(sdk.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(0)))
+				require.True(math.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).AmountOf("atom"), sdk.NewInt(150)))
+				require.True(math.IntEq(suite.T(), suite.bankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(0)))
 			},
 			false,
 			false,
@@ -1116,14 +1117,16 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 	}
 	for _, tc := range testCases {
 		// set testcase parameters
-		suite.accountKeeper.SetParams(suite.ctx, tc.params)
+		err := suite.accountKeeper.SetParams(suite.ctx, tc.params)
+		suite.Require().NoError(err)
 
-		_, err := suite.anteHandler(suite.ctx, tx, false)
+		_, err = suite.anteHandler(suite.ctx, tx, false)
 
 		suite.Require().NotNil(err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
 
 		// reset parameters to default values
-		suite.accountKeeper.SetParams(suite.ctx, types.DefaultParams())
+		err = suite.accountKeeper.SetParams(suite.ctx, types.DefaultParams())
+		suite.Require().NoError(err)
 	}
 
 	// require that local mempool fee check is still run on recheck since validator may change minFee between check and recheck

@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -26,7 +26,8 @@ func TestDecodeStore(t *testing.T) {
 
 	now := time.Now().UTC()
 	e := now.Add(1)
-	grant, _ := authz.NewGrant(now, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123))), &e)
+	sendAuthz := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123)), nil)
+	grant, _ := authz.NewGrant(now, sendAuthz, &e)
 	grantBz, err := cdc.Marshal(&grant)
 	require.NoError(t, err)
 	kvPairs := kv.Pairs{

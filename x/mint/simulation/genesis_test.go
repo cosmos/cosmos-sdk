@@ -7,12 +7,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -20,15 +21,14 @@ import (
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
 // Abonormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
+	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          cdc,
+		Cdc:          encCfg.Codec,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
@@ -51,7 +51,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, dec3, mintGenesis.Params.InflationMin)
 	require.Equal(t, "stake", mintGenesis.Params.MintDenom)
 	require.Equal(t, "0stake", mintGenesis.Minter.BlockProvision(mintGenesis.Params).String())
-	require.Equal(t, "0.170000000000000000", mintGenesis.Minter.NextAnnualProvisions(mintGenesis.Params, sdk.OneInt()).String())
+	require.Equal(t, "0.170000000000000000", mintGenesis.Minter.NextAnnualProvisions(mintGenesis.Params, math.OneInt()).String())
 	require.Equal(t, "0.169999926644441493", mintGenesis.Minter.NextInflationRate(mintGenesis.Params, sdk.OneDec()).String())
 	require.Equal(t, "0.170000000000000000", mintGenesis.Minter.Inflation.String())
 	require.Equal(t, "0.000000000000000000", mintGenesis.Minter.AnnualProvisions.String())
@@ -59,8 +59,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
+	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -74,7 +73,7 @@ func TestRandomizedGenState1(t *testing.T) {
 		{ // panic => reason: incomplete initialization of the simState
 			module.SimulationState{
 				AppParams: make(simtypes.AppParams),
-				Cdc:       cdc,
+				Cdc:       encCfg.Codec,
 				Rand:      r,
 			}, "assignment to entry in nil map"},
 	}

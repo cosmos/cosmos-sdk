@@ -50,6 +50,10 @@ type AnteTestSuite struct {
 	feeGrantKeeper    feegrantkeeper.Keeper
 }
 
+func TestAnteTestSuite(t *testing.T) {
+	suite.Run(t, new(AnteTestSuite))
+}
+
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	var (
@@ -69,7 +73,8 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.Require().NoError(err)
 
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{}).WithBlockHeight(1)
-	suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams())
+	err = suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams())
+	suite.Require().NoError(err)
 
 	// We're using TestMsg encoding in some tests, so register it here.
 	legacyAmino.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
@@ -208,8 +213,4 @@ func (suite *AnteTestSuite) RunTestCase(privs []cryptotypes.PrivKey, msgs []sdk.
 			}
 		}
 	})
-}
-
-func TestAnteTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }

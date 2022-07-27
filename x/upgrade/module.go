@@ -4,17 +4,19 @@ import (
 	"context"
 	"encoding/json"
 
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -149,11 +151,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(am.keeper, ctx, req)
 }
 
-// EndBlock does nothing
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
 //
 // New App Wiring Setup
 //
@@ -171,11 +168,13 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type upgradeInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	ModuleKey depinject.OwnModuleKey
+	Config    *modulev1.Module
+	Key       *store.KVStoreKey
+	Cdc       codec.Codec
 
-	AppOpts servertypes.AppOptions `optional:"true"`
+	AppOpts   servertypes.AppOptions    `optional:"true"`
+	Authority map[string]sdk.AccAddress `optional:"true"`
 }
 
 type upgradeOutputs struct {
@@ -183,6 +182,7 @@ type upgradeOutputs struct {
 
 	UpgradeKeeper keeper.Keeper
 	Module        runtime.AppModuleWrapper
+	GovHandler    govv1beta1.HandlerRoute
 }
 
 func provideModule(in upgradeInputs) upgradeOutputs {
@@ -199,9 +199,16 @@ func provideModule(in upgradeInputs) upgradeOutputs {
 		homePath = cast.ToString(in.AppOpts.Get(flags.FlagHome))
 	}
 
-	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	m := NewAppModule(k)
+	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+	if !ok {
+		// default to governance authority if not provided
+		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	}
 
-	return upgradeOutputs{UpgradeKeeper: k, Module: runtime.WrapAppModule(m)}
+	// set the governance module account as the authority for conducting upgrades
+	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String())
+	m := NewAppModule(k)
+	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
+
+	return upgradeOutputs{UpgradeKeeper: k, Module: runtime.WrapAppModule(m), GovHandler: gh}
 }

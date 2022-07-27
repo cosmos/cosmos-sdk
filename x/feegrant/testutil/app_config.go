@@ -18,6 +18,4 @@ import (
 //go:embed app.yaml
 var appConfig []byte
 
-var (
-	AppConfig = appconfig.LoadYAML(appConfig)
-)
+var AppConfig = appconfig.LoadYAML(appConfig)

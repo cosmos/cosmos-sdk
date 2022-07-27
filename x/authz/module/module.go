@@ -12,11 +12,11 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	"cosmossdk.io/core/appmodule"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -167,11 +167,6 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 // BeginBlock returns the begin blocker for the authz module.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(ctx, am.keeper)
-}
-
-// EndBlock does nothing
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
 }
 
 func init() {

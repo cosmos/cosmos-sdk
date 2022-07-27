@@ -11,10 +11,10 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -174,12 +174,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(ctx, req, am.keeper)
-}
-
-// EndBlock executes all ABCI EndBlock logic respective to the evidence module. It
-// returns no validator updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
 }
 
 // AppModuleSimulation functions

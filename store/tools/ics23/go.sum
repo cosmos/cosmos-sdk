@@ -199,8 +199,8 @@ github.com/coreos/go-systemd/v22 v22.3.2/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSV
 github.com/coreos/go-systemd/v22 v22.3.3-0.20220203105225-a9a7ef127534/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/coreos/pkg v0.0.0-20160727233714-3ac0863d7acf/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
 github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
-github.com/cosmos/cosmos-sdk v0.46.0-rc3 h1:BWU0YJ1RXUCYUmKY8k3kH/yEavMF/7y81Sjd+2otZpY=
-github.com/cosmos/cosmos-sdk v0.46.0-rc3/go.mod h1:fWrmJ90UcB11LoaaTtF/qsqkA8HusUc8+XARAdnJfmA=
+github.com/cosmos/cosmos-sdk v0.46.0 h1:TwifvVmAmqUNB70tN1clrqExryWyBU3RxbI2QZEJUJY=
+github.com/cosmos/cosmos-sdk v0.46.0/go.mod h1:u6Ci6+V+srijJhzctEEPYBygUz3O2YXP5ZijPnV6mt0=
 github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4Y=
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
 github.com/cosmos/iavl v0.19.0 h1:sgyrjqOkycXiN7Tuupuo4QAldKFg7Sipyfeg/IL7cps=

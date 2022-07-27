@@ -149,8 +149,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // InitGenesis performs genesis initialization for the authz module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data proto.Message) []abci.ValidatorUpdate {
-	genesisState := &authz.GenesisState{}
-	genesisState = data.(*authz.GenesisState)
+	genesisState := data.(*authz.GenesisState)
 	am.keeper.InitGenesis(ctx, genesisState)
 	return []abci.ValidatorUpdate{}
 }

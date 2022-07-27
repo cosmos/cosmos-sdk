@@ -279,9 +279,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // InitGenesis performs genesis initialization for the gov module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data proto.Message) []abci.ValidatorUpdate {
-	genesisState := &v1.GenesisState{}
-	genesisState = data.(*v1.GenesisState)
-
+	genesisState := data.(*v1.GenesisState)
 	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }

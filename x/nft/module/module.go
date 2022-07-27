@@ -142,8 +142,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // InitGenesis performs genesis initialization for the nft module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data proto.Message) []abci.ValidatorUpdate {
-	genesisState := &nft.GenesisState{}
-	genesisState = data.(*nft.GenesisState)
+	genesisState := data.(*nft.GenesisState)
 	am.keeper.InitGenesis(ctx, genesisState)
 	return []abci.ValidatorUpdate{}
 }

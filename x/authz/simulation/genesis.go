@@ -37,7 +37,8 @@ func genGrant(r *rand.Rand, accounts []simtypes.Account, genT time.Time) []authz
 
 func generateRandomGrant(r *rand.Rand) *codectypes.Any {
 	authorizations := make([]*codectypes.Any, 2)
-	authorizations[0] = newAnyAuthorization(banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))))
+	sendAuthz := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000))), nil)
+	authorizations[0] = newAnyAuthorization(sendAuthz)
 	authorizations[1] = newAnyAuthorization(authz.NewGenericAuthorization(sdk.MsgTypeURL(&v1.MsgSubmitProposal{})))
 
 	return authorizations[r.Intn(len(authorizations))]
@@ -57,7 +58,9 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var grants []authz.GrantAuthorization
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, "authz", &grants, simState.Rand,
-		func(r *rand.Rand) { grants = genGrant(r, simState.Accounts, simState.GenTimestamp) },
+		func(r *rand.Rand) {
+			grants = genGrant(r, simState.Accounts, simState.GenTimestamp)
+		},
 	)
 
 	authzGrantsGenesis := authz.NewGenesisState(grants)

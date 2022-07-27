@@ -22,13 +22,12 @@ import (
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	db := dbm.NewMemDB()
-	encCdc := simapp.MakeTestEncodingConfig()
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = simapp.DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = 5
 
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, encCdc, appOptions)
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, appOptions)
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
 	var err error

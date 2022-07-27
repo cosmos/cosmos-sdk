@@ -311,7 +311,7 @@ func (m *Manager) RegisterServices(cfg Configurator) {
 // InitGenesis performs init genesis functionality for modules. Exactly one
 // module must return a non-empty validator set update to correctly initialize
 // the chain.
-func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
+func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]proto.Message) abci.ResponseInitChain {
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
@@ -321,13 +321,13 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 		ctx.Logger().Debug("running initialization for module", "module", moduleName)
 
 		// TODO: Is this the best way to get the module's genesis type?
-		moduleGenesis := m.Modules[moduleName].DefaultGenesis()
-		if moduleGenesis != nil {
-			if err := cdc.UnmarshalJSON(genesisData[moduleName], moduleGenesis); err != nil {
-				panic(fmt.Sprintf("failed to parse %s genesis state: %s", moduleName, err))
-			}
-		}
-		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, moduleGenesis)
+		// moduleGenesis := m.Modules[moduleName].DefaultGenesis()
+		// if moduleGenesis != nil {
+		// 	if err := cdc.UnmarshalJSON(genesisData[moduleName], moduleGenesis); err != nil {
+		// 		panic(fmt.Sprintf("failed to parse %s genesis state: %s", moduleName, err))
+		// 	}
+		// }
+		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, genesisData[moduleName])
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set

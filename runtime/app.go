@@ -1,9 +1,9 @@
 package runtime
 
 import (
-	"encoding/json"
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"golang.org/x/exp/slices"
 
@@ -121,8 +121,8 @@ func (a *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Respons
 
 // InitChainer initializes the chain.
 func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	var genesisState map[string]json.RawMessage
-	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
+	var genesisState map[string]proto.Message
+	if err := a.cdc.UnmarshalJSON(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
 	return a.ModuleManager.InitGenesis(ctx, a.cdc, genesisState)

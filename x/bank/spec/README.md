@@ -79,7 +79,7 @@ Each `ModuleAccount` has a different set of permissions that provide different
 object capabilities to perform certain actions. Permissions need to be
 registered upon the creation of the supply `Keeper` so that every time a
 `ModuleAccount` calls the allowed functions, the `Keeper` can lookup the
-permissions to that specific account and perform or not the action.
+permissions to that specific account and perform or not perform the action.
 
 The available permissions are:
 

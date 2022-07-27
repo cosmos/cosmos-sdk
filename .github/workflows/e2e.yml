@@ -48,4 +48,4 @@ jobs:
       - name: e2e tests
         if: env.GIT_DIFF
         run: |
-          cd tests/e2e && go test ./... -mod=readonly -timeout 30m -race
+          cd tests/e2e && go test ./... -mod=readonly -timeout 30m -race -tags='e2e'

@@ -25,15 +25,6 @@ jobs:
             **/**.go
             **/go.mod
             **/go.sum
-      - name: Get data from Go build cache
-        uses: actions/cache@v3
-        # if: env.GIT_DIFF
-        if: ${{ false }}
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/golangci-lint
-            ~/.cache/go-build
           key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: Build
         if: env.GIT_DIFF
@@ -54,19 +45,7 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: Get data from Go build cache
-        uses: actions/cache@v3
-        # if: env.GIT_DIFF
-        if: ${{ false }}
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/golangci-lint
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: e2e tests
         if: env.GIT_DIFF
         run: |
           cd tests/e2e && go test ./... -mod=readonly -timeout 30m -race
-      - uses: actions/upload-artifact@v3
-        if: env.GIT_DIFF

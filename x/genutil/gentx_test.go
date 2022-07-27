@@ -13,9 +13,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -40,9 +40,8 @@ type GenTxTestSuite struct {
 
 	ctx            sdk.Context
 	app            *simapp.SimApp
-	encodingConfig simappparams.EncodingConfig
-
-	msg1, msg2 *stakingtypes.MsgCreateValidator
+	encodingConfig moduletestutil.TestEncodingConfig
+	msg1, msg2     *stakingtypes.MsgCreateValidator
 }
 
 func (suite *GenTxTestSuite) SetupTest() {
@@ -50,7 +49,12 @@ func (suite *GenTxTestSuite) SetupTest() {
 	app := simapp.Setup(suite.T(), checkTx)
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
 	suite.app = app
-	suite.encodingConfig = simapp.MakeTestEncodingConfig()
+	suite.encodingConfig = moduletestutil.TestEncodingConfig{
+		InterfaceRegistry: app.InterfaceRegistry(),
+		Codec:             app.AppCodec(),
+		TxConfig:          app.TxConfig(),
+		Amino:             app.LegacyAmino(),
+	}
 
 	var err error
 	amount := sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)

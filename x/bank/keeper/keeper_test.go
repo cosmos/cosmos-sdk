@@ -18,10 +18,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -83,7 +86,7 @@ type IntegrationTestSuite struct {
 func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) (authkeeper.AccountKeeper, keeper.BaseKeeper) {
 	app := suite.app
 	maccPerms := simapp.GetMaccPerms()
-	appCodec := simapp.MakeTestEncodingConfig().Codec
+	appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}).Codec
 
 	maccPerms[holder] = nil
 	maccPerms[authtypes.Burner] = []string{authtypes.Burner}

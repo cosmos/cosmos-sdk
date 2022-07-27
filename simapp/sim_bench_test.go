@@ -37,7 +37,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	appOptions[flags.FlagHome] = DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = FlagPeriodValue
 
-	app := NewSimApp(logger, db, nil, true, MakeTestEncodingConfig(), appOptions, interBlockCacheOpt())
+	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -88,7 +88,7 @@ func BenchmarkInvariants(b *testing.B) {
 	appOptions[flags.FlagHome] = DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = FlagPeriodValue
 
-	app := NewSimApp(logger, db, nil, true, MakeTestEncodingConfig(), appOptions, interBlockCacheOpt())
+	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(

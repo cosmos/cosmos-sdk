@@ -2,6 +2,18 @@
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
 
+## Unreleased
+
+### SimApp
+
+SimApp's `app.go` is using App Wiring, the dependency injection framework of the Cosmos SDK.
+This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_config.go).
+The old behavior is preserved and still can be used, without the dependency injection framework, as shows [`app_legacy.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_legacy.go).
+
+The constructor, `NewSimApp` has been simplified:
+        - `NewSimApp` does not take encoding parameters (`encodingConfig`) as input, instead the encoding paramaters are injected (when using app wiring), or directly created in the constuctor. Instead, we can instantiate `SimApp` for getting the encoding configuration.
+        - `NewSimApp` now uses `AppOptions` for getting the home path (`homePath`) and the invariant checks period (`invCheckPeriod`). These were uncessary given as arguments, while already present in the `AppOptions`.
+
 ## v0.46
 
 ### Client Changes

@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	fmt "fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,16 +13,19 @@ import (
 )
 
 var (
-	coins1000 = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
-	coins500  = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(500)))
-	fromAddr  = sdk.AccAddress("_____from _____")
-	toAddr    = sdk.AccAddress("_______to________")
+	coins1000   = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
+	coins500    = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(500)))
+	fromAddr    = sdk.AccAddress("_____from _____")
+	toAddr      = sdk.AccAddress("_______to________")
+	unknownAddr = sdk.AccAddress("_____unknown_____")
 )
 
 func TestSendAuthorization(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	authorization := types.NewSendAuthorization(coins1000)
+	allowList := make([]sdk.AccAddress, 1)
+	allowList[0] = toAddr
+	authorization := types.NewSendAuthorization(coins1000, nil)
 
 	t.Log("verify authorization returns valid method name")
 	require.Equal(t, authorization.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
@@ -36,7 +40,7 @@ func TestSendAuthorization(t *testing.T) {
 	require.True(t, resp.Delete)
 	require.Nil(t, resp.Updated)
 
-	authorization = types.NewSendAuthorization(coins1000)
+	authorization = types.NewSendAuthorization(coins1000, nil)
 	require.Equal(t, authorization.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
 	require.NoError(t, authorization.ValidateBasic())
 	send = types.NewMsgSend(fromAddr, toAddr, coins500)
@@ -47,7 +51,7 @@ func TestSendAuthorization(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, resp.Delete)
 	require.NotNil(t, resp.Updated)
-	sendAuth := types.NewSendAuthorization(coins500)
+	sendAuth := types.NewSendAuthorization(coins500, nil)
 	require.Equal(t, sendAuth.String(), resp.Updated.String())
 
 	t.Log("expect updated authorization nil after spending remaining amount")
@@ -55,4 +59,17 @@ func TestSendAuthorization(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, resp.Delete)
 	require.Nil(t, resp.Updated)
+
+	t.Log("allow list and no address")
+	authzWithAllowList := types.NewSendAuthorization(coins1000, allowList)
+	require.Equal(t, authzWithAllowList.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
+	require.NoError(t, authorization.ValidateBasic())
+	send = types.NewMsgSend(fromAddr, unknownAddr, coins500)
+	require.NoError(t, authzWithAllowList.ValidateBasic())
+	resp, err = authzWithAllowList.Accept(ctx, send)
+	require.False(t, resp.Accept)
+	require.False(t, resp.Delete)
+	require.Nil(t, resp.Updated)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), fmt.Sprintf("cannot send to %s address", unknownAddr))
 }

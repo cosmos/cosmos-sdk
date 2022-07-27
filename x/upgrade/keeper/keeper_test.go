@@ -36,7 +36,6 @@ type KeeperTestSuite struct {
 
 func (s *KeeperTestSuite) SetupTest() {
 
-	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := sdk.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
@@ -50,6 +49,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	skipUpgradeHeights := make(map[int64]bool)
 
+	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
 	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, key, s.encCfg.Codec, homeDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	s.upgradeKeeper.SetVersionSetter(s.baseApp)
 

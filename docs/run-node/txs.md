@@ -123,7 +123,7 @@ import (
 func sendTx() error {
     // Choose your codec: Amino or Protobuf. Here, we use Protobuf, given by the
     // following function.
-    encCfg := simapp.MakeTestEncodingConfig()
+    encCfg := simapp.MakeEncodingConfig()
 
     // Create a new TxBuilder.
     txBuilder := encCfg.TxConfig.NewTxBuilder()

@@ -3,7 +3,6 @@ package cosmos.base.tendermint.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "tendermint/types/types.proto";
-import "tendermint/types/evidence.proto";
 import "tendermint/version/types.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -14,7 +13,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/tmservice";
 message Block {
   Header                         header      = 1 [(gogoproto.nullable) = false];
   .tendermint.types.Data         data        = 2 [(gogoproto.nullable) = false];
-  .tendermint.types.EvidenceList evidence    = 3 [(gogoproto.nullable) = false];
   .tendermint.types.Commit       last_commit = 4;
 }
 

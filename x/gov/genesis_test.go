@@ -74,7 +74,7 @@ func TestImportExportQueues(t *testing.T) {
 	}
 
 	db := dbm.NewMemDB()
-	app2 := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, simapp.MakeTestEncodingConfig(), simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
+	app2 := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
 
 	app2.InitChain(
 		abci.RequestInitChain{

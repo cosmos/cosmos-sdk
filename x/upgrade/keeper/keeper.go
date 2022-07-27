@@ -239,10 +239,27 @@ func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
 
-	if iter.Valid() {
-		return parseDoneKey(iter.Key())
-	}
+	upgrades := []struct {
+		Name        string
+		BlockHeight int64
+	}{}
 
+	for iter.Valid() {
+		name := parseDoneKey(iter.Key())
+		value := int64(binary.BigEndian.Uint64(iter.Value()))
+		upgrades = append(upgrades, struct {
+			Name        string
+			BlockHeight int64
+		}{Name: name, BlockHeight: value})
+		iter.Next()
+	}
+	sort.SliceStable(upgrades, func(i, j int) bool {
+		return upgrades[i].BlockHeight > upgrades[j].BlockHeight
+	})
+
+	if len(upgrades) > 0 {
+		return upgrades[0].Name, upgrades[0].BlockHeight
+	}
 	return "", 0
 }
 

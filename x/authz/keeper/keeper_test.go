@@ -125,9 +125,10 @@ func (s *TestSuite) TestKeeperIter() {
 	granteeAddr := addrs[1]
 	granter2Addr := addrs[2]
 	e := ctx.BlockTime().AddDate(1, 0, 0)
+	sendAuthz := banktypes.NewSendAuthorization(coins100, nil)
 
-	s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, banktypes.NewSendAuthorization(coins100), &e)
-	s.authzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, banktypes.NewSendAuthorization(coins100), &e)
+	s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAuthz, &e)
+	s.authzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, sendAuthz, &e)
 
 	s.authzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
 		s.Require().Equal(granteeAddr, grantee)
@@ -144,7 +145,7 @@ func (s *TestSuite) TestDispatchAction() {
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
-	a := banktypes.NewSendAuthorization(coins100)
+	a := banktypes.NewSendAuthorization(coins100, nil)
 
 	require.NoError(banktestutil.FundAccount(s.bankKeeper, s.ctx, granterAddr, coins1000))
 

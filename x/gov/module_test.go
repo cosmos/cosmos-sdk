@@ -34,7 +34,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	genStateJson := map[string]json.RawMessage{}
 	for k, v := range genesisState {
 		if v != nil {
-			genStateJson[k], err = encCdc.Codec.MarshalJSON(v)
+			genStateJson[k], err = app.AppCodec().MarshalJSON(v)
 			if err != nil {
 				panic(fmt.Sprintf("failed to marshal %s: %v", k, err))
 			}

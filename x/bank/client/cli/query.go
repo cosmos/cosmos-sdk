@@ -185,6 +185,7 @@ To query for the total supply of a specific coin denomination use:
 			if err != nil {
 				return err
 			}
+
 			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {
 				return err
@@ -197,6 +198,7 @@ To query for the total supply of a specific coin denomination use:
 			if err != nil {
 				return err
 			}
+
 			if denom == "" {
 				res, err := queryClient.TotalSupply(ctx, &types.QueryTotalSupplyRequest{Pagination: pageReq})
 				if err != nil {

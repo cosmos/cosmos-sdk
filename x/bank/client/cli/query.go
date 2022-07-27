@@ -131,6 +131,7 @@ To query for the client metadata of a specific coin denomination use:
 			if err != nil {
 				return err
 			}
+
 			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {
 				return err

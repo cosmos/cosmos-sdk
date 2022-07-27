@@ -265,11 +265,78 @@ func (s *CLITestSuite) TestGetBalancesCmd() {
 		{
 			"invalid denom",
 			func() client.Context {
-				return s.baseCtx
+				c := newMockTendermintRPC(abci.ResponseQuery{
+					Code: 1,
+				})
+				return s.baseCtx.WithClient(c)
 			},
 			[]string{
 				accounts[0].address.String(),
-				fmt.Sprintf("--%s=1.4", cli.FlagDenom),
+				fmt.Sprintf("--%s=foo", cli.FlagDenom),
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			cmd.SetContext(ctx)
+			cmd.SetArgs(tc.args)
+
+			s.Require().NoError(client.SetCmdClientContextHandler(tc.ctxGen(), cmd))
+
+			err := cmd.Execute()
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
+func (s *CLITestSuite) TestGetCmdDenomsMetadata() {
+	cmd := cli.GetCmdDenomsMetadata()
+	cmd.SetOutput(io.Discard)
+
+	testCases := []struct {
+		name      string
+		ctxGen    func() client.Context
+		args      []string
+		expectErr bool
+	}{
+		{
+			"valid query",
+			func() client.Context {
+				return s.baseCtx
+			},
+			[]string{},
+			false,
+		},
+		{
+			"valid query with denom",
+			func() client.Context {
+				return s.baseCtx
+			},
+			[]string{
+				fmt.Sprintf("--%s=photon", cli.FlagDenom),
+			},
+			false,
+		},
+		{
+			"invalid query with denom",
+			func() client.Context {
+				c := newMockTendermintRPC(abci.ResponseQuery{
+					Code: 1,
+				})
+				return s.baseCtx.WithClient(c)
+			},
+			[]string{
+				fmt.Sprintf("--%s=foo", cli.FlagDenom),
 			},
 			true,
 		},

@@ -1,5 +1,3 @@
-// build +norace
-
 package tx_test
 
 import (

@@ -3,16 +3,14 @@ package v2_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/math"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	v1bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
 	v2bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -70,7 +68,7 @@ func TestSupplyMigration(t *testing.T) {
 }
 
 func TestBalanceKeysMigration(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)

@@ -15,3 +15,4 @@ $mockgen_cmd -source=x/feegrant/expected_keepers.go -package testutil -destinati
 $mockgen_cmd -source=x/mint/types/expected_keepers.go -package testutil -destination x/mint/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/params/proposal_handler_test.go -package testutil -destination x/params/testutil/staking_keeper_mock.go
 $mockgen_cmd -source=x/crisis/types/expected_keepers.go -package testutil -destination x/crisis/testutil/expected_keepers_mocks.go
+$mockgen_cmd -source=x/bank/types/expected_keepers.go -package testutil -destination x/bank/testutil/expected_keepers_mocks.go

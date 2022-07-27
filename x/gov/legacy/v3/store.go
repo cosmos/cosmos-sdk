@@ -3,7 +3,6 @@ package v3
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var minInitialDepositRatio = sdk.NewDec(25).Quo(sdk.NewDec(100))
@@ -16,12 +15,12 @@ var minInitialDepositRatio = sdk.NewDec(25).Quo(sdk.NewDec(100))
 // The migration includes:
 //
 // - Setting the minimum deposit param in the paramstore.
-func MigrateStore(ctx sdk.Context, paramstore paramtypes.Subspace) error {
+func MigrateStore(ctx sdk.Context, paramstore types.ParamSubspace) error {
 	migrateParamsStore(ctx, paramstore)
 	return nil
 }
 
-func migrateParamsStore(ctx sdk.Context, paramstore paramtypes.Subspace) {
+func migrateParamsStore(ctx sdk.Context, paramstore types.ParamSubspace) {
 	var depositParams types.DepositParams
 	paramstore.Get(ctx, types.ParamStoreKeyDepositParams, &depositParams)
 	depositParams.MinInitialDepositRatio = minInitialDepositRatio

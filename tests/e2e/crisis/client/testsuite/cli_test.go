@@ -1,5 +1,5 @@
-//go:build norace
-// +build norace
+//go:build e2e
+// +build e2e
 
 package testsuite
 

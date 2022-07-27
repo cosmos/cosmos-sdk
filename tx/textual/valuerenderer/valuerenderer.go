@@ -39,6 +39,8 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 
 			return vr, nil
 		}
+	case fd.Kind() == protoreflect.BytesKind:
+		return bytesValueRenderer{}, nil
 
 	// Integers
 	case fd.Kind() == protoreflect.Uint32Kind ||

@@ -136,7 +136,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	genStateJson := map[string]json.RawMessage{}
 	for k, v := range genesisState {
 		if v != nil {
-			genStateJson[k] = encCfg.Codec.MustMarshalJSON(v)
+			genStateJson[k] = app.AppCodec().MustMarshalJSON(v)
 		} else {
 			genStateJson[k] = []byte("{}")
 		}

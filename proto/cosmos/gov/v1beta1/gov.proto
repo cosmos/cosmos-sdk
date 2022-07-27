@@ -168,6 +168,13 @@ message DepositParams {
     (gogoproto.moretags)     = "yaml:\"min_expedited_deposit\"",
     (gogoproto.jsontag)      = "min_expedited_deposit,omitempty"
   ];
+
+  //  The ratio representing the proportion of the deposit value that must be paid at proposal submission.
+  string min_initial_deposit_ratio = 4 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.jsontag)    = "min_initial_deposit_ratio,omitempty"
+  ];
 }
 
 // VotingParams defines the params for voting on governance proposals.

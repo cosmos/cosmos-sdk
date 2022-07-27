@@ -40,16 +40,20 @@ func TestRandomizedGenState(t *testing.T) {
 	var govGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
 
-	dec1, _ := sdk.NewDecFromStr("0.375000000000000000")
-	dec2, _ := sdk.NewDecFromStr("0.487000000000000000")
-	dec3, _ := sdk.NewDecFromStr("0.524000000000000000")
-	dec4, _ := sdk.NewDecFromStr("0.313000000000000000")
+	dec1, _ := sdk.NewDecFromStr("0.466000000000000000")
+	dec2, _ := sdk.NewDecFromStr("0.485000000000000000")
+	dec3, _ := sdk.NewDecFromStr("0.511000000000000000")
+	dec4, _ := sdk.NewDecFromStr("0.291000000000000000")
+
+	minInitialDepositDec, err := sdk.NewDecFromStr("0.880000000000000000")
+	require.NoError(t, err)
 
 	require.Equal(t, "272stake", govGenesis.DepositParams.MinDeposit.String())
 	require.Equal(t, "41h11m36s", govGenesis.DepositParams.MaxDepositPeriod.String())
 	require.Equal(t, "800stake", govGenesis.DepositParams.MinExpeditedDeposit.String())
-	require.Equal(t, float64(270511), govGenesis.VotingParams.VotingPeriod.Seconds())
-	require.Equal(t, float64(137225), govGenesis.VotingParams.ExpeditedVotingPeriod.Seconds())
+	require.Equal(t, minInitialDepositDec, govGenesis.DepositParams.MinInitialDepositRatio)
+	require.Equal(t, float64(307362), govGenesis.VotingParams.VotingPeriod.Seconds())
+	require.Equal(t, float64(115820), govGenesis.VotingParams.ExpeditedVotingPeriod.Seconds())
 	require.Equal(t, dec1, govGenesis.TallyParams.Quorum)
 	require.Equal(t, dec2, govGenesis.TallyParams.Threshold)
 	require.Equal(t, dec3, govGenesis.TallyParams.ExpeditedThreshold)

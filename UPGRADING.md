@@ -2,6 +2,12 @@
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
 
+## Unreleased
+
+### AppModule Interface
+
+Remove `Querier`, `Route` and `LegacyQuerier` from the app module interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously known as the LCD.
+
 ## v0.46
 
 ### Client Changes

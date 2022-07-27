@@ -41,7 +41,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 				addresses := make([]sdk.AccAddress, len(res.Accounts))
 				for i, acc := range res.Accounts {
 					var account types.AccountI
-					err := suite.interfaceRegistry.UnpackAny(acc, &account)
+					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 					addresses[i] = account.GetAddress()
 				}
@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 			true,
 			func(res *types.QueryAccountResponse) {
 				var newAccount types.AccountI
-				err := suite.interfaceRegistry.UnpackAny(res.Account, &newAccount)
+				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Account, &newAccount)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(newAccount)
 				suite.Require().True(addr.Equals(newAccount.GetAddress()))
@@ -277,7 +277,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 				mintModuleExists := false
 				for _, acc := range res.Accounts {
 					var account types.AccountI
-					err := suite.interfaceRegistry.UnpackAny(acc, &account)
+					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 
 					moduleAccount, ok := account.(types.ModuleAccountI)
@@ -300,7 +300,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 				mintModuleExists := false
 				for _, acc := range res.Accounts {
 					var account types.AccountI
-					err := suite.interfaceRegistry.UnpackAny(acc, &account)
+					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 
 					moduleAccount, ok := account.(types.ModuleAccountI)
@@ -331,7 +331,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 				var moduleNames []string
 				for _, any := range res.Accounts {
 					var account types.AccountI
-					err := suite.interfaceRegistry.UnpackAny(any, &account)
+					err := suite.encCfg.InterfaceRegistry.UnpackAny(any, &account)
 					suite.Require().NoError(err)
 					moduleAccount, ok := account.(types.ModuleAccountI)
 					suite.Require().True(ok)

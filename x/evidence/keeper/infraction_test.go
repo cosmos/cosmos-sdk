@@ -1,12 +1,11 @@
 package keeper_test
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"time"
 )
 
 func (suite *KeeperTestSuite) TestHandleDoubleSign() {
@@ -16,12 +15,12 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	power := int64(100)
 	stakingParams := suite.stakingKeeper.GetParams(ctx)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
-	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.stakingKeeper)
+	//tstaking := teststaking.NewHelper(suite.T(), ctx, suite.stakingKeeper)
 
 	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
 	// execute end-blocker and verify validator attributes
-	staking.EndBlocker(ctx, suite.stakingKeeper)
+	//staking.EndBlocker(ctx, suite.stakingKeeper)
 	suite.Equal(
 		suite.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)).String(),
 		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(selfDelegation))).String(),

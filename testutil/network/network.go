@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/crypto"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -409,7 +408,9 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		}
 
 		ethPrivateKey, err := crypto.GenerateKey()
-		require.NoError(t, err)
+		if err != nil {
+			return nil, err
+		}
 		orchEthPublicKey := ethPrivateKey.Public().(*ecdsa.PublicKey)
 		ethAddr := crypto.PubkeyToAddress(*orchEthPublicKey)
 

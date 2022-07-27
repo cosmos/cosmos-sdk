@@ -94,6 +94,8 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 				fmt.Sprintf("--%s={\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"BOIkjkFruMpfOFC9oNPhiJGfmY2pHF/gwHdLDLnrnS0=\"}", stakingcli.FlagPubKey),
 				val.Moniker,
 				amount.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagEthereumAddress, val.EthereumAddr.Hex()),
+				fmt.Sprintf("--%s=%s", flags.FlagOrchestratorAddress, val.OrchestratorAddr.String()),
 			},
 			expError: false,
 		},

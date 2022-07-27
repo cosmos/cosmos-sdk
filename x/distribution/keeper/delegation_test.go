@@ -668,7 +668,11 @@ func Test100PercentCommissionReward(t *testing.T) {
 
 	// create validator with 100% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(10, 1), sdk.NewDecWithPrec(10, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
+
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
+
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), sdk.AccAddress(valAddrs[0]), *randomEthAddress, true)
 	app.StakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 
 	// end block to bond validator

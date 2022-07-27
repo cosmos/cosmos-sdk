@@ -401,8 +401,7 @@ func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccCount i
 	moduleAccounts := make([]simtypes.Account, moduleAccCount)
 
 	for i := 0; i < moduleAccCount; i++ {
-		addr := ak.GetModuleAddress(distributiontypes.ModuleName)
-		acc := ak.GetAccount(ctx, addr)
+		acc := ak.GetModuleAccount(ctx, distributiontypes.ModuleName)
 		mAcc := simtypes.Account{
 			Address: acc.GetAddress(),
 			PrivKey: nil,

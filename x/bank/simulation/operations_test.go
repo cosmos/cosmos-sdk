@@ -16,11 +16,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -42,7 +44,11 @@ func (suite *SimTestSuite) SetupTest() {
 	)
 	suite.app, err = simtestutil.Setup(configurator.NewAppConfig(
 		configurator.AuthModule(),
-		configurator.BankModule()),
+		configurator.ParamsModule(),
+		configurator.BankModule(),
+		configurator.StakingModule(),
+		configurator.TxModule(),
+	),
 		&suite.accountKeeper, &suite.bankKeeper, &suite.cdc, &appBuilder)
 
 	suite.NoError(err)

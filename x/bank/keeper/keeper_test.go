@@ -23,7 +23,6 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -31,7 +30,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/nft/module"
 )
 
 const (
@@ -90,7 +88,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	key := sdk.NewKVStoreKey(banktypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())

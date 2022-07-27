@@ -72,5 +72,4 @@ func TestSendAuthorization(t *testing.T) {
 	require.Nil(t, resp.Updated)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), fmt.Sprintf("cannot send to %s address", unknownAddr))
-	fmt.Println(err.Error())
 }

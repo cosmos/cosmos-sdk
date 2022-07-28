@@ -532,3 +532,81 @@ func queryAllRedelegations(store sdk.KVStore, k Querier, req *types.QueryRedeleg
 
 	return redels, res, err
 }
+
+// util
+
+func DelegationToDelegationResponse(ctx sdk.Context, k *Keeper, del types.Delegation) (types.DelegationResponse, error) {
+	val, found := k.GetValidator(ctx, del.GetValidatorAddr())
+	if !found {
+		return types.DelegationResponse{}, types.ErrNoValidatorFound
+	}
+
+	delegatorAddress, err := sdk.AccAddressFromBech32(del.DelegatorAddress)
+	if err != nil {
+		return types.DelegationResponse{}, err
+	}
+
+	return types.NewDelegationResp(
+		delegatorAddress,
+		del.GetValidatorAddr(),
+		del.Shares,
+		sdk.NewCoin(k.BondDenom(ctx), val.TokensFromShares(del.Shares).TruncateInt()),
+	), nil
+}
+
+func DelegationsToDelegationResponses(ctx sdk.Context, k *Keeper, delegations types.Delegations) (types.DelegationResponses, error) {
+	resp := make(types.DelegationResponses, len(delegations))
+
+	for i, del := range delegations {
+		delResp, err := DelegationToDelegationResponse(ctx, k, del)
+		if err != nil {
+			return nil, err
+		}
+
+		resp[i] = delResp
+	}
+
+	return resp, nil
+}
+
+func RedelegationsToRedelegationResponses(ctx sdk.Context, k *Keeper, redels types.Redelegations) (types.RedelegationResponses, error) {
+	resp := make(types.RedelegationResponses, len(redels))
+
+	for i, redel := range redels {
+		valSrcAddr, err := sdk.ValAddressFromBech32(redel.ValidatorSrcAddress)
+		if err != nil {
+			panic(err)
+		}
+		valDstAddr, err := sdk.ValAddressFromBech32(redel.ValidatorDstAddress)
+		if err != nil {
+			panic(err)
+		}
+
+		delegatorAddress := sdk.MustAccAddressFromBech32(redel.DelegatorAddress)
+
+		val, found := k.GetValidator(ctx, valDstAddr)
+		if !found {
+			return nil, types.ErrNoValidatorFound
+		}
+
+		entryResponses := make([]types.RedelegationEntryResponse, len(redel.Entries))
+		for j, entry := range redel.Entries {
+			entryResponses[j] = types.NewRedelegationEntryResponse(
+				entry.CreationHeight,
+				entry.CompletionTime,
+				entry.SharesDst,
+				entry.InitialBalance,
+				val.TokensFromShares(entry.SharesDst).TruncateInt(),
+			)
+		}
+
+		resp[i] = types.NewRedelegationResponse(
+			delegatorAddress,
+			valSrcAddr,
+			valDstAddr,
+			entryResponses,
+		)
+	}
+
+	return resp, nil
+}

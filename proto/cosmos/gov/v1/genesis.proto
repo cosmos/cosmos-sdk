@@ -27,5 +27,7 @@ message GenesisState {
   // tally_params defines all the paramaters of related to tally.
   TallyParams tally_params = 7 [deprecated=true];
   // params defines all the paramaters of x/gov module.
+  //
+  // Since: cosmos-sdk 0.47
   Params params = 8;
 }

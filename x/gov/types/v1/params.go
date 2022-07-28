@@ -20,13 +20,7 @@ var (
 	DefaultVetoThreshold    = sdk.NewDecWithPrec(334, 3)
 )
 
-func (p Params) Equal(p2 Params) bool {
-	return sdk.Coins(p.MinDeposit).IsEqual(p2.MinDeposit) && p.MaxDepositPeriod == p2.MaxDepositPeriod &&
-		p.Quorum == p2.Quorum && p.Threshold == p2.Threshold && p.VetoThreshold == p2.VetoThreshold &&
-		p.VotingPeriod == p2.VotingPeriod
-}
-
-// NewDepositParams creates a new DepositParams object
+// Deprecated: NewDepositParams creates a new DepositParams object
 func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod *time.Duration) DepositParams {
 	return DepositParams{
 		MinDeposit:       minDeposit,
@@ -34,7 +28,7 @@ func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod *time.Duration) Dep
 	}
 }
 
-// NewTallyParams creates a new TallyParams object
+// Deprecated: NewTallyParams creates a new TallyParams object
 func NewTallyParams(quorum, threshold, vetoThreshold string) TallyParams {
 	return TallyParams{
 		Quorum:        quorum,
@@ -43,7 +37,7 @@ func NewTallyParams(quorum, threshold, vetoThreshold string) TallyParams {
 	}
 }
 
-// NewVotingParams creates a new VotingParams object
+// Deprecated: NewVotingParams creates a new VotingParams object
 func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 	return VotingParams{
 		VotingPeriod: votingPeriod,

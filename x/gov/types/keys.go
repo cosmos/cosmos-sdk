@@ -49,7 +49,7 @@ var (
 
 	VotesKeyPrefix = []byte{0x20}
 
-	// ParamsKey is the querier route for gov
+	// ParamsKey is the key to query all gov params
 	ParamsKey = []byte{0x30}
 )
 

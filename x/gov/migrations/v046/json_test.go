@@ -81,7 +81,8 @@ func TestMigrateJSON(t *testing.T) {
 				"amount": "10000000",
 				"denom": "stake"
 			}
-		]
+		],
+		"min_initial_deposit_ratio": ""
 	},
 	"deposits": [],
 	"proposals": [

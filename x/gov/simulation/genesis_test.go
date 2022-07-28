@@ -42,16 +42,20 @@ func TestRandomizedGenState(t *testing.T) {
 	var govGenesis v1.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
 
-	dec1, _ := sdk.NewDecFromStr("0.361000000000000000")
-	dec2, _ := sdk.NewDecFromStr("0.512000000000000000")
-	dec3, _ := sdk.NewDecFromStr("0.267000000000000000")
+	dec1, _ := sdk.NewDecFromStr("0.400000000000000000")
+	dec2, _ := sdk.NewDecFromStr("0.539000000000000000")
+	dec3, _ := sdk.NewDecFromStr("0.314000000000000000")
+
+	minInitialDepositDec, err := sdk.NewDecFromStr("0.590000000000000000")
+	require.NoError(t, err)
 
 	require.Equal(t, "905stake", govGenesis.DepositParams.MinDeposit[0].String())
 	require.Equal(t, "77h26m10s", govGenesis.DepositParams.MaxDepositPeriod.String())
-	require.Equal(t, float64(148296), govGenesis.VotingParams.VotingPeriod.Seconds())
-	require.Equal(t, dec1.String(), govGenesis.TallyParams.Quorum)
-	require.Equal(t, dec2.String(), govGenesis.TallyParams.Threshold)
-	require.Equal(t, dec3.String(), govGenesis.TallyParams.VetoThreshold)
+	require.Equal(t, minInitialDepositDec, govGenesis.DepositParams.MinInitialDepositRatio)
+	require.Equal(t, float64(275567), govGenesis.VotingParams.VotingPeriod.Seconds())
+	require.Equal(t, dec1, govGenesis.TallyParams.Quorum)
+	require.Equal(t, dec2, govGenesis.TallyParams.Threshold)
+	require.Equal(t, dec3, govGenesis.TallyParams.VetoThreshold)
 	require.Equal(t, uint64(0x28), govGenesis.StartingProposalId)
 	require.Equal(t, []*v1.Deposit{}, govGenesis.Deposits)
 	require.Equal(t, []*v1.Vote{}, govGenesis.Votes)

@@ -19,6 +19,7 @@ import (
 const (
 	DepositParamsMinDeposit    = "deposit_params_min_deposit"
 	DepositParamsDepositPeriod = "deposit_params_deposit_period"
+	DepositMinInitialPercent   = "deposit_params_min_initial_percent"
 	VotingParamsVotingPeriod   = "voting_params_voting_period"
 	TallyParamsQuorum          = "tally_params_quorum"
 	TallyParamsThreshold       = "tally_params_threshold"
@@ -33,6 +34,11 @@ func GenDepositParamsDepositPeriod(r *rand.Rand) time.Duration {
 // GenDepositParamsMinDeposit randomized DepositParamsMinDeposit
 func GenDepositParamsMinDeposit(r *rand.Rand) sdk.Coins {
 	return sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simulation.RandIntBetween(r, 1, 1e3))))
+}
+
+// GenDepositMinInitialPercent  randomized DepositMinInitialPercent
+func GenDepositMinInitialDepositRatio(r *rand.Rand) sdk.Dec {
+	return sdk.NewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdk.NewDec(100))
 }
 
 // GenVotingParamsVotingPeriod randomized VotingParamsVotingPeriod
@@ -71,6 +77,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { depositPeriod = GenDepositParamsDepositPeriod(r) },
 	)
 
+	var minInitialDepositRatio sdk.Dec
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, DepositMinInitialPercent, &minInitialDepositRatio, simState.Rand,
+		func(r *rand.Rand) { minInitialDepositRatio = GenDepositMinInitialDepositRatio(r) },
+	)
+
 	var votingPeriod time.Duration
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, VotingParamsVotingPeriod, &votingPeriod, simState.Rand,
@@ -97,7 +109,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	govGenesis := v1.NewGenesisState(
 		startingProposalID,
-		v1.NewDepositParams(minDeposit, depositPeriod),
+		v1.NewDepositParams(minDeposit, depositPeriod).WithMinInitialDepositRatio(minInitialDepositRatio),
 		v1.NewVotingParams(votingPeriod),
 		v1.NewTallyParams(quorum, threshold, veto),
 	)

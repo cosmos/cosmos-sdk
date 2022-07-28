@@ -109,6 +109,10 @@ message DepositParams {
   //  months.
   google.protobuf.Duration max_deposit_period = 2
       [(gogoproto.stdduration) = true, (gogoproto.jsontag) = "max_deposit_period,omitempty"];
+
+  //  The ratio representing the proportion of the deposit value that must be paid at proposal submission.
+  string min_initial_deposit_ratio = 3
+      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.jsontag) = "min_initial_deposit_ratio,omitempty"];
 }
 
 // VotingParams defines the params for voting on governance proposals.

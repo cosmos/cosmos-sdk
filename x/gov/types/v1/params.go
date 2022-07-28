@@ -41,9 +41,16 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewDepositParams creates a new DepositParams object
 func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) DepositParams {
 	return DepositParams{
-		MinDeposit:       minDeposit,
-		MaxDepositPeriod: &maxDepositPeriod,
+		MinDeposit:             minDeposit,
+		MaxDepositPeriod:       &maxDepositPeriod,
+		MinInitialDepositRatio: sdk.ZeroDec().String(),
 	}
+}
+
+// WithMinInitialDepositRatio sets the minimum initial deposit ratio on the DepositParams.
+func (dp DepositParams) WithMinInitialDepositRatio(ratio sdk.Dec) DepositParams {
+	dp.MinInitialDepositRatio = ratio.String()
+	return dp
 }
 
 // DefaultDepositParams default parameters for deposits

@@ -38,6 +38,9 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	}
 
 	proposalMsgs, err := msg.GetMsgs()
+	if err != nil {
+		return nil, err
+	}
 	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata)
 	if err != nil {
 		return nil, err

@@ -4,6 +4,12 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### AppModule Interface
+
+Remove `Querier`, `Route` and `LegacyQuerier` from the app module interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously known as the LCD, and the `sdk.Msg#Route` method won't be used anymore.
+
+
+
 ### SimApp
 
 SimApp's `app.go` is using App Wiring, the dependency injection framework of the Cosmos SDK.

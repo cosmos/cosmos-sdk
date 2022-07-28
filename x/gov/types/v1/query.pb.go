@@ -519,6 +519,8 @@ type QueryParamsResponse struct {
 	// tally_params defines the parameters related to tally.
 	TallyParams *TallyParams `protobuf:"bytes,3,opt,name=tally_params,json=tallyParams,proto3" json:"tally_params,omitempty"` // Deprecated: Do not use.
 	// params defines all the paramaters of x/gov module.
+	//
+	// Since: cosmos-sdk 0.47
 	Params *Params `protobuf:"bytes,4,opt,name=params,proto3" json:"params,omitempty"`
 }
 

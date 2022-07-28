@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"sort"
 	"strings"
 	"sync"
 
@@ -327,8 +328,14 @@ func NewStore(db dbm.Connection, opts StoreConfig) (ret *Store, err error) {
 	if err != nil {
 		return
 	}
+	skeys := make([]string, 0, len(reg.StoreSchema))
+	for skey := range reg.StoreSchema {
+		skeys = append(skeys, skey)
+	}
+	sort.Strings(skeys)
 	// NB. the migrated contents and schema are not committed until the next store.Commit
-	for skey, typ := range reg.StoreSchema {
+	for _, skey := range skeys {
+		typ := reg.StoreSchema[skey]
 		err = schemaWriter.Set([]byte(skey), []byte{byte(typ)})
 		if err != nil {
 			return

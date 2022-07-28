@@ -57,22 +57,25 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		signMode = signing.SignMode_SIGN_MODE_EIP_191
 	}
 
-	gasAdj, err := flagSet.GetFloat64(flags.FlagGasAdjustment)
-	if err != nil {
-		gasAdj = clientCtx.GasAdjustment
-	}
-
 	var gasSetting client.GasSetting
 	gasStr, err := flagSet.GetString(flags.FlagGas)
 	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "gas setting is not specified! using default value from client config: %s\n", clientCtx.GasSetting.String())
 		gasSetting = clientCtx.GasSetting
 	} else {
 		gasSetting, _ = client.ParseGasSetting(gasStr)
 	}
 
+	gasAdj, err := flagSet.GetFloat64(flags.FlagGasAdjustment)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "gas adjustment is not specified! using default value from client config: %f\n", clientCtx.GasAdjustment)
+		gasAdj = clientCtx.GasAdjustment
+	}
+
 	var gasPrices sdk.DecCoins
 	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "gas prices is not specified! using default value from client config: %s\n", clientCtx.GasPrices.String())
 		gasPrices = clientCtx.GasPrices
 	} else {
 		gasPrices, _ = sdk.ParseDecCoins(gasPricesStr)

@@ -48,7 +48,7 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 )
 
-// Alternatively the AppCOnfig can be defined as a YAML or a JSON file.
+// Alternatively the AppConfig can be defined as a YAML or a JSON file.
 // e.g. https://github.com/cosmos/cosmos-sdk/blob/91b1d83f1339e235a1dfa929ecc00084101a19e3/simapp/app.yaml
 
 var AppConfig = appconfig.Compose(&appv1alpha1.Config{

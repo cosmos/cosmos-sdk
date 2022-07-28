@@ -1,6 +1,16 @@
 package testutil
 
 import (
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	_ "github.com/cosmos/cosmos-sdk/x/distribution"
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"
+	_ "github.com/cosmos/cosmos-sdk/x/mint"
+	_ "github.com/cosmos/cosmos-sdk/x/params"
+	_ "github.com/cosmos/cosmos-sdk/x/slashing"
+	_ "github.com/cosmos/cosmos-sdk/x/staking"
+
 	"cosmossdk.io/core/appconfig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -15,7 +25,9 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
+	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
@@ -51,6 +63,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 				InitGenesis: []string{
 					authtypes.ModuleName,
 					banktypes.ModuleName,
+					distrtypes.ModuleName,
 					stakingtypes.ModuleName,
 					minttypes.ModuleName,
 					slashingtypes.ModuleName,
@@ -96,6 +109,14 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		{
 			Name:   genutiltypes.ModuleName,
 			Config: appconfig.WrapAny(&genutilmodulev1.Module{}),
+		},
+		{
+			Name:   minttypes.ModuleName,
+			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
+		},
+		{
+			Name:   distrtypes.ModuleName,
+			Config: appconfig.WrapAny(&distrmodulev1.Module{}),
 		},
 	},
 })

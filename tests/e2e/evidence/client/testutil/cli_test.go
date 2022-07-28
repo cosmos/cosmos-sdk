@@ -10,11 +10,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	testutil2 "github.com/cosmos/cosmos-sdk/x/evidence/client/testutil"
+	clienttestutil "github.com/cosmos/cosmos-sdk/x/evidence/client/testutil"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
-	suite.Run(t, testutil2.NewIntegrationTestSuite(cfg))
+	suite.Run(t, clienttestutil.NewIntegrationTestSuite(cfg))
 }

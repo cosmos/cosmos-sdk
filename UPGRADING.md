@@ -8,6 +8,10 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 Remove `Querier`, `Route` and `LegacyQuerier` from the app module interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously known as the LCD, and the `sdk.Msg#Route` method won't be used anymore.
 
+* `AppModuleBasic`'s `DefaultGenesis` does not take any inputs and returns the default genesis state as `proto.Message` (instead of `json.RawMessage`).
+* `AppModuleGenesis`s `InitGenesis` does not require a codec as input and takes the genesis state as `proto.Message`.
+* `AppModuleGenesis`s `ExportGenesis` does not require a codec as input and returns the genesis state as `proto.Message`.
+
 ### SimApp
 
 SimApp's `app.go` is using App Wiring, the dependency injection framework of the Cosmos SDK.
@@ -23,12 +27,6 @@ The constructor, `NewSimApp` has been simplified:
 
 `simapp.MakeTestEncodingConfig()` was deprecated and has been removed. Instead you can use the `TestEncodingConfig` from the `types/module/testutil` package.
 This means you can replace your usage of `simapp.MakeTestEncodingConfig` in tests to `moduletestutil.MakeTestEncodingConfig`, which takes a series of relevant `AppModuleBasic` as input (the module being tested and any potential dependencies).
-
-### AppModuleBasic and AppModuleGenesis interfaces
-
-* `AppModuleBasic`'s `DefaultGenesis` does not take any inputs and returns the default genesis state as `proto.Message` (instead of `json.RawMessage`).
-* `AppModuleGenesis`s `InitGenesis` does not require a codec as input and takes the genesis state as `proto.Message`.
-* `AppModuleGenesis`s `ExportGenesis` does not require a codec as input and returns the genesis state as `proto.Message`.
 
 ## [v0.46.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0)
 

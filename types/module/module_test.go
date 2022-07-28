@@ -73,10 +73,6 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 	mockInvariantRegistry := mocks.NewMockInvariantRegistry(mockCtrl)
 	goam := module.NewGenesisOnlyAppModule(mockModule)
 
-	require.True(t, goam.Route().Empty())
-	require.Empty(t, goam.QuerierRoute())
-	require.Nil(t, goam.LegacyQuerierHandler(nil))
-
 	// no-op
 	goam.RegisterInvariants(mockInvariantRegistry)
 }
@@ -127,37 +123,6 @@ func TestManager_RegisterInvariants(t *testing.T) {
 	mockAppModule1.EXPECT().RegisterInvariants(gomock.Eq(mockInvariantRegistry)).Times(1)
 	mockAppModule2.EXPECT().RegisterInvariants(gomock.Eq(mockInvariantRegistry)).Times(1)
 	mm.RegisterInvariants(mockInvariantRegistry)
-}
-
-func TestManager_RegisterRoutes(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	t.Cleanup(mockCtrl.Finish)
-
-	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
-	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
-	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
-	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
-	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
-
-	router := mocks.NewMockRouter(mockCtrl)
-	noopHandler := sdk.Handler(func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) { return nil, nil })
-	route1 := sdk.NewRoute("route1", noopHandler)
-	route2 := sdk.NewRoute("", noopHandler)
-	mockAppModule1.EXPECT().Route().Times(1).Return(route1)
-	mockAppModule2.EXPECT().Route().Times(1).Return(route2)
-	router.EXPECT().AddRoute(gomock.Any()).Times(1) // Use of Any due to limitations to compare Functions as the sdk.Handler
-
-	queryRouter := mocks.NewMockQueryRouter(mockCtrl)
-	mockAppModule1.EXPECT().QuerierRoute().Times(1).Return("querierRoute1")
-	mockAppModule2.EXPECT().QuerierRoute().Times(1).Return("")
-	handler3 := sdk.Querier(nil)
-	amino := codec.NewLegacyAmino()
-	mockAppModule1.EXPECT().LegacyQuerierHandler(amino).Times(1).Return(handler3)
-	queryRouter.EXPECT().AddRoute(gomock.Eq("querierRoute1"), gomock.Eq(handler3)).Times(1)
-
-	mm.RegisterRoutes(router, queryRouter, amino)
 }
 
 func TestManager_RegisterQueryServices(t *testing.T) {

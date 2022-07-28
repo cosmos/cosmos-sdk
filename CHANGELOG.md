@@ -90,6 +90,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   A SendEnabled query has been added to both GRPC and CLI.
 * (appModule) Remove `Route`, `QuerierRoute` and `LegacyQuerierHandler` from AppModule Interface. 
 * (x/modules) Remove all LegacyQueries and related code from modules
+* (x/modules) [\#12700](https://github.com/cosmos/cosmos-sdk/pull/12700) Change genesis state type from `json.RawMessage` to `proto.Message` in `DefaultGenesis`, `InitGenesis` and `ExportGenesis` functions.
 
 ### CLI Breaking Changes
 

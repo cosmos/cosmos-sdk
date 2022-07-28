@@ -2,12 +2,10 @@ package client_test
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
@@ -74,16 +72,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState, err := sims.GenesisStateWithValSet(cdc, appBuilder.DefaultGenesis(), valSet, []authtypes.GenesisAccount{acc}, balance)
 	s.NoError(err)
 
-	genStateJson := map[string]json.RawMessage{}
-	for k, v := range genesisState {
-		if v != nil {
-			genStateJson[k] = cdc.MustMarshalJSON(v)
-		} else {
-			genStateJson[k] = []byte("{}")
-		}
-	}
-
-	stateBytes, err := tmjson.MarshalIndent(genStateJson, "", "  ")
+	stateBytes, err := sdk.MarshalGenesisStateToJSON(genesisState, cdc, true)
 	s.NoError(err)
 
 	// init chain will set the validator set and initialize the genesis accounts

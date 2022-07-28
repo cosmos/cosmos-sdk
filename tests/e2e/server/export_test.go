@@ -136,16 +136,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
 
-	genStateJson := map[string]json.RawMessage{}
-	for k, v := range genesisState {
-		if v != nil {
-			genStateJson[k] = app.AppCodec().MustMarshalJSON(v)
-		} else {
-			genStateJson[k] = []byte("{}")
-		}
-	}
-
-	stateBytes, err := tmjson.MarshalIndent(genStateJson, "", "  ")
+	stateBytes, err := sdk.MarshalGenesisStateToJSON(genesisState, app.AppCodec(), true)
 	require.NoError(t, err)
 
 	serverCtx := server.NewDefaultContext()

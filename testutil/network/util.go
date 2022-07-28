@@ -1,7 +1,6 @@
 package network
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -17,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -169,16 +169,7 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 	bankGenState.Balances = append(bankGenState.Balances, genBalances...)
 	cfg.GenesisState[banktypes.ModuleName] = bankGenState
 
-	genStateJson := map[string]json.RawMessage{}
-	for k, v := range cfg.GenesisState {
-		if v != nil {
-			genStateJson[k] = cfg.Codec.MustMarshalJSON(v)
-		} else {
-			genStateJson[k] = []byte("{}")
-		}
-	}
-
-	appGenStateJSON, err := json.MarshalIndent(genStateJson, "", "  ")
+	appGenStateJSON, err := sdk.MarshalGenesisStateToJSON(cfg.GenesisState, cfg.Codec, true)
 	if err != nil {
 		return err
 	}

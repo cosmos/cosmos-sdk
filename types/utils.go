@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	proto "github.com/gogo/protobuf/proto"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -124,4 +127,25 @@ func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]by
 	byteSlice := key[startIndex:neededLength]
 
 	return byteSlice, endIndex
+}
+
+func MarshalGenesisStateToJSON(gs map[string]proto.Message, cdc codec.JSONCodec, indent bool) ([]byte, error) {
+	genStateJson := map[string]json.RawMessage{}
+	var err error
+	for k, v := range gs {
+		if v != nil {
+			genStateJson[k], err = cdc.MarshalJSON(v)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			genStateJson[k] = []byte("{}")
+		}
+	}
+
+	if indent {
+		return tmjson.MarshalIndent(genStateJson, "", "  ")
+	}
+
+	return tmjson.Marshal(genStateJson)
 }

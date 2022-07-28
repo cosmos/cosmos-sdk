@@ -2,13 +2,11 @@ package sims
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -136,20 +134,7 @@ func SetupWithConfiguration(appConfig depinject.Config, validatorSet func() (*tm
 		return nil, fmt.Errorf("failed to create genesis state: %w", err)
 	}
 
-	// init chain must be called to stop deliverState from being nil
-	genStateJson := map[string]json.RawMessage{}
-	for k, v := range genesisState {
-		if v != nil {
-			genStateJson[k], err = codec.MarshalJSON(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal %s: %w", k, err)
-			}
-		} else {
-			genStateJson[k] = []byte("{}")
-		}
-	}
-
-	stateBytes, err := tmjson.MarshalIndent(genStateJson, "", " ")
+	stateBytes, err := sdk.MarshalGenesisStateToJSON(genesisState, codec, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal default genesis state: %w", err)
 	}

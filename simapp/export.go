@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 
@@ -32,16 +31,7 @@ func (app *SimApp) ExportAppStateAndValidators(
 
 	genState := app.ModuleManager.ExportGenesis(ctx)
 
-	genStateJson := map[string]json.RawMessage{}
-	for k, v := range genState {
-		if v != nil {
-			genStateJson[k] = app.appCodec.MustMarshalJSON(v)
-		} else {
-			genStateJson[k] = []byte("{}")
-		}
-	}
-
-	appState, err := json.MarshalIndent(genStateJson, "", "  ")
+	appState, err := sdk.MarshalGenesisStateToJSON(genState, app.AppCodec(), true)
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}

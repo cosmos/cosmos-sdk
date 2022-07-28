@@ -1,14 +1,12 @@
 package baseapp_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
@@ -110,17 +108,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				&testdata.TestMsg{},
 			)
 			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
-
-			genStateJson := map[string]json.RawMessage{}
-			for k, v := range genState {
-				if v != nil {
-					genStateJson[k] = cdc.MustMarshalJSON(v)
-				} else {
-					genStateJson[k] = []byte("{}")
-				}
-			}
-
-			stateBytes, err := tmjson.MarshalIndent(genStateJson, "", "  ")
+			stateBytes, err := sdk.MarshalGenesisStateToJSON(genState, cdc, true)
 			require.NoError(t, err)
 
 			bapp.InitChain(abci.RequestInitChain{

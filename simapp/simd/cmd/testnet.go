@@ -377,16 +377,7 @@ func initGenFiles(
 	}
 	appGenState[banktypes.ModuleName] = bankGenState
 
-	genStateJson := map[string]json.RawMessage{}
-	for k, v := range appGenState {
-		if v != nil {
-			genStateJson[k] = clientCtx.Codec.MustMarshalJSON(v)
-		} else {
-			genStateJson[k] = []byte("{}")
-		}
-	}
-
-	appGenStateJSON, err := json.MarshalIndent(genStateJson, "", "  ")
+	appGenStateJSON, err := sdk.MarshalGenesisStateToJSON(appGenState, clientCtx.Codec, true)
 	if err != nil {
 		return err
 	}

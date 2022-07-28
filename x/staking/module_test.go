@@ -1,7 +1,6 @@
 package staking_test
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -29,16 +29,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
 
-	genStateJson := map[string]json.RawMessage{}
-	for k, v := range genesisState {
-		if v != nil {
-			genStateJson[k] = app.AppCodec().MustMarshalJSON(v)
-		} else {
-			genStateJson[k] = []byte("{}")
-		}
-	}
-
-	stateBytes, err := json.MarshalIndent(genStateJson, "", "  ")
+	stateBytes, err := sdk.MarshalGenesisStateToJSON(genesisState, app.AppCodec(), true)
 	require.NoError(t, err)
 
 	app.InitChain(

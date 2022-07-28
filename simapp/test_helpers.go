@@ -2,14 +2,12 @@ package simapp
 
 import (
 	"context"
-	"encoding/json"
 	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -84,16 +82,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
-		genStateJson := map[string]json.RawMessage{}
-		for k, v := range genesisState {
-			if v != nil {
-				genStateJson[k] = app.appCodec.MustMarshalJSON(v)
-			} else {
-				genStateJson[k] = []byte("{}")
-			}
-		}
-
-		stateBytes, err := tmjson.MarshalIndent(genStateJson, "", "  ")
+		stateBytes, err := sdk.MarshalGenesisStateToJSON(genesisState, app.AppCodec(), true)
 		require.NoError(t, err)
 
 		// Initialize the chain
@@ -145,16 +134,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	genesisState, err := simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, genAccs, balances...)
 	require.NoError(t, err)
 
-	genStateJson := map[string]json.RawMessage{}
-	for k, v := range genesisState {
-		if v != nil {
-			genStateJson[k] = app.appCodec.MustMarshalJSON(v)
-		} else {
-			genStateJson[k] = []byte("{}")
-		}
-	}
-
-	stateBytes, err := tmjson.MarshalIndent(genStateJson, "", "  ")
+	stateBytes, err := sdk.MarshalGenesisStateToJSON(genesisState, app.AppCodec(), true)
 	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts

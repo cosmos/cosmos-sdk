@@ -1,13 +1,10 @@
 package gov_test
 
 import (
-	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
@@ -70,19 +67,7 @@ func TestImportExportQueues(t *testing.T) {
 	genesisState[stakingtypes.ModuleName] = stakingGenState
 	genesisState[distributiontypes.ModuleName] = distributionGenState
 
-	genStateJson := map[string]json.RawMessage{}
-	for k, v := range genesisState {
-		if v != nil {
-			genStateJson[k], err = app.AppCodec().MarshalJSON(v)
-			if err != nil {
-				panic(fmt.Sprintf("failed to marshal %s: %v", k, err))
-			}
-		} else {
-			genStateJson[k] = []byte("{}")
-		}
-	}
-
-	stateBytes, err := tmjson.MarshalIndent(genStateJson, "", " ")
+	stateBytes, err := sdk.MarshalGenesisStateToJSON(genesisState, app.AppCodec(), true)
 	if err != nil {
 		panic(err)
 	}

@@ -54,7 +54,6 @@ account key. It implies --signature-only.
 	cmd.Flags().String(flagMultisig, "", "Address or key name of the multisig account on behalf of which the transaction shall be signed")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().Bool(flagSigOnly, true, "Print only the generated signature, then exit")
-	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
 	flags.AddTxFlagsToCmd(cmd)
 
 	cmd.MarkFlagRequired(flags.FlagFrom)

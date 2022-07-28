@@ -208,7 +208,6 @@ func queryCommand() *cobra.Command {
 	)
 
 	simapp.ModuleBasics.AddQueryCommands(cmd)
-	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
@@ -235,7 +234,6 @@ func txCommand() *cobra.Command {
 	)
 
 	simapp.ModuleBasics.AddTxCommands(cmd)
-	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }

@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -16,7 +15,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
@@ -77,7 +75,6 @@ type KeeperTestSuite struct {
 
 	ctx     sdk.Context
 	querier sdk.Querier
-	app     *runtime.App
 
 	evidenceKeeper    keeper.Keeper
 	bankKeeper        *evidencetestutil.MockBankKeeper
@@ -90,7 +87,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	var legacyAmino *codec.LegacyAmino
+	//var legacyAmino *codec.LegacyAmino
 	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 	key := sdk.NewKVStoreKey(types.StoreKey)
 	tkey := sdk.NewTransientStoreKey("evidence_transient_store")
@@ -119,18 +116,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 	suite.ctx = testCtx.WithBlockHeader(tmproto.Header{Height: 1})
-	suite.querier = keeper.NewQuerier(*evidenceKeeper, legacyAmino)
+	//suite.querier = keeper.NewQuerier(*evidenceKeeper, legacyAmino)
 	//suite.app = app
 
 	//
 
 	suite.accountKeeper = accountKeeper
-
-	//suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[0])).AnyTimes()
-	//suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[1])).AnyTimes()
-	//suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[2])).AnyTimes()
-	//suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[3])).AnyTimes()
-
 	///
 	//for i, addr := range valAddresses {
 	//	addr := sdk.AccAddress(addr)

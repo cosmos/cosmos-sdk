@@ -3,6 +3,8 @@ package ante_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,6 +48,7 @@ func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 }
 
 func TestEnsureMempoolFees(t *testing.T) {
+	ante.DefaultPriorityReduction = sdkmath.NewInt(50)
 	s := SetupTestSuite(t, true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
@@ -102,9 +105,10 @@ func TestEnsureMempoolFees(t *testing.T) {
 
 	newCtx, err := antehandler(s.ctx, tx, false)
 	require.Nil(t, err, "Decorator should not have errored on fee higher than local gasPrice")
-	// Priority is the smallest amount in any denom. Since we have only 1 fee
-	// of 150atom, the priority here is 150.
-	require.Equal(t, feeAmount.AmountOf("atom").Int64(), newCtx.Priority())
+	// Priority is the smallest amount in any denom divided by `ante.DefaultPriorityReduction`.
+	// Since we have only 1 fee of 150atom, the priority here is `150 / 50 = 3`.
+	require.Equal(t, feeAmount.AmountOf("atom").Quo(ante.DefaultPriorityReduction).Int64(), newCtx.Priority())
+	require.Equal(t, int64(3), newCtx.Priority())
 }
 
 func TestDeductFees(t *testing.T) {

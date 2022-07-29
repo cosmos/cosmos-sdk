@@ -93,7 +93,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
-* /
+* (client) [#12723](https://github.com/cosmos/cosmos-sdk/pull/12723) The client config now includes default values for several gas-related parameters, which previously needed to be provided by `--gas`, `--gas-adjustment`, and `--gas-prices` flags.
+  These default values can be configured with the `simd config` command or by editing `.simapp/config/client.toml`.
+  When submitting a tx, if any of these flags is not specified, the value in the client config will be used.
 
 ### Bug Fixes
 

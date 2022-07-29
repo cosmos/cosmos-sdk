@@ -95,6 +95,7 @@ func TestGetADR050ValueRenderer(t *testing.T) {
 		{"uint64", uint64(1), false},
 		{"sdk.Int", math.NewInt(1), false},
 		{"sdk.Dec", math.LegacyNewDec(1), false},
+		{"[]byte", []byte{1}, false},
 		{"float32", float32(1), true},
 		{"float64", float64(1), true},
 	}
@@ -128,6 +129,8 @@ func valueRendererOf(v interface{}) (valuerenderer.ValueRenderer, error) {
 		return textual.GetValueRenderer(a.ByName(protoreflect.Name("INT32")))
 	case int64:
 		return textual.GetValueRenderer(a.ByName(protoreflect.Name("INT64")))
+	case []byte:
+		return textual.GetValueRenderer(a.ByName(protoreflect.Name("BYTES")))
 	case math.Int:
 		return textual.GetValueRenderer(a.ByName(protoreflect.Name("SDKINT")))
 	case math.LegacyDec:

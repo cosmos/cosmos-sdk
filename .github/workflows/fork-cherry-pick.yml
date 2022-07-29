@@ -1,4 +1,5 @@
-name: Cherry pick fork PR
+#This CI is disabled on main and meant to be enabled on forks as an easy way to cherry pick fork commits into main.
+name: Cherry pick fork
 on:
   #Set to trigger on every merge to main, not just a closed PR.
   workflow_dispatch:

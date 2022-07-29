@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -77,19 +78,29 @@ func (k *Keeper) Invariants() []sdk.Invariant {
 // AssertInvariants asserts all registered invariants. If any invariant fails,
 // the method panics.
 func (k *Keeper) AssertInvariants(ctx sdk.Context) {
-	logger := k.Logger(ctx)
-
-	start := time.Now()
-	invarRoutes := k.Routes()
-	n := len(invarRoutes)
+	var (
+		logger      = k.Logger(ctx)
+		start       = time.Now()
+		invarRoutes = k.Routes()
+		n           = len(invarRoutes)
+		eg          errgroup.Group
+	)
 	for i, ir := range invarRoutes {
+		ir := ir
+		i := i
 		logger.Info("asserting crisis invariants", "inv", fmt.Sprint(i+1, "/", n), "name", ir.FullRoute())
-		if res, stop := ir.Invar(ctx); stop {
-			// TODO: Include app name as part of context to allow for this to be
-			// variable.
-			panic(fmt.Errorf("invariant broken: %s\n"+
-				"\tCRITICAL please submit the following transaction:\n"+
-				"\t\t tx crisis invariant-broken %s %s", res, ir.ModuleName, ir.Route))
+		eg.Go(func() (err error) {
+			if res, stop := ir.Invar(ctx); stop {
+				// TODO: Include app name as part of context to allow for this to be
+				// variable.
+				err = fmt.Errorf("invariant broken: %s\n"+
+					"\tCRITICAL please submit the following transaction:\n"+
+					"\t\t tx crisis invariant-broken %s %s", res, ir.ModuleName, ir.Route)
+			}
+			return err
+		})
+		if err := eg.Wait(); err != nil {
+			panic(err)
 		}
 	}
 

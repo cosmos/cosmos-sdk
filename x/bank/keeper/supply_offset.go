@@ -52,9 +52,16 @@ func (k BaseKeeper) AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount 
 }
 
 // GetSupplyWithOffset retrieves the Supply of a denom and offsets it by SupplyOffset
+// If SupplyWithOffset is negative, it returns 0.  This is because sdk.Coin is not valid
+// with a negative amount
 func (k BaseKeeper) GetSupplyWithOffset(ctx sdk.Context, denom string) sdk.Coin {
 	supply := k.GetSupply(ctx, denom)
 	supply.Amount = supply.Amount.Add(k.GetSupplyOffset(ctx, denom))
+
+	if supply.Amount.IsNegative() {
+		supply.Amount = sdk.ZeroInt()
+	}
+
 	return supply
 }
 

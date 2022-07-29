@@ -263,19 +263,19 @@ func (ctx Context) WithViper(prefix string) Context {
 	return ctx
 }
 
-// WithInterfaceRegistry returns the context with an updated Gas
+// WithGasSetting returns the context with an updated GasSetting
 func (ctx Context) WithGasSetting(gasSetting GasSetting) Context {
 	ctx.GasSetting = gasSetting
 	return ctx
 }
 
-// WithInterfaceRegistry returns the context with an updated GasAdjustment
+// WithGasAdjustment returns the context with an updated GasAdjustment
 func (ctx Context) WithGasAdjustment(gasAdj float64) Context {
 	ctx.GasAdjustment = gasAdj
 	return ctx
 }
 
-// WithInterfaceRegistry returns the context with an updated GasPrices
+// WithGasPrices returns the context with an updated GasPrices
 func (ctx Context) WithGasPrices(gasPrices sdk.DecCoins) Context {
 	ctx.GasPrices = gasPrices
 	return ctx

@@ -7,9 +7,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// checkTxFeeWithValidatorMinGasPrices implements the default fee logic, where the minimum price per
+// DefaultPriorityReduction is the default amount of price values required for 1 unit of priority.
+// Because priority is `int64` while price is `big.Int`, it's necessary to scale down the range to keep it more pratical.
+// The default value is the same as the `sdk.DefaultPowerReduction`.
+var DefaultPriorityReduction = sdk.DefaultPowerReduction
+
+// CheckTxFeeWithValidatorMinGasPrices implements the default fee logic, where the minimum price per
 // unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
-func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
+func CheckTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return nil, 0, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -49,9 +54,10 @@ func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins,
 func getTxPriority(fee sdk.Coins) int64 {
 	var priority int64
 	for _, c := range fee {
+		amt := c.Amount.Quo(DefaultPriorityReduction)
 		p := int64(math.MaxInt64)
-		if c.Amount.IsInt64() {
-			p = c.Amount.Int64()
+		if amt.IsInt64() {
+			p = amt.Int64()
 		}
 		if priority == 0 || p < priority {
 			priority = p

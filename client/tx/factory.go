@@ -57,53 +57,56 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		signMode = signing.SignMode_SIGN_MODE_EIP_191
 	}
 
-	var gasSetting client.GasSetting
-	gasStr, err := flagSet.GetString(flags.FlagGas)
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "gas setting is not specified! using default value from client config: %s\n", clientCtx.GasSetting.String())
-		gasSetting = clientCtx.GasSetting
-	} else {
-		gasSetting, _ = client.ParseGasSetting(gasStr)
-	}
-
-	gasAdj, err := flagSet.GetFloat64(flags.FlagGasAdjustment)
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "gas adjustment is not specified! using default value from client config: %f\n", clientCtx.GasAdjustment)
-		gasAdj = clientCtx.GasAdjustment
-	}
-
-	var gasPrices sdk.DecCoins
-	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "gas prices is not specified! using default value from client config: %s\n", clientCtx.GasPrices.String())
-		gasPrices = clientCtx.GasPrices
-	} else {
-		gasPrices, _ = sdk.ParseDecCoins(gasPricesStr)
-	}
-
 	accNum, _ := flagSet.GetUint64(flags.FlagAccountNumber)
 	accSeq, _ := flagSet.GetUint64(flags.FlagSequence)
 	memo, _ := flagSet.GetString(flags.FlagNote)
 	timeoutHeight, _ := flagSet.GetUint64(flags.FlagTimeoutHeight)
 
 	f := Factory{
-		txConfig:           clientCtx.TxConfig,
-		accountRetriever:   clientCtx.AccountRetriever,
-		keybase:            clientCtx.Keyring,
-		chainID:            clientCtx.ChainID,
-		offline:            clientCtx.Offline,
-		generateOnly:       clientCtx.GenerateOnly,
-		gas:                gasSetting.Gas,
-		simulateAndExecute: gasSetting.Simulate,
-		accountNumber:      accNum,
-		sequence:           accSeq,
-		timeoutHeight:      timeoutHeight,
-		gasAdjustment:      gasAdj,
-		memo:               memo,
-		signMode:           signMode,
-		feeGranter:         clientCtx.FeeGranter,
-		feePayer:           clientCtx.FeePayer,
-		gasPrices:          gasPrices,
+		txConfig:         clientCtx.TxConfig,
+		accountRetriever: clientCtx.AccountRetriever,
+		keybase:          clientCtx.Keyring,
+		chainID:          clientCtx.ChainID,
+		offline:          clientCtx.Offline,
+		generateOnly:     clientCtx.GenerateOnly,
+		accountNumber:    accNum,
+		sequence:         accSeq,
+		timeoutHeight:    timeoutHeight,
+		memo:             memo,
+		signMode:         signMode,
+		feeGranter:       clientCtx.FeeGranter,
+		feePayer:         clientCtx.FeePayer,
+	}
+
+	// Add gas-related parameters to factory. These include:
+	//
+	// - gas
+	// - simulateAndExecute
+	// - gasAdjustment
+	// - gasPrices
+	//
+	// If specified by the CLI flags, parse the input, and panic on errors.
+	//
+	// If not, use values stored in client config as default, and print warning messages.
+	if gasStr, err := flagSet.GetString(flags.FlagGas); err == nil {
+		f = f.WithGasStr(gasStr)
+	} else {
+		f = f.WithGas(clientCtx.GasSetting.Gas).WithSimulateAndExecute(clientCtx.GasSetting.Simulate)
+		_, _ = fmt.Fprintf(os.Stderr, "gas setting is not specified! using default value from client config: %s\n", clientCtx.GasSetting.String())
+	}
+
+	if gasAdj, err := flagSet.GetFloat64(flags.FlagGasAdjustment); err == nil {
+		f = f.WithGasAdjustment(gasAdj)
+	} else {
+		f = f.WithGasAdjustment(clientCtx.GasAdjustment)
+		_, _ = fmt.Fprintf(os.Stderr, "gas adjustment is not specified! using default value from client config: %f\n", clientCtx.GasAdjustment)
+	}
+
+	if gasPricesStr, err := flagSet.GetString(flags.FlagGasPrices); err == nil {
+		f = f.WithGasPricesStr(gasPricesStr)
+	} else {
+		f = f.WithGasPrices(clientCtx.GasPrices)
+		_, _ = fmt.Fprintf(os.Stderr, "gas prices is not specified! using default value from client config: %s\n", clientCtx.GasPrices.String())
 	}
 
 	feesStr, _ := flagSet.GetString(flags.FlagFees)
@@ -157,6 +160,34 @@ func (f Factory) WithGas(gas uint64) Factory {
 	return f
 }
 
+// WithGasStr returns a copy of the Factory with updated gas setting, given the
+// stringified gas setting.
+func (f Factory) WithGasStr(gasStr string) Factory {
+	gasSetting, err := client.ParseGasSetting(gasStr)
+	if err != nil {
+		panic(err)
+	}
+
+	return f.WithGas(gasSetting.Gas).WithSimulateAndExecute(gasSetting.Simulate)
+}
+
+// WithGasPrices returns a copy of the Factory with updated gas prices
+func (f Factory) WithGasPrices(gasPrices sdk.DecCoins) Factory {
+	f.gasPrices = gasPrices
+	return f
+}
+
+// WithGasPricesStr returns a copy of the Factory with updated gas prices, given the
+// stringified gas prices.
+func (f Factory) WithGasPricesStr(gasPricesStr string) Factory {
+	gasPrices, err := sdk.ParseDecCoins(gasPricesStr)
+	if err != nil {
+		panic(err)
+	}
+
+	return f.WithGasPrices(gasPrices)
+}
+
 // WithFees returns a copy of the Factory with an updated fee.
 func (f Factory) WithFees(fees string) Factory {
 	parsedFees, err := sdk.ParseCoinsNormalized(fees)
@@ -179,17 +210,6 @@ func (f Factory) WithTips(tip string, tipper string) Factory {
 		Tipper: tipper,
 		Amount: parsedTips,
 	}
-	return f
-}
-
-// WithGasPrices returns a copy of the Factory with updated gas prices.
-func (f Factory) WithGasPrices(gasPrices string) Factory {
-	parsedGasPrices, err := sdk.ParseDecCoins(gasPrices)
-	if err != nil {
-		panic(err)
-	}
-
-	f.gasPrices = parsedGasPrices
 	return f
 }
 

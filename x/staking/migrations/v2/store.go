@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
 	v043distribution "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v043"
-	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
+	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 

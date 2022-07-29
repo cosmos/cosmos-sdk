@@ -3,6 +3,7 @@ package testutil
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -82,7 +83,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			},
 			&types.QuerySupplyOfResponse{},
 			&types.QuerySupplyOfResponse{
-				Amount: sdk.NewCoin("foobar", sdk.ZeroInt()),
+				Amount: sdk.NewCoin("foobar", math.ZeroInt()),
 			},
 		},
 	}

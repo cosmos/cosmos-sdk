@@ -10,7 +10,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -95,12 +94,10 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	var (
-		legacyAmino    *codec.LegacyAmino
 		evidenceKeeper keeper.Keeper
 	)
 
 	app, err := simtestutil.Setup(testutil.AppConfig,
-		&legacyAmino,
 		&evidenceKeeper,
 		&suite.interfaceRegistry,
 		&suite.accountKeeper,
@@ -115,7 +112,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	evidenceKeeper.SetRouter(router)
 
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
-	suite.querier = keeper.NewQuerier(evidenceKeeper, legacyAmino)
 	suite.app = app
 
 	for i, addr := range valAddresses {

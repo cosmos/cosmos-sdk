@@ -10,12 +10,13 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
@@ -32,10 +33,29 @@ type VestingAccountTestSuite struct {
 }
 
 func (s *VestingAccountTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(testutil.AppConfig, &s.accountKeeper)
-	require.NoError(s.T(), err)
+	encCfg := moduletestutil.MakeTestEncodingConfig(vesting.AppModuleBasic{})
 
-	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
+	key := sdk.NewKVStoreKey(authtypes.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	s.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{})
+
+	maccPerms := map[string][]string{
+		"fee_collector":          nil,
+		"mint":                   {"minter"},
+		"bonded_tokens_pool":     {"burner", "staking"},
+		"not_bonded_tokens_pool": {"burner", "staking"},
+		"multiPerm":              {"burner", "minter", "staking"},
+		"random":                 {"random"},
+	}
+
+	s.accountKeeper = keeper.NewAccountKeeper(
+		encCfg.Codec,
+		key,
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		"cosmos",
+		authtypes.NewModuleAddress("gov").String(),
+	)
 }
 
 func TestGetVestedCoinsContVestingAcc(t *testing.T) {

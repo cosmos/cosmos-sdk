@@ -149,6 +149,14 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
 	suite.Require().NotNil(res2)
 
 	suite.Require().Equal(test1Supply, res2.Amount)
+
+	// try to make SupplyWithOffset negative, should return as 0
+	app.BankKeeper.AddSupplyOffset(ctx, "test1", sdk.NewInt(-100000000000))
+	res, err = queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{Denom: test1Supply.Denom})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+
+	suite.Require().Equal(sdk.NewInt64Coin("test1", 0), res.Amount)
 }
 
 func (suite *IntegrationTestSuite) TestQueryParams() {

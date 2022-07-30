@@ -5,6 +5,14 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+// Default gas parameters
+var (
+	DefaultGasSetting            = GasSetting{false, flags.DefaultGasLimit}
+	DefaultGasAdjustment float64 = 1
+	DefaultGasPrices             = sdk.NewDecCoins()
 )
 
 // GasSetting encapsulates the possible values passed through the --gas flag.
@@ -21,11 +29,6 @@ func (v *GasSetting) String() string {
 	return strconv.FormatUint(v.Gas, 10)
 }
 
-// DefaultGasSetting returns the default gas setting
-func DefaultGasSetting() GasSetting {
-	return GasSetting{false, flags.DefaultGasLimit}
-}
-
 // ParseGasSetting parses a string gas value. The value may either be 'auto',
 // which indicates a transaction should be executed in simulate mode to
 // automatically find a sufficient gas value, or a string integer. It returns an
@@ -33,7 +36,7 @@ func DefaultGasSetting() GasSetting {
 func ParseGasSetting(gasStr string) (GasSetting, error) {
 	switch gasStr {
 	case "":
-		return DefaultGasSetting(), nil
+		return DefaultGasSetting, nil
 
 	case flags.GasFlagAuto:
 		return GasSetting{true, 0}, nil

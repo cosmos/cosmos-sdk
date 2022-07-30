@@ -98,21 +98,21 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 
 	gasSetting, err := client.ParseGasSetting(conf.Gas)
 	if err != nil {
-		return ctx, fmt.Errorf("couldn't get gas setting from client config: %v", err)
+		gasSetting = client.DefaultGasSetting
 	}
 
 	ctx = ctx.WithGasSetting(gasSetting)
 
 	gasAdj, err := strconv.ParseFloat(conf.GasAdjustment, 64)
 	if err != nil {
-		return ctx, fmt.Errorf("couldn't get gas adjustment from client config: %v", err)
+		gasAdj = client.DefaultGasAdjustment
 	}
 
 	ctx = ctx.WithGasAdjustment(gasAdj)
 
 	gasPrices, err := sdk.ParseDecCoins(conf.GasPrices)
 	if err != nil {
-		return ctx, fmt.Errorf("couldn't get gas prices from client config: %v", err)
+		gasPrices = client.DefaultGasPrices
 	}
 
 	ctx = ctx.WithGasPrices(gasPrices)

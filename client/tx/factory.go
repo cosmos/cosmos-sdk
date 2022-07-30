@@ -88,21 +88,21 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	// If specified by the CLI flags, parse the input, and panic on errors.
 	//
 	// If not, use values stored in client config as default, and print warning messages.
-	if gasStr, err := flagSet.GetString(flags.FlagGas); err == nil {
+	if gasStr, _ := flagSet.GetString(flags.FlagGas); gasStr != "" {
 		f = f.WithGasStr(gasStr)
 	} else {
 		f = f.WithGas(clientCtx.GasSetting.Gas).WithSimulateAndExecute(clientCtx.GasSetting.Simulate)
 		_, _ = fmt.Fprintf(os.Stderr, "gas setting is not specified! using default value from client config: %s\n", clientCtx.GasSetting.String())
 	}
 
-	if gasAdj, err := flagSet.GetFloat64(flags.FlagGasAdjustment); err == nil {
+	if gasAdj, _ := flagSet.GetFloat64(flags.FlagGasAdjustment); gasAdj != 0 {
 		f = f.WithGasAdjustment(gasAdj)
 	} else {
 		f = f.WithGasAdjustment(clientCtx.GasAdjustment)
 		_, _ = fmt.Fprintf(os.Stderr, "gas adjustment is not specified! using default value from client config: %f\n", clientCtx.GasAdjustment)
 	}
 
-	if gasPricesStr, err := flagSet.GetString(flags.FlagGasPrices); err == nil {
+	if gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices); gasPricesStr != "" {
 		f = f.WithGasPricesStr(gasPricesStr)
 	} else {
 		f = f.WithGasPrices(clientCtx.GasPrices)

@@ -5,6 +5,7 @@
 - Dec 06, 2021: Initial Draft.
 - Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
 - May 16, 2022: Change status to Accepted.
+- Aug 01, 2022: Add custom `Msg`-renderers.
 
 ## Status
 

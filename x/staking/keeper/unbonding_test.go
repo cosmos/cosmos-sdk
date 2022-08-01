@@ -157,35 +157,7 @@ func doValidatorUnbonding(
 	return validator
 }
 
-func TestValidatorUnbondingOnHold1(t *testing.T) {
-	var hookCalled bool
-	var ubdeID uint64
-	app, ctx, _, addrDels, addrVals := setup(t, &hookCalled, &ubdeID)
-	validator := doValidatorUnbonding(t, app, ctx, addrDels, addrVals, &hookCalled)
-
-	completionTime := validator.UnbondingTime
-
-	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-	err := app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
-	require.NoError(t, err)
-
-	// Check that unbonding is not complete
-	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
-	require.True(t, found)
-	// Check that status is unbonding
-	require.Equal(t, types.BondStatus(2), validator.Status)
-
-	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
-	ctx = ctx.WithBlockTime(completionTime)
-	app.StakingKeeper.UnbondAllMatureValidators(ctx)
-
-	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
-	require.True(t, found)
-	// Check that status is unbonded
-	require.Equal(t, types.BondStatus(1), validator.Status)
-}
-
-func TestValidatorUnbondingOnHold2(t *testing.T) {
+func TestValidatorUnbondingOnHold(t *testing.T) {
 	var hookCalled bool
 	var ubdeID uint64
 	app, ctx, _, addrDels, addrVals := setup(t, &hookCalled, &ubdeID)
@@ -203,16 +175,19 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	// Check that status is unbonding
-	require.Equal(t, types.BondStatus(2), validator.Status)
+	require.Equal(t, types.Unbonding, validator.Status)
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
 	err := app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
+	// Try again to unbond validator
+	app.StakingKeeper.UnbondAllMatureValidators(ctx)
+
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	// Check that status is unbonded
-	require.Equal(t, types.BondStatus(1), validator.Status)
+	require.Equal(t, types.Unbonded, validator.Status)
 }
 
 func TestRedelegationOnHold1(t *testing.T) {

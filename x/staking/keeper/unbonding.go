@@ -329,18 +329,8 @@ func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found
 		return false, nil
 	}
 
-	if !val.IsMature(ctx.BlockTime(), ctx.BlockHeight()) {
-		val.UnbondingOnHold = false
-		k.SetValidator(ctx, val)
-	} else {
-		// If unbonding is mature complete it
-		val = k.UnbondingToUnbonded(ctx, val)
-		if val.GetDelegatorShares().IsZero() {
-			k.RemoveValidator(ctx, val.GetOperator())
-		}
-
-		k.DeleteUnbondingIndex(ctx, id)
-	}
+	val.UnbondingOnHoldRefCount--
+	k.SetValidator(ctx, val)
 
 	return true, nil
 }
@@ -410,8 +400,7 @@ func (k Keeper) putValidatorOnHold(ctx sdk.Context, id uint64) (found bool) {
 		return false
 	}
 
-	val.UnbondingOnHold = true
-
+	val.UnbondingOnHoldRefCount++
 	k.SetValidator(ctx, val)
 
 	return true

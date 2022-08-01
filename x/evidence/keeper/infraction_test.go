@@ -59,14 +59,6 @@ func (suite *InfractionTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 	suite.app = app
 
-	//for i, addr := range valAddresses {
-	//	addr := sdk.AccAddress(addr)
-	//	suite.accountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
-	//}
-
-	//queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.interfaceRegistry)
-	//types.RegisterQueryServer(queryHelper, evidenceKeeper)
-	//suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.evidenceKeeper = evidenceKeeper
 }
 

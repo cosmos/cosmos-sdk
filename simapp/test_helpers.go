@@ -43,7 +43,7 @@ type SetupOptions struct {
 	AppOpts types.AppOptions
 }
 
-func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
+func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, map[string]proto.Message) {
 	db := dbm.NewMemDB()
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
@@ -52,9 +52,9 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 
 	app := NewSimApp(log.NewNopLogger(), db, nil, true, appOptions)
 	if withGenesis {
-		return app, NewDefaultGenesisState(app.AppCodec())
+		return app, NewDefaultGenesisState()
 	}
-	return app, GenesisState{}
+	return app, map[string]proto.Message{}
 }
 
 // NewSimappWithCustomOptions initializes a new SimApp with custom options.
@@ -77,7 +77,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 	}
 
 	app := NewSimApp(options.Logger, options.DB, nil, true, options.AppOpts)
-	genesisState := NewDefaultGenesisState(app.appCodec)
+	genesisState := NewDefaultGenesisState()
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 	require.NoError(t, err)
 

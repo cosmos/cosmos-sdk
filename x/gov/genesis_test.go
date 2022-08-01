@@ -59,7 +59,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	// export the state and import it into a new app
 	govGenState := gov.ExportGenesis(ctx, app.GovKeeper)
-	genesisState := simapp.NewDefaultGenesisState(app.AppCodec())
+	genesisState := simapp.NewDefaultGenesisState()
 
 	genesisState[authtypes.ModuleName] = authGenState
 	genesisState[banktypes.ModuleName] = bankGenState

@@ -38,7 +38,7 @@ func (s *decCoinTestSuite) TestNewDecCoinFromDec() {
 		sdk.NewDecCoinFromDec(testDenom1, math.LegacyNewDec(5))
 	})
 	s.Require().NotPanics(func() {
-		sdk.NewDecCoinFromDec(testDenom1, sdk.ZeroDec())
+		sdk.NewDecCoinFromDec(testDenom1, math.LegacyZeroDec())
 	})
 	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromDec(strings.ToUpper(testDenom1), math.LegacyNewDec(5))
@@ -517,7 +517,7 @@ func (s *decCoinTestSuite) TestDecCoinsQuoDecTruncate() {
 		result sdk.DecCoins
 		panics bool
 	}{
-		{sdk.DecCoins{}, sdk.ZeroDec(), sdk.DecCoins(nil), true},
+		{sdk.DecCoins{}, math.LegacyZeroDec(), sdk.DecCoins(nil), true},
 		{sdk.DecCoins{sdk.NewDecCoinFromDec("foo", x)}, y, sdk.DecCoins(nil), false},
 		{sdk.DecCoins{sdk.NewInt64DecCoin("foo", 5)}, math.LegacyNewDec(2), sdk.DecCoins{sdk.NewDecCoinFromDec("foo", sdk.MustNewDecFromStr("2.5"))}, false},
 	}

@@ -446,7 +446,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
-	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
+	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, math.LegacyOneDec()) })
 	burnAmount = app.StakingKeeper.TokensFromConsensusPower(ctx, 7)
 
 	// read updated pool
@@ -480,10 +480,10 @@ func TestSlashWithRedelegation(t *testing.T) {
 	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
-	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
+	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, math.LegacyOneDec()) })
 
-	burnAmount = sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(sdk.OneDec()).TruncateInt()
-	burnAmount = burnAmount.Sub(sdk.OneDec().MulInt(rdTokens).TruncateInt())
+	burnAmount = sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(math.LegacyOneDec()).TruncateInt()
+	burnAmount = burnAmount.Sub(math.LegacyOneDec().MulInt(rdTokens).TruncateInt())
 
 	// read updated pool
 	bondedPool = app.StakingKeeper.GetBondedPool(ctx)
@@ -513,7 +513,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.Equal(t, validator.GetStatus(), types.Unbonding)
 
-	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
+	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, math.LegacyOneDec()) })
 
 	// read updated pool
 	bondedPool = app.StakingKeeper.GetBondedPool(ctx)

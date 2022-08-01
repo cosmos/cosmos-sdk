@@ -242,7 +242,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	require.Equal(t, valTokens, validator.Tokens, "\nvalidator %v\npool %v", validator, valTokens)
 
 	// slash the validator by 100%
-	app.StakingKeeper.Slash(ctx, sdk.ConsAddress(PKs[0].Address()), 0, 100, sdk.OneDec())
+	app.StakingKeeper.Slash(ctx, sdk.ConsAddress(PKs[0].Address()), 0, 100, math.LegacyOneDec())
 	// apply TM updates
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 	// validator should be unbonding
@@ -1081,7 +1081,7 @@ func TestUpdateValidatorCommission(t *testing.T) {
 		newRate     sdk.Dec
 		expectedErr bool
 	}{
-		{val1, sdk.ZeroDec(), true},
+		{val1, math.LegacyZeroDec(), true},
 		{val2, sdk.NewDecWithPrec(-1, 1), true},
 		{val2, sdk.NewDecWithPrec(4, 1), true},
 		{val2, sdk.NewDecWithPrec(3, 1), true},

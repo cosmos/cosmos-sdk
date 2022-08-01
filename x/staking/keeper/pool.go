@@ -75,5 +75,5 @@ func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
 		return sdk.NewDecFromInt(k.TotalBondedTokens(ctx)).QuoInt(stakeSupply)
 	}
 
-	return sdk.ZeroDec()
+	return math.LegacyZeroDec()
 }

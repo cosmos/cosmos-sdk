@@ -216,13 +216,13 @@ func TestValidatorSetInitialCommission(t *testing.T) {
 		commission  types.Commission
 		expectedErr bool
 	}{
-		{val, types.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()), false},
-		{val, types.NewCommission(sdk.ZeroDec(), sdk.NewDecWithPrec(-1, 1), sdk.ZeroDec()), true},
-		{val, types.NewCommission(sdk.ZeroDec(), math.LegacyNewDec(15000000000), sdk.ZeroDec()), true},
-		{val, types.NewCommission(sdk.NewDecWithPrec(-1, 1), sdk.ZeroDec(), sdk.ZeroDec()), true},
-		{val, types.NewCommission(sdk.NewDecWithPrec(2, 1), sdk.NewDecWithPrec(1, 1), sdk.ZeroDec()), true},
-		{val, types.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.NewDecWithPrec(-1, 1)), true},
-		{val, types.NewCommission(sdk.ZeroDec(), sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(2, 1)), true},
+		{val, types.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()), false},
+		{val, types.NewCommission(math.LegacyZeroDec(), sdk.NewDecWithPrec(-1, 1), math.LegacyZeroDec()), true},
+		{val, types.NewCommission(math.LegacyZeroDec(), math.LegacyNewDec(15000000000), math.LegacyZeroDec()), true},
+		{val, types.NewCommission(sdk.NewDecWithPrec(-1, 1), math.LegacyZeroDec(), math.LegacyZeroDec()), true},
+		{val, types.NewCommission(sdk.NewDecWithPrec(2, 1), sdk.NewDecWithPrec(1, 1), math.LegacyZeroDec()), true},
+		{val, types.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), sdk.NewDecWithPrec(-1, 1)), true},
+		{val, types.NewCommission(math.LegacyZeroDec(), sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(2, 1)), true},
 	}
 
 	for i, tc := range testCases {

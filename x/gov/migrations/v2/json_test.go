@@ -1,4 +1,4 @@
-package v043_test
+package v2_test
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	v043gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v043"
+	v2 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -32,7 +32,7 @@ func TestMigrateJSON(t *testing.T) {
 		},
 	}
 
-	migrated := v043gov.MigrateJSON(govGenState)
+	migrated := v2.MigrateJSON(govGenState)
 
 	bz, err := clientCtx.Codec.MarshalJSON(migrated)
 	require.NoError(t, err)

@@ -1,0 +1,417 @@
+Usages of the right tree scope selection in the left tree scope selection in  (274 usages found)
+    Production  (50 usages found)
+        Parameter declaration  (5 usages found)
+            cosmos-sdk  (5 usages found)
+                x/bank/types  (5 usages found)
+                    expected_keepers.go  (5 usages found)
+                        AccountKeeper  (5 usages found)
+                            11 NewAccount(sdk.Context, types.AccountI) types.AccountI
+                            17 SetAccount(ctx sdk.Context, acc types.AccountI)
+                            19 IterateAccounts(ctx sdk.Context, process func(types.AccountI) bool)
+                            21 ValidatePermissions(macc types.ModuleAccountI) error
+                            27 SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI)
+        Return type  (8 usages found)
+            cosmos-sdk  (8 usages found)
+                x/bank/types  (8 usages found)
+                    expected_keepers.go  (7 usages found)
+                        AccountKeeper  (7 usages found)
+                            11 NewAccount(sdk.Context, types.AccountI) types.AccountI
+                            12 NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+                            14 GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+                            15 GetAllAccounts(ctx sdk.Context) []types.AccountI
+                            25 GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (types.ModuleAccountI, []string)
+                            26 GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccountI
+                            28 GetModulePermissions() map[string]types.PermissionsForAddress
+                    send_authorization.go  (1 usage found)
+                        Accept  (1 usage found)
+                            32 func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
+        Struct initialization  (5 usages found)
+            cosmos-sdk  (5 usages found)
+                x/bank/types  (5 usages found)
+                    send_authorization.go  (5 usages found)
+                        Accept  (5 usages found)
+                            35 return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
+                            40 return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
+                            43 return authz.AcceptResponse{Accept: true, Delete: true}, nil
+                            58 return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot send to %s address", toAddr)
+                            61 return authz.AcceptResponse{Accept: true, Delete: false, Updated: &SendAuthorization{SpendLimit: limitLeft, AllowList: allowedList}}, nil
+        Unclassified  (31 usages found)
+            cosmos-sdk  (31 usages found)
+                x/bank  (2 usages found)
+                    module.go  (2 usages found)
+                        provideModule  (2 usages found)
+                            253 blockedAddresses[permission.GetAddress().String()] = true
+                            260 authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+                x/bank/keeper  (12 usages found)
+                    keeper.go  (12 usages found)
+                        BurnCoins  (3 usages found)
+                            443 if !acc.HasPermission(authtypes.Burner) {
+                            447 err := k.subUnlockedCoins(ctx, acc.GetAddress(), amounts)
+                            463 types.NewCoinBurnEvent(acc.GetAddress(), amounts),
+                        DelegateCoinsFromAccountToModule  (2 usages found)
+                            371 if !recipientAcc.HasPermission(authtypes.Staking) {
+                            375 return k.DelegateCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
+                        MintCoins  (3 usages found)
+                            409 if !acc.HasPermission(authtypes.Minter) {
+                            413 err = k.addCoins(ctx, acc.GetAddress(), amounts)
+                            429 types.NewCoinMintEvent(acc.GetAddress(), amounts),
+                        SendCoinsFromAccountToModule  (1 usage found)
+                            357 return k.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
+                        SendCoinsFromModuleToModule  (1 usage found)
+                            344 return k.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
+                        UndelegateCoinsFromModuleToAccount  (2 usages found)
+                            389 if !acc.HasPermission(authtypes.Staking) {
+                            393 return k.UndelegateCoins(ctx, acc.GetAddress(), recipientAddr, amt)
+                x/bank/migrations/v1  (3 usages found)
+                    types.go  (3 usages found)
+                        AddressFromBalancesStore  (3 usages found)
+                            43 kv.AssertKeyAtLeastLength(key, 1+v042auth.AddrLen)
+                            44 addr := key[:v042auth.AddrLen]
+                            45 kv.AssertKeyLength(addr, v042auth.AddrLen)
+                x/bank/migrations/v2  (1 usage found)
+                    store.go  (1 usage found)
+                        migrateBalanceKeys  (1 usage found)
+                            65 denom := oldStoreIter.Key()[v042auth.AddrLen:]
+                x/bank/simulation  (9 usages found)
+                    operations.go  (9 usages found)
+                        getModuleAccounts  (2 usages found)
+                            405 Address: acc.GetAddress(),
+                            408 PubKey:  acc.GetPubKey(),
+                        randomSendFields  (1 usage found)
+                            388 spendable := bk.SpendableCoins(ctx, acc.GetAddress())
+                        sendMsgMultiSend  (3 usages found)
+                            330 accountNumbers[i] = acc.GetAccountNumber()
+                            331 sequenceNumbers[i] = acc.GetSequence()
+                            340 spendable := bk.SpendableCoins(ctx, feePayer.GetAddress())
+                        sendMsgSend  (3 usages found)
+                            139 spendable := bk.SpendableCoins(ctx, account.GetAddress())
+                            156 []uint64{account.GetAccountNumber()},
+                            157 []uint64{account.GetSequence()},
+                x/bank/types  (4 usages found)
+                    codec.go  (2 usages found)
+                        init  (1 usage found)
+                            51 RegisterLegacyAminoCodec(authzcodec.Amino)
+                        RegisterInterfaces  (1 usage found)
+                            32 (*authz.Authorization)(nil),
+                    send_authorization.go  (2 usages found)
+                        Accept  (2 usages found)
+                            43 return authz.AcceptResponse{Accept: true, Delete: true}, nil
+                            61 return authz.AcceptResponse{Accept: true, Delete: false, Updated: &SendAuthorization{SpendLimit: limitLeft, AllowList: allowedList}}, nil
+        Variable declaration  (1 usage found)
+            cosmos-sdk  (1 usage found)
+                x/bank/types  (1 usage found)
+                    send_authorization.go  (1 usage found)
+                        13 var _ authz.Authorization = &SendAuthorization{}
+    Test  (224 usages found)
+        Parameter declaration  (11 usages found)
+            cosmos-sdk  (11 usages found)
+                x/bank/keeper  (11 usages found)
+                    keeper_test.go  (11 usages found)
+                        mockBurnCoins  (1 usage found)
+                            134 func (suite *KeeperTestSuite) mockBurnCoins(moduleAcc *authtypes.ModuleAccount) {
+                        mockDelegateCoins  (1 usage found)
+                            179 func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc authtypes.AccountI, mAcc authtypes.AccountI) {
+                        mockInputOutputCoins  (1 usage found)
+                            162 func (suite *KeeperTestSuite) mockInputOutputCoins(inputs []authtypes.AccountI, outputs []sdk.AccAddress) {
+                        mockMintCoins  (1 usage found)
+                            124 func (suite *KeeperTestSuite) mockMintCoins(moduleAcc *authtypes.ModuleAccount) {
+                        mockSendCoins  (1 usage found)
+                            152 func (suite *KeeperTestSuite) mockSendCoins(ctx sdk.Context, sender authtypes.AccountI, receiver sdk.AccAddress) {
+                        mockSendCoinsFromAccountToModule  (1 usage found)
+                            146 func (suite *KeeperTestSuite) mockSendCoinsFromAccountToModule(acc *authtypes.BaseAccount, moduleAcc *authtypes.ModuleAccount) {
+                        mockSendCoinsFromModuleToAccount  (1 usage found)
+                            128 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, accAddr sdk.AccAddress) {
+                        mockSendCoinsFromModuleToModule  (1 usage found)
+                            139 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToModule(sender *authtypes.ModuleAccount, receiver *authtypes.ModuleAccount) {
+                        mockSpendableCoins  (1 usage found)
+                            175 func (suite *KeeperTestSuite) mockSpendableCoins(ctx sdk.Context, acc authtypes.AccountI) {
+                        mockUnDelegateCoins  (1 usage found)
+                            188 func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc authtypes.AccountI, mAcc authtypes.AccountI) {
+                        mockValidateBalance  (1 usage found)
+                            171 func (suite *KeeperTestSuite) mockValidateBalance(acc authtypes.AccountI) {
+        Struct initialization  (14 usages found)
+            cosmos-sdk  (14 usages found)
+                x/bank  (6 usages found)
+                    app_test.go  (4 usages found)
+                        TestMsgMultiSendMultipleOut  (2 usages found)
+                            190 acc1 := &authtypes.BaseAccount{
+                            193 acc2 := &authtypes.BaseAccount{
+                        TestMsgMultiSendWithAccounts  (1 usage found)
+                            114 acc := &authtypes.BaseAccount{
+                        TestSendNotEnoughBalance  (1 usage found)
+                            79 acc := &authtypes.BaseAccount{
+                    bench_test.go  (2 usages found)
+                        BenchmarkOneBankMultiSendTxPerBlock  (1 usage found)
+                            70 acc := authtypes.BaseAccount{
+                        BenchmarkOneBankSendTxPerBlock  (1 usage found)
+                            26 acc := authtypes.BaseAccount{
+                x/bank/keeper  (8 usages found)
+                    keeper_test.go  (8 usages found)
+                        TestPeriodicVestingAccountReceive  (4 usages found)
+                            901 periods := vesting.Periods{
+                            902 vesting.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 50)}},
+                            903 vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+                            904 vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+                        TestPeriodicVestingAccountSend  (4 usages found)
+                            832 periods := vesting.Periods{
+                            833 vesting.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 50)}},
+                            834 vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+                            835 vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+        Unclassified  (199 usages found)
+            cosmos-sdk  (199 usages found)
+                x/bank  (25 usages found)
+                    app_test.go  (20 usages found)
+                        TestMsgMultiSendDependent  (4 usages found)
+                            236 acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+                            237 acc2 := authtypes.NewBaseAccountWithAddress(addr2)
+                            238 err := acc2.SetAccountNumber(1)
+                            241 genAccs := []authtypes.GenesisAccount{acc1, acc2}
+                        TestMsgMultiSendMultipleOut  (3 usages found)
+                            191 Address: addr1.String(),
+                            194 Address: addr2.String(),
+                            197 genAccs := []authtypes.GenesisAccount{acc1, acc2}
+                        TestMsgMultiSendWithAccounts  (4 usages found)
+                            115 Address: addr1.String(),
+                            118 genAccs := []authtypes.GenesisAccount{acc}
+                            126 res1 := app.AccountKeeper.GetAccount(ctx, addr1)
+                            128 require.Equal(t, acc, res1.(*authtypes.BaseAccount))
+                        TestSendNotEnoughBalance  (9 usages found)
+                            80 Address: addr1.String(),
+                            83 genAccs := []authtypes.GenesisAccount{acc}
+                            91 res1 := app.AccountKeeper.GetAccount(ctx, addr1)
+                            93 require.Equal(t, acc, res1.(*authtypes.BaseAccount))
+                            95 origAccNum := res1.GetAccountNumber()
+                            96 origSeq := res1.GetSequence()
+                            106 res2 := app.AccountKeeper.GetAccount(app.NewContext(true, tmproto.Header{}), addr1)
+                            109 require.Equal(t, res2.GetAccountNumber(), origAccNum)
+                            110 require.Equal(t, res2.GetSequence(), origSeq+1)
+                    bench_test.go  (5 usages found)
+                        BenchmarkOneBankMultiSendTxPerBlock  (2 usages found)
+                            71 Address: addr1.String(),
+                            75 genAccs := []authtypes.GenesisAccount{&acc}
+                        BenchmarkOneBankSendTxPerBlock  (2 usages found)
+                            27 Address: addr1.String(),
+                            31 genAccs := []types.GenesisAccount{&acc}
+                        19 var moduleAccAddr = authtypes.NewModuleAddress(stakingtypes.BondedPoolName)
+                x/bank/keeper  (161 usages found)
+                    grpc_query_test.go  (2 usages found)
+                        TestSpendableBalances  (2 usages found)
+                            104 acc := authtypes.NewBaseAccountWithAddress(addr)
+                            116 vacc := vestingtypes.NewContinuousVestingAccount(
+                    keeper_test.go  (150 usages found)
+                        mockBurnCoins  (2 usages found)
+                            135 suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
+                            136 suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
+                        mockDelegateCoins  (2 usages found)
+                            184 suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
+                            185 suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
+                        mockInputOutputCoins  (1 usage found)
+                            164 suite.authKeeper.EXPECT().GetAccount(suite.ctx, input.GetAddress()).Return(input)
+                        mockMintCoins  (1 usage found)
+                            125 suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
+                        mockSendCoins  (1 usage found)
+                            153 suite.authKeeper.EXPECT().GetAccount(ctx, sender.GetAddress()).Return(sender)
+                        mockSendCoinsFromAccountToModule  (3 usages found)
+                            147 suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
+                            148 suite.authKeeper.EXPECT().GetAccount(suite.ctx, acc.GetAddress()).Return(acc)
+                            149 suite.authKeeper.EXPECT().HasAccount(suite.ctx, moduleAcc.GetAddress()).Return(true)
+                        mockSendCoinsFromModuleToAccount  (2 usages found)
+                            129 suite.authKeeper.EXPECT().GetModuleAddress(moduleAcc.Name).Return(moduleAcc.GetAddress())
+                            130 suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
+                        mockSendCoinsFromModuleToModule  (4 usages found)
+                            140 suite.authKeeper.EXPECT().GetModuleAddress(sender.Name).Return(sender.GetAddress())
+                            141 suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, receiver.Name).Return(receiver)
+                            142 suite.authKeeper.EXPECT().GetAccount(suite.ctx, sender.GetAddress()).Return(sender)
+                            143 suite.authKeeper.EXPECT().HasAccount(suite.ctx, receiver.GetAddress()).Return(true)
+                        mockSpendableCoins  (1 usage found)
+                            176 suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
+                        mockUnDelegateCoins  (3 usages found)
+                            193 suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
+                            194 suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
+                            195 suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
+                        mockValidateBalance  (1 usage found)
+                            172 suite.authKeeper.EXPECT().GetAccount(suite.ctx, acc.GetAddress()).Return(acc)
+                        SetupTest  (1 usage found)
+                            104 authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+                        TestBalanceTrackingEvents  (3 usages found)
+                            1122 multiPermAcc.Name,
+                            1130 multiPermAcc.Name,
+                            1141 multiPermAcc.Name,
+                        TestDelegateCoins  (7 usages found)
+                            937 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                            938 acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
+                            939 vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+                            951 require.NoError(suite.bankKeeper.DelegateCoins(ctx, accAddrs[1], holderAcc.GetAddress(), delCoins))
+                            953 require.Equal(delCoins, suite.bankKeeper.GetAllBalances(ctx, holderAcc.GetAddress()))
+                            957 require.NoError(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
+                            961 require.Equal(delCoins, vacc.GetDelegatedVesting())
+                        TestDelegateCoins_Invalid  (8 usages found)
+                            971 suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(nil)
+                            972 require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
+                            974 suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
+                            976 require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), invalidCoins))
+                            978 suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
+                            979 require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
+                            981 suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
+                            982 require.Error(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), origCoins.Add(origCoins...)))
+                        TestInputOutputCoins  (2 usages found)
+                            463 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                            493 suite.mockInputOutputCoins([]authtypes.AccountI{acc0}, accAddrs[1:3])
+                        TestInputOutputNewAccount  (1 usage found)
+                            443 suite.mockInputOutputCoins([]authtypes.AccountI{authtypes.NewBaseAccountWithAddress(accAddrs[0])}, []sdk.AccAddress{accAddrs[1]})
+                        TestMintCoinRestrictions  (2 usages found)
+                            1274 multiPermAcc.Name,
+                            1282 multiPermAcc.Name,
+                        TestMsgMultiSendEvents  (3 usages found)
+                            676 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                            703 suite.mockInputOutputCoins([]authtypes.AccountI{acc0}, accAddrs[2:4])
+                            728 suite.mockInputOutputCoins([]authtypes.AccountI{acc0}, accAddrs[2:4])
+                        TestMsgSendEvents  (1 usage found)
+                            633 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                        TestPeriodicVestingAccountReceive  (8 usages found)
+                            899 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                            900 acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
+                            902 vesting.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 50)}},
+                            903 vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+                            904 vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+                            907 vacc := vesting.NewPeriodicVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), periods)
+                            922 require.Equal(balances.Sub(vacc.LockedCoins(now)...), sendCoins)
+                            925 require.Equal(balances.Sub(vacc.LockedCoins(now.Add(12*time.Hour))...), origCoins)
+                        TestPeriodicVestingAccountSend  (5 usages found)
+                            833 vesting.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 50)}},
+                            834 vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+                            835 vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+                            838 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                            839 vacc := vesting.NewPeriodicVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), periods)
+                        TestSendCoins  (1 usage found)
+                            512 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                        TestSendCoinsFromModuleToAccount_Blocklist  (1 usage found)
+                            241 suite.authKeeper.EXPECT().GetModuleAddress(mintAcc.Name).Return(mintAcc.GetAddress())
+                        TestSendCoinsNewAccount  (1 usage found)
+                            410 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                        TestSpendableCoins  (3 usages found)
+                            772 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                            773 acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
+                            774 vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+                        TestSupply  (4 usages found)
+                            213 require.NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
+                            215 suite.mockSendCoinsFromModuleToAccount(minterAcc, burnerAcc.GetAddress())
+                            216 require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, burnerAcc.GetAddress(), initCoins))
+                            226 require.NoError(keeper.BurnCoins(ctx, authtypes.Burner, initCoins))
+                        TestSupply_BurnCoins  (14 usages found)
+                            351 require.NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
+                            353 suite.mockSendCoinsFromModuleToAccount(minterAcc, burnerAcc.GetAddress())
+                            354 require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, burnerAcc.GetAddress(), initCoins))
+                            358 require.NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
+                            366 authKeeper.EXPECT().GetModuleAccount(ctx, minterAcc.Name).Return(nil)
+                            367 require.Panics(func() { _ = keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission") // nolint:errcheck
+                            373 require.Error(keeper.BurnCoins(ctx, authtypes.Burner, supplyAfterInflation), "insufficient coins")
+                            376 require.NoError(keeper.BurnCoins(ctx, authtypes.Burner, initCoins))
+                            380 require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
+                            385 require.NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
+                            390 suite.mockSendCoins(ctx, minterAcc, multiPermAcc.GetAddress())
+                            391 require.NoError(keeper.SendCoins(ctx, minterAcc.GetAddress(), multiPermAcc.GetAddress(), initCoins))
+                            394 require.NoError(keeper.BurnCoins(ctx, multiPermAcc.GetName(), initCoins))
+                            398 require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, multiPermAcc.GetAddress()))
+                        TestSupply_MintCoins  (6 usages found)
+                            314 require.Panics(func() { _ = keeper.MintCoins(ctx, authtypes.Burner, initCoins) }, "invalid permission") // nolint:errcheck
+                            317 require.Error(keeper.MintCoins(ctx, authtypes.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewInt(-10)}}), "insufficient coins")
+                            323 require.NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
+                            325 require.Equal(initCoins, keeper.GetAllBalances(ctx, minterAcc.GetAddress()))
+                            336 require.NoError(keeper.MintCoins(ctx, multiPermAcc.GetName(), initCoins))
+                            340 require.Equal(initCoins, keeper.GetAllBalances(ctx, multiPermAcc.GetAddress()))
+                        TestSupply_SendCoins  (19 usages found)
+                            256 suite.mockSendCoinsFromModuleToAccount(mintAcc, holderAcc.GetAddress())
+                            257 require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, holderAcc.GetAddress(), initCoins))
+                            261 _ = keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins) // nolint:errcheck
+                            264 authKeeper.EXPECT().GetModuleAddress(burnerAcc.Name).Return(burnerAcc.GetAddress())
+                            267 _ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins) // nolint:errcheck
+                            272 _ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) // nolint:errcheck
+                            275 authKeeper.EXPECT().GetModuleAddress(holderAcc.Name).Return(holderAcc.GetAddress())
+                            276 authKeeper.EXPECT().GetAccount(suite.ctx, holderAcc.GetAddress()).Return(holderAcc)
+                            278 keeper.SendCoinsFromModuleToAccount(ctx, holderAcc.GetName(), baseAcc.GetAddress(), initCoins.Add(initCoins...)),
+                            283 keeper.SendCoinsFromModuleToModule(ctx, holderAcc.GetName(), authtypes.Burner, initCoins),
+                            286 require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, holderAcc.GetAddress()))
+                            287 require.Equal(initCoins, keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
+                            289 suite.mockSendCoinsFromModuleToAccount(burnerAcc, baseAcc.GetAddress())
+                            291 keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Burner, baseAcc.GetAddress(), initCoins),
+                            293 require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
+                            294 require.Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
+                            297 require.NoError(keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
+                            298 require.Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
+                            299 require.Equal(initCoins, keeper.GetAllBalances(ctx, burnerAcc.GetAddress()))
+                        TestUndelegateCoins  (12 usages found)
+                            994 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                            995 acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
+                            996 vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+                            1008 require.NoError(suite.bankKeeper.DelegateCoins(ctx, accAddrs[1], holderAcc.GetAddress(), delCoins))
+                            1011 require.Equal(delCoins, suite.bankKeeper.GetAllBalances(ctx, holderAcc.GetAddress()))
+                            1015 require.NoError(suite.bankKeeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[1], delCoins))
+                            1018 require.True(suite.bankKeeper.GetAllBalances(ctx, holderAcc.GetAddress()).Empty())
+                            1022 require.NoError(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
+                            1025 require.Equal(delCoins, suite.bankKeeper.GetAllBalances(ctx, holderAcc.GetAddress()))
+                            1029 require.NoError(suite.bankKeeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], delCoins))
+                            1032 require.True(suite.bankKeeper.GetAllBalances(ctx, holderAcc.GetAddress()).Empty())
+                            1035 require.Empty(vacc.GetDelegatedVesting())
+                        TestUndelegateCoins_Invalid  (11 usages found)
+                            1045 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                            1047 suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(nil)
+                            1048 require.Error(suite.bankKeeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], delCoins))
+                            1054 require.NoError(suite.bankKeeper.DelegateCoins(ctx, accAddrs[0], holderAcc.GetAddress(), delCoins))
+                            1056 suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
+                            1057 suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
+                            1058 suite.authKeeper.EXPECT().GetAccount(ctx, acc0.GetAddress()).Return(nil)
+                            1059 require.Error(suite.bankKeeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], delCoins))
+                            1061 suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
+                            1062 suite.authKeeper.EXPECT().GetAccount(ctx, holderAcc.GetAddress()).Return(holderAcc)
+                            1063 require.Error(suite.bankKeeper.UndelegateCoins(ctx, holderAcc.GetAddress(), accAddrs[0], origCoins))
+                        TestValidateBalance  (3 usages found)
+                            550 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                            561 acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
+                            562 vacc := vesting.NewContinuousVestingAccount(acc1, balances.Add(balances...), now.Unix(), endTime.Unix())
+                        TestVestingAccountReceive  (5 usages found)
+                            868 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                            869 acc1 := authtypes.NewBaseAccountWithAddress(accAddrs[1])
+                            870 vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+                            885 require.Equal(balances.Sub(vacc.LockedCoins(now)...), sendCoins)
+                            888 require.Equal(balances.Sub(vacc.LockedCoins(now.Add(12*time.Hour))...), origCoins)
+                        TestVestingAccountSend  (2 usages found)
+                            805 acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+                            806 vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+                        45 holderAcc    = authtypes.NewEmptyModuleAccount(holder)
+                        46 burnerAcc    = authtypes.NewEmptyModuleAccount(authtypes.Burner, authtypes.Burner)
+                        47 minterAcc    = authtypes.NewEmptyModuleAccount(authtypes.Minter, authtypes.Minter)
+                        48 mintAcc      = authtypes.NewEmptyModuleAccount(minttypes.ModuleName, authtypes.Minter)
+                        49 multiPermAcc = authtypes.NewEmptyModuleAccount(multiPerm, authtypes.Burner, authtypes.Minter, authtypes.Staking)
+                        51 baseAcc = authtypes.NewBaseAccountWithAddress(sdk.AccAddress([]byte("baseAcc")))
+                    msg_service_test.go  (9 usages found)
+                        TestMsgMultiSend  (4 usages found)
+                            131 {Address: minterAcc.GetAddress().String(), Coins: origCoins},
+                            145 {Address: minterAcc.GetAddress().String(), Coins: origCoins},
+                            160 suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
+                            162 suite.mockInputOutputCoins([]authtypes.AccountI{minterAcc}, accAddrs[:2])
+                        TestMsgSend  (5 usages found)
+                            78 FromAddress: minterAcc.GetAddress().String(),
+                            88 FromAddress: minterAcc.GetAddress().String(),
+                            89 ToAddress:   baseAcc.Address,
+                            100 suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
+                            102 suite.mockSendCoins(suite.ctx, minterAcc, baseAcc.GetAddress())
+                x/bank/simulation  (2 usages found)
+                    operations_test.go  (2 usages found)
+                        getTestingAccounts  (2 usages found)
+                            197 acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
+                            198 suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+                x/bank/types  (11 usages found)
+                    send_authorization_test.go  (11 usages found)
+                        TestSendAuthorization  (11 usages found)
+                            39 require.True(t, resp.Delete)
+                            40 require.Nil(t, resp.Updated)
+                            51 require.False(t, resp.Delete)
+                            52 require.NotNil(t, resp.Updated)
+                            54 require.Equal(t, sendAuth.String(), resp.Updated.String())
+                            57 resp, err = resp.Updated.Accept(ctx, send)
+                            59 require.True(t, resp.Delete)
+                            60 require.Nil(t, resp.Updated)
+                            69 require.False(t, resp.Accept)
+                            70 require.False(t, resp.Delete)
+                            71 require.Nil(t, resp.Updated)

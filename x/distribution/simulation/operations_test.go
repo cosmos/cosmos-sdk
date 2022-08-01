@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -158,8 +159,8 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 
 	// set outstanding rewards
 	valCommission := sdk.NewDecCoins(
-		sdk.NewDecCoinFromDec(tokenName, sdk.NewDec(5).Quo(sdk.NewDec(2))),
-		sdk.NewDecCoinFromDec("stake", sdk.NewDec(1).Quo(sdk.NewDec(1))),
+		sdk.NewDecCoinFromDec(tokenName, math.LegacyNewDec(5).Quo(math.LegacyNewDec(2))),
+		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1).Quo(math.LegacyNewDec(1))),
 	)
 
 	suite.distrKeeper.SetValidatorOutstandingRewards(suite.ctx, validator0.GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission})
@@ -283,7 +284,7 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 	require.NoError(err)
 	validator, err = validator.SetInitialCommission(commission)
 	require.NoError(err)
-	validator.DelegatorShares = sdk.NewDec(100)
+	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = sdk.NewInt(1000000)
 
 	suite.stakingKeeper.SetValidator(suite.ctx, validator)

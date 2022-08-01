@@ -21,7 +21,7 @@ func NewMinter(inflation, annualProvisions sdk.Dec) Minter {
 func InitialMinter(inflation sdk.Dec) Minter {
 	return NewMinter(
 		inflation,
-		sdk.NewDec(0),
+		math.LegacyNewDec(0),
 	)
 }
 
@@ -54,7 +54,7 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
 	inflationRateChangePerYear := sdk.OneDec().
 		Sub(bondedRatio.Quo(params.GoalBonded)).
 		Mul(params.InflationRateChange)
-	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
+	inflationRateChange := inflationRateChangePerYear.Quo(math.LegacyNewDec(int64(params.BlocksPerYear)))
 
 	// adjust the new annual inflation for this next cycle
 	inflation := m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative

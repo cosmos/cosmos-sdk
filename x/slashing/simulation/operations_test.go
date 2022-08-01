@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -202,7 +203,7 @@ func getTestingValidator(ctx sdk.Context, stakingKeeper *stakingkeeper.Keeper, a
 		return stakingtypes.Validator{}, fmt.Errorf("failed to set initial commission: %w", err)
 	}
 
-	validator.DelegatorShares = sdk.NewDec(100)
+	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = sdk.NewInt(1000000)
 
 	stakingKeeper.SetValidator(ctx, validator)

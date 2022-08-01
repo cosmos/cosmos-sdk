@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +13,7 @@ import (
 func TestNextInflation(t *testing.T) {
 	minter := DefaultInitialMinter()
 	params := DefaultParams()
-	blocksPerYr := sdk.NewDec(int64(params.BlocksPerYear))
+	blocksPerYr := math.LegacyNewDec(int64(params.BlocksPerYear))
 
 	// Governing Mechanism:
 	//    inflationRateChangePerYear = (1- BondedRatio/ GoalBonded) * MaxInflationRateChange
@@ -74,7 +75,7 @@ func TestBlockProvision(t *testing.T) {
 		{(secondsPerYear / 5) / 2, 0},
 	}
 	for i, tc := range tests {
-		minter.AnnualProvisions = sdk.NewDec(tc.annualProvisions)
+		minter.AnnualProvisions = math.LegacyNewDec(tc.annualProvisions)
 		provisions := minter.BlockProvision(params)
 
 		expProvisions := sdk.NewCoin(params.MintDenom,
@@ -99,7 +100,7 @@ func BenchmarkBlockProvision(b *testing.B) {
 
 	s1 := rand.NewSource(100)
 	r1 := rand.New(s1)
-	minter.AnnualProvisions = sdk.NewDec(r1.Int63n(1000000))
+	minter.AnnualProvisions = math.LegacyNewDec(r1.Int63n(1000000))
 
 	// run the BlockProvision function b.N times
 	for n := 0; n < b.N; n++ {

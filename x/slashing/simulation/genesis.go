@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -40,12 +41,12 @@ func GenDowntimeJailDuration(r *rand.Rand) time.Duration {
 
 // GenSlashFractionDoubleSign randomized SlashFractionDoubleSign
 func GenSlashFractionDoubleSign(r *rand.Rand) sdk.Dec {
-	return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1)))
+	return math.LegacyNewDec(1).Quo(math.LegacyNewDec(int64(r.Intn(50) + 1)))
 }
 
 // GenSlashFractionDowntime randomized SlashFractionDowntime
 func GenSlashFractionDowntime(r *rand.Rand) sdk.Dec {
-	return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1)))
+	return math.LegacyNewDec(1).Quo(math.LegacyNewDec(int64(r.Intn(200) + 1)))
 }
 
 // RandomizedGenState generates a random GenesisState for slashing

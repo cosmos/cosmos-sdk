@@ -59,7 +59,7 @@ func TestMsgDecode(t *testing.T) {
 // test ValidateBasic for MsgCreateValidator
 func TestMsgCreateValidator(t *testing.T) {
 	commission1 := types.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	commission2 := types.NewCommissionRates(sdk.NewDec(5), sdk.NewDec(5), sdk.NewDec(5))
+	commission2 := types.NewCommissionRates(math.LegacyNewDec(5), math.LegacyNewDec(5), math.LegacyNewDec(5))
 
 	tests := []struct {
 		name, moniker, identity, website, securityContact, details string
@@ -285,7 +285,7 @@ func TestMsgUpdateParamsValidateBasic(t *testing.T) {
 					MaxEntries:        types.DefaultMaxEntries,
 					MaxValidators:     types.DefaultMaxValidators,
 					HistoricalEntries: types.DefaultHistoricalEntries,
-					MinCommissionRate: sdk.NewDec(-1),
+					MinCommissionRate: math.LegacyNewDec(-1),
 					BondDenom:         "denom",
 				},
 			},
@@ -301,7 +301,7 @@ func TestMsgUpdateParamsValidateBasic(t *testing.T) {
 					MaxEntries:        types.DefaultMaxEntries,
 					MaxValidators:     types.DefaultMaxValidators,
 					HistoricalEntries: types.DefaultHistoricalEntries,
-					MinCommissionRate: sdk.NewDec(2),
+					MinCommissionRate: math.LegacyNewDec(2),
 					BondDenom:         "denom",
 				},
 			},

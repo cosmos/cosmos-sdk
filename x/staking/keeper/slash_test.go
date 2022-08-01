@@ -133,12 +133,12 @@ func TestSlashRedelegation(t *testing.T) {
 	// set a redelegation with an expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(5, 0), sdk.NewInt(10), sdk.NewDec(10))
+		time.Unix(5, 0), sdk.NewInt(10), math.LegacyNewDec(10))
 
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDec(10))
+	del := types.NewDelegation(addrDels[0], addrVals[1], math.LegacyNewDec(10))
 	app.StakingKeeper.SetDelegation(ctx, del)
 
 	// started redelegating prior to the current height, stake didn't contribute to infraction

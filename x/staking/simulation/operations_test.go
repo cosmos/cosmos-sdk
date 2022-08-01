@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -368,7 +369,7 @@ func getTestingValidator(t *testing.T, app *simapp.SimApp, ctx sdk.Context, acco
 	validator, err := validator.SetInitialCommission(commission)
 	require.NoError(t, err)
 
-	validator.DelegatorShares = sdk.NewDec(100)
+	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
 
 	app.StakingKeeper.SetValidator(ctx, validator)

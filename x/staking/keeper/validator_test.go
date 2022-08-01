@@ -147,7 +147,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 
 	// burn half the delegator shares
 	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validator)
-	validator, burned := validator.RemoveDelShares(delSharesCreated.Quo(sdk.NewDec(2)))
+	validator, burned := validator.RemoveDelShares(delSharesCreated.Quo(math.LegacyNewDec(2)))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 50), burned)
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true) // update the validator, possibly kicking it out
 	require.False(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
@@ -574,8 +574,8 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	// validator 3 kicked out temporarily
 	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validators[3])
-	rmTokens := validators[3].TokensFromShares(sdk.NewDec(201)).TruncateInt()
-	validators[3], _ = validators[3].RemoveDelShares(sdk.NewDec(201))
+	rmTokens := validators[3].TokensFromShares(math.LegacyNewDec(201)).TruncateInt()
+	validators[3], _ = validators[3].RemoveDelShares(math.LegacyNewDec(201))
 
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, rmTokens))))

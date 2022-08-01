@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,8 +16,8 @@ const (
 
 var (
 	DefaultMinSignedPerWindow      = sdk.NewDecWithPrec(5, 1)
-	DefaultSlashFractionDoubleSign = sdk.NewDec(1).Quo(sdk.NewDec(20))
-	DefaultSlashFractionDowntime   = sdk.NewDec(1).Quo(sdk.NewDec(100))
+	DefaultSlashFractionDoubleSign = math.LegacyNewDec(1).Quo(math.LegacyNewDec(20))
+	DefaultSlashFractionDowntime   = math.LegacyNewDec(1).Quo(math.LegacyNewDec(100))
 )
 
 // NewParams creates a new Params object

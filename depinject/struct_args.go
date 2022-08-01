@@ -172,7 +172,7 @@ func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int, erro
 			continue
 		}
 		if !res.Elem().Field(i).CanSet() {
-			return reflect.Value{}, 0, fmt.Errorf("using value obtained using unexported field")
+			return reflect.Value{}, 0, fmt.Errorf("using value obtained using unexported field %s from %s on package %s", f.Name, res.Elem().String(), f.PkgPath)
 		}
 
 		res.Elem().Field(i).Set(values[j])

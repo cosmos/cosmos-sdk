@@ -373,7 +373,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(tt *testing.T) {
 			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-			txGen := simapp.MakeTestEncodingConfig().TxConfig
+			txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 			_, _, err = simapp.SignCheckDeliver(tt, txGen, app.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
 			if len(tc.expInError) > 0 {
 				require.Error(tt, err)

@@ -203,7 +203,13 @@ Object: /cosmos.gov.v1.Vote
 
 ### `google.protobuf.Timestamp`
 
-Rendered as either ISO8601 (`2021-01-01T12:00:00Z`).
+Rendered as either [RFC3339](https://tools.ietf.org/html/rfc3339) (e.g. `2021-01-01T12:00:00Z`).
+
+#### Examples
+
+- Time with second precision: `2019-07-02T13:00:34`
+- With fractional seconds: `2019-07-02T13:00:34.090909090`
+- With time zone (UTC+7): `2019-07-02T13:00:34.090909090+07:00`
 
 ### `google.protobuf.Duration` (TODO)
 

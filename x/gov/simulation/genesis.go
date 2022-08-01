@@ -36,7 +36,7 @@ func GenDepositParamsMinDeposit(r *rand.Rand) sdk.Coins {
 	return sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simulation.RandIntBetween(r, 1, 1e3))))
 }
 
-// GenDepositMinInitialPercent  randomized DepositMinInitialPercent
+// GenDepositMinInitialRatio randomized DepositMinInitialRatio
 func GenDepositMinInitialDepositRatio(r *rand.Rand) sdk.Dec {
 	return sdk.NewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdk.NewDec(100))
 }

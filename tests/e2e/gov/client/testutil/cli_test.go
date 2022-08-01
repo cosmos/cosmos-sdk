@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
@@ -22,11 +21,11 @@ func TestIntegrationTestSuite(t *testing.T) {
 	cfg.NumValidators = 1
 	suite.Run(t, testutil.NewIntegrationTestSuite(cfg))
 
-	dp := v1.NewDepositParams(sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, v1.DefaultMinDepositTokens)), time.Duration(15)*time.Second)
-	vp := v1.NewVotingParams(time.Duration(5) * time.Second)
 	genesisState := v1.DefaultGenesisState()
-	genesisState.DepositParams = &dp
-	genesisState.VotingParams = &vp
+	maxDepPeriod := time.Duration(15) * time.Second
+	votingPeriod := time.Duration(5) * time.Second
+	genesisState.Params.MaxDepositPeriod = &maxDepPeriod
+	genesisState.Params.VotingPeriod = &votingPeriod
 	bz, err := cfg.Codec.MarshalJSON(genesisState)
 	require.NoError(t, err)
 	cfg.GenesisState["gov"] = bz

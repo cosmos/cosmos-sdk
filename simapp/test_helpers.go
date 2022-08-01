@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -176,7 +177,7 @@ func SetupWithGenesisAccounts(t *testing.T, genAccs []authtypes.GenesisAccount, 
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
 // that also act as delegators.
-func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
+func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) map[string]proto.Message {
 	t.Helper()
 
 	privVal := mock.NewPV()
@@ -197,7 +198,7 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 		},
 	}
 
-	genesisState := NewDefaultGenesisState(app.appCodec)
+	genesisState := NewDefaultGenesisState()
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balances...)
 	require.NoError(t, err)
 

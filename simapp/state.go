@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -209,7 +210,7 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 		panic(err)
 	}
 
-	var appState GenesisState
+	var appState map[string]proto.Message
 	err = json.Unmarshal(genesis.AppState, &appState)
 	if err != nil {
 		panic(err)

@@ -85,7 +85,7 @@ func (suite *InfractionTestSuite) TestHandleDoubleSign() {
 	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
 	// execute end-blocker and verify validator attributes
-	//staking.EndBlocker(ctx, suite.stakingKeeper)
+	staking.EndBlocker(ctx, suite.stakingKeeper)
 	suite.Equal(
 		suite.bankKeeper.GetAllBalances(ctx, sdk.AccAddress(operatorAddr)).String(),
 		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, initAmt.Sub(selfDelegation))).String(),

@@ -145,7 +145,7 @@ message MsgFooBar {
 
 When this option is set to true on a `Msg`, the implementation CANNOT use the default value renderers to render the `Msg`. Instead, it MUST check that a custom `Msg`-renderer is implemented for `MsgFooBar` (e.g. registered in a registry), or else the implementation MUST throw an error or panic.
 
-Moreover, the implementation must provide 2 functions: one for formatting from Protobuf to string, and one for parsing string to Protobuf. To satisfy point #1, these 2 functions MUST be bijective with each other as inverse.
+Moreover, the implementation must provide 2 functions: one for formatting from Protobuf to string, and one for parsing string to Protobuf. These 2 functions are provided by the application devloper. To satisfy point #1, these 2 functions MUST be bijective with each other as inverse.
 
 Bijectivity of custom `Msg`-renderers SHOULD be checked with best effort by the SDK on node startup. To achieve this, we plan to use a similar technique to property testing, whereby a set of random inputs are generated, and passed into the relevant `Msg`. We then test that the composition of the two custom functions, formatting and parsing, result in the original Protobuf `Msg`:
 

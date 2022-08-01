@@ -71,6 +71,10 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Sprintf("invalid authority address: %s", authority))
+	}
+
 	// If MaxMetadataLen not set by app developer, set to default value.
 	if config.MaxMetadataLen == 0 {
 		config.MaxMetadataLen = types.DefaultConfig().MaxMetadataLen

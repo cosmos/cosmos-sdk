@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/exported"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v1"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -42,35 +41,6 @@ func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	return nil
 }
 
-func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.ParamSubspace, cdc codec.BinaryCodec) error {
-	store := ctx.KVStore(storeKey)
-
-	dp := govv1.DepositParams{}
-	vp := govv1.VotingParams{}
-	tp := govv1.TallyParams{}
-	legacySubspace.Get(ctx, govv1.ParamStoreKeyDepositParams, &dp)
-	legacySubspace.Get(ctx, govv1.ParamStoreKeyVotingParams, &vp)
-	legacySubspace.Get(ctx, govv1.ParamStoreKeyTallyParams, &tp)
-
-	params := govv1.NewParams(
-		dp.MinDeposit,
-		*dp.MaxDepositPeriod,
-		*vp.VotingPeriod,
-		tp.Quorum,
-		tp.Threshold,
-		tp.VetoThreshold,
-	)
-
-	bz, err := cdc.Marshal(&params)
-	if err != nil {
-		return err
-	}
-
-	store.Set(ParamsKey, bz)
-
-	return nil
-}
-
 // MigrateStore performs in-place store migrations from v0.43 to v0.46. The
 // migration includes:
 //
@@ -78,9 +48,5 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.ParamSubspace, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 
-	if err := migrateProposals(store, cdc); err != nil {
-		return err
-	}
-
-	return migrateParams(ctx, storeKey, legacySubspace, cdc)
+	return migrateProposals(store, cdc)
 }

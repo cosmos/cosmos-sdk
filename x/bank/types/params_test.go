@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -18,7 +19,7 @@ func Test_validateSendEnabledParam(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"invalid type", args{sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())}, true},
+		{"invalid type", args{sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())}, true},
 
 		{"invalid empty denom send enabled", args{*NewSendEnabled("", true)}, true},
 		{"invalid empty denom send disabled", args{*NewSendEnabled("", false)}, true},

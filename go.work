@@ -1,0 +1,15 @@
+go 1.18
+
+use (
+	.
+	./api
+	./client/v2
+	./core
+	./db
+	./depinject
+	./errors
+	./math
+	./orm
+	./store/tools/ics23
+	./tx
+)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -171,7 +172,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	var err error
 
-	bondedPoolAmt := sdk.ZeroInt()
+	bondedPoolAmt := math.ZeroInt()
 	for i := range validators {
 		validators[i], err = types.NewValidator(
 			sdk.ValAddress(addrs[i]),

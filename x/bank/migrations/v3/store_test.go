@@ -3,20 +3,21 @@ package v3_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	v3 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestMigrateStore(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
@@ -41,7 +42,7 @@ func TestMigrateStore(t *testing.T) {
 	for _, b := range balances {
 		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
 		bz := addrPrefixStore.Get([]byte(b.Denom))
-		var expected sdk.Int
+		var expected math.Int
 		require.NoError(t, expected.Unmarshal(bz))
 		require.Equal(t, expected, b.Amount)
 	}
@@ -54,7 +55,7 @@ func TestMigrateStore(t *testing.T) {
 }
 
 func TestMigrateDenomMetaData(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
@@ -64,9 +65,9 @@ func TestMigrateDenomMetaData(t *testing.T) {
 			Symbol:      "ATOM",
 			Description: "The native staking token of the Cosmos Hub.",
 			DenomUnits: []*types.DenomUnit{
-				{"uatom", uint32(0), []string{"microatom"}},
-				{"matom", uint32(3), []string{"milliatom"}},
-				{"atom", uint32(6), nil},
+				{Denom: "uatom", Exponent: uint32(0), Aliases: []string{"microatom"}},
+				{Denom: "matom", Exponent: uint32(3), Aliases: []string{"milliatom"}},
+				{Denom: "atom", Exponent: uint32(6), Aliases: nil},
 			},
 			Base:    "uatom",
 			Display: "atom",
@@ -76,9 +77,9 @@ func TestMigrateDenomMetaData(t *testing.T) {
 			Symbol:      "TOKEN",
 			Description: "The native staking token of the Token Hub.",
 			DenomUnits: []*types.DenomUnit{
-				{"1token", uint32(5), []string{"decitoken"}},
-				{"2token", uint32(4), []string{"centitoken"}},
-				{"3token", uint32(7), []string{"dekatoken"}},
+				{Denom: "1token", Exponent: uint32(5), Aliases: []string{"decitoken"}},
+				{Denom: "2token", Exponent: uint32(4), Aliases: []string{"centitoken"}},
+				{Denom: "3token", Exponent: uint32(7), Aliases: []string{"dekatoken"}},
 			},
 			Base:    "utoken",
 			Display: "token",

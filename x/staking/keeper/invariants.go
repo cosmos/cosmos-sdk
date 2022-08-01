@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -46,8 +47,8 @@ func AllInvariants(k *Keeper) sdk.Invariant {
 // reflects the tokens actively bonded and not bonded
 func ModuleAccountInvariants(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		bonded := sdk.ZeroInt()
-		notBonded := sdk.ZeroInt()
+		bonded := math.ZeroInt()
+		notBonded := math.ZeroInt()
 		bondedPool := k.GetBondedPool(ctx)
 		notBondedPool := k.GetNotBondedPool(ctx)
 		bondDenom := k.BondDenom(ctx)

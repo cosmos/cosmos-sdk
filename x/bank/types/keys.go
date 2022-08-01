@@ -16,9 +16,6 @@ const (
 	// RouterKey defines the module's message routing key
 	RouterKey = ModuleName
 
-	// QuerierRoute defines the module's query routing key
-	QuerierRoute = ModuleName
-
 	// ModuleQueryPath defines the ABCI query path of the module
 	ModuleQueryPath = "store/bank/key"
 )
@@ -66,6 +63,12 @@ func AddressAndDenomFromBalancesStore(key []byte) (sdk.AccAddress, string, error
 	}
 
 	return key[1 : addrBound+1], string(key[addrBound+1:]), nil
+}
+
+// CreatePrefixedAccountStoreKey returns the key for the given account and denomination.
+// This method can be used when performing an ABCI query for the balance of an account.
+func CreatePrefixedAccountStoreKey(addr []byte, denom []byte) []byte {
+	return append(CreateAccountBalancesPrefix(addr), denom...)
 }
 
 // CreateAccountBalancesPrefix creates the prefix for an account's balances.

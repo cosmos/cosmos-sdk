@@ -1,6 +1,8 @@
 package multi
 
 import (
+	"sort"
+
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/mem"
@@ -16,8 +18,16 @@ func MigrateFromV1(rootMultiStore *v1Store.Store, store2db dbm.Connection, store
 		*iavl.Store
 		name string
 	}
+	storeKeysByName := rootMultiStore.StoreKeysByName()
+	keys := make([]string, 0, len(storeKeysByName))
+	for key := range storeKeysByName {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
 	var stores []namedStore
-	for _, storeKey := range rootMultiStore.StoreKeysByName() {
+	for _, key := range keys {
+		storeKey := storeKeysByName[key]
 		keyName := storeKey.Name()
 		switch store := rootMultiStore.GetStoreByName(keyName).(type) {
 		case *iavl.Store:

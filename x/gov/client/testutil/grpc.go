@@ -3,13 +3,12 @@ package testutil
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/gogo/protobuf/proto"
 )
 
 func (s *IntegrationTestSuite) TestGetProposalGRPC() {
@@ -357,9 +356,10 @@ func (s *IntegrationTestSuite) TestGetTallyGRPC() {
 func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 	val := s.network.Validators[0]
 
-	dp := v1.DefaultDepositParams()
-	vp := v1.DefaultVotingParams()
-	tp := v1.DefaultTallyParams()
+	params := v1.DefaultParams()
+	dp := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
+	vp := v1.NewVotingParams(params.VotingPeriod)
+	tp := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
 
 	testCases := []struct {
 		name       string
@@ -378,21 +378,21 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamDeposit),
 			false,
 			&v1.QueryParamsResponse{},
-			&v1.QueryParamsResponse{DepositParams: &dp},
+			&v1.QueryParamsResponse{DepositParams: &dp, Params: &params},
 		},
 		{
 			"get vote params",
 			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamVoting),
 			false,
 			&v1.QueryParamsResponse{},
-			&v1.QueryParamsResponse{VotingParams: &vp},
+			&v1.QueryParamsResponse{VotingParams: &vp, Params: &params},
 		},
 		{
 			"get tally params",
 			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamTallying),
 			false,
 			&v1.QueryParamsResponse{},
-			&v1.QueryParamsResponse{TallyParams: &tp},
+			&v1.QueryParamsResponse{TallyParams: &tp, Params: &params},
 		},
 	}
 

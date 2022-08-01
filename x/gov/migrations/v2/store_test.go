@@ -1,4 +1,4 @@
-package v043_test
+package v2_test
 
 import (
 	"bytes"
@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	v042gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v042"
-	v043gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v043"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v1"
+	v2 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -40,32 +40,32 @@ func TestMigrateStore(t *testing.T) {
 	}{
 		{
 			"ProposalKey",
-			v042gov.ProposalKey(proposalID), dummyValue,
+			v1.ProposalKey(proposalID), dummyValue,
 			types.ProposalKey(proposalID), dummyValue,
 		},
 		{
 			"ActiveProposalQueue",
-			v042gov.ActiveProposalQueueKey(proposalID, now), dummyValue,
+			v1.ActiveProposalQueueKey(proposalID, now), dummyValue,
 			types.ActiveProposalQueueKey(proposalID, now), dummyValue,
 		},
 		{
 			"InactiveProposalQueue",
-			v042gov.InactiveProposalQueueKey(proposalID, now), dummyValue,
+			v1.InactiveProposalQueueKey(proposalID, now), dummyValue,
 			types.InactiveProposalQueueKey(proposalID, now), dummyValue,
 		},
 		{
 			"ProposalIDKey",
-			v042gov.ProposalIDKey, dummyValue,
+			v1.ProposalIDKey, dummyValue,
 			types.ProposalIDKey, dummyValue,
 		},
 		{
 			"DepositKey",
-			v042gov.DepositKey(proposalID, addr1), dummyValue,
+			v1.DepositKey(proposalID, addr1), dummyValue,
 			types.DepositKey(proposalID, addr1), dummyValue,
 		},
 		{
 			"VotesKeyPrefix",
-			v042gov.VoteKey(proposalID, addr1), oldVoteValue,
+			v1.VoteKey(proposalID, addr1), oldVoteValue,
 			types.VoteKey(proposalID, addr1), newVoteValue,
 		},
 	}
@@ -75,8 +75,8 @@ func TestMigrateStore(t *testing.T) {
 		store.Set(tc.oldKey, tc.oldValue)
 	}
 
-	// Run migrations.
-	err := v043gov.MigrateStore(ctx, govKey, cdc)
+	// Run migratio
+	err := v2.MigrateStore(ctx, govKey, cdc)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

@@ -203,7 +203,7 @@ func SimulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 
 		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
-		votingPeriod := k.GetVotingParams(ctx).VotingPeriod
+		votingPeriod := k.GetParams(ctx).VotingPeriod
 
 		fops := make([]simtypes.FutureOperation, numVotes+1)
 		for i := 0; i < numVotes; i++ {
@@ -385,7 +385,7 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, bk typ
 		return nil, true, nil // skip
 	}
 
-	minDeposit := k.GetDepositParams(ctx).MinDeposit
+	minDeposit := k.GetParams(ctx).MinDeposit
 	denomIndex := r.Intn(len(minDeposit))
 	denom := minDeposit[denomIndex].Denom
 

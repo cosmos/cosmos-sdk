@@ -18,9 +18,6 @@ const (
 
 	// RouterKey is the message route for gov
 	RouterKey = ModuleName
-
-	// QuerierRoute is the querier route for gov
-	QuerierRoute = ModuleName
 )
 
 // Keys for governance store

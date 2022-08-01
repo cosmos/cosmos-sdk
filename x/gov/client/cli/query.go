@@ -32,8 +32,8 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryProposals(),
 		GetCmdQueryVote(),
 		GetCmdQueryVotes(),
-		GetCmdQueryParam(),
 		GetCmdQueryParams(),
+		GetCmdQueryParam(),
 		GetCmdQueryProposer(),
 		GetCmdQueryDeposit(),
 		GetCmdQueryDeposits(),
@@ -532,23 +532,8 @@ $ %s query gov params
 
 			// Query store for all 3 params
 			ctx := cmd.Context()
-			votingRes, err := queryClient.Params(
-				ctx,
-				&v1.QueryParamsRequest{ParamsType: "voting"},
-			)
-			if err != nil {
-				return err
-			}
 
-			tallyRes, err := queryClient.Params(
-				ctx,
-				&v1.QueryParamsRequest{ParamsType: "tallying"},
-			)
-			if err != nil {
-				return err
-			}
-
-			depositRes, err := queryClient.Params(
+			res, err := queryClient.Params(
 				ctx,
 				&v1.QueryParamsRequest{ParamsType: "deposit"},
 			)
@@ -556,13 +541,13 @@ $ %s query gov params
 				return err
 			}
 
-			params := v1.NewParams(
-				*votingRes.GetVotingParams(),
-				*tallyRes.GetTallyParams(),
-				*depositRes.GetDepositParams(),
-			)
+			vp := v1.NewVotingParams(res.Params.VotingPeriod)
+			res.VotingParams = &vp
 
-			return clientCtx.PrintObjectLegacy(params)
+			tp := v1.NewTallyParams(res.Params.Quorum, res.Params.Threshold, res.Params.VetoThreshold)
+			res.TallyParams = &tp
+
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -579,7 +564,6 @@ func GetCmdQueryParam() *cobra.Command {
 		Short: "Query the parameters (voting|tallying|deposit) of the governance process",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query the all the parameters for the governance process.
-
 Example:
 $ %s query gov param voting
 $ %s query gov param tallying

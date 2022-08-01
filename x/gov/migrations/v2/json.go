@@ -1,4 +1,4 @@
-package v043
+package v2
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"

@@ -10,6 +10,8 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -384,7 +386,7 @@ func (s *EndToEndTestSuite) TestNewSendTxCmdGenOnly() {
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	}
 
-	bz, err := MsgSendExec(clientCtx, from, to, amount, args...)
+	bz, err := clitestutil.MsgSendExec(clientCtx, from, to, amount, args...)
 	s.Require().NoError(err)
 	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
 	s.Require().NoError(err)
@@ -413,7 +415,7 @@ func (s *EndToEndTestSuite) TestNewSendTxCmdDryRun() {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	_, err := MsgSendExec(clientCtx, from, to, amount, args...)
+	_, err := clitestutil.MsgSendExec(clientCtx, from, to, amount, args...)
 	s.Require().NoError(err)
 
 	w.Close()
@@ -511,7 +513,7 @@ func (s *EndToEndTestSuite) TestNewSendTxCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			bz, err := MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			bz, err := clitestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -663,4 +665,16 @@ func (s *EndToEndTestSuite) TestNewMultiSendTxCmd() {
 func NewCoin(denom string, amount math.Int) *sdk.Coin {
 	coin := sdk.NewCoin(denom, amount)
 	return &coin
+}
+
+func MsgMultiSendExec(clientCtx client.Context, from sdk.AccAddress, to []sdk.AccAddress, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := []string{from.String()}
+	for _, addr := range to {
+		args = append(args, addr.String())
+	}
+
+	args = append(args, amount.String())
+	args = append(args, extraArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewMultiSendTxCmd(), args)
 }

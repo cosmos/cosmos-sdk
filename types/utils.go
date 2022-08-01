@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	proto "github.com/gogo/protobuf/proto"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -144,8 +143,8 @@ func MarshalGenesisStateToJSON(gs map[string]proto.Message, cdc codec.JSONCodec,
 	}
 
 	if indent {
-		return tmjson.MarshalIndent(genStateJson, "", "  ")
+		return json.MarshalIndent(genStateJson, "", "  ")
 	}
 
-	return tmjson.Marshal(genStateJson)
+	return json.Marshal(genStateJson)
 }

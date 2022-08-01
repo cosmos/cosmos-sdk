@@ -200,11 +200,11 @@ func TestValidateInitialDeposit(t *testing.T) {
 
 			govKeeper := app.GovKeeper
 
-			params := v1.DefaultDepositParams()
+			params := v1.DefaultParams()
 			params.MinDeposit = tc.minDeposit
 			params.MinInitialDepositRatio = sdk.NewDec(tc.minInitialDepositPercent).Quo(sdk.NewDec(100)).String()
 
-			govKeeper.SetDepositParams(ctx, params)
+			govKeeper.SetParams(ctx, params)
 
 			err := govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit)
 

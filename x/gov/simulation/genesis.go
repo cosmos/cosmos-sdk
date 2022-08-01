@@ -19,7 +19,7 @@ import (
 const (
 	DepositParamsMinDeposit    = "deposit_params_min_deposit"
 	DepositParamsDepositPeriod = "deposit_params_deposit_period"
-	DepositMinInitialPercent   = "deposit_params_min_initial_percent"
+	DepositMinInitialRatio     = "deposit_params_min_initial_ratio"
 	VotingParamsVotingPeriod   = "voting_params_voting_period"
 	TallyParamsQuorum          = "tally_params_quorum"
 	TallyParamsThreshold       = "tally_params_threshold"
@@ -79,7 +79,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	var minInitialDepositRatio sdk.Dec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, DepositMinInitialPercent, &minInitialDepositRatio, simState.Rand,
+		simState.Cdc, DepositMinInitialRatio, &minInitialDepositRatio, simState.Rand,
 		func(r *rand.Rand) { minInitialDepositRatio = GenDepositMinInitialDepositRatio(r) },
 	)
 
@@ -109,9 +109,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	govGenesis := v1.NewGenesisState(
 		startingProposalID,
-		v1.NewDepositParams(minDeposit, depositPeriod).WithMinInitialDepositRatio(minInitialDepositRatio),
-		v1.NewVotingParams(votingPeriod),
-		v1.NewTallyParams(quorum, threshold, veto),
+		v1.NewParams(minDeposit, depositPeriod, votingPeriod, quorum.String(), threshold.String(), veto.String(), minInitialDepositRatio.String()),
 	)
 
 	bz, err := json.MarshalIndent(&govGenesis, "", " ")

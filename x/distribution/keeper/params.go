@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -34,12 +35,12 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 }
 
 // GetCommunityTax returns the current distribution community tax.
-func (k Keeper) GetCommunityTax(ctx sdk.Context) sdk.Dec {
+func (k Keeper) GetCommunityTax(ctx sdk.Context) math.LegacyDec {
 	return k.GetParams(ctx).CommunityTax
 }
 
 // GetBaseProposerReward returns the current distribution base proposer rate.
-func (k Keeper) GetBaseProposerReward(ctx sdk.Context) sdk.Dec {
+func (k Keeper) GetBaseProposerReward(ctx sdk.Context) math.LegacyDec {
 	return k.GetParams(ctx).BaseProposerReward
 }
 

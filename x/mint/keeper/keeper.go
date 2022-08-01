@@ -112,7 +112,7 @@ func (k Keeper) StakingTokenSupply(ctx sdk.Context) math.Int {
 
 // BondedRatio implements an alias call to the underlying staking keeper's
 // BondedRatio to be used in BeginBlocker.
-func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
+func (k Keeper) BondedRatio(ctx sdk.Context) math.LegacyDec {
 	return k.stakingKeeper.BondedRatio(ctx)
 }
 

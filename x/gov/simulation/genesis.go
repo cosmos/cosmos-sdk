@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -41,17 +42,17 @@ func GenVotingParamsVotingPeriod(r *rand.Rand) time.Duration {
 }
 
 // GenTallyParamsQuorum randomized TallyParamsQuorum
-func GenTallyParamsQuorum(r *rand.Rand) sdk.Dec {
+func GenTallyParamsQuorum(r *rand.Rand) math.LegacyDec {
 	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 334, 500)), 3)
 }
 
 // GenTallyParamsThreshold randomized TallyParamsThreshold
-func GenTallyParamsThreshold(r *rand.Rand) sdk.Dec {
+func GenTallyParamsThreshold(r *rand.Rand) math.LegacyDec {
 	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 450, 550)), 3)
 }
 
 // GenTallyParamsVeto randomized TallyParamsVeto
-func GenTallyParamsVeto(r *rand.Rand) sdk.Dec {
+func GenTallyParamsVeto(r *rand.Rand) math.LegacyDec {
 	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
 }
 

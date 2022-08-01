@@ -91,7 +91,7 @@ func TestBlockProvision(t *testing.T) {
 // previously using math.Int operations:
 // BenchmarkBlockProvision-4 5000000 220 ns/op
 //
-// using sdk.Dec operations: (current implementation)
+// using math.LegacyDec operations: (current implementation)
 // BenchmarkBlockProvision-4 3000000 429 ns/op
 func BenchmarkBlockProvision(b *testing.B) {
 	b.ReportAllocs()

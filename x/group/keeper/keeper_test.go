@@ -8,24 +8,28 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/libs/log"
 	tmtime "github.com/tendermint/tendermint/libs/time"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 type TestSuite struct {
@@ -40,29 +44,60 @@ type TestSuite struct {
 	policy            group.DecisionPolicy
 	groupKeeper       keeper.Keeper
 	blockTime         time.Time
-	bankKeeper        bankkeeper.Keeper
-	stakingKeeper     *stakingkeeper.Keeper
+	bankKeeper        *grouptestutil.MockBankKeeper
 	interfaceRegistry codectypes.InterfaceRegistry
+	accountKeeper     *grouptestutil.MockAccountKeeper
 }
 
 func (s *TestSuite) SetupTest() {
-	app, err := simtestutil.Setup(
-		grouptestutil.AppConfig,
-		&s.interfaceRegistry,
-		&s.bankKeeper,
-		&s.stakingKeeper,
-		&s.groupKeeper,
-	)
-	s.Require().NoError(err)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	// app, err := simtestutil.Setup(
+	// 	grouptestutil.AppConfig,
+	// 	&s.interfaceRegistry,
+	// 	&s.bankKeeper,
+	// 	&s.stakingKeeper,
+	// 	&s.groupKeeper,
+	// )
+	// s.Require().NoError(err)
+	// ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	s.blockTime = tmtime.Now()
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: s.blockTime})
+	// ctx = ctx.WithBlockHeader(tmproto.Header{Time: s.blockTime})
 
-	s.app = app
-	s.sdkCtx = ctx
-	s.ctx = sdk.WrapSDKContext(ctx)
-	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 6, sdk.NewInt(30000000))
+	// s.app = app
+	// s.sdkCtx = ctx
+	// s.ctx = sdk.WrapSDKContext(ctx)
+	s.addrs = simtestutil.CreateIncrementalAccounts(6)
+	key := sdk.NewKVStoreKey(group.StoreKey)
+
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+
+	// setup gomock and initialize some globally expected executions
+	ctrl := gomock.NewController(s.T())
+	s.bankKeeper = grouptestutil.NewMockBankKeeper(ctrl)
+	s.accountKeeper = grouptestutil.NewMockAccountKeeper(ctrl)
+
+	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[0])).AnyTimes()
+	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[1])).AnyTimes()
+	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[2])).AnyTimes()
+	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[3])).AnyTimes()
+	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[4]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[4])).AnyTimes()
+	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[5]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[5])).AnyTimes()
+
+	bApp := baseapp.NewBaseApp(
+		"group",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+
+	std.RegisterInterfaces(encCfg.InterfaceRegistry)
+	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+
+	config := group.DefaultConfig()
+	s.groupKeeper = keeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), s.accountKeeper, config)
+	s.ctx = testCtx.Ctx.WithBlockTime(s.blockTime)
+	s.sdkCtx = sdk.UnwrapSDKContext(s.ctx)
 
 	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{
@@ -92,7 +127,9 @@ func (s *TestSuite) SetupTest() {
 	addr, err := sdk.AccAddressFromBech32(policyRes.Address)
 	s.Require().NoError(err)
 	s.groupPolicyAddr = addr
-	s.Require().NoError(testutil.FundAccount(s.bankKeeper, s.sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+
+	// s.bankKeeper.EXPECT().SpendableCoins(testCtx, s.groupPolicyAddr).Return(bank)
+	s.Require().NoError(banktestutil.FundAccount(s.bankKeeper, s.sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 }
 
 func TestKeeperTestSuite(t *testing.T) {

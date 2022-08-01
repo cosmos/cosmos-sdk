@@ -432,10 +432,10 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	red, found := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
 	id := k.IncrementUnbondingId(ctx)
 	if found {
-		red.AddEntry(creationHeight, minTime, balance, sharesDst, id)
+		red.AddEntry(creationHeight, minTime, balance, sharesDst, false, id)
 	} else {
 		red = types.NewRedelegation(delegatorAddr, validatorSrcAddr,
-			validatorDstAddr, creationHeight, minTime, balance, sharesDst, id)
+			validatorDstAddr, creationHeight, minTime, balance, sharesDst, false, id)
 	}
 
 	k.SetRedelegation(ctx, red)
@@ -703,9 +703,9 @@ func (k Keeper) Unbond(
 	return amount, nil
 }
 
-// getBeginInfo returns the completion time and creation height of a
-// redelegation, along with a boolean signaling if the redelegation is
-// complete based on the source validator.
+// getBeginInfo returns the completion time and height of a redelegation, along
+// with a boolean signaling if the redelegation is complete based on the source
+// validator.
 func (k Keeper) getBeginInfo(
 	ctx sdk.Context, valSrcAddr sdk.ValAddress,
 ) (completionTime time.Time, height int64, completeNow bool) {
@@ -785,7 +785,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 
 	// loop through all the entries and try to complete unbonding mature entries
 	for i := 0; i < len(ubd.Entries); i++ {
-		entry := ubd.Entries[i]
+		entry := &ubd.Entries[i]
 		if entry.IsMature(ctxTime) && !entry.UnbondingOnHold {
 			// Proceed with unbonding
 			ubd.RemoveEntry(int64(i))
@@ -889,7 +889,7 @@ func (k Keeper) CompleteRedelegation(
 
 	// loop through all the entries and try to complete mature redelegation entries
 	for i := 0; i < len(red.Entries); i++ {
-		entry := red.Entries[i]
+		entry := &red.Entries[i]
 		if entry.IsMature(ctxTime) && !entry.UnbondingOnHold {
 			red.RemoveEntry(int64(i))
 			i--

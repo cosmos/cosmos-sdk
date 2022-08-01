@@ -84,11 +84,11 @@ func TestMigrateJSON(t *testing.T) {
 				"denom": "stake"
 			}
 		],
+		"min_initial_deposit_ratio": "",
 		"quorum": "0.334000000000000000",
 		"threshold": "0.500000000000000000",
 		"veto_threshold": "0.334000000000000000",
-		"voting_period": "172800s",
-		"min_initial_deposit_ratio": ""
+		"voting_period": "172800s"
 	},
 	"proposals": [
 		{

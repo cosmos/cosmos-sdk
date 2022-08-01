@@ -2,6 +2,11 @@ package types_test
 
 import (
 	"testing"
+	"time"
+
+	"cosmossdk.io/math"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -37,7 +42,7 @@ func TestMsgDecode(t *testing.T) {
 	// now let's try to serialize the whole message
 
 	commission1 := types.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	msg, err := types.NewMsgCreateValidator(valAddr1, pk1, coinPos, types.Description{}, commission1, sdk.OneInt())
+	msg, err := types.NewMsgCreateValidator(valAddr1, pk1, coinPos, types.Description{}, commission1, math.OneInt())
 	require.NoError(t, err)
 	msgSerialized, err := cdc.MarshalInterface(msg)
 	require.NoError(t, err)
@@ -59,22 +64,22 @@ func TestMsgCreateValidator(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, securityContact, details string
 		CommissionRates                                            types.CommissionRates
-		minSelfDelegation                                          sdk.Int
+		minSelfDelegation                                          math.Int
 		validatorAddr                                              sdk.ValAddress
 		pubkey                                                     cryptotypes.PubKey
 		bond                                                       sdk.Coin
 		expectPass                                                 bool
 	}{
-		{"basic good", "a", "b", "c", "d", "e", commission1, sdk.OneInt(), valAddr1, pk1, coinPos, true},
-		{"partial description", "", "", "c", "", "", commission1, sdk.OneInt(), valAddr1, pk1, coinPos, true},
-		{"empty description", "", "", "", "", "", commission2, sdk.OneInt(), valAddr1, pk1, coinPos, false},
-		{"empty address", "a", "b", "c", "d", "e", commission2, sdk.OneInt(), emptyAddr, pk1, coinPos, false},
-		{"empty pubkey", "a", "b", "c", "d", "e", commission1, sdk.OneInt(), valAddr1, emptyPubkey, coinPos, false},
-		{"empty bond", "a", "b", "c", "d", "e", commission2, sdk.OneInt(), valAddr1, pk1, coinZero, false},
-		{"nil bond", "a", "b", "c", "d", "e", commission2, sdk.OneInt(), valAddr1, pk1, sdk.Coin{}, false},
-		{"zero min self delegation", "a", "b", "c", "d", "e", commission1, sdk.ZeroInt(), valAddr1, pk1, coinPos, false},
+		{"basic good", "a", "b", "c", "d", "e", commission1, math.OneInt(), valAddr1, pk1, coinPos, true},
+		{"partial description", "", "", "c", "", "", commission1, math.OneInt(), valAddr1, pk1, coinPos, true},
+		{"empty description", "", "", "", "", "", commission2, math.OneInt(), valAddr1, pk1, coinPos, false},
+		{"empty address", "a", "b", "c", "d", "e", commission2, math.OneInt(), emptyAddr, pk1, coinPos, false},
+		{"empty pubkey", "a", "b", "c", "d", "e", commission1, math.OneInt(), valAddr1, emptyPubkey, coinPos, false},
+		{"empty bond", "a", "b", "c", "d", "e", commission2, math.OneInt(), valAddr1, pk1, coinZero, false},
+		{"nil bond", "a", "b", "c", "d", "e", commission2, math.OneInt(), valAddr1, pk1, sdk.Coin{}, false},
+		{"zero min self delegation", "a", "b", "c", "d", "e", commission1, math.ZeroInt(), valAddr1, pk1, coinPos, false},
 		{"negative min self delegation", "a", "b", "c", "d", "e", commission1, sdk.NewInt(-1), valAddr1, pk1, coinPos, false},
-		{"delegation less than min self delegation", "a", "b", "c", "d", "e", commission1, coinPos.Amount.Add(sdk.OneInt()), valAddr1, pk1, coinPos, false},
+		{"delegation less than min self delegation", "a", "b", "c", "d", "e", commission1, coinPos.Amount.Add(math.OneInt()), valAddr1, pk1, coinPos, false},
 	}
 
 	for _, tc := range tests {
@@ -95,13 +100,13 @@ func TestMsgEditValidator(t *testing.T) {
 		name, moniker, identity, website, securityContact, details string
 		validatorAddr                                              sdk.ValAddress
 		expectPass                                                 bool
-		minSelfDelegation                                          sdk.Int
+		minSelfDelegation                                          math.Int
 	}{
-		{"basic good", "a", "b", "c", "d", "e", valAddr1, true, sdk.OneInt()},
-		{"partial description", "", "", "c", "", "", valAddr1, true, sdk.OneInt()},
-		{"empty description", "", "", "", "", "", valAddr1, false, sdk.OneInt()},
-		{"empty address", "a", "b", "c", "d", "e", emptyAddr, false, sdk.OneInt()},
-		{"nil int", "a", "b", "c", "d", "e", emptyAddr, false, sdk.Int{}},
+		{"basic good", "a", "b", "c", "d", "e", valAddr1, true, math.OneInt()},
+		{"partial description", "", "", "c", "", "", valAddr1, true, math.OneInt()},
+		{"empty description", "", "", "", "", "", valAddr1, false, math.OneInt()},
+		{"empty address", "a", "b", "c", "d", "e", emptyAddr, false, math.OneInt()},
+		{"nil int", "a", "b", "c", "d", "e", emptyAddr, false, math.Int{}},
 	}
 
 	for _, tc := range tests {
@@ -194,6 +199,156 @@ func TestMsgUndelegate(t *testing.T) {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
 			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+		}
+	}
+}
+
+func TestMsgUpdateParams(t *testing.T) {
+	msg := types.MsgUpdateParams{
+		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Params:    types.DefaultParams(),
+	}
+
+	require.Equal(t, []sdk.AccAddress{authtypes.NewModuleAddress(govtypes.ModuleName)}, msg.GetSigners())
+}
+
+func TestMsgUpdateParamsValidateBasic(t *testing.T) {
+	tests := []struct {
+		name            string
+		msgUpdateParams types.MsgUpdateParams
+		expFail         bool
+		expError        string
+	}{
+		{
+			"valid msg",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params:    types.DefaultParams(),
+			},
+			false,
+			"",
+		},
+		{
+			"negative unbounding time",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3 * -1,
+					MaxEntries:        types.DefaultMaxEntries,
+					MaxValidators:     types.DefaultMaxValidators,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					BondDenom:         "denom",
+				},
+			},
+			true,
+			"unbonding time must be positive:",
+		},
+		{
+			"cero value max validator",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3,
+					MaxEntries:        types.DefaultMaxEntries,
+					MaxValidators:     0,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					BondDenom:         "denom",
+				},
+			},
+			true,
+			"max validators must be positive:",
+		},
+		{
+			"cero value max validator",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3,
+					MaxEntries:        0,
+					MaxValidators:     types.DefaultMaxValidators,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					BondDenom:         "denom",
+				},
+			},
+			true,
+			"max entries must be positive:",
+		},
+		{
+			"negative commission rate",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3,
+					MaxEntries:        types.DefaultMaxEntries,
+					MaxValidators:     types.DefaultMaxValidators,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: sdk.NewDec(-1),
+					BondDenom:         "denom",
+				},
+			},
+			true,
+			"minimum commission rate cannot be negative:",
+		},
+		{
+			"negative commission rate",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3,
+					MaxEntries:        types.DefaultMaxEntries,
+					MaxValidators:     types.DefaultMaxValidators,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: sdk.NewDec(2),
+					BondDenom:         "denom",
+				},
+			},
+			true,
+			"minimum commission rate cannot be greater than 100",
+		},
+		{
+			"blank bonddenom",
+			types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3,
+					MaxEntries:        types.DefaultMaxEntries,
+					MaxValidators:     types.DefaultMaxValidators,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					BondDenom:         "",
+				},
+			},
+			true,
+			"bond denom cannot be blank",
+		},
+		{
+			"Invalid authority",
+			types.MsgUpdateParams{
+				Authority: "invalid",
+				Params: types.Params{
+					UnbondingTime:     time.Hour * 24 * 7 * 3,
+					MaxEntries:        types.DefaultMaxEntries,
+					MaxValidators:     types.DefaultMaxValidators,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					BondDenom:         "denom",
+				},
+			},
+			true,
+			"invalid authority address",
+		},
+	}
+
+	for _, tc := range tests {
+		err := tc.msgUpdateParams.ValidateBasic()
+		if tc.expFail {
+			require.Error(t, err)
+			require.Contains(t, err.Error(), tc.expError)
+		} else {
+			require.NoError(t, err)
 		}
 	}
 }

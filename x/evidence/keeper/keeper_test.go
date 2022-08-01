@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -76,18 +75,16 @@ type KeeperTestSuite struct {
 	ctx     sdk.Context
 	querier sdk.Querier
 
-	evidenceKeeper    keeper.Keeper
-	bankKeeper        *evidencetestutil.MockBankKeeper
-	accountKeeper     *evidencetestutil.MockAccountKeeper
-	slashingKeeper    *evidencetestutil.MockSlashingKeeper
-	stakingKeeper     *evidencetestutil.MockStakingKeeper
-	interfaceRegistry codectypes.InterfaceRegistry
-
-	queryClient types.QueryClient
+	evidenceKeeper keeper.Keeper
+	bankKeeper     *evidencetestutil.MockBankKeeper
+	accountKeeper  *evidencetestutil.MockAccountKeeper
+	slashingKeeper *evidencetestutil.MockSlashingKeeper
+	stakingKeeper  *evidencetestutil.MockStakingKeeper
+	queryClient    types.QueryClient
+	encCfg         moduletestutil.TestEncodingConfig
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	//var legacyAmino *codec.LegacyAmino
 	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 	key := sdk.NewKVStoreKey(types.StoreKey)
 	tkey := sdk.NewTransientStoreKey("evidence_transient_store")
@@ -116,20 +113,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 	suite.ctx = testCtx.WithBlockHeader(tmproto.Header{Height: 1})
-	//suite.querier = keeper.NewQuerier(*evidenceKeeper, legacyAmino)
-	//suite.app = app
-
-	//
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 
 	suite.accountKeeper = accountKeeper
-	///
-	//for i, addr := range valAddresses {
-	//	addr := sdk.AccAddress(addr)
-	//	accountkeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
-	//	//suite.accountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
-	//}
 
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.interfaceRegistry)
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, evidenceKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.evidenceKeeper = *evidenceKeeper

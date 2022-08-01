@@ -173,8 +173,8 @@ github.com/btcsuite/winsvc v1.0.0/go.mod h1:jsenWakMcC0zFBFurPLEAyrnc/teJEM1O46f
 github.com/bwesterb/go-ristretto v1.2.0/go.mod h1:fUIoIZaG73pV5biE2Blr2xEzDoMj7NFEuV9ekS419A0=
 github.com/c-bata/go-prompt v0.2.2/go.mod h1:VzqtzE2ksDBcdln8G7mk2RX9QyGjH+OVqOCSiVIqS34=
 github.com/casbin/casbin/v2 v2.1.2/go.mod h1:YcPU1XXisHhLzuxH9coDNf2FbKpjGlbCg3n9yuLkIJQ=
-github.com/celestiaorg/celestia-core v1.1.1-tm-v0.34.16.0.20220726183950-9b6ae383cd6a h1:6XQl36hzcdOAVYDb1QmZ7+uATA9i+SiAlukBrAkJn9k=
-github.com/celestiaorg/celestia-core v1.1.1-tm-v0.34.16.0.20220726183950-9b6ae383cd6a/go.mod h1:bFyLvRuHAPewkGy4WazXJhfYhdV4u79iuoYaeNL3EO4=
+github.com/celestiaorg/celestia-core v1.3.0-tm-v0.34.20 h1:Mq/3VB22g1iunaHBIsH2mD0Y/Pm34q6xxokKeHkXCD8=
+github.com/celestiaorg/celestia-core v1.3.0-tm-v0.34.20/go.mod h1:bFyLvRuHAPewkGy4WazXJhfYhdV4u79iuoYaeNL3EO4=
 github.com/celestiaorg/go-leopard v0.1.0 h1:28z2EkvKJIez5J9CEaiiUEC+OxalRLtTGJJ1oScfE1g=
 github.com/celestiaorg/go-leopard v0.1.0/go.mod h1:NtO/rjlB8dw2aq7jr06vZFKGvryQcTDXaNHelmPNOAM=
 github.com/celestiaorg/merkletree v0.0.0-20210714075610-a84dc3ddbbe4 h1:CJdIpo8n5MFP2MwK0gSRcOVlDlFdQJO1p+FqdxYzmvc=

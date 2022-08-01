@@ -39,7 +39,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-const ConsensusVersion = 5
+const ConsensusVersion = 4
 
 var (
 	_ module.AppModule           = AppModule{}

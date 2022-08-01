@@ -109,10 +109,6 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 		return result.Response, nil
 	}
 
-	// TODO: What happened to proof verification????
-	//
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/12740
-
 	return result.Response, nil
 }
 

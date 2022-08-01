@@ -97,9 +97,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	govGenesis := v1.NewGenesisState(
 		startingProposalID,
-		v1.NewDepositParams(minDeposit, depositPeriod),
-		v1.NewVotingParams(votingPeriod),
-		v1.NewTallyParams(quorum, threshold, veto),
+		v1.NewParams(minDeposit, depositPeriod, votingPeriod, quorum.String(), threshold.String(), veto.String()),
 	)
 
 	bz, err := json.MarshalIndent(&govGenesis, "", " ")

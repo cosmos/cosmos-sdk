@@ -1,4 +1,4 @@
-package v046
+package v3
 
 import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -27,8 +27,13 @@ func MigrateJSON(oldState *v1beta1.GenesisState) (*v1.GenesisState, error) {
 		Deposits:           convertToNewDeposits(oldState.Deposits),
 		Votes:              newVotes,
 		Proposals:          newProps,
-		DepositParams:      &depParams,
-		VotingParams:       &votingParms,
-		TallyParams:        &tallyParams,
+		Params: &v1.Params{
+			MinDeposit:       depParams.MinDeposit,
+			MaxDepositPeriod: depParams.MaxDepositPeriod,
+			VotingPeriod:     votingParms.VotingPeriod,
+			Quorum:           tallyParams.Quorum,
+			Threshold:        tallyParams.Threshold,
+			VetoThreshold:    tallyParams.VetoThreshold,
+		},
 	}, nil
 }

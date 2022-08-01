@@ -88,7 +88,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes bool, 
 		totalVotingPower = totalVotingPower.Add(votingPower)
 	}
 
-	tallyParams := keeper.GetTallyParams(ctx)
+	tallyParams := keeper.GetParams(ctx)
 	tallyResults = v1.NewTallyResultFromMap(results)
 
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.

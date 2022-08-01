@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
-	"time"
 
 	gogotypes "github.com/gogo/protobuf/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -274,7 +273,7 @@ func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) (ty
 // UnbondingToUnbonded switches a validator from unbonding state to unbonded state
 func (k Keeper) UnbondingToUnbonded(ctx sdk.Context, validator types.Validator) types.Validator {
 	if !validator.IsUnbonding() {
-		panic(fmt.Sprintf("bad state transition unbondingToUnbonded, validator: %v\n", validator))
+		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
 
 	return k.CompleteUnbondingValidator(ctx, validator)
@@ -307,18 +306,14 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types
 	// delete the validator by power index, as the key will change
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
-	// delete from queue if present
-	k.DeleteValidatorQueue(ctx, validator, validator.UnbondingTime, validator.UnbondingHeight)
-
 	validator = validator.UpdateStatus(types.Bonded)
-	validator.UnbondingHeight = 0
-	validator.UnbondingTime = time.Time{}
-	validator.UnbondingOnHold = false
-	validator.UnbondingId = 0
 
 	// save the now bonded validator record to the two referenced stores
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator)
+
+	// delete from queue if present
+	k.DeleteValidatorQueue(ctx, validator)
 
 	// trigger hook
 	consAddr, err := validator.GetConsAddr()
@@ -342,19 +337,11 @@ func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validat
 		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
 	}
 
-	consAddr, err := validator.GetConsAddr()
-	if err != nil {
-		return validator, err
-	}
-
 	validator = validator.UpdateStatus(types.Unbonding)
 
 	// set the unbonding completion time and completion height appropriately
 	validator.UnbondingTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
 	validator.UnbondingHeight = ctx.BlockHeader().Height
-
-	id := k.IncrementUnbondingId(ctx)
-	validator.UnbondingId = id
 
 	// save the now unbonded validator record and power index
 	k.SetValidator(ctx, validator)
@@ -363,8 +350,14 @@ func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	// Adds to unbonding validator queue
 	k.InsertUnbondingValidatorQueue(ctx, validator)
 
+	// trigger hook
+	consAddr, err := validator.GetConsAddr()
+	if err != nil {
+		return validator, err
+	}
 	k.AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator())
 
+	id := k.IncrementUnbondingId(ctx)
 	k.SetValidatorByUnbondingIndex(ctx, validator, id)
 
 	k.AfterUnbondingInitiated(ctx, id)
@@ -375,10 +368,6 @@ func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validat
 // perform all the store operations for when a validator status becomes unbonded
 func (k Keeper) CompleteUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	validator = validator.UpdateStatus(types.Unbonded)
-	validator.UnbondingHeight = 0
-	validator.UnbondingTime = time.Time{}
-	validator.UnbondingOnHold = false
-	validator.UnbondingId = 0
 	k.SetValidator(ctx, validator)
 
 	return validator

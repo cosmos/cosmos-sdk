@@ -94,12 +94,11 @@ func (d Delegations) String() (out string) {
 
 func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time, balance sdk.Int, id uint64) UnbondingDelegationEntry {
 	return UnbondingDelegationEntry{
-		CreationHeight:  creationHeight,
-		CompletionTime:  completionTime,
-		InitialBalance:  balance,
-		Balance:         balance,
-		UnbondingId:     id,
-		UnbondingOnHold: false,
+		CreationHeight: creationHeight,
+		CompletionTime: completionTime,
+		InitialBalance: balance,
+		Balance:        balance,
+		UnbondingId:    id,
 	}
 }
 
@@ -210,14 +209,14 @@ func (ubds UnbondingDelegations) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-func NewRedelegationEntry(creationHeight int64, completionTime time.Time, balance sdk.Int, sharesDst sdk.Dec, id uint64) RedelegationEntry {
+func NewRedelegationEntry(creationHeight int64, completionTime time.Time, balance sdk.Int, sharesDst sdk.Dec, onHold bool, id uint64) RedelegationEntry {
 	return RedelegationEntry{
 		CreationHeight:  creationHeight,
 		CompletionTime:  completionTime,
 		InitialBalance:  balance,
 		SharesDst:       sharesDst,
+		UnbondingOnHold: onHold,
 		UnbondingId:     id,
-		UnbondingOnHold: false,
 	}
 }
 
@@ -235,21 +234,21 @@ func (e RedelegationEntry) IsMature(currentTime time.Time) bool {
 //nolint:interfacer
 func NewRedelegation(
 	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress,
-	creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec, unbondingId uint64,
+	creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec, onHold bool, unbondingId uint64,
 ) Redelegation {
 	return Redelegation{
 		DelegatorAddress:    delegatorAddr.String(),
 		ValidatorSrcAddress: validatorSrcAddr.String(),
 		ValidatorDstAddress: validatorDstAddr.String(),
 		Entries: []RedelegationEntry{
-			NewRedelegationEntry(creationHeight, minTime, balance, sharesDst, unbondingId),
+			NewRedelegationEntry(creationHeight, minTime, balance, sharesDst, onHold, unbondingId),
 		},
 	}
 }
 
 // AddEntry - append entry to the unbonding delegation
-func (red *Redelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec, unbondingId uint64) {
-	entry := NewRedelegationEntry(creationHeight, minTime, balance, sharesDst, unbondingId)
+func (red *Redelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec, onHold bool, unbondingId uint64) {
+	entry := NewRedelegationEntry(creationHeight, minTime, balance, sharesDst, onHold, unbondingId)
 	red.Entries = append(red.Entries, entry)
 }
 
@@ -375,9 +374,9 @@ func NewRedelegationResponse(
 
 // NewRedelegationEntryResponse creates a new RedelegationEntryResponse instance.
 func NewRedelegationEntryResponse(
-	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance sdk.Int, id uint64) RedelegationEntryResponse {
+	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance sdk.Int, onHold bool, id uint64) RedelegationEntryResponse {
 	return RedelegationEntryResponse{
-		RedelegationEntry: NewRedelegationEntry(creationHeight, completionTime, initialBalance, sharesDst, id),
+		RedelegationEntry: NewRedelegationEntry(creationHeight, completionTime, initialBalance, sharesDst, onHold, id),
 		Balance:           balance,
 	}
 }

@@ -785,7 +785,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 
 	// loop through all the entries and try to complete unbonding mature entries
 	for i := 0; i < len(ubd.Entries); i++ {
-		entry := &ubd.Entries[i]
+		entry := ubd.Entries[i]
 		if entry.IsMature(ctxTime) && !entry.UnbondingOnHold {
 			// Proceed with unbonding
 			ubd.RemoveEntry(int64(i))
@@ -889,7 +889,7 @@ func (k Keeper) CompleteRedelegation(
 
 	// loop through all the entries and try to complete mature redelegation entries
 	for i := 0; i < len(red.Entries); i++ {
-		entry := &red.Entries[i]
+		entry := red.Entries[i]
 		if entry.IsMature(ctxTime) && !entry.UnbondingOnHold {
 			red.RemoveEntry(int64(i))
 			i--

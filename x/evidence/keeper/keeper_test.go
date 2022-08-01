@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -140,17 +139,6 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 	}
 
 	return evidence
-}
-
-func (suite *KeeperTestSuite) populateValidators(ctx sdk.Context) {
-	// add accounts and set total supply
-	totalSupplyAmt := initAmt.MulRaw(int64(len(valAddresses)))
-	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupplyAmt))
-	suite.NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, totalSupply))
-
-	for _, addr := range valAddresses {
-		suite.NoError(suite.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, (sdk.AccAddress)(addr), initCoins))
-	}
 }
 
 func (suite *KeeperTestSuite) TestSubmitValidEvidence() {

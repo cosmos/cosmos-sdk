@@ -47,15 +47,16 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 
 func NewParams(
 	minDeposit sdk.Coins, maxDepositPeriod time.Duration, votingPeriod time.Duration,
-	quorum string, threshold string, vetoThreshold string, minInitialDepositRation string,
+	quorum string, threshold string, vetoThreshold string, minInitialDepositRatio string,
 ) Params {
 	return Params{
-		MinDeposit:       minDeposit,
-		MaxDepositPeriod: &maxDepositPeriod,
-		VotingPeriod:     &votingPeriod,
-		Quorum:           quorum,
-		Threshold:        threshold,
-		VetoThreshold:    vetoThreshold,
+		MinDeposit:             minDeposit,
+		MaxDepositPeriod:       &maxDepositPeriod,
+		VotingPeriod:           &votingPeriod,
+		Quorum:                 quorum,
+		Threshold:              threshold,
+		VetoThreshold:          vetoThreshold,
+		MinInitialDepositRatio: minInitialDepositRatio,
 	}
 }
 

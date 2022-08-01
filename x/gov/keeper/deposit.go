@@ -188,6 +188,9 @@ func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.
 	if err != nil {
 		return err
 	}
+	if minInitialDepositRatio.IsZero() {
+		return nil
+	}
 	minDepositCoins := params.MinDeposit
 	for i := range minDepositCoins {
 		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()

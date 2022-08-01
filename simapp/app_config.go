@@ -48,6 +48,9 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 )
 
+// Alternatively the AppConfig can be defined as a YAML or a JSON file.
+// e.g. https://github.com/cosmos/cosmos-sdk/blob/91b1d83f1339e235a1dfa929ecc00084101a19e3/simapp/app.yaml
+
 var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 	Modules: []*appv1alpha1.ModuleConfig{
 		{
@@ -122,7 +125,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 				},
 			}),
 		},
-
 		{
 			Name:   vestingtypes.ModuleName,
 			Config: appconfig.WrapAny(&vestingmodulev1.Module{}),
@@ -202,5 +204,3 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		},
 	},
 })
-
-// Alternatively this configuration can be set as yaml or json: https://github.com/cosmos/cosmos-sdk/blob/91b1d83f1339e235a1dfa929ecc00084101a19e3/simapp/app.yaml

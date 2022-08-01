@@ -129,6 +129,30 @@ Msg (<int>/<int>): <string>           // E.g. Msg (1/2): bank v1beta1 send coins
 End of transaction messages
 ```
 
+### 9. Custom `Msg`-Renderers
+
+Application developers may choose to not follow default value renderers' output for their own `Msg`s. In this case, they can implement their own custom `Msg`-renderer. This is similar to [EIP4430](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4430.md), where the smart contract developer chooses the description string to be shown to the end user.
+
+This is done by setting the `cosmos.msg.v1.textual.custom_renderer` Protobuf option to `true`. This option MUST be set on a sdk `Msg`, i.e. on a Protobuf message whose name starts with `Msg`.
+
+```proto
+message MsgFooBar {
+  option (cosmos.msg.v1.textual.custom_renderer) = true;
+
+  // proto fields
+}
+```
+
+When this option is set to true on a `Msg`, the implementation CANNOT use the default value renderers to render the `Msg`. Instead, it MUST check that a custom `Msg`-renderer is implemented for `MsgFooBar` (e.g. registered in a registry), or else the implementation MUST throw an error or panic.
+
+Moreover, the implementation must provide 2 functions: one for formatting from Protobuf to string, and one for parsing string to Protobuf. To satisfy point #1, these 2 functions MUST be bijective with each other as inverse.
+
+Bijectivity of custom `Msg`-renderers SHOULD be checked with best effort by the SDK on node startup. To achieve this, we plan to use a similar technique to property testing, whereby a set of random inputs are generated, and passed into the relevant `Msg`. We then test that the composition of the two functions, formatting and parsing, result to the original Protobuf `Msg`:
+
+```
+parse(format(`MsgFooBar`)) == `MsgFooBar`
+```
+
 #### Example
 
 Given the following Protobuf message:

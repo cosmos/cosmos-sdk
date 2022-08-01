@@ -5,7 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/exported"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -45,7 +44,7 @@ func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 // migration includes:
 //
 // - Migrate proposals to be Msg-based.
-func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.ParamSubspace, cdc codec.BinaryCodec) error {
+func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 
 	return migrateProposals(store, cdc)

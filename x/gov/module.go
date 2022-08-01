@@ -289,6 +289,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err != nil {
 		panic(err)
 	}
+
+	err = cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // InitGenesis performs genesis initialization for the gov module. It returns

@@ -619,3 +619,50 @@ func BenchmarkMarshalTo(b *testing.B) {
 		}
 	}
 }
+
+var sink interface{}
+
+func BenchmarkLegacyQuoMut(b *testing.B) {
+	b1 := math.LegacyNewDec(17e2 + 8371)
+	b2 := math.LegacyNewDec(4371)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+            sink = b1.QuoMut(b2)
+	}
+
+	if sink == nil {
+		b.Fatal("Benchmark did not run")
+	}
+	sink = (interface{})(nil)
+}
+
+func BenchmarkLegacyQuoTruncateMut(b *testing.B) {
+	b1 := math.LegacyNewDec(17e2 + 8371)
+	b2 := math.LegacyNewDec(4371)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+            sink = b1.QuoTruncateMut(b2)
+	}
+
+	if sink == nil {
+		b.Fatal("Benchmark did not run")
+	}
+	sink = (interface{})(nil)
+}
+
+func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
+	b1 := math.LegacyNewDec(17e2 + 8371)
+	b2 := math.LegacyNewDec(4371)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+            sink = b1.QuoRoundupMut(b2)
+	}
+
+	if sink == nil {
+		b.Fatal("Benchmark did not run")
+	}
+	sink = (interface{})(nil)
+}

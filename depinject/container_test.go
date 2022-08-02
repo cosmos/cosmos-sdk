@@ -35,6 +35,10 @@ type KeeperC struct {
 	msgClientA MsgClientA
 }
 
+type KeeperD struct {
+	key KVStoreKey
+}
+
 type Handler struct {
 	Handle func()
 }
@@ -139,12 +143,38 @@ func (ModuleUnexportedProvides) Provide(dependencies CDependencies) (UnexportedF
 	}, Handler{}, nil
 }
 
+type ModuleD struct{}
+
+type DDependencies struct {
+	depinject.In
+
+	Key     KVStoreKey
+	KeeperC KeeperC
+}
+
+type DProvides struct {
+	depinject.Out
+
+	KeeperD  KeeperD
+	Commands []Command
+}
+
+func (ModuleD) Provide(dependencies DDependencies) (DProvides, Handler, error) {
+	return DProvides{
+		KeeperD: KeeperD{
+			key: dependencies.Key,
+		},
+		Commands: []Command{{}, {}},
+	}, Handler{}, nil
+}
+
 func TestUnexportedField(t *testing.T) {
 	var (
 		handlers map[string]Handler
 		commands []Command
 		a        KeeperA
 		c        KeeperC
+		d        KeeperD
 
 		scenarioConfigProvides = depinject.Configs(
 			depinject.Provide(ProvideMsgClientA),
@@ -158,6 +188,14 @@ func TestUnexportedField(t *testing.T) {
 			depinject.ProvideInModule("runtime", ProvideKVStoreKey),
 			depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
 			depinject.ProvideInModule("c", wrapMethod0(ModuleUnexportedDependency{})),
+		)
+
+		scenarioConfigProvidesDependency = depinject.Configs(
+			depinject.Provide(ProvideMsgClientA),
+			depinject.ProvideInModule("runtime", ProvideKVStoreKey),
+			depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
+			depinject.ProvideInModule("c", wrapMethod0(ModuleUnexportedProvides{})),
+			depinject.ProvideInModule("d", wrapMethod0(ModuleD{})),
 		)
 	)
 
@@ -181,6 +219,18 @@ func TestUnexportedField(t *testing.T) {
 			&c,
 		),
 		"depinject.In struct",
+	)
+
+	require.ErrorContains(t,
+		depinject.Inject(
+			scenarioConfigProvidesDependency,
+			&handlers,
+			&commands,
+			&a,
+			&c,
+			&d,
+		),
+		"depinject.Out struct",
 	)
 }
 

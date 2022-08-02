@@ -102,6 +102,15 @@ func (p *paramsV2) ParamSetPairs() types.ParamSetPairs {
 	}
 }
 
+func (p *paramsV2) ParamSetPairs() types.ParamSetPairs {
+	return types.ParamSetPairs{
+		{keyUnbondingTime, &p.UnbondingTime, validateUnbondingTime},
+		{keyMaxValidators, &p.MaxValidators, validateMaxValidators},
+		{keyBondDenom, &p.BondDenom, validateBondDenom},
+		{keyMaxRedelegationEntries, &p.MaxRedelegationEntries, validateMaxRedelegationEntries},
+	}
+}
+
 func paramKeyTable() types.KeyTable {
 	return types.NewKeyTable().RegisterParamSet(&params{})
 }

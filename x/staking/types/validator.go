@@ -52,11 +52,11 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		Jailed:            false,
 		Status:            Unbonded,
 		Tokens:            math.ZeroInt(),
-		DelegatorShares:   sdk.ZeroDec(),
+		DelegatorShares:   math.LegacyZeroDec(),
 		Description:       description,
 		UnbondingHeight:   int64(0),
 		UnbondingTime:     time.Unix(0, 0).UTC(),
-		Commission:        NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		Commission:        NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
 		MinSelfDelegation: math.OneInt(),
 	}, nil
 }
@@ -311,18 +311,18 @@ func (v Validator) InvalidExRate() bool {
 }
 
 // calculate the token worth of provided shares
-func (v Validator) TokensFromShares(shares sdk.Dec) sdk.Dec {
+func (v Validator) TokensFromShares(shares sdk.Dec) math.LegacyDec {
 	return (shares.MulInt(v.Tokens)).Quo(v.DelegatorShares)
 }
 
 // calculate the token worth of provided shares, truncated
-func (v Validator) TokensFromSharesTruncated(shares sdk.Dec) sdk.Dec {
+func (v Validator) TokensFromSharesTruncated(shares sdk.Dec) math.LegacyDec {
 	return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
 }
 
 // TokensFromSharesRoundUp returns the token worth of provided shares, rounded
 // up.
-func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) sdk.Dec {
+func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) math.LegacyDec {
 	return (shares.MulInt(v.Tokens)).QuoRoundUp(v.DelegatorShares)
 }
 
@@ -330,7 +330,7 @@ func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) sdk.Dec {
 // returns an error if the validator has no tokens.
 func (v Validator) SharesFromTokens(amt math.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
-		return sdk.ZeroDec(), ErrInsufficientShares
+		return math.LegacyZeroDec(), ErrInsufficientShares
 	}
 
 	return v.GetDelegatorShares().MulInt(amt).QuoInt(v.GetTokens()), nil
@@ -340,7 +340,7 @@ func (v Validator) SharesFromTokens(amt math.Int) (sdk.Dec, error) {
 // a bond amount. It returns an error if the validator has no tokens.
 func (v Validator) SharesFromTokensTruncated(amt math.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
-		return sdk.ZeroDec(), ErrInsufficientShares
+		return math.LegacyZeroDec(), ErrInsufficientShares
 	}
 
 	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(sdk.NewDecFromInt(v.GetTokens())), nil
@@ -516,9 +516,9 @@ func (v Validator) GetBondedTokens() math.Int { return v.BondedTokens() }
 func (v Validator) GetConsensusPower(r math.Int) int64 {
 	return v.ConsensusPower(r)
 }
-func (v Validator) GetCommission() sdk.Dec         { return v.Commission.Rate }
-func (v Validator) GetMinSelfDelegation() math.Int { return v.MinSelfDelegation }
-func (v Validator) GetDelegatorShares() sdk.Dec    { return v.DelegatorShares }
+func (v Validator) GetCommission() math.LegacyDec      { return v.Commission.Rate }
+func (v Validator) GetMinSelfDelegation() math.Int     { return v.MinSelfDelegation }
+func (v Validator) GetDelegatorShares() math.LegacyDec { return v.DelegatorShares }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {

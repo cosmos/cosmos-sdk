@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
@@ -154,7 +155,7 @@ func TestConvertToLegacyVote(t *testing.T) {
 				require.Equal(t, v1beta1Vote.ProposalId, vote.ProposalId)
 				require.Equal(t, v1beta1Vote.Voter, vote.Voter)
 				require.Equal(t, v1beta1Vote.Options[0].Option, v1beta1.OptionYes)
-				require.Equal(t, v1beta1Vote.Options[0].Weight, sdk.NewDec(1))
+				require.Equal(t, v1beta1Vote.Options[0].Weight, math.LegacyNewDec(1))
 			}
 		})
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -14,10 +15,11 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens = sdk.NewInt(10000000)
-	DefaultQuorum           = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold        = sdk.NewDecWithPrec(5, 1)
-	DefaultVetoThreshold    = sdk.NewDecWithPrec(334, 3)
+	DefaultMinDepositTokens       = sdk.NewInt(10000000)
+	DefaultQuorum                 = sdk.NewDecWithPrec(334, 3)
+	DefaultThreshold              = sdk.NewDecWithPrec(5, 1)
+	DefaultVetoThreshold          = sdk.NewDecWithPrec(334, 3)
+	DefaultMinInitialDepositRatio = sdk.ZeroDec()
 )
 
 // Deprecated: NewDepositParams creates a new DepositParams object
@@ -46,15 +48,16 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 
 func NewParams(
 	minDeposit sdk.Coins, maxDepositPeriod time.Duration, votingPeriod time.Duration,
-	quorum string, threshold string, vetoThreshold string,
+	quorum string, threshold string, vetoThreshold string, minInitialDepositRatio string,
 ) Params {
 	return Params{
-		MinDeposit:       minDeposit,
-		MaxDepositPeriod: &maxDepositPeriod,
-		VotingPeriod:     &votingPeriod,
-		Quorum:           quorum,
-		Threshold:        threshold,
-		VetoThreshold:    vetoThreshold,
+		MinDeposit:             minDeposit,
+		MaxDepositPeriod:       &maxDepositPeriod,
+		VotingPeriod:           &votingPeriod,
+		Quorum:                 quorum,
+		Threshold:              threshold,
+		VetoThreshold:          vetoThreshold,
+		MinInitialDepositRatio: minInitialDepositRatio,
 	}
 }
 
@@ -67,6 +70,7 @@ func DefaultParams() Params {
 		DefaultQuorum.String(),
 		DefaultThreshold.String(),
 		DefaultVetoThreshold.String(),
+		DefaultMinInitialDepositRatio.String(),
 	)
 }
 
@@ -91,7 +95,7 @@ func (p Params) ValidateBasic() error {
 	if quorum.IsNegative() {
 		return fmt.Errorf("quorom cannot be negative: %s", quorum)
 	}
-	if quorum.GT(sdk.OneDec()) {
+	if quorum.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("quorom too large: %s", p.Quorum)
 	}
 
@@ -102,7 +106,7 @@ func (p Params) ValidateBasic() error {
 	if !threshold.IsPositive() {
 		return fmt.Errorf("vote threshold must be positive: %s", threshold)
 	}
-	if threshold.GT(sdk.OneDec()) {
+	if threshold.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("vote threshold too large: %s", threshold)
 	}
 
@@ -113,7 +117,7 @@ func (p Params) ValidateBasic() error {
 	if !vetoThreshold.IsPositive() {
 		return fmt.Errorf("veto threshold must be positive: %s", vetoThreshold)
 	}
-	if vetoThreshold.GT(sdk.OneDec()) {
+	if vetoThreshold.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("veto threshold too large: %s", vetoThreshold)
 	}
 

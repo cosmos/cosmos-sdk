@@ -77,7 +77,7 @@ type BDependencies struct {
 type BProvides struct {
 	depinject.Out
 
-	keeperB  KeeperB
+	KeeperB  KeeperB
 	Commands []Command
 }
 

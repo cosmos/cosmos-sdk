@@ -2,8 +2,11 @@ package depinject
 
 import (
 	"reflect"
+	"strings"
+	"unicode"
 
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // providerDescriptor defines a special provider type that is defined by
@@ -65,7 +68,20 @@ func doExtractProviderDescriptor(ctr interface{}) (providerDescriptor, error) {
 		return providerDescriptor{}, errors.Errorf("expected a Func type, got %v", typ)
 	}
 
-	loc := LocationFromPC(val.Pointer())
+	loc := LocationFromPC(val.Pointer()).(*location)
+	nameParts := strings.Split(loc.name, ".")
+	if len(nameParts) == 0 {
+		return providerDescriptor{}, errors.Errorf("missing function name %s", loc)
+	}
+
+	if unicode.IsLower([]rune(nameParts[len(nameParts)-1])[0]) {
+		return providerDescriptor{}, errors.Errorf("function must be exported: %s", loc)
+	}
+
+	pkgParts := strings.Split(loc.pkg, "/")
+	if slices.Contains(pkgParts, "internal") {
+		return providerDescriptor{}, errors.Errorf("function must not be in an internal package: %s", loc)
+	}
 
 	if typ.IsVariadic() {
 		return providerDescriptor{}, errors.Errorf("variadic function can't be used as a provider: %s", loc)

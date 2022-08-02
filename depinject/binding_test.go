@@ -62,14 +62,18 @@ func (s bindingSuite) TwoImplementationsMallardAndCanvasback() {
 	// we don't need to do anything because this is defined at the type level
 }
 
+func ProvideMallard() Mallard       { return Mallard{} }
+func ProvideCanvasback() Canvasback { return Canvasback{} }
+func ProvideMarbled() Marbled       { return Marbled{} }
+
 func (s *bindingSuite) IsProvided(a string) {
 	switch a {
 	case "Mallard":
-		s.addConfig(depinject.Provide(func() Mallard { return Mallard{} }))
+		s.addConfig(depinject.Provide(ProvideMallard))
 	case "Canvasback":
-		s.addConfig(depinject.Provide(func() Canvasback { return Canvasback{} }))
+		s.addConfig(depinject.Provide(ProvideCanvasback))
 	case "Marbled":
-		s.addConfig(depinject.Provide(func() Marbled { return Marbled{} }))
+		s.addConfig(depinject.Provide(ProvideMarbled))
 	default:
 		s.Fatalf("unexpected duck type %s", a)
 	}
@@ -79,18 +83,22 @@ func (s *bindingSuite) addConfig(config depinject.Config) {
 	s.configs = append(s.configs, config)
 }
 
-func (s *bindingSuite) WeTryToResolveADuckInGlobalScope() {
-	s.addConfig(depinject.Provide(func(duck Duck) DuckWrapper {
-		return DuckWrapper{Module: "", Duck: duck}
-	}))
+func ProvideDuckWrapper(duck Duck) DuckWrapper {
+	return DuckWrapper{Module: "", Duck: duck}
 }
+
+func (s *bindingSuite) WeTryToResolveADuckInGlobalScope() {
+	s.addConfig(depinject.Provide(ProvideDuckWrapper))
+}
+
+func ResolvePond(ducks []DuckWrapper) Pond { return Pond{Ducks: ducks} }
 
 func (s *bindingSuite) resolvePond() *Pond {
 	if s.pond != nil {
 		return s.pond
 	}
 
-	s.addConfig(depinject.Provide(func(ducks []DuckWrapper) Pond { return Pond{Ducks: ducks} }))
+	s.addConfig(depinject.Provide(ResolvePond))
 	var pond Pond
 	s.err = depinject.Inject(depinject.Configs(s.configs...), &pond)
 	s.pond = &pond
@@ -131,10 +139,12 @@ func (s *bindingSuite) ThereIsABindingForAInModule(preferredType string, interfa
 	s.addConfig(depinject.BindInterfaceInModule(moduleName, fullTypeName(interfaceType), fullTypeName(preferredType)))
 }
 
+func ProvideModuleDuck(duck Duck, key depinject.OwnModuleKey) DuckWrapper {
+	return DuckWrapper{Module: depinject.ModuleKey(key).Name(), Duck: duck}
+}
+
 func (s *bindingSuite) ModuleWantsADuck(module string) {
-	s.addConfig(depinject.ProvideInModule(module, func(duck Duck) DuckWrapper {
-		return DuckWrapper{Module: module, Duck: duck}
-	}))
+	s.addConfig(depinject.ProvideInModule(module, ProvideModuleDuck))
 }
 
 func (s *bindingSuite) ModuleResolvesA(module string, duckType string) {

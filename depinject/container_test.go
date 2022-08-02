@@ -153,34 +153,37 @@ func TestTrivial(t *testing.T) {
 	require.NoError(t, depinject.Inject(depinject.Configs()))
 }
 
+func Provide0() int { return 0 }
+func Provide1() int { return 1 }
+
 func TestSimple(t *testing.T) {
 	var x int
 	require.NoError(t,
 		depinject.Inject(
-			depinject.Provide(
-				func() int { return 1 },
-			),
+			depinject.Provide(Provide1),
 			&x,
 		),
 	)
 
 	require.Error(t,
 		depinject.Inject(
-			depinject.Provide(
-				func() int { return 0 },
-				func() int { return 1 },
-			),
+			depinject.Provide(Provide0, Provide1),
 			&x,
 		),
 	)
 }
+
+func ProvideModuleScoped0(depinject.ModuleKey) int { return 0 }
+func ProvideModuleScoped1(depinject.ModuleKey) int { return 1 }
+func ProvideFloat64FromInt(x int) float64          { return float64(x) }
+func ProvideFloat32FromInt(x int) float32          { return float32(x) }
 
 func TestModuleScoped(t *testing.T) {
 	var x int
 	require.Error(t,
 		depinject.Inject(
 			depinject.Provide(
-				func(depinject.ModuleKey) int { return 0 },
+				ProvideModuleScoped0,
 			),
 			&x,
 		),
@@ -191,12 +194,10 @@ func TestModuleScoped(t *testing.T) {
 		depinject.Inject(
 			depinject.Configs(
 				depinject.Provide(
-					func(depinject.ModuleKey) int { return 0 },
-					func() int { return 1 },
+					ProvideModuleScoped0,
+					Provide1,
 				),
-				depinject.ProvideInModule("a",
-					func(x int) float64 { return float64(x) },
-				),
+				depinject.ProvideInModule("a", ProvideFloat64FromInt),
 			),
 			&y,
 		),
@@ -206,12 +207,10 @@ func TestModuleScoped(t *testing.T) {
 		depinject.Inject(
 			depinject.Configs(
 				depinject.Provide(
-					func() int { return 0 },
-					func(depinject.ModuleKey) int { return 1 },
+					Provide0,
+					ProvideModuleScoped0,
 				),
-				depinject.ProvideInModule("a",
-					func(x int) float64 { return float64(x) },
-				),
+				depinject.ProvideInModule("a", ProvideFloat64FromInt),
 			),
 			&y,
 		),
@@ -221,12 +220,10 @@ func TestModuleScoped(t *testing.T) {
 		depinject.Inject(
 			depinject.Configs(
 				depinject.Provide(
-					func(depinject.ModuleKey) int { return 0 },
-					func(depinject.ModuleKey) int { return 1 },
+					ProvideModuleScoped0,
+					ProvideModuleScoped1,
 				),
-				depinject.ProvideInModule("a",
-					func(x int) float64 { return float64(x) },
-				),
+				depinject.ProvideInModule("a", ProvideFloat64FromInt),
 			),
 			&y,
 		),
@@ -235,12 +232,8 @@ func TestModuleScoped(t *testing.T) {
 	require.NoError(t,
 		depinject.Inject(
 			depinject.Configs(
-				depinject.Provide(
-					func(depinject.ModuleKey) int { return 0 },
-				),
-				depinject.ProvideInModule("a",
-					func(x int) float64 { return float64(x) },
-				),
+				depinject.Provide(ProvideModuleScoped0),
+				depinject.ProvideInModule("a", ProvideFloat64FromInt),
 			),
 			&y,
 		),
@@ -249,12 +242,8 @@ func TestModuleScoped(t *testing.T) {
 	require.Error(t,
 		depinject.Inject(
 			depinject.Configs(
-				depinject.Provide(
-					func(depinject.ModuleKey) int { return 0 },
-				),
-				depinject.ProvideInModule("",
-					func(x int) float64 { return float64(x) },
-				),
+				depinject.Provide(ProvideModuleScoped0),
+				depinject.ProvideInModule("", ProvideFloat64FromInt),
 			),
 			&y,
 		),
@@ -264,12 +253,10 @@ func TestModuleScoped(t *testing.T) {
 	require.NoError(t,
 		depinject.Inject(
 			depinject.Configs(
-				depinject.Provide(
-					func(depinject.ModuleKey) int { return 0 },
-				),
+				depinject.Provide(ProvideModuleScoped0),
 				depinject.ProvideInModule("a",
-					func(x int) float64 { return float64(x) },
-					func(x int) float32 { return float32(x) },
+					ProvideFloat64FromInt,
+					ProvideFloat32FromInt,
 				),
 			),
 			&y, &z,

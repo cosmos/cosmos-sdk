@@ -1,11 +1,10 @@
 package depinject
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 type StructIn struct {
@@ -25,6 +24,26 @@ type StructOut struct {
 	Y []byte
 }
 
+func privateProvider(int, float64) (string, []byte) { return "", nil }
+
+type SomeStruct struct{}
+
+func (SomeStruct) privateMethod() int { return 0 }
+
+func SimpleArgs(int, float64) (string, []byte) { return "", nil }
+
+func SimpleArgsWithError(int, float64) (string, []byte, error) { return "", nil, nil }
+
+func StructInAndOut(_ float32, _ StructIn, _ byte) (int16, StructOut, int32, error) {
+	return int16(0), StructOut{}, int32(0), nil
+}
+
+func BadErrorPosition() (error, int) { return nil, 0 }
+
+func BadOptionalFn(_ BadOptional) int { return 0 }
+
+func Variadic(...float64) int { return 0 }
+
 func TestExtractProviderDescriptor(t *testing.T) {
 	var (
 		intType     = reflect.TypeOf(0)
@@ -42,60 +61,81 @@ func TestExtractProviderDescriptor(t *testing.T) {
 		ctr     interface{}
 		wantIn  []providerInput
 		wantOut []providerOutput
-		wantErr bool
+		wantErr string
 	}{
 		{
+			"private",
+			privateProvider,
+			nil,
+			nil,
+			"function must be exported",
+		},
+		{
+			"private method",
+			SomeStruct.privateMethod,
+			nil,
+			nil,
+			"function must be exported",
+		},
+		{
+			"struct",
+			SomeStruct{},
+			nil,
+			nil,
+			"expected a Func type",
+		},
+		{
 			"simple args",
-			func(x int, y float64) (string, []byte) { return "", nil },
+			SimpleArgs,
 			[]providerInput{{Type: intType}, {Type: float64Type}},
 			[]providerOutput{{Type: stringType}, {Type: bytesTyp}},
-			false,
+			"",
 		},
 		{
 			"simple args with error",
-			func(x int, y float64) (string, []byte, error) { return "", nil, nil },
+			SimpleArgsWithError,
 			[]providerInput{{Type: intType}, {Type: float64Type}},
 			[]providerOutput{{Type: stringType}, {Type: bytesTyp}},
-			false,
+			"",
 		},
 		{
 			"struct in and out",
-			func(_ float32, _ StructIn, _ byte) (int16, StructOut, int32, error) {
-				return int16(0), StructOut{}, int32(0), nil
-			},
+			StructInAndOut,
 			[]providerInput{{Type: float32Type}, {Type: intType}, {Type: float64Type, Optional: true}, {Type: byteTyp}},
 			[]providerOutput{{Type: int16Type}, {Type: stringType}, {Type: bytesTyp}, {Type: int32Type}},
-			false,
+			"",
 		},
 		{
 			"error bad position",
-			func() (error, int) { return nil, 0 },
+			BadErrorPosition,
 			nil,
 			nil,
-			true,
+			"error parameter is not last parameter",
 		},
 		{
 			"bad optional",
-			func(_ BadOptional) int { return 0 },
+			BadOptionalFn,
 			nil,
 			nil,
-			true,
+			"bad optional tag",
 		},
 		{
 			"variadic",
-			func(...float64) int { return 0 },
+			Variadic,
 			nil,
 			nil,
-			true,
+			"variadic function can't be used",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := extractProviderDescriptor(tt.ctr)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("extractProviderDescriptor() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if tt.wantErr != "" {
+				assert.ErrorContains(t, err, tt.wantErr)
+			} else {
+				assert.NilError(t, err)
 			}
+
 			if !reflect.DeepEqual(got.Inputs, tt.wantIn) {
 				t.Errorf("extractProviderDescriptor() got = %v, want %v", got.Inputs, tt.wantIn)
 			}
@@ -104,32 +144,4 @@ func TestExtractProviderDescriptor(t *testing.T) {
 			}
 		})
 	}
-}
-
-type SomeStruct struct{}
-
-func TestBadCtr(t *testing.T) {
-	_, err := extractProviderDescriptor(SomeStruct{})
-	require.Error(t, err)
-}
-
-func TestErrorFunc(t *testing.T) {
-	_, err := extractProviderDescriptor(
-		func() (error, int) { return nil, 0 },
-	)
-	require.Error(t, err)
-
-	_, err = extractProviderDescriptor(
-		func() (int, error) { return 0, nil },
-	)
-	require.NoError(t, err)
-
-	var x int
-	require.Error(t,
-		Inject(
-			Provide(func() (int, error) {
-				return 0, fmt.Errorf("the error")
-			}),
-			&x,
-		))
 }

@@ -63,8 +63,6 @@ func (ModuleA) Provide(key KVStoreKey, moduleKey depinject.OwnModuleKey) (Keeper
 
 type ModuleB struct{}
 
-type ModuleC struct{}
-
 type BDependencies struct {
 	depinject.In
 
@@ -75,14 +73,26 @@ type BDependencies struct {
 type BProvides struct {
 	depinject.Out
 
-	KeeperB  KeeperB
+	keeperB  KeeperB
 	Commands []Command
 }
 
 func (ModuleB) Provide(dependencies BDependencies) (BProvides, Handler, error) {
 	return BProvides{
-		KeeperB: KeeperB{
+		keeperB: KeeperB{
 			key:        dependencies.Key,
+			msgClientA: dependencies.A,
+		},
+		Commands: []Command{{}, {}},
+	}, Handler{}, nil
+}
+
+type ModuleUnexportedDependency struct{}
+
+func (ModuleUnexportedDependency) Provide(dependencies UnexportedFieldCDependencies) (CProvides, Handler, error) {
+	return CProvides{
+		KeeperC: KeeperC{
+			key:        dependencies.key,
 			msgClientA: dependencies.A,
 		},
 		Commands: []Command{{}, {}},
@@ -96,6 +106,22 @@ type UnexportedFieldCDependencies struct {
 	A   MsgClientA
 }
 
+type CProvides struct {
+	depinject.Out
+
+	KeeperC  KeeperC
+	Commands []Command
+}
+
+type ModuleUnexportedProvides struct{}
+
+type CDependencies struct {
+	depinject.In
+
+	Key KVStoreKey
+	A   MsgClientA
+}
+
 type UnexportedFieldCProvides struct {
 	depinject.Out
 
@@ -103,7 +129,7 @@ type UnexportedFieldCProvides struct {
 	Commands []Command
 }
 
-func (ModuleC) Provide(dependencies BDependencies) (UnexportedFieldCProvides, Handler, error) {
+func (ModuleUnexportedProvides) Provide(dependencies CDependencies) (UnexportedFieldCProvides, Handler, error) {
 	return UnexportedFieldCProvides{
 		keeperC: KeeperC{
 			key:        dependencies.Key,
@@ -118,22 +144,44 @@ func TestUnexportedField(t *testing.T) {
 		handlers map[string]Handler
 		commands []Command
 		a        KeeperA
-		b        KeeperB
+		c        KeeperC
 
-		scenarioConfig = depinject.Configs(
+		scenarioConfigProvides = depinject.Configs(
+			depinject.Provide(ProvideMsgClientA),
+			depinject.ProvideInModule("runtime", ProvideKVStoreKey),
 			depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-			depinject.ProvideInModule("b", wrapMethod0(ModuleC{})),
+			depinject.ProvideInModule("c", wrapMethod0(ModuleUnexportedProvides{})),
+		)
+
+		scenarioConfigDependency = depinject.Configs(
+			depinject.Provide(ProvideMsgClientA),
+			depinject.ProvideInModule("runtime", ProvideKVStoreKey),
+			depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
+			depinject.ProvideInModule("c", wrapMethod0(ModuleUnexportedDependency{})),
 		)
 	)
 
-	require.Error(t,
+	require.ErrorContains(t,
 		depinject.Inject(
-			scenarioConfig,
+			scenarioConfigProvides,
 			&handlers,
 			&commands,
 			&a,
-			&b,
-		))
+			&c,
+		),
+		"depinject.Out struct",
+	)
+
+	require.ErrorContains(t,
+		depinject.Inject(
+			scenarioConfigDependency,
+			&handlers,
+			&commands,
+			&a,
+			&c,
+		),
+		"depinject.In struct",
+	)
 }
 
 var scenarioConfig = depinject.Configs(

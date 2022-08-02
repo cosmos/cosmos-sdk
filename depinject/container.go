@@ -446,6 +446,13 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 
 			for i, output := range outputs {
 				val := reflect.ValueOf(output)
+				if !val.Elem().CanSet() {
+					return []reflect.Value{}, fmt.Errorf("depinject.In struct %s on package can't have unexported field", val.String())
+				}
+				if !values[i].CanInterface() {
+					return []reflect.Value{}, fmt.Errorf("depinject.Out struct %s on package can't have unexported field", values[i].String())
+
+				}
 				val.Elem().Set(values[i])
 			}
 

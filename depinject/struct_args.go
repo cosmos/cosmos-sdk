@@ -171,8 +171,12 @@ func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int, erro
 		if f.Type.AssignableTo(isInType) {
 			continue
 		}
-		if !res.Elem().Field(i).CanSet() {
-			return reflect.Value{}, 0, fmt.Errorf("depinject.In struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath, f.Name)
+		if !res.Elem().Field(i).CanSet() && values[j].CanInterface() {
+			return reflect.Value{}, 0, fmt.Errorf("depinject.In struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath)
+		}
+		if !values[j].CanInterface() {
+			return reflect.Value{}, 0, fmt.Errorf("depinject.Out struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath)
+
 		}
 
 		res.Elem().Field(i).Set(values[j])

@@ -250,11 +250,10 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 		return false, nil
 	}
 
+	ubd.Entries[i].UnbondingOnHoldRefCount--
+
 	// Check if entry is matured.
-	if !ubd.Entries[i].IsMature(ctx.BlockHeader().Time) {
-		// If not matured, set onHold to false
-		ubd.Entries[i].UnbondingOnHold = false
-	} else {
+	if !ubd.Entries[i].OnHold() && ubd.Entries[i].IsMature(ctx.BlockHeader().Time) {
 		// If matured, complete it.
 		delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
 		if err != nil {
@@ -301,10 +300,9 @@ func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) (found 
 		return false, nil
 	}
 
-	if !red.Entries[i].IsMature(ctx.BlockHeader().Time) {
-		// If not matured, set onHold to false
-		red.Entries[i].UnbondingOnHold = false
-	} else {
+	red.Entries[i].UnbondingOnHoldRefCount--
+
+	if !red.Entries[i].OnHold() && red.Entries[i].IsMature(ctx.BlockHeader().Time) {
 		// If matured, complete it.
 		// Remove entry
 		red.RemoveEntry(int64(i))
@@ -369,8 +367,7 @@ func (k Keeper) putUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) (f
 		return false
 	}
 
-	ubd.Entries[i].UnbondingOnHold = true
-
+	ubd.Entries[i].UnbondingOnHoldRefCount++
 	k.SetUnbondingDelegation(ctx, ubd)
 
 	return true
@@ -387,8 +384,7 @@ func (k Keeper) putRedelegationEntryOnHold(ctx sdk.Context, id uint64) (found bo
 		return false
 	}
 
-	red.Entries[i].UnbondingOnHold = true
-
+	red.Entries[i].UnbondingOnHoldRefCount++
 	k.SetRedelegation(ctx, red)
 
 	return true

@@ -23,7 +23,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -113,7 +112,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 	require.NoError(err)
 
 	newAddr := sdk.AccAddress(pub.Address())
-	_, err = banktestutil.MsgSendExec(
+	_, err = clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		newAddr,
@@ -1083,7 +1082,7 @@ func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 
 	newAddr := sdk.AccAddress(pub.Address())
 
-	_, err = banktestutil.MsgSendExec(
+	_, err = clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		newAddr,
@@ -1444,7 +1443,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	newAddr := sdk.AccAddress(pub.Address())
 
 	// Send some funds to the new account.
-	_, err = banktestutil.MsgSendExec(
+	_, err = clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		newAddr,

@@ -19,6 +19,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -30,7 +31,6 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -66,7 +66,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.queryClient = tx.NewServiceClient(val.ClientCtx)
 
 	// Create a new MsgSend tx from val to itself.
-	out, err := bankcli.MsgSendExec(
+	out, err := cli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		val.Address,
@@ -83,7 +83,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &s.txRes))
 	s.Require().Equal(uint32(0), s.txRes.Code, s.txRes)
 
-	out, err = bankcli.MsgSendExec(
+	out, err = cli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		val.Address,
@@ -616,7 +616,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 
 	// Send coins from validator to multisig.
 	coins := sdk.NewInt64Coin(s.cfg.BondDenom, 15)
-	_, err = bankcli.MsgSendExec(
+	_, err = cli.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
 		addr,
@@ -632,7 +632,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	s.Require().NoError(err)
 
 	// Generate multisig transaction.
-	multiGeneratedTx, err := bankcli.MsgSendExec(
+	multiGeneratedTx, err := cli.MsgSendExec(
 		val1.ClientCtx,
 		addr,
 		val1.Address,

@@ -23,13 +23,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type TestSuite struct {
@@ -74,7 +74,6 @@ func (s *TestSuite) SetupTest() {
 
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(s.T())
-	s.bankKeeper = grouptestutil.NewMockBankKeeper(ctrl)
 	s.accountKeeper = grouptestutil.NewMockAccountKeeper(ctrl)
 
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[0])).AnyTimes()
@@ -83,6 +82,7 @@ func (s *TestSuite) SetupTest() {
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[3])).AnyTimes()
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[4]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[4])).AnyTimes()
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[5]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[5])).AnyTimes()
+	s.bankKeeper = grouptestutil.NewMockBankKeeper(ctrl)
 
 	bApp := baseapp.NewBaseApp(
 		"group",
@@ -129,7 +129,10 @@ func (s *TestSuite) SetupTest() {
 	s.groupPolicyAddr = addr
 
 	// s.bankKeeper.EXPECT().SpendableCoins(testCtx, s.groupPolicyAddr).Return(bank)
-	s.Require().NoError(banktestutil.FundAccount(s.bankKeeper, s.sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+
+	s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
+	s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
+	// s.Require().NoError(banktestutil.FundAccount(s.bankKeeper, s.sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 110000)}))
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -144,7 +147,7 @@ func (s *TestSuite) TestCreateGroupWithLotsOfMembers() {
 }
 
 func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMember {
-	addressPool := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, s.sdkCtx, numMembers, sdk.NewInt(30000000))
+	addressPool := simtestutil.CreateIncrementalAccounts(numMembers)
 	members := make([]group.MemberRequest, numMembers)
 	for i := 0; i < len(members); i++ {
 		members[i] = group.MemberRequest{
@@ -1846,7 +1849,9 @@ func (s *TestSuite) TestVote() {
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 
-	s.Require().NoError(testutil.FundAccount(s.bankKeeper, s.sdkCtx, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+	// s.Require().NoError(testutil.FundAccount(s.bankKeeper, s.sdkCtx, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+
+	s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 	req := &group.MsgSubmitProposal{
 		GroupPolicyAddress: accountAddr,
@@ -2399,8 +2404,11 @@ func (s *TestSuite) TestExecProposal() {
 
 				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
-				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				// sdkCtx := sdk.UnwrapSDKContext(ctx)
+				// s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
+				s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+
+				// s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return myProposalID
 			},
@@ -2547,8 +2555,10 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 
 				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
-				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				// sdkCtx := sdk.UnwrapSDKContext(ctx)
+				s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+
+				// s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return myProposalID
 			},
@@ -2739,7 +2749,8 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 }
 
 func (s *TestSuite) TestLeaveGroup() {
-	addrs := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, s.sdkCtx, 7, sdk.NewInt(30000000))
+	// addrs := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, s.sdkCtx, 7, sdk.NewInt(30000000))
+	addrs := simtestutil.CreateIncrementalAccounts(7)
 
 	admin1 := addrs[0]
 	member1 := addrs[1]

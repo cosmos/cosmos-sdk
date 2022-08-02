@@ -4,6 +4,7 @@ import (
 	gocontext "context"
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -878,9 +879,9 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
 	)
 
 	defaultTallyParams := v1beta1.TallyParams{
-		Quorum:        sdk.NewDec(0),
-		Threshold:     sdk.NewDec(0),
-		VetoThreshold: sdk.NewDec(0),
+		Quorum:        math.LegacyNewDec(0),
+		Threshold:     math.LegacyNewDec(0),
+		VetoThreshold: math.LegacyNewDec(0),
 	}
 
 	testCases := []struct {

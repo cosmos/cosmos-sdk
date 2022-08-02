@@ -31,6 +31,7 @@ package module
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"sort"
 
 	"github.com/gogo/protobuf/proto"
@@ -299,15 +300,17 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 		}
 		ctx.Logger().Debug("running initialization for module", "module", moduleName)
 
-		moduleGenesis := m.Modules[moduleName].DefaultGenesis()
-		if moduleGenesis == nil {
+		// Get the type of the default genesis so we can create a zeroed struct
+		// to which we then unmarshal the genesis' file JSON into
+		genType := reflect.TypeOf(m.Modules[moduleName].DefaultGenesis())
+		if genType == nil {
 			continue
 		}
+		moduleGenesis := reflect.New(genType.Elem()).Interface().(proto.Message)
 
 		if err := cdc.UnmarshalJSON(genesisData[moduleName], moduleGenesis); err != nil {
 			panic(fmt.Sprintf("failed to parse %s genesis state: %s", moduleName, err))
 		}
-
 		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, moduleGenesis)
 
 		// use these validator updates if provided, the module manager assumes

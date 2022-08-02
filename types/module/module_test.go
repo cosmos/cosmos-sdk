@@ -3,6 +3,7 @@ package module_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -154,11 +155,13 @@ func TestManager_InitGenesis(t *testing.T) {
 
 	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
 	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule3 := mocks.NewMockAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mockAppModule3.EXPECT().Name().Times(2).Return("module3")
+	mm := module.NewManager(mockAppModule1, mockAppModule2, mockAppModule3)
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	interfaceRegistry := types.NewInterfaceRegistry()
@@ -167,14 +170,21 @@ func TestManager_InitGenesis(t *testing.T) {
 	genModule1 := &testdata.Cat{Moniker: "module1"}
 	genModule2 := &testdata.Dog{Name: "module2"}
 
-	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"moniker": "module1"}`)}
+	genesisData := map[string]json.RawMessage{
+		"module1": json.RawMessage(`{"moniker": "module1"}`),
+		"module3": json.RawMessage(`{}`),
+	}
 
 	// this should panic since the validator set is empty even after init genesis
 	mockAppModule1.EXPECT().DefaultGenesis().Return(&testdata.Cat{})
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), genModule1).Times(1).Return(nil)
-	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
+	mockAppModule3.EXPECT().DefaultGenesis().Return(nil)
+	require.PanicsWithValue(t,
+		fmt.Sprintf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction),
+		func() { mm.InitGenesis(ctx, cdc, genesisData) },
+	)
 
-	// test panic
+	// test panic because updates were already set by a previous module (module1 and module2 return updates)
 	genesisData = map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"moniker": "module1"}`),
 		"module2": json.RawMessage(`{"name": "module2"}`),
@@ -185,7 +195,10 @@ func TestManager_InitGenesis(t *testing.T) {
 	mockAppModule1.EXPECT().DefaultGenesis().Return(&testdata.Cat{})
 	mockAppModule2.EXPECT().DefaultGenesis().Return(&testdata.Dog{})
 
-	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
+	require.PanicsWithValue(t,
+		"validator InitGenesis updates already set by a previous module",
+		func() { mm.InitGenesis(ctx, cdc, genesisData) },
+	)
 }
 
 func TestManager_ExportGenesis(t *testing.T) {

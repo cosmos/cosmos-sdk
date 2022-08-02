@@ -155,4 +155,7 @@ message Params {
   //  Minimum value of Veto votes to Total votes ratio for proposal to be
   //  vetoed. Default value: 1/3.
   string veto_threshold = 6 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  //  The ratio representing the proportion of the deposit value that must be paid at proposal submission.
+  string min_initial_deposit_ratio = 7 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }

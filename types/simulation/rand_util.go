@@ -70,7 +70,7 @@ func RandomAmount(r *rand.Rand, max math.Int) math.Int {
 
 // RandomDecAmount generates a random decimal amount
 // Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
+func RandomDecAmount(r *rand.Rand, max sdk.Dec) math.LegacyDec {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {

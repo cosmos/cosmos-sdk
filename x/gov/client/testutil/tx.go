@@ -165,18 +165,18 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 	val := s.network.Validators[0]
 	invalidProp := `{
-  "title": "",
-	"description": "Where is the title!?",
-	"type": "Text",
-  "deposit": "-324foocoin"
-}`
+	  "title": "",
+		"description": "Where is the title!?",
+		"type": "Text",
+	  "deposit": "-324foocoin"
+	}`
 	invalidPropFile := testutil.WriteToNewTempFile(s.T(), invalidProp)
 	validProp := fmt.Sprintf(`{
-  "title": "Text Proposal",
-	"description": "Hello, World!",
-	"type": "Text",
-  "deposit": "%s"
-}`, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
+	  "title": "Text Proposal",
+		"description": "Hello, World!",
+		"type": "Text",
+	  "deposit": "%s"
+	}`, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
 	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
 	testCases := []struct {
 		name         string

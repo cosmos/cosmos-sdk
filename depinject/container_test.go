@@ -149,34 +149,8 @@ func TestErrorOption(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestBadCtr(t *testing.T) {
-	_, err := depinject.ExtractProviderDescriptor(KeeperA{})
-	require.Error(t, err)
-}
-
 func TestTrivial(t *testing.T) {
 	require.NoError(t, depinject.Inject(depinject.Configs()))
-}
-
-func TestErrorFunc(t *testing.T) {
-	_, err := depinject.ExtractProviderDescriptor(
-		func() (error, int) { return nil, 0 },
-	)
-	require.Error(t, err)
-
-	_, err = depinject.ExtractProviderDescriptor(
-		func() (int, error) { return 0, nil },
-	)
-	require.NoError(t, err)
-
-	var x int
-	require.Error(t,
-		depinject.Inject(
-			depinject.Provide(func() (int, error) {
-				return 0, fmt.Errorf("the error")
-			}),
-			&x,
-		))
 }
 
 func TestSimple(t *testing.T) {

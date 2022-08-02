@@ -7,7 +7,7 @@ import (
 )
 
 type simpleProvider struct {
-	provider  *ProviderDescriptor
+	provider  *providerDescriptor
 	called    bool
 	values    []reflect.Value
 	moduleKey *moduleKey

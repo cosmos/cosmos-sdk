@@ -1,25 +1,26 @@
-package depinject_test
+package depinject
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
-	"cosmossdk.io/depinject"
+	"github.com/stretchr/testify/require"
 )
 
 type StructIn struct {
-	depinject.In
+	In
 	X int
 	Y float64 `optional:"true"`
 }
 
 type BadOptional struct {
-	depinject.In
+	In
 	X int `optional:"foo"`
 }
 
 type StructOut struct {
-	depinject.Out
+	Out
 	X string
 	Y []byte
 }
@@ -39,22 +40,22 @@ func TestExtractProviderDescriptor(t *testing.T) {
 	tests := []struct {
 		name    string
 		ctr     interface{}
-		wantIn  []depinject.ProviderInput
-		wantOut []depinject.ProviderOutput
+		wantIn  []providerInput
+		wantOut []providerOutput
 		wantErr bool
 	}{
 		{
 			"simple args",
 			func(x int, y float64) (string, []byte) { return "", nil },
-			[]depinject.ProviderInput{{Type: intType}, {Type: float64Type}},
-			[]depinject.ProviderOutput{{Type: stringType}, {Type: bytesTyp}},
+			[]providerInput{{Type: intType}, {Type: float64Type}},
+			[]providerOutput{{Type: stringType}, {Type: bytesTyp}},
 			false,
 		},
 		{
 			"simple args with error",
 			func(x int, y float64) (string, []byte, error) { return "", nil, nil },
-			[]depinject.ProviderInput{{Type: intType}, {Type: float64Type}},
-			[]depinject.ProviderOutput{{Type: stringType}, {Type: bytesTyp}},
+			[]providerInput{{Type: intType}, {Type: float64Type}},
+			[]providerOutput{{Type: stringType}, {Type: bytesTyp}},
 			false,
 		},
 		{
@@ -62,8 +63,8 @@ func TestExtractProviderDescriptor(t *testing.T) {
 			func(_ float32, _ StructIn, _ byte) (int16, StructOut, int32, error) {
 				return int16(0), StructOut{}, int32(0), nil
 			},
-			[]depinject.ProviderInput{{Type: float32Type}, {Type: intType}, {Type: float64Type, Optional: true}, {Type: byteTyp}},
-			[]depinject.ProviderOutput{{Type: int16Type}, {Type: stringType}, {Type: bytesTyp}, {Type: int32Type}},
+			[]providerInput{{Type: float32Type}, {Type: intType}, {Type: float64Type, Optional: true}, {Type: byteTyp}},
+			[]providerOutput{{Type: int16Type}, {Type: stringType}, {Type: bytesTyp}, {Type: int32Type}},
 			false,
 		},
 		{
@@ -90,17 +91,45 @@ func TestExtractProviderDescriptor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := depinject.ExtractProviderDescriptor(tt.ctr)
+			got, err := extractProviderDescriptor(tt.ctr)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ExtractProviderDescriptor() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("extractProviderDescriptor() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got.Inputs, tt.wantIn) {
-				t.Errorf("ExtractProviderDescriptor() got = %v, want %v", got.Inputs, tt.wantIn)
+				t.Errorf("extractProviderDescriptor() got = %v, want %v", got.Inputs, tt.wantIn)
 			}
 			if !reflect.DeepEqual(got.Outputs, tt.wantOut) {
-				t.Errorf("ExtractProviderDescriptor() got = %v, want %v", got.Outputs, tt.wantOut)
+				t.Errorf("extractProviderDescriptor() got = %v, want %v", got.Outputs, tt.wantOut)
 			}
 		})
 	}
+}
+
+type SomeStruct struct{}
+
+func TestBadCtr(t *testing.T) {
+	_, err := extractProviderDescriptor(SomeStruct{})
+	require.Error(t, err)
+}
+
+func TestErrorFunc(t *testing.T) {
+	_, err := extractProviderDescriptor(
+		func() (error, int) { return nil, 0 },
+	)
+	require.Error(t, err)
+
+	_, err = extractProviderDescriptor(
+		func() (int, error) { return 0, nil },
+	)
+	require.NoError(t, err)
+
+	var x int
+	require.Error(t,
+		Inject(
+			Provide(func() (int, error) {
+				return 0, fmt.Errorf("the error")
+			}),
+			&x,
+		))
 }

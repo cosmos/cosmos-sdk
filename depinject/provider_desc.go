@@ -6,16 +6,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ProviderDescriptor defines a special provider type that is defined by
+// providerDescriptor defines a special provider type that is defined by
 // reflection. It should be passed as a value to the Provide function.
 // Ex:
-//   option.Provide(ProviderDescriptor{ ... })
-type ProviderDescriptor struct {
+//   option.Provide(providerDescriptor{ ... })
+type providerDescriptor struct {
 	// Inputs defines the in parameter types to Fn.
-	Inputs []ProviderInput
+	Inputs []providerInput
 
 	// Outputs defines the out parameter types to Fn.
-	Outputs []ProviderOutput
+	Outputs []providerOutput
 
 	// Fn defines the provider function.
 	Fn func([]reflect.Value) ([]reflect.Value, error)
@@ -25,24 +25,24 @@ type ProviderDescriptor struct {
 	Location Location
 }
 
-type ProviderInput struct {
+type providerInput struct {
 	Type     reflect.Type
 	Optional bool
 }
 
-type ProviderOutput struct {
+type providerOutput struct {
 	Type reflect.Type
 }
 
-func ExtractProviderDescriptor(provider interface{}) (ProviderDescriptor, error) {
+func extractProviderDescriptor(provider interface{}) (providerDescriptor, error) {
 	rctr, err := doExtractProviderDescriptor(provider)
 	if err != nil {
-		return ProviderDescriptor{}, err
+		return providerDescriptor{}, err
 	}
 	return expandStructArgsProvider(rctr)
 }
 
-func ExtractInvokerDescriptor(provider interface{}) (ProviderDescriptor, error) {
+func extractInvokerDescriptor(provider interface{}) (providerDescriptor, error) {
 	var err error
 	rctr, err := doExtractProviderDescriptor(provider)
 
@@ -53,48 +53,48 @@ func ExtractInvokerDescriptor(provider interface{}) (ProviderDescriptor, error) 
 	}
 
 	if err != nil {
-		return ProviderDescriptor{}, err
+		return providerDescriptor{}, err
 	}
 	return expandStructArgsProvider(rctr)
 }
 
-func doExtractProviderDescriptor(ctr interface{}) (ProviderDescriptor, error) {
+func doExtractProviderDescriptor(ctr interface{}) (providerDescriptor, error) {
 	val := reflect.ValueOf(ctr)
 	typ := val.Type()
 	if typ.Kind() != reflect.Func {
-		return ProviderDescriptor{}, errors.Errorf("expected a Func type, got %v", typ)
+		return providerDescriptor{}, errors.Errorf("expected a Func type, got %v", typ)
 	}
 
 	loc := LocationFromPC(val.Pointer())
 
 	if typ.IsVariadic() {
-		return ProviderDescriptor{}, errors.Errorf("variadic function can't be used as a provider: %s", loc)
+		return providerDescriptor{}, errors.Errorf("variadic function can't be used as a provider: %s", loc)
 	}
 
 	numIn := typ.NumIn()
-	in := make([]ProviderInput, numIn)
+	in := make([]providerInput, numIn)
 	for i := 0; i < numIn; i++ {
-		in[i] = ProviderInput{
+		in[i] = providerInput{
 			Type: typ.In(i),
 		}
 	}
 
 	errIdx := -1
 	numOut := typ.NumOut()
-	var out []ProviderOutput
+	var out []providerOutput
 	for i := 0; i < numOut; i++ {
 		t := typ.Out(i)
 		if t == errType {
 			if i != numOut-1 {
-				return ProviderDescriptor{}, errors.Errorf("output error parameter is not last parameter in function %s", loc)
+				return providerDescriptor{}, errors.Errorf("output error parameter is not last parameter in function %s", loc)
 			}
 			errIdx = i
 		} else {
-			out = append(out, ProviderOutput{Type: t})
+			out = append(out, providerOutput{Type: t})
 		}
 	}
 
-	return ProviderDescriptor{
+	return providerDescriptor{
 		Inputs:  in,
 		Outputs: out,
 		Fn: func(values []reflect.Value) ([]reflect.Value, error) {

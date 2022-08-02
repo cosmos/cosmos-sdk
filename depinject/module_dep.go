@@ -7,7 +7,7 @@ import (
 )
 
 type moduleDepProvider struct {
-	provider        *ProviderDescriptor
+	provider        *providerDescriptor
 	calledForModule map[*moduleKey]bool
 	valueMap        map[*moduleKey][]reflect.Value
 }

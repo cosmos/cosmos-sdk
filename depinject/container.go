@@ -25,7 +25,7 @@ type container struct {
 }
 
 type invoker struct {
-	fn     *ProviderDescriptor
+	fn     *providerDescriptor
 	modKey *moduleKey
 }
 
@@ -55,7 +55,7 @@ func newContainer(cfg *debugConfig) *container {
 	}
 }
 
-func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]reflect.Value, error) {
+func (c *container) call(provider *providerDescriptor, moduleKey *moduleKey) ([]reflect.Value, error) {
 	loc := provider.Location
 	graphNode := c.locationGraphNode(loc, moduleKey)
 
@@ -205,7 +205,7 @@ func (c *container) getExplicitResolver(typ reflect.Type, key *moduleKey) (resol
 
 var stringType = reflect.TypeOf("")
 
-func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (interface{}, error) {
+func (c *container) addNode(provider *providerDescriptor, key *moduleKey) (interface{}, error) {
 	providerGraphNode := c.locationGraphNode(provider.Location, key)
 	hasModuleKeyParam := false
 	hasOwnModuleKeyParam := false
@@ -359,7 +359,7 @@ func (c *container) supply(value reflect.Value, location Location) error {
 	return nil
 }
 
-func (c *container) addInvoker(provider *ProviderDescriptor, key *moduleKey) error {
+func (c *container) addInvoker(provider *providerDescriptor, key *moduleKey) error {
 	// make sure there are no outputs
 	if len(provider.Outputs) > 0 {
 		return fmt.Errorf("invoker function %s should not return any outputs", provider.Location)
@@ -373,7 +373,7 @@ func (c *container) addInvoker(provider *ProviderDescriptor, key *moduleKey) err
 	return nil
 }
 
-func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Location) (reflect.Value, error) {
+func (c *container) resolve(in providerInput, moduleKey *moduleKey, caller Location) (reflect.Value, error) {
 	c.resolveStack = append(c.resolveStack, resolveFrame{loc: caller, typ: in.Type})
 
 	typeGraphNode := c.typeGraphNode(in.Type)
@@ -426,17 +426,17 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 }
 
 func (c *container) build(loc Location, outputs ...interface{}) error {
-	var providerIn []ProviderInput
+	var providerIn []providerInput
 	for _, output := range outputs {
 		typ := reflect.TypeOf(output)
 		if typ.Kind() != reflect.Pointer {
 			return fmt.Errorf("output type must be a pointer, %s is invalid", typ)
 		}
 
-		providerIn = append(providerIn, ProviderInput{Type: typ.Elem()})
+		providerIn = append(providerIn, providerInput{Type: typ.Elem()})
 	}
 
-	desc := ProviderDescriptor{
+	desc := providerDescriptor{
 		Inputs:  providerIn,
 		Outputs: nil,
 		Fn: func(values []reflect.Value) ([]reflect.Value, error) {

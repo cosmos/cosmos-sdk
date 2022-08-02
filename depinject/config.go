@@ -36,7 +36,7 @@ func ProvideInModule(moduleName string, providers ...interface{}) Config {
 
 func provide(ctr *container, key *moduleKey, providers []interface{}) error {
 	for _, c := range providers {
-		rc, err := ExtractProviderDescriptor(c)
+		rc, err := extractProviderDescriptor(c)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -75,7 +75,7 @@ func InvokeInModule(moduleName string, invokers ...interface{}) Config {
 
 func invoke(ctr *container, key *moduleKey, invokers []interface{}) error {
 	for _, c := range invokers {
-		rc, err := ExtractInvokerDescriptor(c)
+		rc, err := extractInvokerDescriptor(c)
 		if err != nil {
 			return errors.WithStack(err)
 		}

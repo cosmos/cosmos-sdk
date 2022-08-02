@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type KeeperTestSuite struct {
+type IntegrationTestSuite struct {
 	suite.Suite
 
 	app         *simapp.SimApp
@@ -26,7 +26,7 @@ type KeeperTestSuite struct {
 	msgServer   types.MsgServer
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (suite *IntegrationTestSuite) SetupTest() {
 	app := simapp.Setup(suite.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -71,6 +71,6 @@ func TestParams(t *testing.T) {
 	require.True(t, expParams.Equal(resParams))
 }
 
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }

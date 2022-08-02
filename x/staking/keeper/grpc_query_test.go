@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
+func (suite *IntegrationTestSuite) TestGRPCQueryValidators() {
 	queryClient, vals := suite.queryClient, suite.vals
 	var req *types.QueryValidatorsRequest
 	testCases := []struct {
@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryValidator() {
+func (suite *IntegrationTestSuite) TestGRPCQueryValidator() {
 	app, ctx, queryClient, vals := suite.app, suite.ctx, suite.queryClient, suite.vals
 	validator, found := app.StakingKeeper.GetValidator(ctx, vals[0].GetOperator())
 	suite.True(found)
@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidator() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidators() {
+func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorValidators() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 	params := app.StakingKeeper.GetParams(ctx)
 	delValidators := app.StakingKeeper.GetDelegatorValidators(ctx, addrs[0], params.MaxValidators)
@@ -170,7 +170,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidators() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidator() {
+func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorValidator() {
 	queryClient, addrs, vals := suite.queryClient, suite.addrs, suite.vals
 	addr := addrs[1]
 	addrVal, addrVal1 := vals[0].OperatorAddress, vals[1].OperatorAddress
@@ -224,7 +224,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidator() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryDelegation() {
+func (suite *IntegrationTestSuite) TestGRPCQueryDelegation() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	addrVal := vals[0].OperatorAddress
@@ -281,7 +281,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegation() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
+func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorDelegations() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 	addrAcc := addrs[0]
 	addrVal1 := vals[0].OperatorAddress
@@ -294,7 +294,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 	testCases := []struct {
 		msg       string
 		malleate  func()
-		onSuccess func(suite *KeeperTestSuite, response *types.QueryDelegatorDelegationsResponse)
+		onSuccess func(suite *IntegrationTestSuite, response *types.QueryDelegatorDelegationsResponse)
 		expErr    bool
 	}{
 		{
@@ -302,7 +302,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 			func() {
 				req = &types.QueryDelegatorDelegationsRequest{}
 			},
-			func(suite *KeeperTestSuite, response *types.QueryDelegatorDelegationsResponse) {},
+			func(suite *IntegrationTestSuite, response *types.QueryDelegatorDelegationsResponse) {},
 			true,
 		},
 		{
@@ -310,7 +310,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 			func() {
 				req = &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrs[4].String()}
 			},
-			func(suite *KeeperTestSuite, response *types.QueryDelegatorDelegationsResponse) {
+			func(suite *IntegrationTestSuite, response *types.QueryDelegatorDelegationsResponse) {
 				suite.Equal(uint64(0), response.Pagination.Total)
 				suite.Len(response.DelegationResponses, 0)
 			},
@@ -324,7 +324,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
 				}
 			},
-			func(suite *KeeperTestSuite, response *types.QueryDelegatorDelegationsResponse) {
+			func(suite *IntegrationTestSuite, response *types.QueryDelegatorDelegationsResponse) {
 				suite.Equal(uint64(2), response.Pagination.Total)
 				suite.Len(response.DelegationResponses, 1)
 				suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), response.DelegationResponses[0].Balance)
@@ -347,7 +347,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
+func (suite *IntegrationTestSuite) TestGRPCQueryValidatorDelegations() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 	addrAcc := addrs[0]
 	addrVal1 := vals[1].OperatorAddress
@@ -416,7 +416,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryUnbondingDelegation() {
+func (suite *IntegrationTestSuite) TestGRPCQueryUnbondingDelegation() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 	addrAcc2 := addrs[1]
 	addrVal2 := vals[1].OperatorAddress
@@ -475,7 +475,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryUnbondingDelegation() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
+func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	addrVal, addrVal2 := vals[0].OperatorAddress, vals[1].OperatorAddress
@@ -549,7 +549,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryPoolParameters() {
+func (suite *IntegrationTestSuite) TestGRPCQueryPoolParameters() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 	bondDenom := sdk.DefaultBondDenom
 
@@ -567,7 +567,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryPoolParameters() {
 	suite.Equal(app.StakingKeeper.GetParams(ctx), resp.Params)
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
+func (suite *IntegrationTestSuite) TestGRPCQueryHistoricalInfo() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
 	hi, found := app.StakingKeeper.GetHistoricalInfo(ctx, 5)
@@ -625,7 +625,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryRedelegations() {
+func (suite *IntegrationTestSuite) TestGRPCQueryRedelegations() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
@@ -727,7 +727,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegations() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
+func (suite *IntegrationTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 	addrAcc1, _ := addrs[0], addrs[1]
 	val1 := vals[0]

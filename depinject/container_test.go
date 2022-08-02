@@ -83,7 +83,7 @@ type BProvides struct {
 
 func (ModuleB) Provide(dependencies BDependencies) (BProvides, Handler, error) {
 	return BProvides{
-		keeperB: KeeperB{
+		KeeperB: KeeperB{
 			key:        dependencies.Key,
 			msgClientA: dependencies.A,
 		},

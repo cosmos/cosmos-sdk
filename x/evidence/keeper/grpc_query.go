@@ -79,7 +79,6 @@ func (k Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceReques
 		evidence = append(evidence, evidenceAny)
 		return nil
 	})
-
 	if err != nil {
 		return &types.QueryAllEvidenceResponse{}, err
 	}

@@ -34,8 +34,7 @@ func runListCmd(cmd *cobra.Command, _ []string) error {
 	}
 
 	if ok, _ := cmd.Flags().GetBool(flagListNames); !ok {
-		printKeyringRecords(cmd.OutOrStdout(), records, clientCtx.OutputFormat)
-		return nil
+		return printKeyringRecords(cmd.OutOrStdout(), records, clientCtx.OutputFormat)
 	}
 
 	for _, k := range records {

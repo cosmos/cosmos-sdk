@@ -41,8 +41,8 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker) simulation.WeightedOperations {
-
+	appParams simtypes.AppParams, cdc codec.JSONCodec, ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker,
+) simulation.WeightedOperations {
 	var (
 		weightMsgGrant int
 		weightExec     int
@@ -102,7 +102,7 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
 
-		spendLimit := spendableCoins.Sub(fees)
+		spendLimit := spendableCoins.Sub(fees...)
 		if spendLimit == nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "spend limit is nil"), nil, nil
 		}
@@ -116,8 +116,10 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
+
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
+			r,
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,
@@ -170,7 +172,7 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 
 		granterAcc, ok := simtypes.FindAccount(accs, granterAddr)
 		if !ok {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "account not found")
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "account not found"), nil, sdkerrors.ErrNotFound.Wrapf("account not found")
 		}
 
 		spendableCoins := bk.SpendableCoins(ctx, granterAddr)
@@ -187,7 +189,8 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, a.MsgTypeURL())
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		account := ak.GetAccount(ctx, granterAddr)
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
+			r,
 			txCfg,
 			[]sdk.Msg{&msg},
 			fees,
@@ -241,15 +244,19 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 
 		grantee, ok := simtypes.FindAccount(accs, granteeAddr)
 		if !ok {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "grantee account not found")
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.ErrNotFound.Wrapf("grantee account not found")
 		}
 
 		if _, ok := simtypes.FindAccount(accs, granterAddr); !ok {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "granter account not found")
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.ErrNotFound.Wrapf("granter account not found")
 		}
 
 		granterspendableCoins := bk.SpendableCoins(ctx, granterAddr)
 		coins := simtypes.RandSubsetCoins(r, granterspendableCoins)
+		// if coins slice is empty, we can not create valid banktype.MsgSend
+		if len(coins) == 0 {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "empty coins slice"), nil, nil
+		}
 
 		// Check send_enabled status of each sent coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
@@ -276,7 +283,8 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
+			r,
 			txCfg,
 			[]sdk.Msg{&msgExec},
 			fees,

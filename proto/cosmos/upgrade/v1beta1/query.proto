@@ -37,6 +37,8 @@ service Query {
   }
 
   // Returns the account with authority to conduct upgrades
+  //
+  // Since: cosmos-sdk 0.46
   rpc Authority(QueryAuthorityRequest) returns (QueryAuthorityResponse) {
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/authority";
   }

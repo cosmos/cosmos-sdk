@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040slashing "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v040"
+	v040slashing "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v042"
 	v043slashing "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v043"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )

@@ -67,7 +67,9 @@ func NewContext(v *viper.Viper, config *tmcfg.Config, logger tmlog.Logger) *Cont
 
 func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {
 	defer func() {
-		recover()
+		if r := recover(); r != nil {
+			err = fmt.Errorf("bindFlags failed: %v", r)
+		}
 	}()
 
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
@@ -120,8 +122,12 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	basename := path.Base(executableName)
 
 	// Configure the viper instance
-	serverCtx.Viper.BindPFlags(cmd.Flags())
-	serverCtx.Viper.BindPFlags(cmd.PersistentFlags())
+	if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
+		return err
+	}
+	if err := serverCtx.Viper.BindPFlags(cmd.PersistentFlags()); err != nil {
+		return err
+	}
 	serverCtx.Viper.SetEnvPrefix(basename)
 	serverCtx.Viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	serverCtx.Viper.AutomaticEnv()
@@ -139,7 +145,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	}
 
 	var logWriter io.Writer
-	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == tmlog.LogFormatPlain {
+	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == tmcfg.LogFormatPlain {
 		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
 	} else {
 		logWriter = os.Stderr
@@ -197,13 +203,13 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		tmcfg.EnsureRoot(rootDir)
 
 		if err = conf.ValidateBasic(); err != nil {
-			return nil, fmt.Errorf("error in config file: %v", err)
+			return nil, fmt.Errorf("error in config file: %w", err)
 		}
 
 		conf.RPC.PprofListenAddress = "localhost:6060"
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
-		tmcfg.WriteConfigFile(rootDir, conf)
+		tmcfg.WriteConfigFile(tmCfgFile, conf)
 
 	case err != nil:
 		return nil, err
@@ -272,7 +278,6 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		VersionCmd(),
 		tmcmd.ResetAllCmd,
 		tmcmd.ResetStateCmd,
-		tmcmd.InspectCmd,
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)
@@ -402,6 +407,6 @@ func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {
 	return os.OpenFile(
 		traceWriterFile,
 		os.O_WRONLY|os.O_APPEND|os.O_CREATE,
-		0666,
+		0o666,
 	)
 }

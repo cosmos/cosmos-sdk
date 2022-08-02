@@ -1530,7 +1530,11 @@ type QueryClient interface {
 	VotesByVoter(ctx context.Context, in *QueryVotesByVoterRequest, opts ...grpc.CallOption) (*QueryVotesByVoterResponse, error)
 	// GroupsByMember queries groups by member address.
 	GroupsByMember(ctx context.Context, in *QueryGroupsByMemberRequest, opts ...grpc.CallOption) (*QueryGroupsByMemberResponse, error)
-	// TallyResult queries the tally of a proposal votes.
+	// TallyResult returns the tally result of a proposal. If the proposal is
+	// still in voting period, then this query computes the current tally state,
+	// which might not be final. On the other hand, if the proposal is final,
+	// then it simply returns the `final_tally_result` state stored in the
+	// proposal itself.
 	TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error)
 }
 
@@ -1685,7 +1689,11 @@ type QueryServer interface {
 	VotesByVoter(context.Context, *QueryVotesByVoterRequest) (*QueryVotesByVoterResponse, error)
 	// GroupsByMember queries groups by member address.
 	GroupsByMember(context.Context, *QueryGroupsByMemberRequest) (*QueryGroupsByMemberResponse, error)
-	// TallyResult queries the tally of a proposal votes.
+	// TallyResult returns the tally result of a proposal. If the proposal is
+	// still in voting period, then this query computes the current tally state,
+	// which might not be final. On the other hand, if the proposal is final,
+	// then it simply returns the `final_tally_result` state stored in the
+	// proposal itself.
 	TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error)
 }
 

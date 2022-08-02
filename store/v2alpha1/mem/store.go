@@ -3,6 +3,7 @@ package mem
 import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/dbadapter"
 )
@@ -38,7 +39,7 @@ func (s *Store) Commit() (id types.CommitID) {
 	return
 }
 
-func (s *Store) SetPruning(pruning types.PruningOptions) {}
-func (s *Store) GetPruning() types.PruningOptions        { return types.PruningOptions{} }
+func (s *Store) SetPruning(pruningtypes.PruningOptions)  {}
+func (s *Store) GetPruning() pruningtypes.PruningOptions { return pruningtypes.PruningOptions{} }
 
 func (s Store) LastCommitID() (id types.CommitID) { return }

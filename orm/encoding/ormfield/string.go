@@ -16,7 +16,7 @@ func (s StringCodec) FixedBufferSize() int {
 }
 
 func (s StringCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
-	return len(value.Interface().(string)), nil
+	return len(value.String()), nil
 }
 
 func (s StringCodec) IsOrdered() bool {
@@ -24,7 +24,7 @@ func (s StringCodec) IsOrdered() bool {
 }
 
 func (s StringCodec) Compare(v1, v2 protoreflect.Value) int {
-	return strings.Compare(v1.Interface().(string), v2.Interface().(string))
+	return strings.Compare(v1.String(), v2.String())
 }
 
 func (s StringCodec) Decode(r Reader) (protoreflect.Value, error) {
@@ -33,7 +33,7 @@ func (s StringCodec) Decode(r Reader) (protoreflect.Value, error) {
 }
 
 func (s StringCodec) Encode(value protoreflect.Value, w io.Writer) error {
-	_, err := w.Write([]byte(value.Interface().(string)))
+	_, err := w.Write([]byte(value.String()))
 	return err
 }
 
@@ -46,7 +46,7 @@ func (s NonTerminalStringCodec) FixedBufferSize() int {
 }
 
 func (s NonTerminalStringCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
-	return len(value.Interface().(string)) + 1, nil
+	return len(value.String()) + 1, nil
 }
 
 func (s NonTerminalStringCodec) IsOrdered() bool {
@@ -54,7 +54,7 @@ func (s NonTerminalStringCodec) IsOrdered() bool {
 }
 
 func (s NonTerminalStringCodec) Compare(v1, v2 protoreflect.Value) int {
-	return strings.Compare(v1.Interface().(string), v2.Interface().(string))
+	return strings.Compare(v1.String(), v2.String())
 }
 
 func (s NonTerminalStringCodec) Decode(r Reader) (protoreflect.Value, error) {
@@ -69,7 +69,7 @@ func (s NonTerminalStringCodec) Decode(r Reader) (protoreflect.Value, error) {
 }
 
 func (s NonTerminalStringCodec) Encode(value protoreflect.Value, w io.Writer) error {
-	str := value.Interface().(string)
+	str := value.String()
 	bz := []byte(str)
 	for _, b := range bz {
 		if b == 0 {

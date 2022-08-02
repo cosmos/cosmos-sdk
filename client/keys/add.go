@@ -292,14 +292,15 @@ func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemo
 	switch outputFormat {
 	case OutputFormatText:
 		cmd.PrintErrln()
-		printKeyringRecord(cmd.OutOrStdout(), k, keyring.MkAccKeyOutput, outputFormat)
+		if err := printKeyringRecord(cmd.OutOrStdout(), k, keyring.MkAccKeyOutput, outputFormat); err != nil {
+			return err
+		}
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
-			fmt.Fprintln(cmd.ErrOrStderr(), "\n**Important** write this mnemonic phrase in a safe place.")
-			fmt.Fprintln(cmd.ErrOrStderr(), "It is the only way to recover your account if you ever forget your password.")
-			fmt.Fprintln(cmd.ErrOrStderr(), "")
-			fmt.Fprintln(cmd.ErrOrStderr(), mnemonic)
+			if _, err := fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("\n**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.\n\n%s\n", mnemonic)); err != nil {
+				return fmt.Errorf("failed to print mnemonic: %v", err)
+			}
 		}
 	case OutputFormatJSON:
 		out, err := keyring.MkAccKeyOutput(k)

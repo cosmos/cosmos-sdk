@@ -116,7 +116,6 @@ func TestExportCmd_Height(t *testing.T) {
 			require.Equal(t, tc.expHeight, exportedGenDoc.InitialHeight)
 		})
 	}
-
 }
 
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {
@@ -126,7 +125,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 		t.Fatalf("error creating config folder: %s", err)
 	}
 
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	db := dbm.NewMemDB()
 	encCfg := simapp.MakeTestEncodingConfig()
 	app := simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, tempDir, 0, encCfg, simapp.EmptyAppOptions{})
@@ -180,7 +179,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 }
 
 func createConfigFolder(dir string) error {
-	return os.Mkdir(path.Join(dir, "config"), 0700)
+	return os.Mkdir(path.Join(dir, "config"), 0o700)
 }
 
 func saveGenesisFile(genDoc *tmtypes.GenesisDoc, dir string) error {

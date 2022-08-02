@@ -1,5 +1,7 @@
 package keeper
 
+// DONTCOVER
+
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 

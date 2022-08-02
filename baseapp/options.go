@@ -7,17 +7,18 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // File for storing in-package BaseApp optional functions,
 // for options that need access to non-exported fields of the BaseApp
 
 // SetPruning sets a pruning option on the multistore associated with the app
-func SetPruning(opts sdk.PruningOptions) func(*BaseApp) {
+func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetPruning(opts) }
 }
 
@@ -69,19 +70,9 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
 }
 
-// SetSnapshotInterval sets the snapshot interval.
-func SetSnapshotInterval(interval uint64) func(*BaseApp) {
-	return func(app *BaseApp) { app.SetSnapshotInterval(interval) }
-}
-
-// SetSnapshotKeepRecent sets the recent snapshots to keep.
-func SetSnapshotKeepRecent(keepRecent uint32) func(*BaseApp) {
-	return func(app *BaseApp) { app.SetSnapshotKeepRecent(keepRecent) }
-}
-
-// SetSnapshotStore sets the snapshot store.
-func SetSnapshotStore(snapshotStore *snapshots.Store) func(*BaseApp) {
-	return func(app *BaseApp) { app.SetSnapshotStore(snapshotStore) }
+// SetSnapshot sets the snapshot store.
+func SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSnapshot(snapshotStore, opts) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -154,12 +145,20 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 	app.endBlocker = endBlocker
 }
 
-func (app *BaseApp) SetTxHandler(txHandler tx.Handler) {
+func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	if app.sealed {
-		panic("SetTxHandler() on sealed BaseApp")
+		panic("SetAnteHandler() on sealed BaseApp")
 	}
 
-	app.txHandler = txHandler
+	app.anteHandler = ah
+}
+
+func (app *BaseApp) SetPostHandler(ph sdk.AnteHandler) {
+	if app.sealed {
+		panic("SetPostHandler() on sealed BaseApp")
+	}
+
+	app.postHandler = ph
 }
 
 func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {
@@ -201,38 +200,32 @@ func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 	app.storeLoader = loader
 }
 
-// SetSnapshotStore sets the snapshot store.
-func (app *BaseApp) SetSnapshotStore(snapshotStore *snapshots.Store) {
+// SetRouter allows us to customize the router.
+func (app *BaseApp) SetRouter(router sdk.Router) {
 	if app.sealed {
-		panic("SetSnapshotStore() on sealed BaseApp")
+		panic("SetRouter() on sealed BaseApp")
 	}
-	if snapshotStore == nil {
+	app.router = router
+}
+
+// SetSnapshot sets the snapshot store and options.
+func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) {
+	if app.sealed {
+		panic("SetSnapshot() on sealed BaseApp")
+	}
+	if snapshotStore == nil || opts.Interval == snapshottypes.SnapshotIntervalOff {
 		app.snapshotManager = nil
 		return
 	}
-	app.snapshotManager = snapshots.NewManager(snapshotStore, app.cms, nil)
-}
-
-// SetSnapshotInterval sets the snapshot interval.
-func (app *BaseApp) SetSnapshotInterval(snapshotInterval uint64) {
-	if app.sealed {
-		panic("SetSnapshotInterval() on sealed BaseApp")
-	}
-	app.snapshotInterval = snapshotInterval
-}
-
-// SetSnapshotKeepRecent sets the number of recent snapshots to keep.
-func (app *BaseApp) SetSnapshotKeepRecent(snapshotKeepRecent uint32) {
-	if app.sealed {
-		panic("SetSnapshotKeepRecent() on sealed BaseApp")
-	}
-	app.snapshotKeepRecent = snapshotKeepRecent
+	app.cms.SetSnapshotInterval(opts.Interval)
+	app.snapshotManager = snapshots.NewManager(snapshotStore, opts, app.cms, nil, app.logger)
 }
 
 // SetInterfaceRegistry sets the InterfaceRegistry.
 func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.interfaceRegistry = registry
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)
+	app.msgServiceRouter.SetInterfaceRegistry(registry)
 }
 
 // SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore

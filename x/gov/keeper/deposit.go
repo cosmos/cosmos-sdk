@@ -26,10 +26,7 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit v1.Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshal(&deposit)
-	depositor, err := sdk.AccAddressFromBech32(deposit.Depositor)
-	if err != nil {
-		panic(err)
-	}
+	depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
 
 	store.Set(types.DepositKey(deposit.ProposalId, depositor), bz)
 }
@@ -64,16 +61,14 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx sdk.Context, proposalID uint64) {
 			panic(err)
 		}
 
-		depositor, err := sdk.AccAddressFromBech32(deposit.Depositor)
-		if err != nil {
-			panic(err)
-		}
+		depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
+
 		store.Delete(types.DepositKey(proposalID, depositor))
 		return false
 	})
 }
 
-// IterateAllDeposits iterates over the all the stored deposits and performs a callback function
+// IterateAllDeposits iterates over all the stored deposits and performs a callback function
 func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit v1.Deposit) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKeyPrefix)
@@ -91,7 +86,7 @@ func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit v1.Depo
 	}
 }
 
-// IterateDeposits iterates over the all the proposals deposits and performs a callback function
+// IterateDeposits iterates over all the proposals deposits and performs a callback function
 func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func(deposit v1.Deposit) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKey(proposalID))
@@ -172,12 +167,9 @@ func (keeper Keeper) RefundAndDeleteDeposits(ctx sdk.Context, proposalID uint64)
 	store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit v1.Deposit) bool {
-		depositor, err := sdk.AccAddressFromBech32(deposit.Depositor)
-		if err != nil {
-			panic(err)
-		}
+		depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
 
-		err = keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositor, deposit.Amount)
+		err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositor, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}

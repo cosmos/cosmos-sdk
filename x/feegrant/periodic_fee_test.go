@@ -131,8 +131,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			blockTime:     oneHour,
 			accept:        true,
 			remove:        false,
-			remainsPeriod: smallAtom.Sub(oneAtom),
-			remains:       smallAtom.Sub(oneAtom),
+			remainsPeriod: smallAtom.Sub(oneAtom...),
+			remains:       smallAtom.Sub(oneAtom...),
 			periodReset:   oneHour.Add(tenMinutes), // one step from last reset, not now
 		},
 		"period reset no spend limit": {

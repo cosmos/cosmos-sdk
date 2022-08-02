@@ -10,16 +10,16 @@ import (
 	"runtime"
 	"strings"
 
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/hashicorp/go-getter"
 	"github.com/otiai10/copy"
-
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/rs/zerolog"
 )
 
 // DoUpgrade will be called after the log message has been parsed and the process has terminated.
 // We can now make any changes to the underlying directory without interference and leave it
 // in a state, so we can make a proper restart
-func DoUpgrade(cfg *Config, info upgradetypes.Plan) error {
+func DoUpgrade(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) error {
 	// Simplest case is to switch the link
 	err := EnsureBinary(cfg.UpgradeBin(info.Name))
 	if err == nil {
@@ -37,11 +37,11 @@ func DoUpgrade(cfg *Config, info upgradetypes.Plan) error {
 	}
 
 	// If not there, then we try to download it... maybe
-	Logger.Info().Msg("No upgrade binary found, beginning to download it")
+	logger.Info().Msg("no upgrade binary found, beginning to download it")
 	if err := DownloadBinary(cfg, info); err != nil {
 		return fmt.Errorf("cannot download binary. %w", err)
 	}
-	Logger.Info().Msg("Downloading binary complete")
+	logger.Info().Msg("downloading binary complete")
 
 	// and then set the binary again
 	if err := EnsureBinary(cfg.UpgradeBin(info.Name)); err != nil {
@@ -91,11 +91,11 @@ func MarkExecutable(path string) error {
 		return fmt.Errorf("stating binary: %w", err)
 	}
 	// end early if world exec already set
-	if info.Mode()&0001 == 1 {
+	if info.Mode()&0o001 == 1 {
 		return nil
 	}
 	// now try to set all exec bits
-	newMode := info.Mode().Perm() | 0111
+	newMode := info.Mode().Perm() | 0o111
 	return os.Chmod(path, newMode)
 }
 
@@ -162,7 +162,7 @@ func EnsureBinary(path string) error {
 	}
 
 	// this checks if the world-executable bit is set (we cannot check owner easily)
-	exec := info.Mode().Perm() & 0001
+	exec := info.Mode().Perm() & 0o001
 	if exec == 0 {
 		return fmt.Errorf("%s is not world executable", info.Name())
 	}

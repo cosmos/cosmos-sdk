@@ -31,10 +31,10 @@ const (
 	// Floor[Log2[10^Precision - 1]].
 	decimalTruncateBits = DecimalPrecisionBits - 1
 
-	maxDecBitLen = maxBitLen + decimalTruncateBits
+	maxDecBitLen = MaxBitLen + decimalTruncateBits
 
 	// max number of iterations in ApproxRoot function
-	maxApproxRootIterations = 100
+	maxApproxRootIterations = 300
 )
 
 var (
@@ -143,7 +143,7 @@ func NewDecFromIntWithPrec(i Int, prec int64) Dec {
 // CONTRACT - This function does not mutate the input str.
 func NewDecFromStr(str string) (Dec, error) {
 	if len(str) == 0 {
-		return Dec{}, ErrEmptyDecimalStr
+		return Dec{}, fmt.Errorf("%s: %w", str, ErrEmptyDecimalStr)
 	}
 
 	// first extract any negative symbol
@@ -154,7 +154,7 @@ func NewDecFromStr(str string) (Dec, error) {
 	}
 
 	if len(str) == 0 {
-		return Dec{}, ErrEmptyDecimalStr
+		return Dec{}, fmt.Errorf("%s: %w", str, ErrEmptyDecimalStr)
 	}
 
 	strs := strings.Split(str, ".")
@@ -172,7 +172,7 @@ func NewDecFromStr(str string) (Dec, error) {
 	}
 
 	if lenDecs > Precision {
-		return Dec{}, fmt.Errorf("invalid precision; max: %d, got: %d", Precision, lenDecs)
+		return Dec{}, fmt.Errorf("value '%s' exceeds max precision by %d decimal places: max precision %d", str, Precision-lenDecs, Precision)
 	}
 
 	// add some extra zero's to correct to the Precision factor
@@ -182,10 +182,10 @@ func NewDecFromStr(str string) (Dec, error) {
 
 	combined, ok := new(big.Int).SetString(combinedStr, 10) // base 10
 	if !ok {
-		return Dec{}, fmt.Errorf("failed to set decimal string: %s", combinedStr)
+		return Dec{}, fmt.Errorf("failed to set decimal string with base 10: %s", combinedStr)
 	}
 	if combined.BitLen() > maxDecBitLen {
-		return Dec{}, fmt.Errorf("decimal out of range; bitLen: got %d, max %d", combined.BitLen(), maxDecBitLen)
+		return Dec{}, fmt.Errorf("decimal '%s' out of range; bitLen: got %d, max %d", str, combined.BitLen(), maxDecBitLen)
 	}
 	if neg {
 		combined = new(big.Int).Neg(combined)
@@ -318,7 +318,7 @@ func (d Dec) MulInt(i Int) Dec {
 }
 
 func (d Dec) MulIntMut(i Int) Dec {
-	d.i.Mul(d.i, i.i)
+	d.i.Mul(d.i, i.BigInt())
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
@@ -402,7 +402,7 @@ func (d Dec) QuoInt(i Int) Dec {
 }
 
 func (d Dec) QuoIntMut(i Int) Dec {
-	d.i.Quo(d.i, i.i)
+	d.i.Quo(d.i, i.BigInt())
 	return d
 }
 

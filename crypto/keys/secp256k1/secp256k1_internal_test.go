@@ -10,7 +10,6 @@ import (
 )
 
 func Test_genPrivKey(t *testing.T) {
-
 	empty := make([]byte, 32)
 	oneB := big.NewInt(1).Bytes()
 	onePadded := make([]byte, 32)

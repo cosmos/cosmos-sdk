@@ -1,4 +1,4 @@
-package baseapp_test
+package baseapp
 
 import (
 	"testing"
@@ -6,10 +6,12 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestGetBlockRentionHeight(t *testing.T) {
@@ -17,78 +19,85 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	db := dbm.NewMemDB()
 	name := t.Name()
 
+	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
+	require.NoError(t, err)
+
 	testCases := map[string]struct {
-		bapp         *baseapp.BaseApp
+		bapp         *BaseApp
 		maxAgeBlocks int64
 		commitHeight int64
 		expected     int64
 	}{
 		"defaults": {
-			bapp:         baseapp.NewBaseApp(name, logger, db),
+			bapp:         NewBaseApp(name, logger, db, nil),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     0,
 		},
 		"pruning unbonding time only": {
-			bapp:         baseapp.NewBaseApp(name, logger, db, baseapp.SetMinRetainBlocks(1)),
+			bapp:         NewBaseApp(name, logger, db, nil, SetMinRetainBlocks(1)),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     136120,
 		},
 		"pruning iavl snapshot only": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db,
-				baseapp.SetMinRetainBlocks(1),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
+				SetMinRetainBlocks(1),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(10000, 1)),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
-			expected:     498999,
+			expected:     489000,
 		},
 		"pruning state sync snapshot only": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db,
-				baseapp.SetSnapshotInterval(50000),
-				baseapp.SetSnapshotKeepRecent(3),
-				baseapp.SetMinRetainBlocks(1),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+				SetMinRetainBlocks(1),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     349000,
 		},
 		"pruning min retention only": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db,
-				baseapp.SetMinRetainBlocks(400000),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetMinRetainBlocks(400000),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     99000,
 		},
 		"pruning all conditions": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db,
-				baseapp.SetMinRetainBlocks(400000),
-				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
+				SetMinRetainBlocks(400000),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     99000,
 		},
 		"no pruning due to no persisted state": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db,
-				baseapp.SetMinRetainBlocks(400000),
-				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
+				SetMinRetainBlocks(400000),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 10000,
 			expected:     0,
 		},
 		"disable pruning": {
-			bapp: baseapp.NewBaseApp(
-				name, logger, db,
-				baseapp.SetMinRetainBlocks(0),
-				baseapp.SetSnapshotInterval(50000), baseapp.SetSnapshotKeepRecent(3),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
+				SetMinRetainBlocks(0),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
@@ -101,8 +110,8 @@ func TestGetBlockRentionHeight(t *testing.T) {
 
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 		tc.bapp.InitChain(abci.RequestInitChain{
-			ConsensusParams: &tmprototypes.ConsensusParams{
-				Evidence: &tmprototypes.EvidenceParams{
+			ConsensusParams: &abci.ConsensusParams{
+				Evidence: &tmproto.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
 				},
 			},
@@ -124,7 +133,7 @@ func TestBaseAppCreateQueryContext(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db)
+	app := NewBaseApp(name, logger, db, nil)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
 	app.Commit()
@@ -146,7 +155,7 @@ func TestBaseAppCreateQueryContext(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := app.CreateQueryContext(tc.height, tc.prove)
+			_, err := app.createQueryContext(tc.height, tc.prove)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {

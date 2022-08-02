@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/rpc/client/mock"
-	"github.com/tendermint/tendermint/rpc/coretypes"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -106,7 +106,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 			},
 			votes: []v1.Vote{
 				v1.NewVote(0, acc1, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
-				v1.NewVote(0, acc2, v1.NewNonSplitVoteOption(v1.OptionYes), "")},
+				v1.NewVote(0, acc2, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
+			},
 		},
 		{
 			description: "2MsgPerTx1Chunk",
@@ -162,7 +163,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.description, func(t *testing.T) {
-			var marshalled = make([]tmtypes.Tx, len(tc.msgs))
+			marshalled := make([]tmtypes.Tx, len(tc.msgs))
 			cli := TxSearchMock{txs: marshalled, txConfig: encCfg.TxConfig}
 			clientCtx := client.Context{}.
 				WithLegacyAmino(encCfg.Amino).

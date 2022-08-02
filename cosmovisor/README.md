@@ -37,7 +37,7 @@ To install a previous version, you can specify the version. IMPORTANT: Chains th
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
 ```
 
-You can run `cosmovisor --version` to check the Cosmovisor version (works only with Cosmovisor >=1.0.0).
+You can run `cosmovisor version` to check the Cosmovisor version (works only with Cosmovisor >1.1.0).
 
 You can also install from source by pulling the cosmos-sdk repository and switching to the correct version and building as follows:
 
@@ -62,7 +62,7 @@ The first argument passed to `cosmovisor` is the action for `cosmovisor` to take
 
 * `help`, `--help`, or `-h` - Output `cosmovisor` help information and check your `cosmovisor` configuration.
 * `run` - Run the configured binary using the rest of the provided arguments.
-* `version`, or `--version` - Output the `cosmovisor` version and also run the binary with the `version` argument.
+* `version` - Output the `cosmovisor` version and also run the binary with the `version` argument.
 
 All arguments passed to `cosmovisor run` will be passed to the application binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor run` cannot accept any command-line arguments other than those available to the application binary.
 
@@ -209,7 +209,6 @@ You can also use `sha512sum` if you would prefer to use longer hashes, or `md5su
 
 The following instructions provide a demonstration of `cosmovisor` using the simulation application (`simapp`) shipped with the Cosmos SDK's source code. The following commands are to be run from within the `cosmos-sdk` repository.
 
-
 ### Chain Setup
 
 Let's create a new chain using the `v0.44` version of simapp (the Cosmos SDK demo app):
@@ -234,7 +233,7 @@ Set up app config:
 ```
 
 Initialize the node and overwrite any previous genesis file (never do this in a production environment):
- 
+
 <!-- TODO: init does not read chain-id from config -->
 
 ```sh
@@ -289,17 +288,15 @@ cp ./build/simd $DAEMON_HOME/cosmovisor/genesis/bin
 
 Now you can run cosmovisor with simapp v0.44:
 
-
 ```sh
 cosmovisor run start
 ```
-
 
 #### Update App
 
 Update app to the latest version (e.g. v0.45).
 
-Next, we can add a migration - which is defined using `x/upgrade` [upgrade plan](https://github.com/cosmos/cosmos-sdk/blob/master/docs/core/upgrade.md) (you may refer to a past version if you are using an older Cosmos SDK release). In a migration we can do any deterministic state change. 
+Next, we can add a migration - which is defined using `x/upgrade` [upgrade plan](https://github.com/cosmos/cosmos-sdk/blob/main/docs/core/upgrade.md) (you may refer to a past version if you are using an older Cosmos SDK release). In a migration we can do any deterministic state change.
 
 Build the new version `simd` binary:
 
@@ -313,7 +310,6 @@ Create the folder for the upgrade binary and copy the `simd` binary:
 mkdir -p $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 ```
-
 
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
 

@@ -2,6 +2,8 @@ package testutil
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
@@ -385,6 +387,38 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
 	s.Require().NoError(err)
 	s.Require().Equal([]sdk.Msg{types.NewMsgSend(from, to, amount)}, tx.GetMsgs())
+}
+
+func (s *IntegrationTestSuite) TestNewSendTxCmdDryRun() {
+	val := s.network.Validators[0]
+
+	clientCtx := val.ClientCtx
+
+	from := val.Address
+	to := val.Address
+	amount := sdk.NewCoins(
+		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+	)
+	args := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagDryRun),
+	}
+
+	oldSterr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	_, err := MsgSendExec(clientCtx, from, to, amount, args...)
+	s.Require().NoError(err)
+
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stderr = oldSterr
+
+	s.Require().Regexp("gas estimate: [0-9]+", string(out))
 }
 
 func (s *IntegrationTestSuite) TestNewSendTxCmd() {

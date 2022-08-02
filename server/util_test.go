@@ -109,7 +109,7 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 		t.Fatalf("creating config.toml file failed: %v", err)
 	}
 
-	_, err = writer.WriteString(fmt.Sprintf("db-backend = '%s'\n", testDbBackend))
+	_, err = writer.WriteString(fmt.Sprintf("db_backend = '%s'\n", testDbBackend))
 	if err != nil {
 		t.Fatalf("Failed writing string to config.toml: %v", err)
 	}
@@ -218,9 +218,9 @@ func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 	basename = strings.ReplaceAll(basename, ".", "_")
 	// This is added by tendermint
 	envVarName := fmt.Sprintf("%s_RPC_LADDR", strings.ToUpper(basename))
-	os.Setenv(envVarName, testAddr)
+	require.NoError(t, os.Setenv(envVarName, testAddr))
 	t.Cleanup(func() {
-		os.Unsetenv(envVarName)
+		require.NoError(t, os.Unsetenv(envVarName))
 	})
 
 	cmd.PreRunE = preRunETestImpl
@@ -305,7 +305,7 @@ func (v precedenceCommon) setAll(t *testing.T, setFlag *string, setEnvVar *strin
 	}
 
 	if setEnvVar != nil {
-		os.Setenv(v.envVarName, *setEnvVar)
+		require.NoError(t, os.Setenv(v.envVarName, *setEnvVar))
 	}
 
 	if setConfigFile != nil {
@@ -395,7 +395,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 	tempDir := t.TempDir()
 	subDir := filepath.Join(tempDir, "nonPerms")
-	if err := os.Mkdir(subDir, 0600); err != nil {
+	if err := os.Mkdir(subDir, 0o600); err != nil {
 		t.Fatalf("Failed to create sub directory: %v", err)
 	}
 	cmd := server.StartCmd(nil, "/foobar")

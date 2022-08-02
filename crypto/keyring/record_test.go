@@ -78,7 +78,6 @@ func (s *RecordTestSuite) TestLocalRecordMarshaling() {
 	anyPrivKey, err := codectypes.NewAnyWithValue(s.priv)
 	s.Require().NoError(err)
 	s.Require().Equal(localRecord2.PrivKey, anyPrivKey)
-	s.Require().Equal(localRecord2.PrivKeyType, s.priv.Type())
 }
 
 func (s *RecordTestSuite) TestLedgerRecordMarshaling() {

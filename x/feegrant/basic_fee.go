@@ -25,7 +25,7 @@ func (a *BasicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bo
 	}
 
 	if a.SpendLimit != nil {
-		left, invalid := a.SpendLimit.SafeSub(fee)
+		left, invalid := a.SpendLimit.SafeSub(fee...)
 		if invalid {
 			return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "basic allowance")
 		}

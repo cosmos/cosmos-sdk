@@ -1,0 +1,43 @@
+digraph "" {
+    subgraph "cluster_a" {
+      graph [fontsize="12.0", label="Module: a", penwidth="0.5", style="rounded"];
+      "github.com/cosmos/cosmos-sdk/container_test.ModuleA.Provide"[color="lightgrey", fontcolor="dimgrey", penwidth="0.5", shape="box"];
+    }
+
+    subgraph "cluster_b" {
+      graph [fontsize="12.0", label="Module: b", penwidth="0.5", style="rounded"];
+      "github.com/cosmos/cosmos-sdk/container_test.ModuleB.Provide"[color="black", fontcolor="black", penwidth="1.5", shape="box"];
+    }
+
+    subgraph "cluster_runtime" {
+      graph [fontsize="12.0", label="Module: runtime", penwidth="0.5", style="rounded"];
+      "github.com/cosmos/cosmos-sdk/container_test.ProvideKVStoreKey"[color="black", fontcolor="black", penwidth="1.5", shape="box"];
+    }
+
+  "[]github.com/cosmos/cosmos-sdk/container_test.Command"[color="lightgrey", comment="many-per-container", fontcolor="dimgrey", penwidth="0.5"];
+  "github.com/cosmos/cosmos-sdk/container.ModuleKey"[color="black", fontcolor="black", penwidth="1.5"];
+  "github.com/cosmos/cosmos-sdk/container.OwnModuleKey"[color="lightgrey", fontcolor="dimgrey", penwidth="0.5"];
+  "github.com/cosmos/cosmos-sdk/container_test.KVStoreKey"[color="black", fontcolor="black", penwidth="1.5"];
+  "github.com/cosmos/cosmos-sdk/container_test.KeeperA"[color="lightgrey", fontcolor="dimgrey", penwidth="0.5"];
+  "github.com/cosmos/cosmos-sdk/container_test.KeeperB"[color="black", fontcolor="black", penwidth="1.5"];
+  "github.com/cosmos/cosmos-sdk/container_test.MsgClientA"[color="black", fontcolor="black", penwidth="1.5"];
+  "github.com/cosmos/cosmos-sdk/container_test.ProvideMsgClientA"[color="black", fontcolor="black", penwidth="1.5", shape="box"];
+  "github.com/cosmos/cosmos-sdk/container_test.TestGraphAndLogOutput"[color="black", fontcolor="black", penwidth="1.5", shape="hexagon"];
+  "map[string]github.com/cosmos/cosmos-sdk/container_test.Handler"[color="lightgrey", comment="one-per-module", fontcolor="dimgrey", penwidth="0.5"];
+  "github.com/cosmos/cosmos-sdk/container.ModuleKey" -> "github.com/cosmos/cosmos-sdk/container_test.ProvideMsgClientA";
+  "github.com/cosmos/cosmos-sdk/container_test.ProvideMsgClientA" -> "github.com/cosmos/cosmos-sdk/container_test.MsgClientA";
+  "github.com/cosmos/cosmos-sdk/container.ModuleKey" -> "github.com/cosmos/cosmos-sdk/container_test.ProvideKVStoreKey";
+  "github.com/cosmos/cosmos-sdk/container_test.ProvideKVStoreKey" -> "github.com/cosmos/cosmos-sdk/container_test.KVStoreKey";
+  "github.com/cosmos/cosmos-sdk/container_test.KVStoreKey" -> "github.com/cosmos/cosmos-sdk/container_test.ModuleA.Provide";
+  "github.com/cosmos/cosmos-sdk/container.OwnModuleKey" -> "github.com/cosmos/cosmos-sdk/container_test.ModuleA.Provide";
+  "github.com/cosmos/cosmos-sdk/container_test.ModuleA.Provide" -> "github.com/cosmos/cosmos-sdk/container_test.KeeperA";
+  "github.com/cosmos/cosmos-sdk/container_test.ModuleA.Provide" -> "map[string]github.com/cosmos/cosmos-sdk/container_test.Handler";
+  "github.com/cosmos/cosmos-sdk/container_test.ModuleA.Provide" -> "[]github.com/cosmos/cosmos-sdk/container_test.Command";
+  "github.com/cosmos/cosmos-sdk/container_test.KVStoreKey" -> "github.com/cosmos/cosmos-sdk/container_test.ModuleB.Provide";
+  "github.com/cosmos/cosmos-sdk/container_test.MsgClientA" -> "github.com/cosmos/cosmos-sdk/container_test.ModuleB.Provide";
+  "github.com/cosmos/cosmos-sdk/container_test.ModuleB.Provide" -> "github.com/cosmos/cosmos-sdk/container_test.KeeperB";
+  "github.com/cosmos/cosmos-sdk/container_test.ModuleB.Provide" -> "[]github.com/cosmos/cosmos-sdk/container_test.Command";
+  "github.com/cosmos/cosmos-sdk/container_test.ModuleB.Provide" -> "map[string]github.com/cosmos/cosmos-sdk/container_test.Handler";
+  "github.com/cosmos/cosmos-sdk/container_test.KeeperB" -> "github.com/cosmos/cosmos-sdk/container_test.TestGraphAndLogOutput";
+}
+

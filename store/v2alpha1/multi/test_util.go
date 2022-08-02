@@ -7,25 +7,30 @@ import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 )
 
-type dbDeleteVersionFails struct{ dbm.DBConnection }
-type dbRWCommitFails struct{ dbm.DBConnection }
-type dbRWCrudFails struct{ dbm.DBConnection }
-type dbSaveVersionFails struct{ dbm.DBConnection }
-type dbRevertFails struct {
-	dbm.DBConnection
-	// order of calls to fail on (eg. [1, 0] => first call fails; second succeeds)
-	failOn []bool
-}
+type (
+	dbDeleteVersionFails struct{ dbm.DBConnection }
+	dbRWCommitFails      struct{ dbm.DBConnection }
+	dbRWCrudFails        struct{ dbm.DBConnection }
+	dbSaveVersionFails   struct{ dbm.DBConnection }
+	dbRevertFails        struct {
+		dbm.DBConnection
+		// order of calls to fail on (eg. [1, 0] => first call fails; second succeeds)
+		failOn []bool
+	}
+)
+
 type dbVersionsIs struct {
 	dbm.DBConnection
 	vset dbm.VersionSet
 }
-type dbVersionsFails struct{ dbm.DBConnection }
-type rwCommitFails struct{ dbm.DBReadWriter }
-type rwCrudFails struct {
-	dbm.DBReadWriter
-	onKey []byte
-}
+type (
+	dbVersionsFails struct{ dbm.DBConnection }
+	rwCommitFails   struct{ dbm.DBReadWriter }
+	rwCrudFails     struct {
+		dbm.DBReadWriter
+		onKey []byte
+	}
+)
 
 func (dbVersionsFails) Versions() (dbm.VersionSet, error) { return nil, errors.New("dbVersionsFails") }
 func (db dbVersionsIs) Versions() (dbm.VersionSet, error) { return db.vset, nil }
@@ -48,6 +53,7 @@ func (tx rwCommitFails) Commit() error {
 	tx.Discard()
 	return errors.New("rwCommitFails")
 }
+
 func (db dbRWCommitFails) ReadWriter() dbm.DBReadWriter {
 	return rwCommitFails{db.DBConnection.ReadWriter()}
 }
@@ -58,18 +64,21 @@ func (rw rwCrudFails) Get(k []byte) ([]byte, error) {
 	}
 	return rw.DBReadWriter.Get(k)
 }
+
 func (rw rwCrudFails) Has(k []byte) (bool, error) {
 	if rw.onKey == nil || bytes.Equal(rw.onKey, k) {
 		return false, errors.New("rwCrudFails.Has")
 	}
 	return rw.DBReadWriter.Has(k)
 }
+
 func (rw rwCrudFails) Set(k []byte, v []byte) error {
 	if rw.onKey == nil || bytes.Equal(rw.onKey, k) {
 		return errors.New("rwCrudFails.Set")
 	}
 	return rw.DBReadWriter.Set(k, v)
 }
+
 func (rw rwCrudFails) Delete(k []byte) error {
 	if rw.onKey == nil || bytes.Equal(rw.onKey, k) {
 		return errors.New("rwCrudFails.Delete")

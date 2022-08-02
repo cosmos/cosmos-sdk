@@ -5,15 +5,6 @@ module.exports = {
     "/": {
       lang: "en-US"
     },
-    ko: {
-      lang: "ko"
-    },
-    ru: {
-      lang: "ru"
-    },
-    zh: {
-      lang: "zh-CN"
-    }
   },
   base: process.env.VUEPRESS_BASE || "/",
   head: [
@@ -29,6 +20,7 @@ module.exports = {
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
     docsRepo: "cosmos/cosmos-sdk",
+    docsBranch: "release/v0.46.x",
     docsDir: "docs",
     editLinks: true,
     label: "sdk",
@@ -39,20 +31,20 @@ module.exports = {
     },
     versions: [
       {
-        "label": "v0.39",
-        "key": "v0.39"
-      },
-      {
-        "label": "v0.42",
-        "key": "v0.42"
-      },
-      {
         "label": "v0.44",
         "key": "v0.44"
       },
       {
-        "label": "master",
-        "key": "master"
+        "label": "v0.45",
+        "key": "v0.45"
+      },
+      {
+        "label": "v0.46",
+        "key": "v0.46"
+      },
+      {
+        "label": "main",
+        "key": "main"
       }
     ],
     topbar: {
@@ -80,7 +72,7 @@ module.exports = {
             },
             {
               title: "SDK API Reference",
-              path: "https://godoc.org/github.com/cosmos/cosmos-sdk"
+              path: "https://pkg.go.dev/github.com/cosmos/cosmos-sdk"
             },
             {
               title: "REST API Spec",
@@ -146,16 +138,11 @@ module.exports = {
           url: "https://www.youtube.com/c/CosmosProject"
         }
       ],
-      smallprint:
-        "This website is maintained by Tendermint Inc. The contents and opinions of this website are those of Tendermint Inc.",
+      smallprint: "The development of the Cosmos SDK is led primarily by [Interchain Core Teams](https://interchain.io/ecosystem). Funding for this development comes primarily from the Interchain Foundation, a Swiss non-profit.",
       links: [
         {
           title: "Documentation",
           children: [
-            {
-              title: "Cosmos SDK",
-              url: "https://docs.cosmos.network"
-            },
             {
               title: "Cosmos Hub",
               url: "https://hub.cosmos.network"
@@ -163,7 +150,11 @@ module.exports = {
             {
               title: "Tendermint Core",
               url: "https://docs.tendermint.com"
-            }
+            },
+            {
+              title: "IBC-Go",
+              url: "https://ibc.cosmos.network"
+            },
           ]
         },
         {
@@ -189,7 +180,7 @@ module.exports = {
             {
               title: "Contributing to the docs",
               url:
-                "https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md"
+                "https://github.com/cosmos/cosmos-sdk/blob/main/docs/DOCS_README.md"
             },
             {
               title: "Source code on GitHub",

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -118,7 +118,6 @@ func (s *TestSuite) TestKeeperIter() {
 		s.Require().Contains([]sdk.AccAddress{granterAddr, granter2Addr}, granter)
 		return true
 	})
-
 }
 
 func (s *TestSuite) TestDispatchAction() {
@@ -220,7 +219,7 @@ func (s *TestSuite) TestDispatchAction() {
 				require.Len(authzs, 1)
 				authorization := authzs[0].(*banktypes.SendAuthorization)
 				require.NotNil(authorization)
-				require.Equal(authorization.SpendLimit, coins100.Sub(coins10))
+				require.Equal(authorization.SpendLimit, coins100.Sub(coins10...))
 			},
 		},
 		{
@@ -265,7 +264,6 @@ func (s *TestSuite) TestDispatchAction() {
 			tc.postRun()
 		})
 	}
-
 }
 
 // Tests that all msg events included in an authz MsgExec tx
@@ -302,9 +300,12 @@ func (s *TestSuite) TestDispatchedEvents() {
 	result, err := app.AuthzKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
 	require.NoError(err)
 	require.NotNil(result)
+
 	events := s.ctx.EventManager().Events()
+
 	// get last 5 events (events that occur *after* the grant)
 	events = events[len(events)-5:]
+
 	requiredEvents := map[string]bool{
 		"coin_spent":    false,
 		"coin_received": false,

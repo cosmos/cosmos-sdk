@@ -35,7 +35,7 @@ In this case, unbonding should start instantly.
 // — the simulator should check that the sum of all the queued delegations always equals the amount kept track in the data
 // — Staking/Slashing/Distribution module params are being modified by governance based on vote result instantly. We should test the effect.
 // — — Should test to see what would happen if max_validators is changed though, in the middle of an epoch
-// — we should define some new invariants that help check that everything is working smoothly with these new changes for 3 modules e.g. https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/keeper/invariants.go
+// — we should define some new invariants that help check that everything is working smoothly with these new changes for 3 modules e.g. https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/keeper/invariants.go
 // — — Within Epoch, ValidationPower = ValidationPower - SlashAmount
 // — — When epoch actions queue is empty, EpochDelegationPool balance should be zero
 // — we should count all the delegation changes that happen during the epoch, and then make sure that the resulting change at the end of the epoch is actually correct

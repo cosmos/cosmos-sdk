@@ -7,10 +7,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/go-bip39"
-
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

@@ -3,7 +3,7 @@ package container
 import (
 	"reflect"
 
-	"github.com/goccy/go-graphviz/cgraph"
+	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
 )
 
 type simpleProvider struct {
@@ -19,7 +19,7 @@ type simpleResolver struct {
 	resolved    bool
 	typ         reflect.Type
 	value       reflect.Value
-	graphNode   *cgraph.Node
+	graphNode   *graphviz.Node
 }
 
 func (s *simpleResolver) describeLocation() string {
@@ -62,6 +62,6 @@ func (s simpleResolver) addNode(p *simpleProvider, _ int) error {
 	return duplicateDefinitionError(s.typ, p.provider.Location, s.node.provider.Location.String())
 }
 
-func (s simpleResolver) typeGraphNode() *cgraph.Node {
+func (s simpleResolver) typeGraphNode() *graphviz.Node {
 	return s.graphNode
 }

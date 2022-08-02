@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -141,7 +142,7 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	s.Require().NotNil(res)
 	s.Require().Equal(2, len(balns))
 	s.Require().NotNil(res.NextKey)
-	s.Require().Equal(string(res.NextKey), fmt.Sprintf("test7denom"))
+	s.Require().Equal(string(res.NextKey), "test7denom")
 	s.Require().Equal(uint64(10), res.Total)
 
 	s.T().Log("verify both key and offset can't be given")
@@ -168,7 +169,6 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 
 	s.T().Log("verify Reverse pagination returns valid result")
 	s.Require().Equal(balances[235:241].String(), balns.Sort().String())
-
 }
 
 func ExampleFilteredPaginate(t *testing.T) {
@@ -201,7 +201,7 @@ func ExampleFilteredPaginate(t *testing.T) {
 
 	var balResult sdk.Coins
 	pageRes, err := query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var amount sdk.Int
+		var amount math.Int
 		err := amount.Unmarshal(value)
 		if err != nil {
 			return false, err
@@ -218,7 +218,6 @@ func ExampleFilteredPaginate(t *testing.T) {
 
 		return false, nil
 	})
-
 	if err != nil { // should return no error
 		fmt.Println(err)
 	}
@@ -233,7 +232,7 @@ func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec 
 
 	var balResult sdk.Coins
 	res, err = query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var amount sdk.Int
+		var amount math.Int
 		err := amount.Unmarshal(value)
 		if err != nil {
 			return false, err
@@ -277,7 +276,7 @@ func (s *paginationTestSuite) TestFilteredPaginationsNextKey() {
 
 		var balResult sdk.Coins
 		res, err = query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
-			var amount sdk.Int
+			var amount math.Int
 			err := amount.Unmarshal(value)
 			if err != nil {
 				return false, err

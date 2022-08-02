@@ -6,12 +6,14 @@ import (
 	"path/filepath"
 	"time"
 
-	abciclient "github.com/tendermint/tendermint/abci/client"
 	tmos "github.com/tendermint/tendermint/libs/os"
-	tmtime "github.com/tendermint/tendermint/libs/time"
 	"github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/p2p"
+	pvm "github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
@@ -31,36 +33,36 @@ func startInProcess(cfg Config, val *Validator) error {
 		return err
 	}
 
-	app := cfg.AppConstructor(*val)
-
-	genDoc, err := types.GenesisDocFromFile(tmCfg.GenesisFile())
+	nodeKey, err := p2p.LoadOrGenNodeKey(tmCfg.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
-	val.tmNode, err = node.New(
+	app := cfg.AppConstructor(*val)
+	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
+
+	tmNode, err := node.NewNode(
 		tmCfg,
+		pvm.LoadOrGenFilePV(tmCfg.PrivValidatorKeyFile(), tmCfg.PrivValidatorStateFile()),
+		nodeKey,
+		proxy.NewLocalClientCreator(app),
+		genDocProvider,
+		node.DefaultDBProvider,
+		node.DefaultMetricsProvider(tmCfg.Instrumentation),
 		logger.With("module", val.Moniker),
-		abciclient.NewLocalCreator(app),
-		genDoc,
 	)
 	if err != nil {
 		return err
 	}
 
-	if err := val.tmNode.Start(); err != nil {
+	if err := tmNode.Start(); err != nil {
 		return err
 	}
 
+	val.tmNode = tmNode
+
 	if val.RPCAddress != "" {
-		node, ok := val.tmNode.(local.NodeService)
-		if !ok {
-			panic("can't cast service.Service to NodeService")
-		}
-		val.RPCClient, err = local.New(node)
-		if err != nil {
-			panic("cant create a local node")
-		}
+		val.RPCClient = local.New(tmNode)
 	}
 
 	// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.
@@ -97,7 +99,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	if val.AppConfig.GRPC.Enable {
-		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC.Address)
+		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
 		if err != nil {
 			return err
 		}
@@ -150,7 +152,6 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 }
 
 func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance, genFiles []string) error {
-
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
 	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[authtypes.ModuleName], &authGenState)
@@ -195,12 +196,12 @@ func writeFile(name string, dir string, contents []byte) error {
 	writePath := filepath.Join(dir)
 	file := filepath.Join(writePath, name)
 
-	err := tmos.EnsureDir(writePath, 0755)
+	err := tmos.EnsureDir(writePath, 0o755)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(file, contents, 0644) // nolint: gosec
+	err = ioutil.WriteFile(file, contents, 0o644) // nolint: gosec
 	if err != nil {
 		return err
 	}

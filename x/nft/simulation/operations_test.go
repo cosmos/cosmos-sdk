@@ -107,7 +107,6 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Len(futureOperations, 0)
-
 }
 
 func TestSimTestSuite(t *testing.T) {

@@ -32,3 +32,4 @@ not own.
 ## Stores
 
 * MemStore
+* KeyStore

@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"context"
-
 	"encoding/json"
 	"testing"
 	"time"
@@ -81,7 +80,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 
 	proposal := &group.Proposal{
 		Id:                 1,
-		Address:            accAddr.String(),
+		GroupPolicyAddress: accAddr.String(),
 		Metadata:           "proposal metadata",
 		GroupVersion:       1,
 		GroupPolicyVersion: 1,
@@ -89,8 +88,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 			memberAddr.String(),
 		},
 		SubmitTime: submittedAt,
-		Status:     group.PROPOSAL_STATUS_CLOSED,
-		Result:     group.PROPOSAL_RESULT_ACCEPTED,
+		Status:     group.PROPOSAL_STATUS_ACCEPTED,
 		FinalTallyResult: group.TallyResult{
 			YesCount:        "1",
 			NoCount:         "0",
@@ -193,7 +191,6 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	s.Require().Equal(genesisState.GroupSeq, exportedGenesisState.GroupSeq)
 	s.Require().Equal(genesisState.GroupPolicySeq, exportedGenesisState.GroupPolicySeq)
 	s.Require().Equal(genesisState.ProposalSeq, exportedGenesisState.ProposalSeq)
-
 }
 
 func (s *GenesisTestSuite) assertGroupPoliciesEqual(g *group.GroupPolicyInfo, other *group.GroupPolicyInfo) {
@@ -203,22 +200,29 @@ func (s *GenesisTestSuite) assertGroupPoliciesEqual(g *group.GroupPolicyInfo, ot
 	require.Equal(g.Admin, other.Admin)
 	require.Equal(g.Metadata, other.Metadata)
 	require.Equal(g.Version, other.Version)
-	require.Equal(g.GetDecisionPolicy(), other.GetDecisionPolicy())
+	dp1, err := g.GetDecisionPolicy()
+	require.NoError(err)
+	dp2, err := other.GetDecisionPolicy()
+	require.NoError(err)
+	require.Equal(dp1, dp2)
 }
 
 func (s *GenesisTestSuite) assertProposalsEqual(g *group.Proposal, other *group.Proposal) {
 	require := s.Require()
 	require.Equal(g.Id, other.Id)
-	require.Equal(g.Address, other.Address)
+	require.Equal(g.GroupPolicyAddress, other.GroupPolicyAddress)
 	require.Equal(g.Metadata, other.Metadata)
 	require.Equal(g.Proposers, other.Proposers)
 	require.Equal(g.SubmitTime, other.SubmitTime)
 	require.Equal(g.GroupVersion, other.GroupVersion)
 	require.Equal(g.GroupPolicyVersion, other.GroupPolicyVersion)
 	require.Equal(g.Status, other.Status)
-	require.Equal(g.Result, other.Result)
 	require.Equal(g.FinalTallyResult, other.FinalTallyResult)
 	require.Equal(g.VotingPeriodEnd, other.VotingPeriodEnd)
 	require.Equal(g.ExecutorResult, other.ExecutorResult)
-	require.Equal(g.GetMsgs(), other.GetMsgs())
+	msgs1, err := g.GetMsgs()
+	require.NoError(err)
+	msgs2, err := other.GetMsgs()
+	require.NoError(err)
+	require.Equal(msgs1, msgs2)
 }

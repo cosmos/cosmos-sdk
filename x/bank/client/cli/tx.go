@@ -48,6 +48,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 			if err != nil {
 				return err
 			}
+
 			toAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err

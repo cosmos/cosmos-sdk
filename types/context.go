@@ -36,8 +36,9 @@ type Context struct {
 	checkTx       bool
 	recheckTx     bool // if recheckTx == true, then checkTx must also be true
 	minGasPrice   DecCoins
-	consParams    *tmproto.ConsensusParams
+	consParams    *abci.ConsensusParams
 	eventManager  *EventManager
+	priority      int64 // The tx priority, only relevant in CheckTx
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -58,10 +59,11 @@ func (c Context) IsCheckTx() bool             { return c.checkTx }
 func (c Context) IsReCheckTx() bool           { return c.recheckTx }
 func (c Context) MinGasPrices() DecCoins      { return c.minGasPrice }
 func (c Context) EventManager() *EventManager { return c.eventManager }
+func (c Context) Priority() int64             { return c.priority }
 
 // clone the header before returning
 func (c Context) BlockHeader() tmproto.Header {
-	var msg = proto.Clone(&c.header).(*tmproto.Header)
+	msg := proto.Clone(&c.header).(*tmproto.Header)
 	return *msg
 }
 
@@ -72,8 +74,8 @@ func (c Context) HeaderHash() tmbytes.HexBytes {
 	return hash
 }
 
-func (c Context) ConsensusParams() *tmproto.ConsensusParams {
-	return proto.Clone(c.consParams).(*tmproto.ConsensusParams)
+func (c Context) ConsensusParams() *abci.ConsensusParams {
+	return proto.Clone(c.consParams).(*abci.ConsensusParams)
 }
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {
@@ -215,7 +217,7 @@ func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 }
 
 // WithConsensusParams returns a Context with an updated consensus params
-func (c Context) WithConsensusParams(params *tmproto.ConsensusParams) Context {
+func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }
@@ -223,6 +225,12 @@ func (c Context) WithConsensusParams(params *tmproto.ConsensusParams) Context {
 // WithEventManager returns a Context with an updated event manager
 func (c Context) WithEventManager(em *EventManager) Context {
 	c.eventManager = em
+	return c
+}
+
+// WithEventManager returns a Context with an updated tx priority
+func (c Context) WithPriority(p int64) Context {
+	c.priority = p
 	return c
 }
 

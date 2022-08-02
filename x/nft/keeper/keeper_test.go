@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -279,7 +279,7 @@ func (s *TestSuite) TestTransfer() {
 	err = s.app.NFTKeeper.Mint(s.ctx, expNFT, s.addrs[0])
 	s.Require().NoError(err)
 
-	//valid owner
+	// valid owner
 	err = s.app.NFTKeeper.Transfer(s.ctx, testClassID, testID, s.addrs[1])
 	s.Require().NoError(err)
 

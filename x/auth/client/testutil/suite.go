@@ -29,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
@@ -231,7 +232,7 @@ func (s *IntegrationTestSuite) TestCLISignGenOnly() {
 
 func (s *IntegrationTestSuite) TestCLISignBatch() {
 	val := s.network.Validators[0]
-	var sendTokens = sdk.NewCoins(
+	sendTokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 	)
@@ -280,11 +281,55 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().Error(err)
 }
 
+func (s *IntegrationTestSuite) TestCliGetAccountAddressByID() {
+	require := s.Require()
+	val1 := s.network.Validators[0]
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"not enough args",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"invalid account id",
+			[]string{fmt.Sprint(-1), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"valid account id",
+			[]string{fmt.Sprint(0), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.GetAccountAddressByIDCmd()
+			clientCtx := val1.ClientCtx
+
+			queryResJSON, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var res types.QueryAccountAddressByIDResponse
+				require.NoError(val1.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &res))
+				require.NotNil(res.GetAccountAddress())
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	require := s.Require()
 	val1 := s.network.Validators[0]
 	txCfg := val1.ClientCtx.TxConfig
-	var sendTokens = sdk.NewCoins(
+	sendTokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 	)
@@ -599,7 +644,6 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 		name        string
 		args        []string
 		expectEmpty bool
-		expectError string
 	}{
 		{
 			"fee event happy case",
@@ -609,8 +653,6 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			"transaction spanned more than two shares, this is not yet supported",
-			// TODO: change this to not expect an error when functionality is added to celestia-core
 		},
 		{
 			"no matching fee event",
@@ -620,7 +662,6 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true,
-			"",
 		},
 	}
 
@@ -631,10 +672,6 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectError != "" {
-				s.Require().Equal(tc.expectError, err.Error())
-				return
-			}
 			s.Require().NoError(err)
 
 			var result sdk.SearchTxsResult
@@ -925,7 +962,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
-	diff, _ := balRes.Balances.SafeSub(intialCoins)
+	diff, _ := balRes.Balances.SafeSub(intialCoins...)
 	s.Require().Equal(sendTokens.Amount, diff.AmountOf(s.cfg.BondDenom))
 
 	// Generate multisig transaction.
@@ -1569,7 +1606,10 @@ func (s *IntegrationTestSuite) TestAuxSigner() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestAuxToFee() {
+func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
+	// Skipping this test as it needs a simapp with the TipDecorator in post handler.
+	s.T().Skip()
+
 	require := s.Require()
 	val := s.network.Validators[0]
 
@@ -1585,13 +1625,13 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 	fee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1000))
 	tip := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(1000))
 
-	s.Require().NoError(s.network.WaitForNextBlock())
+	require.NoError(s.network.WaitForNextBlock())
 	_, err = s.createBankMsg(val, tipper, sdk.NewCoins(tipperInitialBal))
 	require.NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+	require.NoError(s.network.WaitForNextBlock())
 
 	bal := s.getBalances(val.ClientCtx, tipper, tip.Denom)
-	s.Require().True(bal.Equal(tipperInitialBal.Amount))
+	require.True(bal.Equal(tipperInitialBal.Amount))
 
 	testCases := []struct {
 		name               string
@@ -1604,24 +1644,6 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 		tipperArgs         []string
 		feePayerArgs       []string
 	}{
-		{
-			name:     "when --aux and --sign-mode = direct set: error",
-			tipper:   tipper,
-			feePayer: feePayer,
-			tip:      tip,
-			tipperArgs: []string{
-				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
-				fmt.Sprintf("--%s=%s", flags.FlagTip, tip),
-				fmt.Sprintf("--%s=true", flags.FlagAux),
-			},
-			expectErrAux: true,
-			feePayerArgs: []string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
-			},
-		},
 		{
 			name:     "when --aux and --sign-mode = direct set: error",
 			tipper:   tipper,
@@ -1760,7 +1782,7 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
 			},
@@ -1817,21 +1839,21 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 					require.NoError(err)
 
 					var txRes sdk.TxResponse
-					s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
 					require.Contains(txRes.RawLog, tc.errMsg)
 				} else {
 					require.NoError(err)
 
 					var txRes sdk.TxResponse
-					s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
+					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
-					s.Require().Equal(uint32(0), txRes.Code)
-					s.Require().NotNil(int64(0), txRes.Height)
+					require.Equal(uint32(0), txRes.Code)
+					require.NotNil(int64(0), txRes.Height)
 
 					bal = s.getBalances(val.ClientCtx, tipper, tc.tip.Denom)
 					tipperInitialBal = tipperInitialBal.Sub(tc.tip)
-					s.Require().True(bal.Equal(tipperInitialBal.Amount))
+					require.True(bal.Equal(tipperInitialBal.Amount))
 				}
 			}
 		})
@@ -1839,7 +1861,8 @@ func (s *IntegrationTestSuite) TestAuxToFee() {
 }
 
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {
-	flags := []string{fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+	flags := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees,
 			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

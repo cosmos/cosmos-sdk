@@ -4,28 +4,28 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/goccy/go-graphviz/cgraph"
-
 	"github.com/pkg/errors"
+
+	"github.com/cosmos/cosmos-sdk/container/internal/graphviz"
 )
 
-// AutoGroupType marks a type which automatically gets grouped together. For an AutoGroupType T,
+// ManyPerContainerType marks a type which automatically gets grouped together. For an ManyPerContainerType T,
 // T and []T can be declared as output parameters for providers as many times within the container
 // as desired. All of the provided values for T can be retrieved by declaring an
 // []T input parameter.
-type AutoGroupType interface {
-	// IsAutoGroupType is a marker function which just indicates that this is a auto-group type.
-	IsAutoGroupType()
+type ManyPerContainerType interface {
+	// IsManyPerContainerType is a marker function which just indicates that this is a many-per-container type.
+	IsManyPerContainerType()
 }
 
-var autoGroupTypeType = reflect.TypeOf((*AutoGroupType)(nil)).Elem()
+var manyPerContainerTypeType = reflect.TypeOf((*ManyPerContainerType)(nil)).Elem()
 
-func isAutoGroupType(t reflect.Type) bool {
-	return t.Implements(autoGroupTypeType)
+func isManyPerContainerType(t reflect.Type) bool {
+	return t.Implements(manyPerContainerTypeType)
 }
 
-func isAutoGroupSliceType(typ reflect.Type) bool {
-	return typ.Kind() == reflect.Slice && isAutoGroupType(typ.Elem())
+func isManyPerContainerSliceType(typ reflect.Type) bool {
+	return typ.Kind() == reflect.Slice && isManyPerContainerType(typ.Elem())
 }
 
 type groupResolver struct {
@@ -35,7 +35,7 @@ type groupResolver struct {
 	providers    []*simpleProvider
 	resolved     bool
 	values       reflect.Value
-	graphNode    *cgraph.Node
+	graphNode    *graphviz.Node
 }
 
 type sliceGroupResolver struct {
@@ -43,12 +43,12 @@ type sliceGroupResolver struct {
 }
 
 func (g *groupResolver) describeLocation() string {
-	return fmt.Sprintf("auto-group type %v", g.typ)
+	return fmt.Sprintf("many-per-container type %v", g.typ)
 }
 
 func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location) (reflect.Value, error) {
 	// Log
-	c.logf("Providing auto-group type slice %v to %s from:", g.sliceType, caller.Name())
+	c.logf("Providing many-per-container type slice %v to %s from:", g.sliceType, caller.Name())
 	c.indentLogger()
 	for _, node := range g.providers {
 		c.logf(node.provider.Location.String())
@@ -81,7 +81,7 @@ func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location
 }
 
 func (g *groupResolver) resolve(_ *container, _ *moduleKey, _ Location) (reflect.Value, error) {
-	return reflect.Value{}, errors.Errorf("%v is an auto-group type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
+	return reflect.Value{}, errors.Errorf("%v is an many-per-container type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
 }
 
 func (g *groupResolver) addNode(n *simpleProvider, i int) error {
@@ -90,6 +90,6 @@ func (g *groupResolver) addNode(n *simpleProvider, i int) error {
 	return nil
 }
 
-func (g groupResolver) typeGraphNode() *cgraph.Node {
+func (g groupResolver) typeGraphNode() *graphviz.Node {
 	return g.graphNode
 }

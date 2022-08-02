@@ -33,7 +33,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -55,7 +54,6 @@ type AppModuleBasic interface {
 	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
 
 	// client functionality
-	RegisterRESTRoutes(client.Context, *mux.Router)
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 	GetTxCmd() *cobra.Command
 	GetQueryCmd() *cobra.Command
@@ -106,13 +104,6 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEn
 	}
 
 	return nil
-}
-
-// RegisterRESTRoutes registers all module rest routes
-func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	for _, b := range bm {
-		b.RegisterRESTRoutes(clientCtx, rtr)
-	}
 }
 
 // RegisterGRPCGatewayRoutes registers all module rest routes
@@ -178,9 +169,17 @@ type AppModule interface {
 	// introduced by the module. To avoid wrong/empty versions, the initial version
 	// should be set to 1.
 	ConsensusVersion() uint64
+}
 
-	// ABCI
+// BeginBlockAppModule is an extension interface that contains information about the AppModule and BeginBlock.
+type BeginBlockAppModule interface {
+	AppModule
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
+}
+
+// EndBlockAppModule is an extension interface that contains information about the AppModule and EndBlock.
+type EndBlockAppModule interface {
+	AppModule
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
@@ -235,7 +234,6 @@ type Manager struct {
 
 // NewManager creates a new Manager object
 func NewManager(modules ...AppModule) *Manager {
-
 	moduleMap := make(map[string]AppModule)
 	modulesStr := make([]string, 0, len(modules))
 	for _, module := range modules {
@@ -431,7 +429,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
-	var modules = m.OrderMigrations
+	modules := m.OrderMigrations
 	if modules == nil {
 		modules = DefaultMigrationsOrder(m.ModuleNames())
 	}
@@ -478,7 +476,10 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 	for _, moduleName := range m.OrderBeginBlockers {
-		m.Modules[moduleName].BeginBlock(ctx, req)
+		module, ok := m.Modules[moduleName].(BeginBlockAppModule)
+		if ok {
+			module.BeginBlock(ctx, req)
+		}
 	}
 
 	return abci.ResponseBeginBlock{
@@ -494,7 +495,11 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
-		moduleValUpdates := m.Modules[moduleName].EndBlock(ctx, req)
+		module, ok := m.Modules[moduleName].(EndBlockAppModule)
+		if !ok {
+			continue
+		}
+		moduleValUpdates := module.EndBlock(ctx, req)
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set

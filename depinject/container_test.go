@@ -3,7 +3,6 @@ package depinject_test
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -85,8 +84,9 @@ func (ModuleB) Provide(dependencies BDependencies) (BProvides, Handler, error) {
 var scenarioConfig = depinject.Configs(
 	depinject.Provide(ProvideMsgClientA),
 	depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-	depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-	depinject.ProvideInModule("b", wrapMethod0(ModuleB{})),
+	depinject.ProvideInModule("a", ModuleA.Provide),
+	depinject.ProvideInModule("b", ModuleB.Provide),
+	depinject.Supply(ModuleA{}, ModuleB{}),
 )
 
 func TestScenario(t *testing.T) {
@@ -119,21 +119,6 @@ func TestScenario(t *testing.T) {
 			key: "b",
 		},
 	}, b)
-}
-
-func wrapMethod0(module interface{}) interface{} {
-	methodFn := reflect.TypeOf(module).Method(0).Func.Interface()
-	ctrInfo, err := depinject.ExtractProviderDescriptor(methodFn)
-	if err != nil {
-		panic(err)
-	}
-
-	ctrInfo.Inputs = ctrInfo.Inputs[1:]
-	fn := ctrInfo.Fn
-	ctrInfo.Fn = func(values []reflect.Value) ([]reflect.Value, error) {
-		return fn(append([]reflect.Value{reflect.ValueOf(module)}, values...))
-	}
-	return ctrInfo
 }
 
 func TestResolveError(t *testing.T) {
@@ -596,8 +581,8 @@ func TestGraphAndLogOutput(t *testing.T) {
 
 	badConfig := depinject.Configs(
 		depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-		depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-		depinject.ProvideInModule("b", wrapMethod0(ModuleB{})),
+		depinject.ProvideInModule("a", ModuleA.Provide),
+		depinject.ProvideInModule("b", ModuleB.Provide),
 	)
 	require.Error(t, depinject.InjectDebug(debugOpts, badConfig, &b))
 	golden.Assert(t, graphOut, "example_error.dot")

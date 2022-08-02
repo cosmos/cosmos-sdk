@@ -1,12 +1,13 @@
-package v046_test
+package v3_test
 
 import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/require"
@@ -46,7 +47,7 @@ func TestConvertToLegacyProposal(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			proposal.FinalTallyResult = &tc.tallyResult
-			v1beta1Proposal, err := v046.ConvertToLegacyProposal(proposal)
+			v1beta1Proposal, err := v3.ConvertToLegacyProposal(proposal)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
@@ -113,7 +114,7 @@ func TestConvertToLegacyTallyResult(t *testing.T) {
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			_, err := v046.ConvertToLegacyTallyResult(&tc.tallyResult)
+			_, err := v3.ConvertToLegacyTallyResult(&tc.tallyResult)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
@@ -146,7 +147,7 @@ func TestConvertToLegacyVote(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			vote.Options = tc.options
-			v1beta1Vote, err := v046.ConvertToLegacyVote(vote)
+			v1beta1Vote, err := v3.ConvertToLegacyVote(vote)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
@@ -154,7 +155,7 @@ func TestConvertToLegacyVote(t *testing.T) {
 				require.Equal(t, v1beta1Vote.ProposalId, vote.ProposalId)
 				require.Equal(t, v1beta1Vote.Voter, vote.Voter)
 				require.Equal(t, v1beta1Vote.Options[0].Option, v1beta1.OptionYes)
-				require.Equal(t, v1beta1Vote.Options[0].Weight, sdk.NewDec(1))
+				require.Equal(t, v1beta1Vote.Options[0].Weight, math.LegacyNewDec(1))
 			}
 		})
 	}
@@ -167,7 +168,7 @@ func TestConvertToLegacyDeposit(t *testing.T) {
 		Amount:     sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
 	}
 
-	v1beta1Deposit := v046.ConvertToLegacyDeposit(&deposit)
+	v1beta1Deposit := v3.ConvertToLegacyDeposit(&deposit)
 	require.Equal(t, v1beta1Deposit.ProposalId, deposit.ProposalId)
 	require.Equal(t, v1beta1Deposit.Depositor, deposit.Depositor)
 	require.Equal(t, v1beta1Deposit.Amount[0], deposit.Amount[0])

@@ -7015,7 +7015,7 @@ func (x *CommunityPoolSpendProposal) GetAmount() []*v1beta1.Coin {
 // staking token, and the creation height (to check later on if any slashes have
 // occurred). NOTE: Even though validators are slashed to whole staking tokens,
 // the delegators within the validator may be left with less than a full token,
-// thus math.LegacyDec is used.
+// thus sdk.Dec is used.
 type DelegatorStartingInfo struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

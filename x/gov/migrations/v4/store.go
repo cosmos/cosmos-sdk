@@ -25,6 +25,7 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 		tp.Quorum,
 		tp.Threshold,
 		tp.VetoThreshold,
+		sdk.ZeroDec().String(),
 	)
 
 	bz, err := cdc.Marshal(&params)
@@ -41,6 +42,7 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 // migration includes:
 //
 // Params migrations from x/params to gov
+// Addition of the new min initial deposit ratio parameter that is set to 0 by default.
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.ParamSubspace, cdc codec.BinaryCodec) error {
 	return migrateParams(ctx, storeKey, legacySubspace, cdc)
 }

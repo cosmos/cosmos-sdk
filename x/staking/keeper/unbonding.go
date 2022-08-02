@@ -205,8 +205,10 @@ func redelegationEntryArrayIndex(red types.Redelegation, id uint64) (index int, 
 	return 0, false
 }
 
-// UnbondingCanComplete allows a stopped unbonding operation such as an
-// unbonding delegation, a redelegation, or a validator unbonding to complete
+// UnbondingCanComplete allows a stopped unbonding operation, such as an
+// unbonding delegation, a redelegation, or a validator unbonding to complete.
+// In order for the unbonding operation with `id` to eventually complete, every call
+// to PutUnbondingOnHold(id) must be matched by a call to UnbondingCanComplete(id).
 // ----------------------------------------------------------------------------------------
 
 func (k Keeper) UnbondingCanComplete(ctx sdk.Context, id uint64) error {
@@ -333,8 +335,10 @@ func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found
 	return true, nil
 }
 
-// PutUnbondingOnHold allows an external module to stop an unbonding operation such as an
-// unbonding delegation, a redelegation, or a validator unbonding
+// PutUnbondingOnHold allows an external module to stop an unbonding operation,
+// such as an unbonding delegation, a redelegation, or a validator unbonding.
+// In order for the unbonding operation with `id` to eventually complete, every call
+// to PutUnbondingOnHold(id) must be matched by a call to UnbondingCanComplete(id).
 // ----------------------------------------------------------------------------------------
 func (k Keeper) PutUnbondingOnHold(ctx sdk.Context, id uint64) error {
 	found := k.putUnbondingDelegationEntryOnHold(ctx, id)

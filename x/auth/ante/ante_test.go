@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
@@ -1480,7 +1481,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	// create new minimum gas price so antehandler fails on recheck
 	suite.ctx = suite.ctx.WithMinGasPrices([]sdk.DecCoin{{
 		Denom:  "dnecoin", // fee does not have this denom
-		Amount: sdk.NewDec(5),
+		Amount: math.LegacyNewDec(5),
 	}})
 	_, err = suite.anteHandler(suite.ctx, tx, false)
 	require.NotNil(t, err, "antehandler on recheck did not fail when mingasPrice was changed")

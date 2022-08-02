@@ -44,7 +44,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 
 	// create validator with 50% commission
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 
 	// end block to bond validator and start new block
@@ -73,7 +73,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 
 	// allocate some rewards
 	initial := int64(10)
-	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial)}}
+	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial)}}
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// end period
@@ -83,10 +83,10 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be half the tokens
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, rewards)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, rewards)
 
 	// commission should be the other half
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
 }
 
 func TestCalculateRewardsAfterSlash(t *testing.T) {
@@ -110,7 +110,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
 
 	// create validator with 50% commission
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	valPower := int64(100)
 	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
 
@@ -186,7 +186,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 	// create validator with 50% commission
 	valPower := int64(100)
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
 
 	// end block to bond validator
@@ -272,7 +272,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 
 	// create validator with 50% commission
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 
 	// end block to bond validator
@@ -287,7 +287,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// allocate some rewards
 	initial := int64(20)
-	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial)}}
+	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial)}}
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// second delegation
@@ -314,16 +314,16 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del1, endingPeriod)
 
 	// rewards for del1 should be 3/4 initial
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial * 3 / 4)}}, rewards)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial * 3 / 4)}}, rewards)
 
 	// calculate delegation rewards for del2
 	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
 
 	// rewards for del2 should be 1/4 initial
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial * 1 / 4)}}, rewards)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial * 1 / 4)}}, rewards)
 
 	// commission should be equal to initial (50% twice)
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial)}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial)}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
 }
 
 func TestWithdrawDelegationRewardsBasic(t *testing.T) {
@@ -359,7 +359,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	// create validator with 50% commission
 	power := int64(100)
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	valTokens := tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, power, true)
 
 	// assert correct initial balance
@@ -435,7 +435,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 
 	// create validator with 50% commission
 	valPower := int64(100)
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
 
 	// end block to bond validator
@@ -514,7 +514,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 
 	// create validator with 50% commission
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	valPower := int64(100)
 	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
 
@@ -609,10 +609,10 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.NoError(t, banktestutil.FundModuleAccount(bankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
 	accountKeeper.SetModuleAccount(ctx, distrAcc)
 
-	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}
+	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyNewDec(initial))}
 
 	// create validator with 50% commission
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 
 	// end block to bond validator
@@ -706,10 +706,10 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
 
 	// rewards for del2 should be 1/4 initial
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 4)}}, rewards)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 4)}}, rewards)
 
 	// commission should be half initial
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
 
 	// next block
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -728,13 +728,13 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del1, endingPeriod)
 
 	// rewards for del1 should be 1/4 initial
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 4)}}, rewards)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 4)}}, rewards)
 
 	// calculate delegation rewards for del2
 	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
 
 	// rewards for del2 should be 1/2 initial
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}}, rewards)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, rewards)
 
 	// commission should be zero
 	require.True(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission.IsZero())
@@ -768,10 +768,10 @@ func Test100PercentCommissionReward(t *testing.T) {
 	require.NoError(t, banktestutil.FundModuleAccount(bankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
 	accountKeeper.SetModuleAccount(ctx, distrAcc)
 
-	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}
+	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyNewDec(initial))}
 
 	// create validator with 100% commission
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(10, 1), sdk.NewDecWithPrec(10, 1), sdk.NewDec(0))
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(10, 1), sdk.NewDecWithPrec(10, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 	stakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 

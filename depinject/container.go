@@ -519,7 +519,12 @@ func fullyQualifiedTypeName(typ reflect.Type) string {
 	if typ.Kind() == reflect.Pointer || typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map || typ.Kind() == reflect.Array {
 		pkgType = typ.Elem()
 	}
-	return fmt.Sprintf("%s/%v", pkgType.PkgPath(), typ)
+	pkgPath := pkgType.PkgPath()
+	if pkgPath == "" {
+		return fmt.Sprintf("%v", typ)
+	}
+
+	return fmt.Sprintf("%s/%v", pkgPath, typ)
 }
 
 func bindingKeyFromTypeName(typeName string, key *moduleKey) string {

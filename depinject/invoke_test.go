@@ -12,6 +12,8 @@ import (
 func TestInvoke(t *testing.T) {
 	gocuke.NewRunner(t, &invokeSuite{}).
 		Path("features/invoke.feature").
+		Step("an int provider returning 5", (*invokeSuite).AnIntProviderReturning5).
+		Step(`a string pointer provider pointing to "foo"`, (*invokeSuite).AStringPointerProviderPointingToFoo).
 		Run()
 }
 
@@ -23,10 +25,13 @@ type invokeSuite struct {
 }
 
 func (s *invokeSuite) AnInvokerRequestingAnIntAndStringPointer() {
-	s.configs = append(s.configs, depinject.Invoke(s.intStringPointerInvoker))
+	s.configs = append(s.configs,
+		depinject.Supply(s),
+		depinject.Invoke((*invokeSuite).IntStringPointerInvoker),
+	)
 }
 
-func (s *invokeSuite) intStringPointerInvoker(i int, sp *string) {
+func (s *invokeSuite) IntStringPointerInvoker(i int, sp *string) {
 	s.i = i
 	s.sp = sp
 }
@@ -45,12 +50,19 @@ func (s *invokeSuite) TheInvokerWillGetTheStringPointerParameterSetToNil() {
 	}
 }
 
-func (s *invokeSuite) AnIntProviderReturning(a int64) {
-	s.configs = append(s.configs, depinject.Provide(func() int { return int(a) }))
+func IntProvider5() int { return 5 }
+
+func (s *invokeSuite) AnIntProviderReturning5() {
+	s.configs = append(s.configs, depinject.Provide(IntProvider5))
 }
 
-func (s *invokeSuite) AStringPointerProviderPointingTo(a string) {
-	s.configs = append(s.configs, depinject.Provide(func() *string { return &a }))
+func StringPtrProviderFoo() *string {
+	x := "foo"
+	return &x
+}
+
+func (s *invokeSuite) AStringPointerProviderPointingToFoo() {
+	s.configs = append(s.configs, depinject.Provide(StringPtrProviderFoo))
 }
 
 func (s *invokeSuite) TheInvokerWillGetTheStringPointerParameterSetTo(a string) {
@@ -61,11 +73,16 @@ func (s *invokeSuite) TheInvokerWillGetTheStringPointerParameterSetTo(a string) 
 }
 
 func (s *invokeSuite) AnInvokerRequestingAnIntAndStringPointerRunInModule(a string) {
-	s.configs = append(s.configs, depinject.InvokeInModule(a, s.intStringPointerInvoker))
+	s.configs = append(s.configs,
+		depinject.Supply(s),
+		depinject.InvokeInModule(a, (*invokeSuite).IntStringPointerInvoker),
+	)
+}
+
+func ProvideLenModuleKey(key depinject.ModuleKey) int {
+	return len(key.Name())
 }
 
 func (s *invokeSuite) AModulescopedIntProviderWhichReturnsTheLengthOfTheModuleName() {
-	s.configs = append(s.configs, depinject.Provide(func(key depinject.ModuleKey) int {
-		return len(key.Name())
-	}))
+	s.configs = append(s.configs, depinject.Provide(ProvideLenModuleKey))
 }

@@ -74,8 +74,14 @@ func doExtractProviderDescriptor(ctr interface{}) (providerDescriptor, error) {
 		return providerDescriptor{}, errors.Errorf("missing function name %s", loc)
 	}
 
-	if unicode.IsLower([]rune(nameParts[len(nameParts)-1])[0]) {
+	lastNamePart := nameParts[len(nameParts)-1]
+
+	if unicode.IsLower([]rune(lastNamePart)[0]) {
 		return providerDescriptor{}, errors.Errorf("function must be exported: %s", loc)
+	}
+
+	if strings.Contains(lastNamePart, "-") {
+		return providerDescriptor{}, errors.Errorf("function can't be used as a provider (it might be a bound instance method): %s", loc)
 	}
 
 	pkgParts := strings.Split(loc.pkg, "/")

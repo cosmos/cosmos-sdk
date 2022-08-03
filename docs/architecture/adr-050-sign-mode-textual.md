@@ -130,7 +130,7 @@ Msg (<int>/<int>): <string>           // E.g. Msg (1/2): bank v1beta1 send coins
 End of transaction messages
 ```
 
-### 9. Custom `Msg`-Renderers
+### 9. Custom `Msg` Renderers
 
 Application developers may choose to not follow default value renderers' output for their own `Msg`s. In this case, they can implement their own custom `Msg`-renderer. This is similar to [EIP4430](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4430.md), where the smart contract developer chooses the description string to be shown to the end user.
 

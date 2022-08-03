@@ -1,4 +1,4 @@
-package v046_test
+package v3_test
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -52,7 +52,7 @@ func TestMigrateJSON(t *testing.T) {
 		v1beta1.Vote{ProposalId: 2, Voter: voter.String(), Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionNo)},
 	}
 
-	migrated, err := v046.MigrateJSON(govGenState)
+	migrated, err := v3.MigrateJSON(govGenState)
 	require.NoError(t, err)
 
 	// Make sure the migrated proposal's Msg signer is the gov acct.
@@ -74,16 +74,22 @@ func TestMigrateJSON(t *testing.T) {
 	// Make sure about:
 	// - Proposals use MsgExecLegacyContent
 	expected := `{
-	"deposit_params": {
+	"deposit_params": null,
+	"deposits": [],
+	"params": {
 		"max_deposit_period": "172800s",
 		"min_deposit": [
 			{
 				"amount": "10000000",
 				"denom": "stake"
 			}
-		]
+		],
+		"min_initial_deposit_ratio": "",
+		"quorum": "0.334000000000000000",
+		"threshold": "0.500000000000000000",
+		"veto_threshold": "0.334000000000000000",
+		"voting_period": "172800s"
 	},
-	"deposits": [],
 	"proposals": [
 		{
 			"deposit_end_time": "2001-09-09T01:46:40Z",
@@ -119,11 +125,7 @@ func TestMigrateJSON(t *testing.T) {
 		}
 	],
 	"starting_proposal_id": "1",
-	"tally_params": {
-		"quorum": "0.334000000000000000",
-		"threshold": "0.500000000000000000",
-		"veto_threshold": "0.334000000000000000"
-	},
+	"tally_params": null,
 	"votes": [
 		{
 			"metadata": "",
@@ -148,9 +150,7 @@ func TestMigrateJSON(t *testing.T) {
 			"voter": "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
 		}
 	],
-	"voting_params": {
-		"voting_period": "172800s"
-	}
+	"voting_params": null
 }`
 
 	require.Equal(t, expected, string(indentedBz))

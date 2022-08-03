@@ -43,6 +43,15 @@ type Keeper struct {
 	router *baseapp.MsgServiceRouter
 
 	config types.Config
+
+	// the address capable of executing a MsgUpdateParams message. Typically, this
+	// should be the x/gov module account.
+	authority string
+}
+
+// GetAuthority returns the x/distribution module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -53,13 +62,17 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace types.ParamSubspace,
-	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper,
-	router *baseapp.MsgServiceRouter, config types.Config,
+	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper, sk types.StakingKeeper,
+	router *baseapp.MsgServiceRouter, config types.Config, authority string,
 ) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
 	// If MaxMetadataLen not set by app developer, set to default value.
@@ -69,13 +82,13 @@ func NewKeeper(
 
 	return &Keeper{
 		storeKey:   key,
-		paramSpace: paramSpace,
 		authKeeper: authKeeper,
 		bankKeeper: bankKeeper,
 		sk:         sk,
 		cdc:        cdc,
 		router:     router,
 		config:     config,
+		authority:  authority,
 	}
 }
 

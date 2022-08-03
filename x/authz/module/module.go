@@ -128,20 +128,7 @@ func (AppModule) Name() string {
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the authz module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 func (am AppModule) NewHandler() sdk.Handler {
-	return nil
-}
-
-// QuerierRoute returns the route we respond to for abci queries
-func (AppModule) QuerierRoute() string { return "" }
-
-// LegacyQuerierHandler returns the authz module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 

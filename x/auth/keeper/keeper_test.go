@@ -3,14 +3,16 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 const (
@@ -27,17 +29,42 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app *simapp.SimApp
 	ctx sdk.Context
 
-	queryClient types.QueryClient
+	queryClient   types.QueryClient
+	accountKeeper keeper.AccountKeeper
+	msgServer     types.MsgServer
+	encCfg        moduletestutil.TestEncodingConfig
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.app, suite.ctx = createTestApp(suite.T(), true)
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, suite.app.AccountKeeper)
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{})
+
+	maccPerms := map[string][]string{
+		"fee_collector":          nil,
+		"mint":                   {"minter"},
+		"bonded_tokens_pool":     {"burner", "staking"},
+		"not_bonded_tokens_pool": {"burner", "staking"},
+		multiPerm:                {"burner", "minter", "staking"},
+		randomPerm:               {"random"},
+	}
+
+	suite.accountKeeper = keeper.NewAccountKeeper(
+		suite.encCfg.Codec,
+		key,
+		types.ProtoBaseAccount,
+		maccPerms,
+		"cosmos",
+		types.NewModuleAddress("gov").String(),
+	)
+
+	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
+	types.RegisterQueryServer(queryHelper, suite.accountKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
@@ -45,104 +72,89 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func TestAccountMapperGetSet(t *testing.T) {
-	app, ctx := createTestApp(t, true)
+func (suite *KeeperTestSuite) TestAccountMapperGetSet() {
+	ctx := suite.ctx
 	addr := sdk.AccAddress([]byte("some---------address"))
 
 	// no account before its created
-	acc := app.AccountKeeper.GetAccount(ctx, addr)
-	require.Nil(t, acc)
+	acc := suite.accountKeeper.GetAccount(ctx, addr)
+	suite.Require().Nil(acc)
 
 	// create account and check default values
-	acc = app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-	require.NotNil(t, acc)
-	require.Equal(t, addr, acc.GetAddress())
-	require.EqualValues(t, nil, acc.GetPubKey())
-	require.EqualValues(t, 0, acc.GetSequence())
+	acc = suite.accountKeeper.NewAccountWithAddress(ctx, addr)
+	suite.Require().NotNil(acc)
+	suite.Require().Equal(addr, acc.GetAddress())
+	suite.Require().EqualValues(nil, acc.GetPubKey())
+	suite.Require().EqualValues(0, acc.GetSequence())
 
 	// NewAccount doesn't call Set, so it's still nil
-	require.Nil(t, app.AccountKeeper.GetAccount(ctx, addr))
+	suite.Require().Nil(suite.accountKeeper.GetAccount(ctx, addr))
 
 	// set some values on the account and save it
 	newSequence := uint64(20)
 	err := acc.SetSequence(newSequence)
-	require.NoError(t, err)
-	app.AccountKeeper.SetAccount(ctx, acc)
+	suite.Require().NoError(err)
+	suite.accountKeeper.SetAccount(ctx, acc)
 
 	// check the new values
-	acc = app.AccountKeeper.GetAccount(ctx, addr)
-	require.NotNil(t, acc)
-	require.Equal(t, newSequence, acc.GetSequence())
+	acc = suite.accountKeeper.GetAccount(ctx, addr)
+	suite.Require().NotNil(acc)
+	suite.Require().Equal(newSequence, acc.GetSequence())
 }
 
-func TestAccountMapperRemoveAccount(t *testing.T) {
-	app, ctx := createTestApp(t, true)
+func (suite *KeeperTestSuite) TestAccountMapperRemoveAccount() {
+	ctx := suite.ctx
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 
 	// create accounts
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
+	acc1 := suite.accountKeeper.NewAccountWithAddress(ctx, addr1)
+	acc2 := suite.accountKeeper.NewAccountWithAddress(ctx, addr2)
 
 	accSeq1 := uint64(20)
 	accSeq2 := uint64(40)
 
 	err := acc1.SetSequence(accSeq1)
-	require.NoError(t, err)
+	suite.Require().NoError(err)
 	err = acc2.SetSequence(accSeq2)
-	require.NoError(t, err)
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.AccountKeeper.SetAccount(ctx, acc2)
+	suite.Require().NoError(err)
+	suite.accountKeeper.SetAccount(ctx, acc1)
+	suite.accountKeeper.SetAccount(ctx, acc2)
 
-	acc1 = app.AccountKeeper.GetAccount(ctx, addr1)
-	require.NotNil(t, acc1)
-	require.Equal(t, accSeq1, acc1.GetSequence())
+	acc1 = suite.accountKeeper.GetAccount(ctx, addr1)
+	suite.Require().NotNil(acc1)
+	suite.Require().Equal(accSeq1, acc1.GetSequence())
 
 	// remove one account
-	app.AccountKeeper.RemoveAccount(ctx, acc1)
-	acc1 = app.AccountKeeper.GetAccount(ctx, addr1)
-	require.Nil(t, acc1)
+	suite.accountKeeper.RemoveAccount(ctx, acc1)
+	acc1 = suite.accountKeeper.GetAccount(ctx, addr1)
+	suite.Require().Nil(acc1)
 
-	acc2 = app.AccountKeeper.GetAccount(ctx, addr2)
-	require.NotNil(t, acc2)
-	require.Equal(t, accSeq2, acc2.GetSequence())
+	acc2 = suite.accountKeeper.GetAccount(ctx, addr2)
+	suite.Require().NotNil(acc2)
+	suite.Require().Equal(accSeq2, acc2.GetSequence())
 }
 
-func TestGetSetParams(t *testing.T) {
-	app, ctx := createTestApp(t, true)
+func (suite *KeeperTestSuite) TestGetSetParams() {
+	ctx := suite.ctx
 	params := types.DefaultParams()
 
-	app.AccountKeeper.SetParams(ctx, params)
+	err := suite.accountKeeper.SetParams(ctx, params)
+	suite.Require().NoError(err)
 
-	actualParams := app.AccountKeeper.GetParams(ctx)
-	require.Equal(t, params, actualParams)
+	actualParams := suite.accountKeeper.GetParams(ctx)
+	suite.Require().Equal(params, actualParams)
 }
 
-func TestSupply_ValidatePermissions(t *testing.T) {
-	app, _ := createTestApp(t, true)
+func (suite *KeeperTestSuite) TestSupply_ValidatePermissions() {
+	err := suite.accountKeeper.ValidatePermissions(multiPermAcc)
+	suite.Require().NoError(err)
 
-	// add module accounts to supply keeper
-	maccPerms := simapp.GetMaccPerms()
-	maccPerms[holder] = nil
-	maccPerms[types.Burner] = []string{types.Burner}
-	maccPerms[types.Minter] = []string{types.Minter}
-	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
-	maccPerms[randomPerm] = []string{"random"}
-
-	cdc := simapp.MakeTestEncodingConfig().Codec
-	keeper := keeper.NewAccountKeeper(
-		cdc, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-		types.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
-	)
-
-	err := keeper.ValidatePermissions(multiPermAcc)
-	require.NoError(t, err)
-
-	err = keeper.ValidatePermissions(randomPermAcc)
-	require.NoError(t, err)
+	err = suite.accountKeeper.ValidatePermissions(randomPermAcc)
+	suite.Require().NoError(err)
 
 	// unregistered permissions
 	otherAcc := types.NewEmptyModuleAccount("other", "other")
-	err = app.AccountKeeper.ValidatePermissions(otherAcc)
-	require.Error(t, err)
+	err = suite.accountKeeper.ValidatePermissions(otherAcc)
+	suite.Require().Error(err)
 }

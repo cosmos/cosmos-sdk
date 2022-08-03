@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/math"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -60,7 +62,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	accountStore := k.getAccountStore(sdkCtx, addr)
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
-		var amount sdk.Int
+		var amount math.Int
 		if err := amount.Unmarshal(value); err != nil {
 			return err
 		}
@@ -90,9 +92,9 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 
 	balances := sdk.NewCoins()
 	accountStore := k.getAccountStore(sdkCtx, addr)
-	zeroAmt := sdk.ZeroInt()
+	zeroAmt := math.ZeroInt()
 
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
+	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, _ []byte) error {
 		balances = append(balances, sdk.NewCoin(string(key), zeroAmt))
 		return nil
 	})
@@ -217,7 +219,7 @@ func (k BaseKeeper) DenomOwners(
 	pageRes, err := query.FilteredPaginate(
 		denomPrefixStore,
 		req.Pagination,
-		func(key []byte, value []byte, accumulate bool) (bool, error) {
+		func(key []byte, _ []byte, accumulate bool) (bool, error) {
 			if accumulate {
 				address, _, err := types.AddressAndDenomFromBalancesStore(key)
 				if err != nil {
@@ -241,4 +243,37 @@ func (k BaseKeeper) DenomOwners(
 	}
 
 	return &types.QueryDenomOwnersResponse{DenomOwners: denomOwners, Pagination: pageRes}, nil
+}
+
+func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabledRequest) (*types.QuerySendEnabledResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp := &types.QuerySendEnabledResponse{}
+	if len(req.Denoms) > 0 {
+		store := ctx.KVStore(k.storeKey)
+		for _, denom := range req.Denoms {
+			if se, ok := k.getSendEnabled(store, denom); ok {
+				resp.SendEnabled = append(resp.SendEnabled, types.NewSendEnabled(denom, se))
+			}
+		}
+	} else {
+		store := k.getSendEnabledPrefixStore(ctx)
+		var err error
+		resp.Pagination, err = query.FilteredPaginate(
+			store,
+			req.Pagination,
+			func(key []byte, value []byte, accumulate bool) (bool, error) {
+				if accumulate {
+					resp.SendEnabled = append(resp.SendEnabled, types.NewSendEnabled(string(key), types.IsTrueB(value)))
+				}
+				return true, nil
+			},
+		)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+	}
+	return resp, nil
 }

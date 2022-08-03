@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/depinject"
+	"cosmossdk.io/depinject"
 )
 
 type StructIn struct {
@@ -22,16 +22,6 @@ type StructOut struct {
 	depinject.Out
 	X string
 	Y []byte
-}
-
-type KeyedIn struct {
-	depinject.In
-	X string `key:"theKey"`
-}
-
-type KeyedOut struct {
-	depinject.Out
-	X string `key:"theKey"`
 }
 
 func TestExtractProviderDescriptor(t *testing.T) {
@@ -96,20 +86,6 @@ func TestExtractProviderDescriptor(t *testing.T) {
 			nil,
 			nil,
 			true,
-		},
-		{
-			name:    "keyed input",
-			ctr:     func(_ KeyedIn) int { return 0 },
-			wantIn:  []depinject.ProviderInput{{Type: stringType, Key: "theKey"}},
-			wantOut: []depinject.ProviderOutput{{Type: intType}},
-			wantErr: false,
-		},
-		{
-			name:    "keyed output",
-			ctr:     func(s string) KeyedOut { return KeyedOut{X: "foo"} },
-			wantIn:  []depinject.ProviderInput{{Type: stringType}},
-			wantOut: []depinject.ProviderOutput{{Type: stringType, Key: "theKey"}},
-			wantErr: false,
 		},
 	}
 	for _, tt := range tests {

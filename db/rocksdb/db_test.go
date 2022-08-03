@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/db/dbtest"
 )
 
-func load(t *testing.T, dir string) db.DBConnection {
+func load(t *testing.T, dir string) db.Connection {
 	d, err := NewDB(dir)
 	require.NoError(t, err)
 	return d

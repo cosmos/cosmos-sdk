@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"time"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -13,6 +14,7 @@ type (
 	// evidence module.
 	StakingKeeper interface {
 		ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI
+		GetParams(ctx sdk.Context) (params stakingtypes.Params)
 	}
 
 	// SlashingKeeper defines the slashing module interface contract needed by the
@@ -26,5 +28,17 @@ type (
 		SlashFractionDoubleSign(sdk.Context) sdk.Dec
 		Jail(sdk.Context, sdk.ConsAddress)
 		JailUntil(sdk.Context, sdk.ConsAddress, time.Time)
+	}
+
+	// AccountKeeper define the account keeper interface contracted needed by the evidence module
+	AccountKeeper interface {
+		SetAccount(ctx sdk.Context, acc types.AccountI)
+	}
+
+	// BankKeeper define the account keeper interface contracted needed by the evidence module
+	BankKeeper interface {
+		MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+		SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+		GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	}
 )

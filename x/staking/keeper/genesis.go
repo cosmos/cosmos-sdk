@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,8 +16,8 @@ import (
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []abci.ValidatorUpdate) {
-	bondedTokens := sdk.ZeroInt()
-	notBondedTokens := sdk.ZeroInt()
+	bondedTokens := math.ZeroInt()
+	notBondedTokens := math.ZeroInt()
 
 	// We need to pretend to be "n blocks before genesis", where "n" is the
 	// validator update delay, so that e.g. slashing periods are correctly
@@ -60,10 +61,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 	}
 
 	for _, delegation := range data.Delegations {
-		delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
-		if err != nil {
-			panic(err)
-		}
+		delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
 
 		// Call the before-creation hook if not exported
 		if !data.Exported {
@@ -109,6 +107,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 	}
 
 	// TODO: remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
+
 	bondedBalance := k.bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 	if bondedBalance.IsZero() {
 		k.authKeeper.SetModuleAccount(ctx, bondedPool)

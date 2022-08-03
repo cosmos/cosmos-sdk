@@ -53,7 +53,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightesOps {
-		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		suite.Require().NoError(err)
+
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
@@ -112,12 +114,12 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
-	require.Len(msg.Inputs, 3)
-	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Inputs[1].Address)
-	require.Equal("185121068stake", msg.Inputs[1].Coins.String())
+	require.Len(msg.Inputs, 1)
+	require.Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Inputs[0].Address)
+	require.Equal("114949958stake", msg.Inputs[0].Coins.String())
 	require.Len(msg.Outputs, 2)
 	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Outputs[1].Address)
-	require.Equal("260469617stake", msg.Outputs[1].Coins.String())
+	require.Equal("107287087stake", msg.Outputs[1].Coins.String())
 	require.Equal(types.TypeMsgMultiSend, msg.Type())
 	require.Equal(types.ModuleName, msg.Route())
 	require.Len(futureOperations, 0)

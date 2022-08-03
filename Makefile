@@ -51,6 +51,10 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
   build_tags += libsecp256k1_sdk
 endif
 
+ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
+  build_tags += legacy_simapp
+endif
+
 whitespace :=
 whitespace += $(whitespace)
 comma := ,
@@ -138,18 +142,9 @@ cosmovisor:
 
 .PHONY: build build-linux cosmovisor
 
-mockgen_cmd=go run github.com/golang/mock/mockgen
 
 mocks: $(MOCKS_DIR)
-	$(mockgen_cmd) -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
-	$(mockgen_cmd) -package mocks -destination tests/mocks/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
-	$(mockgen_cmd) -source db/types.go -package mocks -destination tests/mocks/db/types.go
-	$(mockgen_cmd) -source=types/module/module.go -package mocks -destination tests/mocks/types_module_module.go
-	$(mockgen_cmd) -source=types/invariant.go -package mocks -destination tests/mocks/types_invariant.go
-	$(mockgen_cmd) -source=types/router.go -package mocks -destination tests/mocks/types_router.go
-	$(mockgen_cmd) -package mocks -destination tests/mocks/grpc_server.go github.com/gogo/protobuf/grpc Server
-	$(mockgen_cmd) -package mocks -destination tests/mocks/tendermint_tendermint_libs_log_DB.go github.com/tendermint/tendermint/libs/log Logger
-	$(mockgen_cmd) -source=orm/model/ormtable/hooks.go -package ormmocks -destination orm/testing/ormmocks/hooks.go
+	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
 $(MOCKS_DIR):
@@ -244,18 +239,26 @@ CURRENT_DIR = $(shell pwd)
 run-tests:
 ifneq (,$(shell which tparse 2>/dev/null))
 	@echo "Starting unit tests"; \
+	finalec=0; \
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
 		echo "Running unit tests for module $$module"; \
 		go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) ./... | tparse; \
-    done
+		ec=$$?; \
+		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
+	done; \
+	exit $$finalec
 else
 	@echo "Starting unit tests"; \
+	finalec=0; \
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
 		echo "Running unit tests for module $$module"; \
 		go test -mod=readonly $(ARGS) $(TEST_PACKAGES) ./... ; \
-	done
+		ec=$$?; \
+		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
+	done; \
+	exit $$finalec
 endif
 
 .PHONY: run-tests test test-all $(TEST_TARGETS)
@@ -341,22 +344,15 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-markdownLintImage=tmknom/markdownlint
-containerMarkdownLint=$(PROJECT_NAME)-markdownlint
-containerMarkdownLintFix=$(PROJECT_NAME)-markdownlint-fix
+golangci_lint_cmd=github.com/golangci/golangci-lint/cmd/golangci-lint
 
-golangci_lint_cmd=golangci-lint
-
-lint: lint-go
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(markdownLintImage); fi
+lint:
+	@echo "--> Running linter"
+	@go run $(golangci_lint_cmd) run --timeout=10m
 
 lint-fix:
-	golangci-lint run --fix --out-format=tab --issues-exit-code=0
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(markdownLintImage) . --fix; fi
-
-lint-go:
-	@@test -n "$$golangci-lint version | awk '$4 >= 1.42')"
-	$(golangci_lint_cmd) run --out-format=tab $(GIT_DIFF)
+	@echo "--> Running linter"
+	@go run $(golangci_lint_cmd) run --fix --out-format=tab --issues-exit-code=0
 
 .PHONY: lint lint-fix
 
@@ -434,10 +430,10 @@ proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 
-TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
+TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.35.9/proto/tendermint
 GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL    = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
-CONFIO_URL          = https://raw.githubusercontent.com/confio/ics23/v0.6.3
+CONFIO_URL          = https://raw.githubusercontent.com/confio/ics23/v0.7.0
 
 TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
 TM_ABCI_TYPES       = third_party/proto/tendermint/abci

@@ -288,6 +288,15 @@ func (coins Coins) IsValid() bool {
 	return coins.Validate() == nil
 }
 
+// Denoms returns all denoms associated with a Coins object
+func (coins Coins) Denoms() []string {
+	res := make([]string, len(coins))
+	for i, coin := range coins {
+		res[i] = coin.Denom
+	}
+	return res
+}
+
 // Add adds two sets of coins.
 //
 // e.g.
@@ -411,7 +420,7 @@ func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
 }
 
 // MulInt performs the scalar multiplication of coins with a `multiplier`
-// All coins are multipled by x
+// All coins are multiplied by x
 // e.g.
 // {2A, 3B} * 2 = {4A, 6B}
 // {2A} * 0 panics

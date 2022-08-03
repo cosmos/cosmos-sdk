@@ -26,7 +26,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the slashing module's genesis state.
 type GenesisState struct {
-	// params defines all the paramaters of related to deposit.
+	// params defines all the parameters of the module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	// signing_infos represents a map between validator addresses and their
 	// signing infos.

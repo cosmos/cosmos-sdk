@@ -3,6 +3,8 @@ package keyring
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -19,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -59,7 +62,8 @@ func TestNewKeyring(t *testing.T) {
 
 func TestKeyManagementKeyRing(t *testing.T) {
 	cdc := getCodec()
-	kb, err := New("keybasename", "test", t.TempDir(), nil, cdc)
+	tempDir := t.TempDir()
+	kb, err := New("keybasename", "test", tempDir, nil, cdc)
 	require.NoError(t, err)
 	require.NotNil(t, cdc)
 
@@ -150,6 +154,15 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	keyS, err = kb.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
+
+	// create some random directory inside the keyring directory to check migrate ignores
+	// all files other than *.info
+	newPath := filepath.Join(tempDir, "random")
+	require.NoError(t, os.Mkdir(newPath, 0o755))
+	items, err := os.ReadDir(tempDir)
+	require.GreaterOrEqual(t, len(items), 2)
+	keyS, err = kb.List()
+	require.NoError(t, err)
 
 	// addr cache gets nuked - and test skip flag
 	require.NoError(t, kb.Delete(n2))
@@ -441,6 +454,49 @@ func TestInMemoryLanguage(t *testing.T) {
 	_, _, err := kb.NewMnemonic("something", Japanese, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 	require.Error(t, err)
 	require.Equal(t, "unsupported language: only english is supported", err.Error())
+}
+
+func TestInMemoryWithKeyring(t *testing.T) {
+	priv := cryptotypes.PrivKey(secp256k1.GenPrivKey())
+	pub := priv.PubKey()
+
+	cdc := getCodec()
+	_, err := NewLocalRecord("test record", priv, pub)
+
+	multi := multisig.NewLegacyAminoPubKey(
+		1, []cryptotypes.PubKey{
+			pub,
+		},
+	)
+
+	appName := "test-app"
+
+	legacyMultiInfo, err := NewLegacyMultiInfo(appName, multi)
+	require.NoError(t, err)
+	serializedLegacyMultiInfo := MarshalInfo(legacyMultiInfo)
+
+	kb := NewInMemoryWithKeyring(keyring.NewArrayKeyring([]keyring.Item{
+		{
+			Key:         appName + ".info",
+			Data:        serializedLegacyMultiInfo,
+			Description: "test description",
+		},
+	}), cdc)
+
+	t.Run("key exists", func(t *testing.T) {
+		_, err := kb.Key(appName)
+		require.NoError(t, err)
+	})
+
+	t.Run("key deleted", func(t *testing.T) {
+		err := kb.Delete(appName)
+		require.NoError(t, err)
+
+		t.Run("key is gone", func(t *testing.T) {
+			_, err := kb.Key(appName)
+			require.Error(t, err)
+		})
+	})
 }
 
 func TestInMemoryCreateMultisig(t *testing.T) {

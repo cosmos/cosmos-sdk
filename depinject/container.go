@@ -7,14 +7,15 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 type container struct {
 	*debugConfig
 
-	resolvers      map[reflect.Type]resolver
-	keyedResolvers map[string]resolver
+	resolvers         map[string]resolver
+	interfaceBindings map[string]interfaceBinding
+	invokers          []invoker
 
 	moduleKeys map[string]*moduleKey
 
@@ -23,19 +24,34 @@ type container struct {
 	callerMap    map[Location]bool
 }
 
+type invoker struct {
+	fn     *ProviderDescriptor
+	modKey *moduleKey
+}
+
 type resolveFrame struct {
 	loc Location
 	typ reflect.Type
 }
 
+// interfaceBinding defines a type binding for interfaceName to type implTypeName when being provided as a
+// dependency to the module identified by moduleKey.  If moduleKey is nil then the type binding is applied globally,
+// not module-scoped.
+type interfaceBinding struct {
+	interfaceName string
+	implTypeName  string
+	moduleKey     *moduleKey
+	resolver      resolver
+}
+
 func newContainer(cfg *debugConfig) *container {
 	return &container{
-		debugConfig:    cfg,
-		resolvers:      map[reflect.Type]resolver{},
-		keyedResolvers: map[string]resolver{},
-		moduleKeys:     map[string]*moduleKey{},
-		callerStack:    nil,
-		callerMap:      map[Location]bool{},
+		debugConfig:       cfg,
+		resolvers:         map[string]resolver{},
+		moduleKeys:        map[string]*moduleKey{},
+		interfaceBindings: map[string]interfaceBinding{},
+		callerStack:       nil,
+		callerMap:         map[Location]bool{},
 	}
 }
 
@@ -78,14 +94,16 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 	return out, nil
 }
 
-func (c *container) getResolver(typ reflect.Type, key string) (resolver, error) {
-	if key != "" {
-		if vr, ok := c.keyedResolvers[key]; ok {
-			return vr, nil
-		}
+func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
+	pr, err := c.getExplicitResolver(typ, key)
+	if err != nil {
+		return nil, err
+	}
+	if pr != nil {
+		return pr, nil
 	}
 
-	if vr, ok := c.resolvers[typ]; ok {
+	if vr, ok := c.resolverByType(typ); ok {
 		return vr, nil
 	}
 
@@ -109,8 +127,8 @@ func (c *container) getResolver(typ reflect.Type, key string) (resolver, error) 
 			graphNode: typeGraphNode,
 		}
 
-		c.resolvers[elemType] = r
-		c.resolvers[sliceType] = &sliceGroupResolver{r}
+		c.addResolver(elemType, r)
+		c.addResolver(sliceType, &sliceGroupResolver{r})
 	} else if isOnePerModuleType(elemType) {
 		c.logf("Registering resolver for one-per-module type %v", elemType)
 		mapType := reflect.MapOf(stringType, elemType)
@@ -126,11 +144,63 @@ func (c *container) getResolver(typ reflect.Type, key string) (resolver, error) 
 			graphNode: typeGraphNode,
 		}
 
-		c.resolvers[elemType] = r
-		c.resolvers[mapType] = &mapOfOnePerModuleResolver{r}
+		c.addResolver(elemType, r)
+		c.addResolver(mapType, &mapOfOnePerModuleResolver{r})
 	}
 
-	return c.resolvers[typ], nil
+	res, found := c.resolverByType(typ)
+
+	if !found && typ.Kind() == reflect.Interface {
+		matches := map[reflect.Type]reflect.Type{}
+		var resolverType reflect.Type
+		for _, r := range c.resolvers {
+			if r.getType().Kind() != reflect.Interface && r.getType().Implements(typ) {
+				resolverType = r.getType()
+				matches[resolverType] = resolverType
+			}
+		}
+
+		if len(matches) == 1 {
+			res, _ = c.resolverByType(resolverType)
+			c.logf("Implicitly registering resolver %v for interface type %v", resolverType, typ)
+			c.addResolver(typ, res)
+		} else if len(matches) > 1 {
+			return nil, newErrMultipleImplicitInterfaceBindings(typ, matches)
+		}
+	}
+
+	return res, nil
+}
+
+func (c *container) getExplicitResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
+	var pref interfaceBinding
+	var found bool
+
+	// module scoped binding takes precedence
+	pref, found = c.interfaceBindings[bindingKeyFromType(typ, key)]
+
+	// fallback to global scope binding
+	if !found {
+		pref, found = c.interfaceBindings[bindingKeyFromType(typ, nil)]
+	}
+
+	if !found {
+		return nil, nil
+	}
+
+	if pref.resolver != nil {
+		return pref.resolver, nil
+	}
+
+	res, ok := c.resolverByTypeName(pref.implTypeName)
+	if ok {
+		c.logf("Registering resolver %v for interface type %v by explicit binding", res.getType(), typ)
+		pref.resolver = res
+		return res, nil
+
+	}
+
+	return nil, newErrNoTypeForExplicitBindingFound(pref)
 }
 
 var stringType = reflect.TypeOf("")
@@ -155,7 +225,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 			return nil, fmt.Errorf("one-per-module type %v can't be used as an input parameter", typ)
 		}
 
-		vr, err := c.getResolver(typ, in.Key)
+		vr, err := c.getResolver(typ, key)
 		if err != nil {
 			return nil, err
 		}
@@ -197,7 +267,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 				typ = typ.Elem()
 			}
 
-			vr, err := c.getResolver(typ, out.Key)
+			vr, err := c.getResolver(typ, key)
 			if err != nil {
 				return nil, err
 			}
@@ -218,11 +288,7 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 					graphNode:   typeGraphNode,
 					idxInValues: i,
 				}
-				c.resolvers[typ] = vr
-
-				if out.Key != "" {
-					c.keyedResolvers[out.Key] = vr
-				}
+				c.addResolver(typ, vr)
 			}
 
 			c.addGraphEdge(providerGraphNode, vr.typeGraphNode())
@@ -250,25 +316,20 @@ func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (inter
 
 			c.logf("Registering resolver for module-scoped type %v", typ)
 
-			existing, ok := c.resolvers[typ]
+			existing, ok := c.resolverByType(typ)
 			if ok {
 				return nil, errors.Errorf("duplicate provision of type %v by module-scoped provider %s\n\talready provided by %s",
 					typ, provider.Location, existing.describeLocation())
 			}
 
 			typeGraphNode := c.typeGraphNode(typ)
-			mdr := &moduleDepResolver{
+			c.addResolver(typ, &moduleDepResolver{
 				typ:         typ,
 				idxInValues: i,
 				node:        node,
 				valueMap:    map[*moduleKey]reflect.Value{},
 				graphNode:   typeGraphNode,
-			}
-			c.resolvers[typ] = mdr
-
-			if out.Key != "" {
-				c.keyedResolvers[out.Key] = mdr
-			}
+			})
 
 			c.addGraphEdge(providerGraphNode, typeGraphNode)
 		}
@@ -284,16 +345,30 @@ func (c *container) supply(value reflect.Value, location Location) error {
 	typeGraphNode := c.typeGraphNode(typ)
 	c.addGraphEdge(locGrapNode, typeGraphNode)
 
-	if existing, ok := c.resolvers[typ]; ok {
+	if existing, ok := c.resolverByType(typ); ok {
 		return duplicateDefinitionError(typ, location, existing.describeLocation())
 	}
 
-	c.resolvers[typ] = &supplyResolver{
+	c.addResolver(typ, &supplyResolver{
 		typ:       typ,
 		value:     value,
 		loc:       location,
 		graphNode: typeGraphNode,
+	})
+
+	return nil
+}
+
+func (c *container) addInvoker(provider *ProviderDescriptor, key *moduleKey) error {
+	// make sure there are no outputs
+	if len(provider.Outputs) > 0 {
+		return fmt.Errorf("invoker function %s should not return any outputs", provider.Location)
 	}
+
+	c.invokers = append(c.invokers, invoker{
+		fn:     provider,
+		modKey: key,
+	})
 
 	return nil
 }
@@ -321,7 +396,7 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 		return reflect.ValueOf(OwnModuleKey{moduleKey}), nil
 	}
 
-	vr, err := c.getResolver(in.Type, in.Key)
+	vr, err := c.getResolver(in.Type, moduleKey)
 	if err != nil {
 		return reflect.Value{}, err
 	}
@@ -334,7 +409,7 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 
 		markGraphNodeAsFailed(typeGraphNode)
 		return reflect.Value{}, errors.Errorf("can't resolve type %v for %s:\n%s",
-			in.Type, caller, c.formatResolveStack())
+			fullyQualifiedTypeName(in.Type), caller, c.formatResolveStack())
 	}
 
 	res, err := vr.resolve(c, moduleKey, caller)
@@ -371,6 +446,11 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 
 			for i, output := range outputs {
 				val := reflect.ValueOf(output)
+
+				if !values[i].CanInterface() {
+					return []reflect.Value{}, fmt.Errorf("depinject.Out struct %s on package can't have unexported field", values[i].String())
+
+				}
 				val.Elem().Set(values[i])
 			}
 
@@ -407,6 +487,14 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 		return err
 	}
 	c.logf("Done building container")
+	c.logf("Calling invokers")
+	for _, inv := range c.invokers {
+		_, err := c.call(inv.fn, inv.modKey)
+		if err != nil {
+			return err
+		}
+	}
+	c.logf("Done calling invokers")
 
 	return nil
 }
@@ -429,6 +517,42 @@ func (c container) formatResolveStack() string {
 		_, _ = fmt.Fprintf(buf, "\t\t%v for %s\n", rk.typ, rk.loc)
 	}
 	return buf.String()
+}
+
+func fullyQualifiedTypeName(typ reflect.Type) string {
+	pkgType := typ
+	if typ.Kind() == reflect.Pointer || typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map || typ.Kind() == reflect.Array {
+		pkgType = typ.Elem()
+	}
+	return fmt.Sprintf("%s/%v", pkgType.PkgPath(), typ)
+}
+
+func bindingKeyFromTypeName(typeName string, key *moduleKey) string {
+	if key == nil {
+		return fmt.Sprintf("%s;", typeName)
+	}
+	return fmt.Sprintf("%s;%s", typeName, key.name)
+}
+
+func bindingKeyFromType(typ reflect.Type, key *moduleKey) string {
+	return bindingKeyFromTypeName(fullyQualifiedTypeName(typ), key)
+}
+
+func (c *container) addBinding(p interfaceBinding) {
+	c.interfaceBindings[bindingKeyFromTypeName(p.interfaceName, p.moduleKey)] = p
+}
+
+func (c *container) addResolver(typ reflect.Type, r resolver) {
+	c.resolvers[fullyQualifiedTypeName(typ)] = r
+}
+
+func (c *container) resolverByType(typ reflect.Type) (resolver, bool) {
+	return c.resolverByTypeName(fullyQualifiedTypeName(typ))
+}
+
+func (c *container) resolverByTypeName(typeName string) (resolver, bool) {
+	res, found := c.resolvers[typeName]
+	return res, found
 }
 
 func markGraphNodeAsUsed(node *graphviz.Node) {

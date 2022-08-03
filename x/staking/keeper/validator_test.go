@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -12,6 +13,7 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -56,7 +58,7 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 
 func initValidators(t testing.TB, power int64, numAddrs int, powers []int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
 	app, ctx, addrs, valAddrs := bootstrapValidatorTest(t, power, numAddrs)
-	pks := simapp.CreateTestPubKeys(numAddrs)
+	pks := simtestutil.CreateTestPubKeys(numAddrs)
 
 	vs := make([]types.Validator, len(powers))
 	for i, power := range powers {
@@ -145,7 +147,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 
 	// burn half the delegator shares
 	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validator)
-	validator, burned := validator.RemoveDelShares(delSharesCreated.Quo(sdk.NewDec(2)))
+	validator, burned := validator.RemoveDelShares(delSharesCreated.Quo(math.LegacyNewDec(2)))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 50), burned)
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true) // update the validator, possibly kicking it out
 	require.False(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
@@ -240,7 +242,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	require.Equal(t, valTokens, validator.Tokens, "\nvalidator %v\npool %v", validator, valTokens)
 
 	// slash the validator by 100%
-	app.StakingKeeper.Slash(ctx, sdk.ConsAddress(PKs[0].Address()), 0, 100, sdk.OneDec())
+	app.StakingKeeper.Slash(ctx, sdk.ConsAddress(PKs[0].Address()), 0, 100, math.LegacyOneDec())
 	// apply TM updates
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 	// validator should be unbonding
@@ -258,7 +260,7 @@ func TestValidatorBasics(t *testing.T) {
 	for i, power := range powers {
 		validators[i] = teststaking.NewValidator(t, addrVals[i], PKs[i])
 		validators[i].Status = types.Unbonded
-		validators[i].Tokens = sdk.ZeroInt()
+		validators[i].Tokens = math.ZeroInt()
 		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, power)
 
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
@@ -295,7 +297,7 @@ func TestValidatorBasics(t *testing.T) {
 	require.Equal(t, 1, len(resVals))
 	assert.True(ValEq(t, validators[0], resVals[0]))
 	assert.Equal(t, types.Bonded, validators[0].Status)
-	assert.True(sdk.IntEq(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 9), validators[0].BondedTokens()))
+	assert.True(math.IntEq(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 9), validators[0].BondedTokens()))
 
 	// modify a records, save, and retrieve
 	validators[0].Status = types.Bonded
@@ -340,7 +342,7 @@ func TestValidatorBasics(t *testing.T) {
 		"attempting to remove a validator which still contains tokens",
 		func() { app.StakingKeeper.RemoveValidator(ctx, validators[1].GetOperator()) })
 
-	validators[1].Tokens = sdk.ZeroInt()                                // ...remove all tokens
+	validators[1].Tokens = math.ZeroInt()                               // ...remove all tokens
 	app.StakingKeeper.SetValidator(ctx, validators[1])                  // ...set the validator
 	app.StakingKeeper.RemoveValidator(ctx, validators[1].GetOperator()) // Now it can be removed.
 	_, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
@@ -352,7 +354,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
 
 	// initialize some validators into the state
-	amts := []sdk.Int{
+	amts := []math.Int{
 		sdk.NewIntFromUint64(0),
 		app.StakingKeeper.PowerReduction(ctx).MulRaw(100),
 		app.StakingKeeper.PowerReduction(ctx),
@@ -446,7 +448,7 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// initialize some validators into the state
-	amts := []sdk.Int{
+	amts := []math.Int{
 		sdk.NewIntFromUint64(0),
 		app.StakingKeeper.PowerReduction(ctx).MulRaw(100),
 		app.StakingKeeper.PowerReduction(ctx),
@@ -572,8 +574,8 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	// validator 3 kicked out temporarily
 	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validators[3])
-	rmTokens := validators[3].TokensFromShares(sdk.NewDec(201)).TruncateInt()
-	validators[3], _ = validators[3].RemoveDelShares(sdk.NewDec(201))
+	rmTokens := validators[3].TokensFromShares(math.LegacyNewDec(201)).TruncateInt()
+	validators[3], _ = validators[3].RemoveDelShares(math.LegacyNewDec(201))
 
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, rmTokens))))
@@ -1079,7 +1081,7 @@ func TestUpdateValidatorCommission(t *testing.T) {
 		newRate     sdk.Dec
 		expectedErr bool
 	}{
-		{val1, sdk.ZeroDec(), true},
+		{val1, math.LegacyZeroDec(), true},
 		{val2, sdk.NewDecWithPrec(-1, 1), true},
 		{val2, sdk.NewDecWithPrec(4, 1), true},
 		{val2, sdk.NewDecWithPrec(3, 1), true},
@@ -1113,7 +1115,7 @@ func TestUpdateValidatorCommission(t *testing.T) {
 	}
 }
 
-func applyValidatorSetUpdates(t *testing.T, ctx sdk.Context, k keeper.Keeper, expectedUpdatesLen int) []abci.ValidatorUpdate {
+func applyValidatorSetUpdates(t *testing.T, ctx sdk.Context, k *keeper.Keeper, expectedUpdatesLen int) []abci.ValidatorUpdate {
 	updates, err := k.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.NoError(t, err)
 	if expectedUpdatesLen >= 0 {

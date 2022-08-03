@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -12,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -56,7 +56,6 @@ type BaseKeeper struct {
 	ak                     types.AccountKeeper
 	cdc                    codec.BinaryCodec
 	storeKey               storetypes.StoreKey
-	paramSpace             paramtypes.Subspace
 	mintCoinsRestrictionFn MintingRestrictionFn
 }
 
@@ -70,7 +69,7 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 	supply := sdk.NewCoins()
 
 	pageRes, err := query.Paginate(supplyStore, pagination, func(key, value []byte) error {
-		var amount sdk.Int
+		var amount math.Int
 		err := amount.Unmarshal(value)
 		if err != nil {
 			return fmt.Errorf("unable to convert amount string to Int %v", err)
@@ -97,20 +96,18 @@ func NewBaseKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	ak types.AccountKeeper,
-	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
+	authority string,
 ) BaseKeeper {
-	// set KeyTable if it has not already been set
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
 	return BaseKeeper{
-		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
+		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, blockedAddrs, authority),
 		ak:                     ak,
 		cdc:                    cdc,
 		storeKey:               storeKey,
-		paramSpace:             paramSpace,
 		mintCoinsRestrictionFn: func(ctx sdk.Context, coins sdk.Coins) error { return nil },
 	}
 }
@@ -228,7 +225,7 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 		}
 	}
 
-	var amount sdk.Int
+	var amount math.Int
 	err := amount.Unmarshal(bz)
 	if err != nil {
 		panic(fmt.Errorf("unable to unmarshal supply value %v", err))
@@ -532,7 +529,7 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var amount sdk.Int
+		var amount math.Int
 		err := amount.Unmarshal(iterator.Value())
 		if err != nil {
 			panic(fmt.Errorf("unable to unmarshal supply value %v", err))

@@ -1,36 +1,21 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 
 	"sigs.k8s.io/yaml"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-const (
-	// DefaultSendEnabled enabled
-	DefaultSendEnabled = true
-)
-
-var (
-	// KeySendEnabled is store's key for SendEnabled Params
-	KeySendEnabled = []byte("SendEnabled")
-	// KeyDefaultSendEnabled is store's key for the DefaultSendEnabled option
-	KeyDefaultSendEnabled = []byte("DefaultSendEnabled")
-)
-
-// ParamKeyTable for bank module.
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
-}
+// DefaultDefaultSendEnabled is the value that DefaultSendEnabled will have from DefaultParams().
+var DefaultDefaultSendEnabled = true
 
 // NewParams creates a new parameter configuration for the bank module
-func NewParams(defaultSendEnabled bool, sendEnabledParams SendEnabledParams) Params {
+func NewParams(defaultSendEnabled bool) Params {
 	return Params{
-		SendEnabled:        sendEnabledParams,
+		SendEnabled:        nil,
 		DefaultSendEnabled: defaultSendEnabled,
 	}
 }
@@ -38,60 +23,36 @@ func NewParams(defaultSendEnabled bool, sendEnabledParams SendEnabledParams) Par
 // DefaultParams is the default parameter configuration for the bank module
 func DefaultParams() Params {
 	return Params{
-		SendEnabled: SendEnabledParams{},
-		// The default send enabled value allows send transfers for all coin denoms
-		DefaultSendEnabled: true,
+		SendEnabled:        nil,
+		DefaultSendEnabled: DefaultDefaultSendEnabled,
 	}
 }
 
 // Validate all bank module parameters
 func (p Params) Validate() error {
-	if err := validateSendEnabledParams(p.SendEnabled); err != nil {
-		return err
+	if len(p.SendEnabled) > 0 {
+		return errors.New("use of send_enabled in params is no longer supported")
 	}
 	return validateIsBool(p.DefaultSendEnabled)
 }
 
 // String implements the Stringer interface.
 func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
-}
-
-// SendEnabledDenom returns true if the given denom is enabled for sending
-func (p Params) SendEnabledDenom(denom string) bool {
-	for _, pse := range p.SendEnabled {
-		if pse.Denom == denom {
-			return pse.Enabled
-		}
+	sendEnabled, _ := yaml.Marshal(p.SendEnabled)
+	d := " "
+	if len(sendEnabled) > 0 && sendEnabled[0] == '-' {
+		d = "\n"
 	}
-	return p.DefaultSendEnabled
+	return fmt.Sprintf("default_send_enabled: %t\nsend_enabled:%s%s", p.DefaultSendEnabled, d, sendEnabled)
 }
 
-// SetSendEnabledParam returns an updated set of Parameters with the given denom
-// send enabled flag set.
-func (p Params) SetSendEnabledParam(denom string, sendEnabled bool) Params {
-	var sendParams SendEnabledParams
-	for _, p := range p.SendEnabled {
-		if p.Denom != denom {
-			sendParams = append(sendParams, NewSendEnabled(p.Denom, p.Enabled))
-		}
-	}
-	sendParams = append(sendParams, NewSendEnabled(denom, sendEnabled))
-	return NewParams(p.DefaultSendEnabled, sendParams)
+// Validate gets any errors with this SendEnabled entry.
+func (se SendEnabled) Validate() error {
+	return sdk.ValidateDenom(se.Denom)
 }
 
-// ParamSetPairs implements params.ParamSet
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeySendEnabled, &p.SendEnabled, validateSendEnabledParams),
-		paramtypes.NewParamSetPair(KeyDefaultSendEnabled, &p.DefaultSendEnabled, validateIsBool),
-	}
-}
-
-// SendEnabledParams is a collection of parameters indicating if a coin denom is enabled for sending
-type SendEnabledParams []*SendEnabled
-
+// validateSendEnabledParams is used by the x/params module to validate the params for the bank module.
+//nolint:deadcode,unused
 func validateSendEnabledParams(i interface{}) error {
 	params, ok := i.([]*SendEnabled)
 	if !ok {
@@ -120,29 +81,22 @@ func NewSendEnabled(denom string, sendEnabled bool) *SendEnabled {
 	}
 }
 
-// String implements stringer insterface
+// String implements stringer interface
 func (se SendEnabled) String() string {
-	bz, err := codec.ProtoMarshalJSON(&se, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	out, err := yaml.JSONToYAML(bz)
-	if err != nil {
-		panic(err)
-	}
-
-	return string(out)
+	return fmt.Sprintf("denom: %s\nenabled: %t\n", se.Denom, se.Enabled)
 }
 
+// validateSendEnabled is used by the x/params module to validate a single SendEnabled entry.
+//nolint:unused
 func validateSendEnabled(i interface{}) error {
 	param, ok := i.(SendEnabled)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	return sdk.ValidateDenom(param.Denom)
+	return param.Validate()
 }
 
+// validateIsBool is used by the x/params module to validate that a thing is a bool.
 func validateIsBool(i interface{}) error {
 	_, ok := i.(bool)
 	if !ok {

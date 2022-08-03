@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/math"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -34,6 +35,8 @@ type Factory struct {
 	memo               string
 	fees               sdk.Coins
 	tip                *tx.Tip
+	feeGranter         sdk.AccAddress
+	feePayer           sdk.AccAddress
 	gasPrices          sdk.DecCoins
 	signMode           signing.SignMode
 	simulateAndExecute bool
@@ -79,6 +82,8 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		gasAdjustment:      gasAdj,
 		memo:               memo,
 		signMode:           signMode,
+		feeGranter:         clientCtx.FeeGranter,
+		feePayer:           clientCtx.FeePayer,
 	}
 
 	feesStr, _ := flagSet.GetString(flags.FlagFees)
@@ -225,6 +230,18 @@ func (f Factory) WithTimeoutHeight(height uint64) Factory {
 	return f
 }
 
+// WithFeeGranter returns a copy of the Factory with an updated fee granter.
+func (f Factory) WithFeeGranter(fg sdk.AccAddress) Factory {
+	f.feeGranter = fg
+	return f
+}
+
+// WithFeePayer returns a copy of the Factory with an updated fee granter.
+func (f Factory) WithFeePayer(fp sdk.AccAddress) Factory {
+	f.feePayer = fp
+	return f
+}
+
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
 func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
@@ -243,7 +260,7 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 			return nil, errors.New("cannot provide both fees and gas prices")
 		}
 
-		glDec := sdk.NewDec(int64(f.gas))
+		glDec := math.LegacyNewDec(int64(f.gas))
 
 		// Derive the fees based on the provided gas prices, where
 		// fee = ceil(gasPrice * gasLimit).
@@ -264,6 +281,8 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetMemo(f.memo)
 	tx.SetFeeAmount(fees)
 	tx.SetGasLimit(f.gas)
+	tx.SetFeeGranter(f.feeGranter)
+	tx.SetFeePayer(f.feePayer)
 	tx.SetTimeoutHeight(f.TimeoutHeight())
 
 	return tx, nil
@@ -373,7 +392,6 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 // the updated fields will be returned.
 func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	fc := f
-
 	from := clientCtx.GetFromAddress()
 
 	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {

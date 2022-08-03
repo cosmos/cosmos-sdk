@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 // OnePerModuleType marks a type which
@@ -35,6 +35,10 @@ type onePerModuleResolver struct {
 	resolved  bool
 	values    reflect.Value
 	graphNode *graphviz.Node
+}
+
+func (o *onePerModuleResolver) getType() reflect.Type {
+	return o.mapType
 }
 
 type mapOfOnePerModuleResolver struct {

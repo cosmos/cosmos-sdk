@@ -86,6 +86,8 @@ func TestWeightedOperations(t *testing.T) {
 
 	for i, w := range weightesOps {
 		operationMsg, _, _ := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
+		// require.NoError(t, err) // TODO check if it should be NoError
+
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
@@ -145,7 +147,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	require.NoError(t, err)
 
 	submitTime := ctx.BlockHeader().Time
-	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
+	depositPeriod := app.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
 	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
 	require.NoError(t, err)
@@ -191,7 +193,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	require.NoError(t, err)
 
 	submitTime := ctx.BlockHeader().Time
-	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
+	depositPeriod := app.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
 	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
 	require.NoError(t, err)
@@ -234,7 +236,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
 	require.NoError(t, err)
 	submitTime := ctx.BlockHeader().Time
-	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
+	depositPeriod := app.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
 	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
 	require.NoError(t, err)

@@ -45,13 +45,13 @@ Since these migrations are functions that need access to a Keeper's store, use a
 
 ## Writing Migration Scripts
 
-To define the functionality that takes place during an upgrade, write a migration script and place the functions in a `migrations/` directory. For example, to write migration scripts for the bank module, place the functions in `x/bank/migrations/`. Use the recommended naming convention for these functions. For example, `v043bank` is the script that migrates the package `x/bank/migrations/v043`:
+To define the functionality that takes place during an upgrade, write a migration script and place the functions in a `migrations/` directory. For example, to write migration scripts for the bank module, place the functions in `x/bank/migrations/`. Use the recommended naming convention for these functions. For example, `v2bank` is the script that migrates the package `x/bank/migrations/v2`:
 
 ```golang
 // Migrating bank module from version 1 to 2
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return v043bank.MigrateStore(ctx, m.keeper.storeKey) // v043bank is package `x/bank/migrations/v043`.
+	return v2bank.MigrateStore(ctx, m.keeper.storeKey) // v2bank is package `x/bank/migrations/v2`.
 }
 ```
 
-To see example code of changes that were implemented in a migration of balance keys, check out [migrateBalanceKeys](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/bank/migrations/v043/store.go#L50-L71). For context, this code introduced migrations of the bank store that updated addresses to be prefixed by their length in bytes as outlined in [ADR-028](../architecture/adr-028-public-key-addresses.md).
+To see example code of changes that were implemented in a migration of balance keys, check out [migrateBalanceKeys](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/bank/migrations/v2/store.go#L50-L71). For context, this code introduced migrations of the bank store that updated addresses to be prefixed by their length in bytes as outlined in [ADR-028](../architecture/adr-028-public-key-addresses.md).

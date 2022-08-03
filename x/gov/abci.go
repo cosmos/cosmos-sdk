@@ -12,7 +12,7 @@ import (
 )
 
 // EndBlocker called every block, process inflation, update validator set.
-func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
+func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	logger := keeper.Logger(ctx)
@@ -37,7 +37,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		logger.Info(
 			"proposal did not meet minimum deposit; deleted",
 			"proposal", proposal.Id,
-			"min_deposit", sdk.NewCoins(keeper.GetDepositParams(ctx).MinDeposit...).String(),
+			"min_deposit", sdk.NewCoins(keeper.GetParams(ctx).MinDeposit...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
 

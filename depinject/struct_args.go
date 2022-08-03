@@ -1,6 +1,7 @@
 package depinject
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -74,7 +75,10 @@ func expandStructArgsFn(provider ProviderDescriptor) func(inputs []reflect.Value
 		inputs1 := make([]reflect.Value, len(inParams))
 		for i, in := range inParams {
 			if in.Type.AssignableTo(isInType) {
-				v, n := buildIn(in.Type, inputs[j:])
+				v, n, err := buildIn(in.Type, inputs[j:])
+				if err != nil {
+					return []reflect.Value{}, err
+				}
 				inputs1[i] = v
 				j += n
 			} else {
@@ -120,16 +124,9 @@ func structArgsInTypes(typ reflect.Type) ([]ProviderInput, error) {
 			}
 		}
 
-		var key string
-		keyTag, keyFound := f.Tag.Lookup("key")
-		if keyFound {
-			key = keyTag
-		}
-
 		res = append(res, ProviderInput{
 			Type:     f.Type,
 			Optional: optional,
-			Key:      key,
 		})
 	}
 	return res, nil
@@ -158,21 +155,14 @@ func structArgsOutTypes(typ reflect.Type) []ProviderOutput {
 			continue
 		}
 
-		var key string
-		keyTag, keyFound := f.Tag.Lookup("key")
-		if keyFound {
-			key = keyTag
-		}
-
 		res = append(res, ProviderOutput{
 			Type: f.Type,
-			Key:  key,
 		})
 	}
 	return res
 }
 
-func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int) {
+func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int, error) {
 	numFields := typ.NumField()
 	j := 0
 	res := reflect.New(typ)
@@ -181,11 +171,18 @@ func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int) {
 		if f.Type.AssignableTo(isInType) {
 			continue
 		}
+		if !res.Elem().Field(i).CanSet() {
+			return reflect.Value{}, 0, fmt.Errorf("depinject.In struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath)
+		}
+		if !values[j].CanInterface() {
+			return reflect.Value{}, 0, fmt.Errorf("depinject.Out struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath)
+
+		}
 
 		res.Elem().Field(i).Set(values[j])
 		j++
 	}
-	return res.Elem(), j
+	return res.Elem(), j, nil
 }
 
 func extractFromOut(typ reflect.Type, value reflect.Value) []reflect.Value {

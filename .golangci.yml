@@ -6,11 +6,9 @@ run:
 linters:
   disable-all: true
   enable:
-    - bodyclose
     - deadcode
     - depguard
     - dogsled
-    # - errcheck
     - exportloopref
     - goconst
     - gocritic
@@ -23,16 +21,11 @@ linters:
     - misspell
     - nakedret
     - nolintlint
-    - prealloc
-    - revive
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
-    - unparam
     - unused
-    # - wsl
 
 issues:
   exclude-rules:

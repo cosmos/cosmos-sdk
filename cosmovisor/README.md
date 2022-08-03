@@ -1,6 +1,22 @@
-# Cosmosvisor
+# Cosmovisor
 
 `cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
+
+<!-- TOC -->
+  - [Design](#design)
+  - [Contributing](#contributing)
+  - [Setup](#setup)
+    - [Installation](#installation)
+    - [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
+    - [Folder Layout](#folder-layout)
+  - [Usage](#usage)
+    - [Initialization](#initialization)
+    - [Detecting Upgrades](#detecting-upgrades)
+    - [Auto-Download](#auto-download)
+  - [Example: SimApp Upgrade](#example-simapp-upgrade)
+    - [Chain Setup](#chain-setup)
+
+
 
 ## Design
 
@@ -74,8 +90,9 @@ All arguments passed to `cosmovisor run` will be passed to the application binar
 * `DAEMON_NAME` is the name of the binary itself (e.g. `gaiad`, `regend`, `simd`, etc.).
 * `DAEMON_ALLOW_DOWNLOAD_BINARIES` (*optional*), if set to `true`, will enable auto-downloading of new binaries (for security reasons, this is intended for full nodes rather than validators). By default, `cosmovisor` will not auto-download new binaries.
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*, default = `true`), if `true`, restarts the subprocess with the same command-line arguments and flags (but with the new binary) after a successful upgrade. Otherwise (`false`), `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note restart is only after the upgrade and does not auto-restart the subprocess after an error occurs.
-* `DAEMON_POLL_INTERVAL` is the interval length for polling the upgrade plan file. The value can either be a number (in milliseconds) or a duration (e.g. `1s`). Default: 300 milliseconds.
-* `DAEMON_BACKUP_DIR` option to set a custom backup directory. If not set, `DAEMON_HOME` is used.
+* `DAEMON_RESTART_DELAY` (*optional*, default none), allow a node operator to define a delay between the node halt (for upgrade) and backup by the specified time. The value must be a duration (e.g. `1s`).
+* `DAEMON_POLL_INTERVAL` (*optional*, default 300 milliseconds), is the interval length for polling the upgrade plan file. The value must be a duration (e.g. `1s`).
+* `DAEMON_DATA_BACKUP_DIR` option to set a custom backup directory. If not set, `DAEMON_HOME` is used.
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `true`, upgrades directly without performing a backup. Otherwise (`false`, default) backs up the data before trying the upgrade. The default value of false is useful and recommended in case of failures and when a backup needed to rollback. We recommend using the default backup option `UNSAFE_SKIP_BACKUP=false`.
 * `DAEMON_PREUPGRADE_MAX_RETRIES` (defaults to `0`). The maximum number of times to call `pre-upgrade` in the application after exit status of `31`. After the maximum number of retries, cosmovisor fails the upgrade.
 
@@ -114,14 +131,31 @@ The system administrator is responsible for:
 * installing the `cosmovisor` binary
 * configuring the host's init system (e.g. `systemd`, `launchd`, etc.)
 * appropriately setting the environmental variables
-* manually installing the `genesis` folder
-* manually installing the `upgrades/<name>` folders
+* creating the `<DAEMON_HOME>/cosmovisor` directory
+* creating the `<DAEMON_HOME>/cosmovisor/genesis/bin` folder
+* creating the `<DAEMON_HOME>/cosmovisor/upgrades/<name>/bin` folders
+* placing the different versions of the `<DAEMON_NAME>` executable in the appropriate `bin` folders.
 
 `cosmovisor` will set the `current` link to point to `genesis` at first start (i.e. when no `current` link exists) and then handle switching binaries at the correct points in time so that the system administrator can prepare days in advance and relax at upgrade time.
 
 In order to support downloadable binaries, a tarball for each upgrade binary will need to be packaged up and made available through a canonical URL. Additionally, a tarball that includes the genesis binary and all available upgrade binaries can be packaged up and made available so that all the necessary binaries required to sync a fullnode from start can be easily downloaded.
 
 The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc.) all work as expected. The application binaries' directives such as command-line flags and environment variables also work as expected.
+
+### Initialization
+
+The `cosmovisor init <path to executable>` command creates the folder structure required for using cosmovisor.
+
+It does the following:
+
+* creates the `<DAEMON_HOME>/cosmovisor` folder if it doesn't yet exist
+* creates the `<DAEMON_HOME>/cosmovisor/genesis/bin` folder if it doesn't yet exist
+* copies the provided executable file to `<DAEMON_HOME>/cosmovisor/genesis/bin/<DAEMON_NAME>`
+* creates the `current` link, pointing to the `genesis` folder
+
+It uses the `DAEMON_HOME` and `DAEMON_NAME` environment variables for folder location and executable name.
+
+The `cosmovisor init` command is specifically for initializing cosmovisor, and should not be confused with a chain's `init` command (e.g. `cosmovisor run init`).
 
 ### Detecting Upgrades
 
@@ -312,6 +346,7 @@ cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 ```
 
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
+Note, when using a `v0.46+` chain, replace `submit-proposal` by `submit-legacy-proposal`.
 
 ```sh
 ./build/simd tx gov submit-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 200 --from validator --yes

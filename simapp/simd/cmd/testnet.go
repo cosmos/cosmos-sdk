@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/math"
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -26,6 +27,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -295,8 +297,8 @@ func initTestnetFiles(
 			valPubKeys[i],
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-			sdk.OneInt(),
+			stakingtypes.NewCommissionRates(math.LegacyOneDec(), math.LegacyOneDec(), math.LegacyOneDec()),
+			math.OneInt(),
 		)
 		if err != nil {
 			return err
@@ -467,10 +469,9 @@ func calculateIP(ip string, i int) (string, error) {
 }
 
 func writeFile(name string, dir string, contents []byte) error {
-	writePath := filepath.Join(dir)
-	file := filepath.Join(writePath, name)
+	file := filepath.Join(dir, name)
 
-	err := tmos.EnsureDir(writePath, 0o755)
+	err := tmos.EnsureDir(dir, 0o755)
 	if err != nil {
 		return err
 	}
@@ -485,7 +486,7 @@ func writeFile(name string, dir string, contents []byte) error {
 
 // startTestnet starts an in-process testnet
 func startTestnet(cmd *cobra.Command, args startArgs) error {
-	networkConfig := network.DefaultConfig()
+	networkConfig := network.DefaultConfig(simapp.NewTestNetworkFixture)
 
 	// Default networkConfig.ChainID is random, and we should only override it if chainID provided
 	// is non-empty

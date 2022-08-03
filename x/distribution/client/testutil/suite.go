@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -15,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -37,7 +39,8 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := network.DefaultConfig()
+	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
+	s.Require().NoError(err)
 	cfg.NumValidators = 1
 	s.cfg = cfg
 
@@ -537,14 +540,14 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 						// can't use unpackAny as response types are not registered.
 						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
 						s.Require().NoError(err)
-						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))),
+						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))),
 							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
 					case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse":
 						var resp distrtypes.MsgWithdrawValidatorCommissionResponse
 						// can't use unpackAny as response types are not registered.
 						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
 						s.Require().NoError(err)
-						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))),
+						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))),
 							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
 					}
 				}
@@ -623,14 +626,14 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 						// can't use unpackAny as response types are not registered.
 						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
 						s.Require().NoError(err)
-						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))),
+						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))),
 							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
 					case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse":
 						var resp distrtypes.MsgWithdrawValidatorCommissionResponse
 						// can't use unpackAny as response types are not registered.
 						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
 						s.Require().NoError(err)
-						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))),
+						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))),
 							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
 					}
 				}

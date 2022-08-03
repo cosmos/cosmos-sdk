@@ -28,12 +28,10 @@ type ProviderDescriptor struct {
 type ProviderInput struct {
 	Type     reflect.Type
 	Optional bool
-	Key      string
 }
 
 type ProviderOutput struct {
 	Type reflect.Type
-	Key  string
 }
 
 func ExtractProviderDescriptor(provider interface{}) (ProviderDescriptor, error) {
@@ -41,6 +39,26 @@ func ExtractProviderDescriptor(provider interface{}) (ProviderDescriptor, error)
 	if !ok {
 		var err error
 		rctr, err = doExtractProviderDescriptor(provider)
+		if err != nil {
+			return ProviderDescriptor{}, err
+		}
+	}
+
+	return expandStructArgsProvider(rctr)
+}
+
+func ExtractInvokerDescriptor(provider interface{}) (ProviderDescriptor, error) {
+	rctr, ok := provider.(ProviderDescriptor)
+	if !ok {
+		var err error
+		rctr, err = doExtractProviderDescriptor(provider)
+
+		// mark all inputs as optional
+		for i, input := range rctr.Inputs {
+			input.Optional = true
+			rctr.Inputs[i] = input
+		}
+
 		if err != nil {
 			return ProviderDescriptor{}, err
 		}

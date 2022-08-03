@@ -7,22 +7,27 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
+	"github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	var cdc codec.Codec
+	depinject.Inject(testutil.AppConfig, &cdc)
+
 	dec := simulation.NewDecodeStore(cdc)
 
 	now := time.Now().UTC()
 	e := now.Add(1)
-	grant, _ := authz.NewGrant(now, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123))), &e)
+	sendAuthz := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123)), nil)
+	grant, _ := authz.NewGrant(now, sendAuthz, &e)
 	grantBz, err := cdc.Marshal(&grant)
 	require.NoError(t, err)
 	kvPairs := kv.Pairs{

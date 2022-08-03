@@ -8,12 +8,17 @@ import (
 )
 
 // NewGenesisState creates a new genesis state for the governance module
-func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParams, tp TallyParams) *GenesisState {
+func NewGenesisState(startingProposalID uint64, params Params) *GenesisState {
+	dp := NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
+	vp := NewVotingParams(params.VotingPeriod)
+	tp := NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
+
 	return &GenesisState{
 		StartingProposalId: startingProposalID,
 		DepositParams:      &dp,
 		VotingParams:       &vp,
 		TallyParams:        &tp,
+		Params:             &params,
 	}
 }
 
@@ -21,18 +26,13 @@ func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParam
 func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(
 		DefaultStartingProposalID,
-		DefaultDepositParams(),
-		DefaultVotingParams(),
-		DefaultTallyParams(),
+		DefaultParams(),
 	)
 }
 
 // Empty returns true if a GenesisState is empty
 func (data GenesisState) Empty() bool {
-	return data.StartingProposalId == 0 ||
-		data.DepositParams == nil ||
-		data.VotingParams == nil ||
-		data.TallyParams == nil
+	return data.StartingProposalId == 0 || data.Params == nil
 }
 
 // ValidateGenesis checks if parameters are within valid ranges
@@ -53,7 +53,7 @@ func ValidateGenesis(data *GenesisState) error {
 		return fmt.Errorf("invalid deposit params: %w", err)
 	}
 
-	return nil
+	return data.Params.ValidateBasic()
 }
 
 var _ types.UnpackInterfacesMessage = GenesisState{}

@@ -14,13 +14,17 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/math"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+
 	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -31,7 +35,6 @@ import (
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
@@ -68,6 +71,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	pub1, err := account1.GetPubKey()
 	s.Require().NoError(err)
 	pub2, err := account2.GetPubKey()
+	s.Require().NoError(err)
+
+	// Create a dummy account for testing purpose
+	_, _, err = kb.NewMnemonic("dummyAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub1, pub2})
@@ -278,6 +285,50 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	// Sign batch malformed tx file signature only.
 	_, err = TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
 	s.Require().Error(err)
+}
+
+func (s *IntegrationTestSuite) TestCliGetAccountAddressByID() {
+	require := s.Require()
+	val1 := s.network.Validators[0]
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"not enough args",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"invalid account id",
+			[]string{fmt.Sprint(-1), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"valid account id",
+			[]string{fmt.Sprint(0), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.GetAccountAddressByIDCmd()
+			clientCtx := val1.ClientCtx
+
+			queryResJSON, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var res authtypes.QueryAccountAddressByIDResponse
+				require.NoError(val1.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &res))
+				require.NotNil(res.GetAccountAddress())
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
@@ -685,7 +736,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 	s.Require().Equal(0, len(sigs))
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
+	resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -747,7 +798,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().True(strings.Contains(res.String(), "[OK]"))
 
 	// Ensure foo has right amount of funds
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
+	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -770,7 +821,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Ensure destiny account state
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, addr)
+	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -778,7 +829,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
 	// Ensure origin account state
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
+	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -810,7 +861,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Generate multisig transaction.
-	multiGeneratedTx, err := bankcli.MsgSendExec(
+	multiGeneratedTx, err := clitestutil.MsgSendExec(
 		val1.ClientCtx,
 		addr,
 		val1.Address,
@@ -890,9 +941,13 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
+	// Generate dummy account which is not a part of multisig.
+	dummyAcc, err := val1.ClientCtx.Keyring.Key("dummyAccount")
+	s.Require().NoError(err)
+
 	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, addr)
+	resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -912,7 +967,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, addr)
+	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -921,7 +976,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().Equal(sendTokens.Amount, diff.AmountOf(s.cfg.BondDenom))
 
 	// Generate multisig transaction.
-	multiGeneratedTx, err := bankcli.MsgSendExec(
+	multiGeneratedTx, err := clitestutil.MsgSendExec(
 		val1.ClientCtx,
 		addr,
 		val1.Address,
@@ -947,13 +1002,20 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
-	// Sign with account1
+	// Sign with account2
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
 	account2Signature, err := TxSignExec(val1.ClientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
+
+	// Sign with dummy account
+	dummyAddr, err := dummyAcc.GetAddress()
+	s.Require().NoError(err)
+	_, err = TxSignExec(val1.ClientCtx, dummyAddr, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "signing key is not a part of multisig key")
 
 	multiSigWith2Signatures, err := TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
@@ -987,7 +1049,7 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	s.Require().NoError(err)
 
 	// Generate a transaction for testing --multisig with an address not in the keyring.
-	multisigTx, err := bankcli.MsgSendExec(
+	multisigTx, err := clitestutil.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
 		val1.Address,
@@ -1009,7 +1071,7 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	// as the main point of this test is to test the `--multisig` flag with an address
 	// that is not in the keyring.
 	_, err = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
-	s.Require().Contains(err.Error(), "tx intended signer does not match the given signer")
+	s.Require().Contains(err.Error(), "error getting account from keybase")
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisign() {
@@ -1039,7 +1101,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, addr)
+	resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -1048,7 +1110,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().True(sendTokens.Amount.Equal(balRes.Balances.AmountOf(s.cfg.BondDenom)))
 
 	// Generate multisig transaction.
-	multiGeneratedTx, err := bankcli.MsgSendExec(
+	multiGeneratedTx, err := clitestutil.MsgSendExec(
 		val1.ClientCtx,
 		addr,
 		val1.Address,
@@ -1076,7 +1138,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-	// Sign with account1
+	// Sign with account2
 	account2Signature, err := TxSignExec(val1.ClientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
@@ -1126,7 +1188,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	generatedStd, err := bankcli.MsgSendExec(
+	generatedStd, err := clitestutil.MsgSendExec(
 		val.ClientCtx,
 		addr,
 		val.Address,
@@ -1188,7 +1250,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	generatedStd, err := bankcli.MsgSendExec(
+	generatedStd, err := clitestutil.MsgSendExec(
 		val.ClientCtx,
 		addr,
 		val.Address,
@@ -1297,9 +1359,6 @@ func (s *IntegrationTestSuite) TestGetAccountsCmd() {
 }
 
 func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
-	clientCtx := client.Context{}.WithOffline(true)
-	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig)
-
 	cmd := authcli.GetBroadcastCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=true", flags.FlagOffline), ""})
@@ -1308,8 +1367,10 @@ func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 }
 
 func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
+	var txCfg client.TxConfig
+	err := depinject.Inject(authtestutil.AppConfig, &txCfg)
+	require.NoError(t, err)
 	clientCtx := client.Context{}
-	txCfg := simapp.MakeTestEncodingConfig().TxConfig
 	clientCtx = clientCtx.WithTxConfig(txCfg)
 
 	ctx := context.Background()
@@ -1497,7 +1558,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(uint32(0), txRes.Code, txRes.RawLog)
 
 	// Make sure the addr1's balance got funded.
-	queryResJSON, err := bankcli.QueryBalancesExec(val0.ClientCtx, addr1)
+	queryResJSON, err := clitestutil.QueryBalancesExec(val0.ClientCtx, addr1)
 	require.NoError(err)
 	var queryRes banktypes.QueryAllBalancesResponse
 	err = val0.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &queryRes)
@@ -1505,7 +1566,10 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
+// TODO to re-enable in #12274
 func (s *IntegrationTestSuite) TestAuxSigner() {
+	s.T().Skip()
+
 	require := s.Require()
 	val := s.network.Validators[0]
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10))
@@ -1787,17 +1851,19 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 					genTxFile.Name(),
 					tc.feePayerArgs...,
 				)
-
-				if tc.expectErrBroadCast {
+				switch {
+				case tc.expectErrBroadCast:
 					require.Error(err)
-				} else if tc.errMsg != "" {
+
+				case tc.errMsg != "":
 					require.NoError(err)
 
 					var txRes sdk.TxResponse
 					require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 
 					require.Contains(txRes.RawLog, tc.errMsg)
-				} else {
+
+				default:
 					require.NoError(err)
 
 					var txRes sdk.TxResponse
@@ -1824,11 +1890,11 @@ func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.
 	}
 
 	flags = append(flags, extraFlags...)
-	return bankcli.MsgSendExec(val.ClientCtx, val.Address, toAddr, amount, flags...)
+	return clitestutil.MsgSendExec(val.ClientCtx, val.Address, toAddr, amount, flags...)
 }
 
-func (s *IntegrationTestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) sdk.Int {
-	resp, err := bankcli.QueryBalancesExec(clientCtx, addr)
+func (s *IntegrationTestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) math.Int {
+	resp, err := clitestutil.QueryBalancesExec(clientCtx, addr)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse

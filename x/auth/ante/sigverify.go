@@ -310,8 +310,8 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 // IncrementSequenceDecorator handles incrementing sequences of all signers.
 // Use the IncrementSequenceDecorator decorator to prevent replay attacks. Note,
-// there is no need to execute IncrementSequenceDecorator on RecheckTX since
-// CheckTx would already bump the sequence number.
+// there is need to execute IncrementSequenceDecorator on RecheckTx since
+// BaseApp.Commit() will set the check state based on the latest header.
 //
 // NOTE: Since CheckTx and DeliverTx state are managed separately, subsequent and
 // sequential txs orginating from the same account cannot be handled correctly in
@@ -425,7 +425,6 @@ func ConsumeMultisignatureVerificationGas(
 	meter sdk.GasMeter, sig *signing.MultiSignatureData, pubkey multisig.PubKey,
 	params types.Params, accSeq uint64,
 ) error {
-
 	size := sig.BitArray.Count()
 	sigIndex := 0
 

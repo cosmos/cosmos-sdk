@@ -713,6 +713,8 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 }
 
 func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
+	s.T().Skip() // TODO to re-enable in #12274
+
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	granter := val.Address
@@ -750,20 +752,60 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	// granted fee allowance for an account which is not in state and creating
-	// any tx with it by using --fee-account shouldn't fail
-	out, err := govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, grantee.String(),
-		"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
-	)
+	testcases := []struct {
+		name       string
+		from       string
+		flags      []string
+		expErrCode uint32
+	}{
+		{
+			name:  "granted fee allowance for an account which is not in state and creating any tx with it by using --fee-granter shouldn't fail",
+			from:  grantee.String(),
+			flags: []string{fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String())},
+		},
+		{
+			name:       "--fee-payer should also sign the tx (direct)",
+			from:       grantee.String(),
+			flags:      []string{fmt.Sprintf("--%s=%s", flags.FlagFeePayer, granter.String())},
+			expErrCode: 4,
+		},
+		{
+			name: "--fee-payer should also sign the tx (amino-json)",
+			from: grantee.String(),
+			flags: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, granter.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+			},
+			expErrCode: 4,
+		},
+		{
+			name: "use --fee-payer and --fee-granter together works",
+			from: grantee.String(),
+			flags: []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
+			},
+		},
+	}
 
-	s.Require().NoError(err)
-	var resp sdk.TxResponse
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-	s.Require().Equal(uint32(0), resp.Code)
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			out, err := govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, tc.from,
+				"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
+				tc.flags...,
+			)
+			s.Require().NoError(err)
+
+			var resp sdk.TxResponse
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+			s.Require().Equal(tc.expErrCode, resp.Code, resp)
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
+	s.T().Skip() // TODO to re-enable in #12274
+
 	val := s.network.Validators[0]
 
 	granter := val.Address

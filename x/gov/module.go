@@ -7,25 +7,39 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sort"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 
+	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
+
+const ConsensusVersion = 4
 
 var (
 	_ module.AppModule           = AppModule{}
@@ -74,7 +88,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the gov module.
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := v1.RegisterQueryHandlerClient(context.Background(), mux, v1.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
@@ -113,19 +127,137 @@ func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        keeper.Keeper
+	keeper        *keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
+
+	// legacySubspace is used solely for migration of x/params managed parameters
+	legacySubspace types.ParamSubspace
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(
+	cdc codec.Codec, keeper *keeper.Keeper,
+	ak types.AccountKeeper, bk types.BankKeeper, ss types.ParamSubspace,
+) AppModule {
+
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
+		legacySubspace: ss,
 	}
+}
+
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(provideModuleBasic, provideModule, provideKeyTable),
+		appmodule.Invoke(invokeAddRoutes, invokeSetHooks))
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type govInputs struct {
+	depinject.In
+
+	Config           *modulev1.Module
+	Cdc              codec.Codec
+	Key              *store.KVStoreKey
+	ModuleKey        depinject.OwnModuleKey
+	MsgServiceRouter *baseapp.MsgServiceRouter
+	Authority        map[string]sdk.AccAddress `optional:"true"`
+
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+	StakingKeeper types.StakingKeeper
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	LegacySubspace types.ParamSubspace
+}
+
+type govOutputs struct {
+	depinject.Out
+
+	Module       runtime.AppModuleWrapper
+	Keeper       *keeper.Keeper
+	HandlerRoute v1beta1.HandlerRoute
+}
+
+func provideModule(in govInputs) govOutputs {
+	kConfig := types.DefaultConfig()
+	if in.Config.MaxMetadataLen != 0 {
+		kConfig.MaxMetadataLen = in.Config.MaxMetadataLen
+	}
+
+	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+	if !ok {
+		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	}
+
+	k := keeper.NewKeeper(
+		in.Cdc,
+		in.Key,
+		in.AccountKeeper,
+		in.BankKeeper,
+		in.StakingKeeper,
+		in.MsgServiceRouter,
+		kConfig,
+		authority.String(),
+	)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
+	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: types.RouterKey}
+
+	return govOutputs{Module: runtime.WrapAppModule(m), Keeper: k, HandlerRoute: hr}
+}
+
+func provideKeyTable() paramtypes.KeyTable {
+	return v1.ParamKeyTable()
+}
+
+func invokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
+	if keeper == nil || routes == nil {
+		return
+	}
+
+	// Default route order is a lexical sort by RouteKey.
+	// Explicit ordering can be added to the module config if required.
+	slices.SortFunc(routes, func(x, y v1beta1.HandlerRoute) bool {
+		return x.RouteKey < y.RouteKey
+	})
+
+	router := v1beta1.NewRouter()
+	for _, r := range routes {
+		router.AddRoute(r.RouteKey, r.Handler)
+	}
+	keeper.SetLegacyRouter(router)
+}
+
+func invokeSetHooks(keeper *keeper.Keeper, govHooks map[string]types.GovHooksWrapper) error {
+	if keeper == nil || govHooks == nil {
+		return nil
+	}
+
+	// Default ordering is lexical by module name.
+	// Explicit ordering can be added to the module config if required.
+	modNames := maps.Keys(govHooks)
+	order := modNames
+	sort.Strings(order)
+
+	var multiHooks types.MultiGovHooks
+	for _, modName := range order {
+		hook, ok := govHooks[modName]
+		if !ok {
+			return fmt.Errorf("can't find staking hooks for module %s", modName)
+		}
+		multiHooks = append(multiHooks, hook)
+	}
+
+	keeper.SetHooks(multiHooks)
+	return nil
 }
 
 // Name returns the gov module's name.
@@ -138,21 +270,6 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper, am.bankKeeper)
 }
 
-// Deprecated: Route returns the message routing key for the gov module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the gov module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns no sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
-}
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	msgServer := keeper.NewMsgServerImpl(am.keeper)
@@ -163,12 +280,16 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	v1beta1.RegisterQueryServer(cfg.QueryServer(), legacyQueryServer)
 	v1.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
-	m := keeper.NewMigrator(am.keeper)
+	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
 	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
 	if err != nil {
 		panic(err)
 	}
 	err = cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
+	if err != nil {
+		panic(err)
+	}
+	err = cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4)
 	if err != nil {
 		panic(err)
 	}
@@ -191,10 +312,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 3 }
-
-// BeginBlock performs a no-op.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock returns the end blocker for the gov module. It returns no validator
 // updates.
@@ -216,9 +334,11 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 	return simulation.ProposalContents()
 }
 
-// RandomizedParams creates randomized gov param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
+// TODO: Returns an empty slice which will make parameter changes a no-op during
+// simulations. Once all modules are migrated, remove RandomizedParams from
+// the simulation interface.
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for gov module's types

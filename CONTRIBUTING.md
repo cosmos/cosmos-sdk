@@ -109,7 +109,7 @@ Then:
    Draft PRs also helps the core team provide early feedback and ensure the work is in the right direction.
 2. When the code is complete, change your PR from `Draft` to `Ready for Review`.
 3. Go through the actions for each checkbox present in the PR template description. The PR actions are automatically provided for each new PR.
-4. Be sure to include a relevant changelog entry in the `Unreleased` section of `CHANGELOG.md` (see file for log format).
+4. Be sure to include a relevant changelog entry in the `Unreleased` section of `CHANGELOG.md` (see file for log format). The entry should be on top of all others changes in the section.
 
 PRs must have a category prefix that is based on the type of changes being made (for example, `fix`, `feat`,
 `refactor`, `docs`, and so on). The *type* must be included in the PR title as a prefix (for example,

@@ -6,17 +6,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
+	"github.com/cosmos/cosmos-sdk/x/nft"
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 )
 
+//nolint:gosec // these are not hardcoded credentials.
 const (
 	// OpWeightMsgSend Simulation operation weights constants
 	OpWeightMsgSend = "op_weight_msg_send"
@@ -95,12 +95,13 @@ func SimulateMsgSend(
 			Receiver: receiver.Address.String(),
 		}
 
-		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenSignedMockTx(
+		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{senderAcc.GetAccountNumber()},
 			[]uint64{senderAcc.GetSequence()},
@@ -110,12 +111,11 @@ func SimulateMsgSend(
 			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.SimDeliver(txCfg.TxEncoder(), tx)
-		if err != nil {
+		if _, _, err = app.SimDeliver(txCfg.TxEncoder(), tx); err != nil {
 			return simtypes.NoOpMsg(nft.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", cdc), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", cdc), nil, nil
 	}
 }
 

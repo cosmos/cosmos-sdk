@@ -3,7 +3,7 @@ package depinject
 import (
 	"reflect"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 type simpleProvider struct {
@@ -20,6 +20,10 @@ type simpleResolver struct {
 	typ         reflect.Type
 	value       reflect.Value
 	graphNode   *graphviz.Node
+}
+
+func (s *simpleResolver) getType() reflect.Type {
+	return s.typ
 }
 
 func (s *simpleResolver) describeLocation() string {

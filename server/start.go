@@ -32,6 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -207,6 +208,10 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	}
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
+	_, err = startTelemetry(serverconfig.GetConfig(ctx.Viper))
+	if err != nil {
+		return err
+	}
 
 	svr, err := server.NewServer(addr, transport, app)
 	if err != nil {
@@ -318,6 +323,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		app.RegisterTendermintService(clientCtx)
 	}
 
+	metrics, err := startTelemetry(config)
+	if err != nil {
+		return err
+	}
+
 	var apiSrv *api.Server
 	if config.API.Enable {
 		genDoc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
@@ -365,6 +375,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv, config.API)
+		if config.Telemetry.Enabled {
+			apiSrv.SetTelemetry(metrics)
+		}
 		errCh := make(chan error)
 
 		go func() {
@@ -486,4 +499,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	// wait for signal capture and gracefully return
 	return WaitForQuitSignals()
+}
+
+func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
+	if !cfg.Telemetry.Enabled {
+		return nil, nil
+	}
+	return telemetry.New(cfg.Telemetry)
 }

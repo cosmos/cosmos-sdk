@@ -19,13 +19,31 @@ import (
 
 var _ types.QueryServer = AccountKeeper{}
 
+func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAccountAddressByIDRequest) (*types.QueryAccountAddressByIDResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Id < 0 {
+		return nil, status.Error(codes.InvalidArgument, "Invalid account id")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	address := ak.GetAccountAddressByID(ctx, uint64(req.GetId()))
+	if len(address) == 0 {
+		return nil, status.Errorf(codes.NotFound, "account address not found with id %d", req.Id)
+	}
+
+	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil
+}
+
 func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(ak.key)
+	store := ctx.KVStore(ak.storeKey)
 	accountsStore := prefix.NewStore(store, types.AddressStoreKeyPrefix)
 
 	var accounts []*codectypes.Any

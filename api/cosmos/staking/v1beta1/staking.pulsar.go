@@ -12706,7 +12706,7 @@ func (x *Redelegation) GetEntries() []*RedelegationEntry {
 	return nil
 }
 
-// Params defines the parameters for the staking module.
+// Params defines the parameters for the x/staking module.
 type Params struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -148,10 +148,23 @@ When this option is set to true on a `Msg`, the implementation CANNOT use the de
 
 Moreover, the renderer must provide 2 functions: one for formatting from Protobuf to string, and one for parsing string to Protobuf. These 2 functions are provided by the application devloper. To satisfy point #1, these 2 functions MUST be bijective with each other.
 
-Bijectivity of custom `Msg`-renderers SHOULD be checked with best effort by the SDK on node startup. To achieve this, we plan to use a similar technique to property testing, whereby a set of random inputs are generated, and passed into the relevant `Msg`. We then test that the composition of the two custom functions, formatting and parsing, result in the original Protobuf `Msg`:
+Bijectivity of custom `Msg`-renderers SHOULD be checked with best effort by the SDK on node startup. To achieve this, we plan to use a similar technique to property testing, whereby a set of random inputs are generated, and passed into the relevant `Msg`. We then test that the composition of the two custom functions, formatting and parsing, result in the original Protobuf `Msg`. In pseudo-code, this would look like:
 
 ```
-parse(format(`MsgFooBar`)) == `MsgFooBar`
+// for renderer, msg, and ctx of the right type
+keyvals, err := renderer.Format(ctx, msg)
+if err != nil {
+    fail_check()
+}
+msg2, err := renderer.Parse(ctx, keyvals)
+if err != nil {
+    fail_check()
+}
+if !proto.Equal(msg, msg2) {
+    fail_check()
+}
+pass_check()
+```
 ```
 
 #### Example

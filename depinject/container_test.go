@@ -178,23 +178,26 @@ func TestUnexportedField(t *testing.T) {
 		scenarioConfigProvides = depinject.Configs(
 			depinject.Provide(ProvideMsgClientA),
 			depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-			depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-			depinject.ProvideInModule("c", wrapMethod0(ModuleUnexportedProvides{})),
+			depinject.ProvideInModule("a", ModuleA.Provide),
+			depinject.ProvideInModule("c", ModuleUnexportedProvides.Provide),
+			depinject.Supply(ModuleA{}, ModuleUnexportedProvides{}),
 		)
 
 		scenarioConfigDependency = depinject.Configs(
 			depinject.Provide(ProvideMsgClientA),
 			depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-			depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-			depinject.ProvideInModule("c", wrapMethod0(ModuleUnexportedDependency{})),
+			depinject.ProvideInModule("a", ModuleA.Provide),
+			depinject.ProvideInModule("c", ModuleUnexportedDependency.Provide),
+			depinject.Supply(ModuleA{}, ModuleUnexportedDependency{}),
 		)
 
 		scenarioConfigProvidesDependency = depinject.Configs(
 			depinject.Provide(ProvideMsgClientA),
 			depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-			depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-			depinject.ProvideInModule("c", wrapMethod0(ModuleUnexportedProvides{})),
-			depinject.ProvideInModule("d", wrapMethod0(ModuleD{})),
+			depinject.ProvideInModule("a", ModuleA.Provide),
+			depinject.ProvideInModule("c", ModuleUnexportedProvides.Provide),
+			depinject.ProvideInModule("d", ModuleD.Provide),
+			depinject.Supply(ModuleA{}, ModuleUnexportedProvides{}, ModuleD{}),
 		)
 	)
 

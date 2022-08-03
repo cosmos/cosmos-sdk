@@ -2153,3 +2153,63 @@ func TestBaseApp_Init(t *testing.T) {
 		require.Equal(t, tc.expectedSnapshot.KeepRecent, tc.bapp.snapshotManager.GetKeepRecent())
 	}
 }
+
+func TestGenerateFraudProof(t *testing.T) {
+
+	/*
+		1. Create a fresh baseapp
+		2. Create a 'block' and put transactions that set certain key/value pairs in it
+		3. We should be able to `check block` IF block.hash not the same, trigger fraud:
+			- go through all transactions, run them, and keep track of which substores are being used
+			- export the SMTs inside those substores into a fraud proof data structure
+
+
+		// Question: What is a block? Right now abstract, need to make it more concrete
+
+	*/
+
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			kv := msg.(*msgKeyValue)
+			bapp.cms.GetKVStore(capKey2).Set(kv.Key, kv.Value)
+			return &sdk.Result{}, nil
+		}))
+	}
+
+	app := setupBaseApp(t,
+		AppOptionFunc(routerOpt))
+
+	app.InitChain(abci.RequestInitChain{})
+
+	blocks := 1
+	txsPerBlock := 2
+
+	r := rand.New(rand.NewSource(3920758213583))
+	keyCounter := 0
+	for height := int64(1); height <= int64(blocks); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
+		for txNum := 0; txNum < txsPerBlock; txNum++ {
+			tx := txTest{Msgs: []sdk.Msg{}}
+			for msgNum := 0; msgNum < 3; msgNum++ {
+				key := []byte(fmt.Sprintf("%v", keyCounter))
+				value := make([]byte, 10000)
+				_, err := r.Read(value)
+				require.NoError(t, err)
+				tx.Msgs = append(tx.Msgs, msgKeyValue{Key: key, Value: value})
+				keyCounter++
+			}
+			txBytes, err := codec.Marshal(tx)
+			require.NoError(t, err)
+			resp := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+			require.True(t, resp.IsOK(), "%v", resp.String())
+		}
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		commitResponse := app.Commit()
+		_ = commitResponse.GetData()
+	}
+
+	return
+}

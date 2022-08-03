@@ -1,6 +1,7 @@
 package depinject
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"unicode"
@@ -42,12 +43,14 @@ func extractProviderDescriptor(provider interface{}) (providerDescriptor, error)
 	if err != nil {
 		return providerDescriptor{}, err
 	}
-	return expandStructArgsProvider(rctr)
+	return postProcessProvider(rctr)
 }
 
 func extractInvokerDescriptor(provider interface{}) (providerDescriptor, error) {
-	var err error
 	rctr, err := doExtractProviderDescriptor(provider)
+	if err != nil {
+		return providerDescriptor{}, err
+	}
 
 	// mark all inputs as optional
 	for i, input := range rctr.Inputs {
@@ -55,10 +58,7 @@ func extractInvokerDescriptor(provider interface{}) (providerDescriptor, error) 
 		rctr.Inputs[i] = input
 	}
 
-	if err != nil {
-		return providerDescriptor{}, err
-	}
-	return expandStructArgsProvider(rctr)
+	return postProcessProvider(rctr)
 }
 
 func doExtractProviderDescriptor(ctr interface{}) (providerDescriptor, error) {
@@ -135,3 +135,54 @@ func doExtractProviderDescriptor(ctr interface{}) (providerDescriptor, error) {
 }
 
 var errType = reflect.TypeOf((*error)(nil)).Elem()
+
+func postProcessProvider(descriptor providerDescriptor) (providerDescriptor, error) {
+	descriptor, err := expandStructArgsProvider(descriptor)
+	if err != nil {
+		return providerDescriptor{}, err
+	}
+	err = checkInputAndOutputTypes(descriptor)
+	return descriptor, err
+}
+
+func checkInputAndOutputTypes(descriptor providerDescriptor) error {
+	for _, input := range descriptor.Inputs {
+		err := checkType(input.Type)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, output := range descriptor.Outputs {
+		err := checkType(output.Type)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkType(typ reflect.Type) error {
+
+	name := typ.Name()
+	if name == "" {
+		return nil
+	}
+
+	pkgPath := typ.PkgPath()
+	if pkgPath == "" {
+
+	}
+
+	if unicode.IsLower([]rune(name)[0]) {
+		return fmt.Errorf("type must be exported: %s", typ)
+	}
+
+	pkgParts := strings.Split(pkgPath, "/")
+	if slices.Contains(pkgParts, "internal") {
+		return errors.Errorf("type must not be in an internal package: %s", typ)
+	}
+
+	return nil
+}

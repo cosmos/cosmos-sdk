@@ -65,12 +65,12 @@ supplied to the keeper constructor.
 
 #### Limitations
 
-Certain modules are tightly coupled beyond the test phase.  See the dependency report
-for [bank->auth](./test-levels/bank-auth.txt), where 274 total usages of `x/auth` were found in `x/bank`, 50 of
-which are in production code and 224 in test.  This tight coupling may suggest that
-either the modules should be merged, or refactoring is required to abstract references
-to the core types tying the modules together.  It could also indicate that these
-modules should be tested together in integration tests beyond mocked unit tests.
+Certain modules are tightly coupled beyond the test phase.  A recent dependency report for
+`bank -> auth` found that 274 total usages of `auth` in `bank`, 50 of which are in
+production code and 224 in test.  This tight coupling may suggest that either the modules
+should be merged, or refactoring is required to abstract references to the core types tying
+the modules together.  It could also indicate that these modules should be tested together
+in integration tests beyond mocked unit tests.
 
 In some cases setting up a test case for a module with many mocked dependencies can be quite
 cumbersome and the resulting test may only show that the mocking framework works as expected

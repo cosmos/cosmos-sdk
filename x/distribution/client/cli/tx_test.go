@@ -5,10 +5,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/stretchr/testify/require"
@@ -61,28 +58,4 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 	require.NoError(t, err, "")
 	require.Equal(t, 3, callCount)
-}
-
-func TestParseProposal(t *testing.T) {
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
-
-	okJSON := sdktestutil.WriteToNewTempFile(t, `
-{
-  "title": "Community Pool Spend",
-  "description": "Pay me some Atoms!",
-  "recipient": "cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq",
-  "amount": "1000stake",
-  "deposit": "1000stake"
-}
-`)
-
-	proposal, err := ParseCommunityPoolSpendProposalWithDeposit(cdc, okJSON.Name())
-	require.NoError(t, err)
-
-	require.Equal(t, "Community Pool Spend", proposal.Title)
-	require.Equal(t, "Pay me some Atoms!", proposal.Description)
-	require.Equal(t, "cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq", proposal.Recipient)
-	require.Equal(t, "1000stake", proposal.Deposit)
-	require.Equal(t, "1000stake", proposal.Amount)
 }

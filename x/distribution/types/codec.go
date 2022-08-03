@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/distribution interfaces and concrete types
@@ -21,7 +20,6 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/distribution/MsgUpdateParams")
 
 	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/distribution/Params", nil)
-	cdc.RegisterConcrete(&CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -32,10 +30,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgSetWithdrawAddress{},
 		&MsgFundCommunityPool{},
 		&MsgUpdateParams{},
-	)
-	registry.RegisterImplementations(
-		(*govtypes.Content)(nil),
-		&CommunityPoolSpendProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

@@ -20,7 +20,7 @@ language for talking about test scopes and proposes an ideal state of tests at e
 independently versioned Go modules, and [ADR-057: App Wiring Part I](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-057-app-wiring-1.md) offers a methodology
 for breaking apart inter-module dependencies through the use of dependency injection.  As
 described in [EPIC: Separate all SDK modules into standalone go modules](https://github.com/cosmos/cosmos-sdk/issues/11899), module
-dependencies are particularly complected in the test phase, where simapp itself is used as
+dependencies are particularly complected in the test phase, where simapp is used as
 the key test fixture in setting up and running tests.  It is clear that the successful
 completion of Phases 3 and 4 in that EPIC require the resolution of this dependency problem.
 
@@ -66,7 +66,7 @@ supplied to the keeper constructor.
 #### Limitations
 
 Certain modules are tightly coupled beyond the test phase.  A recent dependency report for
-`bank -> auth` found that 274 total usages of `auth` in `bank`, 50 of which are in
+`bank -> auth` found 274 total usages of `auth` in `bank`, 50 of which are in
 production code and 224 in test.  This tight coupling may suggest that either the modules
 should be merged, or refactoring is required to abstract references to the core types tying
 the modules together.  It could also indicate that these modules should be tested together
@@ -210,13 +210,13 @@ demonstrated in [PR#12706](https://github.com/cosmos/cosmos-sdk/pull/12706).
 
 ## Consequences
 
-### Positivep
+### Positive
 
-- increased test coverage
-- improved test organization
+- test coverage is increased
+- test organization is improved
 - reduced dependency graph size in modules
 - simapp removed as a dependency from modules
-- inter-module dependencies introduced in test code removed
+- inter-module dependencies introduced in test code are removed
 - reduced CI run time after transitioning away from in process Tendermint
 
 ### Negative

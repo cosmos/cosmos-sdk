@@ -33,11 +33,16 @@ var _ v1.MsgServer = msgServer{}
 func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitProposal) (*v1.MsgSubmitProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	initialDeposit := msg.GetInitialDeposit()
+
+	if err := k.validateInitialDeposit(ctx, initialDeposit); err != nil {
+		return nil, err
+	}
+
 	proposalMsgs, err := msg.GetMsgs()
 	if err != nil {
 		return nil, err
 	}
-
 	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata)
 	if err != nil {
 		return nil, err

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,15 +31,15 @@ func TestDecodeDistributionStore(t *testing.T) {
 
 	dec := simulation.NewDecodeStore(cdc)
 
-	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.OneDec())}
+	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	feePool := types.InitialFeePool()
 	feePool.CommunityPool = decCoins
-	info := types.NewDelegatorStartingInfo(2, sdk.OneDec(), 200)
+	info := types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)
 	outstanding := types.ValidatorOutstandingRewards{Rewards: decCoins}
 	commission := types.ValidatorAccumulatedCommission{Commission: decCoins}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 100)
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 5)
-	slashEvent := types.NewValidatorSlashEvent(10, sdk.OneDec())
+	slashEvent := types.NewValidatorSlashEvent(10, math.LegacyOneDec())
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

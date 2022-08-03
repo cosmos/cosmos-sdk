@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -178,7 +179,7 @@ func TestMsgUpdateParams(t *testing.T) {
 			input: &types.MsgUpdateParams{
 				Authority: app.StakingKeeper.GetAuthority(),
 				Params: types.Params{
-					MinCommissionRate: sdk.NewDec(-10),
+					MinCommissionRate: math.LegacyNewDec(-10),
 					UnbondingTime:     types.DefaultUnbondingTime,
 					MaxValidators:     types.DefaultMaxValidators,
 					MaxEntries:        types.DefaultMaxEntries,
@@ -194,7 +195,7 @@ func TestMsgUpdateParams(t *testing.T) {
 			input: &types.MsgUpdateParams{
 				Authority: app.StakingKeeper.GetAuthority(),
 				Params: types.Params{
-					MinCommissionRate: sdk.NewDec(2),
+					MinCommissionRate: math.LegacyNewDec(2),
 					UnbondingTime:     types.DefaultUnbondingTime,
 					MaxValidators:     types.DefaultMaxValidators,
 					MaxEntries:        types.DefaultMaxEntries,

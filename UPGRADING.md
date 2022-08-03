@@ -30,13 +30,25 @@ This means you can replace your usage of `simapp.MakeTestEncodingConfig` in test
 
 ### Client Changes
 
-### `x/gov` v1
+### `x/gov`
+
+#### `types/v1`
 
 The `gov` module has been greatly improved. The previous API has been moved to `v1beta1` while the new implementation is called `v1`.
 
 In order to submit a proposal with `submit-proposal` you now need to pass a `proposal.json` file.
 You can still use the old way by using `submit-legacy-proposal`. This is not recommended.
 More information can be found in the gov module [client documentation](https://docs.cosmos.network/v0.46/modules/gov/07_client.html).
+
+#### Minimum Proposal Deposit At Time of Submission
+
+The `gov` module has been updated to support a minimum proposal deposit at submission time. It is determined by a new
+parameter called `MinInitialDepositRatio`. When multiplied by the existing `MinDeposit` parameter, it produces
+the necessary proportion of coins needed at the proposal submission time. The motivation for this change is to prevent proposal spamming.
+
+By default, the new `MinInitialDepositRatio` parameter is set to zero during migration. The value of zero signifies that this 
+feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
+modified to set the new parameter to the desired value.
 
 ### Keyring
 

@@ -1,8 +1,9 @@
 package authz_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/authz"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/authz"
 
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -12,13 +13,13 @@ import (
 
 var (
 	msgTypeURL                = "/cosmos.bank.v1beta1.MsgSend"
-	zeroAllowedAuthorizations  = int32(0)
+	zeroAllowedAuthorizations = int32(0)
 	oneAllowedAuthorizations  = int32(1)
 	withAllowedAuthorizations = int32(2)
 )
 
 func TestCountAuthorization(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	authorization := authz.NewCountAuthorization(msgTypeURL, oneAllowedAuthorizations)
 
@@ -47,7 +48,7 @@ func TestCountAuthorization(t *testing.T) {
 	require.False(t, resp.Delete)
 	require.NotNil(t, resp.Updated)
 	countAuth, _ := resp.Updated.(*authz.CountAuthorization)
-	require.Equal(t, authorization.AllowedAuthorizations - 1, countAuth.AllowedAuthorizations)
+	require.Equal(t, authorization.AllowedAuthorizations-1, countAuth.AllowedAuthorizations)
 
 	t.Log("expect updated authorization nil after using last authorization")
 	resp, err = resp.Updated.Accept(ctx, nil)

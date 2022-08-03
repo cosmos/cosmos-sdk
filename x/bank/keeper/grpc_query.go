@@ -242,3 +242,36 @@ func (k BaseKeeper) DenomOwners(
 
 	return &types.QueryDenomOwnersResponse{DenomOwners: denomOwners, Pagination: pageRes}, nil
 }
+
+func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabledRequest) (*types.QuerySendEnabledResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp := &types.QuerySendEnabledResponse{}
+	if len(req.Denoms) > 0 {
+		store := ctx.KVStore(k.storeKey)
+		for _, denom := range req.Denoms {
+			if se, ok := k.getSendEnabled(store, denom); ok {
+				resp.SendEnabled = append(resp.SendEnabled, types.NewSendEnabled(denom, se))
+			}
+		}
+	} else {
+		store := k.getSendEnabledPrefixStore(ctx)
+		var err error
+		resp.Pagination, err = query.FilteredPaginate(
+			store,
+			req.Pagination,
+			func(key []byte, value []byte, accumulate bool) (bool, error) {
+				if accumulate {
+					resp.SendEnabled = append(resp.SendEnabled, types.NewSendEnabled(string(key), types.IsTrueB(value)))
+				}
+				return true, nil
+			},
+		)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+	}
+	return resp, nil
+}

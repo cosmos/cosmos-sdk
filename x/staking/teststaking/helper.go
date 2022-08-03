@@ -141,5 +141,5 @@ func (sh *Helper) TurnBlockTimeDiff(diff time.Duration) sdk.Context {
 
 // ZeroCommission constructs a commission rates with all zeros.
 func ZeroCommission() stakingtypes.CommissionRates {
-	return stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	return stakingtypes.NewCommissionRates(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
 }

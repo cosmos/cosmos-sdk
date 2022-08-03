@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/math"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -259,7 +260,7 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 			return nil, errors.New("cannot provide both fees and gas prices")
 		}
 
-		glDec := sdk.NewDec(int64(f.gas))
+		glDec := math.LegacyNewDec(int64(f.gas))
 
 		// Derive the fees based on the provided gas prices, where
 		// fee = ceil(gasPrice * gasLimit).
@@ -391,7 +392,6 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 // the updated fields will be returned.
 func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	fc := f
-
 	from := clientCtx.GetFromAddress()
 
 	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {

@@ -24,7 +24,7 @@ func (s *IntegrationTestSuite) TestCmdParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"voting_params":{"voting_period":"172800s"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"},"params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s","voting_period":"172800s","quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"}}`,
+			`{"voting_params":{"voting_period":"172800s"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"},"params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s","voting_period":"172800s","quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000","min_initial_deposit_ratio":"0.000000000000000000"}}`,
 		},
 		{
 			"text output",
@@ -40,6 +40,7 @@ params:
   min_deposit:
   - amount: "10000000"
     denom: stake
+  min_initial_deposit_ratio: "0.000000000000000000"
   quorum: "0.334000000000000000"
   threshold: "0.500000000000000000"
   veto_threshold: "0.334000000000000000"

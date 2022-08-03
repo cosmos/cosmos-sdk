@@ -1,10 +1,11 @@
-package testutil
+package client
 
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/rest"
@@ -14,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
+func (s *EndToEndTestSuite) TestTotalSupplyGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -100,7 +101,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
+func (s *EndToEndTestSuite) TestDenomMetadataGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -225,7 +226,7 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
+func (s *EndToEndTestSuite) TestBalancesGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 

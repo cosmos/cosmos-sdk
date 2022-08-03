@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -22,7 +23,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -112,7 +112,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 	require.NoError(err)
 
 	newAddr := sdk.AccAddress(pub.Address())
-	_, err = banktestutil.MsgSendExec(
+	_, err = clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		newAddr,
@@ -364,7 +364,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 				Delegation: types.Delegation{
 					DelegatorAddress: val.Address.String(),
 					ValidatorAddress: val2.ValAddress.String(),
-					Shares:           sdk.NewDec(10),
+					Shares:           math.LegacyNewDec(10),
 				},
 				Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
 			},
@@ -1082,7 +1082,7 @@ func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 
 	newAddr := sdk.AccAddress(pub.Address())
 
-	_, err = banktestutil.MsgSendExec(
+	_, err = clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		newAddr,
@@ -1443,7 +1443,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	newAddr := sdk.AccAddress(pub.Address())
 
 	// Send some funds to the new account.
-	_, err = banktestutil.MsgSendExec(
+	_, err = clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		newAddr,

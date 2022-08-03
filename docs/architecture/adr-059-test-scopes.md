@@ -37,24 +37,31 @@ CLI tests](https://github.com/cosmos/cosmos-sdk/issues/12696) identifies the ide
 place end to end tests may have in the SDK.
 
 From here we identify three scopes of testing, **unit**, **integration**, **e2e** (end to
-end), seek to define the boundaries of each, their shortcomings (real and imposed), and
+end), seek to define the boundaries of each, their shortcomings (real and imposed), and their
 ideal state in the SDK.
 
 ### Unit tests
 
 Unit tests exercise the code contained in a single module (e.g. `/x/bank`) or package
 (e.g. `/client`) in isolation from the rest of the code base.  Within this we identify two
-levels of unit tests, *illustrative* and *journey*.  
+levels of unit tests, *illustrative* and *journey*.  The definitions below lean heavily on
+[The BDD Books - Formulation](https://leanpub.com/bddbooks-formulation) section 1.3.
 
-Tests which exercise an atomic part of
-a module in isolation - in this case we might do fixture setup/mocking of other parts of the
-module tests which exercise a whole module's function with dependencies mocked, these are
-almost like integration tests in that they exercise many things together but still use mocks
+*Illustrative* tests exercise an atomic part of a module in isolation - in this case we
+might do fixture setup/mocking of other parts of the module.
 
-Example 1 [Bank keeper tests](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/x/bank/keeper/keeper_test.go#L94-L105) - A mock implementation of `AccountKeeper` is
+Tests which exercise a whole module's function with dependencies mocked, are *journeys*.
+These are almost like integration tests in that they exercise many things together but still
+use mocks.
+
+Example 1 journey vs illustrative tests - [depinject's BDD style tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/features/bindings.feature), show how we can
+rapidly build up many illustrative cases demonstrating behavioral rules without [very much
+code](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/binding_test.go) while maintaining high level readability.
+
+Example 2 [depinject table driven tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/provider_desc_test.go)
+
+Example 3 [Bank keeper tests](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/x/bank/keeper/keeper_test.go#L94-L105) - A mock implementation of `AccountKeeper` is
 supplied to the keeper constructor.
-
-Example 2 [depinject tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/provider_desc_test.go)
 
 #### Limitations
 
@@ -100,12 +107,15 @@ understand errors.  This could also be seen as a benefit, and indeed the SDK's c
 integration tests were helpful in tracking down logic errors during earlier stages
 of app-wiring refactors.
 
-### Simulation / generative testing 
+### Simulations
 
-Simulations are a special case of integration tests where deterministically random module
-operations are executed against a running simapp.  No assertions are made for the state
-transitions resulting from module operations but any error will halt and fail the
-simulation.
+Simulations (also called generative testing) are a special case of integration tests where
+deterministically random module operations are executed against a running simapp, building
+blocks on the chain until a specified height is reached.  No *specific* assertions are
+made for the state transitions resulting from module operations but any error will halt and
+fail the simulation.  Since `crisis` is included in simapp and the simulation runs
+EndBlockers at the end of each block any module invariant violations will also fail
+the simulation.
 
 Modules must implement [AppModuleSimulation.WeightedOperations](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/types/module/simulation.go#L31) to define their
 simulation operations.  Note that not all modules implement this which may indicate a
@@ -113,11 +123,11 @@ gap in current simulation test coverage.
 
 Modules not returning simulation operations: 
 
-- `x/auth`
-- `x/capability`
-- `x/evidence`
-- `x/mint`
-- `x/params`
+- `auth`
+- `capability`
+- `evidence`
+- `mint`
+- `params`
 
 A separate binary, [runsim](https://github.com/cosmos/tools/tree/master/cmd/runsim), is responsible for kicking off some of these tests and
 managing their life cycle.
@@ -129,7 +139,7 @@ managing their life cycle.
 - Useful error messages not provided on [failure](https://github.com/cosmos/cosmos-sdk/runs/7606932548?check_suite_focus=true) from CI, requiring a developer to run
   the simulation locally to reproduce.
 
-### End to end tests
+### E2E tests
 
 End to end tests exercise the entire system as we understand it in as close an approximation
 to a production environment as is practical.  Presently these tests are located at
@@ -148,36 +158,78 @@ The scope of e2e tests has been complected with command line interface testing.
 
 ## Decision
 
+We accept these test scopes and identify the following decisions points for each.
+
+#### Unit Tests
+
+All modules must have mocked unit test coverage.
+
+Illustrative tests should outnumber journeys in unit tests.
+
+BDD feature tests are recommended when building up illustrative and journey scenarios.
+
+Unit tests should outnumber integration tests.
+
+Unit tests must not introduce additional dependencies beyond those already present in
+production code.
+
+When module unit test introduction as per [EPIC: Unit testing of modules via mocks](https://github.com/cosmos/cosmos-sdk/issues/12398)
+results in a near complete rewrite of an integration test suite the test suite should be
+retained and moved to `/tests/integration`.  We accept the resulting test logic duplication,
+but recommend the unit tests be rewritten in BDD style.
+
+#### Integration Tests
+
+All integration tests shall be located in `/tests/integration`, even those which do not
+introduce extra module dependencies.
+
+To help limit scope and complexity, it is recommended to use the smallest possible number of
+modules in application startup, i.e. don't depend on simapp.
+
+A *small* number of integration tests should use simapp to start up and test application
+operations.
+
+Integration tests should outnumber e2e tests.
+
+#### Simulations
+
+Simulations shall startup and test simapp directly.
+
+#### E2E Tests
+
+Existing e2e tests shall be migrated to integration tests by removing the dependency on the
+test network and in-process Tendermint node to ensure we do not lose test coverage.
+
+The e2e rest runner shall transition from in process Tendermint to a runner powered by
+Docker via [dockertest](https://github.com/ory/dockertest).
+
+E2E tests exercising a full network upgrade shall be written.
+
+The CLI testing aspect of existing e2e tests shall be rewritten using the network mocking
+demonstrated in [PR#12706](https://github.com/cosmos/cosmos-sdk/pull/12706).
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
+### Positivep
 
-### Backwards Compatibility
-
-> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
-
-### Positive
-
-{positive consequences}
+- increased test coverage
+- improved test organization
+- reduced dependency graph size in modules
+- simapp removed as a dependency from modules
+- inter-module dependencies introduced in test code removed
+- reduced CI run time after transitioning away from in process Tendermint
 
 ### Negative
 
-{negative consequences}
+- some test logic duplication between unit and integration tests during transition
 
 ### Neutral
 
-{neutral consequences}
+- learning curve for BDD style tests
+- some discovery required for e2e transition to dockertest
 
 ## Further Discussions
 
-While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
-Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
-
-## Test Cases [optional]
-
-Test cases for an implementation are mandatory for ADRs that are affecting consensus changes. Other ADRs can choose to include links to test cases if applicable.
-
-## References
-
-* {reference link}
+It may be useful if test suites could be run in integration mode (with mocked tendermint) or
+with e2e fixtures (with real tendermint and many nodes). Integration fixtures could be used
+for quicker runs, e2e fixures could be used for more battle hardening.

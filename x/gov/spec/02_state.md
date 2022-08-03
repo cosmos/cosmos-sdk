@@ -127,7 +127,9 @@ We will use one KVStore `Governance` to store two mappings:
 * A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
   us to query all addresses that voted on the proposal along with their vote by
   doing a range query on `proposalID:addresses`.
-
+* A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all 
+  x/gov params.
+  
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 
 * `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore

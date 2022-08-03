@@ -28,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -242,7 +241,6 @@ type distrOutputs struct {
 	DistrKeeper keeper.Keeper
 	Module      runtime.AppModuleWrapper
 	Hooks       staking.StakingHooksWrapper
-	GovHandler  govv1beta1.HandlerRoute
 }
 
 func provideModule(in distrInputs) distrOutputs {
@@ -273,6 +271,5 @@ func provideModule(in distrInputs) distrOutputs {
 		DistrKeeper: k,
 		Module:      runtime.WrapAppModule(m),
 		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
-		GovHandler:  govv1beta1.HandlerRoute{Handler: NewCommunityPoolSpendProposalHandler(k), RouteKey: types.RouterKey},
 	}
 }

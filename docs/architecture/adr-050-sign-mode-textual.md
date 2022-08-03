@@ -134,7 +134,7 @@ End of transaction messages
 
 Application developers may choose to not follow default renderer value output for their own `Msg`s. In this case, they can implement their own custom `Msg` renderer. This is similar to [EIP4430](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4430.md), where the smart contract developer chooses the description string to be shown to the end user.
 
-This is done by setting the `cosmos.msg.v1.textual.custom_renderer` Protobuf option to `true`. This option MUST be set on a `sdk.Msg`, i.e. on a Protobuf message whose name starts with `Msg`.
+This is done by setting the `cosmos.msg.v1.textual.custom_renderer` Protobuf option to `true`. This option CAN ONLY be set on a Protobuf message representing transaction message object (implementing `sdk.Msg` interface).
 
 ```proto
 message MsgFooBar {

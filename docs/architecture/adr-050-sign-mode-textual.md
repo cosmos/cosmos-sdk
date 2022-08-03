@@ -144,7 +144,7 @@ message MsgFooBar {
 }
 ```
 
-When this option is set to true on a `Msg`, the implementation CANNOT use the default value renderers to render the `Msg`. Instead, it MUST check that a custom `Msg`-renderer is implemented for `MsgFooBar` (e.g. registered in a registry), or else the implementation MUST throw an error or panic.
+When this option is set to true on a `Msg`, the implementation CANNOT use the default value renderers to render the `Msg`. Instead, it MUST check that a custom `Msg` renderer is registered and implemented for `MsgFooBar`, otherwise we MUST return an error.
 
 Moreover, the implementation must provide 2 functions: one for formatting from Protobuf to string, and one for parsing string to Protobuf. These 2 functions are provided by the application devloper. To satisfy point #1, these 2 functions MUST be bijective with each other as inverse.
 

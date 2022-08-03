@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core v0.1.0
 	cosmossdk.io/depinject v1.0.0-alpha.1.0.20220726092710-f848e4300a8a
 	cosmossdk.io/errors v1.0.0-beta.7
-	cosmossdk.io/math v1.0.0-beta.3.0.20220726092710-f848e4300a8a
+	cosmossdk.io/math v1.0.0-beta.3
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.0
 	github.com/bgentry/speakeasy v0.1.0

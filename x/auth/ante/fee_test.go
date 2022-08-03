@@ -3,6 +3,7 @@ package ante_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,7 +71,7 @@ func TestEnsureMempoolFees(t *testing.T) {
 	require.NoError(t, err)
 
 	// Set high gas price so standard test fee fails
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(200).Quo(sdk.NewDec(100000)))
+	atomPrice := sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(200).Quo(math.LegacyNewDec(100000)))
 	highGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 
@@ -96,7 +97,7 @@ func TestEnsureMempoolFees(t *testing.T) {
 	// Set IsCheckTx back to true for testing sufficient mempool fee
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	atomPrice = sdk.NewDecCoinFromDec("atom", sdk.NewDec(0).Quo(sdk.NewDec(100000)))
+	atomPrice = sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(0).Quo(math.LegacyNewDec(100000)))
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(lowGasPrice)
 

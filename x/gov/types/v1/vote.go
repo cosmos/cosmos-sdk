@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -66,7 +67,7 @@ func (w *WeightedVoteOption) IsValid() bool {
 		return false
 	}
 
-	if !weight.IsPositive() || weight.GT(sdk.NewDec(1)) {
+	if !weight.IsPositive() || weight.GT(math.LegacyNewDec(1)) {
 		return false
 	}
 
@@ -75,13 +76,13 @@ func (w *WeightedVoteOption) IsValid() bool {
 
 // NewNonSplitVoteOption creates a single option vote with weight 1
 func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
-	return WeightedVoteOptions{{option, sdk.NewDec(1).String()}}
+	return WeightedVoteOptions{{option, math.LegacyNewDec(1).String()}}
 }
 
 // ValidWeightedVoteOption returns true if the sub vote is valid and false otherwise.
 func ValidWeightedVoteOption(option WeightedVoteOption) bool {
 	weight, err := sdk.NewDecFromStr(option.Weight)
-	if err != nil || !weight.IsPositive() || weight.GT(sdk.NewDec(1)) {
+	if err != nil || !weight.IsPositive() || weight.GT(math.LegacyNewDec(1)) {
 		return false
 	}
 	return ValidVoteOption(option.Option)

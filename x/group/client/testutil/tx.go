@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	client "github.com/cosmos/cosmos-sdk/x/group/client/cli"
@@ -73,7 +72,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	account := sdk.AccAddress(pk.Address())
-	_, err = banktestutil.MsgSendExec(
+	_, err = cli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		account,
@@ -2481,7 +2480,7 @@ func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
 		account := sdk.AccAddress(pk.Address())
 		accounts[i-1] = account.String()
 
-		_, err = banktestutil.MsgSendExec(
+		_, err = cli.MsgSendExec(
 			val.ClientCtx,
 			val.Address,
 			account,
@@ -2552,7 +2551,7 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddres
 
 	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)
 	s.Require().NoError(err)
-	_, err = banktestutil.MsgSendExec(clientCtx, val.Address, addr,
+	_, err = cli.MsgSendExec(clientCtx, val.Address, addr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(tokens))),
 		s.commonFlags...,
 	)

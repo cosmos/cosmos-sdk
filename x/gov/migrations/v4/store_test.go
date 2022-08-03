@@ -69,4 +69,5 @@ func TestMigrateStore(t *testing.T) {
 	require.Equal(t, legacySubspace.tp.Quorum, params.Quorum)
 	require.Equal(t, legacySubspace.tp.Threshold, params.Threshold)
 	require.Equal(t, legacySubspace.tp.VetoThreshold, params.VetoThreshold)
+	require.Equal(t, sdk.ZeroDec().String(), params.MinInitialDepositRatio)
 }

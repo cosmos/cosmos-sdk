@@ -3,6 +3,7 @@ package distribution_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -26,7 +27,7 @@ const (
 
 var (
 	valTokens                = sdk.TokensFromConsensusPower(50, sdk.DefaultPowerReduction)
-	validatorCommissionRates = stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
+	validatorCommissionRates = stakingtypes.NewCommissionRates(math.LegacyOneDec(), math.LegacyOneDec(), math.LegacyOneDec())
 )
 
 type validator struct {

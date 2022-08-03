@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -252,6 +253,14 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 		return false, nil
 	}
 
+	if ubd.Entries[i].UnbondingOnHoldRefCount <= 0 {
+		return true,
+			sdkerrors.Wrapf(
+				types.ErrUnbondingOnHoldRefCountNegative,
+				"undelegation unbondingId(%d), expecting UnbondingOnHoldRefCount > 0, got %T",
+				id, ubd.Entries[i].UnbondingOnHoldRefCount,
+			)
+	}
 	ubd.Entries[i].UnbondingOnHoldRefCount--
 
 	// Check if entry is matured.
@@ -302,6 +311,14 @@ func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) (found 
 		return false, nil
 	}
 
+	if red.Entries[i].UnbondingOnHoldRefCount <= 0 {
+		return true,
+			sdkerrors.Wrapf(
+				types.ErrUnbondingOnHoldRefCountNegative,
+				"redelegation unbondingId(%d), expecting UnbondingOnHoldRefCount > 0, got %T",
+				id, red.Entries[i].UnbondingOnHoldRefCount,
+			)
+	}
 	red.Entries[i].UnbondingOnHoldRefCount--
 
 	if !red.Entries[i].OnHold() && red.Entries[i].IsMature(ctx.BlockHeader().Time) {
@@ -329,6 +346,14 @@ func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found
 		return false, nil
 	}
 
+	if val.UnbondingOnHoldRefCount <= 0 {
+		return true,
+			sdkerrors.Wrapf(
+				types.ErrUnbondingOnHoldRefCountNegative,
+				"val(%s), expecting UnbondingOnHoldRefCount > 0, got %T",
+				val.OperatorAddress, val.UnbondingOnHoldRefCount,
+			)
+	}
 	val.UnbondingOnHoldRefCount--
 	k.SetValidator(ctx, val)
 

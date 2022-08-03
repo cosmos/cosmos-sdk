@@ -42,7 +42,7 @@ jobs:
             --data '{
               "title": "Automated PR for commit: ${{github.event.pull_request.head.sha}}",
               "body":"Please merge these awesome changes in!",
-              "head":"${{github.event.pull_request.user.login}}:pr-patch",
+              "head":"${{github.event.pull_request.user.login}}:pr-patch-${{github.event.pull_request.head.sha}}",
               "base":"main"
               }' \
             --fail

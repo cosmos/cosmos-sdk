@@ -2157,14 +2157,27 @@ func TestBaseApp_Init(t *testing.T) {
 func TestGenerateFraudProof(t *testing.T) {
 
 	/*
-		1. Create a fresh baseapp
+		1. Create a fresh baseapp with a tracekv store
 		2. Create a 'block' and put transactions that set certain key/value pairs in it
-		3. We should be able to `check block` IF block.hash not the same, trigger fraud:
+		3. We should be able to `generate fraud proof` IF block.hash not the same, trigger fraud:
 			- go through all transactions, run them, and keep track of which substores are being used
-			- export the SMTs inside those substores into a fraud proof data structure
+			- export the SMTs inside those substores into a fraud proof data structure along with block height
 
 
-		// Question: What is a block? Right now abstract, need to make it more concrete
+		Tests to write:
+
+		1. Block with bad txs: Txs that exceed gas limits, validateBasic fails, unregistered messages (see TestRunInvalidTransaction)
+		2. Block with invalid appHash at the end
+		3. Corrupted Fraud Proof: bad SMT format, insufficient key-value pairs inside SMT needed to verify fraud
+		4. Bad block, fraud proof needed, fraud proof works, chain halts
+
+		TODO:
+		Figure out how the tracekv interacts with the SMT multistore
+		Try to keep tx as generic as possible so you don't need to care about the messages inside a Tx
+
+
+		Question: What is a block? Right now abstract, need to make it more concrete
+		Candidate Answer: For now, Block is just a list of a transactions and a header with an app hash
 
 	*/
 
@@ -2191,6 +2204,8 @@ func TestGenerateFraudProof(t *testing.T) {
 	keyCounter := 0
 	for height := int64(1); height <= int64(blocks); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
+
+		txs := make([]txTest, txsPerBlock)
 		for txNum := 0; txNum < txsPerBlock; txNum++ {
 			tx := txTest{Msgs: []sdk.Msg{}}
 			for msgNum := 0; msgNum < 3; msgNum++ {
@@ -2201,6 +2216,7 @@ func TestGenerateFraudProof(t *testing.T) {
 				tx.Msgs = append(tx.Msgs, msgKeyValue{Key: key, Value: value})
 				keyCounter++
 			}
+			txs = append(txs, tx)
 			txBytes, err := codec.Marshal(tx)
 			require.NoError(t, err)
 			resp := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -2209,6 +2225,11 @@ func TestGenerateFraudProof(t *testing.T) {
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		commitResponse := app.Commit()
 		_ = commitResponse.GetData()
+
+		// Check Block here
+
+		_ = txs
+
 	}
 
 	return

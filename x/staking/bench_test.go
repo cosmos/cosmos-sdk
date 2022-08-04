@@ -29,7 +29,10 @@ func benchmarkValidateGenesis(b *testing.B, n int) {
 	addressL, pubKeyL := makeRandomAddressesAndPublicKeys(n)
 	for i := 0; i < n; i++ {
 		addr, pubKey := addressL[i], pubKeyL[i]
-		validator := teststaking.NewValidator(b, addr, pubKey)
+		randomEthAddr, err := teststaking.RandomEthAddress()
+		b.Error(err)
+
+		validator := teststaking.NewValidator(b, addr, pubKey, sdk.AccAddress(pubKey.Address()), *randomEthAddr)
 		ni := int64(i + 1)
 		validator.Tokens = sdk.NewInt(ni)
 		validator.DelegatorShares = sdk.NewDec(ni)

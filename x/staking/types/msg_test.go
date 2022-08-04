@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -34,10 +35,13 @@ func TestMsgDecode(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, pk1.Equals(pkUnmarshaled.(*ed25519.PubKey)))
 
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
+
 	// now let's try to serialize the whole message
 
 	commission1 := types.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	msg, err := types.NewMsgCreateValidator(valAddr1, pk1, coinPos, types.Description{}, commission1, sdk.OneInt())
+	msg, err := types.NewMsgCreateValidator(valAddr1, pk1, coinPos, types.Description{}, commission1, sdk.OneInt(), sdk.AccAddress(pk1.Address()), *randomEthAddress)
 	require.NoError(t, err)
 	msgSerialized, err := cdc.MarshalInterface(msg)
 	require.NoError(t, err)
@@ -79,7 +83,9 @@ func TestMsgCreateValidator(t *testing.T) {
 
 	for _, tc := range tests {
 		description := types.NewDescription(tc.moniker, tc.identity, tc.website, tc.securityContact, tc.details)
-		msg, err := types.NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.CommissionRates, tc.minSelfDelegation)
+		randomEthAddress, err := teststaking.RandomEthAddress()
+		require.NoError(t, err)
+		msg, err := types.NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.CommissionRates, tc.minSelfDelegation, sdk.AccAddress(pk1.Address()), *randomEthAddress)
 		require.NoError(t, err)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
@@ -107,8 +113,7 @@ func TestMsgEditValidator(t *testing.T) {
 	for _, tc := range tests {
 		description := types.NewDescription(tc.moniker, tc.identity, tc.website, tc.securityContact, tc.details)
 		newRate := sdk.ZeroDec()
-
-		msg := types.NewMsgEditValidator(tc.validatorAddr, description, &newRate, &tc.minSelfDelegation)
+		msg := types.NewMsgEditValidator(tc.validatorAddr, description, &newRate, &tc.minSelfDelegation, nil, nil)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {

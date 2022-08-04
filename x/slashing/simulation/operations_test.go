@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"math/rand"
 	"testing"
 	"time"
@@ -157,7 +158,9 @@ func getTestingValidator(t *testing.T, app *simapp.SimApp, ctx sdk.Context, acco
 	account := accounts[n]
 	valPubKey := account.ConsKey.PubKey()
 	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
-	validator, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
+	validator, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{}, sdk.AccAddress(valPubKey.Address()), *randomEthAddress)
 	require.NoError(t, err)
 	validator, err = validator.SetInitialCommission(commission)
 	require.NoError(t, err)

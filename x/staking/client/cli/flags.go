@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -77,6 +78,20 @@ func FlagSetAmount() *flag.FlagSet {
 func FlagSetPublicKey() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.String(FlagPubKey, "", "The validator's Protobuf JSON encoded public key")
+	return fs
+}
+
+// FlagSetOrchestratorAddress Returns the flagset for Orchestrator address related operations.
+func FlagSetOrchestratorAddress() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.String(flags.FlagOrchestratorAddress, "", "The Bech32 cosmos1 address of the orchestrator")
+	return fs
+}
+
+// FlagSetEthereumAddress Returns the flagset for Ethereum address related operations.
+func FlagSetEthereumAddress() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.String(flags.FlagEthereumAddress, "", "The 0x EVM address of the orchestrator")
 	return fs
 }
 

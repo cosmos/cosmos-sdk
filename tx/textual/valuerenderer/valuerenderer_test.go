@@ -73,15 +73,18 @@ func TestFormatDecimal(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, tc := range testcases {
-		d, err := math.LegacyNewDecFromStr(tc[0])
-		require.NoError(t, err)
-		r, err := valueRendererOf(d)
-		require.NoError(t, err)
-		b := new(strings.Builder)
-		err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
-		require.NoError(t, err)
+		tc := tc
+		t.Run(tc[0], func(t *testing.T) {
+			d, err := math.LegacyNewDecFromStr(tc[0])
+			require.NoError(t, err)
+			r, err := valueRendererOf(d)
+			require.NoError(t, err)
+			b := new(strings.Builder)
+			err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
+			require.NoError(t, err)
 
-		require.Equal(t, tc[1], b.String())
+			require.Equal(t, tc[1], b.String())
+		})
 	}
 }
 

@@ -160,13 +160,18 @@ The scope of e2e tests has been complected with command line interface testing.
 
 We accept these test scopes and identify the following decisions points for each.
 
+| Scope | Fixture | Keepers mocked |   |
+|-------|---------|----------------|---|
+|       |         |                |   |
+
+
 #### Unit Tests
 
 All modules must have mocked unit test coverage.
 
 Illustrative tests should outnumber journeys in unit tests.
 
-BDD feature tests are recommended when building up illustrative and journey scenarios.
+~BDD feature tests are recommended when building up illustrative and journey scenarios.~
 
 Unit tests should outnumber integration tests.
 
@@ -175,8 +180,9 @@ production code.
 
 When module unit test introduction as per [EPIC: Unit testing of modules via mocks](https://github.com/cosmos/cosmos-sdk/issues/12398)
 results in a near complete rewrite of an integration test suite the test suite should be
-retained and moved to `/tests/integration`.  We accept the resulting test logic duplication,
-but recommend the unit tests be rewritten in BDD style.
+retained and moved to `/tests/integration`.  We accept the resulting test logic
+duplication but recommend improving the unit test suite through the addition of
+illustrative tests.
 
 #### Integration Tests
 
@@ -185,9 +191,6 @@ introduce extra module dependencies.
 
 To help limit scope and complexity, it is recommended to use the smallest possible number of
 modules in application startup, i.e. don't depend on simapp.
-
-A *small* number of integration tests should use simapp to start up and test application
-operations.
 
 Integration tests should outnumber e2e tests.
 
@@ -233,3 +236,5 @@ demonstrated in [PR#12706](https://github.com/cosmos/cosmos-sdk/pull/12706).
 It may be useful if test suites could be run in integration mode (with mocked tendermint) or
 with e2e fixtures (with real tendermint and many nodes). Integration fixtures could be used
 for quicker runs, e2e fixures could be used for more battle hardening.
+
+BDD feature tests are recommended when building up illustrative and journey scenarios.

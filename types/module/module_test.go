@@ -15,12 +15,29 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var errFoo = errors.New("dummy")
+
+func TestTypeAssertions(t *testing.T) {
+	mod := testCreateModule()
+	// the following line panics
+	_ = mod.(module.EndBlockAppModule)
+}
+
+func testCreateModule() module.AppModule {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	appModule := staking.NewAppModule(cdc, nil, nil, nil, nil)
+	// EndBlock exists and can be called
+	// appModule.EndBlock(sdk.Context{}, abci.RequestEndBlock{})
+	return runtime.WrapAppModule(appModule)
+}
 
 func TestBasicManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)

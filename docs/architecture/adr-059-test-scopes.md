@@ -97,6 +97,9 @@ modules](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f
 exercises [HandleEquivocationEvidence](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/x/evidence/keeper/infraction_test.go#L42) which contains many interactions with the staking
 keeper.
 
+Example 3 - Integration suite app configurations may also be specified via golang (not
+YAML as above) [statically](https://github.com/cosmos/cosmos-sdk/blob/main/x/nft/testutil/app_config.go) or [dynamically](https://github.com/cosmos/cosmos-sdk/blob/8c23f6f957d1c0bedd314806d1ac65bea59b084c/tests/integration/bank/keeper/keeper_test.go#L129-L134).
+
 #### Limitations
 
 Setting up a particular input state may be more challenging since the application is
@@ -160,10 +163,12 @@ The scope of e2e tests has been complected with command line interface testing.
 
 We accept these test scopes and identify the following decisions points for each.
 
-| Scope | Fixture | Keepers mocked |   |
-|-------|---------|----------------|---|
-|       |         |                |   |
-
+| Scope       | App Fixture | Mocks? |
+|-------------|-------------|--------|
+| Unit        | None        | Yes    |
+| Integration | depinject   | Some   |
+| Simulation  | simapp      | No     |
+| E2E         | simapp      | No     |
 
 #### Unit Tests
 
@@ -225,6 +230,7 @@ demonstrated in [PR#12706](https://github.com/cosmos/cosmos-sdk/pull/12706).
 ### Negative
 
 - some test logic duplication between unit and integration tests during transition
+- test written using dockertest DX may be a bit worse
 
 ### Neutral
 
@@ -237,4 +243,7 @@ It may be useful if test suites could be run in integration mode (with mocked te
 with e2e fixtures (with real tendermint and many nodes). Integration fixtures could be used
 for quicker runs, e2e fixures could be used for more battle hardening.
 
+A PoC is in progress for `x/gov` unit tests demonstrating BDD, helping to determine if
 BDD feature tests are recommended when building up illustrative and journey scenarios.
+
+Levels are network mocking in integration and e2e tests are still being worked on and formalized.

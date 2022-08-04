@@ -2180,6 +2180,8 @@ func TestGenerateFraudProof(t *testing.T) {
 		Question: What is a block? Right now abstract, need to make it more concrete
 		Candidate Answer: For now, Block is just a list of a transactions and a header with an app hash
 
+		Note: In the current implementation, all substores might not be SMTs, do we assume they are?
+
 	*/
 
 	codec := codec.NewLegacyAmino()
@@ -2233,7 +2235,12 @@ func TestGenerateFraudProof(t *testing.T) {
 		// Try to read through the operations and figure out the minimal set of deepsubtrees that can be put inside a fraudproof data structure
 
 		// This is able to retrieve all the keys touched for a particular substore (capKey2 here) which makes up for one deepstree
-		traceKv := app.cms.GetKVStore(capKey2).(*tracekv.Store)
+
+		// Seems like these substores are not SMT substores which is what's needed for deep subtrees, which blocks this currently.
+		// Current plan is to try to replace baseapp to use SMT store
+
+		kvStore := app.cms.GetKVStore(capKey2)
+		traceKv := kvStore.(*tracekv.Store)
 		keys := traceKv.GetAllKeysUsedInTrace(*traceBuf)
 		_ = keys
 

@@ -91,6 +91,20 @@ func (tkv *Store) ReverseIterator(start, end []byte) types.Iterator {
 	return tkv.iterator(start, end, false)
 }
 
+// GetAllKeysUsedInTrace reads through all traced operations and returns
+// a set of all the keys inside the trace operations
+func (tkv *Store) GetAllKeysUsedInTrace(buf bytes.Buffer) map[string]bool {
+	var traceOp traceOperation
+	var err error
+	keys := make(map[string]bool)
+	for err == nil {
+		traceOp, err = readOperation(buf)
+		key := traceOp.Key
+		keys[key] = true
+	}
+	return keys
+}
+
 // iterator facilitates iteration over a KVStore. It delegates the necessary
 // calls to it's parent KVStore.
 func (tkv *Store) iterator(start, end []byte, ascending bool) types.Iterator {
@@ -206,16 +220,16 @@ func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value
 
 // reaOperation reads a KVStore operation from the underlying buffer as
 // JSON-encoded data where the key/value pair is base64 encoded.
-func readOperation(r bytes.Buffer) traceOperation {
+func readOperation(r bytes.Buffer) (traceOperation, error) {
+	var traceOp traceOperation
 	raw, err := r.ReadString('\n')
 	if err != nil {
-		panic(errors.Wrap(err, "failed to read trace operation"))
+		return traceOp, errors.Wrap(err, "failed to read trace operation")
 	}
-	var traceOp traceOperation
 	err = json.Unmarshal([]byte(raw), &traceOp)
 	if err != nil {
-		panic(errors.Wrap(err, "failed to deserialize trace operation"))
+		return traceOp, errors.Wrap(err, "failed to deserialize trace operation")
 	}
 
-	return traceOp
+	return traceOp, nil
 }

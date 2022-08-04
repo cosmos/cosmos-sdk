@@ -4,5 +4,4 @@ package backends
 import (
 	_ "github.com/cosmos/cosmos-sdk/db/badgerdb"
 	_ "github.com/cosmos/cosmos-sdk/db/memdb"
-	_ "github.com/cosmos/cosmos-sdk/db/rocksdb"
 )

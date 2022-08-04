@@ -12,11 +12,6 @@ const (
 	// MemDBBackend represents in-memory key value store, which is mostly used
 	// for testing.
 	MemDBBackend BackendType = "memdb"
-	// RocksDBBackend represents rocksdb (uses github.com/cosmos/gorocksdb)
-	//   - EXPERIMENTAL
-	//   - requires gcc
-	//   - use rocksdb build tag (go build -tags rocksdb)
-	RocksDBBackend BackendType = "rocksdb"
 	// BadgerDBBackend represents BadgerDB
 	//   - pure Go
 	//   - requires badgerdb build tag

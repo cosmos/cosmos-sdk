@@ -30,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -2185,12 +2184,8 @@ func TestGenerateFraudProof(t *testing.T) {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 
-	traceOpt := func(bapp *BaseApp) {
-		b := &bytes.Buffer{}
-		tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
-		bapp.cms.SetTracer(b)
-		bapp.cms.SetTracingContext(tc)
-	}
+	// traceWriter := &bytes.Buffer{}
+	// traceContext := types.TraceContext(map[string]interface{}{"blockHeight": 64})
 
 	routerOpt := func(bapp *BaseApp) {
 		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
@@ -2201,8 +2196,9 @@ func TestGenerateFraudProof(t *testing.T) {
 	}
 
 	app := setupBaseApp(t,
-		AppOptionFunc(traceOpt),
-		AppOptionFunc(routerOpt))
+		AppOptionFunc(routerOpt),
+		SetTrace(true),
+	)
 
 	app.InitChain(abci.RequestInitChain{})
 

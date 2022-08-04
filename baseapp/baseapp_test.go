@@ -2229,12 +2229,16 @@ func TestGenerateFraudProof(t *testing.T) {
 		}
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 
-		// Here, the store's traceKV should have been populated with all the operations that have taken place
+		// Here, the store's substores' traceKVs should have been populated with all the operations that have taken place
 		// Try to read through the operations and figure out the minimal set of deepsubtrees that can be put inside a fraudproof data structure
 
+		// This is able to retrieve all the keys touched for a particular substore (capKey2 here) which makes up for one deepstree
 		traceKv := app.cms.GetKVStore(capKey2).(*tracekv.Store)
 		keys := traceKv.GetAllKeysUsedInTrace(*traceBuf)
 		_ = keys
+
+		// Next step: Figure out how to get all the storeKeys pertaining to each subStore now
+		// The number of storeKeys will be equal to number of deepSubTrees that the fraudproof data strucutre contains
 
 		commitResponse := app.Commit()
 		_ = commitResponse.GetData()

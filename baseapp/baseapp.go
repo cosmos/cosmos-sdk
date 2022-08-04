@@ -241,7 +241,7 @@ func (app *BaseApp) loadStore() error {
 			return err
 		}
 	}
-	app.cms, err = multi.NewV1MultiStoreAsV2(app.db, config)
+	app.cms, err = multi.NewStore(app.db, config)
 	if err != nil {
 		return fmt.Errorf("failed to load store: %w", err)
 	}

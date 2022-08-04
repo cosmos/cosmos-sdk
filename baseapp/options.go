@@ -21,6 +21,14 @@ func SetPruning(opts pruningtypes.PruningOptions) StoreOption {
 	return func(config *multi.StoreParams, _ uint64) error { config.Pruning = opts; return nil }
 }
 
+func SetTracingEnabled(w io.Writer, tc storetypes.TraceContext) StoreOption {
+	return func(cfg *multi.StoreParams, v uint64) error {
+		cfg.TraceWriter = w
+		cfg.TraceContext = tc
+		return nil
+	}
+}
+
 // SetMinGasPrices returns an option that sets the minimum gas prices on the app.
 func SetMinGasPrices(gasPricesStr string) AppOptionFunc {
 	gasPrices, err := sdk.ParseDecCoins(gasPricesStr)

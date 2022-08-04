@@ -39,7 +39,12 @@ func RevCapabilityKey(module, name string) []byte {
 // FwdCapabilityKey returns a forward lookup key for a given module and capability
 // reference.
 func FwdCapabilityKey(module string, cap *Capability) []byte {
-	return []byte(fmt.Sprintf("%s/fwd/%p", module, cap))
+	// truncate the key to fixed length, keep backward compatible on common architectures.
+	key := fmt.Sprintf("%#010p", cap)
+	if len(key) > 10 {
+		key = key[len(key)-10:]
+	}
+	return []byte(fmt.Sprintf("%s/fwd/0x%s", module, key))
 }
 
 // IndexToKey returns bytes to be used as a key for a given capability index.

@@ -19,7 +19,6 @@ import (
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -58,22 +57,25 @@ func (s *TestSuite) SetupTest() {
 		s.encCfg.TxConfig.TxDecoder(),
 	)
 	s.baseApp.SetCMS(testCtx.CMS)
-	bank.RegisterInterfaces(s.encCfg.InterfaceRegistry)
+	s.baseApp.SetInterfaceRegistry(s.encCfg.InterfaceRegistry)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.interfaceRegistry)
-	authz.RegisterQueryServer(queryHelper, s.authzKeeper)
-	queryClient := authz.NewQueryClient(queryHelper)
-	s.queryClient = queryClient
-
-	s.queryClient = queryClient
 	s.addrs = simtestutil.CreateIncrementalAccounts(3)
-
-	s.authzKeeper = authzkeeper.NewKeeper(key, s.encCfg.Codec, s.baseApp.MsgServiceRouter(), s.accountKeeper)
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
 	s.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
 	s.bankKeeper = authztestutil.NewMockBankKeeper(ctrl)
+	banktypes.RegisterInterfaces(s.encCfg.InterfaceRegistry)
+	banktypes.RegisterMsgServer(s.baseApp.MsgServiceRouter(), s.bankKeeper)
+
+	s.authzKeeper = authzkeeper.NewKeeper(key, s.encCfg.Codec, s.baseApp.MsgServiceRouter(), s.accountKeeper)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.encCfg.InterfaceRegistry)
+	authz.RegisterQueryServer(queryHelper, s.authzKeeper)
+	queryClient := authz.NewQueryClient(queryHelper)
+	s.queryClient = queryClient
+
+	s.queryClient = queryClient
 }
 
 func (s *TestSuite) TestKeeper() {
@@ -333,13 +335,11 @@ func (s *TestSuite) TestDispatchedEvents() {
 	events := s.ctx.EventManager().Events()
 
 	// get last 5 events (events that occur *after* the grant)
-	events = events[len(events)-5:]
+	events = events[len(events)-2:]
 
 	requiredEvents := map[string]bool{
-		"coin_spent":    false,
-		"coin_received": false,
-		"transfer":      false,
-		"message":       false,
+		"cosmos.authz.v1beta1.EventGrant":  true,
+		"cosmos.authz.v1beta1.EventRevoke": true,
 	}
 	for _, e := range events {
 		requiredEvents[e.Type] = true

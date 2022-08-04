@@ -2232,8 +2232,11 @@ func TestGenerateFraudProof(t *testing.T) {
 		// Try to read through the operations and figure out the minimal set of deepsubtrees that can be put inside a fraudproof data structure
 
 		// reads one string
-		str := traceWriter.String()
-		_ = str
+		str1, _ := traceWriter.ReadString('\n')
+		_ = str1
+
+		str2, _ := traceWriter.ReadString('\n')
+		_ = str2
 
 		commitResponse := app.Commit()
 		_ = commitResponse.GetData()

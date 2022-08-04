@@ -42,7 +42,6 @@ const (
 //
 // - 0x09: Params
 var (
-	FeePoolKey                        = []byte{0x00} // key for global distribution state
 	ProposerKey                       = []byte{0x01} // key for the proposer operator address
 	ValidatorOutstandingRewardsPrefix = []byte{0x02} // key for outstanding rewards
 

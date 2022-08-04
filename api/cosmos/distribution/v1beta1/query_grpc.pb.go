@@ -39,8 +39,6 @@ type QueryClient interface {
 	DelegatorValidators(ctx context.Context, in *QueryDelegatorValidatorsRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorsResponse, error)
 	// DelegatorWithdrawAddress queries withdraw address of a delegator.
 	DelegatorWithdrawAddress(ctx context.Context, in *QueryDelegatorWithdrawAddressRequest, opts ...grpc.CallOption) (*QueryDelegatorWithdrawAddressResponse, error)
-	// CommunityPool queries the community pool coins.
-	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
 }
 
 type queryClient struct {
@@ -123,15 +121,6 @@ func (c *queryClient) DelegatorWithdrawAddress(ctx context.Context, in *QueryDel
 	return out, nil
 }
 
-func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error) {
-	out := new(QueryCommunityPoolResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/CommunityPool", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -153,8 +142,6 @@ type QueryServer interface {
 	DelegatorValidators(context.Context, *QueryDelegatorValidatorsRequest) (*QueryDelegatorValidatorsResponse, error)
 	// DelegatorWithdrawAddress queries withdraw address of a delegator.
 	DelegatorWithdrawAddress(context.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error)
-	// CommunityPool queries the community pool coins.
-	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -185,9 +172,6 @@ func (UnimplementedQueryServer) DelegatorValidators(context.Context, *QueryDeleg
 }
 func (UnimplementedQueryServer) DelegatorWithdrawAddress(context.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegatorWithdrawAddress not implemented")
-}
-func (UnimplementedQueryServer) CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CommunityPool not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -346,24 +330,6 @@ func _Query_DelegatorWithdrawAddress_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_CommunityPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryCommunityPoolRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).CommunityPool(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.distribution.v1beta1.Query/CommunityPool",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).CommunityPool(ctx, req.(*QueryCommunityPoolRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -402,10 +368,6 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DelegatorWithdrawAddress",
 			Handler:    _Query_DelegatorWithdrawAddress_Handler,
-		},
-		{
-			MethodName: "CommunityPool",
-			Handler:    _Query_CommunityPool_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

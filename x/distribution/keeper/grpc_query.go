@@ -234,11 +234,3 @@ func (k Keeper) DelegatorWithdrawAddress(c context.Context, req *types.QueryDele
 
 	return &types.QueryDelegatorWithdrawAddressResponse{WithdrawAddress: withdrawAddr.String()}, nil
 }
-
-// CommunityPool queries the community pool coins
-func (k Keeper) CommunityPool(c context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	pool := k.GetFeePoolCommunityCoins(ctx)
-
-	return &types.QueryCommunityPoolResponse{Pool: pool}, nil
-}

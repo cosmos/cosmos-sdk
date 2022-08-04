@@ -97,12 +97,14 @@ func (tkv *Store) GetAllKeysUsedInTrace(buf bytes.Buffer) map[string]bool {
 	var traceOp traceOperation
 	var err error
 	keys := make(map[string]bool)
-	for err == nil {
-		traceOp, err = readOperation(buf)
+	for {
+		traceOp, err = readOperation(&buf)
+		if err != nil {
+			return keys
+		}
 		key := traceOp.Key
 		keys[key] = true
 	}
-	return keys
 }
 
 // iterator facilitates iteration over a KVStore. It delegates the necessary
@@ -220,9 +222,12 @@ func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value
 
 // reaOperation reads a KVStore operation from the underlying buffer as
 // JSON-encoded data where the key/value pair is base64 encoded.
-func readOperation(r bytes.Buffer) (traceOperation, error) {
+func readOperation(r *bytes.Buffer) (traceOperation, error) {
 	var traceOp traceOperation
 	raw, err := r.ReadString('\n')
+	if raw == "" {
+		return traceOp, errors.Wrap(err, "provided buffer is empty")
+	}
 	if err != nil {
 		return traceOp, errors.Wrap(err, "failed to read trace operation")
 	}

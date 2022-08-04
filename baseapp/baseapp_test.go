@@ -24,6 +24,7 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
@@ -2184,7 +2185,7 @@ func TestGenerateFraudProof(t *testing.T) {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 
-	traceWriter := &bytes.Buffer{}
+	traceBuf := &bytes.Buffer{}
 
 	routerOpt := func(bapp *BaseApp) {
 		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
@@ -2196,7 +2197,7 @@ func TestGenerateFraudProof(t *testing.T) {
 
 	app := setupBaseApp(t,
 		AppOptionFunc(routerOpt),
-		SetTracingEnabled(traceWriter),
+		SetTracingEnabled(traceBuf),
 	)
 
 	app.InitChain(abci.RequestInitChain{})
@@ -2231,12 +2232,9 @@ func TestGenerateFraudProof(t *testing.T) {
 		// Here, the store's traceKV should have been populated with all the operations that have taken place
 		// Try to read through the operations and figure out the minimal set of deepsubtrees that can be put inside a fraudproof data structure
 
-		var line string
-		var err error
-		for err == nil {
-			line, err = traceWriter.ReadString('\n')
-			fmt.Println(line)
-		}
+		traceKv := app.cms.GetKVStore(capKey2).(*tracekv.Store)
+		keys := traceKv.GetAllKeysUsedInTrace(*traceBuf)
+		_ = keys
 
 		commitResponse := app.Commit()
 		_ = commitResponse.GetData()

@@ -2231,12 +2231,12 @@ func TestGenerateFraudProof(t *testing.T) {
 		// Here, the store's traceKV should have been populated with all the operations that have taken place
 		// Try to read through the operations and figure out the minimal set of deepsubtrees that can be put inside a fraudproof data structure
 
-		// reads one string
-		str1, _ := traceWriter.ReadString('\n')
-		_ = str1
-
-		str2, _ := traceWriter.ReadString('\n')
-		_ = str2
+		var line string
+		var err error
+		for err == nil {
+			line, err = traceWriter.ReadString('\n')
+			fmt.Println(line)
+		}
 
 		commitResponse := app.Commit()
 		_ = commitResponse.GetData()

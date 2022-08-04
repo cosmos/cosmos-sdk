@@ -39,6 +39,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* nothing
+
+---
+
+## [v0.46.0-pio-1-rc1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc1) - 2022-08-04
+
+This release is based on Cosmos-SDK release [v0.46.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0).
+It also contains the customizations that were included in [v0.45.5-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.45.5-pio-1), but weren't included in v0.46.0.
+
 ### Features
 
 * (x/authz) [\#807](https://github.com/provenance-io/provenance/issues/807) Create a CountAuthorization type.
@@ -53,6 +62,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (store/rootmulti) [#12487](https://github.com/cosmos/cosmos-sdk/pull/12487) Fix non-deterministic map iteration.
 
 ---
+
+# Cosmos-SDK releases
 
 ## [v0.46.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0) - 2022-07-26
 

@@ -21,7 +21,7 @@ func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.
 		return err
 	}
 
-	_, err = w.Write([]byte(formatted))
+	_, err = io.WriteString(w, formatted)
 	return err
 }
 

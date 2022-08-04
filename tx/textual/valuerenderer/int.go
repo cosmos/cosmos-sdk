@@ -18,7 +18,7 @@ func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.
 		return err
 	}
 
-	_, err = w.Write([]byte(formatted))
+	_, err = io.WriteString(w, formatted)
 	return err
 }
 
@@ -30,7 +30,9 @@ func (vr intValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.V
 // operates with string manipulation (instead of manipulating the int or sdk.Int
 // object).
 func formatInteger(v string) (string, error) {
+	sign := ""
 	if v[0] == '-' {
+		sign = "-"
 		v = v[1:]
 	}
 	if len(v) > 1 {
@@ -44,5 +46,5 @@ func formatInteger(v string) (string, error) {
 		v = v[:outputIndex] + thousandSeparator + v[outputIndex:]
 	}
 
-	return v, nil
+	return sign + v, nil
 }

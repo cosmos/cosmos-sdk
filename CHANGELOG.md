@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (x/authz) [\#807](https://github.com/provenance-io/provenance/issues/807) Create a CountAuthorization type.
+* (baseapp) Add custom fee handler [354](https://github.com/provenance-io/provenance/issues/354)
 
 ### Improvements
 

@@ -134,6 +134,8 @@ type BaseApp struct { // nolint: maligned
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
 	abciListeners []ABCIListener
+
+	feeHandler sdk.FeeHandler
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -585,7 +587,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 // Note, gas execution info is always returned. A reference to a Result is
 // returned if the tx does not run out of gas and if all the messages are valid
 // and execute successfully. An error is returned otherwise.
-func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, priority int64, err error) {
+func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, priority int64, txCtx sdk.Context, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
@@ -596,7 +598,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 	// only run the tx if there is block gas remaining
 	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
-		return gInfo, nil, nil, 0, sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
+		return gInfo, nil, nil, 0, ctx, sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
 	}
 
 	defer func() {
@@ -631,12 +633,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 	tx, err := app.txDecoder(txBytes)
 	if err != nil {
-		return sdk.GasInfo{}, nil, nil, 0, err
+		return sdk.GasInfo{}, nil, nil, 0, ctx, err
 	}
 
 	msgs := tx.GetMsgs()
 	if err := validateBasicTxMsgs(msgs); err != nil {
-		return sdk.GasInfo{}, nil, nil, 0, err
+		return sdk.GasInfo{}, nil, nil, 0, ctx, err
 	}
 
 	if app.anteHandler != nil {
@@ -672,7 +674,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		gasWanted = ctx.GasMeter().Limit()
 
 		if err != nil {
-			return gInfo, nil, nil, 0, err
+			return gInfo, nil, nil, 0, ctx, err
 		}
 
 		priority = ctx.Priority()
@@ -696,26 +698,57 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		if app.postHandler != nil {
 			newCtx, err := app.postHandler(runMsgCtx, tx, mode == runTxModeSimulate)
 			if err != nil {
-				return gInfo, nil, nil, priority, err
+				return gInfo, nil, nil, priority, ctx, err
 			}
 
 			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
 		}
 
+		var feeEvents sdk.Events
 		if mode == runTxModeDeliver {
 			// When block gas exceeds, it'll panic and won't commit the cached store.
+			// this should be called before we charge additional fee( otherwise would
+			// defy the whole point of charging additional fee at the end)
 			consumeBlockGas()
 
+			// apply fee logic calls
+			feeEvents, err = FeeInvoke(mode, app, runMsgCtx)
+			if err != nil {
+				return gInfo, nil, nil, priority, ctx, err
+			}
+			// Only write the cache if FeeInvoke didn't return an error.
 			msCache.Write()
 		}
 
-		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
-			// append the events in the order of occurrence
-			result.Events = append(anteEvents, result.Events...)
+		// If we're in deliver or simulate mode, update the events.
+		if mode == runTxModeDeliver || mode == runTxModeSimulate {
+			// these are the ante events propagated only on success, that now means that fee charging has happened successfully.
+			if len(anteEvents) > 0 {
+				// append the events in the order of occurrence
+				result.Events = append(anteEvents, result.Events...)
+			}
+			// additional fee events
+			if len(feeEvents) > 0 {
+				// append the fee events at the end of the other events, since they get charged at the end of the Tx
+				result.Events = append(result.Events, feeEvents.ToABCIEvents()...)
+			}
 		}
 	}
 
-	return gInfo, result, anteEvents, priority, err
+	return gInfo, result, anteEvents, priority, ctx, err
+}
+
+// FeeInvoke apply fee logic and append events
+func FeeInvoke(mode runTxMode, app *BaseApp, runMsgCtx sdk.Context) (sdk.Events, error) {
+	if app.feeHandler != nil {
+		// call the msgFee
+		_, eventsFromFeeHandler, err := app.feeHandler(runMsgCtx, mode == runTxModeSimulate)
+		if err != nil {
+			return nil, err
+		}
+		return eventsFromFeeHandler, nil
+	}
+	return nil, nil
 }
 
 // runMsgs iterates through a list of messages and executes them with the provided

@@ -238,3 +238,12 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
 	app.abciListeners = append(app.abciListeners, s)
 }
+
+// SetFeeHandler sets the FeeHandler which if set will change the behavior of fee handling
+func (app *BaseApp) SetFeeHandler(feeHandler sdk.FeeHandler) {
+	if app.sealed {
+		panic("SetKeeperHandler() on sealed BaseApp")
+	}
+
+	app.feeHandler = feeHandler
+}

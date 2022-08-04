@@ -23,7 +23,7 @@ import (
 )
 
 // baseAppSimulateFn is the signature of the Baseapp#Simulate function.
-type baseAppSimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
+type baseAppSimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)
 
 // txServer is the server for the protobuf Tx service.
 type txServer struct {
@@ -123,7 +123,7 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 		return nil, status.Errorf(codes.InvalidArgument, "empty txBytes is not allowed")
 	}
 
-	gasInfo, result, err := s.simulate(txBytes)
+	gasInfo, result, _, err := s.simulate(txBytes)
 	if err != nil {
 		return nil, err
 	}

@@ -2172,7 +2172,7 @@ func TestGenerateFraudProof(t *testing.T) {
 		4. Bad block, fraud proof needed, fraud proof works, chain halts
 
 		TODO:
-		Figure out how the tracekv interacts with the SMT multistore
+		Figure out how the tracekv interacts with the SMT multistore - done
 		Try to keep tx as generic as possible so you don't need to care about the messages inside a Tx
 
 
@@ -2212,7 +2212,7 @@ func TestGenerateFraudProof(t *testing.T) {
 		txs := make([]txTest, txsPerBlock)
 		for txNum := 0; txNum < txsPerBlock; txNum++ {
 			tx := txTest{Msgs: []sdk.Msg{}}
-			for msgNum := 0; msgNum < 3; msgNum++ {
+			for msgNum := 0; msgNum < 1; msgNum++ {
 				key := []byte(fmt.Sprintf("%v", keyCounter))
 				value := make([]byte, 10000)
 				_, err := r.Read(value)
@@ -2227,6 +2227,10 @@ func TestGenerateFraudProof(t *testing.T) {
 			require.True(t, resp.IsOK(), "%v", resp.String())
 		}
 		app.EndBlock(abci.RequestEndBlock{Height: height})
+
+		// Here, the store's traceKV should have been populated with all the operations that have taken place
+		// Try to read through the operations and figure out the minimal set of deepsubtrees that can be put inside a fraudproof data structure
+
 		commitResponse := app.Commit()
 		_ = commitResponse.GetData()
 

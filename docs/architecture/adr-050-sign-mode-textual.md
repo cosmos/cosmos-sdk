@@ -165,7 +165,6 @@ if !proto.Equal(msg, msg2) {
 }
 pass_check()
 ```
-```
 
 #### Example
 

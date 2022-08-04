@@ -1,4 +1,4 @@
-package v046_test
+package v3_test
 
 import (
 	"testing"
@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	v042gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v042"
-	v046gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	v1gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v1"
+	v3gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
@@ -38,20 +38,20 @@ func TestMigrateStore(t *testing.T) {
 	prop2Bz, err := cdc.Marshal(&prop2)
 	require.NoError(t, err)
 
-	store.Set(v042gov.ProposalKey(prop1.ProposalId), prop1Bz)
-	store.Set(v042gov.ProposalKey(prop2.ProposalId), prop2Bz)
+	store.Set(v1gov.ProposalKey(prop1.ProposalId), prop1Bz)
+	store.Set(v1gov.ProposalKey(prop2.ProposalId), prop2Bz)
 
 	// Run migrations.
-	err = v046gov.MigrateStore(ctx, govKey, cdc)
+	err = v3gov.MigrateStore(ctx, govKey, cdc)
 	require.NoError(t, err)
 
 	var newProp1 v1.Proposal
-	err = cdc.Unmarshal(store.Get(v042gov.ProposalKey(prop1.ProposalId)), &newProp1)
+	err = cdc.Unmarshal(store.Get(v1gov.ProposalKey(prop1.ProposalId)), &newProp1)
 	require.NoError(t, err)
 	compareProps(t, prop1, newProp1)
 
 	var newProp2 v1.Proposal
-	err = cdc.Unmarshal(store.Get(v042gov.ProposalKey(prop2.ProposalId)), &newProp2)
+	err = cdc.Unmarshal(store.Get(v1gov.ProposalKey(prop2.ProposalId)), &newProp2)
 	require.NoError(t, err)
 	compareProps(t, prop2, newProp2)
 }

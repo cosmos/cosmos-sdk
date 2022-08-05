@@ -456,6 +456,7 @@ func prefixNonpersistent(key string) []byte {
 func (s *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 	key := skey.Name()
 	var parent types.KVStore
+
 	typ, has := s.schema[skey]
 	if !has {
 		panic(ErrStoreNotFound(key))

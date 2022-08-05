@@ -102,10 +102,25 @@ func setupBaseApp(t *testing.T, options ...AppOption) *BaseApp {
 // baseapp loaded from a fraudproof
 func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...AppOption) *BaseApp {
 	storeKeys := make([]types.StoreKey, 0, len(fraudProof.stateWitness))
+	routerOpts := make([]func(bapp *BaseApp), 0)
 	for storeKeyName := range fraudProof.stateWitness {
-		storeKeys = append(storeKeys, sdk.NewKVStoreKey(storeKeyName))
+		storeKey := sdk.NewKVStoreKey(storeKeyName)
+		storeKeys = append(storeKeys, storeKey)
+
+		routerOpt := func(bapp *BaseApp) {
+			bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+				kv := msg.(*msgKeyValue)
+				bapp.cms.GetKVStore(storeKey).Set(kv.Key, kv.Value)
+				return &sdk.Result{}, nil
+			}))
+		}
+		routerOpts = append(routerOpts, routerOpt)
 	}
 	options = append(options, SetSubstores(storeKeys...))
+	// RouterOpts should only be called after call to `SetSubstores`
+	for _, routerOpt := range routerOpts {
+		options = append(options, AppOptionFunc(routerOpt))
+	}
 	options = append(options, SetInitialHeight(fraudProof.blockHeight))
 	for storeKey := range fraudProof.stateWitness {
 		stateWitness := fraudProof.stateWitness[storeKey]
@@ -2190,7 +2205,7 @@ func executeBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions in
 	registerTestCodec(codec)
 	r := rand.New(rand.NewSource(3920758213583))
 	keyCounter := 0
-	txs := make([]txTest, numTransactions)
+	txs := make([]txTest, 0)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: blockHeight}})
 	for txNum := 0; txNum < numTransactions; txNum++ {
@@ -2328,10 +2343,8 @@ func TestGenerateFraudProof(t *testing.T) {
 	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, fraudProof.blockHeight)
 	commitHashB1 := appB1.Commit()
 
-	// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it :)
-	appB2 := setupBaseAppFromFraudProof(t, fraudProof,
-		AppOptionFunc(routerOpt),
-	)
+	// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it
+	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
 
 	// Apply the set of transactions txs1 here
 	executeBlock(t, appB2, txs1, fraudProof.blockHeight)

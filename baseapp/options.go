@@ -21,6 +21,13 @@ func SetPruning(opts pruningtypes.PruningOptions) StoreOption {
 	return func(config *multi.StoreParams, _ uint64) error { config.Pruning = opts; return nil }
 }
 
+func SetSubstoreTracer(w io.Writer) StoreOption {
+	return func(cfg *multi.StoreParams, v uint64) error {
+		cfg.SetTracer(w)
+		return nil
+	}
+}
+
 func SetTracerFor(skey storetypes.StoreKey, w io.Writer) StoreOption {
 	return func(cfg *multi.StoreParams, v uint64) error {
 		cfg.SetTracerFor(skey, w)

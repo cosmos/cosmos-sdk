@@ -690,17 +690,17 @@ func (mr *MockAppModuleBasicGenesisProtoMockRecorder) RegisterLegacyAminoCodec(a
 }
 
 // ValidateGenesis mocks base method.
-func (m *MockAppModuleBasicGenesisProto) ValidateGenesis(arg0 codec.JSONCodec, arg1 client.TxEncodingConfig, arg2 json.RawMessage) error {
+func (m *MockAppModuleBasicGenesisProto) ValidateGenesis(arg0 client.TxEncodingConfig, arg1 proto.Message) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateGenesis", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "ValidateGenesis", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ValidateGenesis indicates an expected call of ValidateGenesis.
-func (mr *MockAppModuleBasicGenesisProtoMockRecorder) ValidateGenesis(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockAppModuleBasicGenesisProtoMockRecorder) ValidateGenesis(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockAppModuleBasicGenesisProto)(nil).ValidateGenesis), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockAppModuleBasicGenesisProto)(nil).ValidateGenesis), arg0, arg1)
 }
 
 // MockAppModuleGenesisProto is a mock of AppModuleGenesisProto interface.
@@ -1014,17 +1014,17 @@ func (mr *MockAppModuleGenesisOnlyProtoMockRecorder) RegisterLegacyAminoCodec(ar
 }
 
 // ValidateGenesis mocks base method.
-func (m *MockAppModuleGenesisOnlyProto) ValidateGenesis(arg0 codec.JSONCodec, arg1 client.TxEncodingConfig, arg2 json.RawMessage) error {
+func (m *MockAppModuleGenesisOnlyProto) ValidateGenesis(arg0 client.TxEncodingConfig, arg1 proto.Message) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateGenesis", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "ValidateGenesis", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ValidateGenesis indicates an expected call of ValidateGenesis.
-func (mr *MockAppModuleGenesisOnlyProtoMockRecorder) ValidateGenesis(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockAppModuleGenesisOnlyProtoMockRecorder) ValidateGenesis(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockAppModuleGenesisOnlyProto)(nil).ValidateGenesis), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockAppModuleGenesisOnlyProto)(nil).ValidateGenesis), arg0, arg1)
 }
 
 // MockAppModuleFullGenesis is a mock of AppModuleFullGenesis interface.
@@ -1404,17 +1404,17 @@ func (mr *MockAppModuleFullGenesisProtoMockRecorder) RegisterServices(arg0 inter
 }
 
 // ValidateGenesis mocks base method.
-func (m *MockAppModuleFullGenesisProto) ValidateGenesis(arg0 codec.JSONCodec, arg1 client.TxEncodingConfig, arg2 json.RawMessage) error {
+func (m *MockAppModuleFullGenesisProto) ValidateGenesis(arg0 client.TxEncodingConfig, arg1 proto.Message) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateGenesis", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "ValidateGenesis", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ValidateGenesis indicates an expected call of ValidateGenesis.
-func (mr *MockAppModuleFullGenesisProtoMockRecorder) ValidateGenesis(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockAppModuleFullGenesisProtoMockRecorder) ValidateGenesis(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockAppModuleFullGenesisProto)(nil).ValidateGenesis), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockAppModuleFullGenesisProto)(nil).ValidateGenesis), arg0, arg1)
 }
 
 // MockAppModule is a mock of AppModule interface.

@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"bytes"
+	"crypto/sha512"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -10,13 +11,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/gogo/protobuf/jsonpb"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -34,6 +28,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	"github.com/gogo/protobuf/jsonpb"
+	"github.com/lazyledger/smt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var (
@@ -2239,13 +2240,24 @@ func TestGenerateFraudProof(t *testing.T) {
 		// Seems like these substores are not SMT substores which is what's needed for deep subtrees, which blocks this currently.
 		// Current plan is to try to replace baseapp to use SMT store
 
-		kvStore := app.cms.GetKVStore(capKey2)
+		// Generates a deepsubtree for one substore
+		currKey := capKey2
+
+		kvStore := app.cms.GetKVStore(currKey)
 		traceKv := kvStore.(*tracekv.Store)
 		keys := traceKv.GetAllKeysUsedInTrace(*traceBuf)
-		_ = keys
 
-		// Next step: Figure out how to get all the storeKeys pertaining to each subStore now
-		// The number of storeKeys will be equal to number of deepSubTrees that the fraudproof data strucutre contains
+		substoreSMT := app.cms.(*multi.Store).GetSubStoreSMT(currKey.Name())
+
+		deepsubtree := smt.NewDeepSparseMerkleSubTree(smt.NewSimpleMap(), smt.NewSimpleMap(), sha512.New512_256(), substoreSMT.Root())
+		for key := range keys {
+			value := substoreSMT.Get([]byte(key))
+			proof, err := substoreSMT.GetSMTProof([]byte(key))
+			require.Nil(t, err)
+			deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
+		}
+
+		// Next step: Go over all the storeKeys pertaining to each subStore now
 
 		commitResponse := app.Commit()
 		_ = commitResponse.GetData()

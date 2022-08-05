@@ -157,7 +157,47 @@ func doValidatorUnbonding(
 	return validator
 }
 
-func TestValidatorUnbondingOnHold(t *testing.T) {
+func TestValidatorUnbondingOnHold1(t *testing.T) {
+	var hookCalled bool
+	var ubdeID uint64
+
+	app, ctx, _, _, addrVals := setup(t, &hookCalled, &ubdeID)
+
+	// Start unbonding first validator
+	validator := doValidatorUnbonding(t, app, ctx, addrVals[0], &hookCalled)
+
+	completionTime := validator.UnbondingTime
+	completionHeight := validator.UnbondingHeight
+
+	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
+	err := app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
+	require.NoError(t, err)
+
+	// Try to unbond validator
+	app.StakingKeeper.UnbondAllMatureValidators(ctx)
+
+	// Check that validator unbonding is not complete (is not mature yet)
+	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	require.Equal(t, types.Unbonding, validator.Status)
+	unbondingVals := app.StakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
+	require.Equal(t, 1, len(unbondingVals))
+	require.Equal(t, validator.OperatorAddress, unbondingVals[0])
+
+	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
+	ctx = ctx.WithBlockTime(completionTime.Add(time.Duration(1)))
+	ctx = ctx.WithBlockHeight(completionHeight + 1)
+	app.StakingKeeper.UnbondAllMatureValidators(ctx)
+
+	// Check that validator unbonding is complete
+	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	require.Equal(t, types.Unbonded, validator.Status)
+	unbondingVals = app.StakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
+	require.Equal(t, 0, len(unbondingVals))
+}
+
+func TestValidatorUnbondingOnHold2(t *testing.T) {
 	var hookCalled bool
 	var ubdeID uint64
 	var ubdeIDs []uint64

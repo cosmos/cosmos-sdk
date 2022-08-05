@@ -112,7 +112,7 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 			// Optimization
 			// TODO:
 			// Verify proof inside WitnessData: Not sure since canot do it before setting up without doing the redundant work on creating deepSubTrees here (ideally optimint does it)
-			options = append(options, SetSubstoreKVPair(storeKey, kv, val))
+			options = append(options, SetSubstoreKVPair(storeKey, kv, val)) // TODO: write this option
 		}
 	}
 	// make list of options to pass by parsing fraudproof
@@ -2229,8 +2229,8 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, initialHeight int64)
 }
 
 func TestGenerateFraudProof(t *testing.T) {
-
 	/*
+		Happy case:
 		1. Create a fresh baseapp, B1, with a tracekv store (only happens when generating fraudProof) and state S0
 		2. Make some state transition to state S1 by doing some transactions
 		3. Export that state S1 into a fraudProof data structure
@@ -2246,7 +2246,7 @@ func TestGenerateFraudProof(t *testing.T) {
 		1. Block with bad txs: Txs that exceed gas limits, validateBasic fails, unregistered messages (see TestRunInvalidTransaction)
 		2. Block with invalid appHash at the end
 		3. Corrupted Fraud Proof: bad SMT format, insufficient key-value pairs inside SMT needed to verify fraud
-		4. Bad block, fraud proof needed, fraud proof works, chain halts
+		4. Bad block, fraud proof needed, fraud proof works, chain halts (happy case)
 
 		Notes: In the current implementation, all substores might not be SMTs, do we assume they are? Yes, we do for simplicity here
 		Try to keep tx as generic as possible so you don't need to care about the messages inside a Tx
@@ -2320,16 +2320,17 @@ func TestGenerateFraudProof(t *testing.T) {
 
 	// End of exporting data (S1)
 
-	// TODO: Make some set of transactions here (txs1)
+	// Make some set of transactions here (txs1)
 	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, 0)
 	commitHashB1 := appB1.Commit()
 
 	// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it :)
 	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
 
-	// TODO: Apply the set of transactions txs1 here
+	// Apply the set of transactions txs1 here
 	executeBlock(t, appB1, txs1, int64(fraudProof.blockHeight))
 	commitHashB2 := appB2.Commit()
 
 	// Compare appHash from B1 and B2, if same, BOOM
+	require.Equal(t, string(commitHashB1.Data), string(commitHashB2.Data))
 }

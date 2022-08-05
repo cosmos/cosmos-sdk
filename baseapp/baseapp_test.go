@@ -2188,7 +2188,8 @@ func TestGenerateFraudProof(t *testing.T) {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 
-	traceBuf := &bytes.Buffer{}
+	storeTraceBuf := &bytes.Buffer{}
+	subStoreTraceBuf := &bytes.Buffer{}
 
 	routerOpt := func(bapp *BaseApp) {
 		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
@@ -2200,7 +2201,8 @@ func TestGenerateFraudProof(t *testing.T) {
 
 	app := setupBaseApp(t,
 		AppOptionFunc(routerOpt),
-		SetTracingEnabled(traceBuf),
+		SetSubstoreTracer(storeTraceBuf),
+		SetTracerFor(capKey2, subStoreTraceBuf),
 	)
 
 	app.InitChain(abci.RequestInitChain{})
@@ -2232,22 +2234,15 @@ func TestGenerateFraudProof(t *testing.T) {
 		}
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 
-		// Here, the store's substores' traceKVs should have been populated with all the operations that have taken place
-		// Try to read through the operations and figure out the minimal set of deepsubtrees that can be put inside a fraudproof data structure
-
-		// This is able to retrieve all the keys touched for a particular substore (capKey2 here) which makes up for one deepstree
-
-		// Seems like these substores are not SMT substores which is what's needed for deep subtrees, which blocks this currently.
-		// Current plan is to try to replace baseapp to use SMT store
-
 		cms := app.cms.(*multi.Store)
-		storeKeys := cms.GetAllStoreKeys()
 
+		// Go over all storeKeys inside app.cms and generate deepsubtrees for all of them
+		storeKeys := cms.GetAllStoreKeys()
 		for storeKey := range storeKeys {
-			// Generates a deepsubtree for one substore
+			// Generates a deepsubtree for substore with given key
 			kvStore := cms.GetKVStore(storeKey)
 			traceKv := kvStore.(*tracekv.Store)
-			keys := traceKv.GetAllKeysUsedInTrace(*traceBuf)
+			keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
 
 			substoreSMT := app.cms.(*multi.Store).GetSubStoreSMT(storeKey.Name())
 
@@ -2258,9 +2253,9 @@ func TestGenerateFraudProof(t *testing.T) {
 				require.Nil(t, err)
 				deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
 			}
-		}
+			_ = deepsubtree
 
-		// Next step: Go over all the storeKeys pertaining to each subStore now
+		}
 
 		commitResponse := app.Commit()
 		_ = commitResponse.GetData()

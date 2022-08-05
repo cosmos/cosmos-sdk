@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
+	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -100,12 +101,12 @@ func setupBaseApp(t *testing.T, options ...AppOption) *BaseApp {
 
 // baseapp loaded from a fraudproof
 func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...AppOption) *BaseApp {
-	storeKeys := make([]string, 0, len(fraudProof.stateWitness))
-	for k := range fraudProof.stateWitness {
-		storeKeys = append(storeKeys, k)
+	storeKeys := make([]types.StoreKey, 0, len(fraudProof.stateWitness))
+	for storeKeyName := range fraudProof.stateWitness {
+		storeKeys = append(storeKeys, sdk.NewKVStoreKey(storeKeyName))
 	}
-	options = append(options, SetSubstores(storeKeys)) // TODO: unrwap array to values with some golang magic
-	for _, storeKey := range storeKeys {
+	options = append(options, SetSubstores(storeKeys...)) // TODO: unrwap array to values with some golang magic
+	for storeKey := range fraudProof.stateWitness {
 		stateWitness := fraudProof.stateWitness[storeKey]
 		witnessData := stateWitness.WitnessData
 		for kv, val := range witnessData {

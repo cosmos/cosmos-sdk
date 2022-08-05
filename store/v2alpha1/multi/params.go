@@ -2,6 +2,7 @@ package multi
 
 import (
 	"fmt"
+	"io"
 
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
@@ -39,6 +40,13 @@ func (par *StoreParams) RegisterSubstore(skey types.StoreKey, typ types.StoreTyp
 	}
 	par.storeKeys[skey.Name()] = skey
 	return nil
+}
+
+func (par *StoreParams) SetTracerFor(skey types.StoreKey, w io.Writer) {
+	tlm := newTraceListenMixin()
+	tlm.SetTracer(w)
+	tlm.SetTracingContext(par.TraceContext)
+	par.substoreTraceListenMixins[skey] = tlm
 }
 
 func (par *StoreParams) storeKey(key string) (types.StoreKey, error) {

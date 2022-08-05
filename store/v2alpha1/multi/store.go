@@ -1048,3 +1048,11 @@ func (s *Store) GetSubStoreSMT(key string) *smt.Store {
 	}
 	return sub.stateCommitmentStore
 }
+
+func (s *Store) GetAllStoreKeys() map[types.StoreKey]bool {
+	storeKeys := make(map[types.StoreKey]bool)
+	for key, _ := range s.schema {
+		storeKeys[key] = true
+	}
+	return storeKeys
+}

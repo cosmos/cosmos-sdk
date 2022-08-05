@@ -112,17 +112,19 @@ func ValidateAndGetGenTx(genTx json.RawMessage, txJSONDecoder sdk.TxDecoder) (sd
 	}
 
 	msgs := tx.GetMsgs()
-	if len(msgs) != 1 {
-		return tx, fmt.Errorf("unexpected number of GenTx messages; got: %d, expected: 1", len(msgs))
-	}
+	// if len(msgs) != 1 {
+	// 	return tx, fmt.Errorf("unexpected number of GenTx messages; got: %d, expected: 1", len(msgs))
+	// }
 
 	// TODO: abstract back to staking
 	if _, ok := msgs[0].(*stakingtypes.MsgCreateValidator); !ok {
 		return tx, fmt.Errorf("unexpected GenTx message type; expected: MsgCreateValidator, got: %T", msgs[0])
 	}
 
-	if err := msgs[0].ValidateBasic(); err != nil {
-		return tx, fmt.Errorf("invalid GenTx '%s': %s", msgs[0], err)
+	for i := range msgs {
+		if err := msgs[i].ValidateBasic(); err != nil {
+			return tx, fmt.Errorf("invalid GenTx msg[%d] '%s': %s", i, msgs[i], err)
+		}
 	}
 
 	return tx, nil

@@ -2,6 +2,8 @@ package multi
 
 import (
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 )
 
@@ -60,4 +62,14 @@ func (noopCacheStore) Write() {}
 // pretend commit store is cache store
 func CommitAsCacheStore(s types.CommitMultiStore) types.CacheMultiStore {
 	return noopCacheStore{newCacheStore(s)}
+}
+
+func (cs *cacheStore) wrapTraceListen(store types.KVStore, skey types.StoreKey) types.KVStore {
+	if cs.TracingEnabled() {
+		store = tracekv.NewStore(store, cs.TraceWriter, cs.getTracingContext())
+	}
+	if cs.ListeningEnabled(skey) {
+		store = listenkv.NewStore(store, skey, cs.listeners[skey])
+	}
+	return store
 }

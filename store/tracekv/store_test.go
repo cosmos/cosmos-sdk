@@ -115,9 +115,9 @@ func TestTraceKVStoreSet(t *testing.T) {
 
 func TestGetAllKeysUsedInTrace(t *testing.T) {
 	expectedKeys := map[string]bool{
-		"a2V5MDAwMDAwMDE=": true,
-		"a2V5MDAwMDAwMDI=": true,
-		"a2V5MDAwMDAwMDM=": true,
+		string(kvPairs[0].Key): true,
+		string(kvPairs[1].Key): true,
+		string(kvPairs[2].Key): true,
 	}
 
 	var buf bytes.Buffer

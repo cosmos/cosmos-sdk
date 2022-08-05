@@ -102,8 +102,11 @@ func (tkv *Store) GetAllKeysUsedInTrace(buf bytes.Buffer) map[string]bool {
 		if err != nil {
 			return keys
 		}
-		key := traceOp.Key
-		keys[key] = true
+		key, err := base64.StdEncoding.DecodeString(traceOp.Key)
+		if err != nil {
+			panic(errors.Wrap(err, "failed to decode key read from buf"))
+		}
+		keys[string(key)] = true
 	}
 }
 

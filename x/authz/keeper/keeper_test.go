@@ -161,8 +161,6 @@ func (s *TestSuite) TestDispatchAction() {
 	recipientAddr := addrs[2]
 	a := banktypes.NewSendAuthorization(coins100, nil)
 
-	// require.NoError(banktestutil.FundAccount(s.bankKeeper, s.ctx, granterAddr, coins1000))
-
 	testCases := []struct {
 		name      string
 		req       authz.MsgExec
@@ -305,7 +303,6 @@ func (s *TestSuite) TestDispatchedEvents() {
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
-	// require.NoError(banktestutil.FundAccount(s.bankKeeper, s.ctx, granterAddr, coins1000))
 	expiration := s.ctx.BlockTime().Add(1 * time.Second) // must be in the future
 
 	msgs := authz.NewMsgExec(granteeAddr, []sdk.Msg{

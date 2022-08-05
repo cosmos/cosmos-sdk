@@ -4,7 +4,6 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -42,11 +41,6 @@ func (k Keeper) IterateDelegatorWithdrawAddrs(ctx sdk.Context, handler func(del 
 			break
 		}
 	}
-}
-
-// GetFeePool returns the community pool module account.
-func (k Keeper) GetFeePool(ctx sdk.Context) authtypes.ModuleAccountI {
-	return k.authKeeper.GetModuleAccount(ctx, types.ModuleNameCommunityPool)
 }
 
 // GetPreviousProposerConsAddr returns the proposer consensus address for the

@@ -150,37 +150,3 @@ func TestGetTotalRewards(t *testing.T) {
 
 	require.Equal(t, expectedRewards, totalRewards)
 }
-
-func TestFundCommunityPool(t *testing.T) {
-	var (
-		bankKeeper    bankkeeper.Keeper
-		distrKeeper   keeper.Keeper
-		stakingKeeper *stakingkeeper.Keeper
-	)
-
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&bankKeeper,
-		&distrKeeper,
-		&stakingKeeper,
-	)
-	require.NoError(t, err)
-
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	// reset fee pool
-	distrKeeper.SetFeePool(ctx, types.InitialFeePool())
-
-	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, math.ZeroInt())
-
-	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-	require.NoError(t, banktestutil.FundAccount(bankKeeper, ctx, addr[0], amount))
-
-	initPool := distrKeeper.GetFeePool(ctx)
-	require.Empty(t, initPool.CommunityPool)
-
-	err = distrKeeper.FundCommunityPool(ctx, amount, addr[0])
-	require.Nil(t, err)
-
-	require.Equal(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), distrKeeper.GetFeePool(ctx).CommunityPool)
-	require.Empty(t, bankKeeper.GetAllBalances(ctx, addr[0]))
-}

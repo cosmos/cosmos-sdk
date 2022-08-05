@@ -10,6 +10,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -57,6 +58,11 @@ func (k Keeper) GetAuthority() string {
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
+}
+
+// GetFeePool returns the community pool module account.
+func (k Keeper) GetFeePool(ctx sdk.Context) authtypes.ModuleAccountI {
+	return k.authKeeper.GetModuleAccount(ctx, types.ModuleNameCommunityPool)
 }
 
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal
@@ -163,20 +169,4 @@ func (k Keeper) GetTotalRewards(ctx sdk.Context) (totalRewards sdk.DecCoins) {
 	)
 
 	return totalRewards
-}
-
-// FundCommunityPool allows an account to directly fund the community fund pool.
-// The amount is first added to the distribution module account and then directly
-// added to the pool. An error is returned if the amount cannot be sent to the
-// module account.
-func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error {
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount); err != nil {
-		return err
-	}
-
-	feePool := k.GetFeePool(ctx)
-	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
-	k.SetFeePool(ctx, feePool)
-
-	return nil
 }

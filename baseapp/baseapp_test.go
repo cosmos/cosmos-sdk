@@ -2341,15 +2341,22 @@ func TestGenerateFraudProof(t *testing.T) {
 
 	// Make some set of transactions here (txs1)
 	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, fraudProof.blockHeight)
-	commitHashB1 := appB1.Commit()
+	appB1.Commit()
 
 	// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it
 	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
 
 	// Apply the set of transactions txs1 here
 	executeBlock(t, appB2, txs1, fraudProof.blockHeight)
-	commitHashB2 := appB2.Commit()
+	appB2.Commit()
 
-	// Compare appHash from B1 and B2, if same, BOOM
-	require.Equal(t, string(commitHashB1.Data), string(commitHashB2.Data))
+	// Note that the appHash from B1 and B2 will not be the same because the subset of storeKeys in both apps is different
+
+	// Compare SMT store roots inside all the substores of the second app with the first app's SMT store roots
+	cmsB1 := appB1.cms.(*multi.Store)
+	cmsB2 := appB2.cms.(*multi.Store)
+	smtB1 := cmsB1.GetSubStoreSMT(capKey2.Name())
+	smtB2 := cmsB2.GetSubStoreSMT(capKey2.Name())
+
+	require.Equal(t, string(smtB1.Root()), string(smtB2.Root()))
 }

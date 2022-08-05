@@ -2183,6 +2183,34 @@ func TestBaseApp_Init(t *testing.T) {
 	}
 }
 
+func executeBlockWithArbitraryTxs(t *testing.T, numTransactions int, app *BaseApp, initialHeight int64) []txTest {
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+	r := rand.New(rand.NewSource(3920758213583))
+	keyCounter := 0
+	txs := make([]txTest, numTransactions)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: initialHeight}})
+	for txNum := 0; txNum < numTransactions; txNum++ {
+		tx := txTest{Msgs: []sdk.Msg{}}
+		for msgNum := 0; msgNum < 2; msgNum++ {
+			key := []byte(fmt.Sprintf("%v", keyCounter))
+			value := make([]byte, 10000)
+			_, err := r.Read(value)
+			require.NoError(t, err)
+			tx.Msgs = append(tx.Msgs, msgKeyValue{Key: key, Value: value})
+			keyCounter++
+		}
+		txBytes, err := codec.Marshal(tx)
+		require.NoError(t, err)
+		resp := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		require.True(t, resp.IsOK(), "%v", resp.String())
+		txs = append(txs, tx)
+	}
+	app.EndBlock(abci.RequestEndBlock{Height: initialHeight})
+	return txs
+}
+
 func TestGenerateFraudProof(t *testing.T) {
 
 	/*
@@ -2208,9 +2236,6 @@ func TestGenerateFraudProof(t *testing.T) {
 
 	*/
 
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
-
 	storeTraceBuf := &bytes.Buffer{}
 	subStoreTraceBuf := &bytes.Buffer{}
 
@@ -2234,80 +2259,57 @@ func TestGenerateFraudProof(t *testing.T) {
 
 	// State here: S0
 
-	blocks := 1
-	txsPerBlock := 2
+	numTransactions := 2
+	executeBlockWithArbitraryTxs(t, numTransactions, app, 0)
+	app.Commit()
 
-	r := rand.New(rand.NewSource(3920758213583))
-	keyCounter := 0
-	for height := int64(1); height <= int64(blocks); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
+	cms := app.cms.(*multi.Store)
 
-		for txNum := 0; txNum < txsPerBlock; txNum++ {
-			tx := txTest{Msgs: []sdk.Msg{}}
-			for msgNum := 0; msgNum < 2; msgNum++ {
-				key := []byte(fmt.Sprintf("%v", keyCounter))
-				value := make([]byte, 10000)
-				_, err := r.Read(value)
-				require.NoError(t, err)
-				tx.Msgs = append(tx.Msgs, msgKeyValue{Key: key, Value: value})
-				keyCounter++
-			}
-			txBytes, err := codec.Marshal(tx)
-			require.NoError(t, err)
-			resp := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			require.True(t, resp.IsOK(), "%v", resp.String())
+	// Start //
+	// Exports all data inside current multistore into a fraudProof (S1) //
+
+	var fraudProof FraudProof
+	fraudProof.blockHeight = uint64(app.LastBlockHeight())
+
+	// Go over all storeKeys inside app.cms and populate values inside fraudproof
+	storeKeys := cms.GetAllStoreKeys()
+	for storeKey := range storeKeys {
+		// Generates a deepsubtree for substore with given key
+		kvStore := cms.GetKVStore(storeKey)
+		traceKv := kvStore.(*tracekv.Store)
+		keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
+
+		substoreSMT := app.cms.(*multi.Store).GetSubStoreSMT(storeKey.Name())
+
+		root := substoreSMT.Root()
+
+		var stateWitness StateWitness
+		stateWitness.root = root
+
+		// deepsubtree := smt.NewDeepSparseMerkleSubTree(smt.NewSimpleMap(), smt.NewSimpleMap(), sha512.New512_256(), root)
+		for key := range keys {
+			var witnessData WitnessData
+			value := substoreSMT.Get([]byte(key))
+			proof, err := substoreSMT.GetSMTProof([]byte(key))
+			require.Nil(t, err)
+			// deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
+			witnessData.Key = []byte(key)
+			witnessData.Value = []byte(value)
+			witnessData.proof = *proof
+			stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
 		}
-		app.EndBlock(abci.RequestEndBlock{Height: height})
-		app.Commit()
-
-		cms := app.cms.(*multi.Store)
-
-		// Start //
-		// Exports all data inside current multistore into a fraudProof (S1) //
-
-		var fraudProof FraudProof
-		fraudProof.blockHeight = uint64(app.LastBlockHeight())
-
-		// Go over all storeKeys inside app.cms and populate values inside fraudproof
-		storeKeys := cms.GetAllStoreKeys()
-		for storeKey := range storeKeys {
-			// Generates a deepsubtree for substore with given key
-			kvStore := cms.GetKVStore(storeKey)
-			traceKv := kvStore.(*tracekv.Store)
-			keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
-
-			substoreSMT := app.cms.(*multi.Store).GetSubStoreSMT(storeKey.Name())
-
-			root := substoreSMT.Root()
-
-			var stateWitness StateWitness
-			stateWitness.root = root
-
-			// deepsubtree := smt.NewDeepSparseMerkleSubTree(smt.NewSimpleMap(), smt.NewSimpleMap(), sha512.New512_256(), root)
-			for key := range keys {
-				var witnessData WitnessData
-				value := substoreSMT.Get([]byte(key))
-				proof, err := substoreSMT.GetSMTProof([]byte(key))
-				require.Nil(t, err)
-				// deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
-				witnessData.Key = []byte(key)
-				witnessData.Value = []byte(value)
-				witnessData.proof = *proof
-				stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
-			}
-			fraudProof.stateWitness[storeKey.Name()] = stateWitness
-		}
-
-		// End of exporting data (S1)
-
-		// TODO: Make some set of transactions here (txs1)
-
-		// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it :)
-		newApp := setupBaseAppFromFraudproof(fraudProof)
-
-		// TODO: Make the set of transactions txs1 here
-
-		// Compare appHash from commit, if same, BOOM
-
+		fraudProof.stateWitness[storeKey.Name()] = stateWitness
 	}
+
+	// End of exporting data (S1)
+
+	// TODO: Make some set of transactions here (txs1)
+	txs1 := executeBlockWithArbitraryTxs(t, numTransactions, app, 0)
+
+	// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it :)
+	newApp := setupBaseAppFromFraudproof(fraudProof)
+
+	// TODO: Apply the set of transactions txs1 here
+
+	// Compare appHash from commit, if same, BOOM
 }

@@ -293,6 +293,10 @@ func (app *BaseApp) setHaltHeight(haltHeight uint64) {
 	app.haltHeight = haltHeight
 }
 
+func (app *BaseApp) setInitialHeight(initialHeight int64) {
+	app.initialHeight = initialHeight
+}
+
 func (app *BaseApp) setHaltTime(haltTime uint64) {
 	app.haltTime = haltTime
 }

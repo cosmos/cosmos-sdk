@@ -3,7 +3,7 @@ package baseapp
 import "github.com/lazyledger/smt"
 
 type FraudProof struct {
-	blockHeight uint64
+	blockHeight int64
 
 	stateWitness map[string]StateWitness
 }

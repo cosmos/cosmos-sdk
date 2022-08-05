@@ -50,6 +50,11 @@ func SetHaltHeight(blockHeight uint64) AppOptionFunc {
 	return func(bap *BaseApp) { bap.setHaltHeight(blockHeight) }
 }
 
+// SetInitialHeight returns a BaseApp option function that sets the initial block height.
+func SetInitialHeight(blockHeight int64) AppOptionFunc {
+	return func(bap *BaseApp) { bap.setInitialHeight(blockHeight) }
+}
+
 // SetHaltTime returns a BaseApp option function that sets the halt block time.
 func SetHaltTime(haltTime uint64) AppOptionFunc {
 	return func(bap *BaseApp) { bap.setHaltTime(haltTime) }

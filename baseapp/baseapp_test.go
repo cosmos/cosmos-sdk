@@ -106,6 +106,7 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 		storeKeys = append(storeKeys, sdk.NewKVStoreKey(storeKeyName))
 	}
 	options = append(options, SetSubstores(storeKeys...))
+	options = append(options, SetInitialHeight(fraudProof.blockHeight))
 	for storeKey := range fraudProof.stateWitness {
 		stateWitness := fraudProof.stateWitness[storeKey]
 		witnessData := stateWitness.WitnessData
@@ -2185,14 +2186,14 @@ func TestBaseApp_Init(t *testing.T) {
 	}
 }
 
-func executeBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions int, initialHeight int64) []txTest {
+func executeBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions int, blockHeight int64) []txTest {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	r := rand.New(rand.NewSource(3920758213583))
 	keyCounter := 0
 	txs := make([]txTest, numTransactions)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: initialHeight}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: blockHeight}})
 	for txNum := 0; txNum < numTransactions; txNum++ {
 		tx := txTest{Msgs: []sdk.Msg{}}
 		for msgNum := 0; msgNum < 2; msgNum++ {
@@ -2209,16 +2210,16 @@ func executeBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions in
 		require.True(t, resp.IsOK(), "%v", resp.String())
 		txs = append(txs, tx)
 	}
-	app.EndBlock(abci.RequestEndBlock{Height: initialHeight})
+	app.EndBlock(abci.RequestEndBlock{Height: blockHeight})
 	return txs
 }
 
-func executeBlock(t *testing.T, app *BaseApp, txs []txTest, initialHeight int64) {
+func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	numTransactions := len(txs)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: initialHeight}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: blockHeight}})
 	for txNum := 0; txNum < numTransactions; txNum++ {
 		tx := txs[txNum]
 
@@ -2227,7 +2228,7 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, initialHeight int64)
 		resp := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 		require.True(t, resp.IsOK(), "%v", resp.String())
 	}
-	app.EndBlock(abci.RequestEndBlock{Height: initialHeight})
+	app.EndBlock(abci.RequestEndBlock{Height: blockHeight})
 }
 
 func TestGenerateFraudProof(t *testing.T) {
@@ -2288,7 +2289,6 @@ func TestGenerateFraudProof(t *testing.T) {
 	// Exports all data inside current multistore into a fraudProof (S1) //
 
 	var fraudProof FraudProof
-	fraudProof.blockHeight = uint64(appB1.LastBlockHeight())
 	fraudProof.stateWitness = make(map[string]StateWitness)
 
 	// Go over all storeKeys inside app.cms and populate values inside fraudproof
@@ -2320,17 +2320,24 @@ func TestGenerateFraudProof(t *testing.T) {
 		fraudProof.stateWitness[storeKey.Name()] = stateWitness
 	}
 
+	currentBlockHeight := appB1.LastBlockHeight()
+	fraudProof.blockHeight = currentBlockHeight + 1
+
 	// End of exporting data (S1)
 
 	// Make some set of transactions here (txs1)
-	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, appB1.LastBlockHeight()+1)
+	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, fraudProof.blockHeight)
 	commitHashB1 := appB1.Commit()
 
 	// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it :)
-	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
+	appB2 := setupBaseAppFromFraudProof(t, fraudProof,
+		AppOptionFunc(routerOpt),
+	)
+
+	appB1.InitChain(abci.RequestInitChain{})
 
 	// Apply the set of transactions txs1 here
-	executeBlock(t, appB1, txs1, int64(fraudProof.blockHeight))
+	executeBlock(t, appB1, txs1, fraudProof.blockHeight)
 	commitHashB2 := appB2.Commit()
 
 	// Compare appHash from B1 and B2, if same, BOOM

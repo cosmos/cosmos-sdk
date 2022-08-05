@@ -21,9 +21,9 @@ func SetPruning(opts pruningtypes.PruningOptions) StoreOption {
 	return func(config *multi.StoreParams, _ uint64) error { config.Pruning = opts; return nil }
 }
 
-func SetTracingEnabled(w io.Writer) StoreOption {
+func SetTracerFor(skey storetypes.StoreKey, w io.Writer) StoreOption {
 	return func(cfg *multi.StoreParams, v uint64) error {
-		cfg.TraceWriter = w
+		cfg.SetTracerFor(skey, w)
 		return nil
 	}
 }

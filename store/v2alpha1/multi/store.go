@@ -74,6 +74,7 @@ type StoreParams struct {
 	Upgrades *types.StoreUpgrades
 	// Contains The trace context and listeners that can also be set from store methods.
 	*traceListenMixin
+	substoreTraceListenMixins map[types.StoreKey]*traceListenMixin
 }
 
 // StoreSchema defineds a mapping of substore keys to store types
@@ -108,8 +109,9 @@ type Store struct {
 
 	pruningManager *pruning.Manager
 
-	PersistentCache types.MultiStorePersistentCache
-	substoreCache   map[string]*substore
+	PersistentCache           types.MultiStorePersistentCache
+	substoreCache             map[string]*substore
+	substoreTraceListenMixins map[types.StoreKey]*traceListenMixin
 }
 
 type substore struct {
@@ -117,6 +119,7 @@ type substore struct {
 	name                 string
 	dataBucket           dbm.ReadWriter
 	stateCommitmentStore *smt.Store
+	*traceListenMixin
 }
 
 // Builder type used to create a valid schema with no prefix conflicts
@@ -264,17 +267,18 @@ func NewStore(db dbm.Connection, opts StoreParams) (ret *Store, err error) {
 	}
 
 	ret = &Store{
-		stateDB:            db,
-		stateTxn:           stateTxn,
-		StateCommitmentDB:  opts.StateCommitmentDB,
-		stateCommitmentTxn: stateCommitmentTxn,
-		mem:                mem.NewStore(),
-		tran:               transient.NewStore(),
-		substoreCache:      map[string]*substore{},
-		traceListenMixin:   opts.traceListenMixin,
-		PersistentCache:    opts.PersistentCache,
-		pruningManager:     pruningManager,
-		InitialVersion:     opts.InitialVersion,
+		stateDB:                   db,
+		stateTxn:                  stateTxn,
+		StateCommitmentDB:         opts.StateCommitmentDB,
+		stateCommitmentTxn:        stateCommitmentTxn,
+		mem:                       mem.NewStore(),
+		tran:                      transient.NewStore(),
+		substoreCache:             map[string]*substore{},
+		traceListenMixin:          opts.traceListenMixin,
+		PersistentCache:           opts.PersistentCache,
+		pruningManager:            pruningManager,
+		InitialVersion:            opts.InitialVersion,
+		substoreTraceListenMixins: map[types.StoreKey]*traceListenMixin{},
 	}
 
 	// Now load the substore schema
@@ -1023,12 +1027,14 @@ func (tlm *traceListenMixin) getTracingContext() types.TraceContext {
 	return ctx
 }
 
-func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.StoreKey) types.KVStore {
-	if tlm.TracingEnabled() {
-		store = tracekv.NewStore(store, tlm.TraceWriter, tlm.getTracingContext())
+func (s *Store) wrapTraceListen(store types.KVStore, skey types.StoreKey) types.KVStore {
+	if s.TracingEnabled() {
+		subStoreTlm := s.substoreTraceListenMixins[skey]
+		store = tracekv.NewStore(store, subStoreTlm.TraceWriter, s.getTracingContext())
 	}
-	if tlm.ListeningEnabled(skey) {
-		store = listenkv.NewStore(store, skey, tlm.listeners[skey])
+	if s.ListeningEnabled(skey) {
+		subStoreTlm := s.substoreTraceListenMixins[skey]
+		store = listenkv.NewStore(store, skey, subStoreTlm.listeners[skey])
 	}
 	return store
 }

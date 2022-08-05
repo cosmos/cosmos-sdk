@@ -6,6 +6,7 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"cosmossdk.io/core/appconfig"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -117,6 +118,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 				ModuleAccountPermissions: []*authmodulev1.ModuleAccountPermission{
 					{Account: authtypes.FeeCollectorName},
 					{Account: distrtypes.ModuleName},
+					{Account: distrtypes.ModuleNameCommunityPool},
 					{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
 					{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 					{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
@@ -130,8 +132,20 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 			Config: appconfig.WrapAny(&vestingmodulev1.Module{}),
 		},
 		{
-			Name:   banktypes.ModuleName,
-			Config: appconfig.WrapAny(&bankmodulev1.Module{}),
+			Name: banktypes.ModuleName,
+			Config: appconfig.WrapAny(&bankmodulev1.Module{
+				BlockedModuleAccountsOverride: []string{
+					authtypes.FeeCollectorName,
+					distrtypes.ModuleName,
+					minttypes.ModuleName,
+					stakingtypes.BondedPoolName,
+					stakingtypes.NotBondedPoolName,
+					govtypes.ModuleName,
+					nft.ModuleName,
+					// We allow the following module accounts to receive funds:
+					// distrtypes.ModuleNameCommunityPool
+				},
+			}),
 		},
 		{
 			Name:   stakingtypes.ModuleName,

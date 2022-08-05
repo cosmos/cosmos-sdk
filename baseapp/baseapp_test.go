@@ -98,6 +98,34 @@ func setupBaseApp(t *testing.T, options ...AppOption) *BaseApp {
 	return app
 }
 
+// baseapp loaded from a fraudproof
+func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...AppOption) *BaseApp {
+	storeKeys := make([]string, 0, len(fraudProof.stateWitness))
+	for k := range fraudProof.stateWitness {
+		storeKeys = append(storeKeys, k)
+	}
+	options = append(options, SetSubstores(storeKeys))                // TODO: unrwap array to values
+	options = append(options, SetBlockHeight(fraudProof.blockHeight)) // write this option
+	for _, storeKey := range storeKeys {
+		stateWitness := fraudProof.stateWitness[storeKey]
+		witnessData := stateWitness.WitnessData
+		for kv, val := range witnessData {
+			// could verify proof here lol but that's an optimization and I value speed tbh (https://twitter.com/KyleSamani/status/1418661490274439169?s=20&t=apw9LCI4zoPIPg1ZP1vszQ)
+			options = append(options, SetSubstoreKVPair(storeKey, kv, val)) // write this option
+		}
+	}
+	// make list of options to pass by parsing fraudproof
+	app := newBaseApp(t.Name(), options...)
+	require.Equal(t, t.Name(), app.Name())
+
+	app.SetParamStore(mock.NewParamStore(dbm.NewMemDB()))
+
+	// stores are mounted
+	err := app.Init()
+	require.Nil(t, err)
+	return app
+}
+
 // simple one store baseapp with data and snapshots. Each tx is 1 MB in size (uncompressed).
 func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*BaseApp, error) {
 	codec := codec.NewLegacyAmino()
@@ -2233,8 +2261,11 @@ func TestGenerateFraudProof(t *testing.T) {
 
 		cms := app.cms.(*multi.Store)
 
-		var fraudproof FraudProof
-		fraudproof.blockHeight = uint64(app.LastBlockHeight())
+		// Start //
+		// Exports all data inside current multistore into a fraudProof (S1) //
+
+		var fraudProof FraudProof
+		fraudProof.blockHeight = uint64(app.LastBlockHeight())
 
 		// Go over all storeKeys inside app.cms and populate values inside fraudproof
 		storeKeys := cms.GetAllStoreKeys()
@@ -2263,10 +2294,19 @@ func TestGenerateFraudProof(t *testing.T) {
 				witnessData.proof = *proof
 				stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
 			}
-			fraudproof.stateWitness[storeKey.Name()] = stateWitness
+			fraudProof.stateWitness[storeKey.Name()] = stateWitness
 		}
 
+		// End of exporting data (S1)
+
+		// TODO: Make some set of transactions here (txs_0)
+
 		// Next steps: Now we take contents of the fraud proof and try to populate a fresh baseapp with it :)
+		newApp := setupBaseAppFromFraudproof(fraudProof)
+
+		// TODO: Make the set of transactions txs_0 here
+
+		// Compare appHash from commit, if same, BOOM
 
 	}
 

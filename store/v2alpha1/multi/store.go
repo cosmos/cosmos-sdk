@@ -278,7 +278,7 @@ func NewStore(db dbm.Connection, opts StoreParams) (ret *Store, err error) {
 		PersistentCache:           opts.PersistentCache,
 		pruningManager:            pruningManager,
 		InitialVersion:            opts.InitialVersion,
-		substoreTraceListenMixins: map[types.StoreKey]*traceListenMixin{},
+		substoreTraceListenMixins: opts.substoreTraceListenMixins,
 	}
 
 	// Now load the substore schema

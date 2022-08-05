@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 
@@ -20,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -61,13 +61,12 @@ func (AppModuleBasic) DefaultGenesis() proto.Message {
 }
 
 // ValidateGenesis performs genesis state validation for the auth module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+func (AppModuleBasic) ValidateGenesis(_ client.TxEncodingConfig, data proto.Message) error {
+	gs, ok := data.(*types.GenesisState)
+	if !ok {
+		return sdkerrors.ErrInvalidType.Wrap("invalid message type for auth module")
 	}
-
-	return types.ValidateGenesis(data)
+	return types.ValidateGenesis(*gs)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the auth module.

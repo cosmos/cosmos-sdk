@@ -13,7 +13,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
@@ -31,11 +30,12 @@ func TestBasicManager(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithLegacyAmino(legacyAmino)
-	wantDefaultGenesis := map[string]json.RawMessage{"mockAppModuleBasic1": json.RawMessage(``)}
+	wantDefaultGenesis := map[string]json.RawMessage{
+		"mockAppModuleBasic1": json.RawMessage(``),
+		"mockAppModuleBasic2": json.RawMessage(`{"moniker":"","lives":0}`)}
 
 	mockAppModuleBasic1 := mocks.NewMockAppModuleBasicGenesis(mockCtrl)
+	mockAppModuleBasic2 := mocks.NewMockAppModuleBasicGenesisProto(mockCtrl)
 
 	mockAppModuleBasic1.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic1")
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
@@ -45,8 +45,17 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
 	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
-	mm := module.NewBasicManager(mockAppModuleBasic1)
+	mockAppModuleBasic2.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic2")
+	mockAppModuleBasic2.EXPECT().DefaultGenesis().Times(1).Return(&testdata.Cat{})
+	mockAppModuleBasic2.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic2"])).Times(1).Return(nil)
+	mockAppModuleBasic2.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
+	mockAppModuleBasic2.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
+	mockAppModuleBasic2.EXPECT().GetTxCmd().Times(1).Return(nil)
+	mockAppModuleBasic2.EXPECT().GetQueryCmd().Times(1).Return(nil)
+
+	mm := module.NewBasicManager(mockAppModuleBasic1, mockAppModuleBasic2)
 	require.Equal(t, mm["mockAppModuleBasic1"], mockAppModuleBasic1)
+	require.Equal(t, mm["mockAppModuleBasic2"], mockAppModuleBasic2)
 
 	mm.RegisterLegacyAminoCodec(legacyAmino)
 	mm.RegisterInterfaces(interfaceRegistry)
@@ -56,7 +65,10 @@ func TestBasicManager(t *testing.T) {
 	var data map[string]string
 	require.Equal(t, map[string]string(nil), data)
 
-	require.True(t, errors.Is(errFoo, mm.ValidateGenesis(cdc, nil, wantDefaultGenesis)))
+	require.ErrorIs(t, mm.ValidateGenesis(cdc, nil, wantDefaultGenesis), errFoo)
+
+	// re-test only with module 2, which returns no error
+	require.Nil(t, module.NewBasicManager(mockAppModuleBasic2).ValidateGenesis(cdc, nil, wantDefaultGenesis))
 
 	mockCmd := &cobra.Command{Use: "root"}
 	mm.AddTxCommands(mockCmd)
@@ -65,6 +77,7 @@ func TestBasicManager(t *testing.T) {
 
 	// validate genesis returns nil
 	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, wantDefaultGenesis))
+
 }
 
 func TestGenesisOnlyAppModule(t *testing.T) {

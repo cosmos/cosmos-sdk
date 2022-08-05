@@ -110,11 +110,22 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEn
 				return err
 			}
 		case AppModuleBasicGenesisProto:
-			if err := v.ValidateGenesis(cdc, txEncCfg, genesis[b.Name()]); err != nil {
+			// Get the type used for the genesis state and unmarshal the json into it
+			genType := reflect.TypeOf(v.DefaultGenesis())
+			if genType == nil {
+				continue
+			}
+			moduleGenesis := reflect.New(genType.Elem()).Interface().(proto.Message)
+
+			if err := cdc.UnmarshalJSON(genesis[b.Name()], moduleGenesis); err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "failed to parse %s genesis state: %s", b.Name(), err)
+			}
+
+			if err := v.ValidateGenesis(txEncCfg, moduleGenesis); err != nil {
 				return err
 			}
 		default:
-			panic(fmt.Sprintf("unsupported genesis validation for module %s", b.Name()))
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unsupported genesis validation for module %s", b.Name())
 		}
 	}
 
@@ -178,7 +189,7 @@ type AppModuleBasicGenesisProto interface {
 	AppModuleBasic
 
 	DefaultGenesis() proto.Message
-	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
+	ValidateGenesis(client.TxEncodingConfig, proto.Message) error
 }
 
 type AppModuleGenesisProto interface {

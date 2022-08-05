@@ -105,7 +105,7 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 	for storeKeyName := range fraudProof.stateWitness {
 		storeKeys = append(storeKeys, sdk.NewKVStoreKey(storeKeyName))
 	}
-	options = append(options, SetSubstores(storeKeys...)) // TODO: unrwap array to values with some golang magic
+	options = append(options, SetSubstores(storeKeys...))
 	for storeKey := range fraudProof.stateWitness {
 		stateWitness := fraudProof.stateWitness[storeKey]
 		witnessData := stateWitness.WitnessData
@@ -113,7 +113,8 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 			// Optimization
 			// TODO:
 			// Verify proof inside WitnessData: Not sure since canot do it before setting up without doing the redundant work on creating deepSubTrees here (ideally optimint does it)
-			options = append(options, SetSubstoreKVPair(storeKey, kv, val)) // TODO: write this option
+			// options = append(options, SetSubstoreKVPair(storeKey, kv, val)) // TODO: write this option
+			_, _ = kv, val
 		}
 	}
 	// make list of options to pass by parsing fraudproof
@@ -2278,7 +2279,7 @@ func TestGenerateFraudProof(t *testing.T) {
 	// State here: S0
 
 	numTransactions := 2
-	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 0)
+	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
 	appB1.Commit()
 
 	cms := appB1.cms.(*multi.Store)
@@ -2288,11 +2289,11 @@ func TestGenerateFraudProof(t *testing.T) {
 
 	var fraudProof FraudProof
 	fraudProof.blockHeight = uint64(appB1.LastBlockHeight())
+	fraudProof.stateWitness = make(map[string]StateWitness)
 
 	// Go over all storeKeys inside app.cms and populate values inside fraudproof
-	storeKeys := cms.GetAllStoreKeys()
-	for storeKey := range storeKeys {
-		// Generates a deepsubtree for substore with given key
+	storeKeys := []stypes.StoreKey{capKey2}
+	for _, storeKey := range storeKeys {
 		kvStore := cms.GetKVStore(storeKey)
 		traceKv := kvStore.(*tracekv.Store)
 		keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
@@ -2322,7 +2323,7 @@ func TestGenerateFraudProof(t *testing.T) {
 	// End of exporting data (S1)
 
 	// Make some set of transactions here (txs1)
-	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, 0)
+	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, appB1.LastBlockHeight()+1)
 	commitHashB1 := appB1.Commit()
 
 	// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it :)

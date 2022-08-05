@@ -398,8 +398,6 @@ func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time, endHe
 // UnbondAllMatureValidators unbonds all the mature unbonding validators that
 // have finished their unbonding period.
 func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-
 	blockTime := ctx.BlockTime()
 	blockHeight := ctx.BlockHeight()
 
@@ -438,15 +436,15 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 				if !val.IsUnbonding() {
 					panic("unexpected validator in unbonding queue; status was not unbonding")
 				}
-				if !val.UnbondingOnHold {
+				if val.UnbondingOnHoldRefCount == 0 {
 					val = k.UnbondingToUnbonded(ctx, val)
 					if val.GetDelegatorShares().IsZero() {
 						k.RemoveValidator(ctx, val.GetOperator())
 					}
+					// remove validator from queue
+					k.DeleteValidatorQueue(ctx, val)
 				}
 			}
-
-			store.Delete(key)
 		}
 	}
 }

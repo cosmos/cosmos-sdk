@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -205,8 +206,10 @@ func redelegationEntryArrayIndex(red types.Redelegation, id uint64) (index int, 
 	return 0, false
 }
 
-// UnbondingCanComplete allows a stopped unbonding operation such as an
-// unbonding delegation, a redelegation, or a validator unbonding to complete
+// UnbondingCanComplete allows a stopped unbonding operation, such as an
+// unbonding delegation, a redelegation, or a validator unbonding to complete.
+// In order for the unbonding operation with `id` to eventually complete, every call
+// to PutUnbondingOnHold(id) must be matched by a call to UnbondingCanComplete(id).
 // ----------------------------------------------------------------------------------------
 
 func (k Keeper) UnbondingCanComplete(ctx sdk.Context, id uint64) error {
@@ -250,11 +253,19 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 		return false, nil
 	}
 
+	// The entry must be on hold
+	if !ubd.Entries[i].OnHold() {
+		return true,
+			sdkerrors.Wrapf(
+				types.ErrUnbondingOnHoldRefCountNegative,
+				"undelegation unbondingId(%d), expecting UnbondingOnHoldRefCount > 0, got %T",
+				id, ubd.Entries[i].UnbondingOnHoldRefCount,
+			)
+	}
+	ubd.Entries[i].UnbondingOnHoldRefCount--
+
 	// Check if entry is matured.
-	if !ubd.Entries[i].IsMature(ctx.BlockHeader().Time) {
-		// If not matured, set onHold to false
-		ubd.Entries[i].UnbondingOnHold = false
-	} else {
+	if !ubd.Entries[i].OnHold() && ubd.Entries[i].IsMature(ctx.BlockHeader().Time) {
 		// If matured, complete it.
 		delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
 		if err != nil {
@@ -301,10 +312,18 @@ func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) (found 
 		return false, nil
 	}
 
-	if !red.Entries[i].IsMature(ctx.BlockHeader().Time) {
-		// If not matured, set onHold to false
-		red.Entries[i].UnbondingOnHold = false
-	} else {
+	// The entry must be on hold
+	if !red.Entries[i].OnHold() {
+		return true,
+			sdkerrors.Wrapf(
+				types.ErrUnbondingOnHoldRefCountNegative,
+				"redelegation unbondingId(%d), expecting UnbondingOnHoldRefCount > 0, got %T",
+				id, red.Entries[i].UnbondingOnHoldRefCount,
+			)
+	}
+	red.Entries[i].UnbondingOnHoldRefCount--
+
+	if !red.Entries[i].OnHold() && red.Entries[i].IsMature(ctx.BlockHeader().Time) {
 		// If matured, complete it.
 		// Remove entry
 		red.RemoveEntry(int64(i))
@@ -329,24 +348,24 @@ func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) (found
 		return false, nil
 	}
 
-	if !val.IsMature(ctx.BlockTime(), ctx.BlockHeight()) {
-		val.UnbondingOnHold = false
-		k.SetValidator(ctx, val)
-	} else {
-		// If unbonding is mature complete it
-		val = k.UnbondingToUnbonded(ctx, val)
-		if val.GetDelegatorShares().IsZero() {
-			k.RemoveValidator(ctx, val.GetOperator())
-		}
-
-		k.DeleteUnbondingIndex(ctx, id)
+	if val.UnbondingOnHoldRefCount <= 0 {
+		return true,
+			sdkerrors.Wrapf(
+				types.ErrUnbondingOnHoldRefCountNegative,
+				"val(%s), expecting UnbondingOnHoldRefCount > 0, got %T",
+				val.OperatorAddress, val.UnbondingOnHoldRefCount,
+			)
 	}
+	val.UnbondingOnHoldRefCount--
+	k.SetValidator(ctx, val)
 
 	return true, nil
 }
 
-// PutUnbondingOnHold allows an external module to stop an unbonding operation such as an
-// unbonding delegation, a redelegation, or a validator unbonding
+// PutUnbondingOnHold allows an external module to stop an unbonding operation,
+// such as an unbonding delegation, a redelegation, or a validator unbonding.
+// In order for the unbonding operation with `id` to eventually complete, every call
+// to PutUnbondingOnHold(id) must be matched by a call to UnbondingCanComplete(id).
 // ----------------------------------------------------------------------------------------
 func (k Keeper) PutUnbondingOnHold(ctx sdk.Context, id uint64) error {
 	found := k.putUnbondingDelegationEntryOnHold(ctx, id)
@@ -379,8 +398,7 @@ func (k Keeper) putUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) (f
 		return false
 	}
 
-	ubd.Entries[i].UnbondingOnHold = true
-
+	ubd.Entries[i].UnbondingOnHoldRefCount++
 	k.SetUnbondingDelegation(ctx, ubd)
 
 	return true
@@ -397,8 +415,7 @@ func (k Keeper) putRedelegationEntryOnHold(ctx sdk.Context, id uint64) (found bo
 		return false
 	}
 
-	red.Entries[i].UnbondingOnHold = true
-
+	red.Entries[i].UnbondingOnHoldRefCount++
 	k.SetRedelegation(ctx, red)
 
 	return true
@@ -410,8 +427,7 @@ func (k Keeper) putValidatorOnHold(ctx sdk.Context, id uint64) (found bool) {
 		return false
 	}
 
-	val.UnbondingOnHold = true
-
+	val.UnbondingOnHoldRefCount++
 	k.SetValidator(ctx, val)
 
 	return true

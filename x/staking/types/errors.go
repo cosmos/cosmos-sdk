@@ -50,4 +50,5 @@ var (
 	ErrNoHistoricalInfo                = sdkerrors.Register(ModuleName, 38, "no historical info found")
 	ErrEmptyValidatorPubKey            = sdkerrors.Register(ModuleName, 39, "empty validator public key")
 	ErrUnbondingNotFound               = sdkerrors.Register(ModuleName, 40, "unbonding operation not found")
+	ErrUnbondingOnHoldRefCountNegative = sdkerrors.Register(ModuleName, 41, "cannot un-hold unbonding operation that is not on hold")
 )

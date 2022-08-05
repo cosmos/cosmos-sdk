@@ -2249,27 +2249,27 @@ func TestGenerateFraudProof(t *testing.T) {
 
 	// BaseApp, B1
 
-	app := setupBaseApp(t,
+	appB1 := setupBaseApp(t,
 		AppOptionFunc(routerOpt),
 		SetSubstoreTracer(storeTraceBuf),
 		SetTracerFor(capKey2, subStoreTraceBuf),
 	)
 
-	app.InitChain(abci.RequestInitChain{})
+	appB1.InitChain(abci.RequestInitChain{})
 
 	// State here: S0
 
 	numTransactions := 2
-	executeBlockWithArbitraryTxs(t, numTransactions, app, 0)
-	app.Commit()
+	executeBlockWithArbitraryTxs(t, numTransactions, appB1, 0)
+	appB1.Commit()
 
-	cms := app.cms.(*multi.Store)
+	cms := appB1.cms.(*multi.Store)
 
 	// Start //
 	// Exports all data inside current multistore into a fraudProof (S1) //
 
 	var fraudProof FraudProof
-	fraudProof.blockHeight = uint64(app.LastBlockHeight())
+	fraudProof.blockHeight = uint64(appB1.LastBlockHeight())
 
 	// Go over all storeKeys inside app.cms and populate values inside fraudproof
 	storeKeys := cms.GetAllStoreKeys()
@@ -2279,7 +2279,7 @@ func TestGenerateFraudProof(t *testing.T) {
 		traceKv := kvStore.(*tracekv.Store)
 		keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
 
-		substoreSMT := app.cms.(*multi.Store).GetSubStoreSMT(storeKey.Name())
+		substoreSMT := cms.GetSubStoreSMT(storeKey.Name())
 
 		root := substoreSMT.Root()
 
@@ -2304,10 +2304,10 @@ func TestGenerateFraudProof(t *testing.T) {
 	// End of exporting data (S1)
 
 	// TODO: Make some set of transactions here (txs1)
-	txs1 := executeBlockWithArbitraryTxs(t, numTransactions, app, 0)
+	txs1 := executeBlockWithArbitraryTxs(t, numTransactions, appB1, 0)
 
 	// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it :)
-	newApp := setupBaseAppFromFraudproof(fraudProof)
+	appB2 := setupBaseAppFromFraudproof(fraudProof)
 
 	// TODO: Apply the set of transactions txs1 here
 

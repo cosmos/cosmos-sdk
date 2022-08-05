@@ -55,9 +55,9 @@ func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 	// build codecs
 	basicManager := module.BasicManager{}
 	for name, wrapper := range moduleBasics {
-		basicManager[name] = wrapper
-		wrapper.RegisterInterfaces(interfaceRegistry)
-		wrapper.RegisterLegacyAminoCodec(amino)
+		basicManager[name] = wrapper.AppModuleBasic
+		basicManager[name].RegisterInterfaces(interfaceRegistry)
+		basicManager[name].RegisterLegacyAminoCodec(amino)
 	}
 	std.RegisterInterfaces(interfaceRegistry)
 	std.RegisterLegacyAminoCodec(amino)

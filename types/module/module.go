@@ -31,8 +31,10 @@ package module
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"sort"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -49,9 +51,6 @@ type AppModuleBasic interface {
 	Name() string
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(codectypes.InterfaceRegistry)
-
-	DefaultGenesis(codec.JSONCodec) json.RawMessage
-	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
 
 	// client functionality
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
@@ -89,7 +88,14 @@ func (bm BasicManager) RegisterInterfaces(registry codectypes.InterfaceRegistry)
 func (bm BasicManager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
 	genesis := make(map[string]json.RawMessage)
 	for _, b := range bm {
-		genesis[b.Name()] = b.DefaultGenesis(cdc)
+		switch v := b.(type) {
+		case AppModuleBasicGenesis:
+			genesis[b.Name()] = v.DefaultGenesis(cdc)
+		case AppModuleBasicGenesisProto:
+			genesis[b.Name()] = cdc.MustMarshalJSON(v.DefaultGenesis())
+		default:
+			panic(fmt.Sprintf("module %s is not AppModuleBasicGenesis or AppModuleBasicGenesisProto", b.Name()))
+		}
 	}
 
 	return genesis
@@ -98,8 +104,17 @@ func (bm BasicManager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMe
 // ValidateGenesis performs genesis state validation for all modules
 func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage) error {
 	for _, b := range bm {
-		if err := b.ValidateGenesis(cdc, txEncCfg, genesis[b.Name()]); err != nil {
-			return err
+		switch v := b.(type) {
+		case AppModuleBasicGenesis:
+			if err := v.ValidateGenesis(cdc, txEncCfg, genesis[b.Name()]); err != nil {
+				return err
+			}
+		case AppModuleBasicGenesisProto:
+			if err := v.ValidateGenesis(cdc, txEncCfg, genesis[b.Name()]); err != nil {
+				return err
+			}
+		default:
+			panic(fmt.Sprintf("unsupported genesis validation for module %s", b.Name()))
 		}
 	}
 
@@ -137,17 +152,50 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	}
 }
 
-// AppModuleGenesis is the standard form for an application module genesis functions
-type AppModuleGenesis interface {
+// AppModuleBasicGenesis is the standard form for an application module genesis functions
+type AppModuleBasicGenesis interface {
 	AppModuleBasic
+
+	DefaultGenesis(codec.JSONCodec) json.RawMessage
+	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
+}
+
+type AppModuleGenesis interface {
+	AppModule
 
 	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
 }
 
+type AppModuleBasicGenesisProto interface {
+	AppModuleBasic
+
+	DefaultGenesis() proto.Message
+	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
+}
+
+type AppModuleGenesisProto interface {
+	AppModule
+
+	InitGenesis(sdk.Context, proto.Message) []abci.ValidatorUpdate
+	ExportGenesis(sdk.Context) proto.Message
+}
+
+// AppModuleFullGenesis it's currently only used for tests
+type AppModuleFullGenesis interface {
+	AppModuleBasicGenesis
+	AppModuleGenesis
+}
+
+// AppModuleFullGenesisProto it's currently only used for tests
+type AppModuleFullGenesisProto interface {
+	AppModuleBasicGenesisProto
+	AppModuleGenesisProto
+}
+
 // AppModule is the standard form for an application module
 type AppModule interface {
-	AppModuleGenesis
+	AppModuleBasic
 
 	// registers
 	RegisterInvariants(sdk.InvariantRegistry)
@@ -176,13 +224,13 @@ type EndBlockAppModule interface {
 
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
-	AppModuleGenesis
+	AppModuleBasicGenesis
 }
 
 // NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
-func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
+func NewGenesisOnlyAppModule(amg AppModuleBasicGenesis) AppModuleGenesis {
 	return GenesisOnlyAppModule{
-		AppModuleGenesis: amg,
+		AppModuleBasicGenesis: amg,
 	}
 }
 
@@ -209,6 +257,16 @@ func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBegi
 
 // EndBlock returns an empty module end-block
 func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
+}
+
+// ExportGenesis returns nil
+func (GenesisOnlyAppModule) ExportGenesis(_ sdk.Context, _ codec.JSONCodec) json.RawMessage {
+	return nil
+}
+
+// InitGenesis performs genesis initialization. It returns no validator updates.
+func (GenesisOnlyAppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
@@ -292,13 +350,46 @@ func (m *Manager) RegisterServices(cfg Configurator) {
 func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
+	modulesWithGenesis := []string{}
+	modulesInitGenesis := []string{}
+	modulesInitGenesisProto := []string{}
+	returns := map[string]int{}
 	for _, moduleName := range m.OrderInitGenesis {
 		if genesisData[moduleName] == nil {
 			continue
 		}
+		modulesWithGenesis = append(modulesWithGenesis, moduleName)
 		ctx.Logger().Debug("running initialization for module", "module", moduleName)
 
-		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, cdc, genesisData[moduleName])
+		var moduleValUpdates []abci.ValidatorUpdate
+
+		switch v := m.Modules[moduleName].(type) {
+		case AppModuleGenesis:
+			moduleValUpdates = v.InitGenesis(ctx, cdc, genesisData[moduleName])
+			modulesInitGenesis = append(modulesInitGenesis, moduleName)
+			returns[moduleName] = len(moduleValUpdates)
+		case AppModuleGenesisProto:
+			// Get the type of the default genesis so we can create a zeroed struct
+			// to which we then unmarshal the genesis' file JSON into
+			appModuleBasic, ok := v.(AppModuleBasicGenesisProto)
+			if !ok {
+				panic(fmt.Sprintf("%s implements AppModuleGenesisProto but does not implement AppModuleBasicGenesisProto", moduleName))
+			}
+			genType := reflect.TypeOf(appModuleBasic.DefaultGenesis())
+			if genType == nil {
+				continue
+			}
+			moduleGenesis := reflect.New(genType.Elem()).Interface().(proto.Message)
+
+			if err := cdc.UnmarshalJSON(genesisData[moduleName], moduleGenesis); err != nil {
+				panic(fmt.Sprintf("failed to parse %s genesis state: %s", moduleName, err))
+			}
+			moduleValUpdates = v.InitGenesis(ctx, moduleGenesis)
+			returns[moduleName] = len(moduleValUpdates)
+			modulesInitGenesisProto = append(modulesInitGenesisProto, moduleName)
+		default:
+			panic(fmt.Sprintf("unsupported genesis for module %s", v.Name()))
+		}
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
@@ -312,7 +403,14 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 	// a chain must initialize with a non-empty validator set
 	if len(validatorUpdates) == 0 {
-		panic(fmt.Sprintf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction))
+		panic(fmt.Sprintf(
+			"validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d). Modules with genesis: %v;   modulesInitGenesis: %v;   modulesInitGenesisProto: %v   ; returns %v ",
+			sdk.DefaultPowerReduction,
+			modulesWithGenesis,
+			modulesInitGenesis,
+			modulesInitGenesisProto,
+			returns,
+		))
 	}
 
 	return abci.ResponseInitChain{
@@ -324,7 +422,14 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for _, moduleName := range m.OrderExportGenesis {
-		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
+		switch v := m.Modules[moduleName].(type) {
+		case AppModuleGenesis:
+			genesisData[moduleName] = v.ExportGenesis(ctx, cdc)
+		case AppModuleGenesisProto:
+			genesisData[moduleName] = cdc.MustMarshalJSON(v.ExportGenesis(ctx))
+		default:
+			panic(fmt.Sprintf("unsupported export genesis for module %s", v.Name()))
+		}
 	}
 
 	return genesisData
@@ -434,7 +539,25 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 			}
 		} else {
 			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+			var moduleValUpdates []abci.ValidatorUpdate
+
+			switch v := m.Modules[moduleName].(type) {
+			case AppModuleBasicGenesis:
+				appModule, ok := v.(AppModuleGenesis)
+				if !ok {
+					panic(fmt.Sprintf("%s implements AppModuleBasicGenesisProto but does not implement AppModuleGenesisProto", moduleName))
+				}
+				moduleValUpdates = appModule.InitGenesis(ctx, c.cdc, v.DefaultGenesis(c.cdc))
+			case AppModuleBasicGenesisProto:
+				appModule, ok := v.(AppModuleGenesisProto)
+				if !ok {
+					panic(fmt.Sprintf("%s implements AppModuleBasicGenesisProto but does not implement AppModuleGenesisProto", moduleName))
+				}
+				moduleValUpdates = appModule.InitGenesis(ctx, v.DefaultGenesis())
+			default:
+				panic(fmt.Sprintf("unsupported export genesis for module %s", v.Name()))
+			}
+
 			// The module manager assumes only one module will update the
 			// validator set, and it can't be a new module.
 			if len(moduleValUpdates) > 0 {

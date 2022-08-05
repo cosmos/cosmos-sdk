@@ -3,6 +3,7 @@ package module_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -15,29 +16,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var errFoo = errors.New("dummy")
-
-func TestTypeAssertions(t *testing.T) {
-	mod := testCreateModule()
-	// the following line panics
-	_ = mod.(module.EndBlockAppModule)
-}
-
-func testCreateModule() module.AppModule {
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
-	appModule := staking.NewAppModule(cdc, nil, nil, nil, nil)
-	// EndBlock exists and can be called
-	// appModule.EndBlock(sdk.Context{}, abci.RequestEndBlock{})
-	return runtime.WrapAppModule(appModule)
-}
 
 func TestBasicManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -50,7 +35,7 @@ func TestBasicManager(t *testing.T) {
 	clientCtx = clientCtx.WithLegacyAmino(legacyAmino)
 	wantDefaultGenesis := map[string]json.RawMessage{"mockAppModuleBasic1": json.RawMessage(``)}
 
-	mockAppModuleBasic1 := mocks.NewMockAppModuleBasic(mockCtrl)
+	mockAppModuleBasic1 := mocks.NewMockAppModuleBasicGenesis(mockCtrl)
 
 	mockAppModuleBasic1.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic1")
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
@@ -86,7 +71,7 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockModule := mocks.NewMockAppModuleGenesis(mockCtrl)
+	mockModule := mocks.NewMockAppModuleBasicGenesis(mockCtrl)
 	mockInvariantRegistry := mocks.NewMockInvariantRegistry(mockCtrl)
 	goam := module.NewGenesisOnlyAppModule(mockModule)
 
@@ -169,8 +154,8 @@ func TestManager_InitGenesis(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
-	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule1 := mocks.NewMockAppModuleGenesis(mockCtrl)
+	mockAppModule2 := mocks.NewMockAppModuleFullGenesisProto(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2)
@@ -184,24 +169,31 @@ func TestManager_InitGenesis(t *testing.T) {
 
 	// this should panic since the validator set is empty even after init genesis
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return(nil)
-	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
+	require.PanicsWithValue(t,
+		fmt.Sprintf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction),
+		func() { mm.InitGenesis(ctx, cdc, genesisData) },
+	)
 
 	// test panic
 	genesisData = map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key": "value"}`),
-		"module2": json.RawMessage(`{"key": "value"}`),
+		"module2": json.RawMessage(`{"moniker": "Garfield"}`),
 	}
+	mockAppModule2.EXPECT().DefaultGenesis().Return(&testdata.Cat{})
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
+	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(&testdata.Cat{Moniker: "Garfield"})).Times(1).Return([]abci.ValidatorUpdate{{}})
+	require.PanicsWithValue(t,
+		"validator InitGenesis updates already set by a previous module",
+		func() { mm.InitGenesis(ctx, cdc, genesisData) },
+	)
 }
 
 func TestManager_ExportGenesis(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
-	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule1 := mocks.NewMockAppModuleGenesis(mockCtrl)
+	mockAppModule2 := mocks.NewMockAppModuleGenesis(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2)
@@ -225,8 +217,8 @@ func TestManager_BeginBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
-	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule1 := mocks.NewMockBeginBlockAppModule(mockCtrl)
+	mockAppModule2 := mocks.NewMockBeginBlockAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2)
@@ -244,10 +236,11 @@ func TestManager_EndBlock(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
-	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule1 := mocks.NewMockEndBlockAppModule(mockCtrl)
+	mockAppModule2 := mocks.NewMockEndBlockAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
+
 	mm := module.NewManager(mockAppModule1, mockAppModule2)
 	require.NotNil(t, mm)
 	require.Equal(t, 2, len(mm.Modules))

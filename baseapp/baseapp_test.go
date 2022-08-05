@@ -2185,12 +2185,15 @@ func TestBaseApp_Init(t *testing.T) {
 func TestGenerateFraudProof(t *testing.T) {
 
 	/*
-		1. Create a fresh baseapp with a tracekv store
-		2. Create a 'block' and put transactions that set certain key/value pairs in it
-		3. We should be able to `generate fraud proof` IF block.hash not the same, trigger fraud:
-			- go through all transactions, run them, and keep track of which substores are being used
-			- export the SMTs inside those substores into a fraud proof data structure along with block height
+		1. Create a fresh baseapp, B1, with a tracekv store (only happens when generating fraudProof) and state S0
+		2. Make some state transition to state S1 by doing some transactions
+		3. Export that state S1 into a fraudProof data structure
+		4. Load a fresh baseapp, B2, with the contents of fraud proof data structure from (3) so begin from state S1. Verify first (Optimization)
+		5. Now, pick some set of transactions, txs1, to make some more state transitions.
+		6. Execute txs1 on both B1 and B2 so they go through the same state transitions
+		7. For the test to be successful, the state of both B1 and B2 has to converge at a state S2
 
+		TODO:
 
 		Tests to write:
 
@@ -2199,15 +2202,8 @@ func TestGenerateFraudProof(t *testing.T) {
 		3. Corrupted Fraud Proof: bad SMT format, insufficient key-value pairs inside SMT needed to verify fraud
 		4. Bad block, fraud proof needed, fraud proof works, chain halts
 
-		TODO:
-		Figure out how the tracekv interacts with the SMT multistore - done
+		Notes: In the current implementation, all substores might not be SMTs, do we assume they are? Yes, we do for simplicity here
 		Try to keep tx as generic as possible so you don't need to care about the messages inside a Tx
-
-
-		Question: What is a block? Right now abstract, need to make it more concrete
-		Candidate Answer: For now, Block is just a list of a transactions and a header with an app hash
-
-		Note: In the current implementation, all substores might not be SMTs, do we assume they are?
 
 	*/
 
@@ -2225,6 +2221,8 @@ func TestGenerateFraudProof(t *testing.T) {
 		}))
 	}
 
+	// BaseApp, B1
+
 	app := setupBaseApp(t,
 		AppOptionFunc(routerOpt),
 		SetSubstoreTracer(storeTraceBuf),
@@ -2232,6 +2230,8 @@ func TestGenerateFraudProof(t *testing.T) {
 	)
 
 	app.InitChain(abci.RequestInitChain{})
+
+	// State here: S0
 
 	blocks := 1
 	txsPerBlock := 2
@@ -2299,16 +2299,14 @@ func TestGenerateFraudProof(t *testing.T) {
 
 		// End of exporting data (S1)
 
-		// TODO: Make some set of transactions here (txs_0)
+		// TODO: Make some set of transactions here (txs1)
 
-		// Next steps: Now we take contents of the fraud proof and try to populate a fresh baseapp with it :)
+		// Next steps: Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it :)
 		newApp := setupBaseAppFromFraudproof(fraudProof)
 
-		// TODO: Make the set of transactions txs_0 here
+		// TODO: Make the set of transactions txs1 here
 
 		// Compare appHash from commit, if same, BOOM
 
 	}
-
-	return
 }

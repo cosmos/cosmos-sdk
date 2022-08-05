@@ -350,15 +350,11 @@ func (m *Manager) RegisterServices(cfg Configurator) {
 func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
-	modulesWithGenesis := []string{}
-	modulesInitGenesis := []string{}
-	modulesInitGenesisProto := []string{}
-	returns := map[string]int{}
+
 	for _, moduleName := range m.OrderInitGenesis {
 		if genesisData[moduleName] == nil {
 			continue
 		}
-		modulesWithGenesis = append(modulesWithGenesis, moduleName)
 		ctx.Logger().Debug("running initialization for module", "module", moduleName)
 
 		var moduleValUpdates []abci.ValidatorUpdate
@@ -366,8 +362,6 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 		switch v := m.Modules[moduleName].(type) {
 		case AppModuleGenesis:
 			moduleValUpdates = v.InitGenesis(ctx, cdc, genesisData[moduleName])
-			modulesInitGenesis = append(modulesInitGenesis, moduleName)
-			returns[moduleName] = len(moduleValUpdates)
 		case AppModuleGenesisProto:
 			// Get the type of the default genesis so we can create a zeroed struct
 			// to which we then unmarshal the genesis' file JSON into
@@ -385,8 +379,6 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 				panic(fmt.Sprintf("failed to parse %s genesis state: %s", moduleName, err))
 			}
 			moduleValUpdates = v.InitGenesis(ctx, moduleGenesis)
-			returns[moduleName] = len(moduleValUpdates)
-			modulesInitGenesisProto = append(modulesInitGenesisProto, moduleName)
 		default:
 			panic(fmt.Sprintf("unsupported genesis for module %s", v.Name()))
 		}

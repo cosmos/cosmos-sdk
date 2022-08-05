@@ -11,9 +11,9 @@ func (k Keeper) GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.Val
 	return k.GetValidatorOutstandingRewards(ctx, val).Rewards
 }
 
-// get the community coins
-func (k Keeper) GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins {
-	return k.GetFeePool(ctx).CommunityPool
+// GetCommunityPoolFunds returns the balance of the community pool.
+func (k Keeper) GetCommunityPoolFunds(ctx sdk.Context) sdk.Coins {
+	return k.bankKeeper.GetAllBalances(ctx, k.GetFeePool(ctx).GetAddress())
 }
 
 // GetDistributionAccount returns the distribution ModuleAccount

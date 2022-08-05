@@ -60,8 +60,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// GetFeePool returns the community pool module account.
-func (k Keeper) GetFeePool(ctx sdk.Context) authtypes.ModuleAccountI {
+// GetCommunityPool returns the community pool module account.
+func (k Keeper) GetCommunityPool(ctx sdk.Context) authtypes.ModuleAccountI {
 	return k.authKeeper.GetModuleAccount(ctx, types.ModuleNameCommunityPool)
 }
 

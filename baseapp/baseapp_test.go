@@ -2247,7 +2247,41 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 	app.EndBlock(abci.RequestEndBlock{Height: blockHeight})
 }
 
-func TestGenerateFraudProof(t *testing.T) {
+func generateFraudProof(t *testing.T, store *multi.Store, storeKeyToSubstoreTraceBuf map[types.StoreKey]*bytes.Buffer) FraudProof {
+	var fraudProof FraudProof
+	fraudProof.stateWitness = make(map[string]StateWitness)
+
+	for storeKey, subStoreTraceBuf := range storeKeyToSubstoreTraceBuf {
+		kvStore := store.GetKVStore(storeKey)
+		traceKv := kvStore.(*tracekv.Store)
+		keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
+
+		substoreSMT := store.GetSubStoreSMT(storeKey.Name())
+
+		root := substoreSMT.Root()
+
+		var stateWitness StateWitness
+		stateWitness.root = root
+
+		// deepsubtree := smt.NewDeepSparseMerkleSubTree(smt.NewSimpleMap(), smt.NewSimpleMap(), sha512.New512_256(), root)
+		for key := range keys {
+			var witnessData WitnessData
+			value := substoreSMT.Get([]byte(key))
+			proof, err := substoreSMT.GetSMTProof([]byte(key))
+			require.Nil(t, err)
+			// deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
+			witnessData.Key = []byte(key)
+			witnessData.Value = []byte(value)
+			witnessData.proof = *proof
+			stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
+		}
+		fraudProof.stateWitness[storeKey.Name()] = stateWitness
+	}
+
+	return fraudProof
+}
+
+func TestFraudProofHappyCase(t *testing.T) {
 	/*
 		Happy case:
 		1. Create a fresh baseapp, B1, with a tracekv store (only happens when generating fraudProof) and state S0
@@ -2304,37 +2338,9 @@ func TestGenerateFraudProof(t *testing.T) {
 	// Start //
 	// Exports all data inside current multistore into a fraudProof (S1) //
 
-	var fraudProof FraudProof
-	fraudProof.stateWitness = make(map[string]StateWitness)
-
-	// Go over all storeKeys inside app.cms and populate values inside fraudproof
-	storeKeys := []stypes.StoreKey{capKey2}
-	for _, storeKey := range storeKeys {
-		kvStore := cms.GetKVStore(storeKey)
-		traceKv := kvStore.(*tracekv.Store)
-		keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
-
-		substoreSMT := cms.GetSubStoreSMT(storeKey.Name())
-
-		root := substoreSMT.Root()
-
-		var stateWitness StateWitness
-		stateWitness.root = root
-
-		// deepsubtree := smt.NewDeepSparseMerkleSubTree(smt.NewSimpleMap(), smt.NewSimpleMap(), sha512.New512_256(), root)
-		for key := range keys {
-			var witnessData WitnessData
-			value := substoreSMT.Get([]byte(key))
-			proof, err := substoreSMT.GetSMTProof([]byte(key))
-			require.Nil(t, err)
-			// deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
-			witnessData.Key = []byte(key)
-			witnessData.Value = []byte(value)
-			witnessData.proof = *proof
-			stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
-		}
-		fraudProof.stateWitness[storeKey.Name()] = stateWitness
-	}
+	storeKeyToSubstoreTraceBuf := make(map[types.StoreKey]*bytes.Buffer)
+	storeKeyToSubstoreTraceBuf[capKey2] = subStoreTraceBuf
+	fraudProof := generateFraudProof(t, cms, storeKeyToSubstoreTraceBuf)
 
 	currentBlockHeight := appB1.LastBlockHeight()
 	fraudProof.blockHeight = currentBlockHeight + 1

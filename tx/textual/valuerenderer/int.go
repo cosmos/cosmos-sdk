@@ -2,6 +2,7 @@ package valuerenderer
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"strings"
 
@@ -26,6 +27,18 @@ func (vr intValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.V
 	panic("implement me")
 }
 
+func hasOnlyDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}
+
 // formatInteger formats an integer into a value-rendered string. This function
 // operates with string manipulation (instead of manipulating the int or sdk.Int
 // object).
@@ -37,7 +50,11 @@ func formatInteger(v string) (string, error) {
 	}
 	if len(v) > 1 {
 		v = strings.TrimLeft(v, "0")
+	}
 
+	// Ensure that the string contains only digits at this point.
+	if !hasOnlyDigits(v) {
+		return "", fmt.Errorf("expecting only digits 0-9, but got non-digits in %q", v)
 	}
 
 	startOffset := 3

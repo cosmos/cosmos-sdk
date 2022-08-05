@@ -48,7 +48,7 @@ func TestBasicManager(t *testing.T) {
 
 	mockAppModuleBasic2.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic2")
 	// 2 calls expected here because of reflection in InitGenesis
-	mockAppModuleBasic2.EXPECT().DefaultGenesis().Times(2).Return(&testdata.Cat{})
+	mockAppModuleBasic2.EXPECT().DefaultGenesis().AnyTimes().Return(&testdata.Cat{})
 	mockAppModuleBasic2.EXPECT().ValidateGenesis(gomock.Eq(nil), gomock.Eq(&testdata.Cat{})).Times(1).Return(nil)
 	mockAppModuleBasic2.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic2.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)

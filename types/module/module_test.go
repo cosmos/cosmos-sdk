@@ -207,7 +207,7 @@ func TestManager_ExportGenesis(t *testing.T) {
 	t.Cleanup(mockCtrl.Finish)
 
 	mockAppModule1 := mocks.NewMockAppModuleGenesis(mockCtrl)
-	mockAppModule2 := mocks.NewMockAppModuleGenesis(mockCtrl)
+	mockAppModule2 := mocks.NewMockAppModuleGenesisProto(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2)
@@ -218,13 +218,37 @@ func TestManager_ExportGenesis(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key1": "value1"}`))
-	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key2": "value2"}`))
+	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx)).Times(1).Return(&testdata.Cat{Moniker: "Garfield"})
 
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key1": "value1"}`),
-		"module2": json.RawMessage(`{"key2": "value2"}`),
+		"module2": json.RawMessage(`{"moniker":"Garfield","lives":0}`),
 	}
 	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
+
+	// test panic when a module does not implement the right interface
+	mockInvalidAppModule := mocks.NewMockAppModule(mockCtrl)
+	mockInvalidAppModule.EXPECT().Name().Times(3).Return("module3")
+	mm = module.NewManager(mockInvalidAppModule)
+	require.NotNil(t, mm)
+	require.Equal(t, 1, len(mm.Modules))
+	require.PanicsWithValue(t, "unsupported export genesis for module module3", func() { mm.ExportGenesis(ctx, cdc) })
+}
+
+func TestManager_DefaultGenesis(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+
+	// test panic when a module does not implement the right interface
+	mockInvalidAppModule := mocks.NewMockAppModule(mockCtrl)
+	mockInvalidAppModule.EXPECT().Name().Times(2).Return("module3")
+	mm := module.NewBasicManager(mockInvalidAppModule)
+	require.NotNil(t, mm)
+	require.Equal(t, 1, len(mm))
+	require.PanicsWithValue(t, "module module3 is not AppModuleBasicGenesis or AppModuleBasicGenesisProto", func() { mm.DefaultGenesis(cdc) })
 }
 
 func TestManager_BeginBlock(t *testing.T) {

@@ -24,7 +24,6 @@ const (
 	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"
 	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"
 	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission"
-	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -50,13 +49,6 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		},
 	)
 
-	var weightMsgFundCommunityPool int
-	appParams.GetOrGenerate(cdc, OpWeightMsgFundCommunityPool, &weightMsgFundCommunityPool, nil,
-		func(_ *rand.Rand) {
-			weightMsgFundCommunityPool = simtestutil.DefaultWeightMsgFundCommunityPool
-		},
-	)
-
 	stakeKeeper := sk.(*stakingkeeper.Keeper)
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
@@ -74,10 +66,6 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		simulation.NewWeightedOperation(
 			weightMsgWithdrawValidatorCommission,
 			SimulateMsgWithdrawValidatorCommission(txConfig, ak, bk, k, stakeKeeper),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgFundCommunityPool,
-			SimulateMsgFundCommunityPool(txConfig, ak, bk, k, stakeKeeper),
 		),
 	}
 }
@@ -201,53 +189,5 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 		}
 
 		return simulation.GenAndDeliverTxWithRandFees(txCtx)
-	}
-}
-
-// SimulateMsgFundCommunityPool simulates MsgFundCommunityPool execution where
-// a random account sends a random amount of its funds to the community pool.
-func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk *stakingkeeper.Keeper) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		funder, _ := simtypes.RandomAcc(r, accs)
-
-		account := ak.GetAccount(ctx, funder.Address)
-		spendable := bk.SpendableCoins(ctx, account.GetAddress())
-
-		fundAmount := simtypes.RandSubsetCoins(r, spendable)
-		if fundAmount.Empty() {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgFundCommunityPool, "fund amount is empty"), nil, nil
-		}
-
-		var (
-			fees sdk.Coins
-			err  error
-		)
-
-		coins, hasNeg := spendable.SafeSub(fundAmount...)
-		if !hasNeg {
-			fees, err = simtypes.RandomFees(r, ctx, coins)
-			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgFundCommunityPool, "unable to generate fees"), nil, err
-			}
-		}
-
-		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
-
-		txCtx := simulation.OperationInput{
-			R:             r,
-			App:           app,
-			TxGen:         txConfig,
-			Cdc:           nil,
-			Msg:           msg,
-			MsgType:       msg.Type(),
-			Context:       ctx,
-			SimAccount:    funder,
-			AccountKeeper: ak,
-			ModuleName:    types.ModuleName,
-		}
-
-		return simulation.GenAndDeliverTx(txCtx, fees)
 	}
 }

@@ -31,11 +31,8 @@ type MsgClient interface {
 	// WithdrawValidatorCommission defines a method to withdraw the
 	// full commission to the validator address.
 	WithdrawValidatorCommission(ctx context.Context, in *MsgWithdrawValidatorCommission, opts ...grpc.CallOption) (*MsgWithdrawValidatorCommissionResponse, error)
-	// FundCommunityPool defines a method to allow an account to directly
-	// fund the community pool.
-	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
-	// UpdateParams defines a governance operation for updating the x/distribution module
-	// parameters. The authority is defined in the keeper.
+	// UpdateParams defines a governance operation for updating the x/distribution
+	// module parameters. The authority is defined in the keeper.
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
@@ -76,15 +73,6 @@ func (c *msgClient) WithdrawValidatorCommission(ctx context.Context, in *MsgWith
 	return out, nil
 }
 
-func (c *msgClient) FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error) {
-	out := new(MsgFundCommunityPoolResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/FundCommunityPool", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error) {
 	out := new(MsgUpdateParamsResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/UpdateParams", in, out, opts...)
@@ -107,11 +95,8 @@ type MsgServer interface {
 	// WithdrawValidatorCommission defines a method to withdraw the
 	// full commission to the validator address.
 	WithdrawValidatorCommission(context.Context, *MsgWithdrawValidatorCommission) (*MsgWithdrawValidatorCommissionResponse, error)
-	// FundCommunityPool defines a method to allow an account to directly
-	// fund the community pool.
-	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
-	// UpdateParams defines a governance operation for updating the x/distribution module
-	// parameters. The authority is defined in the keeper.
+	// UpdateParams defines a governance operation for updating the x/distribution
+	// module parameters. The authority is defined in the keeper.
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
@@ -130,9 +115,6 @@ func (UnimplementedMsgServer) WithdrawDelegatorReward(context.Context, *MsgWithd
 }
 func (UnimplementedMsgServer) WithdrawValidatorCommission(context.Context, *MsgWithdrawValidatorCommission) (*MsgWithdrawValidatorCommissionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawValidatorCommission not implemented")
-}
-func (UnimplementedMsgServer) FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FundCommunityPool not implemented")
 }
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
@@ -204,24 +186,6 @@ func _Msg_WithdrawValidatorCommission_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_FundCommunityPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgFundCommunityPool)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).FundCommunityPool(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.distribution.v1beta1.Msg/FundCommunityPool",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).FundCommunityPool(ctx, req.(*MsgFundCommunityPool))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateParams)
 	if err := dec(in); err != nil {
@@ -258,10 +222,6 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawValidatorCommission",
 			Handler:    _Msg_WithdrawValidatorCommission_Handler,
-		},
-		{
-			MethodName: "FundCommunityPool",
-			Handler:    _Msg_FundCommunityPool_Handler,
 		},
 		{
 			MethodName: "UpdateParams",

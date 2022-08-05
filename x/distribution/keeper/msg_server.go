@@ -124,28 +124,6 @@ func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types
 	return &types.MsgWithdrawValidatorCommissionResponse{Amount: amount}, nil
 }
 
-func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	depositer, err := sdk.AccAddressFromBech32(msg.Depositor)
-	if err != nil {
-		return nil, err
-	}
-	if err := k.Keeper.FundCommunityPool(ctx, msg.Amount, depositer); err != nil {
-		return nil, err
-	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Depositor),
-		),
-	)
-
-	return &types.MsgFundCommunityPoolResponse{}, nil
-}
-
 func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.authority != req.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)

@@ -10,7 +10,6 @@ const (
 	TypeMsgSetWithdrawAddress          = "set_withdraw_address"
 	TypeMsgWithdrawDelegatorReward     = "withdraw_delegator_reward"
 	TypeMsgWithdrawValidatorCommission = "withdraw_validator_commission"
-	TypeMsgFundCommunityPool           = "fund_community_pool"
 	TypeMsgUpdateParams                = "update_params"
 )
 
@@ -109,46 +108,6 @@ func (msg MsgWithdrawValidatorCommission) GetSignBytes() []byte {
 func (msg MsgWithdrawValidatorCommission) ValidateBasic() error {
 	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
-	}
-	return nil
-}
-
-// NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and
-// a funding amount.
-func NewMsgFundCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) *MsgFundCommunityPool {
-	return &MsgFundCommunityPool{
-		Amount:    amount,
-		Depositor: depositor.String(),
-	}
-}
-
-// Route returns the MsgFundCommunityPool message route.
-func (msg MsgFundCommunityPool) Route() string { return ModuleName }
-
-// Type returns the MsgFundCommunityPool message type.
-func (msg MsgFundCommunityPool) Type() string { return TypeMsgFundCommunityPool }
-
-// GetSigners returns the signer addresses that are expected to sign the result
-// of GetSignBytes.
-func (msg MsgFundCommunityPool) GetSigners() []sdk.AccAddress {
-	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
-	return []sdk.AccAddress{depositor}
-}
-
-// GetSignBytes returns the raw bytes for a MsgFundCommunityPool message that
-// the expected signer needs to sign.
-func (msg MsgFundCommunityPool) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
-// ValidateBasic performs basic MsgFundCommunityPool message validation.
-func (msg MsgFundCommunityPool) ValidateBasic() error {
-	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
-	}
-	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
 	return nil
 }

@@ -47,7 +47,6 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simtestutil.DefaultWeightMsgSetWithdrawAddress, types.ModuleName, types.TypeMsgSetWithdrawAddress},
 		{simtestutil.DefaultWeightMsgWithdrawDelegationReward, types.ModuleName, types.TypeMsgWithdrawDelegatorReward},
 		{simtestutil.DefaultWeightMsgWithdrawValidatorCommission, types.ModuleName, types.TypeMsgWithdrawValidatorCommission},
-		{simtestutil.DefaultWeightMsgFundCommunityPool, types.ModuleName, types.TypeMsgFundCommunityPool},
 	}
 
 	for i, w := range weightesOps {
@@ -190,33 +189,6 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 		suite.Require().Equal(types.ModuleName, msg.Route())
 		suite.Require().Len(futureOperations, 0)
 	}
-}
-
-// TestSimulateMsgFundCommunityPool tests the normal scenario of a valid message of type TypeMsgFundCommunityPool.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
-func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
-	// setup 3 accounts
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, 3)
-
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
-
-	// execute operation
-	op := simulation.SimulateMsgFundCommunityPool(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-	suite.Require().NoError(err)
-
-	var msg types.MsgFundCommunityPool
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
-	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("4896096stake", msg.Amount.String())
-	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Depositor)
-	suite.Require().Equal(types.TypeMsgFundCommunityPool, msg.Type())
-	suite.Require().Equal(types.ModuleName, msg.Route())
-	suite.Require().Len(futureOperations, 0)
 }
 
 type SimTestSuite struct {

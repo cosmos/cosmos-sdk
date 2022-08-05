@@ -7,7 +7,6 @@ const (
 	DefaultWeightMsgSetWithdrawAddress          int = 50
 	DefaultWeightMsgWithdrawDelegationReward    int = 50
 	DefaultWeightMsgWithdrawValidatorCommission int = 50
-	DefaultWeightMsgFundCommunityPool           int = 50
 	DefaultWeightMsgDeposit                     int = 100
 	DefaultWeightMsgVote                        int = 67
 	DefaultWeightMsgVoteWeighted                int = 33

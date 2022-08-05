@@ -116,7 +116,7 @@ func (e UnbondingDelegationEntry) IsMature(currentTime time.Time) bool {
 
 // OnHold - is the current entry on hold due to external modules
 func (e UnbondingDelegationEntry) OnHold() bool {
-	return e.UnbondingOnHoldRefCount != 0
+	return e.UnbondingOnHoldRefCount > 0
 }
 
 // return the unbonding delegation entry
@@ -239,7 +239,7 @@ func (e RedelegationEntry) IsMature(currentTime time.Time) bool {
 
 // OnHold - is the current entry on hold due to external modules
 func (e RedelegationEntry) OnHold() bool {
-	return e.UnbondingOnHoldRefCount != 0
+	return e.UnbondingOnHoldRefCount > 0
 }
 
 //nolint:interfacer

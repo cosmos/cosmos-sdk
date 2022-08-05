@@ -253,7 +253,8 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 		return false, nil
 	}
 
-	if ubd.Entries[i].UnbondingOnHoldRefCount <= 0 {
+	// The entry must be on hold
+	if !ubd.Entries[i].OnHold() {
 		return true,
 			sdkerrors.Wrapf(
 				types.ErrUnbondingOnHoldRefCountNegative,
@@ -311,7 +312,8 @@ func (k Keeper) redelegationEntryCanComplete(ctx sdk.Context, id uint64) (found 
 		return false, nil
 	}
 
-	if red.Entries[i].UnbondingOnHoldRefCount <= 0 {
+	// The entry must be on hold
+	if !red.Entries[i].OnHold() {
 		return true,
 			sdkerrors.Wrapf(
 				types.ErrUnbondingOnHoldRefCountNegative,

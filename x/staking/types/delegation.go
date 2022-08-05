@@ -94,12 +94,12 @@ func (d Delegations) String() (out string) {
 
 func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time, balance sdk.Int, id uint64) UnbondingDelegationEntry {
 	return UnbondingDelegationEntry{
-		CreationHeight:  creationHeight,
-		CompletionTime:  completionTime,
-		InitialBalance:  balance,
-		Balance:         balance,
-		UnbondingId:     id,
-		UnbondingOnHold: false,
+		CreationHeight:          creationHeight,
+		CompletionTime:          completionTime,
+		InitialBalance:          balance,
+		Balance:                 balance,
+		UnbondingId:             id,
+		UnbondingOnHoldRefCount: 0,
 	}
 }
 
@@ -112,6 +112,11 @@ func (e UnbondingDelegationEntry) String() string {
 // IsMature - is the current entry mature
 func (e UnbondingDelegationEntry) IsMature(currentTime time.Time) bool {
 	return !e.CompletionTime.After(currentTime)
+}
+
+// OnHold - is the current entry on hold due to external modules
+func (e UnbondingDelegationEntry) OnHold() bool {
+	return e.UnbondingOnHoldRefCount > 0
 }
 
 // return the unbonding delegation entry
@@ -213,12 +218,12 @@ func (ubds UnbondingDelegations) String() (out string) {
 
 func NewRedelegationEntry(creationHeight int64, completionTime time.Time, balance sdk.Int, sharesDst sdk.Dec, id uint64) RedelegationEntry {
 	return RedelegationEntry{
-		CreationHeight:  creationHeight,
-		CompletionTime:  completionTime,
-		InitialBalance:  balance,
-		SharesDst:       sharesDst,
-		UnbondingId:     id,
-		UnbondingOnHold: false,
+		CreationHeight:          creationHeight,
+		CompletionTime:          completionTime,
+		InitialBalance:          balance,
+		SharesDst:               sharesDst,
+		UnbondingId:             id,
+		UnbondingOnHoldRefCount: 0,
 	}
 }
 
@@ -231,6 +236,11 @@ func (e RedelegationEntry) String() string {
 // IsMature - is the current entry mature
 func (e RedelegationEntry) IsMature(currentTime time.Time) bool {
 	return !e.CompletionTime.After(currentTime)
+}
+
+// OnHold - is the current entry on hold due to external modules
+func (e RedelegationEntry) OnHold() bool {
+	return e.UnbondingOnHoldRefCount > 0
 }
 
 //nolint:interfacer

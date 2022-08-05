@@ -17,7 +17,6 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
@@ -2247,40 +2246,6 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 	app.EndBlock(abci.RequestEndBlock{Height: blockHeight})
 }
 
-func generateFraudProof(t *testing.T, store *multi.Store, storeKeyToSubstoreTraceBuf map[types.StoreKey]*bytes.Buffer) FraudProof {
-	var fraudProof FraudProof
-	fraudProof.stateWitness = make(map[string]StateWitness)
-
-	for storeKey, subStoreTraceBuf := range storeKeyToSubstoreTraceBuf {
-		kvStore := store.GetKVStore(storeKey)
-		traceKv := kvStore.(*tracekv.Store)
-		keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
-
-		substoreSMT := store.GetSubStoreSMT(storeKey.Name())
-
-		root := substoreSMT.Root()
-
-		var stateWitness StateWitness
-		stateWitness.root = root
-
-		// deepsubtree := smt.NewDeepSparseMerkleSubTree(smt.NewSimpleMap(), smt.NewSimpleMap(), sha512.New512_256(), root)
-		for key := range keys {
-			var witnessData WitnessData
-			value := substoreSMT.Get([]byte(key))
-			proof, err := substoreSMT.GetSMTProof([]byte(key))
-			require.Nil(t, err)
-			// deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
-			witnessData.Key = []byte(key)
-			witnessData.Value = []byte(value)
-			witnessData.proof = *proof
-			stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
-		}
-		fraudProof.stateWitness[storeKey.Name()] = stateWitness
-	}
-
-	return fraudProof
-}
-
 func TestFraudProofHappyCase(t *testing.T) {
 	/*
 		Happy case:
@@ -2335,17 +2300,15 @@ func TestFraudProofHappyCase(t *testing.T) {
 
 	cms := appB1.cms.(*multi.Store)
 
-	// Start //
 	// Exports all data inside current multistore into a fraudProof (S1) //
 
 	storeKeyToSubstoreTraceBuf := make(map[types.StoreKey]*bytes.Buffer)
 	storeKeyToSubstoreTraceBuf[capKey2] = subStoreTraceBuf
-	fraudProof := generateFraudProof(t, cms, storeKeyToSubstoreTraceBuf)
+
+	fraudProof := generateFraudProof(cms, storeKeyToSubstoreTraceBuf)
 
 	currentBlockHeight := appB1.LastBlockHeight()
 	fraudProof.blockHeight = currentBlockHeight + 1
-
-	// End of exporting data (S1)
 
 	// Make some set of transactions here (txs1)
 	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, fraudProof.blockHeight)

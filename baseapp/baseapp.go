@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -13,6 +14,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -764,4 +767,40 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 // makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.
 func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
+}
+
+func generateFraudProof(store *multi.Store, storeKeyToSubstoreTraceBuf map[types.StoreKey]*bytes.Buffer) FraudProof {
+	var fraudProof FraudProof
+	fraudProof.stateWitness = make(map[string]StateWitness)
+
+	for storeKey, subStoreTraceBuf := range storeKeyToSubstoreTraceBuf {
+		kvStore := store.GetKVStore(storeKey)
+		traceKv := kvStore.(*tracekv.Store)
+		keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
+
+		substoreSMT := store.GetSubStoreSMT(storeKey.Name())
+
+		root := substoreSMT.Root()
+
+		var stateWitness StateWitness
+		stateWitness.root = root
+
+		// deepsubtree := smt.NewDeepSparseMerkleSubTree(smt.NewSimpleMap(), smt.NewSimpleMap(), sha512.New512_256(), root)
+		for key := range keys {
+			var witnessData WitnessData
+			value := substoreSMT.Get([]byte(key))
+			proof, err := substoreSMT.GetSMTProof([]byte(key))
+			if err != nil {
+				panic(err)
+			}
+			// deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
+			witnessData.Key = []byte(key)
+			witnessData.Value = []byte(value)
+			witnessData.proof = *proof
+			stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
+		}
+		fraudProof.stateWitness[storeKey.Name()] = stateWitness
+	}
+
+	return fraudProof
 }

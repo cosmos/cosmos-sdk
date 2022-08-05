@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"sort"
 	"strings"
 	"testing"
@@ -14,13 +15,11 @@ import (
 	tmtime "github.com/tendermint/tendermint/libs/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -35,47 +34,29 @@ import (
 type TestSuite struct {
 	suite.Suite
 
-	app               *runtime.App
-	sdkCtx            sdk.Context
-	ctx               context.Context
-	addrs             []sdk.AccAddress
-	groupID           uint64
-	groupPolicyAddr   sdk.AccAddress
-	policy            group.DecisionPolicy
-	groupKeeper       keeper.Keeper
-	blockTime         time.Time
-	bankKeeper        *grouptestutil.MockBankKeeper
-	interfaceRegistry codectypes.InterfaceRegistry
-	accountKeeper     *grouptestutil.MockAccountKeeper
+	sdkCtx          sdk.Context
+	ctx             context.Context
+	addrs           []sdk.AccAddress
+	groupID         uint64
+	groupPolicyAddr sdk.AccAddress
+	policy          group.DecisionPolicy
+	groupKeeper     keeper.Keeper
+	blockTime       time.Time
+	bankKeeper      *grouptestutil.MockBankKeeper
+	accountKeeper   *grouptestutil.MockAccountKeeper
 }
 
 func (s *TestSuite) SetupTest() {
-	// app, err := simtestutil.Setup(
-	// 	grouptestutil.AppConfig,
-	// 	&s.interfaceRegistry,
-	// 	&s.bankKeeper,
-	// 	&s.stakingKeeper,
-	// 	&s.groupKeeper,
-	// )
-	// s.Require().NoError(err)
-	// ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
 	s.blockTime = tmtime.Now()
-	// ctx = ctx.WithBlockHeader(tmproto.Header{Time: s.blockTime})
-
-	// s.app = app
-	// s.sdkCtx = ctx
-	// s.ctx = sdk.WrapSDKContext(ctx)
-	s.addrs = simtestutil.CreateIncrementalAccounts(6)
 	key := sdk.NewKVStoreKey(group.StoreKey)
 
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	s.addrs = simtestutil.CreateIncrementalAccounts(6)
 
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(s.T())
 	s.accountKeeper = grouptestutil.NewMockAccountKeeper(ctrl)
-
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[0])).AnyTimes()
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[1])).AnyTimes()
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[2])).AnyTimes()
@@ -91,8 +72,7 @@ func (s *TestSuite) SetupTest() {
 		encCfg.TxConfig.TxDecoder(),
 	)
 
-	std.RegisterInterfaces(encCfg.InterfaceRegistry)
-	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	config := group.DefaultConfig()
 	s.groupKeeper = keeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), s.accountKeeper, config)
@@ -103,6 +83,9 @@ func (s *TestSuite) SetupTest() {
 	members := []group.MemberRequest{
 		{Address: s.addrs[4].String(), Weight: "1"}, {Address: s.addrs[1].String(), Weight: "2"},
 	}
+
+	s.SetNextAccount()
+
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   s.addrs[0].String(),
 		Members: members,
@@ -121,6 +104,8 @@ func (s *TestSuite) SetupTest() {
 	}
 	err = policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
+	s.SetNextAccount()
+
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	s.policy = policy
@@ -128,11 +113,33 @@ func (s *TestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.groupPolicyAddr = addr
 
-	// s.bankKeeper.EXPECT().SpendableCoins(testCtx, s.groupPolicyAddr).Return(bank)
-
-	s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
+	s.bankKeeper.EXPECT().MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)}).Return(nil).AnyTimes()
+	s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)})
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}).Return(nil).AnyTimes()
 	s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
-	// s.Require().NoError(banktestutil.FundAccount(s.bankKeeper, s.sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 110000)}))
+}
+
+func (s TestSuite) SetNextAccount() {
+	nextAccVal := s.groupKeeper.GetGroupPolicySeq(s.sdkCtx) + 1
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, nextAccVal)
+
+	var accountAddr sdk.AccAddress
+	parentAcc := address.Module(group.ModuleName, []byte{keeper.GroupPolicyTablePrefix})
+	accountAddr = address.Derive(parentAcc, buf)
+	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), accountAddr).Return(nil).AnyTimes()
+	s.accountKeeper.EXPECT().NewAccount(gomock.Any(), &authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{
+			Address: accountAddr.String(),
+		},
+		Name: accountAddr.String(),
+	}).Return(authtypes.NewModuleAccount(authtypes.NewBaseAccountWithAddress(accountAddr), accountAddr.String())).AnyTimes()
+	s.accountKeeper.EXPECT().SetAccount(gomock.Any(), &authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{
+			Address: accountAddr.String(),
+		},
+		Name: accountAddr.String(),
+	}).Return().AnyTimes()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -762,6 +769,8 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 	addr5 := addrs[4]
 	addr6 := addrs[5]
 
+	s.SetNextAccount()
+
 	members := []group.MemberRequest{{
 		Address: addr5.String(),
 		Weight:  "1",
@@ -773,6 +782,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 	specs := map[string]struct {
 		req       *group.MsgCreateGroupWithPolicy
 		policy    group.DecisionPolicy
+		malleate  func()
 		expErr    bool
 		expErrMsg string
 	}{
@@ -781,6 +791,9 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				Admin:              addr1.String(),
 				Members:            members,
 				GroupPolicyAsAdmin: false,
+			},
+			malleate: func() {
+				s.SetNextAccount()
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
@@ -793,6 +806,9 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				Admin:              addr1.String(),
 				Members:            members,
 				GroupPolicyAsAdmin: true,
+			},
+			malleate: func() {
+				s.SetNextAccount()
 			},
 			policy: group.NewThresholdDecisionPolicy(
 				"1",
@@ -871,6 +887,9 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				Members:            members,
 				GroupPolicyAsAdmin: false,
 			},
+			malleate: func() {
+				s.SetNextAccount()
+			},
 			policy: group.NewThresholdDecisionPolicy(
 				"10",
 				time.Second,
@@ -883,6 +902,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
+			s.SetNextAccount()
 			err := spec.req.SetDecisionPolicy(spec.policy)
 			s.Require().NoError(err)
 
@@ -956,6 +976,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 	addr1 := addrs[0]
 	addr4 := addrs[3]
 
+	s.SetNextAccount()
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   addr1.String(),
 		Members: nil,
@@ -1075,6 +1096,8 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			err := spec.req.SetDecisionPolicy(spec.policy)
 			s.Require().NoError(err)
 
+			s.SetNextAccount()
+
 			res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
@@ -1120,6 +1143,7 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 		time.Second,
 		0,
 	)
+	s.SetNextAccount()
 	groupPolicyAddr, myGroupID := s.createGroupAndGroupPolicy(admin, nil, policy)
 
 	specs := map[string]struct {
@@ -1208,6 +1232,8 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 		time.Second,
 		0,
 	)
+
+	s.SetNextAccount()
 	groupPolicyAddr, myGroupID := s.createGroupAndGroupPolicy(admin, nil, policy)
 
 	specs := map[string]struct {
@@ -1287,6 +1313,8 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		time.Second,
 		0,
 	)
+
+	s.SetNextAccount()
 	groupPolicyAddr, myGroupID := s.createGroupAndGroupPolicy(admin, nil, policy)
 
 	specs := map[string]struct {
@@ -1336,6 +1364,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		},
 		"correct data with percentage decision policy": {
 			preRun: func(admin sdk.AccAddress) (string, uint64) {
+				s.SetNextAccount()
 				return s.createGroupAndGroupPolicy(admin, nil, policy)
 			},
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
@@ -1397,6 +1426,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 	addr2 := addrs[1]
 
 	admin := addr2
+
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   admin.String(),
 		Members: nil,
@@ -1431,6 +1461,8 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		}
 		err := req.SetDecisionPolicy(policies[i])
 		s.Require().NoError(err)
+
+		s.SetNextAccount()
 		res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, req)
 		s.Require().NoError(err)
 
@@ -1521,6 +1553,8 @@ func (s *TestSuite) TestSubmitProposal() {
 	)
 	err := policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
+
+	s.SetNextAccount()
 	bigThresholdRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	bigThresholdAddr := bigThresholdRes.Address
@@ -1824,6 +1858,8 @@ func (s *TestSuite) TestVote() {
 		{Address: addr4.String(), Weight: "1"},
 		{Address: addr3.String(), Weight: "2"},
 	}
+
+	// s.SetNextAccount()
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   addr1.String(),
 		Members: members,
@@ -1842,6 +1878,8 @@ func (s *TestSuite) TestVote() {
 	}
 	err = policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
+
+	s.SetNextAccount()
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	accountAddr := policyRes.Address
@@ -1851,6 +1889,7 @@ func (s *TestSuite) TestVote() {
 
 	// s.Require().NoError(testutil.FundAccount(s.bankKeeper, s.sdkCtx, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}).Return(nil).AnyTimes()
 	s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 	req := &group.MsgSubmitProposal{
@@ -2406,7 +2445,7 @@ func (s *TestSuite) TestExecProposal() {
 				s.Require().NoError(err)
 				// sdkCtx := sdk.UnwrapSDKContext(ctx)
 				// s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
-				s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 				// s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
@@ -2452,6 +2491,9 @@ func (s *TestSuite) TestExecProposal() {
 			}
 
 			if spec.expBalance {
+				// s.bankKeeper.EXPECT().GetAllBalances(sdkCtx, s.groupPolicyAddr).Return(
+				// 	s.bankKeeper.SpendableCoins()
+				// )
 				fromBalances := s.bankKeeper.GetAllBalances(sdkCtx, s.groupPolicyAddr)
 				s.Require().Contains(fromBalances, spec.expFromBalances)
 				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
@@ -2556,6 +2598,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				// sdkCtx := sdk.UnwrapSDKContext(ctx)
+				s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}).Return(nil).AnyTimes()
 				s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				// s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -2783,6 +2826,7 @@ func (s *TestSuite) TestLeaveGroup() {
 		time.Hour,
 		time.Hour,
 	)
+	s.SetNextAccount()
 	_, groupID1 := s.createGroupAndGroupPolicy(admin1, members, policy)
 
 	members = []group.MemberRequest{
@@ -2792,6 +2836,8 @@ func (s *TestSuite) TestLeaveGroup() {
 			Metadata: "metadata",
 		},
 	}
+
+	s.SetNextAccount()
 	_, groupID2 := s.createGroupAndGroupPolicy(admin2, members, nil)
 
 	members = []group.MemberRequest{
@@ -2810,6 +2856,8 @@ func (s *TestSuite) TestLeaveGroup() {
 		Percentage: "0.5",
 		Windows:    &group.DecisionPolicyWindows{VotingPeriod: time.Hour},
 	}
+
+	s.SetNextAccount()
 
 	_, groupID3 := s.createGroupAndGroupPolicy(admin3, members, policy)
 	testCases := []struct {
@@ -2944,6 +2992,9 @@ func (s *TestSuite) TestPruneProposals() {
 	policy := group.NewThresholdDecisionPolicy("100", time.Microsecond, time.Microsecond)
 	err := policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
+
+	s.SetNextAccount()
+
 	_, err = s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 
@@ -3023,6 +3074,8 @@ func (s *TestSuite) createGroupAndGroupPolicy(
 	if policy != nil {
 		err = groupPolicy.SetDecisionPolicy(policy)
 		s.Require().NoError(err)
+
+		s.SetNextAccount()
 
 		groupPolicyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, groupPolicy)
 		s.Require().NoError(err)

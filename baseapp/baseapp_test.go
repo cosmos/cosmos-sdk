@@ -2334,10 +2334,8 @@ func TestGenerateFraudProof(t *testing.T) {
 		AppOptionFunc(routerOpt),
 	)
 
-	appB1.InitChain(abci.RequestInitChain{})
-
 	// Apply the set of transactions txs1 here
-	executeBlock(t, appB1, txs1, fraudProof.blockHeight)
+	executeBlock(t, appB2, txs1, fraudProof.blockHeight)
 	commitHashB2 := appB2.Commit()
 
 	// Compare appHash from B1 and B2, if same, BOOM

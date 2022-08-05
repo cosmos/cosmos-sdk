@@ -104,14 +104,15 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 	for k := range fraudProof.stateWitness {
 		storeKeys = append(storeKeys, k)
 	}
-	options = append(options, SetSubstores(storeKeys))                // TODO: unrwap array to values
-	options = append(options, SetBlockHeight(fraudProof.blockHeight)) // write this option
+	options = append(options, SetSubstores(storeKeys)) // TODO: unrwap array to values with some golang magic
 	for _, storeKey := range storeKeys {
 		stateWitness := fraudProof.stateWitness[storeKey]
 		witnessData := stateWitness.WitnessData
 		for kv, val := range witnessData {
-			// could verify proof here lol but that's an optimization and I value speed tbh (https://twitter.com/KyleSamani/status/1418661490274439169?s=20&t=apw9LCI4zoPIPg1ZP1vszQ)
-			options = append(options, SetSubstoreKVPair(storeKey, kv, val)) // write this option
+			// Optimization
+			// TODO:
+			// Verify proof inside WitnessData: Not sure since canot do it before setting up without doing the redundant work on creating deepSubTrees here (ideally optimint does it)
+			options = append(options, SetSubstoreKVPair(storeKey, kv, val))
 		}
 	}
 	// make list of options to pass by parsing fraudproof
@@ -2301,7 +2302,7 @@ func TestGenerateFraudProof(t *testing.T) {
 
 		// TODO: Make some set of transactions here (txs1)
 
-		// Next steps: Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it :)
+		// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it :)
 		newApp := setupBaseAppFromFraudproof(fraudProof)
 
 		// TODO: Make the set of transactions txs1 here

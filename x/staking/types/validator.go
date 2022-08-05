@@ -47,17 +47,18 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 	}
 
 	return Validator{
-		OperatorAddress:   operator.String(),
-		ConsensusPubkey:   pkAny,
-		Jailed:            false,
-		Status:            Unbonded,
-		Tokens:            sdk.ZeroInt(),
-		DelegatorShares:   sdk.ZeroDec(),
-		Description:       description,
-		UnbondingHeight:   int64(0),
-		UnbondingTime:     time.Unix(0, 0).UTC(),
-		Commission:        NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-		MinSelfDelegation: sdk.OneInt(),
+		OperatorAddress:         operator.String(),
+		ConsensusPubkey:         pkAny,
+		Jailed:                  false,
+		Status:                  Unbonded,
+		Tokens:                  sdk.ZeroInt(),
+		DelegatorShares:         sdk.ZeroDec(),
+		Description:             description,
+		UnbondingHeight:         int64(0),
+		UnbondingTime:           time.Unix(0, 0).UTC(),
+		Commission:              NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		MinSelfDelegation:       sdk.OneInt(),
+		UnbondingOnHoldRefCount: 0,
 	}, nil
 }
 
@@ -176,11 +177,6 @@ func (v Validator) IsUnbonded() bool {
 // IsUnbonding checks if the validator status equals Unbonding
 func (v Validator) IsUnbonding() bool {
 	return v.GetStatus() == Unbonding
-}
-
-// IsMature - is the current validator ready to unbond their coins
-func (v Validator) IsMature(currentTime time.Time, currentHeight int64) bool {
-	return v.UnbondingHeight < currentHeight && v.UnbondingTime.Before(currentTime)
 }
 
 // constant used in flags to indicate that description field should not be updated

@@ -2213,7 +2213,6 @@ func TestGenerateFraudProof(t *testing.T) {
 	for height := int64(1); height <= int64(blocks); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
 
-		txs := make([]txTest, txsPerBlock)
 		for txNum := 0; txNum < txsPerBlock; txNum++ {
 			tx := txTest{Msgs: []sdk.Msg{}}
 			for msgNum := 0; msgNum < 2; msgNum++ {
@@ -2224,19 +2223,20 @@ func TestGenerateFraudProof(t *testing.T) {
 				tx.Msgs = append(tx.Msgs, msgKeyValue{Key: key, Value: value})
 				keyCounter++
 			}
-			txs = append(txs, tx)
 			txBytes, err := codec.Marshal(tx)
 			require.NoError(t, err)
 			resp := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 			require.True(t, resp.IsOK(), "%v", resp.String())
 		}
 		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
 
 		cms := app.cms.(*multi.Store)
 
 		var fraudproof FraudProof
 		fraudproof.blockHeight = uint64(app.LastBlockHeight())
-		// Go over all storeKeys inside app.cms and generate deepsubtrees for all of them
+
+		// Go over all storeKeys inside app.cms and populate values inside fraudproof
 		storeKeys := cms.GetAllStoreKeys()
 		for storeKey := range storeKeys {
 			// Generates a deepsubtree for substore with given key
@@ -2266,12 +2266,7 @@ func TestGenerateFraudProof(t *testing.T) {
 			fraudproof.stateWitness[storeKey.Name()] = stateWitness
 		}
 
-		commitResponse := app.Commit()
-		_ = commitResponse.GetData()
-
-		// Check Block here
-
-		_ = txs
+		// Next steps: Now we take contents of the fraud proof and try to populate a fresh baseapp with it :)
 
 	}
 

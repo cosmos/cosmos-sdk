@@ -37,8 +37,11 @@ func SetTracerFor(skey storetypes.StoreKey, w io.Writer) StoreOption {
 
 // SetSubstoreKVPair sets a key, value pair for the given substore inside a multistore
 // Only works for v2alpha1/multi
-func SetSubstoreKVPair(skeyName string, key, val []byte) AppOptionFunc {
-	return func(bapp *BaseApp) { bapp.cms.(*multi.Store).SetSubstoreKVPair(skeyName, key, val) }
+func SetSubstoreKVPair(skeyName string, key, val []byte) AppOptionOrdered {
+	return AppOptionOrdered{
+		func(bapp *BaseApp) { bapp.cms.(*multi.Store).SetSubstoreKVPair(skeyName, key, val) },
+		OptionOrderAfterStore,
+	}
 }
 
 // SetMinGasPrices returns an option that sets the minimum gas prices on the app.

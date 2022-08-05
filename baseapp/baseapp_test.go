@@ -129,8 +129,10 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 			// Optimization
 			// TODO:
 			// Verify proof inside WitnessData: Not sure since canot do it before setting up without doing the redundant work on creating deepSubTrees here (ideally optimint does it)
+
 			options = append(options, SetSubstoreKVPair(storeKey, witness.Key, witness.Value))
 		}
+		// Q. How do we use stateWitness.root to ensure the root of the underlying subtree just initialized is the same? Do we need that?
 	}
 	// make list of options to pass by parsing fraudproof
 	app := newBaseApp(t.Name(), options...)

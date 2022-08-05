@@ -71,7 +71,7 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockModule := mocks.NewMockAppModuleBasicGenesis(mockCtrl)
+	mockModule := mocks.NewMockAppModuleGenesisOnly(mockCtrl)
 	mockInvariantRegistry := mocks.NewMockInvariantRegistry(mockCtrl)
 	goam := module.NewGenesisOnlyAppModule(mockModule)
 

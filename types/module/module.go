@@ -167,6 +167,13 @@ type AppModuleGenesis interface {
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
 }
 
+type AppModuleGenesisOnly interface {
+	AppModuleBasicGenesis
+
+	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
+	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
+}
+
 type AppModuleBasicGenesisProto interface {
 	AppModuleBasic
 
@@ -176,6 +183,13 @@ type AppModuleBasicGenesisProto interface {
 
 type AppModuleGenesisProto interface {
 	AppModule
+
+	InitGenesis(sdk.Context, proto.Message) []abci.ValidatorUpdate
+	ExportGenesis(sdk.Context) proto.Message
+}
+
+type AppModuleGenesisOnlyProto interface {
+	AppModuleBasicGenesisProto
 
 	InitGenesis(sdk.Context, proto.Message) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context) proto.Message
@@ -224,13 +238,13 @@ type EndBlockAppModule interface {
 
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
-	AppModuleBasicGenesis
+	AppModuleGenesisOnly
 }
 
 // NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
-func NewGenesisOnlyAppModule(amg AppModuleBasicGenesis) AppModuleGenesis {
+func NewGenesisOnlyAppModule(amg AppModuleGenesisOnly) AppModuleGenesis {
 	return GenesisOnlyAppModule{
-		AppModuleBasicGenesis: amg,
+		AppModuleGenesisOnly: amg,
 	}
 }
 
@@ -257,16 +271,6 @@ func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBegi
 
 // EndBlock returns an empty module end-block
 func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
-// ExportGenesis returns nil
-func (GenesisOnlyAppModule) ExportGenesis(_ sdk.Context, _ codec.JSONCodec) json.RawMessage {
-	return nil
-}
-
-// InitGenesis performs genesis initialization. It returns no validator updates.
-func (GenesisOnlyAppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 

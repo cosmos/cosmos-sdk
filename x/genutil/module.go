@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	_ module.AppModuleGenesis      = AppModule{}
+	_ module.AppModuleGenesisOnly  = AppModule{}
 	_ module.AppModuleBasicGenesis = AppModuleBasic{}
 )
 
@@ -80,13 +80,13 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
 	txEncodingConfig client.TxEncodingConfig,
 ) module.AppModule {
-	return AppModule{
+	return module.NewGenesisOnlyAppModule(AppModule{
 		AppModuleBasic:   AppModuleBasic{},
 		accountKeeper:    accountKeeper,
 		stakingKeeper:    stakingKeeper,
 		deliverTx:        deliverTx,
 		txEncodingConfig: txEncodingConfig,
-	}
+	})
 }
 
 // InitGenesis performs genesis initialization for the genutil module. It returns
@@ -106,12 +106,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	return am.DefaultGenesis(cdc)
 }
-
-// RegisterInvariants performs a no-op.
-func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// RegisterServices registers all services.
-func (AppModule) RegisterServices(_ module.Configurator) {}
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }

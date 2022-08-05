@@ -2240,21 +2240,24 @@ func TestGenerateFraudProof(t *testing.T) {
 		// Seems like these substores are not SMT substores which is what's needed for deep subtrees, which blocks this currently.
 		// Current plan is to try to replace baseapp to use SMT store
 
-		// Generates a deepsubtree for one substore
-		currKey := capKey2
+		cms := app.cms.(*multi.Store)
+		storeKeys := cms.GetAllStoreKeys()
 
-		kvStore := app.cms.GetKVStore(currKey)
-		traceKv := kvStore.(*tracekv.Store)
-		keys := traceKv.GetAllKeysUsedInTrace(*traceBuf)
+		for storeKey := range storeKeys {
+			// Generates a deepsubtree for one substore
+			kvStore := cms.GetKVStore(storeKey)
+			traceKv := kvStore.(*tracekv.Store)
+			keys := traceKv.GetAllKeysUsedInTrace(*traceBuf)
 
-		substoreSMT := app.cms.(*multi.Store).GetSubStoreSMT(currKey.Name())
+			substoreSMT := app.cms.(*multi.Store).GetSubStoreSMT(storeKey.Name())
 
-		deepsubtree := smt.NewDeepSparseMerkleSubTree(smt.NewSimpleMap(), smt.NewSimpleMap(), sha512.New512_256(), substoreSMT.Root())
-		for key := range keys {
-			value := substoreSMT.Get([]byte(key))
-			proof, err := substoreSMT.GetSMTProof([]byte(key))
-			require.Nil(t, err)
-			deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
+			deepsubtree := smt.NewDeepSparseMerkleSubTree(smt.NewSimpleMap(), smt.NewSimpleMap(), sha512.New512_256(), substoreSMT.Root())
+			for key := range keys {
+				value := substoreSMT.Get([]byte(key))
+				proof, err := substoreSMT.GetSMTProof([]byte(key))
+				require.Nil(t, err)
+				deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
+			}
 		}
 
 		// Next step: Go over all the storeKeys pertaining to each subStore now

@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -78,6 +79,14 @@ func TestBasicManager(t *testing.T) {
 
 	// validate genesis returns nil
 	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, wantDefaultGenesis))
+
+	// validate genesis panics because of an incorrect interface
+	invalidModule := mocks.NewMockAppModuleBasic(mockCtrl)
+	invalidModule.EXPECT().Name().AnyTimes().Return("invalidModule")
+	require.ErrorIs(t,
+		module.NewBasicManager(invalidModule).ValidateGenesis(cdc, nil, wantDefaultGenesis),
+		sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unsupported genesis validation for module invalidModule"),
+	)
 
 }
 

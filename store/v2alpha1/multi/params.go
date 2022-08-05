@@ -12,10 +12,11 @@ import (
 // pruning with PruneDefault, no listeners and no tracer.
 func DefaultStoreParams() StoreParams {
 	return StoreParams{
-		Pruning:          pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
-		SchemaBuilder:    newSchemaBuilder(),
-		storeKeys:        storeKeys{},
-		traceListenMixin: newTraceListenMixin(),
+		Pruning:                   pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
+		SchemaBuilder:             newSchemaBuilder(),
+		storeKeys:                 storeKeys{},
+		traceListenMixin:          newTraceListenMixin(),
+		substoreTraceListenMixins: make(map[types.StoreKey]*traceListenMixin),
 	}
 }
 

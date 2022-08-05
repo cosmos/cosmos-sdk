@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"bytes"
-	"crypto/sha512"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -29,7 +28,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/gogo/protobuf/jsonpb"
-	"github.com/lazyledger/smt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -2236,6 +2234,8 @@ func TestGenerateFraudProof(t *testing.T) {
 
 		cms := app.cms.(*multi.Store)
 
+		var fraudproof FraudProof
+		fraudproof.blockHeight = uint64(app.LastBlockHeight())
 		// Go over all storeKeys inside app.cms and generate deepsubtrees for all of them
 		storeKeys := cms.GetAllStoreKeys()
 		for storeKey := range storeKeys {
@@ -2246,15 +2246,24 @@ func TestGenerateFraudProof(t *testing.T) {
 
 			substoreSMT := app.cms.(*multi.Store).GetSubStoreSMT(storeKey.Name())
 
-			deepsubtree := smt.NewDeepSparseMerkleSubTree(smt.NewSimpleMap(), smt.NewSimpleMap(), sha512.New512_256(), substoreSMT.Root())
+			root := substoreSMT.Root()
+
+			var stateWitness StateWitness
+			stateWitness.root = root
+
+			// deepsubtree := smt.NewDeepSparseMerkleSubTree(smt.NewSimpleMap(), smt.NewSimpleMap(), sha512.New512_256(), root)
 			for key := range keys {
+				var witnessData WitnessData
 				value := substoreSMT.Get([]byte(key))
 				proof, err := substoreSMT.GetSMTProof([]byte(key))
 				require.Nil(t, err)
-				deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
+				// deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
+				witnessData.Key = []byte(key)
+				witnessData.Value = []byte(value)
+				witnessData.proof = *proof
+				stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
 			}
-			_ = deepsubtree
-
+			fraudproof.stateWitness[storeKey.Name()] = stateWitness
 		}
 
 		commitResponse := app.Commit()

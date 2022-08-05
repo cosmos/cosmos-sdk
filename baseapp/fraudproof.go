@@ -9,6 +9,7 @@ type FraudProof struct {
 }
 
 type StateWitness struct {
+	root        []byte
 	WitnessData []WitnessData
 }
 

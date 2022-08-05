@@ -118,8 +118,8 @@ message Validator {
     (gogoproto.nullable)   = false
   ];
 
-  // True if this validator's unbonding has been stopped by an external module
-  bool unbonding_on_hold = 12;
+  // Strictly positive if this validator's unbonding has been stopped by external modules
+  int64 unbonding_on_hold_ref_count = 12;
 }
 
 // BondStatus is the status of a validator.
@@ -233,8 +233,8 @@ message UnbondingDelegationEntry {
   // Incrementing id that uniquely identifies this entry
   uint64 unbonding_id = 5;
 
-  // True if this entry's unbonding has been stopped by an external module
-  bool unbonding_on_hold = 6;
+  // Strictly positive if this entry's unbonding has been stopped by external modules
+  int64 unbonding_on_hold_ref_count = 6;
 }
 
 // RedelegationEntry defines a redelegation object with relevant metadata.
@@ -260,8 +260,8 @@ message RedelegationEntry {
   // Incrementing id that uniquely identifies this entry
   uint64 unbonding_id = 5;
 
-  // True if this entry's unbonding has been stopped by an external module
-  bool unbonding_on_hold = 6;
+  // Strictly positive if this entry's unbonding has been stopped by external modules
+  int64 unbonding_on_hold_ref_count = 6;
 }
 
 // Redelegation contains the list of a particular delegator's redelegating bonds

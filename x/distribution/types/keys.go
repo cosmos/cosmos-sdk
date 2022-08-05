@@ -9,8 +9,12 @@ import (
 )
 
 const (
-	// ModuleName is the module name constant used in many places
+	// ModuleName defines the module name of the x/distribution module.
 	ModuleName = "distribution"
+
+	// ModuleNameCommunityPool defines the name of the community pool within the
+	// x/distribution module.
+	ModuleNameCommunityPool = "community_pool"
 
 	// StoreKey is the store key string for distribution
 	StoreKey = ModuleName
@@ -21,8 +25,6 @@ const (
 
 // Keys for distribution store
 // Items are stored with the following key: values
-//
-// - 0x00<proposalID_Bytes>: FeePol
 //
 // - 0x01: sdk.ConsAddress
 //
@@ -42,7 +44,6 @@ const (
 //
 // - 0x09: Params
 var (
-	FeePoolKey                        = []byte{0x00} // key for global distribution state
 	ProposerKey                       = []byte{0x01} // key for the proposer operator address
 	ValidatorOutstandingRewardsPrefix = []byte{0x02} // key for outstanding rewards
 

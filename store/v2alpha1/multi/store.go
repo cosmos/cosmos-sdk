@@ -522,6 +522,14 @@ func (s *Store) getSubstore(key string) (*substore, error) {
 	}, nil
 }
 
+func (s *Store) SetSubstoreKVPair(skeyName string, kv, val []byte) {
+	sub, err := s.getSubstore(skeyName)
+	if err != nil {
+		panic(err)
+	}
+	sub.Set(kv, val)
+}
+
 // Resets a substore's state after commit (because root stateTxn has been discarded)
 func (s *substore) refresh(rootHash []byte) {
 	pfx := prefixSubstore(s.name)

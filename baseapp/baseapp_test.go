@@ -110,12 +110,11 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 	for storeKey := range fraudProof.stateWitness {
 		stateWitness := fraudProof.stateWitness[storeKey]
 		witnessData := stateWitness.WitnessData
-		for kv, val := range witnessData {
+		for _, witness := range witnessData {
 			// Optimization
 			// TODO:
 			// Verify proof inside WitnessData: Not sure since canot do it before setting up without doing the redundant work on creating deepSubTrees here (ideally optimint does it)
-			// options = append(options, SetSubstoreKVPair(storeKey, kv, val)) // TODO: write this option
-			_, _ = kv, val
+			options = append(options, SetSubstoreKVPair(storeKey, witness.Key, witness.Value))
 		}
 	}
 	// make list of options to pass by parsing fraudproof

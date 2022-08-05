@@ -2183,7 +2183,7 @@ func TestBaseApp_Init(t *testing.T) {
 	}
 }
 
-func executeBlockWithArbitraryTxs(t *testing.T, numTransactions int, app *BaseApp, initialHeight int64) []txTest {
+func executeBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions int, initialHeight int64) []txTest {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	r := rand.New(rand.NewSource(3920758213583))
@@ -2209,6 +2209,23 @@ func executeBlockWithArbitraryTxs(t *testing.T, numTransactions int, app *BaseAp
 	}
 	app.EndBlock(abci.RequestEndBlock{Height: initialHeight})
 	return txs
+}
+
+func executeBlock(t *testing.T, app *BaseApp, txs []txTest, initialHeight int64) {
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+	numTransactions := len(txs)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: initialHeight}})
+	for txNum := 0; txNum < numTransactions; txNum++ {
+		tx := txs[txNum]
+
+		txBytes, err := codec.Marshal(tx)
+		require.NoError(t, err)
+		resp := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		require.True(t, resp.IsOK(), "%v", resp.String())
+	}
+	app.EndBlock(abci.RequestEndBlock{Height: initialHeight})
 }
 
 func TestGenerateFraudProof(t *testing.T) {
@@ -2260,7 +2277,7 @@ func TestGenerateFraudProof(t *testing.T) {
 	// State here: S0
 
 	numTransactions := 2
-	executeBlockWithArbitraryTxs(t, numTransactions, appB1, 0)
+	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 0)
 	appB1.Commit()
 
 	cms := appB1.cms.(*multi.Store)
@@ -2304,12 +2321,15 @@ func TestGenerateFraudProof(t *testing.T) {
 	// End of exporting data (S1)
 
 	// TODO: Make some set of transactions here (txs1)
-	txs1 := executeBlockWithArbitraryTxs(t, numTransactions, appB1, 0)
+	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, 0)
+	commitHashB1 := appB1.Commit()
 
 	// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it :)
-	appB2 := setupBaseAppFromFraudproof(fraudProof)
+	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
 
 	// TODO: Apply the set of transactions txs1 here
+	executeBlock(t, appB1, txs1, int64(fraudProof.blockHeight))
+	commitHashB2 := appB2.Commit()
 
-	// Compare appHash from commit, if same, BOOM
+	// Compare appHash from B1 and B2, if same, BOOM
 }

@@ -22,14 +22,14 @@ func SetPruning(opts pruningtypes.PruningOptions) StoreOption {
 }
 
 func SetSubstoreTracer(w io.Writer) StoreOption {
-	return func(cfg *multi.StoreParams, v uint64) error {
+	return func(cfg *multi.StoreParams, _ uint64) error {
 		cfg.SetTracer(w)
 		return nil
 	}
 }
 
 func SetTracerFor(skey storetypes.StoreKey, w io.Writer) StoreOption {
-	return func(cfg *multi.StoreParams, v uint64) error {
+	return func(cfg *multi.StoreParams, _ uint64) error {
 		cfg.SetTracerFor(skey, w)
 		return nil
 	}
@@ -61,7 +61,7 @@ func SetHaltHeight(blockHeight uint64) AppOptionFunc {
 
 // SetInitialHeight returns a BaseApp option function that sets the initial block height.
 func SetInitialHeight(blockHeight int64) AppOptionFunc {
-	return func(bap *BaseApp) { bap.setInitialHeight(blockHeight) }
+	return func(bapp *BaseApp) { bapp.setInitialHeight(blockHeight) }
 }
 
 // SetHaltTime returns a BaseApp option function that sets the halt block time.
@@ -89,7 +89,7 @@ func SetIndexEvents(ie []string) AppOptionFunc {
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
 func SetInterBlockCache(cache sdk.MultiStorePersistentCache) AppOptionFunc {
-	opt := func(cfg *multi.StoreParams, _ uint64) error {
+	opt := func(cfg *multi.StoreParams, v uint64) error {
 		cfg.PersistentCache = cache
 		return nil
 	}

@@ -792,6 +792,20 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderMo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
 }
 
+// SendCoinsFromModuleToManyAccounts mocks base method.
+func (m *MockBankKeeper) SendCoinsFromModuleToManyAccounts(ctx types.Context, senderModule string, recipientAddrs []types.AccAddress, amts []types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendCoinsFromModuleToManyAccounts", ctx, senderModule, recipientAddrs, amts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendCoinsFromModuleToManyAccounts indicates an expected call of SendCoinsFromModuleToManyAccounts.
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToManyAccounts(ctx, senderModule, recipientAddrs, amts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToManyAccounts", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToManyAccounts), ctx, senderModule, recipientAddrs, amts)
+}
+
 // SendCoinsFromModuleToModule mocks base method.
 func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx types.Context, senderModule, recipientModule string, amt types.Coins) error {
 	m.ctrl.T.Helper()
@@ -819,6 +833,20 @@ func (m *MockBankKeeper) SendEnabled(arg0 context.Context, arg1 *types1.QuerySen
 func (mr *MockBankKeeperMockRecorder) SendEnabled(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendEnabled", reflect.TypeOf((*MockBankKeeper)(nil).SendEnabled), arg0, arg1)
+}
+
+// SendManyCoins mocks base method.
+func (m *MockBankKeeper) SendManyCoins(ctx types.Context, fromAddr types.AccAddress, toAddrs []types.AccAddress, amts []types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendManyCoins", ctx, fromAddr, toAddrs, amts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendManyCoins indicates an expected call of SendManyCoins.
+func (mr *MockBankKeeperMockRecorder) SendManyCoins(ctx, fromAddr, toAddrs, amts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendManyCoins", reflect.TypeOf((*MockBankKeeper)(nil).SendManyCoins), ctx, fromAddr, toAddrs, amts)
 }
 
 // SetAllSendEnabled mocks base method.

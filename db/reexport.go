@@ -21,6 +21,7 @@ var (
 	ErrVersionDoesNotExist = types.ErrVersionDoesNotExist
 
 	MemDBBackend    = types.MemDBBackend
+	RocksDBBackend  = types.RocksDBBackend
 	BadgerDBBackend = types.BadgerDBBackend
 
 	NewDB              = types.NewDB

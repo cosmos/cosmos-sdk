@@ -2246,27 +2246,27 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 	app.EndBlock(abci.RequestEndBlock{Height: blockHeight})
 }
 
-func TestFraudProofHappyCase(t *testing.T) {
+func TestGenerateAndLoadFraudProof(t *testing.T) {
 	/*
-		Happy case:
-		1. Create a fresh baseapp, B1, with a tracekv store (only happens when generating fraudProof) and state S0
+		Covers some parts of the cycle of a fraudproof by simulating the following steps:
+		1. Initialize a baseapp, B1, with some state, S0
 		2. Make some state transition to state S1 by doing some transactions
-		3. Export that state S1 into a fraudProof data structure
-		4. Load a fresh baseapp, B2, with the contents of fraud proof data structure from (3) so begin from state S1. Verify first (Optimization)
+		3. Export that state S1 into a fraudProof data structure (minimal snapshot)
+		4. Load a fresh baseapp, B2, with the contents of fraud proof data structure from (3) so it can begin from state S1.
 		5. Now, pick some set of transactions, txs1, to make some more state transitions.
 		6. Execute txs1 on both B1 and B2 so they go through the same state transitions
-		7. For the test to be successful, the state of both B1 and B2 has to converge at a state S2
+		7. If the state of both B1 and B2 has to converge at a state S2, then we the test passes.
 
-		TODO:
+		This test passing means cosmos-sdk can switch between a baseapp and fraudproof.
 
-		Tests to write:
+		Tests to write in future:
 
 		1. Block with bad txs: Txs that exceed gas limits, validateBasic fails, unregistered messages (see TestRunInvalidTransaction)
 		2. Block with invalid appHash at the end
 		3. Corrupted Fraud Proof: bad SMT format, insufficient key-value pairs inside SMT needed to verify fraud
 		4. Bad block, fraud proof needed, fraud proof works, chain halts (happy case)
 
-		Notes: In the current implementation, all substores might not be SMTs, do we assume they are? Yes, we do for simplicity here
+		Notes: In the current implementation, all substores might not be SMTs, but we assume they are for the prototype here
 		Try to keep tx as generic as possible so you don't need to care about the messages inside a Tx
 
 	*/
@@ -2294,7 +2294,7 @@ func TestFraudProofHappyCase(t *testing.T) {
 
 	// State here: S0
 
-	numTransactions := 2
+	numTransactions := 50
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
 	appB1.Commit()
 

@@ -19,7 +19,6 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
-	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -100,8 +99,8 @@ func setupBaseApp(t *testing.T, options ...AppOption) *BaseApp {
 
 // baseapp loaded from a fraudproof
 func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...AppOption) *BaseApp {
-	storeKeys := make([]types.StoreKey, 0, len(fraudProof.stateWitness))
-	routerOpts := make([]func(bapp *BaseApp), 0)
+	storeKeys := make([]stypes.StoreKey, 0, len(fraudProof.stateWitness))
+	routerOpts := make([]func(bapp *BaseApp), 0, len(fraudProof.stateWitness))
 	for storeKeyName := range fraudProof.stateWitness {
 		storeKey := sdk.NewKVStoreKey(storeKeyName)
 		storeKeys = append(storeKeys, storeKey)
@@ -120,7 +119,10 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 	for _, routerOpt := range routerOpts {
 		options = append(options, AppOptionFunc(routerOpt))
 	}
+
+	// This initial height is used in `BeginBlock` in `validateHeight`
 	options = append(options, SetInitialHeight(fraudProof.blockHeight))
+
 	for storeKey := range fraudProof.stateWitness {
 		stateWitness := fraudProof.stateWitness[storeKey]
 		witnessData := stateWitness.WitnessData
@@ -2302,7 +2304,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 
 	// Exports all data inside current multistore into a fraudProof (S1) //
 
-	storeKeyToSubstoreTraceBuf := make(map[types.StoreKey]*bytes.Buffer)
+	storeKeyToSubstoreTraceBuf := make(map[stypes.StoreKey]*bytes.Buffer)
 	storeKeyToSubstoreTraceBuf[capKey2] = subStoreTraceBuf
 
 	fraudProof := generateFraudProof(cms, storeKeyToSubstoreTraceBuf)

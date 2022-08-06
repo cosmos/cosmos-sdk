@@ -89,7 +89,7 @@ func SetIndexEvents(ie []string) AppOptionFunc {
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
 func SetInterBlockCache(cache sdk.MultiStorePersistentCache) AppOptionFunc {
-	opt := func(cfg *multi.StoreParams, v uint64) error {
+	opt := func(cfg *multi.StoreParams, _ uint64) error {
 		cfg.PersistentCache = cache
 		return nil
 	}

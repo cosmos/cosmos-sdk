@@ -779,22 +779,17 @@ func generateFraudProof(store *multi.Store, storeKeyToSubstoreTraceBuf map[types
 		keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
 
 		substoreSMT := store.GetSubStoreSMT(storeKey.Name())
-
-		root := substoreSMT.Root()
-
-		var stateWitness StateWitness
-		stateWitness.root = root
-
+		stateWitness := StateWitness{
+			WitnessData: make([]WitnessData, 0, keys.Len()),
+		}
 		for key := range keys {
-			var witnessData WitnessData
 			value := substoreSMT.Get([]byte(key))
 			proof, err := substoreSMT.GetSMTProof([]byte(key))
 			if err != nil {
 				panic(err)
 			}
-			witnessData.Key = []byte(key)
-			witnessData.Value = []byte(value)
-			witnessData.proof = *proof
+			bKey, bVal := []byte(key), []byte(value)
+			witnessData := WitnessData{bKey, bVal, *proof}
 			stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
 		}
 		fraudProof.stateWitness[storeKey.Name()] = stateWitness

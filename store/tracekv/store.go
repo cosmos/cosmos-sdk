@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 
+	"github.com/chrispappas/golang-generics-set/set"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -93,20 +94,23 @@ func (tkv *Store) ReverseIterator(start, end []byte) types.Iterator {
 
 // GetAllKeysUsedInTrace reads through all traced operations and returns
 // a set of all the keys inside the trace operations
-func (tkv *Store) GetAllKeysUsedInTrace(buf bytes.Buffer) map[string]bool {
-	var traceOp traceOperation
-	var err error
-	keys := make(map[string]bool)
+func (tkv *Store) GetAllKeysUsedInTrace(buf bytes.Buffer) set.Set[string] {
+
+	keys := make(set.Set[string], 0)
 	for {
-		traceOp, err = readOperation(&buf)
+		traceOp, err := readOperation(&buf)
 		if err != nil {
-			return keys
+			errString := err.Error()
+			if errString == "provided buffer is empty: EOF" {
+				return keys
+			}
+			panic(err)
 		}
 		key, err := base64.StdEncoding.DecodeString(traceOp.Key)
 		if err != nil {
 			panic(errors.Wrap(err, "failed to decode key read from buf"))
 		}
-		keys[string(key)] = true
+		keys.Add(string(key))
 	}
 }
 
@@ -225,19 +229,19 @@ func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value
 
 // reaOperation reads a KVStore operation from the underlying buffer as
 // JSON-encoded data where the key/value pair is base64 encoded.
-func readOperation(r *bytes.Buffer) (traceOperation, error) {
-	var traceOp traceOperation
+func readOperation(r *bytes.Buffer) (*traceOperation, error) {
 	raw, err := r.ReadString('\n')
 	if raw == "" {
-		return traceOp, errors.Wrap(err, "provided buffer is empty")
+		return nil, errors.Wrap(err, "provided buffer is empty")
 	}
 	if err != nil {
-		return traceOp, errors.Wrap(err, "failed to read trace operation")
+		return nil, errors.Wrap(err, "failed to read trace operation")
 	}
+	traceOp := traceOperation{}
 	err = json.Unmarshal([]byte(raw), &traceOp)
 	if err != nil {
-		return traceOp, errors.Wrap(err, "failed to deserialize trace operation")
+		return nil, errors.Wrap(err, "failed to deserialize trace operation")
 	}
 
-	return traceOp, nil
+	return &traceOp, nil
 }

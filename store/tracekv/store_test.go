@@ -6,6 +6,7 @@ import (
 	"io"
 	"testing"
 
+	"github.com/chrispappas/golang-generics-set/set"
 	"github.com/stretchr/testify/require"
 
 	dbm "github.com/tendermint/tm-db"
@@ -114,11 +115,11 @@ func TestTraceKVStoreSet(t *testing.T) {
 }
 
 func TestGetAllKeysUsedInTrace(t *testing.T) {
-	expectedKeys := map[string]bool{
-		string(kvPairs[0].Key): true,
-		string(kvPairs[1].Key): true,
-		string(kvPairs[2].Key): true,
-	}
+	expectedKeys := set.FromSlice([]string{
+		string(kvPairs[0].Key),
+		string(kvPairs[1].Key),
+		string(kvPairs[2].Key),
+	})
 
 	var buf bytes.Buffer
 	store := newEmptyTraceKVStore(&buf)

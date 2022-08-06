@@ -1056,7 +1056,7 @@ func (s *Store) SetPruning(po pruningtypes.PruningOptions) {
 	s.pruningManager.SetOptions(po)
 }
 
-func (s *Store) GetSubStoreSMT(key string) *smt.Store {
+func (s *Store) GetSubstoreSMT(key string) *smt.Store {
 	sub, err := s.getSubstore(key)
 	if err != nil {
 		panic(err)

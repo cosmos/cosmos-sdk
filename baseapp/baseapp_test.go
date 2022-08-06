@@ -2328,8 +2328,8 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	// Compare SMT store roots inside all the substores of the second app with the first app's SMT store roots
 	cmsB1 := appB1.cms.(*multi.Store)
 	cmsB2 := appB2.cms.(*multi.Store)
-	smtB1 := cmsB1.GetSubStoreSMT(capKey2.Name())
-	smtB2 := cmsB2.GetSubStoreSMT(capKey2.Name())
+	smtB1 := cmsB1.GetSubstoreSMT(capKey2.Name())
+	smtB2 := cmsB2.GetSubstoreSMT(capKey2.Name())
 
 	require.Equal(t, string(smtB1.Root()), string(smtB2.Root()))
 }

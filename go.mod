@@ -65,7 +65,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require github.com/cosmos/cosmos-sdk/store/tools/ics23 v0.0.0-00010101000000-000000000000
+require (
+	github.com/chrispappas/golang-generics-set v1.0.1
+	github.com/cosmos/cosmos-sdk/store/tools/ics23 v0.0.0-00010101000000-000000000000
+)
 
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect

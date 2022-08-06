@@ -785,7 +785,6 @@ func generateFraudProof(store *multi.Store, storeKeyToSubstoreTraceBuf map[types
 		var stateWitness StateWitness
 		stateWitness.root = root
 
-		// deepsubtree := smt.NewDeepSparseMerkleSubTree(smt.NewSimpleMap(), smt.NewSimpleMap(), sha512.New512_256(), root)
 		for key := range keys {
 			var witnessData WitnessData
 			value := substoreSMT.Get([]byte(key))
@@ -793,7 +792,6 @@ func generateFraudProof(store *multi.Store, storeKeyToSubstoreTraceBuf map[types
 			if err != nil {
 				panic(err)
 			}
-			// deepsubtree.AddBranch(*proof, []byte(key), []byte(value))
 			witnessData.Key = []byte(key)
 			witnessData.Value = []byte(value)
 			witnessData.proof = *proof

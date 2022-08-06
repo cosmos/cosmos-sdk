@@ -778,7 +778,7 @@ func generateFraudProof(store *multi.Store, storeKeyToSubstoreTraceBuf map[types
 		traceKv := kvStore.(*tracekv.Store)
 		keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
 
-		substoreSMT := store.GetSubStoreSMT(storeKey.Name())
+		substoreSMT := store.GetSubstoreSMT(storeKey.Name())
 		stateWitness := StateWitness{
 			WitnessData: make([]WitnessData, 0, keys.Len()),
 		}

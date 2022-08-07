@@ -32,6 +32,7 @@ func (k Keeper) AllocateTokens(
 
 	// get the blacklisted validators from the param store
 	BLACKLISTED_VAL_ADDRS := k.GetParams(ctx).NoRewardsValidatorAddresses
+	k.Logger(ctx).Info("Blacklisted validators", "addrs", BLACKLISTED_VAL_ADDRS)
 	// deduct the power of the blacklisted validator from the total power (so that the others are upscaled proportionally!)
 	blacklisted_val_power := int64(0)
 	for _, valAddr := range BLACKLISTED_VAL_ADDRS {

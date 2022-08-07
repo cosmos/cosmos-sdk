@@ -32,16 +32,13 @@ func (k Keeper) AllocateTokens(
 
 	// get the blacklisted validators from the param store
 	BLACKLISTED_VAL_ADDRS := k.GetParams(ctx).NoRewardsValidatorAddresses
-
 	// deduct the power of the blacklisted validator from the total power (so that the others are upscaled proportionally!)
-	blacklisted_ValAddrs := []string{}
 	blacklisted_val_power := int64(0)
 	for _, valAddr := range BLACKLISTED_VAL_ADDRS {
 		blacklisted_ValAddr, error := sdk.ValAddressFromBech32(valAddr)
 		if error != nil {
 			panic(error)
 		}
-		blacklisted_ValAddrs = append(blacklisted_ValAddrs, blacklisted_ValAddr.String())
 		blacklisted_validator := k.stakingKeeper.Validator(ctx, blacklisted_ValAddr)
 		blacklisted_val_power += blacklisted_validator.GetConsensusPower(sdk.DefaultPowerReduction)
 	}
@@ -117,12 +114,14 @@ func (k Keeper) AllocateTokens(
 
 		valAddr := validator.GetOperator().String()
 		if stringInSlice(valAddr, BLACKLISTED_VAL_ADDRS) {
+			k.Logger(ctx).Info("[DISTR] skipping rewards for BL'd val %s", valAddr)
 			continue
 		}
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(adjustedTotalPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
+		k.Logger(ctx).Info("[DISTR] rewarding val %s with vote %d, total %d, fraction %d, reward %d", valAddr, vote.Validator.Power, adjustedTotalPower, powerFraction, reward)
 
 		k.Logger(ctx).Info(fmt.Sprintf("AllocateTokensToValidator: staking reward for %s to %v", valAddr, reward))
 

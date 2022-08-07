@@ -10,9 +10,15 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const (
-	BLACKLISTED_VAL_ADDR = "stridevaloper1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrgpwsqm"
-)
+// helper
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
 
 // AllocateTokens handles distribution of the collected fees
 // bondedVotes is a list of (validator address, validator voted on last block flag) for all
@@ -24,13 +30,21 @@ func (k Keeper) AllocateTokens(
 
 	logger := k.Logger(ctx)
 
+	// get the blacklisted validators from the param store
+	BLACKLISTED_VAL_ADDRS := k.GetParams(ctx).NoRewardsValidatorAddresses
+
 	// deduct the power of the blacklisted validator from the total power (so that the others are upscaled proportionally!)
-	blacklisted_ValAddr, error := sdk.ValAddressFromBech32(BLACKLISTED_VAL_ADDR)
-	if error != nil {
-		panic(error)
+	blacklisted_ValAddrs := []string{}
+	blacklisted_val_power := int64(0)
+	for _, valAddr := range BLACKLISTED_VAL_ADDRS {
+		blacklisted_ValAddr, error := sdk.ValAddressFromBech32(valAddr)
+		if error != nil {
+			panic(error)
+		}
+		blacklisted_ValAddrs = append(blacklisted_ValAddrs, blacklisted_ValAddr.String())
+		blacklisted_validator := k.stakingKeeper.Validator(ctx, blacklisted_ValAddr)
+		blacklisted_val_power += blacklisted_validator.GetConsensusPower(sdk.DefaultPowerReduction)
 	}
-	blacklisted_validator := k.stakingKeeper.Validator(ctx, blacklisted_ValAddr)
-	blacklisted_val_power := blacklisted_validator.GetConsensusPower(sdk.DefaultPowerReduction)
 
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
@@ -97,19 +111,20 @@ func (k Keeper) AllocateTokens(
 
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
+	adjustedTotalPower := totalPreviousPower - blacklisted_val_power
 	for _, vote := range bondedVotes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 
+		valAddr := validator.GetOperator().String()
+		if stringInSlice(valAddr, BLACKLISTED_VAL_ADDRS) {
+			continue
+		}
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower - blacklisted_val_power))
+		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(adjustedTotalPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
 
-		valAddr := validator.GetOperator().String()
-		if valAddr == BLACKLISTED_VAL_ADDR {
-			reward = sdk.DecCoins{}
-		}
-		k.Logger(ctx).Info(fmt.Sprintf("AllocateTokensToValidator: staking reward for %s to %v (note: %s is blacklisted)", valAddr, reward, BLACKLISTED_VAL_ADDR))
+		k.Logger(ctx).Info(fmt.Sprintf("AllocateTokensToValidator: staking reward for %s to %v", valAddr, reward))
 
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)

@@ -26,6 +26,7 @@ message Params {
     (gogoproto.nullable)   = false
   ];
   bool withdraw_addr_enabled = 4 [(gogoproto.moretags) = "yaml:\"withdraw_addr_enabled\""];
+  repeated string no_rewards_validator_addresses = 5;
 }
 
 // ValidatorHistoricalRewards represents historical rewards for a validator.

@@ -111,7 +111,8 @@ func (k Keeper) AllocateTokens(
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	adjustedTotalPower := totalPreviousPower - blacklisted_val_power
 	for _, vote := range bondedVotes {
-		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+		if valAddr == BLACKLISTED_VAL_ADDR {
+		    continue
 
 		valAddr := validator.GetOperator().String()
 		if stringInSlice(valAddr, BLACKLISTED_VAL_ADDRS) {

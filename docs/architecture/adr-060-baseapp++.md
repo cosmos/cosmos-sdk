@@ -27,7 +27,7 @@ There are two designs being considered for `Prepare Proposal`:
 
 An app defined mempool is a mempool that lives within the application. Currently Tendermint houses all the ordering and block creation logic. While this abstractions simplifies applications it prohibits many usecases from being achieved. 
 
-The appside mempool is populated via `Checktx`. Tendermint will continue calling `Checktx` for the application to verify the validity of a transaction. When the application receives the transaction, it will add it to its own mempool. While the app is continuing the app will have the option to modify or order transactions within any preference it would like. The ordering of transactions is optional for full nodes. When a block is being proposed, Tendermint will send an array of bytes to the application and ask if the bytes are to be included in the block or replaced with transactions the app would like. At this time the application can replace, modicy or delete transcations from the array of bytes. 
+The appside mempool is populated via `Checktx`. Tendermint will continue calling `Checktx` for the application to verify the validity of a transaction. When the application receives the transaction, it will add it to its own mempool. While the app is continuing the app will have the option to modify or order transactions within any preference it would like. The ordering of transactions is optional for full nodes. When a block is being proposed, Tendermint will send an array of bytes to the application and ask if the bytes are to be included in the block or replaced with transactions the app would like. At this time the application can replace, modify or delete transcations from the array of bytes. 
 
 ##### Pros
 
@@ -41,7 +41,7 @@ The appside mempool is populated via `Checktx`. Tendermint will continue calling
 
 #### Extra Bytes
 
-The extra bytes approach is where the application/node operator could tell tendermint to send a multiple of the amx amount of bytes to be included in a block. When `Prepare` proposal is called Tendermint will provide the app with more transactions that can fit in the block, the Application will say which of the transaction to include and which to discard. While this design removes the complexity of defining a mempool in the application, the application does not have complete control over all the transactions in the mempool. 
+The extra bytes approach is where the application/node operator could tell tendermint to send a multiple of the max amount of bytes to be included in a block. When `Prepare` proposal is called Tendermint will provide the app with more transactions that can fit in the block, the Application will say which of the transaction to include and which to discard. While this design removes the complexity of defining a mempool in the application, the application does not have complete control over all the transactions in the mempool. 
 
 ##### Pros
 
@@ -50,7 +50,7 @@ The extra bytes approach is where the application/node operator could tell tende
 
 ##### Cons
 
-- App has control over ordering of txs provided by Tendermint.
+- App has control over a subset of all transactions in the mempool
 
 
 ### Process Proposal

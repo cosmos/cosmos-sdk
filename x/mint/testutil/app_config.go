@@ -6,6 +6,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
+	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 
@@ -48,12 +49,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					minttypes.ModuleName,
 					genutiltypes.ModuleName,
 					paramstypes.ModuleName,
-				},
-				OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
-					{
-						ModuleName: authtypes.ModuleName,
-						KvStoreKey: "acc",
-					},
 				},
 				InitGenesis: []string{
 					authtypes.ModuleName,

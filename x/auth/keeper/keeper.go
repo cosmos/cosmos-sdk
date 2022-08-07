@@ -79,7 +79,6 @@ func NewAccountKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, proto func() types.AccountI,
 	maccPerms map[string][]string, bech32Prefix string, authority string,
 ) AccountKeeper {
-
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
@@ -97,7 +96,7 @@ func NewAccountKeeper(
 	}
 }
 
-// GetAuthority returns the x/mint module's authority.
+// GetAuthority returns the x/auth module's authority.
 func (ak AccountKeeper) GetAuthority() string {
 	return ak.authority
 }

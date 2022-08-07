@@ -496,9 +496,11 @@ type Module struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// skip_ante_handler defines whether the ante handler registration should be skipped in case an app wants to override this functionality.
+	// skip_ante_handler defines whether the ante handler registration should be skipped in case an app wants to override
+	// this functionality.
 	SkipAnteHandler bool `protobuf:"varint,1,opt,name=skip_ante_handler,json=skipAnteHandler,proto3" json:"skip_ante_handler,omitempty"`
-	// skip_post_handler defines whether the post handler registration should be skipped in case an app wants to override this functionality.
+	// skip_post_handler defines whether the post handler registration should be skipped in case an app wants to override
+	// this functionality.
 	SkipPostHandler bool `protobuf:"varint,2,opt,name=skip_post_handler,json=skipPostHandler,proto3" json:"skip_post_handler,omitempty"`
 }
 

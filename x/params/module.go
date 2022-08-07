@@ -26,7 +26,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/params/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
@@ -100,21 +99,8 @@ func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMess
 	return []abci.ValidatorUpdate{}
 }
 
-// Deprecated: Route returns the message routing key for the params module.
-func (AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 // GenerateGenesisState performs a no-op.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
-
-// QuerierRoute returns the x/param module's querier route name.
-func (AppModule) QuerierRoute() string { return types.QuerierRoute }
-
-// LegacyQuerierHandler returns the x/params querier handler.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
-}
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
@@ -125,7 +111,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // ProposalContents returns all the params content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return simulation.ProposalContents(simState.ParamChanges)
+	return nil
 }
 
 // RandomizedParams creates randomized distribution param changes for the simulator.
@@ -148,14 +134,6 @@ func (am AppModule) ExportGenesis(_ sdk.Context, _ codec.JSONCodec) json.RawMess
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-// BeginBlock performs a no-op.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
-// EndBlock performs a no-op.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
 
 //
 // New App Wiring Setup
@@ -213,7 +191,7 @@ type subspaceInputs struct {
 
 func provideSubspace(in subspaceInputs) types.Subspace {
 	moduleName := in.Key.Name()
-	var kt, exists = in.KeyTables[moduleName]
+	kt, exists := in.KeyTables[moduleName]
 	if !exists {
 		return in.Keeper.Subspace(moduleName)
 	} else {

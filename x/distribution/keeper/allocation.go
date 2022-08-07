@@ -115,14 +115,14 @@ func (k Keeper) AllocateTokens(
 
 		valAddr := validator.GetOperator().String()
 		if stringInSlice(valAddr, BLACKLISTED_VAL_ADDRS) {
-			k.Logger(ctx).Info("[DISTR] skipping rewards for BL'd val %s", valAddr)
+			k.Logger(ctx).Info(fmt.Sprintf("[DISTR] skipping rewards for BL'd val %s", valAddr))
 			continue
 		}
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(adjustedTotalPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
-		k.Logger(ctx).Info("[DISTR] rewarding val %s with vote %d, total %d, fraction %d, reward %d", valAddr, vote.Validator.Power, adjustedTotalPower, powerFraction, reward)
+		k.Logger(ctx).Info(fmt.Sprintf("[DISTR] rewarding val %s with vote %d, total %d, fraction %d, reward %v", valAddr, vote.Validator.Power, adjustedTotalPower, powerFraction, reward))
 
 		k.Logger(ctx).Info(fmt.Sprintf("AllocateTokensToValidator: staking reward for %s to %v", valAddr, reward))
 

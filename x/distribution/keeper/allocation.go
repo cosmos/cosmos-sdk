@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	BLACKLISTED_VAL_ADDR = "stridevaloper1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrgpwsqm"
+	BLACKLISTED_VAL_ADDRS = "stridevaloper1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrgpwsqm"
 )
 
 // AllocateTokens handles distribution of the collected fees
@@ -25,7 +25,7 @@ func (k Keeper) AllocateTokens(
 	logger := k.Logger(ctx)
 
 	// deduct the power of the blacklisted validator from the total power (so that the others are upscaled proportionally!)
-	blacklisted_ValAddr, error := sdk.ValAddressFromBech32(BLACKLISTED_VAL_ADDR)
+	blacklisted_ValAddr, error := sdk.ValAddressFromBech32(BLACKLISTED_VAL_ADDRS)
 	if error != nil {
 		panic(error)
 	}
@@ -97,19 +97,19 @@ func (k Keeper) AllocateTokens(
 
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
+	adjustedTotalPower := totalPreviousPower - blacklisted_val_power
 	for _, vote := range bondedVotes {
-		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+		if valAddr == BLACKLISTED_VAL_ADDR {
+		    continue
 
+		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower - blacklisted_val_power))
+		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(adjustedTotalPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
 
 		valAddr := validator.GetOperator().String()
-		if valAddr == BLACKLISTED_VAL_ADDR {
-			reward = sdk.DecCoins{}
-		}
-		k.Logger(ctx).Info(fmt.Sprintf("AllocateTokensToValidator: staking reward for %s to %v (note: %s is blacklisted)", valAddr, reward, BLACKLISTED_VAL_ADDR))
+		k.Logger(ctx).Info(fmt.Sprintf("AllocateTokensToValidator: staking reward for %s to %v (note: %s is blacklisted)", valAddr, reward, BLACKLISTED_VAL_ADDRS))
 
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)

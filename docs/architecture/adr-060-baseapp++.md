@@ -18,6 +18,9 @@ This ADR describes the adoption of ABCI++, the evolution of ABCI, with this evol
 
 There are two phases that 0.37 tendermint will include, `Prepare` and `Process` Proposal. Prepare proposal is the first phase at which a proposer asks the application if the transactions that are going to be included are the correct ones, at this stage the application has the right to replace modify transactions. The second phase is process proposal, at this phase the consensus engine will ask the application if the block proposed by the proposer is valid. 
 
+
+### Prepare Proposal
+
 There are two designs being considered for `Prepare Proposal`:
 
 #### App-defined Mempool
@@ -50,6 +53,9 @@ The extra bytes approach is where the application/node operator could tell tende
 - App has control over ordering of txs provided by Tendermint.
 
 
+### Process Proposal
+
+At the process proposal phase Tendermint will ask validators to verify the contents of a block. To do this, Tendermint will send the contents of the proposed block to the application. At this stage the application will verify the content of the block in a stateless manner. If the content fails the stateless checks, the application will have the option to tell Tendermint to vote against the block. 
 
 ## Decision
 

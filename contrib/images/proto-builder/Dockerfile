@@ -4,13 +4,13 @@
 
 FROM bufbuild/buf as BUILDER
 
-FROM faddat/archlinux
+FROM ghcr.io/notional-labs/archlinux
 
 RUN pacman -Syyu --noconfirm leveldb rocksdb go base-devel git python npm
 
 ENV GOLANG_PROTOBUF_VERSION=1.28.0 \
-  GOGO_PROTOBUF_VERSION=1.3.2 \
-  GRPC_GATEWAY_VERSION=1.16.0
+    GOGO_PROTOBUF_VERSION=1.3.2 \
+    GRPC_GATEWAY_VERSION=1.16.0
 
 
 RUN go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest

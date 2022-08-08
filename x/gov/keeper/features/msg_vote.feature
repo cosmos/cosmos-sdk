@@ -4,7 +4,7 @@ Feature: MsgWeightedVote
   - the proposal is in voting period
   - the vote options are correct
 
-  Rule: the proposal is in voting period
+  Rule: proposal must be in the voting period to vote
 
   Scenario: vote on a non-existing proposal yields error
     When alice votes "yes=1" on proposal 42

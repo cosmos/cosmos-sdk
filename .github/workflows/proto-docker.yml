@@ -1,8 +1,11 @@
-name: ghcr.io/cosmos/proto-builder
+name: Build & Push SDK Proto Builder
 on:
   push:
     branches:
       - main
+    paths:
+      - "contrib/devtools/Dockerfile"
+  pull_request:
     paths:
       - "contrib/devtools/Dockerfile"
 

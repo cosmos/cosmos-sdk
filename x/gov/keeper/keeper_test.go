@@ -65,7 +65,7 @@ func setupBase(t gocuke.TestingT) *baseSuite {
 
 	// Initialize the gov keeper
 	s.govKeeper = keeper.NewKeeper(encCfg.Codec, key, s.authKeeper, s.bankKeeper, s.stakingKeeper, msr, types.DefaultConfig(), s.govAccount.String())
-	s.govKeeper.SetProposalID(s.ctx, 0)
+	s.govKeeper.SetProposalID(s.ctx, 1)
 	s.govKeeper.SetParams(s.ctx, v1.DefaultParams())
 
 	return s

@@ -2250,7 +2250,7 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 
 func TestGenerateAndLoadFraudProof(t *testing.T) {
 	/*
-		Covers some parts of the cycle of a fraudproof by simulating the following steps:
+		Tests switch between a baseapp and fraudproof and covers parts of the fraudproof cycle. Steps:
 		1. Initialize a baseapp, B1, with some state, S0
 		2. Make some state transition to state S1 by doing some transactions
 		3. Export that state S1 into a fraudProof data structure (minimal snapshot)
@@ -2258,8 +2258,6 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 		5. Now, pick some set of transactions, txs1, to make some more state transitions.
 		6. Execute txs1 on both B1 and B2 so they go through the same state transitions
 		7. If the state of both B1 and B2 has to converge at a state S2, then we the test passes.
-
-		This test passing means cosmos-sdk can switch between a baseapp and fraudproof.
 
 		Tests to write in future:
 
@@ -2298,7 +2296,6 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 
 	numTransactions := 50
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
-	appB1.Commit()
 
 	cms := appB1.cms.(*multi.Store)
 
@@ -2314,14 +2311,16 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 
 	// Make some set of transactions here (txs1)
 	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, fraudProof.blockHeight)
-	appB1.Commit()
+
+	// Light Client
+
+	// TODO: Insert fraudproof verification here
 
 	// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it
 	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
 
 	// Apply the set of transactions txs1 here
 	executeBlock(t, appB2, txs1, fraudProof.blockHeight)
-	appB2.Commit()
 
 	// Note that the appHash from B1 and B2 will not be the same because the subset of storeKeys in both apps is different
 

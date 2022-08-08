@@ -15,7 +15,7 @@ Feature: MsgWeightedVote
     When alice votes "yes=1" on proposal 1
     Then expect the error "1: inactive proposal"
   
-  Rule: the vote options are correct
+  Rule: vote options must be valid
 
   Scenario: unknown vote option yields error
     Given a proposal with "10000000stake" deposit

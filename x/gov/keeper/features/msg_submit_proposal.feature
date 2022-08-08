@@ -6,7 +6,7 @@ Feature: MsgSubmitProposal
 
   Rule: the deposit must be greater or equal than the MinDeposit param
 
-  Scenario: deposit lesser than MinDeposit
+  Scenario: deposit less than MinDeposit
     Given a MinDeposit param set to "100stake" and MinInitialDepositRation set to "1"
     When alice submits a proposal with deposit "10stake"
     Then expect the error "minimum deposit is too small"

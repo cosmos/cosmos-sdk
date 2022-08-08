@@ -34,11 +34,9 @@ import (
 const ConsensusVersion = 4
 
 var (
-	_ module.AppModule                  = AppModule{}
-	_ module.AppModuleBasic             = AppModuleBasic{}
-	_ module.AppModuleSimulation        = AppModule{}
 	_ module.AppModuleGenesisProto      = AppModule{}
 	_ module.AppModuleBasicGenesisProto = AppModuleBasic{}
+	_ module.AppModuleSimulation        = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the auth module.

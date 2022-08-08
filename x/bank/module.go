@@ -39,9 +39,9 @@ import (
 const ConsensusVersion = 4
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
+	_ module.AppModuleGenesis      = AppModule{}
+	_ module.AppModuleBasicGenesis = AppModuleBasic{}
+	_ module.AppModuleSimulation   = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the bank module.

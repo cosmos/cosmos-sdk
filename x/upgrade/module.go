@@ -41,8 +41,8 @@ const (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleGenesis      = AppModule{}
+	_ module.AppModuleBasicGenesis = AppModuleBasic{}
 )
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface

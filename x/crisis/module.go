@@ -35,8 +35,8 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleGenesis      = AppModule{}
+	_ module.AppModuleBasicGenesis = AppModuleBasic{}
 )
 
 // Module init related flags

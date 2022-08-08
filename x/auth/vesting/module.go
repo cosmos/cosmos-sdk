@@ -23,8 +23,8 @@ import (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleGenesis      = AppModule{}
+	_ module.AppModuleBasicGenesis = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the sub-vesting

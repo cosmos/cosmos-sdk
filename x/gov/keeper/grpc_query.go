@@ -162,6 +162,7 @@ func (q Keeper) Params(c context.Context, req *v1.QueryParamsRequest) (*v1.Query
 
 	response := &v1.QueryParamsResponse{}
 
+	//nolint:staticcheck // TODO: refactor to only refer to Params
 	switch req.ParamsType {
 	case v1.ParamDeposit:
 		depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
@@ -380,16 +381,16 @@ func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsReq
 	}
 
 	response := &v1beta1.QueryParamsResponse{}
-
+	//nolint:staticcheck // TODO: refactor to only refer to Params
 	if resp.DepositParams != nil {
 		minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)
 		response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod)
 	}
-
+	//nolint:staticcheck // TODO: refactor to only refer to Params
 	if resp.VotingParams != nil {
 		response.VotingParams = v1beta1.NewVotingParams(*resp.VotingParams.VotingPeriod)
 	}
-
+	//nolint:staticcheck // TODO: refactor to only refer to Params
 	if resp.TallyParams != nil {
 		quorum, err := sdk.NewDecFromStr(resp.TallyParams.Quorum)
 		if err != nil {

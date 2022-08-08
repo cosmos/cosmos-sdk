@@ -31,6 +31,9 @@ issues:
     - text: "Use of weak random number generator"
       linters:
         - gosec
+    - text: "without leading space"
+      linters:
+        - nolintlint
     - text: "comment on exported var"
       linters:
         - golint

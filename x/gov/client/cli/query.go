@@ -541,11 +541,11 @@ $ %s query gov params
 				return err
 			}
 
-			vp := v1.NewVotingParams(res.Params.VotingPeriod)
-			res.VotingParams = &vp
+			vp := v1.NewVotingParams(res.Params.VotingPeriod) //nolint:staticcheck // TODO: refactor to only refer to Params
+			res.VotingParams = &vp                            //nolint:staticcheck // TODO: refactor to only refer to Params
 
-			tp := v1.NewTallyParams(res.Params.Quorum, res.Params.Threshold, res.Params.VetoThreshold)
-			res.TallyParams = &tp
+			tp := v1.NewTallyParams(res.Params.Quorum, res.Params.Threshold, res.Params.VetoThreshold) //nolint:staticcheck // TODO: refactor to only refer to Params
+			res.TallyParams = &tp                                                                      //nolint:staticcheck // TODO: refactor to only refer to Params
 
 			return clientCtx.PrintProto(res)
 		},
@@ -591,11 +591,11 @@ $ %s query gov param deposit
 			var out fmt.Stringer
 			switch args[0] {
 			case "voting":
-				out = res.GetVotingParams()
+				out = res.GetVotingParams() //nolint:staticcheck // TODO: refactor to only refer to Params
 			case "tallying":
-				out = res.GetTallyParams()
+				out = res.GetTallyParams() //nolint:staticcheck // TODO: refactor to only refer to Params
 			case "deposit":
-				out = res.GetDepositParams()
+				out = res.GetDepositParams() //nolint:staticcheck // TODO: refactor to only refer to Params
 			default:
 				return fmt.Errorf("argument must be one of (voting|tallying|deposit), was %s", args[0])
 			}

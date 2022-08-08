@@ -34,8 +34,9 @@ Feature: MsgWeightedVote
     | yes=0.5,no=0.5                       |
     | abstain=0.00001,no_with_veto=0.99999 |
 
-  Scenario: can vote twice on proposal
+  Scenario: 2nd vote on same proposal overwrites the 1st one
     Given a proposal with "10000000stake" deposit
     And alice votes "yes=1" on proposal 1
     When alice votes "no=1" on proposal 1
     Then expect no error
+    And alice's vote on proposal 1 is 'option:VOTE_OPTION_NO weight:"1.000000000000000000"'

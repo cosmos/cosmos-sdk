@@ -112,6 +112,13 @@ func (s *msgServerSuite) AliceVotesOnProposal(optionsStr string, proposalId int6
 	})
 }
 
+func (s *msgServerSuite) AlicesVoteOnProposalIs(proposalId int64, voteOutput string) {
+	vote, found := s.govKeeper.GetVote(s.ctx, uint64(proposalId), s.alice)
+	require.True(s.t, found)
+
+	require.Equal(s.t, voteOutput, v1.WeightedVoteOptions(vote.Options).String())
+}
+
 func (s *msgServerSuite) expectCalls() {
 	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
 	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(s.ctx, s.alice, types.ModuleName, gomock.Any()).Return(nil).AnyTimes()

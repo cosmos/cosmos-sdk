@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, suite.interfaceRegistry)
-	types.RegisterQueryServer(queryHelper, suite.distrKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(suite.distrKeeper))
 	queryClient := types.NewQueryClient(queryHelper)
 
 	suite.ctx = ctx
@@ -370,7 +370,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, suite.interfaceRegistry)
-	types.RegisterQueryServer(queryHelper, suite.distrKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(suite.distrKeeper))
 	queryClient := types.NewQueryClient(queryHelper)
 
 	val := suite.stakingKeeper.Validator(ctx, valAddrs[0])

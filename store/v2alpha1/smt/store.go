@@ -23,8 +23,8 @@ var (
 	valuesPrefix    = []byte{1}
 	preimagesPrefix = []byte{2}
 
-	errKeyEmpty = errors.New("key is empty or nil")
-	errValueNil = errors.New("value is nil")
+	ErrKeyEmpty = errors.New("key is empty or nil")
+	ErrValueNil = errors.New("value is nil")
 )
 
 // Store Implements types.BasicKVStore.
@@ -63,7 +63,7 @@ func LoadStore(db dbm.ReadWriter, root []byte) *Store {
 
 func (s *Store) GetProof(key []byte) (*tmcrypto.ProofOps, error) {
 	if len(key) == 0 {
-		return nil, errKeyEmpty
+		return nil, ErrKeyEmpty
 	}
 	proof, err := s.tree.Prove(key)
 	if err != nil {
@@ -79,7 +79,7 @@ func (s *Store) GetProofICS23(key []byte) (*ics23.CommitmentProof, error) {
 
 func (s *Store) GetSMTProof(key []byte) (*smt.SparseMerkleProof, error) {
 	if len(key) == 0 {
-		return nil, errKeyEmpty
+		return nil, ErrKeyEmpty
 	}
 	proof, err := s.tree.Prove(key)
 	if err != nil {
@@ -95,7 +95,7 @@ func (s *Store) Root() []byte { return s.tree.Root() }
 // Get returns nil iff key doesn't exist. Panics on nil or empty key.
 func (s *Store) Get(key []byte) []byte {
 	if len(key) == 0 {
-		panic(errKeyEmpty)
+		panic(ErrKeyEmpty)
 	}
 	val, err := s.tree.Get(key)
 	if err != nil {
@@ -107,7 +107,7 @@ func (s *Store) Get(key []byte) []byte {
 // Has checks if a key exists. Panics on nil or empty key.
 func (s *Store) Has(key []byte) bool {
 	if len(key) == 0 {
-		panic(errKeyEmpty)
+		panic(ErrKeyEmpty)
 	}
 	has, err := s.tree.Has(key)
 	if err != nil {
@@ -119,10 +119,10 @@ func (s *Store) Has(key []byte) bool {
 // Set sets the key. Panics on nil key or value.
 func (s *Store) Set(key []byte, value []byte) {
 	if len(key) == 0 {
-		panic(errKeyEmpty)
+		panic(ErrKeyEmpty)
 	}
 	if value == nil {
-		panic(errValueNil)
+		panic(ErrValueNil)
 	}
 	_, err := s.tree.Update(key, value)
 	if err != nil {
@@ -135,7 +135,7 @@ func (s *Store) Set(key []byte, value []byte) {
 // Delete deletes the key. Panics on nil key.
 func (s *Store) Delete(key []byte) {
 	if len(key) == 0 {
-		panic(errKeyEmpty)
+		panic(ErrKeyEmpty)
 	}
 	_, _ = s.tree.Delete(key)
 	path := sha256.Sum256(key)

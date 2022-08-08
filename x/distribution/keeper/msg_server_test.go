@@ -145,3 +145,37 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) CommunityPoolSpend() {
+	testCases := []struct {
+		name      string
+		input     *types.MsgCommunityPoolSpend
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "invalid authority",
+			input: &types.MsgCommunityPoolSpend{
+				Authority: "invalid",
+				Recipient: "_______alice________",
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
+			},
+			expErr:    true,
+			expErrMsg: "invalid authority",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			_, err := s.msgServer.CommunityPoolSpend(s.ctx, tc.input)
+
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}

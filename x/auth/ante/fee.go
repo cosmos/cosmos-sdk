@@ -135,8 +135,11 @@ func (dfd *DeductFeeDecorator) checkDeductFee(ctx context.Context, feeTx sdk.Fee
 	}
 
 	events := sdk.Events{
-		sdk.NewEvent(sdk.EventTypeTx, sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String())),
-		sdk.NewEvent(sdk.EventTypeTx, sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String())),
+		sdk.NewEvent(
+			sdk.EventTypeTx,
+			sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),
+			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String()),
+		),
 	}
 	ctx.EventManager().EmitEvents(events)
 

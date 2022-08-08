@@ -426,7 +426,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
 	if app.paramStore.Has(ctx, ParamStoreKeyBlockParams) {
 		var bp tmproto.BlockParams
 
-		app.paramStore.Get(ctx, ParamStoreKeyBlockParams, &bp)
+		app.paramStore.Get(ctx, &cp)
 		cp.Block = &bp
 	}
 
@@ -464,9 +464,7 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusP
 		return
 	}
 
-	app.paramStore.Set(ctx, ParamStoreKeyBlockParams, cp.Block)
-	app.paramStore.Set(ctx, ParamStoreKeyEvidenceParams, cp.Evidence)
-	app.paramStore.Set(ctx, ParamStoreKeyValidatorParams, cp.Validator)
+	app.paramStore.Set(ctx, *cp)
 	// We're explicitly not storing the Tendermint app_version in the param store. It's
 	// stored instead in the x/upgrade store, with its own bump logic.
 }

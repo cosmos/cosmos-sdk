@@ -10,7 +10,6 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	p2p "github.com/tendermint/tendermint/proto/tendermint/p2p"
 	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -1315,10 +1314,10 @@ type ServiceClient interface {
 }
 
 type serviceClient struct {
-	cc grpc1.ClientConn
+	cc *grpc.ClientConn
 }
 
-func NewServiceClient(cc grpc1.ClientConn) ServiceClient {
+func NewServiceClient(cc *grpc.ClientConn) ServiceClient {
 	return &serviceClient{cc}
 }
 
@@ -1433,7 +1432,7 @@ func (*UnimplementedServiceServer) ABCIQuery(ctx context.Context, req *ABCIQuery
 	return nil, status.Errorf(codes.Unimplemented, "method ABCIQuery not implemented")
 }
 
-func RegisterServiceServer(s grpc1.Server, srv ServiceServer) {
+func RegisterServiceServer(s *grpc.Server, srv ServiceServer) {
 	s.RegisterService(&_Service_serviceDesc, srv)
 }
 

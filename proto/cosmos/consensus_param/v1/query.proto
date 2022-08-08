@@ -1,0 +1,25 @@
+syntax = "proto3";
+package cosmos.consensus_param.v1beta1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "tendermint/types/params.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/consensus_param/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params queries the parameters of x/bank module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/params";
+  }
+}
+
+// QueryParamsRequest defines the request type for querying x/bank parameters.
+message QueryParamsRequest {}
+
+// QueryParamsResponse defines the response type for querying x/bank parameters.
+message QueryParamsResponse {
+  tendermint.types.ConsensusParams params = 1 [(gogoproto.nullable) = false];
+}

@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 type container struct {
@@ -95,8 +95,6 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 }
 
 func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
-	c.logf("Resolving %v", typ)
-
 	pr, err := c.getExplicitResolver(typ, key)
 	if err != nil {
 		return nil, err
@@ -367,12 +365,6 @@ func (c *container) addInvoker(provider *ProviderDescriptor, key *moduleKey) err
 		return fmt.Errorf("invoker function %s should not return any outputs", provider.Location)
 	}
 
-	// make all inputs optional
-	for i, input := range provider.Inputs {
-		input.Optional = true
-		provider.Inputs[i] = input
-	}
-
 	c.invokers = append(c.invokers, invoker{
 		fn:     provider,
 		modKey: key,
@@ -417,7 +409,7 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 
 		markGraphNodeAsFailed(typeGraphNode)
 		return reflect.Value{}, errors.Errorf("can't resolve type %v for %s:\n%s",
-			in.Type, caller, c.formatResolveStack())
+			fullyQualifiedTypeName(in.Type), caller, c.formatResolveStack())
 	}
 
 	res, err := vr.resolve(c, moduleKey, caller)
@@ -454,6 +446,11 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 
 			for i, output := range outputs {
 				val := reflect.ValueOf(output)
+
+				if !values[i].CanInterface() {
+					return []reflect.Value{}, fmt.Errorf("depinject.Out struct %s on package can't have unexported field", values[i].String())
+
+				}
 				val.Elem().Set(values[i])
 			}
 

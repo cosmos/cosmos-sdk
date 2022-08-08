@@ -5,13 +5,15 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"github.com/cosmos/cosmos-sdk/depinject"
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -24,7 +26,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/params/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
@@ -98,21 +99,8 @@ func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMess
 	return []abci.ValidatorUpdate{}
 }
 
-// Deprecated: Route returns the message routing key for the params module.
-func (AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 // GenerateGenesisState performs a no-op.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
-
-// QuerierRoute returns the x/param module's querier route name.
-func (AppModule) QuerierRoute() string { return types.QuerierRoute }
-
-// LegacyQuerierHandler returns the x/params querier handler.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
-}
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
@@ -123,7 +111,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // ProposalContents returns all the params content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return simulation.ProposalContents(simState.ParamChanges)
+	return nil
 }
 
 // RandomizedParams creates randomized distribution param changes for the simulator.
@@ -147,14 +135,6 @@ func (am AppModule) ExportGenesis(_ sdk.Context, _ codec.JSONCodec) json.RawMess
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
-// BeginBlock performs a no-op.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
-// EndBlock performs a no-op.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
 //
 // New App Wiring Setup
 //
@@ -164,7 +144,7 @@ func init() {
 		appmodule.Provide(
 			provideModuleBasic,
 			provideModule,
-			provideSubSpace,
+			provideSubspace,
 		))
 }
 
@@ -187,6 +167,7 @@ type paramsOutputs struct {
 	ParamsKeeper  keeper.Keeper
 	BaseAppOption runtime.BaseAppOption
 	Module        runtime.AppModuleWrapper
+	GovHandler    govv1beta1.HandlerRoute
 }
 
 func provideModule(in paramsInputs) paramsOutputs {
@@ -195,10 +176,25 @@ func provideModule(in paramsInputs) paramsOutputs {
 		app.SetParamStore(k.Subspace(baseapp.Paramspace).WithKeyTable(types.ConsensusParamsKeyTable()))
 	}
 	m := runtime.WrapAppModule(NewAppModule(k))
+	govHandler := govv1beta1.HandlerRoute{RouteKey: proposal.RouterKey, Handler: NewParamChangeProposalHandler(k)}
 
-	return paramsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m}
+	return paramsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m, GovHandler: govHandler}
 }
 
-func provideSubSpace(key depinject.ModuleKey, k keeper.Keeper) types.Subspace {
-	return k.Subspace(key.Name())
+type subspaceInputs struct {
+	depinject.In
+
+	Key       depinject.ModuleKey
+	Keeper    keeper.Keeper
+	KeyTables map[string]types.KeyTable
+}
+
+func provideSubspace(in subspaceInputs) types.Subspace {
+	moduleName := in.Key.Name()
+	kt, exists := in.KeyTables[moduleName]
+	if !exists {
+		return in.Keeper.Subspace(moduleName)
+	} else {
+		return in.Keeper.Subspace(moduleName).WithKeyTable(kt)
+	}
 }

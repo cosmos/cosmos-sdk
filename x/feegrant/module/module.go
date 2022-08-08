@@ -12,10 +12,10 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 
+	"cosmossdk.io/depinject"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -140,21 +140,6 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the feegrant module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the feegrant module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// NewHandler returns an sdk.Handler for the feegrant module.
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
-}
-
-// QuerierRoute returns the feegrant module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return ""
-}
-
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
@@ -181,9 +166,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 2 }
-
-// BeginBlock returns the begin blocker for the feegrant module.
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the feegrant module. It returns no validator
 // updates.

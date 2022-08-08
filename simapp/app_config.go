@@ -36,6 +36,7 @@ import (
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
+	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
@@ -46,6 +47,9 @@ import (
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 )
+
+// Alternatively the AppConfig can be defined as a YAML or a JSON file.
+// e.g. https://github.com/cosmos/cosmos-sdk/blob/91b1d83f1339e235a1dfa929ecc00084101a19e3/simapp/app.yaml
 
 var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 	Modules: []*appv1alpha1.ModuleConfig{
@@ -121,7 +125,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 				},
 			}),
 		},
-
 		{
 			Name:   vestingtypes.ModuleName,
 			Config: appconfig.WrapAny(&vestingmodulev1.Module{}),
@@ -192,10 +195,12 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 			Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
 		},
 		{
+			Name:   govtypes.ModuleName,
+			Config: appconfig.WrapAny(&govmodulev1.Module{}),
+		},
+		{
 			Name:   crisistypes.ModuleName,
 			Config: appconfig.WrapAny(&crisismodulev1.Module{}),
 		},
 	},
 })
-
-// Alternatively this configuration can be set as yaml or json: https://github.com/cosmos/cosmos-sdk/blob/91b1d83f1339e235a1dfa929ecc00084101a19e3/simapp/app.yaml

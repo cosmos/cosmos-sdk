@@ -16,11 +16,11 @@ unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`
 
 A proposal will generally require more than just a set of messages to explain its
 purpose but need some greater justification and allow a means for interested participants
-to discuss and debate the proposal. In most cases, it is encouraged to have an off-chain
-system that supports the on-chain governance process. To accommodate for this, a
-proposal contains a special `metadata` field, an array of bytes, which can be used to
-add context to the proposal. The `metadata` field allows custom use for networks, however,
-it is expected that the field contains a URL or some form of CID using a system such as
+to discuss and debate the proposal.
+In most cases, **it is encouraged to have an off-chain system that supports the on-chain governance process**.
+To accommodate for this, a proposal contains a special **`metadata`** field, a string,
+which can be used to add context to the proposal. The `metadata` field allows custom use for networks,
+however, it is expected that the field contains a URL or some form of CID using a system such as
 [IPFS](https://docs.ipfs.io/concepts/content-addressing/). To support the case of
 interoperability across networks, the SDK recommends that the `metadata` represents
 the following `JSON` template:
@@ -37,7 +37,7 @@ the following `JSON` template:
 This makes it far easier for clients to support multiple networks.
 
 The metadata has a maximum length that is chosen by the app developer, and
-passed into the gov keeper as a config.
+passed into the gov keeper as a config. The default maximum length in the SDK is 255 characters.
 
 ### Writing a module that uses governance
 
@@ -119,8 +119,7 @@ This type is used in a temp map when tallying
 
 ## Stores
 
-_Stores are KVStores in the multi-store. The key to find the store is the first
-parameter in the list_`
+_Note: Stores are KVStores in the multi-store. The key to find the store is the first parameter in the list_
 
 We will use one KVStore `Governance` to store two mappings:
 
@@ -128,7 +127,9 @@ We will use one KVStore `Governance` to store two mappings:
 * A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
   us to query all addresses that voted on the proposal along with their vote by
   doing a range query on `proposalID:addresses`.
-
+* A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all 
+  x/gov params.
+  
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 
 * `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
@@ -206,3 +207,13 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
       store(Governance, <proposalID|'proposal'>, proposal)
 ```
+
+## Legacy Proposal
+
+A legacy proposal is the old implementation of governance proposal.
+Contrary to proposal that can contain any messages, a legacy proposal allows to submit a set of pre-defined proposals.
+These proposal are defined by their types.
+
+While proposals should use the new implementation of the governance proposal, we need still to use legacy proposal in order to submit a `software-upgrade` and a `cancel-software-upgrade` proposal.
+
+More information on how to submit proposals in the [client section](07_client.md).

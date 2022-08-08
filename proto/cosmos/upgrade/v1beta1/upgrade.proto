@@ -4,6 +4,7 @@ package cosmos.upgrade.v1beta1;
 import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package                      = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -46,9 +47,10 @@ message Plan {
 // Deprecated: This legacy proposal is deprecated in favor of Msg-based gov
 // proposals, see MsgSoftwareUpgrade.
 message SoftwareUpgradeProposal {
-  option deprecated                   = true;
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option deprecated                          = true;
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+  option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_stringer)        = false;
 
   string title       = 1;
   string description = 2;
@@ -60,9 +62,10 @@ message SoftwareUpgradeProposal {
 // Deprecated: This legacy proposal is deprecated in favor of Msg-based gov
 // proposals, see MsgCancelUpgrade.
 message CancelSoftwareUpgradeProposal {
-  option deprecated                   = true;
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option deprecated                          = true;
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+  option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_stringer)        = false;
 
   string title       = 1;
   string description = 2;

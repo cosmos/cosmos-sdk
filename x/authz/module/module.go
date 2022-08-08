@@ -12,11 +12,11 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	"cosmossdk.io/core/appmodule"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -128,20 +128,7 @@ func (AppModule) Name() string {
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the authz module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 func (am AppModule) NewHandler() sdk.Handler {
-	return nil
-}
-
-// QuerierRoute returns the route we respond to for abci queries
-func (AppModule) QuerierRoute() string { return "" }
-
-// LegacyQuerierHandler returns the authz module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
@@ -167,11 +154,6 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 // BeginBlock returns the begin blocker for the authz module.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(ctx, am.keeper)
-}
-
-// EndBlock does nothing
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
 }
 
 func init() {

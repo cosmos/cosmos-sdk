@@ -1,0 +1,46 @@
+on:
+  #Set to trigger on every merge to main, not just a closed PR.
+  workflow_dispatch:
+  pull_request_target:
+    branches:
+      - main
+    types: ["closed"]
+
+jobs:
+  cherry_pick:
+    runs-on: ubuntu-latest
+    name: Cherry pick into main
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: Create PR Patch Branch
+        shell: bash
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            git config --global user.name "${GITHUB_ACTOR}" #Configs have to be set for pushing the cherry-picked changes onto fork pr-patch branch.
+            git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+            git remote add upstream https://github.com/cosmos/cosmos-sdk.git
+            git fetch --all                                   # Get the latest code
+            git checkout -b pr-patch upstream/main    # Create new branch based on main branch
+            git cherry-pick ${{github.event.pull_request.head.sha}}  # Cherry pick the latest commit of PR
+            git push -u origin pr-patch               # Push your changes to the remote branch
+      - name: Autocreate PR
+        shell: bash
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl --request POST \
+            --url https://api.github.com/repos/cosmos/cosmos-sdk/pulls \
+            --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            --header 'content-type: application/json' \
+            --data '{
+              "title": "Automated PR for commit: ${{github.event.pull_request.head.sha}}",
+              "body":"Please merge these awesome changes in!",
+              "head":"${{github.event.pull_request.user.login}}:pr-patch",
+              "base":"main"
+              }' \
+            --fail

@@ -6,30 +6,34 @@ import (
 	"fmt"
 	"math/rand"
 
+	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"cosmossdk.io/core/appmodule"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/distribution/exported"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+// ConsensusVersion defines the current x/distribution module consensus version.
+const ConsensusVersion = 3
 
 var (
 	_ module.AppModule           = AppModule{}
@@ -98,12 +102,15 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
+
+	// legacySubspace is used solely for migration of x/params managed parameters
+	legacySubspace exported.Subspace
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper,
+	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, ss exported.Subspace,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
@@ -111,6 +118,7 @@ func NewAppModule(
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		stakingKeeper:  stakingKeeper,
+		legacySubspace: ss,
 	}
 }
 
@@ -124,28 +132,19 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-// Deprecated: Route returns the message routing key for the distribution module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the distribution module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns the distribution module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
-}
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 
-	m := keeper.NewMigrator(am.keeper)
-	cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
+	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
+
+	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the distribution module. It returns
@@ -165,17 +164,11 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the distribution module.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(ctx, req, am.keeper)
-}
-
-// EndBlock returns the end blocker for the distribution module. It returns no validator
-// updates.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
 }
 
 // AppModuleSimulation functions
@@ -192,8 +185,12 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 }
 
 // RandomizedParams creates randomized distribution param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
+
+// TODO: Returns an empty slice which will make parameter changes a no-op during
+// simulations. Once all modules are migrated, remove RandomizedParams from
+// the simulation interface.
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for distribution module's types
@@ -225,14 +222,18 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 type distrInputs struct {
 	depinject.In
 
-	Config   *modulev1.Module
-	Key      *store.KVStoreKey
-	Cdc      codec.Codec
-	Subspace paramstypes.Subspace
+	ModuleKey depinject.OwnModuleKey
+	Config    *modulev1.Module
+	Key       *store.KVStoreKey
+	Cdc       codec.Codec
+	Authority map[string]sdk.AccAddress `optional:"true"`
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	StakingKeeper types.StakingKeeper
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	LegacySubspace exported.Subspace
 }
 
 type distrOutputs struct {
@@ -241,6 +242,7 @@ type distrOutputs struct {
 	DistrKeeper keeper.Keeper
 	Module      runtime.AppModuleWrapper
 	Hooks       staking.StakingHooksWrapper
+	GovHandler  govv1beta1.HandlerRoute
 }
 
 func provideModule(in distrInputs) distrOutputs {
@@ -249,12 +251,28 @@ func provideModule(in distrInputs) distrOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, feeCollectorName)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
+	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+	if !ok {
+		// default to governance authority if not provided
+		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	}
+
+	k := keeper.NewKeeper(
+		in.Cdc,
+		in.Key,
+		in.AccountKeeper,
+		in.BankKeeper,
+		in.StakingKeeper,
+		feeCollectorName,
+		authority.String(),
+	)
+
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
 
 	return distrOutputs{
 		DistrKeeper: k,
 		Module:      runtime.WrapAppModule(m),
 		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
+		GovHandler:  govv1beta1.HandlerRoute{Handler: NewCommunityPoolSpendProposalHandler(k), RouteKey: types.RouterKey},
 	}
 }

@@ -13,12 +13,13 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -53,8 +54,8 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 	},
 }
 
-// createDefaultRandomValidatorSet creates a validator set with one random validator
-func createDefaultRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
+// CreateRandomValidatorSet creates a validator set with one random validator
+func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey(context.TODO())
 	if err != nil {
@@ -70,19 +71,19 @@ func createDefaultRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 // Setup initializes a new runtime.App and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, nil, false, extraOutputs...)
+	return SetupWithConfiguration(appConfig, CreateRandomValidatorSet, nil, false, extraOutputs...)
 }
 
 // SetupAtGenesis initializes a new runtime.App at genesis and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, nil, true, extraOutputs...)
+	return SetupWithConfiguration(appConfig, CreateRandomValidatorSet, nil, true, extraOutputs...)
 }
 
 // SetupWithBaseAppOption initializes a new runtime.App and can inject values into extraOutputs.
 // With specific baseApp options. It uses SetupWithConfiguration under the hood.
 func SetupWithBaseAppOption(appConfig depinject.Config, baseAppOption runtime.BaseAppOption, extraOutputs ...interface{}) (*runtime.App, error) {
-	return SetupWithConfiguration(appConfig, createDefaultRandomValidatorSet, baseAppOption, false, extraOutputs...)
+	return SetupWithConfiguration(appConfig, CreateRandomValidatorSet, baseAppOption, false, extraOutputs...)
 }
 
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
@@ -194,15 +195,15 @@ func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawM
 			Jailed:            false,
 			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
-			DelegatorShares:   sdk.OneDec(),
+			DelegatorShares:   math.LegacyOneDec(),
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-			MinSelfDelegation: sdk.ZeroInt(),
+			Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
+			MinSelfDelegation: math.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), math.LegacyOneDec()))
 
 	}
 	// set validators and delegations

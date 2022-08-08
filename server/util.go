@@ -365,9 +365,7 @@ func WaitForQuitSignals() ErrorCode {
 // GetAppDBBackend gets the backend type to use for the application DBs.
 func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	rv := cast.ToString(opts.Get("app-db-backend"))
-	if len(rv) == 0 {
-		rv = sdk.DBBackend
-	}
+
 	if len(rv) == 0 {
 		rv = cast.ToString(opts.Get("db-backend"))
 	}

@@ -834,7 +834,7 @@ func (m *Redelegation) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Redelegation proto.InternalMessageInfo
 
-// Params defines the parameters for the staking module.
+// Params defines the parameters for the x/staking module.
 type Params struct {
 	// unbonding_time is the time duration of unbonding.
 	UnbondingTime time.Duration `protobuf:"bytes,1,opt,name=unbonding_time,json=unbondingTime,proto3,stdduration" json:"unbonding_time"`

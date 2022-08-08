@@ -1,13 +1,13 @@
-// build +norace
-
 package tx_test
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,7 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -28,7 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -48,7 +50,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := network.DefaultConfig()
+	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
 	s.cfg = cfg
 
@@ -64,7 +66,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.queryClient = tx.NewServiceClient(val.ClientCtx)
 
 	// Create a new MsgSend tx from val to itself.
-	out, err := bankcli.MsgSendExec(
+	out, err := cli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		val.Address,
@@ -81,7 +83,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &s.txRes))
 	s.Require().Equal(uint32(0), s.txRes.Code, s.txRes)
 
-	out, err = bankcli.MsgSendExec(
+	out, err = cli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		val.Address,
@@ -109,6 +111,78 @@ func (s *IntegrationTestSuite) SetupSuite() {
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
+}
+
+func (s *IntegrationTestSuite) TestQueryBySig() {
+	// broadcast tx
+	txb := s.mkTxBuilder()
+	txbz, err := s.cfg.TxConfig.TxEncoder()(txb.GetTx())
+	s.Require().NoError(err)
+	_, err = s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txbz, Mode: tx.BroadcastMode_BROADCAST_MODE_BLOCK})
+	s.Require().NoError(err)
+
+	// get the signature out of the builder
+	sigs, err := txb.GetTx().GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Len(sigs, 1)
+	sig, ok := sigs[0].Data.(*signing.SingleSignatureData)
+	s.Require().True(ok)
+
+	// encode, format, query
+	b64Sig := base64.StdEncoding.EncodeToString(sig.Signature)
+	sigFormatted := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, b64Sig)
+	res, err := s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{
+		Events:  []string{sigFormatted},
+		OrderBy: 0,
+		Page:    0,
+		Limit:   10,
+	})
+	s.Require().NoError(err)
+	s.Require().Len(res.Txs, 1)
+	s.Require().Len(res.Txs[0].Signatures, 1)
+	s.Require().Equal(res.Txs[0].Signatures[0], sig.Signature)
+
+	// bad format should error
+	_, err = s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{Events: []string{"tx.foo.bar='baz'"}})
+	s.Require().ErrorContains(err, "invalid event;")
+}
+
+func TestEventRegex(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name  string
+		event string
+		match bool
+	}{
+		{
+			name:  "valid: with quotes",
+			event: "tx.message='something'",
+			match: true,
+		},
+		{
+			name:  "valid: no quotes",
+			event: "tx.message=something",
+			match: true,
+		},
+		{
+			name:  "invalid: too many separators",
+			event: "tx.message.foo='bar'",
+			match: false,
+		},
+		{
+			name:  "valid: symbols ok",
+			event: "tx.signature='foobar/baz123=='",
+			match: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			match := authtx.EventRegex.Match([]byte(tc.event))
+			require.Equal(t, tc.match, match)
+		})
+	}
 }
 
 func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
@@ -542,7 +616,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 
 	// Send coins from validator to multisig.
 	coins := sdk.NewInt64Coin(s.cfg.BondDenom, 15)
-	_, err = bankcli.MsgSendExec(
+	_, err = cli.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
 		addr,
@@ -558,7 +632,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	s.Require().NoError(err)
 
 	// Generate multisig transaction.
-	multiGeneratedTx, err := bankcli.MsgSendExec(
+	multiGeneratedTx, err := cli.MsgSendExec(
 		val1.ClientCtx,
 		addr,
 		val1.Address,

@@ -1,4 +1,4 @@
-name: Build & Push SDK Proto Builder
+name: ghcr.io/cosmos/proto-builder
 on:
   push:
     branches:

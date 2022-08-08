@@ -4,7 +4,7 @@ Feature: MsgSubmitProposal
   - the deposit is greater or equal than the MinDeposit param
   - all Msgs' type URLs are registered and have the gov account as unique signer ("cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn")
 
-  Rule: the deposit is greater or equal than the MinDeposit param
+  Rule: the deposit must be greater or equal than the MinDeposit param
 
   Scenario: deposit lesser than MinDeposit
     Given a MinDeposit param set to "100stake" and MinInitialDepositRation set to "1"

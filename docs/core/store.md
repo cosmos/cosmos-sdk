@@ -148,7 +148,7 @@ The documentation on the IAVL Tree is located [here](https://github.com/cosmos/i
 
 `dbadapter.Store` embeds `dbm.DB`, meaning most of the `KVStore` interface functions are implemented. The other functions (mostly miscellaneous) are manually implemented. This store is primarily used within [Transient Stores](#transient-stores)
 
-### `Transient` Store
+### `Transient` Store 
 
 `Transient.Store` is a base-layer `KVStore` which is automatically discarded at the end of the block.
 

@@ -375,7 +375,6 @@ func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsReq
 	resp, err := q.keeper.Params(c, &v1.QueryParamsRequest{
 		ParamsType: req.ParamsType,
 	})
-
 	if err != nil {
 		return nil, err
 	}

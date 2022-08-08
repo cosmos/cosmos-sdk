@@ -140,7 +140,6 @@ func NewAppModule(
 	cdc codec.Codec, keeper *keeper.Keeper,
 	ak types.AccountKeeper, bk types.BankKeeper, ss types.ParamSubspace,
 ) AppModule {
-
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,

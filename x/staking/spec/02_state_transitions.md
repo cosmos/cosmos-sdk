@@ -41,7 +41,7 @@ When a validator begins the unbonding process the following operations occur:
 - add a new updated record to the `ValidatorByPowerIndex`
 - update the `Validator` object for this validator
 - insert a new record into the `ValidatorQueue` for this validator
-- get a unique `unbondingId` and map it to the validator in `ValidatorsByUnbondingIndex` 
+- get a unique `unbondingId` and map it to the validator in `ValidatorsByUnbondingId` 
 - call the `AfterUnbondingInitiated(unbondingId)` hook
 
 ### Unbonding to Unbonded
@@ -94,7 +94,7 @@ Delegation may be called.
 - if the validator state is `Bonded`, transfer the `Coins` worth of the unbonded
   shares from the `BondedPool` to the `NotBondedPool` `ModuleAccount`
 - remove the validator if it is unbonded and there are no more delegation shares
-- get a unique `unbondingId` and map it to the `UnbondingDelegationEntry` in `UnbondingDelegationByUnbondingIndex` 
+- get a unique `unbondingId` and map it to the `UnbondingDelegationEntry` in `UnbondingDelegationByUnbondingId` 
 - call the `AfterUnbondingInitiated(unbondingId)` hook
 - add the unbonding delegation to `UnbondingDelegationQueue` with the completion time set to `UnbondingTime` 
 
@@ -117,7 +117,7 @@ Redelegations affect the delegation, source and destination validators.
 - otherwise, if the `sourceValidator.Status` is not `Bonded`, and the `destinationValidator`
   is `Bonded`, transfer the newly delegated tokens from the `NotBondedPool` to the `BondedPool` `ModuleAccount`
 - record the token amount in an new entry in the relevant `Redelegation`
-- get a unique `unbondingId` and map it to the `RedelegationEntry` in `RedelegationByUnbondingIndex` 
+- get a unique `unbondingId` and map it to the `RedelegationEntry` in `RedelegationByUnbondingId` 
 - call the `AfterUnbondingInitiated(unbondingId)` hook
 - add the redelegation to `RedelegationQueue` with the completion time set to `UnbondingTime` 
 

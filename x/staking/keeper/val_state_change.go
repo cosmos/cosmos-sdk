@@ -358,7 +358,7 @@ func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	k.AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator())
 
 	id := k.IncrementUnbondingId(ctx)
-	k.SetValidatorByUnbondingIndex(ctx, validator, id)
+	k.SetValidatorByUnbondingId(ctx, validator, id)
 
 	k.AfterUnbondingInitiated(ctx, id)
 

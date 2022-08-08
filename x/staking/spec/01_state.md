@@ -67,7 +67,7 @@ records within a block.
 - Validators: `0x21 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(validator)`
 - ValidatorsByConsAddr: `0x22 | ConsAddrLen (1 byte) | ConsAddr -> OperatorAddr`
 - ValidatorsByPower: `0x23 | BigEndian(ConsensusPower) | OperatorAddrLen (1 byte) | OperatorAddr -> OperatorAddr`
-- ValidatorsByUnbondingIndex: `0x38 | UnbondingId ->  0x21 | OperatorAddrLen (1 byte) | OperatorAddr`
+- ValidatorsByUnbondingId: `0x38 | UnbondingId ->  0x21 | OperatorAddrLen (1 byte) | OperatorAddr`
 - LastValidatorsPower: `0x11 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(ConsensusPower)`
 
 `Validators` is the primary index - it ensures that each operator can have only one
@@ -85,7 +85,7 @@ potential validators to quickly determine the current active set. Here
 ConsensusPower is validator.Tokens/10^6 by default. Note that all validators
 where `Jailed` is true are not stored within this index.
 
-`ValidatorsByUnbondingIndex` is an additional index that enables lookups for 
+`ValidatorsByUnbondingId` is an additional index that enables lookups for 
 validators by the unbonding IDs corresponding to their current unbonding.
 
 `LastValidatorsPower` is a special index that provides a historical list of the
@@ -141,7 +141,7 @@ detected.
 
 - UnbondingDelegation: `0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(unbondingDelegation)`
 - UnbondingDelegationsFromValidator: `0x33 | ValidatorAddrLen (1 byte) | ValidatorAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
-- UnbondingDelegationByUnbondingIndex: `0x38 | UnbondingId -> 0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr`
+- UnbondingDelegationByUnbondingId: `0x38 | UnbondingId -> 0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr`
 
 `UnbondingDelegation` is used in queries, to lookup all unbonding delegations for
 a given delegator.
@@ -150,7 +150,7 @@ a given delegator.
 unbonding delegations associated with a given validator that need to be
 slashed.
 
-`UnbondingDelegationByUnbondingIndex` is an additional index that enables 
+`UnbondingDelegationByUnbondingId` is an additional index that enables 
 lookups for unbonding delegations by the unbonding IDs of the containing 
 unbonding delegation entries.
 
@@ -171,7 +171,7 @@ committed by the source validator.
 - Redelegations: `0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr -> ProtocolBuffer(redelegation)`
 - RedelegationsBySrc: `0x35 | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
 - RedelegationsByDst: `0x36 | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
-- RedelegationByUnbondingIndex: `0x38 | UnbondingId -> 0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr`
+- RedelegationByUnbondingId: `0x38 | UnbondingId -> 0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr`
 
 `Redelegations` is used for queries, to lookup all redelegations for a given
 delegator.
@@ -180,7 +180,7 @@ delegator.
 
 `RedelegationsByDst` is used for slashing based on the `ValidatorDstAddr`
 
-`RedelegationByUnbondingIndex` is an additional index that enables 
+`RedelegationByUnbondingId` is an additional index that enables 
 lookups for redelegations by the unbonding IDs of the containing 
 redelegation entries.
 

@@ -8,26 +8,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Increments and returns a unique ID for an UnbondingDelegationEntry
-func (k Keeper) IncrementUnbondingId(ctx sdk.Context) (unbondingDelegationEntryId uint64) {
+// Increments and returns a unique ID for an unbonding operation
+func (k Keeper) IncrementUnbondingId(ctx sdk.Context) (unbondingId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.UnbondingDelegationEntryIdKey)
+	bz := store.Get(types.UnbondingIdKey)
 
 	if bz == nil {
-		unbondingDelegationEntryId = 0
+		unbondingId = 0
 	} else {
-		unbondingDelegationEntryId = binary.BigEndian.Uint64(bz)
+		unbondingId = binary.BigEndian.Uint64(bz)
 	}
 
-	unbondingDelegationEntryId = unbondingDelegationEntryId + 1
+	unbondingId = unbondingId + 1
 
 	// Convert back into bytes for storage
 	bz = make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, unbondingDelegationEntryId)
+	binary.BigEndian.PutUint64(bz, unbondingId)
 
-	store.Set(types.UnbondingDelegationEntryIdKey, bz)
+	store.Set(types.UnbondingIdKey, bz)
 
-	return unbondingDelegationEntryId
+	return unbondingId
 }
 
 // Remove a ValidatorByUnbondingIndex

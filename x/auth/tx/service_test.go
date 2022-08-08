@@ -225,7 +225,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 				// - tx.* events: tx.fee, tx.acc_seq, tx.signature
 				// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
 				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend
-				s.Require().Equal(len(res.GetResult().GetEvents()), 14) // 1 coin recv 1 coin spent, 1 transfer, 3 messages.
+				s.Require().Equal(len(res.GetResult().GetEvents()), 13) // 1 coin recv 1 coin spent, 1 transfer, 3 messages.
 				s.Require().True(res.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, just check it's not empty.
 			}
 		})
@@ -267,7 +267,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
 				s.Require().Len(result.GetResult().MsgResponses, 1)
-				s.Require().Equal(len(result.GetResult().GetEvents()), 14) // See TestSimulateTx_GRPC for the 13 events.
+				s.Require().Equal(len(result.GetResult().GetEvents()), 13) // See TestSimulateTx_GRPC for the 13 events.
 				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, jus
 			}
 		})

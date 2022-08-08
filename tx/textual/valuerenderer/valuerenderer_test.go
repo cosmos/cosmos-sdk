@@ -73,15 +73,18 @@ func TestFormatDecimal(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, tc := range testcases {
-		d, err := math.LegacyNewDecFromStr(tc[0])
-		require.NoError(t, err)
-		r, err := valueRendererOf(d)
-		require.NoError(t, err)
-		b := new(strings.Builder)
-		err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
-		require.NoError(t, err)
+		tc := tc
+		t.Run(tc[0], func(t *testing.T) {
+			d, err := math.LegacyNewDecFromStr(tc[0])
+			require.NoError(t, err)
+			r, err := valueRendererOf(d)
+			require.NoError(t, err)
+			b := new(strings.Builder)
+			err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
+			require.NoError(t, err)
 
-		require.Equal(t, tc[1], b.String())
+			require.Equal(t, tc[1], b.String())
+		})
 	}
 }
 
@@ -95,6 +98,7 @@ func TestGetADR050ValueRenderer(t *testing.T) {
 		{"uint64", uint64(1), false},
 		{"sdk.Int", math.NewInt(1), false},
 		{"sdk.Dec", math.LegacyNewDec(1), false},
+		{"[]byte", []byte{1}, false},
 		{"float32", float32(1), true},
 		{"float64", float64(1), true},
 	}
@@ -128,6 +132,8 @@ func valueRendererOf(v interface{}) (valuerenderer.ValueRenderer, error) {
 		return textual.GetValueRenderer(a.ByName(protoreflect.Name("INT32")))
 	case int64:
 		return textual.GetValueRenderer(a.ByName(protoreflect.Name("INT64")))
+	case []byte:
+		return textual.GetValueRenderer(a.ByName(protoreflect.Name("BYTES")))
 	case math.Int:
 		return textual.GetValueRenderer(a.ByName(protoreflect.Name("SDKINT")))
 	case math.LegacyDec:

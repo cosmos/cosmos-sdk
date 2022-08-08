@@ -6,18 +6,18 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	v1bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
 	v2bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestSupplyMigration(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
@@ -68,7 +68,7 @@ func TestSupplyMigration(t *testing.T) {
 }
 
 func TestBalanceKeysMigration(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
@@ -93,13 +93,13 @@ func TestBalanceKeysMigration(t *testing.T) {
 	err = v2bank.MigrateStore(ctx, bankKey, encCfg.Codec)
 	require.NoError(t, err)
 
-	newKey := append(types.CreateAccountBalancesPrefix(addr), []byte(fooCoin.Denom)...)
+	newKey := types.CreatePrefixedAccountStoreKey(addr, []byte(fooCoin.Denom))
 	// -7 because we replaced "balances" with 0x02,
 	// +1 because we added length-prefix to address.
 	require.Equal(t, len(oldFooKey)-7+1, len(newKey))
 	require.Nil(t, store.Get(oldFooKey))
 	require.Equal(t, fooBz, store.Get(newKey))
 
-	newKeyFooBar := append(types.CreateAccountBalancesPrefix(addr), []byte(fooBarCoin.Denom)...)
+	newKeyFooBar := types.CreatePrefixedAccountStoreKey(addr, []byte(fooBarCoin.Denom))
 	require.Nil(t, store.Get(newKeyFooBar)) // after migration zero balances pruned from store.
 }

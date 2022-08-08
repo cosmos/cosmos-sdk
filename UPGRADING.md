@@ -2,17 +2,53 @@
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
 
-## v0.46
+## [Unreleased]
+
+### AppModule Interface
+
+Remove `Querier`, `Route` and `LegacyQuerier` from the app module interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously known as the LCD, and the `sdk.Msg#Route` method won't be used anymore.
+
+
+
+### SimApp
+
+SimApp's `app.go` is using App Wiring, the dependency injection framework of the Cosmos SDK.
+This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_config.go).
+The old behavior is preserved and still can be used, without the dependency injection framework, as shows [`app_legacy.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_legacy.go).
+
+The constructor, `NewSimApp` has been simplified:
+
+* `NewSimApp` does not take encoding parameters (`encodingConfig`) as input, instead the encoding parameters are injected (when using app wiring), or directly created in the constructor. Instead, we can instantiate `SimApp` for getting the encoding configuration.
+* `NewSimApp` now uses `AppOptions` for getting the home path (`homePath`) and the invariant checks period (`invCheckPeriod`). These were unnecessary given as arguments as they were already present in the `AppOptions`.
+
+### Encoding
+
+`simapp.MakeTestEncodingConfig()` was deprecated and has been removed. Instead you can use the `TestEncodingConfig` from the `types/module/testutil` package.
+This means you can replace your usage of `simapp.MakeTestEncodingConfig` in tests to `moduletestutil.MakeTestEncodingConfig`, which takes a series of relevant `AppModuleBasic` as input (the module being tested and any potential dependencies).
+
+## [v0.46.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0)
 
 ### Client Changes
 
-### `x/gov` v1
+### `x/gov`
+
+#### `types/v1`
 
 The `gov` module has been greatly improved. The previous API has been moved to `v1beta1` while the new implementation is called `v1`.
 
 In order to submit a proposal with `submit-proposal` you now need to pass a `proposal.json` file.
 You can still use the old way by using `submit-legacy-proposal`. This is not recommended.
 More information can be found in the gov module [client documentation](https://docs.cosmos.network/v0.46/modules/gov/07_client.html).
+
+#### Minimum Proposal Deposit At Time of Submission
+
+The `gov` module has been updated to support a minimum proposal deposit at submission time. It is determined by a new
+parameter called `MinInitialDepositRatio`. When multiplied by the existing `MinDeposit` parameter, it produces
+the necessary proportion of coins needed at the proposal submission time. The motivation for this change is to prevent proposal spamming.
+
+By default, the new `MinInitialDepositRatio` parameter is set to zero during migration. The value of zero signifies that this 
+feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
+modified to set the new parameter to the desired value.
 
 ### Keyring
 

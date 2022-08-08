@@ -6,17 +6,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
+
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/testutil"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -26,19 +26,24 @@ type UpgradeTestSuite struct {
 	upgradeKeeper keeper.Keeper
 	ctx           sdk.Context
 	queryClient   types.QueryClient
+	encCfg        moduletestutil.TestEncodingConfig
 }
 
 func (suite *UpgradeTestSuite) SetupTest() {
-	var interfaceRegistry codectypes.InterfaceRegistry
 
-	app, err := simtestutil.Setup(testutil.AppConfig, &interfaceRegistry, &suite.upgradeKeeper)
-	suite.NoError(err)
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	suite.ctx = testCtx.Ctx
 
-	suite.upgradeKeeper.SetVersionSetter(app.BaseApp)
-	suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, app.ModuleManager.GetVersionMap())
+	skipUpgradeHeights := make(map[int64]bool)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, interfaceRegistry)
+	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, key, suite.encCfg.Codec, "", nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
+		"bank": 0,
+	})
+
+	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, suite.encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, suite.upgradeKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }

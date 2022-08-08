@@ -271,7 +271,7 @@ func (cfg *Config) validate() []error {
 }
 
 // SetCurrentUpgrade sets the named upgrade to be the current link, returns error if this binary doesn't exist
-func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) error {
+func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	// ensure named upgrade exists
 	bin := cfg.UpgradeBin(u.Name)
 
@@ -299,14 +299,19 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		cerr := f.Close()
+		if rerr == nil {
+			rerr = cerr
+		}
+	}()
+
 	bz, err := json.Marshal(u)
 	if err != nil {
 		return err
 	}
-	if _, err := f.Write(bz); err != nil {
-		return err
-	}
-	return f.Close()
+	_, err = f.Write(bz)
+        return err
 }
 
 func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {

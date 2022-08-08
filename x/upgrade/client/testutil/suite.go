@@ -4,9 +4,7 @@ import (
 	"fmt"
 
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,8 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewIntegrationTestSuite(cfg network.Config, keeper keeper.Keeper, ctx sdk.Context) *IntegrationTestSuite {
+	return &IntegrationTestSuite{
+		cfg:           cfg,
+		upgradeKeeper: keeper,
+		ctx:           ctx,
+	}
 }
 
 type IntegrationTestSuite struct {
@@ -30,14 +32,6 @@ type IntegrationTestSuite struct {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-
-	app := simapp.Setup(s.T(), false)
-	s.upgradeKeeper = app.UpgradeKeeper
-
-	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
-
-	s.upgradeKeeper.SetVersionSetter(app.BaseApp)
-	s.upgradeKeeper.SetModuleVersionMap(s.ctx, app.ModuleManager.GetVersionMap())
 
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)

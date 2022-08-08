@@ -464,6 +464,7 @@
     - [UnbondingDelegationEntry](#cosmos.staking.v1beta1.UnbondingDelegationEntry)
     - [ValAddresses](#cosmos.staking.v1beta1.ValAddresses)
     - [Validator](#cosmos.staking.v1beta1.Validator)
+    - [ValidatorUpdates](#cosmos.staking.v1beta1.ValidatorUpdates)
   
     - [BondStatus](#cosmos.staking.v1beta1.BondStatus)
     - [InfractionType](#cosmos.staking.v1beta1.InfractionType)
@@ -6614,6 +6615,21 @@ multiplied by exchange rate.
 | `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  | commission defines the commission parameters. |
 | `min_self_delegation` | [string](#string) |  | min_self_delegation is the validator's self declared minimum self delegation. |
 | `unbonding_on_hold_ref_count` | [int64](#int64) |  | Strictly positive if this validator's unbonding has been stopped by external modules |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.ValidatorUpdates"></a>
+
+### ValidatorUpdates
+ValidatorUpdates defines an array of abci.ValidatorUpdate objects.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `updates` | [tendermint.abci.ValidatorUpdate](#tendermint.abci.ValidatorUpdate) | repeated |  |
 
 
 

@@ -33,7 +33,8 @@ func TestBasicManager(t *testing.T) {
 
 	wantDefaultGenesis := map[string]json.RawMessage{
 		"mockAppModuleBasic1": json.RawMessage(``),
-		"mockAppModuleBasic2": json.RawMessage(`{"moniker":"","lives":0}`)}
+		"mockAppModuleBasic2": json.RawMessage(`{"moniker":"","lives":0}`),
+	}
 
 	mockAppModuleBasic1 := mocks.NewMockAppModuleBasicGenesis(mockCtrl)
 	mockAppModuleBasic2 := mocks.NewMockAppModuleBasicGenesisProto(mockCtrl)

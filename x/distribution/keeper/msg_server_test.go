@@ -196,6 +196,12 @@ func (s *KeeperTestSuite) TestCommunityPoolSpend() {
 				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
+
+				r, err := sdk.AccAddressFromBech32(tc.input.Recipient)
+				s.Require().NoError(err)
+
+				b := s.bankKeeper.GetAllBalances(s.ctx, r)
+				s.Require().False(b.IsZero())
 			}
 		})
 	}

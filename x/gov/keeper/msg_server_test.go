@@ -9,6 +9,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -45,6 +46,20 @@ func (s *msgServerSuite) AMindepositParamSetToAndMininitialdepositrationSetTo(d 
 	require.NoError(s.t, err)
 }
 
+func (s *msgServerSuite) AliceSubmitsAProposalWithMsg(a gocuke.DocString) {
+	var msg sdk.Msg
+	err := s.cdc.UnmarshalInterfaceJSON([]byte(a.Content), &msg)
+	require.NoError(s.t, err)
+
+	any, err := codectypes.NewAnyWithValue(msg)
+	require.NoError(s.t, err)
+	_, s.err = s.msgServer.SubmitProposal(sdk.WrapSDKContext(s.ctx), &v1.MsgSubmitProposal{
+		Messages:       []*codectypes.Any{any},
+		InitialDeposit: sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))),
+		Proposer:       s.alice.String(),
+	})
+}
+
 func (s *msgServerSuite) AliceSubmitsAProposalWithDeposit(d string) {
 	coins, err := sdk.ParseCoinsNormalized(d)
 	require.NoError(s.t, err)
@@ -66,5 +81,6 @@ func (s *msgServerSuite) ExpectNoError() {
 }
 
 func (s *msgServerSuite) expectCalls() {
+	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
 	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(s.ctx, s.alice, types.ModuleName, gomock.Any()).Return(nil).AnyTimes()
 }

@@ -56,6 +56,6 @@ jobs:
         with:
           context: ./contrib/devtools
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
           name: ghcr.io/cosmos/proto-builder

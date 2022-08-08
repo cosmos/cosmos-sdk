@@ -146,7 +146,9 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	}
 }
 
-func (s *KeeperTestSuite) CommunityPoolSpend() {
+func (s *KeeperTestSuite) TestCommunityPoolSpend() {
+	recipient := sdk.AccAddress([]byte("addr1_______________"))
+
 	testCases := []struct {
 		name      string
 		input     *types.MsgCommunityPoolSpend
@@ -157,11 +159,30 @@ func (s *KeeperTestSuite) CommunityPoolSpend() {
 			name: "invalid authority",
 			input: &types.MsgCommunityPoolSpend{
 				Authority: "invalid",
-				Recipient: "_______alice________",
+				Recipient: recipient.String(),
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
 			},
 			expErr:    true,
 			expErrMsg: "invalid authority",
+		},
+		{
+			name: "invalid recipient",
+			input: &types.MsgCommunityPoolSpend{
+				Authority: s.distrKeeper.GetAuthority(),
+				Recipient: "invalid",
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
+			},
+			expErr:    true,
+			expErrMsg: "decoding bech32 failed",
+		},
+		{
+			name: "valid message",
+			input: &types.MsgCommunityPoolSpend{
+				Authority: s.distrKeeper.GetAuthority(),
+				Recipient: recipient.String(),
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
+			},
+			expErr: false,
 		},
 	}
 

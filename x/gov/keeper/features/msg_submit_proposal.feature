@@ -16,7 +16,7 @@ Feature: MsgSubmitProposal
     When alice submits a proposal with deposit "1000stake"
     Then expect no error
 
-  Rule: all Msgs are registered and have the gov account as unique signer
+  Rule: all Msgs must be registered and have the gov account as unique signer
 
   Scenario: Msg with incorrect signer
     When alice submits a proposal with Msg

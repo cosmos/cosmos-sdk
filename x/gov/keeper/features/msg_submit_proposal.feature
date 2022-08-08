@@ -2,7 +2,7 @@ Feature: MsgSubmitProposal
 
   A proposal can be submitted if:
   - the deposit is greater or equal than the MinDeposit param
-  - all Msgs are registered and have the gov account as unique signer ("cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn")
+  - all Msgs' type URLs are registered and have the gov account as unique signer ("cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn")
 
   Rule: the deposit is greater or equal than the MinDeposit param
 
@@ -42,7 +42,7 @@ Feature: MsgSubmitProposal
       """
     Then expect the error "expected gov account as only signer for proposal message"
 
-  Scenario: Msg with signer equal to gov account
+  Scenario: correct Msg with signer equal to gov account
     When alice submits a proposal with Msg
       """
       {

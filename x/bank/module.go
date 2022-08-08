@@ -9,8 +9,9 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/depinject"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/crypto"
+
+	store "github.com/cosmos/cosmos-sdk/store/types"
 
 	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -238,10 +239,10 @@ type bankOutputs struct {
 }
 
 func provideModule(in bankInputs) bankOutputs {
-	// configure blocked module accounts.
+	// Configure blocked module accounts.
 	//
-	// default behavior for blockedAddresses is to regard any module mentioned in AccountKeeper's module account
-	// permissions as blocked.
+	// Default behavior for blockedAddresses is to regard any module mentioned in
+	// AccountKeeper's module account permissions as blocked.
 	blockedAddresses := make(map[string]bool)
 	if len(in.Config.BlockedModuleAccountsOverride) != 0 {
 		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {

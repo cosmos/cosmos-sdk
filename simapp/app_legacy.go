@@ -271,7 +271,11 @@ func NewSimApp(
 	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, keys[authtypes.StoreKey], authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.ModuleAccountAddrs(), authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec,
+		keys[banktypes.StoreKey],
+		app.AccountKeeper,
+		BlockedAddresses(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -669,7 +673,18 @@ func GetMaccPerms() map[string][]string {
 	for k, v := range maccPerms {
 		dupMaccPerms[k] = v
 	}
+
 	return dupMaccPerms
+}
+
+// BlockedAddresses returns all the app's blocked account addresses.
+func BlockedAddresses() map[string]bool {
+	modAccAddrs := GetMaccPerms()
+
+	// allow the following addresses to receive funds
+	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
+	return modAccAddrs
 }
 
 // initParamsKeeper init params keeper and its subspaces

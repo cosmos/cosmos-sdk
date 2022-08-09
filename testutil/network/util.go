@@ -200,7 +200,7 @@ func writeFile(name string, dir string, contents []byte) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(file, contents, 0o644) // nolint: gosec
+	err = ioutil.WriteFile(file, contents, 0o644) //nolint: gosec
 	if err != nil {
 		return err
 	}

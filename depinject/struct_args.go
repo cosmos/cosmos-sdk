@@ -176,7 +176,6 @@ func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int, erro
 		}
 		if !values[j].CanInterface() {
 			return reflect.Value{}, 0, fmt.Errorf("depinject.Out struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath)
-
 		}
 
 		res.Elem().Field(i).Set(values[j])

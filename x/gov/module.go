@@ -33,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -140,7 +139,6 @@ func NewAppModule(
 	cdc codec.Codec, keeper *keeper.Keeper,
 	ak types.AccountKeeper, bk types.BankKeeper, ss types.ParamSubspace,
 ) AppModule {
-
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -195,7 +193,7 @@ func provideModule(in govInputs) govOutputs {
 
 	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
 	if !ok {
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+		authority = authtypes.NewModuleAddress(types.ModuleName)
 	}
 
 	k := keeper.NewKeeper(

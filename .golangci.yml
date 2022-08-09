@@ -21,7 +21,7 @@ linters:
     - misspell
     - nakedret
     - nolintlint
-    - staticcheck
+    # - staticcheck // TODO to re-enable
     - stylecheck
     - typecheck
     - unconvert

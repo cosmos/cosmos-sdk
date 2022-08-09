@@ -127,3 +127,8 @@ As a result, it gives a good indication of the progress of the upgrade.
 
 There is also downgrade and re-upgrade protection. If a node operator chooses to downgrade to IAVL pre-fast index, and then upgrade again, the index is rebuilt from scratch. This implementation detail should not be relevant in most cases. It was added as a safeguard against operator
 mistakes.
+
+### Modules
+
+- The `x/param` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos-SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
+  - The Param module will be maintained until April 18, 2022. At this point the module will reach end of life and be removed from the Cosmos SDK.

@@ -39,6 +39,6 @@ for platform in ${TARGET_PLATFORMS} ; do
     restore_build_env
 done
 
-# Generate and display build report.
+# Generate and display to build report.
 generate_build_report
 cat ${OUTDIR}/build_report

@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/transient"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 var (
@@ -623,6 +624,15 @@ func (s *Store) getMerkleRoots() (ret map[string][]byte, err error) {
 		ret[key.Name()] = sub.stateCommitmentStore.Root()
 	}
 	return
+}
+
+func (s *Store) GetSubStoreProofs() (map[string]*tmcrypto.Proof, error) {
+	storeHashes, err := s.getMerkleRoots()
+	if err != nil {
+		return nil, err
+	}
+	_, proofs, _ := sdkmaps.ProofsFromMap(storeHashes)
+	return proofs, nil
 }
 
 // Calculates root hashes and commits to DB. Does not verify target version or perform pruning.

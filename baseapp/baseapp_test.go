@@ -2322,7 +2322,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 
 	// Light Client
 
-	// TODO: Insert fraudproof verification here
+	// Fraudproof verification
 
 	// Now we take contents of the fraud proof which was recorded with S2 and try to populate a fresh baseapp B2 with it
 	// B2 <- S2

@@ -2253,6 +2253,53 @@ func checkSMTStoreEqual(appB1 *BaseApp, appB2 *BaseApp, storeKeyName string) boo
 	return bytes.Equal(storeHashB1, storeHashB2)
 }
 
+func TestFraudProofGenerationMode(t *testing.T) {
+	// enableFraudProofGenerationMode rolls back an app's state to a previous
+	// state and enables tracing for the list of store keys
+
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			kv := msg.(*msgKeyValue)
+			bapp.cms.GetKVStore(capKey2).Set(kv.Key, kv.Value)
+			return &sdk.Result{}, nil
+		}))
+	}
+
+	// BaseApp, B1 with no Tracing
+	appB1 := setupBaseApp(t,
+		AppOptionFunc(routerOpt),
+	)
+
+	// B1 <- S0
+	appB1.InitChain(abci.RequestInitChain{})
+
+	numTransactions := 1
+	// B1 <- S1
+	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
+	appB1.Commit()
+
+	// B1 <- S2
+	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
+
+	// Now, try to get back to S1
+
+	// storeKeys := make([]stypes.StoreKey, 0)
+	cms := appB1.cms.(*multi.Store)
+	// opts := multi.DefaultStoreParams()
+	// previousCMS, _ := cms.RevertStore(opts)
+	lastVersion := cms.LastCommitID().Version
+	previousCMS, _ := cms.GetVersion(lastVersion)
+	subStore := previousCMS.GetKVStore(capKey2)
+	k := subStore.Get([]byte("26"))
+	k1 := subStore.Get([]byte("41"))
+	_, _ = k, k1
+	// for it := subStore.Iterator(); it.Valid(); {
+	// 	v := it.Value()
+	// 	_ = v
+	// }
+	_ = previousCMS
+}
+
 func TestGenerateAndLoadFraudProof(t *testing.T) {
 	/*
 		Tests switch between a baseapp and fraudproof and covers parts of the fraudproof cycle. Steps:

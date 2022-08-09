@@ -783,7 +783,7 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.Stor
 			return FraudProof{}, err
 		}
 		stateWitness := StateWitness{
-			proof:       proof,
+			proof:       *proof,
 			rootHash:    storeHash,
 			WitnessData: make([]WitnessData, 0, keys.Len()),
 		}

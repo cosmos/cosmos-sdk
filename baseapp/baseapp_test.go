@@ -2248,10 +2248,15 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 func testSubstoresEqual(t *testing.T, appB1 *BaseApp, appB2 *BaseApp, storeKeyName string) {
 
 	cmsB1 := appB1.cms.(*multi.Store)
-	proofB1, storeHashB1, err := cmsB1.GetSubStoreProof(capKey2.Name())
+	proofOpB1, storeHashB1, err := cmsB1.GetSubStoreProof(capKey2.Name())
 	require.Nil(t, err)
 	cmsB2 := appB1.cms.(*multi.Store)
-	proofB2, storeHashB2, err := cmsB2.GetSubStoreProof(capKey2.Name())
+	proofOpB2, storeHashB2, err := cmsB2.GetSubStoreProof(capKey2.Name())
+	require.Nil(t, err)
+
+	proofB1, err := stypes.CommitmentOpDecoder(*proofOpB1)
+	require.Nil(t, err)
+	proofB2, err := stypes.CommitmentOpDecoder(*proofOpB2)
 	require.Nil(t, err)
 
 	hashB1, err := proofB1.Run([][]byte{storeHashB1})
@@ -2336,7 +2341,9 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 
 	// Fraudproof verification
 	for _, stateWitness := range fraudProof.stateWitness {
-		proof := stateWitness.proof
+		proofOp := stateWitness.proof
+		proof, err := stypes.CommitmentOpDecoder(proofOp)
+		require.Nil(t, err)
 		appHash, err := proof.Run([][]byte{stateWitness.rootHash})
 		require.Nil(t, err)
 		require.NotEmpty(t, appHash)

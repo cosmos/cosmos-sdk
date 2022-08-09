@@ -337,11 +337,15 @@ func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validat
 		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
 	}
 
+	id := k.IncrementUnbondingId(ctx)
+
 	validator = validator.UpdateStatus(types.Unbonding)
 
 	// set the unbonding completion time and completion height appropriately
 	validator.UnbondingTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
 	validator.UnbondingHeight = ctx.BlockHeader().Height
+
+	validator.UnbondingIds = append(validator.UnbondingIds, id)
 
 	// save the now unbonded validator record and power index
 	k.SetValidator(ctx, validator)
@@ -357,8 +361,7 @@ func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	}
 	k.AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator())
 
-	id := k.IncrementUnbondingId(ctx)
-	k.SetValidatorByUnbondingId(ctx, validator, id)
+	k.SetValidatorByUnbondingIndex(ctx, validator, id)
 
 	k.AfterUnbondingInitiated(ctx, id)
 

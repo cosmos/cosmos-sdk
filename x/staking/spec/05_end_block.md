@@ -35,10 +35,11 @@ is calculated during `EndBlock`.
 ## Queues
 
 Within staking, certain state-transitions are not instantaneous but take place
-over a duration of time (typically the unbonding period). When these
-transitions are mature certain operations must take place in order to complete
-the state operation. This is achieved through the use of queues which are
-checked/processed at the end of each block.
+over a duration of time (typically the unbonding period). We refer to these 
+transitions as unbonding operations. When these transitions are mature certain 
+operations must take place in order to complete the unbonding operation. 
+This is achieved through the use of queues which are checked/processed at the 
+end of each block.
 
 ### Unbonding Validators
 
@@ -75,3 +76,11 @@ Complete the unbonding of all mature `Redelegation.Entries` within the
 - remove the mature entry from `Redelegation.Entries`
 - remove the `Redelegation` object from the store if there are no
   remaining entries.
+
+## Putting unbonding operations on hold
+
+Unbonding operations can be put on hold by external modules via the `PutUnbondingOnHold(unbondingId)` method. 
+As a result, an unbonding operation (e.g., an unbonding delegation) that is on hold, cannot complete 
+even if it reaches maturity. For an unbonding operation with `unbondingId` to eventually complete 
+(after it reaches maturity), every call to `PutUnbondingOnHold(unbondingId)` must be matched 
+by a call to `UnbondingCanComplete(unbondingId)`. 

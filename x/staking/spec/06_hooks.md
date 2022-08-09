@@ -25,3 +25,5 @@ following hooks can registered with staking:
     - called when a delegation's shares are modified
 - `BeforeDelegationRemoved(Context, AccAddress, ValAddress)`
     - called when a delegation is removed
+- `AfterUnbondingInitiated(Context, UnbondingID)`
+  - called when an unbonding operation (validator unbonding, unbonding delegation, redelegation) was initiated

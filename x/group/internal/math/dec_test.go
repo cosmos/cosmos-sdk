@@ -28,7 +28,7 @@ func TestDec(t *testing.T) {
 	t.Run("TestSubAdd", rapid.MakeCheck(testSubAdd))
 	t.Run("TestAddSub", rapid.MakeCheck(testAddSub))
 
-	// Properties about comparision and equality
+	// Properties about comparison and equality
 	t.Run("TestCmpInverse", rapid.MakeCheck(testCmpInverse))
 	t.Run("TestEqualCommutative", rapid.MakeCheck(testEqualCommutative))
 

@@ -785,10 +785,8 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.Stor
 		}
 		for key := range keys {
 			value := substoreSMT.Get([]byte(key))
-			proof, err := substoreSMT.GetSMTProof([]byte(key))
-			if err != nil {
-				panic(err)
-			}
+			// Assumption: The keys exist in the SMT because they were traced
+			proof := substoreSMT.MustGetSMTProof([]byte(key))
 			bKey, bVal := []byte(key), []byte(value)
 			witnessData := WitnessData{bKey, bVal, *proof}
 			stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)

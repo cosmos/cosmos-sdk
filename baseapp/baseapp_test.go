@@ -118,9 +118,6 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 		stateWitness := fraudProof.stateWitness[storeKeyName]
 		witnessData := stateWitness.WitnessData
 		for _, witness := range witnessData {
-			// TODO:
-			// Verify proof inside WitnessData
-
 			options = append(options, SetSubstoreKVPair(storeKey, witness.Key, witness.Value))
 		}
 	}
@@ -2325,7 +2322,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 
 	// Light Client
 
-	// Fraudproof verification
+	// Fraudproof verification on a store level
 	for _, stateWitness := range fraudProof.stateWitness {
 		proofOp := stateWitness.proof
 		proof, err := stypes.CommitmentOpDecoder(proofOp)
@@ -2334,6 +2331,12 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 		require.Nil(t, err)
 		require.NotEmpty(t, appHash)
 		require.Equal(t, appHash[0], appHashB1)
+
+		// Fraudproof verification on a substore level
+		for _, witness := range stateWitness.WitnessData {
+			proof, key, value := witness.proof, witness.Key, witness.Value
+			_, _, _ = proof, key, value
+		}
 	}
 
 	// Now we take contents of the fraud proof which was recorded with S2 and try to populate a fresh baseapp B2 with it

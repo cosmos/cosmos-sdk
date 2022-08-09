@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"github.com/lazyledger/smt"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
@@ -27,5 +26,5 @@ type StateWitness struct {
 type WitnessData struct {
 	Key   []byte
 	Value []byte
-	proof smt.SparseMerkleProof
+	proof tmcrypto.ProofOp
 }

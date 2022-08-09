@@ -60,7 +60,8 @@ func init() {
 }
 
 // compress compresses the given file descriptor
-// nolint: interfacer
+//
+//nolint:interfacer
 func compress(fd *dpb.FileDescriptorProto) ([]byte, error) {
 	fdBytes, err := proto.Marshal(fd)
 	if err != nil {

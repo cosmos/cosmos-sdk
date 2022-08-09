@@ -1,25 +1,43 @@
-name: golangci-lint
+name: Lint
+# Lint runs golangci-lint over the entire cosmos-sdk repository
+# This workflow is run on every pull request and push to main
+# The `golangci` will pass without running if no *.{go, mod, sum} files have been changed.
 on:
+  pull_request:
   push:
-    tags:
-      - v*
     branches:
       - main
-  pull_request:
 permissions:
   contents: read
+
 jobs:
   golangci:
-    name: lint
+    permissions:
+      pull-requests: read # for technote-space/get-diff-action to get git reference
+    name: golangci-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19
       - uses: actions/checkout@v3
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+      - uses: technote-space/get-diff-action@v6.1.0
+        id: git_diff
         with:
-          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
-          version: latest
-          args: --timeout 10m
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - name: Get data from Go build cache
+        # if: env.GIT_DIFF
+        if: ${{ false }}
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
+      - name: Run golangci-lint
+        if: env.GIT_DIFF
+        run: make lint

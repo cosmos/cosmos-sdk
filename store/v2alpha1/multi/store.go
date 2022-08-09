@@ -525,6 +525,7 @@ func (s *Store) getSubstore(key string) (*substore, error) {
 
 func (s *Store) SetSubstoreKVPair(skeyName string, kv, val []byte) {
 	sub, err := s.getSubstore(skeyName)
+	s.substoreCache[skeyName] = sub
 	if err != nil {
 		panic(err)
 	}

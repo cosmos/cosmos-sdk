@@ -62,7 +62,7 @@ func NewAppModuleBasic(legacyProposalHandlers []govclient.ProposalHandler) AppMo
 
 // Name returns the gov module's name.
 func (AppModuleBasic) Name() string {
-	return types.ModuleName
+	return govtypes.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the gov module's types for the given codec.
@@ -81,7 +81,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var data v1.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", govtypes.ModuleName, err)
 	}
 
 	return v1.ValidateGenesis(&data)
@@ -128,17 +128,17 @@ type AppModule struct {
 	AppModuleBasic
 
 	keeper        *keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	accountKeeper govtypes.AccountKeeper
+	bankKeeper    govtypes.BankKeeper
 
 	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace types.ParamSubspace
+	legacySubspace govtypes.ParamSubspace
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper *keeper.Keeper,
-	ak types.AccountKeeper, bk types.BankKeeper, ss types.ParamSubspace,
+	ak govtypes.AccountKeeper, bk govtypes.BankKeeper, ss govtypes.ParamSubspace,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
@@ -170,12 +170,12 @@ type govInputs struct {
 	MsgServiceRouter *baseapp.MsgServiceRouter
 	Authority        map[string]sdk.AccAddress `optional:"true"`
 
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper
+	AccountKeeper govtypes.AccountKeeper
+	BankKeeper    govtypes.BankKeeper
+	StakingKeeper govtypes.StakingKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace types.ParamSubspace
+	LegacySubspace govtypes.ParamSubspace
 }
 
 type govOutputs struct {
@@ -187,7 +187,7 @@ type govOutputs struct {
 }
 
 func provideModule(in govInputs) govOutputs {
-	kConfig := types.DefaultConfig()
+	kConfig := govtypes.DefaultConfig()
 	if in.Config.MaxMetadataLen != 0 {
 		kConfig.MaxMetadataLen = in.Config.MaxMetadataLen
 	}
@@ -235,7 +235,7 @@ func invokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
 	keeper.SetLegacyRouter(router)
 }
 
-func invokeSetHooks(keeper *keeper.Keeper, govHooks map[string]types.GovHooksWrapper) error {
+func invokeSetHooks(keeper *keeper.Keeper, govHooks map[string]govtypes.GovHooksWrapper) error {
 	if keeper == nil || govHooks == nil {
 		return nil
 	}
@@ -246,7 +246,7 @@ func invokeSetHooks(keeper *keeper.Keeper, govHooks map[string]types.GovHooksWra
 	order := modNames
 	sort.Strings(order)
 
-	var multiHooks types.MultiGovHooks
+	var multiHooks govtypes.MultiGovHooks
 	for _, modName := range order {
 		hook, ok := govHooks[modName]
 		if !ok {
@@ -261,7 +261,7 @@ func invokeSetHooks(keeper *keeper.Keeper, govHooks map[string]types.GovHooksWra
 
 // Name returns the gov module's name.
 func (AppModule) Name() string {
-	return types.ModuleName
+	return govtypes.ModuleName
 }
 
 // RegisterInvariants registers module invariants
@@ -272,7 +272,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	msgServer := keeper.NewMsgServerImpl(am.keeper)
-	v1beta1.RegisterMsgServer(cfg.MsgServer(), keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(types.ModuleName).String(), msgServer))
+	v1beta1.RegisterMsgServer(cfg.MsgServer(), keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(govtypes.ModuleName).String(), msgServer))
 	v1.RegisterMsgServer(cfg.MsgServer(), msgServer)
 
 	legacyQueryServer := keeper.NewLegacyQueryServer(am.keeper)
@@ -280,15 +280,15 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	v1.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
-	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
+	err := cfg.RegisterMigration(govtypes.ModuleName, 1, m.Migrate1to2)
 	if err != nil {
 		panic(err)
 	}
-	err = cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
+	err = cfg.RegisterMigration(govtypes.ModuleName, 2, m.Migrate2to3)
 	if err != nil {
 		panic(err)
 	}
-	err = cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4)
+	err = cfg.RegisterMigration(govtypes.ModuleName, 3, m.Migrate3to4)
 	if err != nil {
 		panic(err)
 	}
@@ -342,7 +342,7 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for gov module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[govtypes.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

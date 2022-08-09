@@ -475,7 +475,7 @@ func writeFile(name string, dir string, contents []byte) error {
 		return err
 	}
 
-	err = os.WriteFile(file, contents, 0o644) // nolint: gosec
+	err = os.WriteFile(file, contents, 0o644) //nolint: gosec
 	if err != nil {
 		return err
 	}

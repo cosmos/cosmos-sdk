@@ -357,9 +357,9 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 	val := s.network.Validators[0]
 
 	params := v1.DefaultParams()
-	dp := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
-	vp := v1.NewVotingParams(params.VotingPeriod)
-	tp := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
+	dp := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)          //nolint:staticcheck
+	vp := v1.NewVotingParams(params.VotingPeriod)                                  //nolint:staticcheck
+	tp := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold) //nolint:staticcheck
 
 	testCases := []struct {
 		name       string

@@ -541,11 +541,11 @@ $ %s query gov params
 				return err
 			}
 
-			vp := v1.NewVotingParams(res.Params.VotingPeriod)
-			res.VotingParams = &vp
+			vp := v1.NewVotingParams(res.Params.VotingPeriod) //nolint:staticcheck
+			res.VotingParams = &vp                            //nolint:staticcheck
 
-			tp := v1.NewTallyParams(res.Params.Quorum, res.Params.Threshold, res.Params.VetoThreshold)
-			res.TallyParams = &tp
+			tp := v1.NewTallyParams(res.Params.Quorum, res.Params.Threshold, res.Params.VetoThreshold) //nolint:staticcheck
+			res.TallyParams = &tp                                                                      //nolint:staticcheck
 
 			return clientCtx.PrintProto(res)
 		},

@@ -28,16 +28,7 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19
-      - uses: technote-space/get-diff-action@v6.1.0
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/**.go
-            **/go.mod
-            **/go.sum
       - name: Get data from Go build cache
-        # if: env.GIT_DIFF
-        if: ${{ false }}
         uses: actions/cache@v3
         with:
           path: |
@@ -68,16 +59,7 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19
-      - uses: technote-space/get-diff-action@v6.1.0
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
       - name: Get data from Go build cache
-        # if: env.GIT_DIFF
-        if: ${{ false }}
         uses: actions/cache@v3
         with:
           path: |
@@ -86,9 +68,7 @@ jobs:
             ~/.cache/go-build
           key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: Run submodule tests and create test coverage profile.
-        # GIT_DIFF is passed to the scripts
         run: bash scripts/module-tests.sh
-        if: env.GIT_DIFF
       - uses: actions/upload-artifact@v3
         with:
           name: "${{ github.sha }}-go-submodules-coverage"
@@ -154,11 +134,9 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
-        if: env.GIT_DIFF
       - name: test & coverage report creation
         run: |
           cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -race -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='ledger test_ledger_mock'
-        if: env.GIT_DIFF
       - uses: actions/upload-artifact@v3
         with:
           name: "${{ github.sha }}-${{ matrix.part }}-coverage"
@@ -178,27 +156,21 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-00-coverage"
-        if: env.GIT_DIFF
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-01-coverage"
-        if: env.GIT_DIFF
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-02-coverage"
-        if: env.GIT_DIFF
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-03-coverage"
-        if: env.GIT_DIFF
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-go-submodules-coverage"
-        if: env.GIT_DIFF
         continue-on-error: true
       - run: |
           cat ./*profile.out | grep -v "mode: atomic" >> coverage.txt
-        if: env.GIT_DIFF
       - name: filter out DONTCOVER
         run: |
           excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
@@ -259,8 +231,6 @@ jobs:
             go.mod
             go.sum
       - name: Get data from Go build cache
-        # if: env.GIT_DIFF
-        if: ${{ false }}
         uses: actions/cache@v3
         with:
           path: |
@@ -271,11 +241,9 @@ jobs:
       - name: start localnet
         run: |
           make clean localnet-start
-        if: env.GIT_DIFF
       - name: test liveness
         run: |
           ./contrib/localnet_liveness.sh 100 5 50 localhost
-        if: env.GIT_DIFF
 
   test-sim-nondeterminism:
     runs-on: ubuntu-latest

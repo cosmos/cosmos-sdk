@@ -57,6 +57,13 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &redB)
 
 			return fmt.Sprintf("%v\n%v", redA, redB)
+		case bytes.Equal(kvA.Key[:1], types.ParamsKey):
+			var paramsA, paramsB types.Params
+
+			cdc.MustUnmarshal(kvA.Value, &paramsA)
+			cdc.MustUnmarshal(kvB.Value, &paramsB)
+
+			return fmt.Sprintf("%v\n%v", paramsA, paramsB)
 		default:
 			panic(fmt.Sprintf("invalid staking key prefix %X", kvA.Key[:1]))
 		}

@@ -20,7 +20,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
-	"github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -2323,28 +2322,9 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 
 	// Light Client
 
-	// Fraudproof verification on a store level
-	for storeKey, stateWitness := range fraudProof.stateWitness {
-		proofOp := stateWitness.proof
-		proof, err := stypes.CommitmentOpDecoder(proofOp)
-		require.Nil(t, err)
-		require.Equal(t, proof.GetKey(), []byte(storeKey))
-		appHash, err := proof.Run([][]byte{stateWitness.rootHash})
-		require.Nil(t, err)
-		require.NotEmpty(t, appHash)
-		require.Equal(t, appHash[0], appHashB1)
-
-		// Fraudproof verification on a substore level
-		for _, witness := range stateWitness.WitnessData {
-			proofOp, key, value := witness.proof, witness.Key, witness.Value
-			proof, err := smt.ProofDecoder(proofOp)
-			require.Nil(t, err)
-			require.Equal(t, proof.GetKey(), key)
-			rootHash, err := proof.Run([][]byte{value})
-			require.Nil(t, err)
-			require.Equal(t, rootHash[0], stateWitness.rootHash)
-		}
-	}
+	fraudProofVerified, err := fraudProof.verifyFraudProof(appHashB1)
+	require.Nil(t, err)
+	require.True(t, fraudProofVerified)
 
 	// Now we take contents of the fraud proof which was recorded with S2 and try to populate a fresh baseapp B2 with it
 	// B2 <- S2

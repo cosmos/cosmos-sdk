@@ -39,7 +39,9 @@ func RevCapabilityKey(module, name string) []byte {
 // FwdCapabilityKey returns a forward lookup key for a given module and capability
 // reference.
 func FwdCapabilityKey(module string, cap *Capability) []byte {
-	// truncate the key to fixed length, keep backward compatible on common architectures.
+	// encode the key to a fixed length to avoid breaking consensus state machine
+	// it's a hacky backport of https://github.com/cosmos/cosmos-sdk/pull/11737
+	// the length 10 is picked so it's backward compatible on common architectures.
 	key := fmt.Sprintf("%#010p", cap)
 	if len(key) > 10 {
 		key = key[len(key)-10:]

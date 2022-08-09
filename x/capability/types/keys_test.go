@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"fmt"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -31,4 +32,22 @@ func TestIndexToKey(t *testing.T) {
 
 func TestIndexFromKey(t *testing.T) {
 	require.Equal(t, uint64(3162), types.IndexFromKey([]byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xc, 0x5a}))
+}
+
+// to test the backward compatibiltiy of the new function
+func legacyFwdCapabilityKey(module string, cap *types.Capability) []byte {
+	return []byte(fmt.Sprintf("%s/fwd/%p", module, cap))
+}
+
+func TestFwdCapabilityKeyCompatibility(t *testing.T) {
+	cap := types.NewCapability(24)
+	new := types.FwdCapabilityKey("bank", cap)
+	old := legacyFwdCapabilityKey("bank", cap)
+	if runtime.GOOS == "darwin" && runtime.GOARCH == "arm" {
+		// the legacy version has 1 more byte on mac m1
+		require.Equal(t, len(old), len(new)+1)
+	} else {
+		// otherwise, the new version is identical
+		require.Equal(t, new, old)
+	}
 }

@@ -33,7 +33,7 @@ import (
 )
 
 // ConsensusVersion defines the current x/distribution module consensus version.
-const ConsensusVersion = 3
+const ConsensusVersion = 4
 
 var (
 	_ module.AppModule           = AppModule{}

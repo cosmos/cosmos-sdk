@@ -9,7 +9,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -130,10 +129,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		// part of the bonded validator set
 		valAddr := sdk.ValAddress(iterator.Value())
 		validator := k.mustGetValidator(ctx, valAddr)
-		consAddr, err := validator.GetConsAddr()
-		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "invalid consensus address for validator %s", valAddr)
-		}
 
 		if validator.Jailed {
 			panic("should never retrieve a jailed validator from the power store")
@@ -180,7 +175,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			update := validator.ABCIValidatorUpdate(powerReduction)
 			updates = append(updates, update)
 			// set the validator update and power
-			k.SetValidatorUpdate(ctx, consAddr, update)
 			k.SetLastValidatorPower(ctx, valAddr, newPower)
 		}
 
@@ -203,18 +197,10 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			return nil, err
 		}
 
-		consAddr, err := validator.GetConsAddr()
-		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "invalid consensus address for validator %s", valAddr)
-		}
-
 		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
 		k.DeleteLastValidatorPower(ctx, validator.GetOperator())
 		update := validator.ABCIValidatorUpdateZero()
 		updates = append(updates, update)
-
-		// set the validator update to transient store
-		k.SetValidatorUpdate(ctx, consAddr, update)
 	}
 
 	// Update the pools based on the recent updates in the validator set:
@@ -236,6 +222,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	if len(updates) > 0 {
 		k.SetLastTotalPower(ctx, totalPower)
 	}
+
+	// set the list of validator updates
+	k.SetValidatorUpdates(ctx, updates)
 
 	return updates, nil
 }

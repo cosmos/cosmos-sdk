@@ -16,10 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 )
 
 const (
@@ -129,7 +129,7 @@ type BaseApp struct { // nolint: maligned
 	indexEvents map[string]struct{}
 }
 
-var _ upgrade.AppVersionManager = (*BaseApp)(nil)
+var _ storetypes.AppVersionManager = (*BaseApp)(nil)
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
 // variadic number of option functions, which act on the BaseApp to set

@@ -5,7 +5,7 @@ import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package                      = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 option (gogoproto.goproto_getters_all) = false;
 
 // Plan specifies information about a planned upgrade and when it should occur.
@@ -22,10 +22,14 @@ message Plan {
   // reached and the software will exit.
   string name = 1;
 
-  // Deprecated: Time based upgrades have been deprecated. Time based upgrade logic
-  // has been removed from the SDK.
-  // If this field is not empty, an error will be thrown.
-  google.protobuf.Timestamp time = 2 [deprecated = true, (gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // Deprecated: Time based upgrades have been deprecated. Time based upgrade
+  // logic has been removed from the SDK. If this field is not empty, an error
+  // will be thrown.
+  google.protobuf.Timestamp time = 2 [
+    deprecated           = true,
+    (gogoproto.stdtime)  = true,
+    (gogoproto.nullable) = false
+  ];
 
   // The height at which the upgrade must be performed.
   // Only used if Time is not set.
@@ -35,11 +39,13 @@ message Plan {
   // such as a git commit that validators could automatically upgrade to
   string info = 4;
 
-  // Deprecated: UpgradedClientState field has been deprecated. IBC upgrade logic has been
-  // moved to the IBC module in the sub module 02-client.
-  // If this field is not empty, an error will be thrown.
-  google.protobuf.Any upgraded_client_state = 5
-      [deprecated = true, (gogoproto.moretags) = "yaml:\"upgraded_client_state\""];
+  // Deprecated: UpgradedClientState field has been deprecated. IBC upgrade
+  // logic has been moved to the IBC module in the sub module 02-client. If this
+  // field is not empty, an error will be thrown.
+  google.protobuf.Any upgraded_client_state = 5 [
+    deprecated           = true,
+    (gogoproto.moretags) = "yaml:\"upgraded_client_state\""
+  ];
 }
 
 // SoftwareUpgradeProposal is a gov Content type for initiating a software
@@ -75,4 +81,9 @@ message ModuleVersion {
 
   // consensus version of the app module
   uint64 version = 2;
+}
+
+// Params defines the x/upgrade parameters.
+message Params {
+  bool is_mainnet = 1;
 }

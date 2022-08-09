@@ -563,8 +563,12 @@
 - [cosmos/upgrade/v1beta1/upgrade.proto](#cosmos/upgrade/v1beta1/upgrade.proto)
     - [CancelSoftwareUpgradeProposal](#cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal)
     - [ModuleVersion](#cosmos.upgrade.v1beta1.ModuleVersion)
+    - [Params](#cosmos.upgrade.v1beta1.Params)
     - [Plan](#cosmos.upgrade.v1beta1.Plan)
     - [SoftwareUpgradeProposal](#cosmos.upgrade.v1beta1.SoftwareUpgradeProposal)
+  
+- [cosmos/upgrade/v1beta1/genesis.proto](#cosmos/upgrade/v1beta1/genesis.proto)
+    - [GenesisState](#cosmos.upgrade.v1beta1.GenesisState)
   
 - [cosmos/upgrade/v1beta1/query.proto](#cosmos/upgrade/v1beta1/query.proto)
     - [QueryAppliedPlanRequest](#cosmos.upgrade.v1beta1.QueryAppliedPlanRequest)
@@ -8060,6 +8064,21 @@ Since: cosmos-sdk 0.43
 
 
 
+<a name="cosmos.upgrade.v1beta1.Params"></a>
+
+### Params
+Params defines the x/upgrade parameters.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `is_mainnet` | [bool](#bool) |  |  |
+
+
+
+
+
+
 <a name="cosmos.upgrade.v1beta1.Plan"></a>
 
 ### Plan
@@ -8091,6 +8110,37 @@ upgrade.
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
 | `plan` | [Plan](#cosmos.upgrade.v1beta1.Plan) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/upgrade/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/upgrade/v1beta1/genesis.proto
+
+
+
+<a name="cosmos.upgrade.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the x/upgrade module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#cosmos.upgrade.v1beta1.Params) |  | params defines the x/upgrade parameters. |
 
 
 

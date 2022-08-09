@@ -18,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	vm "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -31,7 +31,8 @@ type Keeper struct {
 	storeKey           sdk.StoreKey                    // key to access x/upgrade store
 	cdc                codec.BinaryCodec               // App-wide binary codec
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
-	versionManager     vm.AppVersionManager            // implements setting the app version field on BaseApp
+	versionManager     store.AppVersionManager         // implements setting the app version field on BaseApp
+	paramspace         exported.ParamSubspace
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -40,7 +41,19 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's app version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryCodec, homePath string, vs vm.AppVersionManager) Keeper {
+func NewKeeper(
+	skipUpgradeHeights map[int64]bool,
+	storeKey sdk.StoreKey,
+	cdc codec.BinaryCodec,
+	homePath string,
+	vs store.AppVersionManager,
+	paramspace exported.ParamSubspace,
+) Keeper {
+	// set KeyTable if it has not already been set
+	if !paramspace.HasKeyTable() {
+		paramspace = paramspace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -48,6 +61,19 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc cod
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
 		versionManager:     vs,
+		paramspace:         paramspace,
+	}
+}
+
+// InitGenesis initializes the x/upgrade module's state based on GenesisState.
+func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
+	k.SetParams(ctx, genState.Params)
+}
+
+// ExportGenesis returns the x/upgrade module's state in GenesisState.
+func (k Keeper) ExportGenesis(ctx sdk.Context) types.GenesisState {
+	return types.GenesisState{
+		Params: k.GetParams(ctx),
 	}
 }
 

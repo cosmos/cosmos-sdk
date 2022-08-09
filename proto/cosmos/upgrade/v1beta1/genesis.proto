@@ -1,0 +1,13 @@
+syntax = "proto3";
+package cosmos.upgrade.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/upgrade/v1beta1/upgrade.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
+
+// GenesisState defines the x/upgrade module's genesis state.
+message GenesisState {
+  // params defines the x/upgrade parameters.
+  Params params = 1 [(gogoproto.nullable) = false];
+}

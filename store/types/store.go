@@ -11,7 +11,6 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	vm "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 )
 
 type Store interface {
@@ -152,7 +151,7 @@ type CommitMultiStore interface {
 	Committer
 	MultiStore
 	snapshottypes.Snapshotter
-	vm.AppVersionManager
+	AppVersionManager
 
 	// Mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.

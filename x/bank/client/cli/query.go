@@ -41,14 +41,14 @@ func GetQueryCmd() *cobra.Command {
 
 func GetBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "balances [Address]",
-		Short: "Query for TestAccount balances by Address",
+		Use:   "balances [address]",
+		Short: "Query for account balances by address",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the total balance of an TestAccount or of a specific denomination.
+			fmt.Sprintf(`Query the total balance of an account or of a specific denomination.
 
 Example:
-  $ %s query %s balances [Address]
-  $ %s query %s balances [Address] --denom=[denom]
+  $ %s query %s balances [address]
+  $ %s query %s balances [address] --denom=[denom]
 `,
 				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),

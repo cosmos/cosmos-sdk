@@ -36,10 +36,10 @@ func NewTxCmd() *cobra.Command {
 func NewSendTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send [from_key_or_address] [to_address] [amount]",
-		Short: "Send funds from one TestAccount to another.",
-		Long: `Send funds from one TestAccount to another.
+		Short: "Send funds from one account to another.",
+		Long: `Send funds from one account to another.
 Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
-When using '--dry-run' a key Name cannot be used, only a bech32 Address.
+When using '--dry-run' a key name cannot be used, only a bech32 address.
 `,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -71,16 +71,16 @@ When using '--dry-run' a key Name cannot be used, only a bech32 Address.
 }
 
 // NewMultiSendTxCmd returns a CLI command handler for creating a MsgMultiSend transaction.
-// For a better UX this command is limited to send funds from one TestAccount to two or more accounts.
+// For a better UX this command is limited to send funds from one account to two or more accounts.
 func NewMultiSendTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "multi-send [from_key_or_address] [to_address_1, to_address_2, ...] [amount]",
-		Short: "Send funds from one TestAccount to two or more accounts.",
-		Long: `Send funds from one TestAccount to two or more accounts.
-By default, sends the [amount] to each Address of the list.
+		Short: "Send funds from one account to two or more accounts.",
+		Long: `Send funds from one account to two or more accounts.
+By default, sends the [amount] to each address of the list.
 Using the '--split' flag, the [amount] is split equally between the addresses.
 Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
-When using '--dry-run' a key Name cannot be used, only a bech32 Address.
+When using '--dry-run' a key name cannot be used, only a bech32 address.
 `,
 		Args: cobra.MinimumNArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -121,11 +121,11 @@ When using '--dry-run' a key Name cannot be used, only a bech32 Address.
 				output = append(output, types.NewOutput(toAddr, sendCoins))
 			}
 
-			// amount to be send from the from Address
+			// amount to be send from the from address
 			var amount sdk.Coins
 			if split {
 				// user input: 1000stake to send to 3 addresses
-				// actual: 333stake to each Address (=> 999stake actually sent)
+				// actual: 333stake to each address (=> 999stake actually sent)
 				amount = sendCoins.MulInt(totalAddrs)
 			} else {
 				amount = coins.MulInt(totalAddrs)
@@ -137,7 +137,7 @@ When using '--dry-run' a key Name cannot be used, only a bech32 Address.
 		},
 	}
 
-	cmd.Flags().Bool(FlagSplit, false, "Send the equally split token amount to each Address")
+	cmd.Flags().Bool(FlagSplit, false, "Send the equally split token amount to each address")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

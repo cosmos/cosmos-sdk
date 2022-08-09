@@ -787,6 +787,8 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.Stor
 			rootHash:    storeHash,
 			WitnessData: make([]WitnessData, 0, keys.Len()),
 		}
+		proofs, err := cms.GetSubStoreProofs()
+		_, _ = proofs, err
 		for key := range keys {
 			value := substoreSMT.Get([]byte(key))
 			proofOps, err := substoreSMT.GetProof([]byte(key))

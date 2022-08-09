@@ -29,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/transient"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 var (

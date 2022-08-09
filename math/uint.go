@@ -140,6 +140,11 @@ func (u Uint) MarshalJSON() ([]byte, error) {
 	return marshalJSON(u.i)
 }
 
+// MarshalYAML returns the YAML representation.
+func (i Uint) MarshalYAML() (interface{}, error) {
+	return i.String(), nil
+}
+
 // UnmarshalJSON defines custom decoding scheme
 func (u *Uint) UnmarshalJSON(bz []byte) error {
 	if u.i == nil { // Necessary since default Uint initialization has i.i as nil

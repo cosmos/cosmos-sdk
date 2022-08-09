@@ -1,6 +1,7 @@
 package math_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/big"
@@ -10,6 +11,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
+	"sigs.k8s.io/yaml"
 )
 
 type uintTestSuite struct {
@@ -22,6 +24,18 @@ func TestUnitTestSuite(t *testing.T) {
 
 func (s *uintTestSuite) SetupSuite() {
 	s.T().Parallel()
+}
+
+func (s *uintTestSuite) TestUintMarshalYAMLandJSON() {
+	u1 := sdkmath.NewUint(1235)
+	bz, err := yaml.Marshal(u1)
+	s.Require().NoError(err)
+	s.Require().Equal("\"1235\"\n", string(bz))
+
+	bz, err = json.Marshal(u1)
+	s.Require().NoError(err)
+	s.Require().Equal(`"1235"`, string(bz))
+
 }
 
 func (s *uintTestSuite) TestUintPanics() {

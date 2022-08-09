@@ -591,11 +591,11 @@ $ %s query gov param deposit
 			var out fmt.Stringer
 			switch args[0] {
 			case "voting":
-				out = res.GetVotingParams()
+				out = res.GetVotingParams() //nolint:staticcheck
 			case "tallying":
-				out = res.GetTallyParams()
+				out = res.GetTallyParams() //nolint:staticcheck
 			case "deposit":
-				out = res.GetDepositParams()
+				out = res.GetDepositParams() //nolint:staticcheck
 			default:
 				return fmt.Errorf("argument must be one of (voting|tallying|deposit), was %s", args[0])
 			}

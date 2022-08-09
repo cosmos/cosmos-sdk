@@ -164,16 +164,16 @@ func (q Keeper) Params(c context.Context, req *v1.QueryParamsRequest) (*v1.Query
 
 	switch req.ParamsType {
 	case v1.ParamDeposit:
-		depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
-		response.DepositParams = &depositParams
+		depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod) //nolint:staticcheck
+		response.DepositParams = &depositParams                                          //nolint:staticcheck
 
 	case v1.ParamVoting:
-		votingParams := v1.NewVotingParams(params.VotingPeriod)
-		response.VotingParams = &votingParams
+		votingParams := v1.NewVotingParams(params.VotingPeriod) //nolint:staticcheck
+		response.VotingParams = &votingParams                   //nolint:staticcheck
 
 	case v1.ParamTallying:
-		tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
-		response.TallyParams = &tallyParams
+		tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold) //nolint:staticcheck
+		response.TallyParams = &tallyParams                                                     //nolint:staticcheck
 
 	default:
 		return nil, status.Errorf(codes.InvalidArgument,

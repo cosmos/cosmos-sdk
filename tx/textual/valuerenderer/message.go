@@ -33,15 +33,21 @@ func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value
 		if err != nil {
 			return err
 		}
+		// Skip default values.
+		if !v.Message().Has(fd) {
+			continue
+		}
+
+		buf.Reset()
 		if err := vr.Format(ctx, v.Message().Get(fd), buf); err != nil {
 			return fmt.Errorf("failed to format subfield %s: %w", fd.FullName(), err)
 		}
+
 		sc := bufio.NewScanner(buf)
 		if sc.Scan() {
 			str := sc.Text()
 			fmt.Fprintf(w, "> %s: %s\n", formatFieldName(string(fd.Name())), str)
 		}
-
 		for sc.Scan() {
 			str := sc.Text()
 			// Only add a space after the > if the field isn't already nested.
@@ -54,7 +60,6 @@ func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value
 		if sc.Err() != nil {
 			return err
 		}
-		buf.Reset()
 	}
 
 	return nil

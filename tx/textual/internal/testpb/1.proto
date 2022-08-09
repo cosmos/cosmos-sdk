@@ -45,6 +45,7 @@ message Foo {
   string full_name = 1;
   Bar child_bar = 2;
   string unused_field = 3;
+  int64 unused_int = 4;
 }
 
 // Bar is a sample message type used for testing message rendering.

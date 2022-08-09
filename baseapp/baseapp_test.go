@@ -35,8 +35,9 @@ import (
 )
 
 var (
-	capKey1 = sdk.NewKVStoreKey("key1")
-	capKey2 = sdk.NewKVStoreKey("key2")
+	capKey1    = sdk.NewKVStoreKey("key1")
+	capKey2    = sdk.NewKVStoreKey("key2")
+	randSource = int64(3920758213583)
 
 	// testTxPriority is the CheckTx priority that we set in the test
 	// antehandler.
@@ -123,17 +124,15 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 	// This initial height is used in `BeginBlock` in `validateHeight`
 	options = append(options, SetInitialHeight(fraudProof.blockHeight))
 
-	for storeKey := range fraudProof.stateWitness {
-		stateWitness := fraudProof.stateWitness[storeKey]
+	for _, storeKey := range storeKeys {
+		stateWitness := fraudProof.stateWitness[storeKey.Name()]
 		witnessData := stateWitness.WitnessData
 		for _, witness := range witnessData {
-			// Optimization
 			// TODO:
-			// Verify proof inside WitnessData: Not sure since canot do it before setting up without doing the redundant work on creating deepSubTrees here (ideally optimint does it)
+			// Verify proof inside WitnessData
 
 			options = append(options, SetSubstoreKVPair(storeKey, witness.Key, witness.Value))
 		}
-		// Q. How do we use stateWitness.root to ensure the root of the underlying subtree just initialized is the same? Do we need that?
 	}
 	// make list of options to pass by parsing fraudproof
 	app := newBaseApp(t.Name(), options...)
@@ -2206,8 +2205,9 @@ func TestBaseApp_Init(t *testing.T) {
 func executeBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions int, blockHeight int64) []txTest {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
-	r := rand.New(rand.NewSource(3920758213583))
-	keyCounter := 0
+	r := rand.New(rand.NewSource(randSource))
+	randSource *= 2
+	keyCounter := r.Intn(100)
 	txs := make([]txTest, 0)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: blockHeight}})
@@ -2330,7 +2330,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 
 	// B1 <- S2
 	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, fraudProof.blockHeight)
-	//require.False(t, checkSubstoreSMTsEqual(appB1, appB2, capKey2.Name()))
+	require.False(t, checkSubstoreSMTsEqual(appB1, appB2, capKey2.Name()))
 
 	// Apply the set of transactions txs1 here
 	// B2 <- S2

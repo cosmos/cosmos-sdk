@@ -39,3 +39,16 @@ message B {
   double         DOUBLE   = 10;
   map<string, B> MAP      = 11;
 }
+
+// Foo is a sample message type used for testing message rendering.
+message Foo {
+  string full_name = 1;
+  Bar child_bar = 2;
+  string unused_field = 3;
+}
+
+// Bar is a sample message type used for testing message rendering.
+message Bar {
+  string bar_id = 1;
+  int64 power_level = 2;
+}

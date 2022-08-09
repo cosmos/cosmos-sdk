@@ -48,8 +48,7 @@ func (suite *SimTestSuite) SetupTest() {
 		configurator.BankModule(),
 		configurator.StakingModule(),
 		configurator.TxModule(),
-	),
-		&suite.accountKeeper, &suite.bankKeeper, &suite.cdc, &appBuilder)
+	), &suite.accountKeeper, &suite.bankKeeper, &suite.cdc, &appBuilder)
 
 	suite.NoError(err)
 

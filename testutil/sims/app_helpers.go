@@ -20,7 +20,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -70,8 +69,8 @@ func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 }
 
 type GenesisAccount struct {
-	Pubkey types.PubKey
-	Coins  sdk.Coins
+	authtypes.GenesisAccount
+	Coins sdk.Coins
 }
 
 // StartupConfig defines the startup configuration new a test application.
@@ -87,9 +86,13 @@ type StartupConfig struct {
 }
 
 func DefaultStartUpConfig() StartupConfig {
+	priv := secp256k1.GenPrivKey()
+	ba := authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), priv.PubKey(), 0, 0)
+	ga := GenesisAccount{ba, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000)))}
 	return StartupConfig{
-		ValidatorSet: CreateRandomValidatorSet,
-		AtGenesis:    false,
+		ValidatorSet:    CreateRandomValidatorSet,
+		AtGenesis:       false,
+		GenesisAccounts: []GenesisAccount{ga},
 	}
 }
 
@@ -150,23 +153,13 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 		return nil, fmt.Errorf("failed to create validator set")
 	}
 
-	// generate genesis account
-	if len(startupConfig.GenesisAccounts) == 0 {
-		priv := secp256k1.GenPrivKey()
-		startupConfig.GenesisAccounts = append(startupConfig.GenesisAccounts, GenesisAccount{
-			Pubkey: priv.PubKey(),
-			Coins:  sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
-		})
-	}
-
 	var (
 		balances    []banktypes.Balance
 		genAccounts []authtypes.GenesisAccount
 	)
-	for i, ga := range startupConfig.GenesisAccounts {
-		acc := authtypes.NewBaseAccount(ga.Pubkey.Address().Bytes(), ga.Pubkey, uint64(i), 0)
-		genAccounts = append(genAccounts, acc)
-		balances = append(balances, banktypes.Balance{Address: acc.GetAddress().String(), Coins: ga.Coins})
+	for _, ga := range startupConfig.GenesisAccounts {
+		genAccounts = append(genAccounts, ga.GenesisAccount)
+		balances = append(balances, banktypes.Balance{Address: ga.GenesisAccount.GetAddress().String(), Coins: ga.Coins})
 	}
 
 	genesisState, err := GenesisStateWithValSet(codec, appBuilder.DefaultGenesis(), valSet, genAccounts, balances...)

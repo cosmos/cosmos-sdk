@@ -2,7 +2,7 @@ package baseapp
 
 import (
 	"github.com/lazyledger/smt"
-	"github.com/tendermint/tendermint/crypto/merkle"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 // Represents a single-round fraudProof
@@ -17,7 +17,7 @@ type FraudProof struct {
 // State witness with a list of all witness data
 type StateWitness struct {
 	// store level proof
-	proof    merkle.ProofOperator
+	proof    tmcrypto.ProofOp
 	rootHash []byte
 	// List of witness data
 	WitnessData []WitnessData

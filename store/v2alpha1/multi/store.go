@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
 
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	prefixdb "github.com/cosmos/cosmos-sdk/db/prefix"
@@ -28,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/transient"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 var (
@@ -626,15 +626,13 @@ func (s *Store) getMerkleRoots() (ret map[string][]byte, err error) {
 	return
 }
 
-func (s *Store) GetSubStoreProof(storeKeyName string) (merkle.ProofOperator, []byte, error) {
+func (s *Store) GetSubStoreProof(storeKeyName string) (*tmcrypto.ProofOp, []byte, error) {
 	storeHashes, err := s.getMerkleRoots()
 	if err != nil {
 		return nil, nil, err
 	}
 	proofOp, err := types.ProofOpFromMap(storeHashes, storeKeyName)
-	proof, _ := types.CommitmentOpDecoder(proofOp)
-	storeHash := storeHashes[storeKeyName]
-	return proof, storeHash, err
+	return &proofOp, storeHashes[storeKeyName], err
 }
 
 // Calculates root hashes and commits to DB. Does not verify target version or perform pruning.

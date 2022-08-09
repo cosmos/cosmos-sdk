@@ -523,12 +523,8 @@ func (s *Store) getSubstore(key string) (*substore, error) {
 	}, nil
 }
 
-func (s *Store) SetSubstoreKVPair(skeyName string, kv, val []byte) {
-	sub, err := s.getSubstore(skeyName)
-	s.substoreCache[skeyName] = sub
-	if err != nil {
-		panic(err)
-	}
+func (s *Store) SetSubstoreKVPair(skey types.StoreKey, kv, val []byte) {
+	sub := s.GetKVStore(skey)
 	sub.Set(kv, val)
 }
 

@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func TestFoo(t *testing.T) {
+func TestMessageValueRenderer_Format(t *testing.T) {
 	tr := NewTextual()
 	mr := &messageValueRenderer{
 		tr: &tr,

@@ -2102,6 +2102,7 @@ var (
 	fd_Foo_full_name    protoreflect.FieldDescriptor
 	fd_Foo_child_bar    protoreflect.FieldDescriptor
 	fd_Foo_unused_field protoreflect.FieldDescriptor
+	fd_Foo_unused_int   protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -2110,6 +2111,7 @@ func init() {
 	fd_Foo_full_name = md_Foo.Fields().ByName("full_name")
 	fd_Foo_child_bar = md_Foo.Fields().ByName("child_bar")
 	fd_Foo_unused_field = md_Foo.Fields().ByName("unused_field")
+	fd_Foo_unused_int = md_Foo.Fields().ByName("unused_int")
 }
 
 var _ protoreflect.Message = (*fastReflection_Foo)(nil)
@@ -2195,6 +2197,12 @@ func (x *fastReflection_Foo) Range(f func(protoreflect.FieldDescriptor, protoref
 			return
 		}
 	}
+	if x.UnusedInt != int64(0) {
+		value := protoreflect.ValueOfInt64(x.UnusedInt)
+		if !f(fd_Foo_unused_int, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -2216,6 +2224,8 @@ func (x *fastReflection_Foo) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.ChildBar != nil
 	case "Foo.unused_field":
 		return x.UnusedField != ""
+	case "Foo.unused_int":
+		return x.UnusedInt != int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Foo"))
@@ -2238,6 +2248,8 @@ func (x *fastReflection_Foo) Clear(fd protoreflect.FieldDescriptor) {
 		x.ChildBar = nil
 	case "Foo.unused_field":
 		x.UnusedField = ""
+	case "Foo.unused_int":
+		x.UnusedInt = int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Foo"))
@@ -2263,6 +2275,9 @@ func (x *fastReflection_Foo) Get(descriptor protoreflect.FieldDescriptor) protor
 	case "Foo.unused_field":
 		value := x.UnusedField
 		return protoreflect.ValueOfString(value)
+	case "Foo.unused_int":
+		value := x.UnusedInt
+		return protoreflect.ValueOfInt64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Foo"))
@@ -2289,6 +2304,8 @@ func (x *fastReflection_Foo) Set(fd protoreflect.FieldDescriptor, value protoref
 		x.ChildBar = value.Message().Interface().(*Bar)
 	case "Foo.unused_field":
 		x.UnusedField = value.Interface().(string)
+	case "Foo.unused_int":
+		x.UnusedInt = value.Int()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Foo"))
@@ -2318,6 +2335,8 @@ func (x *fastReflection_Foo) Mutable(fd protoreflect.FieldDescriptor) protorefle
 		panic(fmt.Errorf("field full_name of message Foo is not mutable"))
 	case "Foo.unused_field":
 		panic(fmt.Errorf("field unused_field of message Foo is not mutable"))
+	case "Foo.unused_int":
+		panic(fmt.Errorf("field unused_int of message Foo is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Foo"))
@@ -2338,6 +2357,8 @@ func (x *fastReflection_Foo) NewField(fd protoreflect.FieldDescriptor) protorefl
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "Foo.unused_field":
 		return protoreflect.ValueOfString("")
+	case "Foo.unused_int":
+		return protoreflect.ValueOfInt64(int64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Foo"))
@@ -2419,6 +2440,9 @@ func (x *fastReflection_Foo) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if x.UnusedInt != 0 {
+			n += 1 + runtime.Sov(uint64(x.UnusedInt))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -2447,6 +2471,11 @@ func (x *fastReflection_Foo) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.UnusedInt != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.UnusedInt))
+			i--
+			dAtA[i] = 0x20
 		}
 		if len(x.UnusedField) > 0 {
 			i -= len(x.UnusedField)
@@ -2625,6 +2654,25 @@ func (x *fastReflection_Foo) ProtoMethods() *protoiface.Methods {
 				}
 				x.UnusedField = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field UnusedInt", wireType)
+				}
+				x.UnusedInt = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.UnusedInt |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -3413,6 +3461,7 @@ type Foo struct {
 	FullName    string `protobuf:"bytes,1,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
 	ChildBar    *Bar   `protobuf:"bytes,2,opt,name=child_bar,json=childBar,proto3" json:"child_bar,omitempty"`
 	UnusedField string `protobuf:"bytes,3,opt,name=unused_field,json=unusedField,proto3" json:"unused_field,omitempty"`
+	UnusedInt   int64  `protobuf:"varint,4,opt,name=unused_int,json=unusedInt,proto3" json:"unused_int,omitempty"`
 }
 
 func (x *Foo) Reset() {
@@ -3454,6 +3503,13 @@ func (x *Foo) GetUnusedField() string {
 		return x.UnusedField
 	}
 	return ""
+}
+
+func (x *Foo) GetUnusedInt() int64 {
+	if x != nil {
+		return x.UnusedInt
+	}
+	return 0
 }
 
 // Bar is a sample message type used for testing message rendering.
@@ -3549,13 +3605,15 @@ var file__1_proto_rawDesc = []byte{
 	0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x18, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
 	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x02, 0x2e, 0x42, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75,
-	0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x68, 0x0a, 0x03, 0x46, 0x6f, 0x6f, 0x12, 0x1b, 0x0a, 0x09,
-	0x66, 0x75, 0x6c, 0x6c, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x08, 0x66, 0x75, 0x6c, 0x6c, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x21, 0x0a, 0x09, 0x63, 0x68, 0x69,
-	0x6c, 0x64, 0x5f, 0x62, 0x61, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x04, 0x2e, 0x42,
-	0x61, 0x72, 0x52, 0x08, 0x63, 0x68, 0x69, 0x6c, 0x64, 0x42, 0x61, 0x72, 0x12, 0x21, 0x0a, 0x0c,
-	0x75, 0x6e, 0x75, 0x73, 0x65, 0x64, 0x5f, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x0b, 0x75, 0x6e, 0x75, 0x73, 0x65, 0x64, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x22,
+	0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x87, 0x01, 0x0a, 0x03, 0x46, 0x6f, 0x6f, 0x12, 0x1b, 0x0a,
+	0x09, 0x66, 0x75, 0x6c, 0x6c, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x08, 0x66, 0x75, 0x6c, 0x6c, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x21, 0x0a, 0x09, 0x63, 0x68,
+	0x69, 0x6c, 0x64, 0x5f, 0x62, 0x61, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x04, 0x2e,
+	0x42, 0x61, 0x72, 0x52, 0x08, 0x63, 0x68, 0x69, 0x6c, 0x64, 0x42, 0x61, 0x72, 0x12, 0x21, 0x0a,
+	0x0c, 0x75, 0x6e, 0x75, 0x73, 0x65, 0x64, 0x5f, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0b, 0x75, 0x6e, 0x75, 0x73, 0x65, 0x64, 0x46, 0x69, 0x65, 0x6c, 0x64,
+	0x12, 0x1d, 0x0a, 0x0a, 0x75, 0x6e, 0x75, 0x73, 0x65, 0x64, 0x5f, 0x69, 0x6e, 0x74, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x75, 0x6e, 0x75, 0x73, 0x65, 0x64, 0x49, 0x6e, 0x74, 0x22,
 	0x3d, 0x0a, 0x03, 0x42, 0x61, 0x72, 0x12, 0x15, 0x0a, 0x06, 0x62, 0x61, 0x72, 0x5f, 0x69, 0x64,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x62, 0x61, 0x72, 0x49, 0x64, 0x12, 0x1f, 0x0a,
 	0x0b, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x5f, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x02, 0x20, 0x01,

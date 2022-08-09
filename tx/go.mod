@@ -1,6 +1,6 @@
 module cosmossdk.io/tx
 
-go 1.18
+go 1.19
 
 require (
 	cosmossdk.io/api v0.1.0-alpha8

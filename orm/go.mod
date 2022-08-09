@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/orm
 
-go 1.18
+go 1.19
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7

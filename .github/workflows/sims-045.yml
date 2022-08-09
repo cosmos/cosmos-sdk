@@ -10,8 +10,8 @@ on:
 jobs:
   cleanup-runs:
     permissions:
-      actions: write  # for rokroskar/workflow-run-cleanup-action to obtain workflow name & cancel it
-      contents: read  # for rokroskar/workflow-run-cleanup-action to obtain branch
+      actions: write # for rokroskar/workflow-run-cleanup-action to obtain workflow name & cancel it
+      contents: read # for rokroskar/workflow-run-cleanup-action to obtain branch
     runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: rokroskar/workflow-run-cleanup-action@master
@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - name: Display go version
         run: go version
       - run: make build
@@ -38,7 +38,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - name: Display go version
         run: go version
       - name: Install runsim
@@ -57,7 +57,7 @@ jobs:
           ref: "release/v0.45.x"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - name: Display go version
         run: go version
       - uses: actions/cache@v3
@@ -77,7 +77,7 @@ jobs:
           ref: "release/v0.45.x"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - name: Display go version
         run: go version
       - uses: actions/cache@v3
@@ -98,7 +98,7 @@ jobs:
           ref: "release/v0.45.x"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - name: Display go version
         run: go version
       - uses: actions/cache@v3

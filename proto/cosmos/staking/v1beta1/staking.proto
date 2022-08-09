@@ -118,8 +118,11 @@ message Validator {
     (gogoproto.nullable)   = false
   ];
 
-  // Strictly positive if this validator's unbonding has been stopped by external modules
+  // strictly positive if this validator's unbonding has been stopped by external modules
   int64 unbonding_on_hold_ref_count = 12;
+
+  // list of unbonding ids, each uniquely identifing an unbonding of this validator
+  repeated uint64 unbonding_ids = 13;
 }
 
 // BondStatus is the status of a validator.

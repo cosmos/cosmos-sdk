@@ -20,6 +20,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
+	"github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -2323,10 +2324,11 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	// Light Client
 
 	// Fraudproof verification on a store level
-	for _, stateWitness := range fraudProof.stateWitness {
+	for storeKey, stateWitness := range fraudProof.stateWitness {
 		proofOp := stateWitness.proof
 		proof, err := stypes.CommitmentOpDecoder(proofOp)
 		require.Nil(t, err)
+		require.Equal(t, proof.GetKey(), []byte(storeKey))
 		appHash, err := proof.Run([][]byte{stateWitness.rootHash})
 		require.Nil(t, err)
 		require.NotEmpty(t, appHash)
@@ -2334,9 +2336,13 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 
 		// Fraudproof verification on a substore level
 		for _, witness := range stateWitness.WitnessData {
-			proof, key, value := witness.proof, witness.Key, witness.Value
-			proof.GetProof()
-			_, _, _ = proof, key, value
+			proofOp, key, value := witness.proof, witness.Key, witness.Value
+			proof, err := smt.ProofDecoder(proofOp)
+			require.Nil(t, err)
+			require.Equal(t, proof.GetKey(), key)
+			rootHash, err := proof.Run([][]byte{value})
+			require.Nil(t, err)
+			require.Equal(t, rootHash[0], stateWitness.rootHash)
 		}
 	}
 

@@ -21,7 +21,7 @@ func NewMinter(inflation, annualProvisions sdk.Dec) Minter {
 func InitialMinter(inflation sdk.Dec) Minter {
 	return NewMinter(
 		inflation,
-		sdk.NewDec(0),
+		math.LegacyNewDec(0),
 	)
 }
 
@@ -43,7 +43,7 @@ func ValidateMinter(minter Minter) error {
 }
 
 // NextInflationRate returns the new inflation rate for the next hour.
-func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
+func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) math.LegacyDec {
 	// The target annual inflation rate is recalculated for each previsions cycle. The
 	// inflation is also subject to a rate change (positive or negative) depending on
 	// the distance from the desired ratio (67%). The maximum rate change possible is
@@ -51,10 +51,10 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
 	// 7% and 20%.
 
 	// (1 - bondedRatio/GoalBonded) * InflationRateChange
-	inflationRateChangePerYear := sdk.OneDec().
+	inflationRateChangePerYear := math.LegacyOneDec().
 		Sub(bondedRatio.Quo(params.GoalBonded)).
 		Mul(params.InflationRateChange)
-	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
+	inflationRateChange := inflationRateChangePerYear.Quo(math.LegacyNewDec(int64(params.BlocksPerYear)))
 
 	// adjust the new annual inflation for this next cycle
 	inflation := m.Inflation.Add(inflationRateChange) // note inflationRateChange may be negative
@@ -70,7 +70,7 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
 
 // NextAnnualProvisions returns the annual provisions based on current total
 // supply and inflation rate.
-func (m Minter) NextAnnualProvisions(_ Params, totalSupply math.Int) sdk.Dec {
+func (m Minter) NextAnnualProvisions(_ Params, totalSupply math.Int) math.LegacyDec {
 	return m.Inflation.MulInt(totalSupply)
 }
 

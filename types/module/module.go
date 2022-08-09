@@ -152,15 +152,6 @@ type AppModule interface {
 	// registers
 	RegisterInvariants(sdk.InvariantRegistry)
 
-	// Deprecated: use RegisterServices
-	Route() sdk.Route
-
-	// Deprecated: use RegisterServices
-	QuerierRoute() string
-
-	// Deprecated: use RegisterServices
-	LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier
-
 	// RegisterServices allows a module to register services
 	RegisterServices(Configurator)
 
@@ -285,18 +276,6 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 	for _, module := range m.Modules {
 		module.RegisterInvariants(ir)
-	}
-}
-
-// RegisterRoutes registers all module routes and module querier routes
-func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc *codec.LegacyAmino) {
-	for _, module := range m.Modules {
-		if r := module.Route(); !r.Empty() {
-			router.AddRoute(r)
-		}
-		if r := module.QuerierRoute(); r != "" {
-			queryRouter.AddRoute(r, module.LegacyQuerierHandler(legacyQuerierCdc))
-		}
 	}
 }
 

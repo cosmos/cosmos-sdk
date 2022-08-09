@@ -175,5 +175,9 @@ func (msg MsgUpdateParams) GetSignBytes() []byte {
 
 // ValidateBasic performs basic MsgUpdateParams message validation.
 func (msg MsgUpdateParams) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+	}
+
 	return msg.Params.ValidateBasic()
 }

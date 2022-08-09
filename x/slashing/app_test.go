@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/testutil/sims"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -72,7 +74,7 @@ func TestSlashingMsgs(t *testing.T) {
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
-	_, _, err = simapp.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
+	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
 
@@ -89,7 +91,7 @@ func TestSlashingMsgs(t *testing.T) {
 
 	// unjail should fail with unknown validator
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
-	_, res, err := simapp.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
+	_, res, err := sims.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
 	require.Nil(t, res)
 	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))

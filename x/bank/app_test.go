@@ -141,7 +141,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := tmproto.Header{Height: baseApp.LastBlockHeight() + 1}
 	txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
-	_, _, err := simapp.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+	_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 	require.Error(t, err)
 
 	checkBalance(t, baseApp, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)}, s.BankKeeper)
@@ -217,7 +217,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	for _, tc := range testCases {
 		header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 		txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
-		_, _, err := simapp.SignCheckDeliver(t, txConfig, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		if tc.expPass {
 			require.NoError(t, err)
 		} else {
@@ -267,7 +267,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	for _, tc := range testCases {
 		header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 		txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
-		_, _, err := simapp.SignCheckDeliver(t, txConfig, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
 		for _, eb := range tc.expectedBalances {
@@ -319,7 +319,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	for _, tc := range testCases {
 		header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 		txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
-		_, _, err := simapp.SignCheckDeliver(t, txConfig, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
 		for _, eb := range tc.expectedBalances {

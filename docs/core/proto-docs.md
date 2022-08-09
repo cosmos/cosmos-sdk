@@ -6910,7 +6910,8 @@ multiplied by exchange rate.
 | `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | unbonding_time defines, if unbonding, the min time for the validator to complete unbonding. |
 | `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  | commission defines the commission parameters. |
 | `min_self_delegation` | [string](#string) |  | min_self_delegation is the validator's self declared minimum self delegation. |
-| `unbonding_on_hold_ref_count` | [int64](#int64) |  | Strictly positive if this validator's unbonding has been stopped by external modules |
+| `unbonding_on_hold_ref_count` | [int64](#int64) |  | strictly positive if this validator's unbonding has been stopped by external modules |
+| `unbonding_ids` | [uint64](#uint64) | repeated | list of unbonding ids, each uniquely identifing an unbonding of this validator |
 
 
 

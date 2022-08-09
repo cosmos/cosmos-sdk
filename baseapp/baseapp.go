@@ -769,8 +769,8 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
-func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.StoreKey]*bytes.Buffer) FraudProof {
-	var fraudProof FraudProof
+func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.StoreKey]*bytes.Buffer) (FraudProof, error) {
+	fraudProof := FraudProof{}
 	fraudProof.stateWitness = make(map[string]StateWitness)
 	cms := app.cms.(*multi.Store)
 
@@ -778,11 +778,13 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.Stor
 		keys := cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreTraceBuf)
 
 		substoreSMT := cms.GetSubstoreSMT(storeKey.Name())
+		proof, storeHash, _ := cms.GetSubStoreProof(storeKey.Name())
+		// TOOD: Add error checking here
 		stateWitness := StateWitness{
+			proof:       proof,
+			rootHash:    storeHash,
 			WitnessData: make([]WitnessData, 0, keys.Len()),
 		}
-		proofs, err := cms.GetSubStoreProofs()
-		_, _ = proofs, err
 		for key := range keys {
 			value := substoreSMT.Get([]byte(key))
 			// Assumption: The keys exist in the SMT because they were traced
@@ -795,5 +797,5 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.Stor
 		fraudProof.stateWitness[storeKey.Name()] = stateWitness
 	}
 
-	return fraudProof
+	return fraudProof, nil
 }

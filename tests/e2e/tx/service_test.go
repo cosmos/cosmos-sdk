@@ -1,4 +1,4 @@
-package tx_test
+package tx
 
 import (
 	"context"

@@ -3,17 +3,21 @@ package bank_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 type (
@@ -74,6 +78,22 @@ var (
 		Outputs: []types.Output{},
 	}
 )
+
+type testApp struct {
+	BankKeeper    keeper.Keeper
+	AccountKeeper types.AccountKeeper
+}
+
+func createTestApp(t *testing.T) testApp {
+	app := testApp{}
+	err := depinject.Inject(configurator.NewAppConfig(
+		configurator.ParamsModule(),
+		configurator.AuthModule(),
+		configurator.BankModule()),
+		&app.BankKeeper, app.AccountKeeper)
+	assert.NoError(t, err)
+	return app
+}
 
 func TestSendNotEnoughBalance(t *testing.T) {
 	acc := &authtypes.BaseAccount{

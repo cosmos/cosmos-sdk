@@ -790,8 +790,11 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.Stor
 		for key := range keys {
 			value := substoreSMT.Get([]byte(key))
 			// Assumption: The keys exist in the SMT because they were traced
-			// TOOD: Investigate default value leaves
-			proof := substoreSMT.MustGetSMTProof([]byte(key))
+			proofOp, err := substoreSMT.GetProof([]byte(key))
+			proof, _ := types.CommitmentOpDecoder(proofOp.GetOps()[0])
+			if err != nil {
+				return FraudProof{}, err
+			}
 			bKey, bVal := []byte(key), []byte(value)
 			witnessData := WitnessData{bKey, bVal, *proof}
 			stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)

@@ -778,8 +778,10 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.Stor
 		keys := cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreTraceBuf)
 
 		substoreSMT := cms.GetSubstoreSMT(storeKey.Name())
-		proof, storeHash, _ := cms.GetSubStoreProof(storeKey.Name())
-		// TOOD: Add error checking here
+		proof, storeHash, err := cms.GetSubStoreProof(storeKey.Name())
+		if err != nil {
+			return FraudProof{}, err
+		}
 		stateWitness := StateWitness{
 			proof:       proof,
 			rootHash:    storeHash,

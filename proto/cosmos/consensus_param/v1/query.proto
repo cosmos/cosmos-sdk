@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.consensus_param.v1beta1;
+package cosmos.consensus_param.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
@@ -21,5 +21,5 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse defines the response type for querying x/bank parameters.
 message QueryParamsResponse {
-  tendermint.types.ConsensusParams params = 1 [(gogoproto.nullable) = false];
+  tendermint.types.ConsensusParams params = 1;
 }

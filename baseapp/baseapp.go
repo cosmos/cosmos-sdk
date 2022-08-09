@@ -421,30 +421,12 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
 		return nil
 	}
 
-	cp := new(tmproto.ConsensusParams)
-
-	if app.paramStore.Has(ctx, ParamStoreKeyBlockParams) {
-		var bp tmproto.BlockParams
-
-		app.paramStore.Get(ctx, &cp)
-		cp.Block = &bp
+	cp, err := app.paramStore.Get(ctx)
+	if err != nil {
+		panic(err)
 	}
 
-	if app.paramStore.Has(ctx, ParamStoreKeyEvidenceParams) {
-		var ep tmproto.EvidenceParams
-
-		app.paramStore.Get(ctx, ParamStoreKeyEvidenceParams, &ep)
-		cp.Evidence = &ep
-	}
-
-	if app.paramStore.Has(ctx, ParamStoreKeyValidatorParams) {
-		var vp tmproto.ValidatorParams
-
-		app.paramStore.Get(ctx, ParamStoreKeyValidatorParams, &vp)
-		cp.Validator = &vp
-	}
-
-	return cp
+	return &cp
 }
 
 // AddRunTxRecoveryHandler adds custom app.runTx method panic handlers.

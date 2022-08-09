@@ -4,7 +4,7 @@
 // - protoc             (unknown)
 // source: cosmos/consensus_param/v1/query.proto
 
-package consensus_paramv1beta1
+package consensus_paramv1
 
 import (
 	context "context"
@@ -36,7 +36,7 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 
 func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
 	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.consensus_param.v1beta1.Query/Params", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.consensus_param.v1.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.consensus_param.v1beta1.Query/Params",
+		FullMethod: "/cosmos.consensus_param.v1.Query/Params",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
@@ -94,7 +94,7 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Query_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.consensus_param.v1beta1.Query",
+	ServiceName: "cosmos.consensus_param.v1.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

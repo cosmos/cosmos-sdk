@@ -8,6 +8,7 @@ import (
 // ProtocolVersionSetter defines the interface fulfilled by BaseApp
 // which allows setting it's appVersion field.
 type ConsensusParamSetter interface {
-	StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusParams)
-	GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
+	Get(ctx sdk.Context, key []byte) (tmproto.ConsensusParams, error)
+	Has(ctx sdk.Context, key []byte) bool
+	Set(ctx sdk.Context, cp tmproto.ConsensusParams)
 }

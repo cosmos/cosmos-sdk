@@ -241,7 +241,6 @@ jobs:
       - name: test rosetta
         run: |
           make test-rosetta
-        # if: env.GIT_DIFF
 
   liveness-test:
     runs-on: ubuntu-latest

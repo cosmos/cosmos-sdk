@@ -2335,6 +2335,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 		// Fraudproof verification on a substore level
 		for _, witness := range stateWitness.WitnessData {
 			proof, key, value := witness.proof, witness.Key, witness.Value
+			proof.GetProof()
 			_, _, _ = proof, key, value
 		}
 	}

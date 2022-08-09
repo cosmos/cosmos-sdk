@@ -9,6 +9,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "tendermint/types/types.proto";
+import "tendermint/abci/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
@@ -361,4 +362,9 @@ enum InfractionType {
   INFRACTION_TYPE_DOUBLE_SIGN = 1 [(gogoproto.enumvalue_customname) = "DoubleSign"];
   // DOWNTIME defines a validator that missed signing too many blocks.
   INFRACTION_TYPE_DOWNTIME = 2 [(gogoproto.enumvalue_customname) = "Downtime"];
+}
+
+// ValidatorUpdates defines an array of abci.ValidatorUpdate objects.
+message ValidatorUpdates {
+  repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false];
 }

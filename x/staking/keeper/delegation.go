@@ -245,7 +245,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	k.SetUnbondingDelegation(ctx, ubd)
 
 	// Add to the UBDByUnbondingOp index to look up the UBD by the UBDE ID
-	k.SetUnbondingDelegationByUnbondingIndex(ctx, ubd, id)
+	k.SetUnbondingDelegationByUnbondingId(ctx, ubd, id)
 
 	// Call hook
 	k.AfterUnbondingInitiated(ctx, id)
@@ -441,7 +441,7 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	k.SetRedelegation(ctx, red)
 
 	// Add to the UBDByEntry index to look up the UBD by the UBDE ID
-	k.SetRedelegationByUnbondingIndex(ctx, red, id)
+	k.SetRedelegationByUnbondingId(ctx, red, id)
 
 	// Call hook
 	k.AfterUnbondingInitiated(ctx, id)
@@ -790,6 +790,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 			// Proceed with unbonding
 			ubd.RemoveEntry(int64(i))
 			i--
+			k.DeleteUnbondingIndex(ctx, entry.UnbondingId)
 
 			// track undelegation only when remaining or truncated shares are non-zero
 			if !entry.Balance.IsZero() {
@@ -893,6 +894,7 @@ func (k Keeper) CompleteRedelegation(
 		if entry.IsMature(ctxTime) && !entry.OnHold() {
 			red.RemoveEntry(int64(i))
 			i--
+			k.DeleteUnbondingIndex(ctx, entry.UnbondingId)
 
 			if !entry.InitialBalance.IsZero() {
 				balances = balances.Add(sdk.NewCoin(bondDenom, entry.InitialBalance))

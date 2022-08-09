@@ -2245,13 +2245,25 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 	app.EndBlock(abci.RequestEndBlock{Height: blockHeight})
 }
 
-func checkSubstoreSMTsEqual(appB1 *BaseApp, appB2 *BaseApp, storeKeyName string) bool {
-	cmsB1 := appB1.cms.(*multi.Store)
-	cmsB2 := appB2.cms.(*multi.Store)
-	smtB1 := cmsB1.GetSubstoreSMT(storeKeyName)
-	smtB2 := cmsB2.GetSubstoreSMT(storeKeyName)
+func testSubstoresEqual(t *testing.T, appB1 *BaseApp, appB2 *BaseApp, storeKeyName string) {
 
-	return string(smtB1.Root()) == string(smtB2.Root())
+	cmsB1 := appB1.cms.(*multi.Store)
+	proofB1, storeHashB1, err := cmsB1.GetSubStoreProof(capKey2.Name())
+	require.Nil(t, err)
+	cmsB2 := appB1.cms.(*multi.Store)
+	proofB2, storeHashB2, err := cmsB2.GetSubStoreProof(capKey2.Name())
+	require.Nil(t, err)
+
+	hashB1, err := proofB1.Run([][]byte{storeHashB1})
+	require.Nil(t, err)
+	require.NotEmpty(t, hashB1)
+
+	hashB2, err := proofB2.Run([][]byte{storeHashB2})
+	require.Nil(t, err)
+	require.NotEmpty(t, hashB2)
+
+	require.Nil(t, err)
+	require.Equal(t, hashB1[0], hashB2[0])
 }
 
 func TestGenerateAndLoadFraudProof(t *testing.T) {
@@ -2292,7 +2304,6 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	}
 
 	// BaseApp, B1
-
 	appB1 := setupBaseApp(t,
 		AppOptionFunc(routerOpt),
 		SetSubstoreTracer(storeTraceBuf),
@@ -2305,11 +2316,11 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	numTransactions := 5
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
-	appB1.Commit()
 
 	// B1 <- S2
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
-	appB1.Commit()
+	commitB1 := appB1.Commit()
+	appHashB1 := commitB1.GetData()
 
 	// Exports all data inside current multistore into a fraudProof (S1 -> S2) //
 	storeKeyToSubstoreTraceBuf := make(map[stypes.StoreKey]*bytes.Buffer)
@@ -2324,19 +2335,26 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	// Light Client
 
 	// Fraudproof verification
+	for _, stateWitness := range fraudProof.stateWitness {
+		proof := stateWitness.proof
+		appHash, err := proof.Run([][]byte{stateWitness.rootHash})
+		require.Nil(t, err)
+		require.NotEmpty(t, appHash)
+		require.Equal(t, appHash[0], appHashB1)
+	}
 
 	// Now we take contents of the fraud proof which was recorded with S1 and try to populate a fresh baseapp B2 with it
 	// B2 <- S1
 	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
-	require.True(t, checkSubstoreSMTsEqual(appB1, appB2, capKey2.Name()))
+	testSubstoresEqual(t, appB1, appB2, capKey2.Name())
 
 	// B1 <- S2
 	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, fraudProof.blockHeight)
-	require.False(t, checkSubstoreSMTsEqual(appB1, appB2, capKey2.Name()))
+	testSubstoresEqual(t, appB1, appB2, capKey2.Name())
 
 	// Apply the set of transactions txs1 here
 	// B2 <- S2
 	executeBlock(t, appB2, txs1, fraudProof.blockHeight)
 
-	require.True(t, checkSubstoreSMTsEqual(appB1, appB2, capKey2.Name()))
+	testSubstoresEqual(t, appB1, appB2, capKey2.Name())
 }

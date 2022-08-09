@@ -769,6 +769,12 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
+// enableFraudProofGenerationMode rolls back an app's state to a previous
+// state and enables tracing for the list of store keys
+func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey) {
+	return
+}
+
 func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.StoreKey]*bytes.Buffer) (FraudProof, error) {
 	fraudProof := FraudProof{}
 	fraudProof.stateWitness = make(map[string]StateWitness)

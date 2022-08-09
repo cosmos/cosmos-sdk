@@ -781,6 +781,8 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.Stor
 		stateWitness := StateWitness{
 			WitnessData: make([]WitnessData, 0, keys.Len()),
 		}
+		proofs, err := cms.GetSubStoreProofs()
+		_, _ = proofs, err
 		for key := range keys {
 			value := substoreSMT.Get([]byte(key))
 			// Assumption: The keys exist in the SMT because they were traced

@@ -769,16 +769,17 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
-func generateFraudProof(store *multi.Store, storeKeyToSubstoreTraceBuf map[types.StoreKey]*bytes.Buffer) FraudProof {
+func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.StoreKey]*bytes.Buffer) FraudProof {
 	var fraudProof FraudProof
 	fraudProof.stateWitness = make(map[string]StateWitness)
+	cms := app.cms.(*multi.Store)
 
 	for storeKey, subStoreTraceBuf := range storeKeyToSubstoreTraceBuf {
-		kvStore := store.GetKVStore(storeKey)
+		kvStore := cms.GetKVStore(storeKey)
 		traceKv := kvStore.(*tracekv.Store)
 		keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
 
-		substoreSMT := store.GetSubstoreSMT(storeKey.Name())
+		substoreSMT := cms.GetSubstoreSMT(storeKey.Name())
 		stateWitness := StateWitness{
 			WitnessData: make([]WitnessData, 0, keys.Len()),
 		}

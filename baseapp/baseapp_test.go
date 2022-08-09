@@ -2248,6 +2248,15 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 	app.EndBlock(abci.RequestEndBlock{Height: blockHeight})
 }
 
+func checkSubstoreSMTsEqual(appB1 *BaseApp, appB2 *BaseApp, storeKeyName string) bool {
+	cmsB1 := appB1.cms.(*multi.Store)
+	cmsB2 := appB2.cms.(*multi.Store)
+	smtB1 := cmsB1.GetSubstoreSMT(storeKeyName)
+	smtB2 := cmsB2.GetSubstoreSMT(storeKeyName)
+
+	return string(smtB1.Root()) == string(smtB2.Root())
+}
+
 func TestGenerateAndLoadFraudProof(t *testing.T) {
 	/*
 		Tests switch between a baseapp and fraudproof and covers parts of the fraudproof cycle. Steps:
@@ -2258,6 +2267,9 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 		5. Now, pick some set of transactions, txs1, to make some more state transitions.
 		6. Execute txs1 on both B1 and B2 so they go through the same state transitions
 		7. If the state of both B1 and B2 has to converge at a state S2, then we the test passes.
+
+		Note that the appHash from B1 and B2 will not be the same because the subset of storeKeys in both apps is different
+		so we compare subStores instead
 
 		Tests to write in future:
 
@@ -2290,45 +2302,39 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 		SetTracerFor(capKey2, subStoreTraceBuf),
 	)
 
+	// B1 <- S0
 	appB1.InitChain(abci.RequestInitChain{})
 
-	// State here: S0
-
-	numTransactions := 50
+	numTransactions := 1
+	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
-
-	cms := appB1.cms.(*multi.Store)
 
 	// Exports all data inside current multistore into a fraudProof (S1) //
 
 	storeKeyToSubstoreTraceBuf := make(map[stypes.StoreKey]*bytes.Buffer)
 	storeKeyToSubstoreTraceBuf[capKey2] = subStoreTraceBuf
 
-	fraudProof := generateFraudProof(cms, storeKeyToSubstoreTraceBuf)
-
+	// Records S1 in fraudproof
+	fraudProof := appB1.generateFraudProof(storeKeyToSubstoreTraceBuf)
 	currentBlockHeight := appB1.LastBlockHeight()
 	fraudProof.blockHeight = currentBlockHeight + 1
-
-	// Make some set of transactions here (txs1)
-	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, fraudProof.blockHeight)
 
 	// Light Client
 
 	// TODO: Insert fraudproof verification here
 
-	// Now we take contents of the fraud proof and try to populate a fresh baseapp B2 with it
+	// Now we take contents of the fraud proof which was recorded with S1 and try to populate a fresh baseapp B2 with it
+	// B2 <- S1
 	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
+	// require.True(t, checkSubstoreSMTsEqual(appB1, appB2, capKey2.Name()))
+
+	// B1 <- S2
+	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, fraudProof.blockHeight)
+	require.False(t, checkSubstoreSMTsEqual(appB1, appB2, capKey2.Name()))
 
 	// Apply the set of transactions txs1 here
+	// B2 <- S2
 	executeBlock(t, appB2, txs1, fraudProof.blockHeight)
 
-	// Note that the appHash from B1 and B2 will not be the same because the subset of storeKeys in both apps is different
-
-	// Compare SMT store roots inside all the substores of the second app with the first app's SMT store roots
-	cmsB1 := appB1.cms.(*multi.Store)
-	cmsB2 := appB2.cms.(*multi.Store)
-	smtB1 := cmsB1.GetSubstoreSMT(capKey2.Name())
-	smtB2 := cmsB2.GetSubstoreSMT(capKey2.Name())
-
-	require.Equal(t, string(smtB1.Root()), string(smtB2.Root()))
+	require.True(t, checkSubstoreSMTsEqual(appB1, appB2, capKey2.Name()))
 }

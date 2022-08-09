@@ -3,6 +3,7 @@ package file
 import (
 	"encoding/binary"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
@@ -368,7 +369,7 @@ func testListenEndBlock(t *testing.T) {
 
 func readInFile(name string) ([]byte, error) {
 	path := filepath.Join(testDir, name)
-	return os.ReadFile(path)
+	return ioutil.ReadFile(path)
 }
 
 // segmentBytes returns all of the protobuf messages contained in the byte array as an array of byte arrays

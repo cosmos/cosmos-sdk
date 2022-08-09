@@ -3,6 +3,7 @@ package file
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -283,7 +284,7 @@ func (fss *StreamingService) Close() error {
 // to dir. It returns nil if dir is writable.
 func isDirWriteable(dir string) error {
 	f := path.Join(dir, ".touch")
-	if err := os.WriteFile(f, []byte(""), 0o600); err != nil {
+	if err := ioutil.WriteFile(f, []byte(""), 0o600); err != nil {
 		return err
 	}
 	return os.Remove(f)

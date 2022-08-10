@@ -16,12 +16,12 @@ func isExportedType(typ reflect.Type) error {
 	pkgPath := typ.PkgPath()
 	if name != "" && pkgPath != "" {
 		if unicode.IsLower([]rune(name)[0]) {
-			return errors.Errorf("type is not exported: %s", typ)
+			return errors.Errorf("type must be exported: %s", typ)
 		}
 
 		pkgParts := strings.Split(pkgPath, "/")
 		if slices.Contains(pkgParts, "internal") {
-			return errors.Errorf("type is in an internal package: %s", typ)
+			return errors.Errorf("type must not come from an internal package: %s", typ)
 		}
 
 		return nil

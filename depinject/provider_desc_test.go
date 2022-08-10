@@ -5,6 +5,9 @@ import (
 	"testing"
 
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/depinject/internal/codegen"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 type StructIn struct {
@@ -25,6 +28,10 @@ type StructOut struct {
 }
 
 func privateProvider(int, float64) (string, []byte) { return "", nil }
+
+func PrivateInAndOut(containerConfig) *container { return nil }
+
+func InternalInAndOut(graphviz.Attributes) *codegen.FileGen { return nil }
 
 type SomeStruct struct{}
 
@@ -76,6 +83,20 @@ func TestExtractProviderDescriptor(t *testing.T) {
 			nil,
 			nil,
 			"function must be exported",
+		},
+		{
+			"private in and out",
+			PrivateInAndOut,
+			nil,
+			nil,
+			"type must be exported",
+		},
+		{
+			"internal in and out",
+			InternalInAndOut,
+			nil,
+			nil,
+			"internal",
 		},
 		{
 			"struct",
@@ -134,13 +155,13 @@ func TestExtractProviderDescriptor(t *testing.T) {
 				assert.ErrorContains(t, err, tt.wantErr)
 			} else {
 				assert.NilError(t, err)
-			}
 
-			if !reflect.DeepEqual(got.Inputs, tt.wantIn) {
-				t.Errorf("extractProviderDescriptor() got = %v, want %v", got.Inputs, tt.wantIn)
-			}
-			if !reflect.DeepEqual(got.Outputs, tt.wantOut) {
-				t.Errorf("extractProviderDescriptor() got = %v, want %v", got.Outputs, tt.wantOut)
+				if !reflect.DeepEqual(got.Inputs, tt.wantIn) {
+					t.Errorf("extractProviderDescriptor() got = %v, want %v", got.Inputs, tt.wantIn)
+				}
+				if !reflect.DeepEqual(got.Outputs, tt.wantOut) {
+					t.Errorf("extractProviderDescriptor() got = %v, want %v", got.Outputs, tt.wantOut)
+				}
 			}
 		})
 	}

@@ -1,7 +1,6 @@
 package depinject
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 	"unicode"
@@ -147,41 +146,17 @@ func postProcessProvider(descriptor providerDescriptor) (providerDescriptor, err
 
 func checkInputAndOutputTypes(descriptor providerDescriptor) error {
 	for _, input := range descriptor.Inputs {
-		err := checkType(input.Type)
+		err := isExportedType(input.Type)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, output := range descriptor.Outputs {
-		err := checkType(output.Type)
+		err := isExportedType(output.Type)
 		if err != nil {
 			return err
 		}
-	}
-
-	return nil
-}
-
-func checkType(typ reflect.Type) error {
-
-	name := typ.Name()
-	if name == "" {
-		return nil
-	}
-
-	pkgPath := typ.PkgPath()
-	if pkgPath == "" {
-
-	}
-
-	if unicode.IsLower([]rune(name)[0]) {
-		return fmt.Errorf("type must be exported: %s", typ)
-	}
-
-	pkgParts := strings.Split(pkgPath, "/")
-	if slices.Contains(pkgParts, "internal") {
-		return errors.Errorf("type must not be in an internal package: %s", typ)
 	}
 
 	return nil

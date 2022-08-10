@@ -19,16 +19,16 @@ type messageValueRenderer struct {
 var _ ValueRenderer = (*messageValueRenderer)(nil)
 
 func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value, w io.Writer) error {
-	fds := v.Message().Descriptor().Fields()
-	fields := make([]protoreflect.FieldDescriptor, 0, fds.Len())
-	for i := 0; i < fds.Len(); i++ {
-		fields = append(fields, fds.Get(i))
+	fields := v.Message().Descriptor().Fields()
+	fds := make([]protoreflect.FieldDescriptor, 0, fields.Len())
+	for i := 0; i < fields.Len(); i++ {
+		fds = append(fds, fields.Get(i))
 	}
-	sort.Slice(fields, func(i, j int) bool { return fields[i].Number() < fields[j].Number() })
+	sort.Slice(fds, func(i, j int) bool { return fds[i].Number() < fds[j].Number() })
 
 	fmt.Fprintf(w, "%s object\n", v.Message().Descriptor().Name())
 	buf := &bytes.Buffer{}
-	for _, fd := range fields {
+	for _, fd := range fds {
 		vr, err := mr.tr.GetValueRenderer(fd)
 		if err != nil {
 			return err
@@ -57,7 +57,7 @@ func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value
 			}
 			fmt.Fprintf(w, "%s%s\n", nesting, str)
 		}
-		if sc.Err() != nil {
+		if err := sc.Err(); err != nil {
 			return err
 		}
 	}

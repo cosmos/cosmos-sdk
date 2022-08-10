@@ -109,6 +109,8 @@ For hardware wallets that don't have an expert mode, all strings MUST be shown o
 
 Protobuf objects can be arbitrarily complex, containing nested arrays and messages. In order to help the Ledger-signing users, we propose to use the `>` symbol in the beginning of strings to represent nested objects, where each additional `>` represents a new level of nesting.
 
+All `>` symbols MUST go after the optional `*` character for expert mode without space, be aggregated together, and be followed by a single space `' '` character before the rest of the string. See the Regex in point #3 for more details.
+
 ### 7. Encoding of the Transaction Envelope
 
 We define "transaction envelope" as all data in a transaction that is not in the `TxBody.Messages` field. Transaction envelope includes fee, signer infos and memo, but don't include `Msg`s. `//` denotes comments and are not shown on the Ledger device.

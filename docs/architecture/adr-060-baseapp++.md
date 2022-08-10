@@ -53,6 +53,75 @@ serve the same functions as they do now.
 
 ### `PrepareProposal`
 
+Prior to evaluating the decision for how to implement `PrepareProposal`, it is
+important to note that `CheckTx` will still be executed and will be responsible
+for evaluating transaction validity as it does now, with one very important
+_additive_ distinction.
+
+When executing transactions in `CheckTx`, the application will now add valid
+transactions, i.e. passing the AnteHandler, to it's own mempool data structure.
+In order to provide a flexible approach to meet the varying needs of application
+developers, we will define both a mempool interface and a data structure utilizing
+Golang generics that will allow developers to only need to focus on transaction
+ordering. Developers requiring absolute full control can implement their own
+custom mempool implementation.
+
+We define the general mempool interface as follows (subject to change):
+
+```go
+// MempoolTx we define a mempool transaction interface that is as minimal as
+// possible, only requiring applications to define the size of the transaction
+// to be used when reaping and getting the transaction itself. Interface type
+// casting can be used in the actual mempool implementation.
+type MempoolTx interface {
+	// Size returns the size of the transaction in bytes.
+	Size(codec.Codec) int
+	Tx() sdk.Tx
+}
+
+type Mempool[T MempoolTx] interface {
+	// Insert attempts to insert a MempoolTx into the mempool returning an error
+	// upon failure.
+	Insert(T) error
+	// Reap returns the next available transaction in the mempool, returning an error
+	// upon failure. The notion of 'available' or 'next' is defined by the application's
+	// mempool implementation.
+	Reap() (T, error)
+	// ReapMaxBytes performs the the same function as Reap, except it returns
+	// multiple transactions limited by their total size.
+	ReapMaxBytes(n int) ([]T, error)
+	// NumTxs returns the number of transactions currently in the mempool.
+	NumTxs() int
+}
+```
+
+We will define an implementation of `Mempool[T MempoolTx]` that will cover a
+majority of application use cases. Namely, it will prioritize transactions by
+priority and transaction sender, allowing for multiple prioritized transactions
+from the same sender. The mempool will be defined as a wrapper around a B+Tree
+with additional indexes used to handle multi-dimensional indexing/prioritizing.
+
+```go
+type PriorityMempool[T MempoolTx] struct {
+	tree *btree.BTree
+}
+```
+
+Previous discussions<sup>1</sup> have come to the agreement that Tendermint will
+perform a request to the application, via `PrepareProposalRequest`, with a certain
+amount of transactions reaped from Tendermint's local mempool. The exact amount
+of transactions reaped will be determined by a local operator configuration.
+This is referred to as the "one-shot approach" seen in discussions.
+
+When Tendermint reaps transactions from the local mempool and sends them to the
+application via `PrepareProposalRequest`, the application will have to evaluate
+the transactions. Specifically, it will need to inform Tendermint if it should
+reject and or include each transaction. Note, the application can even _replace_
+transactions entirely with other transactions.
+
+When evaluating transactions from `PrepareProposalRequest`, the application will
+...
+
 ### `ProcessProposal`
 
 
@@ -85,8 +154,9 @@ Later, this section can optionally list ideas or improvements the author or revi
 ## References
 
 * https://github.com/tendermint/tendermint/blob/master/spec/abci%2B%2B/README.md
-* https://github.com/tendermint/tendermint/issues/7750#issuecomment-1075717151
-* https://github.com/tendermint/tendermint/issues/7750#issuecomment-1076806155
+* [1] https://github.com/tendermint/tendermint/issues/7750#issuecomment-1076806155
+* [2] https://github.com/tendermint/tendermint/issues/7750#issuecomment-1075717151
+
 
 <!-- ----------------------------------------------------------------------- -->
 <!-- ----------------------------------------------------------------------- -->

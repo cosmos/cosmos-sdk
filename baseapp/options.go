@@ -21,6 +21,8 @@ func SetPruning(opts pruningtypes.PruningOptions) StoreOption {
 	return func(config *multi.StoreParams, _ uint64) error { config.Pruning = opts; return nil }
 }
 
+// SetSubstoreTracer provides a BaseApp option function that sets the
+// tracer for a multistore.
 func SetSubstoreTracer(w io.Writer) StoreOption {
 	return func(cfg *multi.StoreParams, _ uint64) error {
 		cfg.SetTracer(w)
@@ -28,6 +30,8 @@ func SetSubstoreTracer(w io.Writer) StoreOption {
 	}
 }
 
+// SetTracerFor provides a BaseApp option function that sets the
+// tracer for a substore with given skey inside a multistore.
 func SetTracerFor(skey storetypes.StoreKey, w io.Writer) StoreOption {
 	return func(cfg *multi.StoreParams, _ uint64) error {
 		cfg.SetTracerFor(skey, w)

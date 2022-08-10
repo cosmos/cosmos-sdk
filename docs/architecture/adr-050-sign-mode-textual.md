@@ -57,17 +57,35 @@ Ledger devices have limited character display capabilities, so all strings MUST 
 
 In particular, the newline `"\n"` (ASCII: 10) character is forbidden.
 
-### 3. Strings SHOULD have the `<key>: <value>` format
+### 3. Strings MUST match the `^\*?(>* )?((?![\*>: ]).+: )?((?![\*>: ]).+)$` Regex
 
-Given the Regex `/^(\* )?(>* )?(.*: )?(.*)$/`, all strings SHOULD match the Regex with capture groups 3 and 4 non-empty. This is helpful for UIs displaying SignDocTextual to users.
+All strings MUST match the above Regex.
 
-- The initial `*` character is optional and denotes the Ledger Expert mode, see #5.
-- Strings can also include a number of `>` character to denote nesting.
-- In the case where the first Regex capture group is not empty, it represents an indicative key, whose associated value is given in the second capture group. This MAY be used in the Ledger app to perform custom on-screen formatting, for example to break long lines into multiple screens.
+The Regex reads as follows:
+- `^\*?`: The initial `*` character is optional and denotes the Ledger Expert mode, see point #5.
+- `(>* )?`:  Strings can also include a number of `>` character to denote nesting, see point #6.
+- `((?![\*>]).+: )?((?![\*>: ]).*)$`: Strings SHOULD end with capture groups 2 and 3 non-empty, representing the `<key>: <value>` format. This is helpful for UIs displaying SignDocTextual to users. Breaking this down into separate capture groups, we have:
+  - `((?![\*>: ]).+: )?`: represents the `<key>: ` part, i.e. an indicative key, whose associated value is given in the last capture group. This MAY be used in the Ledger app to perform custom on-screen formatting, for example to break a line before displaying the value. It CANNOT start with the characters `'*'`, `'>'`, `':'` or `' '`, as they are reserved characters.
+  - `((?![\*>: ]).+)`: represents the `<value>` part, which can contain any arbitrary non-empty string but CANNOT start with the characters `'*'`, `'>'`, `':'` or `' '`, as they are reserved characters. When the `<key>` is not empty, values are by default encoded using value renderers, see point #4.
 
-This Regex is however not mandatory, to allow for some flexibility, for example to display an English sentence to denote end of sections.
+Please note that point #7 and #8 specifies strings such as `*This transaction has 2 other signers` or `End of transaction messages`, which represent aggregate start and end screens used to delimit nested or repeated content. These are all valid strings under the above Regex.
 
-The `<value>` itself can contain the `": "` characters.
+Examples of valid strings:
+```
+*This transaction has 1 other signer
+End of transaction messages
+> Message (1/2): /cosmos.bank.v1beta1.MsgSend
+Hello World
+*>>> foo:::*>>>::: bar:::*>>>:::
+```
+
+Examples of invalid strings:
+```
+*>              # last capture group empty
+*> *key: value  # key starts with reserved characters
+>* key: value   # wrong order of * and >
+**Hello World   # starts with 2 asterisks
+```
 
 ### 4. Values are encoded using Value Renderers
 
@@ -79,7 +97,11 @@ Ledger devices have the an Expert mode for advanced users. Expert mode needs to 
 
 > Expert mode enables further, more sophisticated features. This could be useful for advanced users
 
-Strings starting with the `*` character will only be shown in Expert mode. These strings are either hardcoded in the transaction envelope (see point #7).
+Strings starting with the `*` character will only be shown in Expert mode. Default value renderers (see point #4) never render strings in expert mode, which means that expert mode strings are:
+- either hardcoded in the transaction envelope (see point #7),
+- or defined using custom `Msg` renderers (see point #9).
+
+If the rendering of a type has multiple nested levels of expert fields (e.g. an expert field containing a message with an expert sub-field), then only one `*` is displayed as the first character, following the Regex defined in point #3.
 
 For hardware wallets that don't have an expert mode, all strings MUST be shown on the device.
 
@@ -125,7 +147,7 @@ Transaction Body is the `Tx.TxBody.Messages` field, which is an array of `Any`s,
 ```
 This transaction has <int> message:   // Optional 's' for "message" if there's is >1 sdk.Msgs.
 // For each Msg, print the following 2 lines:
-Msg (<int>/<int>): <string>           // E.g. Msg (1/2): bank v1beta1 send coins
+Msg (<int>/<int>): <string>           // E.g. Msg (1/2): /cosmos.bank.v1beta1.MsgSend
 <value rendering of Msg struct>
 End of transaction messages
 ```
@@ -134,21 +156,21 @@ End of transaction messages
 
 Application developers may choose to not follow default renderer value output for their own `Msg`s. In this case, they can implement their own custom `Msg` renderer. This is similar to [EIP4430](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4430.md), where the smart contract developer chooses the description string to be shown to the end user.
 
-This is done by setting the `cosmos.msg.v1.textual.custom_renderer` Protobuf option to a non-empty string. This option CAN ONLY be set on a Protobuf message representing transaction message object (implementing `sdk.Msg` interface).
+This is done by setting the `cosmos.msg.v1.textual.expert_custom_renderer` Protobuf option to a non-empty string. This option CAN ONLY be set on a Protobuf message representing transaction message object (implementing `sdk.Msg` interface).
 
 ```proto
 message MsgFooBar {
   // Optional comments to describe in human-readable language the formatting
   // rules of the custom renderer.
-  option (cosmos.msg.v1.textual.custom_renderer) = "<unique algorithm identifier>";
+  option (cosmos.msg.v1.textual.expert_custom_renderer) = "<unique algorithm identifier>";
 
   // proto fields
 }
 ```
 
-When this option is set on a `Msg`, a registered function will transform the `Msg` into an array of one or more strings, which MAY use the key/value format (described in point #3) with the expert field prefix (described in point #5). These strings MAY be rendered from a `Msg` field using a default value renderer, or they may be generated from several fields using custom logic.
+When this option is set on a `Msg`, a registered function will transform the `Msg` into an array of one or more strings, which MUST follow the Regex defined in point #3. This means they MAY use the key/value format (described in point #3) with the expert field prefix (described in point #5) and arbitrary indentation (point #6). These strings MAY be rendered from a `Msg` field using a default value renderer, or they may be generated from several fields using custom logic.
 
-The `unique algorithm identifier` is a string convention chosen by the application developer and is used to identify the custom `Msg` renderer. For example, the SPEC documentation of this custom algorithm can reference this identifier. This identifier CAN have a versioned suffix (e.g. `_v1`) to adapt for future changes (which would be consensus-breaking). We also recommend adding Protobuf comments to describe in human language the custom logic used.
+The `<unique algorithm identifier>` is a string convention chosen by the application developer and is used to identify the custom `Msg` renderer. For example, the SPEC documentation of this custom algorithm can reference this identifier. This identifier CAN have a versioned suffix (e.g. `_v1`) to adapt for future changes (which would be consensus-breaking). We also recommend adding Protobuf comments to describe in human language the custom logic used.
 
 Moreover, the renderer must provide 2 functions: one for formatting from Protobuf to string, and one for parsing string to Protobuf. These 2 functions are provided by the application developer. To satisfy point #1, these 2 functions MUST be bijective with each other. Bijectivity of these 2 functions will not be checked by the SDK at runtime. However, we strongly recommend the application developer to include a comprehensive suite in their app repo to test bijectivity, as to not introduce security bugs. A simple bijectivity test looks like:
 
@@ -180,7 +202,6 @@ message Grant {
 
 message MsgGrant {
   option (cosmos.msg.v1.signer) = "granter";
-  option (cosmos.msg.v1.textual.type_url) = "authz v1beta1 grant";
 
   string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -191,7 +212,7 @@ and a transaction containing 1 such `sdk.Msg`, we get the following encoding:
 
 ```
 This transaction has 1 message:
-Msg (1/1): authz v1beta1 grant
+Msg (1/1): /cosmos
 Granter: cosmos1abc...def
 Grantee: cosmos1ghi...jkl
 End of transaction messages
@@ -264,7 +285,7 @@ Account number: 10
 *Public Key: iQ...==        // Base64 pubkey
 Sequence: 2
 This transaction has 1 message:
-Message (1/1): bank v1beta1 send coins
+Message (1/1): /cosmos.bank.v1beta1.MsgSend
 From: cosmos1...abc
 To: cosmos1...def
 Amount: 10 atom            // Conversion from uatom to atom using value renderers
@@ -343,7 +364,7 @@ Account number: 10
 *Public Key: iR...==
 Sequence: 2
 This transaction has 1 message:
-Message (1/1): bank v1beta1 send coins
+Message (1/1): /cosmos.bank.v1beta1.MsgSend
 From: cosmos1...abc
 To: cosmos1...def
 Amount: 10 atom
@@ -471,24 +492,24 @@ Account number: 10
 *Public Key: iQ...==
 Sequence: 2
 This transaction has 2 messages:
-Message (1/2): bank v1beta1 send coins
+Message (1/2): /cosmos.bank.v1beta1.MsgSend
 From: cosmos1...abc
 To: cosmos1...def
 Amount: 10 atom
-Message (2/2): gov v1 submit proposal
+Message (2/2): /cosmos.gov.v1.SubmitProposal
 Messages: 2 Messages
-> Message (1/2): bank v1beta1 send coins
+> Message (1/2): /cosmos.bank.v1beta1.MsgSend
 > From: cosmos1...jkl
 > To: cosmos1...mno
 > Amount: 20 atom
-> Message (2/2): authz v1beta exec
+> Message (2/2): /cosmos.authz.v1beta1.MsgExec
 > Grantee: cosmos1...pqr
 > Msgs: 2 Msgs
->> Msg (1/2): bank v1beta1 send coins
+>> Msg (1/2): /cosmos.bank.v1beta1.MsgSend
 >> From: cosmos1...stu
 >> To: cosmos1...vwx
 >> Amount: 30 atom
->> Msg (2/2): bank v1beta1 send coins
+>> Msg (2/2): /cosmos.bank.v1beta1.MsgSend
 >> From: cosmos1...abc
 >> To: cosmos1...def
 >> Amount: 40 atom
@@ -521,7 +542,7 @@ SIGN_MODE_TEXTUAL is purely additive, and doesn't break any backwards compatibil
 ### Negative
 
 - Some fields are still encoded in non-human-readable ways, such as public keys in base64.
-- New ledger app needs to be released, still unclear
+- New ledger app needs to be released, still unclear if both SIGN_MODE_LEGACY_AMINO_JSON and SIGN_MODE_TEXTUAL will be supported at the same time.
 
 ### Neutral
 

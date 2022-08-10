@@ -66,7 +66,7 @@ The Regex reads as follows:
 - `(>* )?`:  Strings can also include a number of `>` character to denote nesting, see point #6.
 - `((?![\*>]).+: )?((?![\*>: ]).*)$`: Strings SHOULD end with capture groups 2 and 3 non-empty, representing the `<key>: <value>` format. This is helpful for UIs displaying SignDocTextual to users. Breaking this down into separate capture groups, we have:
   - `((?![\*>: ]).+: )?`: represents the `<key>: ` part, i.e. an indicative key, whose associated value is given in the last capture group. This MAY be used in the Ledger app to perform custom on-screen formatting, for example to break a line before displaying the value. It CANNOT start with the characters `'*'`, `'>'`, `':'` or `' '`, as they are reserved characters.
-  - `((?![\*>: ]).+)`: represents the `<value>` part, which can contain any arbitrary non-empty string but CANNOT start with the characters `'*'`, `'>'`, `':'` or `' '`, as they are reserved characters. When the `<key>` is not empty, values are by default encoded using value renderers, see point #4.
+  - `((?![\*>: ]).+)`: represents the `<value>` part, which can contain any arbitrary non-empty string but CANNOT start with the characters `'*'`, `'>'`, `':'` or `' '`, as they are reserved characters. When using this `<key>: <value>` format, values are by default encoded using value renderers, see point #4.
 
 Please note that points #4, #7 and #8 specifies strings such as `*This transaction has 2 other signers` or `End of transaction messages`, which represent aggregate start and end screens used to delimit nested or repeated content. These are all valid strings under the above Regex.
 

@@ -1,8 +1,8 @@
-# ADR 60: Baseapp++ (part 1)
+# ADR 60: ABCI++ (Phase I)
 
 ## Changelog
 
-* 2022-08-10: Initial Draft
+* 2022-08-10: Initial Draft (@alexanderbez, @marbar3778)
 
 ## Status
 

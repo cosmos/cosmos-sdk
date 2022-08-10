@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/chrispappas/golang-generics-set/set"
@@ -17,6 +18,10 @@ const (
 	deleteOp    operation = "delete"
 	iterKeyOp   operation = "iterKey"
 	iterValueOp operation = "iterValue"
+)
+
+var (
+	ErrBufferEmpty = fmt.Errorf("provided buffer is empty")
 )
 
 type (
@@ -99,11 +104,11 @@ func (tkv *Store) GetAllKeysUsedInTrace(buf bytes.Buffer) set.Set[string] {
 	keys := make(set.Set[string], 0)
 	for {
 		traceOp, err := readOperation(&buf)
+		// Reached end of buffer
+		if err == ErrBufferEmpty {
+			return keys
+		}
 		if err != nil {
-			errString := err.Error()
-			if errString == "provided buffer is empty: EOF" {
-				return keys
-			}
 			panic(err)
 		}
 		key, err := base64.StdEncoding.DecodeString(traceOp.Key)
@@ -227,12 +232,12 @@ func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value
 	io.WriteString(w, "\n")
 }
 
-// reaOperation reads a KVStore operation from the underlying buffer as
+// readOperation reads a KVStore operation from the underlying buffer as
 // JSON-encoded data where the key/value pair is base64 encoded.
 func readOperation(r *bytes.Buffer) (*traceOperation, error) {
 	raw, err := r.ReadString('\n')
 	if raw == "" {
-		return nil, errors.Wrap(err, "provided buffer is empty")
+		return nil, ErrBufferEmpty
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read trace operation")

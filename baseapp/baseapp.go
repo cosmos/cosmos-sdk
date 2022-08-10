@@ -775,9 +775,7 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.Stor
 	cms := app.cms.(*multi.Store)
 
 	for storeKey, subStoreTraceBuf := range storeKeyToSubstoreTraceBuf {
-		kvStore := cms.GetKVStore(storeKey)
-		traceKv := kvStore.(*tracekv.Store)
-		keys := traceKv.GetAllKeysUsedInTrace(*subStoreTraceBuf)
+		keys := cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreTraceBuf)
 
 		substoreSMT := cms.GetSubstoreSMT(storeKey.Name())
 		stateWitness := StateWitness{

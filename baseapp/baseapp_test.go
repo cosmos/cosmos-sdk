@@ -37,7 +37,7 @@ import (
 var (
 	capKey1    = sdk.NewKVStoreKey("key1")
 	capKey2    = sdk.NewKVStoreKey("key2")
-	randSource = int64(3920758213583)
+	randSource = int64(123456789)
 
 	// testTxPriority is the CheckTx priority that we set in the test
 	// antehandler.
@@ -114,18 +114,8 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 			}))
 		}
 		routerOpts = append(routerOpts, routerOpt)
-	}
-	options = append(options, SetSubstores(storeKeys...))
-	// RouterOpts should only be called after call to `SetSubstores`
-	for _, routerOpt := range routerOpts {
-		options = append(options, AppOptionFunc(routerOpt))
-	}
 
-	// This initial height is used in `BeginBlock` in `validateHeight`
-	options = append(options, SetInitialHeight(fraudProof.blockHeight))
-
-	for _, storeKey := range storeKeys {
-		stateWitness := fraudProof.stateWitness[storeKey.Name()]
+		stateWitness := fraudProof.stateWitness[storeKeyName]
 		witnessData := stateWitness.WitnessData
 		for _, witness := range witnessData {
 			// TODO:
@@ -134,6 +124,16 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 			options = append(options, SetSubstoreKVPair(storeKey, witness.Key, witness.Value))
 		}
 	}
+	options = append(options, SetSubstores(storeKeys...))
+
+	// RouterOpts should only be called after call to `SetSubstores`
+	for _, routerOpt := range routerOpts {
+		options = append(options, AppOptionFunc(routerOpt))
+	}
+
+	// This initial height is used in `BeginBlock` in `validateHeight`
+	options = append(options, SetInitialHeight(fraudProof.blockHeight))
+
 	// make list of options to pass by parsing fraudproof
 	app := newBaseApp(t.Name(), options...)
 	require.Equal(t, t.Name(), app.Name())
@@ -2206,7 +2206,7 @@ func executeBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions in
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	r := rand.New(rand.NewSource(randSource))
-	randSource *= 2
+	randSource += 1
 	keyCounter := r.Intn(100)
 	txs := make([]txTest, 0)
 
@@ -2234,12 +2234,9 @@ func executeBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions in
 func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
-	numTransactions := len(txs)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: blockHeight}})
-	for txNum := 0; txNum < numTransactions; txNum++ {
-		tx := txs[txNum]
-
+	for _, tx := range txs {
 		txBytes, err := codec.Marshal(tx)
 		require.NoError(t, err)
 		resp := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
@@ -2305,7 +2302,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	// B1 <- S0
 	appB1.InitChain(abci.RequestInitChain{})
 
-	numTransactions := 1
+	numTransactions := 5
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
 

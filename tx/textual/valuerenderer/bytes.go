@@ -8,14 +8,14 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-//bytesValueRenderer implements ValueRenderer for bytes
+// bytesValueRenderer implements ValueRenderer for bytes
 type bytesValueRenderer struct {
 }
 
 var _ ValueRenderer = bytesValueRenderer{}
 
 func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value, w io.Writer) error {
-	_, err := w.Write([]byte(base64.StdEncoding.EncodeToString(v.Bytes())))
+	_, err := io.WriteString(w, base64.StdEncoding.EncodeToString(v.Bytes()))
 	return err
 }
 

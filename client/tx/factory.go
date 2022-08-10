@@ -392,7 +392,6 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 // the updated fields will be returned.
 func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	fc := f
-
 	from := clientCtx.GetFromAddress()
 
 	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {

@@ -16,6 +16,7 @@ func TestMessageValueRenderer_Format(t *testing.T) {
 	mr := &messageValueRenderer{
 		tr: &tr,
 	}
+	// TODO: add a repeated field to the proto once the renderer for repeated fields is implemented.
 	msg := &testpb.Foo{
 		FullName: "the scanner",
 		ChildBar: &testpb.Bar{

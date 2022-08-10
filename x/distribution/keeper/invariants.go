@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -67,36 +68,50 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 		// cache, we don't want to write changes
 		ctx, _ = ctx.CacheContext()
 
-		var remaining sdk.DecCoins
-
 		valDelegationAddrs := make(map[string][]sdk.AccAddress)
 		for _, del := range k.stakingKeeper.GetAllSDKDelegations(ctx) {
 			valAddr := del.GetValidatorAddr().String()
 			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], del.GetDelegatorAddr())
 		}
 
-		// iterate over all validators
+		// get all validators so that we can iterate concurrently
+		// there might be a more elegant way to do this, but this seems to work pretty well
+		// and compared to the time the whole thing takes this iteration is negligible
+		var valList []stakingtypes.ValidatorI
 		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-			_, _ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
-
-			delegationAddrs, ok := valDelegationAddrs[val.GetOperator().String()]
-			if ok {
-				for _, delAddr := range delegationAddrs {
-					if _, err := k.WithdrawDelegationRewards(ctx, delAddr, val.GetOperator()); err != nil {
-						panic(err)
-					}
-				}
-			}
-
-			remaining = k.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
-			if len(remaining) > 0 && remaining[0].Amount.IsNegative() {
-				return true
-			}
-
+			valList = append(valList, val)
 			return false
 		})
 
-		broken := len(remaining) > 0 && remaining[0].Amount.IsNegative()
+		broken := false
+		var remaining sdk.DecCoins
+		wg := new(sync.WaitGroup)
+		for _, val := range valList {
+			wg.Add(1)
+			go func(val stakingtypes.ValidatorI, wg *sync.WaitGroup) {
+				defer wg.Done()
+
+				_, _ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
+
+				delegationAddrs, ok := valDelegationAddrs[val.GetOperator().String()]
+				if ok {
+					for _, delAddr := range delegationAddrs {
+						if _, err := k.WithdrawDelegationRewards(ctx, delAddr, val.GetOperator()); err != nil {
+							panic(err)
+						}
+					}
+				}
+
+				remainingRewards := k.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
+				if len(remainingRewards) > 0 && remainingRewards[0].Amount.IsNegative() {
+					broken = true
+					remaining = k.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
+				}
+			}(val, wg)
+		}
+
+		wg.Wait()
+
 		return sdk.FormatInvariant(types.ModuleName, "can withdraw",
 			fmt.Sprintf("remaining coins: %v\n", remaining)), broken
 	}

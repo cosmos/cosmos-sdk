@@ -2305,33 +2305,27 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	numTransactions := 5
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
+	appB1.Commit()
 
-	// Exports all data inside current multistore into a fraudProof (S1) //
+	// B1 <- S2
+	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
+	appB1.Commit()
 
+	// Exports all data inside current multistore into a fraudProof (S1 -> S2) //
 	storeKeyToSubstoreTraceBuf := make(map[stypes.StoreKey]*bytes.Buffer)
 	storeKeyToSubstoreTraceBuf[capKey2] = subStoreTraceBuf
 
-	// Records S1 in fraudproof
+	// Records S2 in fraudproof
 	fraudProof := appB1.generateFraudProof(storeKeyToSubstoreTraceBuf)
-	currentBlockHeight := appB1.LastBlockHeight()
+	currentBlockHeight := appB1.LastBlockHeight() // Only changes on a Commit
 	fraudProof.blockHeight = currentBlockHeight + 1
 
 	// Light Client
 
 	// TODO: Insert fraudproof verification here
 
-	// Now we take contents of the fraud proof which was recorded with S1 and try to populate a fresh baseapp B2 with it
-	// B2 <- S1
-	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
-	require.True(t, checkSubstoreSMTsEqual(appB1, appB2, capKey2.Name()))
-
-	// B1 <- S2
-	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, fraudProof.blockHeight)
-	require.False(t, checkSubstoreSMTsEqual(appB1, appB2, capKey2.Name()))
-
-	// Apply the set of transactions txs1 here
+	// Now we take contents of the fraud proof which was recorded with S2 and try to populate a fresh baseapp B2 with it
 	// B2 <- S2
-	executeBlock(t, appB2, txs1, fraudProof.blockHeight)
-
+	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
 	require.True(t, checkSubstoreSMTsEqual(appB1, appB2, capKey2.Name()))
 }

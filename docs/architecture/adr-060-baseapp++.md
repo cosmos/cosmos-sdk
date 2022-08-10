@@ -2,22 +2,43 @@
 
 ## Changelog
 
-* {date}: {changelog}
+* 2022-08-10: Initial Draft
 
 ## Status
 
 Proposed
 
-
 ## Abstract
 
-
-This ADR describes the adoption of ABCI++, the evolution of ABCI, with this evolution there are a few new methods that enchance the state machine and consensus engine coupling. 
+This ADR describes the initial adoption of [ABCI++](https://github.com/tendermint/tendermint/blob/master/spec/abci%2B%2B/README.md),
+the next evolution of ABCI, within the Cosmos SDK. ABCI++ aims to provide
+application developers with more flexibility and control over application and
+consensus semantics, e.g. in-application mempools, in-process oracles, and
+order-book style matching engines.
 
 ## Context
 
-There are two phases that 0.37 tendermint will include, `Prepare` and `Process` Proposal. Prepare proposal is the first phase at which a proposer asks the application if the transactions that are going to be included are the correct ones, at this stage the application has the right to replace modify transactions. The second phase is process proposal, at this phase the consensus engine will ask the application if the block proposed by the proposer is valid. 
+Tendermint will release ABCI++ in phases. Notably, at the time of this writing,
+Tendermint is releasing v0.37.0 which will include `PrepareProposal` and `ProcessProposal`.
 
+The `PrepareProposal` ABCI method is concerned with a block proposer requesting
+the application to evaluate a series of transactions to be included in the next
+block, defined as a slice of `TxRecord` objects. The application can either
+accept, reject, or completely ignore some or all of these transactions. This is
+an important consideration to make as the application can essentially define and
+control its own mempool allowing it to define sophisticated transaction priority
+and filtering mechanisms, by completely ignoring the `TxRecords` Tendermint
+sends it, favoring its own transactions. This essentially means that the Tendermint
+mempool acts more like a gossip data structure.
+
+The second ABCI method, `ProcessProposal`, is used to process the block proposer's
+proposal as defined by `PrepareProposal`. This ABCI method requests that the
+application evaluate the entire proposed block for validity.
+
+It is important to note that in this phase of ABCI++ integration, the application
+is NOT responsible for locking semantics -- Tendermint will still be responsible
+for that. In the future, however, the application will be responsible for locking,
+which allows for parallel execution possibilities.
 
 ### Prepare Proposal
 

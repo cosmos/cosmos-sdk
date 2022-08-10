@@ -1,4 +1,4 @@
-package codegen_test
+package depinject
 
 import (
 	"os"
@@ -7,7 +7,6 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/internal/codegen"
 	"cosmossdk.io/depinject/internal/graphviz"
 )
@@ -37,25 +36,38 @@ func TestCheckIsExportedType(t *testing.T) {
 	expectValidType(t, make(chan<- int))
 	expectValidType(t, func(int, string) (bool, error) { return false, nil })
 	expectValidType(t, func(int, ...string) (bool, error) { return false, nil })
-	expectValidType(t, depinject.In{})
-	expectValidType(t, map[string]depinject.In{})
-	expectValidType(t, &depinject.In{})
-	//expectValidType(t, AGenericStruct[AStruct, FileGen]{})
-	//expectValidType(t, AStructWrapper{})
+	expectValidType(t, In{})
+	expectValidType(t, map[string]In{})
+	expectValidType(t, &In{})
 	expectValidType(t, uintptr(0))
-	expectValidType(t, (*depinject.Location)(nil))
+	expectValidType(t, (*Location)(nil))
 
+	expectInvalidType(t, container{}, "not exported")
+	expectInvalidType(t, &container{}, "not exported")
 	expectInvalidType(t, graphviz.Attributes{}, "internal")
 	expectInvalidType(t, map[string]graphviz.Attributes{}, "internal")
-	//expectInvalidType(t, codegen.AGenericStruct[graphviz.Attributes, codgen.FileGen]{}, "internal")
 	expectInvalidType(t, []graphviz.Attributes{}, "internal")
-	//expectInvalidType(t, AGenericStruct[graphviz.Attributes, FileGen]{}, "internal")
+
+	// generics
+	expectValidType(t, AGenericStruct[int, In]{})
+	expectValidType(t, AGenericStruct[*In, *Out]{})
+	expectInvalidType(t, AGenericStruct[container, containerConfig]{}, "not exported")
+	expectInvalidType(t, AGenericStruct[*container, *containerConfig]{}, "not exported")
+	expectInvalidType(t, AGenericStruct[graphviz.Attributes, codegen.FileGen]{}, "internal")
+	expectInvalidType(t, AGenericStruct[*graphviz.Attributes, *codegen.FileGen]{}, "internal")
 }
 
 func expectValidType(t *testing.T, v interface{}) {
-	assert.NilError(t, codegen.IsExportedType(reflect.TypeOf(v)))
+	t.Helper()
+	assert.NilError(t, isExportedType(reflect.TypeOf(v)))
 }
 
 func expectInvalidType(t *testing.T, v interface{}, errContains string) {
-	assert.ErrorContains(t, codegen.IsExportedType(reflect.TypeOf(v)), errContains)
+	t.Helper()
+	assert.ErrorContains(t, isExportedType(reflect.TypeOf(v)), errContains)
+}
+
+type AGenericStruct[A, B any] struct {
+	A A
+	B B
 }

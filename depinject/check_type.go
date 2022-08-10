@@ -1,4 +1,4 @@
-package codegen
+package depinject
 
 import (
 	"reflect"
@@ -9,14 +9,13 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// IsExportedType checks if the type is exported and not in an internal
+// isExportedType checks if the type is exported and not in an internal
 // package.
-func IsExportedType(typ reflect.Type) error {
+func isExportedType(typ reflect.Type) error {
 	name := typ.Name()
 	pkgPath := typ.PkgPath()
 	if name != "" && pkgPath != "" {
-		nameParts := strings.Split(name, ".")
-		if unicode.IsLower([]rune(nameParts[len(nameParts)-1])[0]) {
+		if unicode.IsLower([]rune(name)[0]) {
 			return errors.Errorf("type is not exported: %s", typ)
 		}
 
@@ -24,21 +23,18 @@ func IsExportedType(typ reflect.Type) error {
 		if slices.Contains(pkgParts, "internal") {
 			return errors.Errorf("type is in an internal package: %s", typ)
 		}
+
+		return nil
 	}
 
 	switch typ.Kind() {
-	case reflect.Bool, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
-		return nil
-
 	case reflect.Array, reflect.Slice, reflect.Chan, reflect.Pointer:
-		return IsExportedType(typ.Elem())
+		return isExportedType(typ.Elem())
 
 	case reflect.Func:
 		numIn := typ.NumIn()
 		for i := 0; i < numIn; i++ {
-			err := IsExportedType(typ.In(i))
+			err := isExportedType(typ.In(i))
 			if err != nil {
 				return err
 			}
@@ -46,7 +42,7 @@ func IsExportedType(typ reflect.Type) error {
 
 		numOut := typ.NumOut()
 		for i := 0; i < numOut; i++ {
-			err := IsExportedType(typ.Out(i))
+			err := isExportedType(typ.Out(i))
 			if err != nil {
 				return err
 			}
@@ -55,11 +51,11 @@ func IsExportedType(typ reflect.Type) error {
 		return nil
 
 	case reflect.Map:
-		err := IsExportedType(typ.Key())
+		err := isExportedType(typ.Key())
 		if err != nil {
 			return err
 		}
-		return IsExportedType(typ.Elem())
+		return isExportedType(typ.Elem())
 
 	default:
 		return nil

@@ -45,7 +45,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk0, sdk.NewInt(100), true)
 
 	// end block to bond validator and start new block
 	staking.EndBlocker(ctx, stakingKeeper)
@@ -112,7 +112,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	valPower := int64(100)
-	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk0, valPower, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, stakingKeeper)
@@ -187,7 +187,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	// create validator with 50% commission
 	valPower := int64(100)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk0, valPower, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, stakingKeeper)
@@ -273,7 +273,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk0, sdk.NewInt(100), true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, stakingKeeper)
@@ -360,7 +360,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	// create validator with 50% commission
 	power := int64(100)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	valTokens := tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, power, true)
+	valTokens := tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk0, power, true)
 
 	// assert correct initial balance
 	expTokens := balanceTokens.Sub(valTokens)
@@ -436,7 +436,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	// create validator with 50% commission
 	valPower := int64(100)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk0, valPower, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, stakingKeeper)
@@ -516,7 +516,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	valPower := int64(100)
-	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk0, valPower, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, stakingKeeper)
@@ -613,7 +613,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk0, sdk.NewInt(100), true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, stakingKeeper)
@@ -772,7 +772,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 
 	// create validator with 100% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(10, 1), sdk.NewDecWithPrec(10, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk0, sdk.NewInt(100), true)
 	stakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 
 	// end block to bond validator

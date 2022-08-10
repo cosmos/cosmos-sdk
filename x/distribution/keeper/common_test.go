@@ -10,12 +10,12 @@ import (
 var (
 	PKS = simtestutil.CreateTestPubKeys(5)
 
-	valConsPk1 = PKS[0]
-	valConsPk2 = PKS[1]
-	valConsPk3 = PKS[2]
+	valConsPk0 = PKS[0]
+	valConsPk1 = PKS[1]
+	valConsPk2 = PKS[2]
 
-	valConsAddr1 = sdk.ConsAddress(valConsPk1.Address())
-	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
+	valConsAddr1 = sdk.ConsAddress(valConsPk0.Address())
+	valConsAddr2 = sdk.ConsAddress(valConsPk1.Address())
 
 	distrAcc = authtypes.NewEmptyModuleAccount(types.ModuleName)
 )

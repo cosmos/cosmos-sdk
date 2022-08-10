@@ -27,7 +27,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
-	addrs := simtestutil.CreateIncrementalAccounts(4)
+	addrs := simtestutil.CreateIncrementalAccounts(2)
 
 	delegatorAddr := addrs[0]
 	withdrawAddr := addrs[1]

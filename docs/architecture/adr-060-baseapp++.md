@@ -120,7 +120,9 @@ reject and or include each transaction. Note, the application can even _replace_
 transactions entirely with other transactions.
 
 When evaluating transactions from `PrepareProposalRequest`, the application will
-...
+ignore _all_ transactions sent to it in the request and instead reap up to
+`PrepareProposalRequest.max_tx_bytes` from it's own mempool. There is no need to
+execute the transactions for validity as they have already passed CheckTx.
 
 ### `ProcessProposal`
 

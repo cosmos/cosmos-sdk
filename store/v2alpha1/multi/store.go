@@ -16,6 +16,8 @@ import (
 	util "github.com/cosmos/cosmos-sdk/internal"
 	dbutil "github.com/cosmos/cosmos-sdk/internal/db"
 	"github.com/cosmos/cosmos-sdk/pruning"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"

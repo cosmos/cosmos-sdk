@@ -2321,6 +2321,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	numTransactions := 5
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
+	appB1.Commit()
 
 	// B1 <- S2
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
@@ -2350,18 +2351,8 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 		require.Equal(t, appHash[0], appHashB1)
 	}
 
-	// Now we take contents of the fraud proof which was recorded with S1 and try to populate a fresh baseapp B2 with it
-	// B2 <- S1
-	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
-	testSubstoresEqual(t, appB1, appB2, capKey2.Name())
-
-	// B1 <- S2
-	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, fraudProof.blockHeight)
-	testSubstoresEqual(t, appB1, appB2, capKey2.Name())
-
-	// Apply the set of transactions txs1 here
+	// Now we take contents of the fraud proof which was recorded with S2 and try to populate a fresh baseapp B2 with it
 	// B2 <- S2
-	executeBlock(t, appB2, txs1, fraudProof.blockHeight)
-
+	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
 	testSubstoresEqual(t, appB1, appB2, capKey2.Name())
 }

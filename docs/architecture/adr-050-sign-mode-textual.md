@@ -68,7 +68,7 @@ The Regex reads as follows:
   - `((?![\*>: ]).+: )?`: represents the `<key>: ` part, i.e. an indicative key, whose associated value is given in the last capture group. This MAY be used in the Ledger app to perform custom on-screen formatting, for example to break a line before displaying the value. It CANNOT start with the characters `'*'`, `'>'`, `':'` or `' '`, as they are reserved characters.
   - `((?![\*>: ]).+)`: represents the `<value>` part, which can contain any arbitrary non-empty string but CANNOT start with the characters `'*'`, `'>'`, `':'` or `' '`, as they are reserved characters. When the `<key>` is not empty, values are by default encoded using value renderers, see point #4.
 
-Please note that point #7 and #8 specifies strings such as `*This transaction has 2 other signers` or `End of transaction messages`, which represent aggregate start and end screens used to delimit nested or repeated content. These are all valid strings under the above Regex.
+Please note that points #4, #7 and #8 specifies strings such as `*This transaction has 2 other signers` or `End of transaction messages`, which represent aggregate start and end screens used to delimit nested or repeated content. These are all valid strings under the above Regex.
 
 Examples of valid strings:
 ```

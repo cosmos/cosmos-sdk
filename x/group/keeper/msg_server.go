@@ -758,7 +758,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		if err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", id, err.Error())
-			k.Logger(cacheCtx).Info("proposal execution failed", "cause", err, "proposalID", id)
+			k.Logger(ctx).Info("proposal execution failed", "cause", err, "proposalID", id)
 		} else {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_SUCCESS
 			flush()

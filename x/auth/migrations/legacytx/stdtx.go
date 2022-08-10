@@ -1,6 +1,7 @@
 package legacytx
 
 import (
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -70,7 +71,7 @@ func (fee StdFee) Bytes() []byte {
 // originally part of the submitted transaction because the fee is computed
 // as fee = ceil(gasWanted * gasPrices).
 func (fee StdFee) GasPrices() sdk.DecCoins {
-	return sdk.NewDecCoinsFromCoins(fee.Amount...).QuoDec(sdk.NewDec(int64(fee.Gas)))
+	return sdk.NewDecCoinsFromCoins(fee.Amount...).QuoDec(math.LegacyNewDec(int64(fee.Gas)))
 }
 
 // StdTip is the tips used in a tipped transaction.

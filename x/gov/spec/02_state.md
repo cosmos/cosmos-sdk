@@ -18,7 +18,7 @@ A proposal will generally require more than just a set of messages to explain it
 purpose but need some greater justification and allow a means for interested participants
 to discuss and debate the proposal.
 In most cases, **it is encouraged to have an off-chain system that supports the on-chain governance process**.
-To accommodate for this, a proposal contains a special **`metadata`** field, an array of bytes,
+To accommodate for this, a proposal contains a special **`metadata`** field, a string,
 which can be used to add context to the proposal. The `metadata` field allows custom use for networks,
 however, it is expected that the field contains a URL or some form of CID using a system such as
 [IPFS](https://docs.ipfs.io/concepts/content-addressing/). To support the case of

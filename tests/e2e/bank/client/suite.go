@@ -1,14 +1,17 @@
-package testutil
+package client
 
 import (
 	"fmt"
 	"io/ioutil"
 	"os"
 
-	"cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+
+	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -20,18 +23,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-type IntegrationTestSuite struct {
+type EndToEndTestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewEndToEndTestSuite(cfg network.Config) *EndToEndTestSuite {
+	return &EndToEndTestSuite{cfg: cfg}
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
+func (s *EndToEndTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	genesisState := s.cfg.GenesisState
@@ -90,12 +93,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
+func (s *EndToEndTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestGetBalancesCmd() {
+func (s *EndToEndTestSuite) TestGetBalancesCmd() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -166,7 +169,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
+func (s *EndToEndTestSuite) TestGetCmdQueryTotalSupply() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -238,7 +241,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryDenomsMetadata() {
+func (s *EndToEndTestSuite) TestGetCmdQueryDenomsMetadata() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -365,7 +368,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDenomsMetadata() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
+func (s *EndToEndTestSuite) TestNewSendTxCmdGenOnly() {
 	val := s.network.Validators[0]
 
 	clientCtx := val.ClientCtx
@@ -383,14 +386,14 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	}
 
-	bz, err := MsgSendExec(clientCtx, from, to, amount, args...)
+	bz, err := clitestutil.MsgSendExec(clientCtx, from, to, amount, args...)
 	s.Require().NoError(err)
 	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
 	s.Require().NoError(err)
 	s.Require().Equal([]sdk.Msg{types.NewMsgSend(from, to, amount)}, tx.GetMsgs())
 }
 
-func (s *IntegrationTestSuite) TestNewSendTxCmdDryRun() {
+func (s *EndToEndTestSuite) TestNewSendTxCmdDryRun() {
 	val := s.network.Validators[0]
 
 	clientCtx := val.ClientCtx
@@ -412,7 +415,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdDryRun() {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	_, err := MsgSendExec(clientCtx, from, to, amount, args...)
+	_, err := clitestutil.MsgSendExec(clientCtx, from, to, amount, args...)
 	s.Require().NoError(err)
 
 	w.Close()
@@ -422,7 +425,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdDryRun() {
 	s.Require().Regexp("gas estimate: [0-9]+", string(out))
 }
 
-func (s *IntegrationTestSuite) TestNewSendTxCmd() {
+func (s *EndToEndTestSuite) TestNewSendTxCmd() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -510,7 +513,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			bz, err := MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			bz, err := clitestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -524,7 +527,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewMultiSendTxCmd() {
+func (s *EndToEndTestSuite) TestNewMultiSendTxCmd() {
 	val := s.network.Validators[0]
 	testAddr := sdk.AccAddress("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
 
@@ -662,4 +665,16 @@ func (s *IntegrationTestSuite) TestNewMultiSendTxCmd() {
 func NewCoin(denom string, amount math.Int) *sdk.Coin {
 	coin := sdk.NewCoin(denom, amount)
 	return &coin
+}
+
+func MsgMultiSendExec(clientCtx client.Context, from sdk.AccAddress, to []sdk.AccAddress, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := []string{from.String()}
+	for _, addr := range to {
+		args = append(args, addr.String())
+	}
+
+	args = append(args, amount.String())
+	args = append(args, extraArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.NewMultiSendTxCmd(), args)
 }

@@ -342,11 +342,12 @@ func (d LegacyDec) Quo(d2 LegacyDec) LegacyDec {
 	return d.ImmutOp(LegacyDec.QuoMut, d2)
 }
 
+var squaredPrecisionReuse = new(big.Int).Mul(precisionReuse, precisionReuse)
+
 // mutable quotient
 func (d LegacyDec) QuoMut(d2 LegacyDec) LegacyDec {
-	// multiply precision twice
-	d.i.Mul(d.i, precisionReuse)
-	d.i.Mul(d.i, precisionReuse)
+	// multiply by precision twice
+	d.i.Mul(d.i, squaredPrecisionReuse)
 	d.i.Quo(d.i, d2.i)
 
 	chopPrecisionAndRound(d.i)
@@ -364,8 +365,7 @@ func (d LegacyDec) QuoTruncate(d2 LegacyDec) LegacyDec {
 // mutable quotient truncate
 func (d LegacyDec) QuoTruncateMut(d2 LegacyDec) LegacyDec {
 	// multiply precision twice
-	d.i.Mul(d.i, precisionReuse)
-	d.i.Mul(d.i, precisionReuse)
+	d.i.Mul(d.i, squaredPrecisionReuse)
 	d.i.Quo(d.i, d2.i)
 
 	chopPrecisionAndTruncate(d.i)
@@ -383,8 +383,7 @@ func (d LegacyDec) QuoRoundUp(d2 LegacyDec) LegacyDec {
 // mutable quotient, round up
 func (d LegacyDec) QuoRoundupMut(d2 LegacyDec) LegacyDec {
 	// multiply precision twice
-	d.i.Mul(d.i, precisionReuse)
-	d.i.Mul(d.i, precisionReuse)
+	d.i.Mul(d.i, squaredPrecisionReuse)
 	d.i.Quo(d.i, d2.i)
 
 	chopPrecisionAndRoundUp(d.i)

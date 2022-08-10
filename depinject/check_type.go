@@ -14,7 +14,8 @@ import (
 // would involve complex parsing of type names (there is no reflect API for
 // generic type parameters). Parsing of these parameters should be possible
 // if someone chooses to do it in the future, but care should be taken to
-// be exhaustive and cover all cases like pointers, map's, chan's, etc.
+// be exhaustive and cover all cases like pointers, map's, chan's, etc. which
+// means you actually need a real parser and not just a regex.
 func isExportedType(typ reflect.Type) error {
 	name := typ.Name()
 	pkgPath := typ.PkgPath()

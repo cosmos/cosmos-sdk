@@ -28,6 +28,7 @@ var (
 )
 
 // Simulation operation weights constants
+//
 //nolint:gosec // these are not hard-coded credentials.
 const (
 	OpWeightMsgDeposit      = "op_weight_msg_deposit"

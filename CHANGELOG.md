@@ -45,6 +45,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [#12674](https://github.com/cosmos/cosmos-sdk/pull/12674) Add convenience function `CreatePrefixedAccountStoreKey()` to construct key to access account's balance for a given denom.
 * [#12877](https://github.com/cosmos/cosmos-sdk/pull/12877) Bumped cosmossdk.io/math to v1.0.0-beta.3
 
+### Bug Fixes
+
+* (x/group) [#12888](https://github.com/cosmos/cosmos-sdk/pull/12888) Fix event propagation to the current context of `x/group` message execution `[]sdk.Result`.
+
 ## [v0.46.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0) - 2022-07-26
 
 ### Features

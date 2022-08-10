@@ -10,7 +10,11 @@ import (
 )
 
 // isExportedType checks if the type is exported and not in an internal
-// package.
+// package. NOTE: generic type parameters are not checked because this
+// would involve complex parsing of type names (there is no reflect API for
+// generic type parameters). Parsing of these parameters should be possible
+// if someone chooses to do it in the future, but care should be taken to
+// be exhaustive and cover all cases like pointers, map's, chan's, etc.
 func isExportedType(typ reflect.Type) error {
 	name := typ.Name()
 	pkgPath := typ.PkgPath()

@@ -51,6 +51,16 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 			return intValueRenderer{}, nil
 		}
 
+	case fd.Kind() == protoreflect.MessageKind:
+		md := fd.Message()
+		fullName := md.FullName()
+		switch fullName {
+		case "google.protobuf.Timestamp":
+			return NewTimestampValueRenderer(), nil
+		}
+		// TODO default message renderer
+		return nil, fmt.Errorf("no value renderer for message %s", fullName)
+
 	default:
 		return nil, fmt.Errorf("value renderers cannot format value of type %s", fd.Kind())
 	}

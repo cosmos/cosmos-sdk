@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
@@ -51,7 +52,7 @@ func (s *TestSuite) SetupTest() {
 	key := sdk.NewKVStoreKey(group.StoreKey)
 
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{}, bank.AppModuleBasic{})
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)
 
 	// setup gomock and initialize some globally expected executions
@@ -71,8 +72,8 @@ func (s *TestSuite) SetupTest() {
 		testCtx.DB,
 		encCfg.TxConfig.TxDecoder(),
 	)
-
-	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
+	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), s.bankKeeper)
 
 	config := group.DefaultConfig()
 	s.groupKeeper = keeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), s.accountKeeper, config)
@@ -2443,11 +2444,7 @@ func (s *TestSuite) TestExecProposal() {
 
 				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
-				// sdkCtx := sdk.UnwrapSDKContext(ctx)
-				// s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
 				s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
-
-				// s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return myProposalID
 			},
@@ -2491,9 +2488,9 @@ func (s *TestSuite) TestExecProposal() {
 			}
 
 			if spec.expBalance {
-				// s.bankKeeper.EXPECT().GetAllBalances(sdkCtx, s.groupPolicyAddr).Return(
-				// 	s.bankKeeper.SpendableCoins()
-				// )
+				s.bankKeeper.EXPECT().GetAllBalances(sdkCtx, s.groupPolicyAddr).Return(sdk.Coins{spec.expFromBalances})
+				s.bankKeeper.EXPECT().GetAllBalances(sdkCtx, addr2).Return(sdk.Coins{spec.expToBalances})
+
 				fromBalances := s.bankKeeper.GetAllBalances(sdkCtx, s.groupPolicyAddr)
 				s.Require().Contains(fromBalances, spec.expFromBalances)
 				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)

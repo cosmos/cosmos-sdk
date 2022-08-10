@@ -2,6 +2,7 @@ package appconfig
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -93,8 +94,14 @@ func Compose(appConfig *appv1alpha1.Config) depinject.Config {
 			return depinject.Error(err)
 		}
 
-		// supply the module config itself
-		opts = append(opts, depinject.Supply(config))
+		opts = append(opts, depinject.Provide(depinject.ProviderDescriptor{
+			Inputs:  nil,
+			Outputs: []depinject.ProviderOutput{{Type: init.ConfigGoType}},
+			Fn: func(values []reflect.Value) ([]reflect.Value, error) {
+				return []reflect.Value{reflect.ValueOf(config)}, nil
+			},
+			Location: depinject.LocationFromCaller(0),
+		}))
 
 		for _, provider := range init.Providers {
 			opts = append(opts, depinject.ProvideInModule(module.Name, provider))

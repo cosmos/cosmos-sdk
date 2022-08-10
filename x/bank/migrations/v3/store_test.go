@@ -3,10 +3,9 @@ package v3_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"

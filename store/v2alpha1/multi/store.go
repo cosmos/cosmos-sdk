@@ -359,11 +359,6 @@ func NewStore(db dbm.Connection, opts StoreParams) (ret *Store, err error) {
 	return
 }
 
-func (s *Store) RevertStore(opts StoreParams) (ret *Store, err error) {
-	db := s.stateDB
-	return NewStore(db, opts)
-}
-
 func (s *Store) Close() error {
 	err := s.stateTxn.Discard()
 	if s.StateCommitmentDB != nil {

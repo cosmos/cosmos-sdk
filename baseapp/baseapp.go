@@ -772,9 +772,6 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 // enableFraudProofGenerationMode rolls back an app's state to a previous
 // state and enables tracing for the list of store keys
 func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey) {
-	cms := app.cms.(*multi.Store)
-	previousCMS, _ := cms.RevertStore(multi.StoreParams{})
-	_ = previousCMS
 	return
 }
 

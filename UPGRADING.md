@@ -4,6 +4,10 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### Simulation
+
+Remove `RandomizedParams` from `AppModuleSimulation` interface. Previously, it used to generate random parameter changes during simulations, however, it does so through ParamChangeProposal which is now legacy. Since all modules were migrated, we can now safely remove this from `AppModuleSimulation` interface.
+
 ### AppModule Interface
 
 Remove `Querier`, `Route` and `LegacyQuerier` from the app module interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously known as the LCD, and the `sdk.Msg#Route` method won't be used anymore.

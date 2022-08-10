@@ -21,9 +21,6 @@ type AppModuleSimulation interface {
 	// content functions used to simulate governance proposals
 	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent
 
-	// randomized module parameters for param change proposals
-	RandomizedParams(r *rand.Rand) []simulation.ParamChange
-
 	// register a func to decode the each module's defined types from their corresponding store key
 	RegisterStoreDecoder(sdk.StoreDecoderRegistry)
 
@@ -104,18 +101,6 @@ func (sm *SimulationManager) GenerateGenesisStates(simState *SimulationState) {
 	for _, module := range sm.Modules {
 		module.GenerateGenesisState(simState)
 	}
-}
-
-// GenerateParamChanges generates randomized contents for creating params change
-// proposal transactions
-func (sm *SimulationManager) GenerateParamChanges(seed int64) (paramChanges []simulation.ParamChange) {
-	r := rand.New(rand.NewSource(seed))
-
-	for _, module := range sm.Modules {
-		paramChanges = append(paramChanges, module.RandomizedParams(r)...)
-	}
-
-	return
 }
 
 // WeightedOperations returns all the modules' weighted operations of an application

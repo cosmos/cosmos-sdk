@@ -412,7 +412,7 @@ func randomDeposit(
 			return nil, false, err
 		}
 
-		minAmount = sdk.NewDecFromInt(minDepositAmount).Mul(minDepositPercent).RoundInt()
+		minAmount = sdk.NewDecFromInt(minDepositAmount).Mul(minDepositPercent).TruncateInt()
 	}
 
 	amount, err := simtypes.RandPositiveInt(r, minDepositAmount.Sub(minAmount))

@@ -110,16 +110,6 @@ func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*r
 	return SetupWithConfiguration(appConfig, cfg, extraOutputs...)
 }
 
-// Map returns a new slice populated with the result of calling the provided function
-// on every element in the provided input slice.
-func Map[T1, T2 any](input []T1, f func(T1) T2) (output []T2) {
-	output = make([]T2, 0, len(input))
-	for _, v := range input {
-		output = append(output, f(v))
-	}
-	return output
-}
-
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
 // appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
 // extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).

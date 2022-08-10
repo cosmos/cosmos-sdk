@@ -40,6 +40,59 @@ is NOT responsible for locking semantics -- Tendermint will still be responsible
 for that. In the future, however, the application will be responsible for locking,
 which allows for parallel execution possibilities.
 
+## Decision
+
+We will integrate the first phase of ABCI++, which will be introduced in Tendermint
+v0.37.0, in the next major release of the Cosmos SDK. We will integrate the two
+aforementioned ABCI++ methods on the `BaseApp` type. We describe the implementations
+of the two methods individually below.
+
+Prior to describing the implementation of the two new methods, it is important to
+note that the existing ABCI methods, `CheckTx`, `DeliverTx`, etc, still exist and
+serve the same functions as they do now.
+
+### `PrepareProposal`
+
+### `ProcessProposal`
+
+
+<!-- 
+## Consequences
+
+> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
+
+### Backwards Compatibility
+
+> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
+
+### Positive
+
+{positive consequences}
+
+### Negative
+
+{negative consequences}
+
+### Neutral
+
+{neutral consequences}
+
+## Further Discussions
+
+While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
+Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR. -->
+
+## References
+
+* https://github.com/tendermint/tendermint/blob/master/spec/abci%2B%2B/README.md
+* https://github.com/tendermint/tendermint/issues/7750#issuecomment-1075717151
+* https://github.com/tendermint/tendermint/issues/7750#issuecomment-1076806155
+
+<!-- ----------------------------------------------------------------------- -->
+<!-- ----------------------------------------------------------------------- -->
+<!-- ----------------------------------------------------------------------- -->
+
+<!-- 
 ### Prepare Proposal
 
 There are two designs being considered for `Prepare Proposal`:
@@ -114,4 +167,4 @@ Test cases for an implementation are mandatory for ADRs that are affecting conse
 
 ## References
 
-* {reference link}
+* {reference link} -->

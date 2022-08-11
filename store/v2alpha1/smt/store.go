@@ -77,6 +77,10 @@ func (s *Store) GetProofICS23(key []byte) (*ics23.CommitmentProof, error) {
 	return createIcs23Proof(s, key)
 }
 
+func (s *Store) GetSMTProof(key []byte) (smt.SparseMerkleProof, error) {
+	return s.tree.Prove(key)
+}
+
 func (s *Store) Root() []byte { return s.tree.Root() }
 
 // BasicKVStore interface below:

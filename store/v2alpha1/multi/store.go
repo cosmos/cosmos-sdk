@@ -1,6 +1,7 @@
 package multi
 
 import (
+	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -16,8 +17,6 @@ import (
 	util "github.com/cosmos/cosmos-sdk/internal"
 	dbutil "github.com/cosmos/cosmos-sdk/internal/db"
 	"github.com/cosmos/cosmos-sdk/pruning"
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
-
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
@@ -29,6 +28,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/transient"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	smtlib "github.com/lazyledger/smt"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 var (
@@ -635,15 +636,6 @@ func (s *Store) getMerkleRoots() (ret map[string][]byte, err error) {
 	return
 }
 
-func (s *Store) GetSubStoreProof(storeKeyName string) (*tmcrypto.ProofOp, []byte, error) {
-	storeHashes, err := s.getMerkleRoots()
-	if err != nil {
-		return nil, nil, err
-	}
-	proofOp, err := types.ProofOpFromMap(storeHashes, storeKeyName)
-	return &proofOp, storeHashes[storeKeyName], err
-}
-
 // Calculates root hashes and commits to DB. Does not verify target version or perform pruning.
 func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	storeHashes, err := s.getMerkleRoots()
@@ -1078,4 +1070,46 @@ func (s *Store) GetSubstoreSMT(key string) *smt.Store {
 		panic(err)
 	}
 	return sub.stateCommitmentStore
+}
+
+func (s *Store) GetLastStore() (*viewStore, error) {
+	lastVersion := s.LastCommitID().Version
+	lastStore, err := s.GetVersion(lastVersion)
+	if err != nil {
+		return nil, err
+	}
+	return lastStore.(*viewStore), nil
+}
+
+func (s *Store) GetLastSubstoreProof(storeKeyName string) (*tmcrypto.ProofOp, []byte, error) {
+	viewLastStore, err := s.GetLastStore()
+	if err != nil {
+		return nil, nil, err
+	}
+	storeHashes, err := viewLastStore.getMerkleRoots()
+	if err != nil {
+		return nil, nil, err
+	}
+	proofOp, err := types.ProofOpFromMap(storeHashes, storeKeyName)
+	return &proofOp, storeHashes[storeKeyName], err
+}
+
+// Constructs a deep sparse merkle tree using the given subKeys for the given storekeyName at the last version
+func (s *Store) GetLastSubstoreSMTWithKeys(storekeyName string, subKeys []string) (*smtlib.DeepSparseMerkleSubTree, error) {
+	viewLastStore, err := s.GetLastStore()
+	if err != nil {
+		return nil, err
+	}
+	smt := viewLastStore.GetSubstoreSMT(storekeyName)
+	dsmt := smtlib.NewDeepSparseMerkleSubTree(smtlib.NewSimpleMap(), smtlib.NewSimpleMap(), sha256.New(), smt.Root())
+	for _, subKey := range subKeys {
+		bKey := []byte(subKey)
+		bValue := smt.Get(bKey)
+		proof, err := smt.GetSMTProof([]byte(subKey))
+		if err != nil {
+			return nil, err
+		}
+		dsmt.AddBranch(proof, bKey, bValue)
+	}
+	return dsmt, nil
 }

@@ -815,33 +815,41 @@ func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey, r
 }
 
 // Generate a fraudproof for an app with the given trace buffers
-func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.StoreKey]*bytes.Buffer) (FraudProof, error) {
+func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*bytes.Buffer) (FraudProof, error) {
 	fraudProof := FraudProof{}
 	fraudProof.stateWitness = make(map[string]StateWitness)
 	cms := app.cms.(*multi.Store)
 
-	for storeKey, subStoreTraceBuf := range storeKeyToSubstoreTraceBuf {
-		keys := cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreTraceBuf)
+	storeKeys := cms.GetStoreKeys()
+	for _, storeKey := range storeKeys {
+		subStoreTraceBuf := storeKeyToSubstoreTraceBuf[storeKey.Name()]
+		keys := cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreTraceBuf).Values()
 
-		substoreSMT := cms.GetSubstoreSMT(storeKey.Name())
-		proof, storeHash, err := cms.GetSubStoreProof(storeKey.Name())
+		// This should be the deep subtree
+		deepSubstoreSMT, err := cms.GetLastSubstoreSMTWithKeys(storeKey.Name(), keys)
+		if err != nil {
+			return FraudProof{}, err
+		}
+		proof, storeHash, err := cms.GetLastSubstoreProof(storeKey.Name())
 		if err != nil {
 			return FraudProof{}, err
 		}
 		stateWitness := StateWitness{
 			proof:       *proof,
 			rootHash:    storeHash,
-			WitnessData: make([]WitnessData, 0, keys.Len()),
+			WitnessData: make([]WitnessData, 0, len(keys)),
 		}
-		for key := range keys {
-			value := substoreSMT.Get([]byte(key))
-			proofOps, err := substoreSMT.GetProof([]byte(key))
+		for _, key := range keys {
+			value, err := deepSubstoreSMT.Get([]byte(key))
 			if err != nil {
 				return FraudProof{}, err
 			}
-			proofOp := proofOps.GetOps()[0]
+			proof, err := deepSubstoreSMT.Prove([]byte(key))
+			if err != nil {
+				return FraudProof{}, err
+			}
 			bKey, bVal := []byte(key), []byte(value)
-			witnessData := WitnessData{bKey, bVal, proofOp}
+			witnessData := WitnessData{bKey, bVal, proof}
 			stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
 		}
 		fraudProof.stateWitness[storeKey.Name()] = stateWitness

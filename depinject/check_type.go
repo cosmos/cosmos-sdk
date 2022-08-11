@@ -63,6 +63,7 @@ func isExportedType(typ reflect.Type) error {
 		return isExportedType(typ.Elem())
 
 	default:
+		// all the remaining types are builtin, non-composite types (like integers), so they are fine to use
 		return nil
 	}
 }

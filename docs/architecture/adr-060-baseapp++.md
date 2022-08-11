@@ -142,6 +142,10 @@ for ensuring validity of the proposed block containing transactions that were
 selected from the `PrepareProposal` step. In order to check validity of the proposed
 block, we must iterate over the list of transactions and ...
 
+We will only populate the `Status` field of the `ProcessProposalResponse` with
+`ACCEPT` if ALL the transactions were accepted as valid, otherwise we will
+populate with `REJECT`.
+
 <!-- 
 ## Consequences
 

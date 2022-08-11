@@ -79,6 +79,8 @@ Ledger devices have the an Expert mode for advanced users. Expert mode needs to 
 
 > Expert mode enables further, more sophisticated features. This could be useful for advanced users
 
+Strings starting with the `*` character will only be shown in Expert mode. These strings are either hardcoded in the transaction envelope (see point #7).
+
 For hardware wallets that don't have an expert mode, all strings MUST be shown on the device.
 
 ### 6. Strings MAY contain `>` characters to denote nesting
@@ -140,6 +142,7 @@ message Grant {
 
 message MsgGrant {
   option (cosmos.msg.v1.signer) = "granter";
+  option (cosmos.msg.v1.textual.type_url) = "authz v1beta1 grant"; 
 
   string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];

@@ -799,10 +799,9 @@ func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey) e
 	}
 	_ = options
 	return nil
-
-	// appB2, err := setupBaseAppFromParams(app.name, storeKeyNames, app.LastBlockHeight()+1, storeToLoadFrom, options...)
-	// _ = appB2
-	// return err
+	appB2, err := SetupBaseAppFromParams(app.name, app.logger, app.db, app.txDecoder, storeKeyNames, app.router, app.LastBlockHeight()+1, storeToLoadFrom, options...)
+	_ = appB2
+	return err
 }
 
 func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.StoreKey]*bytes.Buffer) (FraudProof, error) {
@@ -840,7 +839,7 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.Stor
 	return fraudProof, nil
 }
 
-func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, storeKeyNames []string, routerOpts map[string]AppOptionFunc, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
+func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, storeKeyNames []string, router sdk.Router, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
 	storeKeys := make([]types.StoreKey, 0, len(storeKeyNames))
 	for _, storeKeyName := range storeKeyNames {
 		storeKey := sdk.NewKVStoreKey(storeKeyName)
@@ -851,7 +850,6 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 			key, val := it.Key(), it.Value()
 			options = append(options, SetSubstoreKVPair(storeKey, key, val))
 		}
-		options = append(options, routerOpts[storeKeyName])
 	}
 	options = append(options, SetSubstores(storeKeys...))
 
@@ -861,6 +859,8 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 	// make list of options to pass by parsing fraudproof
 	app := NewBaseApp(appName, logger, db, txDecoder, options...)
 
+	app.router = router
+
 	// stores are mounted
 	err := app.Init()
 
@@ -868,6 +868,6 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 }
 
 // baseapp loaded from a fraudproof
-func SetupBaseAppFromFraudProof(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, routerOpts map[string]AppOptionFunc, fraudProof FraudProof, options ...AppOption) (*BaseApp, error) {
-	return SetupBaseAppFromParams(appName, logger, db, txDecoder, fraudProof.getModules(), routerOpts, fraudProof.blockHeight, fraudProof.extractStore(), options...)
+func SetupBaseAppFromFraudProof(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, router sdk.Router, fraudProof FraudProof, options ...AppOption) (*BaseApp, error) {
+	return SetupBaseAppFromParams(appName, logger, db, txDecoder, fraudProof.getModules(), router, fraudProof.blockHeight, fraudProof.extractStore(), options...)
 }

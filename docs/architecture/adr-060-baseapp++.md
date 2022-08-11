@@ -140,7 +140,9 @@ execute the transactions for validity as they have already passed CheckTx.
 The `ProcessProposal` ABCI method is relatively straightforward. It is responsible
 for ensuring validity of the proposed block containing transactions that were
 selected from the `PrepareProposal` step. In order to check validity of the proposed
-block, we must iterate over the list of transactions and ...
+block, we must iterate over the list of transactions and execute them using the
+same mode/execution strategy as `CheckTx`. In other words, we execute each transaction
+using the AnteHandler only -- no messages are executed.
 
 We will only populate the `Status` field of the `ProcessProposalResponse` with
 `ACCEPT` if ALL the transactions were accepted as valid, otherwise we will

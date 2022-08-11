@@ -2274,7 +2274,10 @@ func TestFraudProofGenerationMode(t *testing.T) {
 	numTransactions := 1
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
-	appB1.Commit()
+	commitB1 := appB1.Commit()
+
+	// appHash of B1 at S1
+	appHashB1AtS1 := commitB1.GetData()
 
 	// B1 <- S2
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
@@ -2298,8 +2301,22 @@ func TestFraudProofGenerationMode(t *testing.T) {
 		storeToLoadFrom[storeKeyName] = previousCMS.GetKVStore(storeKey)
 	}
 
-	appB2 := setupBaseAppFromParams(t, storeKeyNames, appB1.LastBlockHeight()+1, storeToLoadFrom)
-	_ = appB2
+	// Add options for tracing
+	storeTraceBuf := &bytes.Buffer{}
+	subStoreTraceBuf := &bytes.Buffer{}
+
+	// BaseApp, B1
+	options := []AppOption{
+		SetSubstoreTracer(storeTraceBuf),
+		SetTracerFor(capKey2, subStoreTraceBuf),
+	}
+
+	appB2 := setupBaseAppFromParams(t, storeKeyNames, appB1.LastBlockHeight()+1, storeToLoadFrom, options...)
+
+	for _, storeKeyName := range storeKeyNames {
+		hashB2 := getAppHashFromProofInApp(t, appB2, storeKeyName)
+		require.Equal(t, appHashB1AtS1, hashB2)
+	}
 }
 
 func TestGenerateAndLoadFraudProof(t *testing.T) {

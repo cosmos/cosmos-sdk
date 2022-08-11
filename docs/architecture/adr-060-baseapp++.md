@@ -104,11 +104,18 @@ to store senders and their nonces.
 
 Transaction reaping will essentially happen via a two-phase approach:
 
-1. Reap one or more transactions from the priority queue and collect them into a 
-   buffer.
-2. For each transaction in the buffer, ensure it does not violate any nonce predicates.
-3. Continue reaping until the desired number of valid transactions have been selected.
-4. Re-insert any transactions remaining in the buffer.
+1. Reap one or more transactions from the priority queue and collect them into 
+   one of two buffers -- _valid_ and _invalid_.
+2. For transactions that DO NOT violate the nonce validation, they are included
+   in the _valid_ buffer.
+3. For transactions that DO violate the nonce validation, they are included in
+   the _invalid_ buffer.
+4. Continue this process until the desired number of valid transactions are
+   reaped or until the mempool is empty.
+5. Provide Tendermint the list of all transactions from the _valid_ buffer.
+6. Re-insert all transactions, from both buffers, back into mempool. This is to
+   ensure we do not discard transactions from the mempool in case `ProcessProposal`
+   fails.
 
 ```go
 type PriorityMempool[T MempoolTx] struct {

@@ -2245,30 +2245,15 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 	app.EndBlock(abci.RequestEndBlock{Height: blockHeight})
 }
 
-func testSubstoresEqual(t *testing.T, appB1 *BaseApp, appB2 *BaseApp, storeKeyName string) {
+func checkSMTStoreEqual(appB1 *BaseApp, appB2 *BaseApp, storeKeyName string) bool {
 
 	cmsB1 := appB1.cms.(*multi.Store)
-	proofOpB1, storeHashB1, err := cmsB1.GetSubStoreProof(capKey2.Name())
-	require.Nil(t, err)
+	storeHashB1 := cmsB1.GetSubstoreSMT(storeKeyName).Root()
+
 	cmsB2 := appB1.cms.(*multi.Store)
-	proofOpB2, storeHashB2, err := cmsB2.GetSubStoreProof(capKey2.Name())
-	require.Nil(t, err)
+	storeHashB2 := cmsB2.GetSubstoreSMT(storeKeyName).Root()
 
-	proofB1, err := stypes.CommitmentOpDecoder(*proofOpB1)
-	require.Nil(t, err)
-	proofB2, err := stypes.CommitmentOpDecoder(*proofOpB2)
-	require.Nil(t, err)
-
-	hashB1, err := proofB1.Run([][]byte{storeHashB1})
-	require.Nil(t, err)
-	require.NotEmpty(t, hashB1)
-
-	hashB2, err := proofB2.Run([][]byte{storeHashB2})
-	require.Nil(t, err)
-	require.NotEmpty(t, hashB2)
-
-	require.Nil(t, err)
-	require.Equal(t, hashB1[0], hashB2[0])
+	return bytes.Equal(storeHashB1, storeHashB2)
 }
 
 func TestGenerateAndLoadFraudProof(t *testing.T) {
@@ -2354,5 +2339,5 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	// Now we take contents of the fraud proof which was recorded with S2 and try to populate a fresh baseapp B2 with it
 	// B2 <- S2
 	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
-	testSubstoresEqual(t, appB1, appB2, capKey2.Name())
+	require.True(t, checkSMTStoreEqual(appB1, appB2, capKey2.Name()))
 }

@@ -681,8 +681,9 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
 	inputs := []banktypes.Input{
-		{Address: accAddrs[0].String(),
-			Coins: coins,
+		{
+			Address: accAddrs[0].String(),
+			Coins:   coins,
 		},
 	}
 	outputs := []banktypes.Output{

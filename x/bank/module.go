@@ -6,15 +6,17 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/depinject"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/tendermint/tendermint/crypto"
 
-	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"cosmossdk.io/core/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -217,7 +219,7 @@ type bankInputs struct {
 	Authority     map[string]sdk.AccAddress `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
+	LegacySubspace exported.Subspace `optional:"true"`
 }
 
 type bankOutputs struct {

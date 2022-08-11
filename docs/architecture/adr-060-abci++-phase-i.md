@@ -169,6 +169,10 @@ transactions, we need to finally remove the transaction from the app-side mempoo
 during `DeliverTx` since during this phase, the transactions are being included
 in the proposed block.
 
+Alternatively, we can keep the transactions as truly being removed during the
+reaping phase in `PrepareProposal` and add them back to the app-side mempool in
+case `ProcessProposal` fails.
+
 ## Consequences
 
 ### Backwards Compatibility

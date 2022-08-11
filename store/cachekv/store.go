@@ -2,6 +2,7 @@ package cachekv
 
 import (
 	"bytes"
+	"github.com/tendermint/tendermint/libs/math"
 	"io"
 	"sort"
 	"sync"
@@ -280,6 +281,7 @@ const (
 
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
+	const THRESHOLD = 1024
 	startStr, endStr := conv.UnsafeBytesToStr(start), conv.UnsafeBytesToStr(end)
 	if startStr > endStr {
 		// Nothing to do here.
@@ -294,7 +296,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// O(N^2) overhead.
 	// Even without that, too many range checks eventually becomes more expensive
 	// than just not having the cache.
-	if n < 1024 {
+	if n < THRESHOLD {
 		for key := range store.unsortedCache {
 			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
 				cacheValue := store.cache[key]
@@ -323,6 +325,15 @@ func (store *Store) dirtyItems(start, end []byte) {
 	}
 	if startIndex < 0 {
 		startIndex = 0
+	}
+
+	// since we took the time to sort the cache, we should use that effort
+	// we store at least THRESHOLD values -- cost of storing all is amortized across multiple calls
+	if endIndex-startIndex < THRESHOLD {
+		endIndex = math.MinInt(startIndex+THRESHOLD, len(strL)-1)
+		if endIndex-startIndex < THRESHOLD {
+			startIndex = math.MaxInt(endIndex-THRESHOLD, 0)
+		}
 	}
 
 	kvL := make([]*kv.Pair, 0)

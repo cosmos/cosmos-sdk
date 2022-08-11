@@ -83,7 +83,7 @@ func (fraudProof *FraudProof) verifyFraudProof(headerAppHash []byte) (bool, erro
 			if err != nil {
 				return false, err
 			}
-			if !bytes.Equal(key, proof.GetKey()) {
+			if !bytes.Equal(key, proofOp.GetKey()) {
 				return false, fmt.Errorf("got key: %s, expected: %s for storeKey: %s", string(key), string(proof.GetKey()), storeKey)
 			}
 			rootHash, err := proofOp.Run([][]byte{value})

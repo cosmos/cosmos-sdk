@@ -2243,41 +2243,15 @@ func TestFraudProofGenerationMode(t *testing.T) {
 
 	// Do not commit here in order to preserve saved previous versions
 
-	// only storeKey we'd like tracing to be enabled for
+	// the only store key we'd like to enable tracing for
 	storeKeys := []types.StoreKey{capKey2}
 
-	// Now, try to get back to S1
-	cms := appB1.cms.(*multi.Store)
-	lastVersion := cms.LastCommitID().Version
-	previousCMS, err := cms.GetVersion(lastVersion)
-	require.Nil(t, err)
+	appB2, _, err := appB1.enableFraudProofGenerationMode(storeKeys)
 
-	// Initialize params from previousCMS
-	storeToLoadFrom := make(map[string]types.KVStore)
-	storeKeyNames := make([]string, 0, len(storeKeys))
+	require.Nil(t, err)
 	for _, storeKey := range storeKeys {
-		storeKeyName := storeKey.Name()
-		storeKeyNames = append(storeKeyNames, storeKeyName)
-		storeToLoadFrom[storeKeyName] = previousCMS.GetKVStore(storeKey)
-	}
-
-	// Add options for tracing
-	storeTraceBuf := &bytes.Buffer{}
-	subStoreTraceBuf := &bytes.Buffer{}
-
-	// BaseApp, B1
-	options := []AppOption{
-		AppOptionFunc(routerOpt),
-		SetSubstoreTracer(storeTraceBuf),
-		SetTracerFor(storeKeys[0].Name(), subStoreTraceBuf),
-	}
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
-	appB2, err := SetupBaseAppFromParams(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), storeKeyNames, NewRouter(), appB1.LastBlockHeight()+1, storeToLoadFrom, options...)
-	require.Nil(t, err)
-	for _, storeKeyName := range storeKeyNames {
 		cmsB2 := appB2.cms.(*multi.Store)
-		storeHashB2 := cmsB2.GetSubstoreSMT(storeKeyName).Root()
+		storeHashB2 := cmsB2.GetSubstoreSMT(storeKey.Name()).Root()
 		require.Equal(t, storeHashB1AtS1, storeHashB2)
 	}
 }

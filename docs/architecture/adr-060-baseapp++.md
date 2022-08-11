@@ -166,7 +166,10 @@ know them today will still exist and function as they currently do.
 
 ### Positive
 
-{positive consequences}
+* Applications now have full control over transaction ordering and priority.
+* Lays the groundwork for the full integration of ABCI++, which will unlock more
+  app-side use cases around block construction and integration with the Tendermint
+  consensus engine.
 
 ### Negative
 

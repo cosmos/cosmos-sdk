@@ -138,8 +138,7 @@ func setupBaseAppFromParams(t *testing.T, storeKeyNames []string, blockHeight in
 
 // baseapp loaded from a fraudproof
 func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...AppOption) *BaseApp {
-	storeKeys := fraudProof.getModules()
-	return setupBaseAppFromParams(t, storeKeys, fraudProof.blockHeight, fraudProof.extractStore(), options...)
+	return setupBaseAppFromParams(t, fraudProof.getModules(), fraudProof.blockHeight, fraudProof.extractStore(), options...)
 }
 
 // simple one store baseapp with data and snapshots. Each tx is 1 MB in size (uncompressed).
@@ -2282,45 +2281,25 @@ func TestFraudProofGenerationMode(t *testing.T) {
 	appB1.Commit()
 
 	// only storeKey we'd like tracing to be enabled for
-	storeKeys := []stypes.StoreKey{capKey2}
+	storeKeys := []types.StoreKey{capKey2}
 
 	// Now, try to get back to S1
 	cms := appB1.cms.(*multi.Store)
 	lastVersion := cms.LastCommitID().Version
-	previousCMS, _ := cms.GetVersion(lastVersion)
-	options := make([]AppOption, 0)
-	// Read ALL the state from previousCMS from given keys and put that in a fresh baseapp.
-	for _, storeKey := range storeKeys {
-		subStore := previousCMS.GetKVStore(storeKey)
-		it := subStore.Iterator(nil, nil)
-
-		routerOpt := func(bapp *BaseApp) {
-			bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-				kv := msg.(*msgKeyValue)
-				bapp.cms.GetKVStore(storeKey).Set(kv.Key, kv.Value)
-				return &sdk.Result{}, nil
-			}))
-		}
-
-		for ; it.Valid(); it.Next() {
-			key, val := it.Key(), it.Value()
-			options = append(options, SetSubstoreKVPair(storeKey, key, val))
-		}
-		options = append(options, AppOptionFunc(routerOpt))
-	}
-	options = append(options, SetSubstores(storeKeys...))
-
-	// This initial height is used in `BeginBlock` in `validateHeight`
-	options = append(options, SetInitialHeight(appB1.LastBlockHeight()+1))
-	// make list of options to pass by parsing fraudproof
-	app := newBaseApp(t.Name(), options...)
-	require.Equal(t, t.Name(), app.Name())
-
-	app.SetParamStore(mock.NewParamStore(dbm.NewMemDB()))
-
-	// stores are mounted
-	err := app.Init()
+	previousCMS, err := cms.GetVersion(lastVersion)
 	require.Nil(t, err)
+
+	// Initialize params from previousCMS
+	storeToLoadFrom := make(map[string]types.KVStore)
+	storeKeyNames := make([]string, 0, len(storeKeys))
+	for _, storeKey := range storeKeys {
+		storeKeyName := storeKey.Name()
+		storeKeyNames = append(storeKeyNames, storeKeyName)
+		storeToLoadFrom[storeKeyName] = previousCMS.GetKVStore(storeKey)
+	}
+
+	appB2 := setupBaseAppFromParams(t, storeKeyNames, appB1.LastBlockHeight()+1, storeToLoadFrom)
+	_ = appB2
 }
 
 func TestGenerateAndLoadFraudProof(t *testing.T) {

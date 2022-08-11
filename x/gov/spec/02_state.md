@@ -18,7 +18,7 @@ A proposal will generally require more than just a set of messages to explain it
 purpose but need some greater justification and allow a means for interested participants
 to discuss and debate the proposal.
 In most cases, **it is encouraged to have an off-chain system that supports the on-chain governance process**.
-To accommodate for this, a proposal contains a special **`metadata`** field, an array of bytes,
+To accommodate for this, a proposal contains a special **`metadata`** field, a string,
 which can be used to add context to the proposal. The `metadata` field allows custom use for networks,
 however, it is expected that the field contains a URL or some form of CID using a system such as
 [IPFS](https://docs.ipfs.io/concepts/content-addressing/). To support the case of
@@ -127,7 +127,9 @@ We will use one KVStore `Governance` to store two mappings:
 * A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
   us to query all addresses that voted on the proposal along with their vote by
   doing a range query on `proposalID:addresses`.
-
+* A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all 
+  x/gov params.
+  
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 
 * `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore

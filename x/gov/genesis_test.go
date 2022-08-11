@@ -42,7 +42,7 @@ func TestImportExportQueues(t *testing.T) {
 	require.NoError(t, err)
 	proposalID2 := proposal2.Id
 
-	votingStarted, err := app.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], app.GovKeeper.GetDepositParams(ctx).MinDeposit)
+	votingStarted, err := app.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], app.GovKeeper.GetParams(ctx).MinDeposit)
 	require.NoError(t, err)
 	require.True(t, votingStarted)
 
@@ -93,7 +93,7 @@ func TestImportExportQueues(t *testing.T) {
 	ctx2 := app2.BaseApp.NewContext(false, tmproto.Header{})
 
 	// Jump the time forward past the DepositPeriod and VotingPeriod
-	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*app2.GovKeeper.GetDepositParams(ctx2).MaxDepositPeriod).Add(*app2.GovKeeper.GetVotingParams(ctx2).VotingPeriod))
+	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*app2.GovKeeper.GetParams(ctx2).MaxDepositPeriod).Add(*app2.GovKeeper.GetParams(ctx2).VotingPeriod))
 
 	// Make sure that they are still in the DepositPeriod and VotingPeriod respectively
 	proposal1, ok = app2.GovKeeper.GetProposal(ctx2, proposalID1)
@@ -104,7 +104,7 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, proposal2.Status == v1.StatusVotingPeriod)
 
 	macc := app2.GovKeeper.GetGovernanceAccount(ctx2)
-	require.Equal(t, sdk.Coins(app2.GovKeeper.GetDepositParams(ctx2).MinDeposit), app2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
+	require.Equal(t, sdk.Coins(app2.GovKeeper.GetParams(ctx2).MinDeposit), app2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
 
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
 	gov.EndBlocker(ctx2, app2.GovKeeper)

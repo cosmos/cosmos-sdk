@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -51,7 +52,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, suite.interfaceRegistry)
-	types.RegisterQueryServer(queryHelper, suite.distrKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(suite.distrKeeper))
 	queryClient := types.NewQueryClient(queryHelper)
 
 	suite.ctx = ctx
@@ -125,8 +126,8 @@ func (suite *KeeperTestSuite) TestGRPCValidatorOutstandingRewards() {
 	ctx, queryClient, valAddrs := suite.ctx, suite.queryClient, suite.valAddrs
 
 	valCommission := sdk.DecCoins{
-		sdk.NewDecCoinFromDec("mytoken", sdk.NewDec(5000)),
-		sdk.NewDecCoinFromDec("stake", sdk.NewDec(300)),
+		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(5000)),
+		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(300)),
 	}
 
 	// set outstanding rewards
@@ -176,7 +177,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorOutstandingRewards() {
 func (suite *KeeperTestSuite) TestGRPCValidatorCommission() {
 	ctx, queryClient, valAddrs := suite.ctx, suite.queryClient, suite.valAddrs
 
-	commission := sdk.DecCoins{{Denom: "token1", Amount: sdk.NewDec(4)}, {Denom: "token2", Amount: sdk.NewDec(2)}}
+	commission := sdk.DecCoins{{Denom: "token1", Amount: math.LegacyNewDec(4)}, {Denom: "token2", Amount: math.LegacyNewDec(2)}}
 	suite.distrKeeper.SetValidatorAccumulatedCommission(ctx, valAddrs[0], types.ValidatorAccumulatedCommission{Commission: commission})
 
 	var req *types.QueryValidatorCommissionRequest
@@ -362,20 +363,20 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 	ctx, addrs, valAddrs := suite.ctx, suite.addrs, suite.valAddrs
 
 	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.stakingKeeper)
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 
 	staking.EndBlocker(ctx, suite.stakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, suite.interfaceRegistry)
-	types.RegisterQueryServer(queryHelper, suite.distrKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(suite.distrKeeper))
 	queryClient := types.NewQueryClient(queryHelper)
 
 	val := suite.stakingKeeper.Validator(ctx, valAddrs[0])
 
 	initial := int64(10)
-	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial)}}
+	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial)}}
 	suite.distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// test command delegation rewards grpc
@@ -435,7 +436,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 				}
 
 				expRes = &types.QueryDelegationRewardsResponse{
-					Rewards: sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}},
+					Rewards: sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}},
 				}
 			},
 			true,

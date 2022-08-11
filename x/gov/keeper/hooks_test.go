@@ -50,7 +50,7 @@ func TestHooks(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	minDeposit := app.GovKeeper.GetDepositParams(ctx).MinDeposit
+	minDeposit := app.GovKeeper.GetParams(ctx).MinDeposit
 	addrs := simapp.AddTestAddrs(app, ctx, 1, minDeposit[0].Amount)
 
 	govHooksReceiver := MockGovHooksReceiver{}
@@ -71,7 +71,7 @@ func TestHooks(t *testing.T) {
 	require.True(t, govHooksReceiver.AfterProposalSubmissionValid)
 
 	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(time.Duration(1) * time.Second)
+	newHeader.Time = ctx.BlockHeader().Time.Add(*app.GovKeeper.GetParams(ctx).MaxDepositPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 	gov.EndBlocker(ctx, app.GovKeeper)
 
@@ -90,7 +90,7 @@ func TestHooks(t *testing.T) {
 	require.True(t, govHooksReceiver.AfterProposalVoteValid)
 
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*app.GovKeeper.GetVotingParams(ctx).VotingPeriod).Add(time.Duration(1) * time.Second)
+	newHeader.Time = ctx.BlockHeader().Time.Add(*app.GovKeeper.GetParams(ctx).VotingPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 	gov.EndBlocker(ctx, app.GovKeeper)
 	require.True(t, govHooksReceiver.AfterProposalVotingPeriodEndedValid)

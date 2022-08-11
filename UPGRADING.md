@@ -4,6 +4,10 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### Simulation
+
+Remove `RandomizedParams` from `AppModuleSimulation` interface. Previously, it used to generate random parameter changes during simulations, however, it does so through ParamChangeProposal which is now legacy. Since all modules were migrated, we can now safely remove this from `AppModuleSimulation` interface.
+
 ### AppModule Interface
 
 Remove `Querier`, `Route` and `LegacyQuerier` from the app module interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously known as the LCD, and the `sdk.Msg#Route` method won't be used anymore.
@@ -30,13 +34,25 @@ This means you can replace your usage of `simapp.MakeTestEncodingConfig` in test
 
 ### Client Changes
 
-### `x/gov` v1
+### `x/gov`
+
+#### `types/v1`
 
 The `gov` module has been greatly improved. The previous API has been moved to `v1beta1` while the new implementation is called `v1`.
 
 In order to submit a proposal with `submit-proposal` you now need to pass a `proposal.json` file.
 You can still use the old way by using `submit-legacy-proposal`. This is not recommended.
 More information can be found in the gov module [client documentation](https://docs.cosmos.network/v0.46/modules/gov/07_client.html).
+
+#### Minimum Proposal Deposit At Time of Submission
+
+The `gov` module has been updated to support a minimum proposal deposit at submission time. It is determined by a new
+parameter called `MinInitialDepositRatio`. When multiplied by the existing `MinDeposit` parameter, it produces
+the necessary proportion of coins needed at the proposal submission time. The motivation for this change is to prevent proposal spamming.
+
+By default, the new `MinInitialDepositRatio` parameter is set to zero during migration. The value of zero signifies that this 
+feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
+modified to set the new parameter to the desired value.
 
 ### Keyring
 
@@ -111,3 +127,8 @@ As a result, it gives a good indication of the progress of the upgrade.
 
 There is also downgrade and re-upgrade protection. If a node operator chooses to downgrade to IAVL pre-fast index, and then upgrade again, the index is rebuilt from scratch. This implementation detail should not be relevant in most cases. It was added as a safeguard against operator
 mistakes.
+
+### Modules
+
+- The `x/param` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos-SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
+  - The Param module will be maintained until April 18, 2022. At this point the module will reach end of life and be removed from the Cosmos SDK.

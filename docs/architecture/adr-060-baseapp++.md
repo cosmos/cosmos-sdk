@@ -100,7 +100,8 @@ majority of application use cases. Namely, it will prioritize transactions by
 priority and transaction sender, allowing for multiple prioritized transactions
 from the same sender. The mempool will be defined as a wrapper around a simple
 priority queue using a max binary heap, along with additional indexes/metadata
-to store senders and their nonces.
+to store senders and their nonces, allowing for simple multi-dimensional
+prioritization (2-ary).
 
 Transaction reaping will essentially happen via a two-phase approach:
 
@@ -159,6 +160,14 @@ is never committed and is completely discarded after `ProcessProposal` completes
 We will only populate the `Status` field of the `ProcessProposalResponse` with
 `ACCEPT` if ALL the transactions were accepted as valid, otherwise we will
 populate with `REJECT`.
+
+### `DeliverTx`
+
+Since transactions are not truly removed from the app-side mempool during
+`PrepareProposal`, since `ProcessProposal` can fail and we do not want to lose
+transactions, we need to finally remove the transaction from the app-side mempool
+during `DeliverTx` since during this phase, the transactions are being included
+in the proposed block.
 
 ## Consequences
 

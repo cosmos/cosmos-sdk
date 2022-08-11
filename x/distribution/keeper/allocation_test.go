@@ -11,7 +11,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -47,11 +46,10 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	)
 
 	// create validator with 50% commission
-	_, pubkey, addr := testdata.KeyTestPubAddr()
-	valAddr := sdk.ValAddress(addr)
-	val, err := stakingtypes.NewValidator(valAddr, pubkey, stakingtypes.Description{})
-	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr0), valConsPk0, stakingtypes.Description{})
 	require.NoError(t, err)
+	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk0)).Return(val).AnyTimes()
 
 	// allocate tokens
 	tokens := sdk.DecCoins{

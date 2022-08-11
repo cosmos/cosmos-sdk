@@ -381,7 +381,7 @@ func setupValidatorRewards(app *simapp.SimApp, ctx sdk.Context, valAddress sdk.V
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
 	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 2, historicalRewards)
-	// setup current revards
+	// setup current rewards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
 	app.DistrKeeper.SetValidatorCurrentRewards(ctx, valAddress, currentRewards)
 }

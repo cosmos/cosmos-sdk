@@ -4,16 +4,22 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
+	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
@@ -21,40 +27,58 @@ import (
 )
 
 func TestCalculateRewardsBasic(t *testing.T) {
-	var (
-		bankKeeper    bankkeeper.Keeper
-		distrKeeper   keeper.Keeper
-		stakingKeeper *stakingkeeper.Keeper
+	ctrl := gomock.NewController(t)
+
+	key := sdk.NewKVStoreKey(disttypes.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		key,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&bankKeeper,
-		&distrKeeper,
-		&stakingKeeper,
-	)
-	require.NoError(t, err)
-
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	distrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
-
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
-
-	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000))
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
+	// reset fee pool
+	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
+	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
 
 	// create validator with 50% commission
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk0, sdk.NewInt(100), true)
+	valAddr := sdk.ValAddress(valConsAddr0)
+	addr := sdk.AccAddress(valAddr)
+	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr0), valConsPk0, stakingtypes.Description{})
+	require.NoError(t, err)
+	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	// end block to bond validator and start new block
-	staking.EndBlocker(ctx, stakingKeeper)
+	// set validator's tokens and delegator shares
+	val.Tokens = sdk.NewInt(1000)
+	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
+	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(3)
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del)
+
+	// run the necessary hooks manually (given that we are not running an actual staking module)
+	err = distrKeeper.Hooks().AfterValidatorCreated(ctx, valAddr)
+	require.NoError(t, err)
+
+	err = distrKeeper.Hooks().BeforeDelegationCreated(ctx, addr, valAddr)
+	require.NoError(t, err)
+
+	distrKeeper.Hooks().AfterDelegationModified(ctx, addr, valAddr)
+	require.NoError(t, err)
+
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	tstaking.Ctx = ctx
-
-	// fetch validator and delegation
-	val := stakingKeeper.Validator(ctx, valAddrs[0])
-	del := stakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 
 	// historical count should be 2 (once for validator init, once for delegation init)
 	require.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
@@ -86,7 +110,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, rewards)
 
 	// commission should be the other half
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr).Commission)
 }
 
 func TestCalculateRewardsAfterSlash(t *testing.T) {
@@ -96,7 +120,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(distrtestutil.AppConfig,
 		&bankKeeper,
 		&distrKeeper,
 		&stakingKeeper,
@@ -171,7 +195,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(distrtestutil.AppConfig,
 		&bankKeeper,
 		&distrKeeper,
 		&stakingKeeper,
@@ -258,7 +282,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(distrtestutil.AppConfig,
 		&bankKeeper,
 		&distrKeeper,
 		&stakingKeeper,
@@ -334,7 +358,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(distrtestutil.AppConfig,
 		&accountKeeper,
 		&bankKeeper,
 		&distrKeeper,
@@ -420,7 +444,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(distrtestutil.AppConfig,
 		&bankKeeper,
 		&distrKeeper,
 		&stakingKeeper,
@@ -500,7 +524,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(distrtestutil.AppConfig,
 		&bankKeeper,
 		&distrKeeper,
 		&stakingKeeper,
@@ -587,7 +611,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(distrtestutil.AppConfig,
 		&accountKeeper,
 		&bankKeeper,
 		&distrKeeper,
@@ -748,7 +772,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 		stakingKeeper *stakingkeeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(distrtestutil.AppConfig,
 		&accountKeeper,
 		&bankKeeper,
 		&distrKeeper,

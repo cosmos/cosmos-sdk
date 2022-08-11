@@ -530,6 +530,14 @@ func (s *Store) SetSubstoreKVPair(skey types.StoreKey, kv, val []byte) {
 	sub.Set(kv, val)
 }
 
+func (s *Store) GetStoreKeys() []types.StoreKey {
+	storeKeys := make([]types.StoreKey, 0, len(s.schema))
+	for sk := range s.schema {
+		storeKeys = append(storeKeys, sk)
+	}
+	return storeKeys
+}
+
 // Resets a substore's state after commit (because root stateTxn has been discarded)
 func (s *substore) refresh(rootHash []byte) {
 	pfx := prefixSubstore(s.name)

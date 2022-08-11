@@ -155,6 +155,34 @@ Msg (<int>/<int>): <string>           // E.g. Msg (1/2): /cosmos.bank.v1beta1.Ms
 End of transaction messages
 ```
 
+#### Example
+
+Given the following Protobuf message:
+
+```proto
+message Grant {
+  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+message MsgGrant {
+  option (cosmos.msg.v1.signer) = "granter";
+
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+```
+
+and a transaction containing 1 such `sdk.Msg`, we get the following encoding:
+
+```
+This transaction has 1 message:
+Msg (1/1): /cosmos
+Granter: cosmos1abc...def
+Grantee: cosmos1ghi...jkl
+End of transaction messages
+```
+
 ### 9. Custom `Msg` Renderers
 
 Application developers may choose to not follow default renderer value output for their own `Msg`s. In this case, they can implement their own custom `Msg` renderer. This is similar to [EIP4430](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4430.md), where the smart contract developer chooses the description string to be shown to the end user.
@@ -193,45 +221,17 @@ if !proto.Equal(msg, msg2) {
 pass_check()
 ```
 
-#### Example
-
-Given the following Protobuf message:
-
-```proto
-message Grant {
-  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
-  google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-}
-
-message MsgGrant {
-  option (cosmos.msg.v1.signer) = "granter";
-
-  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-}
-```
-
-and a transaction containing 1 such `sdk.Msg`, we get the following encoding:
-
-```
-This transaction has 1 message:
-Msg (1/1): /cosmos
-Granter: cosmos1abc...def
-Grantee: cosmos1ghi...jkl
-End of transaction messages
-```
-
 ### 10. Require signing over the `TxBody` and `AuthInfo` raw bytes
 
 Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L33), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these canonical bytes in SIGN_MODE_TEXTUAL, more specifically over the following base64-encoded bytes:
 
 ```
-sha256(<body_bytes> ++ " " ++ <auth_info_bytes>)
+*Hash of raw bytes: sha256(<body_bytes> ++ " " ++ <auth_info_bytes>)
 ```
 
 This is to prevent transaction hash malleability. The point #1 about bijectivity assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could modify the transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL.
 
-These bytes are only shown in expert mode, see point #7.
+These bytes are only shown in expert mode, hence the leading `*`.
 
 ### 11. Signing Payload and Wire Format
 

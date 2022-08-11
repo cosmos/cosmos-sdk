@@ -426,14 +426,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
 		panic(err)
 	}
 
-	return &cp
-}
-
-// AddRunTxRecoveryHandler adds custom app.runTx method panic handlers.
-func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
-	for _, h := range handlers {
-		app.runTxRecoveryMiddleware = newRecoveryMiddleware(h, app.runTxRecoveryMiddleware)
-	}
+	return cp
 }
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
@@ -446,9 +439,16 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusP
 		return
 	}
 
-	app.paramStore.Set(ctx, *cp)
+	app.paramStore.Set(ctx, cp)
 	// We're explicitly not storing the Tendermint app_version in the param store. It's
 	// stored instead in the x/upgrade store, with its own bump logic.
+}
+
+// AddRunTxRecoveryHandler adds custom app.runTx method panic handlers.
+func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
+	for _, h := range handlers {
+		app.runTxRecoveryMiddleware = newRecoveryMiddleware(h, app.runTxRecoveryMiddleware)
+	}
 }
 
 // getMaximumBlockGas gets the maximum gas from the consensus params. It panics

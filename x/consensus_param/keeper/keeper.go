@@ -10,28 +10,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/consensus_param/types"
 )
 
+var _ exported.ConsensusParamSetter = (*Keeper)(nil)
+
 type Keeper struct {
-	storeKey    storetypes.StoreKey
-	cdc         codec.BinaryCodec
-	paramSetter exported.ConsensusParamSetter
-	authority   string
+	storeKey storetypes.StoreKey
+	cdc      codec.BinaryCodec
+
+	authority string
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, paramSetter exported.ConsensusParamSetter, authority string) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, authority string) Keeper {
 	return Keeper{
-		storeKey:    storeKey,
-		cdc:         cdc,
-		paramSetter: paramSetter,
-		authority:   authority,
+		storeKey:  storeKey,
+		cdc:       cdc,
+		authority: authority,
 	}
-}
-
-func (k *Keeper) SetParamSetter(paramSetter exported.ConsensusParamSetter) {
-	k.paramSetter = paramSetter
-}
-
-func (k *Keeper) GetParamSetter() exported.ConsensusParamSetter {
-	return k.paramSetter
 }
 
 func (k *Keeper) GetAuthority() string {

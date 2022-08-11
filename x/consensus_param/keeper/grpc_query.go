@@ -22,10 +22,6 @@ func NewQuerier(keeper Keeper) Querier {
 
 // Balance implements the Query/Balance gRPC method
 func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	params, err := k.Keeper.Get(sdkCtx)

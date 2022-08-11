@@ -112,7 +112,9 @@ Transaction reaping will essentially happen via a two-phase approach:
 
 ```go
 type PriorityMempool[T MempoolTx] struct {
-	tree *btree.BTree
+	queue   *PriorityQueue[MempoolTx]
+	senders map[string][]int64
+	// ...
 }
 ```
 

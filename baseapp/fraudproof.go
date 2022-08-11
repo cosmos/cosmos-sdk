@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/store/mem"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
@@ -32,6 +33,27 @@ type WitnessData struct {
 	Key   []byte
 	Value []byte
 	proof tmcrypto.ProofOp
+}
+
+func (fraudProof *FraudProof) getModules() []string {
+	keys := make([]string, 0, len(fraudProof.stateWitness))
+	for k := range fraudProof.stateWitness {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func (fraudProof *FraudProof) extractStore() map[string]types.KVStore {
+	store := make(map[string]types.KVStore)
+	for storeKey, stateWitness := range fraudProof.stateWitness {
+		subStore := mem.NewStore()
+		for _, witnessData := range stateWitness.WitnessData {
+			key, val := witnessData.Key, witnessData.Value
+			subStore.Set(key, val)
+		}
+		store[storeKey] = subStore
+	}
+	return store
 }
 
 func (fraudProof *FraudProof) verifyFraudProof(headerAppHash []byte) (bool, error) {

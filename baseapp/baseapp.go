@@ -771,13 +771,18 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 
 // enableFraudProofGenerationMode rolls back an app's state to a previous
 // state and enables tracing for the list of store keys
-func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey) error {
+func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey) (*BaseApp, map[stypes.StoreKey]*bytes.Buffer, error) {
 	cms := app.cms.(*multi.Store)
 	lastVersion := cms.LastCommitID().Version
 	previousCMS, err := cms.GetVersion(lastVersion)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
+
+	// Add options for tracing
+	storeTraceBuf := &bytes.Buffer{}
+
+	storeKeyToSubstoreTraceBuf := make(map[stypes.StoreKey]*bytes.Buffer)
 
 	// Initialize params from previousCMS
 	storeToLoadFrom := make(map[string]types.KVStore)
@@ -786,22 +791,17 @@ func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey) e
 		storeKeyName := storeKey.Name()
 		storeKeyNames = append(storeKeyNames, storeKeyName)
 		storeToLoadFrom[storeKeyName] = previousCMS.GetKVStore(storeKey)
+		storeKeyToSubstoreTraceBuf[storeKey] = &bytes.Buffer{}
 	}
-
-	// Add options for tracing
-	storeTraceBuf := &bytes.Buffer{}
-	subStoreTraceBuf := &bytes.Buffer{}
 
 	// BaseApp, B1
 	options := []AppOption{
 		SetSubstoreTracer(storeTraceBuf),
-		SetTracerFor(storeKeys[0].Name(), subStoreTraceBuf),
+		SetTracerFor(storeKeys[0].Name(), storeKeyToSubstoreTraceBuf[storeKeys[0]]),
 	}
-	_ = options
-	return nil
-	appB2, err := SetupBaseAppFromParams(app.name, app.logger, app.db, app.txDecoder, storeKeyNames, app.router, app.LastBlockHeight()+1, storeToLoadFrom, options...)
-	_ = appB2
-	return err
+	newApp, err := SetupBaseAppFromParams(app.name, app.logger, dbm.NewMemDB(), app.txDecoder, storeKeyNames, app.router, app.LastBlockHeight()+1, storeToLoadFrom, options...)
+
+	return newApp, storeKeyToSubstoreTraceBuf, err
 }
 
 func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.StoreKey]*bytes.Buffer) (FraudProof, error) {

@@ -79,6 +79,14 @@ type MempoolTx interface {
 	Tx() sdk.Tx
 }
 
+// PrepareTxRecord defines a wrapper around a MempoolTx that is returned from
+// PrepareProposal which includes an Action to inform Tendermint what to do with
+// the transaction.
+type PrepareTxRecord[T MempoolTx] struct {
+	Tx T
+	Action abci.TxAction
+}
+
 type Mempool[T MempoolTx] interface {
 	// Insert attempts to insert a MempoolTx into the mempool returning an error
 	// upon failure.
@@ -88,7 +96,7 @@ type Mempool[T MempoolTx] interface {
 	// return transactions from it's own mempool or from the incoming TxRecords or
 	// some combination of both. The notion of 'available' or 'next' is defined by
 	// the application's mempool implementation.
-	ReapMaxBytes(txRecords abci.TxRecords, maxBytes int) ([]T, error)
+	ReapMaxBytes(txRecords abci.TxRecords, maxBytes int) ([]PrepareTxRecord[T], error)
 	// NumTxs returns the number of transactions currently in the mempool.
 	NumTxs() int
 }

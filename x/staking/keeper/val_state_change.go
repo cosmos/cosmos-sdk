@@ -176,8 +176,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
-			update := validator.ABCIValidatorUpdate(powerReduction)
-			updates = append(updates, update)
+			updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
 			// set the validator update and power
 			k.SetLastValidatorPower(ctx, valAddr, newPower)
 		}

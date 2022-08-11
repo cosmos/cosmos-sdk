@@ -772,7 +772,7 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 // enableFraudProofGenerationMode rolls back an app's state to a previous
 // state and enables tracing for the list of store keys
 // It returns the tracing-enabled app along with the trace buffers used
-func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey) (*BaseApp, map[string]*bytes.Buffer, error) {
+func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey, routerOpts map[string]AppOptionFunc) (*BaseApp, map[string]*bytes.Buffer, error) {
 	cms := app.cms.(*multi.Store)
 	lastVersion := cms.LastCommitID().Version
 	previousCMS, err := cms.GetVersion(lastVersion)
@@ -798,10 +798,19 @@ func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey) (
 	// BaseApp, B1
 	options := []AppOption{
 		SetSubstoreTracer(storeTraceBuf),
-		SetTracerFor(storeKeys[0].Name(), storeKeyToSubstoreTraceBuf[storeKeys[0].Name()]),
 	}
-	newApp, err := SetupBaseAppFromParams(app.name, app.logger, dbm.NewMemDB(), app.txDecoder, storeKeyNames, app.router, app.LastBlockHeight()+1, storeToLoadFrom, options...)
 
+	for _, storeKey := range storeKeys {
+		options = append(options, SetTracerFor(storeKey.Name(), storeKeyToSubstoreTraceBuf[storeKey.Name()]))
+		options = append(options, AppOptionFunc(routerOpts[storeKey.Name()]))
+	}
+	newApp, err := SetupBaseAppFromParams(app.name+"WithTracing", app.logger, dbm.NewMemDB(), app.txDecoder, storeKeyNames, app.LastBlockHeight()+1, storeToLoadFrom, options...)
+
+	// Need to reset all the buffers to remove anything logged while setting up baseapp
+	storeTraceBuf.Reset()
+	for _, storeKey := range storeKeys {
+		storeKeyToSubstoreTraceBuf[storeKey.Name()].Reset()
+	}
 	return newApp, storeKeyToSubstoreTraceBuf, err
 }
 
@@ -842,8 +851,9 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.Stor
 }
 
 // set up a new baseapp from given params
-func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, storeKeyNames []string, router sdk.Router, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
+func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, storeKeyNames []string, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
 	storeKeys := make([]types.StoreKey, 0, len(storeKeyNames))
+
 	for _, storeKeyName := range storeKeyNames {
 		storeKey := sdk.NewKVStoreKey(storeKeyName)
 		storeKeys = append(storeKeys, storeKey)
@@ -862,8 +872,6 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 	// make list of options to pass by parsing fraudproof
 	app := NewBaseApp(appName, logger, db, txDecoder, options...)
 
-	app.router = router
-
 	// stores are mounted
 	err := app.Init()
 
@@ -871,6 +879,6 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 }
 
 // set up a new baseapp from a fraudproof
-func SetupBaseAppFromFraudProof(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, router sdk.Router, fraudProof FraudProof, options ...AppOption) (*BaseApp, error) {
-	return SetupBaseAppFromParams(appName, logger, db, txDecoder, fraudProof.getModules(), router, fraudProof.blockHeight, fraudProof.extractStore(), options...)
+func SetupBaseAppFromFraudProof(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, fraudProof FraudProof, options ...AppOption) (*BaseApp, error) {
+	return SetupBaseAppFromParams(appName, logger, db, txDecoder, fraudProof.getModules(), fraudProof.blockHeight, fraudProof.extractStore(), options...)
 }

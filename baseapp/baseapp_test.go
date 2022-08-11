@@ -2246,8 +2246,18 @@ func TestFraudProofGenerationMode(t *testing.T) {
 
 	// the only store key we'd like to enable tracing for
 	storeKeys := []types.StoreKey{capKey2}
-
-	appB2, storeKeyToSubstoreTraceBuf, err := appB1.enableFraudProofGenerationMode(storeKeys)
+	routerOpts := make(map[string]AppOptionFunc)
+	routerOpts[capKey2.Name()] = func(bapp *BaseApp) {
+		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			kv := msg.(*msgKeyValue)
+			cms := bapp.cms.(*multi.Store)
+			// There is only storeKey in the test for now
+			storeKey := cms.GetStoreKeys()[len(storeKeys)-1]
+			bapp.cms.GetKVStore(storeKey).Set(kv.Key, kv.Value)
+			return &sdk.Result{}, nil
+		}))
+	}
+	appB2, storeKeyToSubstoreTraceBuf, err := appB1.enableFraudProofGenerationMode(storeKeys, routerOpts)
 
 	require.Nil(t, err)
 	cmsB2 := appB2.cms.(*multi.Store)
@@ -2257,8 +2267,6 @@ func TestFraudProofGenerationMode(t *testing.T) {
 	}
 
 	txs1 := executeBlockWithArbitraryTxs(t, appB2, numTransactions, 2)
-
-	// TODO: Currently doesn't pass because even `SetSubstoreKVPair` calls are traced which we don't want
 
 	for _, storeKey := range cmsB2.GetStoreKeys() {
 		subStoreBuf := storeKeyToSubstoreTraceBuf[storeKey.Name()]
@@ -2352,7 +2360,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	// B2 <- S2
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
-	appB2, err := SetupBaseAppFromFraudProof(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), NewRouter(), fraudProof, AppOptionFunc(routerOpt))
+	appB2, err := SetupBaseAppFromFraudProof(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), fraudProof, AppOptionFunc(routerOpt))
 	require.Nil(t, err)
 	require.True(t, checkSMTStoreEqual(appB1, appB2, capKey2.Name()))
 }

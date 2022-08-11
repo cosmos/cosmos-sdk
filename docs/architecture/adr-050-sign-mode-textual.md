@@ -140,6 +140,7 @@ Tip: <string>
 *Public Key: <base64_string>
 *Sequence: <uint64>
 *End of other signers
+*Hash of raw bytes: <base64_string>                         // Base64 encoding of bytes defined in #10, to prevent tx hash malleability.
 ```
 
 ### 8. Encoding of the Transaction Body
@@ -220,7 +221,19 @@ Grantee: cosmos1ghi...jkl
 End of transaction messages
 ```
 
-### 9. Signing Payload and Wire Format
+### 10. Require signing over the `TxBody` and `AuthInfo` raw bytes
+
+Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L33), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these canonical bytes in SIGN_MODE_TEXTUAL, more specifically over the following base64-encoded bytes:
+
+```
+sha256(<body_bytes> ++ " " ++ <auth_info_bytes>)
+```
+
+This is to prevent transaction hash malleability. The point #1 about bijectivity assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could modify the transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL.
+
+These bytes are only shown in expert mode, see point #7.
+
+### 11. Signing Payload and Wire Format
 
 This string array is encoded as a single `\n`-delimited string before transmitted to the hardware device, and this long string is the signing payload signed by the hardware wallet.
 
@@ -294,6 +307,7 @@ Amount: 10 atom            // Conversion from uatom to atom using value renderer
 End of transaction messages
 Fee: 0.002 atom
 *Gas: 100'000
+*Hash of raw bytes: <base64_string>
 ```
 
 #### Example 2: Multi-Msg Transaction with 3 signers
@@ -382,6 +396,7 @@ Tip: 200 ibc/CDC4587874B85BEA4FCEC3CEA5A1195139799A1FEE711A07D972537E18FDA39D
 *Sign mode: Direct Aux
 *Sequence: 42
 *End of other signers
+*Hash of raw bytes: <base64_string>
 ```
 
 #### Example 5: Complex Transaction with Nested Messages
@@ -528,6 +543,7 @@ Fee: 0.002 atom
 *Sign mode: Direct
 *Sequence: 42
 *End of other signers
+*Hash of raw bytes: <base64_string>
 ```
 
 ## Consequences

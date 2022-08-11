@@ -2267,14 +2267,13 @@ func TestFraudProofGenerationMode(t *testing.T) {
 
 	// BaseApp, B1
 	options := []AppOption{
+		AppOptionFunc(routerOpt),
 		SetSubstoreTracer(storeTraceBuf),
 		SetTracerFor(storeKeys[0].Name(), subStoreTraceBuf),
 	}
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
-	routerOpts := make(map[string]AppOptionFunc)
-	routerOpts[capKey2.Name()] = AppOptionFunc(routerOpt)
-	appB2, err := SetupBaseAppFromParams(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), storeKeyNames, routerOpts, appB1.LastBlockHeight()+1, storeToLoadFrom, options...)
+	appB2, err := SetupBaseAppFromParams(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), storeKeyNames, NewRouter(), appB1.LastBlockHeight()+1, storeToLoadFrom, options...)
 	require.Nil(t, err)
 	for _, storeKeyName := range storeKeyNames {
 		cmsB2 := appB2.cms.(*multi.Store)
@@ -2360,9 +2359,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	// B2 <- S2
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
-	routerOpts := make(map[string]AppOptionFunc)
-	routerOpts[capKey2.Name()] = AppOptionFunc(routerOpt)
-	appB2, err := SetupBaseAppFromFraudProof(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), routerOpts, fraudProof)
+	appB2, err := SetupBaseAppFromFraudProof(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), NewRouter(), fraudProof, AppOptionFunc(routerOpt))
 	require.Nil(t, err)
 	require.True(t, checkSMTStoreEqual(appB1, appB2, capKey2.Name()))
 }

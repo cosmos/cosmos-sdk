@@ -83,13 +83,12 @@ type Mempool[T MempoolTx] interface {
 	// Insert attempts to insert a MempoolTx into the mempool returning an error
 	// upon failure.
 	Insert(T) error
-	// Reap returns the next available transaction in the mempool, returning an error
-	// upon failure. The notion of 'available' or 'next' is defined by the application's
-	// mempool implementation.
-	Reap() (T, error)
-	// ReapMaxBytes performs the the same function as Reap, except it returns
-	// multiple transactions limited by their total size.
-	ReapMaxBytes(n int) ([]T, error)
+	// ReapMaxBytes returns the next set of available transactions from the mempool,
+	// up to maxBytes or until the mempool is empty. The application can decide to
+	// return transactions from it's own mempool or from the incoming TxRecords or
+	// some combination of both. The notion of 'available' or 'next' is defined by
+	// the application's mempool implementation.
+	ReapMaxBytes(txRecords abci.TxRecords, maxBytes int) ([]T, error)
 	// NumTxs returns the number of transactions currently in the mempool.
 	NumTxs() int
 }
@@ -125,6 +124,9 @@ type PriorityMempool[T MempoolTx] struct {
 	// ...
 }
 ```
+
+> The `PriorityMempool[T MempoolTx]` implementation will support Options such as
+> limiting the mempool size by a fixed number of bytes.
 
 Previous discussions<sup>1</sup> have come to the agreement that Tendermint will
 perform a request to the application, via `PrepareProposalRequest`, with a certain

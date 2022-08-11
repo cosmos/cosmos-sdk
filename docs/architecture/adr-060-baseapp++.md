@@ -98,8 +98,17 @@ type Mempool[T MempoolTx] interface {
 We will define an implementation of `Mempool[T MempoolTx]` that will cover a
 majority of application use cases. Namely, it will prioritize transactions by
 priority and transaction sender, allowing for multiple prioritized transactions
-from the same sender. The mempool will be defined as a wrapper around a B+Tree
-with additional indexes used to handle multi-dimensional indexing/prioritizing.
+from the same sender. The mempool will be defined as a wrapper around a simple
+priority queue using a max binary heap, along with additional indexes/metadata
+to store senders and their nonces.
+
+Transaction reaping will essentially happen via a two-phase approach:
+
+1. Reap one or more transactions from the priority queue and collect them into a 
+   buffer.
+2. For each transaction in the buffer, ensure it does not violate any nonce predicates.
+3. Continue reaping until the desired number of valid transactions have been selected.
+4. Re-insert any transactions remaining in the buffer.
 
 ```go
 type PriorityMempool[T MempoolTx] struct {
@@ -126,6 +135,10 @@ execute the transactions for validity as they have already passed CheckTx.
 
 ### `ProcessProposal`
 
+The `ProcessProposal` ABCI method is relatively straightforward. It is responsible
+for ensuring validity of the proposed block containing transactions that were
+selected from the `PrepareProposal` step. In order to check validity of the proposed
+block, we must iterate over the list of transactions and ...
 
 <!-- 
 ## Consequences

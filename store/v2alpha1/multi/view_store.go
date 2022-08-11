@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 var ErrReadOnly = errors.New("cannot modify read-only store")
@@ -68,6 +69,23 @@ func (s *viewStore) getSubstore(key string) (*viewSubstore, error) {
 		dataBucket:           prefixdb.NewReader(stateR, dataPrefix),
 		stateCommitmentStore: loadSMT(dbm.ReaderAsReadWriter(stateCommitmentR), rootHash),
 	}, nil
+}
+
+func (s *viewStore) GetSubstoreSMT(key string) *smt.Store {
+	sub, err := s.getSubstore(key)
+	if err != nil {
+		panic(err)
+	}
+	return sub.stateCommitmentStore
+}
+
+func (s *viewStore) GetSubStoreProof(key string) (*tmcrypto.ProofOp, []byte, error) {
+	storeHashes, err := s.getMerkleRoots()
+	if err != nil {
+		return nil, nil, err
+	}
+	proofOp, err := types.ProofOpFromMap(storeHashes, key)
+	return &proofOp, storeHashes[key], err
 }
 
 // CacheWrap implements MultiStore.

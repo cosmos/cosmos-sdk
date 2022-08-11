@@ -2253,10 +2253,13 @@ func TestExportPreExecutionState(t *testing.T) {
 	appB2, storeKeyToSubstoreTraceBuf, err := appB1.enableFraudProofGenerationMode(storeKeys, routerOpts)
 	_, _, _ = appB2, storeKeyToSubstoreTraceBuf, err
 
-	// TODO: Execute fraudulent block
+	// TODO: Make this fraudulent somehow
+	executeBlockWithArbitraryTxs(t, appB2, numTransactions, 2)
 
-	// TODO: Get logs, revert back, and filter down state to export to a fraudproof
+	// Note that we do not call commit
 
+	fraudproof, err := appB2.generateFraudProof(storeKeyToSubstoreTraceBuf)
+	_ = fraudproof
 	// TODO: Test if that fraudproof only contains keys from that fraudulent block or not, if yes, pass
 }
 
@@ -2389,18 +2392,22 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	numTransactions := 1
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
-	appB1.Commit()
+	commitB1 := appB1.Commit()
+	appHashB1 := commitB1.GetData()
+	// storeTraceBuf.Reset()
+	// subStoreTraceBuf.Reset()
 
 	// B1 <- S2
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
-	commitB1 := appB1.Commit()
-	appHashB1 := commitB1.GetData()
+	appB1.cms.SetTracingContext(sdk.TraceContext(
+		map[string]interface{}{"blockHeight": 2},
+	))
 
 	// Exports all data inside current multistore into a fraudProof (S1 -> S2) //
-	storeKeyToSubstoreTraceBuf := make(map[stypes.StoreKey]*bytes.Buffer)
-	storeKeyToSubstoreTraceBuf[capKey2] = subStoreTraceBuf
+	storeKeyToSubstoreTraceBuf := make(map[string]*bytes.Buffer)
+	storeKeyToSubstoreTraceBuf[capKey2.Name()] = subStoreTraceBuf
 
-	// Records S2 in fraudproof
+	// Records S1 in fraudproof
 	fraudProof, err := appB1.generateFraudProof(storeKeyToSubstoreTraceBuf)
 	require.Nil(t, err)
 	currentBlockHeight := appB1.LastBlockHeight() // Only changes on a Commit

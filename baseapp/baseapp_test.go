@@ -17,6 +17,7 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
@@ -98,14 +99,11 @@ func setupBaseApp(t *testing.T, options ...AppOption) *BaseApp {
 	return app
 }
 
-// baseapp loaded from a fraudproof
-func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...AppOption) *BaseApp {
-	storeKeys := make([]stypes.StoreKey, 0, len(fraudProof.stateWitness))
-	routerOpts := make([]func(bapp *BaseApp), 0, len(fraudProof.stateWitness))
-	for storeKeyName := range fraudProof.stateWitness {
+func setupBaseAppFromParams(t *testing.T, storeKeyNames []string, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) *BaseApp {
+	storeKeys := make([]types.StoreKey, 0, len(storeKeyNames))
+	for _, storeKeyName := range storeKeyNames {
 		storeKey := sdk.NewKVStoreKey(storeKeyName)
 		storeKeys = append(storeKeys, storeKey)
-
 		routerOpt := func(bapp *BaseApp) {
 			bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 				kv := msg.(*msgKeyValue)
@@ -113,23 +111,18 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 				return &sdk.Result{}, nil
 			}))
 		}
-		routerOpts = append(routerOpts, routerOpt)
-
-		stateWitness := fraudProof.stateWitness[storeKeyName]
-		witnessData := stateWitness.WitnessData
-		for _, witness := range witnessData {
-			options = append(options, SetSubstoreKVPair(storeKey, witness.Key, witness.Value))
+		subStore := storeToLoadFrom[storeKeyName]
+		it := subStore.Iterator(nil, nil)
+		for ; it.Valid(); it.Next() {
+			key, val := it.Key(), it.Value()
+			options = append(options, SetSubstoreKVPair(storeKey, key, val))
 		}
+		options = append(options, AppOptionFunc(routerOpt))
 	}
 	options = append(options, SetSubstores(storeKeys...))
 
-	// RouterOpts should only be called after call to `SetSubstores`
-	for _, routerOpt := range routerOpts {
-		options = append(options, AppOptionFunc(routerOpt))
-	}
-
 	// This initial height is used in `BeginBlock` in `validateHeight`
-	options = append(options, SetInitialHeight(fraudProof.blockHeight))
+	options = append(options, SetInitialHeight(blockHeight))
 
 	// make list of options to pass by parsing fraudproof
 	app := newBaseApp(t.Name(), options...)
@@ -141,6 +134,12 @@ func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...
 	err := app.Init()
 	require.Nil(t, err)
 	return app
+}
+
+// baseapp loaded from a fraudproof
+func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...AppOption) *BaseApp {
+	storeKeys := fraudProof.getModules()
+	return setupBaseAppFromParams(t, storeKeys, fraudProof.blockHeight, fraudProof.extractStore(), options...)
 }
 
 // simple one store baseapp with data and snapshots. Each tx is 1 MB in size (uncompressed).
@@ -2280,24 +2279,48 @@ func TestFraudProofGenerationMode(t *testing.T) {
 
 	// B1 <- S2
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
+	appB1.Commit()
+
+	// only storeKey we'd like tracing to be enabled for
+	storeKeys := []stypes.StoreKey{capKey2}
 
 	// Now, try to get back to S1
-
-	// storeKeys := make([]stypes.StoreKey, 0)
 	cms := appB1.cms.(*multi.Store)
-	// opts := multi.DefaultStoreParams()
-	// previousCMS, _ := cms.RevertStore(opts)
 	lastVersion := cms.LastCommitID().Version
 	previousCMS, _ := cms.GetVersion(lastVersion)
-	subStore := previousCMS.GetKVStore(capKey2)
-	k := subStore.Get([]byte("26"))
-	k1 := subStore.Get([]byte("41"))
-	_, _ = k, k1
-	// for it := subStore.Iterator(); it.Valid(); {
-	// 	v := it.Value()
-	// 	_ = v
-	// }
-	_ = previousCMS
+	options := make([]AppOption, 0)
+	// Read ALL the state from previousCMS from given keys and put that in a fresh baseapp.
+	for _, storeKey := range storeKeys {
+		subStore := previousCMS.GetKVStore(storeKey)
+		it := subStore.Iterator(nil, nil)
+
+		routerOpt := func(bapp *BaseApp) {
+			bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+				kv := msg.(*msgKeyValue)
+				bapp.cms.GetKVStore(storeKey).Set(kv.Key, kv.Value)
+				return &sdk.Result{}, nil
+			}))
+		}
+
+		for ; it.Valid(); it.Next() {
+			key, val := it.Key(), it.Value()
+			options = append(options, SetSubstoreKVPair(storeKey, key, val))
+		}
+		options = append(options, AppOptionFunc(routerOpt))
+	}
+	options = append(options, SetSubstores(storeKeys...))
+
+	// This initial height is used in `BeginBlock` in `validateHeight`
+	options = append(options, SetInitialHeight(appB1.LastBlockHeight()+1))
+	// make list of options to pass by parsing fraudproof
+	app := newBaseApp(t.Name(), options...)
+	require.Equal(t, t.Name(), app.Name())
+
+	app.SetParamStore(mock.NewParamStore(dbm.NewMemDB()))
+
+	// stores are mounted
+	err := app.Init()
+	require.Nil(t, err)
 }
 
 func TestGenerateAndLoadFraudProof(t *testing.T) {

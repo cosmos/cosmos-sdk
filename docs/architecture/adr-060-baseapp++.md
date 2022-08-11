@@ -62,7 +62,7 @@ When executing transactions in `CheckTx`, the application will now add valid
 transactions, i.e. passing the AnteHandler, to it's own mempool data structure.
 In order to provide a flexible approach to meet the varying needs of application
 developers, we will define both a mempool interface and a data structure utilizing
-Golang generics that will allow developers to only need to focus on transaction
+Golang generics, allowing developers to focus only on transaction
 ordering. Developers requiring absolute full control can implement their own
 custom mempool implementation.
 

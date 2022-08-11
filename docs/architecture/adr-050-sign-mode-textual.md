@@ -57,35 +57,17 @@ Ledger devices have limited character display capabilities, so all strings MUST 
 
 In particular, the newline `"\n"` (ASCII: 10) character is forbidden.
 
-### 3. Strings MUST match the `^\*?(>* )?((?![\*>: ]).+: )?((?![\*>: ]).+)$` Regex
+### 3. Strings SHOULD have the `<key>: <value>` format
 
-All strings MUST match the above Regex.
+Given the Regex `/^(\* )?(>* )?(.*: )?(.*)$/`, all strings SHOULD match the Regex with capture groups 3 and 4 non-empty. This is helpful for UIs displaying SignDocTextual to users.
 
-The Regex reads as follows:
-- `^\*?`: The initial `*` character is optional and denotes the Ledger Expert mode, see point #5.
-- `(>* )?`:  Strings can also include a number of `>` character to denote nesting, see point #6.
-- `((?![\*>]).+: )?((?![\*>: ]).*)$`: Strings SHOULD end with capture groups 2 and 3 non-empty, representing the `<key>: <value>` format. This is helpful for UIs displaying SignDocTextual to users. Breaking this down into separate capture groups, we have:
-  - `((?![\*>: ]).+: )?`: represents the `<key>: ` part, i.e. an indicative key, whose associated value is given in the last capture group. This MAY be used in the Ledger app to perform custom on-screen formatting, for example to break a line before displaying the value. It CANNOT start with the characters `'*'`, `'>'`, `':'` or `' '`, as they are reserved characters.
-  - `((?![\*>: ]).+)`: represents the `<value>` part, which can contain any arbitrary non-empty string but CANNOT start with the characters `'*'`, `'>'`, `':'` or `' '`, as they are reserved characters. When using this `<key>: <value>` format, values are by default encoded using value renderers, see point #4.
+- The initial `*` character is optional and denotes the Ledger Expert mode, see #5.
+- Strings can also include a number of `>` character to denote nesting.
+- In the case where the first Regex capture group is not empty, it represents an indicative key, whose associated value is given in the second capture group. This MAY be used in the Ledger app to perform custom on-screen formatting, for example to break long lines into multiple screens.
 
-Please note that points #4, #7 and #8 specifies strings such as `*This transaction has 2 other signers` or `End of transaction messages`, which represent aggregate start and end screens used to delimit nested or repeated content. These are all valid strings under the above Regex.
+This Regex is however not mandatory, to allow for some flexibility, for example to display an English sentence to denote end of sections.
 
-Examples of valid strings:
-```
-*This transaction has 1 other signer
-End of transaction messages
-> Message (1/2): /cosmos.bank.v1beta1.MsgSend
-Hello World
-*>>> foo:::*>>>::: bar:::*>>>:::
-```
-
-Examples of invalid strings:
-```
-*>              # last capture group empty
-*> *key: value  # key starts with reserved characters
->* key: value   # wrong order of * and >
-**Hello World   # starts with 2 asterisks
-```
+The `<value>` itself can contain the `": "` characters.
 
 ### 4. Values are encoded using Value Renderers
 
@@ -97,19 +79,11 @@ Ledger devices have the an Expert mode for advanced users. Expert mode needs to 
 
 > Expert mode enables further, more sophisticated features. This could be useful for advanced users
 
-Strings starting with the `*` character will only be shown in Expert mode. Default value renderers (see point #4) never render strings in expert mode, which means that expert mode strings are:
-- either hardcoded in the transaction envelope (see point #7),
-- or defined using custom `Msg` renderers (see point #9).
-
-If the rendering of a type has multiple nested levels of expert fields (e.g. an expert field containing a message with an expert sub-field), then only one `*` is displayed as the first character, following the Regex defined in point #3.
-
 For hardware wallets that don't have an expert mode, all strings MUST be shown on the device.
 
 ### 6. Strings MAY contain `>` characters to denote nesting
 
 Protobuf objects can be arbitrarily complex, containing nested arrays and messages. In order to help the Ledger-signing users, we propose to use the `>` symbol in the beginning of strings to represent nested objects, where each additional `>` represents a new level of nesting.
-
-All `>` symbols MUST go after the optional `*` character for expert mode without space, be aggregated together, and be followed by a single space `' '` character before the rest of the string. See the Regex in point #3 for more details.
 
 ### 7. Encoding of the Transaction Envelope
 
@@ -140,7 +114,6 @@ Tip: <string>
 *Public Key: <base64_string>
 *Sequence: <uint64>
 *End of other signers
-*Hash of raw bytes: <base64_string>                         // Base64 encoding of bytes defined in #10, to prevent tx hash malleability.
 ```
 
 ### 8. Encoding of the Transaction Body
@@ -150,7 +123,7 @@ Transaction Body is the `Tx.TxBody.Messages` field, which is an array of `Any`s,
 ```
 This transaction has <int> message:   // Optional 's' for "message" if there's is >1 sdk.Msgs.
 // For each Msg, print the following 2 lines:
-Msg (<int>/<int>): <string>           // E.g. Msg (1/2): /cosmos.bank.v1beta1.MsgSend
+Msg (<int>/<int>): <string>           // E.g. Msg (1/2): bank v1beta1 send coins
 <value rendering of Msg struct>
 End of transaction messages
 ```
@@ -177,7 +150,7 @@ and a transaction containing 1 such `sdk.Msg`, we get the following encoding:
 
 ```
 This transaction has 1 message:
-Msg (1/1): /cosmos.authz.v1beta1.MsgGrant
+Msg (1/1): authz v1beta1 grant
 Granter: cosmos1abc...def
 Grantee: cosmos1ghi...jkl
 End of transaction messages
@@ -221,23 +194,7 @@ if !proto.Equal(msg, msg2) {
 pass_check()
 ```
 
-### 10. Require signing over the `TxBody` and `AuthInfo` raw bytes
-
-Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L33), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these canonical bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:
-
-```
-*Hash of raw bytes: <base64(sha256(<body_bytes> ++ " " ++ <auth_info_bytes>))>
-```
-
-where `++` denotes concatenation.
-
-This is to prevent transaction hash malleability. The point #1 about bijectivity assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could intercept a transaction, modify its transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL (by tweaking the byte ordering inside `body_bytes` or `auth_info_bytes`), and then submit it to Tendermint.
-
-By including this hash in the SIGN_MODE_TEXTUAL signing payload, we keep the same level of guarantees as [SIGN_MODE_DIRECT](./adr-020-protobuf-transaction-encoding.md).
-
-These bytes are only shown in expert mode, hence the leading `*`.
-
-### 11. Signing Payload and Wire Format
+### 9. Signing Payload and Wire Format
 
 This string array is encoded as a single `\n`-delimited string before transmitted to the hardware device, and this long string is the signing payload signed by the hardware wallet.
 
@@ -304,14 +261,13 @@ Account number: 10
 *Public Key: iQ...==        // Base64 pubkey
 Sequence: 2
 This transaction has 1 message:
-Message (1/1): /cosmos.bank.v1beta1.MsgSend
+Message (1/1): bank v1beta1 send coins
 From: cosmos1...abc
 To: cosmos1...def
 Amount: 10 atom            // Conversion from uatom to atom using value renderers
 End of transaction messages
 Fee: 0.002 atom
 *Gas: 100'000
-*Hash of raw bytes: <base64_string>
 ```
 
 #### Example 2: Multi-Msg Transaction with 3 signers
@@ -384,7 +340,7 @@ Account number: 10
 *Public Key: iR...==
 Sequence: 2
 This transaction has 1 message:
-Message (1/1): /cosmos.bank.v1beta1.MsgSend
+Message (1/1): bank v1beta1 send coins
 From: cosmos1...abc
 To: cosmos1...def
 Amount: 10 atom
@@ -400,7 +356,6 @@ Tip: 200 ibc/CDC4587874B85BEA4FCEC3CEA5A1195139799A1FEE711A07D972537E18FDA39D
 *Sign mode: Direct Aux
 *Sequence: 42
 *End of other signers
-*Hash of raw bytes: <base64_string>
 ```
 
 #### Example 5: Complex Transaction with Nested Messages
@@ -513,24 +468,24 @@ Account number: 10
 *Public Key: iQ...==
 Sequence: 2
 This transaction has 2 messages:
-Message (1/2): /cosmos.bank.v1beta1.MsgSend
+Message (1/2): bank v1beta1 send coins
 From: cosmos1...abc
 To: cosmos1...def
 Amount: 10 atom
-Message (2/2): /cosmos.gov.v1.SubmitProposal
+Message (2/2): gov v1 submit proposal
 Messages: 2 Messages
-> Message (1/2): /cosmos.bank.v1beta1.MsgSend
+> Message (1/2): bank v1beta1 send coins
 > From: cosmos1...jkl
 > To: cosmos1...mno
 > Amount: 20 atom
-> Message (2/2): /cosmos.authz.v1beta1.MsgExec
+> Message (2/2): authz v1beta exec
 > Grantee: cosmos1...pqr
 > Msgs: 2 Msgs
->> Msg (1/2): /cosmos.bank.v1beta1.MsgSend
+>> Msg (1/2): bank v1beta1 send coins
 >> From: cosmos1...stu
 >> To: cosmos1...vwx
 >> Amount: 30 atom
->> Msg (2/2): /cosmos.bank.v1beta1.MsgSend
+>> Msg (2/2): bank v1beta1 send coins
 >> From: cosmos1...abc
 >> To: cosmos1...def
 >> Amount: 40 atom
@@ -547,7 +502,6 @@ Fee: 0.002 atom
 *Sign mode: Direct
 *Sequence: 42
 *End of other signers
-*Hash of raw bytes: <base64_string>
 ```
 
 ## Consequences
@@ -564,7 +518,7 @@ SIGN_MODE_TEXTUAL is purely additive, and doesn't break any backwards compatibil
 ### Negative
 
 - Some fields are still encoded in non-human-readable ways, such as public keys in base64.
-- New ledger app needs to be released, still unclear if both SIGN_MODE_LEGACY_AMINO_JSON and SIGN_MODE_TEXTUAL will be supported at the same time.
+- New ledger app needs to be released, still unclear
 
 ### Neutral
 

@@ -32,7 +32,7 @@ func SetSubstoreTracer(w io.Writer) StoreOption {
 
 // SetTracerFor provides a BaseApp option function that sets the
 // tracer for a substore with given skey inside a multistore.
-func SetTracerFor(skey storetypes.StoreKey, w io.Writer) StoreOption {
+func SetTracerFor(skey string, w io.Writer) StoreOption {
 	return func(cfg *multi.StoreParams, _ uint64) error {
 		cfg.SetTracerFor(skey, w)
 		return nil

@@ -2274,14 +2274,16 @@ func TestFraudProofGenerationMode(t *testing.T) {
 	numTransactions := 1
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
-	commitB1 := appB1.Commit()
+	appB1.Commit()
 
-	// appHash of B1 at S1
-	appHashB1AtS1 := commitB1.GetData()
+	// storeHash of B1 at S1
+	cmsB1 := appB1.cms.(*multi.Store)
+	storeHashB1AtS1 := cmsB1.GetSubstoreSMT(capKey2.Name()).Root()
 
 	// B1 <- S2
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
-	appB1.Commit()
+
+	// Do not commit here in order to preserve saved previous versions
 
 	// only storeKey we'd like tracing to be enabled for
 	storeKeys := []types.StoreKey{capKey2}
@@ -2308,14 +2310,14 @@ func TestFraudProofGenerationMode(t *testing.T) {
 	// BaseApp, B1
 	options := []AppOption{
 		SetSubstoreTracer(storeTraceBuf),
-		SetTracerFor(capKey2, subStoreTraceBuf),
+		SetTracerFor(storeKeys[0].Name(), subStoreTraceBuf),
 	}
 
 	appB2 := setupBaseAppFromParams(t, storeKeyNames, appB1.LastBlockHeight()+1, storeToLoadFrom, options...)
-
 	for _, storeKeyName := range storeKeyNames {
-		hashB2 := getAppHashFromProofInApp(t, appB2, storeKeyName)
-		require.Equal(t, appHashB1AtS1, hashB2)
+		cmsB2 := appB2.cms.(*multi.Store)
+		storeHashB2 := cmsB2.GetSubstoreSMT(storeKeyName).Root()
+		require.Equal(t, storeHashB1AtS1, storeHashB2)
 	}
 }
 
@@ -2360,13 +2362,13 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	appB1 := setupBaseApp(t,
 		AppOptionFunc(routerOpt),
 		SetSubstoreTracer(storeTraceBuf),
-		SetTracerFor(capKey2, subStoreTraceBuf),
+		SetTracerFor(capKey2.Name(), subStoreTraceBuf),
 	)
 
 	// B1 <- S0
 	appB1.InitChain(abci.RequestInitChain{})
 
-	numTransactions := 5
+	numTransactions := 1
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
 	appB1.Commit()

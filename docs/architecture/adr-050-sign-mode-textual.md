@@ -142,7 +142,7 @@ message Grant {
 
 message MsgGrant {
   option (cosmos.msg.v1.signer) = "granter";
-  option (cosmos.msg.v1.textual.type_url) = "authz v1beta1 grant"; 
+  option (cosmos.msg.v1.textual.type_url) = "authz v1beta1 grant";
 
   string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];

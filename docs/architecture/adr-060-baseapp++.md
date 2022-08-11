@@ -6,7 +6,7 @@
 
 ## Status
 
-Proposed
+PROPOSED
 
 ## Abstract
 
@@ -199,8 +199,12 @@ know them today will still exist and function as they currently do.
 
 ## Further Discussions
 
-While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
-Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
+It is possible to to design the app-side implementation of the `Mempool[T MempoolTx]`
+in many different ways using different data structures and implementations. All
+of which have different tradeoffs. The proposed solution is keeps things simple
+and covers cases that would be required for most basic applications. There are
+tradeoffs that can be made to improve performance of reaping and inserting into
+the provided mempool implementation.
 
 ## References
 

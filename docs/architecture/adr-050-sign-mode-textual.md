@@ -177,7 +177,7 @@ and a transaction containing 1 such `sdk.Msg`, we get the following encoding:
 
 ```
 This transaction has 1 message:
-Msg (1/1): /cosmos
+Msg (1/1): /cosmos.authz.v1beta1.MsgGrant
 Granter: cosmos1abc...def
 Grantee: cosmos1ghi...jkl
 End of transaction messages
@@ -223,11 +223,13 @@ pass_check()
 
 ### 10. Require signing over the `TxBody` and `AuthInfo` raw bytes
 
-Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L33), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these canonical bytes in SIGN_MODE_TEXTUAL, more specifically over the following base64-encoded bytes:
+Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L33), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these canonical bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:
 
 ```
-*Hash of raw bytes: sha256(<body_bytes> ++ " " ++ <auth_info_bytes>)
+*Hash of raw bytes: <base64(sha256(<body_bytes> ++ " " ++ <auth_info_bytes>))>
 ```
+
+where `++` denotes concatenation.
 
 This is to prevent transaction hash malleability. The point #1 about bijectivity assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could modify the transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL.
 

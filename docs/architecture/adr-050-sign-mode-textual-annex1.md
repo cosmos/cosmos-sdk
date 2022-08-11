@@ -203,17 +203,14 @@ Object: /cosmos.gov.v1.Vote
 
 ### `google.protobuf.Timestamp`
 
-Rendered as [RFC3339](https://tools.ietf.org/html/rfc3339) (e.g. `2021-01-01T12:00:00`).
+Rendered as either ISO8601 (`2021-01-01T12:00:00Z`).
 
-### `google.protobuf.Duration` 
+### `google.protobuf.Duration` (TODO)
 
-- Rendered in terms of days, hours, minutes and seconds as these time units can be measured independently of any calendar and duration values are in seconds (so months and years can't be used precisely).
-  - Durations are not aggregated into weeks, as longer durations expressed in weeks are more confusing and less common than directly expressing them in days: "12 weeks, 6 days" vs "90 days".
-- Total seconds values included at the end so users have both pieces of information.
-
-#### Examples
-
-- `1483530 seconds` -> `17 days, 4 hours, 5 minutes, 30 seconds (1483530 seconds total)`
+- rendered in terms of weeks, days, hours, minutes and seconds as these time units can be measured independently of any calendar and duration values are in seconds (so months and years can't be used precisely)
+- total seconds values included at the end so users have both pieces of information
+- Ex:
+  - `1483530 seconds` -> `2 weeks, 3 days, 4 hours, 5 minutes, 30 seconds (1483530 seconds total)`
 
 ### bytes
 

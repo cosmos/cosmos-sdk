@@ -771,8 +771,38 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 
 // enableFraudProofGenerationMode rolls back an app's state to a previous
 // state and enables tracing for the list of store keys
-func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey) {
-	return
+func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey) error {
+	cms := app.cms.(*multi.Store)
+	lastVersion := cms.LastCommitID().Version
+	previousCMS, err := cms.GetVersion(lastVersion)
+	if err != nil {
+		return err
+	}
+
+	// Initialize params from previousCMS
+	storeToLoadFrom := make(map[string]types.KVStore)
+	storeKeyNames := make([]string, 0, len(storeKeys))
+	for _, storeKey := range storeKeys {
+		storeKeyName := storeKey.Name()
+		storeKeyNames = append(storeKeyNames, storeKeyName)
+		storeToLoadFrom[storeKeyName] = previousCMS.GetKVStore(storeKey)
+	}
+
+	// Add options for tracing
+	storeTraceBuf := &bytes.Buffer{}
+	subStoreTraceBuf := &bytes.Buffer{}
+
+	// BaseApp, B1
+	options := []AppOption{
+		SetSubstoreTracer(storeTraceBuf),
+		SetTracerFor(storeKeys[0].Name(), subStoreTraceBuf),
+	}
+	_ = options
+	return nil
+
+	// appB2, err := setupBaseAppFromParams(app.name, storeKeyNames, app.LastBlockHeight()+1, storeToLoadFrom, options...)
+	// _ = appB2
+	// return err
 }
 
 func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.StoreKey]*bytes.Buffer) (FraudProof, error) {

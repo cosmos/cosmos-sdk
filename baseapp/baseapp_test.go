@@ -99,7 +99,7 @@ func setupBaseApp(t *testing.T, options ...AppOption) *BaseApp {
 	return app
 }
 
-func setupBaseAppFromParams(t *testing.T, storeKeyNames []string, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) *BaseApp {
+func setupBaseAppFromParams(appName string, storeKeyNames []string, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
 	storeKeys := make([]types.StoreKey, 0, len(storeKeyNames))
 	for _, storeKeyName := range storeKeyNames {
 		storeKey := sdk.NewKVStoreKey(storeKeyName)
@@ -125,20 +125,17 @@ func setupBaseAppFromParams(t *testing.T, storeKeyNames []string, blockHeight in
 	options = append(options, SetInitialHeight(blockHeight))
 
 	// make list of options to pass by parsing fraudproof
-	app := newBaseApp(t.Name(), options...)
-	require.Equal(t, t.Name(), app.Name())
-
-	app.SetParamStore(mock.NewParamStore(dbm.NewMemDB()))
+	app := newBaseApp(appName, options...)
 
 	// stores are mounted
 	err := app.Init()
-	require.Nil(t, err)
-	return app
+
+	return app, err
 }
 
 // baseapp loaded from a fraudproof
-func setupBaseAppFromFraudProof(t *testing.T, fraudProof FraudProof, options ...AppOption) *BaseApp {
-	return setupBaseAppFromParams(t, fraudProof.getModules(), fraudProof.blockHeight, fraudProof.extractStore(), options...)
+func setupBaseAppFromFraudProof(appName string, fraudProof FraudProof, options ...AppOption) (*BaseApp, error) {
+	return setupBaseAppFromParams(appName, fraudProof.getModules(), fraudProof.blockHeight, fraudProof.extractStore(), options...)
 }
 
 // simple one store baseapp with data and snapshots. Each tx is 1 MB in size (uncompressed).
@@ -2271,7 +2268,7 @@ func TestFraudProofGenerationMode(t *testing.T) {
 	// B1 <- S0
 	appB1.InitChain(abci.RequestInitChain{})
 
-	numTransactions := 1
+	numTransactions := 5
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
 	appB1.Commit()
@@ -2313,7 +2310,8 @@ func TestFraudProofGenerationMode(t *testing.T) {
 		SetTracerFor(storeKeys[0].Name(), subStoreTraceBuf),
 	}
 
-	appB2 := setupBaseAppFromParams(t, storeKeyNames, appB1.LastBlockHeight()+1, storeToLoadFrom, options...)
+	appB2, err := setupBaseAppFromParams(t.Name(), storeKeyNames, appB1.LastBlockHeight()+1, storeToLoadFrom, options...)
+	require.Nil(t, err)
 	for _, storeKeyName := range storeKeyNames {
 		cmsB2 := appB2.cms.(*multi.Store)
 		storeHashB2 := cmsB2.GetSubstoreSMT(storeKeyName).Root()
@@ -2396,6 +2394,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 
 	// Now we take contents of the fraud proof which was recorded with S2 and try to populate a fresh baseapp B2 with it
 	// B2 <- S2
-	appB2 := setupBaseAppFromFraudProof(t, fraudProof)
+	appB2, err := setupBaseAppFromFraudProof(t.Name(), fraudProof)
+	require.Nil(t, err)
 	require.True(t, checkSMTStoreEqual(appB1, appB2, capKey2.Name()))
 }

@@ -2200,6 +2200,67 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 	app.EndBlock(abci.RequestEndBlock{Height: blockHeight})
 }
 
+func checkSMTStoreEqual(appB1 *BaseApp, appB2 *BaseApp, storeKeyName string) bool {
+
+	cmsB1 := appB1.cms.(*multi.Store)
+	storeHashB1 := cmsB1.GetSubstoreSMT(storeKeyName).Root()
+
+	cmsB2 := appB2.cms.(*multi.Store)
+	storeHashB2 := cmsB2.GetSubstoreSMT(storeKeyName).Root()
+
+	return bytes.Equal(storeHashB1, storeHashB2)
+}
+
+func TestExportPreExecutionState(t *testing.T) {
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			kv := msg.(*msgKeyValue)
+			bapp.cms.GetKVStore(capKey2).Set(kv.Key, kv.Value)
+			return &sdk.Result{}, nil
+		}))
+	}
+
+	// BaseApp, B1 with no Tracing
+	appB1 := setupBaseApp(t,
+		AppOptionFunc(routerOpt),
+	)
+
+	// B1 <- S0
+	appB1.InitChain(abci.RequestInitChain{})
+
+	numTransactions := 1
+	// B1 <- S1
+	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
+	appB1.Commit()
+
+	// B1 <- S2
+	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
+
+	// Do not commit here in order to preserve saved previous versions
+
+	// the only store key we'd like to enable tracing for
+	storeKeys := []types.StoreKey{capKey2}
+	routerOpts := make(map[string]AppOptionFunc)
+	routerOpts[capKey2.Name()] = func(bapp *BaseApp) {
+		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			kv := msg.(*msgKeyValue)
+			cms := bapp.cms.(*multi.Store)
+			// There is only storeKey in the test for now
+			storeKey := cms.GetStoreKeys()[len(storeKeys)-1]
+			bapp.cms.GetKVStore(storeKey).Set(kv.Key, kv.Value)
+			return &sdk.Result{}, nil
+		}))
+	}
+	appB2, storeKeyToSubstoreTraceBuf, err := appB1.enableFraudProofGenerationMode(storeKeys, routerOpts)
+	_, _, _ = appB2, storeKeyToSubstoreTraceBuf, err
+
+	// TODO: Execute fraudulent block
+
+	// TODO: Get logs, revert back, and filter down state to export to a fraudproof
+
+	// TODO: Test if that fraudproof only contains keys from that fraudulent block or not, if yes, pass
+}
+
 func TestFraudProofGenerationMode(t *testing.T) {
 	/*
 		Tests fraudproof generation mode. Steps:

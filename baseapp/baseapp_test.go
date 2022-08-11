@@ -99,45 +99,6 @@ func setupBaseApp(t *testing.T, options ...AppOption) *BaseApp {
 	return app
 }
 
-func setupBaseAppFromParams(appName string, storeKeyNames []string, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
-	storeKeys := make([]types.StoreKey, 0, len(storeKeyNames))
-	for _, storeKeyName := range storeKeyNames {
-		storeKey := sdk.NewKVStoreKey(storeKeyName)
-		storeKeys = append(storeKeys, storeKey)
-		routerOpt := func(bapp *BaseApp) {
-			bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-				kv := msg.(*msgKeyValue)
-				bapp.cms.GetKVStore(storeKey).Set(kv.Key, kv.Value)
-				return &sdk.Result{}, nil
-			}))
-		}
-		subStore := storeToLoadFrom[storeKeyName]
-		it := subStore.Iterator(nil, nil)
-		for ; it.Valid(); it.Next() {
-			key, val := it.Key(), it.Value()
-			options = append(options, SetSubstoreKVPair(storeKey, key, val))
-		}
-		options = append(options, AppOptionFunc(routerOpt))
-	}
-	options = append(options, SetSubstores(storeKeys...))
-
-	// This initial height is used in `BeginBlock` in `validateHeight`
-	options = append(options, SetInitialHeight(blockHeight))
-
-	// make list of options to pass by parsing fraudproof
-	app := newBaseApp(appName, options...)
-
-	// stores are mounted
-	err := app.Init()
-
-	return app, err
-}
-
-// baseapp loaded from a fraudproof
-func setupBaseAppFromFraudProof(appName string, fraudProof FraudProof, options ...AppOption) (*BaseApp, error) {
-	return setupBaseAppFromParams(appName, fraudProof.getModules(), fraudProof.blockHeight, fraudProof.extractStore(), options...)
-}
-
 // simple one store baseapp with data and snapshots. Each tx is 1 MB in size (uncompressed).
 func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*BaseApp, error) {
 	codec := codec.NewLegacyAmino()
@@ -2309,8 +2270,11 @@ func TestFraudProofGenerationMode(t *testing.T) {
 		SetSubstoreTracer(storeTraceBuf),
 		SetTracerFor(storeKeys[0].Name(), subStoreTraceBuf),
 	}
-
-	appB2, err := setupBaseAppFromParams(t.Name(), storeKeyNames, appB1.LastBlockHeight()+1, storeToLoadFrom, options...)
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+	routerOpts := make(map[string]AppOptionFunc)
+	routerOpts[capKey2.Name()] = AppOptionFunc(routerOpt)
+	appB2, err := SetupBaseAppFromParams(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), storeKeyNames, routerOpts, appB1.LastBlockHeight()+1, storeToLoadFrom, options...)
 	require.Nil(t, err)
 	for _, storeKeyName := range storeKeyNames {
 		cmsB2 := appB2.cms.(*multi.Store)
@@ -2394,7 +2358,11 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 
 	// Now we take contents of the fraud proof which was recorded with S2 and try to populate a fresh baseapp B2 with it
 	// B2 <- S2
-	appB2, err := setupBaseAppFromFraudProof(t.Name(), fraudProof)
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+	routerOpts := make(map[string]AppOptionFunc)
+	routerOpts[capKey2.Name()] = AppOptionFunc(routerOpt)
+	appB2, err := SetupBaseAppFromFraudProof(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), routerOpts, fraudProof)
 	require.Nil(t, err)
 	require.True(t, checkSMTStoreEqual(appB1, appB2, capKey2.Name()))
 }

@@ -839,3 +839,35 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[types.Stor
 
 	return fraudProof, nil
 }
+
+func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, storeKeyNames []string, routerOpts map[string]AppOptionFunc, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
+	storeKeys := make([]types.StoreKey, 0, len(storeKeyNames))
+	for _, storeKeyName := range storeKeyNames {
+		storeKey := sdk.NewKVStoreKey(storeKeyName)
+		storeKeys = append(storeKeys, storeKey)
+		subStore := storeToLoadFrom[storeKeyName]
+		it := subStore.Iterator(nil, nil)
+		for ; it.Valid(); it.Next() {
+			key, val := it.Key(), it.Value()
+			options = append(options, SetSubstoreKVPair(storeKey, key, val))
+		}
+		options = append(options, routerOpts[storeKeyName])
+	}
+	options = append(options, SetSubstores(storeKeys...))
+
+	// This initial height is used in `BeginBlock` in `validateHeight`
+	options = append(options, SetInitialHeight(blockHeight))
+
+	// make list of options to pass by parsing fraudproof
+	app := NewBaseApp(appName, logger, db, txDecoder, options...)
+
+	// stores are mounted
+	err := app.Init()
+
+	return app, err
+}
+
+// baseapp loaded from a fraudproof
+func SetupBaseAppFromFraudProof(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, routerOpts map[string]AppOptionFunc, fraudProof FraudProof, options ...AppOption) (*BaseApp, error) {
+	return SetupBaseAppFromParams(appName, logger, db, txDecoder, fraudProof.getModules(), routerOpts, fraudProof.blockHeight, fraudProof.extractStore(), options...)
+}

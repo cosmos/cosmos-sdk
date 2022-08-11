@@ -16,6 +16,7 @@ import (
 )
 
 // Simulation operation weights constants
+//
 //nolint:gosec // these are not hardcoded credentials
 const (
 	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"

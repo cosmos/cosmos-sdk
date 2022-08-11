@@ -39,7 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Improvements
+
+* (baseapp) Create the IMsgServiceRouter interface and baseapp.SetMsgServiceRouter function [223](https://github.com/provenance-io/cosmos-sdk/pull/223).
 
 ---
 

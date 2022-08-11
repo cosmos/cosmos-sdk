@@ -31,6 +31,15 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 // MsgServiceHandler defines a function type which handles Msg service message.
 type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
 
+type IMsgServiceRouter interface {
+	Handler(msg sdk.Msg) MsgServiceHandler
+	HandlerByTypeURL(typeURL string) MsgServiceHandler
+	RegisterService(sd *grpc.ServiceDesc, handler interface{})
+	SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry)
+}
+
+var _ IMsgServiceRouter = &MsgServiceRouter{}
+
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
 func (msr *MsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
 	return msr.routes[sdk.MsgTypeURL(msg)]

@@ -40,7 +40,7 @@ type Keeper struct {
 	legacyRouter v1beta1.Router
 
 	// Msg server router
-	router *baseapp.MsgServiceRouter
+	router baseapp.IMsgServiceRouter
 
 	config types.Config
 }
@@ -55,7 +55,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace types.ParamSubspace,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper,
-	legacyRouter v1beta1.Router, router *baseapp.MsgServiceRouter,
+	legacyRouter v1beta1.Router, router baseapp.IMsgServiceRouter,
 	config types.Config,
 ) Keeper {
 	// ensure governance module account is set
@@ -103,7 +103,7 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Router returns the gov keeper's router
-func (keeper Keeper) Router() *baseapp.MsgServiceRouter {
+func (keeper Keeper) Router() baseapp.IMsgServiceRouter {
 	return keeper.router
 }
 

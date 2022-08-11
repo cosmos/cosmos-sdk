@@ -358,7 +358,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 }
 
 // perform all the store operations for when a validator status becomes unbonded
-func (k Keeper) CompleteUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
+func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	validator = validator.UpdateStatus(types.Unbonded)
 	k.SetValidator(ctx, validator)
 

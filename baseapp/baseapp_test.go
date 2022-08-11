@@ -17,6 +17,7 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
@@ -2229,7 +2230,7 @@ func TestFraudProofGenerationMode(t *testing.T) {
 	// B1 <- S0
 	appB1.InitChain(abci.RequestInitChain{})
 
-	numTransactions := 5
+	numTransactions := 1
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
 	appB1.Commit()
@@ -2246,14 +2247,32 @@ func TestFraudProofGenerationMode(t *testing.T) {
 	// the only store key we'd like to enable tracing for
 	storeKeys := []types.StoreKey{capKey2}
 
-	appB2, _, err := appB1.enableFraudProofGenerationMode(storeKeys)
+	appB2, storeKeyToSubstoreTraceBuf, err := appB1.enableFraudProofGenerationMode(storeKeys)
 
 	require.Nil(t, err)
+	cmsB2 := appB2.cms.(*multi.Store)
 	for _, storeKey := range storeKeys {
-		cmsB2 := appB2.cms.(*multi.Store)
 		storeHashB2 := cmsB2.GetSubstoreSMT(storeKey.Name()).Root()
 		require.Equal(t, storeHashB1AtS1, storeHashB2)
 	}
+
+	txs1 := executeBlockWithArbitraryTxs(t, appB2, numTransactions, 2)
+
+	// TODO: Currently doesn't pass because even `SetSubstoreKVPair` calls are traced which we don't want
+
+	for _, storeKey := range cmsB2.GetStoreKeys() {
+		subStoreBuf := storeKeyToSubstoreTraceBuf[storeKey.Name()]
+		tracedKeys := appB2.cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreBuf).Values()
+		txKeys := make([]string, 0)
+		for _, tx := range txs1 {
+			for _, msg := range tx.GetMsgs() {
+				msgKV := msg.(msgKeyValue)
+				txKeys = append(txKeys, (string(msgKV.Key)))
+			}
+		}
+		require.Equal(t, tracedKeys, txKeys)
+	}
+
 }
 
 func TestGenerateAndLoadFraudProof(t *testing.T) {

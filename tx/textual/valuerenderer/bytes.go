@@ -9,8 +9,7 @@ import (
 )
 
 // bytesValueRenderer implements ValueRenderer for bytes
-type bytesValueRenderer struct {
-}
+type bytesValueRenderer struct{}
 
 var _ ValueRenderer = bytesValueRenderer{}
 

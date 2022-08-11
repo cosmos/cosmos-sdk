@@ -822,37 +822,46 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 
 	storeKeys := cms.GetStoreKeys()
 	for _, storeKey := range storeKeys {
-		subStoreTraceBuf := storeKeyToSubstoreTraceBuf[storeKey.Name()]
-		keys := cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreTraceBuf).Values()
+		if subStoreTraceBuf, exists := storeKeyToSubstoreTraceBuf[storeKey.Name()]; exists {
+			//do something here
+			keys := cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreTraceBuf)
 
-		// This should be the deep subtree
-		deepSubstoreSMT, err := cms.GetLastSubstoreSMTWithKeys(storeKey.Name(), keys)
-		if err != nil {
-			return FraudProof{}, err
-		}
-		proof, storeHash, err := cms.GetLastSubstoreProof(storeKey.Name())
-		if err != nil {
-			return FraudProof{}, err
-		}
-		stateWitness := StateWitness{
-			proof:       *proof,
-			rootHash:    storeHash,
-			WitnessData: make([]WitnessData, 0, len(keys)),
-		}
-		for _, key := range keys {
-			value, err := deepSubstoreSMT.Get([]byte(key))
+			// This should be the deep subtree
+			deepSubstoreSMT, err := cms.GetLastSubstoreSMTWithKeys(storeKey.Name(), keys.Values())
 			if err != nil {
 				return FraudProof{}, err
 			}
-			proof, err := deepSubstoreSMT.Prove([]byte(key))
+			proof, err := cms.GetLastSubstoreProof(storeKey.Name())
 			if err != nil {
 				return FraudProof{}, err
 			}
-			bKey, bVal := []byte(key), []byte(value)
-			witnessData := WitnessData{bKey, bVal, proof}
-			stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
+			stateWitness := StateWitness{
+				proof:       *proof,
+				rootHash:    deepSubstoreSMT.Root(),
+				WitnessData: make([]WitnessData, 0, keys.Len()),
+			}
+			for key := range keys {
+				bKey := []byte(key)
+				has, err := deepSubstoreSMT.Has(bKey)
+				if err != nil {
+					return FraudProof{}, err
+				}
+				if has {
+					value, err := deepSubstoreSMT.Get([]byte(key))
+					if err != nil {
+						return FraudProof{}, err
+					}
+					proof, err := deepSubstoreSMT.Prove([]byte(key))
+					if err != nil {
+						return FraudProof{}, err
+					}
+					bKey, bVal := []byte(key), []byte(value)
+					witnessData := WitnessData{bKey, bVal, proof}
+					stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
+				}
+			}
+			fraudProof.stateWitness[storeKey.Name()] = stateWitness
 		}
-		fraudProof.stateWitness[storeKey.Name()] = stateWitness
 	}
 
 	return fraudProof, nil

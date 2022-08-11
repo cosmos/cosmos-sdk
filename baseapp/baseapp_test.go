@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -2161,7 +2162,7 @@ func executeBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions in
 	registerTestCodec(codec)
 	r := rand.New(rand.NewSource(randSource))
 	randSource += 1
-	keyCounter := r.Intn(100)
+	keyCounter := r.Intn(10000)
 	txs := make([]txTest, 0)
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: blockHeight}})
@@ -2202,6 +2203,16 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 func checkSMTStoreEqual(appB1 *BaseApp, appB2 *BaseApp, storeKeyName string) bool {
 
 	cmsB1 := appB1.cms.(*multi.Store)
+	storeKeysB1 := cmsB1.GetStoreKeys()
+	for _, storeKey := range storeKeysB1 {
+		if storeKey.Name() == storeKeyName {
+			smtB1 := cmsB1.GetKVStore(storeKey)
+			for it := smtB1.Iterator(nil, nil); it.Valid(); it.Next() {
+				k, v := it.Key(), it.Value()
+				_, _ = k, v
+			}
+		}
+	}
 	storeHashB1 := cmsB1.GetSubstoreSMT(storeKeyName).Root()
 
 	cmsB2 := appB2.cms.(*multi.Store)
@@ -2338,6 +2349,8 @@ func TestFraudProofGenerationMode(t *testing.T) {
 				txKeys = append(txKeys, (string(msgKV.Key)))
 			}
 		}
+		sort.Strings(tracedKeys)
+		sort.Strings(txKeys)
 		require.Equal(t, tracedKeys, txKeys)
 	}
 }
@@ -2394,20 +2407,17 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
 	commitB1 := appB1.Commit()
 	appHashB1 := commitB1.GetData()
-	// storeTraceBuf.Reset()
-	// subStoreTraceBuf.Reset()
+
+	storeHashB1 := appB1.cms.(*multi.Store).GetSubstoreSMT(capKey2.Name()).Root()
 
 	// B1 <- S2
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
-	appB1.cms.SetTracingContext(sdk.TraceContext(
-		map[string]interface{}{"blockHeight": 2},
-	))
 
 	// Exports all data inside current multistore into a fraudProof (S1 -> S2) //
 	storeKeyToSubstoreTraceBuf := make(map[string]*bytes.Buffer)
 	storeKeyToSubstoreTraceBuf[capKey2.Name()] = subStoreTraceBuf
 
-	// Records S1 in fraudproof
+	// Records S1 in fraudproof (Pre-execution)
 	fraudProof, err := appB1.generateFraudProof(storeKeyToSubstoreTraceBuf)
 	require.Nil(t, err)
 	currentBlockHeight := appB1.LastBlockHeight() // Only changes on a Commit
@@ -2419,11 +2429,12 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	require.Nil(t, err)
 	require.True(t, fraudProofVerified)
 
-	// Now we take contents of the fraud proof which was recorded with S2 and try to populate a fresh baseapp B2 with it
-	// B2 <- S2
+	// Now we take contents of the fraud proof which was recorded with S1 and try to populate a fresh baseapp B2 with it
+	// B2 <- S1
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	appB2, err := SetupBaseAppFromFraudProof(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), fraudProof, AppOptionFunc(routerOpt))
 	require.Nil(t, err)
-	require.True(t, checkSMTStoreEqual(appB1, appB2, capKey2.Name()))
+	storeHashB2 := appB2.cms.(*multi.Store).GetSubstoreSMT(capKey2.Name()).Root()
+	require.Equal(t, storeHashB1, storeHashB2)
 }

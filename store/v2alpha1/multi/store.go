@@ -636,6 +636,14 @@ func (s *Store) getMerkleRoots() (ret map[string][]byte, err error) {
 	return
 }
 
+func (s *Store) GetAppHash() ([]byte, error) {
+	storeHashes, err := s.getMerkleRoots()
+	if err != nil {
+		return nil, err
+	}
+	return sdkmaps.HashFromMap(storeHashes), nil
+}
+
 // Calculates root hashes and commits to DB. Does not verify target version or perform pruning.
 func (s *Store) commit(target uint64) (id *types.CommitID, err error) {
 	storeHashes, err := s.getMerkleRoots()
@@ -1016,7 +1024,9 @@ func (tlm *traceListenMixin) TracingEnabled() bool {
 
 func (tlm *traceListenMixin) SetTracer(w io.Writer) {
 	tlm.TraceWriter = w
+	tlm.SetTracingContext(types.TraceContext{})
 }
+
 func (tlm *traceListenMixin) SetTracingContext(tc types.TraceContext) {
 	tlm.traceContextMutex.Lock()
 	defer tlm.traceContextMutex.Unlock()
@@ -1081,17 +1091,17 @@ func (s *Store) GetLastStore() (*viewStore, error) {
 	return lastStore.(*viewStore), nil
 }
 
-func (s *Store) GetLastSubstoreProof(storeKeyName string) (*tmcrypto.ProofOp, []byte, error) {
+func (s *Store) GetLastSubstoreProof(storeKeyName string) (*tmcrypto.ProofOp, error) {
 	viewLastStore, err := s.GetLastStore()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	storeHashes, err := viewLastStore.getMerkleRoots()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	proofOp, err := types.ProofOpFromMap(storeHashes, storeKeyName)
-	return &proofOp, storeHashes[storeKeyName], err
+	return &proofOp, err
 }
 
 // Constructs a deep sparse merkle tree using the given subKeys for the given storekeyName at the last version
@@ -1100,16 +1110,19 @@ func (s *Store) GetLastSubstoreSMTWithKeys(storekeyName string, subKeys []string
 	if err != nil {
 		return nil, err
 	}
+	// subStore, _ := viewLastStore.getSubstore(storekeyName)
 	smt := viewLastStore.GetSubstoreSMT(storekeyName)
 	dsmt := smtlib.NewDeepSparseMerkleSubTree(smtlib.NewSimpleMap(), smtlib.NewSimpleMap(), sha256.New(), smt.Root())
 	for _, subKey := range subKeys {
 		bKey := []byte(subKey)
-		bValue := smt.Get(bKey)
-		proof, err := smt.GetSMTProof([]byte(subKey))
-		if err != nil {
-			return nil, err
+		if smt.Has(bKey) {
+			bValue := smt.Get(bKey)
+			proof, err := smt.GetSMTProof([]byte(subKey))
+			if err != nil {
+				return nil, err
+			}
+			dsmt.AddBranch(proof, bKey, bValue)
 		}
-		dsmt.AddBranch(proof, bKey, bValue)
 	}
 	return dsmt, nil
 }

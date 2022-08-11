@@ -3,9 +3,6 @@ package bank
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"math/rand"
-	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -14,23 +11,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/consensus_param/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/consensus_param/exported"
 	"github.com/cosmos/cosmos-sdk/x/consensus_param/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus_param/types"
 )
 
 // ConsensusVersion defines the current x/bank module consensus version.
-const ConsensusVersion = 4
+const ConsensusVersion = 1
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the bank module.
@@ -42,57 +35,46 @@ type AppModuleBasic struct {
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
 // RegisterLegacyAminoCodec registers the bank module's types on the LegacyAmino codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
-}
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the bank
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+	return nil
 }
 
-// ValidateGenesis performs genesis state validation for the bank module.
+// ValidateGenesis performs genesis state validation
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-
-	return data.Validate()
+	return nil
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the bank module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
-// GetTxCmd returns the root tx command for the bank module.
+// GetTxCmd returns the root tx command
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd()
+	return nil
 }
 
-// GetQueryCmd returns no root query command for the bank module.
+// GetQueryCmd returns no root query command
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+	return nil
 }
 
 // RegisterInterfaces registers interfaces and implementations of the bank module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
-
-	// Register legacy interfaces for migration scripts.
-	v1bank.RegisterInterfaces(registry)
 }
 
-// AppModule implements an application module for the bank module.
+// AppModule implements an application module
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
+	keeper keeper.Keeper
 
 	// legacySubspace is used solely for migration of x/params managed parameters
 	legacySubspace exported.Subspace
@@ -101,16 +83,15 @@ type AppModule struct {
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper, ss exported.Subspace) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ss exported.Subspace) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
-		accountKeeper:  accountKeeper,
 		legacySubspace: ss,
 	}
 }
@@ -118,60 +99,16 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.Acc
 // Name returns the bank module's name.
 func (AppModule) Name() string { return types.ModuleName }
 
-// RegisterInvariants registers the bank module invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	keeper.RegisterInvariants(ir, am.keeper)
-}
-
-// QuerierRoute returns the bank module's querier route name.
-func (AppModule) QuerierRoute() string { return types.RouterKey }
-
-// InitGenesis performs genesis initialization for the bank module. It returns
-// no validator updates.
+// InitGenesis is handled by for init genesis of consensus params
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	start := time.Now()
-	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
-	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
-
-	am.keeper.InitGenesis(ctx, &genesisState)
-	return []abci.ValidatorUpdate{}
+	return nil
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the bank
-// module.
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := am.keeper.ExportGenesis(ctx)
-	return cdc.MustMarshalJSON(gs)
-}
+// ExportGenesis is handled by tendermint export of genesis
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage { return nil }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
-// AppModuleSimulation functions
-
-// GenerateGenesisState creates a randomized GenState of the bank module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
-// RandomizedParams creates randomized distribution param changes for the simulator.
-
-// TODO: Returns an empty slice which will make parameter changes a no-op during
-// simulations. Once all modules are migrated, remove RandomizedParams from
-// the simulation interface.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
-}
-
-// RegisterStoreDecoder registers a decoder for supply module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
-
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return []simtypes.WeightedOperation{}
-}
+// RegisterInvariants does nothing, there are no invariants to enforce
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}

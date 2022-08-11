@@ -39,6 +39,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* nothing
+
+---
+
+## [v0.46.0-pio-1-rc2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc2) - 2022-08-11
+
 ### Improvements
 
 * (x/authz) Create the GetAuthorization to replace the previously removed GetCleanAuthorization. [#222](https://github.com/provenance-io/cosmos-sdk/pull/222)

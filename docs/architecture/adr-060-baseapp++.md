@@ -170,11 +170,13 @@ know them today will still exist and function as they currently do.
 
 ### Negative
 
-{negative consequences}
+* Requires that the "mempool", as a general data structure that collects and stores
+  uncommitted transactions will be duplicated between both Tendermint and the
+  Cosmos SDK.
+* Additional requests between Tendermint and the Cosmos SDK in the context of
+  block execution. Albeit, the overhead should be negligible.
 
 ### Neutral
-
-{neutral consequences}
 
 ## Further Discussions
 

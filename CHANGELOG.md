@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/authz) Create the GetAuthorization to replace the previously removed GetCleanAuthorization. [#222](https://github.com/provenance-io/cosmos-sdk/pull/222)
 * (baseapp) Create the IMsgServiceRouter interface and baseapp.SetMsgServiceRouter function [223](https://github.com/provenance-io/cosmos-sdk/pull/223).
 
 ---

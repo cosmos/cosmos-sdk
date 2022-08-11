@@ -76,7 +76,7 @@ type StoreParams struct {
 	Upgrades *types.StoreUpgrades
 	// Contains The trace context and listeners that can also be set from store methods.
 	*traceListenMixin
-	substoreTraceListenMixins map[types.StoreKey]*traceListenMixin
+	substoreTraceListenMixins map[string]*traceListenMixin
 }
 
 // StoreSchema defineds a mapping of substore keys to store types
@@ -113,7 +113,7 @@ type Store struct {
 
 	PersistentCache           types.MultiStorePersistentCache
 	substoreCache             map[string]*substore
-	substoreTraceListenMixins map[types.StoreKey]*traceListenMixin
+	substoreTraceListenMixins map[string]*traceListenMixin
 }
 
 type substore struct {
@@ -1046,11 +1046,11 @@ func (tlm *traceListenMixin) getTracingContext() types.TraceContext {
 
 func (s *Store) wrapTraceListen(store types.KVStore, skey types.StoreKey) types.KVStore {
 	if s.TracingEnabled() {
-		subStoreTlm := s.substoreTraceListenMixins[skey]
+		subStoreTlm := s.substoreTraceListenMixins[skey.Name()]
 		store = tracekv.NewStore(store, subStoreTlm.TraceWriter, s.getTracingContext())
 	}
 	if s.ListeningEnabled(skey) {
-		subStoreTlm := s.substoreTraceListenMixins[skey]
+		subStoreTlm := s.substoreTraceListenMixins[skey.Name()]
 		store = listenkv.NewStore(store, skey, subStoreTlm.listeners[skey])
 	}
 	return store

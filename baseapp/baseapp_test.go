@@ -2211,9 +2211,16 @@ func checkSMTStoreEqual(appB1 *BaseApp, appB2 *BaseApp, storeKeyName string) boo
 }
 
 func TestFraudProofGenerationMode(t *testing.T) {
-	// enableFraudProofGenerationMode rolls back an app's state to a previous
-	// state and enables tracing for the list of store keys
-
+	/*
+		Tests fraudproof generation mode. Steps:
+		1. Initialize a baseapp, B1, with some state, S0
+		2. Make some state transition to state S1 by doing some transactions, commit those transactions, and save
+		resulting SMT root hash
+		3. Make another set of state transitions to state S2 but do not commit
+		4. Get a new tracing enabled app by a call to enableFraudProofGenerationMode
+		5. Make sure the SMT root hashes of the new app is the same as the saved one
+		6. Execute another set of transactions and check if the traced keys are the same as the ones in the transactions
+	*/
 	routerOpt := func(bapp *BaseApp) {
 		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			kv := msg.(*msgKeyValue)

@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -27,24 +28,25 @@ type BankKeeper interface {
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 // StakingKeeper expected staking keeper (noalias)
 type StakingKeeper interface {
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(sdk.Context,
-		func(index int64, validator stakingtypes.ValidatorI) (stop bool))
+		func(index int64, validator sdkstaking.ValidatorI) (stop bool))
 
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(sdk.Context,
-		func(index int64, validator stakingtypes.ValidatorI) (stop bool))
+		func(index int64, validator sdkstaking.ValidatorI) (stop bool))
 
 	// iterate through the consensus validator set of the last block by operator address, execute func for each validator
 	IterateLastValidators(sdk.Context,
-		func(index int64, validator stakingtypes.ValidatorI) (stop bool))
+		func(index int64, validator sdkstaking.ValidatorI) (stop bool))
 
-	Validator(sdk.Context, sdk.ValAddress) stakingtypes.ValidatorI            // get a particular validator by operator address
-	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI // get a particular validator by consensus address
+	Validator(sdk.Context, sdk.ValAddress) sdkstaking.ValidatorI            // get a particular validator by operator address
+	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) sdkstaking.ValidatorI // get a particular validator by consensus address
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec)
@@ -53,18 +55,21 @@ type StakingKeeper interface {
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
-	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingtypes.DelegationI
+	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) sdkstaking.DelegationI
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(sdk.Context) uint32
 
 	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool))
+		fn func(index int64, delegation sdkstaking.DelegationI) (stop bool))
 
 	GetLastTotalPower(ctx sdk.Context) sdk.Int
 	GetLastValidatorPower(ctx sdk.Context, valAddr sdk.ValAddress) int64
 
 	GetAllSDKDelegations(ctx sdk.Context) []stakingtypes.Delegation
+
+	GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAddress) (tokenizeShareRecords []stakingtypes.TokenizeShareRecord)
+	GetTokenizeShareRecord(ctx sdk.Context, id uint64) (tokenizeShareRecord stakingtypes.TokenizeShareRecord, err error)
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

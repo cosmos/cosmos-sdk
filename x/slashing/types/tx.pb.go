@@ -104,8 +104,8 @@ func (m *MsgUnjailResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgUnjailResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgUnjail)(nil), "cosmos.slashing.v1beta1.MsgUnjail")
-	proto.RegisterType((*MsgUnjailResponse)(nil), "cosmos.slashing.v1beta1.MsgUnjailResponse")
+	proto.RegisterType((*MsgUnjail)(nil), "liquidstaking.slashing.v1beta1.MsgUnjail")
+	proto.RegisterType((*MsgUnjailResponse)(nil), "liquidstaking.slashing.v1beta1.MsgUnjailResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/slashing/v1beta1/tx.proto", fileDescriptor_3c5611c0c4a59d9d) }

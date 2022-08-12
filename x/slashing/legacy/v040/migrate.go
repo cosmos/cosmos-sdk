@@ -16,7 +16,7 @@ import (
 func Migrate(oldGenState v039slashing.GenesisState) *v040slashing.GenesisState {
 	// Note that the two following `for` loop over a map's keys, so are not
 	// deterministic.
-	newSigningInfos := make([]v040slashing.SigningInfo, 0, len(oldGenState.SigningInfos))
+	var newSigningInfos = make([]v040slashing.SigningInfo, 0, len(oldGenState.SigningInfos))
 	for address, signingInfo := range oldGenState.SigningInfos {
 		newSigningInfos = append(newSigningInfos, v040slashing.SigningInfo{
 			Address: address,
@@ -30,9 +30,9 @@ func Migrate(oldGenState v039slashing.GenesisState) *v040slashing.GenesisState {
 			},
 		})
 	}
-	newValidatorMissedBlocks := make([]v040slashing.ValidatorMissedBlocks, 0, len(oldGenState.MissedBlocks))
+	var newValidatorMissedBlocks = make([]v040slashing.ValidatorMissedBlocks, 0, len(oldGenState.MissedBlocks))
 	for address, validatorMissedBlocks := range oldGenState.MissedBlocks {
-		newMissedBlocks := make([]v040slashing.MissedBlock, len(validatorMissedBlocks))
+		var newMissedBlocks = make([]v040slashing.MissedBlock, len(validatorMissedBlocks))
 		for i, missedBlock := range validatorMissedBlocks {
 			newMissedBlocks[i] = v040slashing.MissedBlock{
 				Index:  missedBlock.Index,

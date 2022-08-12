@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simapp "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestCannotUnjailUnlessJailed(t *testing.T) {
@@ -193,7 +193,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should be bonded still
 	validator, _ := app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
+	require.Equal(t, sdkstaking.Bonded, validator.GetStatus())
 
 	bondPool := app.StakingKeeper.GetBondedPool(ctx)
 	require.True(sdk.IntEq(t, amt, app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount))
@@ -212,7 +212,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should have been jailed
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
+	require.Equal(t, sdkstaking.Unbonding, validator.GetStatus())
 
 	slashAmt := amt.ToDec().Mul(app.SlashingKeeper.SlashFractionDowntime(ctx)).RoundInt()
 
@@ -251,7 +251,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should be rebonded now
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
+	require.Equal(t, sdkstaking.Bonded, validator.GetStatus())
 
 	// validator should have been slashed
 	require.True(t, amt.Sub(slashAmt).Equal(app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount))
@@ -268,7 +268,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeight(height)
 	app.SlashingKeeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
+	require.Equal(t, sdkstaking.Bonded, validator.GetStatus())
 
 	// 500 signed blocks
 	nextHeight := height + app.SlashingKeeper.MinSignedPerWindow(ctx) + 1
@@ -291,5 +291,5 @@ func TestHandleAbsentValidator(t *testing.T) {
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
+	require.Equal(t, sdkstaking.Unbonding, validator.GetStatus())
 }

@@ -17,6 +17,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -35,7 +36,7 @@ var (
 	BondStatusBonded      = BondStatus_name[int32(Bonded)]
 )
 
-var _ ValidatorI = Validator{}
+var _ sdkstaking.ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
 //nolint:interfacer
@@ -49,7 +50,7 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		OperatorAddress:   operator.String(),
 		ConsensusPubkey:   pkAny,
 		Jailed:            false,
-		Status:            Unbonded,
+		Status:            sdkstaking.Unbonded,
 		Tokens:            sdk.ZeroInt(),
 		DelegatorShares:   sdk.ZeroDec(),
 		Description:       description,
@@ -78,7 +79,7 @@ func (v Validators) String() (out string) {
 }
 
 // ToSDKValidators -  convenience function convert []Validator to []sdk.ValidatorI
-func (v Validators) ToSDKValidators() (validators []ValidatorI) {
+func (v Validators) ToSDKValidators() (validators []sdkstaking.ValidatorI) {
 	for _, val := range v {
 		validators = append(validators, val)
 	}
@@ -164,17 +165,17 @@ func UnmarshalValidator(cdc codec.BinaryCodec, value []byte) (v Validator, err e
 
 // IsBonded checks if the validator status equals Bonded
 func (v Validator) IsBonded() bool {
-	return v.GetStatus() == Bonded
+	return v.GetStatus() == sdkstaking.Bonded
 }
 
 // IsUnbonded checks if the validator status equals Unbonded
 func (v Validator) IsUnbonded() bool {
-	return v.GetStatus() == Unbonded
+	return v.GetStatus() == sdkstaking.Unbonded
 }
 
 // IsUnbonding checks if the validator status equals Unbonding
 func (v Validator) IsUnbonding() bool {
-	return v.GetStatus() == Unbonding
+	return v.GetStatus() == sdkstaking.Unbonding
 }
 
 // constant used in flags to indicate that description field should not be updated
@@ -362,7 +363,7 @@ func (v Validator) PotentialConsensusPower(r sdk.Int) int64 {
 
 // UpdateStatus updates the location of the shares within a validator
 // to reflect the new status
-func (v Validator) UpdateStatus(newStatus BondStatus) Validator {
+func (v Validator) UpdateStatus(newStatus sdkstaking.BondStatus) Validator {
 	v.Status = newStatus
 	return v
 }
@@ -443,6 +444,7 @@ func (v *Validator) MinEqual(other *Validator) bool {
 		v.Jailed == other.Jailed &&
 		v.MinSelfDelegation.Equal(other.MinSelfDelegation) &&
 		v.ConsensusPubkey.Equal(other.ConsensusPubkey)
+
 }
 
 // Equal checks if the receiver equals the parameter
@@ -452,9 +454,9 @@ func (v *Validator) Equal(v2 *Validator) bool {
 		v.UnbondingTime.Equal(v2.UnbondingTime)
 }
 
-func (v Validator) IsJailed() bool        { return v.Jailed }
-func (v Validator) GetMoniker() string    { return v.Description.Moniker }
-func (v Validator) GetStatus() BondStatus { return v.Status }
+func (v Validator) IsJailed() bool                   { return v.Jailed }
+func (v Validator) GetMoniker() string               { return v.Description.Moniker }
+func (v Validator) GetStatus() sdkstaking.BondStatus { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress {
 	if v.OperatorAddress == "" {
 		return nil
@@ -474,6 +476,7 @@ func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 	}
 
 	return pk, nil
+
 }
 
 // TmConsPublicKey casts Validator.ConsensusPubkey to tmprotocrypto.PubKey.

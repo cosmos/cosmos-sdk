@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simapp "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -82,8 +82,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
-				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
-			},
+				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE},
 		},
 		{
 			"delegate: testing with invalid validator",
@@ -108,8 +107,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
-				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
-			},
+				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE},
 		},
 		{
 			"delegate: fail validator denied",
@@ -146,8 +144,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
-				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
-			},
+				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE},
 		},
 		{
 			"undelegate: testing with invalid validator",
@@ -172,8 +169,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
-				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
-			},
+				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE},
 		},
 		{
 			"undelegate: fail cannot undelegate, permission denied",
@@ -210,8 +206,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
-				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
-			},
+				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE},
 		},
 		{
 			"redelegate: testing with invalid validator",
@@ -236,8 +231,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
-				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
-			},
+				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE},
 		},
 		{
 			"redelegate: fail cannot undelegate, permission denied",

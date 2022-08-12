@@ -16,7 +16,6 @@ const (
 	FlagSharesFraction      = "shares-fraction"
 
 	FlagMoniker         = "moniker"
-	FlagEditMoniker     = "new-moniker"
 	FlagIdentity        = "identity"
 	FlagWebsite         = "website"
 	FlagSecurityContact = "security-contact"
@@ -83,7 +82,7 @@ func FlagSetPublicKey() *flag.FlagSet {
 func flagSetDescriptionEdit() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagEditMoniker, types.DoNotModifyDesc, "The validator's name")
+	fs.String(FlagMoniker, types.DoNotModifyDesc, "The validator's name")
 	fs.String(FlagIdentity, types.DoNotModifyDesc, "The (optional) identity signature (ex. UPort or Keybase)")
 	fs.String(FlagWebsite, types.DoNotModifyDesc, "The validator's (optional) website")
 	fs.String(FlagSecurityContact, types.DoNotModifyDesc, "The validator's (optional) security contact email")

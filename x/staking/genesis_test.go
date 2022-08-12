@@ -12,11 +12,12 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simapp "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func bootstrapGenesisTest(numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
@@ -45,7 +46,7 @@ func TestInitGenesis(t *testing.T) {
 	bondedVal1 := types.Validator{
 		OperatorAddress: sdk.ValAddress(addrs[0]).String(),
 		ConsensusPubkey: pk0,
-		Status:          types.Bonded,
+		Status:          sdkstaking.Bonded,
 		Tokens:          valTokens,
 		DelegatorShares: valTokens.ToDec(),
 		Description:     types.NewDescription("hoop", "", "", "", ""),
@@ -53,7 +54,7 @@ func TestInitGenesis(t *testing.T) {
 	bondedVal2 := types.Validator{
 		OperatorAddress: sdk.ValAddress(addrs[1]).String(),
 		ConsensusPubkey: pk1,
-		Status:          types.Bonded,
+		Status:          sdkstaking.Bonded,
 		Tokens:          valTokens,
 		DelegatorShares: valTokens.ToDec(),
 		Description:     types.NewDescription("bloop", "", "", "", ""),
@@ -91,11 +92,11 @@ func TestInitGenesis(t *testing.T) {
 	// now make sure the validators are bonded and intra-tx counters are correct
 	resVal, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[0]))
 	require.True(t, found)
-	require.Equal(t, types.Bonded, resVal.Status)
+	require.Equal(t, sdkstaking.Bonded, resVal.Status)
 
 	resVal, found = app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[1]))
 	require.True(t, found)
-	require.Equal(t, types.Bonded, resVal.Status)
+	require.Equal(t, sdkstaking.Bonded, resVal.Status)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 	for i, val := range validators {
@@ -133,7 +134,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 
 	require.Panics(t, func() {
 		// setting validator status to bonded so the balance counts towards bonded pool
-		validator.Status = types.Bonded
+		validator.Status = sdkstaking.Bonded
 		staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, &types.GenesisState{
 			Params:     params,
 			Validators: []types.Validator{validator},
@@ -142,7 +143,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 
 	require.Panics(t, func() {
 		// setting validator status to unbonded so the balance counts towards not bonded pool
-		validator.Status = types.Unbonded
+		validator.Status = sdkstaking.Unbonded
 		staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, &types.GenesisState{
 			Params:     params,
 			Validators: []types.Validator{validator},
@@ -166,7 +167,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		validators[i], err = types.NewValidator(sdk.ValAddress(addrs[i]),
 			PKs[i], types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""))
 		require.NoError(t, err)
-		validators[i].Status = types.Bonded
+		validators[i].Status = sdkstaking.Bonded
 
 		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
 		if i < 100 {
@@ -225,7 +226,7 @@ func TestValidateGenesis(t *testing.T) {
 		{"jailed and bonded validator", func(data *types.GenesisState) {
 			data.Validators = genValidators1
 			data.Validators[0].Jailed = true
-			data.Validators[0].Status = types.Bonded
+			data.Validators[0].Status = sdkstaking.Bonded
 		}, true},
 	}
 

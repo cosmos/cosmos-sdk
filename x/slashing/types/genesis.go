@@ -11,6 +11,7 @@ import (
 func NewGenesisState(
 	params Params, signingInfos []SigningInfo, missedBlocks []ValidatorMissedBlocks,
 ) *GenesisState {
+
 	return &GenesisState{
 		Params:       params,
 		SigningInfos: signingInfos,

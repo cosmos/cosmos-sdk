@@ -30,7 +30,7 @@ Validators can have one of three statuses
 
 - `Unbonded`: The validator is not in the active set. They cannot sign blocks and do not earn
   rewards. They can receive delegations.
-- `Bonded`: Once the validator receives sufficient bonded tokens they automtically join the
+- `Bonded`": Once the validator receives sufficient bonded tokens they automtically join the
   active set during [`EndBlock`](./05_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
   They are signing blocks and receiving rewards. They can receive further delegations.
   They can be slashed for misbehavior. Delegators to this validator who unbond their delegation
@@ -215,3 +215,24 @@ the current block in a `HistoricalInfo` object. The Validators are sorted on the
 they are in a determisnistic order.
 The oldest HistoricalEntries will be pruned to ensure that there only exist the parameter-defined number of
 historical entries.
+
+## TokenizeShareRecord
+
+TokenizeShareRecord objects are created when a user tokenize his delegation.
+
+Record is put on `0x61 | id -> TokenizeShareRecord`
+
+```go
+type TokenizeShareRecord struct {
+	Id              uint64
+	Owner           string
+	ShareTokenDenom string
+	ModuleAccount   string
+	Validator       string
+}
+```
+
+There are helper queues to manage the tokenize share records by owner and by share token denom.
+
+`0x62 | owner | id -> TokenizeShareRecordId`
+`0x63 | denom -> TokenizeShareRecordId`

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -67,7 +66,6 @@ func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
 
 // Get the validator operator address from LastValidatorPowerKey
 func AddressFromLastValidatorPowerKey(key []byte) []byte {
-	kv.AssertKeyAtLeastLength(key, 2)
 	return key[1:] // remove prefix bytes
 }
 
@@ -114,7 +112,9 @@ func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
 // parse the validators operator address from power rank key
 func ParseValidatorPowerRankKey(key []byte) (operAddr []byte) {
 	powerBytesLen := 8
-	kv.AssertKeyLength(key, 1+powerBytesLen+v040auth.AddrLen)
+	if len(key) != 1+powerBytesLen+v040auth.AddrLen {
+		panic("Invalid validator power rank key length")
+	}
 
 	operAddr = sdk.CopyBytes(key[powerBytesLen+1:])
 
@@ -196,11 +196,11 @@ func GetUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte 
 
 // rearranges the ValIndexKey to get the UBDKey
 func GetUBDKeyFromValIndexKey(indexKey []byte) []byte {
-	kv.AssertKeyAtLeastLength(indexKey, 2)
 	addrs := indexKey[1:] // remove prefix bytes
-	kv.AssertKeyLength(addrs, 2*v040auth.AddrLen)
+	if len(addrs) != 2*v040auth.AddrLen {
+		panic("unexpected key length")
+	}
 
-	kv.AssertKeyAtLeastLength(addrs, v040auth.AddrLen+1)
 	valAddr := addrs[:v040auth.AddrLen]
 	delAddr := addrs[v040auth.AddrLen:]
 
@@ -268,7 +268,9 @@ func GetREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.V
 // GetREDKeyFromValSrcIndexKey rearranges the ValSrcIndexKey to get the REDKey
 func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
 	// note that first byte is prefix byte
-	kv.AssertKeyLength(indexKey, 3*v040auth.AddrLen+1)
+	if len(indexKey) != 3*v040auth.AddrLen+1 {
+		panic("unexpected key length")
+	}
 
 	valSrcAddr := indexKey[1 : v040auth.AddrLen+1]
 	delAddr := indexKey[v040auth.AddrLen+1 : 2*v040auth.AddrLen+1]
@@ -280,7 +282,9 @@ func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
 // GetREDKeyFromValDstIndexKey rearranges the ValDstIndexKey to get the REDKey
 func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
 	// note that first byte is prefix byte
-	kv.AssertKeyLength(indexKey, 3*v040auth.AddrLen+1)
+	if len(indexKey) != 3*v040auth.AddrLen+1 {
+		panic("unexpected key length")
+	}
 
 	valDstAddr := indexKey[1 : v040auth.AddrLen+1]
 	delAddr := indexKey[v040auth.AddrLen+1 : 2*v040auth.AddrLen+1]

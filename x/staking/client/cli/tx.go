@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -44,6 +45,9 @@ func NewTxCmd() *cobra.Command {
 		NewDelegateCmd(),
 		NewRedelegateCmd(),
 		NewUnbondCmd(),
+		NewTokenizeSharesCmd(),
+		NewRedeemTokensCmd(),
+		NewTransferTokenizeShareRecordCmd(),
 	)
 
 	return stakingTxCmd
@@ -98,7 +102,7 @@ func NewEditValidatorCmd() *cobra.Command {
 				return err
 			}
 			valAddr := clientCtx.GetFromAddress()
-			moniker, _ := cmd.Flags().GetString(FlagEditMoniker)
+			moniker, _ := cmd.Flags().GetString(FlagMoniker)
 			identity, _ := cmd.Flags().GetString(FlagIdentity)
 			website, _ := cmd.Flags().GetString(FlagWebsite)
 			security, _ := cmd.Flags().GetString(FlagSecurityContact)
@@ -497,6 +501,7 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool) (tx.Factory, sdk.Msg, error) {
 	amounstStr := config.Amount
 	amount, err := sdk.ParseCoinNormalized(amounstStr)
+
 	if err != nil {
 		return txBldr, nil, err
 	}
@@ -515,6 +520,7 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	maxRateStr := config.CommissionMaxRate
 	maxChangeRateStr := config.CommissionMaxChangeRate
 	commissionRates, err := buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr)
+
 	if err != nil {
 		return txBldr, nil, err
 	}
@@ -543,4 +549,148 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	}
 
 	return txBldr, msg, nil
+}
+
+// NewTokenizeSharesCmd defines a command for tokenizing shares from a validator.
+func NewTokenizeSharesCmd() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "tokenize-share [validator-addr] [amount] [rewardOwner]",
+		Short: "Tokenize delegation to share tokens",
+		Args:  cobra.ExactArgs(3),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Tokenize delegation to share tokens.
+
+Example:
+$ %s tx staking tokenize-share %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
+`,
+				version.AppName, bech32PrefixValAddr, bech32PrefixAccAddr,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			delAddr := clientCtx.GetFromAddress()
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			amount, err := sdk.ParseCoinNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			rewardOwner, err := sdk.AccAddressFromBech32(args[2])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgTokenizeShares{
+				DelegatorAddress:    delAddr.String(),
+				ValidatorAddress:    valAddr.String(),
+				Amount:              amount,
+				TokenizedShareOwner: rewardOwner.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewRedeemTokensCmd defines a command for redeeming tokens from a validator for shares.
+func NewRedeemTokensCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "redeem-tokens [amount]",
+		Short: "Redeem specified amount of share tokens to delegation",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Redeem specified amount of share tokens to delegation.
+
+Example:
+$ %s tx staking redeem-tokens 100sharetoken --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			delAddr := clientCtx.GetFromAddress()
+
+			amount, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgRedeemTokensforShares{
+				DelegatorAddress: delAddr.String(),
+				Amount:           amount,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewTransferTokenizeShareRecordCmd defines a command to transfer ownership of TokenizeShareRecord
+func NewTransferTokenizeShareRecordCmd() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "transfer-tokenize-share-record [record-id] [new-owner]",
+		Short: "Transfer ownership of TokenizeShareRecord",
+		Args:  cobra.ExactArgs(2),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Transfer ownership of TokenizeShareRecord.
+
+Example:
+$ %s tx staking transfer-tokenize-share-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
+`,
+				version.AppName, bech32PrefixAccAddr,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			recordId, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			ownerAddr, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgTransferTokenizeShareRecord{
+				Sender:                clientCtx.GetFromAddress().String(),
+				TokenizeShareRecordId: uint64(recordId),
+				NewOwner:              ownerAddr.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }

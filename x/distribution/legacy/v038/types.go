@@ -43,6 +43,7 @@ func NewGenesisState(
 	historical []v034distr.ValidatorHistoricalRewardsRecord, cur []v034distr.ValidatorCurrentRewardsRecord,
 	dels []v034distr.DelegatorStartingInfoRecord, slashes []v036distr.ValidatorSlashEventRecord,
 ) GenesisState {
+
 	return GenesisState{
 		FeePool:                         feePool,
 		Params:                          params,

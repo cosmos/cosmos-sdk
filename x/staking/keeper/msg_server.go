@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"time"
 
 	metrics "github.com/armon/go-metrics"
@@ -11,7 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type msgServer struct {
@@ -101,7 +106,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
 	// NOTE source will always be from a wallet which are unbonded
-	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
+	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Value.Amount, sdkstaking.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +216,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 	}
 
 	// NOTE: source funds are always unbonded
-	newShares, err := k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonded, validator, true)
+	newShares, err := k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdkstaking.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
 	}
@@ -371,4 +376,237 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	return &types.MsgUndelegateResponse{
 		CompletionTime: completionTime,
 	}, nil
+}
+
+func getShareTokenDenom(validatorAddress string, tokenizeShareRecordId uint64) string {
+	return validatorAddress + strconv.Itoa(int(tokenizeShareRecordId))
+}
+
+func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if valErr != nil {
+		return nil, valErr
+	}
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	_ = validator
+
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	delegation, found := k.GetDelegation(ctx, delegatorAddress, valAddr)
+	if !found {
+		return nil, types.ErrNoDelegatorForAddress
+	}
+
+	if msg.Amount.Denom != k.BondDenom(ctx) {
+		return nil, types.ErrOnlyBondDenomAllowdForTokenize
+	}
+
+	delegationAmount := validator.Tokens.ToDec().Mul(delegation.GetShares()).Quo(validator.DelegatorShares)
+	if msg.Amount.Amount.GT(sdk.Int(delegationAmount)) {
+		return nil, types.ErrNotEnoughDelegationShares
+	}
+
+	acc := k.authKeeper.GetAccount(ctx, delegatorAddress)
+	if acc != nil {
+		acc, ok := acc.(vesting.VestingAccount)
+		if ok {
+			// if account is a vesting account, it checks if free delegation (non-vesting delegation) is not exceeding
+			// the tokenize share amount and execute further tokenize share process
+			// tokenize share is reducing unlocked tokens delegation from the vesting account and further process
+			// is not causing issues
+			delFree := acc.GetDelegatedFree().AmountOf(msg.Amount.Denom)
+			if delFree.LT(msg.Amount.Amount) {
+				return nil, types.ErrExceedingFreeVestingDelegations
+			}
+		}
+	}
+
+	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
+	k.SetLastTokenizeShareRecordId(ctx, recordId)
+
+	shareTokenDenom := getShareTokenDenom(msg.ValidatorAddress, recordId)
+	record := types.TokenizeShareRecord{
+		Id:              recordId,
+		Owner:           msg.TokenizedShareOwner,
+		ShareTokenDenom: shareTokenDenom,
+		ModuleAccount:   fmt.Sprintf("tokenizeshare_%d", recordId),
+		Validator:       msg.ValidatorAddress,
+	}
+
+	shareToken := sdk.NewCoin(shareTokenDenom, msg.Amount.Amount)
+
+	err = k.bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{shareToken})
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delegatorAddress, sdk.Coins{shareToken})
+	if err != nil {
+		return nil, err
+	}
+
+	shares, err := k.ValidateUnbondAmount(
+		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
+	)
+
+	returnAmount, err := k.Unbond(ctx, delegatorAddress, valAddr, shares)
+	if err != nil {
+		return nil, err
+	}
+
+	if validator.IsBonded() {
+		k.bondedTokensToNotBonded(ctx, returnAmount)
+	}
+
+	// Note: UndelegateCoinsFromModuleToAccount is internally calling TrackUndelegation for vesting account
+	err = k.bankKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, delegatorAddress, sdk.Coins{msg.Amount})
+	if err != nil {
+		return nil, err
+	}
+
+	// create reward ownership record
+	k.AddTokenizeShareRecord(ctx, record)
+
+	// send coins to module account
+	err = k.bankKeeper.SendCoins(ctx, delegatorAddress, record.GetModuleAddress(), sdk.Coins{msg.Amount})
+	if err != nil {
+		return nil, err
+	}
+
+	validator, found = k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	// delegate from module account
+	_, err = k.Keeper.Delegate(ctx, record.GetModuleAddress(), msg.Amount.Amount, sdkstaking.Unbonded, validator, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgTokenizeSharesResponse{
+		Amount: shareToken,
+	}, nil
+}
+
+func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemTokensforShares) (*types.MsgRedeemTokensforSharesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	balance := k.bankKeeper.GetBalance(ctx, delegatorAddress, msg.Amount.Denom)
+	if balance.Amount.LT(msg.Amount.Amount) {
+		return nil, types.ErrNotEnoughBalance
+	}
+
+	record, err := k.GetTokenizeShareRecordByDenom(ctx, msg.Amount.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, valErr := sdk.ValAddressFromBech32(record.Validator)
+	if valErr != nil {
+		return nil, valErr
+	}
+
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	// calculate the ratio between shares and redeem amount
+	// moduleAccountTotalDelegation * redeemAmount / totalIssue
+	delegation, found := k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
+	shareDenomSupply := k.bankKeeper.GetSupply(ctx, msg.Amount.Denom)
+	shares := delegation.Shares.Mul(msg.Amount.Amount.ToDec()).QuoInt(shareDenomSupply.Amount)
+
+	returnAmount, err := k.Unbond(ctx, record.GetModuleAddress(), valAddr, shares)
+	if err != nil {
+		return nil, err
+	}
+
+	if validator.IsBonded() {
+		k.bondedTokensToNotBonded(ctx, returnAmount)
+	}
+
+	_, found = k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
+	if !found {
+		if k.hooks != nil {
+			k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id)
+		}
+
+		k.DeleteTokenizeShareRecord(ctx, record.Id)
+	}
+
+	// send share tokens to NotBondedPool and burn
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, delegatorAddress, types.NotBondedPoolName, sdk.Coins{msg.Amount})
+	if err != nil {
+		return nil, err
+	}
+	err = k.bankKeeper.BurnCoins(ctx, types.NotBondedPoolName, sdk.Coins{msg.Amount})
+	if err != nil {
+		return nil, err
+	}
+
+	// send equivalent amount of tokens to the delegator
+	returnCoin := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, delegatorAddress, sdk.Coins{returnCoin})
+	if err != nil {
+		return nil, err
+	}
+
+	validator, found = k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	// convert the share tokens to delegated status
+	// Note: Delegate(substractAccount => true) -> DelegateCoinsFromAccountToModule -> TrackDelegation for vesting account
+	_, err = k.Keeper.Delegate(ctx, delegatorAddress, returnAmount, sdkstaking.Unbonded, validator, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRedeemTokensforSharesResponse{}, nil
+}
+
+func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types.MsgTransferTokenizeShareRecord) (*types.MsgTransferTokenizeShareRecordResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	record, err := k.GetTokenizeShareRecord(ctx, msg.TokenizeShareRecordId)
+	if err != nil {
+		return nil, types.ErrTokenizeShareRecordNotExists
+	}
+
+	if record.Owner != msg.Sender {
+		return nil, types.ErrNotTokenizeShareRecordOwner
+	}
+
+	// Remove old account reference
+	oldOwner, err := sdk.AccAddressFromBech32(record.Owner)
+	k.deleteTokenizeShareRecordWithOwner(ctx, oldOwner, record.Id)
+
+	record.Owner = msg.NewOwner
+	k.setTokenizeShareRecord(ctx, record)
+
+	// Set new account reference
+	newOwner, err := sdk.AccAddressFromBech32(record.Owner)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress
+	}
+	k.setTokenizeShareRecordWithOwner(ctx, newOwner, record.Id)
+
+	return &types.MsgTransferTokenizeShareRecordResponse{}, nil
 }

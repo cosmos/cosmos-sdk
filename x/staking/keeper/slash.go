@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	types "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -122,11 +123,11 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 
 	switch validator.GetStatus() {
-	case types.Bonded:
+	case sdkstaking.Bonded:
 		if err := k.burnBondedTokens(ctx, tokensToBurn); err != nil {
 			panic(err)
 		}
-	case types.Unbonding, types.Unbonded:
+	case sdkstaking.Unbonding, sdkstaking.Unbonded:
 		if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
 			panic(err)
 		}
@@ -164,8 +165,7 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
 func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
-	infractionHeight int64, slashFactor sdk.Dec,
-) (totalSlashAmount sdk.Int) {
+	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()
 	burnedAmount := sdk.ZeroInt()
@@ -218,8 +218,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // insufficient stake remaining)
 // NOTE this is only slashing for prior infractions from the source validator
 func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
-	infractionHeight int64, slashFactor sdk.Dec,
-) (totalSlashAmount sdk.Int) {
+	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()
 	bondedBurnedAmount, notBondedBurnedAmount := sdk.ZeroInt(), sdk.ZeroInt()
@@ -252,7 +251,10 @@ func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 			panic(err)
 		}
 
-		delegatorAddress := sdk.MustAccAddressFromBech32(redelegation.DelegatorAddress)
+		delegatorAddress, err := sdk.AccAddressFromBech32(redelegation.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
 
 		delegation, found := k.GetDelegation(ctx, delegatorAddress, valDstAddr)
 		if !found {

@@ -69,6 +69,10 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.k.AfterValidatorCreated(ctx, valAddr)
 }
 
+// Implements sdk.ValidatorHooks - just addition to fulfill the staking hook interface
+func (h Hooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) {
+}
+
 func (h Hooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress)  {}
 func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
 func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}

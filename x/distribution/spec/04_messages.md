@@ -72,6 +72,14 @@ The commission is calculated in every block during `BeginBlock`, so no iteration
 The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable for the validator.
 Only integer amounts can be sent. If the accumulated awards have decimals, the amount is truncated before the withdrawal is sent, and the remainder is left to be withdrawn later.
 
+## MsgWithdrawTokenizeShareRecordReward
+
+A `TokenizeShareRecords` owner can send the MsgWithdrawTokenizeShareRecordReward message to withraw their rewards allocated for tokenized amount of staking tokens.
+
+The middle account (1:1 assigned per tokenize share record) takes the role of a delegator.
+
+While executing the message, handler iterates all the tokenize share records, withdraw delegation reward from each record account and send the rewards to the record owner.
+
 ## FundCommunityPool
 
 This message sends coins directly from the sender to the community pool.

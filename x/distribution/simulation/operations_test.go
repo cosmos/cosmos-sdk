@@ -8,7 +8,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simapp "github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -41,6 +41,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simappparams.DefaultWeightMsgWithdrawDelegationReward, types.ModuleName, types.TypeMsgWithdrawDelegatorReward},
 		{simappparams.DefaultWeightMsgWithdrawValidatorCommission, types.ModuleName, types.TypeMsgWithdrawValidatorCommission},
 		{simappparams.DefaultWeightMsgFundCommunityPool, types.ModuleName, types.TypeMsgFundCommunityPool},
+		{simappparams.DefaultWeightMsgWithdrawDelegationReward, types.ModuleName, types.TypeMsgWithdrawTokenizeShareRecordReward},
 	}
 
 	for i, w := range weightesOps {
@@ -57,6 +58,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 // TestSimulateMsgSetWithdrawAddress tests the normal scenario of a valid message of type TypeMsgSetWithdrawAddress.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
+
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -264,6 +266,7 @@ func (suite *SimTestSuite) setupValidatorRewards(valAddress sdk.ValAddress) {
 	// setup current revards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
 	suite.app.DistrKeeper.SetValidatorCurrentRewards(suite.ctx, valAddress, currentRewards)
+
 }
 
 func TestSimTestSuite(t *testing.T) {

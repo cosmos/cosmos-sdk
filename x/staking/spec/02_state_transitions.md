@@ -174,3 +174,42 @@ The total number of tokens is now `T + T_j`, and the total number of shares is `
 A special case is the initial delegation, when `T = 0` and `S = 0`, so `T_j / T` is undefined.
 For the initial delegation, delegator `j` who delegates `T_j` tokens receive `S_j = T_j` shares.
 So a validator that hasn't received any rewards and has not been slashed will have `T = S`.
+
+## Tokenizing
+
+### Tokenize delegation shares
+
+Tokenizing delegation shares tokenize the delegation shares to transferrable asset.
+
+The process of tokenizing delegation shares
+
+1. Get delegation from the delegator to the validator
+2. Verify that delegation amount is bigger than tokenize amount
+3. Create a new tokenize share record as the owner specified by the delegator
+4. Mint share tokens to delegator
+5. Unbond tokenizing amount from delegator and send it to toknize share record account
+6. Delegate the unbonded amount to the same validator from tokenize share record account
+
+### Redeem delegation shares
+
+Redeeming of delegation shares is to convert tokenized delegation shares to regular delegation share.
+
+The process of redeeming delegation shares from tokenized share
+
+1. Verify that tokenize share tokens amount is not lower than redeeming share tokens amount
+2. Get tokenize share record from tokenized share denom
+3. Unbond the amount of tokens from the tokenize share record account
+4. If tokenize share record account's delegation amount is zero, delete the record
+5. Burn share tokens
+6. Delegate unbonded tokens from delegator address to the validator
+
+### Transfer tokenize share record
+
+Transferring of tokenized share record is done to move the reward withdrawal rights.
+
+The process of transferring the tokenize share record
+
+1. Check tokenize share record exists and the owner is the sender of the message
+2. Delete old owner's reference to tokenize share record
+3. Update tokenize share record to have new owner
+4. Add new owner's reference to tokenize share record

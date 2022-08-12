@@ -17,13 +17,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simapp "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount sdk.Int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
@@ -84,8 +85,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 
 	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, types.Unbonding, validator.Status)    // ensure is unbonding
-	require.Equal(t, initBond.QuoRaw(2), validator.Tokens) // ensure tokens slashed
+	require.Equal(t, sdkstaking.Unbonding, validator.Status) // ensure is unbonding
+	require.Equal(t, initBond.QuoRaw(2), validator.Tokens)   // ensure tokens slashed
 	app.StakingKeeper.Unjail(ctx, consAddr0)
 
 	// the old power record should have been deleted as the power changed
@@ -130,7 +131,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	valTokens := tstaking.CreateValidatorWithValPower(addr1, pk1, 10, true)
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	validator := tstaking.CheckValidator(addr1, types.Bonded, false)
+	validator := tstaking.CheckValidator(addr1, sdkstaking.Bonded, false)
 	assert.Equal(t, addr1.String(), validator.OperatorAddress)
 	consKey, err := validator.TmConsPublicKey()
 	require.NoError(t, err)
@@ -155,7 +156,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, len(updates))
 
-	validator = tstaking.CheckValidator(addr2, types.Bonded, false)
+	validator = tstaking.CheckValidator(addr2, sdkstaking.Bonded, false)
 	assert.Equal(t, addr2.String(), validator.OperatorAddress)
 	consPk, err := validator.TmConsPublicKey()
 	require.NoError(t, err)
@@ -231,7 +232,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.Equal(t, 1, len(updates))
 
 	// verify the validator exists and has the correct attributes
-	validator := tstaking.CheckValidator(valAddr, types.Bonded, false)
+	validator := tstaking.CheckValidator(valAddr, sdkstaking.Bonded, false)
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
 	require.Equal(t, bondAmount, validator.BondedTokens())
 
@@ -239,7 +240,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	tstaking.Delegate(delAddr, valAddr, bondAmount)
 
 	// verify validator bonded shares
-	validator = tstaking.CheckValidator(valAddr, types.Bonded, false)
+	validator = tstaking.CheckValidator(valAddr, sdkstaking.Bonded, false)
 	require.Equal(t, bondAmount.MulRaw(2), validator.DelegatorShares.RoundInt())
 	require.Equal(t, bondAmount.MulRaw(2), validator.BondedTokens())
 
@@ -307,7 +308,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	// apply TM updates
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	validator := tstaking.CheckValidator(validatorAddr, types.Bonded, false)
+	validator := tstaking.CheckValidator(validatorAddr, sdkstaking.Bonded, false)
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
 	require.Equal(t, bondAmount, validator.BondedTokens(), "validator: %v", validator)
 
@@ -325,7 +326,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		tstaking.Ctx = ctx
 		tstaking.Delegate(delegatorAddr, validatorAddr, bondAmount)
 
-		// Check that the accounts and the bond account have the appropriate values
+		//Check that the accounts and the bond account have the appropriate values
 		validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddr)
 		require.True(t, found)
 		bond, found := app.StakingKeeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
@@ -486,8 +487,8 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 
 	// these are more than we have bonded now
 	errorCases := []sdk.Int{
-		// 1<<64 - 1, // more than int64 power
-		// 1<<63 + 1, // more than int64 power
+		//1<<64 - 1, // more than int64 power
+		//1<<63 + 1, // more than int64 power
 		app.StakingKeeper.TokensFromConsensusPower(ctx, 1<<63-1),
 		app.StakingKeeper.TokensFromConsensusPower(ctx, 1<<31),
 		initBond,
@@ -1065,7 +1066,7 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	// the total number of validators should stay the same
 	vals := app.StakingKeeper.GetLastValidators(ctx)
 	require.Equal(t, 2, len(vals), "vals %v", vals)
-	tstaking.CheckValidator(val1, types.Bonded, false)
+	tstaking.CheckValidator(val1, sdkstaking.Bonded, false)
 }
 
 func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
@@ -1160,7 +1161,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	// validator power should have been reduced to zero
 	// validator should be in unbonding state
 	validator, _ = app.StakingKeeper.GetValidator(ctx, valA)
-	require.Equal(t, validator.GetStatus(), types.Unbonding)
+	require.Equal(t, validator.GetStatus(), sdkstaking.Unbonding)
 }
 
 func TestInvalidMsg(t *testing.T) {
@@ -1214,4 +1215,219 @@ func TestInvalidCoinDenom(t *testing.T) {
 
 	msgRedelegate = types.NewMsgBeginRedelegate(delAddr, valA, valB, oneCoin)
 	tstaking.Handle(msgRedelegate, true)
+}
+
+func TestTokenizeShares(t *testing.T) {
+	initPower := int64(1000)
+
+	testCases := []struct {
+		name      string
+		delIndex  int64
+		valIndex  int64
+		amount    sdk.Int
+		isSuccess bool
+		expStatus sdkstaking.BondStatus
+		expJailed bool
+	}{
+		{
+			"tokenize shares for less than self delegation",
+			0, 0,
+			sdk.NewInt(10000),
+			true,
+			sdkstaking.Bonded,
+			false,
+		},
+		{
+			"tokenize shares for more than self delegation",
+			0, 0,
+			sdk.TokensFromConsensusPower(initPower+1, sdk.DefaultPowerReduction),
+			false,
+			sdkstaking.Bonded,
+			false,
+		},
+		{
+			"tokenize share for full self delegation",
+			0, 0,
+			sdk.TokensFromConsensusPower(50, sdk.DefaultPowerReduction),
+			true,
+			sdkstaking.Unbonding,
+			true,
+		},
+		{
+			"tokenize shares for less than delegation",
+			1, 0,
+			sdk.NewInt(1000),
+			true,
+			sdkstaking.Bonded,
+			false,
+		},
+		{
+			"tokenize shares for more than delegation",
+			1, 0,
+			sdk.NewInt(20000),
+			false,
+			sdkstaking.Bonded,
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(*testing.T) {
+			app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 3, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
+			val1 := valAddrs[0]
+			del2 := delAddrs[1]
+			tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+			// set staking params
+			params := app.StakingKeeper.GetParams(ctx)
+			params.MaxValidators = 2
+			app.StakingKeeper.SetParams(ctx, params)
+
+			// add validators
+			tstaking.CreateValidatorWithValPower(val1, PKs[0], 50, true)
+
+			// call it to update validator status to bonded
+			_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+			require.NoError(t, err)
+
+			// delegate tokens to the validator
+			tstaking.Delegate(del2, val1, sdk.NewInt(10000))
+
+			del := delAddrs[tc.delIndex]
+			val := valAddrs[tc.valIndex]
+
+			tstaking.TokenizeShares(del, val, sdk.NewCoin(sdk.DefaultBondDenom, tc.amount), del, tc.isSuccess)
+
+			if tc.isSuccess {
+				// call it to update validator status automatically
+				_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+				require.NoError(t, err)
+
+				tstaking.CheckValidator(val, tc.expStatus, tc.expJailed)
+			}
+		})
+	}
+}
+
+func TestRedeemTokensforShares(t *testing.T) {
+	initPower := int64(1000)
+
+	testCases := []struct {
+		name      string
+		amount    sdk.Int
+		isSuccess bool
+	}{
+		{
+			"redeem full shares",
+			sdk.NewInt(10000),
+			true,
+		},
+		{
+			"redeem partial shares",
+			sdk.NewInt(1000),
+			true,
+		},
+		{
+			"redeem zero shares",
+			sdk.NewInt(0),
+			false,
+		},
+		{
+			"redeem more than shares",
+			sdk.NewInt(20000),
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(*testing.T) {
+			app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 3, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
+			val1 := valAddrs[0]
+			del2 := delAddrs[1]
+			tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+			// set staking params
+			params := app.StakingKeeper.GetParams(ctx)
+			params.MaxValidators = 2
+			app.StakingKeeper.SetParams(ctx, params)
+
+			// add validators
+			tstaking.CreateValidatorWithValPower(val1, PKs[0], 50, true)
+
+			// call it to update validator status to bonded
+			_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+			require.NoError(t, err)
+
+			// delegate tokens to the validator
+			tstaking.Delegate(del2, val1, sdk.NewInt(10000))
+
+			// tokenize shares
+			tstaking.TokenizeShares(del2, val1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000), del2, true)
+
+			// get tokenize share record
+			record, err := app.StakingKeeper.GetTokenizeShareRecord(ctx, 1)
+			require.NoError(t, err)
+
+			// redeem share
+			tstaking.RedeemTokensForShares(del2, sdk.NewCoin(record.ShareTokenDenom, tc.amount), tc.isSuccess)
+		})
+	}
+}
+
+func TransferTokenizeShareRecord(t *testing.T) {
+	initPower := int64(1000)
+
+	testCases := []struct {
+		name      string
+		recordId  uint64
+		oldOwner  int64
+		newOwner  int64
+		isSuccess bool
+	}{
+		{
+			"transfer to other",
+			1,
+			2, 1,
+			true,
+		},
+		{
+			"self transfer",
+			1,
+			2, 2,
+			true,
+		},
+		{
+			"transfer non-existent",
+			2,
+			2, 2,
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(*testing.T) {
+			app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 3, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
+			val1 := valAddrs[0]
+			del2 := delAddrs[1]
+			tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+			// set staking params
+			params := app.StakingKeeper.GetParams(ctx)
+			params.MaxValidators = 2
+			app.StakingKeeper.SetParams(ctx, params)
+
+			// add validators
+			tstaking.CreateValidatorWithValPower(val1, PKs[0], 50, true)
+
+			// call it to update validator status to bonded
+			_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+			require.NoError(t, err)
+
+			// delegate tokens to the validator
+			tstaking.Delegate(del2, val1, sdk.NewInt(10000))
+
+			// tokenize shares
+			tstaking.TokenizeShares(del2, val1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000), del2, true)
+
+			// redeem share
+			tstaking.TranserTokenizeShareRecord(tc.recordId, delAddrs[tc.oldOwner], delAddrs[tc.newOwner], tc.isSuccess)
+		})
+	}
 }

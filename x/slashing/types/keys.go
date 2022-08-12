@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -44,7 +43,6 @@ func ValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
 // ValidatorSigningInfoAddress - extract the address from a validator signing info key
 func ValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
 	// Remove prefix and address length.
-	kv.AssertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 
 	return sdk.ConsAddress(addr)

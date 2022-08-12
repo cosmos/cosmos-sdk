@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -81,6 +82,33 @@ func (sh *Helper) Undelegate(delegator sdk.AccAddress, val sdk.ValAddress, amoun
 	return sh.Handle(msg, ok)
 }
 
+func (sh *Helper) TokenizeShares(delegator sdk.AccAddress, val sdk.ValAddress, amount sdk.Coin, shareOwner sdk.AccAddress, ok bool) {
+	msg := &stakingtypes.MsgTokenizeShares{
+		DelegatorAddress:    delegator.String(),
+		ValidatorAddress:    val.String(),
+		Amount:              amount,
+		TokenizedShareOwner: shareOwner.String(),
+	}
+	sh.Handle(msg, ok)
+}
+
+func (sh *Helper) RedeemTokensForShares(delegator sdk.AccAddress, amount sdk.Coin, ok bool) {
+	msg := &stakingtypes.MsgRedeemTokensforShares{
+		DelegatorAddress: delegator.String(),
+		Amount:           amount,
+	}
+	sh.Handle(msg, ok)
+}
+
+func (sh *Helper) TranserTokenizeShareRecord(recordId uint64, owner, newOwner sdk.AccAddress, ok bool) {
+	msg := &stakingtypes.MsgTransferTokenizeShareRecord{
+		TokenizeShareRecordId: recordId,
+		Sender:                owner.String(),
+		NewOwner:              newOwner.String(),
+	}
+	sh.Handle(msg, ok)
+}
+
 // Handle calls staking handler on a given message
 func (sh *Helper) Handle(msg sdk.Msg, ok bool) *sdk.Result {
 	res, err := sh.h(sh.Ctx, msg)
@@ -96,7 +124,7 @@ func (sh *Helper) Handle(msg sdk.Msg, ok bool) *sdk.Result {
 
 // CheckValidator asserts that a validor exists and has a given status (if status!="")
 // and if has a right jailed flag.
-func (sh *Helper) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondStatus, jailed bool) stakingtypes.Validator {
+func (sh *Helper) CheckValidator(addr sdk.ValAddress, status sdkstaking.BondStatus, jailed bool) stakingtypes.Validator {
 	v, ok := sh.k.GetValidator(sh.Ctx, addr)
 	require.True(sh.t, ok)
 	require.Equal(sh.t, jailed, v.Jailed, "wrong Jalied status")

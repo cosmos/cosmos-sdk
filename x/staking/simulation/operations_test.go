@@ -9,7 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simapp "github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -22,6 +22,7 @@ import (
 
 // TestWeightedOperations tests the weights of the operations.
 func TestWeightedOperations(t *testing.T) {
+
 	app, ctx := createTestApp(false)
 
 	ctx.WithChainID("test-chain")
@@ -41,12 +42,14 @@ func TestWeightedOperations(t *testing.T) {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
-	}{
-		{simappparams.DefaultWeightMsgCreateValidator, types.ModuleName, types.TypeMsgCreateValidator},
+	}{{simappparams.DefaultWeightMsgCreateValidator, types.ModuleName, types.TypeMsgCreateValidator},
 		{simappparams.DefaultWeightMsgEditValidator, types.ModuleName, types.TypeMsgEditValidator},
 		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgDelegate},
 		{simappparams.DefaultWeightMsgUndelegate, types.ModuleName, types.TypeMsgUndelegate},
 		{simappparams.DefaultWeightMsgBeginRedelegate, types.ModuleName, types.TypeMsgBeginRedelegate},
+		{simulation.DefaultWeightMsgTokenizeShares, types.ModuleName, types.TypeMsgTokenizeShares},
+		{simulation.DefaultWeightMsgRedeemTokensforShares, types.ModuleName, types.TypeMsgRedeemTokensforShares},
+		{simulation.DefaultWeightMsgTransferTokenizeShareRecord, types.ModuleName, types.TypeMsgTransferTokenizeShareRecord},
 	}
 
 	for i, w := range weightesOps {
@@ -208,6 +211,7 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	require.Equal(t, types.TypeMsgUndelegate, msg.Type())
 	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
 	require.Len(t, futureOperations, 0)
+
 }
 
 // TestSimulateMsgBeginRedelegate tests the normal scenario of a valid message of type TypeMsgBeginRedelegate.
@@ -257,6 +261,7 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	require.Equal(t, "cosmosvaloper1h6a7shta7jyc72hyznkys683z98z36e0zdk8g9", msg.ValidatorDstAddress)
 	require.Equal(t, "cosmosvaloper17s94pzwhsn4ah25tec27w70n65h5t2scgxzkv2", msg.ValidatorSrcAddress)
 	require.Len(t, futureOperations, 0)
+
 }
 
 // returns context and an app with updated mint keeper
@@ -320,4 +325,5 @@ func setupValidatorRewards(app *simapp.SimApp, ctx sdk.Context, valAddress sdk.V
 	// setup current revards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
 	app.DistrKeeper.SetValidatorCurrentRewards(ctx, valAddress, currentRewards)
+
 }

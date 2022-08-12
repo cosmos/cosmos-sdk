@@ -180,8 +180,8 @@ func (m *Params) GetDowntimeJailDuration() time.Duration {
 }
 
 func init() {
-	proto.RegisterType((*ValidatorSigningInfo)(nil), "cosmos.slashing.v1beta1.ValidatorSigningInfo")
-	proto.RegisterType((*Params)(nil), "cosmos.slashing.v1beta1.Params")
+	proto.RegisterType((*ValidatorSigningInfo)(nil), "liquidstaking.slashing.v1beta1.ValidatorSigningInfo")
+	proto.RegisterType((*Params)(nil), "liquidstaking.slashing.v1beta1.Params")
 }
 
 func init() {

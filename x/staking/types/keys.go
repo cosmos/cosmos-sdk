@@ -9,7 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -48,6 +47,11 @@ var (
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
 	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
+
+	TokenizeShareRecordPrefix          = []byte{0x61} // key for tokenizeshare record prefix
+	TokenizeShareRecordIdByOwnerPrefix = []byte{0x62} // key for tokenizeshare record id by owner prefix
+	TokenizeShareRecordIdByDenomPrefix = []byte{0x63} // key for tokenizeshare record id by denom prefix
+	LastTokenizeShareRecordIdKey       = []byte{0x64} // key for last tokenize share record id
 )
 
 // GetValidatorKey creates the key for the validator with address
@@ -64,13 +68,11 @@ func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
 
 // AddressFromValidatorsKey creates the validator operator address from ValidatorsKey
 func AddressFromValidatorsKey(key []byte) []byte {
-	kv.AssertKeyAtLeastLength(key, 3)
 	return key[2:] // remove prefix bytes and address length
 }
 
 // AddressFromLastValidatorPowerKey creates the validator operator address from LastValidatorPowerKey
 func AddressFromLastValidatorPowerKey(key []byte) []byte {
-	kv.AssertKeyAtLeastLength(key, 3)
 	return key[2:] // remove prefix bytes and address length
 }
 
@@ -199,13 +201,10 @@ func GetUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte 
 
 // GetUBDKeyFromValIndexKey rearranges the ValIndexKey to get the UBDKey
 func GetUBDKeyFromValIndexKey(indexKey []byte) []byte {
-	kv.AssertKeyAtLeastLength(indexKey, 2)
 	addrs := indexKey[1:] // remove prefix bytes
 
 	valAddrLen := addrs[0]
-	kv.AssertKeyAtLeastLength(addrs, 2+int(valAddrLen))
 	valAddr := addrs[1 : 1+valAddrLen]
-	kv.AssertKeyAtLeastLength(addrs, 3+int(valAddrLen))
 	delAddr := addrs[valAddrLen+2:]
 
 	return GetUBDKey(delAddr, valAddr)
@@ -279,16 +278,12 @@ func GetREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.V
 // GetREDKeyFromValSrcIndexKey rearranges the ValSrcIndexKey to get the REDKey
 func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
 	// note that first byte is prefix byte, which we remove
-	kv.AssertKeyAtLeastLength(indexKey, 2)
 	addrs := indexKey[1:]
 
 	valSrcAddrLen := addrs[0]
-	kv.AssertKeyAtLeastLength(addrs, int(valSrcAddrLen)+2)
 	valSrcAddr := addrs[1 : valSrcAddrLen+1]
 	delAddrLen := addrs[valSrcAddrLen+1]
-	kv.AssertKeyAtLeastLength(addrs, int(valSrcAddrLen)+int(delAddrLen)+2)
 	delAddr := addrs[valSrcAddrLen+2 : valSrcAddrLen+2+delAddrLen]
-	kv.AssertKeyAtLeastLength(addrs, int(valSrcAddrLen)+int(delAddrLen)+4)
 	valDstAddr := addrs[valSrcAddrLen+delAddrLen+3:]
 
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
@@ -297,16 +292,12 @@ func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
 // GetREDKeyFromValDstIndexKey rearranges the ValDstIndexKey to get the REDKey
 func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
 	// note that first byte is prefix byte, which we remove
-	kv.AssertKeyAtLeastLength(indexKey, 2)
 	addrs := indexKey[1:]
 
 	valDstAddrLen := addrs[0]
-	kv.AssertKeyAtLeastLength(addrs, int(valDstAddrLen)+2)
 	valDstAddr := addrs[1 : valDstAddrLen+1]
 	delAddrLen := addrs[valDstAddrLen+1]
-	kv.AssertKeyAtLeastLength(addrs, int(valDstAddrLen)+int(delAddrLen)+3)
 	delAddr := addrs[valDstAddrLen+2 : valDstAddrLen+2+delAddrLen]
-	kv.AssertKeyAtLeastLength(addrs, int(valDstAddrLen)+int(delAddrLen)+4)
 	valSrcAddr := addrs[valDstAddrLen+delAddrLen+3:]
 
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
@@ -346,4 +337,23 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 // GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
 func GetHistoricalInfoKey(height int64) []byte {
 	return append(HistoricalInfoKey, []byte(strconv.FormatInt(height, 10))...)
+}
+
+// GetTokenizeShareRecordByIndexKey returns the key of the specified id. Intended for querying the tokenizeShareRecord by the id.
+func GetTokenizeShareRecordByIndexKey(id uint64) []byte {
+	return append(TokenizeShareRecordPrefix, sdk.Uint64ToBigEndian(id)...)
+}
+
+// GetTokenizeShareRecordIdsByOwnerPrefix returns the key of the specified owner. Intended for querying all tokenizeShareRecords of an owner
+func GetTokenizeShareRecordIdsByOwnerPrefix(owner sdk.AccAddress) []byte {
+	return append(TokenizeShareRecordIdByOwnerPrefix, owner.Bytes()...)
+}
+
+// GetTokenizeShareRecordIdByOwnerAndIdKey returns the key of the specified owner and id. Intended for setting tokenizeShareRecord of an owner
+func GetTokenizeShareRecordIdByOwnerAndIdKey(owner sdk.AccAddress, id uint64) []byte {
+	return append(append(TokenizeShareRecordIdByOwnerPrefix, owner.Bytes()...), sdk.Uint64ToBigEndian(id)...)
+}
+
+func GetTokenizeShareRecordIdByDenomKey(denom string) []byte {
+	return append(TokenizeShareRecordIdByDenomPrefix, []byte(denom)...)
 }

@@ -256,10 +256,10 @@ func (m *MissedBlock) GetMissed() bool {
 }
 
 func init() {
-	proto.RegisterType((*GenesisState)(nil), "cosmos.slashing.v1beta1.GenesisState")
-	proto.RegisterType((*SigningInfo)(nil), "cosmos.slashing.v1beta1.SigningInfo")
-	proto.RegisterType((*ValidatorMissedBlocks)(nil), "cosmos.slashing.v1beta1.ValidatorMissedBlocks")
-	proto.RegisterType((*MissedBlock)(nil), "cosmos.slashing.v1beta1.MissedBlock")
+	proto.RegisterType((*GenesisState)(nil), "liquidstaking.slashing.v1beta1.GenesisState")
+	proto.RegisterType((*SigningInfo)(nil), "liquidstaking.slashing.v1beta1.SigningInfo")
+	proto.RegisterType((*ValidatorMissedBlocks)(nil), "liquidstaking.slashing.v1beta1.ValidatorMissedBlocks")
+	proto.RegisterType((*MissedBlock)(nil), "liquidstaking.slashing.v1beta1.MissedBlock")
 }
 
 func init() {

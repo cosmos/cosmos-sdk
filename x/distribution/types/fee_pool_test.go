@@ -10,6 +10,7 @@ import (
 )
 
 func TestValidateGenesis(t *testing.T) {
+
 	fp := types.InitialFeePool()
 	require.Nil(t, fp.ValidateGenesis())
 

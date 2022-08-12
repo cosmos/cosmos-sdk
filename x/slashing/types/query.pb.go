@@ -308,12 +308,12 @@ func (m *QuerySigningInfosResponse) GetPagination() *query.PageResponse {
 }
 
 func init() {
-	proto.RegisterType((*QueryParamsRequest)(nil), "cosmos.slashing.v1beta1.QueryParamsRequest")
-	proto.RegisterType((*QueryParamsResponse)(nil), "cosmos.slashing.v1beta1.QueryParamsResponse")
-	proto.RegisterType((*QuerySigningInfoRequest)(nil), "cosmos.slashing.v1beta1.QuerySigningInfoRequest")
-	proto.RegisterType((*QuerySigningInfoResponse)(nil), "cosmos.slashing.v1beta1.QuerySigningInfoResponse")
-	proto.RegisterType((*QuerySigningInfosRequest)(nil), "cosmos.slashing.v1beta1.QuerySigningInfosRequest")
-	proto.RegisterType((*QuerySigningInfosResponse)(nil), "cosmos.slashing.v1beta1.QuerySigningInfosResponse")
+	proto.RegisterType((*QueryParamsRequest)(nil), "liquidstaking.slashing.v1beta1.QueryParamsRequest")
+	proto.RegisterType((*QueryParamsResponse)(nil), "liquidstaking.slashing.v1beta1.QueryParamsResponse")
+	proto.RegisterType((*QuerySigningInfoRequest)(nil), "liquidstaking.slashing.v1beta1.QuerySigningInfoRequest")
+	proto.RegisterType((*QuerySigningInfoResponse)(nil), "liquidstaking.slashing.v1beta1.QuerySigningInfoResponse")
+	proto.RegisterType((*QuerySigningInfosRequest)(nil), "liquidstaking.slashing.v1beta1.QuerySigningInfosRequest")
+	proto.RegisterType((*QuerySigningInfosResponse)(nil), "liquidstaking.slashing.v1beta1.QuerySigningInfosResponse")
 }
 
 func init() {

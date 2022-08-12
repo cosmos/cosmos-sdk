@@ -22,7 +22,6 @@ import (
 
 func TestSetWithdrawAddr(t *testing.T) {
 	ctrl := gomock.NewController(t)
-
 	key := sdk.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
@@ -69,7 +68,6 @@ func TestSetWithdrawAddr(t *testing.T) {
 
 func TestWithdrawValidatorCommission(t *testing.T) {
 	ctrl := gomock.NewController(t)
-
 	key := sdk.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
@@ -125,7 +123,6 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 func TestGetTotalRewards(t *testing.T) {
 	ctrl := gomock.NewController(t)
-
 	key := sdk.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
@@ -167,7 +164,6 @@ func TestGetTotalRewards(t *testing.T) {
 
 func TestFundCommunityPool(t *testing.T) {
 	ctrl := gomock.NewController(t)
-
 	key := sdk.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})

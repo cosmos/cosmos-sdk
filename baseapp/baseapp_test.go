@@ -2250,7 +2250,7 @@ func checkSMTStoreEqual(appB1 *BaseApp, appB2 *BaseApp, storeKeyName string) boo
 	cmsB1 := appB1.cms.(*multi.Store)
 	storeHashB1 := cmsB1.GetSubstoreSMT(storeKeyName).Root()
 
-	cmsB2 := appB1.cms.(*multi.Store)
+	cmsB2 := appB2.cms.(*multi.Store)
 	storeHashB2 := cmsB2.GetSubstoreSMT(storeKeyName).Root()
 
 	return bytes.Equal(storeHashB1, storeHashB2)

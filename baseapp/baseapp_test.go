@@ -2244,7 +2244,7 @@ func TestExportPreExecutionState(t *testing.T) {
 	appB1.Commit()
 
 	// B1 <- S2
-	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
+	txs1 := executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
 
 	// Do not commit here in order to preserve saved previous versions
 
@@ -2264,12 +2264,15 @@ func TestExportPreExecutionState(t *testing.T) {
 	appB2, storeKeyToSubstoreTraceBuf, err := appB1.enableFraudProofGenerationMode(storeKeys, routerOpts)
 	require.Nil(t, err)
 
-	_ = storeKeyToSubstoreTraceBuf
+	txs1 = append(txs1, txTest{Msgs: []sdk.Msg{
+		msgKeyValue{Key: []byte("7884"), Value: []byte("1234")},
+	}})
 
-	// TODO: Make this fraudulent somehow
-	executeBlockWithArbitraryTxs(t, appB2, numTransactions, 2)
+	// Apply Fraudulent block but do not commit
+	executeBlock(t, appB2, txs1, 2)
 
-	// Note that we do not call commit
+	fraudProof, err := appB2.generateFraudProof(storeKeyToSubstoreTraceBuf, 2)
+	_ = fraudProof
 
 	// No saved versions now so cannot revert state :(
 
@@ -2420,10 +2423,8 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	storeKeyToSubstoreTraceBuf[capKey2.Name()] = subStoreTraceBuf
 
 	// Records S1 in fraudproof (Pre-execution)
-	fraudProof, err := appB1.generateFraudProof(storeKeyToSubstoreTraceBuf)
+	fraudProof, err := appB1.generateFraudProof(storeKeyToSubstoreTraceBuf, appB1.LastBlockHeight())
 	require.Nil(t, err)
-	currentBlockHeight := appB1.LastBlockHeight() // Only changes on a Commit
-	fraudProof.blockHeight = currentBlockHeight + 1
 
 	// Light Client
 

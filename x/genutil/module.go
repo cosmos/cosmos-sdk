@@ -27,7 +27,9 @@ var (
 )
 
 // AppModuleBasic defines the basic application module used by the genutil module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	GenTxValidator types.MessageValidator
+}
 
 // Name returns the genutil module's name.
 func (AppModuleBasic) Name() string {
@@ -53,7 +55,7 @@ func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, txEncodingConfig cl
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(&data, txEncodingConfig.TxJSONDecoder())
+	return types.ValidateGenesis(&data, txEncodingConfig.TxJSONDecoder(), b.GenTxValidator)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the genutil module.

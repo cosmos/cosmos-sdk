@@ -18,7 +18,7 @@ import (
 const flagGenTxDir = "gentx-dir"
 
 // CollectGenTxsCmd - return the cobra command to collect genesis transactions
-func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
+func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeHome string, m genutil.AppModuleBasic) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs",
 		Short: "Collect genesis txs and output a genesis.json file",
@@ -52,7 +52,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeH
 
 			appMessage, err := genutil.GenAppStateFromConfig(cdc,
 				clientCtx.TxConfig,
-				config, initCfg, *genDoc, genBalIterator)
+				config, initCfg, *genDoc, genBalIterator, m.GenTxValidator)
 			if err != nil {
 				return errors.Wrap(err, "failed to get genesis app state from config")
 			}

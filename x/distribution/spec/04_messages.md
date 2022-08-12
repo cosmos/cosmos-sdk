@@ -13,7 +13,7 @@ The withdraw address cannot be any of the module accounts. These accounts are bl
 
 Response:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L31-L41
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/proto/cosmos/distribution/v1beta1/tx.proto#L29-L37
 
 ```go
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error
@@ -63,7 +63,7 @@ The final calculated stake is equivalent to the actual staked coins in the deleg
 
 Response:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L46-L56
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/proto/cosmos/distribution/v1beta1/tx.proto#L42-L50
 
 ## WithdrawValidatorCommission
 
@@ -71,6 +71,14 @@ The validator can send the WithdrawValidatorCommission message to withdraw their
 The commission is calculated in every block during `BeginBlock`, so no iteration is required to withdraw.
 The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable for the validator.
 Only integer amounts can be sent. If the accumulated awards have decimals, the amount is truncated before the withdrawal is sent, and the remainder is left to be withdrawn later.
+
+## MsgWithdrawTokenizeShareRecordReward
+
+A `TokenizeShareRecords` owner can send the MsgWithdrawTokenizeShareRecordReward message to withraw their rewards allocated for tokenized amount of staking tokens.
+
+The middle account (1:1 assigned per tokenize share record) takes the role of a delegator.
+
+While executing the message, handler iterates all the tokenize share records, withdraw delegation reward from each record account and send the rewards to the record owner.
 
 ## FundCommunityPool
 

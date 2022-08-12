@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -64,7 +65,7 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 	}
 
 	if !k.GetWithdrawAddrEnabled(ctx) {
-		return types.ErrSetWithdrawAddrDisabled
+		return sdkdistr.ErrSetWithdrawAddrDisabled
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -82,12 +83,12 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	val := k.stakingKeeper.Validator(ctx, valAddr)
 	if val == nil {
-		return nil, types.ErrNoValidatorDistInfo
+		return nil, sdkdistr.ErrNoValidatorDistInfo
 	}
 
 	del := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 	if del == nil {
-		return nil, types.ErrEmptyDelegationDistInfo
+		return nil, sdkdistr.ErrEmptyDelegationDistInfo
 	}
 
 	// withdraw rewards
@@ -122,7 +123,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 	// fetch validator accumulated commission
 	accumCommission := k.GetValidatorAccumulatedCommission(ctx, valAddr)
 	if accumCommission.Commission.IsZero() {
-		return nil, types.ErrNoValidatorCommission
+		return nil, sdkdistr.ErrNoValidatorCommission
 	}
 
 	commission, remainder := accumCommission.Commission.TruncateDecimal()
@@ -177,4 +178,157 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 	k.SetFeePool(ctx, feePool)
 
 	return nil
+}
+
+func (k Keeper) WithdrawSingleShareRecordReward(ctx sdk.Context, recordId uint64) error {
+	record, err := k.stakingKeeper.GetTokenizeShareRecord(ctx, recordId)
+	if err != nil {
+		return err
+	}
+
+	owner, err := sdk.AccAddressFromBech32(record.Owner)
+	if err != nil {
+		return err
+	}
+
+	valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+	if err != nil {
+		return err
+	}
+
+	val := k.stakingKeeper.Validator(ctx, valAddr)
+	del := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
+	if val != nil && del != nil {
+		// withdraw rewards into reward module account and send it to reward owner
+		cacheCtx, write := ctx.CacheContext()
+		_, err = k.WithdrawDelegationRewards(cacheCtx, record.GetModuleAddress(), valAddr)
+		if err != nil {
+			return err
+		}
+		write()
+	}
+
+	// apply changes when the module account has positive balance
+	balances := k.bankKeeper.GetAllBalances(ctx, record.GetModuleAddress())
+	if !balances.Empty() {
+		err = k.bankKeeper.SendCoins(ctx, record.GetModuleAddress(), owner, balances)
+		if err != nil {
+			return err
+		}
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeWithdrawTokenizeShareReward,
+				sdk.NewAttribute(types.AttributeKeyWithdrawAddress, owner.String()),
+				sdk.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
+			),
+		)
+	}
+	return nil
+}
+
+// withdraw reward for owning TokenizeShareRecord
+func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress, recordId uint64) (sdk.Coins, error) {
+	record, err := k.stakingKeeper.GetTokenizeShareRecord(ctx, recordId)
+	if err != nil {
+		return nil, err
+	}
+
+	if record.Owner != ownerAddr.String() {
+		return nil, types.ErrNotTokenizeShareRecordOwner
+	}
+
+	valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+	if err != nil {
+		return nil, err
+	}
+
+	val := k.stakingKeeper.Validator(ctx, valAddr)
+	if val == nil {
+		return nil, err
+	}
+
+	del := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
+	if del == nil {
+		return nil, err
+	}
+
+	// withdraw rewards into reward module account and send it to reward owner
+	_, err = k.WithdrawDelegationRewards(ctx, record.GetModuleAddress(), valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	// apply changes when the module account has positive balance
+	rewards := k.bankKeeper.GetAllBalances(ctx, record.GetModuleAddress())
+	if !rewards.Empty() {
+		err = k.bankKeeper.SendCoins(ctx, record.GetModuleAddress(), ownerAddr, rewards)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeWithdrawTokenizeShareReward,
+			sdk.NewAttribute(types.AttributeKeyWithdrawAddress, ownerAddr.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, rewards.String()),
+		),
+	)
+
+	return rewards, nil
+}
+
+// withdraw reward for all owning TokenizeShareRecord
+func (k Keeper) WithdrawAllTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress) (sdk.Coins, error) {
+	totalRewards := sdk.Coins{}
+
+	records := k.stakingKeeper.GetTokenizeShareRecordsByOwner(ctx, ownerAddr)
+
+	for _, record := range records {
+		valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+		if err != nil {
+			return nil, err
+		}
+
+		val := k.stakingKeeper.Validator(ctx, valAddr)
+		if val == nil {
+			continue
+		}
+
+		del := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
+		if del == nil {
+			continue
+		}
+
+		// withdraw rewards into reward module account and send it to reward owner
+		cacheCtx, write := ctx.CacheContext()
+		_, err = k.WithdrawDelegationRewards(cacheCtx, record.GetModuleAddress(), valAddr)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			continue
+		}
+
+		// apply changes when the module account has positive balance
+		balances := k.bankKeeper.GetAllBalances(cacheCtx, record.GetModuleAddress())
+		if !balances.Empty() {
+			err = k.bankKeeper.SendCoins(cacheCtx, record.GetModuleAddress(), ownerAddr, balances)
+			if err != nil {
+				k.Logger(ctx).Error(err.Error())
+				continue
+			}
+			write()
+			totalRewards = totalRewards.Add(balances...)
+		}
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeWithdrawTokenizeShareReward,
+			sdk.NewAttribute(types.AttributeKeyWithdrawAddress, ownerAddr.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, totalRewards.String()),
+		),
+	)
+
+	return totalRewards, nil
 }

@@ -8,12 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simapp "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // bootstrapSlashTest creates 3 validators and bootstrap the app.
@@ -137,7 +138,7 @@ func TestSlashRedelegation(t *testing.T) {
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDec(10))
+	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDec(10), false)
 	app.StakingKeeper.SetDelegation(ctx, del)
 
 	// started redelegating prior to the current height, stake didn't contribute to infraction
@@ -378,7 +379,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// power decreased by 1 again, validator is out of stake
 	// validator should be in unbonding period
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
-	require.Equal(t, validator.GetStatus(), types.Unbonding)
+	require.Equal(t, validator.GetStatus(), sdkstaking.Unbonding)
 }
 
 // tests Slash at a previous height with a redelegation
@@ -390,11 +391,12 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	// set a redelegation
 	rdTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
-	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdTokens, sdk.NewDecFromInt(rdTokens))
+	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
+		time.Unix(0, 0), rdTokens, sdk.NewDecFromInt(rdTokens))
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdTokens))
+	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdTokens), false)
 	app.StakingKeeper.SetDelegation(ctx, del)
 
 	// update bonded tokens
@@ -503,14 +505,14 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated validator
 	// validator decreased to zero power, should be in unbonding period
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
-	require.Equal(t, validator.GetStatus(), types.Unbonding)
+	require.Equal(t, validator.GetStatus(), sdkstaking.Unbonding)
 
 	// slash the validator again, by 100%
 	// no stake remains to be slashed
 	ctx = ctx.WithBlockHeight(12)
 	// validator still in unbonding period
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
-	require.Equal(t, validator.GetStatus(), types.Unbonding)
+	require.Equal(t, validator.GetStatus(), sdkstaking.Unbonding)
 
 	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
 
@@ -530,7 +532,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated validator
 	// power still zero, still in unbonding period
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
-	require.Equal(t, validator.GetStatus(), types.Unbonding)
+	require.Equal(t, validator.GetStatus(), sdkstaking.Unbonding)
 }
 
 // tests Slash at a previous height with both an unbonding delegation and a redelegation
@@ -542,11 +544,13 @@ func TestSlashBoth(t *testing.T) {
 	// set a redelegation with expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rdATokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
-	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11, time.Unix(0, 0), rdATokens, sdk.NewDecFromInt(rdATokens))
+	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
+		time.Unix(0, 0), rdATokens,
+		sdk.NewDecFromInt(rdATokens))
 	app.StakingKeeper.SetRedelegation(ctx, rdA)
 
 	// set the associated delegation
-	delA := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdATokens))
+	delA := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdATokens), false)
 	app.StakingKeeper.SetDelegation(ctx, delA)
 
 	// set an unbonding delegation with expiration timestamp (beyond which the

@@ -32,6 +32,13 @@ func (k Keeper) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress,
 	return nil
 }
 
+func (k Keeper) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) error {
+	if k.hooks != nil {
+		k.hooks.BeforeTokenizeShareRecordRemoved(ctx, recordId)
+	}
+	return nil
+}
+
 // AfterValidatorBonded - call hook if registered
 func (k Keeper) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	if k.hooks != nil {

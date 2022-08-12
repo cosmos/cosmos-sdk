@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -41,6 +42,8 @@ func NewTxCmd() *cobra.Command {
 		NewWithdrawAllRewardsCmd(),
 		NewSetWithdrawAddrCmd(),
 		NewFundCommunityPoolCmd(),
+		NewWithdrawTokenizeShareRecordRewardCmd(),
+		NewWithdrawAllTokenizeShareRecordRewardCmd(),
 	)
 
 	return distTxCmd
@@ -52,6 +55,7 @@ func newSplitAndApply(
 	genOrBroadcastFn newGenerateOrBroadcastFunc, clientCtx client.Context,
 	fs *pflag.FlagSet, msgs []sdk.Msg, chunkSize int,
 ) error {
+
 	if chunkSize == 0 {
 		return genOrBroadcastFn(clientCtx, fs, msgs...)
 	}
@@ -74,7 +78,6 @@ func newSplitAndApply(
 	return nil
 }
 
-// NewWithdrawRewardsCmd returns a CLI command handler for creating a MsgWithdrawDelegatorReward transaction.
 func NewWithdrawRewardsCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -110,6 +113,12 @@ $ %s tx distribution withdraw-rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 				msgs = append(msgs, types.NewMsgWithdrawValidatorCommission(valAddr))
 			}
 
+			for _, msg := range msgs {
+				if err := msg.ValidateBasic(); err != nil {
+					return err
+				}
+			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msgs...)
 		},
 	}
@@ -120,7 +129,6 @@ $ %s tx distribution withdraw-rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 	return cmd
 }
 
-// NewWithdrawAllRewardsCmd returns a CLI command handler for creating a MsgWithdrawDelegatorReward transaction.
 func NewWithdrawAllRewardsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-all-rewards",
@@ -184,7 +192,6 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 	return cmd
 }
 
-// NewSetWithdrawAddrCmd returns a CLI command handler for creating a MsgSetWithdrawAddress transaction.
 func NewSetWithdrawAddrCmd() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
@@ -223,7 +230,6 @@ $ %s tx distribution set-withdraw-addr %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 	return cmd
 }
 
-// NewFundCommunityPoolCmd returns a CLI command handler for creating a MsgFundCommunityPool transaction.
 func NewFundCommunityPoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fund-community-pool [amount]",
@@ -323,6 +329,75 @@ Where proposal.json contains:
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	return cmd
+}
+
+// WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for all owning TokenizeShareRecord
+func NewWithdrawAllTokenizeShareRecordRewardCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-all-tokenize-share-rewards",
+		Args:  cobra.ExactArgs(0),
+		Short: "Withdraw reward for all owning TokenizeShareRecord",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Withdraw reward for all owned TokenizeShareRecord
+
+Example:
+$ %s tx distribution withdraw-tokenize-share-rewards --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgWithdrawAllTokenizeShareRecordReward(clientCtx.GetFromAddress())
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// WithdrawTokenizeShareRecordReward defines a method to withdraw reward for an owning TokenizeShareRecord
+func NewWithdrawTokenizeShareRecordRewardCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-tokenize-share-rewards",
+		Args:  cobra.ExactArgs(1),
+		Short: "Withdraw reward for an owning TokenizeShareRecord",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Withdraw reward for an owned TokenizeShareRecord
+
+Example:
+$ %s tx distribution withdraw-tokenize-share-rewards 1 --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			recordId, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgWithdrawTokenizeShareRecordReward(clientCtx.GetFromAddress(), uint64(recordId))
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

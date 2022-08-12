@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over keeper
@@ -31,30 +32,34 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator status %s", req.Status)
 	}
 
+	var validators types.Validators
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.ValidatorsKey)
 
-	validators, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, val *types.Validator) (*types.Validator, error) {
-		if req.Status != "" && !strings.EqualFold(val.GetStatus().String(), req.Status) {
-			return nil, nil
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		val, err := types.UnmarshalValidator(k.cdc, value)
+		if err != nil {
+			return false, err
 		}
 
-		return val, nil
-	}, func() *types.Validator {
-		return &types.Validator{}
+		if req.Status != "" && !strings.EqualFold(val.GetStatus().String(), req.Status) {
+			return false, nil
+		}
+
+		if accumulate {
+			validators = append(validators, val)
+		}
+
+		return true, nil
 	})
+
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	vals := types.Validators{}
-	for _, val := range validators {
-		vals = append(vals, *val)
-	}
-
-	return &types.QueryValidatorsResponse{Validators: vals, Pagination: pageRes}, nil
+	return &types.QueryValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
 }
 
 // Validator queries validator info for given validator address
@@ -90,41 +95,42 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	if req.ValidatorAddr == "" {
 		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
+	var delegations []types.Delegation
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.DelegationKey)
-	delegations, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, delegation *types.Delegation) (*types.Delegation, error) {
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		delegation, err := types.UnmarshalDelegation(k.cdc, value)
+		if err != nil {
+			return false, err
+		}
+
 		valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 		if err != nil {
-			return nil, err
+			return false, err
 		}
 
 		if !delegation.GetValidatorAddr().Equals(valAddr) {
-			return nil, nil
+			return false, nil
 		}
 
-		return delegation, nil
-	}, func() *types.Delegation {
-		return &types.Delegation{}
+		if accumulate {
+			delegations = append(delegations, delegation)
+		}
+		return true, nil
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	dels := types.Delegations{}
-	for _, d := range delegations {
-		dels = append(dels, *d)
-	}
-
-	delResponses, err := DelegationsToDelegationResponses(ctx, k.Keeper, dels)
+	delResponses, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryValidatorDelegationsResponse{
-		DelegationResponses: delResponses, Pagination: pageRes,
-	}, nil
+		DelegationResponses: delResponses, Pagination: pageRes}, nil
 }
 
 // ValidatorUnbondingDelegations queries unbonding delegations of a validator
@@ -282,6 +288,7 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 	}
 
 	return &types.QueryDelegatorDelegationsResponse{DelegationResponses: delegationResps, Pagination: pageRes}, nil
+
 }
 
 // DelegatorValidator queries validator info for given delegator validator pair
@@ -348,8 +355,7 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 	}
 
 	return &types.QueryDelegatorUnbondingDelegationsResponse{
-		UnbondingResponses: unbondingDelegations, Pagination: pageRes,
-	}, nil
+		UnbondingResponses: unbondingDelegations, Pagination: pageRes}, nil
 }
 
 // HistoricalInfo queries the historical info for given height
@@ -428,12 +434,13 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 
 		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
-			return types.ErrNoValidatorFound
+			return sdkstaking.ErrNoValidatorFound
 		}
 
 		validators = append(validators, validator)
 		return nil
 	})
+
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -465,6 +472,7 @@ func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 }
 
 func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, err error) {
+
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
@@ -531,4 +539,115 @@ func queryAllRedelegations(store sdk.KVStore, k Querier, req *types.QueryRedeleg
 	})
 
 	return redels, res, err
+}
+
+// Query for individual tokenize share record information by share by id
+func (k Querier) TokenizeShareRecordById(c context.Context, req *types.QueryTokenizeShareRecordByIdRequest) (*types.QueryTokenizeShareRecordByIdResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	record, err := k.GetTokenizeShareRecord(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryTokenizeShareRecordByIdResponse{
+		Record: record,
+	}, nil
+}
+
+// Query for individual tokenize share record information by share denom
+func (k Querier) TokenizeShareRecordByDenom(c context.Context, req *types.QueryTokenizeShareRecordByDenomRequest) (*types.QueryTokenizeShareRecordByDenomResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	record, err := k.GetTokenizeShareRecordByDenom(ctx, req.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryTokenizeShareRecordByDenomResponse{
+		Record: record,
+	}, nil
+}
+
+// Query tokenize share records by address
+func (k Querier) TokenizeShareRecordsOwned(c context.Context, req *types.QueryTokenizeShareRecordsOwnedRequest) (*types.QueryTokenizeShareRecordsOwnedResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	owner, err := sdk.AccAddressFromBech32(req.Owner)
+	if err != nil {
+		return nil, err
+	}
+	records := k.GetTokenizeShareRecordsByOwner(ctx, owner)
+
+	return &types.QueryTokenizeShareRecordsOwnedResponse{
+		Records: records,
+	}, nil
+}
+
+// Query for all tokenize share records
+func (k Querier) AllTokenizeShareRecords(c context.Context, req *types.QueryAllTokenizeShareRecordsRequest) (*types.QueryAllTokenizeShareRecordsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	records := k.GetAllTokenizeShareRecords(ctx)
+
+	return &types.QueryAllTokenizeShareRecordsResponse{
+		Records: records,
+	}, nil
+}
+
+// Query for last tokenize share record id
+func (k Querier) LastTokenizeShareRecordId(c context.Context, req *types.QueryLastTokenizeShareRecordIdRequest) (*types.QueryLastTokenizeShareRecordIdResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	return &types.QueryLastTokenizeShareRecordIdResponse{
+		Id: k.GetLastTokenizeShareRecordId(ctx),
+	}, nil
+}
+
+// Query for total tokenized staked assets
+func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTotalTokenizeSharedAssetsRequest) (*types.QueryTotalTokenizeSharedAssetsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	records := k.GetAllTokenizeShareRecords(ctx)
+	totalTokenizeShared := sdk.ZeroInt()
+
+	for _, record := range records {
+		moduleAcc := record.GetModuleAddress()
+		valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+		if err != nil {
+			return nil, err
+		}
+
+		validator, found := k.GetValidator(ctx, valAddr)
+		if !found {
+			return nil, sdkstaking.ErrNoValidatorFound
+		}
+
+		delegation, found := k.GetDelegation(ctx, moduleAcc, valAddr)
+		if !found {
+			return nil, sdkstaking.ErrNoDelegation
+		}
+
+		tokens := validator.TokensFromShares(delegation.Shares)
+		totalTokenizeShared = totalTokenizeShared.Add(tokens.RoundInt())
+	}
+	return &types.QueryTotalTokenizeSharedAssetsResponse{
+		Value: sdk.NewCoin(k.BondDenom(ctx), totalTokenizeShared),
+	}, nil
 }

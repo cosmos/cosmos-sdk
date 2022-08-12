@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -17,7 +18,9 @@ const (
 var _ govtypes.Content = &CommunityPoolSpendProposal{}
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeCommunityPoolSpend)
+	// already registered in cosmos
+	// govtypes.RegisterProposalType(ProposalTypeCommunityPoolSpend)
+	// govtypes.RegisterProposalTypeCodec(&CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal")
 }
 
 // NewCommunityPoolSpendProposal creates a new community pool spend proposal.
@@ -45,10 +48,10 @@ func (csp *CommunityPoolSpendProposal) ValidateBasic() error {
 		return err
 	}
 	if !csp.Amount.IsValid() {
-		return ErrInvalidProposalAmount
+		return sdkdistr.ErrInvalidProposalAmount
 	}
 	if csp.Recipient == "" {
-		return ErrEmptyProposalRecipient
+		return sdkdistr.ErrEmptyProposalRecipient
 	}
 
 	return nil

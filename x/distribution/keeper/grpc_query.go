@@ -11,7 +11,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -82,6 +83,7 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
+	events := make([]types.ValidatorSlashEvent, 0)
 	store := ctx.KVStore(k.storeKey)
 	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
@@ -89,25 +91,29 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	}
 	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(valAddr))
 
-	events, pageRes, err := query.GenericFilteredPaginate(k.cdc, slashesStore, req.Pagination, func(key []byte, result *types.ValidatorSlashEvent) (*types.ValidatorSlashEvent, error) {
-		if result.ValidatorPeriod < req.StartingHeight || result.ValidatorPeriod > req.EndingHeight {
-			return nil, nil
+	pageRes, err := query.FilteredPaginate(slashesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var result types.ValidatorSlashEvent
+		err := k.cdc.Unmarshal(value, &result)
+
+		if err != nil {
+			return false, err
 		}
 
-		return result, nil
-	}, func() *types.ValidatorSlashEvent {
-		return &types.ValidatorSlashEvent{}
+		if result.ValidatorPeriod < req.StartingHeight || result.ValidatorPeriod > req.EndingHeight {
+			return false, nil
+		}
+
+		if accumulate {
+			events = append(events, result)
+		}
+		return true, nil
 	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	slashes := []types.ValidatorSlashEvent{}
-	for _, event := range events {
-		slashes = append(slashes, *event)
-	}
-
-	return &types.QueryValidatorSlashesResponse{Slashes: slashes, Pagination: pageRes}, nil
+	return &types.QueryValidatorSlashesResponse{Slashes: events, Pagination: pageRes}, nil
 }
 
 // DelegationRewards the total rewards accrued by a delegation
@@ -133,7 +139,7 @@ func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationR
 
 	val := k.stakingKeeper.Validator(ctx, valAdr)
 	if val == nil {
-		return nil, sdkerrors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
+		return nil, sdkerrors.Wrap(sdkdistr.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
 	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
@@ -142,7 +148,7 @@ func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationR
 	}
 	del := k.stakingKeeper.Delegation(ctx, delAdr, valAdr)
 	if del == nil {
-		return nil, types.ErrNoDelegationExists
+		return nil, sdkdistr.ErrNoDelegationExists
 	}
 
 	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
@@ -173,7 +179,7 @@ func (k Keeper) DelegationTotalRewards(c context.Context, req *types.QueryDelega
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, delAdr,
-		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
+		func(_ int64, del sdkstaking.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
 			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
@@ -207,7 +213,7 @@ func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegator
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, delAdr,
-		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
+		func(_ int64, del sdkstaking.DelegationI) (stop bool) {
 			validators = append(validators, del.GetValidatorAddr().String())
 			return false
 		},
@@ -242,4 +248,55 @@ func (k Keeper) CommunityPool(c context.Context, req *types.QueryCommunityPoolRe
 	pool := k.GetFeePoolCommunityCoins(ctx)
 
 	return &types.QueryCommunityPoolResponse{Pool: pool}, nil
+}
+
+// TokenizeShareRecordReward returns estimated amount of reward from tokenize share record ownership
+func (k Keeper) TokenizeShareRecordReward(c context.Context, req *types.QueryTokenizeShareRecordRewardRequest) (*types.QueryTokenizeShareRecordRewardResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	totalRewards := sdk.DecCoins{}
+	rewards := []types.TokenizeShareRecordReward{}
+
+	ownerAddr, err := sdk.AccAddressFromBech32(req.OwnerAddress)
+	if err != nil {
+		return nil, err
+	}
+	records := k.stakingKeeper.GetTokenizeShareRecordsByOwner(ctx, ownerAddr)
+	for _, record := range records {
+		valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+		if err != nil {
+			return nil, err
+		}
+
+		moduleAddr := record.GetModuleAddress()
+		moduleBalance := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
+		moduleBalanceDecCoins := sdk.NewDecCoinsFromCoins(moduleBalance...)
+
+		val := k.stakingKeeper.Validator(ctx, valAddr)
+		del := k.stakingKeeper.Delegation(ctx, moduleAddr, valAddr)
+		if val != nil && del != nil {
+			// withdraw rewards
+			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
+			recordReward := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+
+			rewards = append(rewards, types.TokenizeShareRecordReward{
+				RecordId: record.Id,
+				Reward:   recordReward.Add(moduleBalanceDecCoins...),
+			})
+			totalRewards = totalRewards.Add(recordReward...)
+		}
+
+		if !moduleBalance.IsZero() {
+			rewards = append(rewards, types.TokenizeShareRecordReward{
+				RecordId: record.Id,
+				Reward:   moduleBalanceDecCoins,
+			})
+			totalRewards = totalRewards.Add(moduleBalanceDecCoins...)
+		}
+	}
+
+	return &types.QueryTokenizeShareRecordRewardResponse{
+		Rewards: rewards,
+		Total:   totalRewards,
+	}, nil
 }

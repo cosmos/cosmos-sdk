@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
@@ -23,7 +24,7 @@ func (k Keeper) GetDelegatorValidators(
 
 		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
-			panic(types.ErrNoValidatorFound)
+			panic(sdkstaking.ErrNoValidatorFound)
 		}
 
 		validators[i] = validator
@@ -39,12 +40,12 @@ func (k Keeper) GetDelegatorValidator(
 ) (validator types.Validator, err error) {
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	if !found {
-		return validator, types.ErrNoDelegation
+		return validator, sdkstaking.ErrNoDelegation
 	}
 
 	validator, found = k.GetValidator(ctx, delegation.GetValidatorAddr())
 	if !found {
-		panic(types.ErrNoValidatorFound)
+		panic(sdkstaking.ErrNoValidatorFound)
 	}
 
 	return validator, nil

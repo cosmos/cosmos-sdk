@@ -5,10 +5,10 @@ import "testing"
 func BenchmarkGetValidator(b *testing.B) {
 	// 900 is the max number we are allowed to use in order to avoid simapp.CreateTestPubKeys
 	// panic: encoding/hex: odd length hex string
-	powersNumber := 900
+	var powersNumber = 900
 
 	var totalPower int64 = 0
-	powers := make([]int64, powersNumber)
+	var powers = make([]int64, powersNumber)
 	for i := range powers {
 		powers[i] = int64(i)
 		totalPower += int64(i)

@@ -17,6 +17,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -35,7 +36,7 @@ var (
 	BondStatusBonded      = BondStatus_name[int32(Bonded)]
 )
 
-var _ ValidatorI = Validator{}
+var _ sdkstaking.ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
 //nolint:interfacer
@@ -46,17 +47,18 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 	}
 
 	return Validator{
-		OperatorAddress:   operator.String(),
-		ConsensusPubkey:   pkAny,
-		Jailed:            false,
-		Status:            Unbonded,
-		Tokens:            sdk.ZeroInt(),
-		DelegatorShares:   sdk.ZeroDec(),
-		Description:       description,
-		UnbondingHeight:   int64(0),
-		UnbondingTime:     time.Unix(0, 0).UTC(),
-		Commission:        NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-		MinSelfDelegation: sdk.OneInt(),
+		OperatorAddress:      operator.String(),
+		ConsensusPubkey:      pkAny,
+		Jailed:               false,
+		Status:               sdkstaking.Unbonded,
+		Tokens:               sdk.ZeroInt(),
+		DelegatorShares:      sdk.ZeroDec(),
+		Description:          description,
+		UnbondingHeight:      int64(0),
+		UnbondingTime:        time.Unix(0, 0).UTC(),
+		Commission:           NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		TotalExemptShares:    sdk.ZeroDec(),
+		TotalTokenizedShares: sdk.ZeroDec(),
 	}, nil
 }
 
@@ -84,15 +86,6 @@ func (v Validators) String() (out string) {
 	}
 
 	return strings.TrimSpace(out)
-}
-
-// ToSDKValidators -  convenience function convert []Validator to []sdk.ValidatorI
-func (v Validators) ToSDKValidators() (validators []ValidatorI) {
-	for _, val := range v {
-		validators = append(validators, val)
-	}
-
-	return validators
 }
 
 // Sort Validators sorts validator array in ascending operator address order
@@ -173,17 +166,17 @@ func UnmarshalValidator(cdc codec.BinaryCodec, value []byte) (v Validator, err e
 
 // IsBonded checks if the validator status equals Bonded
 func (v Validator) IsBonded() bool {
-	return v.GetStatus() == Bonded
+	return v.GetStatus() == sdkstaking.Bonded
 }
 
 // IsUnbonded checks if the validator status equals Unbonded
 func (v Validator) IsUnbonded() bool {
-	return v.GetStatus() == Unbonded
+	return v.GetStatus() == sdkstaking.Unbonded
 }
 
 // IsUnbonding checks if the validator status equals Unbonding
 func (v Validator) IsUnbonding() bool {
-	return v.GetStatus() == Unbonding
+	return v.GetStatus() == sdkstaking.Unbonding
 }
 
 // constant used in flags to indicate that description field should not be updated
@@ -329,7 +322,7 @@ func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) sdk.Dec {
 // returns an error if the validator has no tokens.
 func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
-		return sdk.ZeroDec(), ErrInsufficientShares
+		return sdk.ZeroDec(), sdkstaking.ErrInsufficientShares
 	}
 
 	return v.GetDelegatorShares().MulInt(amt).QuoInt(v.GetTokens()), nil
@@ -339,7 +332,7 @@ func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, error) {
 // a bond amount. It returns an error if the validator has no tokens.
 func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
-		return sdk.ZeroDec(), ErrInsufficientShares
+		return sdk.ZeroDec(), sdkstaking.ErrInsufficientShares
 	}
 
 	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(sdk.NewDecFromInt(v.GetTokens())), nil
@@ -371,7 +364,7 @@ func (v Validator) PotentialConsensusPower(r sdk.Int) int64 {
 
 // UpdateStatus updates the location of the shares within a validator
 // to reflect the new status
-func (v Validator) UpdateStatus(newStatus BondStatus) Validator {
+func (v Validator) UpdateStatus(newStatus sdkstaking.BondStatus) Validator {
 	v.Status = newStatus
 	return v
 }
@@ -450,8 +443,8 @@ func (v *Validator) MinEqual(other *Validator) bool {
 		v.Description.Equal(other.Description) &&
 		v.Commission.Equal(other.Commission) &&
 		v.Jailed == other.Jailed &&
-		v.MinSelfDelegation.Equal(other.MinSelfDelegation) &&
 		v.ConsensusPubkey.Equal(other.ConsensusPubkey)
+
 }
 
 // Equal checks if the receiver equals the parameter
@@ -461,9 +454,9 @@ func (v *Validator) Equal(v2 *Validator) bool {
 		v.UnbondingTime.Equal(v2.UnbondingTime)
 }
 
-func (v Validator) IsJailed() bool        { return v.Jailed }
-func (v Validator) GetMoniker() string    { return v.Description.Moniker }
-func (v Validator) GetStatus() BondStatus { return v.Status }
+func (v Validator) IsJailed() bool                   { return v.Jailed }
+func (v Validator) GetMoniker() string               { return v.Description.Moniker }
+func (v Validator) GetStatus() sdkstaking.BondStatus { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress {
 	if v.OperatorAddress == "" {
 		return nil
@@ -483,6 +476,7 @@ func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 	}
 
 	return pk, nil
+
 }
 
 // TmConsPublicKey casts Validator.ConsensusPubkey to tmprotocrypto.PubKey.
@@ -515,9 +509,10 @@ func (v Validator) GetBondedTokens() sdk.Int { return v.BondedTokens() }
 func (v Validator) GetConsensusPower(r sdk.Int) int64 {
 	return v.ConsensusPower(r)
 }
-func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
-func (v Validator) GetMinSelfDelegation() sdk.Int { return v.MinSelfDelegation }
-func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }
+func (v Validator) GetCommission() sdk.Dec      { return v.Commission.Rate }
+func (v Validator) GetDelegatorShares() sdk.Dec { return v.DelegatorShares }
+
+func (v Validator) GetMinSelfDelegation() sdk.Int { return sdk.ZeroInt() }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {

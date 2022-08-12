@@ -179,7 +179,6 @@ valset:
     security_contact: ""
     website: ""
   jailed: false
-  min_self_delegation: "1"
   operator_address: cosmosvaloper1rne8lgs98p0jqe82sgt0qr4rdn4hgvmgp9ggcc
   status: BOND_STATUS_BONDED
   tokens: "10000000"
@@ -526,7 +525,6 @@ description:
   security_contact: ""
   website: ""
 jailed: false
-min_self_delegation: "1"
 operator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 status: BOND_STATUS_BONDED
 tokens: "32948270000"
@@ -577,7 +575,6 @@ description:
     security_contact: ""
     website: ""
   jailed: false
-  min_self_delegation: "1"
   operator_address: cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
   status: BOND_STATUS_BONDED
   tokens: "32948270000"
@@ -603,7 +600,6 @@ description:
     security_contact: info@noderunners.biz
     website: http://noderunners.biz
   jailed: false
-  min_self_delegation: "1"
   operator_address: cosmosvaloper1q5ku90atkhktze83j9xjaks2p7uruag5zp6wt7
   status: BOND_STATUS_BONDED
   tokens: "559343421"
@@ -712,19 +708,6 @@ Example:
 ```bash
 simd tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from mykey
 ```
-#### cancel unbond 
-The command `cancel-unbond` allow users to cancel the unbonding delegation entry and delegate back to the original validator.
-
-Usage:
-```bash
-simd tx staking cancel-unbond [validator-addr] [amount] [creation-height]
-```
-
-Example:
-```bash
-simd tx staking cancel-unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake 123123 --from mykey
-```
-
 
 ## gRPC
 
@@ -766,8 +749,7 @@ Example Output:
           "maxChangeRate": "10000000000000000"
         },
         "updateTime": "2021-10-01T05:52:50.380144238Z"
-      },
-      "minSelfDelegation": "1"
+      }
     }
   ],
   "pagination": {
@@ -812,8 +794,7 @@ Example Output:
         "maxChangeRate": "10000000000000000"
       },
       "updateTime": "2021-10-01T05:52:50.380144238Z"
-    },
-    "minSelfDelegation": "1"
+    }
   }
 }
 ```
@@ -1155,8 +1136,7 @@ Example Output:
           "max_change_rate": "0.150000000000000000"
         },
         "update_time": "2021-10-01T15:00:00Z"
-      },
-      "min_self_delegation": "1"
+      }
     }
   ],
   "pagination": {
@@ -1212,8 +1192,7 @@ Example Output:
         "max_change_rate": "0.150000000000000000"
       },
       "update_time": "2021-10-01T15:00:00Z"
-    },
-    "min_self_delegation": "1"
+    }
   }
 }
 ```
@@ -1287,8 +1266,7 @@ Example Output:
             "max_change_rate": "0.030000000000000000"
           },
           "update_time": "2021-10-01T15:00:00Z"
-        },
-        "min_self_delegation": "1"
+        }
       }
     ]
   }
@@ -1535,8 +1513,7 @@ Example Output:
           "max_change_rate": "0.100000000000000000"
         },
         "update_time": "2021-10-09T19:03:54.984821705Z"
-      },
-      "min_self_delegation": "1"
+      }
     }
   ],
   "pagination": {
@@ -1592,8 +1569,7 @@ Example Output:
         "max_change_rate": "0.100000000000000000"
       },
       "update_time": "2021-10-09T19:03:54.984821705Z"
-    },
-    "min_self_delegation": "1"
+    }
   }
 }
 ```
@@ -1669,8 +1645,7 @@ Example Output:
             "max_change_rate": "0.030000000000000000"
           },
           "update_time": "2021-10-01T15:00:00Z"
-        },
-        "min_self_delegation": "1"
+        }
       },
       {
         "operator_address": "cosmosvaloper1t8ehvswxjfn3ejzkjtntcyrqwvmvuknzmvtaaa",
@@ -1698,8 +1673,7 @@ Example Output:
             "max_change_rate": "0.200000000000000000"
           },
           "update_time": "2021-10-01T15:06:38.821314287Z"
-        },
-        "min_self_delegation": "1"
+        }
       }
     ]
   }
@@ -1804,8 +1778,7 @@ Example Output:
           "max_change_rate": "0.100000000000000000"
         },
         "update_time": "2021-10-01T15:51:31.596618510Z"
-      },
-      "min_self_delegation": "1"
+      }
     },
     {
       "operator_address": "cosmosvaloper1q5ku90atkhktze83j9xjaks2p7uruag5zp6wt7",
@@ -1833,8 +1806,7 @@ Example Output:
           "max_change_rate": "0.100000000000000000"
         },
         "update_time": "2021-10-04T18:02:21.446645619Z"
-      },
-      "min_self_delegation": "1"
+      }
     }
   ],
   "pagination": {
@@ -1890,8 +1862,7 @@ Example Output:
         "max_change_rate": "0.020000000000000000"
       },
       "update_time": "2021-10-01T19:24:52.663191049Z"
-    },
-    "min_self_delegation": "1"
+    }
   }
 }
 ```

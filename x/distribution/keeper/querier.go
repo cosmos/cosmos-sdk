@@ -9,7 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
@@ -134,12 +135,12 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 
 	val := k.stakingKeeper.Validator(ctx, params.ValidatorAddress)
 	if val == nil {
-		return nil, sdkerrors.Wrap(types.ErrNoValidatorExists, params.ValidatorAddress.String())
+		return nil, sdkerrors.Wrap(sdkdistr.ErrNoValidatorExists, params.ValidatorAddress.String())
 	}
 
 	del := k.stakingKeeper.Delegation(ctx, params.DelegatorAddress, params.ValidatorAddress)
 	if del == nil {
-		return nil, types.ErrNoDelegationExists
+		return nil, sdkdistr.ErrNoDelegationExists
 	}
 
 	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
@@ -172,7 +173,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, params.DelegatorAddress,
-		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
+		func(_ int64, del sdkstaking.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
 			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
@@ -208,7 +209,7 @@ func queryDelegatorValidators(ctx sdk.Context, _ []string, req abci.RequestQuery
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, params.DelegatorAddress,
-		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
+		func(_ int64, del sdkstaking.DelegationI) (stop bool) {
 			validators = append(validators, del.GetValidatorAddr())
 			return false
 		},

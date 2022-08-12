@@ -9,7 +9,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simapp "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -23,7 +23,6 @@ type KeeperTestSuite struct {
 	addrs       []sdk.AccAddress
 	vals        []types.Validator
 	queryClient types.QueryClient
-	msgServer   types.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -35,8 +34,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
-
-	suite.msgServer = keeper.NewMsgServerImpl(app.StakingKeeper)
 
 	addrs, _, validators := createValidators(suite.T(), ctx, app, []int64{9, 8, 7})
 	header := tmproto.Header{
@@ -53,18 +50,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators
 }
-
 func TestParams(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	expParams := types.DefaultParams()
 
-	// check that the empty keeper loads the default
+	//check that the empty keeper loads the default
 	resParams := app.StakingKeeper.GetParams(ctx)
 	require.True(t, expParams.Equal(resParams))
 
-	// modify a params, save, and retrieve
+	//modify a params, save, and retrieve
 	expParams.MaxValidators = 777
 	app.StakingKeeper.SetParams(ctx, expParams)
 	resParams = app.StakingKeeper.GetParams(ctx)

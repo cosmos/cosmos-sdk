@@ -1,20 +1,26 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // staking message types
 const (
-	TypeMsgUndelegate                = "begin_unbonding"
-	TypeMsgCancelUnbondingDelegation = "cancel_unbond"
-	TypeMsgEditValidator             = "edit_validator"
-	TypeMsgCreateValidator           = "create_validator"
-	TypeMsgDelegate                  = "delegate"
-	TypeMsgBeginRedelegate           = "begin_redelegate"
+	TypeMsgUndelegate                  = "begin_unbonding"
+	TypeMsgEditValidator               = "edit_validator"
+	TypeMsgCreateValidator             = "create_validator"
+	TypeMsgDelegate                    = "delegate"
+	TypeMsgBeginRedelegate             = "begin_redelegate"
+	TypeMsgCancelUnbondingDelegation   = "cancel_unbond"
+	TypeMsgTokenizeShares              = "tokenize_shares"
+	TypeMsgRedeemTokensforShares       = "redeem_tokens_for_shares"
+	TypeMsgTransferTokenizeShareRecord = "transfer_tokenize_share_record"
+	TypeMsgExemptDelegation            = "exempt_delegation"
 )
 
 var (
@@ -25,6 +31,9 @@ var (
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
+	_ sdk.Msg                            = &MsgTokenizeShares{}
+	_ sdk.Msg                            = &MsgRedeemTokensforShares{}
+	_ sdk.Msg                            = &MsgTransferTokenizeShareRecord{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
 )
 
@@ -32,7 +41,7 @@ var (
 // Delegator address and validator address are the same.
 func NewMsgCreateValidator(
 	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, //nolint:interfacer
-	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation sdk.Int,
+	selfDelegation sdk.Coin, description Description, commission CommissionRates,
 ) (*MsgCreateValidator, error) {
 	var pkAny *codectypes.Any
 	if pubKey != nil {
@@ -42,13 +51,12 @@ func NewMsgCreateValidator(
 		}
 	}
 	return &MsgCreateValidator{
-		Description:       description,
-		DelegatorAddress:  sdk.AccAddress(valAddr).String(),
-		ValidatorAddress:  valAddr.String(),
-		Pubkey:            pkAny,
-		Value:             selfDelegation,
-		Commission:        commission,
-		MinSelfDelegation: minSelfDelegation,
+		Description:      description,
+		DelegatorAddress: sdk.AccAddress(valAddr).String(),
+		ValidatorAddress: valAddr.String(),
+		Pubkey:           pkAny,
+		Value:            selfDelegation,
+		Commission:       commission,
 	}, nil
 }
 
@@ -78,7 +86,7 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgCreateValidator) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -98,7 +106,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 	}
 
 	if msg.Pubkey == nil {
-		return ErrEmptyValidatorPubKey
+		return sdkstaking.ErrEmptyValidatorPubKey
 	}
 
 	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
@@ -117,17 +125,6 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 		return err
 	}
 
-	if !msg.MinSelfDelegation.IsPositive() {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"minimum self delegation must be a positive integer",
-		)
-	}
-
-	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
-		return ErrSelfDelegationBelowMinimum
-	}
-
 	return nil
 }
 
@@ -139,12 +136,11 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 
 // NewMsgEditValidator creates a new MsgEditValidator instance
 //nolint:interfacer
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *sdk.Int) *MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec) *MsgEditValidator {
 	return &MsgEditValidator{
-		Description:       description,
-		CommissionRate:    newRate,
-		ValidatorAddress:  valAddr.String(),
-		MinSelfDelegation: newMinSelfDelegation,
+		Description:      description,
+		CommissionRate:   newRate,
+		ValidatorAddress: valAddr.String(),
 	}
 }
 
@@ -162,7 +158,7 @@ func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgEditValidator) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -174,13 +170,6 @@ func (msg MsgEditValidator) ValidateBasic() error {
 
 	if msg.Description == (Description{}) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
-	}
-
-	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.IsPositive() {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"minimum self delegation must be a positive integer",
-		)
 	}
 
 	if msg.CommissionRate != nil {
@@ -210,13 +199,16 @@ func (msg MsgDelegate) Type() string { return TypeMsgDelegate }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{delegator}
 }
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgDelegate) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -260,13 +252,16 @@ func (msg MsgBeginRedelegate) Type() string { return TypeMsgBeginRedelegate }
 
 // GetSigners implements the sdk.Msg interface
 func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{delegator}
 }
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgBeginRedelegate) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -310,13 +305,16 @@ func (msg MsgUndelegate) Type() string { return TypeMsgUndelegate }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{delegator}
 }
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgUndelegate) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -334,6 +332,101 @@ func (msg MsgUndelegate) ValidateBasic() error {
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
+	}
+
+	return nil
+}
+
+// Type implements the sdk.Msg interface.
+func (msg MsgTokenizeShares) Type() string { return TypeMsgTokenizeShares }
+
+func (msg MsgTokenizeShares) GetSigners() []sdk.AccAddress {
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delegator}
+}
+
+func (msg MsgTokenizeShares) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgTokenizeShares) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.TokenizedShareOwner); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid tokenize share owner address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid shares amount",
+		)
+	}
+
+	return nil
+}
+
+// Type implements the sdk.Msg interface.
+func (msg MsgRedeemTokensforShares) Type() string { return TypeMsgRedeemTokensforShares }
+
+func (msg MsgRedeemTokensforShares) GetSigners() []sdk.AccAddress {
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delegator}
+}
+
+func (msg MsgRedeemTokensforShares) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgRedeemTokensforShares) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid shares amount",
+		)
+	}
+
+	return nil
+}
+
+// Type implements the sdk.Msg interface.
+func (msg MsgTransferTokenizeShareRecord) Type() string { return TypeMsgTransferTokenizeShareRecord }
+
+func (msg MsgTransferTokenizeShareRecord) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+func (msg MsgTransferTokenizeShareRecord) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgTransferTokenizeShareRecord) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.NewOwner); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid new owner address: %s", err)
 	}
 
 	return nil
@@ -364,7 +457,7 @@ func (msg MsgCancelUnbondingDelegation) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgCancelUnbondingDelegation) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic implements the sdk.Msg interface.
@@ -388,6 +481,48 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 			sdkerrors.ErrInvalidRequest,
 			"invalid height",
 		)
+	}
+
+	return nil
+}
+
+// NewMsgExemptDelegation creates a new MsgExemptDelegation instance.
+//nolint:interfacer
+func NewMsgExemptDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgExemptDelegation {
+	return &MsgExemptDelegation{
+		DelegatorAddress: delAddr.String(),
+		ValidatorAddress: valAddr.String(),
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) Type() string { return TypeMsgExemptDelegation }
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) GetSigners() []sdk.AccAddress {
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delegator}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
 	return nil

@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -26,7 +25,6 @@ var (
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
-	defaultMinSelfDelegation       = "1"
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
@@ -45,13 +43,15 @@ func NewTxCmd() *cobra.Command {
 		NewDelegateCmd(),
 		NewRedelegateCmd(),
 		NewUnbondCmd(),
-		NewCancelUnbondingDelegation(),
+		NewTokenizeSharesCmd(),
+		NewRedeemTokensCmd(),
+		NewTransferTokenizeShareRecordCmd(),
+		NewExemptDelegationCmd(),
 	)
 
 	return stakingTxCmd
 }
 
-// NewCreateValidatorCmd returns a CLI command handler for creating a MsgCreateValidator transaction.
 func NewCreateValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
@@ -77,7 +77,6 @@ func NewCreateValidatorCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetAmount())
 	cmd.Flags().AddFlagSet(flagSetDescriptionCreate())
 	cmd.Flags().AddFlagSet(FlagSetCommissionCreate())
-	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
 
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
@@ -91,7 +90,6 @@ func NewCreateValidatorCmd() *cobra.Command {
 	return cmd
 }
 
-// NewEditValidatorCmd returns a CLI command handler for creating a MsgEditValidator transaction.
 func NewEditValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
@@ -121,19 +119,7 @@ func NewEditValidatorCmd() *cobra.Command {
 				newRate = &rate
 			}
 
-			var newMinSelfDelegation *sdk.Int
-
-			minSelfDelegationString, _ := cmd.Flags().GetString(FlagMinSelfDelegation)
-			if minSelfDelegationString != "" {
-				msb, ok := sdk.NewIntFromString(minSelfDelegationString)
-				if !ok {
-					return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
-				}
-
-				newMinSelfDelegation = &msb
-			}
-
-			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, newMinSelfDelegation)
+			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -141,13 +127,11 @@ func NewEditValidatorCmd() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(flagSetDescriptionEdit())
 	cmd.Flags().AddFlagSet(flagSetCommissionUpdate())
-	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
-// NewDelegateCmd returns a CLI command handler for creating a MsgDelegate transaction.
 func NewDelegateCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -191,7 +175,6 @@ $ %s tx staking delegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --f
 	return cmd
 }
 
-// NewRedelegateCmd returns a CLI command handler for creating a MsgBeginRedelegate transaction.
 func NewRedelegateCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -240,7 +223,6 @@ $ %s tx staking redelegate %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj %s1l2rsakp3
 	return cmd
 }
 
-// NewUnbondCmd returns a CLI command handler for creating a MsgUndelegate transaction.
 func NewUnbondCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -274,57 +256,6 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 			}
 
 			msg := types.NewMsgUndelegate(delAddr, valAddr, amount)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// NewCancelUnbondingDelegation returns a CLI command handler for creating a MsgCancelUnbondingDelegation transaction.
-func NewCancelUnbondingDelegation() *cobra.Command {
-	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
-
-	cmd := &cobra.Command{
-		Use:   "cancel-unbond [validator-addr] [amount] [creation-height]",
-		Short: "Cancel unbonding delegation and delegate back to the validator",
-		Args:  cobra.ExactArgs(3),
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Cancel Unbonding Delegation and delegate back to the validator.
-
-Example:
-$ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake 2 --from mykey
-`,
-				version.AppName, bech32PrefixValAddr,
-			),
-		),
-		Example: fmt.Sprintf(`$ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake 2 --from mykey`,
-			version.AppName, bech32PrefixValAddr),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			delAddr := clientCtx.GetFromAddress()
-			valAddr, err := sdk.ValAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
-			amount, err := sdk.ParseCoinNormalized(args[1])
-			if err != nil {
-				return err
-			}
-
-			creationHeight, err := strconv.ParseInt(args[2], 10, 64)
-			if err != nil {
-				return sdkerrors.Wrap(fmt.Errorf("invalid height: %d", creationHeight), "invalid height")
-			}
-
-			msg := types.NewMsgCancelUnbondingDelegation(delAddr, valAddr, creationHeight, amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -376,17 +307,8 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		return txf, nil, err
 	}
 
-	// get the initial validator min self delegation
-	msbStr, _ := fs.GetString(FlagMinSelfDelegation)
-
-	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
-	if !ok {
-		return txf, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
-	}
-
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
-	)
+		sdk.ValAddress(valAddr), pk, amount, description, commissionRates)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -419,7 +341,6 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	fsCreateValidator.String(FlagDetails, "", "The validator's (optional) details")
 	fsCreateValidator.String(FlagIdentity, "", "The (optional) identity signature (ex. UPort or Keybase)")
 	fsCreateValidator.AddFlagSet(FlagSetCommissionCreate())
-	fsCreateValidator.AddFlagSet(FlagSetMinSelfDelegation())
 	fsCreateValidator.AddFlagSet(FlagSetAmount())
 	fsCreateValidator.AddFlagSet(FlagSetPublicKey())
 
@@ -428,10 +349,8 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	commission rate:             %s
 	commission max rate:         %s
 	commission max change rate:  %s
-	minimum self delegation:     %s
 `, defaultAmount, defaultCommissionRate,
-		defaultCommissionMaxRate, defaultCommissionMaxChangeRate,
-		defaultMinSelfDelegation)
+		defaultCommissionMaxRate, defaultCommissionMaxChangeRate)
 
 	return fsCreateValidator, defaultsDesc
 }
@@ -446,7 +365,6 @@ type TxCreateValidatorConfig struct {
 	CommissionRate          string
 	CommissionMaxRate       string
 	CommissionMaxChangeRate string
-	MinSelfDelegation       string
 
 	PubKey cryptotypes.PubKey
 
@@ -514,11 +432,6 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 		return c, err
 	}
 
-	c.MinSelfDelegation, err = flagSet.GetString(FlagMinSelfDelegation)
-	if err != nil {
-		return c, err
-	}
-
 	c.NodeID = nodeID
 	c.PubKey = valPubKey
 	c.Website = website
@@ -544,10 +457,6 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 		c.CommissionMaxChangeRate = defaultCommissionMaxChangeRate
 	}
 
-	if c.MinSelfDelegation == "" {
-		c.MinSelfDelegation = defaultMinSelfDelegation
-	}
-
 	return c, nil
 }
 
@@ -555,6 +464,7 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool) (tx.Factory, sdk.Msg, error) {
 	amounstStr := config.Amount
 	amount, err := sdk.ParseCoinNormalized(amounstStr)
+
 	if err != nil {
 		return txBldr, nil, err
 	}
@@ -573,20 +483,13 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	maxRateStr := config.CommissionMaxRate
 	maxChangeRateStr := config.CommissionMaxChangeRate
 	commissionRates, err := buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr)
+
 	if err != nil {
 		return txBldr, nil, err
 	}
 
-	// get the initial validator min self delegation
-	msbStr := config.MinSelfDelegation
-	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
-
-	if !ok {
-		return txBldr, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
-	}
-
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), config.PubKey, amount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr), config.PubKey, amount, description, commissionRates,
 	)
 	if err != nil {
 		return txBldr, msg, err
@@ -601,4 +504,183 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	}
 
 	return txBldr, msg, nil
+}
+
+// NewTokenizeSharesCmd defines a command for tokenizing shares from a validator.
+func NewTokenizeSharesCmd() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "tokenize-share [validator-addr] [amount] [rewardOwner]",
+		Short: "Tokenize delegation to share tokens",
+		Args:  cobra.ExactArgs(3),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Tokenize delegation to share tokens.
+
+Example:
+$ %s tx staking tokenize-share %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
+`,
+				version.AppName, bech32PrefixValAddr, bech32PrefixAccAddr,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			delAddr := clientCtx.GetFromAddress()
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			amount, err := sdk.ParseCoinNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			rewardOwner, err := sdk.AccAddressFromBech32(args[2])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgTokenizeShares{
+				DelegatorAddress:    delAddr.String(),
+				ValidatorAddress:    valAddr.String(),
+				Amount:              amount,
+				TokenizedShareOwner: rewardOwner.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewRedeemTokensCmd defines a command for redeeming tokens from a validator for shares.
+func NewRedeemTokensCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "redeem-tokens [amount]",
+		Short: "Redeem specified amount of share tokens to delegation",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Redeem specified amount of share tokens to delegation.
+
+Example:
+$ %s tx staking redeem-tokens 100sharetoken --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			delAddr := clientCtx.GetFromAddress()
+
+			amount, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgRedeemTokensforShares{
+				DelegatorAddress: delAddr.String(),
+				Amount:           amount,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewTransferTokenizeShareRecordCmd defines a command to transfer ownership of TokenizeShareRecord
+func NewTransferTokenizeShareRecordCmd() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "transfer-tokenize-share-record [record-id] [new-owner]",
+		Short: "Transfer ownership of TokenizeShareRecord",
+		Args:  cobra.ExactArgs(2),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Transfer ownership of TokenizeShareRecord.
+
+Example:
+$ %s tx staking transfer-tokenize-share-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
+`,
+				version.AppName, bech32PrefixAccAddr,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			recordId, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			ownerAddr, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgTransferTokenizeShareRecord{
+				Sender:                clientCtx.GetFromAddress().String(),
+				TokenizeShareRecordId: uint64(recordId),
+				NewOwner:              ownerAddr.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewExemptDelegationCmd defines a command to make delegation to a validator as exempt delegation
+func NewExemptDelegationCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exempt-delegation [validator]",
+		Short: "Make delegation to a validator as exempt delegation",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Make delegation to a validator as exempt delegation.
+
+Example:
+$ %s tx staking exempt-delegation cosmosvaloper13h5xdxhsdaugwdrkusf8lkgu406h8t62jkqv3h --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgExemptDelegation{
+				DelegatorAddress: clientCtx.GetFromAddress().String(),
+				ValidatorAddress: args[0],
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }

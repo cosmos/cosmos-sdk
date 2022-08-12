@@ -78,6 +78,14 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 	return nil
 }
 
+func (h Hooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) error {
+	err := h.k.WithdrawSingleShareRecordReward(ctx, recordId)
+	if err != nil {
+		h.k.Logger(ctx).Error(err.Error())
+	}
+	return err
+}
+
 // increment period
 func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)

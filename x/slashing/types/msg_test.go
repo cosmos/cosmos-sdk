@@ -6,11 +6,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkslashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func TestMsgUnjailGetSignBytes(t *testing.T) {
 	addr := sdk.AccAddress("abcd")
-	msg := NewMsgUnjail(sdk.ValAddress(addr))
+	msg := sdkslashingtypes.NewMsgUnjail(sdk.ValAddress(addr))
 	bytes := msg.GetSignBytes()
 	require.Equal(
 		t,

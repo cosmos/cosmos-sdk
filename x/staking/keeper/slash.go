@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	types "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -122,11 +123,11 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 
 	switch validator.GetStatus() {
-	case types.Bonded:
+	case sdkstaking.Bonded:
 		if err := k.burnBondedTokens(ctx, tokensToBurn); err != nil {
 			panic(err)
 		}
-	case types.Unbonding, types.Unbonded:
+	case sdkstaking.Unbonding, sdkstaking.Unbonded:
 		if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
 			panic(err)
 		}

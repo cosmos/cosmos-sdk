@@ -10,10 +10,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Implements Delegation interface
-var _ DelegationI = Delegation{}
+var _ sdkstaking.DelegationI = Delegation{}
 
 // String implements the Stringer interface for a DVPair object.
 func (dv DVPair) String() string {
@@ -29,11 +30,12 @@ func (dvv DVVTriplet) String() string {
 
 // NewDelegation creates a new delegation object
 //nolint:interfacer
-func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
+func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, exempt bool) Delegation {
 	return Delegation{
 		DelegatorAddress: delegatorAddr.String(),
 		ValidatorAddress: validatorAddr.String(),
 		Shares:           shares,
+		Exempt:           exempt,
 	}
 }
 
@@ -60,11 +62,12 @@ func UnmarshalDelegation(cdc codec.BinaryCodec, value []byte) (delegation Delega
 }
 
 func (d Delegation) GetDelegatorAddr() sdk.AccAddress {
-	delAddr := sdk.MustAccAddressFromBech32(d.DelegatorAddress)
-
+	delAddr, err := sdk.AccAddressFromBech32(d.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	return delAddr
 }
-
 func (d Delegation) GetValidatorAddr() sdk.ValAddress {
 	addr, err := sdk.ValAddressFromBech32(d.ValidatorAddress)
 	if err != nil {
@@ -293,10 +296,10 @@ func (d Redelegations) String() (out string) {
 
 // NewDelegationResp creates a new DelegationResponse instance
 func NewDelegationResp(
-	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, balance sdk.Coin,
+	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, exempt bool, balance sdk.Coin,
 ) DelegationResponse {
 	return DelegationResponse{
-		Delegation: NewDelegation(delegatorAddr, validatorAddr, shares),
+		Delegation: NewDelegation(delegatorAddr, validatorAddr, shares, exempt),
 		Balance:    balance,
 	}
 }
@@ -349,8 +352,7 @@ func NewRedelegationResponse(
 
 // NewRedelegationEntryResponse creates a new RedelegationEntryResponse instance.
 func NewRedelegationEntryResponse(
-	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance sdk.Int,
-) RedelegationEntryResponse {
+	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance sdk.Int) RedelegationEntryResponse {
 	return RedelegationEntryResponse{
 		RedelegationEntry: NewRedelegationEntry(creationHeight, completionTime, initialBalance, sharesDst),
 		Balance:           balance,

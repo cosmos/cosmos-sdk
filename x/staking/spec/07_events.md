@@ -1,5 +1,5 @@
 <!--
-order: 7
+order: 6
 -->
 
 # Events
@@ -32,13 +32,12 @@ The staking module emits the following events:
 
 ### MsgEditValidator
 
-| Type           | Attribute Key       | Attribute Value     |
-| -------------- | ------------------- | ------------------- |
-| edit_validator | commission_rate     | {commissionRate}    |
-| edit_validator | min_self_delegation | {minSelfDelegation} |
-| message        | module              | staking             |
-| message        | action              | edit_validator      |
-| message        | sender              | {senderAddress}     |
+| Type           | Attribute Key   | Attribute Value  |
+| -------------- | --------------- | ---------------- |
+| edit_validator | commission_rate | {commissionRate} |
+| message        | module          | staking          |
+| message        | action          | edit_validator   |
+| message        | sender          | {senderAddress}  |
 
 ### MsgDelegate
 
@@ -61,19 +60,7 @@ The staking module emits the following events:
 | message | action              | begin_unbonding    |
 | message | sender              | {senderAddress}    |
 
-* [0] Time is formatted in the RFC3339 standard
-
-### MsgCancelUnbondingDelegation
-
-| Type                          | Attribute Key       | Attribute Value                     |
-| ----------------------------- | ------------------  | ------------------------------------|
-| cancel_unbonding_delegation   | validator           | {validatorAddress}                  |
-| cancel_unbonding_delegation   | delegator           | {delegatorAddress}                  |
-| cancel_unbonding_delegation   | amount              | {cancelUnbondingDelegationAmount}   |
-| cancel_unbonding_delegation   | creation_height     | {unbondingCreationHeight}           |
-| message                       | module              | staking                             |
-| message                       | action              | cancel_unbond                       |
-| message                       | sender              | {senderAddress}                     |
+- [0] Time is formatted in the RFC3339 standard
 
 ### MsgBeginRedelegate
 
@@ -87,4 +74,4 @@ The staking module emits the following events:
 | message    | action                | begin_redelegate      |
 | message    | sender                | {senderAddress}       |
 
-* [0] Time is formatted in the RFC3339 standard
+- [0] Time is formatted in the RFC3339 standard

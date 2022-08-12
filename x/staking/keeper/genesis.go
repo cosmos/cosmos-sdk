@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // InitGenesis sets the pool and parameters for the provided keeper.  For each
@@ -48,10 +49,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 		}
 
 		switch validator.GetStatus() {
-		case types.Bonded:
+		case sdkstaking.Bonded:
 			bondedTokens = bondedTokens.Add(validator.GetTokens())
 
-		case types.Unbonding, types.Unbonded:
+		case sdkstaking.Unbonding, sdkstaking.Unbonded:
 			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
 
 		default:

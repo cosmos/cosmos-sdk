@@ -10,6 +10,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // NewHistoricalInfo will create a historical information struct from header and valset
@@ -45,11 +46,11 @@ func UnmarshalHistoricalInfo(cdc codec.BinaryCodec, value []byte) (hi Historical
 // ValidateBasic will ensure HistoricalInfo is not nil and sorted
 func ValidateBasic(hi HistoricalInfo) error {
 	if len(hi.Valset) == 0 {
-		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is empty")
+		return sdkerrors.Wrap(sdkstaking.ErrInvalidHistoricalInfo, "validator set is empty")
 	}
 
 	if !sort.IsSorted(Validators(hi.Valset)) {
-		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is not sorted by address")
+		return sdkerrors.Wrap(sdkstaking.ErrInvalidHistoricalInfo, "validator set is not sorted by address")
 	}
 
 	return nil

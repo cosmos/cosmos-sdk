@@ -9,7 +9,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simapp "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -91,7 +91,7 @@ func (suite *SlashingTestSuite) TestGRPCSigningInfos() {
 	})
 
 	// verify all values are returned without pagination
-	infoResp, err := queryClient.SigningInfos(gocontext.Background(),
+	var infoResp, err = queryClient.SigningInfos(gocontext.Background(),
 		&types.QuerySigningInfosRequest{Pagination: nil})
 	suite.NoError(err)
 	suite.Equal(signingInfos, infoResp.Info)

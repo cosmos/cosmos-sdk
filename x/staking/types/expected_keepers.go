@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // DistributionKeeper expected distribution keeper (noalias)
@@ -32,10 +33,14 @@ type BankKeeper interface {
 
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 
+	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderPool, recipientPool string, amt sdk.Coins) error
+	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 
+	MintCoins(cts sdk.Context, name string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 }
 
@@ -43,20 +48,20 @@ type BankKeeper interface {
 type ValidatorSet interface {
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(sdk.Context,
-		func(index int64, validator ValidatorI) (stop bool))
+		func(index int64, validator sdkstaking.ValidatorI) (stop bool))
 
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(sdk.Context,
-		func(index int64, validator ValidatorI) (stop bool))
+		func(index int64, validator sdkstaking.ValidatorI) (stop bool))
 
 	// iterate through the consensus validator set of the last block by operator address, execute func for each validator
 	IterateLastValidators(sdk.Context,
-		func(index int64, validator ValidatorI) (stop bool))
+		func(index int64, validator sdkstaking.ValidatorI) (stop bool))
 
-	Validator(sdk.Context, sdk.ValAddress) ValidatorI            // get a particular validator by operator address
-	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) ValidatorI // get a particular validator by consensus address
-	TotalBondedTokens(sdk.Context) sdk.Int                       // total bonded tokens within the validator set
-	StakingTokenSupply(sdk.Context) sdk.Int                      // total staking token supply
+	Validator(sdk.Context, sdk.ValAddress) sdkstaking.ValidatorI            // get a particular validator by operator address
+	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) sdkstaking.ValidatorI // get a particular validator by consensus address
+	TotalBondedTokens(sdk.Context) sdk.Int                                  // total bonded tokens within the validator set
+	StakingTokenSupply(sdk.Context) sdk.Int                                 // total staking token supply
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) sdk.Int
@@ -65,7 +70,7 @@ type ValidatorSet interface {
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
-	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) DelegationI
+	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) sdkstaking.DelegationI
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(sdk.Context) uint32
@@ -78,7 +83,7 @@ type DelegationSet interface {
 	// iterate through all delegations from one delegator by validator-AccAddress,
 	//   execute func for each validator
 	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-		fn func(index int64, delegation DelegationI) (stop bool))
+		fn func(index int64, delegation sdkstaking.DelegationI) (stop bool))
 }
 
 // Event Hooks
@@ -92,6 +97,7 @@ type StakingHooks interface {
 	AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error                           // Must be called when a validator is created
 	BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) error                         // Must be called when a validator's state changes
 	AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error // Must be called when a validator is deleted
+	BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) error                       // Must be called when tokenize share record is deleted
 
 	AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error         // Must be called when a validator is bonded
 	AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error // Must be called when a validator begins unbonding

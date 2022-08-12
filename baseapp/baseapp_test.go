@@ -2211,7 +2211,7 @@ func checkSMTStoreEqual(appB1 *BaseApp, appB2 *BaseApp, storeKeyName string) boo
 	return bytes.Equal(storeHashB1, storeHashB2)
 }
 
-func TestExportPreExecutionState(t *testing.T) {
+func TestEndToEndFraudProof(t *testing.T) {
 	routerOpt := func(bapp *BaseApp) {
 		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			kv := msg.(*msgKeyValue)

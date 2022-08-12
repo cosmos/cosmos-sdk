@@ -804,7 +804,7 @@ func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey, r
 		options = append(options, SetTracerFor(storeKey.Name(), storeKeyToSubstoreTraceBuf[storeKey.Name()]))
 		options = append(options, AppOptionFunc(routerOpts[storeKey.Name()]))
 	}
-	newApp, err := SetupBaseAppFromParams(app.name+"WithTracing", app.logger, dbm.NewMemDB(), app.txDecoder, storeKeyNames, app.LastBlockHeight()+1, storeToLoadFrom, options...)
+	newApp, err := SetupBaseAppFromParams(app.name+"WithTracing", app.logger, dbm.NewMemDB(), app.txDecoder, storeKeyNames, app.LastBlockHeight(), storeToLoadFrom, options...)
 
 	// Need to reset all the buffers to remove anything logged while setting up baseapp
 	storeTraceBuf.Reset()
@@ -815,9 +815,10 @@ func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey, r
 }
 
 // Generate a fraudproof for an app with the given trace buffers
-func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*bytes.Buffer) (FraudProof, error) {
+func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*bytes.Buffer, blockHeight int64) (FraudProof, error) {
 	fraudProof := FraudProof{}
 	fraudProof.stateWitness = make(map[string]StateWitness)
+	fraudProof.blockHeight = blockHeight
 	cms := app.cms.(*multi.Store)
 
 	storeKeys := cms.GetStoreKeys()
@@ -828,6 +829,9 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 
 			// This should be the deep subtree
 			deepSubstoreSMT, err := cms.GetLastSubstoreSMTWithKeys(storeKey.Name(), keys.Values())
+			if deepSubstoreSMT.Root() == nil {
+				continue
+			}
 			if err != nil {
 				return FraudProof{}, err
 			}
@@ -888,9 +892,12 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 
 	// make list of options to pass by parsing fraudproof
 	app := NewBaseApp(appName, logger, db, txDecoder, options...)
-
+	err := app.cms.(*multi.Store).SaveVersion(uint64(blockHeight))
+	if err != nil {
+		return nil, err
+	}
 	// stores are mounted
-	err := app.Init()
+	err = app.Init()
 
 	return app, err
 }

@@ -765,6 +765,19 @@ func (s *Store) GetVersion(version int64) (types.MultiStore, error) {
 	return s.getView(version)
 }
 
+func (s *Store) SaveVersion(version uint64) error {
+	if err := s.stateTxn.Commit(); err != nil {
+		return err
+	}
+	if err := s.stateDB.SaveVersion(version); err != nil {
+		return err
+	}
+	if err := s.refreshTransactions(false); err != nil {
+		return err
+	}
+	return nil
+}
+
 // CacheWrap implements MultiStore.
 func (s *Store) CacheWrap() types.CacheMultiStore {
 	return newCacheStore(s)
@@ -1083,7 +1096,11 @@ func (s *Store) GetSubstoreSMT(key string) *smt.Store {
 }
 
 func (s *Store) GetLastStore() (*viewStore, error) {
-	lastVersion := s.LastCommitID().Version
+	versions, err := s.stateDB.Versions()
+	if err != nil {
+		return nil, err
+	}
+	lastVersion := int64(versions.Last())
 	lastStore, err := s.GetVersion(lastVersion)
 	if err != nil {
 		return nil, err
@@ -1110,12 +1127,12 @@ func (s *Store) GetLastSubstoreSMTWithKeys(storekeyName string, subKeys []string
 	if err != nil {
 		return nil, err
 	}
-	// subStore, _ := viewLastStore.getSubstore(storekeyName)
+	sub, err := viewLastStore.getSubstore(storekeyName)
 	smt := viewLastStore.GetSubstoreSMT(storekeyName)
 	dsmt := smtlib.NewDeepSparseMerkleSubTree(smtlib.NewSimpleMap(), smtlib.NewSimpleMap(), sha256.New(), smt.Root())
 	for _, subKey := range subKeys {
 		bKey := []byte(subKey)
-		if smt.Has(bKey) {
+		if sub.Has(bKey) {
 			bValue := smt.Get(bKey)
 			proof, err := smt.GetSMTProof([]byte(subKey))
 			if err != nil {

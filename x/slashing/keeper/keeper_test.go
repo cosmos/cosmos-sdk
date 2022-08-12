@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Test a new validator entering the validator set

@@ -18,6 +18,7 @@ import (
 )
 
 // Simulation operation weights constants
+//
 //nolint:gosec // these are not hardcoded credentials.
 const (
 	OpWeightMsgUnjail = "op_weight_msg_unjail"

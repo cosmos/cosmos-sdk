@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -97,7 +96,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
 			cmd := cli.NewMsgVerifyInvariantTxCmd()
-			cmd.SetOut(ioutil.Discard)
+			cmd.SetOut(io.Discard)
 			assert.NotNil(t, cmd)
 
 			cmd.SetContext(ctx)

@@ -18,6 +18,7 @@ var commonArgs = []string{
 }
 
 // MsgSubmitLegacyProposal creates a tx for submit legacy proposal
+//
 //nolint:staticcheck // we are intentionally using a deprecated flag here.
 func MsgSubmitLegacyProposal(clientCtx client.Context, from, title, description, proposalType string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := append([]string{

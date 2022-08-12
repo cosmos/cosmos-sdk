@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"cosmossdk.io/errors"
 	"github.com/armon/go-metrics"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -59,7 +57,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		"submit proposal",
 	)
 
-	defer telemetry.IncrCounter(1, types.ModuleName, "proposal")
+	defer telemetry.IncrCounter(1, govtypes.ModuleName, "proposal")
 
 	proposer, _ := sdk.AccAddressFromBech32(msg.GetProposer())
 	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit())
@@ -70,14 +68,14 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, govtypes.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.GetProposer()),
 		),
 	)
 
 	if votingStarted {
-		submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal,
-			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.Id)),
+		submitEvent := sdk.NewEvent(govtypes.EventTypeSubmitProposal,
+			sdk.NewAttribute(govtypes.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.Id)),
 		)
 
 		ctx.EventManager().EmitEvent(submitEvent)
@@ -93,22 +91,22 @@ func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1.MsgExecLegac
 
 	govAcct := k.GetGovernanceAccount(ctx).GetAddress().String()
 	if govAcct != msg.Authority {
-		return nil, sdkerrors.Wrapf(types.ErrInvalidSigner, "expected %s got %s", govAcct, msg.Authority)
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", govAcct, msg.Authority)
 	}
 
 	content, err := v1.LegacyContentFromMessage(msg)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(types.ErrInvalidProposalContent, "%+v", err)
+		return nil, errors.Wrapf(govtypes.ErrInvalidProposalContent, "%+v", err)
 	}
 
 	// Ensure that the content has a respective handler
 	if !k.Keeper.legacyRouter.HasRoute(content.ProposalRoute()) {
-		return nil, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
+		return nil, errors.Wrap(govtypes.ErrNoProposalHandlerExists, content.ProposalRoute())
 	}
 
 	handler := k.Keeper.legacyRouter.GetRoute(content.ProposalRoute())
 	if err := handler(ctx, content); err != nil {
-		return nil, sdkerrors.Wrapf(types.ErrInvalidProposalContent, "failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
+		return nil, errors.Wrapf(govtypes.ErrInvalidProposalContent, "failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
 	}
 
 	return &v1.MsgExecLegacyContentResponse{}, nil
@@ -126,7 +124,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResp
 	}
 
 	defer telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, "vote"},
+		[]string{govtypes.ModuleName, "vote"},
 		1,
 		[]metrics.Label{
 			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
@@ -136,7 +134,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResp
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, govtypes.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Voter),
 		),
 	)
@@ -156,7 +154,7 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) 
 	}
 
 	defer telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, "vote"},
+		[]string{govtypes.ModuleName, "vote"},
 		1,
 		[]metrics.Label{
 			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
@@ -166,7 +164,7 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, govtypes.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Voter),
 		),
 	)
@@ -186,7 +184,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 	}
 
 	defer telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, "deposit"},
+		[]string{govtypes.ModuleName, "deposit"},
 		1,
 		[]metrics.Label{
 			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
@@ -196,7 +194,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, govtypes.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Depositor),
 		),
 	)
@@ -204,8 +202,8 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 	if votingStarted {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				types.EventTypeProposalDeposit,
-				sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", msg.ProposalId)),
+				govtypes.EventTypeProposalDeposit,
+				sdk.NewAttribute(govtypes.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", msg.ProposalId)),
 			),
 		)
 	}

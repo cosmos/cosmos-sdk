@@ -2,7 +2,6 @@ package cachekv
 
 import (
 	"bytes"
-	"github.com/tendermint/tendermint/libs/math"
 	"io"
 	"sort"
 	"sync"
@@ -14,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/tendermint/tendermint/libs/math"
 )
 
 // cValue represents a cached value.

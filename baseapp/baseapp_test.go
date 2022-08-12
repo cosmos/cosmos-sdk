@@ -2262,15 +2262,17 @@ func TestExportPreExecutionState(t *testing.T) {
 		}))
 	}
 	appB2, storeKeyToSubstoreTraceBuf, err := appB1.enableFraudProofGenerationMode(storeKeys, routerOpts)
-	_, _, _ = appB2, storeKeyToSubstoreTraceBuf, err
+	require.Nil(t, err)
+
+	_ = storeKeyToSubstoreTraceBuf
 
 	// TODO: Make this fraudulent somehow
 	executeBlockWithArbitraryTxs(t, appB2, numTransactions, 2)
 
 	// Note that we do not call commit
 
-	fraudproof, err := appB2.generateFraudProof(storeKeyToSubstoreTraceBuf)
-	_ = fraudproof
+	// No saved versions now so cannot revert state :(
+
 	// TODO: Test if that fraudproof only contains keys from that fraudulent block or not, if yes, pass
 }
 

@@ -2232,6 +2232,7 @@ func TestEndToEndFraudProof(t *testing.T) {
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
 	appB1.Commit()
+	storeHashB1 := appB1.cms.(*multi.Store).GetSubstoreSMT(capKey2.Name()).Root()
 
 	// B1 <- S2
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
@@ -2252,13 +2253,55 @@ func TestEndToEndFraudProof(t *testing.T) {
 		}))
 	}
 	appB2, storeKeyToSubstoreTraceBuf, err := appB1.enableFraudProofGenerationMode(storeKeys, routerOpts)
-	_, _, _ = appB2, storeKeyToSubstoreTraceBuf, err
+	require.Nil(t, err)
 
-	// TODO: Execute fraudulent block
+	cmsB2 := appB2.cms.(*multi.Store)
+	for _, storeKey := range storeKeys {
+		storeHashB2 := cmsB2.GetSubstoreSMT(storeKey.Name()).Root()
+		require.Equal(t, storeHashB1, storeHashB2)
+	}
 
-	// TODO: Get logs, revert back, and filter down state to export to a fraudproof
+	// Execute fraudulent block
+	// Note: should be one block but not able to revert state for a fresh baseapp because it needs a commit to revert
+	// so we have two blocks where we commit one
+	fraudTxs := executeBlockWithArbitraryTxs(t, appB2, numTransactions, 1)
+	commitHashB2 := appB2.Commit()
+	appHashB2 := commitHashB2.GetData()
+	executeBlockWithArbitraryTxs(t, appB2, numTransactions, 2)
 
-	// TODO: Test if that fraudproof only contains keys from that fraudulent block or not, if yes, pass
+	fraudProof, err := appB2.generateFraudProof(storeKeyToSubstoreTraceBuf, appB2.LastBlockHeight())
+	require.Nil(t, err)
+
+	// Light Client
+	fraudProofVerified, err := fraudProof.verifyFraudProof(appHashB2)
+	require.Nil(t, err)
+	require.True(t, fraudProofVerified)
+
+	// Check if fraudproof only contains keys from that fraudulent block or not, if yes, pass
+	for _, moduleName := range fraudProof.getModules() {
+		witnessKeys, witnessVals := make([]string, 0), make([]string, 0)
+		stateWitness := fraudProof.stateWitness[moduleName]
+		for _, witnessData := range stateWitness.WitnessData {
+			key, val := string(witnessData.Key), string(witnessData.Value)
+			witnessKeys = append(witnessKeys, key)
+			witnessVals = append(witnessVals, val)
+		}
+		txKeys, txVals := make([]string, 0), make([]string, 0)
+		for _, tx := range fraudTxs {
+			for _, msg := range tx.GetMsgs() {
+				msgKV := msg.(msgKeyValue)
+				txKeys = append(txKeys, (string(msgKV.Key)))
+				txVals = append(txVals, (string(msgKV.Value)))
+			}
+		}
+		sort.Strings(witnessKeys)
+		sort.Strings(txKeys)
+		require.Equal(t, witnessKeys, txKeys)
+
+		sort.Strings(witnessVals)
+		sort.Strings(txVals)
+		require.Equal(t, witnessVals, txVals)
+	}
 }
 
 func TestFraudProofGenerationMode(t *testing.T) {

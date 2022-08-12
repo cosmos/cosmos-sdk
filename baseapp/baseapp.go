@@ -846,10 +846,8 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 			}
 			for key := range keys {
 				bKey := []byte(key)
-				has, err := deepSubstoreSMT.Has(bKey)
-				if err != nil {
-					return FraudProof{}, err
-				}
+				has, _ := deepSubstoreSMT.Has(bKey)
+				// The error returned here is sometimes `invalid key` but the boolean is false
 				if has {
 					value, err := deepSubstoreSMT.Get([]byte(key))
 					if err != nil {

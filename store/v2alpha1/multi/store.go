@@ -765,19 +765,6 @@ func (s *Store) GetVersion(version int64) (types.MultiStore, error) {
 	return s.getView(version)
 }
 
-func (s *Store) SaveVersion(version uint64) error {
-	if err := s.stateTxn.Commit(); err != nil {
-		return err
-	}
-	if err := s.stateDB.SaveVersion(version); err != nil {
-		return err
-	}
-	if err := s.refreshTransactions(false); err != nil {
-		return err
-	}
-	return nil
-}
-
 // CacheWrap implements MultiStore.
 func (s *Store) CacheWrap() types.CacheMultiStore {
 	return newCacheStore(s)

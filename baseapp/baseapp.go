@@ -892,12 +892,8 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 
 	// make list of options to pass by parsing fraudproof
 	app := NewBaseApp(appName, logger, db, txDecoder, options...)
-	err := app.cms.(*multi.Store).SaveVersion(uint64(blockHeight))
-	if err != nil {
-		return nil, err
-	}
 	// stores are mounted
-	err = app.Init()
+	err := app.Init()
 
 	return app, err
 }

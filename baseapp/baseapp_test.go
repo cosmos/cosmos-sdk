@@ -2274,9 +2274,11 @@ func TestExportPreExecutionState(t *testing.T) {
 	fraudProof, err := appB2.generateFraudProof(storeKeyToSubstoreTraceBuf, 2)
 	_ = fraudProof
 
-	// No saved versions now so cannot revert state :(
+	// Added saved version but SMT is nil now :(
 
 	// TODO: Test if that fraudproof only contains keys from that fraudulent block or not, if yes, pass
+
+	// TODO: Compare app hash too
 }
 
 func TestFraudProofGenerationMode(t *testing.T) {

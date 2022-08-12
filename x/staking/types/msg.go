@@ -6,7 +6,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // staking message types
@@ -106,7 +105,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 	}
 
 	if msg.Pubkey == nil {
-		return sdkstaking.ErrEmptyValidatorPubKey
+		return ErrEmptyValidatorPubKey
 	}
 
 	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {

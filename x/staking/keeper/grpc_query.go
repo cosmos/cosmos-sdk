@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over keeper
@@ -434,7 +433,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 
 		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
-			return sdkstaking.ErrNoValidatorFound
+			return types.ErrNoValidatorFound
 		}
 
 		validators = append(validators, validator)
@@ -636,12 +635,12 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 
 		validator, found := k.GetValidator(ctx, valAddr)
 		if !found {
-			return nil, sdkstaking.ErrNoValidatorFound
+			return nil, types.ErrNoValidatorFound
 		}
 
 		delegation, found := k.GetDelegation(ctx, moduleAcc, valAddr)
 		if !found {
-			return nil, sdkstaking.ErrNoDelegation
+			return nil, types.ErrNoDelegation
 		}
 
 		tokens := validator.TokensFromShares(delegation.Shares)

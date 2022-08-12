@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	sdkslashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // NewQuerier creates a new querier for slashing clients.
@@ -51,7 +50,7 @@ func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQu
 
 	signingInfo, found := k.GetValidatorSigningInfo(ctx, sdk.ConsAddress(params.ConsAddress))
 	if !found {
-		return nil, sdkerrors.Wrap(sdkslashingtypes.ErrNoSigningInfoFound, params.ConsAddress)
+		return nil, sdkerrors.Wrap(types.ErrNoSigningInfoFound, params.ConsAddress)
 	}
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, signingInfo)

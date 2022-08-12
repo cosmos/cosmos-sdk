@@ -10,11 +10,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Implements Delegation interface
-var _ sdkstaking.DelegationI = Delegation{}
+var _ DelegationI = Delegation{}
 
 // String implements the Stringer interface for a DVPair object.
 func (dv DVPair) String() string {

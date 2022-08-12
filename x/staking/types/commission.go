@@ -6,7 +6,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // NewCommissionRates returns an initialized validator commission rates.
@@ -53,27 +52,27 @@ func (cr CommissionRates) Validate() error {
 	switch {
 	case cr.MaxRate.IsNegative():
 		// max rate cannot be negative
-		return sdkstaking.ErrCommissionNegative
+		return ErrCommissionNegative
 
 	case cr.MaxRate.GT(sdk.OneDec()):
 		// max rate cannot be greater than 1
-		return sdkstaking.ErrCommissionHuge
+		return ErrCommissionHuge
 
 	case cr.Rate.IsNegative():
 		// rate cannot be negative
-		return sdkstaking.ErrCommissionNegative
+		return ErrCommissionNegative
 
 	case cr.Rate.GT(cr.MaxRate):
 		// rate cannot be greater than the max rate
-		return sdkstaking.ErrCommissionGTMaxRate
+		return ErrCommissionGTMaxRate
 
 	case cr.MaxChangeRate.IsNegative():
 		// change rate cannot be negative
-		return sdkstaking.ErrCommissionChangeRateNegative
+		return ErrCommissionChangeRateNegative
 
 	case cr.MaxChangeRate.GT(cr.MaxRate):
 		// change rate cannot be greater than the max rate
-		return sdkstaking.ErrCommissionChangeRateGTMaxRate
+		return ErrCommissionChangeRateGTMaxRate
 	}
 
 	return nil
@@ -85,19 +84,19 @@ func (c Commission) ValidateNewRate(newRate sdk.Dec, blockTime time.Time) error 
 	switch {
 	case blockTime.Sub(c.UpdateTime).Hours() < 24:
 		// new rate cannot be changed more than once within 24 hours
-		return sdkstaking.ErrCommissionUpdateTime
+		return ErrCommissionUpdateTime
 
 	case newRate.IsNegative():
 		// new rate cannot be negative
-		return sdkstaking.ErrCommissionNegative
+		return ErrCommissionNegative
 
 	case newRate.GT(c.MaxRate):
 		// new rate cannot be greater than the max rate
-		return sdkstaking.ErrCommissionGTMaxRate
+		return ErrCommissionGTMaxRate
 
 	case newRate.Sub(c.Rate).GT(c.MaxChangeRate):
 		// new rate % points change cannot be greater than the max change rate
-		return sdkstaking.ErrCommissionGTMaxChangeRate
+		return ErrCommissionGTMaxChangeRate
 	}
 
 	return nil

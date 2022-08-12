@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -55,7 +54,7 @@ func delegateCoinsFromAccount(ctx sdk.Context, app *simapp.SimApp, addr sdk.AccA
 	// bondDenom := app.StakingKeeper.BondDenom(ctx)
 	// coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
 	// app.BankKeeper.DelegateCoinsFromAccountToModule(ctx, addr, types.EpochDelegationPoolName, coins)
-	_, err := app.StakingKeeper.Delegate(ctx, addr, amount, sdkstaking.Unbonded, val, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addr, amount, types.Unbonded, val, true)
 
 	return err
 }

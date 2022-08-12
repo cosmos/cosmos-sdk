@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // IsValSetSorted reports whether valset is sorted.
@@ -93,12 +92,12 @@ func TestTrackHistoricalInfo(t *testing.T) {
 
 	// Set bonded validators in keeper
 	val1 := teststaking.NewValidator(t, addrVals[2], PKs[2])
-	val1.Status = sdkstaking.Bonded // when not bonded, consensus power is Zero
+	val1.Status = types.Bonded // when not bonded, consensus power is Zero
 	val1.Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10)
 	val2 := teststaking.NewValidator(t, addrVals[3], PKs[3])
-	val1.Status = sdkstaking.Bonded
+	val1.Status = types.Bonded
 	val2.Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 80)
 	app.StakingKeeper.SetValidator(ctx, val2)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80)

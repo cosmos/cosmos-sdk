@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -48,10 +47,10 @@ func (csp *CommunityPoolSpendProposal) ValidateBasic() error {
 		return err
 	}
 	if !csp.Amount.IsValid() {
-		return sdkdistr.ErrInvalidProposalAmount
+		return ErrInvalidProposalAmount
 	}
 	if csp.Recipient == "" {
-		return sdkdistr.ErrEmptyProposalRecipient
+		return ErrEmptyProposalRecipient
 	}
 
 	return nil

@@ -17,7 +17,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -36,7 +35,7 @@ var (
 	BondStatusBonded      = BondStatus_name[int32(Bonded)]
 )
 
-var _ sdkstaking.ValidatorI = Validator{}
+var _ ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
 //nolint:interfacer
@@ -50,7 +49,7 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		OperatorAddress:      operator.String(),
 		ConsensusPubkey:      pkAny,
 		Jailed:               false,
-		Status:               sdkstaking.Unbonded,
+		Status:               Unbonded,
 		Tokens:               sdk.ZeroInt(),
 		DelegatorShares:      sdk.ZeroDec(),
 		Description:          description,
@@ -166,17 +165,17 @@ func UnmarshalValidator(cdc codec.BinaryCodec, value []byte) (v Validator, err e
 
 // IsBonded checks if the validator status equals Bonded
 func (v Validator) IsBonded() bool {
-	return v.GetStatus() == sdkstaking.Bonded
+	return v.GetStatus() == Bonded
 }
 
 // IsUnbonded checks if the validator status equals Unbonded
 func (v Validator) IsUnbonded() bool {
-	return v.GetStatus() == sdkstaking.Unbonded
+	return v.GetStatus() == Unbonded
 }
 
 // IsUnbonding checks if the validator status equals Unbonding
 func (v Validator) IsUnbonding() bool {
-	return v.GetStatus() == sdkstaking.Unbonding
+	return v.GetStatus() == Unbonding
 }
 
 // constant used in flags to indicate that description field should not be updated
@@ -322,7 +321,7 @@ func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) sdk.Dec {
 // returns an error if the validator has no tokens.
 func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
-		return sdk.ZeroDec(), sdkstaking.ErrInsufficientShares
+		return sdk.ZeroDec(), ErrInsufficientShares
 	}
 
 	return v.GetDelegatorShares().MulInt(amt).QuoInt(v.GetTokens()), nil
@@ -332,7 +331,7 @@ func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, error) {
 // a bond amount. It returns an error if the validator has no tokens.
 func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
-		return sdk.ZeroDec(), sdkstaking.ErrInsufficientShares
+		return sdk.ZeroDec(), ErrInsufficientShares
 	}
 
 	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(sdk.NewDecFromInt(v.GetTokens())), nil
@@ -364,7 +363,7 @@ func (v Validator) PotentialConsensusPower(r sdk.Int) int64 {
 
 // UpdateStatus updates the location of the shares within a validator
 // to reflect the new status
-func (v Validator) UpdateStatus(newStatus sdkstaking.BondStatus) Validator {
+func (v Validator) UpdateStatus(newStatus BondStatus) Validator {
 	v.Status = newStatus
 	return v
 }
@@ -454,9 +453,9 @@ func (v *Validator) Equal(v2 *Validator) bool {
 		v.UnbondingTime.Equal(v2.UnbondingTime)
 }
 
-func (v Validator) IsJailed() bool                   { return v.Jailed }
-func (v Validator) GetMoniker() string               { return v.Description.Moniker }
-func (v Validator) GetStatus() sdkstaking.BondStatus { return v.Status }
+func (v Validator) IsJailed() bool        { return v.Jailed }
+func (v Validator) GetMoniker() string    { return v.Description.Moniker }
+func (v Validator) GetStatus() BondStatus { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress {
 	if v.OperatorAddress == "" {
 		return nil

@@ -37,6 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 <!-- NOTE: when creating a new release, update cosmovisor/cmd/cosmovisor/cmd/version.go:Version -->
 
+## v1.2.1 2022-08-15
+
+* [\XXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXX) Fix failure when installing cosmovisor via `go install`.
+* [\XXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXX) Fix plan path case sensitivity issue.
+
 ## v1.2.0 2022-07-26
 
 ### Features

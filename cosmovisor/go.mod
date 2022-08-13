@@ -27,6 +27,10 @@ require (
 	github.com/btcsuite/btcd v0.22.0-beta // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+<<<<<<< HEAD
+=======
+	github.com/coinbase/rosetta-sdk-go v0.7.11 // indirect
+>>>>>>> c670fece2 (ci: fix release notes not populated by goreleaser)
 	github.com/confio/ics23/go v0.7.0 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7 // indirect

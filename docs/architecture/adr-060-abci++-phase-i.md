@@ -213,7 +213,7 @@ know them today will still exist and function as they currently do.
 
 ## Further Discussions
 
-It is possible to to design the app-side implementation of the `Mempool[T MempoolTx]`
+It is possible to design the app-side implementation of the `Mempool[T MempoolTx]`
 in many different ways using different data structures and implementations. All
 of which have different tradeoffs. The proposed solution keeps things simple
 and covers cases that would be required for most basic applications. There are

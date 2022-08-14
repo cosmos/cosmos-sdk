@@ -59,7 +59,7 @@ for evaluating transaction validity as it does now, with one very important
 _additive_ distinction.
 
 When executing transactions in `CheckTx`, the application will now add valid
-transactions, i.e. passing the AnteHandler, to it's own mempool data structure.
+transactions, i.e. passing the AnteHandler, to its own mempool data structure.
 In order to provide a flexible approach to meet the varying needs of application
 developers, we will define both a mempool interface and a data structure utilizing
 Golang generics, allowing developers to focus only on transaction

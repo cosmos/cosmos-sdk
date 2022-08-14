@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"os"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -400,6 +401,7 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 // MintCoins creates new coins from thin air and adds it to the module account.
 // It will panic if the module account does not exist or is unauthorized.
 func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error {
+	fmt.Fprintln(os.Stderr, "Mint coins", amounts)
 	err := k.mintCoinsRestrictionFn(ctx, amounts)
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))

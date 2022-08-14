@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"os"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -25,6 +26,7 @@ func (k Keeper) AllocateTokens(
 	feeCollector := k.authKeeper.GetModuleAccount(ctx, k.feeCollectorName)
 	feesCollectedInt := k.bankKeeper.GetAllBalances(ctx, feeCollector.GetAddress())
 	feesCollected := sdk.NewDecCoinsFromCoins(feesCollectedInt...)
+	fmt.Fprintln(os.Stderr, "Fees collected", feesCollected)
 
 	// transfer collected fees to the distribution module account
 	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, feesCollectedInt)
@@ -62,7 +64,7 @@ func (k Keeper) AllocateTokens(
 				sdk.NewAttribute(types.AttributeKeyValidator, proposerValidator.GetOperator().String()),
 			),
 		)
-
+		fmt.Fprintln(os.Stderr, "Paying previous proposer", proposerReward)
 		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
 		remaining = remaining.Sub(proposerReward)
 	} else {
@@ -78,10 +80,24 @@ func (k Keeper) AllocateTokens(
 			previousProposer.String()))
 	}
 
+	fmt.Fprintln(os.Stderr, "Fee collected", feesCollected)
 	// calculate fraction allocated to validators
 	communityTax := k.GetCommunityTax(ctx)
+	fmt.Fprintln(os.Stderr, "Community tax", communityTax)
 	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
+	fmt.Fprintln(os.Stderr, "Vote Multiplier", voteMultiplier)
 
+	// During the stake free period (first 483940 blocks (~28 days), the validators selected are
+
+	blockHeaderHeight := ctx.BlockHeader().Height
+	fmt.Fprintln(os.Stdout, "Current block height", blockHeaderHeight)
+	if blockHeaderHeight < 483840 {
+		logger.Error("Missing handler for stake-free grace period")
+		// TODO: We need to set up an initial validator blocktime (sort by time).
+		// Based on that we run into a deterministic list the 100 validators that received their daily rewards
+		// THere is 28 daily unique selection.
+		// The same validators are paid for a period of 17280 blocks.
+	}
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range bondedVotes {
@@ -91,10 +107,12 @@ func (k Keeper) AllocateTokens(
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
+		fmt.Fprintln(os.Stderr, "Allocated", reward)
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
 	}
 
+	fmt.Fprintln(os.Stderr, "Remaining", remaining)
 	// allocate community funding
 	feePool.CommunityPool = feePool.CommunityPool.Add(remaining...)
 	k.SetFeePool(ctx, feePool)

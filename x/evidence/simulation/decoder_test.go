@@ -8,22 +8,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
-	"github.com/cosmos/cosmos-sdk/x/evidence/testutil"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 func TestDecodeStore(t *testing.T) {
-	var evidenceKeeper keeper.Keeper
-
-	err := depinject.Inject(testutil.AppConfig, &evidenceKeeper)
-	require.NoError(t, err)
-
-	dec := simulation.NewDecodeStore(evidenceKeeper)
+	app := simapp.Setup(false)
+	dec := simulation.NewDecodeStore(app.EvidenceKeeper)
 
 	delPk1 := ed25519.GenPrivKey().PubKey()
 
@@ -34,7 +28,7 @@ func TestDecodeStore(t *testing.T) {
 		ConsensusAddress: sdk.ConsAddress(delPk1.Address()).String(),
 	}
 
-	evBz, err := evidenceKeeper.MarshalEvidence(ev)
+	evBz, err := app.EvidenceKeeper.MarshalEvidence(ev)
 	require.NoError(t, err)
 
 	kvPairs := kv.Pairs{

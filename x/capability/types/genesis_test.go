@@ -40,6 +40,7 @@ func TestValidateGenesis(t *testing.T) {
 				}
 
 				genState.Owners = append(genState.Owners, genOwner)
+
 			},
 			expPass: false,
 		},
@@ -54,6 +55,7 @@ func TestValidateGenesis(t *testing.T) {
 				}
 
 				genState.Owners = append(genState.Owners, genOwner)
+
 			},
 			expPass: false,
 		},
@@ -67,6 +69,7 @@ func TestValidateGenesis(t *testing.T) {
 				}
 
 				genState.Owners = append(genState.Owners, genOwner)
+
 			},
 			expPass: false,
 		},
@@ -80,6 +83,7 @@ func TestValidateGenesis(t *testing.T) {
 				}
 
 				genState.Owners = append(genState.Owners, genOwner)
+
 			},
 			expPass: false,
 		},
@@ -93,6 +97,7 @@ func TestValidateGenesis(t *testing.T) {
 				}
 
 				genState.Owners = append(genState.Owners, genOwner)
+
 			},
 			expPass: false,
 		},
@@ -106,6 +111,7 @@ func TestValidateGenesis(t *testing.T) {
 				}
 
 				genState.Owners = append(genState.Owners, genOwner)
+
 			},
 			expPass: false,
 		},

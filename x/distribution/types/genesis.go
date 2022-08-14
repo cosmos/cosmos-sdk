@@ -10,6 +10,7 @@ func NewGenesisState(
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
 	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord, slashes []ValidatorSlashEventRecord,
 ) *GenesisState {
+
 	return &GenesisState{
 		Params:                          params,
 		FeePool:                         fp,

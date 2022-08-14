@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -65,10 +66,10 @@ func TestChunkWriter(t *testing.T) {
 		require.NoError(t, err)
 		chunkWriter.CloseWithError(theErr)
 	}()
-	chunk, err := io.ReadAll(<-ch)
+	chunk, err := ioutil.ReadAll(<-ch)
 	require.NoError(t, err)
 	assert.Equal(t, []byte{1, 2}, chunk)
-	_, err = io.ReadAll(<-ch)
+	_, err = ioutil.ReadAll(<-ch)
 	require.Error(t, err)
 	assert.Equal(t, theErr, err)
 	assert.Empty(t, ch)
@@ -132,7 +133,7 @@ func TestChunkReader(t *testing.T) {
 	pr, pw := io.Pipe()
 	pch := make(chan io.ReadCloser, 1)
 	pch <- pr
-	_ = pw.CloseWithError(theErr)
+	pw.CloseWithError(theErr)
 
 	chunkReader = snapshots.NewChunkReader(pch)
 	buf = make([]byte, 4)
@@ -143,7 +144,7 @@ func TestChunkReader(t *testing.T) {
 	// Closing the reader should close the writer
 	pr, pw = io.Pipe()
 	pch = make(chan io.ReadCloser, 2)
-	pch <- io.NopCloser(bytes.NewBuffer([]byte{1, 2, 3}))
+	pch <- ioutil.NopCloser(bytes.NewBuffer([]byte{1, 2, 3}))
 	pch <- pr
 	close(pch)
 

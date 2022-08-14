@@ -3,12 +3,9 @@ package keeper_test
 import (
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/depinject"
-	"github.com/stretchr/testify/require"
+	"github.com/cosmos/cosmos-sdk/simapp"
 
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/testutil"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -21,15 +18,12 @@ const (
 func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_Existing() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	numEvidence := 100
-
-	var legacyAmino *codec.LegacyAmino
-	err := depinject.Inject(testutil.AppConfig, &legacyAmino)
-	require.NoError(suite.T(), err)
+	legacyCdc := simapp.MakeTestEncodingConfig().Amino
 
 	evidence := suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryEvidence}, "/"),
-		Data: legacyAmino.MustMarshalJSON(types.NewQueryEvidenceRequest(evidence[0].Hash())),
+		Data: legacyCdc.MustMarshalJSON(types.NewQueryEvidenceRequest(evidence[0].Hash())),
 	}
 
 	bz, err := suite.querier(ctx, []string{types.QueryEvidence}, query)
@@ -37,17 +31,14 @@ func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_Existing() {
 	suite.NotNil(bz)
 
 	var e exported.Evidence
-	suite.Nil(legacyAmino.UnmarshalJSON(bz, &e))
+	suite.Nil(legacyCdc.UnmarshalJSON(bz, &e))
 	suite.Equal(evidence[0], e)
 }
 
 func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_NonExisting() {
 	ctx := suite.ctx.WithIsCheckTx(false)
+	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	numEvidence := 100
-
-	var cdc codec.Codec
-	err := depinject.Inject(testutil.AppConfig, &cdc)
-	require.NoError(suite.T(), err)
 
 	suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
@@ -62,16 +53,13 @@ func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_NonExisting() {
 
 func (suite *KeeperTestSuite) TestQuerier_QueryAllEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
+	cdc := simapp.MakeTestEncodingConfig().Amino
 	numEvidence := 100
-
-	var legacyAmino *codec.LegacyAmino
-	err := depinject.Inject(testutil.AppConfig, &legacyAmino)
-	require.NoError(suite.T(), err)
 
 	suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryAllEvidence}, "/"),
-		Data: legacyAmino.MustMarshalJSON(types.NewQueryAllEvidenceParams(1, numEvidence)),
+		Data: cdc.MustMarshalJSON(types.NewQueryAllEvidenceParams(1, numEvidence)),
 	}
 
 	bz, err := suite.querier(ctx, []string{types.QueryAllEvidence}, query)
@@ -79,22 +67,19 @@ func (suite *KeeperTestSuite) TestQuerier_QueryAllEvidence() {
 	suite.NotNil(bz)
 
 	var e []exported.Evidence
-	suite.Nil(legacyAmino.UnmarshalJSON(bz, &e))
+	suite.Nil(cdc.UnmarshalJSON(bz, &e))
 	suite.Len(e, numEvidence)
 }
 
 func (suite *KeeperTestSuite) TestQuerier_QueryAllEvidence_InvalidPagination() {
 	ctx := suite.ctx.WithIsCheckTx(false)
+	cdc := simapp.MakeTestEncodingConfig().Amino
 	numEvidence := 100
-
-	var legacyAmino *codec.LegacyAmino
-	err := depinject.Inject(testutil.AppConfig, &legacyAmino)
-	require.NoError(suite.T(), err)
 
 	suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryAllEvidence}, "/"),
-		Data: legacyAmino.MustMarshalJSON(types.NewQueryAllEvidenceParams(0, numEvidence)),
+		Data: cdc.MustMarshalJSON(types.NewQueryAllEvidenceParams(0, numEvidence)),
 	}
 
 	bz, err := suite.querier(ctx, []string{types.QueryAllEvidence}, query)
@@ -102,6 +87,6 @@ func (suite *KeeperTestSuite) TestQuerier_QueryAllEvidence_InvalidPagination() {
 	suite.NotNil(bz)
 
 	var e []exported.Evidence
-	suite.Nil(legacyAmino.UnmarshalJSON(bz, &e))
+	suite.Nil(cdc.UnmarshalJSON(bz, &e))
 	suite.Len(e, 0)
 }

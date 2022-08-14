@@ -127,7 +127,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 
 	// test consensus param
 	s.Require().Nil(ctx.ConsensusParams())
-	cp := &tmproto.ConsensusParams{}
+	cp := &abci.ConsensusParams{}
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context
@@ -220,9 +220,4 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 
 	ctx = context.Background()
 	s.Require().Panics(func() { types.UnwrapSDKContext(ctx) })
-
-	// test unwrapping when we've used context.WithValue
-	ctx = context.WithValue(sdkCtx, "foo", "bar")
-	sdkCtx2 = types.UnwrapSDKContext(ctx)
-	s.Require().Equal(sdkCtx, sdkCtx2)
 }

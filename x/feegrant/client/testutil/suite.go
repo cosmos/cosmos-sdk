@@ -21,8 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
@@ -52,11 +51,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
-	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
-	s.Require().NoError(err)
+	s.network = network.New(s.T(), s.cfg)
 
-	_, err = s.network.WaitForHeight(1)
+	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
@@ -83,7 +80,7 @@ func (s *IntegrationTestSuite) createGrant(granter, grantee sdk.Address) {
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
 	fee := sdk.NewCoin("stake", sdk.NewInt(100))
@@ -316,7 +313,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 	alreadyExistedGrantee := s.addedGrantee
 	clientCtx := val.ClientCtx
 
-	fromAddr, fromName, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, granter.String())
+	fromAddr, fromName, _, err := client.GetFromFields(clientCtx.Keyring, granter.String(), clientCtx.GenerateOnly)
 	s.Require().Equal(fromAddr, granter)
 	s.Require().NoError(err)
 
@@ -663,7 +660,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				},
 				commonFlags...,
 			),
-			false, 38, &sdk.TxResponse{},
+			false, 4, &sdk.TxResponse{},
 		},
 		{
 			"Valid revoke",
@@ -718,11 +715,9 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	granter := val.Address
 
 	// creating an account manually (This account won't be exist in state)
-	k, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
-	pub, err := k.GetPubKey()
-	s.Require().NoError(err)
-	grantee := sdk.AccAddress(pub.Address())
+	grantee := sdk.AccAddress(info.GetPubKey().Address())
 
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -750,77 +745,37 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	testcases := []struct {
-		name       string
-		from       string
-		flags      []string
-		expErrCode uint32
-	}{
-		{
-			name:  "granted fee allowance for an account which is not in state and creating any tx with it by using --fee-granter shouldn't fail",
-			from:  grantee.String(),
-			flags: []string{fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String())},
-		},
-		{
-			name:       "--fee-payer should also sign the tx (direct)",
-			from:       grantee.String(),
-			flags:      []string{fmt.Sprintf("--%s=%s", flags.FlagFeePayer, granter.String())},
-			expErrCode: 4,
-		},
-		{
-			name: "--fee-payer should also sign the tx (amino-json)",
-			from: grantee.String(),
-			flags: []string{
-				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, granter.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-			},
-			expErrCode: 4,
-		},
-		{
-			name: "use --fee-payer and --fee-granter together works",
-			from: grantee.String(),
-			flags: []string{
-				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, grantee.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
-			},
-		},
-	}
+	// granted fee allowance for an account which is not in state and creating
+	// any tx with it by using --fee-account shouldn't fail
+	out, err := govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
+		"Text Proposal", "No desc", govtypes.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
+	)
 
-	for _, tc := range testcases {
-		s.Run(tc.name, func() {
-			out, err := govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, tc.from,
-				"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
-				tc.flags...,
-			)
-			s.Require().NoError(err)
-
-			var resp sdk.TxResponse
-			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-			s.Require().Equal(tc.expErrCode, resp.Code, resp)
-		})
-	}
+	s.Require().NoError(err)
+	var resp sdk.TxResponse
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+	s.Require().Equal(uint32(0), resp.Code)
 }
 
 func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	val := s.network.Validators[0]
 
 	granter := val.Address
-	k, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
-	pub, err := k.GetPubKey()
-	s.Require().NoError(err)
-	grantee := sdk.AccAddress(pub.Address())
+	grantee := sdk.AccAddress(info.GetPubKey().Address())
 
 	clientCtx := val.ClientCtx
 
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 	spendLimit := sdk.NewCoin("stake", sdk.NewInt(1000))
 
-	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govv1beta1.MsgSubmitProposal{}), sdk.MsgTypeURL(&govv1.MsgVoteWeighted{})}, ",")
+	allowMsgs := strings.Join([]string{sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{}), sdk.MsgTypeURL(&govtypes.MsgVoteWeighted{})}, ",")
 
 	testCases := []struct {
 		name         string
@@ -930,10 +885,9 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 		{
 			"valid proposal tx",
 			func() (testutil.BufferWriter, error) {
-				return govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, grantee.String(),
-					"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
-					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
-					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+				return govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
+					"Text Proposal", "No desc", govtypes.ProposalTypeText,
+					fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
 				)
 			},
 			&sdk.TxResponse{},
@@ -943,8 +897,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 			"valid weighted_vote tx",
 			func() (testutil.BufferWriter, error) {
 				return govtestutil.MsgVote(val.ClientCtx, grantee.String(), "0", "yes",
-					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
-					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
 				)
 			},
 			&sdk.TxResponse{},
@@ -958,7 +911,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 						grantee.String(),
 						"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
 						fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
-						fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter),
+						fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter),
 					},
 					commonFlags...,
 				)

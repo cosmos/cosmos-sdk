@@ -2,11 +2,8 @@ package keeper
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
-
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,14 +16,14 @@ import (
 // It must have a codec with all available allowances registered.
 type Keeper struct {
 	cdc        codec.BinaryCodec
-	storeKey   storetypes.StoreKey
+	storeKey   sdk.StoreKey
 	authKeeper feegrant.AccountKeeper
 }
 
 var _ ante.FeegrantKeeper = &Keeper{}
 
 // NewKeeper creates a fee grant Keeper
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak feegrant.AccountKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, ak feegrant.AccountKeeper) Keeper {
 	return Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
@@ -41,6 +38,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GrantAllowance creates a new grant
 func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
+
 	// create the account if it is not in account state
 	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
 	if granteeAcc == nil {
@@ -50,57 +48,6 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 
 	store := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
-
-	var oldExp *time.Time
-	existingGrant, err := k.getGrant(ctx, granter, grantee)
-
-	// If we didn't find any grant, we don't return any error.
-	// All other kinds of errors are returned.
-	if err != nil && !sdkerrors.IsOf(err, sdkerrors.ErrNotFound) {
-		return err
-	}
-
-	if existingGrant != nil && existingGrant.GetAllowance() != nil {
-		grantInfo, err := existingGrant.GetGrant()
-		if err != nil {
-			return err
-		}
-
-		oldExp, err = grantInfo.ExpiresAt()
-		if err != nil {
-			return err
-		}
-	}
-
-	newExp, err := feeAllowance.ExpiresAt()
-	switch {
-	case err != nil:
-		return err
-
-	case newExp != nil && newExp.Before(ctx.BlockTime()):
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
-
-	case oldExp == nil && newExp != nil:
-		// when old oldExp is nil there won't be any key added before to queue.
-		// add the new key to queue directly.
-		k.addToFeeAllowanceQueue(ctx, key[1:], newExp)
-
-	case oldExp != nil && newExp == nil:
-		// when newExp is nil no need of adding the key to the pruning queue
-		// remove the old key from queue.
-		k.removeFromGrantQueue(ctx, oldExp, key[1:])
-
-	case oldExp != nil && newExp != nil && !oldExp.Equal(*newExp):
-		// `key` formed here with the prefix of `FeeAllowanceKeyPrefix` (which is `0x00`)
-		// remove the 1st byte and reuse the remaining key as it is.
-
-		// remove the old key from queue.
-		k.removeFromGrantQueue(ctx, oldExp, key[1:])
-
-		// add the new key to queue.
-		k.addToFeeAllowanceQueue(ctx, key[1:], newExp)
-	}
-
 	grant, err := feegrant.NewGrant(granter, grantee, feeAllowance)
 	if err != nil {
 		return err
@@ -116,39 +63,6 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			feegrant.EventTypeSetFeeGrant,
-			sdk.NewAttribute(feegrant.AttributeKeyGranter, grant.Granter),
-			sdk.NewAttribute(feegrant.AttributeKeyGrantee, grant.Grantee),
-		),
-	)
-
-	return nil
-}
-
-// UpdateAllowance updates the existing grant.
-func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-	store := ctx.KVStore(k.storeKey)
-	key := feegrant.FeeAllowanceKey(granter, grantee)
-
-	_, err := k.getGrant(ctx, granter, grantee)
-	if err != nil {
-		return err
-	}
-
-	grant, err := feegrant.NewGrant(granter, grantee, feeAllowance)
-	if err != nil {
-		return err
-	}
-
-	bz, err := k.cdc.Marshal(&grant)
-	if err != nil {
-		return err
-	}
-
-	store.Set(key, bz)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			feegrant.EventTypeUpdateFeeGrant,
 			sdk.NewAttribute(feegrant.AttributeKeyGranter, grant.Granter),
 			sdk.NewAttribute(feegrant.AttributeKeyGrantee, grant.Grantee),
 		),
@@ -196,7 +110,7 @@ func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.Ac
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, sdkerrors.ErrNotFound.Wrap("fee-grant not found")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee-grant not found")
 	}
 
 	var feegrant feegrant.Grant
@@ -262,7 +176,7 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	emitUseGrantEvent(ctx, granter.String(), grantee.String())
 
 	// if fee allowance is accepted, store the updated state of the allowance
-	return k.UpdateAllowance(ctx, granter, grantee, grant)
+	return k.GrantAllowance(ctx, granter, grantee, grant)
 }
 
 func emitUseGrantEvent(ctx sdk.Context, granter, grantee string) {
@@ -312,30 +226,4 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (*feegrant.GenesisState, error) {
 	return &feegrant.GenesisState{
 		Allowances: grants,
 	}, err
-}
-
-func (k Keeper) removeFromGrantQueue(ctx sdk.Context, exp *time.Time, allowanceKey []byte) {
-	key := feegrant.FeeAllowancePrefixQueue(exp, allowanceKey)
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(key)
-}
-
-func (k Keeper) addToFeeAllowanceQueue(ctx sdk.Context, grantKey []byte, exp *time.Time) {
-	store := ctx.KVStore(k.storeKey)
-	store.Set(feegrant.FeeAllowancePrefixQueue(exp, grantKey), []byte{})
-}
-
-// RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
-func (k Keeper) RemoveExpiredAllowances(ctx sdk.Context) {
-	exp := ctx.BlockTime()
-	store := ctx.KVStore(k.storeKey)
-	iterator := store.Iterator(feegrant.FeeAllowanceQueueKeyPrefix, sdk.InclusiveEndBytes(feegrant.AllowanceByExpTimeKey(&exp)))
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		store.Delete(iterator.Key())
-
-		granter, grantee := feegrant.ParseAddressesFromFeeAllowanceQueueKey(iterator.Key())
-		store.Delete(feegrant.FeeAllowanceKey(granter, grantee))
-	}
 }

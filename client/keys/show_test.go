@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,18 +25,12 @@ func Test_multiSigKey_Properties(t *testing.T) {
 		1,
 		[]cryptotypes.PubKey{tmpKey1.PubKey()},
 	)
-	k, err := keyring.NewMultiRecord("myMultisig", pk)
+	tmp, err := keyring.NewMultiInfo("myMultisig", pk)
 	require.NoError(t, err)
-	require.Equal(t, "myMultisig", k.Name)
-	require.Equal(t, keyring.TypeMulti, k.GetType())
-
-	pub, err := k.GetPubKey()
-	require.NoError(t, err)
-	require.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3F", pub.Address().String())
-
-	addr, err := k.GetAddress()
-	require.NoError(t, err)
-	require.Equal(t, "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc", sdk.MustBech32ifyAddressBytes("cosmos", addr))
+	require.Equal(t, "myMultisig", tmp.GetName())
+	require.Equal(t, keyring.TypeMulti, tmp.GetType())
+	require.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3F", tmp.GetPubKey().Address().String())
+	require.Equal(t, "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc", sdk.MustBech32ifyAddressBytes("cosmos", tmp.GetAddress()))
 }
 
 func Test_showKeysCmd(t *testing.T) {
@@ -53,13 +46,12 @@ func Test_runShowCmd(t *testing.T) {
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	kbHome := t.TempDir()
-	cdc := simapp.MakeTestEncodingConfig().Codec
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
 
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
-		WithCodec(cdc)
+		WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{"invalid"})
@@ -72,8 +64,8 @@ func Test_runShowCmd(t *testing.T) {
 	fakeKeyName2 := "runShowCmd_Key2"
 
 	t.Cleanup(func() {
-		cleanupKeys(t, kb, "runShowCmd_Key1")
-		cleanupKeys(t, kb, "runShowCmd_Key2")
+		kb.Delete("runShowCmd_Key1")
+		kb.Delete("runShowCmd_Key2")
 	})
 
 	path := hd.NewFundraiserParams(1, sdk.CoinType, 0).String()
@@ -88,51 +80,49 @@ func Test_runShowCmd(t *testing.T) {
 	cmd.SetArgs([]string{
 		fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-		fmt.Sprintf("--%s=", FlagBechPrefix),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=", FlagBechPrefix),
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid Bech32 prefix encoding provided: ")
 
 	cmd.SetArgs([]string{
 		fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 	})
 
 	// try fetch by name
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// try fetch by addr
-	k, err := kb.Key(fakeKeyName1)
-	require.NoError(t, err)
-	addr, err := k.GetAddress()
-	require.NoError(t, err)
+	info, err := kb.Key(fakeKeyName1)
 	cmd.SetArgs([]string{
-		addr.String(),
+		info.GetAddress().String(),
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 	})
 
+	require.NoError(t, err)
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now try multisig key - set bech to acc
 	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 		fmt.Sprintf("--%s=0", flagMultiSigThreshold),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "threshold must be a positive integer")
 
 	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
@@ -140,31 +130,31 @@ func Test_runShowCmd(t *testing.T) {
 	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--%s=acc", FlagBechPrefix),
 		fmt.Sprintf("--%s=true", FlagDevice),
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for accounts stored in devices")
 
 	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--%s=val", FlagBechPrefix),
 		fmt.Sprintf("--%s=true", FlagDevice),
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for accounts")
 
 	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--%s=val", FlagBechPrefix),
 		fmt.Sprintf("--%s=true", FlagDevice),
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
 		fmt.Sprintf("--%s=true", FlagPublicKey),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for addresses not pubkeys")
 }

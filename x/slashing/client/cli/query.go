@@ -30,6 +30,7 @@ func GetQueryCmd() *cobra.Command {
 	)
 
 	return slashingQueryCmd
+
 }
 
 // GetCmdQuerySigningInfo implements the command to query signing info.

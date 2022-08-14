@@ -3,7 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	"io/ioutil"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -32,8 +32,8 @@ func GetTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(
 		NewMsgCreateVestingAccountCmd(),
-		NewMsgCreatePermanentLockedAccountCmd(),
 		NewMsgCreatePeriodicVestingAccountCmd(),
+		NewMsgDonateAllVestingTokensCmd(),
 	)
 
 	return txCmd
@@ -47,7 +47,7 @@ func NewMsgCreateVestingAccountCmd() *cobra.Command {
 		Short: "Create a new vesting account funded with an allocation of tokens.",
 		Long: `Create a new vesting account funded with an allocation of tokens. The
 account can either be a delayed or continuous vesting account, which is determined
-by the '--delayed' flag. All vesting accounts created will have their start time
+by the '--delayed' flag. All vesting accouts created will have their start time
 set by the committed block's time. The end_time must be provided as a UNIX epoch
 timestamp.`,
 		Args: cobra.ExactArgs(3),
@@ -85,42 +85,6 @@ timestamp.`,
 	return cmd
 }
 
-// NewMsgCreatePermanentLockedAccountCmd returns a CLI command handler for creating a
-// MsgCreatePermanentLockedAccount transaction.
-func NewMsgCreatePermanentLockedAccountCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "create-permanent-locked-account [to_address] [amount]",
-		Short: "Create a new permanently locked account funded with an allocation of tokens.",
-		Long: `Create a new account funded with an allocation of permanently locked tokens. These
-tokens may be used for staking but are non-transferable. Staking rewards will acrue as liquid and transferable
-tokens.`,
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			toAddr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
-			amount, err := sdk.ParseCoinsNormalized(args[1])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgCreatePermanentLockedAccount(clientCtx.GetFromAddress(), toAddr, amount)
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
 type VestingData struct {
 	StartTime int64         `json:"start_time"`
 	Periods   []InputPeriod `json:"periods"`
@@ -141,19 +105,20 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 		Where periods.json contains:
 
 		An array of coin strings and unix epoch times for coins to vest
-{ "start_time": 1625204910,
-"period":[
- {
-  "coins": "10test",
-  "length_seconds":2592000 //30 days
- },
- {
-	"coins": "10test",
-	"length_seconds":2592000 //30 days
- },
-]
-	}
-		`,
+{ 
+	"start_time": 1625204910,
+	"periods":[
+		{
+			"coins": "10test",
+			"length_seconds":2592000
+		},
+		{
+			"coins": "10test",
+			"length_seconds":2592000 //30 days
+		}
+	]
+}
+`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -166,7 +131,7 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 				return err
 			}
 
-			contents, err := os.ReadFile(args[1])
+			contents, err := ioutil.ReadFile(args[1])
 			if err != nil {
 				return err
 			}
@@ -198,6 +163,34 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewMsgDonateAllVestingTokensCmd returns a CLI command handler for creating a
+// MsgDonateAllVestingTokens transaction.
+func NewMsgDonateAllVestingTokensCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "donate-all-vesting-tokens",
+		Short: "Donate all vesting tokens of a vesting account to community pool.",
+		Long: `Donate all vesting tokens of a vesting account to community pool. 
+		The account must not have any delegated vesting tokens to prevent complex
+		vesting logic changes. After donation, the account will be changed to normal 
+		"BaseAccount".`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgDonateAllVestingTokens(clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

@@ -2,10 +2,10 @@
 
 ## Changelog
 
-* 2020-01-08: Initial version
-* 2020-01-09: Alterations to handle vesting accounts
-* 2020-01-14: Updates from review feedback
-* 2020-01-30: Updates from implementation
+- 2020-01-08: Initial version
+- 2020-01-09: Alterations to handle vesting accounts
+- 2020-01-14: Updates from review feedback
+- 2020-01-30: Updates from implementation
 
 ### Glossary
 
@@ -38,11 +38,11 @@ vesting coins (which is safe since these cannot contain arbitrary denominations)
 
 The following APIs will be added to the `x/bank` keeper:
 
-* `GetAllBalances(ctx Context, addr AccAddress) Coins`
-* `GetBalance(ctx Context, addr AccAddress, denom string) Coin`
-* `SetBalance(ctx Context, addr AccAddress, coin Coin)`
-* `LockedCoins(ctx Context, addr AccAddress) Coins`
-* `SpendableCoins(ctx Context, addr AccAddress) Coins`
+- `GetAllBalances(ctx Context, addr AccAddress) Coins`
+- `GetBalance(ctx Context, addr AccAddress, denom string) Coin`
+- `SetBalance(ctx Context, addr AccAddress, coin Coin)`
+- `LockedCoins(ctx Context, addr AccAddress) Coins`
+- `SpendableCoins(ctx Context, addr AccAddress) Coins`
 
 Additional APIs may be added to facilitate iteration and auxiliary functionality not essential to
 core functionality or persistence.
@@ -100,13 +100,13 @@ Accepted.
 
 ### Positive
 
-* O(1) reads & writes of balances (with respect to the number of denominations for
+- O(1) reads & writes of balances (with respect to the number of denominations for
 which an account has non-zero balances). Note, this does not relate to the actual
 I/O cost, rather the total number of direct reads needed.
 
 ### Negative
 
-* Slightly less efficient reads/writes when reading & writing all balances of a
+- Slightly less efficient reads/writes when reading & writing all balances of a
 single account in a transaction.
 
 ### Neutral
@@ -115,6 +115,6 @@ None in particular.
 
 ## References
 
-* Ref: https://github.com/cosmos/cosmos-sdk/issues/4982
-* Ref: https://github.com/cosmos/cosmos-sdk/issues/5467
-* Ref: https://github.com/cosmos/cosmos-sdk/issues/5492
+- Ref: https://github.com/cosmos/cosmos-sdk/issues/4982
+- Ref: https://github.com/cosmos/cosmos-sdk/issues/5467
+- Ref: https://github.com/cosmos/cosmos-sdk/issues/5492

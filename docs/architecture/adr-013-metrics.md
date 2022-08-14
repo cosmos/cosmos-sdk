@@ -2,7 +2,7 @@
 
 ## Changelog
 
-* 20-01-2020: Initial Draft
+- 20-01-2020: Initial Draft
 
 ## Status
 
@@ -148,7 +148,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 
 ### Positive
 
-* Exposure into the performance and behavior of an application
+- Exposure into the performance and behavior of an application
 
 ### Negative
 

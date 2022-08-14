@@ -15,7 +15,7 @@ Accounts are exposed externally as an interface, and stored internally as
 either a base account or vesting account. Module clients wishing to add more
 account types may do so.
 
-* `0x01 | Address -> ProtocolBuffer(account)`
+- `0x01 | Address -> ProtocolBuffer(account)`
 
 ### Account Interface
 

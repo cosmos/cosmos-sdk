@@ -113,11 +113,11 @@ comparing potential future ones to find the max.
 
 Currently the only Tendermint ABCI fault is:
 
-* Unjustified precommits (double signs)
+- Unjustified precommits (double signs)
 
 It is currently planned to include the following fault in the near future:
 
-* Signing a precommit when you're in unbonding phase (needed to make light client bisection safe)
+- Signing a precommit when you're in unbonding phase (needed to make light client bisection safe)
 
 Given that these faults are both attributable byzantine faults, we will likely
 want to slash them equally, and thus we can enact the above change.

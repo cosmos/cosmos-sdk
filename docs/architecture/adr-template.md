@@ -2,7 +2,7 @@
 
 ## Changelog
 
-* {date}: {changelog}
+- {date}: {changelog}
 
 ## Status
 
@@ -57,4 +57,4 @@ Test cases for an implementation are mandatory for ADRs that are affecting conse
 
 ## References
 
-* {reference link}
+- {reference link}

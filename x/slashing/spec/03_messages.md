@@ -22,7 +22,7 @@ message MsgUnjail {
 
 Below is a pseudocode of the `MsgSrv/Unjail` RPC:
 
-```go
+```
 unjail(tx MsgUnjail)
     validator = getValidator(tx.ValidatorAddr)
     if validator == nil

@@ -1,4 +1,3 @@
-//go:build cgo && ledger && !test_ledger_mock
 // +build cgo,ledger,!test_ledger_mock
 
 package ledger

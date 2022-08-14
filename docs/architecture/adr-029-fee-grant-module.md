@@ -2,8 +2,8 @@
 
 ## Changelog
 
-* 2020/08/18: Initial Draft
-* 2021/05/05: Removed height based expiration support and simplified naming.
+- 2020/08/18: Initial Draft
+- 2021/05/05: Removed height based expiration support and simplified naming.
 
 ## Status
 
@@ -137,17 +137,17 @@ set and correctly deduct fees based on fee allowances.
 
 ### Positive
 
-* improved UX for use cases where it is cumbersome to maintain an account balance just for fees
+- improved UX for use cases where it is cumbersome to maintain an account balance just for fees
 
 ### Negative
 
 ### Neutral
 
-* a new field must be added to the transaction `Fee` message and a new `AnteDecorator` must be
+- a new field must be added to the transaction `Fee` message and a new `AnteDecorator` must be
 created to use it
 
 ## References
 
-* Blog article describing initial work: https://medium.com/regen-network/hacking-the-cosmos-cosmwasm-and-key-management-a08b9f561d1b
-* Initial public specification: https://gist.github.com/aaronc/b60628017352df5983791cad30babe56
-* Original subkeys proposal from B-harvest which influenced this design: https://github.com/cosmos/cosmos-sdk/issues/4480
+- Blog article describing initial work: https://medium.com/regen-network/hacking-the-cosmos-cosmwasm-and-key-management-a08b9f561d1b
+- Initial public specification: https://gist.github.com/aaronc/b60628017352df5983791cad30babe56
+- Original subkeys proposal from B-harvest which influenced this design: https://github.com/cosmos/cosmos-sdk/issues/4480

@@ -21,8 +21,8 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	app := simapp.Setup(t, false)
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	app := simapp.Setup(false)
+	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	acc := types.NewBaseAccountWithAddress(delAddr1)
 	dec := simulation.NewDecodeStore(app.AccountKeeper)
 

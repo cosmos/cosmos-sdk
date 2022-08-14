@@ -8,13 +8,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var PKs = simtestutil.CreateTestPubKeys(500)
+var (
+	PKs = simapp.CreateTestPubKeys(500)
+)
 
 func init() {
 	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
@@ -22,8 +23,8 @@ func init() {
 
 // createTestInput Returns a simapp with custom StakingKeeper
 // to avoid messing with the hooks.
-func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(t, false)
+func createTestInput() (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.StakingKeeper = keeper.NewKeeper(
@@ -44,7 +45,7 @@ func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, ty
 // generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
 func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int) ([]sdk.AccAddress, []sdk.ValAddress) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, sdk.NewInt(10000))
-	addrVals := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	return addrDels, addrVals
 }

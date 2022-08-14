@@ -1,4 +1,3 @@
-//go:build norace
 // +build norace
 
 package testutil
@@ -6,16 +5,13 @@ package testutil
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/x/params/testutil"
+
+	"github.com/stretchr/testify/suite"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
-	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
-	require.NoError(t, err)
+	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 	suite.Run(t, NewIntegrationTestSuite(cfg))
 }

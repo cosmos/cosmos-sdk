@@ -1,0 +1,470 @@
+---
+swagger: "2.0"
+info:
+  version: "3.0"
+  title: Gaia-Lite for Cosmos
+  description: A REST interface for state queries, transaction generation and broadcasting.
+tags:
+  - name: Transactions
+    description: Search, encode, or broadcast transactions.
+  - name: Tendermint RPC
+    description: Tendermint APIs, such as query blocks, transactions and validatorset
+schemes:
+  - https
+host: api.cosmos.network
+securityDefinitions:
+  kms:
+    type: basic
+paths:
+  /node_info:
+    get:
+      description: Information about the connected node
+      summary: The properties of the connected node
+      tags:
+        - Gaia REST
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Node status
+          schema:
+            type: object
+            properties:
+              application_version:
+                properties:
+                  build_tags:
+                    type: string
+                  client_name:
+                    type: string
+                  commit:
+                    type: string
+                  go:
+                    type: string
+                  name:
+                    type: string
+                  server_name:
+                    type: string
+                  version:
+                    type: string
+              node_info:
+                properties:
+                  id:
+                    type: string
+                  moniker:
+                    type: string
+                    example: validator-name
+                  protocol_version:
+                    properties:
+                      p2p:
+                        type: string
+                        example: 7
+                      block:
+                        type: string
+                        example: 10
+                      app:
+                        type: string
+                        example: 0
+                  network:
+                    type: string
+                    example: gaia-2
+                  channels:
+                    type: string
+                  listen_addr:
+                    type: string
+                    example: 192.168.56.1:26656
+                  version:
+                    description: Tendermint version
+                    type: string
+                    example: 0.15.0
+                  other:
+                    description: more information on versions
+                    type: object
+                    properties:
+                      tx_index:
+                        type: string
+                        example: on
+                      rpc_address:
+                        type: string
+                        example: tcp://0.0.0.0:26657
+        500:
+          description: Failed to query node status
+  /syncing:
+    get:
+      summary: Syncing state of node
+      tags:
+        - Tendermint RPC
+      description: Get if the node is currently syning with other nodes
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Node syncing status
+          schema:
+            type: object
+            properties:
+              syncing:
+                type: boolean
+        500:
+          description: Server internal error
+  /blocks/latest:
+    get:
+      summary: Get the latest block
+      tags:
+        - Tendermint RPC
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The latest block
+          schema:
+            $ref: "#/definitions/BlockQuery"
+        500:
+          description: Server internal error
+  /blocks/{height}:
+    get:
+      summary: Get a block at a certain height
+      tags:
+        - Tendermint RPC
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: height
+          description: Block height
+          required: true
+          type: number
+          x-example: 1
+      responses:
+        200:
+          description: The block at a specific height
+          schema:
+            $ref: "#/definitions/BlockQuery"
+        404:
+          description: Request block height doesn't
+        400:
+          description: Invalid height
+        500:
+          description: Server internal error
+  /validatorsets/latest:
+    get:
+      summary: Get the latest validator set
+      tags:
+        - Tendermint RPC
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The validator set at the latest block height
+          schema:
+            type: object
+            properties:
+              block_height:
+                type: string
+              validators:
+                type: array
+                items:
+                  $ref: "#/definitions/TendermintValidator"
+        500:
+          description: Server internal error
+  /validatorsets/{height}:
+    get:
+      summary: Get a validator set a certain height
+      tags:
+        - Tendermint RPC
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: height
+          description: Block height
+          required: true
+          type: number
+          x-example: 1
+      responses:
+        200:
+          description: The validator set at a specific block height
+          schema:
+            type: object
+            properties:
+              block_height:
+                type: string
+              validators:
+                type: array
+                items:
+                  $ref: "#/definitions/TendermintValidator"
+        404:
+          description: Block at height not available
+        400:
+          description: Invalid height
+        500:
+          description: Server internal error
+definitions:
+  CheckTxResult:
+    type: object
+    properties:
+      code:
+        type: integer
+      data:
+        type: string
+      gas_used:
+        type: integer
+      gas_wanted:
+        type: integer
+      info:
+        type: string
+      log:
+        type: string
+      tags:
+        type: array
+        items:
+          $ref: "#/definitions/KVPair"
+    example:
+      code: 0
+      data: data
+      log: log
+      gas_used: 5000
+      gas_wanted: 10000
+      info: info
+      tags:
+        - ""
+        - ""
+  DeliverTxResult:
+    type: object
+    properties:
+      code:
+        type: integer
+      data:
+        type: string
+      gas_used:
+        type: integer
+      gas_wanted:
+        type: integer
+      info:
+        type: string
+      log:
+        type: string
+      tags:
+        type: array
+        items:
+          $ref: "#/definitions/KVPair"
+    example:
+      code: 5
+      data: data
+      log: log
+      gas_used: 5000
+      gas_wanted: 10000
+      info: info
+      tags:
+        - ""
+        - ""
+  KVPair:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+  Msg:
+    type: string
+  Address:
+    type: string
+    description: bech32 encoded address
+    example: cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27
+  ValidatorAddress:
+    type: string
+    description: bech32 encoded address
+    example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
+  Coin:
+    type: object
+    properties:
+      denom:
+        type: string
+        example: stake
+      amount:
+        type: string
+        example: "50"
+  Hash:
+    type: string
+    example: EE5F3404034C524501629B56E0DDC38FAD651F04
+  BlockID:
+    type: object
+    properties:
+      hash:
+        $ref: "#/definitions/Hash"
+      parts:
+        type: object
+        properties:
+          total:
+            type: number
+            example: 0
+          hash:
+            $ref: "#/definitions/Hash"
+  BlockHeader:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        example: cosmoshub-2
+      height:
+        type: number
+        example: 1
+      time:
+        type: string
+        example: "2017-12-30T05:53:09.287+01:00"
+      num_txs:
+        type: number
+        example: 0
+      last_block_id:
+        $ref: "#/definitions/BlockID"
+      total_txs:
+        type: number
+        example: 35
+      last_commit_hash:
+        $ref: "#/definitions/Hash"
+      data_hash:
+        $ref: "#/definitions/Hash"
+      validators_hash:
+        $ref: "#/definitions/Hash"
+      next_validators_hash:
+        $ref: "#/definitions/Hash"
+      consensus_hash:
+        $ref: "#/definitions/Hash"
+      app_hash:
+        $ref: "#/definitions/Hash"
+      last_results_hash:
+        $ref: "#/definitions/Hash"
+      evidence_hash:
+        $ref: "#/definitions/Hash"
+      proposer_address:
+        $ref: "#/definitions/Address"
+      version:
+        type: object
+        properties:
+          block:
+            type: string
+            example: 10
+          app:
+            type: string
+            example: 0
+  Block:
+    type: object
+    properties:
+      header:
+        $ref: "#/definitions/BlockHeader"
+      txs:
+        type: array
+        items:
+          type: string
+      evidence:
+        type: array
+        items:
+          type: string
+      last_commit:
+        type: object
+        properties:
+          block_id:
+            $ref: "#/definitions/BlockID"
+          precommits:
+            type: array
+            items:
+              type: object
+              properties:
+                validator_address:
+                  type: string
+                validator_index:
+                  type: string
+                  example: "0"
+                height:
+                  type: string
+                  example: "0"
+                round:
+                  type: string
+                  example: "0"
+                timestamp:
+                  type: string
+                  example: "2017-12-30T05:53:09.287+01:00"
+                type:
+                  type: number
+                  example: 2
+                block_id:
+                  $ref: "#/definitions/BlockID"
+                signature:
+                  type: string
+                  example: "7uTC74QlknqYWEwg7Vn6M8Om7FuZ0EO4bjvuj6rwH1mTUJrRuMMZvAAqT9VjNgP0RA/TDp6u/92AqrZfXJSpBQ=="
+  BlockQuery:
+    type: object
+    properties:
+      block_meta:
+        type: object
+        properties:
+          header:
+            $ref: "#/definitions/BlockHeader"
+          block_id:
+            $ref: "#/definitions/BlockID"
+      block:
+        $ref: "#/definitions/Block"
+  BaseReq:
+    type: object
+    properties:
+      from:
+        type: string
+        example: "cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc"
+        description: Sender address or Keybase name to generate a transaction
+      memo:
+        type: string
+        example: "Sent via Cosmos Voyager 🚀"
+      chain_id:
+        type: string
+        example: "Cosmos-Hub"
+      account_number:
+        type: string
+        example: "0"
+      sequence:
+        type: string
+        example: "1"
+      gas:
+        type: string
+        example: "200000"
+      gas_adjustment:
+        type: string
+        example: "1.2"
+      fees:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
+      simulate:
+        type: boolean
+        example: false
+        description: Estimate gas for a transaction (cannot be used in conjunction with generate_only)
+  TendermintValidator:
+    type: object
+    properties:
+      address:
+        $ref: "#/definitions/ValidatorAddress"
+      pub_key:
+        type: string
+        example: cosmosvalconspub1zcjduepq0vu2zgkgk49efa0nqwzndanq5m4c7pa3u4apz4g2r9gspqg6g9cs3k9cuf
+      voting_power:
+        type: string
+        example: "1000"
+      proposer_priority:
+        type: string
+        example: "1000"
+  PublicKey:
+    type: object
+    properties:
+      type:
+        type: string
+      value:
+        type: string
+  SigningInfo:
+    type: object
+    properties:
+      start_height:
+        type: string
+      index_offset:
+        type: string
+      jailed_until:
+        type: string
+      missed_blocks_counter:
+        type: string

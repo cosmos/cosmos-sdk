@@ -42,7 +42,7 @@ func TestAddressFromBalancesStore(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			addr, denom, err := types.AddressAndDenomFromBalancesStore(tc.key)
+			addr, err := types.AddressFromBalancesStore(tc.key)
 			if tc.wantErr {
 				assert.Error(t, err)
 				assert.True(t, errors.Is(types.ErrInvalidKey, err))
@@ -51,83 +51,7 @@ func TestAddressFromBalancesStore(t *testing.T) {
 			}
 			if len(tc.expectedKey) > 0 {
 				assert.Equal(t, tc.expectedKey, addr)
-				assert.Equal(t, "stake", denom)
 			}
 		})
 	}
-}
-
-func TestCreateDenomAddressPrefix(t *testing.T) {
-	require := require.New(t)
-
-	key := types.CreateDenomAddressPrefix("")
-	require.Len(key, len(types.DenomAddressPrefix)+1)
-	require.Equal(append(types.DenomAddressPrefix, 0), key)
-
-	key = types.CreateDenomAddressPrefix("abc")
-	require.Len(key, len(types.DenomAddressPrefix)+4)
-	require.Equal(append(types.DenomAddressPrefix, 'a', 'b', 'c', 0), key)
-}
-
-func TestCreateSendEnabledKey(t *testing.T) {
-	denom := "bazcoin"
-	expected := cloneAppend(types.SendEnabledPrefix, []byte(denom))
-	actual := types.CreateSendEnabledKey(denom)
-	assert.Equal(t, expected, actual, "full byte slice")
-	assert.Equal(t, types.SendEnabledPrefix, actual[:len(types.SendEnabledPrefix)], "prefix")
-	assert.Equal(t, []byte(denom), actual[len(types.SendEnabledPrefix):], "denom part")
-}
-
-func TestIsTrueB(t *testing.T) {
-	tests := []struct {
-		name string
-		bz   []byte
-		exp  bool
-	}{
-		{
-			name: "empty bz",
-			bz:   []byte{},
-			exp:  false,
-		},
-		{
-			name: "nil bz",
-			bz:   nil,
-			exp:  false,
-		},
-		{
-			name: "one byte zero",
-			bz:   []byte{0x00},
-			exp:  false,
-		},
-		{
-			name: "one byte one",
-			bz:   []byte{0x01},
-			exp:  true,
-		},
-		{
-			name: "one byte two",
-			bz:   []byte{0x02},
-			exp:  false,
-		},
-		{
-			name: "two bytes one zero",
-			bz:   []byte{0x01, 0x00},
-			exp:  false,
-		},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(tt *testing.T) {
-			actual := types.IsTrueB(tc.bz)
-			assert.Equal(t, tc.exp, actual)
-		})
-	}
-}
-
-func TestToBoolB(t *testing.T) {
-	t.Run("true", func(t *testing.T) {
-		assert.Equal(t, types.TrueB, types.ToBoolB(true))
-	})
-	t.Run("false", func(t *testing.T) {
-		assert.Equal(t, types.FalseB, types.ToBoolB(false))
-	})
 }

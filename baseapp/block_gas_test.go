@@ -1,13 +1,13 @@
 package baseapp_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -28,7 +27,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
+var blockMaxGas = uint64(simapp.DefaultConsensusParams.Block.MaxGas)
 
 func TestBaseApp_BlockGas(t *testing.T) {
 	testcases := []struct {
@@ -62,18 +61,18 @@ func TestBaseApp_BlockGas(t *testing.T) {
 					return &sdk.Result{}, nil
 				}))
 			}
-
 			encCfg := simapp.MakeTestEncodingConfig()
-			app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, 0, encCfg, simtestutil.EmptyAppOptions{}, routerOpt)
-			app.InterfaceRegistry().RegisterImplementations((*sdk.Msg)(nil),
+			encCfg.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
+			encCfg.InterfaceRegistry.RegisterImplementations((*sdk.Msg)(nil),
 				&testdata.TestMsg{},
 			)
-			genState := simapp.GenesisStateWithSingleValidator(t, app)
-			stateBytes, err := tmjson.MarshalIndent(genState, "", " ")
+			app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, map[int64]bool{}, "", 0, encCfg, simapp.EmptyAppOptions{}, routerOpt)
+			genState := simapp.NewDefaultGenesisState(encCfg.Marshaler)
+			stateBytes, err := json.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
 			app.InitChain(abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: simtestutil.DefaultConsensusParams,
+				ConsensusParams: simapp.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			})
 
@@ -101,7 +100,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			txBuilder.SetFeeAmount(feeAmount)
 			txBuilder.SetGasLimit(txtypes.MaxGasWanted) // tx validation checks that gasLimit can't be bigger than this
 
-			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{7}, []uint64{0}
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{6}, []uint64{0}
 			_, txBytes, err := createTestTx(encCfg.TxConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)
 
@@ -124,7 +123,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(70184) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(59142) // baseGas is the gas consumed before tx msg
 			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
 			if expGasConsumed > txtypes.MaxGasWanted {
 				// capped by gasLimit
@@ -166,7 +165,6 @@ func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 	sigsV2 = []signing.SignatureV2{}
 	for i, priv := range privs {
 		signerData := xauthsigning.SignerData{
-			Address:       sdk.AccAddress(priv.PubKey().Bytes()).String(),
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],

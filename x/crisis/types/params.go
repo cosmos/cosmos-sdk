@@ -7,8 +7,10 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// ParamStoreKeyConstantFee is the constant fee parameter
-var ParamStoreKeyConstantFee = []byte("ConstantFee")
+var (
+	// key for constant fee parameter
+	ParamStoreKeyConstantFee = []byte("ConstantFee")
+)
 
 // type declaration for parameters
 func ParamKeyTable() paramtypes.KeyTable {

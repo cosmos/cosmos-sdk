@@ -5,13 +5,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	dbm "github.com/tendermint/tm-db"
 )
 
 func Test_openDB(t *testing.T) {
 	t.Parallel()
-	_, err := openDB(t.TempDir(), dbm.GoLevelDBBackend)
+	_, err := openDB(t.TempDir())
 	require.NoError(t, err)
 }
 

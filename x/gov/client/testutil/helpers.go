@@ -17,9 +17,8 @@ var commonArgs = []string{
 	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 }
 
-// MsgSubmitLegacyProposal creates a tx for submit legacy proposal
-//nolint:staticcheck // we are intentionally using a deprecated flag here.
-func MsgSubmitLegacyProposal(clientCtx client.Context, from, title, description, proposalType string, extraArgs ...string) (testutil.BufferWriter, error) {
+// MsgSubmitProposal creates a tx for submit proposal
+func MsgSubmitProposal(clientCtx client.Context, from, title, description, proposalType string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := append([]string{
 		fmt.Sprintf("--%s=%s", govcli.FlagTitle, title),
 		fmt.Sprintf("--%s=%s", govcli.FlagDescription, description),
@@ -29,7 +28,7 @@ func MsgSubmitLegacyProposal(clientCtx client.Context, from, title, description,
 
 	args = append(args, extraArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdSubmitLegacyProposal(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdSubmitProposal(), args)
 }
 
 // MsgVote votes for a proposal

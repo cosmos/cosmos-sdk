@@ -5,7 +5,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"reflect"
 	"strings"
 	"sync"
@@ -162,10 +162,8 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 	return hasUnknownNonCriticals, nil
 }
 
-var (
-	protoMessageForTypeNameMu    sync.RWMutex
-	protoMessageForTypeNameCache = make(map[string]proto.Message)
-)
+var protoMessageForTypeNameMu sync.RWMutex
+var protoMessageForTypeNameCache = make(map[string]proto.Message)
 
 // protoMessageForTypeName takes in a fully qualified name e.g. testdata.TestVersionFD1
 // and returns a corresponding empty protobuf message that serves the prototype for typechecking.
@@ -360,7 +358,7 @@ func extractFileDescMessageDesc(desc descriptorIface) (*descriptor.FileDescripto
 	if err != nil {
 		return nil, nil, err
 	}
-	protoBlob, err := io.ReadAll(gzr)
+	protoBlob, err := ioutil.ReadAll(gzr)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -384,10 +382,8 @@ type descriptorMatch struct {
 	desc  *descriptor.DescriptorProto
 }
 
-var (
-	descprotoCacheMu sync.RWMutex
-	descprotoCache   = make(map[reflect.Type]*descriptorMatch)
-)
+var descprotoCacheMu sync.RWMutex
+var descprotoCache = make(map[reflect.Type]*descriptorMatch)
 
 // getDescriptorInfo retrieves the mapping of field numbers to their respective field descriptors.
 func getDescriptorInfo(desc descriptorIface, msg proto.Message) (map[int32]*descriptor.FieldDescriptorProto, *descriptor.DescriptorProto, error) {

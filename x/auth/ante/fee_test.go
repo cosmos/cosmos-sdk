@@ -2,23 +2,21 @@ package ante_test
 
 import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 )
 
 func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, nil)
+	mfd := ante.NewMempoolFeeDecorator()
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
-	testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -58,11 +56,8 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	suite.ctx = suite.ctx.WithMinGasPrices(lowGasPrice)
 
-	newCtx, err := antehandler(suite.ctx, tx, false)
+	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "Decorator should not have errored on fee higher than local gasPrice")
-	// Priority is the smallest amount in any denom. Since we have only 1 fee
-	// of 150atom, the priority here is 150.
-	suite.Require().Equal(feeAmount.AmountOf("atom").Int64(), newCtx.Priority())
 }
 
 func (suite *AnteTestSuite) TestDeductFees() {
@@ -88,10 +83,10 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
 
-	dfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil, nil)
+	dfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 
 	_, err = antehandler(suite.ctx, tx, false)
@@ -100,7 +95,7 @@ func (suite *AnteTestSuite) TestDeductFees() {
 
 	// Set account with sufficient funds
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
 	suite.Require().NoError(err)
 
 	_, err = antehandler(suite.ctx, tx, false)

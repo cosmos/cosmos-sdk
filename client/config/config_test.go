@@ -3,18 +3,17 @@ package config_test
 import (
 	"bytes"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -26,21 +25,17 @@ const (
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
-	chainId := "test-chain"
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
-		WithViper("").
-		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry())).
-		WithChainID(chainId)
+		WithViper("")
 
-	require.NoError(t, clientCtx.Viper.BindEnv(nodeEnv))
+	clientCtx.Viper.BindEnv(nodeEnv)
 	if envVar != "" {
-		require.NoError(t, os.Setenv(nodeEnv, envVar))
+		os.Setenv(nodeEnv, envVar)
 	}
 
 	clientCtx, err := config.ReadFromClientConfig(clientCtx)
 	require.NoError(t, err)
-	require.Equal(t, clientCtx.ChainID, chainId)
 
 	return clientCtx, func() { _ = os.RemoveAll(home) }
 }
@@ -48,7 +43,7 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 func TestConfigCmd(t *testing.T) {
 	clientCtx, cleanup := initClientContext(t, testNode1)
 	defer func() {
-		_ = os.Unsetenv(nodeEnv)
+		os.Unsetenv(nodeEnv)
 		cleanup()
 	}()
 
@@ -62,8 +57,8 @@ func TestConfigCmd(t *testing.T) {
 	b := bytes.NewBufferString("")
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"node"})
-	require.NoError(t, cmd.Execute())
-	out, err := io.ReadAll(b)
+	cmd.Execute()
+	out, err := ioutil.ReadAll(b)
 	require.NoError(t, err)
 	require.Equal(t, string(out), testNode1+"\n")
 }
@@ -91,7 +86,7 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 			clientCtx, cleanup := initClientContext(t, tc.envVar)
 			defer func() {
 				if tc.envVar != "" {
-					_ = os.Unsetenv(nodeEnv)
+					os.Unsetenv(nodeEnv)
 				}
 				cleanup()
 			}()

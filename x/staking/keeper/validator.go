@@ -6,7 +6,6 @@ import (
 
 	gogotypes "github.com/gogo/protobuf/types"
 
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -97,8 +96,7 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
-	tokensToAdd math.Int,
-) (valOut types.Validator, addedShares sdk.Dec) {
+	tokensToAdd sdk.Int) (valOut types.Validator, addedShares sdk.Dec) {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, addedShares = validator.AddTokensFromDel(tokensToAdd)
 	k.SetValidator(ctx, validator)
@@ -109,8 +107,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
-	sharesToRemove sdk.Dec,
-) (valOut types.Validator, removedTokens math.Int) {
+	sharesToRemove sdk.Dec) (valOut types.Validator, removedTokens sdk.Int) {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, removedTokens = validator.RemoveDelShares(sharesToRemove)
 	k.SetValidator(ctx, validator)
@@ -121,8 +118,7 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
-	validator types.Validator, tokensToRemove math.Int,
-) types.Validator {
+	validator types.Validator, tokensToRemove sdk.Int) types.Validator {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator = validator.RemoveTokens(tokensToRemove)
 	k.SetValidator(ctx, validator)
@@ -134,17 +130,12 @@ func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
 // UpdateValidatorCommission attempts to update a validator's commission rate.
 // An error is returned if the new commission rate is invalid.
 func (k Keeper) UpdateValidatorCommission(ctx sdk.Context,
-	validator types.Validator, newRate sdk.Dec,
-) (types.Commission, error) {
+	validator types.Validator, newRate sdk.Dec) (types.Commission, error) {
 	commission := validator.Commission
 	blockTime := ctx.BlockHeader().Time
 
 	if err := commission.ValidateNewRate(newRate, blockTime); err != nil {
 		return commission, err
-	}
-
-	if newRate.LT(k.MinCommissionRate(ctx)) {
-		return commission, fmt.Errorf("cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))
 	}
 
 	commission.Rate = newRate
@@ -380,21 +371,9 @@ func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
 	addrs := k.GetUnbondingValidators(ctx, val.UnbondingTime, val.UnbondingHeight)
 	newAddrs := []string{}
 
-	// since address string may change due to Bech32 prefix change, we parse the addresses into bytes
-	// format for normalization
-	deletingAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
-	if err != nil {
-		panic(err)
-	}
-
 	for _, addr := range addrs {
-		storedAddr, err := sdk.ValAddressFromBech32(addr)
-		if err != nil {
-			// even if we don't panic here, it will panic in UnbondAllMatureValidators at unbond time
-			panic(err)
-		}
-		if !storedAddr.Equals(deletingAddr) {
-			newAddrs = append(newAddrs, storedAddr.String())
+		if addr != val.OperatorAddress {
+			newAddrs = append(newAddrs, addr)
 		}
 	}
 

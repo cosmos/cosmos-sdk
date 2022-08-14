@@ -86,6 +86,7 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 		grants = append(grants, &grant)
 		return nil
 	})
+
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -127,6 +128,7 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 
 		return true, nil
 	})
+
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

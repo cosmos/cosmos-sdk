@@ -81,7 +81,9 @@ func TestGenesisAccountIterator(t *testing.T) {
 }
 
 func TestPackAccountsAny(t *testing.T) {
-	var accounts []*codectypes.Any
+	var (
+		accounts []*codectypes.Any
+	)
 
 	testCases := []struct {
 		msg      string

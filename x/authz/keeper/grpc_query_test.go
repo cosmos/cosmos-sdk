@@ -14,7 +14,7 @@ import (
 )
 
 func (suite *TestSuite) TestGRPCQueryAuthorization() {
-	queryClient, addrs := suite.queryClient, suite.addrs
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 	var (
 		req              *authz.QueryGrantsRequest
 		expAuthorization authz.Authorization
@@ -52,13 +52,17 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 					MsgTypeUrl: "unknown",
 				}
 			},
-			"authorization not found for unknown type",
+			"no authorization found for unknown type",
 			func(require *require.Assertions, res *authz.QueryGrantsResponse) {},
 		},
 		{
 			"Success",
 			func(require *require.Assertions) {
-				expAuthorization = suite.createSendAuthorization(addrs[0], addrs[1])
+				now := ctx.BlockHeader().Time
+				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+				expAuthorization = &banktypes.SendAuthorization{SpendLimit: newCoins}
+				err := app.AuthzKeeper.SaveGrant(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
+				require.NoError(err)
 				req = &authz.QueryGrantsRequest{
 					Granter:    addrs[1].String(),
 					Grantee:    addrs[0].String(),
@@ -69,7 +73,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			func(require *require.Assertions, res *authz.QueryGrantsResponse) {
 				var auth authz.Authorization
 				require.Equal(1, len(res.Grants))
-				err := suite.interfaceRegistry.UnpackAny(res.Grants[0].Authorization, &auth)
+				err := suite.app.InterfaceRegistry().UnpackAny(res.Grants[0].Authorization, &auth)
 				require.NoError(err)
 				require.NotNil(auth)
 				require.Equal(auth.String(), expAuthorization.String())
@@ -93,7 +97,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 }
 
 func (suite *TestSuite) TestGRPCQueryAuthorizations() {
-	queryClient, addrs := suite.queryClient, suite.addrs
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 	var (
 		req              *authz.QueryGrantsRequest
 		expAuthorization authz.Authorization
@@ -125,7 +129,11 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 		{
 			"Success",
 			func() {
-				expAuthorization = suite.createSendAuthorization(addrs[0], addrs[1])
+				now := ctx.BlockHeader().Time
+				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+				expAuthorization = &banktypes.SendAuthorization{SpendLimit: newCoins}
+				err := app.AuthzKeeper.SaveGrant(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
+				suite.Require().NoError(err)
 				req = &authz.QueryGrantsRequest{
 					Granter: addrs[1].String(),
 					Grantee: addrs[0].String(),
@@ -135,7 +143,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 			func(res *authz.QueryGrantsResponse) {
 				var auth authz.Authorization
 				suite.Require().Equal(1, len(res.Grants))
-				err := suite.interfaceRegistry.UnpackAny(res.Grants[0].Authorization, &auth)
+				err := suite.app.InterfaceRegistry().UnpackAny(res.Grants[0].Authorization, &auth)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(auth)
 				suite.Require().Equal(auth.String(), expAuthorization.String())
@@ -158,7 +166,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 
 func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 	require := suite.Require()
-	queryClient, addrs := suite.queryClient, suite.addrs
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
 	testCases := []struct {
 		msg      string
@@ -177,7 +185,11 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 		{
 			"valid case, single authorization",
 			func() {
-				suite.createSendAuthorization(addrs[1], addrs[0])
+				now := ctx.BlockHeader().Time
+				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+				authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
+				err := app.AuthzKeeper.SaveGrant(ctx, addrs[1], addrs[0], authorization, now.Add(time.Hour))
+				require.NoError(err)
 			},
 			false,
 			authz.QueryGranterGrantsRequest{
@@ -188,7 +200,11 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 		{
 			"valid case, multiple authorization",
 			func() {
-				suite.createSendAuthorization(addrs[2], addrs[0])
+				now := ctx.BlockHeader().Time
+				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+				authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
+				err := app.AuthzKeeper.SaveGrant(ctx, addrs[2], addrs[0], authorization, now.Add(time.Hour))
+				require.NoError(err)
 			},
 			false,
 			authz.QueryGranterGrantsRequest{
@@ -227,7 +243,7 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 
 func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 	require := suite.Require()
-	queryClient, addrs := suite.queryClient, suite.addrs
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 
 	testCases := []struct {
 		msg      string
@@ -246,7 +262,11 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 		{
 			"valid case, single authorization",
 			func() {
-				suite.createSendAuthorization(addrs[0], addrs[1])
+				now := ctx.BlockHeader().Time
+				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+				authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
+				err := app.AuthzKeeper.SaveGrant(ctx, addrs[0], addrs[1], authorization, now.Add(time.Hour))
+				require.NoError(err)
 			},
 			false,
 			authz.QueryGranteeGrantsRequest{
@@ -266,7 +286,11 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 		{
 			"valid case, multiple authorization",
 			func() {
-				suite.createSendAuthorization(addrs[0], addrs[2])
+				now := ctx.BlockHeader().Time
+				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+				authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
+				err := app.AuthzKeeper.SaveGrant(ctx, addrs[0], addrs[2], authorization, now.Add(time.Hour))
+				require.NoError(err)
 			},
 			false,
 			authz.QueryGranteeGrantsRequest{
@@ -300,13 +324,4 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 			}
 		})
 	}
-}
-
-func (suite *TestSuite) createSendAuthorization(a1, a2 sdk.AccAddress) authz.Authorization {
-	exp := suite.ctx.BlockHeader().Time.Add(time.Hour)
-	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
-	authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
-	err := suite.authzKeeper.SaveGrant(suite.ctx, a1, a2, authorization, &exp)
-	suite.Require().NoError(err)
-	return authorization
 }

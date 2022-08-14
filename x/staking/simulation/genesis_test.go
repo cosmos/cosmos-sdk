@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -33,7 +32,7 @@ func TestRandomizedGenState(t *testing.T) {
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: sdkmath.NewInt(1000),
+		InitialStake: 1000,
 		GenState:     make(map[string]json.RawMessage),
 	}
 
@@ -95,10 +94,9 @@ func TestRandomizedGenState1(t *testing.T) {
 				Rand:         r,
 				NumBonded:    4,
 				Accounts:     simtypes.RandomAccounts(r, 3),
-				InitialStake: sdkmath.NewInt(1000),
+				InitialStake: 1000,
 				GenState:     make(map[string]json.RawMessage),
-			}, "invalid memory address or nil pointer dereference",
-		},
+			}, "invalid memory address or nil pointer dereference"},
 	}
 
 	for _, tt := range tests {

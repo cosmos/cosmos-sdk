@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -13,7 +14,6 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
 )
@@ -27,11 +27,12 @@ type SimTestSuite struct {
 
 func (suite *SimTestSuite) SetupTest() {
 	checkTx := false
-	app := simapp.Setup(suite.T(), checkTx)
+	app := simapp.Setup(checkTx)
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{
 		Time: time.Now(),
 	})
+
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
@@ -42,7 +43,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 
 	// add coins to the accounts
 	for _, account := range accounts {
-		err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, account.Address, initCoins)
+		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, account.Address, initCoins)
 		suite.Require().NoError(err)
 	}
 
@@ -74,20 +75,18 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{
 			simappparams.DefaultWeightGrantAllowance,
-			feegrant.MsgGrantAllowance{}.Route(),
+			feegrant.ModuleName,
 			simulation.TypeMsgGrantAllowance,
 		},
 		{
 			simappparams.DefaultWeightRevokeAllowance,
-			feegrant.MsgRevokeAllowance{}.Route(),
+			feegrant.ModuleName,
 			simulation.TypeMsgRevokeAllowance,
 		},
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
-		require.NoError(err)
-
+		operationMsg, _, _ := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
@@ -114,7 +113,7 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	require.NoError(err)
 
 	var msg feegrant.MsgGrantAllowance
-	suite.app.LegacyAmino().UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
 	require.Equal(accounts[2].Address.String(), msg.Granter)
@@ -156,7 +155,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	require.NoError(err)
 
 	var msg feegrant.MsgRevokeAllowance
-	suite.app.LegacyAmino().UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
 	require.Equal(granter.Address.String(), msg.Granter)

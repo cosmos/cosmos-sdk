@@ -2,12 +2,12 @@
 
 ## Changelog
 
-* 12 December 2019: Initial version
-* 02 April 2020: Memory Store Revisions
+- 12 December 2019: Initial version
+- 02 April 2020: Memory Store Revisions
 
 ## Context
 
-Full implementation of the [IBC specification](https://github.com/cosmos/ibc) requires the ability to create and authenticate object-capability keys at runtime (i.e., during transaction execution),
+Full implementation of the [IBC specification](https://github.com/cosmos/ibs) requires the ability to create and authenticate object-capability keys at runtime (i.e., during transaction execution),
 as described in [ICS 5](https://github.com/cosmos/ibc/tree/master/spec/core/ics-005-port-allocation#technical-specification). In the IBC specification, capability keys are created for each newly initialised
 port & channel, and are used to authenticate future usage of the port or channel. Since channels and potentially ports can be initialised during transaction execution, the state machine must be able to create
 object-capability keys at this time.
@@ -21,7 +21,7 @@ This ADR proposes such an interface & mechanism.
 
 ## Decision
 
-The Cosmos SDK will include a new `CapabilityKeeper` abstraction, which is responsible for provisioning,
+The SDK will include a new `CapabilityKeeper` abstraction, which is responsible for provisioning,
 tracking, and authenticating capabilities at runtime. During application initialisation in `app.go`,
 the `CapabilityKeeper` will be hooked up to modules through unique function references
 (by calling `ScopeToModule`, defined below) so that it can identify the calling module when later
@@ -326,14 +326,14 @@ Proposed.
 
 ### Positive
 
-* Dynamic capability support.
-* Allows CapabilityKeeper to return same capability pointer from go-map while reverting any writes to the persistent `KVStore` and in-memory `MemoryStore` on tx failure.
+- Dynamic capability support.
+- Allows CapabilityKeeper to return same capability pointer from go-map while reverting any writes to the persistent `KVStore` and in-memory `MemoryStore` on tx failure.
 
 ### Negative
 
-* Requires an additional keeper.
-* Some overlap with existing `StoreKey` system (in the future they could be combined, since this is a superset functionality-wise).
-* Requires an extra level of indirection in the reverse mapping, since MemoryStore must map to index which must then be used as key in a go map to retrieve the actual capability
+- Requires an additional keeper.
+- Some overlap with existing `StoreKey` system (in the future they could be combined, since this is a superset functionality-wise).
+- Requires an extra level of indirection in the reverse mapping, since MemoryStore must map to index which must then be used as key in a go map to retrieve the actual capability
 
 ### Neutral
 
@@ -341,4 +341,4 @@ Proposed.
 
 ## References
 
-* [Original discussion](https://github.com/cosmos/cosmos-sdk/pull/5230#discussion_r343978513)
+- [Original discussion](https://github.com/cosmos/cosmos-sdk/pull/5230#discussion_r343978513)

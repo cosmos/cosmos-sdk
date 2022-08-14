@@ -111,7 +111,8 @@ func (suite *PKSuite) TestMarshalProto() {
 	require.NoError(cdc.UnmarshalInterface(bz, &pkI))
 	require.True(pkI.Equals(suite.pk))
 
-	require.Error(cdc.UnmarshalInterface(bz, nil), "nil should fail")
+	cdc.UnmarshalInterface(bz, nil)
+	require.Error(err, "nil should fail")
 }
 
 func (suite *PKSuite) TestSize() {

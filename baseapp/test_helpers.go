@@ -7,8 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// SimCheck defines a CheckTx helper function that used in tests and simulations.
-func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+func (app *BaseApp) Check(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 	// runTx expects tx bytes as argument, so we encode the tx argument into
 	// bytes. Note that runTx will actually decode those bytes again. But since
 	// this helper is only used in tests/simulation, it's fine.
@@ -16,23 +15,22 @@ func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *
 	if err != nil {
 		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
-	gasInfo, result, _, _, err := app.runTx(runTxModeCheck, bz)
+	gasInfo, result, _, err := app.runTx(runTxModeCheck, bz)
 	return gasInfo, result, err
 }
 
-// Simulate executes a tx in simulate mode to get result and gas info.
 func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
-	gasInfo, result, _, _, err := app.runTx(runTxModeSimulate, txBytes)
+	gasInfo, result, _, err := app.runTx(runTxModeSimulate, txBytes)
 	return gasInfo, result, err
 }
 
-func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+func (app *BaseApp) Deliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 	// See comment for Check().
 	bz, err := txEncoder(tx)
 	if err != nil {
 		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
-	gasInfo, result, _, _, err := app.runTx(runTxModeDeliver, bz)
+	gasInfo, result, _, err := app.runTx(runTxModeDeliver, bz)
 	return gasInfo, result, err
 }
 

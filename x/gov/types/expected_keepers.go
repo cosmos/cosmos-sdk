@@ -1,7 +1,6 @@
 package types
 
 import (
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -20,7 +19,7 @@ type StakingKeeper interface {
 		sdk.Context, func(index int64, validator stakingtypes.ValidatorI) (stop bool),
 	)
 
-	TotalBondedTokens(sdk.Context) math.Int // total bonded tokens within the validator set
+	TotalBondedTokens(sdk.Context) sdk.Int // total bonded tokens within the validator set
 	IterateDelegations(
 		ctx sdk.Context, delegator sdk.AccAddress,
 		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool),

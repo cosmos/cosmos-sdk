@@ -27,6 +27,8 @@ const (
 	FlagDevice = "device"
 
 	flagMultiSigThreshold = "multisig-threshold"
+
+	defaultMultiSigKeyName = "multi"
 )
 
 // ShowKeysCmd shows key information for a given key name.
@@ -51,40 +53,36 @@ consisting of all the keys provided by name and multisig threshold.`,
 }
 
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
-	k := new(keyring.Record)
+	var info keyring.Info
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
 	}
-	outputFormat := clientCtx.OutputFormat
 
 	if len(args) == 1 {
-		k, err = fetchKey(clientCtx.Keyring, args[0])
+		info, err = fetchKey(clientCtx.Keyring, args[0])
 		if err != nil {
 			return fmt.Errorf("%s is not a valid name or address: %v", args[0], err)
 		}
 	} else {
 		pks := make([]cryptotypes.PubKey, len(args))
 		for i, keyref := range args {
-			k, err := fetchKey(clientCtx.Keyring, keyref)
+			info, err := fetchKey(clientCtx.Keyring, keyref)
 			if err != nil {
 				return fmt.Errorf("%s is not a valid name or address: %v", keyref, err)
 			}
-			key, err := k.GetPubKey()
-			if err != nil {
-				return err
-			}
-			pks[i] = key
+
+			pks[i] = info.GetPubKey()
 		}
 
 		multisigThreshold, _ := cmd.Flags().GetInt(flagMultiSigThreshold)
-
-		if err := validateMultisigThreshold(multisigThreshold, len(args)); err != nil {
+		err = validateMultisigThreshold(multisigThreshold, len(args))
+		if err != nil {
 			return err
 		}
 
 		multikey := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
-		k, err = keyring.NewMultiRecord(k.Name, multikey)
+		info, err = keyring.NewMultiInfo(defaultMultiSigKeyName, multikey)
 		if err != nil {
 			return err
 		}
@@ -120,7 +118,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 
 	switch {
 	case isShowAddr, isShowPubKey:
-		ko, err := bechKeyOut(k)
+		ko, err := bechKeyOut(info)
 		if err != nil {
 			return err
 		}
@@ -128,14 +126,9 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		if isShowPubKey {
 			out = ko.PubKey
 		}
-
-		if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {
-			return err
-		}
+		fmt.Fprintln(cmd.OutOrStdout(), out)
 	default:
-		if err := printKeyringRecord(cmd.OutOrStdout(), k, bechKeyOut, outputFormat); err != nil {
-			return err
-		}
+		printKeyInfo(cmd.OutOrStdout(), info, bechKeyOut, clientCtx.OutputFormat)
 	}
 
 	if isShowDevice {
@@ -147,43 +140,36 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		}
 
 		// Override and show in the device
-		if k.GetType() != keyring.TypeLedger {
+		if info.GetType() != keyring.TypeLedger {
 			return fmt.Errorf("the device flag (-d) can only be used for accounts stored in devices")
 		}
 
-		ledgerItem := k.GetLedger()
-		if ledgerItem == nil {
-			return errors.New("unable to get ledger item")
-		}
-
-		pk, err := k.GetPubKey()
+		hdpath, err := info.GetPath()
 		if err != nil {
-			return err
+			return nil
 		}
 
-		return ledger.ShowAddress(*ledgerItem.Path, pk, sdk.GetConfig().GetBech32AccountAddrPrefix())
+		return ledger.ShowAddress(*hdpath, info.GetPubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix())
 	}
 
 	return nil
 }
 
-func fetchKey(kb keyring.Keyring, keyref string) (*keyring.Record, error) {
+func fetchKey(kb keyring.Keyring, keyref string) (keyring.Info, error) {
 	// firstly check if the keyref is a key name of a key registered in a keyring.
-	k, err := kb.Key(keyref)
+	info, err := kb.Key(keyref)
 	// if the key is not there or if we have a problem with a keyring itself then we move to a
 	// fallback: searching for key by address.
-
 	if err == nil || !sdkerr.IsOf(err, sdkerr.ErrIO, sdkerr.ErrKeyNotFound) {
-		return k, err
+		return info, err
 	}
-
 	accAddr, err := sdk.AccAddressFromBech32(keyref)
 	if err != nil {
-		return k, err
+		return info, err
 	}
 
-	k, err = kb.KeyByAddress(accAddr)
-	return k, sdkerr.Wrap(err, "Invalid key")
+	info, err = kb.KeyByAddress(accAddr)
+	return info, sdkerr.Wrap(err, "Invalid key")
 }
 
 func validateMultisigThreshold(k, nKeys int) error {

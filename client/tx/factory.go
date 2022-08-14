@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -29,13 +28,8 @@ type Factory struct {
 	timeoutHeight      uint64
 	gasAdjustment      float64
 	chainID            string
-	offline            bool
-	generateOnly       bool
 	memo               string
 	fees               sdk.Coins
-	tip                *tx.Tip
-	feeGranter         sdk.AccAddress
-	feePayer           sdk.AccAddress
 	gasPrices          sdk.DecCoins
 	signMode           signing.SignMode
 	simulateAndExecute bool
@@ -51,8 +45,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		signMode = signing.SignMode_SIGN_MODE_DIRECT
 	case flags.SignModeLegacyAminoJSON:
 		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
-	case flags.SignModeDirectAux:
-		signMode = signing.SignMode_SIGN_MODE_DIRECT_AUX
 	case flags.SignModeEIP191:
 		signMode = signing.SignMode_SIGN_MODE_EIP_191
 	}
@@ -71,8 +63,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		accountRetriever:   clientCtx.AccountRetriever,
 		keybase:            clientCtx.Keyring,
 		chainID:            clientCtx.ChainID,
-		offline:            clientCtx.Offline,
-		generateOnly:       clientCtx.GenerateOnly,
 		gas:                gasSetting.Gas,
 		simulateAndExecute: gasSetting.Simulate,
 		accountNumber:      accNum,
@@ -81,17 +71,10 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		gasAdjustment:      gasAdj,
 		memo:               memo,
 		signMode:           signMode,
-		feeGranter:         clientCtx.FeeGranter,
-		feePayer:           clientCtx.FeePayer,
 	}
 
 	feesStr, _ := flagSet.GetString(flags.FlagFees)
 	f = f.WithFees(feesStr)
-
-	tipsStr, _ := flagSet.GetString(flags.FlagTip)
-	// Add tips to factory. The tipper is necessarily the Msg signer, i.e.
-	// the from address.
-	f = f.WithTips(tipsStr, clientCtx.FromAddress.String())
 
 	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
@@ -147,20 +130,6 @@ func (f Factory) WithFees(fees string) Factory {
 	}
 
 	f.fees = parsedFees
-	return f
-}
-
-// WithTips returns a copy of the Factory with an updated tip.
-func (f Factory) WithTips(tip string, tipper string) Factory {
-	parsedTips, err := sdk.ParseCoinsNormalized(tip)
-	if err != nil {
-		panic(err)
-	}
-
-	f.tip = &tx.Tip{
-		Tipper: tipper,
-		Amount: parsedTips,
-	}
 	return f
 }
 
@@ -229,26 +198,10 @@ func (f Factory) WithTimeoutHeight(height uint64) Factory {
 	return f
 }
 
-// WithFeeGranter returns a copy of the Factory with an updated fee granter.
-func (f Factory) WithFeeGranter(fg sdk.AccAddress) Factory {
-	f.feeGranter = fg
-	return f
-}
-
-// WithFeePayer returns a copy of the Factory with an updated fee granter.
-func (f Factory) WithFeePayer(fp sdk.AccAddress) Factory {
-	f.feePayer = fp
-	return f
-}
-
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
 func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
-	if f.offline && f.generateOnly {
-		if f.chainID != "" {
-			return nil, fmt.Errorf("chain ID cannot be used when offline and generate-only flags are set")
-		}
-	} else if f.chainID == "" {
+	if f.chainID == "" {
 		return nil, fmt.Errorf("chain ID required but not specified")
 	}
 
@@ -280,8 +233,6 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetMemo(f.memo)
 	tx.SetFeeAmount(fees)
 	tx.SetGasLimit(f.gas)
-	tx.SetFeeGranter(f.feeGranter)
-	tx.SetFeePayer(f.feePayer)
 	tx.SetTimeoutHeight(f.TimeoutHeight())
 
 	return tx, nil
@@ -297,14 +248,7 @@ func (f Factory) PrintUnsignedTx(clientCtx client.Context, msgs ...sdk.Msg) erro
 			return errors.New("cannot estimate gas in offline mode")
 		}
 
-		// Prepare TxFactory with acc & seq numbers as CalculateGas requires
-		// account and sequence numbers to be set
-		preparedTxf, err := f.Prepare(clientCtx)
-		if err != nil {
-			return err
-		}
-
-		_, adjusted, err := CalculateGas(clientCtx, preparedTxf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx, f, msgs...)
 		if err != nil {
 			return err
 		}
@@ -335,9 +279,19 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	pk, err := f.getSimPK()
-	if err != nil {
-		return nil, err
+	// use the first element from the list of keys in order to generate a valid
+	// pubkey that supports multiple algorithms
+
+	var pk cryptotypes.PubKey = &secp256k1.PubKey{} // use default public key type
+
+	if f.keybase != nil {
+		infos, _ := f.keybase.List()
+		if len(infos) == 0 {
+			return nil, errors.New("cannot build signature for simulation, key infos slice is empty")
+		}
+
+		// take the first info record just for simulation purposes
+		pk = infos[0].GetPubKey()
 	}
 
 	// Create an empty signature literal as the ante handler will populate with a
@@ -354,35 +308,6 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 	}
 
 	return f.txConfig.TxEncoder()(txb.GetTx())
-}
-
-// getSimPK gets the public key to use for building a simulation tx.
-// Note, we should only check for keys in the keybase if we are in simulate and execute mode,
-// e.g. when using --gas=auto.
-// When using --dry-run, we are is simulation mode only and should not check the keybase.
-// Ref: https://github.com/cosmos/cosmos-sdk/issues/11283
-func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
-	var (
-		ok bool
-		pk cryptotypes.PubKey = &secp256k1.PubKey{} // use default public key type
-	)
-
-	// Use the first element from the list of keys in order to generate a valid
-	// pubkey that supports multiple algorithms.
-	if f.simulateAndExecute && f.keybase != nil {
-		records, _ := f.keybase.List()
-		if len(records) == 0 {
-			return nil, errors.New("cannot build signature for simulation, key records slice is empty")
-		}
-
-		// take the first record just for simulation purposes
-		pk, ok = records[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
-		if !ok {
-			return nil, errors.New("cannot build signature for simulation, failed to convert proto Any to public key")
-		}
-	}
-
-	return pk, nil
 }
 
 // Prepare ensures the account defined by ctx.GetFromAddress() exists and

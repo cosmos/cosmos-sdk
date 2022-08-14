@@ -1,11 +1,9 @@
 package testutil
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/stretchr/testify/suite"
+	"testing"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {

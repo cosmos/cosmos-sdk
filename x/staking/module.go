@@ -5,18 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"sort"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"golang.org/x/exp/maps"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"github.com/cosmos/cosmos-sdk/depinject"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
+	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -27,13 +19,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-)
-
-const (
-	consensusVersion uint64 = 3
 )
 
 var (
@@ -80,11 +69,14 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	return ValidateGenesis(&data)
 }
 
+// RegisterRESTRoutes registers the REST routes for the staking module.
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	rest.RegisterHandlers(clientCtx, rtr)
+}
+
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the staking module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
-	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
-		panic(err)
-	}
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 // GetTxCmd returns the root tx command for the staking module.
@@ -101,13 +93,13 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        *keeper.Keeper
+	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -126,9 +118,9 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-// Deprecated: Route returns the message routing key for the staking module.
+// Route returns the message routing key for the staking module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
 // QuerierRoute returns the staking module's querier route name.
@@ -149,7 +141,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	m := keeper.NewMigrator(am.keeper)
 	cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
-	cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
 }
 
 // InitGenesis performs genesis initialization for the staking module. It returns
@@ -159,17 +150,18 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	return am.keeper.InitGenesis(ctx, &genesisState)
+	return InitGenesis(ctx, am.keeper, am.accountKeeper, am.bankKeeper, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(am.keeper.ExportGenesis(ctx))
+	gs := ExportGenesis(ctx, am.keeper)
+	return cdc.MustMarshalJSON(gs)
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
+func (AppModule) ConsensusVersion() uint64 { return 2 }
 
 // BeginBlock returns the begin blocker for the staking module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
@@ -180,82 +172,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 // updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return EndBlocker(ctx, am.keeper)
-}
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
-		appmodule.Invoke(invokeSetStakingHooks),
-	)
-}
-
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type stakingInputs struct {
-	depinject.In
-
-	Config        *modulev1.Module
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
-	Cdc           codec.Codec
-	Subspace      paramstypes.Subspace
-	Key           *store.KVStoreKey
-}
-
-// Dependency Injection Outputs
-type stakingOutputs struct {
-	depinject.Out
-
-	StakingKeeper *keeper.Keeper
-	Module        runtime.AppModuleWrapper
-}
-
-func provideModule(in stakingInputs) stakingOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper, in.BankKeeper, in.Subspace)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
-	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
-}
-
-func invokeSetStakingHooks(
-	config *modulev1.Module,
-	keeper *keeper.Keeper,
-	stakingHooks map[string]types.StakingHooksWrapper,
-) error {
-	// all arguments to invokers are optional
-	if keeper == nil || config == nil {
-		return nil
-	}
-
-	modNames := maps.Keys(stakingHooks)
-	order := config.HooksOrder
-	if len(order) == 0 {
-		order = modNames
-		sort.Strings(order)
-	}
-
-	if len(order) != len(modNames) {
-		return fmt.Errorf("len(hooks_order: %v) != len(hooks modules: %v)", order, modNames)
-	}
-
-	if len(modNames) == 0 {
-		return nil
-	}
-
-	var multiHooks types.MultiStakingHooks
-	for _, modName := range order {
-		hook, ok := stakingHooks[modName]
-		if !ok {
-			return fmt.Errorf("can't find staking hooks for module %s", modName)
-		}
-
-		multiHooks = append(multiHooks, hook)
-	}
-
-	keeper.SetHooks(multiHooks)
-	return nil
 }
 
 // AppModuleSimulation functions

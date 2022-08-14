@@ -7,7 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/stretchr/testify/require"
@@ -471,7 +472,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 		{
 			"signer does not have enough funds to pay the fee",
 			func() {
-				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
+				err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
 				suite.Require().NoError(err)
 			},
 			false,
@@ -488,7 +489,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 				suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).Empty())
 				require.True(sdk.IntEq(suite.T(), suite.app.BankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(149)))
 
-				err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)))
+				err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)))
 				suite.Require().NoError(err)
 			},
 			false,
@@ -511,6 +512,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
@@ -571,7 +573,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMemoGas() {
 			"tx with memo has enough gas",
 			func() {
 				feeAmount = sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
-				gasLimit = 60000
+				gasLimit = 50000
 				suite.txBuilder.SetMemo(strings.Repeat("0123456789", 10))
 			},
 			false,
@@ -947,8 +949,7 @@ func TestCountSubkeys(t *testing.T) {
 	multiLevelSubKey1 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
 	multiLevelSubKey2 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
 	multiLevelMultiKey := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{
-		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey(),
-	})
+		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey()})
 	type args struct {
 		pub cryptotypes.PubKey
 	}

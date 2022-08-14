@@ -8,7 +8,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ types.UnpackInterfacesMessage = &Grant{}
+var (
+	_ types.UnpackInterfacesMessage = &Grant{}
+)
 
 // NewGrant creates a new FeeAllowanceGrant.
 //nolint:interfacer

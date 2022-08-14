@@ -22,7 +22,9 @@ func TestDefaultGenesisState(t *testing.T) {
 }
 
 func TestNewGenesisState(t *testing.T) {
-	var evidence []exported.Evidence
+	var (
+		evidence []exported.Evidence
+	)
 
 	testCases := []struct {
 		msg      string
@@ -124,7 +126,7 @@ func TestGenesisStateValidate(t *testing.T) {
 }
 
 func TestUnpackInterfaces(t *testing.T) {
-	gs := types.GenesisState{
+	var gs = types.GenesisState{
 		Evidence: []*codectypes.Any{{}},
 	}
 
@@ -147,6 +149,7 @@ func TestUnpackInterfaces(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
+
 			if tc.expPass {
 				require.NoError(t, gs.UnpackInterfaces(tc.unpacker))
 			} else {

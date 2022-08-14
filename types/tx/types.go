@@ -23,9 +23,13 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	}
 
 	anys := t.Body.Messages
-	res, err := GetMsgs(anys, "transaction")
-	if err != nil {
-		panic(err)
+	res := make([]sdk.Msg, len(anys))
+	for i, any := range anys {
+		cached := any.GetCachedValue()
+		if cached == nil {
+			panic("Any cached value is nil. Transaction messages must be correctly packed Any values.")
+		}
+		res[i] = cached.(sdk.Msg)
 	}
 	return res
 }
@@ -125,11 +129,9 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 func (t *Tx) GetGas() uint64 {
 	return t.AuthInfo.Fee.GasLimit
 }
-
 func (t *Tx) GetFee() sdk.Coins {
 	return t.AuthInfo.Fee.Amount
 }
-
 func (t *Tx) FeePayer() sdk.AccAddress {
 	feePayer := t.AuthInfo.Fee.Payer
 	if feePayer != "" {
@@ -164,16 +166,12 @@ func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	if err := UnpackInterfaces(unpacker, m.Messages); err != nil {
-		return err
-	}
-
-	if err := unpackTxExtensionOptionsI(unpacker, m.ExtensionOptions); err != nil {
-		return err
-	}
-
-	if err := unpackTxExtensionOptionsI(unpacker, m.NonCriticalExtensionOptions); err != nil {
-		return err
+	for _, any := range m.Messages {
+		var msg sdk.Msg
+		err := unpacker.UnpackAny(any, &msg)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -195,14 +193,8 @@ func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(m.PublicKey, new(cryptotypes.PubKey))
 }
 
-// RegisterInterfaces registers the sdk.Tx and MsgResponse interfaces.
-// Note: the registration of sdk.Msg is done in sdk.RegisterInterfaces, but it
-// could be moved inside this function.
+// RegisterInterfaces registers the sdk.Tx interface.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	registry.RegisterInterface(msgResponseInterfaceProtoName, (*MsgResponse)(nil))
-
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
 	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
-
-	registry.RegisterInterface("cosmos.tx.v1beta1.TxExtensionOptionI", (*ExtensionOptionI)(nil))
 }

@@ -35,8 +35,7 @@ func benchmarkBlankParentIteratorNext(b *testing.B, keysize int) {
 	iter := kvstore.Iterator(keys[0], keys[b.N])
 	defer iter.Close()
 
-	for ; iter.Valid(); iter.Next() {
-		_ = iter.Key()
+	for _ = iter.Key(); iter.Valid(); iter.Next() {
 		// deadcode elimination stub
 		sink = iter
 	}
@@ -71,8 +70,7 @@ func benchmarkRandomSet(b *testing.B, keysize int) {
 
 	// Use a singleton for value, to not waste time computing it
 	value := randSlice(defaultValueSizeBz)
-	// Add 1 to avoid issues when b.N = 1
-	keys := generateRandomKeys(keysize, b.N+1)
+	keys := generateRandomKeys(keysize, b.N)
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -84,8 +82,7 @@ func benchmarkRandomSet(b *testing.B, keysize int) {
 	iter := kvstore.Iterator(keys[0], keys[b.N])
 	defer iter.Close()
 
-	for ; iter.Valid(); iter.Next() {
-		_ = iter.Key()
+	for _ = iter.Key(); iter.Valid(); iter.Next() {
 		// deadcode elimination stub
 		sink = iter
 	}
@@ -103,8 +100,7 @@ func benchmarkIteratorOnParentWithManyDeletes(b *testing.B, numDeletes int) {
 	// Use simple values for keys, pick a random start,
 	// and take next D keys sequentially after.
 	startKey := randSlice(32)
-	// Add 1 to avoid issues when numDeletes = 1
-	keys := generateSequentialKeys(startKey, numDeletes+1)
+	keys := generateSequentialKeys(startKey, numDeletes)
 	// setup parent db with D keys.
 	for _, k := range keys {
 		mem.Set(k, value)
@@ -122,11 +118,10 @@ func benchmarkIteratorOnParentWithManyDeletes(b *testing.B, numDeletes int) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	iter := kvstore.Iterator(keys[0], keys[numDeletes])
+	iter := kvstore.Iterator(keys[0], keys[b.N])
 	defer iter.Close()
 
-	for ; iter.Valid(); iter.Next() {
-		_ = iter.Key()
+	for _ = iter.Key(); iter.Valid(); iter.Next() {
 		// deadcode elimination stub
 		sink = iter
 	}

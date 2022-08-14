@@ -6,20 +6,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
-	"github.com/cosmos/cosmos-sdk/x/mint/testutil"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func TestDecodeStore(t *testing.T) {
-	var cdc codec.Codec
-	err := depinject.Inject(testutil.AppConfig, &cdc)
-	require.NoError(t, err)
-
+	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
 	minter := types.NewMinter(sdk.OneDec(), sdk.NewDec(15))

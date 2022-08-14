@@ -2,13 +2,11 @@ package config
 
 import (
 	"fmt"
-	"math"
 	"strings"
 
 	"github.com/spf13/viper"
 
-	clientflags "github.com/cosmos/cosmos-sdk/client/flags"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -17,22 +15,11 @@ import (
 const (
 	defaultMinGasPrices = ""
 
-	// DefaultAPIAddress defines the default address to bind the API server to.
-	DefaultAPIAddress = "tcp://0.0.0.0:1317"
-
 	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
 	DefaultGRPCAddress = "0.0.0.0:9090"
 
 	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
 	DefaultGRPCWebAddress = "0.0.0.0:9091"
-
-	// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
-	// bytes the server can receive.
-	DefaultGRPCMaxRecvMsgSize = 1024 * 1024 * 10
-
-	// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
-	// bytes the server can send.
-	DefaultGRPCMaxSendMsgSize = math.MaxInt32
 )
 
 // BaseConfig defines the server's basic configuration
@@ -44,6 +31,7 @@ type BaseConfig struct {
 
 	Pruning           string `mapstructure:"pruning"`
 	PruningKeepRecent string `mapstructure:"pruning-keep-recent"`
+	PruningKeepEvery  string `mapstructure:"pruning-keep-every"`
 	PruningInterval   string `mapstructure:"pruning-interval"`
 
 	// HaltHeight contains a non-zero block height at which a node will gracefully
@@ -83,10 +71,6 @@ type BaseConfig struct {
 	IndexEvents []string `mapstructure:"index-events"`
 	// IavlCacheSize set the size of the iavl tree cache.
 	IAVLCacheSize uint64 `mapstructure:"iavl-cache-size"`
-
-	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
-	// An empty string indicates that the Tendermint config's DBBackend value should be used.
-	AppDBBackend string `mapstructure:"app-db-backend"`
 }
 
 // APIConfig defines the API listener configuration.
@@ -141,15 +125,6 @@ type RosettaConfig struct {
 
 	// Offline defines if the server must be run in offline mode
 	Offline bool `mapstructure:"offline"`
-
-	// EnableFeeSuggestion defines if the server should suggest fee by default
-	EnableFeeSuggestion bool `mapstructure:"enable-fee-suggestion"`
-
-	// GasToSuggest defines gas limit when calculating the fee
-	GasToSuggest int `mapstructure:"gas-to-suggest"`
-
-	// DenomToSuggest defines the defult denom for fee suggestion
-	DenomToSuggest string `mapstructure:"denom-to-suggest"`
 }
 
 // GRPCConfig defines configuration for the gRPC server.
@@ -159,14 +134,6 @@ type GRPCConfig struct {
 
 	// Address defines the API server to listen on
 	Address string `mapstructure:"address"`
-
-	// MaxRecvMsgSize defines the max message size in bytes the server can receive.
-	// The default value is 10MB.
-	MaxRecvMsgSize int `mapstructure:"max-recv-msg-size"`
-
-	// MaxSendMsgSize defines the max message size in bytes the server can send.
-	// The default value is math.MaxInt32.
-	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
 }
 
 // GRPCWebConfig defines configuration for the gRPC-web server.
@@ -184,7 +151,7 @@ type GRPCWebConfig struct {
 // StateSyncConfig defines the state sync snapshot configuration.
 type StateSyncConfig struct {
 	// SnapshotInterval sets the interval at which state sync snapshots are taken.
-	// 0 disables snapshots.
+	// 0 disables snapshots. Must be a multiple of PruningKeepEvery.
 	SnapshotInterval uint64 `mapstructure:"snapshot-interval"`
 
 	// SnapshotKeepRecent sets the number of recent state sync snapshots to keep.
@@ -238,13 +205,13 @@ func DefaultConfig() *Config {
 		BaseConfig: BaseConfig{
 			MinGasPrices:      defaultMinGasPrices,
 			InterBlockCache:   true,
-			Pruning:           pruningtypes.PruningOptionDefault,
+			Pruning:           storetypes.PruningOptionDefault,
 			PruningKeepRecent: "0",
+			PruningKeepEvery:  "0",
 			PruningInterval:   "0",
 			MinRetainBlocks:   0,
 			IndexEvents:       make([]string, 0),
 			IAVLCacheSize:     781250, // 50 MB
-			AppDBBackend:      "",
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -253,27 +220,22 @@ func DefaultConfig() *Config {
 		API: APIConfig{
 			Enable:             false,
 			Swagger:            false,
-			Address:            DefaultAPIAddress,
+			Address:            "tcp://0.0.0.0:1317",
 			MaxOpenConnections: 1000,
 			RPCReadTimeout:     10,
 			RPCMaxBodyBytes:    1000000,
 		},
 		GRPC: GRPCConfig{
-			Enable:         true,
-			Address:        DefaultGRPCAddress,
-			MaxRecvMsgSize: DefaultGRPCMaxRecvMsgSize,
-			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
+			Enable:  true,
+			Address: DefaultGRPCAddress,
 		},
 		Rosetta: RosettaConfig{
-			Enable:              false,
-			Address:             ":8080",
-			Blockchain:          "app",
-			Network:             "network",
-			Retries:             3,
-			Offline:             false,
-			EnableFeeSuggestion: false,
-			GasToSuggest:        clientflags.DefaultGasLimit,
-			DenomToSuggest:      "uatom",
+			Enable:     false,
+			Address:    ":8080",
+			Blockchain: "app",
+			Network:    "network",
+			Retries:    3,
+			Offline:    false,
 		},
 		GRPCWeb: GRPCWebConfig{
 			Enable:  true,
@@ -303,13 +265,13 @@ func GetConfig(v *viper.Viper) Config {
 			InterBlockCache:   v.GetBool("inter-block-cache"),
 			Pruning:           v.GetString("pruning"),
 			PruningKeepRecent: v.GetString("pruning-keep-recent"),
+			PruningKeepEvery:  v.GetString("pruning-keep-every"),
 			PruningInterval:   v.GetString("pruning-interval"),
 			HaltHeight:        v.GetUint64("halt-height"),
 			HaltTime:          v.GetUint64("halt-time"),
 			IndexEvents:       v.GetStringSlice("index-events"),
 			MinRetainBlocks:   v.GetUint64("min-retain-blocks"),
 			IAVLCacheSize:     v.GetUint64("iavl-cache-size"),
-			AppDBBackend:      v.GetString("app-db-backend"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             v.GetString("telemetry.service-name"),
@@ -331,21 +293,16 @@ func GetConfig(v *viper.Viper) Config {
 			EnableUnsafeCORS:   v.GetBool("api.enabled-unsafe-cors"),
 		},
 		Rosetta: RosettaConfig{
-			Enable:              v.GetBool("rosetta.enable"),
-			Address:             v.GetString("rosetta.address"),
-			Blockchain:          v.GetString("rosetta.blockchain"),
-			Network:             v.GetString("rosetta.network"),
-			Retries:             v.GetInt("rosetta.retries"),
-			Offline:             v.GetBool("rosetta.offline"),
-			EnableFeeSuggestion: v.GetBool("rosetta.enable-fee-suggestion"),
-			GasToSuggest:        v.GetInt("rosetta.gas-to-suggest"),
-			DenomToSuggest:      v.GetString("rosetta.denom-to-suggest"),
+			Enable:     v.GetBool("rosetta.enable"),
+			Address:    v.GetString("rosetta.address"),
+			Blockchain: v.GetString("rosetta.blockchain"),
+			Network:    v.GetString("rosetta.network"),
+			Retries:    v.GetInt("rosetta.retries"),
+			Offline:    v.GetBool("rosetta.offline"),
 		},
 		GRPC: GRPCConfig{
-			Enable:         v.GetBool("grpc.enable"),
-			Address:        v.GetString("grpc.address"),
-			MaxRecvMsgSize: v.GetInt("grpc.max-recv-msg-size"),
-			MaxSendMsgSize: v.GetInt("grpc.max-send-msg-size"),
+			Enable:  v.GetBool("grpc.enable"),
+			Address: v.GetString("grpc.address"),
 		},
 		GRPCWeb: GRPCWebConfig{
 			Enable:           v.GetBool("grpc-web.enable"),
@@ -364,9 +321,9 @@ func (c Config) ValidateBasic() error {
 	if c.BaseConfig.MinGasPrices == "" {
 		return sdkerrors.ErrAppConfig.Wrap("set min gas price in app.toml or flag or env variable")
 	}
-	if c.Pruning == pruningtypes.PruningOptionEverything && c.StateSync.SnapshotInterval > 0 {
+	if c.Pruning == storetypes.PruningOptionEverything && c.StateSync.SnapshotInterval > 0 {
 		return sdkerrors.ErrAppConfig.Wrapf(
-			"cannot enable state sync snapshots with '%s' pruning setting", pruningtypes.PruningOptionEverything,
+			"cannot enable state sync snapshots with '%s' pruning setting", storetypes.PruningOptionEverything,
 		)
 	}
 

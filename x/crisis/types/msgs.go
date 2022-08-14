@@ -2,7 +2,6 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ensure Msg interface compliance at compile time
@@ -35,8 +34,8 @@ func (msg MsgVerifyInvariant) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgVerifyInvariant) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
+	if msg.Sender == "" {
+		return ErrNoSender
 	}
 	return nil
 }

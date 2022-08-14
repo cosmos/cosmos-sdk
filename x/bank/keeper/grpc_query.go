@@ -3,8 +3,6 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/math"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -61,14 +59,16 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	balances := sdk.NewCoins()
 	accountStore := k.getAccountStore(sdkCtx, addr)
 
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
-		var amount math.Int
-		if err := amount.Unmarshal(value); err != nil {
+	pageRes, err := query.Paginate(accountStore, req.Pagination, func(_, value []byte) error {
+		var result sdk.Coin
+		err := k.cdc.Unmarshal(value, &result)
+		if err != nil {
 			return err
 		}
-		balances = append(balances, sdk.NewCoin(string(key), amount))
+		balances = append(balances, result)
 		return nil
 	})
+
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
@@ -168,6 +168,7 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 		metadatas = append(metadatas, metadata)
 		return nil
 	})
+
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -198,82 +199,4 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 	return &types.QueryDenomMetadataResponse{
 		Metadata: metadata,
 	}, nil
-}
-
-func (k BaseKeeper) DenomOwners(
-	goCtx context.Context,
-	req *types.QueryDenomOwnersRequest,
-) (*types.QueryDenomOwnersResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-	}
-
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "empty denom")
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, req.Denom)
-
-	var denomOwners []*types.DenomOwner
-	pageRes, err := query.FilteredPaginate(
-		denomPrefixStore,
-		req.Pagination,
-		func(key []byte, value []byte, accumulate bool) (bool, error) {
-			if accumulate {
-				address, _, err := types.AddressAndDenomFromBalancesStore(key)
-				if err != nil {
-					return false, err
-				}
-
-				denomOwners = append(
-					denomOwners,
-					&types.DenomOwner{
-						Address: address.String(),
-						Balance: k.GetBalance(ctx, address, req.Denom),
-					},
-				)
-			}
-
-			return true, nil
-		},
-	)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryDenomOwnersResponse{DenomOwners: denomOwners, Pagination: pageRes}, nil
-}
-
-func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabledRequest) (*types.QuerySendEnabledResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-	}
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	resp := &types.QuerySendEnabledResponse{}
-	if len(req.Denoms) > 0 {
-		store := ctx.KVStore(k.storeKey)
-		for _, denom := range req.Denoms {
-			if se, ok := k.getSendEnabled(store, denom); ok {
-				resp.SendEnabled = append(resp.SendEnabled, types.NewSendEnabled(denom, se))
-			}
-		}
-	} else {
-		store := k.getSendEnabledPrefixStore(ctx)
-		var err error
-		resp.Pagination, err = query.FilteredPaginate(
-			store,
-			req.Pagination,
-			func(key []byte, value []byte, accumulate bool) (bool, error) {
-				if accumulate {
-					resp.SendEnabled = append(resp.SendEnabled, types.NewSendEnabled(string(key), types.IsTrueB(value)))
-				}
-				return true, nil
-			},
-		)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-	}
-	return resp, nil
 }

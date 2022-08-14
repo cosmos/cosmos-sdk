@@ -3,15 +3,14 @@ package testutil
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GenerateCoinKey generates a new key mnemonic along with its addrress.
-func GenerateCoinKey(algo keyring.SignatureAlgo, cdc codec.Codec) (sdk.AccAddress, string, error) {
+func GenerateCoinKey(algo keyring.SignatureAlgo) (sdk.AccAddress, string, error) {
 	// generate a private key, with mnemonic
-	info, secret, err := keyring.NewInMemory(cdc).NewMnemonic(
+	info, secret, err := keyring.NewInMemory().NewMnemonic(
 		"name",
 		keyring.English,
 		sdk.GetConfig().GetFullBIP44Path(),
@@ -21,11 +20,8 @@ func GenerateCoinKey(algo keyring.SignatureAlgo, cdc codec.Codec) (sdk.AccAddres
 	if err != nil {
 		return sdk.AccAddress{}, "", err
 	}
-	addr, err := info.GetAddress()
-	if err != nil {
-		return sdk.AccAddress{}, "", err
-	}
-	return addr, secret, nil
+
+	return sdk.AccAddress(info.GetPubKey().Address()), secret, nil
 }
 
 // GenerateSaveCoinKey generates a new key mnemonic with its addrress.
@@ -56,24 +52,31 @@ func GenerateSaveCoinKey(
 	}
 
 	var (
-		record *keyring.Record
+		info   keyring.Info
 		secret string
 	)
 
-	// generate or recover a new account
 	if mnemonic != "" {
 		secret = mnemonic
-		record, err = keybase.NewAccount(keyName, mnemonic, keyring.DefaultBIP39Passphrase, sdk.GetConfig().GetFullBIP44Path(), algo)
+		info, err = keybase.NewAccount(
+			keyName,
+			mnemonic,
+			keyring.DefaultBIP39Passphrase,
+			sdk.GetConfig().GetFullBIP44Path(),
+			algo,
+		)
 	} else {
-		record, secret, err = keybase.NewMnemonic(keyName, keyring.English, sdk.GetConfig().GetFullBIP44Path(), keyring.DefaultBIP39Passphrase, algo)
+		info, secret, err = keybase.NewMnemonic(
+			keyName,
+			keyring.English,
+			sdk.GetConfig().GetFullBIP44Path(),
+			keyring.DefaultBIP39Passphrase,
+			algo,
+		)
 	}
 	if err != nil {
 		return sdk.AccAddress{}, "", err
 	}
 
-	addr, err := record.GetAddress()
-	if err != nil {
-		return nil, "", err
-	}
-	return addr, secret, nil
+	return sdk.AccAddress(info.GetAddress()), secret, nil
 }

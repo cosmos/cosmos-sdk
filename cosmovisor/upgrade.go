@@ -4,29 +4,27 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/hashicorp/go-getter"
 	"github.com/otiai10/copy"
-	"github.com/rs/zerolog"
 )
 
-// UpgradeBinary will be called after the log message has been parsed and the process has terminated.
+// DoUpgrade will be called after the log message has been parsed and the process has terminated.
 // We can now make any changes to the underlying directory without interference and leave it
 // in a state, so we can make a proper restart
-func UpgradeBinary(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) error {
-	// simplest case is to switch the link
+func DoUpgrade(cfg *Config, info *UpgradeInfo) error {
+	// Simplest case is to switch the link
 	err := EnsureBinary(cfg.UpgradeBin(info.Name))
 	if err == nil {
 		// we have the binary - do it
-		return cfg.SetCurrentUpgrade(info)
+		return cfg.SetCurrentUpgrade(info.Name)
 	}
-
 	// if auto-download is disabled, we fail
 	if !cfg.AllowDownloadBinaries {
 		return fmt.Errorf("binary not present, downloading disabled: %w", err)
@@ -38,22 +36,20 @@ func UpgradeBinary(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) 
 	}
 
 	// If not there, then we try to download it... maybe
-	logger.Info().Msg("no upgrade binary found, beginning to download it")
 	if err := DownloadBinary(cfg, info); err != nil {
-		return fmt.Errorf("cannot download binary. %w", err)
+		return fmt.Errorf("cannot download binary: %w", err)
 	}
-	logger.Info().Msg("downloading binary complete")
 
 	// and then set the binary again
 	if err := EnsureBinary(cfg.UpgradeBin(info.Name)); err != nil {
 		return fmt.Errorf("downloaded binary doesn't check out: %w", err)
 	}
 
-	return cfg.SetCurrentUpgrade(info)
+	return cfg.SetCurrentUpgrade(info.Name)
 }
 
 // DownloadBinary will grab the binary and place it in the proper directory
-func DownloadBinary(cfg *Config, info upgradetypes.Plan) error {
+func DownloadBinary(cfg *Config, info *UpgradeInfo) error {
 	url, err := GetDownloadURL(info)
 	if err != nil {
 		return err
@@ -92,11 +88,11 @@ func MarkExecutable(path string) error {
 		return fmt.Errorf("stating binary: %w", err)
 	}
 	// end early if world exec already set
-	if info.Mode()&0o001 == 1 {
+	if info.Mode()&0001 == 1 {
 		return nil
 	}
 	// now try to set all exec bits
-	newMode := info.Mode().Perm() | 0o111
+	newMode := info.Mode().Perm() | 0111
 	return os.Chmod(path, newMode)
 }
 
@@ -106,11 +102,11 @@ type UpgradeConfig struct {
 }
 
 // GetDownloadURL will check if there is an arch-dependent binary specified in Info
-func GetDownloadURL(info upgradetypes.Plan) (string, error) {
+func GetDownloadURL(info *UpgradeInfo) (string, error) {
 	doc := strings.TrimSpace(info.Info)
 	// if this is a url, then we download that and try to get a new doc with the real info
 	if _, err := url.Parse(doc); err == nil {
-		tmpDir, err := os.MkdirTemp("", "upgrade-manager-reference")
+		tmpDir, err := ioutil.TempDir("", "upgrade-manager-reference")
 		if err != nil {
 			return "", fmt.Errorf("create tempdir for reference file: %w", err)
 		}
@@ -121,7 +117,7 @@ func GetDownloadURL(info upgradetypes.Plan) (string, error) {
 			return "", fmt.Errorf("downloading reference link %s: %w", doc, err)
 		}
 
-		refBytes, err := os.ReadFile(refPath)
+		refBytes, err := ioutil.ReadFile(refPath)
 		if err != nil {
 			return "", fmt.Errorf("reading downloaded reference: %w", err)
 		}
@@ -151,6 +147,33 @@ func OSArch() string {
 	return fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 }
 
+// SetCurrentUpgrade sets the named upgrade to be the current link, returns error if this binary doesn't exist
+func (cfg *Config) SetCurrentUpgrade(upgradeName string) error {
+	// ensure named upgrade exists
+	bin := cfg.UpgradeBin(upgradeName)
+
+	if err := EnsureBinary(bin); err != nil {
+		return err
+	}
+
+	// set a symbolic link
+	link := filepath.Join(cfg.Root(), currentLink)
+	safeName := url.PathEscape(upgradeName)
+	upgrade := filepath.Join(cfg.Root(), upgradesDir, safeName)
+
+	// remove link if it exists
+	if _, err := os.Stat(link); err == nil {
+		os.Remove(link)
+	}
+
+	// point to the new directory
+	if err := os.Symlink(upgrade, link); err != nil {
+		return fmt.Errorf("creating current symlink: %w", err)
+	}
+
+	return nil
+}
+
 // EnsureBinary ensures the file exists and is executable, or returns an error
 func EnsureBinary(path string) error {
 	info, err := os.Stat(path)
@@ -163,7 +186,7 @@ func EnsureBinary(path string) error {
 	}
 
 	// this checks if the world-executable bit is set (we cannot check owner easily)
-	exec := info.Mode().Perm() & 0o001
+	exec := info.Mode().Perm() & 0001
 	if exec == 0 {
 		return fmt.Errorf("%s is not world executable", info.Name())
 	}

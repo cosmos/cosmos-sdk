@@ -3,6 +3,7 @@ package keys
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,13 +13,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runImportCmd(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
 	testCases := []struct {
 		name           string
 		keyringBackend string
@@ -81,20 +80,22 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 
 			// Now add a temporary keybase
 			kbHome := t.TempDir()
-			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, nil, cdc)
-			require.NoError(t, err)
+			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, nil)
 
 			clientCtx := client.Context{}.
 				WithKeyringDir(kbHome).
 				WithKeyring(kb).
-				WithInput(mockIn).
-				WithCodec(cdc)
+				WithInput(mockIn)
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-			t.Cleanup(cleanupKeys(t, kb, "keyname1"))
+			require.NoError(t, err)
+			t.Cleanup(func() {
+				kb.Delete("keyname1") // nolint:errcheck
+			})
 
 			keyfile := filepath.Join(kbHome, "key.asc")
-			require.NoError(t, os.WriteFile(keyfile, []byte(armoredKey), 0o644))
+
+			require.NoError(t, ioutil.WriteFile(keyfile, []byte(armoredKey), 0644))
 
 			defer func() {
 				_ = os.RemoveAll(kbHome)

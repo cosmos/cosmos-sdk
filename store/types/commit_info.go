@@ -1,9 +1,13 @@
 package types
 
 import (
+	fmt "fmt"
+
+	ics23 "github.com/confio/ics23/go"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
+	sdkproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
 )
 
 // GetHash returns the GetHash from the CommitID.
@@ -38,11 +42,27 @@ func (ci CommitInfo) Hash() []byte {
 }
 
 func (ci CommitInfo) ProofOp(storeName string) tmcrypto.ProofOp {
-	ret, err := ProofOpFromMap(ci.toMap(), storeName)
-	if err != nil {
-		panic(err)
+	cmap := ci.toMap()
+	_, proofs, _ := sdkmaps.ProofsFromMap(cmap)
+
+	proof := proofs[storeName]
+	if proof == nil {
+		panic(fmt.Sprintf("ProofOp for %s but not registered store name", storeName))
 	}
-	return ret
+
+	// convert merkle.SimpleProof to CommitmentProof
+	existProof, err := sdkproofs.ConvertExistenceProof(proof, []byte(storeName), cmap[storeName])
+	if err != nil {
+		panic(fmt.Errorf("could not convert simple proof to existence proof: %w", err))
+	}
+
+	commitmentProof := &ics23.CommitmentProof{
+		Proof: &ics23.CommitmentProof_Exist{
+			Exist: existProof,
+		},
+	}
+
+	return NewSimpleMerkleCommitmentOp([]byte(storeName), commitmentProof).ProofOp()
 }
 
 func (ci CommitInfo) CommitID() CommitID {

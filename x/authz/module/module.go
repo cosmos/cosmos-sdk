@@ -5,20 +5,14 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
-	"cosmossdk.io/core/appmodule"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -50,17 +44,10 @@ func (AppModuleBasic) Name() string {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	authz.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 	authz.RegisterMsgServer(cfg.MsgServer(), am.keeper)
-	m := keeper.NewMigrator(am.keeper)
-	err := cfg.RegisterMigration(authz.ModuleName, 1, m.Migrate1to2)
-	if err != nil {
-		panic(err)
-	}
 }
 
 // RegisterLegacyAminoCodec registers the authz module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	authz.RegisterLegacyAminoCodec(cdc)
-}
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the authz module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -83,11 +70,13 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 	return authz.ValidateGenesis(data)
 }
 
+// RegisterRESTRoutes registers the REST routes for the authz module.
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, r *mux.Router) {
+}
+
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
-	if err := authz.RegisterQueryHandlerClient(context.Background(), mux, authz.NewQueryClient(clientCtx)); err != nil {
-		panic(err)
-	}
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
+	authz.RegisterQueryHandlerClient(context.Background(), mux, authz.NewQueryClient(clientCtx))
 }
 
 // GetQueryCmd returns the cli query commands for the authz module
@@ -128,9 +117,9 @@ func (AppModule) Name() string {
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the authz module.
+// Route returns the message routing key for the staking module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
+	return sdk.NewRoute(authz.RouterKey, nil)
 }
 
 func (am AppModule) NewHandler() sdk.Handler {
@@ -162,54 +151,13 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return 1 }
 
-// BeginBlock returns the begin blocker for the authz module.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	BeginBlocker(ctx, am.keeper)
-}
+func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 
 // EndBlock does nothing
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
-}
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
-		),
-	)
-}
-
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type authzInputs struct {
-	depinject.In
-
-	Key              *store.KVStoreKey
-	Cdc              codec.Codec
-	AccountKeeper    authz.AccountKeeper
-	BankKeeper       authz.BankKeeper
-	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter *baseapp.MsgServiceRouter
-}
-
-type authzOutputs struct {
-	depinject.Out
-
-	AuthzKeeper keeper.Keeper
-	Module      runtime.AppModuleWrapper
-}
-
-func provideModule(in authzInputs) authzOutputs {
-	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return authzOutputs{AuthzKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 
 // ____________________________________________________________________________
@@ -240,8 +188,7 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		am.registry,
 		simState.AppParams, simState.Cdc,
-		am.accountKeeper, am.bankKeeper, am.keeper,
+		am.accountKeeper, am.bankKeeper, am.keeper, am.cdc,
 	)
 }

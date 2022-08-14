@@ -5,10 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -27,11 +25,14 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	defer func() {
-		require.NoError(b, db.Close())
-		require.NoError(b, os.RemoveAll(dir))
+		db.Close()
+		err = os.RemoveAll(dir)
+		if err != nil {
+			b.Fatal(err)
+		}
 	}()
 
-	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, MakeTestEncodingConfig(), simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome), interBlockCacheOpt())
+	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -41,7 +42,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		ModuleAccountAddrs(),
+		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
@@ -74,11 +75,14 @@ func BenchmarkInvariants(b *testing.B) {
 	config.AllInvariants = false
 
 	defer func() {
-		require.NoError(b, db.Close())
-		require.NoError(b, os.RemoveAll(dir))
+		db.Close()
+		err = os.RemoveAll(dir)
+		if err != nil {
+			b.Fatal(err)
+		}
 	}()
 
-	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, MakeTestEncodingConfig(), simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome), interBlockCacheOpt())
+	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -88,7 +92,7 @@ func BenchmarkInvariants(b *testing.B) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		ModuleAccountAddrs(),
+		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)

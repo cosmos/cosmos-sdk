@@ -2,12 +2,12 @@
 
 ## Changelog
 
-* 10-Feb-2021: Initial Draft
+- 10-Feb-2021: Initial Draft
 
 ## Authors
 
-* Dev Ojha (@valardragon)
-* Sunny Aggarwal (@sunnya97)
+- Dev Ojha (@valardragon)
+- Sunny Aggarwal (@sunnya97)
 
 ## Status
 
@@ -43,10 +43,10 @@ There is a design consideration for whether to apply a slash immediately or at t
 
 Applying it immediately can be viewed as offering greater consensus layer security, at potential costs to the aforementioned usecases. The benefits of immediate slashing for consensus layer security can be all be obtained by executing the validator jailing immediately (thus removing it from the validator set), and delaying the actual slash change to the validator's weight until the epoch boundary. For the use cases mentioned above, workarounds can be integrated to avoid problems, as follows:
 
-* For threshold based cryptography, this setting will have the threshold cryptography use the original epoch weights, while consensus has an update that lets it more rapidly benefit from additional security. If the threshold based cryptography blocks liveness of the chain, then we have effectively raised the liveness threshold of the remaining validators for the rest of the epoch. (Alternatively, jailed nodes could still contribute shares) This plan will fail in the extreme case that more than 1/3rd of the validators have been jailed within a single epoch. For such an extreme scenario, the chain already have its own custom incident response plan, and defining how to handle the threshold cryptography should be a part of that.
-* For light client efficiency, there can be a bit included in the header indicating an intra-epoch slash (ala https://github.com/tendermint/spec/issues/199).
-* For fairness of deterministic leader election, applying a slash or jailing within an epoch would break the guarantee we were seeking to provide. This then re-introduces a new (but significantly simpler) problem for trying to provide fairness guarantees. Namely, that validators can adversarially elect to remove themself from the set of proposers. From a security perspective, this could potentially be handled by two different mechanisms (or prove to still be too difficult to achieve). One is making a security statement acknowledging the ability for an adversary to force an ahead-of-time fixed threshold of users to drop out of the proposer set within an epoch. The second method would be to  parameterize such that the cost of a slash within the epoch far outweights benefits due to being a proposer. However, this latter criterion is quite dubious, since being a proposer can have many advantageous side-effects in chains with complex state machines. (Namely, DeFi games such as Fomo3D)
-* For staking derivative design, there is no issue introduced. This does not increase the state size of staking records, since whether a slash has occured is fully queryable given the validator address.
+- For threshold based cryptography, this setting will have the threshold cryptography use the original epoch weights, while consensus has an update that lets it more rapidly benefit from additional security. If the threshold based cryptography blocks liveness of the chain, then we have effectively raised the liveness threshold of the remaining validators for the rest of the epoch. (Alternatively, jailed nodes could still contribute shares) This plan will fail in the extreme case that more than 1/3rd of the validators have been jailed within a single epoch. For such an extreme scenario, the chain already have its own custom incident response plan, and defining how to handle the threshold cryptography should be a part of that.
+- For light client efficiency, there can be a bit included in the header indicating an intra-epoch slash (ala https://github.com/tendermint/spec/issues/199).
+- For fairness of deterministic leader election, applying a slash or jailing within an epoch would break the guarantee we were seeking to provide. This then re-introduces a new (but significantly simpler) problem for trying to provide fairness guarantees. Namely, that validators can adversarially elect to remove themself from the set of proposers. From a security perspective, this could potentially be handled by two different mechanisms (or prove to still be too difficult to achieve). One is making a security statement acknowledging the ability for an adversary to force an ahead-of-time fixed threshold of users to drop out of the proposer set within an epoch. The second method would be to  parameterize such that the cost of a slash within the epoch far outweights benefits due to being a proposer. However, this latter criterion is quite dubious, since being a proposer can have many advantageous side-effects in chains with complex state machines. (Namely, DeFi games such as Fomo3D)
+- For staking derivative design, there is no issue introduced. This does not increase the state size of staking records, since whether a slash has occured is fully queryable given the validator address.
 
 ### Token lockup
 
@@ -73,36 +73,36 @@ Until an ABCI mechanism for variable block times is introduced, it is ill-advise
 
 ## Decision
 
-**Step-1**:  Implement buffering of all staking and slashing messages.
+__Step-1__:  Implement buffering of all staking and slashing messages.
 
 First we create a pool for storing tokens that are being bonded, but should be applied at the epoch boundary called the `EpochDelegationPool`. Then, we have two separate queues, one for staking, one for slashing. We describe what happens on each message being delivered below:
 
 ### Staking messages
 
-* **MsgCreateValidator**: Move user's self-bond to `EpochDelegationPool` immediately. Queue a message for the epoch boundary to handle the self-bond, taking the funds from the `EpochDelegationPool`. If Epoch execution fail, return back funds from `EpochDelegationPool` to user's account.
-* **MsgEditValidator**: Validate message and if valid queue the message for execution at the end of the Epoch.
-* **MsgDelegate**: Move user's funds to `EpochDelegationPool` immediately. Queue a message for the epoch boundary to handle the delegation, taking the funds from the `EpochDelegationPool`. If Epoch execution fail, return back funds from `EpochDelegationPool` to user's account.
-* **MsgBeginRedelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
-* **MsgUndelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
+- **MsgCreateValidator**: Move user's self-bond to `EpochDelegationPool` immediately. Queue a message for the epoch boundary to handle the self-bond, taking the funds from the `EpochDelegationPool`. If Epoch execution fail, return back funds from `EpochDelegationPool` to user's account.
+- **MsgEditValidator**: Validate message and if valid queue the message for execution at the end of the Epoch.
+- **MsgDelegate**: Move user's funds to `EpochDelegationPool` immediately. Queue a message for the epoch boundary to handle the delegation, taking the funds from the `EpochDelegationPool`. If Epoch execution fail, return back funds from `EpochDelegationPool` to user's account.
+- **MsgBeginRedelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
+- **MsgUndelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
 
 ### Slashing messages
 
-* **MsgUnjail**: Validate message and if valid queue the message for execution at the end of the Epoch.
-* **Slash Event**: Whenever a slash event is created, it gets queued in the slashing module to apply at the end of the epoch. The queues should be setup such that this slash applies immediately.
+- **MsgUnjail**: Validate message and if valid queue the message for execution at the end of the Epoch.
+- **Slash Event**: Whenever a slash event is created, it gets queued in the slashing module to apply at the end of the epoch. The queues should be setup such that this slash applies immediately.
 
 ### Evidence Messages
 
-* **MsgSubmitEvidence**: This gets executed immediately, and the validator gets jailed immediately. However in slashing, the actual slash event gets queued.
+- **MsgSubmitEvidence**: This gets executed immediately, and the validator gets jailed immediately. However in slashing, the actual slash event gets queued.
 
 Then we add methods to the end blockers, to ensure that at the epoch boundary the queues are cleared and delegation updates are applied.
 
-**Step-2**: Implement querying of queued staking txs.
+__Step-2__: Implement querying of queued staking txs.
 
 When querying the staking activity of a given address, the status should return not only the amount of tokens staked, but also if there are any queued stake events for that address. This will require more work to be done in the querying logic, to trace the queued upcoming staking events.
 
 As an initial implementation, this can be implemented as a linear search over all queued staking events. However, for chains that need long epochs, they should eventually build additional support for nodes that support querying to be able to produce results in constant time. (This is do-able by maintaining an auxilliary hashmap for indexing upcoming staking events by address)
 
-**Step-3**: Adjust gas
+__Step-3__: Adjust gas
 
 Currently gas represents the cost of executing a transaction when its done immediately. (Merging together costs of p2p overhead, state access overhead, and computational overhead) However, now a transaction can cause computation in a future block, namely at the epoch boundary.
 

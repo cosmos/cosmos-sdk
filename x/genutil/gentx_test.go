@@ -10,13 +10,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -44,7 +44,7 @@ type GenTxTestSuite struct {
 
 func (suite *GenTxTestSuite) SetupTest() {
 	checkTx := false
-	app := simapp.Setup(suite.T(), checkTx)
+	app := simapp.Setup(checkTx)
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
 	suite.app = app
 	suite.encodingConfig = simapp.MakeTestEncodingConfig()
@@ -64,7 +64,7 @@ func (suite *GenTxTestSuite) setAccountBalance(addr sdk.AccAddress, amount int64
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
-	err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, amount)})
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, amount)})
 	suite.Require().NoError(err)
 
 	bankGenesisState := suite.app.BankKeeper.ExportGenesis(suite.ctx)
@@ -110,7 +110,7 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
-			cdc := suite.encodingConfig.Codec
+			cdc := suite.encodingConfig.Marshaler
 			txJSONEncoder := suite.encodingConfig.TxConfig.TxJSONEncoder()
 
 			tc.malleate()
@@ -177,10 +177,10 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
-			cdc := suite.encodingConfig.Codec
+			cdc := suite.encodingConfig.Marshaler
 
 			suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
-			stakingGenesisState := suite.app.StakingKeeper.ExportGenesis(suite.ctx)
+			stakingGenesisState := staking.ExportGenesis(suite.ctx, suite.app.StakingKeeper)
 			suite.Require().Equal(stakingGenesisState.Params, stakingtypes.DefaultParams())
 			stakingGenesis, err := cdc.MarshalJSON(stakingGenesisState) // TODO switch this to use Marshaler
 			suite.Require().NoError(err)
@@ -197,6 +197,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			} else {
 				suite.Require().Error(err)
 			}
+
 		})
 	}
 }
@@ -232,13 +233,13 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				_ = suite.setAccountBalance(addr2, 1)
 
 				msg := banktypes.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)})
-				tx, err := simtestutil.GenSignedMockTx(
+				tx, err := helpers.GenTx(
 					suite.encodingConfig.TxConfig,
 					[]sdk.Msg{msg},
 					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)},
-					simtestutil.DefaultGenTxGas,
+					helpers.DefaultGenTxGas,
 					suite.ctx.ChainID(),
-					[]uint64{7},
+					[]uint64{0},
 					[]uint64{0},
 					priv1,
 				)
@@ -267,12 +268,12 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 					)
 				})
 			} else {
-				_, err := genutil.DeliverGenTxs(
-					suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
-					suite.encodingConfig.TxConfig,
-				)
-
-				suite.Require().Error(err)
+				suite.Require().Panics(func() {
+					genutil.DeliverGenTxs(
+						suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
+						suite.encodingConfig.TxConfig,
+					)
+				})
 			}
 		})
 	}

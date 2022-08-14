@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"sigs.k8s.io/yaml"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -25,9 +25,9 @@ func ParamKeyTable() paramtypes.KeyTable {
 // DefaultParams returns default distribution parameters
 func DefaultParams() Params {
 	return Params{
-		CommunityTax:        sdk.NewDecWithPrec(2, 2), // 2%
-		BaseProposerReward:  sdk.NewDecWithPrec(1, 2), // 1%
-		BonusProposerReward: sdk.NewDecWithPrec(4, 2), // 4%
+		CommunityTax:        sdk.NewDecWithPrec(50, 2), // 50%
+		BaseProposerReward:  sdk.NewDecWithPrec(1, 2),  // 1%
+		BonusProposerReward: sdk.NewDecWithPrec(3, 2),  // 3%
 		WithdrawAddrEnabled: true,
 	}
 }

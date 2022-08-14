@@ -37,7 +37,7 @@ in this testnet.
 9. Modify your `config/config.toml` (in the simapp working directory) to include the other participants as
     persistent peers:
 
-    ```text
+    ```
     # Comma separated list of nodes to keep persistent connections to
     persistent_peers = "[validator_address]@[ip_address]:[port],[validator_address]@[ip_address]:[port]"
     ```

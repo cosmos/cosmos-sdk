@@ -10,17 +10,20 @@ parent:
 ![banner](docs/cosmos-sdk-image.jpg)
 
 <div align="center">
-  <a href="https://github.com/cosmos/cosmos-sdk/blob/main/LICENSE">
+  <a href="https://github.com/cosmos/cosmos-sdk/releases/latest">
+    <img alt="Version" src="https://img.shields.io/github/tag/cosmos/cosmos-sdk.svg" />
+  </a>
+  <a href="https://github.com/cosmos/cosmos-sdk/blob/master/LICENSE">
     <img alt="License: Apache-2.0" src="https://img.shields.io/github/license/cosmos/cosmos-sdk.svg" />
   </a>
   <a href="https://pkg.go.dev/github.com/cosmos/cosmos-sdk?tab=doc">
-    <img alt="GoDoc" src="https://pkg.go.dev/github.com/cosmos/cosmos-sdk?status.svg" />
+    <img alt="GoDoc" src="https://godoc.org/github.com/cosmos/cosmos-sdk?status.svg" />
   </a>
   <a href="https://goreportcard.com/report/github.com/cosmos/cosmos-sdk">
     <img alt="Go report card" src="https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk" />
   </a>
   <a href="https://codecov.io/gh/cosmos/cosmos-sdk">
-    <img alt="Code Coverage" src="https://codecov.io/gh/cosmos/cosmos-sdk/branch/main/graph/badge.svg" />
+    <img alt="Code Coverage" src="https://codecov.io/gh/cosmos/cosmos-sdk/branch/master/graph/badge.svg" />
   </a>
 </div>
 <div align="center">
@@ -42,7 +45,7 @@ The Cosmos SDK is a framework for building blockchain applications. [Tendermint 
 **WARNING**: The Cosmos SDK has mostly stabilized, but we are still making some
 breaking changes.
 
-**Note**: Requires [Go 1.18+](https://go.dev/dl)
+**Note**: Requires [Go 1.18+](https://golang.org/dl/)
 
 ## Quick Start
 
@@ -74,7 +77,7 @@ The IBC module for the Cosmos SDK has moved to its own [cosmos/ibc-go repository
 
 ### Ignite CLI
 
-Ignite CLI is the all-in-one platform to build, launch, and maintain any crypto application on a sovereign and secured blockchain. If you are building a new app or a new module, use [Ignite CLI](https://github.com/ignite/cli) to get started and speed up development.
+Ignite CLI is the all-in-one platform to build, launch, and maintain any crypto application on a sovereign and secured blockchain. If you are building a new app or a new module, use [Ignite CLI](https://github.com/ignite-hq/cli) to get started and speed up development.
 
 ## Disambiguation
 

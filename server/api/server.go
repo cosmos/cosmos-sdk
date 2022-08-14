@@ -16,10 +16,10 @@ import (
 	tmrpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -107,7 +107,7 @@ func (s *Server) Start(cfg config.Config) error {
 	tmCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
 	tmCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
 
-	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg.MaxOpenConnections)
+	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg)
 	if err != nil {
 		s.mtx.Unlock()
 		return err
@@ -146,7 +146,7 @@ func (s *Server) registerMetrics() {
 
 		gr, err := s.metrics.Gather(format)
 		if err != nil {
-			writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to gather metrics: %s", err))
+			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to gather metrics: %s", err))
 			return
 		}
 
@@ -155,23 +155,4 @@ func (s *Server) registerMetrics() {
 	}
 
 	s.Router.HandleFunc("/metrics", metricsHandler).Methods("GET")
-}
-
-// errorResponse defines the attributes of a JSON error response.
-type errorResponse struct {
-	Code  int    `json:"code,omitempty"`
-	Error string `json:"error"`
-}
-
-// newErrorResponse creates a new errorResponse instance.
-func newErrorResponse(code int, err string) errorResponse {
-	return errorResponse{Code: code, Error: err}
-}
-
-// writeErrorResponse prepares and writes a HTTP error
-// given a status code and an error message.
-func writeErrorResponse(w http.ResponseWriter, status int, err string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_, _ = w.Write(legacy.Cdc.MustMarshalJSON(newErrorResponse(0, err)))
 }

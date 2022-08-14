@@ -4,17 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
-	"cosmossdk.io/core/appmodule"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -55,8 +53,11 @@ func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, txEncodingConfig cl
 	return types.ValidateGenesis(&data, txEncodingConfig.TxJSONDecoder())
 }
 
+// RegisterRESTRoutes registers the REST routes for the genutil module.
+func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
+
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the genutil module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {
 }
 
 // GetTxCmd returns no root tx command for the genutil module.
@@ -80,6 +81,7 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
 	txEncodingConfig client.TxEncodingConfig,
 ) module.AppModule {
+
 	return module.NewGenesisOnlyAppModule(AppModule{
 		AppModuleBasic:   AppModuleBasic{},
 		accountKeeper:    accountKeeper,
@@ -109,27 +111,3 @@ func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMe
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
-	)
-}
-
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type genutilInputs struct {
-	depinject.In
-
-	AccountKeeper types.AccountKeeper
-	StakingKeeper types.StakingKeeper
-	DeliverTx     func(abci.RequestDeliverTx) abci.ResponseDeliverTx
-	Config        client.TxConfig
-}
-
-func provideModule(in genutilInputs) runtime.AppModuleWrapper {
-	m := NewAppModule(in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config)
-	return runtime.WrapAppModule(m)
-}

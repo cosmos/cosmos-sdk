@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -85,7 +85,7 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 	var fees sdk.Coins
 	var err error
 
-	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg...)
+	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg)
 	if hasNeg {
 		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "message doesn't leave room for fees"), nil, err
 	}
@@ -100,24 +100,26 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 // GenAndDeliverTx generates a transactions and delivers it.
 func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
-	tx, err := simtestutil.GenSignedMockTx(
+	tx, err := helpers.GenTx(
 		txCtx.TxGen,
 		[]sdk.Msg{txCtx.Msg},
 		fees,
-		simtestutil.DefaultGenTxGas,
+		helpers.DefaultGenTxGas,
 		txCtx.Context.ChainID(),
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
 		txCtx.SimAccount.PrivKey,
 	)
+
 	if err != nil {
 		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate mock tx"), nil, err
 	}
 
-	_, _, err = txCtx.App.SimDeliver(txCtx.TxGen.TxEncoder(), tx)
+	_, _, err = txCtx.App.Deliver(txCtx.TxGen.TxEncoder(), tx)
 	if err != nil {
 		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to deliver tx"), nil, err
 	}
 
 	return simtypes.NewOperationMsg(txCtx.Msg, true, "", txCtx.Cdc), nil, nil
+
 }

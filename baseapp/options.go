@@ -7,9 +7,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -18,7 +16,7 @@ import (
 // for options that need access to non-exported fields of the BaseApp
 
 // SetPruning sets a pruning option on the multistore associated with the app
-func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
+func SetPruning(opts sdk.PruningOptions) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetPruning(opts) }
 }
 
@@ -70,9 +68,19 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
 }
 
-// SetSnapshot sets the snapshot store.
-func SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) func(*BaseApp) {
-	return func(app *BaseApp) { app.SetSnapshot(snapshotStore, opts) }
+// SetSnapshotInterval sets the snapshot interval.
+func SetSnapshotInterval(interval uint64) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSnapshotInterval(interval) }
+}
+
+// SetSnapshotKeepRecent sets the recent snapshots to keep.
+func SetSnapshotKeepRecent(keepRecent uint32) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSnapshotKeepRecent(keepRecent) }
+}
+
+// SetSnapshotStore sets the snapshot store.
+func SetSnapshotStore(snapshotStore *snapshots.Store) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSnapshotStore(snapshotStore) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -153,14 +161,6 @@ func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
 }
 
-func (app *BaseApp) SetPostHandler(ph sdk.AnteHandler) {
-	if app.sealed {
-		panic("SetPostHandler() on sealed BaseApp")
-	}
-
-	app.postHandler = ph
-}
-
 func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {
 	if app.sealed {
 		panic("SetAddrPeerFilter() on sealed BaseApp")
@@ -208,17 +208,32 @@ func (app *BaseApp) SetRouter(router sdk.Router) {
 	app.router = router
 }
 
-// SetSnapshot sets the snapshot store and options.
-func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) {
+// SetSnapshotStore sets the snapshot store.
+func (app *BaseApp) SetSnapshotStore(snapshotStore *snapshots.Store) {
 	if app.sealed {
-		panic("SetSnapshot() on sealed BaseApp")
+		panic("SetSnapshotStore() on sealed BaseApp")
 	}
-	if snapshotStore == nil || opts.Interval == snapshottypes.SnapshotIntervalOff {
+	if snapshotStore == nil {
 		app.snapshotManager = nil
 		return
 	}
-	app.cms.SetSnapshotInterval(opts.Interval)
-	app.snapshotManager = snapshots.NewManager(snapshotStore, opts, app.cms, nil, app.logger)
+	app.snapshotManager = snapshots.NewManager(snapshotStore, app.cms)
+}
+
+// SetSnapshotInterval sets the snapshot interval.
+func (app *BaseApp) SetSnapshotInterval(snapshotInterval uint64) {
+	if app.sealed {
+		panic("SetSnapshotInterval() on sealed BaseApp")
+	}
+	app.snapshotInterval = snapshotInterval
+}
+
+// SetSnapshotKeepRecent sets the number of recent snapshots to keep.
+func (app *BaseApp) SetSnapshotKeepRecent(snapshotKeepRecent uint32) {
+	if app.sealed {
+		panic("SetSnapshotKeepRecent() on sealed BaseApp")
+	}
+	app.snapshotKeepRecent = snapshotKeepRecent
 }
 
 // SetInterfaceRegistry sets the InterfaceRegistry.
@@ -226,20 +241,4 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.interfaceRegistry = registry
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)
 	app.msgServiceRouter.SetInterfaceRegistry(registry)
-}
-
-// SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
-func (app *BaseApp) SetStreamingService(s StreamingService) {
-	// add the listeners for each StoreKey
-	for key, lis := range s.Listeners() {
-		app.cms.AddListeners(key, lis)
-	}
-	// register the StreamingService within the BaseApp
-	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
-	app.abciListeners = append(app.abciListeners, s)
-}
-
-// SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.
-func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
-	app.txDecoder = txDecoder
 }

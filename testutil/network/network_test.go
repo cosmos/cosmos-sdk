@@ -1,4 +1,3 @@
-//go:build norace
 // +build norace
 
 package network_test
@@ -21,12 +20,11 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), network.DefaultConfig())
-	s.Require().NoError(err)
+	s.network = network.New(s.T(), network.DefaultConfig())
+	s.Require().NotNil(s.network)
 
-	h, err := s.network.WaitForHeight(1)
-	s.Require().NoError(err, "stalled at height %d", h)
+	_, err := s.network.WaitForHeight(1)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -58,7 +57,7 @@ func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 func TestVerifyMultiStoreQueryProof(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db)
 	iavlStoreKey := types.NewKVStoreKey("iavlStoreKey")
 
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
@@ -113,7 +112,7 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 func TestVerifyMultiStoreQueryProofAbsence(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db)
 	iavlStoreKey := types.NewKVStoreKey("iavlStoreKey")
 
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)

@@ -5,28 +5,21 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/testutil"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var (
@@ -81,52 +74,39 @@ type KeeperTestSuite struct {
 
 	ctx     sdk.Context
 	querier sdk.Querier
-	app     *runtime.App
-
-	evidenceKeeper    keeper.Keeper
-	bankKeeper        bankkeeper.Keeper
-	accountKeeper     authkeeper.AccountKeeper
-	slashingKeeper    slashingkeeper.Keeper
-	stakingKeeper     *stakingkeeper.Keeper
-	interfaceRegistry codectypes.InterfaceRegistry
+	app     *simapp.SimApp
 
 	queryClient types.QueryClient
+	stakingHdl  sdk.Handler
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	var (
-		legacyAmino    *codec.LegacyAmino
-		evidenceKeeper keeper.Keeper
-	)
+	checkTx := false
+	app := simapp.Setup(checkTx)
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&legacyAmino,
-		&evidenceKeeper,
-		&suite.interfaceRegistry,
-		&suite.accountKeeper,
-		&suite.bankKeeper,
-		&suite.slashingKeeper,
-		&suite.stakingKeeper,
+	// recreate keeper in order to use custom testing types
+	evidenceKeeper := keeper.NewKeeper(
+		app.AppCodec(), app.GetKey(types.StoreKey), app.StakingKeeper, app.SlashingKeeper,
 	)
-	require.NoError(suite.T(), err)
-
 	router := types.NewRouter()
-	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
+	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(*evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
-	suite.querier = keeper.NewQuerier(evidenceKeeper, legacyAmino)
+	app.EvidenceKeeper = *evidenceKeeper
+
+	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
+	suite.querier = keeper.NewQuerier(*evidenceKeeper, app.LegacyAmino())
 	suite.app = app
 
 	for i, addr := range valAddresses {
 		addr := sdk.AccAddress(addr)
-		suite.accountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
+		app.AccountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
 	}
 
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.interfaceRegistry)
-	types.RegisterQueryServer(queryHelper, evidenceKeeper)
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.EvidenceKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
-	suite.evidenceKeeper = evidenceKeeper
+	suite.stakingHdl = staking.NewHandler(app.StakingKeeper)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {
@@ -142,7 +122,7 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 			ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 		}
 
-		suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, evidence[i]))
+		suite.Nil(suite.app.EvidenceKeeper.SubmitEvidence(ctx, evidence[i]))
 	}
 
 	return evidence
@@ -152,10 +132,10 @@ func (suite *KeeperTestSuite) populateValidators(ctx sdk.Context) {
 	// add accounts and set total supply
 	totalSupplyAmt := initAmt.MulRaw(int64(len(valAddresses)))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupplyAmt))
-	suite.NoError(suite.bankKeeper.MintCoins(ctx, minttypes.ModuleName, totalSupply))
+	suite.NoError(suite.app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, totalSupply))
 
 	for _, addr := range valAddresses {
-		suite.NoError(suite.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, (sdk.AccAddress)(addr), initCoins))
+		suite.NoError(suite.app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, (sdk.AccAddress)(addr), initCoins))
 	}
 }
 
@@ -170,9 +150,9 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
-	suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, e))
+	suite.Nil(suite.app.EvidenceKeeper.SubmitEvidence(ctx, e))
 
-	res, ok := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
+	res, ok := suite.app.EvidenceKeeper.GetEvidence(ctx, e.Hash())
 	suite.True(ok)
 	suite.Equal(e, res)
 }
@@ -188,10 +168,10 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
-	suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, e))
-	suite.Error(suite.evidenceKeeper.SubmitEvidence(ctx, e))
+	suite.Nil(suite.app.EvidenceKeeper.SubmitEvidence(ctx, e))
+	suite.Error(suite.app.EvidenceKeeper.SubmitEvidence(ctx, e))
 
-	res, ok := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
+	res, ok := suite.app.EvidenceKeeper.GetEvidence(ctx, e.Hash())
 	suite.True(ok)
 	suite.Equal(e, res)
 }
@@ -206,9 +186,9 @@ func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
-	suite.Error(suite.evidenceKeeper.SubmitEvidence(ctx, e))
+	suite.Error(suite.app.EvidenceKeeper.SubmitEvidence(ctx, e))
 
-	res, ok := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
+	res, ok := suite.app.EvidenceKeeper.GetEvidence(ctx, e.Hash())
 	suite.False(ok)
 	suite.Nil(res)
 }
@@ -218,16 +198,16 @@ func (suite *KeeperTestSuite) TestIterateEvidence() {
 	numEvidence := 100
 	suite.populateEvidence(ctx, numEvidence)
 
-	evidence := suite.evidenceKeeper.GetAllEvidence(ctx)
+	evidence := suite.app.EvidenceKeeper.GetAllEvidence(ctx)
 	suite.Len(evidence, numEvidence)
 }
 
 func (suite *KeeperTestSuite) TestGetEvidenceHandler() {
-	handler, err := suite.evidenceKeeper.GetEvidenceHandler((&types.Equivocation{}).Route())
+	handler, err := suite.app.EvidenceKeeper.GetEvidenceHandler((&types.Equivocation{}).Route())
 	suite.NoError(err)
 	suite.NotNil(handler)
 
-	handler, err = suite.evidenceKeeper.GetEvidenceHandler("invalidHandler")
+	handler, err = suite.app.EvidenceKeeper.GetEvidenceHandler("invalidHandler")
 	suite.Error(err)
 	suite.Nil(handler)
 }

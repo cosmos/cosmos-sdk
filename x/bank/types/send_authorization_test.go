@@ -19,7 +19,7 @@ var (
 )
 
 func TestSendAuthorization(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	authorization := types.NewSendAuthorization(coins1000)
 

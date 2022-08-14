@@ -41,6 +41,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"reflect"
 	"sort"
@@ -218,7 +219,7 @@ func decompress(b []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("bad gzipped descriptor: %v", err)
 	}
-	out, err := io.ReadAll(r)
+	out, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("bad gzipped descriptor: %v", err)
 	}

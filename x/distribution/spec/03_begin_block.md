@@ -9,9 +9,9 @@ the distribution `ModuleAccount` account. When a delegator or validator
 withdraws their rewards, they are taken out of the `ModuleAccount`. During begin
 block, the different claims on the fees collected are updated as follows:
 
-* The block proposer of the previous height and its delegators receive between 1% and 5% of fee rewards.
-* The reserve community tax is charged.
-* The remainder is distributed proportionally by voting power to all bonded validators
+- The block proposer of the previous height and its delegators receive between 1% and 5% of fee rewards.
+- The reserve community tax is charged.
+- The remainder is distributed proportionally by voting power to all bonded validators
 
 To incentivize validators to wait and include additional pre-commits in the block, the block proposer reward is calculated from Tendermint pre-commit messages.
 
@@ -45,7 +45,7 @@ only bonded validators can supply valid precommits) and is always larger than
 Any remaining fees are distributed among all the bonded validators, including
 the proposer, in proportion to their consensus power.
 
-```text
+```
 powFrac = validator power / total bonded validator power
 proposerMul = baseproposerreward + bonusproposerreward * P
 voteMul = 1 - communitytax - proposerMul
@@ -79,7 +79,7 @@ blocks. Then hold `(precommits included) / (total bonded validator power)`
 constant so that the amortized block reward for the validator is `( validator power / total bonded power) * (1 - community tax rate)` of
 the total rewards. Consequently, the reward for a single delegator is:
 
-```text
+```
 (delegator proportion of the validator power / validator power) * (validator power / total bonded power)
   * (1 - community tax rate) * (1 - validator commision rate)
 = (delegator proportion of the validator power / total bonded power) * (1 -

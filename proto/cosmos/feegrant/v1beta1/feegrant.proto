@@ -58,7 +58,7 @@ message AllowedMsgAllowance {
   option (gogoproto.goproto_getters)         = false;
   option (cosmos_proto.implements_interface) = "FeeAllowanceI";
 
-  // allowance can be any of basic and periodic fee allowance.
+  // allowance can be any of basic and filtered fee allowance.
   google.protobuf.Any allowance = 1 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
 
   // allowed_messages are the messages for which the grantee has the access.
@@ -68,11 +68,11 @@ message AllowedMsgAllowance {
 // Grant is stored in the KVStore to record a grant with full context
 message Grant {
   // granter is the address of the user granting an allowance of their funds.
-  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string granter = 1;
 
   // grantee is the address of the user being granted an allowance of another user's funds.
-  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string grantee = 2;
 
-  // allowance can be any of basic, periodic, allowed fee allowance.
+  // allowance can be any of basic and filtered fee allowance.
   google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
 }

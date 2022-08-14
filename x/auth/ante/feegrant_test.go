@@ -11,7 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -20,7 +21,6 @@ import (
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
@@ -32,7 +32,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
 
 	// this just tests our handler
-	dfd := ante.NewDeductFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, nil)
+	dfd := ante.NewDeductFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper)
 	feeAnteHandler := sdk.ChainAnteDecorators(dfd)
 
 	// this tests the whole stack
@@ -46,11 +46,11 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	priv5, _, addr5 := testdata.KeyTestPubAddr()
 
 	// Set addr1 with insufficient funds
-	err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
 	suite.Require().NoError(err)
 
 	// Set addr2 with more funds
-	err = testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
 	suite.Require().NoError(err)
 
 	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
@@ -144,7 +144,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}
 
-			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, simtestutil.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
+			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
 			suite.Require().NoError(err)
 			_, err = feeAnteHandler(ctx, tx, false) // tests only feegrant ante
 			if tc.valid {
@@ -169,8 +169,7 @@ func SigGasNoConsumer(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, para
 }
 
 func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums,
-	accSeqs []uint64, feeGranter sdk.AccAddress, priv ...cryptotypes.PrivKey,
-) (sdk.Tx, error) {
+	accSeqs []uint64, feeGranter sdk.AccAddress, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(priv))
 
 	// create a random length memo

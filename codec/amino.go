@@ -47,6 +47,7 @@ func MarshalJSONIndent(cdc *LegacyAmino, obj interface{}) ([]byte, error) {
 	if err = json.Indent(&out, bz, "", "  "); err != nil {
 		return nil, err
 	}
+
 	return out.Bytes(), nil
 }
 

@@ -2,7 +2,6 @@ package staking_test
 
 import (
 	"math/big"
-	"testing"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -32,13 +30,13 @@ var (
 
 	commissionRates = types.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
-	PKs = simtestutil.CreateTestPubKeys(500)
+	PKs = simapp.CreateTestPubKeys(500)
 )
 
 // getBaseSimappWithCustomKeeper Returns a simapp with custom StakingKeeper
 // to avoid messing with the hooks.
-func getBaseSimappWithCustomKeeper(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(t, false)
+func getBaseSimappWithCustomKeeper() (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	appCodec := app.AppCodec()
@@ -58,7 +56,7 @@ func getBaseSimappWithCustomKeeper(t *testing.T) (*codec.LegacyAmino, *simapp.Si
 // generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
 func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int, accAmount sdk.Int) ([]sdk.AccAddress, []sdk.ValAddress) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, accAmount)
-	addrVals := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	return addrDels, addrVals
 }

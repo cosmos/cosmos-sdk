@@ -99,8 +99,8 @@ func mustAny(msg proto.Message) *types.Any {
 }
 
 func BenchmarkProtoCodecMarshalLengthPrefixed(b *testing.B) {
-	pCdc := codec.NewProtoCodec(types.NewInterfaceRegistry())
-	msg := &testdata.HasAnimal{
+	var pCdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
+	var msg = &testdata.HasAnimal{
 		X: 1000,
 		Animal: mustAny(&testdata.HasAnimal{
 			X: 2000,

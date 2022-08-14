@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
-	"os"
 	"time"
 
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -29,6 +28,7 @@ import (
 func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
+
 		if FlagGenesisTimeValue == 0 {
 			genesisTimestamp = simtypes.RandTimestamp(r)
 		} else {
@@ -55,7 +55,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 
 		case config.ParamsFile != "":
 			appParams := make(simtypes.AppParams)
-			bz, err := os.ReadFile(config.ParamsFile)
+			bz, err := ioutil.ReadFile(config.ParamsFile)
 			if err != nil {
 				panic(err)
 			}
@@ -147,13 +147,10 @@ func AppStateRandomizedFn(
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts
-	var (
-		numInitiallyBonded int64
-		initialStake       sdkmath.Int
-	)
+	var initialStake, numInitiallyBonded int64
 	appParams.GetOrGenerate(
 		cdc, simappparams.StakePerAccount, &initialStake, r,
-		func(r *rand.Rand) { initialStake = sdkmath.NewInt(r.Int63n(1e12)) },
+		func(r *rand.Rand) { initialStake = r.Int63n(1e12) },
 	)
 	appParams.GetOrGenerate(
 		cdc, simappparams.InitiallyBondedValidators, &numInitiallyBonded, r,
@@ -197,7 +194,7 @@ func AppStateRandomizedFn(
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
 func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (tmtypes.GenesisDoc, []simtypes.Account) {
-	bytes, err := os.ReadFile(genesisFile)
+	bytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
 	}

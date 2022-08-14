@@ -7,9 +7,8 @@ import (
 
 // bank message types
 const (
-	TypeMsgSend           = "send"
-	TypeMsgMultiSend      = "multisend"
-	TypeMsgSetSendEnabled = "set-send-enabled"
+	TypeMsgSend      = "send"
+	TypeMsgMultiSend = "multisend"
 )
 
 var _ sdk.Msg = &MsgSend{}
@@ -28,12 +27,14 @@ func (msg MsgSend) Type() string { return TypeMsgSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSend) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
+	_, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
+	_, err = sdk.AccAddressFromBech32(msg.ToAddress)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid recipient address (%s)", err)
 	}
 
 	if !msg.Amount.IsValid() {
@@ -54,8 +55,11 @@ func (msg MsgSend) GetSignBytes() []byte {
 
 // GetSigners Implements Msg.
 func (msg MsgSend) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
-	return []sdk.AccAddress{fromAddress}
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{from}
 }
 
 var _ sdk.Msg = &MsgMultiSend{}
@@ -95,8 +99,8 @@ func (msg MsgMultiSend) GetSignBytes() []byte {
 func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
 	addrs := make([]sdk.AccAddress, len(msg.Inputs))
 	for i, in := range msg.Inputs {
-		inAddr, _ := sdk.AccAddressFromBech32(in.Address)
-		addrs[i] = inAddr
+		addr, _ := sdk.AccAddressFromBech32(in.Address)
+		addrs[i] = addr
 	}
 
 	return addrs
@@ -104,8 +108,9 @@ func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic - validate transaction input
 func (in Input) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(in.Address); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid input address: %s", err)
+	_, err := sdk.AccAddressFromBech32(in.Address)
+	if err != nil {
+		return err
 	}
 
 	if !in.Coins.IsValid() {
@@ -130,8 +135,9 @@ func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 
 // ValidateBasic - validate transaction output
 func (out Output) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(out.Address); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid output address: %s", err)
+	_, err := sdk.AccAddressFromBech32(out.Address)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid output address (%s)", err)
 	}
 
 	if !out.Coins.IsValid() {

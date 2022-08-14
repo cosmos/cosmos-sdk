@@ -3,12 +3,13 @@ package tmservice
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/tendermint/tendermint/rpc/coretypes"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
-func getBlock(ctx context.Context, clientCtx client.Context, height *int64) (*coretypes.ResultBlock, error) {
+func getBlock(ctx context.Context, clientCtx client.Context, height *int64) (*ctypes.ResultBlock, error) {
 	// get the node
 	node, err := clientCtx.GetNode()
 	if err != nil {
@@ -27,7 +28,7 @@ func GetProtoBlock(ctx context.Context, clientCtx client.Context, height *int64)
 	if err != nil {
 		return tmproto.BlockID{}, nil, err
 	}
-	protoBlockID := block.BlockID.ToProto()
+	protoBlockId := block.BlockID.ToProto()
 
-	return protoBlockID, protoBlock, nil
+	return protoBlockId, protoBlock, nil
 }

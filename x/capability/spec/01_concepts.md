@@ -31,5 +31,4 @@ not own.
 
 ## Stores
 
-* MemStore
-* KeyStore
+- MemStore

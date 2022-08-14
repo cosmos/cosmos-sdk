@@ -6,20 +6,17 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestAccountRetriever(t *testing.T) {
-	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
-	require.NoError(t, err)
+	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 
-	network, err := network.New(t, t.TempDir(), cfg)
-	require.NoError(t, err)
+	network := network.New(t, cfg)
 	defer network.Cleanup()
 
-	_, err = network.WaitForHeight(3)
+	_, err := network.WaitForHeight(3)
 	require.NoError(t, err)
 
 	val := network.Validators[0]

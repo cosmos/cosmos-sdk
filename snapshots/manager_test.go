@@ -6,20 +6,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
 )
 
-var opts = types.NewSnapshotOptions(1500, 2)
-
 func TestManager_List(t *testing.T) {
 	store := setupStore(t)
-	snapshotter := &mockSnapshotter{}
-	snapshotter.SetSnapshotInterval(opts.Interval)
-	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
-	require.Equal(t, opts.Interval, snapshotter.GetSnapshotInterval())
+	manager := snapshots.NewManager(store, nil)
 
 	mgrList, err := manager.List()
 	require.NoError(t, err)
@@ -38,7 +32,7 @@ func TestManager_List(t *testing.T) {
 
 func TestManager_LoadChunk(t *testing.T) {
 	store := setupStore(t)
-	manager := snapshots.NewManager(store, opts, &mockSnapshotter{}, nil, log.NewNopLogger())
+	manager := snapshots.NewManager(store, nil)
 
 	// Existing chunk should return body
 	chunk, err := manager.LoadChunk(2, 1, 1)
@@ -65,11 +59,10 @@ func TestManager_Take(t *testing.T) {
 		{7, 8, 9},
 	}
 	snapshotter := &mockSnapshotter{
-		items:         items,
-		prunedHeights: make(map[int64]struct{}),
+		items: items,
 	}
 	expectChunks := snapshotItems(items)
-	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
+	manager := snapshots.NewManager(store, snapshotter)
 
 	// nil manager should return error
 	_, err := (*snapshots.Manager)(nil).Create(1)
@@ -78,15 +71,10 @@ func TestManager_Take(t *testing.T) {
 	// creating a snapshot at a lower height than the latest should error
 	_, err = manager.Create(3)
 	require.Error(t, err)
-	_, didPruneHeight := snapshotter.prunedHeights[3]
-	require.True(t, didPruneHeight)
 
 	// creating a snapshot at a higher height should be fine, and should return it
 	snapshot, err := manager.Create(5)
 	require.NoError(t, err)
-	_, didPruneHeight = snapshotter.prunedHeights[5]
-	require.True(t, didPruneHeight)
-
 	assert.Equal(t, &types.Snapshot{
 		Height: 5,
 		Format: snapshotter.SnapshotFormat(),
@@ -110,9 +98,7 @@ func TestManager_Take(t *testing.T) {
 
 func TestManager_Prune(t *testing.T) {
 	store := setupStore(t)
-	snapshotter := &mockSnapshotter{}
-	snapshotter.SetSnapshotInterval(opts.Interval)
-	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
+	manager := snapshots.NewManager(store, nil)
 
 	pruned, err := manager.Prune(2)
 	require.NoError(t, err)
@@ -130,10 +116,8 @@ func TestManager_Prune(t *testing.T) {
 
 func TestManager_Restore(t *testing.T) {
 	store := setupStore(t)
-	target := &mockSnapshotter{
-		prunedHeights: make(map[int64]struct{}),
-	}
-	manager := snapshots.NewManager(store, opts, target, nil, log.NewNopLogger())
+	target := &mockSnapshotter{}
+	manager := snapshots.NewManager(store, target)
 
 	expectItems := [][]byte{
 		{1, 2, 3},
@@ -155,13 +139,13 @@ func TestManager_Restore(t *testing.T) {
 	require.ErrorIs(t, err, types.ErrUnknownFormat)
 
 	// Restore errors on no chunks
-	err = manager.Restore(types.Snapshot{Height: 3, Format: types.CurrentFormat, Hash: []byte{1, 2, 3}})
+	err = manager.Restore(types.Snapshot{Height: 3, Format: 1, Hash: []byte{1, 2, 3}})
 	require.Error(t, err)
 
 	// Restore errors on chunk and chunkhashes mismatch
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   types.CurrentFormat,
+		Format:   1,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   4,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
@@ -171,7 +155,7 @@ func TestManager_Restore(t *testing.T) {
 	// Starting a restore works
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   types.CurrentFormat,
+		Format:   1,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   1,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
@@ -181,8 +165,6 @@ func TestManager_Restore(t *testing.T) {
 	// While the restore is in progress, any other operations fail
 	_, err = manager.Create(4)
 	require.Error(t, err)
-	_, didPruneHeight := target.prunedHeights[4]
-	require.True(t, didPruneHeight)
 
 	_, err = manager.Prune(1)
 	require.Error(t, err)
@@ -208,7 +190,7 @@ func TestManager_Restore(t *testing.T) {
 	// Starting a new restore should fail now, because the target already has contents.
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   types.CurrentFormat,
+		Format:   1,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   3,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
@@ -221,7 +203,7 @@ func TestManager_Restore(t *testing.T) {
 	target.items = nil
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
-		Format:   types.CurrentFormat,
+		Format:   1,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   1,
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},

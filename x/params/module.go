@@ -5,20 +5,15 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+
+	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	modulev1 "cosmossdk.io/api/cosmos/params/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"github.com/cosmos/cosmos-sdk/depinject"
-	"github.com/cosmos/cosmos-sdk/runtime"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -57,11 +52,12 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodin
 	return nil
 }
 
+// RegisterRESTRoutes registers the REST routes for the params module.
+func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
+
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the params module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
-	if err := proposal.RegisterQueryHandlerClient(context.Background(), mux, proposal.NewQueryClient(clientCtx)); err != nil {
-		panic(err)
-	}
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	proposal.RegisterQueryHandlerClient(context.Background(), mux, proposal.NewQueryClient(clientCtx))
 }
 
 // GetTxCmd returns no root tx command for the params module.
@@ -98,10 +94,7 @@ func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMess
 	return []abci.ValidatorUpdate{}
 }
 
-// Deprecated: Route returns the message routing key for the params module.
-func (AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
+func (AppModule) Route() sdk.Route { return sdk.Route{} }
 
 // GenerateGenesisState performs a no-op.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
@@ -153,52 +146,4 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock performs a no-op.
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
-}
-
-//
-// New App Wiring Setup
-//
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
-			provideSubSpace,
-		))
-}
-
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type paramsInputs struct {
-	depinject.In
-
-	KvStoreKey        *store.KVStoreKey
-	TransientStoreKey *store.TransientStoreKey
-	Cdc               codec.Codec
-	LegacyAmino       *codec.LegacyAmino
-}
-
-type paramsOutputs struct {
-	depinject.Out
-
-	ParamsKeeper  keeper.Keeper
-	BaseAppOption runtime.BaseAppOption
-	Module        runtime.AppModuleWrapper
-}
-
-func provideModule(in paramsInputs) paramsOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.KvStoreKey, in.TransientStoreKey)
-	baseappOpt := func(app *baseapp.BaseApp) {
-		app.SetParamStore(k.Subspace(baseapp.Paramspace).WithKeyTable(types.ConsensusParamsKeyTable()))
-	}
-	m := runtime.WrapAppModule(NewAppModule(k))
-
-	return paramsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m}
-}
-
-func provideSubSpace(key depinject.ModuleKey, k keeper.Keeper) types.Subspace {
-	return k.Subspace(key.Name())
 }

@@ -2,14 +2,11 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 )
 
 // RegisterLegacyAminoCodec registers the vesting interfaces and concrete types on the
@@ -21,8 +18,11 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)
 	cdc.RegisterConcrete(&PeriodicVestingAccount{}, "cosmos-sdk/PeriodicVestingAccount", nil)
 	cdc.RegisterConcrete(&PermanentLockedAccount{}, "cosmos-sdk/PermanentLockedAccount", nil)
-	legacy.RegisterAminoMsg(cdc, &MsgCreateVestingAccount{}, "cosmos-sdk/MsgCreateVestingAccount")
-	legacy.RegisterAminoMsg(cdc, &MsgCreatePermanentLockedAccount{}, "cosmos-sdk/MsgCreatePermLockedAccount")
+
+	// msg registration
+	cdc.RegisterConcrete(&MsgCreateVestingAccount{}, "cosmos-sdk/MsgCreateVestingAccount", nil)
+	cdc.RegisterConcrete(&MsgCreatePeriodicVestingAccount{}, "cosmos-sdk/MsgCreatePeriodicVestingAccount", nil)
+	cdc.RegisterConcrete(&MsgDonateAllVestingTokens{}, "cosmos-sdk/MsgDonateAllVestingTokens", nil)
 }
 
 // RegisterInterface associates protoName with AccountI and VestingAccount
@@ -58,23 +58,16 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateVestingAccount{},
-		&MsgCreatePermanentLockedAccount{},
+		&MsgCreatePeriodicVestingAccount{},
+		&MsgDonateAllVestingTokens{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
-var (
-	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(amino)
-)
+var amino = codec.NewLegacyAmino()
 
 func init() {
 	RegisterLegacyAminoCodec(amino)
-	cryptocodec.RegisterCrypto(amino)
-	sdk.RegisterLegacyAminoCodec(amino)
-
-	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
-	// used to properly serialize MsgGrant and MsgExec instances
-	RegisterLegacyAminoCodec(authzcodec.Amino)
+	amino.Seal()
 }

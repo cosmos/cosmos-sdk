@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 type WeightedProposalContent interface {
@@ -84,6 +84,7 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 	bz := cdc.MustMarshalJSON(msg)
 
 	return NewOperationMsgBasic(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), comment, ok, bz)
+
 }
 
 // NoOpMsg - create a no-operation message

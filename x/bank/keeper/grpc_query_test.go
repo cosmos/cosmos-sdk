@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -36,7 +36,7 @@ func (suite *IntegrationTestSuite) TestQueryBalance() {
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
 
 	res, err = queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -68,7 +68,7 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
 
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -84,7 +84,6 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	}
 	req = types.NewQueryAllBalancesRequest(addr, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
-	suite.Require().NoError(err)
 	suite.Equal(res.Balances.Len(), 1)
 	suite.Nil(res.Pagination.NextKey)
 }
@@ -122,7 +121,7 @@ func (suite *IntegrationTestSuite) TestSpendableBalances() {
 	)
 
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, acc.GetAddress(), origCoins))
 
 	// move time forward for some tokens to vest
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
@@ -141,22 +140,16 @@ func (suite *IntegrationTestSuite) TestSpendableBalances() {
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
-	res, err := queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
-	suite.Require().NoError(err)
-	genesisSupply := res.Supply
-
-	testCoins := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
+	expectedTotalSupply := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
 	suite.
 		Require().
-		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, testCoins))
+		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
 
-	res, err = queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
+	res, err := queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	expectedTotalSupply := genesisSupply.Add(testCoins...)
-	suite.Require().Equal(2, len(res.Supply))
-	suite.Require().Equal(res.Supply, expectedTotalSupply)
+	suite.Require().Equal(expectedTotalSupply, res.Supply)
 }
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
@@ -361,225 +354,6 @@ func (suite *IntegrationTestSuite) QueryDenomMetadataRequest() {
 			} else {
 				suite.Require().Error(err)
 			}
-		})
-	}
-}
-
-func (suite *IntegrationTestSuite) TestGRPCDenomOwners() {
-	ctx := suite.ctx
-
-	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
-	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
-
-	for i := 0; i < 10; i++ {
-		acc := authKeeper.NewAccountWithAddress(ctx, authtypes.NewModuleAddress(fmt.Sprintf("account-%d", i)))
-		authKeeper.SetAccount(ctx, acc)
-
-		bal := sdk.NewCoins(sdk.NewCoin(
-			sdk.DefaultBondDenom,
-			sdk.TokensFromConsensusPower(initialPower/10, sdk.DefaultPowerReduction),
-		))
-		suite.Require().NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, acc.GetAddress(), bal))
-	}
-
-	testCases := map[string]struct {
-		req      *types.QueryDenomOwnersRequest
-		expPass  bool
-		numAddrs int
-		hasNext  bool
-		total    uint64
-	}{
-		"empty request": {
-			req:     &types.QueryDenomOwnersRequest{},
-			expPass: false,
-		},
-		"invalid denom": {
-			req: &types.QueryDenomOwnersRequest{
-				Denom: "foo",
-			},
-			expPass:  true,
-			numAddrs: 0,
-			hasNext:  false,
-			total:    0,
-		},
-		"valid request - page 1": {
-			req: &types.QueryDenomOwnersRequest{
-				Denom: sdk.DefaultBondDenom,
-				Pagination: &query.PageRequest{
-					Limit:      6,
-					CountTotal: true,
-				},
-			},
-			expPass:  true,
-			numAddrs: 6,
-			hasNext:  true,
-			total:    13,
-		},
-		"valid request - page 2": {
-			req: &types.QueryDenomOwnersRequest{
-				Denom: sdk.DefaultBondDenom,
-				Pagination: &query.PageRequest{
-					Offset:     6,
-					Limit:      10,
-					CountTotal: true,
-				},
-			},
-			expPass:  true,
-			numAddrs: 7,
-			hasNext:  false,
-			total:    13,
-		},
-	}
-
-	for name, tc := range testCases {
-		suite.Run(name, func() {
-			resp, err := suite.queryClient.DenomOwners(gocontext.Background(), tc.req)
-			if tc.expPass {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.DenomOwners, tc.numAddrs)
-				suite.Equal(tc.total, resp.Pagination.Total)
-
-				if tc.hasNext {
-					suite.NotNil(resp.Pagination.NextKey)
-				} else {
-					suite.Nil(resp.Pagination.NextKey)
-				}
-			} else {
-				suite.Require().Error(err)
-			}
-		})
-	}
-
-	suite.Require().True(true)
-}
-
-func (suite *IntegrationTestSuite) TestQuerySendEnabled() {
-	ctx, bankKeeper := suite.ctx, suite.app.BankKeeper
-
-	bankKeeper.SetSendEnabled(ctx, "falsestcoin", false)
-	bankKeeper.SetSendEnabled(ctx, "truestcoin", true)
-
-	tests := []struct {
-		name string
-		req  *types.QuerySendEnabledRequest
-		exp  *types.QuerySendEnabledResponse
-	}{
-		{
-			name: "nil denoms list",
-			req:  &types.QuerySendEnabledRequest{Denoms: []string{}},
-			exp: &types.QuerySendEnabledResponse{
-				SendEnabled: []*types.SendEnabled{
-					{"falsestcoin", false},
-					{"truestcoin", true},
-				},
-				Pagination: &query.PageResponse{
-					NextKey: nil,
-					Total:   2,
-				},
-			},
-		},
-		{
-			name: "empty denoms list",
-			req:  &types.QuerySendEnabledRequest{Denoms: []string{}},
-			exp: &types.QuerySendEnabledResponse{
-				SendEnabled: []*types.SendEnabled{
-					{"falsestcoin", false},
-					{"truestcoin", true},
-				},
-				Pagination: &query.PageResponse{
-					NextKey: nil,
-					Total:   2,
-				},
-			},
-		},
-		{
-			name: "limit 1",
-			req: &types.QuerySendEnabledRequest{
-				Pagination: &query.PageRequest{
-					Limit:      1,
-					CountTotal: true,
-				},
-			},
-			exp: &types.QuerySendEnabledResponse{
-				SendEnabled: []*types.SendEnabled{
-					{"falsestcoin", false},
-				},
-				Pagination: &query.PageResponse{
-					NextKey: []byte("truestcoin"),
-					Total:   2,
-				},
-			},
-		},
-		{
-			name: "just truestcoin",
-			req:  &types.QuerySendEnabledRequest{Denoms: []string{"truestcoin"}},
-			exp: &types.QuerySendEnabledResponse{
-				SendEnabled: []*types.SendEnabled{
-					{"truestcoin", true},
-				},
-				Pagination: nil,
-			},
-		},
-		{
-			name: "just falsestcoin",
-			req:  &types.QuerySendEnabledRequest{Denoms: []string{"falsestcoin"}},
-			exp: &types.QuerySendEnabledResponse{
-				SendEnabled: []*types.SendEnabled{
-					{"falsestcoin", false},
-				},
-				Pagination: nil,
-			},
-		},
-		{
-			name: "just an unknown coin",
-			req:  &types.QuerySendEnabledRequest{Denoms: []string{"unknowniercoin"}},
-			exp: &types.QuerySendEnabledResponse{
-				SendEnabled: nil,
-				Pagination:  nil,
-			},
-		},
-		{
-			name: "both truestcoin falsestcoin",
-			req:  &types.QuerySendEnabledRequest{Denoms: []string{"truestcoin", "falsestcoin"}},
-			exp: &types.QuerySendEnabledResponse{
-				SendEnabled: []*types.SendEnabled{
-					{"truestcoin", true},
-					{"falsestcoin", false},
-				},
-				Pagination: nil,
-			},
-		},
-		{
-			name: "both truestcoin falsestcoin and an unknown",
-			req:  &types.QuerySendEnabledRequest{Denoms: []string{"truestcoin", "falsestcoin", "unknownestcoin"}},
-			exp: &types.QuerySendEnabledResponse{
-				SendEnabled: []*types.SendEnabled{
-					{"truestcoin", true},
-					{"falsestcoin", false},
-				},
-				Pagination: nil,
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			resp, err := suite.queryClient.SendEnabled(gocontext.Background(), tc.req)
-			suite.Require().NoError(err)
-			if !suite.Assert().Equal(tc.exp, resp) {
-				if !suite.Assert().Len(resp.SendEnabled, len(tc.exp.SendEnabled)) {
-					for i := range tc.exp.SendEnabled {
-						suite.Assert().Equal(tc.exp.SendEnabled[i].Denom, resp.SendEnabled[i].Denom, fmt.Sprintf("SendEnabled[%d].Denom", i))
-						suite.Assert().Equal(tc.exp.SendEnabled[i].Enabled, resp.SendEnabled[i].Enabled, fmt.Sprintf("SendEnabled[%d].Enabled", i))
-					}
-				}
-				if !suite.Assert().Equal(tc.exp.Pagination, resp.Pagination, "Pagination") && tc.exp.Pagination != nil && resp.Pagination != nil {
-					suite.Assert().Equal(tc.exp.Pagination.NextKey, resp.Pagination.NextKey, "Pagination.NextKey")
-					suite.Assert().Equal(tc.exp.Pagination.Total, resp.Pagination.Total, "Pagination.Total")
-				}
-			}
-			suite.Require().Equal(tc.exp, resp)
 		})
 	}
 }

@@ -6,11 +6,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -18,7 +17,6 @@ import (
 )
 
 // Simulation operation weights constants
-//nolint:gosec // these are not hardcoded credentials.
 const (
 	OpWeightMsgUnjail = "op_weight_msg_unjail"
 )
@@ -28,28 +26,29 @@ func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
 	bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper,
 ) simulation.WeightedOperations {
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
+
 	var weightMsgUnjail int
 	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
 		func(_ *rand.Rand) {
-			weightMsgUnjail = simtestutil.DefaultWeightMsgUnjail
+			weightMsgUnjail = simappparams.DefaultWeightMsgUnjail
 		},
 	)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgUnjail,
-			SimulateMsgUnjail(codec.NewProtoCodec(interfaceRegistry), ak, bk, k, sk.(*stakingkeeper.Keeper)),
+			SimulateMsgUnjail(ak, bk, k, sk.(stakingkeeper.Keeper)),
 		),
 	}
 }
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
-func SimulateMsgUnjail(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk *stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "validator is not ok"), nil, nil // skip
@@ -89,12 +88,12 @@ func SimulateMsgUnjail(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.B
 
 		msg := types.NewMsgUnjail(validator.GetOperator())
 
-		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)
-		tx, err := simtestutil.GenSignedMockTx(
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			simtestutil.DefaultGenTxGas,
+			helpers.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -104,7 +103,7 @@ func SimulateMsgUnjail(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.B
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		_, res, err := app.SimDeliver(txGen.TxEncoder(), tx)
+		_, res, err := app.Deliver(txGen.TxEncoder(), tx)
 
 		// result should fail if:
 		// - validator cannot be unjailed due to tombstone

@@ -140,7 +140,7 @@ The `x/bank` supports the following transactional commands.
 
 1. Send tokens via a `MsgSend` message.
 
-   ```sh
+   ```shell
    app tx send [from_key_or_address] [to_address] [amount] [...flags]
    ```
 
@@ -155,8 +155,8 @@ endpoint.
 
 1. Construct an unsigned `MsgSend` transaction.
 
-   | Method | Path                                 |
-   | :----- | :----------------------------------- |
+   | Method | Path                     |
+   | :----- | :----------------------- |
    | `POST` | `/bank/accounts/{address}/transfers` |
 
    Sample payload:
@@ -185,9 +185,9 @@ endpoint.
 
 2. Query for an account's balance.
 
-   | Method | Path                       |
-   | :----- | :------------------------- |
-   | `GET`  | `/bank/balances/{address}` |
+   | Method | Path                     |
+   | :----- | :----------------------- |
+   | `GET` | `/bank/balances/{address}` |
 
    Sample response:
 

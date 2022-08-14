@@ -3,6 +3,8 @@ package tx
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
@@ -12,11 +14,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/query"
+	pagination "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
@@ -51,16 +51,9 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
 
-	page := int(req.Page)
-	// Tendermint node.TxSearch that is used for querying txs defines pages starting from 1,
-	// so we default to 1 if not provided in the request.
-	if page == 0 {
-		page = 1
-	}
-
-	limit := int(req.Limit)
-	if limit == 0 {
-		limit = query.DefaultLimit
+	page, limit, err := pagination.ParsePagination(req.Pagination)
+	if err != nil {
+		return nil, err
 	}
 	orderBy := parseOrderBy(req.OrderBy)
 
@@ -94,7 +87,9 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	return &txtypes.GetTxsEventResponse{
 		Txs:         txsList,
 		TxResponses: result.Txs,
-		Total:       result.TotalCount,
+		Pagination: &pagination.PageResponse{
+			Total: result.TotalCount,
+		},
 	}, nil
 }
 
@@ -185,7 +180,7 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 			"or greater than the current height %d", req.Height, currentHeight)
 	}
 
-	blockID, block, err := tmservice.GetProtoBlock(ctx, s.clientCtx, &req.Height)
+	blockId, block, err := tmservice.GetProtoBlock(ctx, s.clientCtx, &req.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -196,13 +191,13 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		limit = req.Pagination.Limit
 	} else {
 		offset = 0
-		limit = query.DefaultLimit
+		limit = pagination.DefaultLimit
 	}
 
 	blockTxs := block.Data.Txs
 	blockTxsLn := uint64(len(blockTxs))
 	txs := make([]*txtypes.Tx, 0, limit)
-	if offset >= blockTxsLn && blockTxsLn != 0 {
+	if offset >= blockTxsLn {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("out of range: cannot paginate %d txs with offset %d and limit %d", blockTxsLn, offset, limit)
 	}
 	decodeTxAt := func(i uint64) error {
@@ -234,12 +229,13 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 
 	return &txtypes.GetBlockWithTxsResponse{
 		Txs:     txs,
-		BlockId: &blockID,
+		BlockId: &blockId,
 		Block:   block,
-		Pagination: &query.PageResponse{
+		Pagination: &pagination.PageResponse{
 			Total: blockTxsLn,
 		},
 	}, nil
+
 }
 
 func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {

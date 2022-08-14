@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"sigs.k8s.io/yaml"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -29,6 +29,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded sdk.Dec, blocksPerYear uint64,
 ) Params {
+
 	return Params{
 		MintDenom:           mintDenom,
 		InflationRateChange: inflationRateChange,
@@ -79,6 +80,7 @@ func (p Params) Validate() error {
 	}
 
 	return nil
+
 }
 
 // String implements the Stringer interface.

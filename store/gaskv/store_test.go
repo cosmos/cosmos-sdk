@@ -74,6 +74,7 @@ func TestGasKVStoreIterator(t *testing.T) {
 	vb := iterator.Value()
 	require.Equal(t, vb, valFmt(2))
 	iterator.Next()
+
 	require.Equal(t, types.Gas(14565), meter.GasConsumed())
 	kc := iterator.Key()
 	require.Equal(t, kc, keyFmt(3))
@@ -84,6 +85,7 @@ func TestGasKVStoreIterator(t *testing.T) {
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
 	require.Equal(t, types.Gas(14697), meter.GasConsumed())
+
 	require.NoError(t, iterator.Error())
 
 	reverseIterator := st.ReverseIterator(nil, nil)
@@ -100,6 +102,7 @@ func TestGasKVStoreIterator(t *testing.T) {
 	reverseIterator.Next()
 	require.False(t, reverseIterator.Valid())
 	require.Panics(t, reverseIterator.Next)
+
 	require.Equal(t, types.Gas(15135), meter.GasConsumed())
 }
 

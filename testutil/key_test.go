@@ -7,54 +7,44 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGenerateCoinKey(t *testing.T) {
 	t.Parallel()
-	cdc := simapp.MakeTestEncodingConfig().Codec
-	addr, mnemonic, err := GenerateCoinKey(hd.Secp256k1, cdc)
+	addr, mnemonic, err := GenerateCoinKey(hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Test creation
-	k, err := keyring.NewInMemory(cdc).NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
+	info, err := keyring.NewInMemory().NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
 	require.NoError(t, err)
-	addr1, err := k.GetAddress()
-	require.NoError(t, err)
-	require.Equal(t, addr, addr1)
+	require.Equal(t, addr, info.GetAddress())
 }
 
 func TestGenerateSaveCoinKey(t *testing.T) {
 	t.Parallel()
 
-	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil)
 	require.NoError(t, err)
 
 	addr, mnemonic, err := GenerateSaveCoinKey(kb, "keyname", "", false, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Test key was actually saved
-	k, err := kb.Key("keyname")
+	info, err := kb.Key("keyname")
 	require.NoError(t, err)
-	addr1, err := k.GetAddress()
-	require.NoError(t, err)
-	require.Equal(t, addr, addr1)
+	require.Equal(t, addr, info.GetAddress())
 
 	// Test in-memory recovery
-	k, err = keyring.NewInMemory(encCfg.Codec).NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
+	info, err = keyring.NewInMemory().NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
 	require.NoError(t, err)
-	addr1, err = k.GetAddress()
-	require.NoError(t, err)
-	require.Equal(t, addr, addr1)
+	require.Equal(t, addr, info.GetAddress())
 }
 
 func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	t.Parallel()
 
-	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil)
 	require.NoError(t, err)
 
 	keyname := "justakey"

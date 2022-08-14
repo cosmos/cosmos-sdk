@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-const chainUpgradeGuide = "https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md"
+const chainUpgradeGuide = "https://docs.cosmos.network/master/migrations/chain-upgrade-guide-040.html"
 
 // ValidateGenesisCmd takes a genesis file, and makes sure that it is valid.
 func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {

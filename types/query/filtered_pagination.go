@@ -20,6 +20,7 @@ func FilteredPaginate(
 	pageRequest *PageRequest,
 	onResult func(key []byte, value []byte, accumulate bool) (bool, error),
 ) (*PageResponse, error) {
+
 	// if the PageRequest is nil, use default PageRequest
 	if pageRequest == nil {
 		pageRequest = &PageRequest{}
@@ -102,9 +103,7 @@ func FilteredPaginate(
 		}
 
 		if numHits == end+1 {
-			if nextKey == nil {
-				nextKey = iterator.Key()
-			}
+			nextKey = iterator.Key()
 
 			if !countTotal {
 				break

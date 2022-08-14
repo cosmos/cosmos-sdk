@@ -6,25 +6,19 @@ import (
 	"fmt"
 	"math/rand"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/mint/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -70,11 +64,15 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	return types.ValidateGenesis(data)
 }
 
+// RegisterRESTRoutes registers the REST routes for the mint module.
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	rest.RegisterRoutes(clientCtx, rtr)
+}
+
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
-	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
-		panic(err)
-	}
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+
 }
 
 // GetTxCmd returns no root tx command for the mint module.
@@ -91,23 +89,14 @@ type AppModule struct {
 
 	keeper     keeper.Keeper
 	authKeeper types.AccountKeeper
-
-	// inflationCalculator is used to calculate the inflation rate during BeginBlock.
-	// If inflationCalculator is nil, the default inflation calculation logic is used.
-	inflationCalculator types.InflationCalculationFn
 }
 
-// NewAppModule creates a new AppModule object. If the InflationCalculationFn
-// argument is nil, then the SDK's default inflation function will be used.
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, ic types.InflationCalculationFn) AppModule {
-	if ic == nil {
-		ic = types.DefaultInflationCalculationFn
-	}
+// NewAppModule creates a new AppModule object
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic:      AppModuleBasic{cdc: cdc},
-		keeper:              keeper,
-		authKeeper:          ak,
-		inflationCalculator: ic,
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
+		authKeeper:     ak,
 	}
 }
 
@@ -119,7 +108,7 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the mint module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the mint module.
+// Route returns the message routing key for the mint module.
 func (AppModule) Route() sdk.Route { return sdk.Route{} }
 
 // QuerierRoute returns the mint module's querier route name.
@@ -144,14 +133,14 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	am.keeper.InitGenesis(ctx, am.authKeeper, &genesisState)
+	InitGenesis(ctx, am.keeper, am.authKeeper, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the mint
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := am.keeper.ExportGenesis(ctx)
+	gs := ExportGenesis(ctx, am.keeper)
 	return cdc.MustMarshalJSON(gs)
 }
 
@@ -160,7 +149,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	BeginBlocker(ctx, am.keeper, am.inflationCalculator)
+	BeginBlocker(ctx, am.keeper)
 }
 
 // EndBlock returns the end blocker for the mint module. It returns no validator
@@ -194,44 +183,4 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // WeightedOperations doesn't return any mint module operation.
 func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil
-}
-
-//
-// New App Wiring Setup
-//
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
-	)
-}
-
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type mintInputs struct {
-	depinject.In
-
-	Key      *store.KVStoreKey
-	Cdc      codec.Codec
-	Subspace paramstypes.Subspace
-
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper
-}
-
-type mintOutputs struct {
-	depinject.Out
-
-	MintKeeper keeper.Keeper
-	Module     runtime.AppModuleWrapper
-}
-
-func provideModule(in mintInputs) mintOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.StakingKeeper, in.AccountKeeper, in.BankKeeper, authtypes.FeeCollectorName)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil)
-
-	return mintOutputs{MintKeeper: k, Module: runtime.WrapAppModule(m)}
 }

@@ -9,12 +9,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/testutil"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
@@ -22,28 +19,30 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx          sdk.Context
-	paramsKeeper keeper.Keeper
-	queryClient  proposal.QueryClient
+	app *simapp.SimApp
+	ctx sdk.Context
+
+	queryClient proposal.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	var interfaceRegistry codectypes.InterfaceRegistry
+	suite.app, suite.ctx = createTestApp(true)
 
-	app, err := simtestutil.Setup(
-		testutil.AppConfig,
-		&suite.paramsKeeper,
-	)
-	suite.Require().NoError(err)
-
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, interfaceRegistry)
-	proposal.RegisterQueryServer(queryHelper, suite.paramsKeeper)
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
+	proposal.RegisterQueryServer(queryHelper, suite.app.ParamsKeeper)
 	suite.queryClient = proposal.NewQueryClient(queryHelper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
+}
+
+// returns context and app
+func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(isCheckTx)
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
+
+	return app, ctx
 }
 
 func validateNoOp(_ interface{}) error { return nil }
@@ -147,29 +146,6 @@ func TestKeeper(t *testing.T) {
 
 func indirect(ptr interface{}) interface{} {
 	return reflect.ValueOf(ptr).Elem().Interface()
-}
-
-func TestGetSubspaces(t *testing.T) {
-	_, _, _, _, keeper := testComponents()
-
-	table := types.NewKeyTable(
-		types.NewParamSetPair([]byte("string"), "", validateNoOp),
-		types.NewParamSetPair([]byte("bool"), false, validateNoOp),
-	)
-
-	_ = keeper.Subspace("key1").WithKeyTable(table)
-	_ = keeper.Subspace("key2").WithKeyTable(table)
-
-	spaces := keeper.GetSubspaces()
-	require.Len(t, spaces, 2)
-
-	var names []string
-	for _, ss := range spaces {
-		names = append(names, ss.Name())
-	}
-
-	require.Contains(t, names, "key1")
-	require.Contains(t, names, "key2")
 }
 
 func TestSubspace(t *testing.T) {

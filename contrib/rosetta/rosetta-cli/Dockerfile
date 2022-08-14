@@ -2,7 +2,7 @@ FROM golang:1.18-alpine as build
 
 RUN apk add git gcc libc-dev --no-cache
 
-ARG ROSETTA_VERSION="v0.7.3"
+ARG ROSETTA_VERSION="v0.6.7"
 
 # build rosetta CLI
 WORKDIR /rosetta

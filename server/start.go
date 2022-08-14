@@ -4,35 +4,32 @@ package server
 
 import (
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"runtime/pprof"
 	"time"
 
 	"github.com/spf13/cobra"
-	abciclient "github.com/tendermint/tendermint/abci/client"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
-	tmservice "github.com/tendermint/tendermint/libs/service"
 	"github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/p2p"
+	pvm "github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const (
@@ -52,6 +49,7 @@ const (
 
 	FlagPruning           = "pruning"
 	FlagPruningKeepRecent = "pruning-keep-recent"
+	FlagPruningKeepEvery  = "pruning-keep-every"
 	FlagPruningInterval   = "pruning-interval"
 	FlagIndexEvents       = "index-events"
 	FlagMinRetainBlocks   = "min-retain-blocks"
@@ -59,16 +57,6 @@ const (
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
 	FlagStateSyncSnapshotKeepRecent = "state-sync.snapshot-keep-recent"
-
-	// api-related flags
-	FlagAPIEnable             = "api.enable"
-	FlagAPISwagger            = "api.swagger"
-	FlagAPIAddress            = "api.address"
-	FlagAPIMaxOpenConnections = "api.max-open-connections"
-	FlagRPCReadTimeout        = "api.rpc-read-timeout"
-	FlagRPCWriteTimeout       = "api.rpc-write-timeout"
-	FlagRPCMaxBodyBytes       = "api.rpc-max-body-bytes"
-	FlagAPIEnableUnsafeCORS   = "api.enabled-unsafe-cors"
 
 	// gRPC-related flags
 	flagGRPCOnly       = "grpc-only"
@@ -87,15 +75,15 @@ func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Comman
 		Long: `Run the full node application with Tendermint in or out of process. By
 default, the application will run with Tendermint in process.
 
-Pruning options can be provided via the '--pruning' flag or alternatively with '--pruning-keep-recent', and
-'pruning-interval' together.
+Pruning options can be provided via the '--pruning' flag or alternatively with '--pruning-keep-recent',
+'pruning-keep-every', and 'pruning-interval' together.
 
 For '--pruning' the options are as follows:
 
-default: the last 362880 states are kept, pruning at 10 block intervals
+default: the last 100 states are kept in addition to every 500th state; pruning at 10 block intervals
 nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-everything: 2 latest states will be kept; pruning at 10 block intervals.
-custom: allow pruning options to be manually specified through 'pruning-keep-recent', and 'pruning-interval'
+everything: all saved states will be deleted, storing only the current and previous state; pruning at 10 block intervals
+custom: allow pruning options to be manually specified through 'pruning-keep-recent', 'pruning-keep-every', and 'pruning-interval'
 
 Node halting configurations exist in the form of two flags: '--halt-height' and '--halt-time'. During
 the ABCI Commit phase, the node will check if the current block height is greater than or equal to
@@ -116,9 +104,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 			// Bind flags to the Context's Viper so the app construction can set
 			// options accordingly.
-			if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
-				return err
-			}
+			serverCtx.Viper.BindPFlags(cmd.Flags())
 
 			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
 			return err
@@ -160,27 +146,19 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 	cmd.Flags().Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
-	cmd.Flags().String(FlagPruning, pruningtypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
+	cmd.Flags().String(FlagPruning, storetypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
 	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
 	cmd.Flags().Uint64(FlagMinRetainBlocks, 0, "Minimum block height offset during ABCI commit to prune Tendermint blocks")
 
-	cmd.Flags().Bool(FlagAPIEnable, false, "Define if the API server should be enabled")
-	cmd.Flags().Bool(FlagAPISwagger, false, "Define if swagger documentation should automatically be registered (Note: the API must also be enabled)")
-	cmd.Flags().String(FlagAPIAddress, serverconfig.DefaultAPIAddress, "the API server address to listen on")
-	cmd.Flags().Uint(FlagAPIMaxOpenConnections, 1000, "Define the number of maximum open connections")
-	cmd.Flags().Uint(FlagRPCReadTimeout, 10, "Define the Tendermint RPC read timeout (in seconds)")
-	cmd.Flags().Uint(FlagRPCWriteTimeout, 0, "Define the Tendermint RPC write timeout (in seconds)")
-	cmd.Flags().Uint(FlagRPCMaxBodyBytes, 1000000, "Define the Tendermint maximum response body (in bytes)")
-	cmd.Flags().Bool(FlagAPIEnableUnsafeCORS, false, "Define if CORS should be enabled (unsafe - use it at your own risk)")
-
 	cmd.Flags().Bool(flagGRPCOnly, false, "Start the node in gRPC query only mode (no Tendermint process is started)")
 	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
-	cmd.Flags().String(flagGRPCAddress, serverconfig.DefaultGRPCAddress, "the gRPC server address to listen on")
+	cmd.Flags().String(flagGRPCAddress, config.DefaultGRPCAddress, "the gRPC server address to listen on")
 
-	cmd.Flags().Bool(flagGRPCWebEnable, true, "Define if the gRPC-Web server should be enabled. (Note: gRPC must also be enabled)")
-	cmd.Flags().String(flagGRPCWebAddress, serverconfig.DefaultGRPCWebAddress, "The gRPC-Web server address to listen on")
+	cmd.Flags().Bool(flagGRPCWebEnable, true, "Define if the gRPC-Web server should be enabled. (Note: gRPC must also be enabled.)")
+	cmd.Flags().String(flagGRPCWebAddress, config.DefaultGRPCWebAddress, "The gRPC-Web server address to listen on")
 
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
@@ -195,7 +173,7 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	transport := ctx.Viper.GetString(flagTransport)
 	home := ctx.Viper.GetString(flags.FlagHome)
 
-	db, err := openDB(home, GetAppDBBackend(ctx.Viper))
+	db, err := openDB(home)
 	if err != nil {
 		return err
 	}
@@ -249,50 +227,61 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		cpuProfileCleanup = func() {
 			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
 			pprof.StopCPUProfile()
-			if err := f.Close(); err != nil {
-				ctx.Logger.Info("failed to close cpu-profile file", "profile", cpuProfile, "err", err.Error())
-			}
+			f.Close()
 		}
 	}
 
-	db, err := openDB(home, GetAppDBBackend(ctx.Viper))
+	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
+	db, err := openDB(home)
 	if err != nil {
 		return err
 	}
 
-	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
 		return err
 	}
 
-	config := serverconfig.GetConfig(ctx.Viper)
+	config := config.GetConfig(ctx.Viper)
 	if err := config.ValidateBasic(); err != nil {
-		return err
+		ctx.Logger.Error("WARNING: The minimum-gas-prices config in app.toml is set to the empty string. " +
+			"This defaults to 0 in the current version, but will error in the next version " +
+			"(SDK v0.45). Please explicitly put the desired minimum-gas-prices in your app.toml.")
 	}
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
-	genDoc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
+	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
+	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+
 	var (
-		tmNode   tmservice.Service
+		tmNode   *node.Node
 		gRPCOnly = ctx.Viper.GetBool(flagGRPCOnly)
 	)
+
 	if gRPCOnly {
 		ctx.Logger.Info("starting node in gRPC only mode; Tendermint is disabled")
 		config.GRPC.Enable = true
 	} else {
 		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
 
-		tmNode, err = node.New(cfg, ctx.Logger, abciclient.NewLocalCreator(app), genDoc)
+		tmNode, err = node.NewNode(
+			cfg,
+			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+			nodeKey,
+			proxy.NewLocalClientCreator(app),
+			genDocProvider,
+			node.DefaultDBProvider,
+			node.DefaultMetricsProvider(cfg.Instrumentation),
+			ctx.Logger,
+		)
 		if err != nil {
 			return err
 		}
-
 		if err := tmNode.Start(); err != nil {
 			return err
 		}
@@ -302,17 +291,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	// service if API or gRPC is enabled, and avoid doing so in the general
 	// case, because it spawns a new local tendermint RPC client.
 	if (config.API.Enable || config.GRPC.Enable) && tmNode != nil {
-		node, ok := tmNode.(local.NodeService)
-		if !ok {
-			return fmt.Errorf("unable to set node type; please try re-installing the binary")
-		}
-
-		localNode, err := local.New(node)
-		if err != nil {
-			return err
-		}
-
-		clientCtx = clientCtx.WithClient(localNode)
+		clientCtx = clientCtx.WithClient(local.New(tmNode))
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
@@ -320,48 +299,12 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	var apiSrv *api.Server
 	if config.API.Enable {
-		genDoc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
+		genDoc, err := genDocProvider()
 		if err != nil {
 			return err
 		}
 
 		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
-
-		if config.GRPC.Enable {
-			_, port, err := net.SplitHostPort(config.GRPC.Address)
-			if err != nil {
-				return err
-			}
-
-			maxSendMsgSize := config.GRPC.MaxSendMsgSize
-			if maxSendMsgSize == 0 {
-				maxSendMsgSize = serverconfig.DefaultGRPCMaxSendMsgSize
-			}
-
-			maxRecvMsgSize := config.GRPC.MaxRecvMsgSize
-			if maxRecvMsgSize == 0 {
-				maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
-			}
-
-			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
-
-			// If grpc is enabled, configure grpc client for grpc gateway.
-			grpcClient, err := grpc.Dial(
-				grpcAddress,
-				grpc.WithTransportCredentials(insecure.NewCredentials()),
-				grpc.WithDefaultCallOptions(
-					grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
-					grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
-					grpc.MaxCallSendMsgSize(maxSendMsgSize),
-				),
-			)
-			if err != nil {
-				return err
-			}
-
-			clientCtx = clientCtx.WithGRPCClient(grpcClient)
-			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
-		}
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv, config.API)
@@ -387,7 +330,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	)
 
 	if config.GRPC.Enable {
-		grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC)
+		grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC.Address)
 		if err != nil {
 			return err
 		}
@@ -418,25 +361,16 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			offlineMode = true
 		}
 
-		minGasPrices, err := sdktypes.ParseDecCoins(config.MinGasPrices)
-		if err != nil {
-			ctx.Logger.Error("failed to parse minimum-gas-prices: ", err)
-			return err
-		}
-
 		conf := &rosetta.Config{
-			Blockchain:          config.Rosetta.Blockchain,
-			Network:             config.Rosetta.Network,
-			TendermintRPC:       ctx.Config.RPC.ListenAddress,
-			GRPCEndpoint:        config.GRPC.Address,
-			Addr:                config.Rosetta.Address,
-			Retries:             config.Rosetta.Retries,
-			Offline:             offlineMode,
-			GasToSuggest:        config.Rosetta.GasToSuggest,
-			EnableFeeSuggestion: config.Rosetta.EnableFeeSuggestion,
-			GasPrices:           minGasPrices.Sort(),
-			Codec:               clientCtx.Codec.(*codec.ProtoCodec),
-			InterfaceRegistry:   clientCtx.InterfaceRegistry,
+			Blockchain:        config.Rosetta.Blockchain,
+			Network:           config.Rosetta.Network,
+			TendermintRPC:     ctx.Config.RPC.ListenAddress,
+			GRPCEndpoint:      config.GRPC.Address,
+			Addr:              config.Rosetta.Address,
+			Retries:           config.Rosetta.Retries,
+			Offline:           offlineMode,
+			Codec:             clientCtx.Codec.(*codec.ProtoCodec),
+			InterfaceRegistry: clientCtx.InterfaceRegistry,
 		}
 
 		rosettaSrv, err = rosetta.ServerFromConfig(conf)
@@ -475,9 +409,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		if grpcSrv != nil {
 			grpcSrv.Stop()
 			if grpcWebSrv != nil {
-				if err := grpcWebSrv.Close(); err != nil {
-					ctx.Logger.Error("failed to close grpc-web http server: ", err)
-				}
+				grpcWebSrv.Close()
 			}
 		}
 

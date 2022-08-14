@@ -7,28 +7,22 @@ import (
 	"math/rand"
 	"time"
 
-	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
-	"github.com/cosmos/cosmos-sdk/depinject"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/tendermint/tendermint/crypto"
-
-	"cosmossdk.io/core/appmodule"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	v040 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v042"
+	v040 "github.com/cosmos/cosmos-sdk/x/bank/legacy/v040"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -68,11 +62,14 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 	return data.Validate()
 }
 
+// RegisterRESTRoutes registers the REST routes for the bank module.
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	rest.RegisterHandlers(clientCtx, rtr)
+}
+
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the bank module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
-	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
-		panic(err)
-	}
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 // GetTxCmd returns the root tx command for the bank module.
@@ -107,17 +104,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(am.keeper.(keeper.BaseKeeper))
-	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/bank from version 1 to 2: %v", err))
-	}
-
-	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/bank from version 2 to 3: %v", err))
-	}
-
-	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/bank from version 3 to 4: %v", err))
-	}
+	cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
 }
 
 // NewAppModule creates a new AppModule object
@@ -137,9 +124,9 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-// Deprecated: Route returns the message routing key for the bank module.
+// Route returns the message routing key for the bank module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
 // QuerierRoute returns the bank module's querier route name.
@@ -170,7 +157,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 4 }
+func (AppModule) ConsensusVersion() uint64 { return 2 }
 
 // BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
@@ -206,56 +193,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc, am.accountKeeper, am.keeper,
 	)
-}
-
-// App Wiring
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
-			provideModuleBasic,
-			provideModule))
-}
-
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type bankInputs struct {
-	depinject.In
-
-	Config        *modulev1.Module
-	AccountKeeper types.AccountKeeper
-	Cdc           codec.Codec
-	Subspace      paramtypes.Subspace
-	Key           *store.KVStoreKey
-}
-
-type bankOutputs struct {
-	depinject.Out
-
-	BankKeeper keeper.BaseKeeper
-	Module     runtime.AppModuleWrapper
-}
-
-func provideModule(in bankInputs) bankOutputs {
-	// configure blocked module accounts.
-	//
-	// default behavior for blockedAddresses is to regard any module mentioned in AccountKeeper's module account
-	// permissions as blocked.
-	blockedAddresses := make(map[string]bool)
-	if len(in.Config.BlockedModuleAccountsOverride) != 0 {
-		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
-			addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
-			blockedAddresses[addr.String()] = true
-		}
-	} else {
-		for _, permission := range in.AccountKeeper.GetModulePermissions() {
-			blockedAddresses[permission.GetAddress().String()] = true
-		}
-	}
-
-	bankKeeper := keeper.NewBaseKeeper(in.Cdc, in.Key, in.AccountKeeper, in.Subspace, blockedAddresses)
-	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
-	return bankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
 }

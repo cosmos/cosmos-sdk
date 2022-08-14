@@ -3,100 +3,84 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	keep "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	"github.com/cosmos/cosmos-sdk/x/mint/testutil"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
+
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-type MintKeeperTestSuite struct {
-	suite.Suite
-
-	ctx         sdk.Context
-	legacyAmino *codec.LegacyAmino
-	mintKeeper  keeper.Keeper
-}
-
-func (suite *MintKeeperTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&suite.legacyAmino,
-		&suite.mintKeeper,
-	)
-	suite.Require().NoError(err)
-
-	suite.ctx = app.BaseApp.NewContext(true, tmproto.Header{})
-
-	suite.mintKeeper.SetParams(suite.ctx, types.DefaultParams())
-	suite.mintKeeper.SetMinter(suite.ctx, types.DefaultInitialMinter())
-}
-
-func (suite *MintKeeperTestSuite) TestNewQuerier(t *testing.T) {
-	querier := keep.NewQuerier(suite.mintKeeper, suite.legacyAmino)
+func TestNewQuerier(t *testing.T) {
+	app, ctx := createTestApp(true)
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	query := abci.RequestQuery{
 		Path: "",
 		Data: []byte{},
 	}
 
-	_, err := querier(suite.ctx, []string{types.QueryParameters}, query)
+	_, err := querier(ctx, []string{types.QueryParameters}, query)
 	require.NoError(t, err)
 
-	_, err = querier(suite.ctx, []string{types.QueryInflation}, query)
+	_, err = querier(ctx, []string{types.QueryInflation}, query)
 	require.NoError(t, err)
 
-	_, err = querier(suite.ctx, []string{types.QueryAnnualProvisions}, query)
+	_, err = querier(ctx, []string{types.QueryAnnualProvisions}, query)
 	require.NoError(t, err)
 
-	_, err = querier(suite.ctx, []string{"foo"}, query)
+	_, err = querier(ctx, []string{"foo"}, query)
 	require.Error(t, err)
 }
 
-func (suite *MintKeeperTestSuite) TestQueryParams(t *testing.T) {
-	querier := keep.NewQuerier(suite.mintKeeper, suite.legacyAmino)
+func TestQueryParams(t *testing.T) {
+	app, ctx := createTestApp(true)
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	var params types.Params
 
-	res, sdkErr := querier(suite.ctx, []string{types.QueryParameters}, abci.RequestQuery{})
+	res, sdkErr := querier(ctx, []string{types.QueryParameters}, abci.RequestQuery{})
 	require.NoError(t, sdkErr)
 
-	err := suite.legacyAmino.UnmarshalJSON(res, &params)
+	err := app.LegacyAmino().UnmarshalJSON(res, &params)
 	require.NoError(t, err)
 
-	require.Equal(t, suite.mintKeeper.GetParams(suite.ctx), params)
+	require.Equal(t, app.MintKeeper.GetParams(ctx), params)
 }
 
-func (suite *MintKeeperTestSuite) TestQueryInflation(t *testing.T) {
-	querier := keep.NewQuerier(suite.mintKeeper, suite.legacyAmino)
+func TestQueryInflation(t *testing.T) {
+	app, ctx := createTestApp(true)
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	var inflation sdk.Dec
 
-	res, sdkErr := querier(suite.ctx, []string{types.QueryInflation}, abci.RequestQuery{})
+	res, sdkErr := querier(ctx, []string{types.QueryInflation}, abci.RequestQuery{})
 	require.NoError(t, sdkErr)
 
-	err := suite.legacyAmino.UnmarshalJSON(res, &inflation)
+	err := app.LegacyAmino().UnmarshalJSON(res, &inflation)
 	require.NoError(t, err)
 
-	require.Equal(t, suite.mintKeeper.GetMinter(suite.ctx).Inflation, inflation)
+	require.Equal(t, app.MintKeeper.GetMinter(ctx).Inflation, inflation)
 }
 
-func (suite *MintKeeperTestSuite) TestQueryAnnualProvisions(t *testing.T) {
-	querier := keep.NewQuerier(suite.mintKeeper, suite.legacyAmino)
+func TestQueryAnnualProvisions(t *testing.T) {
+	app, ctx := createTestApp(true)
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	var annualProvisions sdk.Dec
 
-	res, sdkErr := querier(suite.ctx, []string{types.QueryAnnualProvisions}, abci.RequestQuery{})
+	res, sdkErr := querier(ctx, []string{types.QueryAnnualProvisions}, abci.RequestQuery{})
 	require.NoError(t, sdkErr)
 
-	err := suite.legacyAmino.UnmarshalJSON(res, &annualProvisions)
+	err := app.LegacyAmino().UnmarshalJSON(res, &annualProvisions)
 	require.NoError(t, err)
 
-	require.Equal(t, suite.mintKeeper.GetMinter(suite.ctx).AnnualProvisions, annualProvisions)
+	require.Equal(t, app.MintKeeper.GetMinter(ctx).AnnualProvisions, annualProvisions)
 }

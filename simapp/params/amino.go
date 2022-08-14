@@ -1,4 +1,3 @@
-//go:build test_amino
 // +build test_amino
 
 package params
@@ -6,7 +5,7 @@ package params
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 // MakeTestEncodingConfig creates an EncodingConfig for an amino based test configuration.

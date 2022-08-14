@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 		{
 			"success",
 			func() {
-				space = suite.paramsKeeper.Subspace("test").
+				space = suite.app.ParamsKeeper.Subspace("test").
 					WithKeyTable(types.NewKeyTable(types.NewParamSetPair(key, paramJSON{}, validateNoOp)))
 				req = &proposal.QueryParamsRequest{Subspace: "test", Key: "key"}
 				expValue = ""
@@ -83,25 +83,4 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			}
 		})
 	}
-}
-
-func (suite *KeeperTestSuite) TestGRPCQuerySubspaces() {
-	ctx := sdk.WrapSDKContext(suite.ctx)
-
-	// NOTE: Each subspace will not have any keys that we can check against
-	// because InitGenesis has not been called during app construction.
-	resp, err := suite.queryClient.Subspaces(ctx, &proposal.QuerySubspacesRequest{})
-	suite.Require().NoError(err)
-	suite.Require().NotNil(resp)
-
-	spaces := make([]string, len(resp.Subspaces))
-	i := 0
-	for _, ss := range resp.Subspaces {
-		spaces[i] = ss.Subspace
-		i++
-	}
-
-	// require the response contains a few subspaces we know exist
-	suite.Require().Contains(spaces, "bank")
-	suite.Require().Contains(spaces, "staking")
 }

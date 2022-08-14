@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"io/ioutil"
 	"os"
 	"text/template"
 
@@ -42,7 +43,7 @@ func writeConfigToFile(configFilePath string, config *ClientConfig) error {
 		return err
 	}
 
-	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
+	return ioutil.WriteFile(configFilePath, buffer.Bytes(), 0600)
 }
 
 // ensureConfigPath creates a directory configPath if it does not exist

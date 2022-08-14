@@ -18,6 +18,7 @@ func (k Keeper) AllocateTokens(
 	ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
 	previousProposer sdk.ConsAddress, bondedVotes []abci.VoteInfo,
 ) {
+
 	logger := k.Logger(ctx)
 
 	// fetch and clear the collected fees for distribution, since this is
@@ -26,7 +27,9 @@ func (k Keeper) AllocateTokens(
 	feeCollector := k.authKeeper.GetModuleAccount(ctx, k.feeCollectorName)
 	feesCollectedInt := k.bankKeeper.GetAllBalances(ctx, feeCollector.GetAddress())
 	feesCollected := sdk.NewDecCoinsFromCoins(feesCollectedInt...)
-	fmt.Fprintln(os.Stderr, "Fees collected", feesCollected)
+	blockHeaderHeight := ctx.BlockHeader().Height
+	logger.Info("Distribution started", "blockheight", blockHeaderHeight)
+	logger.Info("collected fees for distributions", "feesCollected", feesCollected.String())
 
 	// transfer collected fees to the distribution module account
 	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, feesCollectedInt)
@@ -49,8 +52,13 @@ func (k Keeper) AllocateTokens(
 	// calculate previous proposer reward
 	baseProposerReward := k.GetBaseProposerReward(ctx)
 	bonusProposerReward := k.GetBonusProposerReward(ctx)
+
 	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.MulTruncate(previousFractionVotes))
+	logger.Info(" proposer multiplier", "bonus percentage", proposerMultiplier.String())
 	proposerReward := feesCollected.MulDecTruncate(proposerMultiplier)
+	bonusAbsoluteReward := feesCollected.MulDecTruncate(bonusProposerReward.MulTruncate(previousFractionVotes))
+	baseAbsoluteReward := feesCollected.MulDecTruncate(baseProposerReward.MulTruncate(previousFractionVotes))
+	logger.Info(" proposer reward", "total reward", proposerReward.String(), "base", baseAbsoluteReward.String(), "bonus", bonusAbsoluteReward.String())
 
 	// pay previous proposer
 	remaining := feesCollected
@@ -64,7 +72,6 @@ func (k Keeper) AllocateTokens(
 				sdk.NewAttribute(types.AttributeKeyValidator, proposerValidator.GetOperator().String()),
 			),
 		)
-		fmt.Fprintln(os.Stderr, "Paying previous proposer", proposerReward)
 		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
 		remaining = remaining.Sub(proposerReward)
 	} else {
@@ -80,17 +87,14 @@ func (k Keeper) AllocateTokens(
 			previousProposer.String()))
 	}
 
-	fmt.Fprintln(os.Stderr, "Fee collected", feesCollected)
 	// calculate fraction allocated to validators
 	communityTax := k.GetCommunityTax(ctx)
-	fmt.Fprintln(os.Stderr, "Community tax", communityTax)
+	logger.Info("Community tax", "tax", communityTax)
 	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
-	fmt.Fprintln(os.Stderr, "Vote Multiplier", voteMultiplier)
+	logger.Info("Vote Multiplier", "multiplier", voteMultiplier)
 
 	// During the stake free period (first 483940 blocks (~28 days), the validators selected are
 
-	blockHeaderHeight := ctx.BlockHeader().Height
-	fmt.Fprintln(os.Stdout, "Current block height", blockHeaderHeight)
 	if blockHeaderHeight < 483840 {
 		logger.Error("Missing handler for stake-free grace period")
 		// TODO: We need to set up an initial validator blocktime (sort by time).
@@ -108,14 +112,17 @@ func (k Keeper) AllocateTokens(
 		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
 		fmt.Fprintln(os.Stderr, "Allocated", reward)
+		logger.Info("Allocated reward", "reward", reward)
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
 	}
 
-	fmt.Fprintln(os.Stderr, "Remaining", remaining)
 	// allocate community funding
+	// TODO: Transfer to smart-contract instead. Modifiable address via proposal voting.
+	// Keep any remaining to community pool.
 	feePool.CommunityPool = feePool.CommunityPool.Add(remaining...)
 	k.SetFeePool(ctx, feePool)
+	logger.Info("Allocated community funding", "value", remaining.String())
 }
 
 // AllocateTokensToValidator allocate tokens to a particular validator, splitting according to commission

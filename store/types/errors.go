@@ -6,4 +6,6 @@ import (
 
 const StoreCodespace = "store"
 
-var ErrInvalidProof = sdkerrors.Register(StoreCodespace, 2, "invalid proof")
+var (
+	ErrInvalidProof = sdkerrors.Register(StoreCodespace, 2, "invalid proof")
+)

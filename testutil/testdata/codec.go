@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	tx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 func NewTestInterfaceRegistry() types.InterfaceRegistry {
@@ -31,10 +30,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*HasHasAnimalI)(nil),
 		&HasHasAnimal{},
-	)
-	registry.RegisterImplementations(
-		(*tx.ExtensionOptionI)(nil),
-		&Cat{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

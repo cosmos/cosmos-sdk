@@ -8,17 +8,16 @@ import (
 
 // HandleCommunityPoolSpendProposal is a handler for executing a passed community spend proposal
 func HandleCommunityPoolSpendProposal(ctx sdk.Context, k Keeper, p *types.CommunityPoolSpendProposal) error {
-	recipient, addrErr := sdk.AccAddressFromBech32(p.Recipient)
-	if addrErr != nil {
-		return addrErr
-	}
-
-	if k.bankKeeper.BlockedAddr(recipient) {
+	if k.blockedAddrs[p.Recipient] {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", p.Recipient)
 	}
 
-	err := k.DistributeFromFeePool(ctx, p.Amount, recipient)
+	recipient, err := sdk.AccAddressFromBech32(p.Recipient)
 	if err != nil {
+		return err
+	}
+
+	if err := k.DistributeFromFeePool(ctx, p.Amount, recipient); err != nil {
 		return err
 	}
 

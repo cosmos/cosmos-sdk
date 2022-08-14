@@ -23,11 +23,10 @@ type KeeperTestSuite struct {
 	addrs       []sdk.AccAddress
 	vals        []types.Validator
 	queryClient types.QueryClient
-	msgServer   types.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
+	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	querier := keeper.Querier{Keeper: app.StakingKeeper}
@@ -35,8 +34,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
-
-	suite.msgServer = keeper.NewMsgServerImpl(app.StakingKeeper)
 
 	addrs, _, validators := createValidators(suite.T(), ctx, app, []int64{9, 8, 7})
 	header := tmproto.Header{
@@ -53,18 +50,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators
 }
-
 func TestParams(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	expParams := types.DefaultParams()
 
-	// check that the empty keeper loads the default
+	//check that the empty keeper loads the default
 	resParams := app.StakingKeeper.GetParams(ctx)
 	require.True(t, expParams.Equal(resParams))
 
-	// modify a params, save, and retrieve
+	//modify a params, save, and retrieve
 	expParams.MaxValidators = 777
 	app.StakingKeeper.SetParams(ctx, expParams)
 	resParams = app.StakingKeeper.GetParams(ctx)

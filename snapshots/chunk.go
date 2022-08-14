@@ -2,9 +2,7 @@ package snapshots
 
 import (
 	"io"
-	"math"
 
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -61,7 +59,7 @@ func (w *ChunkWriter) CloseWithError(err error) {
 		w.closed = true
 		close(w.ch)
 		if w.pipe != nil {
-			_ = w.pipe.CloseWithError(err) // CloseWithError always returns nil
+			w.pipe.CloseWithError(err)
 		}
 	}
 }
@@ -162,21 +160,4 @@ func DrainChunks(chunks <-chan io.ReadCloser) {
 	for chunk := range chunks {
 		_ = chunk.Close()
 	}
-}
-
-// ValidRestoreHeight will check height is valid for snapshot restore or not
-func ValidRestoreHeight(format uint32, height uint64) error {
-	if format != snapshottypes.CurrentFormat {
-		return sdkerrors.Wrapf(snapshottypes.ErrUnknownFormat, "format %v", format)
-	}
-
-	if height == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot restore snapshot at height 0")
-	}
-	if height > uint64(math.MaxInt64) {
-		return sdkerrors.Wrapf(snapshottypes.ErrInvalidMetadata,
-			"snapshot height %v cannot exceed %v", height, int64(math.MaxInt64))
-	}
-
-	return nil
 }

@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"sigs.k8s.io/yaml"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -105,13 +105,13 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 		s.Require().Equal(acc, res)
 
 		str = hex.EncodeToString(acc)
-		res, err = types.AccAddressFromHexUnsafe(str)
+		res, err = types.AccAddressFromHex(str)
 		s.Require().Nil(err)
 		s.Require().Equal(acc, res)
 	}
 
 	for _, str := range invalidStrs {
-		_, err := types.AccAddressFromHexUnsafe(str)
+		_, err := types.AccAddressFromHex(str)
 		s.Require().NotNil(err)
 
 		_, err = types.AccAddressFromBech32(str)
@@ -121,8 +121,8 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 		s.Require().NotNil(err)
 	}
 
-	_, err := types.AccAddressFromHexUnsafe("")
-	s.Require().Equal(types.ErrEmptyHexAddress, err)
+	_, err := types.AccAddressFromHex("")
+	s.Require().Equal("decoding Bech32 address failed: must provide an address", err.Error())
 }
 
 func (s *addressTestSuite) TestValAddr() {
@@ -163,7 +163,7 @@ func (s *addressTestSuite) TestValAddr() {
 
 	// test empty string
 	_, err := types.ValAddressFromHex("")
-	s.Require().Equal(types.ErrEmptyHexAddress, err)
+	s.Require().Equal("decoding Bech32 address failed: must provide an address", err.Error())
 }
 
 func (s *addressTestSuite) TestConsAddress() {
@@ -203,7 +203,7 @@ func (s *addressTestSuite) TestConsAddress() {
 
 	// test empty string
 	_, err := types.ConsAddressFromHex("")
-	s.Require().Equal(types.ErrEmptyHexAddress, err)
+	s.Require().Equal("decoding Bech32 address failed: must provide an address", err.Error())
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyz"
@@ -298,6 +298,7 @@ func (s *addressTestSuite) TestAddressInterface() {
 			s.T().Fail()
 		}
 	}
+
 }
 
 func (s *addressTestSuite) TestVerifyAddressFormat() {

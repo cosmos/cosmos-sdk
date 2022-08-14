@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
-	"sigs.k8s.io/yaml"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const flagLong = "long"

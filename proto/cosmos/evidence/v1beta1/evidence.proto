@@ -6,7 +6,6 @@ option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
-import "cosmos_proto/cosmos.proto";
 
 // Equivocation implements the Evidence interface and defines evidence of double
 // signing misbehavior.
@@ -18,5 +17,5 @@ message Equivocation {
   int64                     height            = 1;
   google.protobuf.Timestamp time              = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   int64                     power             = 3;
-  string                    consensus_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                    consensus_address = 4 [(gogoproto.moretags) = "yaml:\"consensus_address\""];
 }

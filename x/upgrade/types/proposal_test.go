@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -71,6 +71,7 @@ func TestContentAccessors(t *testing.T) {
 			assert.Equal(t, tc.typ, unwrap.Prop.ProposalType())
 			assert.Equal(t, "upgrade", unwrap.Prop.ProposalRoute())
 			assert.Equal(t, tc.str, unwrap.Prop.String())
+
 		})
 
 	}

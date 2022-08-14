@@ -13,7 +13,4 @@ var (
 
 	// ErrInvalidMetadata is returned when the snapshot metadata is invalid.
 	ErrInvalidMetadata = errors.New("invalid snapshot metadata")
-
-	// ErrInvalidSnapshotVersion is returned when the snapshot version is invalid
-	ErrInvalidSnapshotVersion = errors.New("invalid snapshot version")
 )

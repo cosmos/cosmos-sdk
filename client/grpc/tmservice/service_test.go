@@ -11,21 +11,18 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg         network.Config
-	network     *network.Network
-	queryClient tmservice.ServiceClient
-}
+	cfg     network.Config
+	network *network.Network
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+	queryClient tmservice.ServiceClient
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -35,12 +32,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.NumValidators = 1
 
 	s.cfg = cfg
+	s.network = network.New(s.T(), cfg)
 
-	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
-	s.Require().NoError(err)
+	s.Require().NotNil(s.network)
 
-	_, err = s.network.WaitForHeight(1)
+	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	s.queryClient = tmservice.NewServiceClient(s.network.Validators[0].ClientCtx)
@@ -113,7 +109,7 @@ func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	s.Require().Equal(true, ok)
 	s.Require().Equal(content, val.PubKey)
 
-	// with pagination
+	//with pagination
 	_, err = s.queryClient.GetLatestValidatorSet(context.Background(), &tmservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{
 		Offset: 0,
 		Limit:  10,
@@ -207,7 +203,7 @@ func (s IntegrationTestSuite) TestValidatorSetByHeight_GRPC() {
 		expErrMsg string
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
-		{"empty request", &tmservice.GetValidatorSetByHeightRequest{}, true, "height must be greater than zero"},
+		{"empty request", &tmservice.GetValidatorSetByHeightRequest{}, true, "height must be greater than 0"},
 		{"no pagination", &tmservice.GetValidatorSetByHeightRequest{Height: 1}, false, ""},
 		{"with pagination", &tmservice.GetValidatorSetByHeightRequest{Height: 1, Pagination: &qtypes.PageRequest{Offset: 0, Limit: 1}}, false, ""},
 	}
@@ -235,7 +231,7 @@ func (s IntegrationTestSuite) TestValidatorSetByHeight_GRPCGateway() {
 		expErr    bool
 		expErrMsg string
 	}{
-		{"invalid height", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", vals[0].APIAddress, -1), true, "height must be greater than zero"},
+		{"invalid height", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", vals[0].APIAddress, -1), true, "height must be greater than 0"},
 		{"no pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", vals[0].APIAddress, 1), false, ""},
 		{"pagination invalid fields", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=-1&pagination.limit=-2", vals[0].APIAddress, 1), true, "strconv.ParseUint"},
 		{"with pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=0&pagination.limit=2", vals[0].APIAddress, 1), false, ""},
@@ -257,91 +253,6 @@ func (s IntegrationTestSuite) TestValidatorSetByHeight_GRPCGateway() {
 	}
 }
 
-func (s IntegrationTestSuite) TestABCIQuery() {
-	testCases := []struct {
-		name         string
-		req          *tmservice.ABCIQueryRequest
-		expectErr    bool
-		expectedCode uint32
-		validQuery   bool
-	}{
-		{
-			name: "valid request with proof",
-			req: &tmservice.ABCIQueryRequest{
-				Path:  "/store/gov/key",
-				Data:  []byte{0x03},
-				Prove: true,
-			},
-			validQuery: true,
-		},
-		{
-			name: "valid request without proof",
-			req: &tmservice.ABCIQueryRequest{
-				Path:  "/store/gov/key",
-				Data:  []byte{0x03},
-				Prove: false,
-			},
-			validQuery: true,
-		},
-		{
-			name: "request with invalid path",
-			req: &tmservice.ABCIQueryRequest{
-				Path: "/foo/bar",
-				Data: []byte{0x03},
-			},
-			expectErr: true,
-		},
-		{
-			name: "request with invalid path recursive",
-			req: &tmservice.ABCIQueryRequest{
-				Path: "/cosmos.base.tendermint.v1beta1.Service/ABCIQuery",
-				Data: s.cfg.Codec.MustMarshal(&tmservice.ABCIQueryRequest{
-					Path: "/cosmos.base.tendermint.v1beta1.Service/ABCIQuery",
-				}),
-			},
-			expectErr: true,
-		},
-		{
-			name: "request with invalid broadcast tx path",
-			req: &tmservice.ABCIQueryRequest{
-				Path: "/cosmos.tx.v1beta1.Service/BroadcastTx",
-				Data: []byte{0x00},
-			},
-			expectErr: true,
-		},
-		{
-			name: "request with invalid data",
-			req: &tmservice.ABCIQueryRequest{
-				Path: "/store/gov/key",
-				Data: []byte{0x0044, 0x00},
-			},
-			validQuery: false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			res, err := s.queryClient.ABCIQuery(context.Background(), tc.req)
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().Nil(res)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NotNil(res)
-				s.Require().Equal(res.Code, tc.expectedCode)
-			}
-
-			if tc.validQuery {
-				s.Require().Greater(res.Height, int64(0))
-				s.Require().Greater(len(res.Key), 0, "expected non-empty key")
-				s.Require().Greater(len(res.Value), 0, "expected non-empty value")
-			}
-
-			if tc.req.Prove {
-				s.Require().Greater(len(res.ProofOps.Ops), 0, "expected proofs")
-			}
-		})
-	}
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }

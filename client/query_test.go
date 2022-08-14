@@ -1,4 +1,3 @@
-//go:build norace
 // +build norace
 
 package client_test
@@ -12,6 +11,7 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestQueryABCIHeight() {
+
 	testCases := []struct {
 		name      string
 		reqHeight int64

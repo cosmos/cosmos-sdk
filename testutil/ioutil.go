@@ -3,6 +3,7 @@ package testutil
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -44,8 +45,8 @@ func ApplyMockIODiscardOutErr(c *cobra.Command) BufferReader {
 	mockIn := strings.NewReader("")
 
 	c.SetIn(mockIn)
-	c.SetOut(io.Discard)
-	c.SetErr(io.Discard)
+	c.SetOut(ioutil.Discard)
+	c.SetErr(ioutil.Discard)
 
 	return mockIn
 }
@@ -67,21 +68,8 @@ func WriteToNewTempFile(t testing.TB, s string) *os.File {
 func TempFile(t testing.TB) *os.File {
 	t.Helper()
 
-	fp, err := os.CreateTemp(GetTempDir(t), "")
+	fp, err := ioutil.TempFile(t.TempDir(), "")
 	require.NoError(t, err)
 
 	return fp
-}
-
-// GetTempDir returns a writable temporary director for the test to use.
-func GetTempDir(t testing.TB) string {
-	t.Helper()
-	// os.MkDir() is used instead of testing.T.TempDir()
-	// see https://github.com/cosmos/cosmos-sdk/pull/8475 and
-	// https://github.com/cosmos/cosmos-sdk/pull/10341 for
-	// this change's rationale.
-	tempdir, err := os.MkdirTemp("", "")
-	require.NoError(t, err)
-	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
-	return tempdir
 }

@@ -10,7 +10,7 @@ linters:
     - deadcode
     - depguard
     - dogsled
-    - exportloopref
+    # - errcheck
     - goconst
     - gocritic
     - gofmt
@@ -21,14 +21,19 @@ linters:
     - ineffassign
     - misspell
     - nakedret
-    - nolintlint
+    - prealloc
+    - revive
+    - exportloopref
     - staticcheck
     - structcheck
     - stylecheck
     - typecheck
     - unconvert
-    - unparam
     - unused
+    - unparam
+    - misspell
+    # - wsl
+    - nolintlint
 
 issues:
   exclude-rules:
@@ -49,7 +54,7 @@ issues:
     - text: "ST1016:"
       linters:
         - stylecheck
-    - path: "migrations"
+    - path: "legacy"
       text: "SA1019:"
       linters:
         - staticcheck

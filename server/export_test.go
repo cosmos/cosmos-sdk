@@ -3,6 +3,7 @@ package server_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -21,10 +22,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
@@ -32,7 +33,7 @@ import (
 func TestExportCmd_ConsensusParams(t *testing.T) {
 	tempDir := t.TempDir()
 
-	_, ctx, _, cmd := setupApp(t, tempDir)
+	_, ctx, genDoc, cmd := setupApp(t, tempDir)
 
 	output := &bytes.Buffer{}
 	cmd.SetOut(output)
@@ -45,13 +46,14 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
 	}
 
-	require.Equal(t, simtestutil.DefaultConsensusParams.Block.MaxBytes, exportedGenDoc.ConsensusParams.Block.MaxBytes)
-	require.Equal(t, simtestutil.DefaultConsensusParams.Block.MaxGas, exportedGenDoc.ConsensusParams.Block.MaxGas)
+	require.Equal(t, genDoc.ConsensusParams.Block.TimeIotaMs, exportedGenDoc.ConsensusParams.Block.TimeIotaMs)
+	require.Equal(t, simapp.DefaultConsensusParams.Block.MaxBytes, exportedGenDoc.ConsensusParams.Block.MaxBytes)
+	require.Equal(t, simapp.DefaultConsensusParams.Block.MaxGas, exportedGenDoc.ConsensusParams.Block.MaxGas)
 
-	require.Equal(t, simtestutil.DefaultConsensusParams.Evidence.MaxAgeDuration, exportedGenDoc.ConsensusParams.Evidence.MaxAgeDuration)
-	require.Equal(t, simtestutil.DefaultConsensusParams.Evidence.MaxAgeNumBlocks, exportedGenDoc.ConsensusParams.Evidence.MaxAgeNumBlocks)
+	require.Equal(t, simapp.DefaultConsensusParams.Evidence.MaxAgeDuration, exportedGenDoc.ConsensusParams.Evidence.MaxAgeDuration)
+	require.Equal(t, simapp.DefaultConsensusParams.Evidence.MaxAgeNumBlocks, exportedGenDoc.ConsensusParams.Evidence.MaxAgeNumBlocks)
 
-	require.Equal(t, simtestutil.DefaultConsensusParams.Validator.PubKeyTypes, exportedGenDoc.ConsensusParams.Validator.PubKeyTypes)
+	require.Equal(t, simapp.DefaultConsensusParams.Validator.PubKeyTypes, exportedGenDoc.ConsensusParams.Validator.PubKeyTypes)
 }
 
 func TestExportCmd_HomeDir(t *testing.T) {
@@ -117,56 +119,48 @@ func TestExportCmd_Height(t *testing.T) {
 			require.Equal(t, tc.expHeight, exportedGenDoc.InitialHeight)
 		})
 	}
+
 }
 
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {
-	t.Helper()
-
 	if err := createConfigFolder(tempDir); err != nil {
 		t.Fatalf("error creating config folder: %s", err)
 	}
 
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	db := dbm.NewMemDB()
 	encCfg := simapp.MakeTestEncodingConfig()
-	app := simapp.NewSimApp(logger, db, nil, true, 0, encCfg, simtestutil.NewAppOptionsWithFlagHome(tempDir))
-
-	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
-	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
-	require.NoError(t, err)
+	app := simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, tempDir, 0, encCfg, simapp.EmptyAppOptions{})
 
 	serverCtx := server.NewDefaultContext()
 	serverCtx.Config.RootDir = tempDir
 
 	clientCtx := client.Context{}.WithCodec(app.AppCodec())
-	genDoc := &tmtypes.GenesisDoc{}
-	genDoc.ChainID = "theChainId"
-	genDoc.Validators = nil
-	genDoc.AppState = stateBytes
+	genDoc := newDefaultGenesisDoc(encCfg.Marshaler)
 
 	require.NoError(t, saveGenesisFile(genDoc, serverCtx.Config.GenesisFile()))
 	app.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: simtestutil.DefaultConsensusParams,
+			ConsensusParams: simapp.DefaultConsensusParams,
 			AppStateBytes:   genDoc.AppState,
 		},
 	)
 	app.Commit()
 
 	cmd := server.ExportCmd(
-		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions) (types.ExportedApp, error) {
+		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptons types.AppOptions) (types.ExportedApp, error) {
 			encCfg := simapp.MakeTestEncodingConfig()
 
 			var simApp *simapp.SimApp
 			if height != -1 {
-				simApp = simapp.NewSimApp(logger, db, nil, false, 0, encCfg, appOptions)
+				simApp = simapp.NewSimApp(logger, db, nil, false, map[int64]bool{}, "", 0, encCfg, appOptons)
 
 				if err := simApp.LoadHeight(height); err != nil {
 					return types.ExportedApp{}, err
 				}
 			} else {
-				simApp = simapp.NewSimApp(logger, db, nil, true, 0, encCfg, appOptions)
+				simApp = simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, "", 0, encCfg, appOptons)
 			}
 
 			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
@@ -180,7 +174,23 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 }
 
 func createConfigFolder(dir string) error {
-	return os.Mkdir(path.Join(dir, "config"), 0o700)
+	return os.Mkdir(path.Join(dir, "config"), 0700)
+}
+
+func newDefaultGenesisDoc(cdc codec.Codec) *tmtypes.GenesisDoc {
+	genesisState := simapp.NewDefaultGenesisState(cdc)
+
+	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+
+	genDoc := &tmtypes.GenesisDoc{}
+	genDoc.ChainID = "theChainId"
+	genDoc.Validators = nil
+	genDoc.AppState = stateBytes
+
+	return genDoc
 }
 
 func saveGenesisFile(genDoc *tmtypes.GenesisDoc, dir string) error {

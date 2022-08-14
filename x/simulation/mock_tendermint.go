@@ -86,6 +86,7 @@ func updateValidators(
 	updates []abci.ValidatorUpdate,
 	event func(route, op, evResult string),
 ) map[string]mockValidator {
+
 	for _, update := range updates {
 		str := fmt.Sprintf("%X", update.PubKey.GetEd25519())
 
@@ -99,6 +100,7 @@ func updateValidators(
 		} else if _, ok := current[str]; ok {
 			// validator already exists
 			event("end_block", "validator_updates", "updated")
+
 		} else {
 			// Set this new validator
 			current[str] = mockValidator{
@@ -117,8 +119,7 @@ func updateValidators(
 func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	validators mockValidators, pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
-	event func(route, op, evResult string), header tmproto.Header,
-) abci.RequestBeginBlock {
+	event func(route, op, evResult string), header tmproto.Header) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{
 			Header: header,

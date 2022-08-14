@@ -43,7 +43,8 @@ func TestNewWeightedProposalContent(t *testing.T) {
 	require.Equal(t, content, pContent.ContentSimulatorFn()(nil, ctx, nil))
 }
 
-type testContent struct{}
+type testContent struct {
+}
 
 func (t testContent) GetTitle() string       { return "" }
 func (t testContent) GetDescription() string { return "" }

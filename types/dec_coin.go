@@ -17,7 +17,7 @@ func NewDecCoin(denom string, amount Int) DecCoin {
 
 	return DecCoin{
 		Denom:  coin.Denom,
-		Amount: NewDecFromInt(coin.Amount),
+		Amount: coin.Amount.ToDec(),
 	}
 }
 
@@ -43,7 +43,7 @@ func NewDecCoinFromCoin(coin Coin) DecCoin {
 
 	return DecCoin{
 		Denom:  coin.Denom,
-		Amount: NewDecFromInt(coin.Amount),
+		Amount: coin.Amount.ToDec(),
 	}
 }
 
@@ -111,7 +111,7 @@ func (coin DecCoin) Sub(coinB DecCoin) DecCoin {
 // change. Note, the change may be zero.
 func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
 	truncated := coin.Amount.TruncateInt()
-	change := coin.Amount.Sub(NewDecFromInt(truncated))
+	change := coin.Amount.Sub(truncated.ToDec())
 	return NewCoin(coin.Denom, truncated), NewDecCoinFromDec(coin.Denom, change)
 }
 
@@ -182,10 +182,14 @@ func sanitizeDecCoins(decCoins []DecCoin) DecCoins {
 // NewDecCoinsFromCoins constructs a new coin set with decimal values
 // from regular Coins.
 func NewDecCoinsFromCoins(coins ...Coin) DecCoins {
-	decCoins := make(DecCoins, len(coins))
+	if len(coins) == 0 {
+		return DecCoins{}
+	}
+
+	decCoins := make([]DecCoin, 0, len(coins))
 	newCoins := NewCoins(coins...)
-	for i, coin := range newCoins {
-		decCoins[i] = NewDecCoinFromCoin(coin)
+	for _, coin := range newCoins {
+		decCoins = append(decCoins, NewDecCoinFromCoin(coin))
 	}
 
 	return decCoins
@@ -374,15 +378,12 @@ func (coins DecCoins) MulDec(d Dec) DecCoins {
 }
 
 // MulDecTruncate multiplies all the decimal coins by a decimal, truncating. It
-// returns nil DecCoins if d is zero.
+// panics if d is zero.
 //
 // CONTRACT: No zero coins will be returned.
 func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
-	if d.IsZero() {
-		return DecCoins{}
-	}
-
 	var res DecCoins
+
 	for _, coin := range coins {
 		product := DecCoin{
 			Denom:  coin.Denom,
@@ -632,7 +633,7 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 	}
 
 	if err := ValidateDenom(denomStr); err != nil {
-		return DecCoin{}, fmt.Errorf("invalid denom cannot contain spaces: %s", err)
+		return DecCoin{}, fmt.Errorf("invalid denom cannot contain upper case characters or spaces: %s", err)
 	}
 
 	return NewDecCoinFromDec(denomStr, amount), nil

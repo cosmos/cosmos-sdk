@@ -4,11 +4,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"os"
+	"io/ioutil"
 	"testing"
 
-	"github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
+
+	bip39 "github.com/cosmos/go-bip39"
+
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -33,7 +35,7 @@ func initFundraiserTestVectors(t *testing.T) []addrData {
 	// var hdPath string = "m/44'/118'/0'/0/0"
 	var hdToAddrTable []addrData
 
-	b, err := os.ReadFile("testdata/test.json")
+	b, err := ioutil.ReadFile("testdata/test.json")
 	if err != nil {
 		t.Fatalf("could not read fundraiser test vector file (testdata/test.json): %s", err)
 	}

@@ -2,12 +2,10 @@ package config
 
 import (
 	"bytes"
-	"fmt"
-	"io/ioutil"
-	"os"
 	"text/template"
 
 	"github.com/spf13/viper"
+	tmos "github.com/tendermint/tendermint/libs/os"
 )
 
 const DefaultConfigTemplate = `# This is a TOML config file.
@@ -22,14 +20,15 @@ const DefaultConfigTemplate = `# This is a TOML config file.
 # specified in this config (e.g. 0.25token1;0.0001token2).
 minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
-# default: the last 362880 states are kept, pruning at 10 block intervals
+# default: the last 100 states are kept in addition to every 500th state; pruning at 10 block intervals
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-# everything: 2 latest states will be kept; pruning at 10 block intervals.
-# custom: allow pruning options to be manually specified through 'pruning-keep-recent', and 'pruning-interval'
+# everything: all saved states will be deleted, storing only the current and previous state; pruning at 10 block intervals
+# custom: allow pruning options to be manually specified through 'pruning-keep-recent', 'pruning-keep-every', and 'pruning-interval'
 pruning = "{{ .BaseConfig.Pruning }}"
 
 # These are applied if and only if the pruning strategy is custom.
 pruning-keep-recent = "{{ .BaseConfig.PruningKeepRecent }}"
+pruning-keep-every = "{{ .BaseConfig.PruningKeepEvery }}"
 pruning-interval = "{{ .BaseConfig.PruningInterval }}"
 
 # HaltHeight contains a non-zero block height at which a node will gracefully
@@ -69,17 +68,11 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 #
 # Example:
 # ["message.sender", "message.recipient"]
-index-events = [{{ range .BaseConfig.IndexEvents }}{{ printf "%q, " . }}{{end}}]
+index-events = {{ .BaseConfig.IndexEvents }}
 
 # IavlCacheSize set the size of the iavl tree cache. 
 # Default cache size is 50mb.
 iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
-
-# AppDBBackend defines the database backend type to use for the application and snapshots DBs.
-# An empty string indicates that a fallback will be used.
-# First fallback is the deprecated compile-time types.DBBackend value.
-# Second fallback (if the types.DBBackend also isn't set), is the db-backend value set in Tendermint's config.toml.
-app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 
 ###############################################################################
 ###                         Telemetry Configuration                         ###
@@ -170,18 +163,6 @@ retries = {{ .Rosetta.Retries }}
 # Offline defines if Rosetta server should run in offline mode.
 offline = {{ .Rosetta.Offline }}
 
-# EnableDefaultSuggestedFee defines if the server should suggest fee by default.
-# If 'construction/medata' is called without gas limit and gas price,
-# suggested fee based on gas-to-suggest and denom-to-suggest will be given.
-enable-fee-suggestion = {{ .Rosetta.EnableFeeSuggestion }}
-
-# GasToSuggest defines gas limit when calculating the fee
-gas-to-suggest = {{ .Rosetta.GasToSuggest }}
-
-# DenomToSuggest defines the defult denom for fee suggestion.
-# Price must be in minimum-gas-prices.
-denom-to-suggest = "{{ .Rosetta.DenomToSuggest }}"
-
 ###############################################################################
 ###                           gRPC Configuration                            ###
 ###############################################################################
@@ -193,14 +174,6 @@ enable = {{ .GRPC.Enable }}
 
 # Address defines the gRPC server address to bind to.
 address = "{{ .GRPC.Address }}"
-
-# MaxRecvMsgSize defines the max message size in bytes the server can receive.
-# The default value is 10MB.
-max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
-
-# MaxSendMsgSize defines the max message size in bytes the server can send.
-# The default value is math.MaxInt32.
-max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 
 ###############################################################################
 ###                        gRPC Web Configuration                           ###
@@ -227,7 +200,7 @@ enable-unsafe-cors = {{ .GRPCWeb.EnableUnsafeCORS }}
 [state-sync]
 
 # snapshot-interval specifies the block interval at which local state sync snapshots are
-# taken (0 to disable).
+# taken (0 to disable). Must be a multiple of pruning-keep-every.
 snapshot-interval = {{ .StateSync.SnapshotInterval }}
 
 # snapshot-keep-recent specifies the number of recent snapshots to keep and serve (0 to keep all).
@@ -276,12 +249,5 @@ func WriteConfigFile(configFilePath string, config interface{}) {
 		panic(err)
 	}
 
-	mustWriteFile(configFilePath, buffer.Bytes(), 0o644)
-}
-
-func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {
-	if err := ioutil.WriteFile(filePath, contents, mode); err != nil {
-		fmt.Printf(fmt.Sprintf("failed to write file: %v", err) + "\n")
-		os.Exit(1)
-	}
+	tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0644)
 }

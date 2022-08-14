@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/cosmos/go-bip39"
+	bip39 "github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -74,8 +74,8 @@ Example:
 	f.Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
 	f.String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
 	f.Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
-	f.Uint32(flagAccount, 0, "Account number for HD derivation (less than equal 2147483647)")
-	f.Uint32(flagIndex, 0, "Address index number for HD derivation (less than equal 2147483647)")
+	f.Uint32(flagAccount, 0, "Account number for HD derivation")
+	f.Uint32(flagIndex, 0, "Address index number for HD derivation")
 	f.String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
 	return cmd
@@ -119,7 +119,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
 		// use in memory keybase
-		kb = keyring.NewInMemory(ctx.Codec)
+		kb = keyring.NewInMemory()
 	} else {
 		_, err = kb.Key(name)
 		if err == nil {
@@ -153,11 +153,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 					return err
 				}
 
-				key, err := k.GetPubKey()
-				if err != nil {
-					return err
-				}
-				pks[i] = key
+				pks[i] = k.GetPubKey()
 			}
 
 			if noSort, _ := cmd.Flags().GetBool(flagNoSort); !noSort {
@@ -167,28 +163,29 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 
 			pk := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
-			k, err := kb.SaveMultisig(name, pk)
+			info, err := kb.SaveMultisig(name, pk)
 			if err != nil {
 				return err
 			}
 
-			return printCreate(cmd, k, false, "", outputFormat)
+			return printCreate(cmd, info, false, "", outputFormat)
 		}
 	}
 
 	pubKey, _ := cmd.Flags().GetString(FlagPublicKey)
 	if pubKey != "" {
 		var pk cryptotypes.PubKey
-		if err = ctx.Codec.UnmarshalInterfaceJSON([]byte(pubKey), &pk); err != nil {
-			return err
-		}
-
-		k, err := kb.SaveOfflineKey(name, pk)
+		err = ctx.Codec.UnmarshalInterfaceJSON([]byte(pubKey), &pk)
 		if err != nil {
 			return err
 		}
 
-		return printCreate(cmd, k, false, "", outputFormat)
+		info, err := kb.SavePubKey(name, pk, algo.Name())
+		if err != nil {
+			return err
+		}
+
+		return printCreate(cmd, info, false, "", outputFormat)
 	}
 
 	coinType, _ := cmd.Flags().GetUint32(flagCoinType)
@@ -206,12 +203,13 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if useLedger {
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-		k, err := kb.SaveLedgerKey(name, hd.Secp256k1, bech32PrefixAccAddr, coinType, account, index)
+
+		info, err := kb.SaveLedgerKey(name, algo, bech32PrefixAccAddr, coinType, account, index)
 		if err != nil {
 			return err
 		}
 
-		return printCreate(cmd, k, false, "", outputFormat)
+		return printCreate(cmd, info, false, "", outputFormat)
 	}
 
 	// Get bip39 mnemonic
@@ -273,7 +271,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		}
 	}
 
-	k, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
+	info, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
 	if err != nil {
 		return err
 	}
@@ -285,25 +283,24 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		mnemonic = ""
 	}
 
-	return printCreate(cmd, k, showMnemonic, mnemonic, outputFormat)
+	return printCreate(cmd, info, showMnemonic, mnemonic, outputFormat)
 }
 
-func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemonic, outputFormat string) error {
+func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemonic string, outputFormat string) error {
 	switch outputFormat {
 	case OutputFormatText:
 		cmd.PrintErrln()
-		if err := printKeyringRecord(cmd.OutOrStdout(), k, keyring.MkAccKeyOutput, outputFormat); err != nil {
-			return err
-		}
+		printKeyInfo(cmd.OutOrStdout(), info, keyring.MkAccKeyOutput, outputFormat)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
-			if _, err := fmt.Fprintf(cmd.ErrOrStderr(), "\n**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.\n\n%s\n", mnemonic); err != nil {
-				return fmt.Errorf("failed to print mnemonic: %v", err)
-			}
+			fmt.Fprintln(cmd.ErrOrStderr(), "\n**Important** write this mnemonic phrase in a safe place.")
+			fmt.Fprintln(cmd.ErrOrStderr(), "It is the only way to recover your account if you ever forget your password.")
+			fmt.Fprintln(cmd.ErrOrStderr(), "")
+			fmt.Fprintln(cmd.ErrOrStderr(), mnemonic)
 		}
 	case OutputFormatJSON:
-		out, err := keyring.MkAccKeyOutput(k)
+		out, err := keyring.MkAccKeyOutput(info)
 		if err != nil {
 			return err
 		}

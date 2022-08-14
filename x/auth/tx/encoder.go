@@ -42,5 +42,6 @@ func DefaultJSONTxEncoder(cdc codec.ProtoCodecMarshaler) sdk.TxEncoder {
 		}
 
 		return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, tx)
+
 	}
 }

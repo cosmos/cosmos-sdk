@@ -2,10 +2,7 @@ package testutil
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 
-	"cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -83,8 +80,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState[types.ModuleName] = bankGenesisBz
 	s.cfg.GenesisState = genesisState
 
-	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
-	s.Require().NoError(err)
+	s.network = network.New(s.T(), s.cfg)
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -378,7 +374,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 	)
 	args := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	}
@@ -388,38 +384,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
 	s.Require().NoError(err)
 	s.Require().Equal([]sdk.Msg{types.NewMsgSend(from, to, amount)}, tx.GetMsgs())
-}
-
-func (s *IntegrationTestSuite) TestNewSendTxCmdDryRun() {
-	val := s.network.Validators[0]
-
-	clientCtx := val.ClientCtx
-
-	from := val.Address
-	to := val.Address
-	amount := sdk.NewCoins(
-		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-	)
-	args := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagDryRun),
-	}
-
-	oldSterr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-
-	_, err := MsgSendExec(clientCtx, from, to, amount, args...)
-	s.Require().NoError(err)
-
-	w.Close()
-	out, _ := ioutil.ReadAll(r)
-	os.Stderr = oldSterr
-
-	s.Require().Regexp("gas estimate: [0-9]+", string(out))
 }
 
 func (s *IntegrationTestSuite) TestNewSendTxCmd() {
@@ -444,27 +408,10 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
-		},
-		{
-			"chain-id shouldn't be used with offline and generate-only flags",
-			val.Address,
-			val.Address,
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=true", flags.FlagOffline),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-			},
-			true, 0, &sdk.TxResponse{},
 		},
 		{
 			"not enough fees",
@@ -476,7 +423,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))).String()),
 			},
 			false,
@@ -493,7 +440,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 			),
 			[]string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				"--gas=10",
 			},
@@ -506,7 +453,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	for _, tc := range testCases {
 		tc := tc
 
-		s.Require().NoError(s.network.WaitForNextBlock())
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -524,142 +470,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewMultiSendTxCmd() {
-	val := s.network.Validators[0]
-	testAddr := sdk.AccAddress("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
-
-	testCases := []struct {
-		name         string
-		from         sdk.AccAddress
-		to           []sdk.AccAddress
-		amount       sdk.Coins
-		args         []string
-		expectErr    bool
-		expectedCode uint32
-		respType     proto.Message
-	}{
-		{
-			"valid transaction",
-			val.Address,
-			[]sdk.AccAddress{val.Address, testAddr},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, 0, &sdk.TxResponse{},
-		},
-		{
-			"valid split transaction",
-			val.Address,
-			[]sdk.AccAddress{val.Address, testAddr},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-			),
-			[]string{
-				fmt.Sprintf("--%s=true", cli.FlagSplit),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, 0, &sdk.TxResponse{},
-		},
-		{
-			"not enough arguments",
-			val.Address,
-			[]sdk.AccAddress{val.Address},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true, 0, &sdk.TxResponse{},
-		},
-		{
-			"chain-id shouldn't be used with offline and generate-only flags",
-			val.Address,
-			[]sdk.AccAddress{val.Address, testAddr},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=true", flags.FlagOffline),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-			},
-			true, 0, &sdk.TxResponse{},
-		},
-		{
-			"not enough fees",
-			val.Address,
-			[]sdk.AccAddress{val.Address, testAddr},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))).String()),
-			},
-			false,
-			sdkerrors.ErrInsufficientFee.ABCICode(),
-			&sdk.TxResponse{},
-		},
-		{
-			"not enough gas",
-			val.Address,
-			[]sdk.AccAddress{val.Address, testAddr},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-				"--gas=10",
-			},
-			false,
-			sdkerrors.ErrOutOfGas.ABCICode(),
-			&sdk.TxResponse{},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Require().NoError(s.network.WaitForNextBlock())
-		s.Run(tc.name, func() {
-			clientCtx := val.ClientCtx
-
-			bz, err := MsgMultiSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
-			}
-		})
-	}
-}
-
-func NewCoin(denom string, amount math.Int) *sdk.Coin {
+func NewCoin(denom string, amount sdk.Int) *sdk.Coin {
 	coin := sdk.NewCoin(denom, amount)
 	return &coin
 }

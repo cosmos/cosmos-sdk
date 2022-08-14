@@ -3,6 +3,8 @@ package keeper
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -11,31 +13,33 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// Deprecated: UpgradeInfoFileName file to store upgrade information
-// use x/upgrade/types.UpgradeInfoFilename instead.
+// UpgradeInfoFileName file to store upgrade information
 const UpgradeInfoFileName string = "upgrade-info.json"
+
+// upgrade defines a comparable structure for sorting upgrades.
+type upgrade struct {
+	Name        string
+	BlockHeight int64
+}
 
 type Keeper struct {
 	homePath           string                          // root directory of app config
 	skipUpgradeHeights map[int64]bool                  // map of heights to skip for an upgrade
-	storeKey           storetypes.StoreKey             // key to access x/upgrade store
+	storeKey           sdk.StoreKey                    // key to access x/upgrade store
 	cdc                codec.BinaryCodec               // App-wide binary codec
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
-	authority          string                          // the address capable of executing and cancelling an upgrade. Usually the gov module account
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -44,7 +48,7 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter) Keeper {
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -52,17 +56,7 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, 
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
 		versionSetter:      vs,
-		authority:          authority,
 	}
-}
-
-// SetVersionSetter sets the interface implemented by baseapp which allows setting baseapp's protocol version field
-func (k *Keeper) SetVersionSetter(vs xp.ProtocolVersionSetter) {
-	k.versionSetter = vs
-}
-
-func (k *Keeper) GetVersionSetter() xp.ProtocolVersionSetter {
-	return k.versionSetter
 }
 
 // SetUpgradeHandler sets an UpgradeHandler for the upgrade specified by name. This handler will be called when the upgrade
@@ -174,9 +168,10 @@ func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
-// If there is another Plan already scheduled, it will cancel and overwrite it.
-// ScheduleUpgrade will also write the upgraded IBC ClientState to the upgraded client
-// path if it is specified in the plan.
+// If there is another Plan already scheduled, it will overwrite it
+// (implicitly cancelling the current plan)
+// ScheduleUpgrade will also write the upgraded client to the upgraded client path
+// if an upgraded client is specified in the plan
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	if err := plan.ValidateBasic(); err != nil {
 		return err
@@ -248,42 +243,44 @@ func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
 
-	if iter.Valid() {
-		return parseDoneKey(iter.Key())
+	var upgrades []upgrade
+	for ; iter.Valid(); iter.Next() {
+		name := parseDoneKey(iter.Key())
+		value := int64(sdk.BigEndianToUint64(iter.Value()))
+
+		upgrades = append(upgrades, upgrade{Name: name, BlockHeight: value})
+	}
+
+	// sort upgrades in descending order by block height
+	sort.SliceStable(upgrades, func(i, j int) bool {
+		return upgrades[i].BlockHeight > upgrades[j].BlockHeight
+	})
+
+	if len(upgrades) > 0 {
+		return upgrades[0].Name, upgrades[0].BlockHeight
 	}
 
 	return "", 0
 }
 
-// parseDoneKey - split upgrade name and height from the done key
-func parseDoneKey(key []byte) (string, int64) {
-	// 1 byte for the DoneByte + 8 bytes height + at least 1 byte for the name
-	kv.AssertKeyAtLeastLength(key, 10)
-	height := binary.BigEndian.Uint64(key[1:9])
-	return string(key[9:]), int64(height)
-}
+// parseDoneKey - split upgrade name from the done key
+func parseDoneKey(key []byte) string {
+	if len(key) < 2 {
+		panic(fmt.Sprintf("expected key of length at least %d, got %d", 2, len(key)))
+	}
 
-// encodeDoneKey - concatenate DoneByte, height and upgrade name to form the done key
-func encodeDoneKey(name string, height int64) []byte {
-	key := make([]byte, 9+len(name)) // 9 = donebyte + uint64 len
-	key[0] = types.DoneByte
-	binary.BigEndian.PutUint64(key[1:9], uint64(height))
-	copy(key[9:], name)
-	return key
+	return string(key[1:])
 }
 
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
-	iter := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
-	defer iter.Close()
-
-	for ; iter.Valid(); iter.Next() {
-		upgradeName, height := parseDoneKey(iter.Key())
-		if upgradeName == name {
-			return height
-		}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+	bz := store.Get([]byte(name))
+	if len(bz) == 0 {
+		return 0
 	}
-	return 0
+
+	return int64(binary.BigEndian.Uint64(bz))
 }
 
 // ClearIBCState clears any planned IBC state
@@ -326,8 +323,10 @@ func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool)
 
 // setDone marks this upgrade name as being done so the name can't be reused accidentally
 func (k Keeper) setDone(ctx sdk.Context, name string) {
-	store := ctx.KVStore(k.storeKey)
-	store.Set(encodeDoneKey(name, ctx.BlockHeight()), []byte{1})
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, uint64(ctx.BlockHeight()))
+	store.Set([]byte(name), bz)
 }
 
 // HasHandler returns true iff there is a handler registered for this name
@@ -370,24 +369,35 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 	return k.skipUpgradeHeights[height]
 }
 
-// DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName.
-func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
+// DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName. The function
+// doesn't save the `Plan.Info` data, hence it won't support auto download functionality
+// by cosmvisor.
+// NOTE: this function will be update in the next release.
+func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
+	return k.DumpUpgradeInfoWithInfoToDisk(height, name, "")
+}
+
+// Deprecated: DumpUpgradeInfoWithInfoToDisk writes upgrade information to UpgradeInfoFileName.
+// `info` should be provided and contain Plan.Info data in order to support
+// auto download functionality by cosmovisor and other tools using upgarde-info.json
+// (GetUpgradeInfoPath()) file.
+func (k Keeper) DumpUpgradeInfoWithInfoToDisk(height int64, name string, info string) error {
 	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()
 	if err != nil {
 		return err
 	}
 
-	upgradeInfo := types.Plan{
-		Name:   p.Name,
+	upgradeInfo := upgradeInfo{
+		Name:   name,
 		Height: height,
-		Info:   p.Info,
+		Info:   info,
 	}
-	info, err := json.Marshal(upgradeInfo)
+	bz, err := json.Marshal(upgradeInfo)
 	if err != nil {
 		return err
 	}
 
-	return os.WriteFile(upgradeInfoFilePath, info, 0o600)
+	return os.WriteFile(upgradeInfoFilePath, bz, 0o600)
 }
 
 // GetUpgradeInfoPath returns the upgrade info file path
@@ -398,7 +408,7 @@ func (k Keeper) GetUpgradeInfoPath() (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(upgradeInfoFileDir, types.UpgradeInfoFilename), nil
+	return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
 }
 
 // getHomeDir returns the height at which the given upgrade was executed
@@ -410,15 +420,15 @@ func (k Keeper) getHomeDir() string {
 // written to disk by the old binary when panicking. An error is returned if
 // the upgrade path directory cannot be created or if the file exists and
 // cannot be read or if the upgrade info fails to unmarshal.
-func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
-	var upgradeInfo types.Plan
+func (k Keeper) ReadUpgradeInfoFromDisk() (store.UpgradeInfo, error) {
+	var upgradeInfo store.UpgradeInfo
 
 	upgradeInfoPath, err := k.GetUpgradeInfoPath()
 	if err != nil {
 		return upgradeInfo, err
 	}
 
-	data, err := os.ReadFile(upgradeInfoPath)
+	data, err := ioutil.ReadFile(upgradeInfoPath)
 	if err != nil {
 		// if file does not exist, assume there are no upgrades
 		if os.IsNotExist(err) {
@@ -433,6 +443,16 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 	}
 
 	return upgradeInfo, nil
+}
+
+// upgradeInfo is stripped types.Plan structure used to dump upgrade plan data.
+type upgradeInfo struct {
+	// Name has types.Plan.Name value
+	Name string `json:"name,omitempty"`
+	// Height has types.Plan.Height value
+	Height int64 `json:"height,omitempty"`
+	// Height has types.Plan.Height value
+	Info string `json:"info,omitempty"`
 }
 
 // SetDowngradeVerified updates downgradeVerified.

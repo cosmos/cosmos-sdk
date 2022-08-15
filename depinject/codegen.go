@@ -39,43 +39,18 @@ import (
 func Codegen() DebugOption {
 	loc := LocationFromCaller(1).(*location)
 	return debugOption(func(config *debugConfig) error {
+		config.codegenLoc = loc
+
 		f, err := parser.ParseFile(config.fset, loc.file, nil, parser.ParseComments|parser.AllErrors)
 		if err != nil {
 			return err
 		}
 
-		fileGen, err := codegen.NewFileGen(f, loc.pkg)
+		err = config.startCodegen(f)
 		if err != nil {
 			return err
 		}
 
-		funcGen := fileGen.PatchFuncDecl(loc.name)
-		if funcGen == nil {
-			return fmt.Errorf("couldn't resolve function %s in %s", loc.name, loc.file)
-		}
-
-		funcParamNames, err := config.checkAndPatchFuncDecl(funcGen)
-		if err != nil {
-			return err
-		}
-
-		config.funcParamNames = funcParamNames
-
-		if len(fileGen.File.Comments) == 0 ||
-			len(fileGen.File.Comments[0].List) == 0 ||
-			strings.TrimSpace(fileGen.File.Comments[0].List[0].Text) != "//go:build depinject" {
-			return config.astError(fileGen.File, `expected comment: //go:build depinject`)
-		}
-
-		fileGen.File.Comments[0] = &ast.CommentGroup{
-			List: []*ast.Comment{
-				{
-					Text: "//go:build !depinject\n",
-				},
-			},
-		}
-
-		config.funcGen = funcGen
 		outFilename := loc.file
 		ext := path.Ext(outFilename)
 		outFilename = outFilename[0:len(outFilename)-len(ext)] + ".depinject.go"
@@ -84,11 +59,46 @@ func Codegen() DebugOption {
 		if err != nil {
 			return err
 		}
-
 		config.codegenOut = outFile
-		config.codegenLoc = loc
+
 		return nil
 	})
+}
+
+func (c *debugConfig) startCodegen(file *ast.File) error {
+	fileGen, err := codegen.NewFileGen(file, c.codegenLoc.pkg)
+	if err != nil {
+		return err
+	}
+
+	funcGen := fileGen.PatchFuncDecl(c.codegenLoc.name)
+	if funcGen == nil {
+		return fmt.Errorf("couldn't resolve function %s in %s", c.codegenLoc.name, c.codegenLoc.file)
+	}
+
+	funcParamNames, err := c.checkAndPatchFuncDecl(funcGen)
+	if err != nil {
+		return err
+	}
+
+	c.funcParamNames = funcParamNames
+
+	if len(fileGen.File.Comments) == 0 ||
+		len(fileGen.File.Comments[0].List) == 0 ||
+		strings.TrimSpace(fileGen.File.Comments[0].List[0].Text) != "//go:build depinject" {
+		return c.astError(fileGen.File, `expected comment: //go:build depinject`)
+	}
+
+	fileGen.File.Comments[0] = &ast.CommentGroup{
+		List: []*ast.Comment{
+			{
+				Text: "//go:build !depinject\n",
+			},
+		},
+	}
+
+	c.funcGen = funcGen
+	return nil
 }
 
 func (c *debugConfig) checkAndPatchFuncDecl(funcGen *codegen.FuncGen) ([]*ast.Ident, error) {

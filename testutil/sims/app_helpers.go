@@ -15,7 +15,6 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

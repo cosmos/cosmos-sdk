@@ -10,7 +10,6 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/depinject"
-
 	store "github.com/cosmos/cosmos-sdk/store/types"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"

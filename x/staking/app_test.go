@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	"github.com/stretchr/testify/require"

@@ -7,10 +7,9 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"sigs.k8s.io/yaml"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"sigs.k8s.io/yaml"
 )
 
 // Implements Delegation interface

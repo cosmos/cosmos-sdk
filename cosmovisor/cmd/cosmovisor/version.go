@@ -6,10 +6,9 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/cosmovisor"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
 
 func init() {

@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/mock/gomock"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidencetestutil "github.com/cosmos/cosmos-sdk/x/evidence/testutil"
-
-	"github.com/stretchr/testify/suite"
+	"github.com/golang/mock/gomock"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -22,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/stretchr/testify/suite"
 )
 
 var (

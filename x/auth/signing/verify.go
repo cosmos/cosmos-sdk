@@ -1,6 +1,7 @@
 package signing
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -30,7 +31,7 @@ func VerifySignature(pubKey cryptotypes.PubKey, signerData SignerData, sigData s
 			}
 
 			if !secp256k1PubKey.VerifySignatureEip191(signBytes, data.Signature) {
-				return fmt.Errorf("unable to verify single signer eip191 signature")
+				return fmt.Errorf("unable to verify single signer eip191 signature %s for signBytes %s", hex.EncodeToString(signBytes), string(signBytes))
 			}
 		} else {
 			if !pubKey.VerifySignature(signBytes, data.Signature) {

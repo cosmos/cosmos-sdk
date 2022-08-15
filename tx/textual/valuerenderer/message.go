@@ -52,7 +52,7 @@ func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value
 			str := sc.Text()
 			// Only add a space after the > if the field isn't already nested.
 			nesting := "> "
-			if str[0] == '>' {
+			if len(str) > 0 && str[0] == '>' {
 				nesting = ">"
 			}
 			fmt.Fprintf(w, "%s%s\n", nesting, str)
@@ -71,7 +71,7 @@ func formatFieldName(name string) string {
 	if len(name) == 0 {
 		return name
 	}
-	return strings.ToUpper(name[0:1]) + strings.ReplaceAll(name[1:], "_", " ")
+	return strings.ToTitle(name[0:1]) + strings.ReplaceAll(name[1:], "_", " ")
 }
 
 func (mr *messageValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {

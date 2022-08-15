@@ -2,6 +2,7 @@ package legacytx
 
 import (
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -107,6 +108,7 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 
 // ValidateBasic does a simple and lightweight validation check that doesn't
 // require access to any other information.
+//
 //nolint:revive // we need to change the receiver name here, because otherwise we conflict with tx.MaxGasWanted.
 func (stdTx StdTx) ValidateBasic() error {
 	stdSigs := stdTx.GetSignatures()

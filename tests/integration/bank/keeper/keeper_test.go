@@ -12,6 +12,7 @@ import (
 
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -122,7 +123,6 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
-
 	var interfaceRegistry codectypes.InterfaceRegistry
 
 	app, err := sims.Setup(
@@ -139,7 +139,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	suite.fetchStoreKey = app.UnsafeFindStoreKey
 
-	//suite.Require().NoError(suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams()))
+	// suite.Require().NoError(suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams()))
 	suite.Require().NoError(suite.bankKeeper.SetParams(suite.ctx, types.DefaultParams()))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, interfaceRegistry)

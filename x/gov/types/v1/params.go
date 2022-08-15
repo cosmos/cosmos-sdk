@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -75,7 +76,6 @@ func DefaultParams() Params {
 }
 
 func (p Params) ValidateBasic() error {
-
 	if minDeposit := sdk.Coins(p.MinDeposit); minDeposit.Empty() || !minDeposit.IsValid() {
 		return fmt.Errorf("invalid minimum deposit: %s", minDeposit)
 	}

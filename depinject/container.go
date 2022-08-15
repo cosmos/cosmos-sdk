@@ -449,7 +449,6 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 
 				if !values[i].CanInterface() {
 					return []reflect.Value{}, fmt.Errorf("depinject.Out struct %s on package can't have unexported field", values[i].String())
-
 				}
 				val.Elem().Set(values[i])
 			}

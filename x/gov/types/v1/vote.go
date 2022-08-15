@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,6 +18,7 @@ const (
 )
 
 // NewVote creates a new Vote instance
+//
 //nolint:interfacer
 func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions, metadata string) Vote {
 	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options, Metadata: metadata}

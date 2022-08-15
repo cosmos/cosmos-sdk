@@ -10,10 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/rs/zerolog"
 )
 
 // environment variable names
@@ -311,7 +312,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 		return err
 	}
 	_, err = f.Write(bz)
-        return err
+	return err
 }
 
 func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {

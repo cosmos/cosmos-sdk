@@ -9,8 +9,9 @@ import (
 	"strings"
 	"time"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/rs/zerolog"
+
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type fileWatcher struct {
@@ -157,10 +158,6 @@ func parseUpgradeInfoFile(filename string) (upgradetypes.Plan, error) {
 	if ui.Height <= 0 || ui.Name == "" {
 		return upgradetypes.Plan{}, fmt.Errorf("invalid upgrade-info.json content; name and height must be not empty; got: %v", ui)
 	}
-
-	// Normalize name to prevent operator error in upgrade name case sensitivity
-	// errors.
-	ui.Name = strings.ToLower(ui.Name)
 
 	return ui, err
 }

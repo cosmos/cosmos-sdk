@@ -35,7 +35,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
-<!-- NOTE: when creating a new release, update cosmovisor/cmd/cosmovisor/cmd/version.go:Version -->
 
 ## v1.2.1 2022-08-15
 

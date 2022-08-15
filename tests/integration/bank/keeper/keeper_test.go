@@ -122,7 +122,6 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
-
 	var interfaceRegistry codectypes.InterfaceRegistry
 
 	app, err := sims.Setup(
@@ -139,7 +138,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	suite.fetchStoreKey = app.UnsafeFindStoreKey
 
-	//suite.Require().NoError(suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams()))
+	// suite.Require().NoError(suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams()))
 	suite.Require().NoError(suite.bankKeeper.SetParams(suite.ctx, types.DefaultParams()))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, interfaceRegistry)

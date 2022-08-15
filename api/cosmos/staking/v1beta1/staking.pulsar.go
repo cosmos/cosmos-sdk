@@ -2,9 +2,13 @@
 package stakingv1beta1
 
 import (
+	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	types "cosmossdk.io/api/tendermint/types"
-	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -14,9 +18,6 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var _ protoreflect.List = (*_HistoricalInfo_2_list)(nil)
@@ -12706,7 +12707,7 @@ func (x *Redelegation) GetEntries() []*RedelegationEntry {
 	return nil
 }
 
-// Params defines the parameters for the staking module.
+// Params defines the parameters for the x/staking module.
 type Params struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

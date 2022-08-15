@@ -2,17 +2,18 @@
 package modulev1
 
 import (
-	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
+	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/gogo/protobuf/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var (
@@ -517,9 +518,11 @@ type Module struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// max_execution_period defines the max duration after a proposal's voting period ends that members can send a MsgExec to execute the proposal.
+	// max_execution_period defines the max duration after a proposal's voting period ends that members can send a MsgExec
+	// to execute the proposal.
 	MaxExecutionPeriod *durationpb.Duration `protobuf:"bytes,1,opt,name=max_execution_period,json=maxExecutionPeriod,proto3" json:"max_execution_period,omitempty"`
-	// max_metadata_len defines the max length of the metadata bytes field for various entities within the group module. Defaults to 255 if not explicitly set.
+	// max_metadata_len defines the max length of the metadata bytes field for various entities within the group module.
+	// Defaults to 255 if not explicitly set.
 	MaxMetadataLen uint64 `protobuf:"varint,2,opt,name=max_metadata_len,json=maxMetadataLen,proto3" json:"max_metadata_len,omitempty"`
 }
 

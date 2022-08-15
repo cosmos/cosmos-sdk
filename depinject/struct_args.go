@@ -1,6 +1,7 @@
 package depinject
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -12,9 +13,10 @@ import (
 // positional parameters.
 //
 // Fields of the struct may support the following tags:
-//		optional	if set to true, the dependency is optional and will
-//					be set to its default value if not found, rather than causing
-//					an error
+//
+//	optional	if set to true, the dependency is optional and will
+//				be set to its default value if not found, rather than causing
+//				an error
 type In struct{}
 
 func (In) isIn() {}
@@ -75,7 +77,10 @@ func expandStructArgsFn(provider ProviderDescriptor) func(inputs []reflect.Value
 		inputs1 := make([]reflect.Value, len(inParams))
 		for i, in := range inParams {
 			if in.Type.AssignableTo(isInType) {
-				v, n := buildIn(in.Type, inputs[j:])
+				v, n, err := buildIn(in.Type, inputs[j:])
+				if err != nil {
+					return []reflect.Value{}, err
+				}
 				inputs1[i] = v
 				j += n
 			} else {
@@ -175,7 +180,7 @@ func structArgsOutTypes(typ reflect.Type) []ProviderOutput {
 	return res
 }
 
-func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int) {
+func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int, error) {
 	numFields := typ.NumField()
 	j := 0
 	res := reflect.New(typ)
@@ -184,11 +189,17 @@ func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int) {
 		if f.Type.AssignableTo(isInType) {
 			continue
 		}
+		if !res.Elem().Field(i).CanSet() {
+			return reflect.Value{}, 0, fmt.Errorf("depinject.In struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath)
+		}
+		if !values[j].CanInterface() {
+			return reflect.Value{}, 0, fmt.Errorf("depinject.Out struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath)
+		}
 
 		res.Elem().Field(i).Set(values[j])
 		j++
 	}
-	return res.Elem(), j
+	return res.Elem(), j, nil
 }
 
 func extractFromOut(typ reflect.Type, value reflect.Value) []reflect.Value {

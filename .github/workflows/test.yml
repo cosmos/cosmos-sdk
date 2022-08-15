@@ -157,7 +157,7 @@ jobs:
         if: env.GIT_DIFF
       - name: test & coverage report creation
         run: |
-          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock'
+          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -race -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='ledger test_ledger_mock'
         if: env.GIT_DIFF
       - uses: actions/upload-artifact@v3
         with:
@@ -218,7 +218,7 @@ jobs:
 
   test-rosetta:
     runs-on: buildjet-4vcpu-ubuntu-2004
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v6.1.0

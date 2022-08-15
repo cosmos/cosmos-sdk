@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - "release/**"
     paths:
       - "docs/**"
       - "x/**/*.md"
@@ -15,7 +16,7 @@ permissions:
 jobs:
   build-and-deploy:
     permissions:
-      contents: write  # for JamesIves/github-pages-deploy-action to push changes in repo
+      contents: write # for JamesIves/github-pages-deploy-action to push changes in repo
     runs-on: ubuntu-latest
     container:
       image: tendermintdev/docker-website-deployment
@@ -32,7 +33,7 @@ jobs:
           make build-docs LEDGER_ENABLED=false
 
       - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4.3.4
+        uses: JamesIves/github-pages-deploy-action@v4.4.0
         with:
           branch: gh-pages
           folder: ~/output

@@ -2,10 +2,14 @@ package depinject
 
 import (
 	"fmt"
+	"go/ast"
+	"go/token"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
 
+	"cosmossdk.io/depinject/internal/codegen"
 	"cosmossdk.io/depinject/internal/graphviz"
 )
 
@@ -176,6 +180,15 @@ type debugConfig struct {
 	onError   DebugOption
 	onSuccess DebugOption
 	cleanup   []func()
+
+	// codegen
+	funcGen               *codegen.FuncGen
+	codegenErrReturn      *ast.ReturnStmt
+	moduleKeyContextIdent *ast.Ident
+	codegenOut            io.Writer
+	fset                  *token.FileSet
+	codegenLoc            *location
+	funcParamNames        []*ast.Ident
 }
 
 type debugOption func(*debugConfig) error
@@ -187,8 +200,27 @@ func (c debugOption) applyConfig(ctr *debugConfig) error {
 var _ DebugOption = (*debugOption)(nil)
 
 func newDebugConfig() (*debugConfig, error) {
+	fileGen, err := codegen.NewFileGen(&ast.File{
+		Decls: []ast.Decl{
+			&ast.FuncDecl{
+				Name: ast.NewIdent("Build"),
+				Type: &ast.FuncType{
+					Results: &ast.FieldList{},
+					Params:  &ast.FieldList{},
+				},
+				Body: &ast.BlockStmt{},
+			},
+		},
+	}, "")
+	if err != nil {
+		panic(err)
+	}
+
 	return &debugConfig{
-		graph: graphviz.NewGraph(),
+		graph:            graphviz.NewGraph(),
+		funcGen:          fileGen.PatchFuncDecl("Build"),
+		codegenErrReturn: &ast.ReturnStmt{},
+		fset:             token.NewFileSet(),
 	}, nil
 }
 

@@ -27,7 +27,7 @@ func VerifySignature(pubKey cryptotypes.PubKey, signerData SignerData, sigData s
 
 			secp256k1PubKey, ok := pubKey.(*secp256k1.PubKey)
 			if !ok {
-				return fmt.Errorf("eip191 sign mode requires pubkey to be of type secp256k1")
+				return fmt.Errorf("eip191 sign mode requires pubkey to be of type cosmos.crypto.secp256k1.PubKey")
 			}
 
 			if !secp256k1PubKey.VerifySignatureEip191(signBytes, data.Signature) {
@@ -35,7 +35,7 @@ func VerifySignature(pubKey cryptotypes.PubKey, signerData SignerData, sigData s
 			}
 		} else {
 			if !pubKey.VerifySignature(signBytes, data.Signature) {
-				return fmt.Errorf("unable to verify single signer signature")
+				return fmt.Errorf("unable to verify single signer eip191 signature %s for signBytes %s", hex.EncodeToString(data.Signature), hex.EncodeToString(signBytes))
 			}
 		}
 		return nil

@@ -5,10 +5,15 @@ import (
 	"go/ast"
 	"go/token"
 	"reflect"
+	"regexp"
+	"strings"
 )
 
+// TypeExpr generates an ast.Expr to be used in the context of the file for the
+// provided reflect.Type, adding any needed imports.
 func (g *FileGen) TypeExpr(typ reflect.Type) (ast.Expr, error) {
 	if name := typ.Name(); name != "" {
+		name = g.importGenericTypeParams(name, typ.PkgPath())
 		importPrefix := g.AddOrGetImport(typ.PkgPath())
 		if importPrefix == "" {
 			return ast.NewIdent(name), nil
@@ -110,4 +115,40 @@ func (g *FileGen) TypeExpr(typ reflect.Type) (ast.Expr, error) {
 	default:
 		return nil, fmt.Errorf("unexpected type %v", typ)
 	}
+}
+
+var genericTypeNameRegex = regexp.MustCompile(`(\w+)\[(.*)]`)
+
+func (g *FileGen) importGenericTypeParams(typeName string, pkgPath string) (newTypeName string) {
+	// a generic type parameter from the same package the generic type is defined won't have the
+	// full package name so we need to compare it with the final package part (the default import prefix)
+	// ex: for a/b.C in package a/b, we'll just see the type param b.C.
+	pkgParts := strings.Split(pkgPath, "/")
+	pkgDefaultPrefix := pkgParts[len(pkgParts)-1]
+
+	matches := genericTypeNameRegex.FindStringSubmatch(typeName)
+	if len(matches) == 3 {
+		typeParamExpr := matches[2]
+		typeParams := strings.Split(typeParamExpr, ",")
+		var importedTypeParams []string
+		for _, param := range typeParams {
+			param = strings.TrimSpace(param)
+			i := strings.LastIndex(param, ".")
+			if i > 0 {
+				pkg := param[:i]
+				name := param[i+1:]
+				var prefix string
+				if pkg == pkgDefaultPrefix {
+					prefix = pkg
+				} else {
+					prefix = g.AddOrGetImport(pkg)
+				}
+				param = fmt.Sprintf("%s.%s", prefix, name)
+			}
+			importedTypeParams = append(importedTypeParams, param)
+		}
+		return fmt.Sprintf("%s[%s]", matches[1], strings.Join(importedTypeParams, ", "))
+	}
+
+	return typeName
 }

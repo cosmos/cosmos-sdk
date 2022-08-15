@@ -10,7 +10,7 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 type MyInt int
@@ -19,7 +19,14 @@ type AStruct struct {
 	Foo int
 }
 
+type AGenericStruct[A, B any] struct {
+	A A
+	B B
+}
+
 type AStructWrapper AStruct
+
+type AnInterface interface{}
 
 func TestTypeExpr(t *testing.T) {
 	expectTypeExpr(t, false, "bool")
@@ -52,11 +59,11 @@ func TestTypeExpr(t *testing.T) {
 	expectTypeExpr(t, AStruct{}, "codegen.AStruct")
 	expectTypeExpr(t, map[string]graphviz.Attributes{}, "map[string]graphviz.Attributes")
 	expectTypeExpr(t, &AStruct{}, "*codegen.AStruct")
+	expectTypeExpr(t, AGenericStruct[graphviz.Node, FileGen]{}, "codegen.AGenericStruct[graphviz.Node, codegen.FileGen]")
 	expectTypeExpr(t, AStructWrapper{}, "codegen.AStructWrapper")
 	expectTypeExpr(t, "abc", "string")
 	expectTypeExpr(t, uintptr(0), "uintptr")
-	// TODO: interface
-	// TODO: UnsafePointer
+	expectTypeExpr(t, (*AnInterface)(nil), "*codegen.AnInterface")
 }
 
 func expectTypeExpr(t *testing.T, value interface{}, expected string) {

@@ -8,6 +8,10 @@ import (
 	"strconv"
 )
 
+// ValueExpr generates an ast.Expr to be used in the context of the file for the
+// provided reflect.Value, adding any needed imports. Values with kind Chan,
+// Func, Interface, Uintptr, and UnsafePointer cannot be generated and only
+// pointers to structs can be generated.
 func (g *FileGen) ValueExpr(value reflect.Value) (ast.Expr, error) {
 	typ := value.Type()
 	switch typ.Kind() {

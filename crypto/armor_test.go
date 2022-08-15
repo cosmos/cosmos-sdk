@@ -14,7 +14,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
 	"cosmossdk.io/depinject"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"

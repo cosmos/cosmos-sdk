@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	dbm "github.com/tendermint/tm-db"
-
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	dbm "github.com/tendermint/tm-db"
 )
 
 // This is set at compile time. Could be cleveldb, defaults is goleveldb.

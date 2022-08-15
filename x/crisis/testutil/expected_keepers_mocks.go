@@ -7,9 +7,8 @@ package testutil
 import (
 	reflect "reflect"
 
-	gomock "github.com/golang/mock/gomock"
-
 	types "github.com/cosmos/cosmos-sdk/types"
+	gomock "github.com/golang/mock/gomock"
 )
 
 // MockSupplyKeeper is a mock of SupplyKeeper interface.

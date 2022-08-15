@@ -6,11 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -71,11 +72,12 @@ func (suite *SimTestSuite) SetupTest() {
 		return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
 	}
 
+	startupCfg := simtestutil.DefaultStartUpConfig()
+	startupCfg.ValidatorSet = createValidator
+
 	app, err := simtestutil.SetupWithConfiguration(
 		testutil.AppConfig,
-		createValidator,
-		nil,
-		false,
+		startupCfg,
 		&suite.legacyAmino,
 		&suite.codec,
 		&suite.interfaceRegistry,

@@ -129,11 +129,11 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
+		gasInfo, _, err := app.Deliver(txCfg.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, nil), nil, err
 	}
 }
 
@@ -196,12 +196,12 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, err.Error()), nil, err
 		}
 
-		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
+		gasInfo, _, err := app.Deliver(txCfg.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(&msg, true, "", nil), nil, nil
+		return simtypes.NewOperationMsg(&msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, nil), nil, nil
 	}
 }
 
@@ -286,7 +286,7 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}
 
-		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
+		gasInfo, _, err := app.Deliver(txCfg.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}
@@ -295,6 +295,6 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "unmarshal error"), nil, err
 		}
-		return simtypes.NewOperationMsg(&msgExec, true, "success", nil), nil, nil
+		return simtypes.NewOperationMsg(&msgExec, true, "success", gasInfo.GasWanted, gasInfo.GasUsed, nil), nil, nil
 	}
 }

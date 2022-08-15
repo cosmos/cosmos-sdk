@@ -116,11 +116,11 @@ func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMs
 		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate mock tx"), nil, err
 	}
 
-	_, _, err = txCtx.App.Deliver(txCtx.TxGen.TxEncoder(), tx)
+	gasInfo, _, err := txCtx.App.Deliver(txCtx.TxGen.TxEncoder(), tx)
 	if err != nil {
 		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to deliver tx"), nil, err
 	}
 
-	return simtypes.NewOperationMsg(txCtx.Msg, true, "", txCtx.Cdc), nil, nil
+	return simtypes.NewOperationMsg(txCtx.Msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, txCtx.Cdc), nil, nil
 
 }

@@ -172,12 +172,12 @@ func SimulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
+		gasInfo, _, err := app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		opMsg := simtypes.NewOperationMsg(msg, true, "", nil)
+		opMsg := simtypes.NewOperationMsg(msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, nil)
 
 		// get the submitted proposal ID
 		proposalID, err := k.GetProposalID(ctx)

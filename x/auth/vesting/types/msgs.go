@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -22,6 +23,7 @@ var _ sdk.Msg = &MsgCreatePermanentLockedAccount{}
 var _ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
+//
 //nolint:interfacer
 func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins, endTime int64, delayed bool) *MsgCreateVestingAccount {
 	return &MsgCreateVestingAccount{
@@ -76,6 +78,7 @@ func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCreatePermanentLockedAccount returns a reference to a new MsgCreatePermanentLockedAccount.
+//
 //nolint:interfacer
 func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgCreatePermanentLockedAccount {
 	return &MsgCreatePermanentLockedAccount{
@@ -124,6 +127,7 @@ func (msg MsgCreatePermanentLockedAccount) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCreatePeriodicVestingAccount returns a reference to a new MsgCreatePeriodicVestingAccount.
+//
 //nolint:interfacer
 func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime int64, periods []Period) *MsgCreatePeriodicVestingAccount {
 	return &MsgCreatePeriodicVestingAccount{

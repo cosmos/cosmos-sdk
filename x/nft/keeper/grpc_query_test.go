@@ -16,9 +16,7 @@ func TestGRPCQuery(t *testing.T) {
 }
 
 func (s *TestSuite) TestBalance() {
-	var (
-		req *nft.QueryBalanceRequest
-	)
+	var req *nft.QueryBalanceRequest
 	testCases := []struct {
 		msg      string
 		malleate func(index int, require *require.Assertions)
@@ -169,9 +167,7 @@ func (s *TestSuite) TestOwner() {
 }
 
 func (s *TestSuite) TestSupply() {
-	var (
-		req *nft.QuerySupplyRequest
-	)
+	var req *nft.QuerySupplyRequest
 	testCases := []struct {
 		msg      string
 		malleate func(index int, require *require.Assertions)
@@ -223,7 +219,7 @@ func (s *TestSuite) TestSupply() {
 					Id:      testID,
 					Uri:     testURI,
 				}
-				err := s.app.NFTKeeper.Mint(s.ctx, n, s.addrs[0])
+				err := s.nftKeeper.Mint(s.ctx, n, s.addrs[0])
 				require.NoError(err, "the error occurred on:%d", index)
 
 				req = &nft.QuerySupplyRequest{
@@ -252,6 +248,7 @@ func (s *TestSuite) TestSupply() {
 		})
 	}
 }
+
 func (s *TestSuite) TestNFTs() {
 	var (
 		req  *nft.QueryNFTsRequest
@@ -295,7 +292,7 @@ func (s *TestSuite) TestNFTs() {
 					Id:      testID,
 					Uri:     testURI,
 				}
-				err := s.app.NFTKeeper.Mint(s.ctx, n, s.addrs[0])
+				err := s.nftKeeper.Mint(s.ctx, n, s.addrs[0])
 				require.NoError(err, "the error occurred on:%d", index)
 			},
 			"",
@@ -306,7 +303,7 @@ func (s *TestSuite) TestNFTs() {
 		{
 			"Success,query by owner",
 			func(index int, require *require.Assertions) {
-				err := s.app.NFTKeeper.SaveClass(s.ctx, nft.Class{
+				err := s.nftKeeper.SaveClass(s.ctx, nft.Class{
 					Id: "MyKitty",
 				})
 				require.NoError(err)
@@ -317,7 +314,7 @@ func (s *TestSuite) TestNFTs() {
 						ClassId: "MyKitty",
 						Id:      fmt.Sprintf("MyCat%d", i),
 					}
-					err := s.app.NFTKeeper.Mint(s.ctx, n, s.addrs[2])
+					err := s.nftKeeper.Mint(s.ctx, n, s.addrs[2])
 					require.NoError(err)
 					nfts = append(nfts, &n)
 				}

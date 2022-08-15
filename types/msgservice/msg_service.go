@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"reflect"
 
 	"github.com/gogo/protobuf/proto"
@@ -64,7 +64,7 @@ func unzip(b []byte) []byte {
 		panic(err)
 	}
 
-	unzipped, err := ioutil.ReadAll(r)
+	unzipped, err := io.ReadAll(r)
 	if err != nil {
 		panic(err)
 	}

@@ -211,12 +211,13 @@ func (e Events) ToABCIEvents() []abci.Event {
 }
 
 // Common event types and attribute keys
-var (
+const (
 	EventTypeTx = "tx"
 
 	AttributeKeyAccountSequence = "acc_seq"
 	AttributeKeySignature       = "signature"
 	AttributeKeyFee             = "fee"
+	AttributeKeyFeePayer        = "fee_payer"
 
 	EventTypeMessage = "message"
 

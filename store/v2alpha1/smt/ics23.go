@@ -31,7 +31,7 @@ func createIcs23Proof(store *Store, key []byte) (*ics23.CommitmentProof, error) 
 		if err != nil {
 			return nil, err
 		}
-		ret.Proof = &ics23.CommitmentProof_Exist{&ics23.ExistenceProof{
+		ret.Proof = &ics23.CommitmentProof_Exist{Exist: &ics23.ExistenceProof{
 			Key:   path[:],
 			Value: value,
 			Leaf:  ics23.SmtSpec.LeafSpec,
@@ -42,7 +42,7 @@ func createIcs23Proof(store *Store, key []byte) (*ics23.CommitmentProof, error) 
 		if err != nil {
 			return nil, err
 		}
-		ret.Proof = &ics23.CommitmentProof_Nonexist{nonexist}
+		ret.Proof = &ics23.CommitmentProof_Nonexist{Nonexist: nonexist}
 	}
 	return ret, nil
 }
@@ -104,7 +104,7 @@ func convertInnerOps(path []byte, sideNodes [][]byte) []*ics23.InnerOp {
 			Hash:   ics23.HashOp_SHA256,
 			Prefix: []byte{1},
 		}
-		if getBitAtFromMSB(path[:], depth-1-i) == 1 {
+		if getBitAtFromMSB(path, depth-1-i) == 1 {
 			// right child is on path
 			op.Prefix = append(op.Prefix, sideNodes[i]...)
 		} else {

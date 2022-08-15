@@ -149,6 +149,8 @@ var xxx_messageInfo_MsgCreateVestingAccountResponse proto.InternalMessageInfo
 
 // MsgCreatePermanentLockedAccount defines a message that enables creating a permanent
 // locked account.
+//
+// Since: cosmos-sdk 0.46
 type MsgCreatePermanentLockedAccount struct {
 	FromAddress string                                   `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
 	ToAddress   string                                   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
@@ -210,6 +212,8 @@ func (m *MsgCreatePermanentLockedAccount) GetAmount() github_com_cosmos_cosmos_s
 }
 
 // MsgCreatePermanentLockedAccountResponse defines the Msg/CreatePermanentLockedAccount response type.
+//
+// Since: cosmos-sdk 0.46
 type MsgCreatePermanentLockedAccountResponse struct {
 }
 
@@ -250,6 +254,8 @@ var xxx_messageInfo_MsgCreatePermanentLockedAccountResponse proto.InternalMessag
 
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
+//
+// Since: cosmos-sdk 0.46
 type MsgCreatePeriodicVestingAccount struct {
 	FromAddress    string   `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
 	ToAddress      string   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
@@ -320,6 +326,8 @@ func (m *MsgCreatePeriodicVestingAccount) GetVestingPeriods() []Period {
 
 // MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
 // response type.
+//
+// Since: cosmos-sdk 0.46
 type MsgCreatePeriodicVestingAccountResponse struct {
 }
 
@@ -506,9 +514,13 @@ type MsgClient interface {
 	CreateVestingAccount(ctx context.Context, in *MsgCreateVestingAccount, opts ...grpc.CallOption) (*MsgCreateVestingAccountResponse, error)
 	// CreatePermanentLockedAccount defines a method that enables creating a permanent
 	// locked account.
+	//
+	// Since: cosmos-sdk 0.46
 	CreatePermanentLockedAccount(ctx context.Context, in *MsgCreatePermanentLockedAccount, opts ...grpc.CallOption) (*MsgCreatePermanentLockedAccountResponse, error)
 	// CreatePeriodicVestingAccount defines a method that enables creating a
 	// periodic vesting account.
+	//
+	// Since: cosmos-sdk 0.46
 	CreatePeriodicVestingAccount(ctx context.Context, in *MsgCreatePeriodicVestingAccount, opts ...grpc.CallOption) (*MsgCreatePeriodicVestingAccountResponse, error)
 }
 
@@ -554,9 +566,13 @@ type MsgServer interface {
 	CreateVestingAccount(context.Context, *MsgCreateVestingAccount) (*MsgCreateVestingAccountResponse, error)
 	// CreatePermanentLockedAccount defines a method that enables creating a permanent
 	// locked account.
+	//
+	// Since: cosmos-sdk 0.46
 	CreatePermanentLockedAccount(context.Context, *MsgCreatePermanentLockedAccount) (*MsgCreatePermanentLockedAccountResponse, error)
 	// CreatePeriodicVestingAccount defines a method that enables creating a
 	// periodic vesting account.
+	//
+	// Since: cosmos-sdk 0.46
 	CreatePeriodicVestingAccount(context.Context, *MsgCreatePeriodicVestingAccount) (*MsgCreatePeriodicVestingAccountResponse, error)
 }
 

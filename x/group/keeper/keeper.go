@@ -6,11 +6,11 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
@@ -75,13 +75,13 @@ type Keeper struct {
 	voteByProposalIndex orm.Index
 	voteByVoterIndex    orm.Index
 
-	router *authmiddleware.MsgServiceRouter
+	router *baseapp.MsgServiceRouter
 
 	config group.Config
 }
 
 // NewKeeper creates a new group keeper.
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddleware.MsgServiceRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *baseapp.MsgServiceRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
 		router:    router,
@@ -211,7 +211,6 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *authmiddle
 	k.config = config
 
 	return k
-
 }
 
 // Logger returns a module-specific logger.
@@ -224,13 +223,12 @@ func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
 }
 
-// iterateProposalsByVPEnd iterates over all proposals whose voting_period_end is after the `endTime` time argument.
-func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, endTime time.Time, cb func(proposal group.Proposal) (bool, error)) error {
+// proposalsByVPEnd returns all proposals whose voting_period_end is after the `endTime` time argument.
+func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals []group.Proposal, err error) {
 	timeBytes := sdk.FormatTimeBytes(endTime)
 	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)
-
 	if err != nil {
-		return err
+		return proposals, err
 	}
 	defer it.Close()
 
@@ -250,19 +248,12 @@ func (k Keeper) iterateProposalsByVPEnd(ctx sdk.Context, endTime time.Time, cb f
 			break
 		}
 		if err != nil {
-			return err
+			return proposals, err
 		}
-
-		stop, err := cb(proposal)
-		if err != nil {
-			return err
-		}
-		if stop {
-			break
-		}
+		proposals = append(proposals, proposal)
 	}
 
-	return nil
+	return proposals, nil
 }
 
 // pruneProposal deletes a proposal from state.
@@ -281,22 +272,13 @@ func (k Keeper) pruneProposal(ctx sdk.Context, proposalID uint64) error {
 // abortProposals iterates through all proposals by group policy index
 // and marks submitted proposals as aborted.
 func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) error {
-	proposalIt, err := k.proposalByGroupPolicyIndex.Get(ctx.KVStore(k.key), groupPolicyAddr.Bytes())
+	proposals, err := k.proposalsByGroupPolicy(ctx, groupPolicyAddr)
 	if err != nil {
 		return err
 	}
-	defer proposalIt.Close()
 
-	for {
-		var proposalInfo group.Proposal
-		_, err = proposalIt.LoadNext(&proposalInfo)
-		if errors.ErrORMIteratorDone.Is(err) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &proposalInfo)"
+	for _, proposalInfo := range proposals {
 		// Mark all proposals still in the voting phase as aborted.
 		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
 			proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
@@ -309,26 +291,40 @@ func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) 
 	return nil
 }
 
-// pruneVotes prunes all votes for a proposal from state.
-func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
-	store := ctx.KVStore(k.key)
-	it, err := k.voteByProposalIndex.Get(store, proposalID)
+// proposalsByGroupPolicy returns all proposals for a given group policy.
+func (k Keeper) proposalsByGroupPolicy(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) ([]group.Proposal, error) {
+	proposalIt, err := k.proposalByGroupPolicyIndex.Get(ctx.KVStore(k.key), groupPolicyAddr.Bytes())
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer it.Close()
+	defer proposalIt.Close()
 
+	var proposals []group.Proposal
 	for {
-		var vote group.Vote
-		_, err = it.LoadNext(&vote)
+		var proposalInfo group.Proposal
+		_, err = proposalIt.LoadNext(&proposalInfo)
 		if errors.ErrORMIteratorDone.Is(err) {
 			break
 		}
 		if err != nil {
-			return err
+			return proposals, err
 		}
 
-		err = k.voteTable.Delete(store, &vote)
+		proposals = append(proposals, proposalInfo)
+	}
+	return proposals, nil
+}
+
+// pruneVotes prunes all votes for a proposal from state.
+func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
+	votes, err := k.votesByProposal(ctx, proposalID)
+	if err != nil {
+		return err
+	}
+
+	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &v)"
+	for _, v := range votes {
+		err = k.voteTable.Delete(ctx.KVStore(k.key), &v)
 		if err != nil {
 			return err
 		}
@@ -337,20 +333,42 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 	return nil
 }
 
+// votesByProposal returns all votes for a given proposal.
+func (k Keeper) votesByProposal(ctx sdk.Context, proposalID uint64) ([]group.Vote, error) {
+	it, err := k.voteByProposalIndex.Get(ctx.KVStore(k.key), proposalID)
+	if err != nil {
+		return nil, err
+	}
+	defer it.Close()
+
+	var votes []group.Vote
+	for {
+		var vote group.Vote
+		_, err = it.LoadNext(&vote)
+		if errors.ErrORMIteratorDone.Is(err) {
+			break
+		}
+		if err != nil {
+			return votes, err
+		}
+		votes = append(votes, vote)
+	}
+	return votes, nil
+}
+
 // PruneProposals prunes all proposals that are expired, i.e. whose
 // `voting_period + max_execution_period` is greater than the current block
 // time.
 func (k Keeper) PruneProposals(ctx sdk.Context) error {
-	err := k.iterateProposalsByVPEnd(ctx, ctx.BlockTime().Add(-k.config.MaxExecutionPeriod), func(proposal group.Proposal) (bool, error) {
+	proposals, err := k.proposalsByVPEnd(ctx, ctx.BlockTime().Add(-k.config.MaxExecutionPeriod))
+	if err != nil {
+		return nil
+	}
+	for _, proposal := range proposals {
 		err := k.pruneProposal(ctx, proposal.Id)
 		if err != nil {
-			return true, err
+			return err
 		}
-
-		return false, nil
-	})
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -359,37 +377,42 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 // TallyProposalsAtVPEnd iterates over all proposals whose voting period
 // has ended, tallies their votes, prunes them, and updates the proposal's
 // `FinalTallyResult` field.
+
 func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
-	return k.iterateProposalsByVPEnd(ctx, ctx.BlockTime(), func(proposal group.Proposal) (bool, error) {
+	proposals, err := k.proposalsByVPEnd(ctx, ctx.BlockTime())
+	if err != nil {
+		return nil
+	}
+	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointers in the loop)"
+	for _, proposal := range proposals {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
 		if err != nil {
-			return true, sdkerrors.Wrap(err, "group policy")
+			return sdkerrors.Wrap(err, "group policy")
 		}
 
 		electorate, err := k.getGroupInfo(ctx, policyInfo.GroupId)
 		if err != nil {
-			return true, sdkerrors.Wrap(err, "group")
+			return sdkerrors.Wrap(err, "group")
 		}
 
-		proposalId := proposal.Id
+		proposalID := proposal.Id
 		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
-			if err := k.pruneProposal(ctx, proposalId); err != nil {
-				return true, err
+			if err := k.pruneProposal(ctx, proposalID); err != nil {
+				return err
 			}
-			if err := k.pruneVotes(ctx, proposalId); err != nil {
-				return true, err
+			if err := k.pruneVotes(ctx, proposalID); err != nil {
+				return err
 			}
 		} else {
 			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
 			if err != nil {
-				return true, sdkerrors.Wrap(err, "doTallyAndUpdate")
+				return sdkerrors.Wrap(err, "doTallyAndUpdate")
 			}
 
 			if err := k.proposalTable.Update(ctx.KVStore(k.key), proposal.Id, &proposal); err != nil {
-				return true, sdkerrors.Wrap(err, "proposal update")
+				return sdkerrors.Wrap(err, "proposal update")
 			}
 		}
-
-		return false, nil
-	})
+	}
+	return nil
 }

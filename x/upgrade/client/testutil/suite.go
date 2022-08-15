@@ -4,42 +4,37 @@ import (
 	"fmt"
 
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewIntegrationTestSuite(cfg network.Config, keeper keeper.Keeper, ctx sdk.Context) *IntegrationTestSuite {
+	return &IntegrationTestSuite{
+		cfg:           cfg,
+		upgradeKeeper: keeper,
+		ctx:           ctx,
+	}
 }
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app     *simapp.SimApp
-	cfg     network.Config
-	network *network.Network
-	ctx     sdk.Context
+	upgradeKeeper keeper.Keeper
+	cfg           network.Config
+	network       *network.Network
+	ctx           sdk.Context
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	app := simapp.Setup(s.T(), false)
-	s.app = app
-	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
-
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
-
-	s.cfg = cfg
 
 	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 }
 
@@ -80,13 +75,12 @@ func (s *IntegrationTestSuite) TestModuleVersionsCLI() {
 	// avoid printing as yaml from CLI command
 	clientCtx.OutputFormat = "JSON"
 
-	vm := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
-	mv := s.app.UpgradeKeeper.GetModuleVersions(s.ctx)
+	vm := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
+	mv := s.upgradeKeeper.GetModuleVersions(s.ctx)
 	s.Require().NotEmpty(vm)
 
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-
 			expect := mv
 			if tc.expPass {
 				if tc.single {

@@ -7,9 +7,14 @@ on:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+" # Push events to matching v*, i.e. v1.0, v20.15.10
 
+permissions:
+  contents: read
+
 jobs:
   release:
-    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # for goreleaser/goreleaser-action to create a GitHub release
+    runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: actions/checkout@v3
       - name: Install Go
@@ -19,7 +24,7 @@ jobs:
       - name: Unshallow
         run: git fetch --prune --unshallow
       - name: Create release
-        uses: goreleaser/goreleaser-action@v2.7.0
+        uses: goreleaser/goreleaser-action@v3
         with:
           args: release --rm-dist --release-notes ./RELEASE_NOTES.md
         env:

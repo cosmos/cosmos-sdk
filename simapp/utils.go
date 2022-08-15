@@ -9,7 +9,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -25,7 +25,7 @@ func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string,
 	}
 
 	config := NewConfigFromFlags()
-	config.ChainID = helpers.SimAppChainID
+	config.ChainID = simtestutil.SimAppChainID
 
 	var logger log.Logger
 	if FlagVerboseValue {
@@ -67,7 +67,6 @@ func SimulationOperations(app App, cdc codec.JSONCodec, config simtypes.Config) 
 		}
 	}
 
-	simState.ParamChanges = app.SimulationManager().GenerateParamChanges(config.Seed)
 	simState.Contents = app.SimulationManager().GetProposalContents(simState)
 	return app.SimulationManager().WeightedOperations(simState)
 }
@@ -84,7 +83,7 @@ func CheckExportSimulation(
 			return err
 		}
 
-		if err := os.WriteFile(config.ExportStatePath, []byte(exported.AppState), 0600); err != nil {
+		if err := os.WriteFile(config.ExportStatePath, []byte(exported.AppState), 0o600); err != nil {
 			return err
 		}
 	}
@@ -96,7 +95,7 @@ func CheckExportSimulation(
 			return err
 		}
 
-		if err := os.WriteFile(config.ExportParamsPath, paramsBz, 0600); err != nil {
+		if err := os.WriteFile(config.ExportParamsPath, paramsBz, 0o600); err != nil {
 			return err
 		}
 	}

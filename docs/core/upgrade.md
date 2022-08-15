@@ -5,16 +5,16 @@ order: 15
 # In-Place Store Migrations
 
 ::: warning
-Read and understand all of the in-place store migration documentation before you run a migration on a live chain.
+Read and understand all the in-place store migration documentation before you run a migration on a live chain.
 :::
 
 Upgrade your app modules smoothly with custom in-place store migration logic. {synopsis}
 
-The Cosmos SDK uses two methods to perform upgrades.
+The Cosmos SDK uses two methods to perform upgrades:
 
-* Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. See [Chain Upgrade Guide to v0.42](https://docs.cosmos.network/v0.42/migrations/chain-upgrade-guide-040.html).
+* Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file.
 
-* Version v0.44 and later can perform upgrades in place to significantly decrease the upgrade time for chains with a larger state. Use the [Module Upgrade Guide](../building-modules/upgrade.md) to set up your application modules to take advantage of in-place upgrades.
+* Perform upgrades in place, which significantly decrease the upgrade time for chains with a larger state. Use the [Module Upgrade Guide](../building-modules/upgrade.md) to set up your application modules to take advantage of in-place upgrades.
 
 This document provides steps to use the In-Place Store Migrations upgrade method.
 
@@ -67,7 +67,7 @@ To learn more about configuring migration scripts for your modules, see the [Mod
 
 By default, all migrations are run in module name alphabetical ascending order, except `x/auth` which is run last. The reason is state dependencies between x/auth and other modules (you can read more in [issue #10606](https://github.com/cosmos/cosmos-sdk/issues/10606)).
 
-If you want to change the order of migration then you should call `app.mm.SetOrderMigrations(module1, module2, ...)` in your app.go file. The function will panic if you forget to include a module in the argument list.
+If you want to change the order of migration, then you should call `app.mm.SetOrderMigrations(module1, module2, ...)` in your app.go file. The function will panic if you forget to include a module in the argument list.
 
 ## Adding New Modules During Upgrades
 
@@ -155,6 +155,6 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 
 You can sync a full node to an existing blockchain which has been upgraded using Cosmovisor
 
-In order to successfully sync, you must start with the initial binary that the blockchain started with at genesis. If all Software Upgrade Plans contain binary instruction then you can run Cosmovisor with auto download option to automatically handle downloading and switching to the binaries associated with each sequential upgrade. Otherwise you need to manually provide all binaries to Cosmovisor.
+To successfully sync, you must start with the initial binary that the blockchain started with at genesis. If all Software Upgrade Plans contain binary instruction, then you can run Cosmovisor with auto-download option to automatically handle downloading and switching to the binaries associated with each sequential upgrade. Otherwise, you need to manually provide all binaries to Cosmovisor.
 
 To learn more about Cosmovisor, see the [Cosmovisor Quick Start](../run-node/cosmovisor.md).

@@ -1,9 +1,10 @@
 package authz_test
 
 import (
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"testing"
 	"time"
+
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -29,6 +30,13 @@ func TestMsgExecAuthorized(t *testing.T) {
 	}{
 		{"nil grantee address", nil, []sdk.Msg{}, false},
 		{"zero-messages test: should fail", grantee, []sdk.Msg{}, false},
+		{"invalid nested msg", grantee, []sdk.Msg{
+			&banktypes.MsgSend{
+				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+				FromAddress: "invalid_from_address",
+				ToAddress:   grantee.String(),
+			},
+		}, false},
 		{"valid test: msg type", grantee, []sdk.Msg{
 			&banktypes.MsgSend{
 				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
@@ -46,6 +54,7 @@ func TestMsgExecAuthorized(t *testing.T) {
 		}
 	}
 }
+
 func TestMsgRevokeAuthorization(t *testing.T) {
 	tests := []struct {
 		title            string
@@ -84,21 +93,35 @@ func TestMsgGrantAuthorization(t *testing.T) {
 		expectErr        bool
 		valBasic         bool
 	}{
-		{"nil granter address",
-			nil, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false},
-		{"nil grantee address",
-			granter, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false},
-		{"nil granter and grantee address",
-			nil, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false},
-		{"nil authorization should fail",
-			granter, grantee, nil, &now, true, false},
-		{"valid test case",
-			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 1, 0), false, true},
-		{"valid test case with nil expire time",
-			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, nil, false, true},
+		{
+			"nil granter address",
+			nil, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false,
+		},
+		{
+			"nil grantee address",
+			granter, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false,
+		},
+		{
+			"nil granter and grantee address",
+			nil, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, &now, false, false,
+		},
+		{
+			"nil authorization should fail",
+			granter, grantee, nil, &now, true, false,
+		},
+		{
+			"valid test case",
+			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 1, 0), false, true,
+		},
+		{
+			"valid test case with nil expire time",
+			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, nil, false, true,
+		},
 		// we don't access the block time / nor time.Now, so we don't know if it's in the past at this level.
-		{"past expire time should not fail",
-			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 0, -1), false, true},
+		{
+			"past expire time should not fail",
+			granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, addDatePtr(&now, 0, -1), false, true,
+		},
 	}
 	for _, tc := range tests {
 		msg, err := authz.NewMsgGrant(
@@ -151,7 +174,8 @@ func TestAminoJSON(t *testing.T) {
 	require.NoError(t, err)
 	grant, err := authz.NewGrant(blockTime, authz.NewGenericAuthorization(typeURL), &expiresAt)
 	require.NoError(t, err)
-	sendGrant, err := authz.NewGrant(blockTime, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))), &expiresAt)
+	sendAuthz := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000))), nil)
+	sendGrant, err := authz.NewGrant(blockTime, sendAuthz, &expiresAt)
 	require.NoError(t, err)
 	valAddr, err := sdk.ValAddressFromBech32("cosmosvaloper1xcy3els9ua75kdm783c3qu0rfa2eples6eavqq")
 	require.NoError(t, err)

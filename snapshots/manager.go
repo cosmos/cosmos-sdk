@@ -23,12 +23,12 @@ import (
 // Although the ABCI interface (and this manager) passes chunks as byte slices, the internal
 // snapshot/restore APIs use IO streams (i.e. chan io.ReadCloser), for two reasons:
 //
-// 1) In the future, ABCI should support streaming. Consider e.g. InitChain during chain
-//    upgrades, which currently passes the entire chain state as an in-memory byte slice.
-//    https://github.com/tendermint/tendermint/issues/5184
+//  1. In the future, ABCI should support streaming. Consider e.g. InitChain during chain
+//     upgrades, which currently passes the entire chain state as an in-memory byte slice.
+//     https://github.com/tendermint/tendermint/issues/5184
 //
-// 2) io.ReadCloser streams automatically propagate IO errors, and can pass arbitrary
-//    errors via io.Pipe.CloseWithError().
+//  2. io.ReadCloser streams automatically propagate IO errors, and can pass arbitrary
+//     errors via io.Pipe.CloseWithError().
 type Manager struct {
 	extensions map[string]types.ExtensionSnapshotter
 	// store is the snapshot store where all completed snapshots are persisted.
@@ -66,12 +66,13 @@ const (
 	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
 )
 
-var (
-	ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
-)
+var ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
 
 // NewManager creates a new manager.
 func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter, logger log.Logger) *Manager {
+	if extensions == nil {
+		extensions = map[string]types.ExtensionSnapshotter{}
+	}
 	return &Manager{
 		store:      store,
 		opts:       opts,

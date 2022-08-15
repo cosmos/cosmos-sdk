@@ -18,7 +18,6 @@ var (
 )
 
 func TestGenesisStateValidate(t *testing.T) {
-
 	submittedAt := time.Now().UTC()
 	timeout := submittedAt.Add(time.Second * 1).UTC()
 
@@ -737,7 +736,6 @@ func TestGenesisStateValidate(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-
 			err := tc.genesisState.Validate()
 			if tc.expErr {
 				require.Error(t, err)

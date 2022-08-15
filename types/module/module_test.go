@@ -73,14 +73,8 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 	mockInvariantRegistry := mocks.NewMockInvariantRegistry(mockCtrl)
 	goam := module.NewGenesisOnlyAppModule(mockModule)
 
-	require.True(t, goam.Route().Empty())
-	require.Empty(t, goam.QuerierRoute())
-	require.Nil(t, goam.LegacyQuerierHandler(nil))
-
 	// no-op
 	goam.RegisterInvariants(mockInvariantRegistry)
-	goam.BeginBlock(sdk.Context{}, abci.RequestBeginBlock{})
-	require.Equal(t, []abci.ValidatorUpdate{}, goam.EndBlock(sdk.Context{}, abci.RequestEndBlock{}))
 }
 
 func TestManagerOrderSetters(t *testing.T) {
@@ -131,37 +125,6 @@ func TestManager_RegisterInvariants(t *testing.T) {
 	mm.RegisterInvariants(mockInvariantRegistry)
 }
 
-func TestManager_RegisterRoutes(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	t.Cleanup(mockCtrl.Finish)
-
-	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
-	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
-	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
-	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
-	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
-
-	router := mocks.NewMockRouter(mockCtrl)
-	noopHandler := sdk.Handler(func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) { return nil, nil })
-	route1 := sdk.NewRoute("route1", noopHandler)
-	route2 := sdk.NewRoute("", noopHandler)
-	mockAppModule1.EXPECT().Route().Times(1).Return(route1)
-	mockAppModule2.EXPECT().Route().Times(1).Return(route2)
-	router.EXPECT().AddRoute(gomock.Any()).Times(1) // Use of Any due to limitations to compare Functions as the sdk.Handler
-
-	queryRouter := mocks.NewMockQueryRouter(mockCtrl)
-	mockAppModule1.EXPECT().QuerierRoute().Times(1).Return("querierRoute1")
-	mockAppModule2.EXPECT().QuerierRoute().Times(1).Return("")
-	handler3 := sdk.Querier(nil)
-	amino := codec.NewLegacyAmino()
-	mockAppModule1.EXPECT().LegacyQuerierHandler(amino).Times(1).Return(handler3)
-	queryRouter.EXPECT().AddRoute(gomock.Eq("querierRoute1"), gomock.Eq(handler3)).Times(1)
-
-	mm.RegisterRoutes(router, queryRouter, amino)
-}
-
 func TestManager_RegisterQueryServices(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
@@ -209,7 +172,8 @@ func TestManager_InitGenesis(t *testing.T) {
 	// test panic
 	genesisData = map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key": "value"}`),
-		"module2": json.RawMessage(`{"key": "value"}`)}
+		"module2": json.RawMessage(`{"key": "value"}`),
+	}
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
@@ -235,7 +199,8 @@ func TestManager_ExportGenesis(t *testing.T) {
 
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key1": "value1"}`),
-		"module2": json.RawMessage(`{"key2": "value2"}`)}
+		"module2": json.RawMessage(`{"key2": "value2"}`),
+	}
 	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
 }
 

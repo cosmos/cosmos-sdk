@@ -333,6 +333,8 @@ type Validator struct {
 	// commission defines the commission parameters.
 	Commission Commission `protobuf:"bytes,10,opt,name=commission,proto3" json:"commission"`
 	// min_self_delegation is the validator's self declared minimum self delegation.
+	//
+	// Since: cosmos-sdk 0.46
 	MinSelfDelegation github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_self_delegation"`
 }
 
@@ -832,7 +834,7 @@ func (m *Redelegation) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Redelegation proto.InternalMessageInfo
 
-// Params defines the parameters for the staking module.
+// Params defines the parameters for the x/staking module.
 type Params struct {
 	// unbonding_time is the time duration of unbonding.
 	UnbondingTime time.Duration `protobuf:"bytes,1,opt,name=unbonding_time,json=unbondingTime,proto3,stdduration" json:"unbonding_time"`

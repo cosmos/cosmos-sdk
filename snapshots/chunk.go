@@ -1,10 +1,10 @@
 package snapshots
 
 import (
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"io"
 	"math"
 
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 

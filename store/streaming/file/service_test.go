@@ -3,7 +3,6 @@ package file
 import (
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
@@ -128,7 +127,7 @@ func TestFileStreamingService(t *testing.T) {
 	if os.Getenv("CI") != "" {
 		t.Skip("Skipping TestFileStreamingService in CI environment")
 	}
-	err := os.Mkdir(testDir, 0700)
+	err := os.Mkdir(testDir, 0o700)
 	require.Nil(t, err)
 	defer os.RemoveAll(testDir)
 
@@ -369,10 +368,10 @@ func testListenEndBlock(t *testing.T) {
 
 func readInFile(name string) ([]byte, error) {
 	path := filepath.Join(testDir, name)
-	return ioutil.ReadFile(path)
+	return os.ReadFile(path)
 }
 
-// Returns all of the protobuf messages contained in the byte array as an array of byte arrays
+// segmentBytes returns all of the protobuf messages contained in the byte array as an array of byte arrays
 // The messages have their length prefix removed
 func segmentBytes(bz []byte) ([][]byte, error) {
 	var err error
@@ -388,7 +387,7 @@ func segmentBytes(bz []byte) ([][]byte, error) {
 	return segments, nil
 }
 
-// Returns the bytes for the leading protobuf object in the byte array (removing the length prefix) and returns the remainder of the byte array
+// getHeadSegment returns the bytes for the leading protobuf object in the byte array (removing the length prefix) and returns the remainder of the byte array
 func getHeadSegment(bz []byte) ([]byte, []byte, error) {
 	size, prefixSize := binary.Uvarint(bz)
 	if prefixSize < 0 {

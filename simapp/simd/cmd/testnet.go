@@ -6,11 +6,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/math"
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -26,6 +26,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -100,7 +101,7 @@ func NewTestnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBala
 	return testnetCmd
 }
 
-// get cmd to initialize all files for tendermint testnet and application
+// testnetInitFilesCmd returns a cmd to initialize all files for tendermint testnet and application
 func testnetInitFilesCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init-files",
@@ -137,7 +138,6 @@ Example:
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 
 			return initTestnetFiles(clientCtx, cmd, config, mbm, genBalIterator, args)
-
 		},
 	}
 
@@ -150,7 +150,7 @@ Example:
 	return cmd
 }
 
-// get cmd to start multi validator in-process testnet
+// testnetStartCmd returns a cmd to start multi validator in-process testnet
 func testnetStartCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
@@ -163,7 +163,6 @@ Example:
 	simd testnet --v 4 --output-dir ./.testnets
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-
 			args := startArgs{}
 			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
 			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
@@ -177,7 +176,6 @@ Example:
 			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
 
 			return startTestnet(cmd, args)
-
 		},
 	}
 
@@ -190,7 +188,7 @@ Example:
 	return cmd
 }
 
-const nodeDirPerm = 0755
+const nodeDirPerm = 0o755
 
 // initTestnetFiles initializes testnet files for a testnet to be run in a separate process
 func initTestnetFiles(
@@ -298,8 +296,8 @@ func initTestnetFiles(
 			valPubKeys[i],
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-			sdk.OneInt(),
+			stakingtypes.NewCommissionRates(math.LegacyOneDec(), math.LegacyOneDec(), math.LegacyOneDec()),
+			math.OneInt(),
 		)
 		if err != nil {
 			return err
@@ -356,7 +354,6 @@ func initGenFiles(
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, numValidators int,
 ) error {
-
 	appGenState := mbm.DefaultGenesis(clientCtx.Codec)
 
 	// set the accounts in the genesis state
@@ -406,7 +403,6 @@ func collectGenFiles(
 	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
 	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
 ) error {
-
 	var appState json.RawMessage
 	genTime := tmtime.Now()
 
@@ -472,15 +468,14 @@ func calculateIP(ip string, i int) (string, error) {
 }
 
 func writeFile(name string, dir string, contents []byte) error {
-	writePath := filepath.Join(dir)
-	file := filepath.Join(writePath, name)
+	file := filepath.Join(dir, name)
 
-	err := tmos.EnsureDir(writePath, 0755)
+	err := tmos.EnsureDir(dir, 0o755)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(file, contents, 0644) // nolint: gosec
+	err = os.WriteFile(file, contents, 0o644) //nolint: gosec
 	if err != nil {
 		return err
 	}
@@ -490,7 +485,7 @@ func writeFile(name string, dir string, contents []byte) error {
 
 // startTestnet starts an in-process testnet
 func startTestnet(cmd *cobra.Command, args startArgs) error {
-	networkConfig := network.DefaultConfig()
+	networkConfig := network.DefaultConfig(simapp.NewTestNetworkFixture)
 
 	// Default networkConfig.ChainID is random, and we should only override it if chainID provided
 	// is non-empty

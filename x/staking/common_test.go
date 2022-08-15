@@ -4,12 +4,17 @@ import (
 	"math/big"
 	"testing"
 
+	"cosmossdk.io/math"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -29,9 +34,9 @@ var (
 	valKey  = ed25519.GenPrivKey()
 	valAddr = sdk.AccAddress(valKey.PubKey().Address())
 
-	commissionRates = types.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	commissionRates = types.NewCommissionRates(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
 
-	PKs = simapp.CreateTestPubKeys(500)
+	PKs = simtestutil.CreateTestPubKeys(500)
 )
 
 // getBaseSimappWithCustomKeeper Returns a simapp with custom StakingKeeper
@@ -47,7 +52,7 @@ func getBaseSimappWithCustomKeeper(t *testing.T) (*codec.LegacyAmino, *simapp.Si
 		app.GetKey(types.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.GetSubspace(types.ModuleName),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	app.StakingKeeper.SetParams(ctx, types.DefaultParams())
 
@@ -55,9 +60,9 @@ func getBaseSimappWithCustomKeeper(t *testing.T) (*codec.LegacyAmino, *simapp.Si
 }
 
 // generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
-func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int, accAmount sdk.Int) ([]sdk.AccAddress, []sdk.ValAddress) {
+func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int, accAmount math.Int) ([]sdk.AccAddress, []sdk.ValAddress) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, accAmount)
-	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+	addrVals := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
 	return addrDels, addrVals
 }

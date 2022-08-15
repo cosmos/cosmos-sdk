@@ -36,7 +36,7 @@ func NewStore(db db.DB, dir string) (*Store, error) {
 	if dir == "" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "snapshot directory not given")
 	}
-	err := os.MkdirAll(dir, 0755)
+	err := os.MkdirAll(dir, 0o755)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to create snapshot directory %q", dir)
 	}
@@ -259,9 +259,9 @@ func (s *Store) Save(
 	snapshotHasher := sha256.New()
 	chunkHasher := sha256.New()
 	for chunkBody := range chunks {
-		defer chunkBody.Close() // nolint: staticcheck
+		defer chunkBody.Close() //nolint: staticcheck
 		dir := s.pathSnapshot(height, format)
-		err = os.MkdirAll(dir, 0755)
+		err = os.MkdirAll(dir, 0o755)
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to create snapshot directory %q", dir)
 		}
@@ -270,7 +270,7 @@ func (s *Store) Save(
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to create snapshot chunk file %q", path)
 		}
-		defer file.Close() // nolint: staticcheck
+		defer file.Close() //nolint: staticcheck
 
 		chunkHasher.Reset()
 		_, err = io.Copy(io.MultiWriter(file, chunkHasher, snapshotHasher), chunkBody)

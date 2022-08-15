@@ -7,12 +7,13 @@ import (
 // Type Aliases to errors module
 //
 // Deprecated: functionality of this package has been moved to it's own module:
-//    cosmossdk.io/errors
+//
+//	cosmossdk.io/errors
+//
 // Please use the above module instead of this package.
 var (
 	SuccessABCICode    = errorsmod.SuccessABCICode
 	ABCIInfo           = errorsmod.ABCIInfo
-	Redact             = errorsmod.Redact
 	UndefinedCodespace = errorsmod.UndefinedCodespace
 	Register           = errorsmod.Register
 	ABCIError          = errorsmod.ABCIError
@@ -162,7 +163,10 @@ var (
 	// ErrAppConfig defines an error occurred if min-gas-prices field in BaseConfig is empty.
 	ErrAppConfig = Register(RootCodespace, 40, "error in app.toml")
 
-	// ErrPanic is only set when we recover from a panic, so we know to
-	// redact potentially sensitive system info
+	// ErrInvalidGasLimit defines an error when an invalid GasWanted value is
+	// supplied.
+	ErrInvalidGasLimit = Register(RootCodespace, 41, "invalid gas limit")
+
+	// ErrPanic should only be set when we recovering from a panic
 	ErrPanic = errorsmod.ErrPanic
 )

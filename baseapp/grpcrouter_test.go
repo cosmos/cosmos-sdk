@@ -5,16 +5,16 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -54,12 +54,11 @@ func TestGRPCQueryRouter(t *testing.T) {
 
 func TestRegisterQueryServiceTwice(t *testing.T) {
 	// Setup baseapp.
+	var appBuilder *runtime.AppBuilder
+	err := depinject.Inject(makeMinimalConfig(), &appBuilder)
+	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	encCfg := simapp.MakeTestEncodingConfig()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
-	app := baseapp.NewBaseApp("test", logger, db)
-	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
+	app := appBuilder.Build(log.MustNewDefaultLogger("plain", "info", false), db, nil)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {

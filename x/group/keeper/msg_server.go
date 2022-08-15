@@ -105,7 +105,8 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 			if err := k.assertMetadataLength(req.MemberUpdates[i].Metadata, "group member metadata"); err != nil {
 				return err
 			}
-			groupMember := group.GroupMember{GroupId: req.GroupId,
+			groupMember := group.GroupMember{
+				GroupId: req.GroupId,
 				Member: &group.Member{
 					Address:  req.MemberUpdates[i].Address,
 					Weight:   req.MemberUpdates[i].Weight,
@@ -160,7 +161,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, req *group.MsgUpdateGr
 				if err != nil {
 					return err
 				}
-				// Substract previous weight from the group total weight.
+				// Subtract previous weight from the group total weight.
 				totalWeight, err = math.SubNonNegative(totalWeight, previousMemberWeight)
 				if err != nil {
 					return err
@@ -247,12 +248,12 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "group response")
 	}
-	groupId := groupRes.GroupId
+	groupID := groupRes.GroupId
 
 	var groupPolicyAddr sdk.AccAddress
 	groupPolicyRes, err := k.CreateGroupPolicy(goCtx, &group.MsgCreateGroupPolicy{
 		Admin:          req.Admin,
-		GroupId:        groupId,
+		GroupId:        groupID,
 		Metadata:       req.GroupPolicyMetadata,
 		DecisionPolicy: req.DecisionPolicy,
 	})
@@ -269,7 +270,7 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 
 	if req.GroupPolicyAsAdmin {
 		updateAdminReq := &group.MsgUpdateGroupAdmin{
-			GroupId:  groupId,
+			GroupId:  groupID,
 			Admin:    req.Admin,
 			NewAdmin: groupPolicyAddress,
 		}
@@ -289,7 +290,7 @@ func (k Keeper) CreateGroupWithPolicy(goCtx context.Context, req *group.MsgCreat
 		}
 	}
 
-	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupId, GroupPolicyAddress: groupPolicyAddress}, nil
+	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupID, GroupPolicyAddress: groupPolicyAddress}, nil
 }
 
 func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {
@@ -333,7 +334,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 	// collision with an existing address.
 	for {
 		nextAccVal := k.groupPolicySeq.NextVal(ctx.KVStore(k.key))
-		var buf = make([]byte, 8)
+		buf := make([]byte, 8)
 		binary.BigEndian.PutUint64(buf, nextAccVal)
 
 		parentAcc := address.Module(group.ModuleName, []byte{GroupPolicyTablePrefix})
@@ -746,13 +747,14 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	var logs string
 	if proposal.Status == group.PROPOSAL_STATUS_ACCEPTED && proposal.ExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 		// Caching context so that we don't update the store in case of failure.
-		ctx, flush := ctx.CacheContext()
+		cacheCtx, flush := ctx.CacheContext()
 
 		addr, err := sdk.AccAddressFromBech32(policyInfo.Address)
 		if err != nil {
 			return nil, err
 		}
-		_, err = k.doExecuteMsgs(ctx, k.router, proposal, addr)
+
+		results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr)
 		if err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", id, err.Error())
@@ -760,6 +762,11 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		} else {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_SUCCESS
 			flush()
+
+			for _, res := range results {
+				// NOTE: The sdk msg handler creates a new EventManager, so events must be correctly propagated back to the current context
+				ctx.EventManager().EmitEvents(res.GetEvents())
+			}
 		}
 	}
 
@@ -871,8 +878,10 @@ type authNGroupReq interface {
 	GetAdmin() string
 }
 
-type actionFn func(m *group.GroupInfo) error
-type groupPolicyActionFn func(m *group.GroupPolicyInfo) error
+type (
+	actionFn            func(m *group.GroupInfo) error
+	groupPolicyActionFn func(m *group.GroupPolicyInfo) error
+)
 
 // doUpdateGroupPolicy first makes sure that the group policy admin initiated the group policy update,
 // before performing the group policy update and emitting an event.

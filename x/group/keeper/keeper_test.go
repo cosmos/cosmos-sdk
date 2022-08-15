@@ -12,33 +12,48 @@ import (
 	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
+	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 type TestSuite struct {
 	suite.Suite
 
-	app             *simapp.SimApp
-	sdkCtx          sdk.Context
-	ctx             context.Context
-	addrs           []sdk.AccAddress
-	groupID         uint64
-	groupPolicyAddr sdk.AccAddress
-	policy          group.DecisionPolicy
-	keeper          keeper.Keeper
-	blockTime       time.Time
+	app               *runtime.App
+	sdkCtx            sdk.Context
+	ctx               context.Context
+	addrs             []sdk.AccAddress
+	groupID           uint64
+	groupPolicyAddr   sdk.AccAddress
+	policy            group.DecisionPolicy
+	groupKeeper       keeper.Keeper
+	blockTime         time.Time
+	bankKeeper        bankkeeper.Keeper
+	stakingKeeper     *stakingkeeper.Keeper
+	interfaceRegistry codectypes.InterfaceRegistry
 }
 
 func (s *TestSuite) SetupTest() {
-	app := simapp.Setup(s.T(), false)
+	app, err := simtestutil.Setup(
+		grouptestutil.AppConfig,
+		&s.interfaceRegistry,
+		&s.bankKeeper,
+		&s.stakingKeeper,
+		&s.groupKeeper,
+	)
+	s.Require().NoError(err)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	s.blockTime = tmtime.Now()
@@ -47,14 +62,13 @@ func (s *TestSuite) SetupTest() {
 	s.app = app
 	s.sdkCtx = ctx
 	s.ctx = sdk.WrapSDKContext(ctx)
-	s.keeper = s.app.GroupKeeper
-	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 6, sdk.NewInt(30000000))
+	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 6, sdk.NewInt(30000000))
 
 	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{
 		{Address: s.addrs[4].String(), Weight: "1"}, {Address: s.addrs[1].String(), Weight: "2"},
 	}
-	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   s.addrs[0].String(),
 		Members: members,
 	})
@@ -72,17 +86,49 @@ func (s *TestSuite) SetupTest() {
 	}
 	err = policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
-	policyRes, err := s.keeper.CreateGroupPolicy(s.ctx, policyReq)
+	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	s.policy = policy
 	addr, err := sdk.AccAddressFromBech32(policyRes.Address)
 	s.Require().NoError(err)
 	s.groupPolicyAddr = addr
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+	s.Require().NoError(testutil.FundAccount(s.bankKeeper, s.sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
+}
+
+func (s *TestSuite) TestCreateGroupWithLotsOfMembers() {
+	for i := 50; i < 70; i++ {
+		membersResp := s.createGroupAndGetMembers(i)
+		s.Require().Equal(len(membersResp), i)
+	}
+}
+
+func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMember {
+	addressPool := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, s.sdkCtx, numMembers, sdk.NewInt(30000000))
+	members := make([]group.MemberRequest, numMembers)
+	for i := 0; i < len(members); i++ {
+		members[i] = group.MemberRequest{
+			Address: addressPool[i].String(),
+			Weight:  "1",
+		}
+	}
+
+	g, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+		Admin:   members[0].Address,
+		Members: members,
+	})
+	s.Require().NoErrorf(err, "failed to create group with %d members", len(members))
+	s.T().Logf("group %d created with %d members", g.GroupId, len(members))
+
+	groupMemberResp, err := s.groupKeeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: g.GroupId})
+	s.Require().NoError(err)
+
+	s.T().Logf("got %d members from group %d", len(groupMemberResp.Members), g.GroupId)
+
+	return groupMemberResp.Members
 }
 
 func (s *TestSuite) TestCreateGroup() {
@@ -165,10 +211,10 @@ func (s *TestSuite) TestCreateGroup() {
 		spec := spec
 		s.Run(msg, func() {
 			blockTime := sdk.UnwrapSDKContext(s.ctx).BlockTime()
-			res, err := s.keeper.CreateGroup(s.ctx, spec.req)
+			res, err := s.groupKeeper.CreateGroup(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
-				_, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: uint64(seq + 1)})
+				_, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: uint64(seq + 1)})
 				s.Require().Error(err)
 				return
 			}
@@ -179,7 +225,7 @@ func (s *TestSuite) TestCreateGroup() {
 			s.Assert().Equal(uint64(seq), id)
 
 			// then all data persisted
-			loadedGroupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})
+			loadedGroupRes, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.req.Admin, loadedGroupRes.Info.Admin)
 			s.Assert().Equal(spec.req.Metadata, loadedGroupRes.Info.Metadata)
@@ -187,7 +233,7 @@ func (s *TestSuite) TestCreateGroup() {
 			s.Assert().Equal(uint64(1), loadedGroupRes.Info.Version)
 
 			// and members are stored as well
-			membersRes, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: id})
+			membersRes, err := s.groupKeeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: id})
 			s.Require().NoError(err)
 			loadedMembers := membersRes.Members
 			s.Require().Equal(len(members), len(loadedMembers))
@@ -208,7 +254,7 @@ func (s *TestSuite) TestCreateGroup() {
 			}
 
 			// query groups by admin
-			groupsRes, err := s.keeper.GroupsByAdmin(s.ctx, &group.QueryGroupsByAdminRequest{Admin: addr1.String()})
+			groupsRes, err := s.groupKeeper.GroupsByAdmin(s.ctx, &group.QueryGroupsByAdminRequest{Admin: addr1.String()})
 			s.Require().NoError(err)
 			loadedGroups := groupsRes.Groups
 			s.Require().Equal(len(spec.expGroups), len(loadedGroups))
@@ -222,7 +268,6 @@ func (s *TestSuite) TestCreateGroup() {
 			}
 		})
 	}
-
 }
 
 func (s *TestSuite) TestUpdateGroupAdmin() {
@@ -238,7 +283,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 	}}
 	oldAdmin := addr2.String()
 	newAdmin := addr3.String()
-	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   oldAdmin,
 		Members: members,
 	})
@@ -297,7 +342,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			_, err := s.keeper.UpdateGroupAdmin(s.ctx, spec.req)
+			_, err := s.groupKeeper.UpdateGroupAdmin(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -305,7 +350,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 			s.Require().NoError(err)
 
 			// then
-			res, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
+			res, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expStored, res.Info)
 		})
@@ -372,7 +417,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
 			ctx := sdk.WrapSDKContext(sdkCtx)
-			_, err := s.keeper.UpdateGroupMetadata(ctx, spec.req)
+			_, err := s.groupKeeper.UpdateGroupMetadata(ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -380,7 +425,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 			s.Require().NoError(err)
 
 			// then
-			res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
+			res, err := s.groupKeeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expStored, res.Info)
 		})
@@ -402,7 +447,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 	}}
 
 	myAdmin := addr4.String()
-	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   myAdmin,
 		Members: members,
 	})
@@ -634,7 +679,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
 			ctx := sdk.WrapSDKContext(sdkCtx)
-			_, err := s.keeper.UpdateGroupMembers(ctx, spec.req)
+			_, err := s.groupKeeper.UpdateGroupMembers(ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -642,12 +687,12 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			s.Require().NoError(err)
 
 			// then
-			res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
+			res, err := s.groupKeeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expGroup, res.Info)
 
 			// and members persisted
-			membersRes, err := s.keeper.GroupMembers(ctx, &group.QueryGroupMembersRequest{GroupId: groupID})
+			membersRes, err := s.groupKeeper.GroupMembers(ctx, &group.QueryGroupMembersRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			loadedMembers := membersRes.Members
 			s.Require().Equal(len(spec.expMembers), len(loadedMembers))
@@ -802,7 +847,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			s.Require().NoError(err)
 
 			blockTime := sdk.UnwrapSDKContext(s.ctx).BlockTime()
-			res, err := s.keeper.CreateGroupWithPolicy(s.ctx, spec.req)
+			res, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), spec.expErrMsg)
@@ -813,7 +858,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			groupPolicyAddr := res.GroupPolicyAddress
 
 			// then all data persisted in group
-			loadedGroupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})
+			loadedGroupRes, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.req.GroupMetadata, loadedGroupRes.Info.Metadata)
 			s.Assert().Equal(id, loadedGroupRes.Info.Id)
@@ -825,7 +870,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			}
 
 			// and members are stored as well
-			membersRes, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: id})
+			membersRes, err := s.groupKeeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: id})
 			s.Require().NoError(err)
 			loadedMembers := membersRes.Members
 			s.Require().Equal(len(members), len(loadedMembers))
@@ -846,7 +891,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			}
 
 			// then all data persisted in group policy
-			groupPolicyRes, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{Address: groupPolicyAddr})
+			groupPolicyRes, err := s.groupKeeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{Address: groupPolicyAddr})
 			s.Require().NoError(err)
 
 			groupPolicy := groupPolicyRes.Info
@@ -864,7 +909,6 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			}
 		})
 	}
-
 }
 
 func (s *TestSuite) TestCreateGroupPolicy() {
@@ -872,7 +916,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 	addr1 := addrs[0]
 	addr4 := addrs[3]
 
-	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   addr1.String(),
 		Members: nil,
 	})
@@ -991,7 +1035,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			err := spec.req.SetDecisionPolicy(spec.policy)
 			s.Require().NoError(err)
 
-			res, err := s.keeper.CreateGroupPolicy(s.ctx, spec.req)
+			res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), spec.expErrMsg)
@@ -1001,7 +1045,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 			addr := res.Address
 
 			// then all data persisted
-			groupPolicyRes, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{Address: addr})
+			groupPolicyRes, err := s.groupKeeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{Address: addr})
 			s.Require().NoError(err)
 
 			groupPolicy := groupPolicyRes.Info
@@ -1098,13 +1142,13 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 		s.Require().NoError(err)
 
 		s.Run(msg, func() {
-			_, err := s.keeper.UpdateGroupPolicyAdmin(s.ctx, spec.req)
+			_, err := s.groupKeeper.UpdateGroupPolicyAdmin(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
 			}
 			s.Require().NoError(err)
-			res, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{
+			res, err := s.groupKeeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{
 				Address: groupPolicyAddr,
 			})
 			s.Require().NoError(err)
@@ -1177,13 +1221,13 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 		s.Require().NoError(err)
 
 		s.Run(msg, func() {
-			_, err := s.keeper.UpdateGroupPolicyMetadata(s.ctx, spec.req)
+			_, err := s.groupKeeper.UpdateGroupPolicyMetadata(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
 			}
 			s.Require().NoError(err)
-			res, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{
+			res, err := s.groupKeeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{
 				Address: groupPolicyAddr,
 			})
 			s.Require().NoError(err)
@@ -1293,13 +1337,13 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		s.Require().NoError(err)
 
 		s.Run(msg, func() {
-			_, err := s.keeper.UpdateGroupPolicyDecisionPolicy(s.ctx, spec.req)
+			_, err := s.groupKeeper.UpdateGroupPolicyDecisionPolicy(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
 			}
 			s.Require().NoError(err)
-			res, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{
+			res, err := s.groupKeeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{
 				Address: policyAddr,
 			})
 			s.Require().NoError(err)
@@ -1313,7 +1357,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 	addr2 := addrs[1]
 
 	admin := addr2
-	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   admin.String(),
 		Members: nil,
 	})
@@ -1347,7 +1391,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 		}
 		err := req.SetDecisionPolicy(policies[i])
 		s.Require().NoError(err)
-		res, err := s.keeper.CreateGroupPolicy(s.ctx, req)
+		res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, req)
 		s.Require().NoError(err)
 
 		expectAcc := &group.GroupPolicyInfo{
@@ -1364,7 +1408,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 	sort.Slice(expectAccs, func(i, j int) bool { return expectAccs[i].Address < expectAccs[j].Address })
 
 	// query group policy by group
-	policiesByGroupRes, err := s.keeper.GroupPoliciesByGroup(s.ctx, &group.QueryGroupPoliciesByGroupRequest{
+	policiesByGroupRes, err := s.groupKeeper.GroupPoliciesByGroup(s.ctx, &group.QueryGroupPoliciesByGroupRequest{
 		GroupId: myGroupID,
 	})
 	s.Require().NoError(err)
@@ -1387,7 +1431,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 	}
 
 	// query group policy by admin
-	policiesByAdminRes, err := s.keeper.GroupPoliciesByAdmin(s.ctx, &group.QueryGroupPoliciesByAdminRequest{
+	policiesByAdminRes, err := s.groupKeeper.GroupPoliciesByAdmin(s.ctx, &group.QueryGroupPoliciesByAdminRequest{
 		Admin: admin.String(),
 	})
 	s.Require().NoError(err)
@@ -1437,7 +1481,7 @@ func (s *TestSuite) TestSubmitProposal() {
 	)
 	err := policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
-	bigThresholdRes, err := s.keeper.CreateGroupPolicy(s.ctx, policyReq)
+	bigThresholdRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	bigThresholdAddr := bigThresholdRes.Address
 
@@ -1570,9 +1614,9 @@ func (s *TestSuite) TestSubmitProposal() {
 				ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			},
 			postRun: func(sdkCtx sdk.Context) {
-				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, accountAddr)
+				fromBalances := s.bankKeeper.GetAllBalances(sdkCtx, accountAddr)
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
-				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
+				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
 			},
 		},
@@ -1603,7 +1647,7 @@ func (s *TestSuite) TestSubmitProposal() {
 			err := spec.req.SetMsgs(spec.msgs)
 			s.Require().NoError(err)
 
-			res, err := s.keeper.SubmitProposal(s.ctx, spec.req)
+			res, err := s.groupKeeper.SubmitProposal(s.ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -1613,7 +1657,7 @@ func (s *TestSuite) TestSubmitProposal() {
 
 			if !(spec.expProposal.ExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
 				// then all data persisted
-				proposalRes, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: id})
+				proposalRes, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: id})
 				s.Require().NoError(err)
 				proposal := proposalRes.Proposal
 
@@ -1686,7 +1730,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 		"already closed proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pId := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
-				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
+				_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
 					Address:    proposers[0],
 				})
@@ -1710,7 +1754,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 		s.Run(msg, func() {
 			pId := spec.preRun(s.sdkCtx)
 
-			_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
+			_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 				ProposalId: pId,
 				Address:    spec.admin,
 			})
@@ -1722,7 +1766,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			}
 
 			s.Require().NoError(err)
-			resp, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: pId})
+			resp, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: pId})
 			s.Require().NoError(err)
 			s.Require().Equal(resp.GetProposal().Status, group.PROPOSAL_STATUS_WITHDRAWN)
 		})
@@ -1740,7 +1784,7 @@ func (s *TestSuite) TestVote() {
 		{Address: addr4.String(), Weight: "1"},
 		{Address: addr3.String(), Weight: "2"},
 	}
-	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   addr1.String(),
 		Members: members,
 	})
@@ -1758,14 +1802,14 @@ func (s *TestSuite) TestVote() {
 	}
 	err = policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
-	policyRes, err := s.keeper.CreateGroupPolicy(s.ctx, policyReq)
+	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	accountAddr := policyRes.Address
 	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+	s.Require().NoError(testutil.FundAccount(s.bankKeeper, s.sdkCtx, groupPolicy, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 	req := &group.MsgSubmitProposal{
 		GroupPolicyAddress: accountAddr,
@@ -1779,12 +1823,12 @@ func (s *TestSuite) TestVote() {
 	}})
 	s.Require().NoError(err)
 
-	proposalRes, err := s.keeper.SubmitProposal(s.ctx, req)
+	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, req)
 	s.Require().NoError(err)
 	myProposalID := proposalRes.ProposalId
 
 	// proposals by group policy
-	proposalsRes, err := s.keeper.ProposalsByGroupPolicy(s.ctx, &group.QueryProposalsByGroupPolicyRequest{
+	proposalsRes, err := s.groupKeeper.ProposalsByGroupPolicy(s.ctx, &group.QueryProposalsByGroupPolicyRequest{
 		Address: accountAddr,
 	})
 	s.Require().NoError(err)
@@ -1843,9 +1887,9 @@ func (s *TestSuite) TestVote() {
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			postRun: func(sdkCtx sdk.Context) {
-				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, groupPolicy)
+				fromBalances := s.bankKeeper.GetAllBalances(sdkCtx, groupPolicy)
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
-				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr5)
+				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr5)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
 			},
 		},
@@ -1937,7 +1981,7 @@ func (s *TestSuite) TestVote() {
 				Option:     group.VOTE_OPTION_YES,
 			},
 			doBefore: func(ctx context.Context) {
-				_, err := s.keeper.Vote(ctx, &group.MsgVote{
+				_, err := s.groupKeeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
 					Voter:      addr3.String(),
 					Option:     group.VOTE_OPTION_NO_WITH_VETO,
@@ -2019,7 +2063,7 @@ func (s *TestSuite) TestVote() {
 				Option:     group.VOTE_OPTION_NO,
 			},
 			doBefore: func(ctx context.Context) {
-				_, err := s.keeper.Vote(ctx, &group.MsgVote{
+				_, err := s.groupKeeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
 					Voter:      addr3.String(),
 					Option:     group.VOTE_OPTION_YES,
@@ -2037,7 +2081,7 @@ func (s *TestSuite) TestVote() {
 				Option:     group.VOTE_OPTION_NO,
 			},
 			doBefore: func(ctx context.Context) {
-				_, err := s.keeper.Vote(ctx, &group.MsgVote{
+				_, err := s.groupKeeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
 					Voter:      addr4.String(),
 					Option:     group.VOTE_OPTION_YES,
@@ -2061,7 +2105,7 @@ func (s *TestSuite) TestVote() {
 			if spec.doBefore != nil {
 				spec.doBefore(ctx)
 			}
-			_, err := s.keeper.Vote(ctx, spec.req)
+			_, err := s.groupKeeper.Vote(ctx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -2072,7 +2116,7 @@ func (s *TestSuite) TestVote() {
 
 			if !(spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
 				// vote is stored and all data persisted
-				res, err := s.keeper.VoteByProposalVoter(ctx, &group.QueryVoteByProposalVoterRequest{
+				res, err := s.groupKeeper.VoteByProposalVoter(ctx, &group.QueryVoteByProposalVoterRequest{
 					ProposalId: spec.req.ProposalId,
 					Voter:      spec.req.Voter,
 				})
@@ -2085,7 +2129,7 @@ func (s *TestSuite) TestVote() {
 				s.Assert().Equal(s.blockTime, loaded.SubmitTime)
 
 				// query votes by proposal
-				votesByProposalRes, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
+				votesByProposalRes, err := s.groupKeeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
 					ProposalId: spec.req.ProposalId,
 				})
 				s.Require().NoError(err)
@@ -2100,7 +2144,7 @@ func (s *TestSuite) TestVote() {
 
 				// query votes by voter
 				voter := spec.req.Voter
-				votesByVoterRes, err := s.keeper.VotesByVoter(ctx, &group.QueryVotesByVoterRequest{
+				votesByVoterRes, err := s.groupKeeper.VotesByVoter(ctx, &group.QueryVotesByVoterRequest{
 					Voter: voter,
 				})
 				s.Require().NoError(err)
@@ -2112,7 +2156,7 @@ func (s *TestSuite) TestVote() {
 				s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
 				s.Assert().Equal(s.blockTime, votesByVoter[0].SubmitTime)
 
-				proposalRes, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{
+				proposalRes, err := s.groupKeeper.Proposal(ctx, &group.QueryProposalRequest{
 					ProposalId: spec.req.ProposalId,
 				})
 				s.Require().NoError(err)
@@ -2126,7 +2170,7 @@ func (s *TestSuite) TestVote() {
 					s.Assert().Equal(group.DefaultTallyResult(), proposal.FinalTallyResult) // Make sure proposal isn't mutated.
 
 					// do a round of tallying
-					tallyResult, err := s.keeper.Tally(sdkCtx, *proposal, myGroupID)
+					tallyResult, err := s.groupKeeper.Tally(sdkCtx, *proposal, myGroupID)
 					s.Require().NoError(err)
 
 					s.Assert().Equal(spec.expTallyResult, tallyResult)
@@ -2156,7 +2200,7 @@ func (s *TestSuite) TestVote() {
 		0,
 	)
 	require.NoError(reqCreate.SetDecisionPolicy(policy))
-	result, err := s.keeper.CreateGroupWithPolicy(s.ctx, reqCreate)
+	result, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, reqCreate)
 	require.NoError(err)
 	require.NotNil(result)
 
@@ -2172,30 +2216,30 @@ func (s *TestSuite) TestVote() {
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}}))
 
-	resSubmitProposal, err := s.keeper.SubmitProposal(s.ctx, reqProposal)
+	resSubmitProposal, err := s.groupKeeper.SubmitProposal(s.ctx, reqProposal)
 	require.NoError(err)
 	require.NotNil(resSubmitProposal)
 	proposalID := resSubmitProposal.ProposalId
 
 	for _, voter := range []string{addr4.String(), addr3.String(), addr2.String()} {
-		_, err := s.keeper.Vote(s.ctx,
+		_, err := s.groupKeeper.Vote(s.ctx,
 			&group.MsgVote{ProposalId: proposalID, Voter: voter, Option: group.VOTE_OPTION_YES},
 		)
 		require.NoError(err)
 	}
 
-	qProposals, err := s.keeper.Proposal(s.ctx, &group.QueryProposalRequest{
+	qProposals, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{
 		ProposalId: proposalID,
 	})
 	require.NoError(err)
 
-	tallyResult, err := s.keeper.Tally(s.sdkCtx, *qProposals.Proposal, groupID)
+	tallyResult, err := s.groupKeeper.Tally(s.sdkCtx, *qProposals.Proposal, groupID)
 	require.NoError(err)
 
-	_, err = s.keeper.LeaveGroup(s.ctx, &group.MsgLeaveGroup{Address: addr4.String(), GroupId: groupID})
+	_, err = s.groupKeeper.LeaveGroup(s.ctx, &group.MsgLeaveGroup{Address: addr4.String(), GroupId: groupID})
 	require.NoError(err)
 
-	tallyResult1, err := s.keeper.Tally(s.sdkCtx, *qProposals.Proposal, groupID)
+	tallyResult1, err := s.groupKeeper.Tally(s.sdkCtx, *qProposals.Proposal, groupID)
 	require.NoError(err)
 	require.NotEqual(tallyResult.String(), tallyResult1.String())
 }
@@ -2292,7 +2336,7 @@ func (s *TestSuite) TestExecProposal() {
 			setupProposal: func(ctx context.Context) uint64 {
 				myProposalID := submitProposalAndVote(ctx, s, []sdk.Msg{msgSend1}, proposers, group.VOTE_OPTION_YES)
 
-				_, err := s.keeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
+				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				return myProposalID
 			},
@@ -2316,10 +2360,10 @@ func (s *TestSuite) TestExecProposal() {
 				msgs := []sdk.Msg{msgSend2}
 				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 
-				_, err := s.keeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
+				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return myProposalID
 			},
@@ -2339,7 +2383,7 @@ func (s *TestSuite) TestExecProposal() {
 			}
 
 			ctx = sdk.WrapSDKContext(sdkCtx)
-			_, err := s.keeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
+			_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -2349,7 +2393,7 @@ func (s *TestSuite) TestExecProposal() {
 			if !(spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
 
 				// and proposal is updated
-				res, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				res, err := s.groupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
 				proposal := res.Proposal
 
@@ -2363,9 +2407,9 @@ func (s *TestSuite) TestExecProposal() {
 			}
 
 			if spec.expBalance {
-				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, s.groupPolicyAddr)
+				fromBalances := s.bankKeeper.GetAllBalances(sdkCtx, s.groupPolicyAddr)
 				s.Require().Contains(fromBalances, spec.expFromBalances)
-				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
+				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, spec.expToBalances)
 			}
 		})
@@ -2429,7 +2473,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
 
 				// then modify group
-				_, err := s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
+				_, err := s.groupKeeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
 					Admin:   addr1.String(),
 					GroupId: s.groupID,
 				})
@@ -2441,7 +2485,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 		"proposal not pruned with group policy modified before tally": {
 			setupProposal: func(ctx context.Context) uint64 {
 				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
-				_, err := s.keeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
+				_, err := s.groupKeeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
 					Admin:              addr1.String(),
 					GroupPolicyAddress: s.groupPolicyAddr.String(),
 				})
@@ -2464,10 +2508,10 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				msgs := []sdk.Msg{msgSend2}
 				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 
-				_, err := s.keeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
+				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+				s.Require().NoError(testutil.FundAccount(s.bankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return myProposalID
 			},
@@ -2487,7 +2531,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 			}
 
 			ctx = sdk.WrapSDKContext(sdkCtx)
-			_, err := s.keeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
+			_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), spec.expErrMsg)
@@ -2497,17 +2541,17 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 
 			if spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 				// Make sure proposal is deleted from state
-				_, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				_, err := s.groupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().Contains(err.Error(), spec.expErrMsg)
-				res, err := s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
+				res, err := s.groupKeeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
 				s.Require().Empty(res.GetVotes())
 
 			} else {
 				// Check that proposal and votes exists
-				res, err := s.keeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				res, err := s.groupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
-				_, err = s.keeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: res.Proposal.Id})
+				_, err = s.groupKeeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: res.Proposal.Id})
 				s.Require().NoError(err)
 				s.Require().Equal("", spec.expErrMsg)
 
@@ -2603,7 +2647,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		"tally of withdrawn proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pId := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
-				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
+				_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
 					Address:    proposers[0],
 				})
@@ -2619,7 +2663,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		"tally of withdrawn proposal (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pId := submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
-				_, err := s.keeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
+				_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 					ProposalId: pId,
 					Address:    proposers[0],
 				})
@@ -2639,8 +2683,8 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		s.Run(msg, func() {
 			pId := spec.preRun(s.sdkCtx)
 
-			module.EndBlocker(spec.newCtx, s.keeper)
-			resp, err := s.keeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
+			module.EndBlocker(spec.newCtx, s.groupKeeper)
+			resp, err := s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
 				ProposalId: pId,
 			})
 
@@ -2658,7 +2702,8 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 }
 
 func (s *TestSuite) TestLeaveGroup() {
-	addrs := simapp.AddTestAddrsIncremental(s.app, s.sdkCtx, 7, sdk.NewInt(3000000))
+	addrs := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, s.sdkCtx, 7, sdk.NewInt(30000000))
+
 	admin1 := addrs[0]
 	member1 := addrs[1]
 	member2 := addrs[2]
@@ -2799,26 +2844,26 @@ func (s *TestSuite) TestLeaveGroup() {
 		s.Run(tc.name, func() {
 			var groupWeight1 math.Dec
 			if !tc.expErr {
-				groupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: tc.req.GroupId})
+				groupRes, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: tc.req.GroupId})
 				require.NoError(err)
 				groupWeight1, err = math.NewNonNegativeDecFromString(groupRes.Info.TotalWeight)
 				require.NoError(err)
 			}
 
-			res, err := s.keeper.LeaveGroup(s.ctx, tc.req)
+			res, err := s.groupKeeper.LeaveGroup(s.ctx, tc.req)
 			if tc.expErr {
 				require.Error(err)
 				require.Contains(err.Error(), tc.errMsg)
 			} else {
 				require.NoError(err)
 				require.NotNil(res)
-				res, err := s.keeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{
+				res, err := s.groupKeeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{
 					GroupId: tc.req.GroupId,
 				})
 				require.NoError(err)
 				require.Len(res.Members, tc.expMembersSize)
 
-				groupRes, err := s.keeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: tc.req.GroupId})
+				groupRes, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: tc.req.GroupId})
 				require.NoError(err)
 				groupWeight2, err := math.NewNonNegativeDecFromString(groupRes.Info.TotalWeight)
 				require.NoError(err)
@@ -2831,9 +2876,57 @@ func (s *TestSuite) TestLeaveGroup() {
 	}
 }
 
+func (s *TestSuite) TestPruneProposals() {
+	addrs := s.addrs
+	expirationTime := time.Hour * 24 * 15 // 15 days
+	groupID := s.groupID
+	accountAddr := s.groupPolicyAddr
+
+	msgSend := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addrs[0].String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
+
+	policyReq := &group.MsgCreateGroupPolicy{
+		Admin:   addrs[0].String(),
+		GroupId: groupID,
+	}
+
+	policy := group.NewThresholdDecisionPolicy("100", time.Microsecond, time.Microsecond)
+	err := policyReq.SetDecisionPolicy(policy)
+	s.Require().NoError(err)
+	_, err = s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
+	s.Require().NoError(err)
+
+	req := &group.MsgSubmitProposal{
+		GroupPolicyAddress: accountAddr.String(),
+		Proposers:          []string{addrs[1].String()},
+	}
+	err = req.SetMsgs([]sdk.Msg{msgSend})
+	s.Require().NoError(err)
+	submittedProposal, err := s.groupKeeper.SubmitProposal(s.ctx, req)
+	s.Require().NoError(err)
+	queryProposal := group.QueryProposalRequest{ProposalId: submittedProposal.ProposalId}
+	prePrune, err := s.groupKeeper.Proposal(s.ctx, &queryProposal)
+	s.Require().NoError(err)
+	s.Require().Equal(prePrune.Proposal.Id, submittedProposal.ProposalId)
+	// Move Forward in time for 15 days, after voting period end + max_execution_period
+	s.sdkCtx = s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(expirationTime))
+
+	// Prune Expired Proposals
+	err = s.groupKeeper.PruneProposals(s.sdkCtx)
+	s.Require().NoError(err)
+	postPrune, err := s.groupKeeper.Proposal(s.ctx, &queryProposal)
+	s.Require().Nil(postPrune)
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "load proposal: not found")
+}
+
 func submitProposal(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
-	proposers []string) uint64 {
+	proposers []string,
+) uint64 {
 	proposalReq := &group.MsgSubmitProposal{
 		GroupPolicyAddress: s.groupPolicyAddr.String(),
 		Proposers:          proposers,
@@ -2841,18 +2934,19 @@ func submitProposal(
 	err := proposalReq.SetMsgs(msgs)
 	s.Require().NoError(err)
 
-	proposalRes, err := s.keeper.SubmitProposal(ctx, proposalReq)
+	proposalRes, err := s.groupKeeper.SubmitProposal(ctx, proposalReq)
 	s.Require().NoError(err)
 	return proposalRes.ProposalId
 }
 
 func submitProposalAndVote(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
-	proposers []string, voteOption group.VoteOption) uint64 {
+	proposers []string, voteOption group.VoteOption,
+) uint64 {
 	s.Require().Greater(len(proposers), 0)
 	myProposalID := submitProposal(ctx, s, msgs, proposers)
 
-	_, err := s.keeper.Vote(ctx, &group.MsgVote{
+	_, err := s.groupKeeper.Vote(ctx, &group.MsgVote{
 		ProposalId: myProposalID,
 		Voter:      proposers[0],
 		Option:     voteOption,
@@ -2866,7 +2960,7 @@ func (s *TestSuite) createGroupAndGroupPolicy(
 	members []group.MemberRequest,
 	policy group.DecisionPolicy,
 ) (policyAddr string, groupID uint64) {
-	groupRes, err := s.keeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   admin.String(),
 		Members: members,
 	})
@@ -2882,7 +2976,7 @@ func (s *TestSuite) createGroupAndGroupPolicy(
 		err = groupPolicy.SetDecisionPolicy(policy)
 		s.Require().NoError(err)
 
-		groupPolicyRes, err := s.keeper.CreateGroupPolicy(s.ctx, groupPolicy)
+		groupPolicyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, groupPolicy)
 		s.Require().NoError(err)
 		policyAddr = groupPolicyRes.Address
 	}

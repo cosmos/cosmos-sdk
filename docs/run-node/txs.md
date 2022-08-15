@@ -42,7 +42,7 @@ Signing a transaction using the CLI requires the unsigned transaction to be save
 simd tx sign unsigned_tx.json --chain-id my-test-chain --keyring-backend test --from $MY_VALIDATOR_ADDRESS
 ```
 
-This command will decode the unsigned transaction and sign it with `SIGN_MODE_DIRECT` with `$MY_VALIDATOR_ADDRESS`'s key, which we already set up in the keyring. The signed transaction will be output as JSON to the console, and, as above, we can save it to a file by appending `> signed_tx.json`.
+This command will decode the unsigned transaction and sign it with `SIGN_MODE_DIRECT` with `$MY_VALIDATOR_ADDRESS`'s key, which we already set up in the keyring. The signed transaction will be output as JSON to the console, and, as above, we can save it to a file by appending `--output-document signed_tx.json`.
 
 Some useful flags to consider in the `tx sign` command:
 
@@ -121,12 +121,11 @@ import (
 )
 
 func sendTx() error {
-    // Choose your codec: Amino or Protobuf. Here, we use Protobuf, given by the
-    // following function.
-    encCfg := simapp.MakeTestEncodingConfig()
+    // Choose your codec: Amino or Protobuf. Here, we use Protobuf, given by the following function.
+    app := simapp.NewSimApp(...)
 
     // Create a new TxBuilder.
-    txBuilder := encCfg.TxConfig.NewTxBuilder()
+    txBuilder := app.TxConfig().NewTxBuilder()
 
     // --snip--
 }
@@ -144,7 +143,7 @@ priv2, _, addr2 := testdata.KeyTestPubAddr()
 priv3, _, addr3 := testdata.KeyTestPubAddr()
 ```
 
-Populating the `TxBuilder` can be done via its [methods](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/client/tx_config.go#L32-L45):
+Populating the `TxBuilder` can be done via its [methods](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/client/tx_config.go#L33-L50):
 
 ```go
 import (
@@ -177,7 +176,7 @@ At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 
 ### Signing a Transaction
 
-We set encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:
+We set encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:
 
 * for each signer, populate the signer's `SignerInfo` inside `TxBuilder`,
 * once all `SignerInfo`s are populated, for each signer, sign the `SignDoc` (the payload to be signed).

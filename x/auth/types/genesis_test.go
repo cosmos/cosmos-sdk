@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"testing"
 
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/codec"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -51,6 +54,9 @@ func TestValidateGenesisDuplicateAccounts(t *testing.T) {
 }
 
 func TestGenesisAccountIterator(t *testing.T) {
+	var cdc codec.Codec
+	depinject.Inject(testutil.AppConfig, &cdc)
+
 	acc1 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 	acc2 := types.NewBaseAccountWithAddress(sdk.AccAddress(addr2))
 
@@ -62,14 +68,14 @@ func TestGenesisAccountIterator(t *testing.T) {
 	authGenState.Accounts = accounts
 
 	appGenesis := make(map[string]json.RawMessage)
-	authGenStateBz, err := appCodec.MarshalJSON(authGenState)
+	authGenStateBz, err := cdc.MarshalJSON(authGenState)
 	require.NoError(t, err)
 
 	appGenesis[types.ModuleName] = authGenStateBz
 
 	var addresses []sdk.AccAddress
 	types.GenesisAccountIterator{}.IterateGenesisAccounts(
-		appCodec, appGenesis, func(acc types.AccountI) (stop bool) {
+		cdc, appGenesis, func(acc types.AccountI) (stop bool) {
 			addresses = append(addresses, acc.GetAddress())
 			return false
 		},
@@ -81,9 +87,7 @@ func TestGenesisAccountIterator(t *testing.T) {
 }
 
 func TestPackAccountsAny(t *testing.T) {
-	var (
-		accounts []*codectypes.Any
-	)
+	var accounts []*codectypes.Any
 
 	testCases := []struct {
 		msg      string

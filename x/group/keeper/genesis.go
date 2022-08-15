@@ -40,7 +40,6 @@ func (k Keeper) InitGenesis(ctx types.Context, cdc codec.JSONCodec, data json.Ra
 	}
 
 	return []abci.ValidatorUpdate{}
-
 }
 
 func (k Keeper) ExportGenesis(ctx types.Context, cdc codec.JSONCodec) *group.GenesisState {

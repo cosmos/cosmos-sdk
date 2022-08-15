@@ -27,7 +27,7 @@ type DecCoin struct {
 }
 ```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/distribution/v1beta1/distribution.proto#L94-L101
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
 
 ## Validator Distribution
 
@@ -63,3 +63,12 @@ type DelegationDistInfo struct {
     WithdrawalHeight int64    // last time this delegation withdrew rewards
 }
 ```
+
+## Params
+
+The distribution module stores it's params in state with the prefix of `0x09`, 
+it can be updated with governance or the address with authority.
+
+* Params: `0x09 | ProtocolBuffer(Params)`
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30

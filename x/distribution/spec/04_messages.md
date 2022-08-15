@@ -13,7 +13,7 @@ The withdraw address cannot be any of the module accounts. These accounts are bl
 
 Response:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/proto/cosmos/distribution/v1beta1/tx.proto#L29-L37
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L31-L41
 
 ```go
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error
@@ -63,7 +63,7 @@ The final calculated stake is equivalent to the actual staked coins in the deleg
 
 Response:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/proto/cosmos/distribution/v1beta1/tx.proto#L42-L50
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L46-L56
 
 ## WithdrawValidatorCommission
 
@@ -120,3 +120,13 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
 }
 ```
+
+## MsgUpdateParams
+
+Distribution module params can be updated through `MsgUpdateParams`, which can be done using governance proposal and the signer will always be gov module account address. 
+
++++ https://github.com/cosmos/cosmos-sdk/blob/8822ef2695a1eb8cb30b7432f58f631c73951f1d/proto/cosmos/distribution/v1beta1/tx.proto#L106-L119
+
+The message handling can fail if:
+
+* signer is not the gov module account address.

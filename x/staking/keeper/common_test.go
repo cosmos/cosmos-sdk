@@ -4,18 +4,22 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var (
-	PKs = simapp.CreateTestPubKeys(500)
-)
+var PKs = simtestutil.CreateTestPubKeys(500)
 
 func init() {
 	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
@@ -32,7 +36,7 @@ func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Cont
 		app.GetKey(types.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.GetSubspace(types.ModuleName),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	return app.LegacyAmino(), app, ctx
 }
@@ -45,7 +49,42 @@ func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, ty
 // generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
 func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int) ([]sdk.AccAddress, []sdk.ValAddress) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, sdk.NewInt(10000))
-	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+	addrVals := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
 	return addrDels, addrVals
+}
+
+func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, app.StakingKeeper.TokensFromConsensusPower(ctx, 300))
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
+	pks := simtestutil.CreateTestPubKeys(5)
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	app.StakingKeeper = keeper.NewKeeper(
+		cdc,
+		app.GetKey(types.StoreKey),
+		app.AccountKeeper,
+		app.BankKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+
+	val1 := teststaking.NewValidator(t, valAddrs[0], pks[0])
+	val2 := teststaking.NewValidator(t, valAddrs[1], pks[1])
+	vals := []types.Validator{val1, val2}
+
+	app.StakingKeeper.SetValidator(ctx, val1)
+	app.StakingKeeper.SetValidator(ctx, val2)
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, val2)
+	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val1)
+	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val2)
+
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[0], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[0]), types.Unbonded, val1, true)
+	require.NoError(t, err)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[1], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[1]), types.Unbonded, val2, true)
+	require.NoError(t, err)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[0], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[2]), types.Unbonded, val2, true)
+	require.NoError(t, err)
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
+
+	return addrs, valAddrs, vals
 }

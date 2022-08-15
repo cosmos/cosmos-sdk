@@ -12,12 +12,13 @@ import (
 )
 
 // EndBlocker called every block, process inflation, update validator set.
-func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
+func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	logger := keeper.Logger(ctx)
 
-	// delete dead proposals from store and returns theirs deposits. A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
+	// delete dead proposals from store and returns theirs deposits.
+	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {
 		keeper.DeleteProposal(ctx, proposal.Id)
 		keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
@@ -36,7 +37,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		logger.Info(
 			"proposal did not meet minimum deposit; deleted",
 			"proposal", proposal.Id,
-			"min_deposit", sdk.NewCoins(keeper.GetDepositParams(ctx).MinDeposit...).String(),
+			"min_deposit", sdk.NewCoins(keeper.GetParams(ctx).MinDeposit...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
 

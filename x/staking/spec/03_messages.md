@@ -11,9 +11,9 @@ In this section we describe the processing of the staking messages and the corre
 A validator is created using the `MsgCreateValidator` message.
 The validator must be created with an initial delegation from the operator.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L16-L17
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L18-L19
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L35-L51
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L43-L65
 
 This message is expected to fail if:
 
@@ -36,9 +36,9 @@ in the first end-block.
 The `Description`, `CommissionRate` of a validator can be updated using the
 `MsgEditValidator` message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L19-L20
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L21-L22
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L56-L76
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L70-L88
 
 This message is expected to fail if:
 
@@ -55,9 +55,9 @@ Within this message the delegator provides coins, and in return receives
 some amount of their validator's (newly created) delegator-shares that are
 assigned to `Delegation.Shares`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L22-L24
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L24-L26
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L81-L90
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L93-L104
 
 This message is expected to fail if:
 
@@ -87,13 +87,13 @@ will not be added to the power index until it is unjailed.
 The `MsgUndelegate` message allows delegators to undelegate their tokens from
 validator.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L30-L32
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L32-L34
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L112-L121
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L128-L139
 
 This message returns a response containing the completion time of the undelegation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L123-L126
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L128-L144
 
 This message is expected to fail if:
 
@@ -117,24 +117,24 @@ When this message is processed the following actions occur:
 ![Unbond sequence](../../../docs/uml/svg/unbond_sequence.svg)
 
 ## MsgCancelUnbondingDelegation
+
 The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and deleagate back to a previous validator.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/28243eb41c16ecfc95631ac2bb266dd28ed5c317/proto/cosmos/staking/v1beta1/tx.proto#L36-L38
++++ hhttps://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L36-L40
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/28243eb41c16ecfc95631ac2bb266dd28ed5c317/proto/cosmos/staking/v1beta1/tx.proto#L144-L154
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/28243eb41c16ecfc95631ac2bb266dd28ed5c317/proto/cosmos/staking/v1beta1/tx.proto#L156-L157
-
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L146-L165
 
 This message is expected to fail if:
+
 * the `unbondingDelegation` entry is already processed.
 * the `cancel unbonding delegation` amount is greater than the `unbondingDelegation` entry balance.
 * the `cancel unbonding delegation` height doesn't exists in the `unbondingDelegationQueue` of the delegator.
 
 When this message is processed the following actions occur:
+
 * if the `unbondingDelegation` Entry balance is zero 
-   * in this condition `unbondingDelegation` entry will be removed from `unbondingDelegationQueue`.
-   * otherwise `unbondingDelegationQueue` will be updated with new `unbondingDelegation` entry balance and initial balance
+    * in this condition `unbondingDelegation` entry will be removed from `unbondingDelegationQueue`.
+    * otherwise `unbondingDelegationQueue` will be updated with new `unbondingDelegation` entry balance and initial balance
 * the validator's `DelegatorShares` and the delegation's `Shares` are both increased by the message `Amount`.
 
 ## MsgBeginRedelegate
@@ -143,13 +143,13 @@ The redelegation command allows delegators to instantly switch validators. Once
 the unbonding period has passed, the redelegation is automatically completed in
 the EndBlocker.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L26-L28
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L28-L30
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L95-L105
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L109-L121
 
 This message returns a response containing the completion time of the redelegation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L107-L110
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L123-L126
 
 This message is expected to fail if:
 
@@ -173,3 +173,15 @@ When this message is processed the following actions occur:
     * under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
 ![Begin redelegation sequence](../../../docs/uml/svg/begin_redelegation_sequence.svg)
+
+
+## MsgUpdateParams
+
+The `MsgUpdateParams` update the staking module parameters.
+The params are updated through a governance proposal where the signer is the gov module account address.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/e412ce990251768579d49947991be76a87564f7d/proto/cosmos/staking/v1beta1/tx.proto#L172-L190
+
+The message handling can fail if:
+
+* signer is not the authority defined in the staking keeper (usually the gov module account).

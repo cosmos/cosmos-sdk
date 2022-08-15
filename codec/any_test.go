@@ -10,8 +10,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func NewTestInterfaceRegistry() types.InterfaceRegistry {
@@ -60,7 +60,7 @@ func TestMarshalAny(t *testing.T) {
 
 func TestMarshalProtoPubKey(t *testing.T) {
 	require := require.New(t)
-	ccfg := simapp.MakeTestEncodingConfig()
+	ccfg := testutil.MakeTestEncodingConfig()
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
 
@@ -79,7 +79,7 @@ func TestMarshalProtoPubKey(t *testing.T) {
 	var pkI cryptotypes.PubKey
 	err = ccfg.InterfaceRegistry.UnpackAny(&pkAny2, &pkI)
 	require.NoError(err)
-	var pk2 = pkAny2.GetCachedValue().(cryptotypes.PubKey)
+	pk2 := pkAny2.GetCachedValue().(cryptotypes.PubKey)
 	require.True(pk2.Equals(pk))
 
 	// **** test binary serialization ****
@@ -92,7 +92,7 @@ func TestMarshalProtoPubKey(t *testing.T) {
 	require.NoError(err)
 	err = ccfg.InterfaceRegistry.UnpackAny(&pkAny3, &pkI)
 	require.NoError(err)
-	var pk3 = pkAny3.GetCachedValue().(cryptotypes.PubKey)
+	pk3 := pkAny3.GetCachedValue().(cryptotypes.PubKey)
 	require.True(pk3.Equals(pk))
 }
 
@@ -100,7 +100,7 @@ func TestMarshalProtoPubKey(t *testing.T) {
 // helper functions
 func TestMarshalProtoInterfacePubKey(t *testing.T) {
 	require := require.New(t)
-	ccfg := simapp.MakeTestEncodingConfig()
+	ccfg := testutil.MakeTestEncodingConfig()
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
 

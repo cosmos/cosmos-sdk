@@ -6,8 +6,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -38,16 +40,16 @@ func getTestProposal() []sdk.Msg {
 
 func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
-	pks := simapp.CreateTestPubKeys(5)
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
+	pks := simtestutil.CreateTestPubKeys(5)
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		cdc,
 		app.GetKey(stakingtypes.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.GetSubspace(stakingtypes.ModuleName),
+		authtypes.NewModuleAddress(types.ModuleName).String(),
 	)
 
 	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})

@@ -61,7 +61,7 @@ func (m *MsgCancelUpgrade) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners returns the expected signers for MsgSoftwareUpgrade.
+// GetSigners returns the expected signers for MsgCancelUpgrade.
 func (m *MsgCancelUpgrade) GetSigners() []sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(m.Authority)
 	return []sdk.AccAddress{addr}

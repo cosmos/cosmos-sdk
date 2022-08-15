@@ -65,7 +65,6 @@ The SIGN_MODE_DIRECT sign mode is not supported.'
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document is written to the given file instead of STDOUT")
 	cmd.Flags().Bool(flagAmino, false, "Generate Amino-encoded JSON suitable for submitting to the txs REST endpoint")
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
 
 	return cmd
 }
@@ -139,7 +138,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 
 				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
 				if err != nil {
-					addr, _ := sdk.AccAddressFromHex(sig.PubKey.Address().String())
+					addr, _ := sdk.AccAddressFromHexUnsafe(sig.PubKey.Address().String())
 					return fmt.Errorf("couldn't verify signature for address %s", addr)
 				}
 
@@ -192,7 +191,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return
 		}
 
-		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 		if err != nil {
 			return err
 		}
@@ -259,7 +258,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			txFactory = txFactory.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 		}
 
-		var infile = os.Stdin
+		infile := os.Stdin
 		if args[0] != "-" {
 			infile, err = os.Open(args[0])
 			defer func() {

@@ -25,11 +25,11 @@
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
 
-Contributing to this repo can mean many things such as participating in
+Contributing to this repo can mean many things, such as participating in
 discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
-1. Start by browsing [new issues](https://github.com/cosmos/cosmos-sdk/issues) and [discussions](https://github.com/cosmos/cosmos-sdk/discussions). If you are looking for something interesting or if you have something in your mind, there is a chance it was has been discussed.
+1. Start by browsing [new issues](https://github.com/cosmos/cosmos-sdk/issues) and [discussions](https://github.com/cosmos/cosmos-sdk/discussions). If you are looking for something interesting or if you have something in your mind, there is a chance it had been discussed.
    * Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)?
 2. Determine whether a GitHub issue or discussion is more appropriate for your needs:
    1. If want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
@@ -109,7 +109,7 @@ Then:
    Draft PRs also helps the core team provide early feedback and ensure the work is in the right direction.
 2. When the code is complete, change your PR from `Draft` to `Ready for Review`.
 3. Go through the actions for each checkbox present in the PR template description. The PR actions are automatically provided for each new PR.
-4. Be sure to include a relevant changelog entry in the `Unreleased` section of `CHANGELOG.md` (see file for log format).
+4. Be sure to include a relevant changelog entry in the `Unreleased` section of `CHANGELOG.md` (see file for log format). The entry should be on top of all others changes in the section.
 
 PRs must have a category prefix that is based on the type of changes being made (for example, `fix`, `feat`,
 `refactor`, `docs`, and so on). The *type* must be included in the PR title as a prefix (for example,
@@ -180,7 +180,7 @@ build, in which case we can fall back on `go mod tidy -v`.
 
 We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along with [gogoproto](https://github.com/gogo/protobuf) to generate code for use in Cosmos SDK.
 
-For determinstic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-docker/) to install it.
+For deterministic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-docker/) to install it.
 
 For formatting code in `.proto` files, you can run `make proto-format` command.
 
@@ -223,7 +223,7 @@ If needed, we backport a commit from `main` to a release branch (excluding conse
 
 ## Code Owner Membership
 
-In the ethos of open source projects, and out of necessity to keep the code
+In the ethos of open-source projects, and out of necessity to keep the code
 alive, the core contributor team will strive to permit special repo privileges
 to developers who show an aptitude towards developing with this code base.
 
@@ -243,7 +243,7 @@ The other code owners should then all approve this PR to publicly display their 
 Only if unanimous consensus is reached among all the existing code-owners will
 an invitation be extended to a new potential-member. Likewise, when an existing
 member is suggested to be removed/or have their privileges reduced, the member
-in question must agree on the decision for their removal or else no action
+in question must agree to the decision for their removal or else no action
 should be taken. If however, a code-owner is demonstrably shown to intentionally
 have had acted maliciously or grossly negligent, code-owner privileges may be
 stripped with no prior warning or consent from the member in question.

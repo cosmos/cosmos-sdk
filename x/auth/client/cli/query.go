@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -41,6 +42,7 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		GetAccountCmd(),
+		GetAccountAddressByIDCmd(),
 		GetAccountsCmd(),
 		QueryParamsCmd(),
 		QueryModuleAccountsCmd(),
@@ -116,6 +118,39 @@ func GetAccountCmd() *cobra.Command {
 			}
 
 			return clientCtx.PrintProto(res.Account)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetAccountAddressByIDCmd returns a query account that will display the account address of a given account id.
+func GetAccountAddressByIDCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "address-by-id [id]",
+		Short:   "Query for account address by account id",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s q auth address-by-id 1", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			id, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AccountAddressByID(cmd.Context(), &types.QueryAccountAddressByIDRequest{Id: id})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -298,7 +333,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 				}
 			case typeSig:
 				{
-					sigParts, err := parseSigArgs(args)
+					sigParts, err := ParseSigArgs(args)
 					if err != nil {
 						return err
 					}
@@ -356,8 +391,8 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 	return cmd
 }
 
-// parseSigArgs parses comma-separated signatures from the CLI arguments.
-func parseSigArgs(args []string) ([]string, error) {
+// ParseSigArgs parses comma-separated signatures from the CLI arguments.
+func ParseSigArgs(args []string) ([]string, error) {
 	if len(args) != 1 || args[0] == "" {
 		return nil, fmt.Errorf("argument should be comma-separated signatures")
 	}

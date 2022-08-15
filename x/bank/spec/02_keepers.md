@@ -22,7 +22,7 @@ Typically, these addresses are module accounts. If these addresses receive funds
 outside the expected rules of the state machine, invariants are likely to be
 broken and could result in a halted network.
 
-By providing the `x/bank` module with a blocklisted set of addresses, an error occurs for the operation if a user or client attempts to directly or indirectly send funds to a blocklisted account, for example, by using [IBC](http://docs.cosmos.network/master/ibc/).
+By providing the `x/bank` module with a blocklisted set of addresses, an error occurs for the operation if a user or client attempts to directly or indirectly send funds to a blocklisted account, for example, by using [IBC](https://ibc.cosmos.network).
 
 ## Common Types
 
@@ -61,15 +61,17 @@ Restricted permission to mint per module could be achieved by using baseKeeper w
 // between accounts.
 type Keeper interface {
     SendKeeper
-    WithMintCoinsRestriction(NewRestrictionFn BankMintingRestrictionFn) BaseKeeper 
+    WithMintCoinsRestriction(MintingRestrictionFn) BaseKeeper
 
     InitGenesis(sdk.Context, *types.GenesisState)
     ExportGenesis(sdk.Context) *types.GenesisState
 
     GetSupply(ctx sdk.Context, denom string) sdk.Coin
+    HasSupply(ctx sdk.Context, denom string) bool
     GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
     IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
     GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
+    HasDenomMetaData(ctx sdk.Context, denom string) bool
     SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
     IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
 
@@ -83,6 +85,9 @@ type Keeper interface {
 
     DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
     UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
+
+    // GetAuthority gets the address capable of executing governance proposal messages. Usually the gov module account.
+    GetAuthority() string
 
     types.QueryServer
 }
@@ -103,7 +108,14 @@ type SendKeeper interface {
     SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
     GetParams(ctx sdk.Context) types.Params
-    SetParams(ctx sdk.Context, params types.Params)
+    SetParams(ctx sdk.Context, params types.Params) error
+
+    IsSendEnabledDenom(ctx sdk.Context, denom string) bool
+    SetSendEnabled(ctx sdk.Context, denom string, value bool)
+    SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types.SendEnabled)
+    DeleteSendEnabled(ctx sdk.Context, denom string)
+    IterateSendEnabledEntries(ctx sdk.Context, cb func(denom string, sendEnabled bool) (stop bool))
+    GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEnabled
 
     IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
     IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
@@ -128,6 +140,7 @@ type ViewKeeper interface {
     GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
     LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
     SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+    SpendableCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
     IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool))
     IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))

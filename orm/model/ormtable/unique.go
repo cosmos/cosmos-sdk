@@ -190,8 +190,10 @@ func (u uniqueKeyIndex) Fields() string {
 	return u.fields.String()
 }
 
-var _ indexer = &uniqueKeyIndex{}
-var _ UniqueIndex = &uniqueKeyIndex{}
+var (
+	_ indexer     = &uniqueKeyIndex{}
+	_ UniqueIndex = &uniqueKeyIndex{}
+)
 
 // isNonTrivialUniqueKey checks if unique key fields are non-trivial, meaning that they
 // don't contain the full primary key. If they contain the full primary key, then

@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/cosmos/cosmos-sdk/pruning"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	iavltree "github.com/cosmos/iavl"
 	protoio "github.com/gogo/protobuf/io"
 	gogotypes "github.com/gogo/protobuf/types"
@@ -18,8 +20,6 @@ import (
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/pruning"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	vm "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 )
 
 const (
@@ -72,9 +73,9 @@ type Store struct {
 }
 
 var (
-	_ types.CommitMultiStore  = (*Store)(nil)
-	_ types.AppVersionManager = (*Store)(nil)
-	_ types.Queryable         = (*Store)(nil)
+	_ types.CommitMultiStore = (*Store)(nil)
+	_ vm.AppVersionManager   = (*Store)(nil)
+	_ types.Queryable        = (*Store)(nil)
 )
 
 // NewStore returns a reference to a new Store object with the provided DB. The

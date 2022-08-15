@@ -68,7 +68,13 @@ func (pubKey *PubKey) VerifySignatureEip191(msg []byte, sigStr []byte) bool {
 		return false
 	}
 
-	return signature.Verify(sha3.NewLegacyKeccak256().Sum(msg), pub)
+	return signature.Verify(keccak256(msg), pub)
+}
+
+func keccak256(bytes []byte) []byte {
+	hasher := sha3.NewLegacyKeccak256()
+	hasher.Write(bytes)
+	return hasher.Sum(nil)
 }
 
 // Read Signature struct from R || S. Caller needs to ensure

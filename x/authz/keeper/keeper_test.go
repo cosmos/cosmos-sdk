@@ -4,21 +4,23 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	"github.com/cosmos/cosmos-sdk/x/authz/testutil"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 var (
@@ -34,34 +36,46 @@ type TestSuite struct {
 	ctx               sdk.Context
 	addrs             []sdk.AccAddress
 	authzKeeper       authzkeeper.Keeper
-	bankKeeper        bankkeeper.Keeper
+	accountKeeper     *authztestutil.MockAccountKeeper
+	bankKeeper        *authztestutil.MockBankKeeper
 	interfaceRegistry codectypes.InterfaceRegistry
+	baseApp           *baseapp.BaseApp
+	encCfg            moduletestutil.TestEncodingConfig
 	queryClient       authz.QueryClient
 }
 
 func (s *TestSuite) SetupTest() {
-	var stakingKeeper *stakingkeeper.Keeper
+	key := sdk.NewKVStoreKey(authzkeeper.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	s.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
 
-	app, err := simtestutil.Setup(
-		testutil.AppConfig,
-		&s.bankKeeper,
-		&stakingKeeper,
-		&s.authzKeeper,
-		&s.interfaceRegistry,
+	s.baseApp = baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		s.encCfg.TxConfig.TxDecoder(),
 	)
-	s.Require().NoError(err)
+	s.baseApp.SetCMS(testCtx.CMS)
+	s.baseApp.SetInterfaceRegistry(s.encCfg.InterfaceRegistry)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.interfaceRegistry)
+	s.addrs = simtestutil.CreateIncrementalAccounts(3)
+
+	// gomock initializations
+	ctrl := gomock.NewController(s.T())
+	s.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
+	s.bankKeeper = authztestutil.NewMockBankKeeper(ctrl)
+	banktypes.RegisterInterfaces(s.encCfg.InterfaceRegistry)
+	banktypes.RegisterMsgServer(s.baseApp.MsgServiceRouter(), s.bankKeeper)
+
+	s.authzKeeper = authzkeeper.NewKeeper(key, s.encCfg.Codec, s.baseApp.MsgServiceRouter(), s.accountKeeper)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.encCfg.InterfaceRegistry)
 	authz.RegisterQueryServer(queryHelper, s.authzKeeper)
 	queryClient := authz.NewQueryClient(queryHelper)
 	s.queryClient = queryClient
 
-	s.ctx = ctx
 	s.queryClient = queryClient
-	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, stakingKeeper, ctx, 3, sdk.NewInt(30000000))
 }
 
 func (s *TestSuite) TestKeeper() {
@@ -146,8 +160,6 @@ func (s *TestSuite) TestDispatchAction() {
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
 	a := banktypes.NewSendAuthorization(coins100, nil)
-
-	require.NoError(banktestutil.FundAccount(s.bankKeeper, s.ctx, granterAddr, coins1000))
 
 	testCases := []struct {
 		name      string
@@ -291,7 +303,6 @@ func (s *TestSuite) TestDispatchedEvents() {
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
-	require.NoError(banktestutil.FundAccount(s.bankKeeper, s.ctx, granterAddr, coins1000))
 	expiration := s.ctx.BlockTime().Add(1 * time.Second) // must be in the future
 
 	msgs := authz.NewMsgExec(granteeAddr, []sdk.Msg{
@@ -321,13 +332,11 @@ func (s *TestSuite) TestDispatchedEvents() {
 	events := s.ctx.EventManager().Events()
 
 	// get last 5 events (events that occur *after* the grant)
-	events = events[len(events)-5:]
+	events = events[len(events)-2:]
 
 	requiredEvents := map[string]bool{
-		"coin_spent":    false,
-		"coin_received": false,
-		"transfer":      false,
-		"message":       false,
+		"cosmos.authz.v1beta1.EventGrant":  true,
+		"cosmos.authz.v1beta1.EventRevoke": true,
 	}
 	for _, e := range events {
 		requiredEvents[e.Type] = true

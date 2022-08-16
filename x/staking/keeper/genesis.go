@@ -3,8 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -26,7 +27,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 	// genesis.json are in block 0.
 	ctx = ctx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
 
-	k.SetParams(ctx, data.Params)
+	if err := k.SetParams(ctx, data.Params); err != nil {
+		panic(err)
+	}
 	k.SetLastTotalPower(ctx, data.LastTotalPower)
 
 	for _, validator := range data.Validators {

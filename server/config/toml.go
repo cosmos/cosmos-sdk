@@ -3,7 +3,6 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"text/template"
 
@@ -280,7 +279,7 @@ func WriteConfigFile(configFilePath string, config interface{}) {
 }
 
 func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {
-	if err := ioutil.WriteFile(filePath, contents, mode); err != nil {
+	if err := os.WriteFile(filePath, contents, mode); err != nil {
 		fmt.Printf(fmt.Sprintf("failed to write file: %v", err) + "\n")
 		os.Exit(1)
 	}

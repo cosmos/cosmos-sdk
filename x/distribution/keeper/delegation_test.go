@@ -56,13 +56,11 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
 	addr := sdk.AccAddress(valAddr)
-	val, err := distrtestutil.CreateValidator(valConsPk0)
+	val, err := distrtestutil.CreateValidator(valConsPk0, sdk.NewInt(1000))
 	require.NoError(t, err)
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	// set validator's tokens and delegator shares
-	val.Tokens = sdk.NewInt(1000)
-	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
+	// delegation mock
 	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(3)
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del)
@@ -136,14 +134,12 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
 	addr := sdk.AccAddress(valAddr)
-	val, err := distrtestutil.CreateValidator(valConsPk0)
+	valPower := int64(100)
+	stake := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
+	val, err := distrtestutil.CreateValidator(valConsPk0, stake)
 	require.NoError(t, err)
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	// set validator's tokens and delegator shares
-	valPower := int64(100)
-	val.Tokens = sdk.TokensFromConsensusPower(valPower, sdk.DefaultPowerReduction)
-	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
 	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
 
 	// set mock calls
@@ -233,14 +229,13 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
 	addr := sdk.AccAddress(valAddr)
-	val, err := distrtestutil.CreateValidator(valConsPk0)
+	valPower := int64(100)
+	stake := sdk.TokensFromConsensusPower(valPower, sdk.DefaultPowerReduction)
+	val, err := distrtestutil.CreateValidator(valConsPk0, stake)
 	require.NoError(t, err)
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	// set validator's tokens and delegator shares
-	valPower := int64(100)
-	val.Tokens = sdk.TokensFromConsensusPower(valPower, sdk.DefaultPowerReduction)
-	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
+	// delegation mocks
 	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(4)
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del)
@@ -349,7 +344,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	// create validator with 50% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
 	addr0 := sdk.AccAddress(valAddr)
-	val, err := distrtestutil.CreateValidator(valConsPk0)
+	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
 	require.NoError(t, err)
 
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
@@ -374,7 +369,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// second delegation
 	addr1 := sdk.AccAddress(valConsAddr1)
-	_, del1, err := distrtestutil.Delegate(ctx, distrKeeper, addr1, &val, sdk.NewInt(10000000), nil)
+	_, del1, err := distrtestutil.Delegate(ctx, distrKeeper, addr1, &val, sdk.NewInt(100), nil)
 	require.NoError(t, err)
 
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr1, valAddr).Return(del1)

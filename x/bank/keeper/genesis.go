@@ -57,6 +57,5 @@ func (k BaseKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		k.GetAccountsBalances(ctx),
 		totalSupply,
 		k.GetAllDenomMetaData(ctx),
-		k.getGenesisSupplyOffsets(ctx),
-	)
+	).WithSupplyOffsets(k.getGenesisSupplyOffsets(ctx))
 }

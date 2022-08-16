@@ -63,19 +63,25 @@ func (gs GenesisState) Validate() error {
 
 // NewGenesisState creates a new genesis state.
 func NewGenesisState(params Params, balances []Balance, supply sdk.Coins,
-	denomMetaData []Metadata, supplyOffsets []GenesisSupplyOffset) *GenesisState {
+	denomMetaData []Metadata) *GenesisState {
 	return &GenesisState{
 		Params:        params,
 		Balances:      balances,
 		Supply:        supply,
 		DenomMetadata: denomMetaData,
-		SupplyOffsets: supplyOffsets,
+		SupplyOffsets: []GenesisSupplyOffset{},
 	}
+}
+
+// WithSupplyOffsets adds supply offsets to a genesis state
+func (gs *GenesisState) WithSupplyOffsets(supplyOffsets []GenesisSupplyOffset) *GenesisState {
+	gs.SupplyOffsets = supplyOffsets
+	return gs
 }
 
 // DefaultGenesisState returns a default bank module genesis state.
 func DefaultGenesisState() *GenesisState {
-	return NewGenesisState(DefaultParams(), []Balance{}, sdk.Coins{}, []Metadata{}, []GenesisSupplyOffset{})
+	return NewGenesisState(DefaultParams(), []Balance{}, sdk.Coins{}, []Metadata{})
 }
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application

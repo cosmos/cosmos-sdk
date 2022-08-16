@@ -24,11 +24,14 @@ type msgServerSuite struct {
 	*baseSuite
 
 	msgServer v1.MsgServer
-	err       error
+
+	proposal *v1.Proposal
+	err      error
 }
 
 func TestMsgServer(t *testing.T) {
 	gocuke.NewRunner(t, &msgServerSuite{}).Path(
+		"./features/msg_deposit.feature",
 		"./features/msg_submit_proposal.feature",
 		"./features/msg_vote.feature",
 	).Run()
@@ -40,7 +43,9 @@ func (s *msgServerSuite) Before(t gocuke.TestingT) {
 	s.expectCalls()
 }
 
-func (s *msgServerSuite) AMindepositParamSetToAndMininitialdepositrationSetTo(d string, r string) {
+// MsgSubmitProposal
+
+func (s *msgServerSuite) AMindepositParamSetToAndMininitialdepositratioSetTo(d string, r string) {
 	p := v1.DefaultParams()
 	coins, err := sdk.ParseCoinsNormalized(d)
 	require.NoError(s.t, err)
@@ -88,8 +93,10 @@ func (s *msgServerSuite) ExpectNoError() {
 	require.NoError(s.t, s.err)
 }
 
-func (s *msgServerSuite) AProposalWithDeposit(d string) {
-	coins, err := sdk.ParseCoinsNormalized(d)
+// MsgVote
+
+func (s *msgServerSuite) AProposalWithInitialDeposit(deposit string) {
+	coins, err := sdk.ParseCoinsNormalized(deposit)
 	require.NoError(s.t, err)
 
 	_, err = s.msgServer.SubmitProposal(sdk.WrapSDKContext(s.ctx), &v1.MsgSubmitProposal{
@@ -120,6 +127,38 @@ func (s *msgServerSuite) AlicesVoteOnProposalIs(proposalId int64, voteOutput str
 
 	require.Equal(s.t, voteOutput, v1.WeightedVoteOptions(vote.Options).String())
 }
+
+// MsgDeposit
+
+func (s *msgServerSuite) AliceDepositsOnProposal(deposit string, proposalId int64) {
+	coins, err := sdk.ParseCoinsNormalized(deposit)
+	require.NoError(s.t, err)
+
+	_, s.err = s.msgServer.Deposit(sdk.WrapSDKContext(s.ctx), &v1.MsgDeposit{
+		ProposalId: uint64(proposalId),
+		Depositor:  s.alice.String(),
+		Amount:     coins,
+	})
+}
+
+func (s *msgServerSuite) WeQueryProposal(proposalId int64) {
+	res, err := s.govKeeper.Proposal(sdk.WrapSDKContext(s.ctx), &v1.QueryProposalRequest{
+		ProposalId: uint64(proposalId),
+	})
+	require.NoError(s.t, err)
+
+	s.proposal = res.Proposal
+}
+
+func (s *msgServerSuite) ExpectTheProposalToHaveStatus(expStatus string) {
+	require.Equal(s.t, expStatus, v1.ProposalStatus_name[int32(s.proposal.Status)])
+}
+
+func (s *msgServerSuite) ExpectTheProposalToHaveTotalDeposit(expDeposit string) {
+	require.Equal(s.t, expDeposit, sdk.Coins(s.proposal.TotalDeposit).String())
+}
+
+// Shared
 
 func (s *msgServerSuite) expectCalls() {
 	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()

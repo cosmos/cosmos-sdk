@@ -6,24 +6,24 @@ Feature: MsgWeightedVote
 
   Rule: proposal must be in the voting period to vote
 
-  Scenario: vote on a non-existing proposal yields error
+  Scenario: cannot vote on a non-existing proposal
     When alice votes "yes=1" on proposal 42
     Then expect the error "42: unknown proposal"
 
-  Scenario: vote on inactive proposal (not enough deposit) yields error
-    Given a proposal with "0stake" deposit
+  Scenario: cannot vote on inactive proposal (in DEPOSIT_PERIOD)
+    Given a proposal with "0stake" initial deposit
     When alice votes "yes=1" on proposal 1
     Then expect the error "1: inactive proposal"
   
   Rule: vote options must be valid
 
-  Scenario: unknown vote option yields error
-    Given a proposal with "10000000stake" deposit
+  Scenario: cannote vote with unknown vote option
+    Given a proposal with "10000000stake" initial deposit
     When alice votes "foo=1" on proposal 1
     Then expect the error "'foo' is not a valid vote option"
 
   Scenario Outline: correct votes
-    Given a proposal with "10000000stake" deposit
+    Given a proposal with "10000000stake" initial deposit
     When alice votes "<vote-option>" on proposal 1
     Then expect no error
 
@@ -35,7 +35,7 @@ Feature: MsgWeightedVote
     | abstain=0.00001,no_with_veto=0.99999 |
 
   Scenario: 2nd vote on same proposal overwrites the 1st one
-    Given a proposal with "10000000stake" deposit
+    Given a proposal with "10000000stake" initial deposit
     And alice votes "yes=1" on proposal 1
     When alice votes "no=1" on proposal 1
     Then expect no error

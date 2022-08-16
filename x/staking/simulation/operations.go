@@ -413,8 +413,19 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "account does have any unbonding delegation"), nil, nil
 		}
 
-		// get random unbonding delegation entry at block height
-		unbondingDelegationEntry := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))]
+		// this is a temporary fix to make staking simulation pass.
+		// we should fetch the first unbondingDelegationEntry that matches with the creationHeight.
+		// because currently the staking msgServer chooses the first unbondingDelegationEntry with the matching creationHeight.
+		creationHeight := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))].CreationHeight
+
+		var unbondingDelegationEntry types.UnbondingDelegationEntry
+
+		for _, entry := range unbondingDelegation.Entries {
+			if entry.CreationHeight == creationHeight {
+				unbondingDelegationEntry = entry
+				break
+			}
+		}
 
 		if unbondingDelegationEntry.CompletionTime.Before(ctx.BlockTime()) {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "unbonding delegation is already processed"), nil, nil

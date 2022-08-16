@@ -306,6 +306,68 @@ func TestCacheKVMergeIteratorRandom(t *testing.T) {
 	}
 }
 
+func TestNilEndIterator(t *testing.T) {
+	tests := []struct {
+		name  string
+		write bool
+		end   []byte
+	}{
+		{name: "write=false, end=nil", write: false, end: nil},
+		{name: "write=true, end=nil", write: true, end: nil},
+		{name: "write=false, end=non-nil", write: false, end: keyFmt(3000)},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			st := newCacheKVStore()
+
+			for i := 0; i < 3000; i++ {
+				kstr := keyFmt(i)
+				st.Set(kstr, valFmt(i))
+			}
+
+			if tt.write {
+				st.Write()
+			}
+
+			itr := st.Iterator(keyFmt(1000), tt.end)
+			i := 1000
+			j := 0
+			for itr.Valid() {
+				require.Equal(t, keyFmt(i), itr.Key())
+				require.Equal(t, valFmt(i), itr.Value())
+				itr.Next()
+				i++
+				j++
+			}
+
+			require.Equal(t, 2000, j)
+		})
+	}
+}
+
+func TestNilEndIterator2(t *testing.T) {
+	st := newCacheKVStore()
+	st.Set([]byte("AB"), []byte{1})
+
+	// difference between success and fail is this line:
+	//st.Write()
+
+	// may also be side-effected by a successful iteration
+
+	iter1 := st.Iterator([]byte("A"), []byte("B"))
+	require.True(t, iter1.Valid())
+	require.NoError(t, iter1.Close())
+
+	iter2 := st.Iterator([]byte("AA"), nil)
+	require.True(t, iter2.Valid())
+	require.NoError(t, iter2.Close())
+
+	iter3 := st.Iterator([]byte("A"), nil)
+	require.True(t, iter3.Valid())
+	require.NoError(t, iter3.Close())
+}
+
 //-------------------------------------------------------------------------------------------
 // do some random ops
 

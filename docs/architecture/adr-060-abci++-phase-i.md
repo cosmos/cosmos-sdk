@@ -96,7 +96,7 @@ type Mempool[T MempoolTx] interface {
 	Insert(T) error
 	// ReapMaxBytes returns the next set of available transactions from the app-side
 	// mempool, up to maxBytes or until the mempool is empty. The application can
-	// decide to return transactions from it's own mempool or from the incoming
+	// decide to return transactions from its own mempool or from the incoming
 	// TxRecords or some combination of both. The notion of 'available' or 'next'
 	// is defined by the application's mempool implementation.
 	ReapMaxBytes(txRecords abci.TxRecords, maxBytes int) ([]PrepareTxRecord[T], error)

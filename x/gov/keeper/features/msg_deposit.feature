@@ -3,7 +3,7 @@ Feature: MsgDeposit
   A user can deposit if:
   - the proposal is in deposit period
 
-  Rule: proposal must be in the deposit period
+  Rule: proposal must be in the deposit or voting period
 
   Scenario: cannot deposit on a non-existing proposal
     When alice deposits "100stake" on proposal 42
@@ -28,7 +28,9 @@ Feature: MsgDeposit
     When alice deposits "50stake" on proposal 1
     Then expect no error
 
-  # Scenario: cannot deposit on proposal past its voting period
+  # TODO Scenario: cannot deposit on proposal past its deposit end time
+
+  # TODO Scenario: cannot deposit on proposal past its voting period
 
   Rule: proposal must have enough deposit to be active
 
@@ -53,3 +55,17 @@ Feature: MsgDeposit
     When we query proposal 1
     Then expect the proposal to have status "PROPOSAL_STATUS_VOTING_PERIOD"
     And expect the proposal to have total deposit "120stake"
+
+  Rule: all deposits must be transferred to the gov module account
+
+  Scenario: initial deposit is transferred to the gov module account
+    Given
+
+  Scenario: further deposits are transferred to the gov module account
+    Given a proposal with "50stake" initial deposit
+    Then expect the gov account to have "50stake"
+
+  Scenario: further deposits are transferred to the gov module account
+    Given a proposal with "50stake" initial deposit
+    When alice deposits "70stake" on proposal 1
+    Then expect the gov account to have "120stake"

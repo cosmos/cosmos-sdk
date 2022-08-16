@@ -23,7 +23,8 @@ var (
 type msgServerSuite struct {
 	*baseSuite
 
-	msgServer v1.MsgServer
+	govAcctBalance sdk.Coins // Track the gov module balance
+	msgServer      v1.MsgServer
 
 	proposal *v1.Proposal
 	err      error
@@ -158,9 +159,21 @@ func (s *msgServerSuite) ExpectTheProposalToHaveTotalDeposit(expDeposit string) 
 	require.Equal(s.t, expDeposit, sdk.Coins(s.proposal.TotalDeposit).String())
 }
 
+func (s *msgServerSuite) ExpectTheGovAccountToHave(expBalance string) {
+	require.Equal(s.t, expBalance, s.govAcctBalance.String())
+}
+
 // Shared
 
 func (s *msgServerSuite) expectCalls() {
 	s.authKeeper.EXPECT().GetModuleAccount(s.ctx, types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
-	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(s.ctx, s.alice, types.ModuleName, gomock.Any()).Return(nil).AnyTimes()
+	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(s.ctx, s.alice, types.ModuleName, gomock.Any()).DoAndReturn(
+		func(_ sdk.Context, from sdk.AccAddress, to string, amt sdk.Coins) error {
+			for _, c := range amt {
+				s.govAcctBalance = s.govAcctBalance.Add(c)
+			}
+
+			return nil
+		},
+	).AnyTimes()
 }

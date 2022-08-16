@@ -116,7 +116,12 @@ func (s *KeeperTestSuite) TestParams() {
 			}
 
 			params := keeper.GetParams(ctx)
-			require.Equal(expected, params)
+			require.Equal(params, expected)
+			require.Equal(keeper.SignedBlocksWindow(ctx), expected.SignedBlocksWindow)
+			require.Equal(keeper.MinSignedPerWindow(ctx), expected.MinSignedPerWindow.MulInt64(expected.SignedBlocksWindow).RoundInt64())
+			require.Equal(keeper.DowntimeJailDuration(ctx), expected.DowntimeJailDuration)
+			require.Equal(keeper.SlashFractionDoubleSign(ctx), expected.SlashFractionDoubleSign)
+			require.Equal(keeper.SlashFractionDowntime(ctx), expected.SlashFractionDowntime)
 		})
 	}
 }

@@ -3,9 +3,10 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/golang/mock/gomock"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/golang/mock/gomock"
 )
 
 func (s *KeeperTestSuite) TestUpdateParams() {

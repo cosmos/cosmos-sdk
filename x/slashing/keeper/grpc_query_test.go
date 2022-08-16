@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -15,7 +14,7 @@ func (s *KeeperTestSuite) TestGRPCQueryParams() {
 	queryClient := s.queryClient
 	require := s.Require()
 
-	paramsResp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
+	paramsResp, err := queryClient.Params(gocontext.Background(), &slashingtypes.QueryParamsRequest{})
 
 	require.NoError(err)
 	require.Equal(testslashing.TestParams(), paramsResp.Params)
@@ -25,7 +24,7 @@ func (s *KeeperTestSuite) TestGRPCSigningInfo() {
 	queryClient, ctx, keeper := s.queryClient, s.ctx, s.slashingKeeper
 	require := s.Require()
 
-	infoResp, err := queryClient.SigningInfo(gocontext.Background(), &types.QuerySigningInfoRequest{ConsAddress: ""})
+	infoResp, err := queryClient.SigningInfo(gocontext.Background(), &slashingtypes.QuerySigningInfoRequest{ConsAddress: ""})
 	require.Error(err)
 	require.Nil(infoResp)
 
@@ -43,7 +42,7 @@ func (s *KeeperTestSuite) TestGRPCSigningInfo() {
 	require.True(found)
 
 	infoResp, err = queryClient.SigningInfo(gocontext.Background(),
-		&types.QuerySigningInfoRequest{ConsAddress: consAddr.String()})
+		&slashingtypes.QuerySigningInfoRequest{ConsAddress: consAddr.String()})
 	require.NoError(err)
 	require.Equal(info, infoResp.ValSigningInfo)
 }
@@ -68,21 +67,21 @@ func (s *KeeperTestSuite) TestGRPCSigningInfos() {
 	signingInfo.Address = string(consAddr2)
 	keeper.SetValidatorSigningInfo(ctx, consAddr2, signingInfo)
 
-	var signingInfos []types.ValidatorSigningInfo
+	var signingInfos []slashingtypes.ValidatorSigningInfo
 
-	keeper.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
+	keeper.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
 		signingInfos = append(signingInfos, info)
 		return false
 	})
 
 	// verify all values are returned without pagination
 	infoResp, err := queryClient.SigningInfos(gocontext.Background(),
-		&types.QuerySigningInfosRequest{Pagination: nil})
+		&slashingtypes.QuerySigningInfosRequest{Pagination: nil})
 	require.NoError(err)
 	require.Equal(signingInfos, infoResp.Info)
 
 	infoResp, err = queryClient.SigningInfos(gocontext.Background(),
-		&types.QuerySigningInfosRequest{Pagination: &query.PageRequest{Limit: 1, CountTotal: true}})
+		&slashingtypes.QuerySigningInfosRequest{Pagination: &query.PageRequest{Limit: 1, CountTotal: true}})
 	require.NoError(err)
 	require.Len(infoResp.Info, 1)
 	require.Equal(signingInfos[0], infoResp.Info[0])

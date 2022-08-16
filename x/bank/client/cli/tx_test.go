@@ -8,12 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
 
 func (s *CLITestSuite) TestSendTxCmd() {
-	accounts := s.createKeyringAccounts(1)
+	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 	cmd := cli.NewSendTxCmd()
 	cmd.SetOutput(io.Discard)
 
@@ -38,8 +39,8 @@ func (s *CLITestSuite) TestSendTxCmd() {
 			func() client.Context {
 				return s.baseCtx
 			},
-			accounts[0].address,
-			accounts[0].address,
+			accounts[0].Address,
+			accounts[0].Address,
 			sdk.NewCoins(
 				sdk.NewCoin("stake", sdk.NewInt(10)),
 				sdk.NewCoin("photon", sdk.NewInt(40)),
@@ -48,11 +49,11 @@ func (s *CLITestSuite) TestSendTxCmd() {
 			false,
 		},
 		{
-			"invalid to address",
+			"invalid to Address",
 			func() client.Context {
 				return s.baseCtx
 			},
-			accounts[0].address,
+			accounts[0].Address,
 			sdk.AccAddress{},
 			sdk.NewCoins(
 				sdk.NewCoin("stake", sdk.NewInt(10)),
@@ -66,8 +67,8 @@ func (s *CLITestSuite) TestSendTxCmd() {
 			func() client.Context {
 				return s.baseCtx
 			},
-			accounts[0].address,
-			accounts[0].address,
+			accounts[0].Address,
+			accounts[0].Address,
 			nil,
 			extraArgs,
 			true,
@@ -95,7 +96,7 @@ func (s *CLITestSuite) TestSendTxCmd() {
 }
 
 func (s *CLITestSuite) TestMultiSendTxCmd() {
-	accounts := s.createKeyringAccounts(3)
+	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 3)
 
 	cmd := cli.NewMultiSendTxCmd()
 	cmd.SetOutput(io.Discard)
@@ -122,10 +123,10 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 			func() client.Context {
 				return s.baseCtx
 			},
-			accounts[0].address.String(),
+			accounts[0].Address.String(),
 			[]string{
-				accounts[1].address.String(),
-				accounts[2].address.String(),
+				accounts[1].Address.String(),
+				accounts[2].Address.String(),
 			},
 			sdk.NewCoins(
 				sdk.NewCoin("stake", sdk.NewInt(10)),
@@ -135,14 +136,14 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 			false,
 		},
 		{
-			"invalid from address",
+			"invalid from Address",
 			func() client.Context {
 				return s.baseCtx
 			},
 			"foo",
 			[]string{
-				accounts[1].address.String(),
-				accounts[2].address.String(),
+				accounts[1].Address.String(),
+				accounts[2].Address.String(),
 			},
 			sdk.NewCoins(
 				sdk.NewCoin("stake", sdk.NewInt(10)),
@@ -156,9 +157,9 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 			func() client.Context {
 				return s.baseCtx
 			},
-			accounts[0].address.String(),
+			accounts[0].Address.String(),
 			[]string{
-				accounts[1].address.String(),
+				accounts[1].Address.String(),
 				"bar",
 			},
 			sdk.NewCoins(
@@ -173,10 +174,10 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 			func() client.Context {
 				return s.baseCtx
 			},
-			accounts[0].address.String(),
+			accounts[0].Address.String(),
 			[]string{
-				accounts[1].address.String(),
-				accounts[2].address.String(),
+				accounts[1].Address.String(),
+				accounts[2].Address.String(),
 			},
 			nil,
 			extraArgs,

@@ -126,7 +126,9 @@ Transaction reaping will essentially happen via a two-phase approach:
 5. Provide Tendermint the list of all transactions from the _valid_ buffer.
 6. Re-insert all transactions, from both buffers, back into app-side mempool.
    This is to ensure we do not discard transactions from the app-side mempool in
-	 case `ProcessProposal` fails.
+	 case `ProcessProposal` fails or in case that the proposal, while passing
+	 `ProcessProposal` is not the one decided for that height, i.e. the height took
+	 more than one round.
 
 ```go
 type PriorityMempool[T MempoolTx] struct {

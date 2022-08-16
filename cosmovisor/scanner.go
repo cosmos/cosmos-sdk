@@ -158,9 +158,5 @@ func parseUpgradeInfoFile(filename string) (upgradetypes.Plan, error) {
 		return upgradetypes.Plan{}, fmt.Errorf("invalid upgrade-info.json content; name and height must be not empty; got: %v", ui)
 	}
 
-	// Normalize name to prevent operator error in upgrade name case sensitivity
-	// errors.
-	ui.Name = strings.ToLower(ui.Name)
-
 	return ui, err
 }

@@ -35,7 +35,9 @@ func (k Keeper) DeleteHistoricalInfo(ctx sdk.Context, height int64) {
 }
 
 // IterateHistoricalInfo provides an interator over all stored HistoricalInfo
-//  objects. For each HistoricalInfo object, cb will be called. If the cb returns
+//
+//	objects. For each HistoricalInfo object, cb will be called. If the cb returns
+//
 // true, the iterator will close and stop.
 func (k Keeper) IterateHistoricalInfo(ctx sdk.Context, cb func(types.HistoricalInfo) bool) {
 	store := ctx.KVStore(k.storeKey)

@@ -2,7 +2,6 @@ package cli_test
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"testing"
 
@@ -15,9 +14,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
@@ -46,11 +43,6 @@ func (m mockTendermintRPC) ABCIQueryWithOptions(
 	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
 }
 
-type account struct {
-	name    string
-	address sdk.AccAddress
-}
-
 type CLITestSuite struct {
 	suite.Suite
 
@@ -73,24 +65,4 @@ func (s *CLITestSuite) SetupSuite() {
 		WithClient(mockTendermintRPC{Client: rpcclientmock.New()}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard)
-}
-
-func (s *CLITestSuite) createKeyringAccounts(num int) []account {
-	accounts := make([]account, num)
-	for i := range accounts {
-		record, _, err := s.kr.NewMnemonic(
-			fmt.Sprintf("key-%d", i),
-			keyring.English,
-			sdk.FullFundraiserPath,
-			keyring.DefaultBIP39Passphrase,
-			hd.Secp256k1)
-		s.Require().NoError(err)
-
-		addr, err := record.GetAddress()
-		s.Require().NoError(err)
-
-		accounts[i] = account{name: record.Name, address: addr}
-	}
-
-	return accounts
 }

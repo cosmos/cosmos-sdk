@@ -12,13 +12,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (s *CLITestSuite) TestGetBalancesCmd() {
-	accounts := s.createKeyringAccounts(1)
+	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 
 	cmd := cli.GetBalancesCmd()
 	cmd.SetOutput(io.Discard)
@@ -40,7 +41,7 @@ func (s *CLITestSuite) TestGetBalancesCmd() {
 				return s.baseCtx.WithClient(c)
 			},
 			[]string{
-				accounts[0].address.String(),
+				accounts[0].Address.String(),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			&types.QueryAllBalancesResponse{},
@@ -58,7 +59,7 @@ func (s *CLITestSuite) TestGetBalancesCmd() {
 				return s.baseCtx.WithClient(c)
 			},
 			[]string{
-				accounts[0].address.String(),
+				accounts[0].Address.String(),
 				fmt.Sprintf("--%s=photon", cli.FlagDenom),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
@@ -66,7 +67,7 @@ func (s *CLITestSuite) TestGetBalancesCmd() {
 			false,
 		},
 		{
-			"invalid address",
+			"invalid Address",
 			func() client.Context {
 				return s.baseCtx
 			},
@@ -85,7 +86,7 @@ func (s *CLITestSuite) TestGetBalancesCmd() {
 				return s.baseCtx.WithClient(c)
 			},
 			[]string{
-				accounts[0].address.String(),
+				accounts[0].Address.String(),
 				fmt.Sprintf("--%s=foo", cli.FlagDenom),
 			},
 			nil,

@@ -31,7 +31,6 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-
 	suite.Run(t, new(IntegrationTestSuite))
 }
 

@@ -5,6 +5,7 @@ use (
 	./api
 	./client/v2
 	./core
+	./cosmovisor
 	./db
 	./depinject
 	./errors

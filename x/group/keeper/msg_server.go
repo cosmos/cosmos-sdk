@@ -747,13 +747,14 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	var logs string
 	if proposal.Status == group.PROPOSAL_STATUS_ACCEPTED && proposal.ExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 		// Caching context so that we don't update the store in case of failure.
-		ctx, flush := ctx.CacheContext()
+		cacheCtx, flush := ctx.CacheContext()
 
 		addr, err := sdk.AccAddressFromBech32(policyInfo.Address)
 		if err != nil {
 			return nil, err
 		}
-		_, err = k.doExecuteMsgs(ctx, k.router, proposal, addr)
+
+		results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr)
 		if err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", id, err.Error())
@@ -761,6 +762,11 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		} else {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_SUCCESS
 			flush()
+
+			for _, res := range results {
+				// NOTE: The sdk msg handler creates a new EventManager, so events must be correctly propagated back to the current context
+				ctx.EventManager().EmitEvents(res.GetEvents())
+			}
 		}
 	}
 

@@ -146,20 +146,20 @@ type PriorityMempool[T MempoolTx] struct {
 > limiting the mempool size by a fixed number of bytes.
 
 Previous discussions<sup>1</sup> have come to the agreement that Tendermint will
-perform a request to the application, via `PrepareProposalRequest`, with a certain
+perform a request to the application, via `RequestPrepareProposal`, with a certain
 amount of transactions reaped from Tendermint's local mempool. The exact amount
 of transactions reaped will be determined by a local operator configuration.
 This is referred to as the "one-shot approach" seen in discussions.
 
 When Tendermint reaps transactions from the local mempool and sends them to the
-application via `PrepareProposalRequest`, the application will have to evaluate
+application via `RequestPrepareProposal`, the application will have to evaluate
 the transactions. Specifically, it will need to inform Tendermint if it should
 reject and or include each transaction. Note, the application can even _replace_
 transactions entirely with other transactions.
 
-When evaluating transactions from `PrepareProposalRequest`, the application will
+When evaluating transactions from `RequestPrepareProposal`, the application will
 ignore _all_ transactions sent to it in the request and instead reap up to
-`PrepareProposalRequest.max_tx_bytes` from it's own mempool. There is no need to
+`RequestPrepareProposal.max_tx_bytes` from it's own mempool. There is no need to
 execute the transactions for validity as they have already passed CheckTx.
 
 ### `ProcessProposal`
@@ -197,7 +197,7 @@ case `ProcessProposal` fails.
 ### Backwards Compatibility
 
 ABCI++ is naturally not backwards compatible with prior versions of the Cosmos SDK
-and Tendermint. For example, an application that requests `PrepareProposalRequest`
+and Tendermint. For example, an application that requests `RequestPrepareProposal`
 to the same application that does not speak ABCI++ will naturally fail.
 
 However, in the first phase of the integration, the existing ABCI methods as we

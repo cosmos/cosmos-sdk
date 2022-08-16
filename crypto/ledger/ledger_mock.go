@@ -23,9 +23,17 @@ import (
 // set the discoverLedger function which is responsible for loading the Ledger
 // device at runtime or returning an error.
 func init() {
-	discoverLedger = func() (SECP256K1, error) {
+	options.discoverLedger = func() (SECP256K1, error) {
 		return LedgerSECP256K1Mock{}, nil
 	}
+
+	// Set default values for Cosmos Ledger instance. These can be updated
+	// by setting fields in the Keyring Options.
+	options.createPubkey = func(key []byte) types.PubKey {
+		return &secp256k1.PubKey{Key: key}
+	}
+	options.appName = "Cosmos"
+	options.skipDERConversion = false
 }
 
 type LedgerSECP256K1Mock struct{}

@@ -414,7 +414,7 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 		}
 
 		// this is a temporary fix to make staking simulation pass.
-		// we should fetch the first unbondingDelegationEntry that matches with the creationHeight.
+		// we should fetch the first unbondingDelegationEntry that matches the creationHeight.
 		// because currently the staking msgServer chooses the first unbondingDelegationEntry with the matching creationHeight.
 		creationHeight := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))].CreationHeight
 

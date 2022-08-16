@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   cleanup-runs:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     steps:
       - uses: rokroskar/workflow-run-cleanup-action@master
         env:
@@ -20,7 +20,7 @@ jobs:
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
 
   install-tparse:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v3
         with:
@@ -35,7 +35,7 @@ jobs:
           key: ${{ runner.os }}-go-tparse-binary
 
   build:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -67,7 +67,7 @@ jobs:
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
 
   split-test-files:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -96,7 +96,7 @@ jobs:
           path: ./pkgs.txt.part.03
 
   test-race:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     needs: split-test-files
     strategy:
       fail-fast: false

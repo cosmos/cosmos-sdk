@@ -9,9 +9,7 @@ permissions:
 
 jobs:
   goreleaser:
-    permissions:
-      contents: write  # for goreleaser/goreleaser-action to create a GitHub release
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:

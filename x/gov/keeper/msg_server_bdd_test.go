@@ -28,8 +28,10 @@ type msgServerSuite struct {
 }
 
 func TestMsgServer(t *testing.T) {
-	gocuke.NewRunner(t, &msgServerSuite{}).Path("./features/msg_submit_proposal.feature").Run()
-	gocuke.NewRunner(t, &msgServerSuite{}).Path("./features/msg_vote.feature").Run()
+	gocuke.NewRunner(t, &msgServerSuite{}).Path(
+		"./features/msg_submit_proposal.feature",
+		"./features/msg_vote.feature",
+	).Run()
 }
 
 func (s *msgServerSuite) Before(t gocuke.TestingT) {

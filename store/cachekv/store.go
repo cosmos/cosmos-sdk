@@ -327,8 +327,10 @@ func (store *Store) dirtyItems(start, end []byte) {
 		startIndex = 0
 	}
 
-	// since we took the time to sort the cache, we should use that effort
-	// we store at least THRESHOLD values -- cost of storing all is amortized across multiple calls
+	// Since we spent cycles to sort the values, we should process and remove a reasonable amount
+	// ensure start to end is at least THRESHOLD in size
+	// if below THRESHOLD, expand it to cover additional values
+	// this amortizes the cost of processing elements across multiple calls
 	if endIndex-startIndex < THRESHOLD {
 		endIndex = math.MinInt(startIndex+THRESHOLD, len(strL)-1)
 		if endIndex-startIndex < THRESHOLD {

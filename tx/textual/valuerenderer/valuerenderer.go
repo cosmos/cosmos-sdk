@@ -42,14 +42,15 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 	case fd.Kind() == protoreflect.BytesKind:
 		return bytesValueRenderer{}, nil
 
+	case fd.Kind() == protoreflect.EnumKind:
+		return enumRenderer{}, nil
+
 	// Integers
 	case fd.Kind() == protoreflect.Uint32Kind ||
 		fd.Kind() == protoreflect.Uint64Kind ||
 		fd.Kind() == protoreflect.Int32Kind ||
 		fd.Kind() == protoreflect.Int64Kind:
-		{
-			return intValueRenderer{}, nil
-		}
+		return intValueRenderer{}, nil
 
 	default:
 		return nil, fmt.Errorf("value renderers cannot format value of type %s", fd.Kind())

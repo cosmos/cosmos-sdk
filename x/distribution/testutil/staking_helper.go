@@ -13,6 +13,8 @@ import (
 func CreateValidator(pk cryptotypes.PubKey) (stakingtypes.Validator, error) {
 	valConsAddr := sdk.GetConsAddress(pk)
 	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr), pk, stakingtypes.Description{})
+	val.Tokens = math.NewInt(10000000)
+	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
 	return val, err
 }
 
@@ -37,6 +39,7 @@ func CallCreateValidatorHooks(ctx sdk.Context, k keeper.Keeper, addr sdk.AccAddr
 
 // SlashValidator copies what x/staking Slash does. It should be used for testing only.
 // And it must be updated whenever the original function is updated.
+// The passed validator will get its tokens updated.
 func SlashValidator(
 	ctx sdk.Context,
 	consAddr sdk.ConsAddress,
@@ -83,4 +86,40 @@ func SlashValidator(
 	validator.Tokens = validator.Tokens.Sub(tokensToBurn)
 
 	return tokensToBurn
+}
+
+// Delegate imitate what x/staking Delegate does. It should be used for testing only.
+// If a delegation is passed we are simulating an update to a previous delegation,
+// if it's nil then we simulate a new delegation.
+func Delegate(
+	ctx sdk.Context,
+	distrKeeper keeper.Keeper,
+	delegator sdk.AccAddress,
+	validator *stakingtypes.Validator,
+	amount math.Int,
+	delegation *stakingtypes.Delegation,
+) (
+	newShares sdk.Dec,
+	updatedDel stakingtypes.Delegation,
+	err error,
+) {
+	if delegation != nil {
+		err = distrKeeper.Hooks().BeforeDelegationSharesModified(ctx, delegator, validator.GetOperator())
+	} else {
+		err = distrKeeper.Hooks().BeforeDelegationCreated(ctx, delegator, validator.GetOperator())
+		del := stakingtypes.NewDelegation(delegator, validator.GetOperator(), math.LegacyZeroDec())
+		delegation = &del
+	}
+
+	if err != nil {
+		return math.LegacyZeroDec(), stakingtypes.Delegation{}, err
+	}
+
+	// Add tokens from delegation to validator
+	updateVal, newShares := validator.AddTokensFromDel(amount)
+	*validator = updateVal
+
+	delegation.Shares = delegation.Shares.Add(newShares)
+
+	return newShares, *delegation, nil
 }

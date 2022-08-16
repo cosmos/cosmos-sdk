@@ -183,10 +183,10 @@ populate with `REJECT`.
 ### `DeliverTx`
 
 Since transactions are not truly removed from the app-side mempool during
-`PrepareProposal`, since `ProcessProposal` can fail and we do not want to lose
-transactions, we need to finally remove the transaction from the app-side mempool
-during `DeliverTx` since during this phase, the transactions are being included
-in the proposed block.
+`PrepareProposal`, since `ProcessProposal` can fail or take multiple rounds and
+we do not want to lose transactions, we need to finally remove the transaction
+from the app-side mempool during `DeliverTx` since during this phase, the
+transactions are being included in the proposed block.
 
 Alternatively, we can keep the transactions as truly being removed during the
 reaping phase in `PrepareProposal` and add them back to the app-side mempool in

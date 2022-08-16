@@ -132,8 +132,12 @@ Transaction reaping will essentially happen via a two-phase approach:
 
 ```go
 type PriorityMempool[T MempoolTx] struct {
-	queue   *PriorityQueue[MempoolTx]
+	queue *PriorityQueue[MempoolTx]
+
+	// senders will contain a mapping from tx sender account addresses to all
+	// sequence numbers (nonces) or txs that they have in the app-side mempool.
 	senders map[string][]int64
+
 	// ...
 }
 ```

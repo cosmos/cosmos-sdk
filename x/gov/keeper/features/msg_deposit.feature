@@ -59,9 +59,6 @@ Feature: MsgDeposit
   Rule: all deposits must be transferred to the gov module account
 
   Scenario: initial deposit is transferred to the gov module account
-    Given
-
-  Scenario: further deposits are transferred to the gov module account
     Given a proposal with "50stake" initial deposit
     Then expect the gov account to have "50stake"
 

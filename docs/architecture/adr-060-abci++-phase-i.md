@@ -66,13 +66,16 @@ Golang generics, allowing developers to focus only on transaction
 ordering. Developers requiring absolute full control can implement their own
 custom mempool implementation.
 
+> Note, there will most likely be a need to modify the AnteHandler method signature
+> to now accept a series of TxRecords.
+
 We define the general mempool interface as follows (subject to change):
 
 ```go
-// MempoolTx we define a mempool transaction interface that is as minimal as
-// possible, only requiring applications to define the size of the transaction
-// to be used when reaping and getting the transaction itself. Interface type
-// casting can be used in the actual mempool implementation.
+// MempoolTx we define an app-side mempool transaction interface that is as
+// minimal as possible, only requiring applications to define the size of the
+// transaction to be used when reaping and getting the transaction itself.
+// Interface type casting can be used in the actual app-side mempool implementation.
 type MempoolTx interface {
 	// Size returns the size of the transaction in bytes.
 	Size(codec.Codec) int
@@ -88,14 +91,14 @@ type PrepareTxRecord[T MempoolTx] struct {
 }
 
 type Mempool[T MempoolTx] interface {
-	// Insert attempts to insert a MempoolTx into the mempool returning an error
-	// upon failure.
+	// Insert attempts to insert a MempoolTx into the app-side mempool returning
+	// an error upon failure.
 	Insert(T) error
-	// ReapMaxBytes returns the next set of available transactions from the mempool,
-	// up to maxBytes or until the mempool is empty. The application can decide to
-	// return transactions from it's own mempool or from the incoming TxRecords or
-	// some combination of both. The notion of 'available' or 'next' is defined by
-	// the application's mempool implementation.
+	// ReapMaxBytes returns the next set of available transactions from the app-side
+	// mempool, up to maxBytes or until the mempool is empty. The application can
+	// decide to return transactions from it's own mempool or from the incoming
+	// TxRecords or some combination of both. The notion of 'available' or 'next'
+	// is defined by the application's mempool implementation.
 	ReapMaxBytes(txRecords abci.TxRecords, maxBytes int) ([]PrepareTxRecord[T], error)
 	// NumTxs returns the number of transactions currently in the mempool.
 	NumTxs() int
@@ -105,8 +108,8 @@ type Mempool[T MempoolTx] interface {
 We will define an implementation of `Mempool[T MempoolTx]` that will cover a
 majority of application use cases. Namely, it will prioritize transactions by
 priority and transaction sender, allowing for multiple prioritized transactions
-from the same sender. The mempool will be defined as a wrapper around a simple
-priority queue using a max binary heap, along with additional indexes/metadata
+from the same sender. The app-side mempool will be defined as a wrapper around a
+simple priority queue using a max binary heap, along with additional indexes/metadata
 to store senders and their nonces, allowing for simple multi-dimensional
 prioritization (2-ary).
 
@@ -121,9 +124,9 @@ Transaction reaping will essentially happen via a two-phase approach:
 4. Continue this process until the desired number of valid transactions are
    reaped or until the mempool is empty.
 5. Provide Tendermint the list of all transactions from the _valid_ buffer.
-6. Re-insert all transactions, from both buffers, back into mempool. This is to
-   ensure we do not discard transactions from the mempool in case `ProcessProposal`
-   fails.
+6. Re-insert all transactions, from both buffers, back into app-side mempool.
+   This is to ensure we do not discard transactions from the app-side mempool in
+	 case `ProcessProposal` fails.
 
 ```go
 type PriorityMempool[T MempoolTx] struct {

@@ -223,7 +223,7 @@ func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(ctx.KVStore(k.key))
 }
 
-// GetGroupPolicySeq returns the current value of the group table sequence
+// GetGroupPolicySeq returns the current value of the group policy table sequence
 func (k Keeper) GetGroupPolicySeq(ctx sdk.Context) uint64 {
 	return k.groupPolicySeq.CurVal(ctx.KVStore(k.key))
 }

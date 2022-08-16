@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
-// extends `BankKeeper` from expected_keepers.
+// extends `AccountKeeper` from expected_keepers.
 type AccountKeeper interface {
 	group.AccountKeeper
 }

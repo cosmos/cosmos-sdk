@@ -33,7 +33,6 @@ func TestQueryGroupsByMember(t *testing.T) {
 	key := sdk.NewKVStoreKey(group.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
-	_ = encCfg
 
 	ctx := testCtx.Ctx
 

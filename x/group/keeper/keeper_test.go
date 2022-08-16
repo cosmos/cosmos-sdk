@@ -1874,7 +1874,6 @@ func (s *TestSuite) TestVote() {
 		{Address: addr3.String(), Weight: "2"},
 	}
 
-	// s.SetNextAccount()
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   addr1.String(),
 		Members: members,
@@ -2826,7 +2825,6 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 }
 
 func (s *TestSuite) TestLeaveGroup() {
-	// addrs := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, s.sdkCtx, 7, sdk.NewInt(30000000))
 	addrs := simtestutil.CreateIncrementalAccounts(7)
 
 	admin1 := addrs[0]

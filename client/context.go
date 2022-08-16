@@ -54,7 +54,6 @@ type Context struct {
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
 	ReformatTx        ReformatTxFn
-	LedgerHasProtobuf bool
 
 	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
 	IsAux bool
@@ -271,13 +270,6 @@ func (ctx Context) WithAux(isAux bool) Context {
 // will conditionally reformat the transaction using the builder.
 func (ctx Context) WithReformatTx(reformatFn ReformatTxFn) Context {
 	ctx.ReformatTx = reformatFn
-	return ctx
-}
-
-// WithLedgerHasProto returns the context with the provided boolean value, indicating
-// whether the target Ledger application can support Protobuf payloads.
-func (ctx Context) WithLedgerHasProtobuf(val bool) Context {
-	ctx.LedgerHasProtobuf = val
 	return ctx
 }
 

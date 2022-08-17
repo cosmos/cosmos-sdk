@@ -213,6 +213,8 @@ entirely if the timestamp has no fractional seconds.
 
 The timestamp with 1136214245 seconds and 700000000 nanoseconds is rendered
 as `2006-01-02T15:04:05.7Z`.
+The timestamp with 1136214245 seconds and zero nanoseconds is rendered
+as `2006-01-02T15:04:05Z`.
 
 ### `google.protobuf.Duration` (TODO)
 

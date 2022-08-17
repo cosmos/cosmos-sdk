@@ -279,9 +279,10 @@ const (
 	stateAlreadySorted
 )
 
+const minSortSize = 1024
+
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
-	const THRESHOLD = 1024
 	startStr, endStr := conv.UnsafeBytesToStr(start), conv.UnsafeBytesToStr(end)
 	if startStr > endStr {
 		// Nothing to do here.
@@ -296,7 +297,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// O(N^2) overhead.
 	// Even without that, too many range checks eventually becomes more expensive
 	// than just not having the cache.
-	if n < THRESHOLD {
+	if n < minSortSize {
 		for key := range store.unsortedCache {
 			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
 				cacheValue := store.cache[key]
@@ -328,13 +329,13 @@ func (store *Store) dirtyItems(start, end []byte) {
 	}
 
 	// Since we spent cycles to sort the values, we should process and remove a reasonable amount
-	// ensure start to end is at least THRESHOLD in size
-	// if below THRESHOLD, expand it to cover additional values
+	// ensure start to end is at least minSortSize in size
+	// if below minSortSize, expand it to cover additional values
 	// this amortizes the cost of processing elements across multiple calls
-	if endIndex-startIndex < THRESHOLD {
-		endIndex = math.MinInt(startIndex+THRESHOLD, len(strL)-1)
-		if endIndex-startIndex < THRESHOLD {
-			startIndex = math.MaxInt(endIndex-THRESHOLD, 0)
+	if endIndex-startIndex < minSortSize {
+		endIndex = math.MinInt(startIndex+minSortSize, len(strL)-1)
+		if endIndex-startIndex < minSortSize {
+			startIndex = math.MaxInt(endIndex-minSortSize, 0)
 		}
 	}
 

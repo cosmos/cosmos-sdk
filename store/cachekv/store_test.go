@@ -307,21 +307,25 @@ func TestCacheKVMergeIteratorRandom(t *testing.T) {
 }
 
 func TestNilEndIterator(t *testing.T) {
+	const SIZE = 3000
+
 	tests := []struct {
-		name  string
-		write bool
-		end   []byte
+		name       string
+		write      bool
+		startIndex int
+		end        []byte
 	}{
-		{name: "write=false, end=nil", write: false, end: nil},
-		{name: "write=true, end=nil", write: true, end: nil},
-		{name: "write=false, end=non-nil", write: false, end: keyFmt(3000)},
+		{name: "write=false, end=nil", write: false, end: nil, startIndex: 1000},
+		{name: "write=false, end=nil; full key scan", write: false, end: nil, startIndex: 2000},
+		{name: "write=true, end=nil", write: true, end: nil, startIndex: 1000},
+		{name: "write=false, end=non-nil", write: false, end: keyFmt(3000), startIndex: 1000},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			st := newCacheKVStore()
 
-			for i := 0; i < 3000; i++ {
+			for i := 0; i < SIZE; i++ {
 				kstr := keyFmt(i)
 				st.Set(kstr, valFmt(i))
 			}
@@ -330,8 +334,8 @@ func TestNilEndIterator(t *testing.T) {
 				st.Write()
 			}
 
-			itr := st.Iterator(keyFmt(1000), tt.end)
-			i := 1000
+			itr := st.Iterator(keyFmt(tt.startIndex), tt.end)
+			i := tt.startIndex
 			j := 0
 			for itr.Valid() {
 				require.Equal(t, keyFmt(i), itr.Key())
@@ -341,7 +345,7 @@ func TestNilEndIterator(t *testing.T) {
 				j++
 			}
 
-			require.Equal(t, 2000, j)
+			require.Equal(t, SIZE-tt.startIndex, j)
 		})
 	}
 }

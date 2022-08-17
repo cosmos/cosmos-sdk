@@ -3,7 +3,7 @@ go 1.18
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.1.1-0.20220726092710-f848e4300a8a
+	cosmossdk.io/api v0.1.0-alpha9
 	cosmossdk.io/core v0.2.0
 	cosmossdk.io/depinject v1.0.0-alpha.2
 	cosmossdk.io/errors v1.0.0-beta.7

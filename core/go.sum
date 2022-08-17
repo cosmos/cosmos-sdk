@@ -1,7 +1,7 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-cosmossdk.io/api v0.1.0-alpha8 h1:Hr+8bLI4UphF+aMiDIVklrdzRm99dFaNq2inBKGDzNU=
-cosmossdk.io/api v0.1.0-alpha8/go.mod h1:gIs3NW5OSNK5wKqxF8JHnGTL82QMsXpwGeKmu2i5xFA=
+cosmossdk.io/api v0.1.0-alpha9 h1:8QQT+BhaMpcCgR4Wm8JVuhhtj4a7uZjsxvvWvmsQFB0=
+cosmossdk.io/api v0.1.0-alpha9/go.mod h1:PyJpp0BY4tHLI0kzkiUzpZxgOE+pJbhDPleYrA5yVio=
 cosmossdk.io/depinject v1.0.0-alpha.2 h1:pVcPnqc8bY2GCHVMj77rk6Ew7uz0K3QhrUHdqoKvO5g=
 cosmossdk.io/depinject v1.0.0-alpha.2/go.mod h1:Wmu0TV/H4s4s8zaJ9YnaioLyCbqlCvMQ4xTtzJzGzvA=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=

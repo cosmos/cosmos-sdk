@@ -4,11 +4,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func (suite *KeeperTestSuite) TestSubmitProposalReq() {
@@ -735,7 +740,6 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 }
 
 func (suite *KeeperTestSuite) TestMsgUpdateParams() {
-
 	authority := suite.app.GovKeeper.GetAuthority()
 	params := v1.DefaultParams()
 	testCases := []struct {
@@ -1004,6 +1008,86 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 			} else {
 				suite.Require().NoError(err)
 			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
+	const meetsDepositValue = baseDepositTestAmount * baseDepositTestPercent / 100
+	baseDepositRatioDec := sdk.NewDec(baseDepositTestPercent).Quo(sdk.NewDec(100))
+
+	testcases := map[string]struct {
+		minDeposit             sdk.Coins
+		minInitialDepositRatio sdk.Dec
+		initialDeposit         sdk.Coins
+		accountBalance         sdk.Coins
+
+		expectError bool
+	}{
+		"meets initial deposit, enough balance - success": {
+			minDeposit:             sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseDepositTestAmount))),
+			minInitialDepositRatio: baseDepositRatioDec,
+			initialDeposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue))),
+			accountBalance:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue))),
+		},
+		"does not meet initial deposit, enough balance - error": {
+			minDeposit:             sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseDepositTestAmount))),
+			minInitialDepositRatio: baseDepositRatioDec,
+			initialDeposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue-1))),
+			accountBalance:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue))),
+
+			expectError: true,
+		},
+		"meets initial deposit, not enough balance - error": {
+			minDeposit:             sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseDepositTestAmount))),
+			minInitialDepositRatio: baseDepositRatioDec,
+			initialDeposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue))),
+			accountBalance:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue-1))),
+
+			expectError: true,
+		},
+		"does not meet initial deposit and not enough balance - error": {
+			minDeposit:             sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseDepositTestAmount))),
+			minInitialDepositRatio: baseDepositRatioDec,
+			initialDeposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue-1))),
+			accountBalance:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue-1))),
+
+			expectError: true,
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			// Setup
+			privateKey := secp256k1.GenPrivKey()
+			address := sdk.AccAddress(privateKey.PubKey().Address())
+			acc := &authtypes.BaseAccount{
+				Address: address.String(),
+			}
+
+			genAccs := []authtypes.GenesisAccount{acc}
+			app := simapp.SetupWithGenesisAccounts(suite.T(), genAccs, banktypes.Balance{Address: acc.Address, Coins: tc.accountBalance})
+			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			govKeeper := app.GovKeeper
+			msgServer := keeper.NewMsgServerImpl(govKeeper)
+
+			params := v1.DefaultParams()
+			params.MinDeposit = tc.minDeposit
+			params.MinInitialDepositRatio = tc.minInitialDepositRatio.String()
+			govKeeper.SetParams(ctx, params)
+
+			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test")
+			suite.Require().NoError(err)
+
+			// System under test
+			_, err = msgServer.SubmitProposal(sdk.WrapSDKContext(ctx), msg)
+
+			// Assertions
+			if tc.expectError {
+				suite.Require().Error(err)
+				return
+			}
+			suite.Require().NoError(err)
 		})
 	}
 }

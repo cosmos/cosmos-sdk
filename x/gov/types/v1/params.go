@@ -15,10 +15,11 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens = sdk.NewInt(10000000)
-	DefaultQuorum           = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold        = sdk.NewDecWithPrec(5, 1)
-	DefaultVetoThreshold    = sdk.NewDecWithPrec(334, 3)
+	DefaultMinDepositTokens       = sdk.NewInt(10000000)
+	DefaultQuorum                 = sdk.NewDecWithPrec(334, 3)
+	DefaultThreshold              = sdk.NewDecWithPrec(5, 1)
+	DefaultVetoThreshold          = sdk.NewDecWithPrec(334, 3)
+	DefaultMinInitialDepositRatio = sdk.ZeroDec()
 )
 
 // Deprecated: NewDepositParams creates a new DepositParams object
@@ -47,15 +48,16 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 
 func NewParams(
 	minDeposit sdk.Coins, maxDepositPeriod time.Duration, votingPeriod time.Duration,
-	quorum string, threshold string, vetoThreshold string,
+	quorum string, threshold string, vetoThreshold string, minInitialDepositRatio string,
 ) Params {
 	return Params{
-		MinDeposit:       minDeposit,
-		MaxDepositPeriod: &maxDepositPeriod,
-		VotingPeriod:     &votingPeriod,
-		Quorum:           quorum,
-		Threshold:        threshold,
-		VetoThreshold:    vetoThreshold,
+		MinDeposit:             minDeposit,
+		MaxDepositPeriod:       &maxDepositPeriod,
+		VotingPeriod:           &votingPeriod,
+		Quorum:                 quorum,
+		Threshold:              threshold,
+		VetoThreshold:          vetoThreshold,
+		MinInitialDepositRatio: minInitialDepositRatio,
 	}
 }
 
@@ -68,11 +70,11 @@ func DefaultParams() Params {
 		DefaultQuorum.String(),
 		DefaultThreshold.String(),
 		DefaultVetoThreshold.String(),
+		DefaultMinInitialDepositRatio.String(),
 	)
 }
 
 func (p Params) ValidateBasic() error {
-
 	if minDeposit := sdk.Coins(p.MinDeposit); minDeposit.Empty() || !minDeposit.IsValid() {
 		return fmt.Errorf("invalid minimum deposit: %s", minDeposit)
 	}

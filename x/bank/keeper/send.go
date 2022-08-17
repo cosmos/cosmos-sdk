@@ -99,6 +99,7 @@ func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 }
 
 // SetParams sets the total set of bank parameters.
+//
 //nolint:staticcheck // params.SendEnabled is deprecated but it should be here regardless.
 func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 	// normally SendEnabled is deprecated but we still support it for backwards compatibility
@@ -466,11 +467,12 @@ func (k BaseSendKeeper) GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEn
 // getSendEnabled returns whether send is enabled and whether that flag was set for a denom.
 //
 // Example usage:
-//    store := ctx.KVStore(k.storeKey)
-//    sendEnabled, found := getSendEnabled(store, "atom")
-//    if !found {
-//        sendEnabled = DefaultSendEnabled
-//    }
+//
+//	store := ctx.KVStore(k.storeKey)
+//	sendEnabled, found := getSendEnabled(store, "atom")
+//	if !found {
+//	    sendEnabled = DefaultSendEnabled
+//	}
 func (k BaseSendKeeper) getSendEnabled(store sdk.KVStore, denom string) (bool, bool) {
 	key := types.CreateSendEnabledKey(denom)
 	if !store.Has(key) {

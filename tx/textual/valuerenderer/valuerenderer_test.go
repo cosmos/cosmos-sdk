@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -20,7 +20,7 @@ import (
 func TestFormatInteger(t *testing.T) {
 	type integerTest []string
 	var testcases []integerTest
-	raw, err := ioutil.ReadFile("../internal/testdata/integers.json")
+	raw, err := os.ReadFile("../internal/testdata/integers.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -67,21 +67,24 @@ func TestFormatInteger(t *testing.T) {
 func TestFormatDecimal(t *testing.T) {
 	type decimalTest []string
 	var testcases []decimalTest
-	raw, err := ioutil.ReadFile("../internal/testdata/decimals.json")
+	raw, err := os.ReadFile("../internal/testdata/decimals.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
 	for _, tc := range testcases {
-		d, err := math.LegacyNewDecFromStr(tc[0])
-		require.NoError(t, err)
-		r, err := valueRendererOf(d)
-		require.NoError(t, err)
-		b := new(strings.Builder)
-		err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
-		require.NoError(t, err)
+		tc := tc
+		t.Run(tc[0], func(t *testing.T) {
+			d, err := math.LegacyNewDecFromStr(tc[0])
+			require.NoError(t, err)
+			r, err := valueRendererOf(d)
+			require.NoError(t, err)
+			b := new(strings.Builder)
+			err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
+			require.NoError(t, err)
 
-		require.Equal(t, tc[1], b.String())
+			require.Equal(t, tc[1], b.String())
+		})
 	}
 }
 

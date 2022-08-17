@@ -21,6 +21,7 @@ func init() {
 }
 
 // NewCommunityPoolSpendProposal creates a new community pool spend proposal.
+//
 //nolint:interfacer
 func NewCommunityPoolSpendProposal(title, description string, recipient sdk.AccAddress, amount sdk.Coins) *CommunityPoolSpendProposal {
 	return &CommunityPoolSpendProposal{title, description, recipient.String(), amount}

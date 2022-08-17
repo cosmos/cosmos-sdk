@@ -1037,13 +1037,13 @@ A user can query the `group` module using REST endpoints.
 The `GroupInfo` endpoint allows users to query for group info by given group id.
 
 ```bash
-/cosmos/group/v1beta1/group_info/{group_id}
+/cosmos/group/v1/group_info/{group_id}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/group_info/1
+curl localhost:1317/cosmos/group/v1/group_info/1
 ```
 
 Example Output:
@@ -1051,7 +1051,7 @@ Example Output:
 ```bash
 {
   "info": {
-    "group_id": "1",
+    "id": "1",
     "admin": "cosmos1..",
     "metadata": "AQ==",
     "version": "1",
@@ -1065,13 +1065,13 @@ Example Output:
 The `GroupPolicyInfo` endpoint allows users to query for group policy info by account address of group policy.
 
 ```bash
-/cosmos/group/v1beta1/group_policy_info/{address}
+/cosmos/group/v1/group_policy_info/{address}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/group_policy_info/cosmos1..
+curl localhost:1317/cosmos/group/v1/group_policy_info/cosmos1..
 ```
 
 Example Output:
@@ -1101,13 +1101,13 @@ Example Output:
 The `GroupMembers` endpoint allows users to query for group members by group id with pagination flags.
 
 ```bash
-/cosmos/group/v1beta1/group_members/{group_id}
+/cosmos/group/v1/group_members/{group_id}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/group_members/1
+curl localhost:1317/cosmos/group/v1/group_members/1
 ```
 
 Example Output:
@@ -1143,13 +1143,13 @@ Example Output:
 The `GroupsByAdmin` endpoint allows users to query for groups by admin account address with pagination flags.
 
 ```bash
-/cosmos/group/v1beta1/groups_by_admin/{admin}
+/cosmos/group/v1/groups_by_admin/{admin}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/groups_by_admin/cosmos1..
+curl localhost:1317/cosmos/group/v1/groups_by_admin/cosmos1..
 ```
 
 Example Output:
@@ -1158,14 +1158,14 @@ Example Output:
 {
   "groups": [
     {
-      "group_id": "1",
+      "id": "1",
       "admin": "cosmos1..",
       "metadata": "AQ==",
       "version": "1",
       "total_weight": "3"
     },
     {
-      "group_id": "2",
+      "id": "2",
       "admin": "cosmos1..",
       "metadata": "AQ==",
       "version": "1",
@@ -1184,13 +1184,13 @@ Example Output:
 The `GroupPoliciesByGroup` endpoint allows users to query for group policies by group id with pagination flags.
 
 ```bash
-/cosmos/group/v1beta1/group_policies_by_group/{group_id}
+/cosmos/group/v1/group_policies_by_group/{group_id}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/group_policies_by_group/1
+curl localhost:1317/cosmos/group/v1/group_policies_by_group/1
 ```
 
 Example Output:
@@ -1241,13 +1241,13 @@ Example Output:
 The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
 
 ```bash
-/cosmos/group/v1beta1/group_policies_by_admin/{admin}
+/cosmos/group/v1/group_policies_by_admin/{admin}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/group_policies_by_admin/cosmos1..
+curl localhost:1317/cosmos/group/v1/group_policies_by_admin/cosmos1..
 ```
 
 Example Output:
@@ -1267,7 +1267,7 @@ Example Output:
         "windows": {
           "voting_period": "120h",
           "min_execution_period": "0s"
-      }
+      } 
       },
     },
     {
@@ -1297,13 +1297,13 @@ Example Output:
 The `Proposal` endpoint allows users to query for proposal by id.
 
 ```bash
-/cosmos/group/v1beta1/proposal/{proposal_id}
+/cosmos/group/v1/proposal/{proposal_id}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/proposal/1
+curl localhost:1317/cosmos/group/v1/proposal/1
 ```
 
 Example Output:
@@ -1355,13 +1355,13 @@ Example Output:
 The `ProposalsByGroupPolicy` endpoint allows users to query for proposals by account address of group policy with pagination flags.
 
 ```bash
-/cosmos/group/v1beta1/proposals_by_group_policy/{address}
+/cosmos/group/v1/proposals_by_group_policy/{address}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/proposals_by_group_policy/cosmos1..
+curl localhost:1317/cosmos/group/v1/proposals_by_group_policy/cosmos1..
 ```
 
 Example Output:
@@ -1370,13 +1370,13 @@ Example Output:
 {
   "proposals": [
     {
-      "proposal_id": "1",
-      "address": "cosmos1..",
+      "id": "1",
+      "group_policy_address": "cosmos1..",
       "metadata": "AQ==",
       "proposers": [
         "cosmos1.."
       ],
-      "submitted_at": "2021-12-17T08:03:27.099649352Z",
+      "submit_time": "2021-12-17T08:03:27.099649352Z",
       "group_version": "1",
       "group_policy_version": "1",
       "status": "STATUS_CLOSED",
@@ -1419,7 +1419,7 @@ Example Output:
 The `VoteByProposalVoter` endpoint allows users to query for vote by proposal id and voter account address.
 
 ```bash
-/cosmos/group/v1beta1/vote_by_proposal_voter/{proposal_id}/{voter}
+/cosmos/group/v1/vote_by_proposal_voter/{proposal_id}/{voter}
 ```
 
 Example:
@@ -1447,13 +1447,13 @@ Example Output:
 The `VotesByProposal` endpoint allows users to query for votes by proposal id with pagination flags.
 
 ```bash
-/cosmos/group/v1beta1/votes_by_proposal/{proposal_id}
+/cosmos/group/v1/votes_by_proposal/{proposal_id}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/votes_by_proposal/1
+curl localhost:1317/cosmos/group/v1/votes_by_proposal/1
 ```
 
 Example Output:
@@ -1464,9 +1464,9 @@ Example Output:
     {
       "proposal_id": "1",
       "voter": "cosmos1..",
-      "choice": "CHOICE_YES",
+      "option": "CHOICE_YES",
       "metadata": "AQ==",
-      "submitted_at": "2021-12-17T08:05:02.490164009Z"
+      "submit_time": "2021-12-17T08:05:02.490164009Z"
     }
   ],
   "pagination": {
@@ -1481,13 +1481,13 @@ Example Output:
 The `VotesByVoter` endpoint allows users to query for votes by voter account address with pagination flags.
 
 ```bash
-/cosmos/group/v1beta1/votes_by_voter/{voter}
+/cosmos/group/v1/votes_by_voter/{voter}
 ```
 
 Example:
 
 ```bash
-curl localhost:1317/cosmos/group/v1beta1/votes_by_voter/cosmos1..
+curl localhost:1317/cosmos/group/v1/votes_by_voter/cosmos1..
 ```
 
 Example Output:

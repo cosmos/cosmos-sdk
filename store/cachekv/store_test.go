@@ -346,28 +346,6 @@ func TestNilEndIterator(t *testing.T) {
 	}
 }
 
-func TestNilEndIterator2(t *testing.T) {
-	st := newCacheKVStore()
-	st.Set([]byte("AB"), []byte{1})
-
-	// difference between success and fail is this line:
-	//st.Write()
-
-	// may also be side-effected by a successful iteration
-
-	iter1 := st.Iterator([]byte("A"), []byte("B"))
-	require.True(t, iter1.Valid())
-	require.NoError(t, iter1.Close())
-
-	iter2 := st.Iterator([]byte("AA"), nil)
-	require.True(t, iter2.Valid())
-	require.NoError(t, iter2.Close())
-
-	iter3 := st.Iterator([]byte("A"), nil)
-	require.True(t, iter3.Valid())
-	require.NoError(t, iter3.Close())
-}
-
 //-------------------------------------------------------------------------------------------
 // do some random ops
 

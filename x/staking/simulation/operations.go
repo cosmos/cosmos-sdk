@@ -413,9 +413,12 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "account does have any unbonding delegation"), nil, nil
 		}
 
-		// this is a temporary fix to make staking simulation pass.
-		// we should fetch the first unbondingDelegationEntry that matches the creationHeight.
-		// because currently the staking msgServer chooses the first unbondingDelegationEntry with the matching creationHeight.
+		// This is a temporary fix to make staking simulation pass. We should fetch
+		// the first unbondingDelegationEntry that matches the creationHeight, because
+		// currently the staking msgServer chooses the first unbondingDelegationEntry
+		// with the matching creationHeight.
+		//
+		// ref: https://github.com/cosmos/cosmos-sdk/issues/12932
 		creationHeight := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))].CreationHeight
 
 		var unbondingDelegationEntry types.UnbondingDelegationEntry

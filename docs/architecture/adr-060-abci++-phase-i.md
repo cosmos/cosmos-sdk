@@ -180,7 +180,7 @@ Instead, we will define an additional ABCI interface method on the existing
 or `EndBlock`. This new interface method will be defined as follows:
 
 ```go
-ProcessProposal(_ sdk.Context, _ abci.RequestProcessProposal) error {}
+ProcessProposal(sdk.Context, abci.RequestProcessProposal) error {}
 ```
 
 Note, we must call `ProcessProposal` with a new internal branched state on the

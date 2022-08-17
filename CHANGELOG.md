@@ -102,7 +102,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   A SendEnabled query has been added to both GRPC and CLI.
 * (appModule) Remove `Route`, `QuerierRoute` and `LegacyQuerierHandler` from AppModule Interface. 
 * (x/modules) Remove all LegacyQueries and related code from modules
-* (store) [#11825](https://github.com/cosmos/cosmos-sdk/pull/11825) Make extension snapshotter interface safer to use.
+* (store) [#11825](https://github.com/cosmos/cosmos-sdk/pull/11825) Make extension snapshotter interface safer to use, renamed the util function `WriteExtensionItem` to `WriteExtensionPayload`.
 
 ### CLI Breaking Changes
 

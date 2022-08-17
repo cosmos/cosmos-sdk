@@ -166,17 +166,31 @@ execute the transactions for validity as they have already passed CheckTx.
 
 The `ProcessProposal` ABCI method is relatively straightforward. It is responsible
 for ensuring validity of the proposed block containing transactions that were
-selected from the `PrepareProposal` step. In order to check validity of the proposed
-block, we must iterate over the list of transactions and execute them using the
-same mode/execution strategy as `CheckTx`. In other words, we execute each transaction
-using the AnteHandler only -- no messages are executed. However, we cannot just
-execute `CheckTx` again, because `BaseApp` already has a modified `checkState` at
-this point. So when executing `ProcessProposal`, we create a similar branched
-state, `processProposalState`, off of `deliverState`. Using `processProposalState`
-we execute the AnteHandler for each transaction. Note, the `processProposalState`
-is never committed and is completely discarded after `ProcessProposal` completes.
+selected from the `PrepareProposal` step. However, how an application determines
+validity of a proposed block depends on the application and its varying use cases.
+For most applications, simply calling the `AnteHandler` chain would suffice, but
+there could easily be other applications that need more control over the validation
+process of the proposed block, such as ensuring txs are in a certain order or
+that certain transactions are included. While this theoretically could be achieved
+with a custom `AnteHandler` implementation, it's not the cleanest UX or the most
+efficient solution.
 
-We will only populate the `Status` field of the `ProcessProposalResponse` with
+Instead, we will define an additional ABCI interface method on the existing
+`Application` interface, similar to the existing ABCI methods such as `BeginBlock`
+or `EndBlock`. This new interface method will be defined as follows:
+
+```go
+ProcessProposal(_ sdk.Context, _ abci.RequestProcessProposal) error {}
+```
+
+Note, we must call `ProcessProposal` with a new internal branched state on the
+`Context` argument as we cannot simply just use the existing `checkState` because
+`BaseApp` already has a modified `checkState` at this point. So when executing
+`ProcessProposal`, we create a similar branched state, `processProposalState`,
+off of `deliverState`. Note, the `processProposalState` is never committed and
+is completely discarded after `ProcessProposal` finishes execution.
+
+We will only populate the `Status` field of the `ResponseProcessProposal` with
 `ACCEPT` if ALL the transactions were accepted as valid, otherwise we will
 populate with `REJECT`.
 

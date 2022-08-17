@@ -9,11 +9,8 @@ the distribution `ModuleAccount` account. When a delegator or validator
 withdraws their rewards, they are taken out of the `ModuleAccount`. During begin
 block, the different claims on the fees collected are updated as follows:
 
-* The block proposer of the previous height and its delegators receive between 1% and 5% of fee rewards.
 * The reserve community tax is charged.
 * The remainder is distributed proportionally by voting power to all bonded validators
-
-To incentivize validators to wait and include additional pre-commits in the block, the block proposer reward is calculated from Tendermint pre-commit messages.
 
 ## The Distribution Scheme
 
@@ -35,24 +32,15 @@ integer value.
 
 ### Reward To the Validators
 
-The proposer receives a base reward of `fees * baseproposerreward` and a bonus
-of `fees * bonusproposerreward * P`, where `P = (total power of validators with
-included precommits / total bonded validator power)`. The more precommits the
-proposer includes, the larger `P` is. `P` can never be larger than `1.00` (since
-only bonded validators can supply valid precommits) and is always larger than
-`2/3`.
-
-Any remaining fees are distributed among all the bonded validators, including
-the proposer, in proportion to their consensus power.
+The proposer receives no extra rewards. All fees are distributed among all the
+bonded validators, including the proposer, in proportion to their consensus power.
 
 ```text
 powFrac = validator power / total bonded validator power
-proposerMul = baseproposerreward + bonusproposerreward * P
-voteMul = 1 - communitytax - proposerMul
+voteMul = 1 - community_tax
 ```
 
-In total, the proposer receives `fees  * (voteMul * powFrac + proposerMul)`.
-All other validators receive `fees * voteMul * powFrac`.
+All validators receive `fees * voteMul * powFrac`.
 
 ### Rewards to Delegators
 
@@ -75,13 +63,13 @@ For this example distribution, the underlying consensus engine selects block pro
 proportion to their power relative to the entire bonded power.
 
 All validators are equally performant at including pre-commits in their proposed
-blocks. Then hold `(precommits included) / (total bonded validator power)`
+blocks. Then hold `(pre_commits included) / (total bonded validator power)`
 constant so that the amortized block reward for the validator is `( validator power / total bonded power) * (1 - community tax rate)` of
 the total rewards. Consequently, the reward for a single delegator is:
 
 ```text
 (delegator proportion of the validator power / validator power) * (validator power / total bonded power)
-  * (1 - community tax rate) * (1 - validator commision rate)
+  * (1 - community tax rate) * (1 - validator commission rate)
 = (delegator proportion of the validator power / total bonded power) * (1 -
-community tax rate) * (1 - validator commision rate)
+community tax rate) * (1 - validator commission rate)
 ```

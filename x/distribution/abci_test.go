@@ -4,6 +4,10 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -14,9 +18,6 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 const (
@@ -116,9 +117,18 @@ func TestVerifyProposerRewardAssignement(t *testing.T) {
 	})
 	require.NotEmpty(t, app.Commit())
 
+	// Note, we used to ensure that the lazy validator's rewards are less than the
+	// non-lazy validator, given the assumption that proposer-based rewards are
+	// used. However, since proposer-based rewards are no longer used, the rewards
+	// should be the same.
+	//
+	// We keep this (modified) assertion in case we'd like to augment the test
+	// in the future.
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/pull/12876
 	rewardsValidatorBeforeLazyValidator := distrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
 	rewardsLazyValidator := distrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx].addr)
 	rewardsValidatorAfterLazyValidator := distrKeeper.GetValidatorOutstandingRewardsCoins(ctx, validators[lazyValidatorIdx+1].addr)
-	require.True(t, rewardsLazyValidator[0].Amount.LT(rewardsValidatorAfterLazyValidator[0].Amount))
+	require.True(t, rewardsLazyValidator[0].Amount.Equal(rewardsValidatorAfterLazyValidator[0].Amount))
 	require.Equal(t, rewardsValidatorBeforeLazyValidator, rewardsValidatorAfterLazyValidator)
 }

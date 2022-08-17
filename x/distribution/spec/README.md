@@ -36,13 +36,11 @@ The distribution mechanism outlined herein is used to lazily distribute the
 following rewards between validators and associated delegators:
 
 * multi-token fees to be socially distributed
-* proposer reward pool
-* inflated atom provisions
+* inflated staked asset provisions
 * validator commission on all rewards earned by their delegators stake
 
-Fees are pooled within a global pool, as well as validator specific
-proposer-reward pools. The mechanisms used allow for validators and delegators
-to independently and lazily withdraw their rewards.  
+Fees are pooled within a global pool. The mechanisms used allow for validators
+and delegators to independently and lazily withdraw their rewards.  
 
 ## Shortcomings
 

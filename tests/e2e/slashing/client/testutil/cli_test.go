@@ -8,13 +8,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	clienttestutil "github.com/cosmos/cosmos-sdk/x/slashing/client/testutil"
 
 	"github.com/stretchr/testify/suite"
 )
 
-func TestIntegrationTestSuite(t *testing.T) {
+func TestEndToEndTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
-	suite.Run(t, clienttestutil.NewIntegrationTestSuite(cfg))
+	suite.Run(t, NewEndToEndTestSuite(cfg))
 }

@@ -3,86 +3,91 @@ package keeper_test
 import (
 	"time"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+
+	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-func (suite *KeeperTestSuite) TestGetSetValidatorSigningInfo() {
-	ctx := suite.ctx
+func (s *KeeperTestSuite) TestValidatorSigningInfo() {
+	ctx, keeper := s.ctx, s.slashingKeeper
+	require := s.Require()
 
-	addrDels := suite.addrDels
-	info, found := suite.slashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[2]))
-	suite.Require().False(found)
-	newInfo := types.NewValidatorSigningInfo(
-		sdk.ConsAddress(addrDels[2]),
-		int64(4),
+	signingInfo := slashingtypes.NewValidatorSigningInfo(
+		consAddr,
+		ctx.BlockHeight(),
 		int64(3),
 		time.Unix(2, 0),
 		false,
 		int64(10),
 	)
-	suite.slashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[2]), newInfo)
-	info, found = suite.slashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[2]))
-	suite.Require().True(found)
-	suite.Require().Equal(info.StartHeight, int64(4))
-	suite.Require().Equal(info.IndexOffset, int64(3))
-	suite.Require().Equal(info.JailedUntil, time.Unix(2, 0).UTC())
-	suite.Require().Equal(info.MissedBlocksCounter, int64(10))
+
+	// set the validator signing information
+	keeper.SetValidatorSigningInfo(ctx, consAddr, signingInfo)
+
+	require.True(keeper.HasValidatorSigningInfo(ctx, consAddr))
+	info, found := keeper.GetValidatorSigningInfo(ctx, consAddr)
+	require.True(found)
+	require.Equal(info.StartHeight, ctx.BlockHeight())
+	require.Equal(info.IndexOffset, int64(3))
+	require.Equal(info.JailedUntil, time.Unix(2, 0).UTC())
+	require.Equal(info.MissedBlocksCounter, int64(10))
+
+	var signingInfos []slashingtypes.ValidatorSigningInfo
+
+	keeper.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
+		signingInfos = append(signingInfos, info)
+		return false
+	})
+
+	require.Equal(signingInfos[0].Address, signingInfo.Address)
+
+	// test Tombstone
+	keeper.Tombstone(ctx, consAddr)
+	require.True(keeper.IsTombstoned(ctx, consAddr))
+
+	// test JailUntil
+	jailTime := time.Now().Add(time.Hour).UTC()
+	keeper.JailUntil(ctx, consAddr, jailTime)
+	sInfo, _ := keeper.GetValidatorSigningInfo(ctx, consAddr)
+	require.Equal(sInfo.JailedUntil, jailTime)
 }
 
-func (suite *KeeperTestSuite) TestGetSetValidatorMissedBlockBitArray() {
-	ctx := suite.ctx
-	addrDels := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 1, suite.stakingKeeper.TokensFromConsensusPower(ctx, 200))
+func (s *KeeperTestSuite) TestValidatorMissedBlockBitArray() {
+	ctx, keeper := s.ctx, s.slashingKeeper
+	require := s.Require()
 
-	missed := suite.slashingKeeper.GetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrDels[0]), 0)
-	suite.Require().False(missed) // treat empty key as not missed
-	suite.slashingKeeper.SetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrDels[0]), 0, true)
-	missed = suite.slashingKeeper.GetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrDels[0]), 0)
-	suite.Require().True(missed) // now should be missed
-}
+	params := testslashing.TestParams()
+	params.SignedBlocksWindow = 100
+	require.NoError(keeper.SetParams(ctx, params))
 
-func (suite *KeeperTestSuite) TestTombstoned() {
-	ctx := suite.ctx
-	addrDels := suite.addrDels
+	testCases := []struct {
+		name   string
+		index  int64
+		missed bool
+	}{
+		{
+			name:   "missed block with false",
+			index:  50,
+			missed: false,
+		},
+		{
+			name:   "missed block with true",
+			index:  51,
+			missed: true,
+		},
+	}
+	for ind, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			keeper.SetValidatorMissedBlockBitArray(ctx, consAddr, tc.index, tc.missed)
+			missed := keeper.GetValidatorMissedBlockBitArray(ctx, consAddr, tc.index)
 
-	suite.Require().Panics(func() { suite.slashingKeeper.Tombstone(ctx, sdk.ConsAddress(addrDels[4])) })
-	suite.Require().False(suite.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(addrDels[4])))
-
-	newInfo := types.NewValidatorSigningInfo(
-		sdk.ConsAddress(addrDels[4]),
-		int64(4),
-		int64(3),
-		time.Unix(2, 0),
-		false,
-		int64(10),
-	)
-	suite.slashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[4]), newInfo)
-
-	suite.Require().False(suite.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(addrDels[4])))
-	suite.slashingKeeper.Tombstone(ctx, sdk.ConsAddress(addrDels[4]))
-	suite.Require().True(suite.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(addrDels[4])))
-	suite.Require().Panics(func() { suite.slashingKeeper.Tombstone(ctx, sdk.ConsAddress(addrDels[4])) })
-}
-
-func (suite *KeeperTestSuite) TestJailUntil() {
-	ctx := suite.ctx
-	addrDels := suite.addrDels
-
-	suite.Require().Panics(func() { suite.slashingKeeper.JailUntil(ctx, sdk.ConsAddress(addrDels[3]), time.Now()) })
-
-	newInfo := types.NewValidatorSigningInfo(
-		sdk.ConsAddress(addrDels[3]),
-		int64(4),
-		int64(3),
-		time.Unix(2, 0),
-		false,
-		int64(10),
-	)
-	suite.slashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[3]), newInfo)
-	suite.slashingKeeper.JailUntil(ctx, sdk.ConsAddress(addrDels[3]), time.Unix(253402300799, 0).UTC())
-
-	info, ok := suite.slashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[3]))
-	suite.Require().True(ok)
-	suite.Require().Equal(time.Unix(253402300799, 0).UTC(), info.JailedUntil)
+			require.Equal(missed, tc.missed)
+			missedBlocks := keeper.GetValidatorMissedBlocks(ctx, consAddr)
+			require.Equal(len(missedBlocks), ind+1)
+			require.Equal(missedBlocks[ind].Index, tc.index)
+			require.Equal(missedBlocks[ind].Missed, tc.missed)
+		})
+	}
 }

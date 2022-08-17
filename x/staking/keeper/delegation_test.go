@@ -317,8 +317,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.True(math.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
 }
 
-//// test undelegating self delegation from a validator pushing it below MinSelfDelegation
-//// shift it from the bonded to unbonding state and jailed
+// // test undelegating self delegation from a validator pushing it below MinSelfDelegation
+// // shift it from the bonded to unbonding state and jailed
 func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 

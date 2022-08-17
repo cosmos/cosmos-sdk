@@ -35,6 +35,10 @@ func provideStoreKey(key depinject.ModuleKey, state *runtimeState) StoreKey {
 
 func provideApp(state *runtimeState, handlers map[string]Handler) App {
 	return func(w io.Writer) {
+		sort.Slice(state.storeKeys, func(i, j int) bool {
+			return state.storeKeys[i].name < state.storeKeys[j].name
+		})
+
 		for _, key := range state.storeKeys {
 			_, _ = fmt.Fprintf(w, "got store key %s\n", key.name)
 		}

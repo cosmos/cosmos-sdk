@@ -54,7 +54,10 @@ func SlashValidator(
 	}
 
 	// call the before-modification hook
-	distrKeeper.Hooks().BeforeValidatorModified(ctx, validator.GetOperator())
+	err := distrKeeper.Hooks().BeforeValidatorModified(ctx, validator.GetOperator())
+	if err != nil {
+		panic(err)
+	}
 
 	// we simplify this part, as we won't be able to test redelegations or
 	// unbonding delegations

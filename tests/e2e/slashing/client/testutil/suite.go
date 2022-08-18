@@ -15,20 +15,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 )
 
-type IntegrationTestSuite struct {
+type EndToEndTestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewEndToEndTestSuite(cfg network.Config) *EndToEndTestSuite {
+	return &EndToEndTestSuite{cfg: cfg}
 }
 
 // SetupSuite executes bootstrapping logic before all the tests, i.e. once before
 // the entire suite, start executing.
-func (s *IntegrationTestSuite) SetupSuite() {
+func (s *EndToEndTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	var err error
@@ -41,12 +41,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 // TearDownSuite performs cleanup logic after all the tests, i.e. once after the
 // entire suite, has finished executing.
-func (s *IntegrationTestSuite) TearDownSuite() {
+func (s *EndToEndTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
+func (s *EndToEndTestSuite) TestGetCmdQuerySigningInfo() {
 	val := s.network.Validators[0]
 	pubKeyBz, err := s.cfg.Codec.MarshalInterfaceJSON(val.PubKey)
 	s.Require().NoError(err)
@@ -104,7 +104,7 @@ tombstoned: false`, sdk.ConsAddress(val.PubKey.Address())),
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
+func (s *EndToEndTestSuite) TestGetCmdQueryParams() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -142,7 +142,7 @@ slash_fraction_downtime: "0.010000000000000000"`,
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewUnjailTxCmd() {
+func (s *EndToEndTestSuite) TestNewUnjailTxCmd() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name         string

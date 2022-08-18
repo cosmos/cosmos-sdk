@@ -9,20 +9,13 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/module"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -895,54 +888,63 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 }
 
 func Test100PercentCommissionReward(t *testing.T) {
-	var (
-		accountKeeper authkeeper.AccountKeeper
-		bankKeeper    bankkeeper.Keeper
-		distrKeeper   keeper.Keeper
-		stakingKeeper *stakingkeeper.Keeper
+	ctrl := gomock.NewController(t)
+	key := sdk.NewKVStoreKey(disttypes.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		key,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
 	)
 
-	app, err := simtestutil.Setup(distrtestutil.AppConfig,
-		&accountKeeper,
-		&bankKeeper,
-		&distrKeeper,
-		&stakingKeeper,
-	)
+	// reset fee pool
+	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
+	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
+
+	// create validator with 50% commission
+	valAddr := sdk.ValAddress(valConsAddr0)
+	addr := sdk.AccAddress(valAddr)
+	val, err := distrtestutil.CreateValidator(valConsPk0, sdk.NewInt(100))
 	require.NoError(t, err)
+	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(10, 1), sdk.NewDecWithPrec(10, 1), math.LegacyNewDec(0))
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	// validator and delegation mocks
+	del := stakingtypes.NewDelegation(addr, valAddr, val.DelegatorShares)
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(3)
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del).Times(3)
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
-	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
-	initial := int64(20)
+	// run the necessary hooks manually (given that we are not running an actual staking module)
+	err = distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr)
+	require.NoError(t, err)
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val).Times(2)
 
-	// set module account coins
-	distrAcc := distrKeeper.GetDistributionAccount(ctx)
-	require.NoError(t, banktestutil.FundModuleAccount(bankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
-	accountKeeper.SetModuleAccount(ctx, distrAcc)
-
-	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyNewDec(initial))}
-
-	// create validator with 100% commission
-	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(10, 1), sdk.NewDecWithPrec(10, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk0, sdk.NewInt(100), true)
-	stakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
-
-	// end block to bond validator
-	staking.EndBlocker(ctx, stakingKeeper)
 	// next block
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
-	// fetch validator
-	val := stakingKeeper.Validator(ctx, valAddrs[0])
+	// allocate some rewards
+	initial := int64(20)
+	tokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, math.NewInt(initial))}
+	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// allocate some rewards
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
-	// end block
-	staking.EndBlocker(ctx, stakingKeeper)
-
 	// next block
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
@@ -955,7 +957,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	// allocate some more rewards
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
-	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(addr), valAddr)
 	require.NoError(t, err)
 
 	denom, _ := sdk.GetBaseDenom()

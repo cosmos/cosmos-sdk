@@ -3,7 +3,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"maps"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 	"reflect"
 	"slices"
 	"strings"
@@ -132,7 +133,9 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 	}
 
 	// sort the keys to ensure the order is always the same
-	keys := slices.Sorted(maps.Keys(attrMap))
+	keys := maps.Keys(attrMap)
+	slices.Sort(keys)
+
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
 	for _, k := range keys {
 		v := attrMap[k]

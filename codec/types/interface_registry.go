@@ -53,6 +53,7 @@ type InterfaceRegistry interface {
 	// for the provided interface type URL.
 	ListImplementations(ifaceTypeURL string) []string
 
+	// EnsureRegistered ensures there is a registered implementation for the given concrete type.
 	EnsureRegistered(iface interface{}) error
 }
 
@@ -83,6 +84,7 @@ type UnpackInterfacesMessage interface {
 type interfaceRegistry struct {
 	interfaceNames map[string]reflect.Type
 	interfaceImpls map[reflect.Type]interfaceMap
+	implInterfaces map[reflect.Type]reflect.Type
 	typeURLMap     map[string]reflect.Type
 }
 
@@ -93,6 +95,7 @@ func NewInterfaceRegistry() InterfaceRegistry {
 	return &interfaceRegistry{
 		interfaceNames: map[string]reflect.Type{},
 		interfaceImpls: map[reflect.Type]interfaceMap{},
+		implInterfaces: map[reflect.Type]reflect.Type{},
 		typeURLMap:     map[string]reflect.Type{},
 	}
 }
@@ -107,18 +110,19 @@ func (registry *interfaceRegistry) RegisterInterface(protoName string, iface int
 	registry.RegisterImplementations(iface, impls...)
 }
 
-func (registry *interfaceRegistry) EnsureRegistered(iface interface{}) error {
-	if reflect.ValueOf(iface).Kind() != reflect.Ptr {
-		return fmt.Errorf("%T is not a pointer", iface)
+// EnsureRegistered ensures there is a registered implementation for the given concrete type.
+//
+// Returns an error if not, and nil if so.
+func (registry *interfaceRegistry) EnsureRegistered(impl interface{}) error {
+	if reflect.ValueOf(impl).Kind() != reflect.Ptr {
+		return fmt.Errorf("%T is not a pointer", impl)
 	}
 
-	typ := reflect.TypeOf(iface)
-	for _, candidate := range registry.interfaceNames {
-		if typ.AssignableTo(candidate.Elem()) {
-			return nil
-		}
+	if _, found := registry.implInterfaces[reflect.TypeOf(impl)]; !found {
+		return fmt.Errorf("%T does not have a registered interface", impl)
 	}
-	return fmt.Errorf("%T does not have a registered interface", iface)
+
+	return nil
 }
 
 // RegisterImplementations registers a concrete proto Message which implements
@@ -179,7 +183,7 @@ func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL strin
 
 	imap[typeURL] = implType
 	registry.typeURLMap[typeURL] = implType
-
+	registry.implInterfaces[implType] = ityp
 	registry.interfaceImpls[ityp] = imap
 }
 

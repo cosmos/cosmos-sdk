@@ -56,6 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking Changes
 
 * [#13673](https://github.com/cosmos/cosmos-sdk/pull/13673) The `GetFromFields` function now takes `Context` as an argument and removes `genOnly`.
+* (store) [#11825](https://github.com/cosmos/cosmos-sdk/pull/11825) Make extension snapshotter interface safer to use, renamed the util function `WriteExtensionItem` to `WriteExtensionPayload`.
 
 ## v0.45.10 - 2022-10-24
 

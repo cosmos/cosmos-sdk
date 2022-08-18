@@ -18,7 +18,6 @@ require (
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
-	github.com/cosmos/cosmos-sdk/store/tools/ics23 v0.0.0-20220726092710-f848e4300a8a
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.19.1
 	github.com/cosmos/ledger-cosmos-go v0.11.1
@@ -54,7 +53,7 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
-	github.com/tendermint/tendermint v0.35.9
+	github.com/tendermint/tendermint v0.34.20
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	golang.org/x/exp v0.0.0-20220428152302-39d4317da171

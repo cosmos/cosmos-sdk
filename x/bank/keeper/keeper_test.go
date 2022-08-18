@@ -705,7 +705,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	require.Equal(12, len(events)) // 9 events because account funding causes extra minting + coin_spent + coin_recv events
+	require.Equal(12, len(events)) // 12 events because account funding causes extra minting + coin_spent + coin_recv events
 
 	event1 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -713,7 +713,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: accAddrs[0]},
+		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: []byte(accAddrs[0].String())},
 	)
 	require.Equal(abci.Event(event1), events[7])
 
@@ -738,7 +738,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: accAddrs[2]},
+		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: []byte(accAddrs[2].String())},
 	)
 	event2.Attributes = append(
 		event2.Attributes,
@@ -749,7 +749,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	}
 	event3.Attributes = append(
 		event3.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: accAddrs[3]},
+		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: []byte(accAddrs[3].String())},
 	)
 	event3.Attributes = append(
 		event3.Attributes,

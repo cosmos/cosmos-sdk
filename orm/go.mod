@@ -3,9 +3,9 @@ module github.com/cosmos/cosmos-sdk/orm
 go 1.18
 
 require (
+	cosmossdk.io/api v0.1.0-alpha9
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
-	github.com/cosmos/cosmos-sdk/api v0.1.0
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.8
 	github.com/iancoleman/strcase v0.2.0

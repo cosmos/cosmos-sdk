@@ -51,6 +51,9 @@ func startInProcess(cfg Config, val *Validator) error {
 		node.DefaultMetricsProvider(tmCfg.Instrumentation),
 		logger.With("module", val.Moniker),
 	)
+	if err != nil {
+		return err
+	}
 
 	if err := tmNode.Start(); err != nil {
 		return err

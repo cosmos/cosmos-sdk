@@ -3,6 +3,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 	"reflect"
 	"slices"
 	"strings"

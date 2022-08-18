@@ -39,7 +39,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Bug Fixes
+
+* (x/auth) Add the missing account number case to the sim state decoder. [228](https://github.com/provenance-io/cosmos-sdk/pull/228)
+* (x/auth) Handle missing account numbers during InitGenesis. [228](https://github.com/provenance-io/cosmos-sdk/pull/228)
 
 ---
 

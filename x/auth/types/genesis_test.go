@@ -14,22 +14,41 @@ import (
 )
 
 func TestSanitize(t *testing.T) {
-	addr1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	authAcc1 := types.NewBaseAccountWithAddress(addr1)
-	err := authAcc1.SetAccountNumber(1)
-	require.NoError(t, err)
+	acc1Addr := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+	acc2Addr := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 
-	addr2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	authAcc2 := types.NewBaseAccountWithAddress(addr2)
+	t.Run("accounts are sorted by account number", func(t *testing.T) {
+		acc1 := types.NewBaseAccountWithAddress(acc1Addr)
+		acc1.AccountNumber = 2
+		acc2 := types.NewBaseAccountWithAddress(acc2Addr)
+		acc2.AccountNumber = 0
+		acc3 := types.NewEmptyModuleAccount("testing")
+		acc3.BaseAccount.AccountNumber = 1
 
-	genAccs := types.GenesisAccounts{authAcc1, authAcc2}
+		input := types.GenesisAccounts{acc1, acc2, acc3}
+		expected := types.GenesisAccounts{acc2, acc3, acc1}
+		actual := types.SanitizeGenesisAccounts(input)
 
-	require.True(t, genAccs[0].GetAccountNumber() > genAccs[1].GetAccountNumber())
-	require.Equal(t, genAccs[1].GetAddress(), addr2)
-	genAccs = types.SanitizeGenesisAccounts(genAccs)
+		require.Equal(t, expected, actual)
+	})
 
-	require.False(t, genAccs[0].GetAccountNumber() > genAccs[1].GetAccountNumber())
-	require.Equal(t, genAccs[1].GetAddress(), addr1)
+	t.Run("duplicate account numbers are corrected", func(t *testing.T) {
+		acc1 := types.NewBaseAccountWithAddress(acc1Addr)
+		acc1.AccountNumber = 0
+		acc2 := types.NewBaseAccountWithAddress(acc2Addr)
+		acc2.AccountNumber = 1
+		acc3 := types.NewEmptyModuleAccount("testing")
+		acc3.BaseAccount.AccountNumber = 0
+
+		expAcc3 := types.NewEmptyModuleAccount("testing")
+		expAcc3.BaseAccount.AccountNumber = 2
+
+		input := types.GenesisAccounts{acc1, acc2, acc3}
+		expected := types.GenesisAccounts{acc1, acc2, expAcc3}
+		actual := types.SanitizeGenesisAccounts(input)
+
+		require.Equal(t, expected, actual)
+	})
 }
 
 var (

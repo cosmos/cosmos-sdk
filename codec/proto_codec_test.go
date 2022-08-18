@@ -3,6 +3,7 @@ package codec_test
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -50,16 +51,27 @@ func TestProtoCodecMarshal(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	interfaceRegistry.RegisterInterface("testdata.Animal",
 		(*testdata.Animal)(nil),
-		&testdata.Cat{})
+		&testdata.Cat{},
+	)
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	cat := &testdata.Cat{Moniker: "Garfield", Lives: 6}
+	require.NoError(t, interfaceRegistry.EnsureRegistered(cat))
+
 	var (
-		animalCat  testdata.Animal = cat
+		animalCat  testdata.Animal  = cat
 		cartoonCat testdata.Cartoon = cat
 	)
 
-	bz, err := cdc.MarshalInterface(animalCat)
+	// sanity check
+	//foo := reflect.TypeOf(animalCat)
+	animal := (*testdata.Animal)(nil)
+	foo := reflect.TypeOf(animal)
+	require.True(t, reflect.TypeOf(cat).Implements(foo.Elem()))
+
+	bz, err := cdc.MarshalInterface(cat)
+	require.NoError(t, err)
+	bz, err = cdc.MarshalInterface(animalCat)
 	require.NoError(t, err)
 
 	err = cdc.UnmarshalInterface(bz, &animalCat)

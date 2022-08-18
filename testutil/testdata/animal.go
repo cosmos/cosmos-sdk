@@ -23,11 +23,11 @@ type Cartoon interface {
 	Identify() string
 }
 
-func (c Cat) Greet() string {
+func (c *Cat) Greet() string {
 	return fmt.Sprintf("Meow, my name is %s", c.Moniker)
 }
 
-func (c Cat) Identify() string {
+func (c *Cat) Identify() string {
 	return "This is Garfield."
 }
 

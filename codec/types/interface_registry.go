@@ -52,6 +52,8 @@ type InterfaceRegistry interface {
 	// ListImplementations lists the valid type URLs for the given interface name that can be used
 	// for the provided interface type URL.
 	ListImplementations(ifaceTypeURL string) []string
+
+	EnsureRegistered(iface interface{}) error
 }
 
 // UnpackInterfacesMessage is meant to extend protobuf types (which implement
@@ -100,8 +102,29 @@ func (registry *interfaceRegistry) RegisterInterface(protoName string, iface int
 	if typ.Elem().Kind() != reflect.Interface {
 		panic(fmt.Errorf("%T is not an interface type", iface))
 	}
+
+	for _, impl := range impls {
+		ifaceType := reflect.TypeOf(iface).Elem()
+		iType := reflect.TypeOf(impl)
+		fmt.Println(iType.AssignableTo(ifaceType))
+	}
+
 	registry.interfaceNames[protoName] = typ
 	registry.RegisterImplementations(iface, impls...)
+}
+
+func (registry *interfaceRegistry) EnsureRegistered(iface interface{}) error {
+	if reflect.ValueOf(iface).Kind() != reflect.Ptr {
+		return fmt.Errorf("%T is not a pointer", iface)
+	}
+
+	typ := reflect.TypeOf(iface)
+	for _, candidate := range registry.interfaceNames {
+		if typ.AssignableTo(candidate.Elem()) {
+			return nil
+		}
+	}
+	return fmt.Errorf("%T does not have a registered interface", iface)
 }
 
 // RegisterImplementations registers a concrete proto Message which implements

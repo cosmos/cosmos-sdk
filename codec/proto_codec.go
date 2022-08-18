@@ -190,12 +190,16 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 	if err := assertNotNil(i); err != nil {
 		return nil, err
 	}
-	any, err := types.NewAnyWithValue(i)
+	a, err := types.NewAnyWithValue(i)
+	if err != nil {
+		return nil, err
+	}
+	err = pc.interfaceRegistry.EnsureRegistered(i)
 	if err != nil {
 		return nil, err
 	}
 
-	return pc.Marshal(any)
+	return pc.Marshal(a)
 }
 
 // UnmarshalInterface is a convenience function for proto unmarshaling interfaces. It

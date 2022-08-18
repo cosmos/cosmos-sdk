@@ -93,18 +93,18 @@ type PrepareTxRecord[T MempoolTx] struct {
 type Mempool[T MempoolTx] interface {
 	// Insert attempts to insert a MempoolTx into the app-side mempool returning
 	// an error upon failure.
-	Insert(T) error
+	Insert(sdk.Context, T) error
 	// ReapMaxBytes returns the next set of available transactions from the app-side
 	// mempool, up to maxBytes or until the mempool is empty. The application can
 	// decide to return transactions from its own mempool or from the incoming
 	// TxRecords or some combination of both. The notion of 'available' or 'next'
 	// is defined by the application's mempool implementation.
-	ReapMaxBytes(txRecords abci.TxRecords, maxBytes int) ([]PrepareTxRecord[T], error)
+	ReapMaxBytes(ctx sdk.Context, txRecords abci.TxRecords, maxBytes int) ([]PrepareTxRecord[T], error)
 	// NumTxs returns the number of transactions currently in the mempool.
 	NumTxs() int
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
-	Remove(T) error
+	Remove(sdk.Context, T) error
 }
 ```
 

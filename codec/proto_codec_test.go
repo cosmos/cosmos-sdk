@@ -46,6 +46,37 @@ func (lpm *lyingProtoMarshaler) Size() int {
 	return lpm.falseSize
 }
 
+func TestProtoCodecMarshal(t *testing.T) {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	interfaceRegistry.RegisterInterface("testdata.Animal",
+		(*testdata.Animal)(nil),
+		&testdata.Cat{})
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+
+	cat := &testdata.Cat{Moniker: "Garfield", Lives: 6}
+	var (
+		animalCat  testdata.Animal = cat
+		cartoonCat testdata.Cartoon = cat
+	)
+
+	bz, err := cdc.MarshalInterface(animalCat)
+	require.NoError(t, err)
+
+	err = cdc.UnmarshalInterface(bz, &animalCat)
+	require.NoError(t, err)
+
+	bz, err = cdc.MarshalInterface(cartoonCat)
+	require.Error(t, err)
+
+	err = cdc.UnmarshalInterface(bz, &cartoonCat)
+	require.Error(t, err)
+
+	interfaceRegistry.RegisterInterface("testdata.Cartoon",
+		(*testdata.Animal)(nil),
+		&testdata.Cat{})
+
+}
+
 func TestProtoCodecUnmarshalLengthPrefixedChecks(t *testing.T) {
 	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
 

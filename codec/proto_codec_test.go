@@ -55,38 +55,42 @@ func TestProtoCodecMarshal(t *testing.T) {
 	)
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
+	cartonRegistry := types.NewInterfaceRegistry()
+	cartonRegistry.RegisterInterface("testdata.Cartoon",
+		(*testdata.Cartoon)(nil),
+		&testdata.Bird{},
+	)
+	cartoonCdc := codec.NewProtoCodec(cartonRegistry)
+
 	cat := &testdata.Cat{Moniker: "Garfield", Lives: 6}
+	bird := &testdata.Bird{Species: "Passerina ciris"}
 	require.NoError(t, interfaceRegistry.EnsureRegistered(cat))
 
 	var (
-		animalCat  testdata.Animal  = cat
-		cartoonCat testdata.Cartoon = cat
+		animal  testdata.Animal
+		cartoon testdata.Cartoon
 	)
 
 	// sanity check
-	//foo := reflect.TypeOf(animalCat)
-	animal := (*testdata.Animal)(nil)
-	foo := reflect.TypeOf(animal)
-	require.True(t, reflect.TypeOf(cat).Implements(foo.Elem()))
+	require.True(t, reflect.TypeOf(cat).Implements(reflect.TypeOf((*testdata.Animal)(nil)).Elem()))
 
 	bz, err := cdc.MarshalInterface(cat)
 	require.NoError(t, err)
-	bz, err = cdc.MarshalInterface(animalCat)
+
+	err = cdc.UnmarshalInterface(bz, &animal)
 	require.NoError(t, err)
 
-	err = cdc.UnmarshalInterface(bz, &animalCat)
+	bz, err = cdc.MarshalInterface(bird)
+	require.ErrorContains(t, err, "does not have a registered interface")
+
+	bz, err = cartoonCdc.MarshalInterface(bird)
 	require.NoError(t, err)
 
-	bz, err = cdc.MarshalInterface(cartoonCat)
-	require.Error(t, err)
+	err = cdc.UnmarshalInterface(bz, &cartoon)
+	require.ErrorContains(t, err, "no registered implementations")
 
-	err = cdc.UnmarshalInterface(bz, &cartoonCat)
-	require.Error(t, err)
-
-	interfaceRegistry.RegisterInterface("testdata.Cartoon",
-		(*testdata.Animal)(nil),
-		&testdata.Cat{})
-
+	err = cartoonCdc.UnmarshalInterface(bz, &cartoon)
+	require.NoError(t, err)
 }
 
 func TestProtoCodecUnmarshalLengthPrefixedChecks(t *testing.T) {

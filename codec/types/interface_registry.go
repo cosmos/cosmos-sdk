@@ -103,12 +103,6 @@ func (registry *interfaceRegistry) RegisterInterface(protoName string, iface int
 		panic(fmt.Errorf("%T is not an interface type", iface))
 	}
 
-	for _, impl := range impls {
-		ifaceType := reflect.TypeOf(iface).Elem()
-		iType := reflect.TypeOf(impl)
-		fmt.Println(iType.AssignableTo(ifaceType))
-	}
-
 	registry.interfaceNames[protoName] = typ
 	registry.RegisterImplementations(iface, impls...)
 }

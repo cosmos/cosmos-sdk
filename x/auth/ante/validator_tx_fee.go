@@ -41,18 +41,19 @@ func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins,
 		}
 	}
 
-	priority := getTxPriority(feeCoins)
+	priority := getTxPriority(feeCoins, int64(gas))
 	return feeCoins, priority, nil
 }
 
 // getTxPriority returns a naive tx priority based on the amount of the smallest denomination of the fee
 // provided in a transaction.
-func getTxPriority(fee sdk.Coins) int64 {
+func getTxPriority(fee sdk.Coins, gas int64) int64 {
 	var priority int64
 	for _, c := range fee {
 		p := int64(math.MaxInt64)
-		if c.Amount.IsInt64() {
-			p = c.Amount.Int64()
+		price := c.Amount.QuoRaw(gas)
+		if price.IsInt64() {
+			p = price.Int64()
 		}
 		if priority == 0 || p < priority {
 			priority = p

@@ -139,6 +139,7 @@ func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 func (m *mockSnapshotter) SnapshotFormat() uint32 {
 	return 1
 }
+
 func (m *mockSnapshotter) SupportedFormats() []uint32 {
 	return []uint32{1}
 }

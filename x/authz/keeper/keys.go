@@ -26,7 +26,7 @@ func grantStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType strin
 	grantee = address.MustLengthPrefix(grantee)
 
 	l := 1 + len(grantee) + len(granter) + len(m)
-	var key = make([]byte, l)
+	key := make([]byte, l)
 	copy(key, GrantKey)
 	copy(key[1:], granter)
 	copy(key[1+len(granter):], grantee)

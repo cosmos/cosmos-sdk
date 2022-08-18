@@ -67,5 +67,4 @@ func TestBroadcastError(t *testing.T) {
 			require.Equal(t, txHash, resp.TxHash)
 		}
 	}
-
 }

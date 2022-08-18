@@ -59,8 +59,7 @@ func TestAltSigningAlgoList_String(t *testing.T) {
 	require.Equal(t, fmt.Sprintf("%s,notSupported", string(hd.Secp256k1Type)), list.String())
 }
 
-type notSupportedAlgo struct {
-}
+type notSupportedAlgo struct{}
 
 func (n notSupportedAlgo) Name() hd.PubKeyType {
 	return "notSupported"

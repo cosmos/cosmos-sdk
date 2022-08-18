@@ -191,7 +191,6 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 			s.Require().False(exists, "invalid case: %s retrieved valid client state", tc.name)
 		}
 	}
-
 }
 
 // Test that the protocol version successfully increments after an

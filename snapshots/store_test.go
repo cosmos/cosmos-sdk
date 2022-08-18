@@ -120,7 +120,8 @@ func TestStore_Get(t *testing.T) {
 		Hash:   hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
 		Metadata: types.Metadata{
 			ChunkHashes: checksums([][]byte{
-				{2, 1, 0}, {2, 1, 1}}),
+				{2, 1, 0}, {2, 1, 1},
+			}),
 		},
 	}, snapshot)
 }
@@ -155,16 +156,20 @@ func TestStore_List(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, []*types.Snapshot{
-		{Height: 3, Format: 2, Chunks: 3, Hash: hash([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}}),
+		{
+			Height: 3, Format: 2, Chunks: 3, Hash: hash([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}})},
 		},
-		{Height: 2, Format: 2, Chunks: 3, Hash: hash([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}}),
+		{
+			Height: 2, Format: 2, Chunks: 3, Hash: hash([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}})},
 		},
-		{Height: 2, Format: 1, Chunks: 2, Hash: hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
+		{
+			Height: 2, Format: 1, Chunks: 2, Hash: hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{2, 1, 0}, {2, 1, 1}})},
 		},
-		{Height: 1, Format: 1, Chunks: 2, Hash: hash([][]byte{{1, 1, 0}, {1, 1, 1}}),
+		{
+			Height: 1, Format: 1, Chunks: 2, Hash: hash([][]byte{{1, 1, 0}, {1, 1, 1}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{1, 1, 0}, {1, 1, 1}})},
 		},
 	}, snapshots)
@@ -188,7 +193,8 @@ func TestStore_Load(t *testing.T) {
 		Hash:   hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
 		Metadata: types.Metadata{
 			ChunkHashes: checksums([][]byte{
-				{2, 1, 0}, {2, 1, 1}}),
+				{2, 1, 0}, {2, 1, 1},
+			}),
 		},
 	}, snapshot)
 
@@ -246,13 +252,16 @@ func TestStore_Prune(t *testing.T) {
 	snapshots, err = store.List()
 	require.NoError(t, err)
 	require.Equal(t, []*types.Snapshot{
-		{Height: 3, Format: 2, Chunks: 3, Hash: hash([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}}),
+		{
+			Height: 3, Format: 2, Chunks: 3, Hash: hash([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}})},
 		},
-		{Height: 2, Format: 2, Chunks: 3, Hash: hash([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}}),
+		{
+			Height: 2, Format: 2, Chunks: 3, Hash: hash([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}})},
 		},
-		{Height: 2, Format: 1, Chunks: 2, Hash: hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
+		{
+			Height: 2, Format: 1, Chunks: 2, Hash: hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{2, 1, 0}, {2, 1, 1}})},
 		},
 	}, snapshots)

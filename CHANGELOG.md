@@ -39,6 +39,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* nothing
+
+---
+
+## [v0.46.0-pio-1-rc3](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc3) - 2022-08-18
+
 ### Bug Fixes
 
 * (x/auth) Add the missing account number case to the sim state decoder. [228](https://github.com/provenance-io/cosmos-sdk/pull/228)

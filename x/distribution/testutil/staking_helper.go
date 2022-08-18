@@ -29,7 +29,7 @@ func CallCreateValidatorHooks(ctx sdk.Context, k keeper.Keeper, addr sdk.AccAddr
 		return err
 	}
 
-	k.Hooks().AfterDelegationModified(ctx, addr, valAddr)
+	err = k.Hooks().AfterDelegationModified(ctx, addr, valAddr)
 	if err != nil {
 		return err
 	}

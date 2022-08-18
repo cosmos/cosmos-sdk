@@ -45,7 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [#]() (deps) Downgrade to Tendermint [v0.34.20](https://github.com/tendermint/tendermint/releases/tag/v0.34.20).
+* [#12958](https://github.com/cosmos/cosmos-sdk/pull/12958) (deps) Downgrade to Tendermint [v0.34.21](https://github.com/tendermint/tendermint/releases/tag/v0.34.1).
 * [#12352](https://github.com/cosmos/cosmos-sdk/pull/12352) Move the `RegisterSwaggerAPI` logic into a separate helper function in the server package.
 * [#12876](https://github.com/cosmos/cosmos-sdk/pull/12876) Remove proposer-based rewards.
 * [#12892](https://github.com/cosmos/cosmos-sdk/pull/12892) `make format` now runs only gofumpt and golangci-lint run ./... --fix, replacing `goimports` `gofmt` and `misspell`

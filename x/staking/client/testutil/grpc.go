@@ -3,6 +3,7 @@ package testutil
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -270,7 +271,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegation() {
 					Delegation: types.Delegation{
 						DelegatorAddress: val.Address.String(),
 						ValidatorAddress: val2.ValAddress.String(),
-						Shares:           sdk.NewDec(10),
+						Shares:           math.LegacyNewDec(10),
 					},
 					Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
 				},

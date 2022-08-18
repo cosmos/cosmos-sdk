@@ -59,6 +59,7 @@ Example:
 			if err != nil {
 				return err
 			}
+
 			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {
 				return err
@@ -75,17 +76,22 @@ Example:
 			if err != nil {
 				return err
 			}
+
 			ctx := cmd.Context()
+
 			if denom == "" {
 				params := types.NewQueryAllBalancesRequest(addr, pageReq)
+
 				res, err := queryClient.AllBalances(ctx, params)
 				if err != nil {
 					return err
 				}
+
 				return clientCtx.PrintProto(res)
 			}
 
 			params := types.NewQueryBalanceRequest(addr, denom)
+
 			res, err := queryClient.Balance(ctx, params)
 			if err != nil {
 				return err
@@ -125,6 +131,7 @@ To query for the client metadata of a specific coin denomination use:
 			if err != nil {
 				return err
 			}
+
 			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {
 				return err
@@ -178,6 +185,7 @@ To query for the total supply of a specific coin denomination use:
 			if err != nil {
 				return err
 			}
+
 			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {
 				return err
@@ -190,6 +198,7 @@ To query for the total supply of a specific coin denomination use:
 			if err != nil {
 				return err
 			}
+
 			if denom == "" {
 				res, err := queryClient.TotalSupply(ctx, &types.QueryTotalSupplyRequest{Pagination: pageReq})
 				if err != nil {

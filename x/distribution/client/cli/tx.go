@@ -313,6 +313,11 @@ Where proposal.json contains:
 			if err != nil {
 				return err
 			}
+
+			if amount.IsZero() {
+				return fmt.Errorf("invalid amount: %s", amount)
+			}
+
 			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, recpAddr, amount)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)

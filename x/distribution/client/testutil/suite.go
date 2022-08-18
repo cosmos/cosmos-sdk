@@ -762,8 +762,26 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
   "description": "Pay me some Atoms!",
   "recipient": "foo",
   "amount": "-343foocoin",
-  "deposit": -324foocoin
+  "deposit": "-324foocoin"
 }`
+
+	invalidProp1 := fmt.Sprintf(`{
+	"title": "Title",
+	"description": "Pay me some Atoms!",
+	"recipient": "%s",
+	"amount": "0stake",
+	"deposit": "10stake"
+  }`, val.Address.String())
+	invalidPropFile1 := sdktestutil.WriteToNewTempFile(s.T(), invalidProp1)
+
+	invalidProp2 := fmt.Sprintf(`{
+		"title": "Title",
+		"description": "Pay me some Atoms!",
+		"recipient": "%s",
+		"amount": "",
+		"deposit": "10stake"
+	  }`, val.Address.String())
+	invalidPropFile2 := sdktestutil.WriteToNewTempFile(s.T(), invalidProp2)
 
 	// fund some tokens to the community pool
 	args := []string{
@@ -798,6 +816,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 		expectErr    bool
 		expectedCode uint32
 		respType     proto.Message
+		expErrMsg    string
 	}{
 		{
 			"invalid proposal",
@@ -809,6 +828,31 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true, 0, nil,
+			"invalid decimal coin expression",
+		},
+		{
+			"invalid proposal with amount empty",
+			[]string{
+				invalidPropFile1.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+			"invalid amount",
+		},
+		{
+			"invalid proposal with amount zero",
+			[]string{
+				invalidPropFile2.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0, nil,
+			"invalid amount",
 		},
 		{
 			"valid transaction",
@@ -820,6 +864,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
+			"",
 		},
 	}
 
@@ -834,6 +879,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())

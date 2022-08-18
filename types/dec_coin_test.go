@@ -569,6 +569,29 @@ func (s *decCoinTestSuite) TestNewDecCoinsWithIsValid() {
 	}
 }
 
+func (s *decCoinTestSuite) TestNewDecCoinsWithZeroCoins() {
+	zeroCoins := append(sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(0))), sdk.Coin{Denom: "wbtc", Amount: sdk.NewInt(10)})
+
+	tests := []struct {
+		coins        sdk.Coins
+		expectLength int
+	}{
+		{
+			sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(10)), sdk.NewCoin("wbtc", sdk.NewInt(10))),
+			2,
+		},
+		{
+			zeroCoins,
+			1,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		s.Require().Equal(sdk.NewDecCoinsFromCoins(tc.coins...).Len(), tc.expectLength)
+	}
+}
+
 func (s *decCoinTestSuite) TestDecCoins_AddDecCoinWithIsValid() {
 	lengthTestDecCoins := sdk.NewDecCoins().Add(sdk.NewDecCoin("mytoken", sdk.NewInt(10))).Add(sdk.DecCoin{Denom: "BTC", Amount: math.LegacyNewDec(10)})
 	s.Require().Equal(2, len(lengthTestDecCoins), "should be 2")

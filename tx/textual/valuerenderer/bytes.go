@@ -2,7 +2,7 @@ package valuerenderer
 
 import (
 	"context"
-	"encoding/base64"
+	"encoding/hex"
 	"io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -14,7 +14,7 @@ type bytesValueRenderer struct{}
 var _ ValueRenderer = bytesValueRenderer{}
 
 func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value, w io.Writer) error {
-	_, err := io.WriteString(w, base64.StdEncoding.EncodeToString(v.Bytes()))
+	_, err := io.WriteString(w, hex.EncodeToString(v.Bytes()))
 	return err
 }
 
@@ -24,7 +24,7 @@ func (vr bytesValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect
 		return protoreflect.ValueOfBytes([]byte{}), err
 	}
 
-	data, err := base64.StdEncoding.DecodeString(string(formatted))
+	data, err := hex.DecodeString(string(formatted))
 	if err != nil {
 		return protoreflect.ValueOfBytes([]byte{}), err
 	}

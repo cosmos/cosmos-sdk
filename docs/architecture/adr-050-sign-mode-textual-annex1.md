@@ -214,7 +214,7 @@ Rendered as either ISO8601 (`2021-01-01T12:00:00Z`).
 
 ### bytes
 
-- Bytes are rendered in base64.
+- Bytes are rendered in hexadecimal, all capital letters, without the `0x` prefix.
 
 ### address bytes
 

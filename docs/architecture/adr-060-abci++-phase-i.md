@@ -102,6 +102,9 @@ type Mempool[T MempoolTx] interface {
 	ReapMaxBytes(txRecords abci.TxRecords, maxBytes int) ([]PrepareTxRecord[T], error)
 	// NumTxs returns the number of transactions currently in the mempool.
 	NumTxs() int
+	// Remove attempts to remove a transaction from the mempool, returning an error
+	// upon failure.
+	Remove(T) error
 }
 ```
 

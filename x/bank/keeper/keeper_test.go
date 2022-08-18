@@ -643,11 +643,11 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: accAddrs[1]},
+		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: []byte(accAddrs[1].String())},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: accAddrs[0]},
+		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: []byte(accAddrs[0].String())},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
@@ -660,7 +660,7 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: accAddrs[0]},
+		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: []byte(accAddrs[0].String())},
 	)
 
 	// events are shifted due to the funding account events

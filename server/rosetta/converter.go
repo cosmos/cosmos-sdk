@@ -31,9 +31,9 @@ import (
 // Converter is a utility that can be used to convert
 // back and forth from rosetta to sdk and tendermint types
 // IMPORTANT NOTES:
-// - IT SHOULD BE USED ONLY TO DEAL WITH THINGS
-//   IN A STATELESS WAY! IT SHOULD NEVER INTERACT DIRECTLY
-//   WITH TENDERMINT RPC AND COSMOS GRPC
+//   - IT SHOULD BE USED ONLY TO DEAL WITH THINGS
+//     IN A STATELESS WAY! IT SHOULD NEVER INTERACT DIRECTLY
+//     WITH TENDERMINT RPC AND COSMOS GRPC
 //
 // - IT SHOULD RETURN cosmos rosetta gateway error types!
 type Converter interface {

@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-func (s *IntegrationTestSuite) TestGRPCQueries() {
+func (s *EndToEndTestSuite) TestGRPCQueries() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 

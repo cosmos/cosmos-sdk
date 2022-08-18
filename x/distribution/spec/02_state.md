@@ -34,9 +34,8 @@ type DecCoin struct {
 Validator distribution information for the relevant validator is updated each time:
 
 1. delegation amount to a validator is updated,
-2. a validator successfully proposes a block and receives a reward,
-3. any delegator withdraws from a validator, or
-4. the validator withdraws its commission.
+2. any delegator withdraws from a validator, or
+3. the validator withdraws its commission.
 
 * ValidatorDistInfo: `0x02 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(validatorDistribution)`
 

@@ -36,10 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## v1.2.1 2022-08-17
-
 * [\12921](https://github.com/cosmos/cosmos-sdk/pull/12918) Add documentation about expected plan path name.
-* [\12918](https://github.com/cosmos/cosmos-sdk/pull/12918) Fix failure when installing cosmovisor via `go install`.
 * [\12918](https://github.com/cosmos/cosmos-sdk/pull/12918) Automatically set version using module version.
 
 ## v1.2.0 2022-07-26

@@ -2,27 +2,31 @@ package distribution_test
 
 import (
 	"testing"
+	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
+	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 var (
 	delPk1   = ed25519.GenPrivKey().PubKey()
 	delAddr1 = sdk.AccAddress(delPk1.Address())
+	distrAcc = authtypes.NewEmptyModuleAccount(types.ModuleName)
 
-	amount = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	amount     = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	zeroAmount = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)))
 )
 
 func testProposal(recipient sdk.AccAddress, amount sdk.Coins) *types.CommunityPoolSpendProposal {
@@ -30,75 +34,77 @@ func testProposal(recipient sdk.AccAddress, amount sdk.Coins) *types.CommunityPo
 }
 
 func TestProposalHandlerPassed(t *testing.T) {
-	var (
-		accountKeeper authkeeper.AccountKeeper
-		bankKeeper    bankkeeper.Keeper
-		distrKeeper   keeper.Keeper
-	)
+	ctrl := gomock.NewController(t)
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
 
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&accountKeeper,
-		&bankKeeper,
-		&distrKeeper,
-	)
-	require.NoError(t, err)
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		key,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
 
 	recipient := delAddr1
 
-	// add coins to the module account
-	macc := distrKeeper.GetDistributionAccount(ctx)
-	balances := bankKeeper.GetAllBalances(ctx, macc.GetAddress())
-	require.NoError(t, banktestutil.FundModuleAccount(bankKeeper, ctx, macc.GetName(), amount))
-
-	accountKeeper.SetModuleAccount(ctx, macc)
-
-	account := accountKeeper.NewAccountWithAddress(ctx, recipient)
-	accountKeeper.SetAccount(ctx, account)
-	require.True(t, bankKeeper.GetAllBalances(ctx, account.GetAddress()).IsZero())
-
-	feePool := distrKeeper.GetFeePool(ctx)
+	feePool := types.InitialFeePool()
 	feePool.CommunityPool = sdk.NewDecCoinsFromCoins(amount...)
 	distrKeeper.SetFeePool(ctx, feePool)
+
+	bankKeeper.EXPECT().BlockedAddr(recipient).Return(false)
+	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, amount).Return(nil)
 
 	tp := testProposal(recipient, amount)
 	hdlr := distribution.NewCommunityPoolSpendProposalHandler(distrKeeper)
 	require.NoError(t, hdlr(ctx, tp))
-
-	balances = bankKeeper.GetAllBalances(ctx, recipient)
-	require.Equal(t, balances, amount)
 }
 
 func TestProposalHandlerFailed(t *testing.T) {
-	var (
-		accountKeeper authkeeper.AccountKeeper
-		bankKeeper    bankkeeper.Keeper
-		distrKeeper   keeper.Keeper
+	ctrl := gomock.NewController(t)
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		key,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
 	)
-
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&accountKeeper,
-		&bankKeeper,
-		&distrKeeper,
-	)
-	require.NoError(t, err)
-
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	// reset fee pool
-	distrKeeper.SetFeePool(ctx, types.InitialFeePool())
 
 	recipient := delAddr1
 
-	account := accountKeeper.NewAccountWithAddress(ctx, recipient)
-	accountKeeper.SetAccount(ctx, account)
-	require.True(t, bankKeeper.GetAllBalances(ctx, account.GetAddress()).IsZero())
+	feePool := types.InitialFeePool()
+	feePool.CommunityPool = sdk.NewDecCoinsFromCoins(amount...)
+	distrKeeper.SetFeePool(ctx, feePool)
+
+	bankKeeper.EXPECT().BlockedAddr(recipient).Return(false)
+	bankKeeper.EXPECT().
+		SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, amount).
+		Return(sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", zeroAmount, amount))
 
 	tp := testProposal(recipient, amount)
 	hdlr := distribution.NewCommunityPoolSpendProposalHandler(distrKeeper)
-	require.Error(t, hdlr(ctx, tp))
-
-	balances := bankKeeper.GetAllBalances(ctx, recipient)
-	require.True(t, balances.IsZero())
+	require.ErrorIs(t, hdlr(ctx, tp), sdkerrors.ErrInsufficientFunds)
 }

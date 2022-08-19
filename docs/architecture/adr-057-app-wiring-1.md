@@ -245,11 +245,8 @@ func main() {
 ### Application to existing SDK modules
 
 So far we have described a system which is largely agnostic to the specifics of the SDK such as store keys, `AppModule`,
-`BaseApp`, etc. A second app wiring ADR will be created which outlines the details of how this app wiring system will
-be applied to the existing SDK in a way that:
-
-1. is as easy to apply to existing modules as possible,
-2. while also making it possible to improve existing APIs and minimize long-term technical debt
+`BaseApp`, etc. Improvements to these parts of the framework that integrate with the general app wiring framework
+defined here are described in [ADR 061: Core Module API](./adr-061-core-module-api.md).
 
 ### Registration of Inter-Module Hooks
 
@@ -328,8 +325,8 @@ registration paradigms. These two methods can live side-by-side for as long as i
 
 ## Further Discussions
 
-As mentioned above, a second app wiring ADR will be created to describe more specifics than there is space to go
-into here. Further discussions will also happen within the Cosmos SDK Framework Working Group and in https://github.com/cosmos/cosmos-sdk/discussions/10582.
+The protobuf type registration system described in this ADR has not been implemented and may need to be reconsidered in
+light of code generation. It may be better to do this type registration with a DI provider.
 
 ## References
 
@@ -339,3 +336,4 @@ into here. Further discussions will also happen within the Cosmos SDK Framework 
 * https://github.com/google/wire
 * https://pkg.go.dev/github.com/cosmos/cosmos-sdk/container
 * https://github.com/cosmos/cosmos-sdk/pull/11802
+* [ADR 061](./adr-061-core-module-api.md)

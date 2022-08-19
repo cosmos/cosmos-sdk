@@ -57,7 +57,16 @@ The design principles of the core API are as follows:
 * other non-core and/or non-LTS services can be exposed by specific versions of runtime modules or other modules 
 following the same design principles, this includes functionality that interacts with specific non-stable versions of
 third party dependencies such as Tendermint
+* the core API doesn't implement *any* functionality, it just defines types
 * go stable API management principles are followed (TODO: link)
+
+Runtime modules which implement the core API are *intentionally* separate from the core API in order to enable more 
+forks of the runtime module than is possible with the SDK's current tightly coupled `BaseApp` design while still
+allowing for a high degree of composability and compatibility.
+
+Modules which are built only against the core API don't need to know anything about which version of runtime,
+`BaseApp` or Tendermint in order to be compatible. Modules from the core mainline SDK could be easily composed
+with a forked version of runtime with this pattern.
 
 ### Core Services
 
@@ -355,6 +364,11 @@ For example, `cosmos.bank.module.v3.Module` might specify that it can migrate fr
 The app wiring framework will ensure that if the `ModuleDescriptor` specifies that a module can upgrade from another
 module, an `UpgradeHandler` specifying that `FromModule` must be provided.
 
+This pattern of identifying from module versions will allow a module to upgrade from a version it is not a direct
+descendant of. For example, someone could fork staking and allow upgrading from the mainline SDK staking. The mainline
+SDK staking could later merge some of the forked changes and allow upgrading from the fork back to mainline. This
+is intended to allow smooth forking and merging patterns in the ecosystem for simpler and more diverse innovation.
+
 A helper method on handler will be provided to simplify upgrade handler registration, ex:
 ```go
 func (h *Handler) RegisterUpgradeHandler(fromModule protoreflect.FullName, handler func(context.Context) error)
@@ -448,6 +462,7 @@ principles that allow for strong long-term support (LTS).
 * deterministic events and queries
 * event listeners
 * inter-module msg and query execution support
+* more explicit support for forking and merging of module versions (including runtime)
 
 ### Negative
 

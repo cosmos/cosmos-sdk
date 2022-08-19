@@ -11,7 +11,7 @@ import (
 
 // Service is a type which retrieves basic block info from a context independent
 // of any specific Tendermint core version. Modules which need a specific
-// Tendermint header should use a different service and should expect to need
+// Tendermint header should use a different service and should expect a need
 // to update whenever Tendermint makes any changes. blockinfo.Service is a
 // core API type that should be provided by the runtime module being used to
 // build an app via depinject.

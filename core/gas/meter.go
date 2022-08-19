@@ -22,7 +22,7 @@ type Service interface {
 	// WithMeter returns a new context with the provided transaction-level gas meter.
 	WithMeter(ctx context.Context, meter Meter) context.Context
 
-	// WithMeter returns a new context with the provided block-level gas meter.
+	// WithBlockMeter returns a new context with the provided block-level gas meter.
 	WithBlockMeter(ctx context.Context, meter Meter) context.Context
 }
 

@@ -220,10 +220,10 @@ type Handler struct {
     // must be annotated with the option cosmos.msg.v1.service = true.
     Services []ServiceImpl
 	
-	DefaultGenesis(GenesisTarget)
-    ValidateGenesis(GenesisSource) error
-    InitGenesis(context.Context, GenesisSource) error
-    ExportGenesis(context.Context, GenesisTarget)
+	DefaultGenesis func(GenesisTarget)
+    ValidateGenesis func(GenesisSource) error
+    InitGenesis func(context.Context, GenesisSource) error
+    ExportGenesis func(context.Context, GenesisTarget)
 
     BeginBlocker func(context.Context) error
 	EndBlocker func(context.Context) error
@@ -333,9 +333,9 @@ the event and optionally return an error. If an event listener returns a non-nil
 that emitted the event and revert any state transitions that this process would have caused.
 
 Event listeners for typed events can be added to the handler struct either by populating the `EventListeners` field
-or using the `Handler.AddEventListener` builder method:
+or using generic helper methods:
 ```go
-handler.AddEventListener(func (ctx context.Context, e *EventReceive) error) { ... })
+appmodule.AddEventListener(handler, func (ctx context.Context, e *EventReceive)) { ... })
 ```
 
 Event listeners provide a standardized alternative to module hooks, such as `StakingHooks`, even though these hooks

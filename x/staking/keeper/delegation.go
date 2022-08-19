@@ -259,16 +259,6 @@ func (k Keeper) IterateDelegatorRedelegations(ctx sdk.Context, delegator sdk.Acc
 	}
 }
 
-// HasMaxUnbondingDelegationEntries - check if unbonding delegation has maximum number of entries.
-func (k Keeper) HasMaxUnbondingDelegationEntries(ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) bool {
-	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
-	if !found {
-		return false
-	}
-
-	return len(ubd.Entries) >= int(k.MaxEntries(ctx))
-}
-
 // SetUnbondingDelegation sets the unbonding delegation and associated index.
 func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	delegatorAddress := sdk.MustAccAddressFromBech32(ubd.DelegatorAddress)
@@ -802,10 +792,6 @@ func (k Keeper) Undelegate(
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return time.Time{}, types.ErrNoDelegatorForAddress
-	}
-
-	if k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
-		return time.Time{}, types.ErrMaxUnbondingDelegationEntries
 	}
 
 	returnAmount, err := k.Unbond(ctx, delAddr, valAddr, sharesAmount)

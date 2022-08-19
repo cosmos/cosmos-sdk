@@ -7,19 +7,29 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	_ "github.com/cosmos/cosmos-sdk/x/params"
+	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -38,25 +48,36 @@ var (
 type GenTxTestSuite struct {
 	suite.Suite
 
-	ctx            sdk.Context
-	app            *simapp.SimApp
+	ctx sdk.Context
+
 	encodingConfig moduletestutil.TestEncodingConfig
 	msg1, msg2     *stakingtypes.MsgCreateValidator
+	accountKeeper  authkeeper.AccountKeeper
+	bankKeeper     bankkeeper.Keeper
+	stakingKeeper  *stakingkeeper.Keeper
+	baseApp        *baseapp.BaseApp
 }
 
 func (suite *GenTxTestSuite) SetupTest() {
-	checkTx := false
-	app := simapp.Setup(suite.T(), checkTx)
-	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
-	suite.app = app
-	suite.encodingConfig = moduletestutil.TestEncodingConfig{
-		InterfaceRegistry: app.InterfaceRegistry(),
-		Codec:             app.AppCodec(),
-		TxConfig:          app.TxConfig(),
-		Amino:             app.LegacyAmino(),
-	}
 
-	var err error
+	encCfg := moduletestutil.TestEncodingConfig{}
+
+	app, err := simtestutil.SetupWithConfiguration(
+		configurator.NewAppConfig(
+			configurator.BankModule(),
+			configurator.TxModule(),
+			configurator.StakingModule(),
+			configurator.ParamsModule(),
+			configurator.AuthModule()),
+		simtestutil.DefaultStartUpConfig(),
+		&encCfg.InterfaceRegistry, &encCfg.Codec, &encCfg.TxConfig, &encCfg.Amino,
+		&suite.accountKeeper, &suite.bankKeeper, &suite.stakingKeeper)
+	suite.Require().NoError(err)
+
+	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.encodingConfig = encCfg
+	suite.baseApp = app.BaseApp
+
 	amount := sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)
 	one := math.OneInt()
 	suite.msg1, err = stakingtypes.NewMsgCreateValidator(
@@ -68,13 +89,13 @@ func (suite *GenTxTestSuite) SetupTest() {
 }
 
 func (suite *GenTxTestSuite) setAccountBalance(addr sdk.AccAddress, amount int64) json.RawMessage {
-	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
 
-	err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, amount)})
+	err := testutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, amount)})
 	suite.Require().NoError(err)
 
-	bankGenesisState := suite.app.BankKeeper.ExportGenesis(suite.ctx)
+	bankGenesisState := suite.bankKeeper.ExportGenesis(suite.ctx)
 	bankGenesis, err := suite.encodingConfig.Amino.MarshalJSON(bankGenesisState) // TODO switch this to use Marshaler
 	suite.Require().NoError(err)
 
@@ -186,8 +207,8 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			suite.SetupTest()
 			cdc := suite.encodingConfig.Codec
 
-			suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
-			stakingGenesisState := suite.app.StakingKeeper.ExportGenesis(suite.ctx)
+			suite.stakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
+			stakingGenesisState := suite.stakingKeeper.ExportGenesis(suite.ctx)
 			suite.Require().Equal(stakingGenesisState.Params, stakingtypes.DefaultParams())
 			stakingGenesis, err := cdc.MarshalJSON(stakingGenesisState) // TODO switch this to use Marshaler
 			suite.Require().NoError(err)
@@ -271,13 +292,13 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 			if tc.expPass {
 				suite.Require().NotPanics(func() {
 					genutil.DeliverGenTxs(
-						suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
+						suite.ctx, genTxs, suite.stakingKeeper, suite.baseApp.DeliverTx,
 						suite.encodingConfig.TxConfig,
 					)
 				})
 			} else {
 				_, err := genutil.DeliverGenTxs(
-					suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
+					suite.ctx, genTxs, suite.stakingKeeper, suite.baseApp.DeliverTx,
 					suite.encodingConfig.TxConfig,
 				)
 

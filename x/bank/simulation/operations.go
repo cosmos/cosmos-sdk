@@ -6,9 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -17,10 +17,13 @@ import (
 )
 
 // Simulation operation weights constants
+//
 //nolint:gosec // these are not hardcoded credentials.
 const (
-	OpWeightMsgSend      = "op_weight_msg_send"
-	OpWeightMsgMultiSend = "op_weight_msg_multisend"
+	OpWeightMsgSend           = "op_weight_msg_send"
+	OpWeightMsgMultiSend      = "op_weight_msg_multisend"
+	DefaultWeightMsgSend      = 100 // from simappparams.DefaultWeightMsgSend
+	DefaultWeightMsgMultiSend = 10  // from simappparams.DefaultWeightMsgMultiSend
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -30,13 +33,13 @@ func WeightedOperations(
 	var weightMsgSend, weightMsgMultiSend int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) {
-			weightMsgSend = simappparams.DefaultWeightMsgSend
+			weightMsgSend = DefaultWeightMsgSend
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgMultiSend, &weightMsgMultiSend, nil,
 		func(_ *rand.Rand) {
-			weightMsgMultiSend = simappparams.DefaultWeightMsgMultiSend
+			weightMsgMultiSend = DefaultWeightMsgMultiSend
 		},
 	)
 
@@ -145,7 +148,7 @@ func sendMsgSend(
 			return err
 		}
 	}
-	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
@@ -345,7 +348,7 @@ func sendMsgMultiSend(
 			return err
 		}
 	}
-	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
@@ -399,8 +402,7 @@ func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccCount i
 	moduleAccounts := make([]simtypes.Account, moduleAccCount)
 
 	for i := 0; i < moduleAccCount; i++ {
-		addr := ak.GetModuleAddress(distributiontypes.ModuleName)
-		acc := ak.GetAccount(ctx, addr)
+		acc := ak.GetModuleAccount(ctx, distributiontypes.ModuleName)
 		mAcc := simtypes.Account{
 			Address: acc.GetAddress(),
 			PrivKey: nil,

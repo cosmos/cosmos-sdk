@@ -47,6 +47,24 @@ func (lpm *lyingProtoMarshaler) Size() int {
 	return lpm.falseSize
 }
 
+func TestEnsureRegistered(t *testing.T) {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cat := &testdata.Cat{Moniker: "Garfield"}
+
+	err := interfaceRegistry.EnsureRegistered(*cat)
+	require.ErrorContains(t, err, "testdata.Cat is not a pointer")
+
+	err = interfaceRegistry.EnsureRegistered(cat)
+	require.ErrorContains(t, err, "testdata.Cat does not have a registered interface")
+
+	interfaceRegistry.RegisterInterface("testdata.Animal",
+		(*testdata.Animal)(nil),
+		&testdata.Cat{},
+	)
+
+	require.NoError(t, interfaceRegistry.EnsureRegistered(cat))
+}
+
 func TestProtoCodecMarshal(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	interfaceRegistry.RegisterInterface("testdata.Animal",

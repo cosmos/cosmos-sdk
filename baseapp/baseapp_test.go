@@ -2186,6 +2186,36 @@ func executeBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions in
 	return txs
 }
 
+func getBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions int, blockHeight int64) (*abci.RequestBeginBlock, []*abci.RequestDeliverTx, *abci.RequestEndBlock) {
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+	r := rand.New(rand.NewSource(randSource))
+	randSource += 1
+	keyCounter := r.Intn(10000)
+	txs := make([]txTest, 0)
+
+	beginRequest := abci.RequestBeginBlock{Header: tmproto.Header{Height: blockHeight}}
+	deliverRequests := make([]*abci.RequestDeliverTx, 0)
+	for txNum := 0; txNum < numTransactions; txNum++ {
+		tx := txTest{Msgs: []sdk.Msg{}}
+		for msgNum := 0; msgNum < 2; msgNum++ {
+			key := []byte(fmt.Sprintf("%v", keyCounter))
+			value := make([]byte, 10000)
+			_, err := r.Read(value)
+			require.NoError(t, err)
+			tx.Msgs = append(tx.Msgs, msgKeyValue{Key: key, Value: value})
+			keyCounter++
+		}
+		txBytes, err := codec.Marshal(tx)
+		require.NoError(t, err)
+		deliverRequest := abci.RequestDeliverTx{Tx: txBytes}
+		deliverRequests = append(deliverRequests, &deliverRequest)
+		txs = append(txs, tx)
+	}
+	endBlockRequest := abci.RequestEndBlock{Height: blockHeight}
+	return &beginRequest, deliverRequests, &endBlockRequest
+}
+
 func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
@@ -2198,6 +2228,20 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 		require.True(t, resp.IsOK(), "%v", resp.String())
 	}
 	app.EndBlock(abci.RequestEndBlock{Height: blockHeight})
+}
+
+func executeBlockWithRequests(t *testing.T, app *BaseApp, beginRequest *abci.RequestBeginBlock, deliverRequests []*abci.RequestDeliverTx, endRequest *abci.RequestEndBlock) {
+	if beginRequest != nil {
+		app.BeginBlock(*beginRequest)
+	}
+	for _, deliverRequest := range deliverRequests {
+		require.NotNil(t, deliverRequest)
+		resp := app.DeliverTx(*deliverRequest)
+		require.True(t, resp.IsOK(), "%v", resp.String())
+	}
+	if endRequest != nil {
+		app.EndBlock(*endRequest)
+	}
 }
 
 func TestEndToEndFraudProof(t *testing.T) {
@@ -2418,7 +2462,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	// B1 <- S0
 	appB1.InitChain(abci.RequestInitChain{})
 
-	numTransactions := 1
+	numTransactions := 5
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
 	commitB1 := appB1.Commit()
@@ -2427,7 +2471,12 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	storeHashB1 := appB1.cms.(*multi.Store).GetSubstoreSMT(capKey2.Name()).Root()
 
 	// B1 <- S2
-	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
+	beginRequest, deliverRequests, endRequest := getBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
+
+	deliverRequests = deliverRequests[0 : len(deliverRequests)/2]
+	endRequest = nil
+
+	executeBlockWithRequests(t, appB1, beginRequest, deliverRequests, endRequest)
 
 	// Exports all data inside current multistore into a fraudProof (S1 -> S2) //
 	storeKeyToSubstoreTraceBuf := make(map[string]*bytes.Buffer)

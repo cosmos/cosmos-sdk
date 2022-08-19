@@ -207,7 +207,9 @@ Rendered using [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339) (a
 simplification of ISO 8601), which is the current recommendation for portable
 time values. The rendering always uses "Z" (UTC) as the timezone. It uses only
 the necessary fractional digits of a second, omitting the fractional part
-entirely if the timestamp has no fractional seconds.
+entirely if the timestamp has no fractional seconds. (The resulting timestamps
+are not automatically sortable by standard lexicographic order, but we favor
+the legibility of the shorter string.)
 
 #### Examples
 

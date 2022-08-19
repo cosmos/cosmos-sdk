@@ -91,9 +91,8 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 		authtypes.NewModuleAddress("gov").String(),
 	)
 
+	// reset fee pool & set params
 	distrKeeper.SetParams(ctx, disttypes.DefaultParams())
-
-	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
 
 	// create validator with 50% commission

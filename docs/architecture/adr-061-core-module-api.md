@@ -10,8 +10,15 @@ PROPOSED Not Implemented
 
 ## Abstract
 
-> "If you can't explain it simply, you don't understand it well enough." Provide a simplified and layman-accessible explanation of the ADR.
-> A short (~200 word) description of the issue being addressed.
+A new core API is proposed to replace the existing `AppModule` and `sdk.Context` frameworks a set of core services
+and a new `Handler` struct. This core API aims to:
+- be simpler,
+- more extensible
+- and more stable than the current framework
+while also
+- enabling deterministic events and queries, and
+- supporting event listeners
+- and [ADR 033: Protobuf-based Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md) clients.
 
 ## Context
 
@@ -60,13 +67,15 @@ manual wiring.
 
 #### Store Services
 
-The generic store interface is defined as the current SDK `KVStore` interface. The `StoreService` type is a refactoring
-of the existing store key types which inverts the relationship with the context. Instead of expecting a
+Store services will be defined in the `cosmossdk.io/core/store` package.
+
+The generic `store.KVStore` interface is the same as current SDK `KVStore` interface. The `store.Service` type is a
+refactoring of the existing store key types which inverts the relationship with the context. Instead of expecting a
 "bag of variables" context type to explicitly know about stores, `StoreService` uses the general-purpose
 `context.Context` just to coordinate state:
 
 ```go
-type StoreService interface {
+type Service interface {
     // Open retrieves the KVStore from the context.
 	Open(context.Context) KVStore
 }
@@ -84,17 +93,17 @@ get a reference to via dependency injection or manually:
 
 ```go
 type KVStoreService interface {
-    StoreService
+    Service
 	IsKVStoreService()
 }
 
 type MemoryStoreService interface {
-    StoreService
+    Service
 	IsMemoryStoreService()
 }
 
 type TransientStoreService interface {
-	StoreService
+	Service
 	IsTransientStoreService()
 }
 ```
@@ -105,7 +114,9 @@ type of store they need in their dependency injection (or manual) constructors.
 
 #### Event Service
 
-The event service gives modules access to an event manager which allows modules to emit typed and legacy,
+The event `Service` and `Manager` will be defined in the `cosmossdk.io/core/event` package.
+
+The event `Service` gives modules access to an event `Manager` which allows modules to emit typed and legacy,
 untyped events:
 
 ```go
@@ -130,6 +141,8 @@ Design questions:
 
 #### Block Info Service
 
+The block info `Service` will be defined in the `cosmossdk.io/core/blockinfo` package.
+
 The `BlockInfo` service allows modules to get a limited set of information about the currently executing block
 that does not depend on any specific version of Tendermint:
 ```go
@@ -153,6 +166,8 @@ The basic `BlockInfo` service is left fairly generic to insulate the vast majori
 exposure to changes in the Tendermint protocol.
 
 #### Gas Service
+
+The gas `Service` and `Meter` types will be defined in the `cosmossdk.io/core/gas` package.
 
 The gas service handles tracking of gas consumptions at the block and transaction level and also allows
 for overriding the gas meter passed to child calls:
@@ -184,9 +199,13 @@ which ensures all required pre-processing steps are uniformly executed by all mo
 
 ### Core `Handler` Struct
 
-Modules will provide their core services to runtime module via the `Handler` struct instead of the existing
+
+Modules will provide their core services to runtime module via the `Handler` struct, defined in the `cosmossdk.io/core/appmodule`
+package, instead of the existing
 `AppModule` interface:
 ```go
+package appmodule
+
 type Handler struct {
     // Services are the Msg and Query services for the module. Msg services
     // must be annotated with the option cosmos.msg.v1.service = true.
@@ -221,6 +240,14 @@ The `Handler` struct type will implement `grpc.ServiceRegistrar` interface which
     h := &appmodule.Handler{}
 	types.RegisterMsgServer(h, keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(h, am.keeper)
+```
+
+Service registrations will be stored in the `Handler.Services` field using the `ServiceImpl` struct:
+```go
+type ServiceImpl struct {
+	Desc *grpc.ServiceDesc
+	Impl interface{}
+}
 ```
 
 Because of the `cosmos.msg.v1.service` protobuf option, required for `Msg` services, the same handler struct can be
@@ -302,6 +329,13 @@ or using the `Handler.AddEventListener` builder method:
 handler.AddEventListener(func (ctx context.Context, e *EventReceive) error) { ... })
 ```
 
+Event listeners provide a standardized alternative to module hooks, such as `StakingHooks`, even though these hooks
+are still supported and described in [ADR 057: App Wiring](./adr-057-app-wiring-1.md)
+
+Only one event listener per event type can be defined per module. Event listeners will be called in a deterministic
+order based on alphabetically sorting module names. If a more customizable order is desired, additional parameters
+to the runtime module config object can be added to support optional custom ordering.
+
 #### Upgrade Handlers
 
 Upgrade handlers can be specified using the `UpgradeHandlers` field that takes an array of `UpgradeHandler` structs:
@@ -328,6 +362,46 @@ func (h *Handler) RegisterUpgradeHandler(fromModule protoreflect.FullName, handl
 
 #### Remaining Parts of AppModule
 
+The current `AppModule` framework handles a number of additional concerns which aren't addressed by this core API.
+These include the registration of:
+* gogo proto and amino interface types
+* cobra query and tx commands
+* gRPC gateway 
+* crisis module invariants
+* simulations
+
+The design proposed here relegates the registration of these things to other structures besides the `Handler` struct
+defined here. In the case of gogo proto and amino interfaces, the registration of these generally should happen as early
+as possible during initialization and in [ADR 057: App Wiring](./adr-057-app-wiring-1.md), protobuf type registration  
+happens before dependency injection (although this could alternatively be done dedicated DI providers).
+
+Commands should likely be handled at a different level of the framework as they are purely a client concern. Currently,
+we use the cobra framework, but there have been discussions of potentially using other frameworks, automatically
+generating CLI commands, and even letting libraries outside the SDK totally manage this.
+
+gRPC gateway registration should probably be handled by the runtime module, but the core API shouldn't depend on gRPC
+gateway types as 1) we are already using an older version and 2) it's possible the framework can do this registration
+automatically in the future. So for now, the runtime module should probably provide some sort of specific type for doing
+this registration ex:
+```go
+type GrpcGatewayInfo struct {
+	Handlers []GrpcGatewayHandler
+}
+
+type GrpcGatewayHandler func(ctx context.Context, mux *runtime.ServeMux, client QueryClient) error
+```
+
+which modules can return in a provider:
+```go
+func ProvideGrpcGateway() GrpcGatewayInfo {
+	return GrpcGatewayinfo {
+        Handlers: []Handler {types.RegisterQueryHandlerClient}
+	}
+}
+```
+
+Crisis module invariants and simulations are subject to potential redesign and should be managed with types
+defined in the crisis and simulation modules respectively.
 
 #### Example Usage
 
@@ -347,47 +421,54 @@ func ProvideApp(config *foomodulev2.Module, evtSvc event.EventService, db orm.Mo
 }
 ```
 
-TODO:
-* interfaces and legacy amino registration
-* commands
-* grpc gateway
-* invariants
-* inter-module hooks
-* simulations
-
 ### Runtime Compatibility Version
 
-### Legacy `AppModule` Runtime Compatibility
+The `core` module will define a static integer var, `cosmossdk.io/core/RuntimeCompatibilityVersion`, which is
+a minor version indicator of the core module that is accessible at runtime. Correct runtime module implementations
+should check this compatibility version and return an error if the current `RuntimeCompatibilityVersion` is higher
+than the version of the core API that this runtime version can support. When new features are adding to the `core`
+module API that runtime modules are required to support, this version should be incremented.
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
-
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
+Early versions of runtime modules should aim to support as much as possible modules built with the existing
+`AppModule`/`sdk.Context` framework. As the core API is more widely adopted, later runtime versions may choose to
+drop support and only support the core API plus any runtime module specific APIs (like specific versions of Tendermint).
+
+The core module itself should strive to remain at the go semantic version `v1` as long as possible and follow design
+principles that allow for strong long-term support (LTS).
 
 ### Positive
 
-{positive consequences}
+* better API encapsulation and separation of concerns
+* more stable APIs
+* more framework extensibility
+* deterministic events and queries
+* event listeners
+* inter-module msg and query execution support
 
 ### Negative
 
-{negative consequences}
-
 ### Neutral
 
-{neutral consequences}
+* modules will need to be refactored to use this API
+* some replacements for `AppModule` functionality still need to be defined in follow-ups
+  (type registration, commands, invariants, simulations) and this will take additional design work
+* the upgrade module may need upgrades to support the new upgrade handler system described here
 
 ## Further Discussions
 
-While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
-Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
-
-## Test Cases [optional]
-
-Test cases for an implementation are mandatory for ADRs that are affecting consensus changes. Other ADRs can choose to include links to test cases if applicable.
+* how to register:
+  * gogo proto and amino interface types
+  * cobra commands
+  * invariants
+  * simulations
+* should event and gas services allow callers to replace the event manager and gas meter in the context?
 
 ## References
 
-* {reference link}
+* [ADR 033: Protobuf-based Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md)
+* [ADR 057: App Wiring](./adr-057-app-wiring-1.md)
+* [ADR 055: ORM](./adr-055-orm.md)

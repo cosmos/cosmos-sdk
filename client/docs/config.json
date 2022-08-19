@@ -116,6 +116,15 @@
           "Params": "FeegrantParams"
         }
       }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/nft/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "NftParams",
+          "Balance": "NftBalance"
+        }
+      }
     }
   ]
 }

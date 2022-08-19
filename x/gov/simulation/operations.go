@@ -28,6 +28,7 @@ var (
 )
 
 // Simulation operation weights constants
+//
 //nolint:gosec // these are not hard-coded credentials.
 const (
 	OpWeightMsgDeposit      = "op_weight_msg_deposit"
@@ -412,7 +413,7 @@ func randomDeposit(
 			return nil, false, err
 		}
 
-		minAmount = sdk.NewDecFromInt(minDepositAmount).Mul(minDepositPercent).RoundInt()
+		minAmount = sdk.NewDecFromInt(minDepositAmount).Mul(minDepositPercent).TruncateInt()
 	}
 
 	amount, err := simtypes.RandPositiveInt(r, minDepositAmount.Sub(minAmount))

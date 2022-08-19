@@ -52,6 +52,7 @@ func (se SendEnabled) Validate() error {
 }
 
 // validateSendEnabledParams is used by the x/params module to validate the params for the bank module.
+//
 //nolint:deadcode,unused
 func validateSendEnabledParams(i interface{}) error {
 	params, ok := i.([]*SendEnabled)
@@ -87,6 +88,7 @@ func (se SendEnabled) String() string {
 }
 
 // validateSendEnabled is used by the x/params module to validate a single SendEnabled entry.
+//
 //nolint:unused
 func validateSendEnabled(i interface{}) error {
 	param, ok := i.(SendEnabled)

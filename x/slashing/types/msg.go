@@ -17,6 +17,7 @@ var (
 )
 
 // NewMsgUnjail creates a new MsgUnjail instance
+//
 //nolint:interfacer
 func NewMsgUnjail(validatorAddr sdk.ValAddress) *MsgUnjail {
 	return &MsgUnjail{

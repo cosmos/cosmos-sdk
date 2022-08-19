@@ -740,7 +740,6 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 }
 
 func (suite *KeeperTestSuite) TestMsgUpdateParams() {
-
 	authority := suite.app.GovKeeper.GetAuthority()
 	params := v1.DefaultParams()
 	testCases := []struct {
@@ -1015,7 +1014,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 
 func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 	const meetsDepositValue = baseDepositTestAmount * baseDepositTestPercent / 100
-	var baseDepositRatioDec = sdk.NewDec(baseDepositTestPercent).Quo(sdk.NewDec(100))
+	baseDepositRatioDec := sdk.NewDec(baseDepositTestPercent).Quo(sdk.NewDec(100))
 
 	testcases := map[string]struct {
 		minDeposit             sdk.Coins

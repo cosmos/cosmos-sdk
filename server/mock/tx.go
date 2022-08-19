@@ -1,4 +1,3 @@
-//nolint
 package mock
 
 import (
@@ -70,7 +69,7 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 	var tx sdk.Tx
 
 	split := bytes.Split(txBytes, []byte("="))
-	if len(split) == 1 {
+	if len(split) == 1 { //nolint:gocritic
 		k := split[0]
 		tx = kvstoreTx{k, k, txBytes}
 	} else if len(split) == 2 {

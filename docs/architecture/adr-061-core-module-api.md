@@ -481,6 +481,7 @@ principles that allow for strong long-term support (LTS).
   * invariants
   * simulations
 * should event and gas services allow callers to replace the event manager and gas meter in the context?
+* should we allow a way for emitting typed events which aren't part of consensus?
 
 ## References
 

@@ -135,16 +135,8 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagFeeAccount, "", "Fee account pays fees for the transaction instead of deducting from the signer")
 
 	// --gas can accept integers and "auto"
-	f.String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically. Note: %q option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of %q. (default %d)",
+	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically. Note: %q option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of %q. (default %d)",
 		GasFlagAuto, GasFlagAuto, FlagFees, DefaultGasLimit))
-
-	AddKeyringFlags(f)
-}
-
-// AddKeyringFlags sets common keyring flags
-func AddKeyringFlags(flags *pflag.FlagSet) {
-	flags.String(FlagKeyringDir, "", "The client Keyring directory; if omitted, the default 'home' directory will be used")
-	flags.String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test|memory)")
 }
 
 // AddPaginationFlagsToCmd adds common pagination flags to cmd

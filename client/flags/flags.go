@@ -127,7 +127,8 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagAux, false, "Generate aux signer data instead of sending a tx")
 
 	// --gas can accept integers and "auto"
-	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))
+	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically. Note: %q option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of %q. (default %d)",
+		GasFlagAuto, GasFlagAuto, FlagFees, DefaultGasLimit))
 }
 
 // AddPaginationFlagsToCmd adds common pagination flags to cmd

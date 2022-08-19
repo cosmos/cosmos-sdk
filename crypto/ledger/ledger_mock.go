@@ -27,13 +27,7 @@ func init() {
 		return LedgerSECP256K1Mock{}, nil
 	}
 
-	// Set default values for Cosmos Ledger instance. These can be updated
-	// by setting fields in the Keyring Options.
-	options.createPubkey = func(key []byte) types.PubKey {
-		return &secp256k1.PubKey{Key: key}
-	}
-	options.appName = "Cosmos"
-	options.skipDERConversion = false
+	initOptionsDefault()
 }
 
 type LedgerSECP256K1Mock struct{}

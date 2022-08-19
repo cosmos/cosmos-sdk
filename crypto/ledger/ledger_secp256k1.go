@@ -58,6 +58,15 @@ type (
 	}
 )
 
+// Initialize the default options values for the Cosmos Ledger
+func initOptionsDefault() {
+	options.createPubkey = func(key []byte) types.PubKey {
+		return &secp256k1.PubKey{Key: key}
+	}
+	options.appName = "Cosmos"
+	options.skipDERConversion = false
+}
+
 // Set the discoverLedger function to use a different Ledger derivation
 func SetDiscoverLedger(fn discoverLedgerFn) {
 	options.discoverLedger = fn
@@ -254,9 +263,9 @@ func sign(device SECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte) ([]byte, err
 
 	if options.skipDERConversion {
 		return sig, nil
-	} else {
-		return convertDERtoBER(sig)
 	}
+
+	return convertDERtoBER(sig)
 }
 
 // getPubKeyUnsafe reads the pubkey from a ledger device

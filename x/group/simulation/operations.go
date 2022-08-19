@@ -42,6 +42,7 @@ var (
 )
 
 // Simulation operation weights constants
+//
 //nolint:gosec // these are not hardcoded credentials.
 const (
 	OpMsgCreateGroup                     = "op_weight_msg_create_group"

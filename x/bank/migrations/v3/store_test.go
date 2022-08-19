@@ -3,21 +3,22 @@ package v3_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	v3 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestMigrateStore(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
@@ -55,7 +56,7 @@ func TestMigrateStore(t *testing.T) {
 }
 
 func TestMigrateDenomMetaData(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)

@@ -62,8 +62,10 @@ var lock = new(sync.Mutex)
 
 // AppConstructor defines a function which accepts a network configuration and
 // creates an ABCI Application to provide to Tendermint.
-type AppConstructor = func(val moduletestutil.Validator) servertypes.Application
-type TestFixtureFactory = func() TestFixture
+type (
+	AppConstructor     = func(val moduletestutil.Validator) servertypes.Application
+	TestFixtureFactory = func() TestFixture
+)
 
 type TestFixture struct {
 	AppConstructor AppConstructor
@@ -483,7 +485,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			valPubKeys[i],
 			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
+			stakingtypes.NewCommissionRates(commission, math.LegacyOneDec(), math.LegacyOneDec()),
 			math.OneInt(),
 		)
 		if err != nil {

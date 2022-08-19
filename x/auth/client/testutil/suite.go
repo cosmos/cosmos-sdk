@@ -35,7 +35,6 @@ import (
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
@@ -737,7 +736,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 	s.Require().Equal(0, len(sigs))
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
+	resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -799,7 +798,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().True(strings.Contains(res.String(), "[OK]"))
 
 	// Ensure foo has right amount of funds
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
+	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -822,7 +821,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Ensure destiny account state
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, addr)
+	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -830,7 +829,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
 	// Ensure origin account state
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
+	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -862,7 +861,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Generate multisig transaction.
-	multiGeneratedTx, err := bankcli.MsgSendExec(
+	multiGeneratedTx, err := clitestutil.MsgSendExec(
 		val1.ClientCtx,
 		addr,
 		val1.Address,
@@ -948,7 +947,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, addr)
+	resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -968,7 +967,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, addr)
+	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
 	s.Require().NoError(err)
 
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -977,7 +976,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().Equal(sendTokens.Amount, diff.AmountOf(s.cfg.BondDenom))
 
 	// Generate multisig transaction.
-	multiGeneratedTx, err := bankcli.MsgSendExec(
+	multiGeneratedTx, err := clitestutil.MsgSendExec(
 		val1.ClientCtx,
 		addr,
 		val1.Address,
@@ -1050,7 +1049,7 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	s.Require().NoError(err)
 
 	// Generate a transaction for testing --multisig with an address not in the keyring.
-	multisigTx, err := bankcli.MsgSendExec(
+	multisigTx, err := clitestutil.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
 		val1.Address,
@@ -1102,7 +1101,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, addr)
+	resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -1111,7 +1110,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().True(sendTokens.Amount.Equal(balRes.Balances.AmountOf(s.cfg.BondDenom)))
 
 	// Generate multisig transaction.
-	multiGeneratedTx, err := bankcli.MsgSendExec(
+	multiGeneratedTx, err := clitestutil.MsgSendExec(
 		val1.ClientCtx,
 		addr,
 		val1.Address,
@@ -1189,7 +1188,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	generatedStd, err := bankcli.MsgSendExec(
+	generatedStd, err := clitestutil.MsgSendExec(
 		val.ClientCtx,
 		addr,
 		val.Address,
@@ -1251,7 +1250,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	generatedStd, err := bankcli.MsgSendExec(
+	generatedStd, err := clitestutil.MsgSendExec(
 		val.ClientCtx,
 		addr,
 		val.Address,
@@ -1559,7 +1558,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(uint32(0), txRes.Code, txRes.RawLog)
 
 	// Make sure the addr1's balance got funded.
-	queryResJSON, err := bankcli.QueryBalancesExec(val0.ClientCtx, addr1)
+	queryResJSON, err := clitestutil.QueryBalancesExec(val0.ClientCtx, addr1)
 	require.NoError(err)
 	var queryRes banktypes.QueryAllBalancesResponse
 	err = val0.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &queryRes)
@@ -1891,11 +1890,11 @@ func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.
 	}
 
 	flags = append(flags, extraFlags...)
-	return bankcli.MsgSendExec(val.ClientCtx, val.Address, toAddr, amount, flags...)
+	return clitestutil.MsgSendExec(val.ClientCtx, val.Address, toAddr, amount, flags...)
 }
 
 func (s *IntegrationTestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) math.Int {
-	resp, err := bankcli.QueryBalancesExec(clientCtx, addr)
+	resp, err := clitestutil.QueryBalancesExec(clientCtx, addr)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse

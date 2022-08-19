@@ -157,12 +157,15 @@ jobs:
         if: env.GIT_DIFF
       - name: test & coverage report creation
         run: |
-          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock'
+          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -race -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='ledger test_ledger_mock'
         if: env.GIT_DIFF
       - uses: actions/upload-artifact@v3
         with:
           name: "${{ github.sha }}-${{ matrix.part }}-coverage"
           path: ./${{ matrix.part }}profile.out
+    env:
+      # Here we don't use the go.work for ensuring that the modules are correctly tagged and tidy-ed.
+      GOWORK: off
 
   upload-coverage-report:
     runs-on: buildjet-4vcpu-ubuntu-2004

@@ -1,10 +1,10 @@
 /*
 Package module contains application module patterns and associated "manager" functionality.
 The module pattern has been broken down by:
- - independent module functionality (AppModuleBasic)
- - inter-dependent module genesis functionality (AppModuleGenesis)
- - inter-dependent module simulation functionality (AppModuleSimulation)
- - inter-dependent module full functionality (AppModule)
+  - independent module functionality (AppModuleBasic)
+  - inter-dependent module genesis functionality (AppModuleGenesis)
+  - inter-dependent module simulation functionality (AppModuleSimulation)
+  - inter-dependent module full functionality (AppModule)
 
 inter-dependent module functionality is module functionality which somehow
 depends on other modules, typically through the module keeper.  Many of the
@@ -152,15 +152,6 @@ type AppModule interface {
 	// registers
 	RegisterInvariants(sdk.InvariantRegistry)
 
-	// Deprecated: use RegisterServices
-	Route() sdk.Route
-
-	// Deprecated: use RegisterServices
-	QuerierRoute() string
-
-	// Deprecated: use RegisterServices
-	LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier
-
 	// RegisterServices allows a module to register services
 	RegisterServices(Configurator)
 
@@ -288,18 +279,6 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 	}
 }
 
-// RegisterRoutes registers all module routes and module querier routes
-func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc *codec.LegacyAmino) {
-	for _, module := range m.Modules {
-		if r := module.Route(); !r.Empty() {
-			router.AddRoute(r)
-		}
-		if r := module.QuerierRoute(); r != "" {
-			queryRouter.AddRoute(r, module.LegacyQuerierHandler(legacyQuerierCdc))
-		}
-	}
-}
-
 // RegisterServices registers all module services
 func (m *Manager) RegisterServices(cfg Configurator) {
 	for _, module := range m.Modules {
@@ -385,19 +364,21 @@ type VersionMap map[string]uint64
 // returning RunMigrations should be enough:
 //
 // Example:
-//   cfg := module.NewConfigurator(...)
-//   app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-//       return app.mm.RunMigrations(ctx, cfg, fromVM)
-//   })
+//
+//	cfg := module.NewConfigurator(...)
+//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//	    return app.mm.RunMigrations(ctx, cfg, fromVM)
+//	})
 //
 // Internally, RunMigrations will perform the following steps:
 // - create an `updatedVM` VersionMap of module with their latest ConsensusVersion
 // - make a diff of `fromVM` and `udpatedVM`, and for each module:
-//    - if the module's `fromVM` version is less than its `updatedVM` version,
-//      then run in-place store migrations for that module between those versions.
-//    - if the module does not exist in the `fromVM` (which means that it's a new module,
-//      because it was not in the previous x/upgrade's store), then run
-//      `InitGenesis` on that module.
+//   - if the module's `fromVM` version is less than its `updatedVM` version,
+//     then run in-place store migrations for that module between those versions.
+//   - if the module does not exist in the `fromVM` (which means that it's a new module,
+//     because it was not in the previous x/upgrade's store), then run
+//     `InitGenesis` on that module.
+//
 // - return the `updatedVM` to be persisted in the x/upgrade's store.
 //
 // Migrations are run in an order defined by `Manager.OrderMigrations` or (if not set) defined by
@@ -410,18 +391,19 @@ type VersionMap map[string]uint64
 // running anything for foo.
 //
 // Example:
-//   cfg := module.NewConfigurator(...)
-//   app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-//       // Assume "foo" is a new module.
-//       // `fromVM` is fetched from existing x/upgrade store. Since foo didn't exist
-//       // before this upgrade, `v, exists := fromVM["foo"]; exists == false`, and RunMigration will by default
-//       // run InitGenesis on foo.
-//       // To skip running foo's InitGenesis, you need set `fromVM`'s foo to its latest
-//       // consensus version:
-//       fromVM["foo"] = foo.AppModule{}.ConsensusVersion()
 //
-//       return app.mm.RunMigrations(ctx, cfg, fromVM)
-//   })
+//	cfg := module.NewConfigurator(...)
+//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//	    // Assume "foo" is a new module.
+//	    // `fromVM` is fetched from existing x/upgrade store. Since foo didn't exist
+//	    // before this upgrade, `v, exists := fromVM["foo"]; exists == false`, and RunMigration will by default
+//	    // run InitGenesis on foo.
+//	    // To skip running foo's InitGenesis, you need set `fromVM`'s foo to its latest
+//	    // consensus version:
+//	    fromVM["foo"] = foo.AppModule{}.ConsensusVersion()
+//
+//	    return app.mm.RunMigrations(ctx, cfg, fromVM)
+//	})
 //
 // Please also refer to docs/core/upgrade.md for more information.
 func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {

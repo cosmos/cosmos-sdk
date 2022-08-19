@@ -1,22 +1,19 @@
-//go:build norace
-// +build norace
+//go:build e2e
+// +build e2e
 
 package testutil
 
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	clienttestutil "github.com/cosmos/cosmos-sdk/x/slashing/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
-func TestIntegrationTestSuite(t *testing.T) {
-	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
-	require.NoError(t, err)
+func TestEndToEndTestSuite(t *testing.T) {
+	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
-	suite.Run(t, clienttestutil.NewIntegrationTestSuite(cfg))
+	suite.Run(t, NewEndToEndTestSuite(cfg))
 }

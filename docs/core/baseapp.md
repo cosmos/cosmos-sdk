@@ -69,7 +69,6 @@ First, the important parameters that are initialized during the bootstrapping of
   are relayed to the relevant module's gRPC `Query` service.
 * [`TxDecoder`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/types#TxDecoder): It is used to decode
   raw transaction bytes relayed by the underlying Tendermint engine.
-* [`ParamStore`](#paramstore): The parameter store used to get and set application consensus parameters.
 * [`AnteHandler`](#antehandler): This handler is used to handle signature verification, fee payment,
   and other pre-message execution checks when a transaction is received. It's executed during
   [`CheckTx/RecheckTx`](#checktx) and [`DeliverTx`](#delivertx).
@@ -182,8 +181,8 @@ newly committed state and `deliverState` is set to `nil` to be reset on `BeginBl
 During `InitChain`, the `RequestInitChain` provides `ConsensusParams` which contains parameters
 related to block execution such as maximum gas and size in addition to evidence parameters. If these
 parameters are non-nil, they are set in the BaseApp's `ParamStore`. Behind the scenes, the `ParamStore`
-is actually managed by an `x/params` module `Subspace`. This allows the parameters to be tweaked via
-on-chain governance.
+is managed by an `x/consensus_params` module. This allows the parameters to be tweaked via
+ on-chain governance.
 
 ## Service Routers
 

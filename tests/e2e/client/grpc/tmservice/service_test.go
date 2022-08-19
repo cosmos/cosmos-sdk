@@ -1,5 +1,5 @@
-//go:build norace
-// +build norace
+//go:build e2e
+// +build e2e
 
 package tmservice_test
 
@@ -31,7 +31,6 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-
 	suite.Run(t, new(IntegrationTestSuite))
 }
 

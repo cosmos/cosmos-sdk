@@ -3,10 +3,11 @@ package v1_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -101,18 +102,18 @@ func TestMsgVoteWeighted(t *testing.T) {
 		{0, addrs[0], v1.NewNonSplitVoteOption(v1.OptionNoWithVeto), "", true},
 		{0, addrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), "", true},
 		{0, addrs[0], v1.WeightedVoteOptions{ // weight sum > 1
-			v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDec(1)),
-			v1.NewWeightedVoteOption(v1.OptionAbstain, sdk.NewDec(1)),
+			v1.NewWeightedVoteOption(v1.OptionYes, math.LegacyNewDec(1)),
+			v1.NewWeightedVoteOption(v1.OptionAbstain, math.LegacyNewDec(1)),
 		}, "", false},
 		{0, addrs[0], v1.WeightedVoteOptions{ // duplicate option
 			v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
 			v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
 		}, "", false},
 		{0, addrs[0], v1.WeightedVoteOptions{ // zero weight
-			v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDec(0)),
+			v1.NewWeightedVoteOption(v1.OptionYes, math.LegacyNewDec(0)),
 		}, "", false},
 		{0, addrs[0], v1.WeightedVoteOptions{ // negative weight
-			v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDec(-1)),
+			v1.NewWeightedVoteOption(v1.OptionYes, math.LegacyNewDec(-1)),
 		}, "", false},
 		{0, addrs[0], v1.WeightedVoteOptions{}, "", false},
 		{0, addrs[0], v1.NewNonSplitVoteOption(v1.VoteOption(0x13)), "", false},

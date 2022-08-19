@@ -828,14 +828,14 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 			keys := cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreTraceBuf)
 
 			// This should be the deep subtree
-			deepSubstoreSMT, err := cms.GetLastSubstoreSMTWithKeys(storeKey.Name(), keys.Values())
+			deepSubstoreSMT, err := cms.GetSubstoreSMTWithKeys(storeKey.Name(), keys.Values())
 			if deepSubstoreSMT.Root() == nil {
 				continue
 			}
 			if err != nil {
 				return FraudProof{}, err
 			}
-			proof, err := cms.GetLastSubstoreProof(storeKey.Name())
+			proof, err := cms.GetStoreProof(storeKey.Name())
 			if err != nil {
 				return FraudProof{}, err
 			}

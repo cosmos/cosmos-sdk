@@ -2465,25 +2465,41 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	numTransactions := 5
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
-	commitB1 := appB1.Commit()
-	appHashB1 := commitB1.GetData()
-
-	storeHashB1 := appB1.cms.(*multi.Store).GetSubstoreSMT(capKey2.Name()).Root()
+	appB1.Commit()
 
 	// B1 <- S2
 	beginRequest, deliverRequests, endRequest := getBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
 
-	deliverRequests = deliverRequests[0 : len(deliverRequests)/2]
+	// Modify requests to discard second half of the block
+	fraudDeliverTx := deliverRequests[(len(deliverRequests) / 2) : (len(deliverRequests)/2)+1]
+	deliverRequests = deliverRequests[0:(len(deliverRequests) / 2)]
 	endRequest = nil
 
 	executeBlockWithRequests(t, appB1, beginRequest, deliverRequests, endRequest)
+
+	// Clear all trace logs
+	storeTraceBuf.Reset()
+	subStoreTraceBuf.Reset()
+
+	// Execute Fraud Tx with tracing
+	executeBlockWithRequests(t, appB1, nil, fraudDeliverTx, nil)
+
+	// Save appHash, substoreHash here for comparision later
+	appHashB1, err := appB1.cms.(*multi.Store).GetAppHash()
+	require.Nil(t, err)
+	storeHashB1 := appB1.cms.(*multi.Store).GetSubstoreSMT(capKey2.Name()).Root()
+
+	// TODO: make new appFraudGen app which creates app with previous state
+	appFraudGen, _, err := appB1.enableFraudProofGenerationMode(nil, nil)
+	executeBlockWithRequests(t, appFraudGen, beginRequest, deliverRequests, endRequest)
+	require.Nil(t, err)
 
 	// Exports all data inside current multistore into a fraudProof (S1 -> S2) //
 	storeKeyToSubstoreTraceBuf := make(map[string]*bytes.Buffer)
 	storeKeyToSubstoreTraceBuf[capKey2.Name()] = subStoreTraceBuf
 
 	// Records S1 in fraudproof (Pre-execution)
-	fraudProof, err := appB1.generateFraudProof(storeKeyToSubstoreTraceBuf, appB1.LastBlockHeight())
+	fraudProof, err := appFraudGen.generateFraudProof(storeKeyToSubstoreTraceBuf, appB1.LastBlockHeight())
 	require.Nil(t, err)
 
 	// Light Client

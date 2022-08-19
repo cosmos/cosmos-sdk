@@ -1082,25 +1082,8 @@ func (s *Store) GetSubstoreSMT(key string) *smt.Store {
 	return sub.stateCommitmentStore
 }
 
-func (s *Store) GetLastStore() (*viewStore, error) {
-	versions, err := s.stateDB.Versions()
-	if err != nil {
-		return nil, err
-	}
-	lastVersion := int64(versions.Last())
-	lastStore, err := s.GetVersion(lastVersion)
-	if err != nil {
-		return nil, err
-	}
-	return lastStore.(*viewStore), nil
-}
-
-func (s *Store) GetLastSubstoreProof(storeKeyName string) (*tmcrypto.ProofOp, error) {
-	viewLastStore, err := s.GetLastStore()
-	if err != nil {
-		return nil, err
-	}
-	storeHashes, err := viewLastStore.getMerkleRoots()
+func (s *Store) GetStoreProof(storeKeyName string) (*tmcrypto.ProofOp, error) {
+	storeHashes, err := s.getMerkleRoots()
 	if err != nil {
 		return nil, err
 	}
@@ -1109,13 +1092,12 @@ func (s *Store) GetLastSubstoreProof(storeKeyName string) (*tmcrypto.ProofOp, er
 }
 
 // Constructs a deep sparse merkle tree using the given subKeys for the given storekeyName at the last version
-func (s *Store) GetLastSubstoreSMTWithKeys(storekeyName string, subKeys []string) (*smtlib.DeepSparseMerkleSubTree, error) {
-	viewLastStore, err := s.GetLastStore()
+func (s *Store) GetSubstoreSMTWithKeys(storekeyName string, subKeys []string) (*smtlib.DeepSparseMerkleSubTree, error) {
+	sub, err := s.getSubstore(storekeyName)
 	if err != nil {
 		return nil, err
 	}
-	sub, err := viewLastStore.getSubstore(storekeyName)
-	smt := viewLastStore.GetSubstoreSMT(storekeyName)
+	smt := s.GetSubstoreSMT(storekeyName)
 	dsmt := smtlib.NewDeepSparseMerkleSubTree(smtlib.NewSimpleMap(), smtlib.NewSimpleMap(), sha256.New(), smt.Root())
 	for _, subKey := range subKeys {
 		bKey := []byte(subKey)

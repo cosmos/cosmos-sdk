@@ -2,15 +2,16 @@
 package modulev1
 
 import (
-	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
+	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var (
@@ -496,9 +497,11 @@ type Module struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// skip_ante_handler defines whether the ante handler registration should be skipped in case an app wants to override this functionality.
+	// skip_ante_handler defines whether the ante handler registration should be skipped in case an app wants to override
+	// this functionality.
 	SkipAnteHandler bool `protobuf:"varint,1,opt,name=skip_ante_handler,json=skipAnteHandler,proto3" json:"skip_ante_handler,omitempty"`
-	// skip_post_handler defines whether the post handler registration should be skipped in case an app wants to override this functionality.
+	// skip_post_handler defines whether the post handler registration should be skipped in case an app wants to override
+	// this functionality.
 	SkipPostHandler bool `protobuf:"varint,2,opt,name=skip_post_handler,json=skipPostHandler,proto3" json:"skip_post_handler,omitempty"`
 }
 

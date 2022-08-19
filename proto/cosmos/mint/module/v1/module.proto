@@ -9,4 +9,6 @@ message Module {
   option (cosmos.app.v1alpha1.module) = {
     go_import: "github.com/cosmos/cosmos-sdk/x/mint"
   };
+
+  string fee_collector_name = 1;
 }

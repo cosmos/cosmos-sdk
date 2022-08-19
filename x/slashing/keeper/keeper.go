@@ -14,25 +14,30 @@ import (
 
 // Keeper of the slashing store
 type Keeper struct {
-	storeKey   storetypes.StoreKey
-	cdc        codec.BinaryCodec
-	sk         types.StakingKeeper
-	paramspace types.ParamSubspace
+	storeKey    storetypes.StoreKey
+	cdc         codec.BinaryCodec
+	legacyAmino *codec.LegacyAmino
+	sk          types.StakingKeeper
+
+	// the address capable of executing a MsgUpdateParams message. Typically, this
+	// should be the x/gov module account.
+	authority string
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc codec.BinaryCodec, key storetypes.StoreKey, sk types.StakingKeeper, paramspace types.ParamSubspace) Keeper {
-	// set KeyTable if it has not already been set
-	if !paramspace.HasKeyTable() {
-		paramspace = paramspace.WithKeyTable(types.ParamKeyTable())
-	}
-
+func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key storetypes.StoreKey, sk types.StakingKeeper, authority string) Keeper {
 	return Keeper{
-		storeKey:   key,
-		cdc:        cdc,
-		sk:         sk,
-		paramspace: paramspace,
+		storeKey:    key,
+		cdc:         cdc,
+		legacyAmino: legacyAmino,
+		sk:          sk,
+		authority:   authority,
 	}
+}
+
+// GetAuthority returns the x/slashing module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // Logger returns a module-specific logger.

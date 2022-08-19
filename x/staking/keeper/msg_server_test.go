@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -140,6 +141,130 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 				balanceForNotBondedPool := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(notBondedPool.GetAddress()), bondDenom)
 				require.Equal(t, balanceForNotBondedPool, moduleBalance.Sub(testCase.req.Amount))
 				moduleBalance = moduleBalance.Sub(testCase.req.Amount)
+			}
+		})
+	}
+}
+
+func TestMsgUpdateParams(t *testing.T) {
+	app := simapp.Setup(t, false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
+
+	testCases := []struct {
+		name      string
+		input     *types.MsgUpdateParams
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "valid params",
+			input: &types.MsgUpdateParams{
+				Authority: app.StakingKeeper.GetAuthority(),
+				Params:    types.DefaultParams(),
+			},
+			expErr: false,
+		},
+		{
+			name: "invalid authority",
+			input: &types.MsgUpdateParams{
+				Authority: "invalid",
+				Params:    types.DefaultParams(),
+			},
+			expErr:    true,
+			expErrMsg: "invalid authority",
+		},
+		{
+			name: "negative commission rate",
+			input: &types.MsgUpdateParams{
+				Authority: app.StakingKeeper.GetAuthority(),
+				Params: types.Params{
+					MinCommissionRate: math.LegacyNewDec(-10),
+					UnbondingTime:     types.DefaultUnbondingTime,
+					MaxValidators:     types.DefaultMaxValidators,
+					MaxEntries:        types.DefaultMaxEntries,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					BondDenom:         types.BondStatusBonded,
+				},
+			},
+			expErr:    true,
+			expErrMsg: "minimum commission rate cannot be negative",
+		},
+		{
+			name: "commission rate cannot be bigger than 100",
+			input: &types.MsgUpdateParams{
+				Authority: app.StakingKeeper.GetAuthority(),
+				Params: types.Params{
+					MinCommissionRate: math.LegacyNewDec(2),
+					UnbondingTime:     types.DefaultUnbondingTime,
+					MaxValidators:     types.DefaultMaxValidators,
+					MaxEntries:        types.DefaultMaxEntries,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					BondDenom:         types.BondStatusBonded,
+				},
+			},
+			expErr:    true,
+			expErrMsg: "minimum commission rate cannot be greater than 100%",
+		},
+		{
+			name: "invalid bond denom",
+			input: &types.MsgUpdateParams{
+				Authority: app.StakingKeeper.GetAuthority(),
+				Params: types.Params{
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					UnbondingTime:     types.DefaultUnbondingTime,
+					MaxValidators:     types.DefaultMaxValidators,
+					MaxEntries:        types.DefaultMaxEntries,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					BondDenom:         "",
+				},
+			},
+			expErr:    true,
+			expErrMsg: "bond denom cannot be blank",
+		},
+		{
+			name: "max validators most be positive",
+			input: &types.MsgUpdateParams{
+				Authority: app.StakingKeeper.GetAuthority(),
+				Params: types.Params{
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					UnbondingTime:     types.DefaultUnbondingTime,
+					MaxValidators:     0,
+					MaxEntries:        types.DefaultMaxEntries,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					BondDenom:         types.BondStatusBonded,
+				},
+			},
+			expErr:    true,
+			expErrMsg: "max validators must be positive",
+		},
+		{
+			name: "max entries most be positive",
+			input: &types.MsgUpdateParams{
+				Authority: app.StakingKeeper.GetAuthority(),
+				Params: types.Params{
+					MinCommissionRate: types.DefaultMinCommissionRate,
+					UnbondingTime:     types.DefaultUnbondingTime,
+					MaxValidators:     types.DefaultMaxValidators,
+					MaxEntries:        0,
+					HistoricalEntries: types.DefaultHistoricalEntries,
+					BondDenom:         types.BondStatusBonded,
+				},
+			},
+			expErr:    true,
+			expErrMsg: "max entries must be positive",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := msgServer.UpdateParams(ctx, tc.input)
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expErrMsg)
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}

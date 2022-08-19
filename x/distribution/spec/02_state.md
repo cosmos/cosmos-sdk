@@ -34,9 +34,8 @@ type DecCoin struct {
 Validator distribution information for the relevant validator is updated each time:
 
 1. delegation amount to a validator is updated,
-2. a validator successfully proposes a block and receives a reward,
-3. any delegator withdraws from a validator, or
-4. the validator withdraws its commission.
+2. any delegator withdraws from a validator, or
+3. the validator withdraws its commission.
 
 * ValidatorDistInfo: `0x02 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(validatorDistribution)`
 
@@ -63,3 +62,12 @@ type DelegationDistInfo struct {
     WithdrawalHeight int64    // last time this delegation withdrew rewards
 }
 ```
+
+## Params
+
+The distribution module stores it's params in state with the prefix of `0x09`, 
+it can be updated with governance or the address with authority.
+
+* Params: `0x09 | ProtocolBuffer(Params)`
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30

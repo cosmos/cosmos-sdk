@@ -13,12 +13,14 @@ Pool is used for tracking bonded and not-bonded token supply of the bond denomin
 LastTotalPower tracks the total amounts of bonded tokens recorded during the previous end block.
 Store entries prefixed with "Last" must remain unchanged until EndBlock.
 
-* LastTotalPower: `0x12 -> ProtocolBuffer(sdk.Int)`
+* LastTotalPower: `0x12 -> ProtocolBuffer(math.Int)`
 
 ## Params
 
-Params is a module-wide configuration structure that stores system parameters
-and defines overall functioning of the staking module.
+The staking module stores it's params in state with the prefix of `0x51`,
+it can be updated with governance or the address with authority.
+
+* Params: `0x51 | ProtocolBuffer(Params)`
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L285-L306
 
@@ -28,7 +30,7 @@ Validators can have one of three statuses
 
 * `Unbonded`: The validator is not in the active set. They cannot sign blocks and do not earn
   rewards. They can receive delegations.
-* `Bonded`": Once the validator receives sufficient bonded tokens they automtically join the
+* `Bonded`: Once the validator receives sufficient bonded tokens they automtically join the
   active set during [`EndBlock`](./05_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
   They are signing blocks and receiving rewards. They can receive further delegations.
   They can be slashed for misbehavior. Delegators to this validator who unbond their delegation

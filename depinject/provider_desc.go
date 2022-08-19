@@ -9,7 +9,8 @@ import (
 // ProviderDescriptor defines a special provider type that is defined by
 // reflection. It should be passed as a value to the Provide function.
 // Ex:
-//   option.Provide(ProviderDescriptor{ ... })
+//
+//	option.Provide(ProviderDescriptor{ ... })
 type ProviderDescriptor struct {
 	// Inputs defines the in parameter types to Fn.
 	Inputs []ProviderInput
@@ -39,6 +40,26 @@ func ExtractProviderDescriptor(provider interface{}) (ProviderDescriptor, error)
 	if !ok {
 		var err error
 		rctr, err = doExtractProviderDescriptor(provider)
+		if err != nil {
+			return ProviderDescriptor{}, err
+		}
+	}
+
+	return expandStructArgsProvider(rctr)
+}
+
+func ExtractInvokerDescriptor(provider interface{}) (ProviderDescriptor, error) {
+	rctr, ok := provider.(ProviderDescriptor)
+	if !ok {
+		var err error
+		rctr, err = doExtractProviderDescriptor(provider)
+
+		// mark all inputs as optional
+		for i, input := range rctr.Inputs {
+			input.Optional = true
+			rctr.Inputs[i] = input
+		}
+
 		if err != nil {
 			return ProviderDescriptor{}, err
 		}

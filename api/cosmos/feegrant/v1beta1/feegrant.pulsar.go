@@ -2,8 +2,12 @@
 package feegrantv1beta1
 
 import (
-	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
+	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -13,9 +17,6 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var _ protoreflect.List = (*_BasicAllowance_1_list)(nil)
@@ -2597,15 +2598,15 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// BasicAllowance implements Allowance with a one-time grant of tokens
+// BasicAllowance implements Allowance with a one-time grant of coins
 // that optionally expires. The grantee can use up to SpendLimit to cover fees.
 type BasicAllowance struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// spend_limit specifies the maximum amount of tokens that can be spent
-	// by this allowance and will be updated as tokens are spent. If it is
+	// spend_limit specifies the maximum amount of coins that can be spent
+	// by this allowance and will be updated as coins are spent. If it is
 	// empty, there is no spend limit and any amount of coins can be spent.
 	SpendLimit []*v1beta1.Coin `protobuf:"bytes,1,rep,name=spend_limit,json=spendLimit,proto3" json:"spend_limit,omitempty"`
 	// expiration specifies an optional time when this allowance expires

@@ -3,16 +3,17 @@ package runtime
 import (
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // BaseAppOption is a depinject.AutoGroupType which can be used to pass
@@ -62,15 +63,17 @@ func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 	std.RegisterLegacyAminoCodec(amino)
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
+	msgServiceRouter := baseapp.NewMsgServiceRouter()
 	app := &App{
 		storeKeys:         nil,
 		interfaceRegistry: interfaceRegistry,
 		cdc:               cdc,
 		amino:             amino,
 		basicManager:      basicManager,
+		msgServiceRouter:  msgServiceRouter,
 	}
 
-	return interfaceRegistry, cdc, amino, app, cdc, baseapp.NewMsgServiceRouter()
+	return interfaceRegistry, cdc, amino, app, cdc, msgServiceRouter
 }
 
 type appInputs struct {

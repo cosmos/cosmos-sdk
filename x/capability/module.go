@@ -3,7 +3,6 @@ package capability
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"cosmossdk.io/core/appmodule"
@@ -13,6 +12,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/capability/module/v1"
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -107,17 +107,6 @@ func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
 }
 
-// Deprecated: Route returns the capability module's message routing key.
-func (AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the capability module's query routing key.
-func (AppModule) QuerierRoute() string { return "" }
-
-// LegacyQuerierHandler returns the capability module's Querier.
-func (am AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
-
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(module.Configurator) {}
@@ -159,11 +148,29 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	}
 }
 
-// EndBlock executes all ABCI EndBlock logic respective to the capability module. It
-// returns no validator updates.
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
+// GenerateGenesisState creates a randomized GenState of the capability module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
+
+// ProposalContents performs a no-op
+func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+	return nil
+}
+
+// RegisterStoreDecoder registers a decoder for capability module's types
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+}
+
+// WeightedOperations returns the all the gov module operations with their respective weights.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return nil
+}
+
+//
+// New App Wiring Setup
+//
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
@@ -177,38 +184,29 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-func provideModule(
-	kvStoreKey *store.KVStoreKey,
-	memStoreKey *store.MemoryStoreKey,
-	cdc codec.Codec,
-	config *modulev1.Module,
-) (*keeper.Keeper, runtime.AppModuleWrapper) {
-	k := keeper.NewKeeper(cdc, kvStoreKey, memStoreKey)
-	m := NewAppModule(cdc, *k, config.SealKeeper)
-	return k, runtime.WrapAppModule(m)
+type capabilityInputs struct {
+	depinject.In
+
+	Config *modulev1.Module
+
+	KvStoreKey  *store.KVStoreKey
+	MemStoreKey *store.MemoryStoreKey
+	Cdc         codec.Codec
 }
 
-// GenerateGenesisState creates a randomized GenState of the capability module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+type capabilityOutputs struct {
+	depinject.Out
+
+	CapabilityKeeper *keeper.Keeper
+	Module           runtime.AppModuleWrapper
 }
 
-// ProposalContents performs a no-op
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
+func provideModule(in capabilityInputs) capabilityOutputs {
+	k := keeper.NewKeeper(in.Cdc, in.KvStoreKey, in.MemStoreKey)
+	m := NewAppModule(in.Cdc, *k, in.Config.SealKeeper)
 
-// RandomizedParams creates randomized capability param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return nil
-}
-
-// RegisterStoreDecoder registers a decoder for capability module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
-}
-
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return nil
+	return capabilityOutputs{
+		CapabilityKeeper: k,
+		Module:           runtime.WrapAppModule(m),
+	}
 }

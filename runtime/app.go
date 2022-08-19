@@ -32,8 +32,11 @@ import (
 // App can be used to create a hybrid app.go setup where some configuration is
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app.go for an example of this setup.
+//
+//nolint:unused
 type App struct {
 	*baseapp.BaseApp
+
 	ModuleManager     *module.Manager
 	configurator      module.Configurator
 	config            *runtimev1alpha1.Module
@@ -45,6 +48,7 @@ type App struct {
 	beginBlockers     []func(sdk.Context, abci.RequestBeginBlock)
 	endBlockers       []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 	baseAppOptions    []BaseAppOption
+	msgServiceRouter  *baseapp.MsgServiceRouter
 }
 
 // RegisterModules registers the provided modules with the module manager and
@@ -156,7 +160,7 @@ func (a *App) Configurator() module.Configurator {
 	return a.configurator
 }
 
-// UnsafeFindStoreKey FindStoreKey fetches a registered StoreKey from the App in linear time.
+// UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
 //
 // NOTE: This should only be used in testing.
 func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {

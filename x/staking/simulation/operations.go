@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -15,6 +16,7 @@ import (
 )
 
 // Simulation operation weights constants
+//
 //nolint:gosec // these are not hardcoded credentials
 const (
 	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
@@ -159,12 +161,13 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k *
 			simtypes.RandomDecAmount(r, maxCommission),
 		)
 
-		msg, err := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, sdk.OneInt())
+		msg, err := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, math.OneInt())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to create CreateValidator message"), nil, err
 		}
 
 		txCtx := simulation.OperationInput{
+			R:             r,
 			App:           app,
 			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,
@@ -289,6 +292,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.
 		msg := types.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
 
 		txCtx := simulation.OperationInput{
+			R:             r,
 			App:           app,
 			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,
@@ -409,8 +413,22 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "account does have any unbonding delegation"), nil, nil
 		}
 
-		// get random unbonding delegation entry at block height
-		unbondingDelegationEntry := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))]
+		// This is a temporary fix to make staking simulation pass. We should fetch
+		// the first unbondingDelegationEntry that matches the creationHeight, because
+		// currently the staking msgServer chooses the first unbondingDelegationEntry
+		// with the matching creationHeight.
+		//
+		// ref: https://github.com/cosmos/cosmos-sdk/issues/12932
+		creationHeight := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))].CreationHeight
+
+		var unbondingDelegationEntry types.UnbondingDelegationEntry
+
+		for _, entry := range unbondingDelegation.Entries {
+			if entry.CreationHeight == creationHeight {
+				unbondingDelegationEntry = entry
+				break
+			}
+		}
 
 		if unbondingDelegationEntry.CompletionTime.Before(ctx.BlockTime()) {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "unbonding delegation is already processed"), nil, nil

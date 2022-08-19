@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"runtime/debug"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 func init() {
@@ -16,12 +16,8 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 }
 
-var (
-	// Version represents Cosmovisor version value. Overwritten during build
-	Version = "1.1.0"
-	// OutputFlag defines the output format flag
-	OutputFlag = tmcli.OutputFlag
-)
+// OutputFlag defines the output format flag
+var OutputFlag = "output"
 
 var versionCmd = &cobra.Command{
 	Use:          "version",
@@ -38,8 +34,17 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+func getVersion() string {
+	version, ok := debug.ReadBuildInfo()
+	if !ok {
+		panic("failed to get cosmovisor version")
+	}
+
+	return strings.TrimSpace(version.Main.Version)
+}
+
 func printVersion(logger *zerolog.Logger, args []string) error {
-	fmt.Println("cosmovisor version: ", Version)
+	fmt.Printf("cosmovisor version: %s\n", getVersion())
 
 	if err := Run(logger, append([]string{"version"}, args...)); err != nil {
 		return fmt.Errorf("failed to run version command: %w", err)
@@ -67,7 +72,7 @@ func printVersionJSON(logger *zerolog.Logger, args []string) error {
 		Version    string          `json:"cosmovisor_version"`
 		AppVersion json.RawMessage `json:"app_version"`
 	}{
-		Version:    Version,
+		Version:    getVersion(),
 		AppVersion: json.RawMessage(buf.String()),
 	})
 	if err != nil {

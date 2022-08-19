@@ -3,6 +3,7 @@ package authz
 import (
 	"context"
 	"encoding/json"
+	"path/filepath"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -97,6 +98,22 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // GetTxCmd returns the transaction commands for the authz module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd()
+}
+
+// ValidateGenesisFrom performs genesis state validation for the auth module.
+func (b AppModuleBasic) ValidateGenesisFrom(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, filePath string) error {
+	f, err := module.OpenGenesisModuleFile(filepath.Join(filePath, authz.ModuleName), authz.ModuleName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	bz, err := module.FileRead(f)
+	if err != nil {
+		return err
+	}
+
+	return b.ValidateGenesis(cdc, config, bz)
 }
 
 // AppModule implements the sdk.AppModule interface
@@ -220,4 +237,20 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc,
 		am.accountKeeper, am.bankKeeper, am.keeper,
 	)
+}
+
+// InitGenesisFrom performs genesis initialization for the authz module. It returns
+// no validator updates.
+func (am AppModule) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, path string) ([]abci.ValidatorUpdate, error) {
+	if err := am.keeper.InitGenesisFrom(ctx, cdc, path); err != nil {
+		return nil, err
+	}
+
+	return []abci.ValidatorUpdate{}, nil
+}
+
+// ExportGenesisTo exports the genesis state as raw bytes files to the destination
+// path for the authz module.
+func (am AppModule) ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, path string) error {
+	return am.keeper.ExportGenesisTo(ctx, cdc, path)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 
 	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -101,6 +102,22 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 // RegisterLegacyAminoCodec registers the group module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
+// ValidateGenesisFrom performs genesis state validation for the group module.
+func (b AppModuleBasic) ValidateGenesisFrom(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, filePath string) error {
+	f, err := module.OpenGenesisModuleFile(filepath.Join(filePath, group.ModuleName), group.ModuleName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	bz, err := module.FileRead(f)
+	if err != nil {
+		return err
+	}
+
+	return b.ValidateGenesis(cdc, config, bz)
+}
+
 // Name returns the group module's name.
 func (AppModule) Name() string {
 	return group.ModuleName
@@ -127,6 +144,18 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx, cdc)
 	return cdc.MustMarshalJSON(gs)
+}
+
+// InitGenesis performs genesis initialization for the group module. It returns
+// no validator updates.
+func (am AppModule) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, importPath string) ([]abci.ValidatorUpdate, error) {
+	return am.keeper.InitGenesisFrom(ctx, cdc, importPath)
+}
+
+// ExportGenesis returns the exported genesis state as raw bytes for the group
+// module.
+func (am AppModule) ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, exportPath string) error {
+	return am.keeper.ExportGenesisTo(ctx, cdc, exportPath)
 }
 
 // RegisterServices registers a gRPC query service to respond to the

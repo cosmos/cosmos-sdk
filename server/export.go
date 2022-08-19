@@ -5,6 +5,7 @@ package server
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
@@ -33,6 +34,11 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 
 			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
 			config.SetRoot(homeDir)
+
+			binaryExportPath, err := cmd.Flags().GetString(flags.FlagGenesisFilePath)
+			if err != nil {
+				return err
+			}
 
 			if _, err := os.Stat(config.GenesisFile()); os.IsNotExist(err) {
 				return err
@@ -95,16 +101,23 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				},
 			}
 
-			// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
-			// (except for stuff inside AppState). Inside AppState, we're free
-			// to encode as protobuf or amino.
-			encoded, err := tmjson.Marshal(doc)
-			if err != nil {
-				return err
+			if len(binaryExportPath) > 0 {
+				if err := doc.SaveAs(filepath.Join(binaryExportPath, "genesis", "genesis.json")); err != nil {
+					return err
+				}
+			} else {
+				// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+				// (except for stuff inside AppState). Inside AppState, we're free
+				// to encode as protobuf or amino.
+				encoded, err := tmjson.Marshal(doc)
+				if err != nil {
+					return err
+				}
+
+				cmd.SetOut(cmd.OutOrStdout())
+				cmd.Println(string(sdk.MustSortJSON(encoded)))
 			}
 
-			cmd.SetOut(cmd.OutOrStdout())
-			cmd.Println(string(sdk.MustSortJSON(encoded)))
 			return nil
 		},
 	}
@@ -113,6 +126,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 	cmd.Flags().Int64(FlagHeight, -1, "Export state from a particular height (-1 means latest height)")
 	cmd.Flags().Bool(FlagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
 	cmd.Flags().StringSlice(FlagJailAllowedAddrs, []string{}, "Comma-separated list of operator addresses of jailed validators to unjail")
+	cmd.Flags().String(flags.FlagGenesisFilePath, "", "Export state to the designated file path")
 
 	return cmd
 }

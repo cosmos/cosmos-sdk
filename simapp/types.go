@@ -33,7 +33,7 @@ type App interface {
 
 	// Exports the state of the application for a genesis file.
 	ExportAppStateAndValidators(
-		forZeroHeight bool, jailAllowedAddrs []string,
+		forZeroHeight bool, jailAllowedAddrs []string, exportPath string,
 	) (types.ExportedApp, error)
 
 	// Helper for the simulation framework.

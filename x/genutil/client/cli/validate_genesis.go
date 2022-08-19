@@ -1,13 +1,16 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -15,8 +18,8 @@ import (
 const chainUpgradeGuide = "https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md"
 
 // ValidateGenesisCmd takes a genesis file, and makes sure that it is valid.
-func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
-	return &cobra.Command{
+func ValidateGenesisCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "validate-genesis [file]",
 		Args:  cobra.RangeArgs(0, 1),
 		Short: "validates the genesis file at the default location or at the location passed as an arg",
@@ -34,24 +37,53 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 				genesis = args[0]
 			}
 
-			genDoc, err := validateGenDoc(genesis)
+			genesisFilePath, err := cmd.Flags().GetString(flags.FlagGenesisFilePath)
 			if err != nil {
 				return err
 			}
 
-			var genState map[string]json.RawMessage
-			if err = json.Unmarshal(genDoc.AppState, &genState); err != nil {
-				return fmt.Errorf("error unmarshalling genesis doc %s: %s", genesis, err.Error())
+			if len(genesisFilePath) > 0 {
+				genDoc, err := validateGenDoc(filepath.Join(genesisFilePath, "genesis.json"))
+				if err != nil {
+					return err
+				}
+
+				var jsonObj = make(map[string]json.RawMessage)
+				jsonObj["module_genesis_state"] = []byte("true")
+				loadAppStateFromFolder, _ := json.Marshal(jsonObj)
+
+				if bytes.Equal(genDoc.AppState, loadAppStateFromFolder) {
+					return fmt.Errorf("genesisAppState is not equal to expectedAppState, expect: %v, actual: %v", loadAppStateFromFolder, genDoc.AppState)
+				}
+
+				if err = mbm.ValidateGenesisFrom(cdc, clientCtx.TxConfig, genesisFilePath); err != nil {
+					return fmt.Errorf("error validating genesis from files: %w", err)
+				}
+				fmt.Printf("The genesis in %s is valid\n", genesisFilePath)
+			} else {
+				genDoc, err := validateGenDoc(genesis)
+				if err != nil {
+					return err
+				}
+
+				var genState map[string]json.RawMessage
+				if err = json.Unmarshal(genDoc.AppState, &genState); err != nil {
+					return fmt.Errorf("error unmarshalling genesis doc %s: %s", genesis, err.Error())
+				}
+
+				if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
+					return fmt.Errorf("error validating genesis file %s: %s", genesis, err.Error())
+				}
+				fmt.Printf("File at %s is a valid genesis file\n", genesis)
 			}
 
-			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
-				return fmt.Errorf("error validating genesis file %s: %s", genesis, err.Error())
-			}
-
-			fmt.Printf("File at %s is a valid genesis file\n", genesis)
 			return nil
 		},
 	}
+
+	cmd.Flags().String(flags.FlagGenesisFilePath, filepath.Join(defaultNodeHome, "genesis"), "the file path of app genesis states")
+
+	return cmd
 }
 
 // validateGenDoc reads a genesis file and validates that it is a correct

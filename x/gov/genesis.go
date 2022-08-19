@@ -3,7 +3,9 @@ package gov
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -84,4 +86,34 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v1.GenesisState {
 		TallyParams:        &tallyParams,
 		Params:             &params,
 	}
+}
+
+func InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, importPath string) error {
+	f, err := module.OpenGenesisModuleFile(importPath, types.ModuleName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	bz, err := module.FileRead(f)
+	if err != nil {
+		return err
+	}
+
+	var gs v1.GenesisState
+	cdc.MustUnmarshalJSON(bz, &gs)
+	InitGenesis(ctx, ak, bk, &k, &gs)
+	return nil
+}
+
+func ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, k keeper.Keeper, exportPath string) error {
+	f, err := module.CreateGenesisExportFile(exportPath, types.ModuleName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	gs := ExportGenesis(ctx, &k)
+	bz := cdc.MustMarshalJSON(gs)
+	return module.FileWrite(f, bz)
 }

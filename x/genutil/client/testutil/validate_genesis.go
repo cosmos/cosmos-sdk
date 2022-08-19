@@ -90,7 +90,7 @@ func (s *IntegrationTestSuite) TestValidateGenesis() {
 		tc := tc
 		s.Run(tc.name, func() {
 			genesisFile := testutil.WriteToNewTempFile(s.T(), tc.genesis)
-			_, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.ValidateGenesisCmd(nil), []string{genesisFile.Name()})
+			_, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.ValidateGenesisCmd(nil, ""), []string{genesisFile.Name()})
 			if tc.expErr {
 				s.Require().Contains(err.Error(), "Make sure that you have correctly migrated all Tendermint consensus params")
 			} else {

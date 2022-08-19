@@ -3,6 +3,7 @@ package module
 import (
 	"context"
 	"encoding/json"
+	"path/filepath"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -74,6 +75,22 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 	return nft.ValidateGenesis(data)
 }
 
+// ValidateGenesisFrom performs genesis state validation for the nft module.
+func (b AppModuleBasic) ValidateGenesisFrom(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, filePath string) error {
+	f, err := module.OpenGenesisModuleFile(filepath.Join(filePath, nft.ModuleName), nft.ModuleName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	bz, err := module.FileRead(f)
+	if err != nil {
+		return err
+	}
+
+	return b.ValidateGenesis(cdc, config, bz)
+}
+
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the nft module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
 	if err := nft.RegisterQueryHandlerClient(context.Background(), mux, nft.NewQueryClient(clientCtx)); err != nil {
@@ -138,6 +155,21 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
+}
+
+// InitGenesis performs genesis initialization for the nft module. It returns
+// no validator updates.
+func (am AppModule) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, importPath string) ([]abci.ValidatorUpdate, error) {
+	if err := am.keeper.InitGenesisFrom(ctx, cdc, importPath); err != nil {
+		return nil, err
+	}
+	return []abci.ValidatorUpdate{}, nil
+}
+
+// ExportGenesis returns the exported genesis state as raw bytes for the nft
+// module.
+func (am AppModule) ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, exportPath string) error {
+	return am.keeper.ExportGenesisTo(ctx, cdc, exportPath)
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

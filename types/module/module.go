@@ -31,6 +31,8 @@ package module
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -52,6 +54,7 @@ type AppModuleBasic interface {
 
 	DefaultGenesis(codec.JSONCodec) json.RawMessage
 	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
+	ValidateGenesisFrom(codec.JSONCodec, client.TxEncodingConfig, string) error
 
 	// client functionality
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
@@ -137,12 +140,26 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	}
 }
 
+// ValidateGenesisFrom performs genesis state validation for all modules
+func (bm BasicManager) ValidateGenesisFrom(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, filePath string) error {
+	for _, b := range bm {
+		if err := b.ValidateGenesisFrom(cdc, txEncCfg, filePath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // AppModuleGenesis is the standard form for an application module genesis functions
 type AppModuleGenesis interface {
 	AppModuleBasic
 
 	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
+
+	InitGenesisFrom(sdk.Context, codec.JSONCodec, string) ([]abci.ValidatorUpdate, error)
+	ExportGenesisTo(sdk.Context, codec.JSONCodec, string) error
 }
 
 // AppModule is the standard form for an application module
@@ -221,6 +238,7 @@ type Manager struct {
 	OrderBeginBlockers []string
 	OrderEndBlockers   []string
 	OrderMigrations    []string
+	GenesisPath        string
 }
 
 // NewManager creates a new Manager object
@@ -238,6 +256,7 @@ func NewManager(modules ...AppModule) *Manager {
 		OrderExportGenesis: modulesStr,
 		OrderBeginBlockers: modulesStr,
 		OrderEndBlockers:   modulesStr,
+		GenesisPath:        "",
 	}
 }
 
@@ -292,13 +311,26 @@ func (m *Manager) RegisterServices(cfg Configurator) {
 func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
+	initWithPath := (len(m.GenesisPath) != 0)
 	for _, moduleName := range m.OrderInitGenesis {
-		if genesisData[moduleName] == nil {
+		if (!initWithPath && genesisData[moduleName] == nil) ||
+			(initWithPath && m.Modules[moduleName] == nil) {
 			continue
 		}
 		ctx.Logger().Debug("running initialization for module", "module", moduleName)
 
-		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, cdc, genesisData[moduleName])
+		var moduleValUpdates []abci.ValidatorUpdate
+		if initWithPath {
+			modulePath := filepath.Join(m.GenesisPath, moduleName)
+			fmt.Printf("loading module genesis state from %s\n", moduleName)
+			update, err := m.Modules[moduleName].InitGenesisFrom(ctx, cdc, modulePath)
+			if err != nil {
+				panic(fmt.Sprintf("InitGenesis error: %v", err))
+			}
+			moduleValUpdates = update
+		} else {
+			moduleValUpdates = m.Modules[moduleName].InitGenesis(ctx, cdc, genesisData[moduleName])
+		}
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
@@ -321,13 +353,25 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 }
 
 // ExportGenesis performs export genesis functionality for modules
-func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string]json.RawMessage {
+func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) (map[string]json.RawMessage, error) {
 	genesisData := make(map[string]json.RawMessage)
-	for _, moduleName := range m.OrderExportGenesis {
-		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
+
+	if len(m.GenesisPath) > 0 {
+		for _, moduleName := range m.OrderExportGenesis {
+			modulePath := filepath.Join(m.GenesisPath, moduleName)
+			fmt.Printf("exporting module: %s,path: %s\n", moduleName, modulePath)
+			err := m.Modules[moduleName].ExportGenesisTo(ctx, cdc, modulePath)
+			if err != nil {
+				return nil, fmt.Errorf("ExportGenesis to file failed, module=%s err=%v", moduleName, err)
+			}
+		}
+	} else {
+		for _, moduleName := range m.OrderExportGenesis {
+			genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
+		}
 	}
 
-	return genesisData
+	return genesisData, nil
 }
 
 // assertNoForgottenModules checks that we didn't forget any modules in the
@@ -523,6 +567,11 @@ func (m *Manager) ModuleNames() []string {
 	return ms
 }
 
+// SetGenesisPath sets the genesis binaries export/import path.
+func (m *Manager) SetGenesisPath(path string) {
+	m.GenesisPath = path
+}
+
 // DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,
 // except x/auth which will run last, see:
 // https://github.com/cosmos/cosmos-sdk/issues/10591
@@ -542,4 +591,53 @@ func DefaultMigrationsOrder(modules []string) []string {
 		out = append(out, authName)
 	}
 	return out
+}
+
+func CreateGenesisExportFile(exportPath string, moduleName string) (*os.File, error) {
+	if err := os.MkdirAll(exportPath, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	fp := filepath.Join(exportPath, fmt.Sprintf("genesis_%s.bin", moduleName))
+	f, err := os.Create(fp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create file: %w", err)
+	}
+
+	return f, nil
+}
+
+func OpenGenesisModuleFile(importPath string, moduleName string) (*os.File, error) {
+	fp := filepath.Join(importPath, fmt.Sprintf("genesis_%s.bin", moduleName))
+	f, err := os.OpenFile(fp, os.O_RDONLY, 0666)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file: %w", err)
+	}
+
+	return f, nil
+}
+
+func FileWrite(f *os.File, bz []byte) error {
+	if n, err := f.Write(bz); err != nil {
+		return fmt.Errorf("failed to write genesis file: %w", err)
+	} else if n != len(bz) {
+		return fmt.Errorf("genesis file was not fully written: %w", err)
+	}
+	return nil
+}
+
+func FileRead(f *os.File) ([]byte, error) {
+	fi, err := f.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("failed to stat file: %w", err)
+	}
+
+	bz := make([]byte, fi.Size())
+	if n, err := f.Read(bz); err != nil {
+		return nil, fmt.Errorf("failed to read genesis file: %w", err)
+	} else if n != int(fi.Size()) {
+		return nil, fmt.Errorf("couldn't read entire genesis file, read: %d, file size: %d", n, fi.Size())
+	}
+
+	return bz, nil
 }

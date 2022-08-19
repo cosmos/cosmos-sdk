@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
@@ -85,4 +86,32 @@ func (k Keeper) ExportGenesis(ctx types.Context, cdc codec.JSONCodec) *group.Gen
 	genesisState.Votes = votes
 
 	return genesisState
+}
+
+func (k Keeper) InitGenesisFrom(ctx types.Context, cdc codec.JSONCodec, importPath string) ([]abci.ValidatorUpdate, error) {
+	f, err := module.OpenGenesisModuleFile(importPath, group.ModuleName)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	bz, err := module.FileRead(f)
+	if err != nil {
+		return nil, err
+	}
+
+	k.InitGenesis(ctx, cdc, bz)
+	return []abci.ValidatorUpdate{}, nil
+}
+
+func (k Keeper) ExportGenesisTo(ctx types.Context, cdc codec.JSONCodec, exportPath string) error {
+	f, err := module.CreateGenesisExportFile(exportPath, group.ModuleName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	gs := k.ExportGenesis(ctx, cdc)
+	bz := cdc.MustMarshalJSON(gs)
+	return module.FileWrite(f, bz)
 }

@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -68,4 +70,34 @@ func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	})
 
 	return types.NewGenesisState(params, signingInfos, missedBlocks)
+}
+
+func (k Keeper) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, sk types.StakingKeeper, importPath string) error {
+	f, err := module.OpenGenesisModuleFile(importPath, types.ModuleName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	bz, err := module.FileRead(f)
+	if err != nil {
+		return err
+	}
+
+	var gs types.GenesisState
+	cdc.MustUnmarshalJSON(bz, &gs)
+	k.InitGenesis(ctx, sk, &gs)
+	return nil
+}
+
+func (k Keeper) ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, exportPath string) error {
+	f, err := module.CreateGenesisExportFile(exportPath, types.ModuleName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	gs := k.ExportGenesis(ctx)
+	bz := cdc.MustMarshalJSON(gs)
+	return module.FileWrite(f, bz)
 }

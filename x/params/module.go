@@ -76,6 +76,11 @@ func (am AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistr
 	proposal.RegisterInterfaces(registry)
 }
 
+// ValidateGenesisFrom performs genesis state validation for the params module.
+func (AppModuleBasic) ValidateGenesisFrom(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig, filePath string) error {
+	return nil
+}
+
 // AppModule implements an application module for the distribution module.
 type AppModule struct {
 	AppModuleBasic
@@ -191,4 +196,22 @@ func provideSubspace(in subspaceInputs) types.Subspace {
 	} else {
 		return in.Keeper.Subspace(moduleName).WithKeyTable(kt)
 	}
+}
+
+// BeginBlock performs a no-op.
+func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+
+// EndBlock performs a no-op.
+func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
+}
+
+// InitGenesisFrom performs a no-op.
+func (am AppModule) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, path string) ([]abci.ValidatorUpdate, error) {
+	return []abci.ValidatorUpdate{}, nil
+}
+
+// ExportGenesisTo performs a no-op.
+func (am AppModule) ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, path string) error {
+	return nil
 }

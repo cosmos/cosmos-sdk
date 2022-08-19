@@ -71,26 +71,33 @@ func (k BaseViewKeeper) GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk
 }
 
 // GetAccountsBalances returns all the accounts balances from the store.
+// return nil when the context is closed.
 func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 	balances := make([]types.Balance, 0)
 	mapAddressToBalancesIdx := make(map[string]int)
 
 	k.IterateAllBalances(ctx, func(addr sdk.AccAddress, balance sdk.Coin) bool {
-		idx, ok := mapAddressToBalancesIdx[addr.String()]
-		if ok {
-			// address is already on the set of accounts balances
-			balances[idx].Coins = balances[idx].Coins.Add(balance)
-			balances[idx].Coins.Sort()
+		select {
+		case <-ctx.Context().Done():
+			balances = nil
+			return true
+		default:
+			idx, ok := mapAddressToBalancesIdx[addr.String()]
+			if ok {
+				// address is already on the set of accounts balances
+				balances[idx].Coins = balances[idx].Coins.Add(balance)
+				balances[idx].Coins.Sort()
+				return false
+			}
+
+			accountBalance := types.Balance{
+				Address: addr.String(),
+				Coins:   sdk.NewCoins(balance),
+			}
+			balances = append(balances, accountBalance)
+			mapAddressToBalancesIdx[addr.String()] = len(balances) - 1
 			return false
 		}
-
-		accountBalance := types.Balance{
-			Address: addr.String(),
-			Coins:   sdk.NewCoins(balance),
-		}
-		balances = append(balances, accountBalance)
-		mapAddressToBalancesIdx[addr.String()] = len(balances) - 1
-		return false
 	})
 
 	return balances

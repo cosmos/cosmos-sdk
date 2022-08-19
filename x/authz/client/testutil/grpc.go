@@ -185,7 +185,7 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 		},
 		{
 			"no authorizations found",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, grantee.String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, string(grantee)),
 			false,
 			"",
 			0,
@@ -244,7 +244,7 @@ func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
 		},
 		{
 			"valid query",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, grantee.String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, string(grantee)),
 			false,
 			"",
 			1,

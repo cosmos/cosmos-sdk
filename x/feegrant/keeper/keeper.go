@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
@@ -336,4 +337,38 @@ func (k Keeper) RemoveExpiredAllowances(ctx sdk.Context) {
 		granter, grantee := feegrant.ParseAddressesFromFeeAllowanceQueueKey(iterator.Key())
 		store.Delete(feegrant.FeeAllowanceKey(granter, grantee))
 	}
+}
+
+func (k Keeper) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, importPath string) error {
+	f, err := module.OpenGenesisModuleFile(importPath, feegrant.ModuleName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	bz, err := module.FileRead(f)
+	if err != nil {
+		return err
+	}
+
+	var gs feegrant.GenesisState
+	cdc.MustUnmarshalJSON(bz, &gs)
+	k.InitGenesis(ctx, &gs)
+	return nil
+}
+
+func (k Keeper) ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, exportPath string) error {
+	f, err := module.CreateGenesisExportFile(exportPath, feegrant.ModuleName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	gs, err := k.ExportGenesis(ctx)
+	if err != nil {
+		return err
+	}
+
+	bz := cdc.MustMarshalJSON(gs)
+	return module.FileWrite(f, bz)
 }

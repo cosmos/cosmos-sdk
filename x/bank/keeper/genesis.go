@@ -3,7 +3,9 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -59,4 +61,35 @@ func (k BaseKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		k.GetAllSendEnabledEntries(ctx),
 	)
 	return rv
+}
+
+func (k BaseKeeper) ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, exportPath string) error {
+	f, err := module.CreateGenesisExportFile(exportPath, types.ModuleName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	gs := k.ExportGenesis(ctx)
+	bz := cdc.MustMarshalJSON(gs)
+	return module.FileWrite(f, bz)
+}
+
+func (k BaseKeeper) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, importPath string) error {
+	f, err := module.OpenGenesisModuleFile(importPath, types.ModuleName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	bz, err := module.FileRead(f)
+	if err != nil {
+		return err
+	}
+
+	var gs types.GenesisState
+	cdc.MustUnmarshalJSON(bz, &gs)
+
+	k.InitGenesis(ctx, &gs)
+	return nil
 }

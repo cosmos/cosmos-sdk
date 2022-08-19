@@ -17,14 +17,14 @@ type Handler struct {
 
 	// BeginBlocker doesn't take or return any special arguments as this
 	// is the most stable across Tendermint versions and most common need
-	// for modules. Special parameters can be inspected and/or returned
+	// for modules. Special parameters can be injected and/or returned
 	// using custom hooks that the app will provide which may vary from
 	// one Tendermint release to another.
 	BeginBlocker func(context.Context) error
 
 	// EndBlocker doesn't take or return any special arguments as this
 	// is the most stable across Tendermint versions and most common need
-	// for modules. Special parameters can be inspected and/or returned
+	// for modules. Special parameters can be injected and/or returned
 	// using custom hooks that the app will provide which may vary from
 	// one Tendermint release to another.
 	EndBlocker func(context.Context) error
@@ -40,7 +40,7 @@ type Handler struct {
 }
 
 // RegisterService registers a msg or query service. If the cosmos.msg.v1.service
-// option is set true on the service, then it is registered as a msg service,
+// option is set to true on the service, then it is registered as a msg service,
 // otherwise it is registered as a query service.
 func (h *Handler) RegisterService(desc *grpc.ServiceDesc, impl interface{}) {
 	h.Services = append(h.Services, ServiceImpl{

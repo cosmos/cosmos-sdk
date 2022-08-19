@@ -4,7 +4,7 @@ order: 2
 
 # Transaction Lifecycle
 
-This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/transactions.md). The transaction will be referred to as `Tx`. {synopsis}
+This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/transactions.md). The transaction is referred to herein as `Tx`. {synopsis}
 
 ## Pre-requisite Readings
 
@@ -20,7 +20,7 @@ One of the main application interfaces is the command-line interface. The transa
 [appname] tx [command] [args] [flags]
 ```
 
-This command will automatically **create** the transaction, **sign** it using the account's private key, and **broadcast** it to the specified peer node.
+This command automatically **creates** the transaction, **signs** it using the account's private key, and **broadcasts** it to the specified peer node.
 
 There are several required and optional flags for transaction creation. The `--from` flag specifies which [account](./accounts.md) the transaction is originating from. For example, if the transaction is sending coins, the funds will be drawn from the specified `from` address.
 
@@ -36,7 +36,7 @@ Additionally, there are several [flags](../core/cli.md) users can use to indicat
 
 The ultimate value of the fees paid is equal to the gas multiplied by the gas prices. In other words, `fees = ceil(gas * gasPrices)`. Thus, since fees can be calculated using gas prices and vice versa, the users specify only one of the two.
 
-Later, validators decide whether or not to include the transaction in their block by comparing the given or calculated `gas-prices` to their local `min-gas-prices`. `Tx` will be rejected if its `gas-prices` is not high enough, so users are incentivized to pay more.
+Later, validators decide whether or not to include the transaction in their block by comparing the given or calculated `gas-prices` to their local `min-gas-prices`. `Tx` is rejected if its `gas-prices` is not high enough, so users are incentivized to pay more.
 
 #### CLI Example
 

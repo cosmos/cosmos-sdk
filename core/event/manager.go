@@ -4,7 +4,7 @@ package event
 import (
 	"context"
 
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 // Service represents an event service which can retrieve and set an event manager in a context.
@@ -19,7 +19,7 @@ type Service interface {
 type Manager interface {
 
 	// Emit emits a typed protobuf event.
-	Emit(proto.Message) error
+	Emit(protoiface.MessageV1) error
 
 	// EmitLegacy emits a legacy (untyped) tendermint event.
 	EmitLegacy(eventType string, attrs ...LegacyEventAttribute) error

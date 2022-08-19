@@ -31,7 +31,7 @@ func init() {
 type keeper struct {
 	depinject.In
 
-	KVStoreKey       store.KVStoreKey
+	KVStoreKey       store.KVStoreService
 	BlockInfoService blockinfo.Service
 	EventService     event.Service
 	GasService       gas.Service

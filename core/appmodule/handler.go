@@ -28,6 +28,15 @@ type Handler struct {
 	// using custom hooks that the app will provide which may vary from
 	// one Tendermint release to another.
 	EndBlocker func(context.Context) error
+
+	DefaultGenesis  func(GenesisTarget)
+	ValidateGenesis func(GenesisSource) error
+	InitGenesis     func(context.Context, GenesisSource) error
+	ExportGenesis   func(context.Context, GenesisTarget)
+
+	EventListeners []EventListener
+
+	UpgradeHandlers []UpgradeHandler
 }
 
 // RegisterService registers a msg or query service. If the cosmos.msg.v1.service

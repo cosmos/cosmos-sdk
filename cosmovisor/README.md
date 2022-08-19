@@ -2,6 +2,22 @@
 
 `cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
+<!-- TOC -->
+* [Design](#design)
+* [Contributing](#contributing)
+* [Setup](#setup)
+  * [Installation](#installation)
+  * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
+  * [Folder Layout](#folder-layout)
+* [Usage](#usage)
+  * [Initialization](#initialization)
+  * [Detecting Upgrades](#detecting-upgrades)
+  * [Auto-Download](#auto-download)
+* [Example: SimApp Upgrade](#example-simapp-upgrade)
+  * [Chain Setup](#chain-setup)
+    * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+    * [Update App](#update-app)
+
 ## Design
 
 Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
@@ -19,11 +35,13 @@ Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
 
 Cosmovisor is part of the Cosmos SDK monorepo, but it's a separate module with it's own release schedule.
 
-Release branches have the following format `release/cosmovisor/vA.B.x`, where A and B are a number (e.g. `release/cosmovisor/v0.1.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
+Release branches have the following format `release/cosmovisor/vA.B.x`, where A and B are a number (e.g. `release/cosmovisor/v1.2.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
 
 ## Setup
 
 ### Installation
+
+You can download Cosmovisor from the [Github releases](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv1.2.1).
 
 To install the latest version of `cosmovisor`, run the following command:
 
@@ -31,13 +49,13 @@ To install the latest version of `cosmovisor`, run the following command:
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@latest
 ```
 
-To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos-SDK v0.44.3 or earlier (eg v0.44.2) and want to use auto-download feature MUST use Cosmovisor v0.1.0
+To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos-SDK v0.44.3 or earlier (eg v0.44.2) and want to use auto-download feature MUST use `cosmovisor v0.1.0`
 
 ```sh
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
 ```
 
-You can run `cosmovisor version` to check the Cosmovisor version (works only with Cosmovisor >1.1.0).
+Run `cosmovisor version` to check the cosmovisor version.
 
 You can also install from source by pulling the cosmos-sdk repository and switching to the correct version and building as follows:
 
@@ -76,7 +94,7 @@ All arguments passed to `cosmovisor run` will be passed to the application binar
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*, default = `true`), if `true`, restarts the subprocess with the same command-line arguments and flags (but with the new binary) after a successful upgrade. Otherwise (`false`), `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note restart is only after the upgrade and does not auto-restart the subprocess after an error occurs.
 * `DAEMON_RESTART_DELAY` (*optional*, default none), allow a node operator to define a delay between the node halt (for upgrade) and backup by the specified time. The value must be a duration (e.g. `1s`).
 * `DAEMON_POLL_INTERVAL` (*optional*, default 300 milliseconds), is the interval length for polling the upgrade plan file. The value must be a duration (e.g. `1s`).
-* `DAEMON_BACKUP_DIR` option to set a custom backup directory. If not set, `DAEMON_HOME` is used.
+* `DAEMON_DATA_BACKUP_DIR` option to set a custom backup directory. If not set, `DAEMON_HOME` is used.
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `true`, upgrades directly without performing a backup. Otherwise (`false`, default) backs up the data before trying the upgrade. The default value of false is useful and recommended in case of failures and when a backup needed to rollback. We recommend using the default backup option `UNSAFE_SKIP_BACKUP=false`.
 * `DAEMON_PREUPGRADE_MAX_RETRIES` (defaults to `0`). The maximum number of times to call `pre-upgrade` in the application after exit status of `31`. After the maximum number of retries, cosmovisor fails the upgrade.
 
@@ -115,14 +133,31 @@ The system administrator is responsible for:
 * installing the `cosmovisor` binary
 * configuring the host's init system (e.g. `systemd`, `launchd`, etc.)
 * appropriately setting the environmental variables
-* manually installing the `genesis` folder
-* manually installing the `upgrades/<name>` folders
+* creating the `<DAEMON_HOME>/cosmovisor` directory
+* creating the `<DAEMON_HOME>/cosmovisor/genesis/bin` folder
+* creating the `<DAEMON_HOME>/cosmovisor/upgrades/<name>/bin` folders
+* placing the different versions of the `<DAEMON_NAME>` executable in the appropriate `bin` folders.
 
 `cosmovisor` will set the `current` link to point to `genesis` at first start (i.e. when no `current` link exists) and then handle switching binaries at the correct points in time so that the system administrator can prepare days in advance and relax at upgrade time.
 
 In order to support downloadable binaries, a tarball for each upgrade binary will need to be packaged up and made available through a canonical URL. Additionally, a tarball that includes the genesis binary and all available upgrade binaries can be packaged up and made available so that all the necessary binaries required to sync a fullnode from start can be easily downloaded.
 
 The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc.) all work as expected. The application binaries' directives such as command-line flags and environment variables also work as expected.
+
+### Initialization
+
+The `cosmovisor init <path to executable>` command creates the folder structure required for using cosmovisor.
+
+It does the following:
+
+* creates the `<DAEMON_HOME>/cosmovisor` folder if it doesn't yet exist
+* creates the `<DAEMON_HOME>/cosmovisor/genesis/bin` folder if it doesn't yet exist
+* copies the provided executable file to `<DAEMON_HOME>/cosmovisor/genesis/bin/<DAEMON_NAME>`
+* creates the `current` link, pointing to the `genesis` folder
+
+It uses the `DAEMON_HOME` and `DAEMON_NAME` environment variables for folder location and executable name.
+
+The `cosmovisor init` command is specifically for initializing cosmovisor, and should not be confused with a chain's `init` command (e.g. `cosmovisor run init`).
 
 ### Detecting Upgrades
 

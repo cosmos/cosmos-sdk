@@ -5,6 +5,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -15,8 +17,8 @@ import (
 // data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
 func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []abci.ValidatorUpdate) {
-	bondedTokens := sdk.ZeroInt()
-	notBondedTokens := sdk.ZeroInt()
+	bondedTokens := math.ZeroInt()
+	notBondedTokens := math.ZeroInt()
 
 	// We need to pretend to be "n blocks before genesis", where "n" is the
 	// validator update delay, so that e.g. slashing periods are correctly
@@ -25,7 +27,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 	// genesis.json are in block 0.
 	ctx = ctx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
 
-	k.SetParams(ctx, data.Params)
+	if err := k.SetParams(ctx, data.Params); err != nil {
+		panic(err)
+	}
 	k.SetLastTotalPower(ctx, data.LastTotalPower)
 
 	for _, validator := range data.Validators {
@@ -106,6 +110,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 	}
 
 	// TODO: remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
+
 	bondedBalance := k.bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 	if bondedBalance.IsZero() {
 		k.authKeeper.SetModuleAccount(ctx, bondedPool)

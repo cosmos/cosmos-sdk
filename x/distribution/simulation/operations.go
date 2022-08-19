@@ -19,6 +19,7 @@ import (
 )
 
 // Simulation operation weights constants
+//
 //nolint:gosec // these are not hardcoded credentials.
 const (
 	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"
@@ -236,6 +237,7 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
 
 		txCtx := simulation.OperationInput{
+			R:             r,
 			App:           app,
 			TxGen:         txConfig,
 			Cdc:           nil,

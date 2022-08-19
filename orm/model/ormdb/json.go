@@ -15,7 +15,17 @@ import (
 )
 
 func (m moduleDB) DefaultJSON(target ormjson.WriteTarget) error {
-	for name, table := range m.tablesByName {
+	tableNames := make([]protoreflect.FullName, 0, len(m.tablesByName))
+	for name := range m.tablesByName {
+		tableNames = append(tableNames, name)
+	}
+	sort.Slice(tableNames, func(i, j int) bool {
+		ti, tj := tableNames[i], tableNames[j]
+		return ti.Name() < tj.Name()
+	})
+
+	for _, name := range tableNames {
+		table := m.tablesByName[name]
 		w, err := target.OpenWriter(name)
 		if err != nil {
 			return err

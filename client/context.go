@@ -7,14 +7,10 @@ import (
 	"io"
 	"os"
 
-	"github.com/spf13/viper"
-
-	"sigs.k8s.io/yaml"
-
-	"google.golang.org/grpc"
-
 	"github.com/gogo/protobuf/proto"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"github.com/spf13/viper"
+	"google.golang.org/grpc"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -26,7 +22,7 @@ import (
 // handling and queries.
 type Context struct {
 	FromAddress       sdk.AccAddress
-	Client            rpcclient.Client
+	Client            TendermintRPC
 	GRPCClient        *grpc.ClientConn
 	ChainID           string
 	Codec             codec.Codec
@@ -128,7 +124,7 @@ func (ctx Context) WithHeight(height int64) Context {
 
 // WithClient returns a copy of the context with an updated RPC client
 // instance.
-func (ctx Context) WithClient(client rpcclient.Client) Context {
+func (ctx Context) WithClient(client TendermintRPC) Context {
 	ctx.Client = client
 	return ctx
 }

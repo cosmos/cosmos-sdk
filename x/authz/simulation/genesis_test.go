@@ -8,25 +8,26 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
-	"github.com/cosmos/cosmos-sdk/x/authz/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	var cdc codec.Codec
-	depinject.Inject(testutil.AppConfig, &cdc)
+	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
+	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          cdc,
+		Cdc:          encCfg.Codec,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),

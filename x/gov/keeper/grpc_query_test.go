@@ -4,10 +4,11 @@ import (
 	gocontext "context"
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
+	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -131,7 +132,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 				suite.Require().NoError(err)
 				suite.Require().NotEmpty(submittedProposal)
 
-				expProposal, err = v046.ConvertToLegacyProposal(submittedProposal)
+				expProposal, err = v3.ConvertToLegacyProposal(submittedProposal)
 				suite.Require().NoError(err)
 			},
 			true,
@@ -788,6 +789,8 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	queryClient := suite.queryClient
 
+	params := v1.DefaultParams()
+
 	var (
 		req    *v1.QueryParamsRequest
 		expRes *v1.QueryParamsResponse
@@ -809,7 +812,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			"deposit params request",
 			func() {
 				req = &v1.QueryParamsRequest{ParamsType: v1.ParamDeposit}
-				depositParams := v1.DefaultDepositParams()
+				depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
 				expRes = &v1.QueryParamsResponse{
 					DepositParams: &depositParams,
 				}
@@ -820,7 +823,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			"voting params request",
 			func() {
 				req = &v1.QueryParamsRequest{ParamsType: v1.ParamVoting}
-				votingParams := v1.DefaultVotingParams()
+				votingParams := v1.NewVotingParams(params.VotingPeriod)
 				expRes = &v1.QueryParamsResponse{
 					VotingParams: &votingParams,
 				}
@@ -831,7 +834,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			"tally params request",
 			func() {
 				req = &v1.QueryParamsRequest{ParamsType: v1.ParamTallying}
-				tallyParams := v1.DefaultTallyParams()
+				tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
 				expRes = &v1.QueryParamsResponse{
 					TallyParams: &tallyParams,
 				}
@@ -876,9 +879,9 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
 	)
 
 	defaultTallyParams := v1beta1.TallyParams{
-		Quorum:        sdk.NewDec(0),
-		Threshold:     sdk.NewDec(0),
-		VetoThreshold: sdk.NewDec(0),
+		Quorum:        math.LegacyNewDec(0),
+		Threshold:     math.LegacyNewDec(0),
+		VetoThreshold: math.LegacyNewDec(0),
 	}
 
 	testCases := []struct {

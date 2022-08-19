@@ -5,30 +5,13 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/math"
 	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// Parameter store keys
-var (
-	KeyMintDenom           = []byte("MintDenom")
-	KeyInflationRateChange = []byte("InflationRateChange")
-	KeyInflationMax        = []byte("InflationMax")
-	KeyInflationMin        = []byte("InflationMin")
-	KeyGoalBonded          = []byte("GoalBonded")
-	KeyBlocksPerYear       = []byte("BlocksPerYear")
-)
-
-// ParamTable for minting module.
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
-}
-
-func NewParams(
-	mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded sdk.Dec, blocksPerYear uint64,
-) Params {
+func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded sdk.Dec, blocksPerYear uint64) Params {
 	return Params{
 		MintDenom:           mintDenom,
 		InflationRateChange: inflationRateChange,
@@ -39,7 +22,7 @@ func NewParams(
 	}
 }
 
-// default minting module parameters
+// DefaultParams returns default x/mint module parameters.
 func DefaultParams() Params {
 	return Params{
 		MintDenom:           sdk.DefaultBondDenom,
@@ -87,18 +70,6 @@ func (p Params) String() string {
 	return string(out)
 }
 
-// Implements params.ParamSet
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
-		paramtypes.NewParamSetPair(KeyInflationRateChange, &p.InflationRateChange, validateInflationRateChange),
-		paramtypes.NewParamSetPair(KeyInflationMax, &p.InflationMax, validateInflationMax),
-		paramtypes.NewParamSetPair(KeyInflationMin, &p.InflationMin, validateInflationMin),
-		paramtypes.NewParamSetPair(KeyGoalBonded, &p.GoalBonded, validateGoalBonded),
-		paramtypes.NewParamSetPair(KeyBlocksPerYear, &p.BlocksPerYear, validateBlocksPerYear),
-	}
-}
-
 func validateMintDenom(i interface{}) error {
 	v, ok := i.(string)
 	if !ok {
@@ -124,7 +95,7 @@ func validateInflationRateChange(i interface{}) error {
 	if v.IsNegative() {
 		return fmt.Errorf("inflation rate change cannot be negative: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("inflation rate change too large: %s", v)
 	}
 
@@ -140,7 +111,7 @@ func validateInflationMax(i interface{}) error {
 	if v.IsNegative() {
 		return fmt.Errorf("max inflation cannot be negative: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("max inflation too large: %s", v)
 	}
 
@@ -156,7 +127,7 @@ func validateInflationMin(i interface{}) error {
 	if v.IsNegative() {
 		return fmt.Errorf("min inflation cannot be negative: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("min inflation too large: %s", v)
 	}
 
@@ -172,7 +143,7 @@ func validateGoalBonded(i interface{}) error {
 	if v.IsNegative() || v.IsZero() {
 		return fmt.Errorf("goal bonded must be positive: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("goal bonded too large: %s", v)
 	}
 

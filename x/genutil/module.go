@@ -4,16 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 
-	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
-	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
+	"cosmossdk.io/core/appmodule"
+
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -89,8 +90,7 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 	})
 }
 
-// InitGenesis performs genesis initialization for the genutil module. It returns
-// no validator updates.
+// InitGenesis performs genesis initialization for the genutil module.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)

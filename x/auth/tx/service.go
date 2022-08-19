@@ -3,10 +3,11 @@ package tx
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
-	"github.com/golang/protobuf/proto" // nolint: staticcheck
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -39,13 +40,18 @@ func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interface
 	}
 }
 
-var _ txtypes.ServiceServer = txServer{}
+var (
+	_ txtypes.ServiceServer = txServer{}
+
+	// EventRegex checks that an event string is formatted with {alphabetic}.{alphabetic}={value}
+	EventRegex = regexp.MustCompile(`^[a-zA-Z]+\.[a-zA-Z]+=\S+$`)
+)
 
 const (
 	eventFormat = "{eventType}.{eventAttribute}={value}"
 )
 
-// TxsByEvents implements the ServiceServer.TxsByEvents RPC method.
+// GetTxsEvent implements the ServiceServer.TxsByEvents RPC method.
 func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
@@ -69,7 +75,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	}
 
 	for _, event := range req.Events {
-		if !strings.Contains(event, "=") || strings.Count(event, "=") > 1 {
+		if !EventRegex.Match([]byte(event)) {
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
 		}
 	}

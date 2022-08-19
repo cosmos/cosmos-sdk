@@ -112,7 +112,6 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	store.Set(key, bz)
-
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			feegrant.EventTypeSetFeeGrant,
@@ -222,7 +221,6 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(grant feegrant.
 		if err := k.cdc.Unmarshal(bz, &feeGrant); err != nil {
 			return err
 		}
-
 		stop = cb(feeGrant)
 	}
 

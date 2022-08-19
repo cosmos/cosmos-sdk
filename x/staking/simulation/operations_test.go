@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -119,7 +120,7 @@ func TestSimulateMsgCancelUnbondingDelegation(t *testing.T) {
 	delegator := accounts[1]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
-	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 
 	setupValidatorRewards(app, ctx, validator0.GetOperator())
 
@@ -233,7 +234,7 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	delegator := accounts[1]
 	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
-	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 
 	setupValidatorRewards(app, ctx, validator0.GetOperator())
 
@@ -281,7 +282,7 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	delegator := accounts[2]
 	delegation := types.NewDelegation(delegator.Address, validator1.GetOperator(), issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
-	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator1.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator1.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 
 	setupValidatorRewards(app, ctx, validator0.GetOperator())
 	setupValidatorRewards(app, ctx, validator1.GetOperator())
@@ -351,12 +352,12 @@ func createTestApp(t *testing.T, isCheckTx bool, r *rand.Rand, n int) (*simapp.S
 }
 
 func getTestingValidator0(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account) types.Validator {
-	commission0 := types.NewCommission(sdk.ZeroDec(), sdk.OneDec(), sdk.OneDec())
+	commission0 := types.NewCommission(math.LegacyZeroDec(), math.LegacyOneDec(), math.LegacyOneDec())
 	return getTestingValidator(t, app, ctx, accounts, commission0, 0)
 }
 
 func getTestingValidator1(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account) types.Validator {
-	commission1 := types.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	commission1 := types.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
 	return getTestingValidator(t, app, ctx, accounts, commission1, 1)
 }
 
@@ -368,7 +369,7 @@ func getTestingValidator(t *testing.T, app *simapp.SimApp, ctx sdk.Context, acco
 	validator, err := validator.SetInitialCommission(commission)
 	require.NoError(t, err)
 
-	validator.DelegatorShares = sdk.NewDec(100)
+	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
 
 	app.StakingKeeper.SetValidator(ctx, validator)
@@ -377,7 +378,7 @@ func getTestingValidator(t *testing.T, app *simapp.SimApp, ctx sdk.Context, acco
 }
 
 func setupValidatorRewards(app *simapp.SimApp, ctx sdk.Context, valAddress sdk.ValAddress) {
-	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.OneDec())}
+	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
 	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 2, historicalRewards)
 	// setup current revards

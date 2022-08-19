@@ -26,6 +26,7 @@ var (
 )
 
 // Simulation operation weights constants
+//
 //nolint:gosec // these are not hardcoded credentials.
 const (
 	OpWeightMsgGrant = "op_weight_msg_grant"
@@ -118,12 +119,15 @@ func SimulateMsgGrant(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ba
 		if !t1.Before(ctx.BlockTime()) {
 			expiration = &t1
 		}
-		msg, err := authz.NewMsgGrant(granter.Address, grantee.Address, generateRandomAuthorization(r, spendLimit), expiration)
+		randomAuthz := generateRandomAuthorization(r, spendLimit)
+
+		msg, err := authz.NewMsgGrant(granter.Address, grantee.Address, randomAuthz, expiration)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
 		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,
@@ -147,7 +151,8 @@ func SimulateMsgGrant(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ba
 
 func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) authz.Authorization {
 	authorizations := make([]authz.Authorization, 2)
-	authorizations[0] = banktype.NewSendAuthorization(spendLimit)
+	sendAuthz := banktype.NewSendAuthorization(spendLimit, nil)
+	authorizations[0] = sendAuthz
 	authorizations[1] = authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktype.MsgSend{}))
 
 	return authorizations[r.Intn(len(authorizations))]
@@ -194,6 +199,7 @@ func SimulateMsgRevoke(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.B
 		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		account := ak.GetAccount(ctx, granterAddr)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txCfg,
 			[]sdk.Msg{&msg},
 			fees,
@@ -256,6 +262,10 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ban
 
 		granterspendableCoins := bk.SpendableCoins(ctx, granterAddr)
 		coins := simtypes.RandSubsetCoins(r, granterspendableCoins)
+		// if coins slice is empty, we can not create valid banktype.MsgSend
+		if len(coins) == 0 {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "empty coins slice"), nil, nil
+		}
 
 		// Check send_enabled status of each sent coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
@@ -283,6 +293,7 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ban
 		txCfg := tx.NewTxConfig(cdc, tx.DefaultSignModes)
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
 		tx, err := simtestutil.GenSignedMockTx(
+			r,
 			txCfg,
 			[]sdk.Msg{&msgExec},
 			fees,

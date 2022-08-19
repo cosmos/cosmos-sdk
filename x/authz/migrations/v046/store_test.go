@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -35,6 +35,7 @@ func TestMigration(t *testing.T) {
 	blockTime := ctx.BlockTime()
 	oneDay := blockTime.AddDate(0, 0, 1)
 	oneYear := blockTime.AddDate(1, 0, 0)
+	sendAuthz := banktypes.NewSendAuthorization(coins100, nil)
 
 	grants := []struct {
 		granter       sdk.AccAddress
@@ -47,7 +48,7 @@ func TestMigration(t *testing.T) {
 			grantee1,
 			sendMsgType,
 			func() authz.Grant {
-				any, err := codectypes.NewAnyWithValue(banktypes.NewSendAuthorization(coins100))
+				any, err := codectypes.NewAnyWithValue(sendAuthz)
 				require.NoError(t, err)
 				return authz.Grant{
 					Authorization: any,
@@ -60,7 +61,7 @@ func TestMigration(t *testing.T) {
 			grantee2,
 			sendMsgType,
 			func() authz.Grant {
-				any, err := codectypes.NewAnyWithValue(banktypes.NewSendAuthorization(coins100))
+				any, err := codectypes.NewAnyWithValue(sendAuthz)
 				require.NoError(t, err)
 				return authz.Grant{
 					Authorization: any,

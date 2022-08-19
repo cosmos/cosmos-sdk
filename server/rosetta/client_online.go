@@ -256,7 +256,8 @@ func (c *Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes [
 }
 
 // GetTx returns a transaction given its hash. For Rosetta we  make a synthetic transaction for BeginBlock
-//  and EndBlock to adhere to balance tracking rules.
+//
+//	and EndBlock to adhere to balance tracking rules.
 func (c *Client) GetTx(ctx context.Context, hash string) (*rosettatypes.Transaction, error) {
 	hashBytes, err := hex.DecodeString(hash)
 	if err != nil {

@@ -11,8 +11,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -200,6 +200,29 @@ func (suite *SubspaceTestSuite) TestGetParamSet() {
 	suite.Require().Equal(a.UnbondingTime, b.UnbondingTime)
 	suite.Require().Equal(a.MaxValidators, b.MaxValidators)
 	suite.Require().Equal(a.BondDenom, b.BondDenom)
+}
+
+func (suite *SubspaceTestSuite) TestGetParamSetIfExists() {
+	a := params{
+		UnbondingTime: time.Hour * 48,
+		MaxValidators: 100,
+		BondDenom:     "stake",
+	}
+	suite.Require().NotPanics(func() {
+		suite.ss.Set(suite.ctx, keyUnbondingTime, a.UnbondingTime)
+		suite.ss.Set(suite.ctx, keyMaxValidators, a.MaxValidators)
+		suite.ss.Set(suite.ctx, keyBondDenom, a.BondDenom)
+	})
+
+	b := paramsV2{}
+	suite.Require().NotPanics(func() {
+		suite.ss.GetParamSetIfExists(suite.ctx, &b)
+	})
+	suite.Require().Equal(a.UnbondingTime, b.UnbondingTime)
+	suite.Require().Equal(a.MaxValidators, b.MaxValidators)
+	suite.Require().Equal(a.BondDenom, b.BondDenom)
+	suite.Require().Zero(b.MaxRedelegationEntries)
+	suite.Require().False(suite.ss.Has(suite.ctx, keyMaxRedelegationEntries), "key from the new param version should not yet exist")
 }
 
 func (suite *SubspaceTestSuite) TestSetParamSet() {

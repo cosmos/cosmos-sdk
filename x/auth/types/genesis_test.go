@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 

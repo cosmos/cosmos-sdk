@@ -150,7 +150,13 @@ type Options struct {
 // purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
 func NewInMemory(cdc codec.Codec, opts ...Option) Keyring {
-	return newKeystore(keyring.NewArrayKeyring(nil), cdc, BackendMemory, opts...)
+	return NewInMemoryWithKeyring(keyring.NewArrayKeyring(nil), cdc, opts...)
+}
+
+// NewInMemoryWithKeyring returns an in memory keyring using the specified keyring.Keyring
+// as the backing keyring.
+func NewInMemoryWithKeyring(kr keyring.Keyring, cdc codec.Codec, opts ...Option) Keyring {
+	return newKeystore(kr, cdc, BackendMemory, opts...)
 }
 
 // New creates a new instance of a keyring.
@@ -708,7 +714,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			}
 
 			buf := bufio.NewReader(buf)
-			pass, err := input.GetPassword("Enter keyring passphrase:", buf)
+			pass, err := input.GetPassword(fmt.Sprintf("Enter keyring passphrase (attempt %d/%d):", failureCounter, maxPassphraseEntryAttempts), buf)
 			if err != nil {
 				// NOTE: LGTM.io reports a false positive alert that states we are printing the password,
 				// but we only log the error.

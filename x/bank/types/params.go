@@ -7,24 +7,10 @@ import (
 	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // DefaultDefaultSendEnabled is the value that DefaultSendEnabled will have from DefaultParams().
 var DefaultDefaultSendEnabled = true
-
-var (
-	// KeySendEnabled is store's key for SendEnabled Params
-	// Deprecated: Use the SendEnabled functionality in the keeper.
-	KeySendEnabled = []byte("SendEnabled")
-	// KeyDefaultSendEnabled is store's key for the DefaultSendEnabled option
-	KeyDefaultSendEnabled = []byte("DefaultSendEnabled")
-)
-
-// ParamKeyTable for bank module.
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
-}
 
 // NewParams creates a new parameter configuration for the bank module
 func NewParams(defaultSendEnabled bool) Params {
@@ -60,20 +46,14 @@ func (p Params) String() string {
 	return fmt.Sprintf("default_send_enabled: %t\nsend_enabled:%s%s", p.DefaultSendEnabled, d, sendEnabled)
 }
 
-// ParamSetPairs implements params.ParamSet
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeySendEnabled, &p.SendEnabled, validateSendEnabledParams),
-		paramtypes.NewParamSetPair(KeyDefaultSendEnabled, &p.DefaultSendEnabled, validateIsBool),
-	}
-}
-
 // Validate gets any errors with this SendEnabled entry.
 func (se SendEnabled) Validate() error {
 	return sdk.ValidateDenom(se.Denom)
 }
 
 // validateSendEnabledParams is used by the x/params module to validate the params for the bank module.
+//
+//nolint:deadcode,unused
 func validateSendEnabledParams(i interface{}) error {
 	params, ok := i.([]*SendEnabled)
 	if !ok {
@@ -108,6 +88,8 @@ func (se SendEnabled) String() string {
 }
 
 // validateSendEnabled is used by the x/params module to validate a single SendEnabled entry.
+//
+//nolint:unused
 func validateSendEnabled(i interface{}) error {
 	param, ok := i.(SendEnabled)
 	if !ok {

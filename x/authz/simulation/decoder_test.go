@@ -7,27 +7,28 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
-	"github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestDecodeStore(t *testing.T) {
-	var cdc codec.Codec
-	depinject.Inject(testutil.AppConfig, &cdc)
+	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
+	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 
-	dec := simulation.NewDecodeStore(cdc)
+	dec := simulation.NewDecodeStore(encCfg.Codec)
 
 	now := time.Now().UTC()
 	e := now.Add(1)
-	grant, _ := authz.NewGrant(now, banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123))), &e)
-	grantBz, err := cdc.Marshal(&grant)
+	sendAuthz := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123)), nil)
+	grant, _ := authz.NewGrant(now, sendAuthz, &e)
+	grantBz, err := encCfg.Codec.Marshal(&grant)
 	require.NoError(t, err)
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

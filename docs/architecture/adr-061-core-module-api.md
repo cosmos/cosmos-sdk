@@ -109,11 +109,12 @@ The event service gives modules access to an event manager which allows modules 
 untyped events:
 
 ```go
-type EventService interface {
-    GetManager(context.Context) EventManager
+package event
+type Service interface {
+    GetManager(context.Context) Manager
 }
 
-type EventManager interface {
+type Manager interface {
     Emit(proto.Message) error
     EmitLegacy(eventType string, attrs ...LegacyEventAttribute) error
 }
@@ -132,7 +133,9 @@ Design questions:
 The `BlockInfo` service allows modules to get a limited set of information about the currently executing block
 that does not depend on any specific version of Tendermint:
 ```go
-type BlockInfoService interface {
+package blockinfo
+
+type Service interface {
     GetBlockInfo(ctx context.Context) BlockInfo
 }
 
@@ -151,9 +154,11 @@ exposure to changes in the Tendermint protocol.
 
 #### Gas Service
 
-The `GasService` handles tracking of gas consumptions at the block and transaction level and also allows
+The gas service handles tracking of gas consumptions at the block and transaction level and also allows
 for overriding the gas meter passed to child calls:
 ```go
+package gas
+
 type Service interface {
 	GetMeter(context.Context) Meter
 	GetBlockMeter(context.Context) Meter
@@ -319,6 +324,27 @@ module, an `UpgradeHandler` specifying that `FromModule` must be provided.
 A helper method on handler will be provided to simplify upgrade handler registration, ex:
 ```go
 func (h *Handler) RegisterUpgradeHandler(fromModule protoreflect.FullName, handler func(context.Context) error)
+```
+
+#### Remaining Parts of AppModule
+
+
+#### Example Usage
+
+Here is an example of setting up a hypothetical `foo` v2 module which uses the [ORM](./adr-055-orm.md) for its state
+management and genesis.
+
+```go
+func ProvideApp(config *foomodulev2.Module, evtSvc event.EventService, db orm.ModuleDB) (Keeper, *Handler){
+	k := &Keeper{db: db, evtSvc: evtSvc}
+	h := &Handler{}
+	foov1.RegisterMsgServer(h, k)
+    foov1.RegisterQueryServer(h, k)
+	h.RegisterBeginBlocker(k.BeginBlock)
+    db.RegisterGenesis(h)
+    h.RegisterUpgradeHandler("foo.module.v1.Module", k.MigrateFromV1)
+	return k, h
+}
 ```
 
 TODO:

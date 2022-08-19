@@ -6,13 +6,15 @@ import (
 	"sort"
 	"sync"
 
-	"cosmossdk.io/math"
-	"cosmossdk.io/store/cachekv/internal"
-	dbm "cosmossdk.io/store/db"
-	"cosmossdk.io/store/internal/conv"
-	"cosmossdk.io/store/internal/kv"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
+	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/internal/conv"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/tendermint/tendermint/libs/math"
 )
 
 // cValue represents a cached value.
@@ -346,6 +348,8 @@ const (
 	stateAlreadySorted
 )
 
+const minSortSize = 1024
+
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
 	startStr, endStr := conv.UnsafeBytesToStr(start), conv.UnsafeBytesToStr(end)
@@ -362,7 +366,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// O(N^2) overhead.
 	// Even without that, too many range checks eventually becomes more expensive
 	// than just not having the cache.
-	if n < 1024 {
+	if n < minSortSize {
 		for key := range store.unsortedCache {
 			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
 				cacheValue := store.cache[key]
@@ -391,6 +395,17 @@ func (store *Store) dirtyItems(start, end []byte) {
 	}
 	if startIndex < 0 {
 		startIndex = 0
+	}
+
+	// Since we spent cycles to sort the values, we should process and remove a reasonable amount
+	// ensure start to end is at least minSortSize in size
+	// if below minSortSize, expand it to cover additional values
+	// this amortizes the cost of processing elements across multiple calls
+	if endIndex-startIndex < minSortSize {
+		endIndex = math.MinInt(startIndex+minSortSize, len(strL)-1)
+		if endIndex-startIndex < minSortSize {
+			startIndex = math.MaxInt(endIndex-minSortSize, 0)
+		}
 	}
 
 	kvL := make([]*kv.Pair, 0)

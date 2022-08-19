@@ -8,6 +8,7 @@ import "cosmos/crypto/hd/v1/hd.proto";
 
 option go_package                      = "github.com/cosmos/cosmos-sdk/crypto/keyring";
 option (gogoproto.goproto_getters_all) = false;
+option (gogoproto.gogoproto_import)    = false;
 
 // Record is used for representing a key in the keyring.
 message Record {

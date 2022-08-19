@@ -53,7 +53,7 @@ type InterfaceRegistry interface {
 	// for the provided interface type URL.
 	ListImplementations(ifaceTypeURL string) []string
 
-	// EnsureRegistered ensures there is a registered implementation for the given concrete type.
+	// EnsureRegistered ensures there is a registered interface for the given concrete type.
 	EnsureRegistered(iface interface{}) error
 }
 
@@ -110,7 +110,7 @@ func (registry *interfaceRegistry) RegisterInterface(protoName string, iface int
 	registry.RegisterImplementations(iface, impls...)
 }
 
-// EnsureRegistered ensures there is a registered implementation for the given concrete type.
+// EnsureRegistered ensures there is a registered interface for the given concrete type.
 //
 // Returns an error if not, and nil if so.
 func (registry *interfaceRegistry) EnsureRegistered(impl interface{}) error {

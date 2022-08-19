@@ -171,9 +171,11 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome, gentxModule),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome,
+			gentxModule.GenTxValidator),
 		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
+		genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig,
+			banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),
 		AddGenesisAccountCmd(simapp.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),

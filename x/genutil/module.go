@@ -31,6 +31,12 @@ type AppModuleBasic struct {
 	GenTxValidator types.MessageValidator
 }
 
+// NewAppModuleBasic creates AppModuleBasic, validator is a function used to validate genesis
+// transactions.
+func NewAppModuleBasic(validator types.MessageValidator) AppModuleBasic {
+	return AppModuleBasic{validator}
+}
+
 // Name returns the genutil module's name.
 func (AppModuleBasic) Name() string {
 	return types.ModuleName

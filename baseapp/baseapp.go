@@ -801,8 +801,12 @@ func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey, r
 	}
 
 	for _, storeKey := range storeKeys {
-		options = append(options, SetTracerFor(storeKey.Name(), storeKeyToSubstoreTraceBuf[storeKey.Name()]))
-		options = append(options, AppOptionFunc(routerOpts[storeKey.Name()]))
+		if substoreBuf, exists := storeKeyToSubstoreTraceBuf[storeKey.Name()]; exists {
+			options = append(options, SetTracerFor(storeKey.Name(), substoreBuf))
+		}
+		if routerOpt, exists := routerOpts[(storeKey.Name())]; exists {
+			options = append(options, AppOptionFunc(routerOpt))
+		}
 	}
 	newApp, err := SetupBaseAppFromParams(app.name+"WithTracing", app.logger, dbm.NewMemDB(), app.txDecoder, storeKeyNames, app.LastBlockHeight(), storeToLoadFrom, options...)
 
@@ -812,6 +816,37 @@ func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey, r
 		storeKeyToSubstoreTraceBuf[storeKey.Name()].Reset()
 	}
 	return newApp, storeKeyToSubstoreTraceBuf, err
+}
+
+// getAppWithRevertedState rolls back an app's state to a previous
+// state and enables tracing for the list of store keys
+// It returns the tracing-enabled app along with the trace buffers used
+func (app *BaseApp) getAppWithRevertedState(storeKeys []types.StoreKey, routerOpts map[string]AppOptionFunc) (*BaseApp, error) {
+	cms := app.cms.(*multi.Store)
+	lastVersion := cms.LastCommitID().Version
+	previousCMS, err := cms.GetVersion(lastVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize params from previousCMS
+	storeToLoadFrom := make(map[string]types.KVStore)
+	storeKeyNames := make([]string, 0, len(storeKeys))
+	for _, storeKey := range storeKeys {
+		storeKeyName := storeKey.Name()
+		storeKeyNames = append(storeKeyNames, storeKeyName)
+		storeToLoadFrom[storeKeyName] = previousCMS.GetKVStore(storeKey)
+	}
+
+	// BaseApp, B1
+	options := make([]AppOption, 0)
+
+	for _, storeKey := range storeKeys {
+		options = append(options, AppOptionFunc(routerOpts[storeKey.Name()]))
+	}
+	newApp, err := SetupBaseAppFromParams(app.name+"WithTracing", app.logger, dbm.NewMemDB(), app.txDecoder, storeKeyNames, app.LastBlockHeight(), storeToLoadFrom, options...)
+
+	return newApp, err
 }
 
 // Generate a fraudproof for an app with the given trace buffers

@@ -2168,7 +2168,7 @@ func executeBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions in
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: blockHeight}})
 	for txNum := 0; txNum < numTransactions; txNum++ {
 		tx := txTest{Msgs: []sdk.Msg{}}
-		for msgNum := 0; msgNum < 2; msgNum++ {
+		for msgNum := 0; msgNum < 1; msgNum++ {
 			key := []byte(fmt.Sprintf("%v", keyCounter))
 			value := make([]byte, 10000)
 			_, err := r.Read(value)
@@ -2186,7 +2186,7 @@ func executeBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions in
 	return txs
 }
 
-func getBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions int, blockHeight int64) (*abci.RequestBeginBlock, []*abci.RequestDeliverTx, *abci.RequestEndBlock) {
+func getBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions int, blockHeight int64) (*abci.RequestBeginBlock, []txTest, []*abci.RequestDeliverTx, *abci.RequestEndBlock) {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	r := rand.New(rand.NewSource(randSource))
@@ -2198,7 +2198,7 @@ func getBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions int, b
 	deliverRequests := make([]*abci.RequestDeliverTx, 0)
 	for txNum := 0; txNum < numTransactions; txNum++ {
 		tx := txTest{Msgs: []sdk.Msg{}}
-		for msgNum := 0; msgNum < 2; msgNum++ {
+		for msgNum := 0; msgNum < 1; msgNum++ {
 			key := []byte(fmt.Sprintf("%v", keyCounter))
 			value := make([]byte, 10000)
 			_, err := r.Read(value)
@@ -2213,7 +2213,7 @@ func getBlockWithArbitraryTxs(t *testing.T, app *BaseApp, numTransactions int, b
 		txs = append(txs, tx)
 	}
 	endBlockRequest := abci.RequestEndBlock{Height: blockHeight}
-	return &beginRequest, deliverRequests, &endBlockRequest
+	return &beginRequest, txs, deliverRequests, &endBlockRequest
 }
 
 func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
@@ -2230,8 +2230,11 @@ func executeBlock(t *testing.T, app *BaseApp, txs []txTest, blockHeight int64) {
 	app.EndBlock(abci.RequestEndBlock{Height: blockHeight})
 }
 
-func executeBlockWithRequests(t *testing.T, app *BaseApp, beginRequest *abci.RequestBeginBlock, deliverRequests []*abci.RequestDeliverTx, endRequest *abci.RequestEndBlock) {
+func executeBlockWithRequests(t *testing.T, app *BaseApp, beginRequest *abci.RequestBeginBlock, deliverRequests []*abci.RequestDeliverTx, endRequest *abci.RequestEndBlock, blockHeight int64) {
 	if beginRequest != nil {
+		if blockHeight != 0 {
+			beginRequest.Header.Height = blockHeight
+		}
 		app.BeginBlock(*beginRequest)
 	}
 	for _, deliverRequest := range deliverRequests {
@@ -2242,6 +2245,32 @@ func executeBlockWithRequests(t *testing.T, app *BaseApp, beginRequest *abci.Req
 	if endRequest != nil {
 		app.EndBlock(*endRequest)
 	}
+}
+
+// Takes the key embedded in given message, and returns a
+// deliverRequest with a tx that has the same key but a different value
+func getFraudTx(t *testing.T, tx txTest) *abci.RequestDeliverTx {
+	msgs := tx.GetMsgs()
+	require.NotEmpty(t, msgs)
+	msgKV := msgs[0].(msgKeyValue)
+	key := msgKV.Key
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+
+	fraudTx := txTest{Msgs: []sdk.Msg{}}
+	r := rand.New(rand.NewSource(randSource))
+	randSource += 1
+
+	newValue := make([]byte, 10000)
+	_, err := r.Read(newValue)
+	require.NoError(t, err)
+	fraudTx.Msgs = append(fraudTx.Msgs, msgKeyValue{Key: key, Value: newValue})
+
+	fraudTxBytes, err := codec.Marshal(fraudTx)
+	require.Nil(t, err)
+	fraudDeliverRequest := abci.RequestDeliverTx{Tx: fraudTxBytes}
+
+	return &fraudDeliverRequest
 }
 
 func TestEndToEndFraudProof(t *testing.T) {
@@ -2462,37 +2491,52 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	// B1 <- S0
 	appB1.InitChain(abci.RequestInitChain{})
 
-	numTransactions := 5
+	numTransactions := 2
 	// B1 <- S1
 	executeBlockWithArbitraryTxs(t, appB1, numTransactions, 1)
 	appB1.Commit()
 
 	// B1 <- S2
-	beginRequest, deliverRequests, endRequest := getBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
+	beginRequest, txs, deliverRequests, _ := getBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
 
 	// Modify requests to discard second half of the block
-	fraudDeliverTx := deliverRequests[(len(deliverRequests) / 2) : (len(deliverRequests)/2)+1]
-	deliverRequests = deliverRequests[0:(len(deliverRequests) / 2)]
-	endRequest = nil
+	deliverRequests = deliverRequests[0 : len(deliverRequests)-1]
+	txs = txs[0 : len(txs)-1]
+	require.NotEmpty(t, txs)
+	fraudDeliverRequest := getFraudTx(t, txs[0])
 
-	executeBlockWithRequests(t, appB1, beginRequest, deliverRequests, endRequest)
-
-	// Clear all trace logs
-	storeTraceBuf.Reset()
-	subStoreTraceBuf.Reset()
-
-	// Execute Fraud Tx with tracing
-	executeBlockWithRequests(t, appB1, nil, fraudDeliverTx, nil)
+	executeBlockWithRequests(t, appB1, beginRequest, deliverRequests, nil, 0)
 
 	// Save appHash, substoreHash here for comparision later
 	appHashB1, err := appB1.cms.(*multi.Store).GetAppHash()
 	require.Nil(t, err)
 	storeHashB1 := appB1.cms.(*multi.Store).GetSubstoreSMT(capKey2.Name()).Root()
 
-	// TODO: make new appFraudGen app which creates app with previous state
-	appFraudGen, _, err := appB1.enableFraudProofGenerationMode(nil, nil)
-	executeBlockWithRequests(t, appFraudGen, beginRequest, deliverRequests, endRequest)
+	// Clear all trace logs
+	storeTraceBuf.Reset()
+	subStoreTraceBuf.Reset()
+
+	// Execute Fraud Tx with tracing
+	executeBlockWithRequests(t, appB1, nil, []*abci.RequestDeliverTx{fraudDeliverRequest}, nil, 0)
+
+	//make new appFraudGen app which creates app with previous state
+
+	storeKeys := []types.StoreKey{capKey1, capKey2}
+	routerOpts := make(map[string]AppOptionFunc)
+	newRouterOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			kv := msg.(*msgKeyValue)
+			cms := bapp.cms.(*multi.Store)
+			storeKey := cms.GetStoreKeys()[len(storeKeys)-1]
+			bapp.cms.GetKVStore(storeKey).Set(kv.Key, kv.Value)
+			return &sdk.Result{}, nil
+		}))
+	}
+	routerOpts[capKey2.Name()] = newRouterOpt
+
+	appFraudGen, _, err := appB1.enableFraudProofGenerationMode(storeKeys, routerOpts)
 	require.Nil(t, err)
+	executeBlockWithRequests(t, appFraudGen, beginRequest, deliverRequests, nil, 1)
 
 	// Exports all data inside current multistore into a fraudProof (S1 -> S2) //
 	storeKeyToSubstoreTraceBuf := make(map[string]*bytes.Buffer)

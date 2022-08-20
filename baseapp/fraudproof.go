@@ -17,6 +17,8 @@ type FraudProof struct {
 	// The block height to load state of
 	blockHeight int64
 
+	appHash []byte
+
 	// A map from module name to state witness
 	stateWitness map[string]StateWitness
 }
@@ -58,7 +60,7 @@ func (fraudProof *FraudProof) extractStore() map[string]types.KVStore {
 	return store
 }
 
-func (fraudProof *FraudProof) verifyFraudProof(headerAppHash []byte) (bool, error) {
+func (fraudProof *FraudProof) verifyFraudProof() (bool, error) {
 	for storeKey, stateWitness := range fraudProof.stateWitness {
 		proofOp := stateWitness.proof
 		proof, err := types.CommitmentOpDecoder(proofOp)
@@ -72,8 +74,8 @@ func (fraudProof *FraudProof) verifyFraudProof(headerAppHash []byte) (bool, erro
 		if err != nil {
 			return false, err
 		}
-		if !bytes.Equal(appHash[0], headerAppHash) {
-			return false, fmt.Errorf("got appHash: %s, expected: %s", string(headerAppHash), string(headerAppHash))
+		if !bytes.Equal(appHash[0], fraudProof.appHash) {
+			return false, fmt.Errorf("got appHash: %s, expected: %s", string(fraudProof.appHash), string(fraudProof.appHash))
 		}
 
 		// Fraudproof verification on a substore level

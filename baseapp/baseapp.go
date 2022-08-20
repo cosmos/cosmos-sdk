@@ -855,7 +855,11 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 	fraudProof.stateWitness = make(map[string]StateWitness)
 	fraudProof.blockHeight = blockHeight
 	cms := app.cms.(*multi.Store)
-
+	appHash, err := cms.GetAppHash()
+	if err != nil {
+		return FraudProof{}, err
+	}
+	fraudProof.appHash = appHash
 	storeKeys := cms.GetStoreKeys()
 	for _, storeKey := range storeKeys {
 		if subStoreTraceBuf, exists := storeKeyToSubstoreTraceBuf[storeKey.Name()]; exists {

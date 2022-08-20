@@ -2335,7 +2335,8 @@ func TestEndToEndFraudProof(t *testing.T) {
 	require.Nil(t, err)
 
 	// Light Client
-	fraudProofVerified, err := fraudProof.verifyFraudProof(appHashB2)
+	require.Equal(t, appHashB2, fraudProof.appHash)
+	fraudProofVerified, err := fraudProof.verifyFraudProof()
 	require.Nil(t, err)
 	require.True(t, fraudProofVerified)
 
@@ -2407,14 +2408,12 @@ func TestFraudProofGenerationMode(t *testing.T) {
 
 	// Do not commit here in order to preserve saved previous versions
 
-	// the only store key we'd like to enable tracing for
 	storeKeys := []types.StoreKey{capKey2}
 	routerOpts := make(map[string]AppOptionFunc)
 	routerOpts[capKey2.Name()] = func(bapp *BaseApp) {
 		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			kv := msg.(*msgKeyValue)
 			cms := bapp.cms.(*multi.Store)
-			// There is only storeKey in the test for now
 			storeKey := cms.GetStoreKeys()[len(storeKeys)-1]
 			bapp.cms.GetKVStore(storeKey).Set(kv.Key, kv.Value)
 			return &sdk.Result{}, nil
@@ -2429,7 +2428,7 @@ func TestFraudProofGenerationMode(t *testing.T) {
 		require.Equal(t, storeHashB1AtS1, storeHashB2)
 	}
 
-	txs1 := executeBlockWithArbitraryTxs(t, appB2, numTransactions, 2)
+	txs1 := executeBlockWithArbitraryTxs(t, appB2, numTransactions, 1)
 
 	for _, storeKey := range cmsB2.GetStoreKeys() {
 		subStoreBuf := storeKeyToSubstoreTraceBuf[storeKey.Name()]
@@ -2542,13 +2541,13 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	storeKeyToSubstoreTraceBuf := make(map[string]*bytes.Buffer)
 	storeKeyToSubstoreTraceBuf[capKey2.Name()] = subStoreTraceBuf
 
-	// Records S1 in fraudproof (Pre-execution)
+	// Records S1 in fraudproof
 	fraudProof, err := appFraudGen.generateFraudProof(storeKeyToSubstoreTraceBuf, appB1.LastBlockHeight())
 	require.Nil(t, err)
 
 	// Light Client
-
-	fraudProofVerified, err := fraudProof.verifyFraudProof(appHashB1)
+	require.Equal(t, appHashB1, fraudProof.appHash)
+	fraudProofVerified, err := fraudProof.verifyFraudProof()
 	require.Nil(t, err)
 	require.True(t, fraudProofVerified)
 

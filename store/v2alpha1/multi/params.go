@@ -17,6 +17,7 @@ func DefaultStoreParams() StoreParams {
 		storeKeys:                 storeKeys{},
 		traceListenMixin:          newTraceListenMixin(),
 		substoreTraceListenMixins: make(map[string]*traceListenMixin),
+		storeKeyToSubstoreHash:    make(map[string][]byte),
 	}
 }
 
@@ -48,6 +49,10 @@ func (par *StoreParams) SetTracerFor(skey string, w io.Writer) {
 	tlm.SetTracer(w)
 	tlm.SetTracingContext(par.TraceContext)
 	par.substoreTraceListenMixins[skey] = tlm
+}
+
+func (par *StoreParams) SetSubStoreHashMap(storeKeyToSubstoreHash map[string][]byte) {
+	par.storeKeyToSubstoreHash = storeKeyToSubstoreHash
 }
 
 func (par *StoreParams) storeKey(key string) (types.StoreKey, error) {

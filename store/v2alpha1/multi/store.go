@@ -76,6 +76,7 @@ type StoreParams struct {
 	// Contains The trace context and listeners that can also be set from store methods.
 	*traceListenMixin
 	substoreTraceListenMixins map[string]*traceListenMixin
+	storeKeyToSubstoreHash    map[string][]byte
 }
 
 // StoreSchema defineds a mapping of substore keys to store types
@@ -266,6 +267,8 @@ func NewStore(db dbm.Connection, opts StoreParams) (ret *Store, err error) {
 		}
 		stateCommitmentTxn = opts.StateCommitmentDB.ReadWriter()
 	}
+
+	// TODO: Initialize substores with deep smts here from params.storeKeyToSubstoreHash
 
 	ret = &Store{
 		stateDB:                   db,

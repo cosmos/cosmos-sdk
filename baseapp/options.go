@@ -128,6 +128,7 @@ func SetSubstoresWithRoots(storeKeyToSubstoreHash map[string][]byte, keys ...sto
 			if err = config.RegisterSubstore(key, typ); err != nil {
 				return err
 			}
+			config.SetSubStoreHashMap(storeKeyToSubstoreHash)
 		}
 		return nil
 	}

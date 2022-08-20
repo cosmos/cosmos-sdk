@@ -116,6 +116,23 @@ func SetSubstores(keys ...storetypes.StoreKey) StoreOption {
 	}
 }
 
+// SetSubstoresWithRoots registers substores according to app configuration
+// It also assigns the given substoreHashes for each key using deep SMTs
+func SetSubstoresWithRoots(storeKeyToSubstoreHash map[string][]byte, keys ...storetypes.StoreKey) StoreOption {
+	return func(config *multi.StoreParams, _ uint64) error {
+		for _, key := range keys {
+			typ, err := storetypes.StoreKeyToType(key)
+			if err != nil {
+				return err
+			}
+			if err = config.RegisterSubstore(key, typ); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
 func SetSubstoresFromMaps(
 	keys map[string]*storetypes.KVStoreKey,
 	tkeys map[string]*storetypes.TransientStoreKey,

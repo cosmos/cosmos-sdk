@@ -824,6 +824,7 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 	fraudProof.stateWitness = make(map[string]StateWitness)
 	fraudProof.blockHeight = blockHeight
 	cms := app.cms.(*multi.Store)
+
 	appHash, err := cms.GetAppHash()
 	if err != nil {
 		return FraudProof{}, err
@@ -832,10 +833,8 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 	storeKeys := cms.GetStoreKeys()
 	for _, storeKey := range storeKeys {
 		if subStoreTraceBuf, exists := storeKeyToSubstoreTraceBuf[storeKey.Name()]; exists {
-			//do something here
 			keys := cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreTraceBuf)
 
-			// This should be the deep subtree
 			smt := cms.GetSubstoreSMT(storeKey.Name())
 			if smt.Root() == nil {
 				continue
@@ -852,7 +851,6 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 			for key := range keys {
 				bKey := []byte(key)
 				has := smt.Has(bKey)
-				// The error returned here is sometimes `invalid key` but the boolean is false
 				if has {
 					value := smt.Get([]byte(key))
 					proof, err := smt.GetSMTProof([]byte(key))

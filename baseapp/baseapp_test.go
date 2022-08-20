@@ -2426,7 +2426,7 @@ func TestFraudProofGenerationMode(t *testing.T) {
 	}
 
 	txs1 := executeBlockWithArbitraryTxs(t, appB2, numTransactions, 1)
-
+  
 	for _, storeKey := range cmsB2.GetStoreKeys() {
 		subStoreBuf := storeKeyToSubstoreTraceBuf[storeKey.Name()]
 		tracedKeys := appB2.cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreBuf).Values()

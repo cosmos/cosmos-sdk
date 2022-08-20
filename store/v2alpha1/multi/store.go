@@ -1090,25 +1090,3 @@ func (s *Store) GetStoreProof(storeKeyName string) (*tmcrypto.ProofOp, error) {
 	proofOp, err := types.ProofOpFromMap(storeHashes, storeKeyName)
 	return &proofOp, err
 }
-
-// Constructs a deep sparse merkle tree using the given subKeys for the given storekeyName at the last version
-func (s *Store) GetSubstoreSMTWithKeys(storekeyName string, subKeys []string) (*smtlib.DeepSparseMerkleSubTree, error) {
-	sub, err := s.getSubstore(storekeyName)
-	if err != nil {
-		return nil, err
-	}
-	smt := s.GetSubstoreSMT(storekeyName)
-	dsmt := smtlib.NewDeepSparseMerkleSubTree(smtlib.NewSimpleMap(), smtlib.NewSimpleMap(), sha256.New(), smt.Root())
-	for _, subKey := range subKeys {
-		bKey := []byte(subKey)
-		if sub.Has(bKey) {
-			bValue := smt.Get(bKey)
-			proof, err := smt.GetSMTProof([]byte(subKey))
-			if err != nil {
-				return nil, err
-			}
-			dsmt.AddBranch(proof, bKey, bValue)
-		}
-	}
-	return dsmt, nil
-}

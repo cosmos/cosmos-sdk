@@ -18,7 +18,6 @@ type FraudProof struct {
 	blockHeight int64
 
 	appHash []byte
-
 	// A map from module name to state witness
 	stateWitness map[string]StateWitness
 }
@@ -77,7 +76,6 @@ func (fraudProof *FraudProof) verifyFraudProof() (bool, error) {
 		if !bytes.Equal(appHash[0], fraudProof.appHash) {
 			return false, fmt.Errorf("got appHash: %s, expected: %s", string(fraudProof.appHash), string(fraudProof.appHash))
 		}
-
 		// Fraudproof verification on a substore level
 		for _, witness := range stateWitness.WitnessData {
 			smtProof, key, value := witness.proof, witness.Key, witness.Value

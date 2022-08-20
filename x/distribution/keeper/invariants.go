@@ -74,17 +74,17 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 			valDelegationAddrs[valAddr] = append(valDelegationAddrs[valAddr], del.GetDelegatorAddr())
 		}
 
-		// get all validators so that we can iterate concurrently
-		// there might be a more elegant way to do this, but this seems to work pretty well
-		// and compared to the time the whole thing takes this iteration is negligible
 		var valList []stakingtypes.ValidatorI
 		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 			valList = append(valList, val)
 			return false
 		})
 
-		broken := false
-		var remaining sdk.DecCoins
+		var (
+		  broken bool
+		  remaining sdk.DecCoins
+		 )
+		
 		wg := new(sync.WaitGroup)
 		for _, val := range valList {
 			wg.Add(1)

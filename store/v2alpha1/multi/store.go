@@ -268,8 +268,6 @@ func NewStore(db dbm.Connection, opts StoreParams) (ret *Store, err error) {
 		stateCommitmentTxn = opts.StateCommitmentDB.ReadWriter()
 	}
 
-	// TODO: Initialize substores with deep smts here from params.storeKeyToSubstoreHash
-
 	ret = &Store{
 		stateDB:                   db,
 		stateTxn:                  stateTxn,
@@ -356,8 +354,8 @@ func NewStore(db dbm.Connection, opts StoreParams) (ret *Store, err error) {
 			return
 		}
 		ret.schema[skey] = typ
+		ret.getSubstoreAsDeepSMT(skey, opts.storeKeyToSubstoreHash[skey.Name()])
 	}
-
 	return
 }
 
@@ -495,6 +493,33 @@ func (s *Store) GetKVStore(skey types.StoreKey) types.KVStore {
 func (rs *Store) HasKVStore(skey types.StoreKey) bool {
 	_, has := rs.schema[skey]
 	return has
+}
+
+// Creates a persistent substore. This reads, but does not update the substore cache.
+// Uses the given subStoreHash to initialize the substore with an underlying deep SMT
+func (s *Store) createSubstoreAsDeepSMT(key string, substoreHash []byte) (*substore, error) {
+	pfx := prefixSubstore(key)
+	stateRW := prefixdb.NewReadWriter(s.stateTxn, pfx)
+	stateCommitmentRW := prefixdb.NewReadWriter(s.stateCommitmentTxn, pfx)
+	var stateCommitmentStore *smt.Store
+
+	// rootHash, err := stateRW.Get(substoreMerkleRootKey)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if rootHash != nil {
+	// 	stateCommitmentStore = loadSMT(stateCommitmentRW, rootHash)
+	// } else {
+	smtdb := prefixdb.NewReadWriter(stateCommitmentRW, smtPrefix)
+	stateCommitmentStore = smt.NewStore(smtdb)
+	// }
+
+	return &substore{
+		root:                 s,
+		name:                 key,
+		dataBucket:           prefixdb.NewReadWriter(stateRW, dataPrefix),
+		stateCommitmentStore: stateCommitmentStore,
+	}, nil
 }
 
 // Gets a persistent substore. This reads, but does not update the substore cache.

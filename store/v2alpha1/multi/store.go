@@ -503,16 +503,12 @@ func (s *Store) createSubstoreAsDeepSMT(key string, substoreHash []byte) (*subst
 	stateCommitmentRW := prefixdb.NewReadWriter(s.stateCommitmentTxn, pfx)
 	var stateCommitmentStore *smt.Store
 
-	// rootHash, err := stateRW.Get(substoreMerkleRootKey)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// if rootHash != nil {
-	// 	stateCommitmentStore = loadSMT(stateCommitmentRW, rootHash)
-	// } else {
+	err := stateRW.Set(substoreMerkleRootKey, substoreHash)
+	if err != nil {
+		return nil, err
+	}
 	smtdb := prefixdb.NewReadWriter(stateCommitmentRW, smtPrefix)
-	stateCommitmentStore = smt.NewStore(smtdb)
-	// }
+	stateCommitmentStore = smt.NewStoreWithDeepSMT(smtdb, substoreHash)
 
 	return &substore{
 		root:                 s,

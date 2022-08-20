@@ -203,7 +203,7 @@ func (s queryServer) GetNodeInfo(ctx context.Context, req *GetNodeInfoRequest) (
 	}
 
 	resp := GetNodeInfoResponse{
-		NodeInfo: protoNodeInfo,
+		DefaultNodeInfo: protoNodeInfo,
 		ApplicationVersion: &VersionInfo{
 			AppName:          nodeInfo.AppName,
 			Name:             nodeInfo.Name,

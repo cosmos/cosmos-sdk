@@ -2344,6 +2344,8 @@ func TestEndToEndFraudProof(t *testing.T) {
 	registerTestCodec(codec)
 	appB3, err := SetupBaseAppFromFraudProof(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), fraudProof, AppOptionFunc(routerOpt))
 	require.Nil(t, err)
+
+	// Check if the the resulting app's substore is the same as the one fraudproof initialized it with
 	storeHashB3 := appB3.cms.(*multi.Store).GetSubstoreSMT(capKey2.Name()).Root()
 	require.Equal(t, storeHashB2, storeHashB3)
 
@@ -2526,8 +2528,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	executeBlockWithRequests(t, appB1, nil, []*abci.RequestDeliverTx{fraudDeliverRequest}, nil, 0)
 	// Now, subStoreBuf knows about all the keys accessed in (S2 -> S3)
 
-	//make new appFraudGen app which creates app with previous state
-
+	// Make new appFraudGen app which creates app with previous state
 	storeKeys := []types.StoreKey{capKey1, capKey2}
 	routerOpts := make(map[string]AppOptionFunc)
 	newRouterOpt := func(bapp *BaseApp) {

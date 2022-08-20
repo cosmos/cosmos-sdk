@@ -907,6 +907,5 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 
 // set up a new baseapp from a fraudproof
 func SetupBaseAppFromFraudProof(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, fraudProof FraudProof, options ...AppOption) (*BaseApp, error) {
-	// TODO: Get fraudProofs to work with storeKeyToSMT
 	return SetupBaseAppFromParams(appName, logger, db, txDecoder, fraudProof.getModules(), fraudProof.getSubstoreSMTs(), fraudProof.blockHeight, fraudProof.extractStore(), options...)
 }

@@ -45,6 +45,15 @@ func (fraudProof *FraudProof) getModules() []string {
 	return keys
 }
 
+func (fraudProof *FraudProof) getRootHashes() []string {
+	rootHashes := make([]string, 0, len(fraudProof.stateWitness))
+	for k := range fraudProof.stateWitness {
+		rootHash := fraudProof.stateWitness[k].rootHash
+		rootHashes = append(rootHashes, string(rootHash))
+	}
+	return rootHashes
+}
+
 func (fraudProof *FraudProof) extractStore() map[string]types.KVStore {
 	store := make(map[string]types.KVStore)
 	for storeKey, stateWitness := range fraudProof.stateWitness {

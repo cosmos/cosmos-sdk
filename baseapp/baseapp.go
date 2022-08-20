@@ -808,7 +808,7 @@ func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey, r
 			options = append(options, AppOptionFunc(routerOpt))
 		}
 	}
-	newApp, err := SetupBaseAppFromParams(app.name+"WithTracing", app.logger, dbm.NewMemDB(), app.txDecoder, storeKeyNames, app.LastBlockHeight(), storeToLoadFrom, options...)
+	newApp, err := SetupBaseAppFromParams(app.name+"WithTracing", app.logger, dbm.NewMemDB(), app.txDecoder, storeKeyNames, nil, app.LastBlockHeight(), storeToLoadFrom, options...)
 
 	// Need to reset all the buffers to remove anything logged while setting up baseapp
 	storeTraceBuf.Reset()
@@ -870,7 +870,7 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 }
 
 // set up a new baseapp from given params
-func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, storeKeyNames []string, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
+func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, storeKeyNames []string, rootHashes []string, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
 	storeKeys := make([]types.StoreKey, 0, len(storeKeyNames))
 
 	for _, storeKeyName := range storeKeyNames {
@@ -883,7 +883,9 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 			options = append(options, SetSubstoreKVPair(storeKey, key, val))
 		}
 	}
-	options = append(options, SetSubstores(storeKeys...))
+
+	storeKeyToSubstoreHash := make(map[string][]byte)
+	options = append(options, SetSubstoresWithRoots(storeKeyToSubstoreHash, storeKeys...))
 
 	// This initial height is used in `BeginBlock` in `validateHeight`
 	options = append(options, SetInitialHeight(blockHeight))
@@ -898,5 +900,5 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 
 // set up a new baseapp from a fraudproof
 func SetupBaseAppFromFraudProof(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, fraudProof FraudProof, options ...AppOption) (*BaseApp, error) {
-	return SetupBaseAppFromParams(appName, logger, db, txDecoder, fraudProof.getModules(), fraudProof.blockHeight, fraudProof.extractStore(), options...)
+	return SetupBaseAppFromParams(appName, logger, db, txDecoder, fraudProof.getModules(), fraudProof.getRootHashes(), fraudProof.blockHeight, fraudProof.extractStore(), options...)
 }

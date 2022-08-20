@@ -11,6 +11,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/lazyledger/smt"
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -41,9 +42,11 @@ func SetTracerFor(skey string, w io.Writer) StoreOption {
 
 // SetSubstoreKVPair sets a key, value pair for the given substore inside a multistore
 // Only works for v2alpha1/multi
-func SetSubstoreKVPair(skey storetypes.StoreKey, key, val []byte) AppOptionOrdered {
+func SetSubstoreKVPair(skey storetypes.StoreKey, root []byte, proof smt.SparseMerkleProof, key, val []byte) AppOptionOrdered {
 	return AppOptionOrdered{
-		func(bapp *BaseApp) { bapp.cms.(*multi.Store).SetSubstoreKVPair(skey, key, val) },
+		func(bapp *BaseApp) {
+			bapp.cms.(*multi.Store).SetDeepSMTBranchKVPair(skey.Name(), root, proof, key, val)
+		},
 		OptionOrderAfterStore,
 	}
 }

@@ -879,6 +879,7 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 		it := subStore.Iterator(nil, nil)
 		for ; it.Valid(); it.Next() {
 			key, val := it.Key(), it.Value()
+			// Need proof and root from fraudproof
 			options = append(options, SetSubstoreKVPair(storeKey, key, val))
 		}
 	}

@@ -61,6 +61,22 @@ func NewStoreWithDeepSMT(db dbm.ReadWriter, rootHash []byte) *Store {
 	}
 }
 
+func AddBranchToStoreWithDeepSMT(db dbm.ReadWriter, root []byte, proof smt.SparseMerkleProof, key []byte, value []byte) *Store {
+	nodes := prefix.NewReadWriter(db, nodesPrefix)
+	values := prefix.NewReadWriter(db, valuesPrefix)
+	preimages := prefix.NewReadWriter(db, preimagesPrefix)
+
+	deepSMT := smt.DeepSparseMerkleSubTree{
+		smt.ImportSparseMerkleTree(dbMapStore{nodes}, dbMapStore{values}, sha256.New(), root),
+	}
+	deepSMT.AddBranch(proof, key, value)
+	return &Store{
+		tree:      deepSMT.SparseMerkleTree,
+		values:    values,
+		preimages: preimages,
+	}
+}
+
 func LoadStore(db dbm.ReadWriter, root []byte) *Store {
 	nodes := prefix.NewReadWriter(db, nodesPrefix)
 	values := prefix.NewReadWriter(db, valuesPrefix)

@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/transient"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	smtlib "github.com/lazyledger/smt"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
@@ -495,10 +496,17 @@ func (rs *Store) HasKVStore(skey types.StoreKey) bool {
 	return has
 }
 
+func (s *Store) SetDeepSMTBranchKVPair(skey string, root []byte, proof smtlib.SparseMerkleProof, key []byte, value []byte) {
+	pfx := prefixSubstore(skey)
+	stateCommitmentRW := prefixdb.NewReadWriter(s.stateCommitmentTxn, pfx)
+	smtdb := prefixdb.NewReadWriter(stateCommitmentRW, smtPrefix)
+	smt.AddBranchToStoreWithDeepSMT(smtdb, root, proof, key, value)
+}
+
 // Creates a persistent substore. This reads, but does not update the substore cache.
 // Uses the given subStoreHash to initialize the substore with an underlying deep SMT
-func (s *Store) createSubstoreAsDeepSMT(key string, substoreHash []byte) (*substore, error) {
-	pfx := prefixSubstore(key)
+func (s *Store) createSubstoreAsDeepSMT(skey string, substoreHash []byte) (*substore, error) {
+	pfx := prefixSubstore(skey)
 	stateRW := prefixdb.NewReadWriter(s.stateTxn, pfx)
 	stateCommitmentRW := prefixdb.NewReadWriter(s.stateCommitmentTxn, pfx)
 	var stateCommitmentStore *smt.Store
@@ -512,7 +520,7 @@ func (s *Store) createSubstoreAsDeepSMT(key string, substoreHash []byte) (*subst
 
 	return &substore{
 		root:                 s,
-		name:                 key,
+		name:                 skey,
 		dataBucket:           prefixdb.NewReadWriter(stateRW, dataPrefix),
 		stateCommitmentStore: stateCommitmentStore,
 	}, nil

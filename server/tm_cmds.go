@@ -3,14 +3,11 @@ package server
 // DONTCOVER
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
-	cfg "github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
-	"github.com/tendermint/tendermint/scripts/keymigrate"
-	"github.com/tendermint/tendermint/scripts/scmigrate"
 	tversion "github.com/tendermint/tendermint/version"
 	"sigs.k8s.io/yaml"
 
@@ -28,12 +25,12 @@ func ShowNodeIDCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			nodeKey, err := cfg.LoadNodeKeyID()
+			nodeKey, err := p2p.LoadNodeKey(cfg.NodeKeyFile())
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(nodeKey)
+			fmt.Println(nodeKey.ID())
 			return nil
 		},
 	}
@@ -48,12 +45,8 @@ func ShowValidatorCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			privValidator, err := pvm.LoadFilePV(cfg.PrivValidator.KeyFile(), cfg.PrivValidator.StateFile())
-			if err != nil {
-				return err
-			}
-
-			pk, err := privValidator.GetPubKey(cmd.Context())
+			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+			pk, err := privValidator.GetPubKey()
 			if err != nil {
 				return err
 			}
@@ -86,10 +79,7 @@ func ShowAddressCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			privValidator, err := pvm.LoadFilePV(cfg.PrivValidator.KeyFile(), cfg.PrivValidator.StateFile())
-			if err != nil {
-				return err
-			}
+			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
 			fmt.Println(valConsAddr.String())
@@ -113,7 +103,7 @@ func VersionCmd() *cobra.Command {
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				Tendermint:    tversion.TMVersion,
+				Tendermint:    tversion.TMCoreSemVer,
 				ABCI:          tversion.ABCIVersion,
 				BlockProtocol: tversion.BlockProtocol,
 				P2PProtocol:   tversion.P2PProtocol,
@@ -126,66 +116,4 @@ func VersionCmd() *cobra.Command {
 			return nil
 		},
 	}
-}
-
-// makeKeyMigrateCmd is ported from tendermint's key-migrate command, but
-// uses the SDK's own server.Context.
-// ref: https://github.com/tendermint/tendermint/blob/master/UPGRADING.md#database-key-format-changes
-func makeKeyMigrateCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "key-migrate",
-		Short: "Run Tendermint database key migration",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx, cancel := context.WithCancel(cmd.Context())
-			defer cancel()
-
-			serverCtx := GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
-
-			contexts := []string{
-				// this is ordered to put the
-				// (presumably) biggest/most important
-				// subsets first.
-				"blockstore",
-				"state",
-				"peerstore",
-				"tx_index",
-				"evidence",
-				"light",
-			}
-
-			for idx, dbctx := range contexts {
-				serverCtx.Logger.Info("beginning a key migration",
-					"dbctx", dbctx,
-					"num", idx+1,
-					"total", len(contexts),
-				)
-
-				db, err := cfg.DefaultDBProvider(&cfg.DBContext{
-					ID:     dbctx,
-					Config: config,
-				})
-				if err != nil {
-					return fmt.Errorf("constructing database handle: %w", err)
-				}
-
-				if err = keymigrate.Migrate(ctx, dbctx, db); err != nil {
-					return fmt.Errorf("running migration for context %q: %w",
-						dbctx, err)
-				}
-
-				if dbctx == "blockstore" {
-					if err := scmigrate.Migrate(ctx, db); err != nil {
-						return fmt.Errorf("running seen commit migration: %w", err)
-					}
-				}
-			}
-
-			serverCtx.Logger.Info("completed database migration successfully")
-
-			return nil
-		},
-	}
-
-	return cmd
 }

@@ -3,7 +3,6 @@
 ### Bug Fixes
 
 * Fix failure when installing cosmovisor via `go install`.
-* Fix plan path case sensitivity issue.
 
 ### Changelog
 

@@ -863,12 +863,9 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 			keys := cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreTraceBuf)
 
 			// This should be the deep subtree
-			deepSubstoreSMT, err := cms.GetSubstoreSMTWithKeys(storeKey.Name(), keys.Values())
-			if deepSubstoreSMT.Root() == nil {
+			smt := cms.GetSubstoreSMT(storeKey.Name())
+			if smt.Root() == nil {
 				continue
-			}
-			if err != nil {
-				return FraudProof{}, err
 			}
 			proof, err := cms.GetStoreProof(storeKey.Name())
 			if err != nil {
@@ -876,19 +873,16 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 			}
 			stateWitness := StateWitness{
 				proof:       *proof,
-				rootHash:    deepSubstoreSMT.Root(),
+				rootHash:    smt.Root(),
 				WitnessData: make([]WitnessData, 0, keys.Len()),
 			}
 			for key := range keys {
 				bKey := []byte(key)
-				has, _ := deepSubstoreSMT.Has(bKey)
+				has := smt.Has(bKey)
 				// The error returned here is sometimes `invalid key` but the boolean is false
 				if has {
-					value, err := deepSubstoreSMT.Get([]byte(key))
-					if err != nil {
-						return FraudProof{}, err
-					}
-					proof, err := deepSubstoreSMT.Prove([]byte(key))
+					value := smt.Get([]byte(key))
+					proof, err := smt.GetSMTProof([]byte(key))
 					if err != nil {
 						return FraudProof{}, err
 					}

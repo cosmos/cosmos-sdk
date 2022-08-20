@@ -2328,6 +2328,8 @@ func TestEndToEndFraudProof(t *testing.T) {
 	appHashB2, err := appB2.cms.(*multi.Store).GetAppHash()
 	require.Nil(t, err)
 
+	storeHashB2 := cmsB2.GetSubstoreSMT(capKey2.Name()).Root()
+
 	fraudProof, err := appB2.generateFraudProof(storeKeyToSubstoreTraceBuf, appB2.LastBlockHeight())
 	require.Nil(t, err)
 
@@ -2336,6 +2338,14 @@ func TestEndToEndFraudProof(t *testing.T) {
 	fraudProofVerified, err := fraudProof.verifyFraudProof()
 	require.Nil(t, err)
 	require.True(t, fraudProofVerified)
+
+	// Now we take contents of the fraud proof and create a new baseapp with its contents
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+	appB3, err := SetupBaseAppFromFraudProof(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), fraudProof, AppOptionFunc(routerOpt))
+	require.Nil(t, err)
+	storeHashB3 := appB3.cms.(*multi.Store).GetSubstoreSMT(capKey2.Name()).Root()
+	require.Equal(t, storeHashB2, storeHashB3)
 
 	// Check if fraudproof only contains keys from that fraudulent block or not, if yes, pass
 	for _, moduleName := range fraudProof.getModules() {
@@ -2552,8 +2562,8 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	require.Nil(t, err)
 	require.True(t, fraudProofVerified)
 
-	// Now we take contents of the fraud proof which was recorded with S1 and try to populate a fresh baseapp B2 with it
-	// B2 <- S1
+	// Now we take contents of the fraud proof which was recorded with S2 and try to populate a fresh baseapp B2 with it
+	// B2 <- S2
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	appB2, err := SetupBaseAppFromFraudProof(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), fraudProof, AppOptionFunc(routerOpt))

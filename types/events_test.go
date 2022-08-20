@@ -76,8 +76,8 @@ func (s *eventsTestSuite) TestEmitTypedEvent() {
 			s.Require().Len(em.Events(), 1)
 			attrs := em.Events()[0].Attributes
 			s.Require().Len(attrs, 2)
-			s.Require().Equal(attrs[0].Key, "amount")
-			s.Require().Equal(attrs[1].Key, "denom")
+			s.Require().Equal(string(attrs[0].Key), "amount")
+			s.Require().Equal(string(attrs[1].Key), "denom")
 		}
 	})
 }
@@ -158,15 +158,15 @@ func (s *eventsTestSuite) TestMarkEventsToIndex() {
 		{
 			Type: "message",
 			Attributes: []abci.EventAttribute{
-				{Key: "sender", Value: "foo"},
-				{Key: "recipient", Value: "bar"},
+				{Key: []byte("sender"), Value: []byte("foo")},
+				{Key: []byte("recipient"), Value: []byte("bar")},
 			},
 		},
 		{
 			Type: "staking",
 			Attributes: []abci.EventAttribute{
-				{Key: "deposit", Value: "5"},
-				{Key: "unbond", Value: "10"},
+				{Key: []byte("deposit"), Value: []byte("5")},
+				{Key: []byte("unbond"), Value: []byte("10")},
 			},
 		},
 	}
@@ -182,15 +182,15 @@ func (s *eventsTestSuite) TestMarkEventsToIndex() {
 				{
 					Type: "message",
 					Attributes: []abci.EventAttribute{
-						{Key: "sender", Value: "foo", Index: true},
-						{Key: "recipient", Value: "bar", Index: true},
+						{Key: []byte("sender"), Value: []byte("foo"), Index: true},
+						{Key: []byte("recipient"), Value: []byte("bar"), Index: true},
 					},
 				},
 				{
 					Type: "staking",
 					Attributes: []abci.EventAttribute{
-						{Key: "deposit", Value: "5", Index: true},
-						{Key: "unbond", Value: "10", Index: true},
+						{Key: []byte("deposit"), Value: []byte("5"), Index: true},
+						{Key: []byte("unbond"), Value: []byte("10"), Index: true},
 					},
 				},
 			},
@@ -202,15 +202,15 @@ func (s *eventsTestSuite) TestMarkEventsToIndex() {
 				{
 					Type: "message",
 					Attributes: []abci.EventAttribute{
-						{Key: "sender", Value: "foo", Index: true},
-						{Key: "recipient", Value: "bar"},
+						{Key: []byte("sender"), Value: []byte("foo"), Index: true},
+						{Key: []byte("recipient"), Value: []byte("bar")},
 					},
 				},
 				{
 					Type: "staking",
 					Attributes: []abci.EventAttribute{
-						{Key: "deposit", Value: "5", Index: true},
-						{Key: "unbond", Value: "10"},
+						{Key: []byte("deposit"), Value: []byte("5"), Index: true},
+						{Key: []byte("unbond"), Value: []byte("10")},
 					},
 				},
 			},
@@ -225,15 +225,15 @@ func (s *eventsTestSuite) TestMarkEventsToIndex() {
 				{
 					Type: "message",
 					Attributes: []abci.EventAttribute{
-						{Key: "sender", Value: "foo", Index: true},
-						{Key: "recipient", Value: "bar", Index: true},
+						{Key: []byte("sender"), Value: []byte("foo"), Index: true},
+						{Key: []byte("recipient"), Value: []byte("bar"), Index: true},
 					},
 				},
 				{
 					Type: "staking",
 					Attributes: []abci.EventAttribute{
-						{Key: "deposit", Value: "5", Index: true},
-						{Key: "unbond", Value: "10", Index: true},
+						{Key: []byte("deposit"), Value: []byte("5"), Index: true},
+						{Key: []byte("unbond"), Value: []byte("10"), Index: true},
 					},
 				},
 			},

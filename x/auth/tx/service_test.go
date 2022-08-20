@@ -610,6 +610,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	s.Require().NoError(err)
 
 	height, err := s.network.LatestHeight()
+	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(height + 1)
 	s.Require().NoError(err)
 
@@ -628,8 +629,10 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
+	s.Require().NoError(err)
 
 	height, err = s.network.LatestHeight()
+	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(height + 1)
 	s.Require().NoError(err)
 
@@ -674,7 +677,9 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 
 	// convert from protoJSON to protoBinary for sim
 	sdkTx, err := val1.ClientCtx.TxConfig.TxJSONDecoder()(multiSigWith2Signatures.Bytes())
+	s.Require().NoError(err)
 	txBytes, err := val1.ClientCtx.TxConfig.TxEncoder()(sdkTx)
+	s.Require().NoError(err)
 
 	// simulate tx
 	sim := &tx.SimulateRequest{TxBytes: txBytes}

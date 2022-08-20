@@ -1,7 +1,6 @@
 package sims
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -37,8 +36,8 @@ const (
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // SimApp testing.
-var DefaultConsensusParams = &tmproto.ConsensusParams{
-	Block: &tmproto.BlockParams{
+var DefaultConsensusParams = &abci.ConsensusParams{
+	Block: &abci.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
@@ -57,7 +56,7 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 // CreateRandomValidatorSet creates a validator set with one random validator
 func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey(context.TODO())
+	pubKey, err := privVal.GetPubKey()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pub key: %w", err)
 	}

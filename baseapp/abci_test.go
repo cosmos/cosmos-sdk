@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
@@ -111,8 +110,8 @@ func TestGetBlockRentionHeight(t *testing.T) {
 
 		tc.bapp.SetParamStore(mock.NewParamStore(memdb.NewDB()))
 		tc.bapp.InitChain(abci.RequestInitChain{
-			ConsensusParams: &tmprototypes.ConsensusParams{
-				Evidence: &tmprototypes.EvidenceParams{
+			ConsensusParams: &abci.ConsensusParams{
+				Evidence: &tmproto.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
 				},
 			},

@@ -146,7 +146,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	}
 
 	var logWriter io.Writer
-	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == tmlog.LogFormatPlain {
+	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == tmcfg.LogFormatPlain {
 		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
 	} else {
 		logWriter = os.Stderr
@@ -211,9 +211,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
 		conf.Consensus.TimeoutCommit = 5 * time.Second
-		if err := tmcfg.WriteConfigFile(rootDir, conf); err != nil {
-			return nil, fmt.Errorf("error writing config file: %w", err)
-		}
+		tmcfg.WriteConfigFile(tmCfgFile, conf)
 
 	case err != nil:
 		return nil, err
@@ -282,8 +280,6 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		VersionCmd(),
 		tmcmd.ResetAllCmd,
 		tmcmd.ResetStateCmd,
-		tmcmd.InspectCmd,
-		makeKeyMigrateCmd(),
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)

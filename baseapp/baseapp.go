@@ -870,9 +870,8 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 }
 
 // set up a new baseapp from given params
-func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, storeKeyNames []string, rootHashes []string, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
+func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, storeKeyNames []string, storeKeyToSubstoreHash map[string][]byte, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
 	storeKeys := make([]types.StoreKey, 0, len(storeKeyNames))
-
 	for _, storeKeyName := range storeKeyNames {
 		storeKey := sdk.NewKVStoreKey(storeKeyName)
 		storeKeys = append(storeKeys, storeKey)
@@ -883,8 +882,6 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 			options = append(options, SetSubstoreKVPair(storeKey, key, val))
 		}
 	}
-
-	storeKeyToSubstoreHash := make(map[string][]byte)
 	options = append(options, SetSubstoresWithRoots(storeKeyToSubstoreHash, storeKeys...))
 
 	// This initial height is used in `BeginBlock` in `validateHeight`

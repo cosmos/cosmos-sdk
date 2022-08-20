@@ -354,7 +354,7 @@ func NewStore(db dbm.Connection, opts StoreParams) (ret *Store, err error) {
 			return
 		}
 		ret.schema[skey] = typ
-		ret.getSubstoreAsDeepSMT(skey, opts.storeKeyToSubstoreHash[skey.Name()])
+		ret.createSubstoreAsDeepSMT(skey.Name(), opts.storeKeyToSubstoreHash[skey.Name()])
 	}
 	return
 }

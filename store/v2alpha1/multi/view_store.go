@@ -79,7 +79,7 @@ func (s *viewStore) GetSubstoreSMT(key string) *smt.Store {
 	return sub.stateCommitmentStore
 }
 
-func (s *viewStore) GetSubStoreProof(key string) (*tmcrypto.ProofOp, []byte, error) {
+func (s *viewStore) GetSubstoreProof(key string) (*tmcrypto.ProofOp, []byte, error) {
 	storeHashes, err := s.getMerkleRoots()
 	if err != nil {
 		return nil, nil, err

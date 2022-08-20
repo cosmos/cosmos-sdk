@@ -1104,6 +1104,19 @@ func (s *Store) SetPruning(po pruningtypes.PruningOptions) {
 	s.pruningManager.SetOptions(po)
 }
 
+func (s *Store) GetLastStore() (*viewStore, error) {
+	versions, err := s.stateDB.Versions()
+	if err != nil {
+		return nil, err
+	}
+	lastVersion := int64(versions.Last())
+	lastStore, err := s.GetVersion(lastVersion)
+	if err != nil {
+		return nil, err
+	}
+	return lastStore.(*viewStore), nil
+}
+
 func (s *Store) GetSubstoreSMT(key string) *smt.Store {
 	sub, err := s.getSubstore(key)
 	if err != nil {

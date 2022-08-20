@@ -42,7 +42,18 @@ func SetTracerFor(skey string, w io.Writer) StoreOption {
 
 // SetSubstoreKVPair sets a key, value pair for the given substore inside a multistore
 // Only works for v2alpha1/multi
-func SetSubstoreKVPair(skey storetypes.StoreKey, root []byte, proof smt.SparseMerkleProof, key, val []byte) AppOptionOrdered {
+func SetSubstoreKVPair(skey storetypes.StoreKey, key, val []byte) AppOptionOrdered {
+	return AppOptionOrdered{
+		func(bapp *BaseApp) {
+			bapp.cms.(*multi.Store).SetSubstoreKVPair(skey, key, val)
+		},
+		OptionOrderAfterStore,
+	}
+}
+
+// SetDeepSMTBranchKVPair adds a branch with a key, value pair for the given substore's deep SMT inside a multistore
+// Only works for v2alpha1/multi
+func SetDeepSMTBranchKVPair(skey storetypes.StoreKey, root []byte, proof smt.SparseMerkleProof, key, val []byte) AppOptionOrdered {
 	return AppOptionOrdered{
 		func(bapp *BaseApp) {
 			bapp.cms.(*multi.Store).SetDeepSMTBranchKVPair(skey.Name(), root, proof, key, val)

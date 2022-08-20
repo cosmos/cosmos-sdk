@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
+	smtlib "github.com/lazyledger/smt"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
@@ -18,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 	stypes "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
-	"github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -787,13 +787,13 @@ func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey, r
 
 	// Initialize params from previousCMS
 	storeToLoadFrom := make(map[string]types.KVStore)
-	storeKeyToSMT := make(map[string]*smt.Store)
+	storeKeyToSMT := make(map[string]*smtlib.SparseMerkleTree)
 	storeKeyNames := make([]string, 0, len(storeKeys))
 	for _, storeKey := range storeKeys {
 		storeKeyName := storeKey.Name()
 		storeKeyNames = append(storeKeyNames, storeKeyName)
 		storeToLoadFrom[storeKeyName] = previousCMS.GetKVStore(storeKey)
-		storeKeyToSMT[storeKeyName] = previousCMS.GetSubstoreSMT(storeKeyName)
+		storeKeyToSMT[storeKeyName] = previousCMS.GetSubstoreSMT(storeKeyName).GetTree()
 		storeKeyToSubstoreTraceBuf[storeKeyName] = &bytes.Buffer{}
 	}
 
@@ -872,7 +872,7 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 }
 
 // set up a new baseapp from given params
-func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, storeKeyNames []string, storeKeyToSMT map[string]*smt.Store, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
+func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, storeKeyNames []string, storeKeyToSMT map[string]*smtlib.SparseMerkleTree, blockHeight int64, storeToLoadFrom map[string]types.KVStore, options ...AppOption) (*BaseApp, error) {
 	storeKeys := make([]types.StoreKey, 0, len(storeKeyNames))
 	storeKeyToSubstoreHash := make(map[string][]byte)
 	for _, storeKeyName := range storeKeyNames {
@@ -880,16 +880,16 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 		storeKeys = append(storeKeys, storeKey)
 		subStore := storeToLoadFrom[storeKeyName]
 		it := subStore.Iterator(nil, nil)
-		subStoreSMT := storeKeyToSMT[storeKeyName]
+		substoreSMT := storeKeyToSMT[storeKeyName]
 		for ; it.Valid(); it.Next() {
 			key, val := it.Key(), it.Value()
-			proof, err := subStoreSMT.GetSMTProof(key)
+			proof, err := substoreSMT.Prove(key)
 			if err != nil {
 				return nil, err
 			}
-			options = append(options, SetDeepSMTBranchKVPair(storeKey, subStoreSMT.Root(), proof, key, val))
+			options = append(options, SetDeepSMTBranchKVPair(storeKey, substoreSMT.Root(), proof, key, val))
 		}
-		storeKeyToSubstoreHash[storeKeyName] = subStoreSMT.Root()
+		storeKeyToSubstoreHash[storeKeyName] = substoreSMT.Root()
 	}
 
 	options = append(options, SetSubstoresWithRoots(storeKeyToSubstoreHash, storeKeys...))
@@ -908,5 +908,5 @@ func SetupBaseAppFromParams(appName string, logger log.Logger, db dbm.Connection
 // set up a new baseapp from a fraudproof
 func SetupBaseAppFromFraudProof(appName string, logger log.Logger, db dbm.Connection, txDecoder sdk.TxDecoder, fraudProof FraudProof, options ...AppOption) (*BaseApp, error) {
 	// TODO: Get fraudProofs to work with storeKeyToSMT
-	return SetupBaseAppFromParams(appName, logger, db, txDecoder, fraudProof.getModules(), nil, fraudProof.blockHeight, fraudProof.extractStore(), options...)
+	return SetupBaseAppFromParams(appName, logger, db, txDecoder, fraudProof.getModules(), fraudProof.getSubstoreSMTs(), fraudProof.blockHeight, fraudProof.extractStore(), options...)
 }

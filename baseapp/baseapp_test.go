@@ -2426,7 +2426,7 @@ func TestFraudProofGenerationMode(t *testing.T) {
 	}
 
 	txs1 := executeBlockWithArbitraryTxs(t, appB2, numTransactions, 1)
-  
+
 	for _, storeKey := range cmsB2.GetStoreKeys() {
 		subStoreBuf := storeKeyToSubstoreTraceBuf[storeKey.Name()]
 		tracedKeys := appB2.cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreBuf).Values()
@@ -2559,7 +2559,5 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	appB2, err := SetupBaseAppFromFraudProof(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), fraudProof, AppOptionFunc(routerOpt))
 	require.Nil(t, err)
 	storeHashB2 := appB2.cms.(*multi.Store).GetSubstoreSMT(capKey2.Name()).Root()
-	_, _ = storeHashB1, storeHashB2
-	// TODO: need to initialize the new app with deep subtree instead of populating the empty SMT on startup
-	// require.Equal(t, storeHashB1, storeHashB2)
+	require.Equal(t, storeHashB1, storeHashB2)
 }

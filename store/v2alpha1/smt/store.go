@@ -108,6 +108,8 @@ func (s *Store) GetSMTProof(key []byte) (smt.SparseMerkleProof, error) {
 	return s.tree.Prove(key)
 }
 
+func (s *Store) GetTree() *smt.SparseMerkleTree { return s.tree }
+
 func (s *Store) Root() []byte { return s.tree.Root() }
 
 // BasicKVStore interface below:

@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/mem"
@@ -45,13 +46,18 @@ func (fraudProof *FraudProof) getModules() []string {
 	return keys
 }
 
-func (fraudProof *FraudProof) getRootHashes() map[string][]byte {
-	storeKeyToSubstoreHash := make(map[string][]byte)
-	for k := range fraudProof.stateWitness {
-		rootHash := fraudProof.stateWitness[k].rootHash
-		storeKeyToSubstoreHash[k] = rootHash
+func (fraudProof *FraudProof) getSubstoreSMTs() map[string]*smtlib.SparseMerkleTree {
+	storeKeyToSMT := make(map[string]*smtlib.SparseMerkleTree)
+	for storeKey, stateWitness := range fraudProof.stateWitness {
+		rootHash := stateWitness.rootHash
+		substoreDeepSMT := smtlib.NewDeepSparseMerkleSubTree(smtlib.NewSimpleMap(), smtlib.NewSimpleMap(), sha256.New(), rootHash)
+		for _, witnessData := range stateWitness.WitnessData {
+			proof, key, val := witnessData.proof, witnessData.Key, witnessData.Value
+			substoreDeepSMT.AddBranch(proof, key, val)
+		}
+		storeKeyToSMT[storeKey] = substoreDeepSMT.SparseMerkleTree
 	}
-	return storeKeyToSubstoreHash
+	return storeKeyToSMT
 }
 
 func (fraudProof *FraudProof) extractStore() map[string]types.KVStore {

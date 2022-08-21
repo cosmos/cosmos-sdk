@@ -27,6 +27,8 @@ var (
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec
 const (
 	OpWeightMsgGrant = "op_weight_msg_grant"
 	OpWeightRevoke   = "op_weight_msg_revoke"
@@ -262,9 +264,8 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		if err != nil {
 			if sdkerrors.ErrInsufficientFunds.Is(err) {
 				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
-			} else {
-				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 			}
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}
 
 		msgExec := authz.NewMsgExec(granteeAddr, msg)

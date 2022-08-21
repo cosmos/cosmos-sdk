@@ -19,6 +19,8 @@ import (
 var initialProposalID = uint64(100000000000000)
 
 // Simulation operation weights constants
+//
+//nolint:gosec
 const (
 	OpWeightMsgDeposit      = "op_weight_msg_deposit"
 	OpWeightMsgVote         = "op_weight_msg_vote"

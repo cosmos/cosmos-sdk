@@ -181,7 +181,7 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 			"or greater than the current height %d", req.Height, currentHeight)
 	}
 
-	blockId, block, err := tmservice.GetProtoBlock(ctx, s.clientCtx, &req.Height)
+	blockId, block, err := tmservice.GetProtoBlock(ctx, s.clientCtx, &req.Height) //nolint:revive
 	if err != nil {
 		return nil, err
 	}

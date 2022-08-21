@@ -16,6 +16,8 @@ import (
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec
 const (
 	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"
 	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"

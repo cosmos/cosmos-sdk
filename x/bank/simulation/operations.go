@@ -17,6 +17,8 @@ import (
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec
 const (
 	OpWeightMsgSend      = "op_weight_msg_send"
 	OpWeightMsgMultiSend = "op_weight_msg_multisend"

@@ -17,6 +17,8 @@ import (
 )
 
 // Simulation operation weights constants
+//
+//nolint:staticcheck
 const (
 	OpWeightMsgUnjail = "op_weight_msg_unjail"
 )

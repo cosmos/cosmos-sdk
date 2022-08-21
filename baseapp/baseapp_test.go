@@ -104,11 +104,11 @@ func registerTestCodec(cdc *codec.LegacyAmino) {
 	sdk.RegisterLegacyAminoCodec(cdc)
 
 	// register test types
-	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
-	cdc.RegisterConcrete(&msgCounter{}, "cosmos-sdk/baseapp/msgCounter", nil)
-	cdc.RegisterConcrete(&msgCounter2{}, "cosmos-sdk/baseapp/msgCounter2", nil)
-	cdc.RegisterConcrete(&msgKeyValue{}, "cosmos-sdk/baseapp/msgKeyValue", nil)
-	cdc.RegisterConcrete(&msgNoRoute{}, "cosmos-sdk/baseapp/msgNoRoute", nil)
+	// cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
+	// cdc.RegisterConcrete(&msgCounter{}, "cosmos-sdk/baseapp/msgCounter", nil)
+	// cdc.RegisterConcrete(&msgCounter2{}, "cosmos-sdk/baseapp/msgCounter2", nil)
+	// cdc.RegisterConcrete(&msgKeyValue{}, "cosmos-sdk/baseapp/msgKeyValue", nil)
+	// cdc.RegisterConcrete(&msgNoRoute{}, "cosmos-sdk/baseapp/msgNoRoute", nil)
 }
 
 // aminoTxEncoder creates a amino TxEncoder for testing purposes.
@@ -138,11 +138,11 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*BaseApp, err
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			kv := msg.(*msgKeyValue)
-			bapp.cms.GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
-			return &sdk.Result{}, nil
-		}))
+		// bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		// 	kv := msg.(*msgKeyValue)
+		// 	bapp.cms.GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
+		// 	return &sdk.Result{}, nil
+		// }))
 	}
 
 	snapshotTimeout := 1 * time.Minute
@@ -538,9 +538,6 @@ func TestBaseAppOptionSeal(t *testing.T) {
 	require.Panics(t, func() {
 		app.SetFauxMerkleMode()
 	})
-	require.Panics(t, func() {
-		app.SetRouter(NewRouter())
-	})
 }
 
 func TestSetMinGasPrices(t *testing.T) {
@@ -918,14 +915,14 @@ func TestCheckTx(t *testing.T) {
 	counterKey := []byte("counter-key")
 
 	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey)) }
-	routerOpt := func(bapp *BaseApp) {
-		// TODO: can remove this once CheckTx doesnt process msgs.
-		bapp.Router().AddRoute(sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			return &sdk.Result{}, nil
-		}))
-	}
+	// routerOpt := func(bapp *BaseApp) {
+	// TODO: can remove this once CheckTx doesnt process msgs.
+	// bapp.Router().AddRoute(sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+	// 	return &sdk.Result{}, nil
+	// }))
+	// }
 
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	app := setupBaseApp(t, anteOpt)
 
 	nTxs := int64(5)
 	app.InitChain(abci.RequestInitChain{})
@@ -933,6 +930,11 @@ func TestCheckTx(t *testing.T) {
 	// Create same codec used in txDecoder
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
+
+	app.SetMsgServiceRouter(NewMsgServiceRouter())
+	app.SetInterfaceRegistry(testdata.NewTestInterfaceRegistry())
+	testdata.RegisterInterfaces(app.MsgServiceRouter().interfaceRegistry)
+	testdata.RegisterMsgServer(app.MsgServiceRouter(), testdata.MsgServerImpl{})
 
 	for i := int64(0); i < nTxs; i++ {
 		tx := newTxCounter(i, 0) // no messages
@@ -973,13 +975,13 @@ func TestDeliverTx(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 
 	// test increments in the handler
-	deliverKey := []byte("deliver-key")
-	routerOpt := func(bapp *BaseApp) {
-		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
-		bapp.Router().AddRoute(r)
-	}
+	// deliverKey := []byte("deliver-key")
+	// routerOpt := func(bapp *BaseApp) {
+	// 	r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+	// 	bapp.Router().AddRoute(r)
+	// }
 
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	app := setupBaseApp(t, anteOpt)
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
@@ -1029,10 +1031,10 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	deliverKey := []byte("deliver-key")
 	deliverKey2 := []byte("deliver-key2")
 	routerOpt := func(bapp *BaseApp) {
-		r1 := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
-		r2 := sdk.NewRoute(routeMsgCounter2, handlerMsgCounter(t, capKey1, deliverKey2))
-		bapp.Router().AddRoute(r1)
-		bapp.Router().AddRoute(r2)
+		// r1 := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+		// r2 := sdk.NewRoute(routeMsgCounter2, handlerMsgCounter(t, capKey1, deliverKey2))
+		// bapp.Router().AddRoute(r1)
+		// bapp.Router().AddRoute(r2)
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
@@ -1107,11 +1109,11 @@ func TestSimulateTx(t *testing.T) {
 	}
 
 	routerOpt := func(bapp *BaseApp) {
-		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			ctx.GasMeter().ConsumeGas(gasConsumed, "test")
-			return &sdk.Result{}, nil
-		})
-		bapp.Router().AddRoute(r)
+		// r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		// 	ctx.GasMeter().ConsumeGas(gasConsumed, "test")
+		// 	return &sdk.Result{}, nil
+		// })
+		// bapp.Router().AddRoute(r)
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
@@ -1172,10 +1174,10 @@ func TestRunInvalidTransaction(t *testing.T) {
 		})
 	}
 	routerOpt := func(bapp *BaseApp) {
-		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			return &sdk.Result{}, nil
-		})
-		bapp.Router().AddRoute(r)
+		// r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		// 	return &sdk.Result{}, nil
+		// })
+		// bapp.Router().AddRoute(r)
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
@@ -1297,12 +1299,12 @@ func TestTxGasLimits(t *testing.T) {
 	}
 
 	routerOpt := func(bapp *BaseApp) {
-		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(*msgCounter).Counter
-			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
-			return &sdk.Result{}, nil
-		})
-		bapp.Router().AddRoute(r)
+		// r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		// 	count := msg.(*msgCounter).Counter
+		// 	ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
+		// 	return &sdk.Result{}, nil
+		// })
+		// bapp.Router().AddRoute(r)
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
@@ -1381,12 +1383,12 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	}
 
 	routerOpt := func(bapp *BaseApp) {
-		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(*msgCounter).Counter
-			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
-			return &sdk.Result{}, nil
-		})
-		bapp.Router().AddRoute(r)
+		// r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		// 	count := msg.(*msgCounter).Counter
+		// 	ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
+		// 	return &sdk.Result{}, nil
+		// })
+		// bapp.Router().AddRoute(r)
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
@@ -1466,10 +1468,10 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 		})
 	}
 	routerOpt := func(bapp *BaseApp) {
-		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			return &sdk.Result{}, nil
-		})
-		bapp.Router().AddRoute(r)
+		// r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		// 	return &sdk.Result{}, nil
+		// })
+		// bapp.Router().AddRoute(r)
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
@@ -1506,8 +1508,8 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	deliverKey := []byte("deliver-key")
 	routerOpt := func(bapp *BaseApp) {
-		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
-		bapp.Router().AddRoute(r)
+		// r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+		// bapp.Router().AddRoute(r)
 	}
 
 	cdc := codec.NewLegacyAmino()
@@ -1603,12 +1605,12 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	}
 
 	routerOpt := func(bapp *BaseApp) {
-		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(*msgCounter).Counter
-			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
-			return &sdk.Result{}, nil
-		})
-		bapp.Router().AddRoute(r)
+		// r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		// 	count := msg.(*msgCounter).Counter
+		// 	ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
+		// 	return &sdk.Result{}, nil
+		// })
+		// bapp.Router().AddRoute(r)
 	}
 
 	cdc := codec.NewLegacyAmino()
@@ -1657,12 +1659,12 @@ func TestQuery(t *testing.T) {
 	}
 
 	routerOpt := func(bapp *BaseApp) {
-		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			store := ctx.KVStore(capKey1)
-			store.Set(key, value)
-			return &sdk.Result{}, nil
-		})
-		bapp.Router().AddRoute(r)
+		// r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		// 	store := ctx.KVStore(capKey1)
+		// 	store.Set(key, value)
+		// 	return &sdk.Result{}, nil
+		// })
+		// bapp.Router().AddRoute(r)
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
@@ -2122,10 +2124,10 @@ type testCustomRouter struct {
 	routes sync.Map
 }
 
-func (rtr *testCustomRouter) AddRoute(route sdk.Route) sdk.Router {
-	rtr.routes.Store(route.Path(), route.Handler())
-	return rtr
-}
+// func (rtr *testCustomRouter) AddRoute(route sdk.Route) sdk.Router {
+// 	rtr.routes.Store(route.Path(), route.Handler())
+// 	return rtr
+// }
 
 func (rtr *testCustomRouter) Route(ctx sdk.Context, path string) sdk.Handler {
 	if v, ok := rtr.routes.Load(path); ok {
@@ -2142,11 +2144,11 @@ func TestWithRouter(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 
 	// test increments in the handler
-	deliverKey := []byte("deliver-key")
+	// deliverKey := []byte("deliver-key")
 	routerOpt := func(bapp *BaseApp) {
-		bapp.SetRouter(&testCustomRouter{routes: sync.Map{}})
-		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
-		bapp.Router().AddRoute(r)
+		// bapp.SetRouter(&testCustomRouter{routes: sync.Map{}})
+		// r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+		// bapp.Router().AddRoute(r)
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)

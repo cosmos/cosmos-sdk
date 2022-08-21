@@ -28,10 +28,10 @@ var (
 )
 
 // Router provides handlers for each transaction type.
-type Router interface {
-	AddRoute(r Route) Router
-	Route(ctx Context, path string) Handler
-}
+// type Router interface {
+// 	AddRoute(r Route) Router
+// 	Route(ctx Context, path string) Handler
+// }
 
 type Route struct {
 	path    string

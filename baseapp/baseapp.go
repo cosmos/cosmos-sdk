@@ -18,7 +18,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 const (
@@ -49,7 +48,6 @@ type BaseApp struct { //nolint: maligned
 	db                dbm.DB               // common DB backend
 	cms               sdk.CommitMultiStore // Main (uncached) state
 	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-	router            sdk.Router           // handle any kind of legacy message
 	queryRouter       sdk.QueryRouter      // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
@@ -149,7 +147,6 @@ func NewBaseApp(
 		db:               db,
 		cms:              store.NewCommitMultiStore(db),
 		storeLoader:      DefaultStoreLoader,
-		router:           NewRouter(),
 		queryRouter:      NewQueryRouter(),
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
@@ -368,17 +365,6 @@ func (app *BaseApp) setIndexEvents(ie []string) {
 	for _, e := range ie {
 		app.indexEvents[e] = struct{}{}
 	}
-}
-
-// Router returns the legacy router of the BaseApp.
-func (app *BaseApp) Router() sdk.Router {
-	if app.sealed {
-		// We cannot return a Router when the app is sealed because we can't have
-		// any routes modified which would cause unexpected routing behavior.
-		panic("Router() on sealed BaseApp")
-	}
-
-	return app.router
 }
 
 // QueryRouter returns the QueryRouter of a BaseApp.
@@ -752,20 +738,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			// ADR 031 request type routing
 			msgResult, err = handler(ctx, msg)
 			eventMsgName = sdk.MsgTypeURL(msg)
-		} else if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
-			// legacy sdk.Msg routing
-			// Assuming that the app developer has migrated all their Msgs to
-			// proto messages and has registered all `Msg services`, then this
-			// path should never be called, because all those Msgs should be
-			// registered within the `msgServiceRouter` already.
-			msgRoute := legacyMsg.Route()
-			eventMsgName = legacyMsg.Type()
-			handler := app.router.Route(ctx, msgRoute)
-			if handler == nil {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
-			}
-
-			msgResult, err = handler(ctx, msg)
 		} else {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 		}

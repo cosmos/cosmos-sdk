@@ -259,7 +259,7 @@ func TestWriteSimulationResponse(t *testing.T) {
 	res := w.Result() //nolint:bodyclose
 	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, http.StatusOK, res.StatusCode)
-	bs, err := ioutil.ReadAll(res.Body)
+	bs, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, `{"gas_estimate":"10"}`, string(bs))
@@ -322,7 +322,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	res := w.Result() //nolint:bodyclose
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
-	got, err := ioutil.ReadAll(res.Body)
+	got, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 
 	t.Cleanup(func() { res.Body.Close() })
@@ -340,7 +340,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	res = w.Result() //nolint:bodyclose
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
-	got, err = ioutil.ReadAll(res.Body)
+	got, err = io.ReadAll(res.Body)
 	require.NoError(t, err)
 
 	t.Cleanup(func() { res.Body.Close() })
@@ -358,7 +358,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	res = w.Result() //nolint:bodyclose
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
-	got, err = ioutil.ReadAll(res.Body)
+	got, err = io.ReadAll(res.Body)
 	require.NoError(t, err)
 
 	t.Cleanup(func() { res.Body.Close() })
@@ -373,7 +373,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	res = w.Result() //nolint:bodyclose
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
 
-	got, err = ioutil.ReadAll(res.Body)
+	got, err = io.ReadAll(res.Body)
 	require.NoError(t, err)
 
 	t.Cleanup(func() { res.Body.Close() })
@@ -400,7 +400,7 @@ func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, e
 	resp := w.Result() //nolint:bodyclose
 	t.Cleanup(func() { resp.Body.Close() })
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	require.Nil(t, err)
 	require.Equal(t, expectedBody, body)
 
@@ -415,7 +415,7 @@ func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, e
 	resp = w.Result() //nolint:bodyclose
 
 	t.Cleanup(func() { resp.Body.Close() })
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 
 	require.Nil(t, err)
 	require.Equal(t, string(expectedBody), string(body))

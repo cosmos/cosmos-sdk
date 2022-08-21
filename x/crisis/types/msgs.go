@@ -8,6 +8,7 @@ import (
 var _ sdk.Msg = &MsgVerifyInvariant{}
 
 // NewMsgVerifyInvariant creates a new MsgVerifyInvariant object
+//
 //nolint:interfacer
 func NewMsgVerifyInvariant(sender sdk.AccAddress, invModeName, invRoute string) *MsgVerifyInvariant {
 	return &MsgVerifyInvariant{

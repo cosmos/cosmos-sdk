@@ -200,8 +200,9 @@ func (pc *ProtoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
 // NOTE: to unmarshal a concrete type, you should use Unmarshal instead
 //
 // Example:
-//    var x MyInterface
-//    err := cdc.UnmarshalInterface(bz, &x)
+//
+//	var x MyInterface
+//	err := cdc.UnmarshalInterface(bz, &x)
 func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 	any := &types.Any{}
 	err := pc.Unmarshal(bz, any)
@@ -229,8 +230,9 @@ func (pc *ProtoCodec) MarshalInterfaceJSON(x proto.Message) ([]byte, error) {
 // NOTE: to unmarshal a concrete type, you should use UnmarshalJSON instead
 //
 // Example:
-//    var x MyInterface  // must implement proto.Message
-//    err := cdc.UnmarshalInterfaceJSON(&x, bz)
+//
+//	var x MyInterface  // must implement proto.Message
+//	err := cdc.UnmarshalInterfaceJSON(&x, bz)
 func (pc *ProtoCodec) UnmarshalInterfaceJSON(bz []byte, iface interface{}) error {
 	any := &types.Any{}
 	err := pc.UnmarshalJSON(bz, any)

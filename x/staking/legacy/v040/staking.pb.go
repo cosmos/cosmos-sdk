@@ -8,7 +8,6 @@ import (
 	compress_gzip "compress/gzip"
 	fmt "fmt"
 	io "io"
-	io_ioutil "io/ioutil"
 	math "math"
 	math_bits "math/bits"
 	reflect "reflect"
@@ -1929,7 +1928,7 @@ func StakingDescription() (desc *github_com_gogo_protobuf_protoc_gen_gogo_descri
 	if err != nil {
 		panic(err)
 	}
-	ungzipped, err := io_ioutil.ReadAll(gzipr)
+	ungzipped, err := io.ReadAll(gzipr)
 	if err != nil {
 		panic(err)
 	}

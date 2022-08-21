@@ -59,5 +59,5 @@ func GenerateSaveCoinKey(
 		return sdk.AccAddress{}, "", err
 	}
 
-	return sdk.AccAddress(k.GetAddress()), mnemonic, nil
+	return k.GetAddress(), mnemonic, nil
 }

@@ -53,7 +53,7 @@ func makeChunks(chunks [][]byte) <-chan io.ReadCloser {
 func readChunks(chunks <-chan io.ReadCloser) [][]byte {
 	bodies := [][]byte{}
 	for chunk := range chunks {
-		body, err := ioutil.ReadAll(chunk)
+		body, err := io.ReadAll(chunk)
 		if err != nil {
 			panic(err)
 		}
@@ -147,10 +147,10 @@ func (m *mockSnapshotter) SupportedFormats() []uint32 {
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.
 // The snapshot will complete when the returned closer is called.
 func setupBusyManager(t *testing.T) *snapshots.Manager {
-	// ioutil.TempDir() is used instead of testing.T.TempDir()
+	// os.MkdirTemp() is used instead of testing.T.TempDir()
 	// see https://github.com/cosmos/cosmos-sdk/pull/8475 for
 	// this change's rationale.
-	tempdir, err := ioutil.TempDir("", "")
+	tempdir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
 

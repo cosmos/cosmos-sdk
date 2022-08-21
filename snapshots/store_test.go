@@ -20,10 +20,10 @@ import (
 )
 
 func setupStore(t *testing.T) *snapshots.Store {
-	// ioutil.TempDir() is used instead of testing.T.TempDir()
+	// os.MkdirTemp() is used instead of testing.T.TempDir()
 	// see https://github.com/cosmos/cosmos-sdk/pull/8475 for
 	// this change's rationale.
-	tempdir, err := ioutil.TempDir("", "")
+	tempdir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
 
@@ -201,7 +201,7 @@ func TestStore_Load(t *testing.T) {
 	for i := uint32(0); i < snapshot.Chunks; i++ {
 		reader, ok := <-chunks
 		require.True(t, ok)
-		chunk, err := ioutil.ReadAll(reader)
+		chunk, err := io.ReadAll(reader)
 		require.NoError(t, err)
 		err = reader.Close()
 		require.NoError(t, err)
@@ -226,7 +226,7 @@ func TestStore_LoadChunk(t *testing.T) {
 	chunk, err = store.LoadChunk(2, 1, 0)
 	require.NoError(t, err)
 	require.NotNil(t, chunk)
-	body, err := ioutil.ReadAll(chunk)
+	body, err := io.ReadAll(chunk)
 	require.NoError(t, err)
 	assert.Equal(t, []byte{2, 1, 0}, body)
 	err = chunk.Close()

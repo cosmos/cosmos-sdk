@@ -10,6 +10,7 @@ import (
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
+	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
@@ -138,6 +139,15 @@ func StakingModule() ModuleOption {
 		config.moduleConfigs["staking"] = &appv1alpha1.ModuleConfig{
 			Name:   "staking",
 			Config: appconfig.WrapAny(&stakingmodulev1.Module{}),
+		}
+	}
+}
+
+func SlashingModule() ModuleOption {
+	return func(config *appConfig) {
+		config.moduleConfigs["slashing"] = &appv1alpha1.ModuleConfig{
+			Name:   "slashing",
+			Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
 		}
 	}
 }

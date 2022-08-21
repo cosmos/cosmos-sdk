@@ -27,16 +27,15 @@ type DecCoin struct {
 }
 ```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
 
 ## Validator Distribution
 
 Validator distribution information for the relevant validator is updated each time:
 
 1. delegation amount to a validator is updated,
-2. a validator successfully proposes a block and receives a reward,
-3. any delegator withdraws from a validator, or
-4. the validator withdraws its commission.
+2. any delegator withdraws from a validator, or
+3. the validator withdraws its commission.
 
 * ValidatorDistInfo: `0x02 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(validatorDistribution)`
 
@@ -71,4 +70,4 @@ it can be updated with governance or the address with authority.
 
 * Params: `0x09 | ProtocolBuffer(Params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30

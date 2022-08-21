@@ -1468,7 +1468,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	require.NoError(err)
 
 	// Create a HTTP rpc client.
-	rpcClient, err := http.New(val.RPCAddress)
+	rpcClient, err := http.New(val.RPCAddress, "/websocket")
 	require.NoError(err)
 
 	// Loop until we find a block result with the correct validator updates.

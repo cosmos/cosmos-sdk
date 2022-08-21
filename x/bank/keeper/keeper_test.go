@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -643,15 +643,15 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[1].String()},
+		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: []byte(accAddrs[1].String())},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
+		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: []byte(accAddrs[0].String())},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
 	)
 
 	event2 := sdk.Event{
@@ -660,7 +660,7 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
+		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: []byte(accAddrs[0].String())},
 	)
 
 	// events are shifted due to the funding account events
@@ -681,8 +681,9 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
 	inputs := []banktypes.Input{
-		{Address: accAddrs[0].String(),
-			Coins: coins,
+		{
+			Address: accAddrs[0].String(),
+			Coins:   coins,
 		},
 	}
 	outputs := []banktypes.Output{
@@ -704,7 +705,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	require.Equal(12, len(events)) // 9 events because account funding causes extra minting + coin_spent + coin_recv events
+	require.Equal(12, len(events)) // 12 events because account funding causes extra minting + coin_spent + coin_recv events
 
 	event1 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -712,7 +713,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
+		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: []byte(accAddrs[0].String())},
 	)
 	require.Equal(abci.Event(event1), events[7])
 
@@ -737,22 +738,22 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[2].String()},
+		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: []byte(accAddrs[2].String())},
 	)
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()})
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
 	event3 := sdk.Event{
 		Type:       banktypes.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
 	}
 	event3.Attributes = append(
 		event3.Attributes,
-		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[3].String()},
+		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: []byte(accAddrs[3].String())},
 	)
 	event3.Attributes = append(
 		event3.Attributes,
-		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
 	)
 	// events are shifted due to the funding account events
 	require.Equal(abci.Event(event1), events[25])

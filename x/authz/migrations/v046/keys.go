@@ -14,7 +14,6 @@ import (
 //
 // - 0x01<grant_Bytes>: Grant
 // - 0x02<grant_expiration_Bytes>: GrantQueueItem
-//
 var (
 	GrantPrefix      = []byte{0x01}
 	GrantQueuePrefix = []byte{0x02}

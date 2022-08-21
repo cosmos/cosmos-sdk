@@ -74,6 +74,7 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 					BaseProposerReward:  sdk.NewDecWithPrec(2, 1),
 					BonusProposerReward: sdk.NewDecWithPrec(1, 1),
 					WithdrawAddrEnabled: true,
+					SecretFoundationTax: sdk.NewDecWithPrec(0, 1),
 				}
 
 				app.DistrKeeper.SetParams(ctx, params)

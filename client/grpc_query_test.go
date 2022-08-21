@@ -1,5 +1,3 @@
-// +build norace
-
 package client_test
 
 import (
@@ -9,12 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,12 +18,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-type testcase struct {
-	clientContextHeight int64
-	grpcHeight          int64
-	expectedHeight      int64
-}
-
 const (
 	// if clientContextHeight or grpcHeight is set to this flag,
 	// the test assumes that the respective height is not provided.
@@ -38,29 +28,18 @@ const (
 	// if this flag is set to expectedHeight, an error is assumed.
 	errorHeightFlag = int64(-2)
 )
+
+type testcase struct {
+	clientContextHeight int64
+	grpcHeight          int64
+	expectedHeight      int64
+}
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
 	network *network.Network
 }
-
-type testcase struct {
-	clientContextHeight int64
-	grpcHeight          int64
-	expectedHeight      int64
-}
-
-const (
-	// if clientContextHeight or grpcHeight is set to this flag,
-	// the test assumes that the respective height is not provided.
-	heightNotSetFlag = int64(-1)
-	// given the current block time, this should never be reached by the time
-	// a test is run.
-	invalidBeyondLatestHeight = 1_000_000_000
-	// if this flag is set to expectedHeight, an error is assumed.
-	errorHeightFlag = int64(-2)
-)
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
@@ -129,6 +108,7 @@ func (s *IntegrationTestSuite) TestGRPCQuery_BankService_VariousInputs() {
 		s.T().Run(name, func(t *testing.T) {
 			// Setup
 			clientCtx := val0.ClientCtx
+			clientCtx.GRPCConcurrency = true
 			clientCtx.Height = 0
 
 			if tc.clientContextHeight != heightNotSetFlag {

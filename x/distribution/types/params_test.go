@@ -17,17 +17,18 @@ func TestParams_ValidateBasic(t *testing.T) {
 		BaseProposerReward  sdk.Dec
 		BonusProposerReward sdk.Dec
 		WithdrawAddrEnabled bool
+		SecretFoundationTax sdk.Dec
 	}
 	tests := []struct {
 		name    string
 		fields  fields
 		wantErr bool
 	}{
-		{"success", fields{toDec("0.1"), toDec("0.5"), toDec("0.4"), false}, false},
-		{"negative community tax", fields{toDec("-0.1"), toDec("0.5"), toDec("0.4"), false}, true},
-		{"negative base proposer reward", fields{toDec("0.1"), toDec("-0.5"), toDec("0.4"), false}, true},
-		{"negative bonus proposer reward", fields{toDec("0.1"), toDec("0.5"), toDec("-0.4"), false}, true},
-		{"total sum greater than 1", fields{toDec("0.2"), toDec("0.5"), toDec("0.4"), false}, true},
+		{"success", fields{toDec("0.1"), toDec("0.5"), toDec("0.4"), false, toDec("0.1")}, false},
+		{"negative community tax", fields{toDec("-0.1"), toDec("0.5"), toDec("0.4"), false, toDec("0.1")}, true},
+		{"negative base proposer reward", fields{toDec("0.1"), toDec("-0.5"), toDec("0.4"), false, toDec("0.1")}, true},
+		{"negative bonus proposer reward", fields{toDec("0.1"), toDec("0.5"), toDec("-0.4"), false, toDec("0.1")}, true},
+		{"total sum greater than 1", fields{toDec("0.2"), toDec("0.5"), toDec("0.4"), false, toDec("0.1")}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -36,6 +37,7 @@ func TestParams_ValidateBasic(t *testing.T) {
 				BaseProposerReward:  tt.fields.BaseProposerReward,
 				BonusProposerReward: tt.fields.BonusProposerReward,
 				WithdrawAddrEnabled: tt.fields.WithdrawAddrEnabled,
+				SecretFoundationTax: tt.fields.SecretFoundationTax,
 			}
 			if err := p.ValidateBasic(); (err != nil) != tt.wantErr {
 				t.Errorf("ValidateBasic() error = %v, wantErr %v", err, tt.wantErr)

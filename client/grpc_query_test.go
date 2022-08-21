@@ -1,4 +1,3 @@
-//go:build norace
 // +build norace
 
 package client_test
@@ -10,10 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,6 +45,23 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
+type testcase struct {
+	clientContextHeight int64
+	grpcHeight          int64
+	expectedHeight      int64
+}
+
+const (
+	// if clientContextHeight or grpcHeight is set to this flag,
+	// the test assumes that the respective height is not provided.
+	heightNotSetFlag = int64(-1)
+	// given the current block time, this should never be reached by the time
+	// a test is run.
+	invalidBeyondLatestHeight = 1_000_000_000
+	// if this flag is set to expectedHeight, an error is assumed.
+	errorHeightFlag = int64(-2)
+)
+
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
@@ -59,44 +77,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-//func (s *IntegrationTestSuite) TestGRPCQuery() {
-//	val0 := s.network.Validators[0]
-//
-//	// gRPC query to test service should work
-//	testClient := testdata.NewQueryClient(val0.ClientCtx)
-//	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
-//	s.Require().NoError(err)
-//	s.Require().Equal("hello", testRes.Message)
-//
-//	// gRPC query to bank service should work
-//	denom := fmt.Sprintf("%stoken", val0.Moniker)
-//	bankClient := banktypes.NewQueryClient(val0.ClientCtx)
-//	var header metadata.MD
-//	bankRes, err := bankClient.Balance(
-//		context.Background(),
-//		&banktypes.QueryBalanceRequest{Address: val0.Address.String(), Denom: denom},
-//		grpc.Header(&header), // Also fetch grpc header
-//	)
-//	s.Require().NoError(err)
-//	s.Require().Equal(
-//		sdk.NewCoin(denom, s.network.Config.AccountTokens),
-//		*bankRes.GetBalance(),
-//	)
-//	blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
-//	s.Require().NotEmpty(blockHeight[0]) // Should contain the block height
-//
-//	// Request metadata should work
-//	val0.ClientCtx = val0.ClientCtx.WithHeight(1) // We set clientCtx to height 1
-//	bankClient = banktypes.NewQueryClient(val0.ClientCtx)
-//	bankRes, err = bankClient.Balance(
-//		context.Background(),
-//		&banktypes.QueryBalanceRequest{Address: val0.Address.String(), Denom: denom},
-//		grpc.Header(&header),
-//	)
-//	blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
-//	s.Require().Equal([]string{"1"}, blockHeight)
-//}
-
 func (s *IntegrationTestSuite) TestGRPCQuery_TestService() {
 	val0 := s.network.Validators[0]
 
@@ -105,26 +85,6 @@ func (s *IntegrationTestSuite) TestGRPCQuery_TestService() {
 	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	s.Require().NoError(err)
 	s.Require().Equal("hello", testRes.Message)
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
-}
-
-func (s *IntegrationTestSuite) TestGRPCConcurrency() {
-	val0 := s.network.Validators[0]
-	clientCtx := val0.ClientCtx
-	clientCtx.GRPCConcurrency = true
-	in := &testdata.EchoRequest{Message: "hello"}
-	out := &testdata.EchoResponse{}
-	err := clientCtx.Invoke(context.Background(), "/testdata.Query/Echo", in, out)
-	s.Require().NoError(err)
-	s.Require().Equal("hello", out.Message)
-
-	clientCtx.GRPCConcurrency = false
-	err = clientCtx.Invoke(context.Background(), "/testdata.Query/Echo", in, out)
-	s.Require().NoError(err)
-	s.Require().Equal("hello", out.Message)
 }
 
 func (s *IntegrationTestSuite) TestGRPCQuery_BankService_VariousInputs() {
@@ -169,7 +129,6 @@ func (s *IntegrationTestSuite) TestGRPCQuery_BankService_VariousInputs() {
 		s.T().Run(name, func(t *testing.T) {
 			// Setup
 			clientCtx := val0.ClientCtx
-			clientCtx.GRPCConcurrency = true
 			clientCtx.Height = 0
 
 			if tc.clientContextHeight != heightNotSetFlag {
@@ -206,6 +165,23 @@ func (s *IntegrationTestSuite) TestGRPCQuery_BankService_VariousInputs() {
 	}
 }
 
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
+}
+
+//			grpcContxt := context.Background()
+//			if tc.grpcHeight != heightNotSetFlag {
+//				header := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, fmt.Sprintf("%d", tc.grpcHeight))
+//				grpcContxt = metadata.NewOutgoingContext(grpcContxt, header)
+//			}
+//
+//			height, err := client.SelectHeight(clientCtx, grpcContxt)
+//			require.NoError(t, err)
+//			require.Equal(t, tc.expectedHeight, height)
+//		})
+//	}
+//}
+
 func TestSelectHeight(t *testing.T) {
 	testcases := map[string]testcase{
 		"clientContextHeight 1; grpcHeight not set - clientContextHeight selected": {
@@ -233,7 +209,6 @@ func TestSelectHeight(t *testing.T) {
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			clientCtx := client.Context{}
-			clientCtx.GRPCConcurrency = true
 			if tc.clientContextHeight != heightNotSetFlag {
 				clientCtx = clientCtx.WithHeight(tc.clientContextHeight)
 			}

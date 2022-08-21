@@ -13,6 +13,9 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding"
+	"google.golang.org/grpc/encoding/proto"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
@@ -104,6 +107,22 @@ func startInProcess(cfg Config, val *Validator) error {
 		}
 
 		val.grpc = grpcSrv
+
+		// If grpc is enabled, configure grpc client.
+		grpcClient, err := grpc.Dial(
+			val.AppConfig.GRPC.Address,
+			grpc.WithInsecure(),
+			grpc.WithDefaultCallOptions(
+				grpc.ForceCodec(encoding.GetCodec(proto.Name)),
+				grpc.MaxCallRecvMsgSize(val.AppConfig.GRPC.MaxRecvMsgSize),
+				grpc.MaxCallSendMsgSize(val.AppConfig.GRPC.MaxSendMsgSize),
+			),
+		)
+		if err != nil {
+			return err
+		}
+
+		val.ClientCtx = val.ClientCtx.WithGRPCClient(grpcClient)
 
 		if val.AppConfig.GRPCWeb.Enable {
 			val.grpcWeb, err = servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)

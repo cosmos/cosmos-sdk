@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/mem"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
-
+	smtlib "github.com/lazyledger/smt"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
@@ -46,18 +46,23 @@ func (fraudProof *FraudProof) getModules() []string {
 	return keys
 }
 
-func (fraudProof *FraudProof) getSubstoreSMTs() map[string]*smtlib.SparseMerkleTree {
+func (fraudProof *FraudProof) getSubstoreSMTs() (map[string]*smtlib.SparseMerkleTree, error) {
 	storeKeyToSMT := make(map[string]*smtlib.SparseMerkleTree)
 	for storeKey, stateWitness := range fraudProof.stateWitness {
 		rootHash := stateWitness.rootHash
 		substoreDeepSMT := smtlib.NewDeepSparseMerkleSubTree(smtlib.NewSimpleMap(), smtlib.NewSimpleMap(), sha256.New(), rootHash)
 		for _, witnessData := range stateWitness.WitnessData {
-			proof, key, val := witnessData.proof, witnessData.Key, witnessData.Value
-			substoreDeepSMT.AddBranch(proof, key, val)
+			proofOp, key, val := witnessData.proof, witnessData.Key, witnessData.Value
+			proof, err := smt.ProofDecoder(proofOp)
+			if err != nil {
+				return nil, err
+			}
+			smtProof := proof.(*smt.ProofOp).GetProof()
+			substoreDeepSMT.AddBranch(smtProof, key, val)
 		}
 		storeKeyToSMT[storeKey] = substoreDeepSMT.SparseMerkleTree
 	}
-	return storeKeyToSMT
+	return storeKeyToSMT, nil
 }
 
 func (fraudProof *FraudProof) extractStore() map[string]types.KVStore {

@@ -62,6 +62,10 @@ func (p *ProofOp) GetKey() []byte {
 	return p.Key
 }
 
+func (p *ProofOp) GetProof() smt.SparseMerkleProof {
+	return p.Proof
+}
+
 func (p *ProofOp) ProofOp() tmmerkle.ProofOp {
 	var data bytes.Buffer
 	enc := gob.NewEncoder(&data)

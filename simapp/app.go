@@ -377,7 +377,7 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 // GetMaccPerms returns a copy of the module account permissions
 func GetMaccPerms() map[string][]string {
 	dup := make(map[string][]string)
-	for _, perms := range maccPerms {
+	for _, perms := range moduleAccPerms {
 		dup[perms.Account] = perms.Permissions
 	}
 

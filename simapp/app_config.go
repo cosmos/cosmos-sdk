@@ -1,5 +1,3 @@
-//go:build !legacy_simapp
-
 package simapp
 
 import (
@@ -115,7 +113,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 			Name: authtypes.ModuleName,
 			Config: appconfig.WrapAny(&authmodulev1.Module{
 				Bech32Prefix:             "cosmos",
-				ModuleAccountPermissions: maccPerms,
+				ModuleAccountPermissions: moduleAccPerms,
 			}),
 		},
 		{
@@ -131,7 +129,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					minttypes.ModuleName,
 					stakingtypes.BondedPoolName,
 					stakingtypes.NotBondedPoolName,
-					govtypes.ModuleName,
 					nft.ModuleName,
 					// We allow the following module accounts to receive funds:
 					// govtypes.ModuleName
@@ -211,7 +208,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 })
 
 // module account permissions
-var maccPerms = []*authmodulev1.ModuleAccountPermission{
+var moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
 	{Account: authtypes.FeeCollectorName},
 	{Account: distrtypes.ModuleName},
 	{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},

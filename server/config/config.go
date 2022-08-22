@@ -290,14 +290,14 @@ func DefaultConfig() *Config {
 func GetConfig(v *viper.Viper) (Config, error) {
 	globalLabelsRaw, ok := v.Get("telemetry.global-labels").([]interface{})
 	if !ok {
-		return *DefaultConfig(), fmt.Errorf("failed to parse global-labels config")
+		return Config{}, fmt.Errorf("failed to parse global-labels config")
 	}
 
 	globalLabels := make([][]string, 0, len(globalLabelsRaw))
 	for idx, glr := range globalLabelsRaw {
 		labelsRaw, ok := glr.([]interface{})
 		if !ok {
-			return *DefaultConfig(), fmt.Errorf("failed to parse global label number %d from config", idx)
+			return Config{}, fmt.Errorf("failed to parse global label number %d from config", idx)
 		}
 		if len(labelsRaw) == 2 {
 			globalLabels = append(globalLabels, []string{labelsRaw[0].(string), labelsRaw[1].(string)})

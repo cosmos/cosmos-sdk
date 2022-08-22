@@ -18,9 +18,9 @@ import (
 
 // Simulation operation weights constants
 //
-//nolint:staticcheck
+
 const (
-	OpWeightMsgUnjail = "op_weight_msg_unjail"
+	OpWeightMsgUnjail = "op_weight_msg_unjail" //nolint:gosec
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

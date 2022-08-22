@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#]() Add `FormatTime` and `ParseTimeString` methods
 * [#12952](https://github.com/cosmos/cosmos-sdk/pull/12952) Replace keyring module to Cosmos fork.
 * [#12352](https://github.com/cosmos/cosmos-sdk/pull/12352) Move the `RegisterSwaggerAPI` logic into a separate helper function in the server package.
 * [#12876](https://github.com/cosmos/cosmos-sdk/pull/12876) Remove proposer-based rewards.

@@ -165,7 +165,7 @@ End of transaction messages
 Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L33), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:
 
 ```
-*Hash of raw bytes: <HEX(sha256(<len(body_bytes) ++ <body_bytes> ++ len(auth_info_bytes) ++ <auth_info_bytes>))>
+*Hash of raw bytes: <HEX(sha256(len(body_bytes) ++ <body_bytes> ++ len(auth_info_bytes) ++ auth_info_bytes))>
 ```
 
 where `++` denotes concatenation and `HEX` is the hexadecimal representation of the bytes, all in capital letters..

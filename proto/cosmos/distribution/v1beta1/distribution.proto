@@ -16,16 +16,22 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+
+  // The base_proposer_reward and bonus_proposer_reward fields are deprecated
+  // and are no longer used in the x/distribution module's reward mechanism.
   string base_proposer_reward = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    deprecated             = true
   ];
   string bonus_proposer_reward = 3 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    deprecated             = true
   ];
+
   bool withdraw_addr_enabled = 4;
 }
 

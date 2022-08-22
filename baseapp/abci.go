@@ -111,6 +111,12 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 }
 
+// SetOption implements the ABCI interface.
+func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
+	// TODO: Implement!
+	return
+}
+
 // Info implements the ABCI interface.
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	lastCommitID := app.cms.LastCommitID()

@@ -31,7 +31,6 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
@@ -226,7 +225,7 @@ func (s *IntegrationTestSuite) TestValidatorSetByHeight_GRPC() {
 		expErrMsg string
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
-		{"empty request", &tmservice.GetValidatorSetByHeightRequest{}, true, "height must be greater than zero"},
+		{"empty request", &tmservice.GetValidatorSetByHeightRequest{}, true, "height must be greater than 0"},
 		{"no pagination", &tmservice.GetValidatorSetByHeightRequest{Height: 1}, false, ""},
 		{"with pagination", &tmservice.GetValidatorSetByHeightRequest{Height: 1, Pagination: &qtypes.PageRequest{Offset: 0, Limit: 1}}, false, ""},
 	}
@@ -254,7 +253,7 @@ func (s *IntegrationTestSuite) TestValidatorSetByHeight_GRPCGateway() {
 		expErr    bool
 		expErrMsg string
 	}{
-		{"invalid height", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", vals[0].APIAddress, -1), true, "height must be greater than zero"},
+		{"invalid height", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", vals[0].APIAddress, -1), true, "height must be greater than 0"},
 		{"no pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", vals[0].APIAddress, 1), false, ""},
 		{"pagination invalid fields", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=-1&pagination.limit=-2", vals[0].APIAddress, 1), true, "strconv.ParseUint"},
 		{"with pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=0&pagination.limit=2", vals[0].APIAddress, 1), false, ""},

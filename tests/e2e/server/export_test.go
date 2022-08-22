@@ -129,7 +129,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 		t.Fatalf("error creating config folder: %s", err)
 	}
 
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 

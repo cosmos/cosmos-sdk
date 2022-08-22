@@ -3,32 +3,36 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/golang/mock/gomock"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func (s *KeeperTestSuite) TestUpdateParams() {
+	require := s.Require()
+
 	minSignedPerWindow, err := sdk.NewDecFromStr("0.60")
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	slashFractionDoubleSign, err := sdk.NewDecFromStr("0.022")
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	slashFractionDowntime, err := sdk.NewDecFromStr("0.0089")
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	invalidVal, err := sdk.NewDecFromStr("-1")
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	testCases := []struct {
 		name      string
-		request   *types.MsgUpdateParams
+		request   *slashingtypes.MsgUpdateParams
 		expectErr bool
 		expErrMsg string
 	}{
 		{
 			name: "set invalid authority",
-			request: &types.MsgUpdateParams{
+			request: &slashingtypes.MsgUpdateParams{
 				Authority: "foo",
 			},
 			expectErr: true,
@@ -36,9 +40,9 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		},
 		{
 			name: "set invalid signed blocks window",
-			request: &types.MsgUpdateParams{
+			request: &slashingtypes.MsgUpdateParams{
 				Authority: s.slashingKeeper.GetAuthority(),
-				Params: types.Params{
+				Params: slashingtypes.Params{
 					SignedBlocksWindow:      0,
 					MinSignedPerWindow:      minSignedPerWindow,
 					DowntimeJailDuration:    time.Duration(34800000000000),
@@ -51,9 +55,9 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		},
 		{
 			name: "set invalid min signed per window",
-			request: &types.MsgUpdateParams{
+			request: &slashingtypes.MsgUpdateParams{
 				Authority: s.slashingKeeper.GetAuthority(),
-				Params: types.Params{
+				Params: slashingtypes.Params{
 					SignedBlocksWindow:      int64(750),
 					MinSignedPerWindow:      invalidVal,
 					DowntimeJailDuration:    time.Duration(34800000000000),
@@ -66,9 +70,9 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		},
 		{
 			name: "set invalid downtime jail duration",
-			request: &types.MsgUpdateParams{
+			request: &slashingtypes.MsgUpdateParams{
 				Authority: s.slashingKeeper.GetAuthority(),
-				Params: types.Params{
+				Params: slashingtypes.Params{
 					SignedBlocksWindow:      int64(750),
 					MinSignedPerWindow:      minSignedPerWindow,
 					DowntimeJailDuration:    time.Duration(0),
@@ -81,9 +85,9 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		},
 		{
 			name: "set invalid slash fraction double sign",
-			request: &types.MsgUpdateParams{
+			request: &slashingtypes.MsgUpdateParams{
 				Authority: s.slashingKeeper.GetAuthority(),
-				Params: types.Params{
+				Params: slashingtypes.Params{
 					SignedBlocksWindow:      int64(750),
 					MinSignedPerWindow:      minSignedPerWindow,
 					DowntimeJailDuration:    time.Duration(10),
@@ -96,9 +100,9 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		},
 		{
 			name: "set invalid slash fraction downtime",
-			request: &types.MsgUpdateParams{
+			request: &slashingtypes.MsgUpdateParams{
 				Authority: s.slashingKeeper.GetAuthority(),
-				Params: types.Params{
+				Params: slashingtypes.Params{
 					SignedBlocksWindow:      int64(750),
 					MinSignedPerWindow:      minSignedPerWindow,
 					DowntimeJailDuration:    time.Duration(10),
@@ -111,9 +115,9 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		},
 		{
 			name: "set full valid params",
-			request: &types.MsgUpdateParams{
+			request: &slashingtypes.MsgUpdateParams{
 				Authority: s.slashingKeeper.GetAuthority(),
-				Params: types.Params{
+				Params: slashingtypes.Params{
 					SignedBlocksWindow:      int64(750),
 					MinSignedPerWindow:      minSignedPerWindow,
 					DowntimeJailDuration:    time.Duration(34800000000000),
@@ -130,11 +134,23 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		s.Run(tc.name, func() {
 			_, err := s.msgServer.UpdateParams(s.ctx, tc.request)
 			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expErrMsg)
+				require.Error(err)
+				require.Contains(err.Error(), tc.expErrMsg)
 			} else {
-				s.Require().NoError(err)
+				require.NoError(err)
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestUnjail() {
+	addr := sdk.AccAddress([]byte("val1_______________"))
+	request := &slashingtypes.MsgUnjail{
+		ValidatorAddr: sdk.ValAddress(addr).String(),
+	}
+
+	s.stakingKeeper.EXPECT().Validator(gomock.Any(), gomock.Any()).Return(nil)
+	_, err := s.msgServer.Unjail(s.ctx, request)
+	s.Require().Error(err)
+	s.Require().Equal(err, slashingtypes.ErrNoValidatorForAddress)
 }

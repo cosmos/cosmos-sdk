@@ -42,7 +42,6 @@ type TestSuite struct {
 var s TestSuite
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
-
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := sdk.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))

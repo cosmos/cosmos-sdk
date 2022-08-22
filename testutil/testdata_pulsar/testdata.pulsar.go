@@ -967,6 +967,474 @@ func (x *fastReflection_Cat) ProtoMethods() *protoiface.Methods {
 }
 
 var (
+	md_Bird         protoreflect.MessageDescriptor
+	fd_Bird_species protoreflect.FieldDescriptor
+	fd_Bird_color   protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_testdata_proto_init()
+	md_Bird = File_testdata_proto.Messages().ByName("Bird")
+	fd_Bird_species = md_Bird.Fields().ByName("species")
+	fd_Bird_color = md_Bird.Fields().ByName("color")
+}
+
+var _ protoreflect.Message = (*fastReflection_Bird)(nil)
+
+type fastReflection_Bird Bird
+
+func (x *Bird) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_Bird)(x)
+}
+
+func (x *Bird) slowProtoReflect() protoreflect.Message {
+	mi := &file_testdata_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_Bird_messageType fastReflection_Bird_messageType
+var _ protoreflect.MessageType = fastReflection_Bird_messageType{}
+
+type fastReflection_Bird_messageType struct{}
+
+func (x fastReflection_Bird_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_Bird)(nil)
+}
+func (x fastReflection_Bird_messageType) New() protoreflect.Message {
+	return new(fastReflection_Bird)
+}
+func (x fastReflection_Bird_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_Bird
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_Bird) Descriptor() protoreflect.MessageDescriptor {
+	return md_Bird
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_Bird) Type() protoreflect.MessageType {
+	return _fastReflection_Bird_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_Bird) New() protoreflect.Message {
+	return new(fastReflection_Bird)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_Bird) Interface() protoreflect.ProtoMessage {
+	return (*Bird)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_Bird) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Species != "" {
+		value := protoreflect.ValueOfString(x.Species)
+		if !f(fd_Bird_species, value) {
+			return
+		}
+	}
+	if x.Color != int32(0) {
+		value := protoreflect.ValueOfInt32(x.Color)
+		if !f(fd_Bird_color, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_Bird) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "testdata.Bird.species":
+		return x.Species != ""
+	case "testdata.Bird.color":
+		return x.Color != int32(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testdata.Bird"))
+		}
+		panic(fmt.Errorf("message testdata.Bird does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_Bird) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "testdata.Bird.species":
+		x.Species = ""
+	case "testdata.Bird.color":
+		x.Color = int32(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testdata.Bird"))
+		}
+		panic(fmt.Errorf("message testdata.Bird does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_Bird) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "testdata.Bird.species":
+		value := x.Species
+		return protoreflect.ValueOfString(value)
+	case "testdata.Bird.color":
+		value := x.Color
+		return protoreflect.ValueOfInt32(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testdata.Bird"))
+		}
+		panic(fmt.Errorf("message testdata.Bird does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_Bird) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "testdata.Bird.species":
+		x.Species = value.Interface().(string)
+	case "testdata.Bird.color":
+		x.Color = int32(value.Int())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testdata.Bird"))
+		}
+		panic(fmt.Errorf("message testdata.Bird does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_Bird) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "testdata.Bird.species":
+		panic(fmt.Errorf("field species of message testdata.Bird is not mutable"))
+	case "testdata.Bird.color":
+		panic(fmt.Errorf("field color of message testdata.Bird is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testdata.Bird"))
+		}
+		panic(fmt.Errorf("message testdata.Bird does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_Bird) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "testdata.Bird.species":
+		return protoreflect.ValueOfString("")
+	case "testdata.Bird.color":
+		return protoreflect.ValueOfInt32(int32(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: testdata.Bird"))
+		}
+		panic(fmt.Errorf("message testdata.Bird does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_Bird) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in testdata.Bird", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_Bird) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_Bird) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_Bird) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_Bird) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*Bird)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Species)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Color != 0 {
+			n += 1 + runtime.Sov(uint64(x.Color))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*Bird)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Color != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Color))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.Species) > 0 {
+			i -= len(x.Species)
+			copy(dAtA[i:], x.Species)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Species)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*Bird)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Bird: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Bird: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Species", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Species = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Color", wireType)
+				}
+				x.Color = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Color |= int32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
 	md_HasAnimal        protoreflect.MessageDescriptor
 	fd_HasAnimal_animal protoreflect.FieldDescriptor
 	fd_HasAnimal_x      protoreflect.FieldDescriptor
@@ -988,7 +1456,7 @@ func (x *HasAnimal) ProtoReflect() protoreflect.Message {
 }
 
 func (x *HasAnimal) slowProtoReflect() protoreflect.Message {
-	mi := &file_testdata_proto_msgTypes[2]
+	mi := &file_testdata_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1469,7 +1937,7 @@ func (x *HasHasAnimal) ProtoReflect() protoreflect.Message {
 }
 
 func (x *HasHasAnimal) slowProtoReflect() protoreflect.Message {
-	mi := &file_testdata_proto_msgTypes[3]
+	mi := &file_testdata_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1904,7 +2372,7 @@ func (x *HasHasHasAnimal) ProtoReflect() protoreflect.Message {
 }
 
 func (x *HasHasHasAnimal) slowProtoReflect() protoreflect.Message {
-	mi := &file_testdata_proto_msgTypes[4]
+	mi := &file_testdata_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2387,7 +2855,7 @@ func (x *BadMultiSignature) ProtoReflect() protoreflect.Message {
 }
 
 func (x *BadMultiSignature) slowProtoReflect() protoreflect.Message {
-	mi := &file_testdata_proto_msgTypes[5]
+	mi := &file_testdata_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2891,7 +3359,7 @@ func (x *TableModel) ProtoReflect() protoreflect.Message {
 }
 
 func (x *TableModel) slowProtoReflect() protoreflect.Message {
-	mi := &file_testdata_proto_msgTypes[6]
+	mi := &file_testdata_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3546,6 +4014,49 @@ func (x *Cat) GetLives() int32 {
 	return 0
 }
 
+type Bird struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Species string `protobuf:"bytes,1,opt,name=species,proto3" json:"species,omitempty"`
+	Color   int32  `protobuf:"varint,2,opt,name=color,proto3" json:"color,omitempty"`
+}
+
+func (x *Bird) Reset() {
+	*x = Bird{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_testdata_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Bird) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Bird) ProtoMessage() {}
+
+// Deprecated: Use Bird.ProtoReflect.Descriptor instead.
+func (*Bird) Descriptor() ([]byte, []int) {
+	return file_testdata_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Bird) GetSpecies() string {
+	if x != nil {
+		return x.Species
+	}
+	return ""
+}
+
+func (x *Bird) GetColor() int32 {
+	if x != nil {
+		return x.Color
+	}
+	return 0
+}
+
 type HasAnimal struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3558,7 +4069,7 @@ type HasAnimal struct {
 func (x *HasAnimal) Reset() {
 	*x = HasAnimal{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_testdata_proto_msgTypes[2]
+		mi := &file_testdata_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3572,7 +4083,7 @@ func (*HasAnimal) ProtoMessage() {}
 
 // Deprecated: Use HasAnimal.ProtoReflect.Descriptor instead.
 func (*HasAnimal) Descriptor() ([]byte, []int) {
-	return file_testdata_proto_rawDescGZIP(), []int{2}
+	return file_testdata_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *HasAnimal) GetAnimal() *anypb.Any {
@@ -3600,7 +4111,7 @@ type HasHasAnimal struct {
 func (x *HasHasAnimal) Reset() {
 	*x = HasHasAnimal{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_testdata_proto_msgTypes[3]
+		mi := &file_testdata_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3614,7 +4125,7 @@ func (*HasHasAnimal) ProtoMessage() {}
 
 // Deprecated: Use HasHasAnimal.ProtoReflect.Descriptor instead.
 func (*HasHasAnimal) Descriptor() ([]byte, []int) {
-	return file_testdata_proto_rawDescGZIP(), []int{3}
+	return file_testdata_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *HasHasAnimal) GetHasAnimal() *anypb.Any {
@@ -3635,7 +4146,7 @@ type HasHasHasAnimal struct {
 func (x *HasHasHasAnimal) Reset() {
 	*x = HasHasHasAnimal{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_testdata_proto_msgTypes[4]
+		mi := &file_testdata_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3649,7 +4160,7 @@ func (*HasHasHasAnimal) ProtoMessage() {}
 
 // Deprecated: Use HasHasHasAnimal.ProtoReflect.Descriptor instead.
 func (*HasHasHasAnimal) Descriptor() ([]byte, []int) {
-	return file_testdata_proto_rawDescGZIP(), []int{4}
+	return file_testdata_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *HasHasHasAnimal) GetHasHasAnimal() *anypb.Any {
@@ -3672,7 +4183,7 @@ type BadMultiSignature struct {
 func (x *BadMultiSignature) Reset() {
 	*x = BadMultiSignature{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_testdata_proto_msgTypes[5]
+		mi := &file_testdata_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3686,7 +4197,7 @@ func (*BadMultiSignature) ProtoMessage() {}
 
 // Deprecated: Use BadMultiSignature.ProtoReflect.Descriptor instead.
 func (*BadMultiSignature) Descriptor() ([]byte, []int) {
-	return file_testdata_proto_rawDescGZIP(), []int{5}
+	return file_testdata_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *BadMultiSignature) GetSignatures() [][]byte {
@@ -3717,7 +4228,7 @@ type TableModel struct {
 func (x *TableModel) Reset() {
 	*x = TableModel{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_testdata_proto_msgTypes[6]
+		mi := &file_testdata_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3731,7 +4242,7 @@ func (*TableModel) ProtoMessage() {}
 
 // Deprecated: Use TableModel.ProtoReflect.Descriptor instead.
 func (*TableModel) Descriptor() ([]byte, []int) {
-	return file_testdata_proto_rawDescGZIP(), []int{6}
+	return file_testdata_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *TableModel) GetId() uint64 {
@@ -3776,43 +4287,46 @@ var file_testdata_proto_rawDesc = []byte{
 	0x74, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x6f, 0x6e, 0x69, 0x6b, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x07, 0x6d, 0x6f, 0x6e, 0x69, 0x6b, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x6c,
 	0x69, 0x76, 0x65, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x6c, 0x69, 0x76, 0x65,
-	0x73, 0x22, 0x47, 0x0a, 0x09, 0x48, 0x61, 0x73, 0x41, 0x6e, 0x69, 0x6d, 0x61, 0x6c, 0x12, 0x2c,
-	0x0a, 0x06, 0x61, 0x6e, 0x69, 0x6d, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14,
-	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
-	0x2e, 0x41, 0x6e, 0x79, 0x52, 0x06, 0x61, 0x6e, 0x69, 0x6d, 0x61, 0x6c, 0x12, 0x0c, 0x0a, 0x01,
-	0x78, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x01, 0x78, 0x22, 0x43, 0x0a, 0x0c, 0x48, 0x61,
-	0x73, 0x48, 0x61, 0x73, 0x41, 0x6e, 0x69, 0x6d, 0x61, 0x6c, 0x12, 0x33, 0x0a, 0x0a, 0x68, 0x61,
-	0x73, 0x5f, 0x61, 0x6e, 0x69, 0x6d, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14,
-	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
-	0x2e, 0x41, 0x6e, 0x79, 0x52, 0x09, 0x68, 0x61, 0x73, 0x41, 0x6e, 0x69, 0x6d, 0x61, 0x6c, 0x22,
-	0x4d, 0x0a, 0x0f, 0x48, 0x61, 0x73, 0x48, 0x61, 0x73, 0x48, 0x61, 0x73, 0x41, 0x6e, 0x69, 0x6d,
-	0x61, 0x6c, 0x12, 0x3a, 0x0a, 0x0e, 0x68, 0x61, 0x73, 0x5f, 0x68, 0x61, 0x73, 0x5f, 0x61, 0x6e,
-	0x69, 0x6d, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f,
-	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79,
-	0x52, 0x0c, 0x68, 0x61, 0x73, 0x48, 0x61, 0x73, 0x41, 0x6e, 0x69, 0x6d, 0x61, 0x6c, 0x22, 0x62,
-	0x0a, 0x11, 0x42, 0x61, 0x64, 0x4d, 0x75, 0x6c, 0x74, 0x69, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74,
-	0x75, 0x72, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0c, 0x52, 0x0a, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75,
-	0x72, 0x65, 0x73, 0x12, 0x27, 0x0a, 0x0f, 0x6d, 0x61, 0x6c, 0x69, 0x63, 0x69, 0x6f, 0x75, 0x73,
-	0x5f, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0e, 0x6d, 0x61,
-	0x6c, 0x69, 0x63, 0x69, 0x6f, 0x75, 0x73, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x3a, 0x04, 0xd0, 0xa1,
-	0x1f, 0x01, 0x22, 0x64, 0x0a, 0x0a, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x4d, 0x6f, 0x64, 0x65, 0x6c,
-	0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64,
-	0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
-	0x6e, 0x61, 0x6d, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08,
-	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08,
-	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x42, 0x94, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d,
-	0x2e, 0x74, 0x65, 0x73, 0x74, 0x64, 0x61, 0x74, 0x61, 0x42, 0x0d, 0x54, 0x65, 0x73, 0x74, 0x64,
-	0x61, 0x74, 0x61, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x35, 0x67, 0x69, 0x74, 0x68,
-	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x75, 0x74, 0x69,
-	0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x70, 0x75, 0x6c, 0x73, 0x61,
-	0x72, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x54, 0x65, 0x73, 0x74, 0x64, 0x61,
-	0x74, 0x61, 0xca, 0x02, 0x08, 0x54, 0x65, 0x73, 0x74, 0x64, 0x61, 0x74, 0x61, 0xe2, 0x02, 0x14,
-	0x54, 0x65, 0x73, 0x74, 0x64, 0x61, 0x74, 0x61, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x08, 0x54, 0x65, 0x73, 0x74, 0x64, 0x61, 0x74, 0x61, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x22, 0x36, 0x0a, 0x04, 0x42, 0x69, 0x72, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x70, 0x65,
+	0x63, 0x69, 0x65, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x73, 0x70, 0x65, 0x63,
+	0x69, 0x65, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f, 0x6c, 0x6f, 0x72, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x05, 0x52, 0x05, 0x63, 0x6f, 0x6c, 0x6f, 0x72, 0x22, 0x47, 0x0a, 0x09, 0x48, 0x61, 0x73,
+	0x41, 0x6e, 0x69, 0x6d, 0x61, 0x6c, 0x12, 0x2c, 0x0a, 0x06, 0x61, 0x6e, 0x69, 0x6d, 0x61, 0x6c,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x06, 0x61, 0x6e,
+	0x69, 0x6d, 0x61, 0x6c, 0x12, 0x0c, 0x0a, 0x01, 0x78, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x01, 0x78, 0x22, 0x43, 0x0a, 0x0c, 0x48, 0x61, 0x73, 0x48, 0x61, 0x73, 0x41, 0x6e, 0x69, 0x6d,
+	0x61, 0x6c, 0x12, 0x33, 0x0a, 0x0a, 0x68, 0x61, 0x73, 0x5f, 0x61, 0x6e, 0x69, 0x6d, 0x61, 0x6c,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x09, 0x68, 0x61,
+	0x73, 0x41, 0x6e, 0x69, 0x6d, 0x61, 0x6c, 0x22, 0x4d, 0x0a, 0x0f, 0x48, 0x61, 0x73, 0x48, 0x61,
+	0x73, 0x48, 0x61, 0x73, 0x41, 0x6e, 0x69, 0x6d, 0x61, 0x6c, 0x12, 0x3a, 0x0a, 0x0e, 0x68, 0x61,
+	0x73, 0x5f, 0x68, 0x61, 0x73, 0x5f, 0x61, 0x6e, 0x69, 0x6d, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x0c, 0x68, 0x61, 0x73, 0x48, 0x61, 0x73,
+	0x41, 0x6e, 0x69, 0x6d, 0x61, 0x6c, 0x22, 0x62, 0x0a, 0x11, 0x42, 0x61, 0x64, 0x4d, 0x75, 0x6c,
+	0x74, 0x69, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x73,
+	0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0c, 0x52,
+	0x0a, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x73, 0x12, 0x27, 0x0a, 0x0f, 0x6d,
+	0x61, 0x6c, 0x69, 0x63, 0x69, 0x6f, 0x75, 0x73, 0x5f, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x0c, 0x52, 0x0e, 0x6d, 0x61, 0x6c, 0x69, 0x63, 0x69, 0x6f, 0x75, 0x73, 0x46,
+	0x69, 0x65, 0x6c, 0x64, 0x3a, 0x04, 0xd0, 0xa1, 0x1f, 0x01, 0x22, 0x64, 0x0a, 0x0a, 0x54, 0x61,
+	0x62, 0x6c, 0x65, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x16, 0x0a, 0x06,
+	0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x6e, 0x75,
+	0x6d, 0x62, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0x42, 0x94, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x64, 0x61, 0x74,
+	0x61, 0x42, 0x0d, 0x54, 0x65, 0x73, 0x74, 0x64, 0x61, 0x74, 0x61, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x50, 0x01, 0x5a, 0x35, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b,
+	0x2f, 0x74, 0x65, 0x73, 0x74, 0x75, 0x74, 0x69, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x64, 0x61,
+	0x74, 0x61, 0x5f, 0x70, 0x75, 0x6c, 0x73, 0x61, 0x72, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa,
+	0x02, 0x08, 0x54, 0x65, 0x73, 0x74, 0x64, 0x61, 0x74, 0x61, 0xca, 0x02, 0x08, 0x54, 0x65, 0x73,
+	0x74, 0x64, 0x61, 0x74, 0x61, 0xe2, 0x02, 0x14, 0x54, 0x65, 0x73, 0x74, 0x64, 0x61, 0x74, 0x61,
+	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x08, 0x54,
+	0x65, 0x73, 0x74, 0x64, 0x61, 0x74, 0x61, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3827,21 +4341,22 @@ func file_testdata_proto_rawDescGZIP() []byte {
 	return file_testdata_proto_rawDescData
 }
 
-var file_testdata_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_testdata_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_testdata_proto_goTypes = []interface{}{
 	(*Dog)(nil),               // 0: testdata.Dog
 	(*Cat)(nil),               // 1: testdata.Cat
-	(*HasAnimal)(nil),         // 2: testdata.HasAnimal
-	(*HasHasAnimal)(nil),      // 3: testdata.HasHasAnimal
-	(*HasHasHasAnimal)(nil),   // 4: testdata.HasHasHasAnimal
-	(*BadMultiSignature)(nil), // 5: testdata.BadMultiSignature
-	(*TableModel)(nil),        // 6: testdata.TableModel
-	(*anypb.Any)(nil),         // 7: google.protobuf.Any
+	(*Bird)(nil),              // 2: testdata.Bird
+	(*HasAnimal)(nil),         // 3: testdata.HasAnimal
+	(*HasHasAnimal)(nil),      // 4: testdata.HasHasAnimal
+	(*HasHasHasAnimal)(nil),   // 5: testdata.HasHasHasAnimal
+	(*BadMultiSignature)(nil), // 6: testdata.BadMultiSignature
+	(*TableModel)(nil),        // 7: testdata.TableModel
+	(*anypb.Any)(nil),         // 8: google.protobuf.Any
 }
 var file_testdata_proto_depIdxs = []int32{
-	7, // 0: testdata.HasAnimal.animal:type_name -> google.protobuf.Any
-	7, // 1: testdata.HasHasAnimal.has_animal:type_name -> google.protobuf.Any
-	7, // 2: testdata.HasHasHasAnimal.has_has_animal:type_name -> google.protobuf.Any
+	8, // 0: testdata.HasAnimal.animal:type_name -> google.protobuf.Any
+	8, // 1: testdata.HasHasAnimal.has_animal:type_name -> google.protobuf.Any
+	8, // 2: testdata.HasHasHasAnimal.has_has_animal:type_name -> google.protobuf.Any
 	3, // [3:3] is the sub-list for method output_type
 	3, // [3:3] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -3880,7 +4395,7 @@ func file_testdata_proto_init() {
 			}
 		}
 		file_testdata_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*HasAnimal); i {
+			switch v := v.(*Bird); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3892,7 +4407,7 @@ func file_testdata_proto_init() {
 			}
 		}
 		file_testdata_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*HasHasAnimal); i {
+			switch v := v.(*HasAnimal); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3904,7 +4419,7 @@ func file_testdata_proto_init() {
 			}
 		}
 		file_testdata_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*HasHasHasAnimal); i {
+			switch v := v.(*HasHasAnimal); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3916,7 +4431,7 @@ func file_testdata_proto_init() {
 			}
 		}
 		file_testdata_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BadMultiSignature); i {
+			switch v := v.(*HasHasHasAnimal); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3928,6 +4443,18 @@ func file_testdata_proto_init() {
 			}
 		}
 		file_testdata_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*BadMultiSignature); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_testdata_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*TableModel); i {
 			case 0:
 				return &v.state
@@ -3946,7 +4473,7 @@ func file_testdata_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_testdata_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

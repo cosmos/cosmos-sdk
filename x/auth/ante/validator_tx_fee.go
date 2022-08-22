@@ -45,7 +45,7 @@ func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins,
 	return feeCoins, priority, nil
 }
 
-// getTxPriority returns a naive tx priority based on the amount of the smallest denomination of the fee
+// getTxPriority returns a naive tx priority based on the amount of the smallest denomination of the gas price
 // provided in a transaction.
 func getTxPriority(fee sdk.Coins, gas int64) int64 {
 	var priority int64

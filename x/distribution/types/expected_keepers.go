@@ -47,6 +47,8 @@ type StakingKeeper interface {
 		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool))
 
 	GetAllSDKDelegations(ctx sdk.Context) []stakingtypes.Delegation
+	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
+	GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

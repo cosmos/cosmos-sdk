@@ -77,7 +77,7 @@ func ParseTimeBytes(bz []byte) (time.Time, error) {
 }
 
 // Parses an encoded type using FormatTimeKey back into a time.Time
-func ParseTime(T any) (time.Time, error) {
+func ParseTime(T any) (time.Time, error) { //nolint:gocritic
 	var (
 		result time.Time
 		err    error

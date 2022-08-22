@@ -27,7 +27,7 @@ type DecCoin struct {
 }
 ```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
 
 ## Validator Distribution
 
@@ -70,4 +70,4 @@ it can be updated with governance or the address with authority.
 
 * Params: `0x09 | ProtocolBuffer(Params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30

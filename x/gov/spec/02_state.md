@@ -12,7 +12,7 @@ to resolve and then execute if the proposal passes. `Proposal`'s are identified 
 unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`,
 `voting_start_time`, `voting_end_time` which track the lifecycle of a proposal
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1/gov.proto#L42-L59
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L42-L59
 
 A proposal will generally require more than just a set of messages to explain its
 purpose but need some greater justification and allow a means for interested participants
@@ -58,15 +58,15 @@ parameter set has to be created and the previous one rendered inactive.
 
 ### DepositParams
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1/gov.proto#L102-L112
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L102-L112
 
 ### VotingParams
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1/gov.proto#L114-L118
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L114-L118
 
 ### TallyParams
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1/gov.proto#L120-L132
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L120-L132
 
 Parameters are stored in a global `GlobalParams` KVStore.
 
@@ -104,7 +104,7 @@ const (
 
 ## Deposit
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1/gov.proto#L34-L40
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L34-L40
 
 ## ValidatorGovInfo
 

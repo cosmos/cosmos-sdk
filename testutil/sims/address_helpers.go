@@ -13,13 +13,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 
+// BondDenomProvider is a subset of the staking keeper's public interface that
+// provides the staking bond denom. It is used in arguments in this package's
+// functions so that a mock staking keeper can be passed instead of the real one.
+type BondDenomProvider interface {
+	BondDenom(ctx sdk.Context) string
+}
+
 // AddTestAddrsFromPubKeys adds the addresses into the SimApp providing only the public keys.
-func AddTestAddrsFromPubKeys(bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt math.Int) {
+func AddTestAddrsFromPubKeys(bankKeeper bankkeeper.Keeper, stakingKeeper BondDenomProvider, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt math.Int) {
 	initCoins := sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), accAmt))
 
 	for _, pk := range pubKeys {
@@ -29,16 +35,16 @@ func AddTestAddrsFromPubKeys(bankKeeper bankkeeper.Keeper, stakingKeeper *stakin
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrs(bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
+func AddTestAddrs(bankKeeper bankkeeper.Keeper, stakingKeeper BondDenomProvider, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(bankKeeper, stakingKeeper, ctx, accNum, accAmt, CreateRandomAccounts)
 }
 
 // AddTestAddrsIncremental constructs and returns accNum amount of accounts with an initial balance of accAmt in random order
-func AddTestAddrsIncremental(bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
+func AddTestAddrsIncremental(bankKeeper bankkeeper.Keeper, stakingKeeper BondDenomProvider, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(bankKeeper, stakingKeeper, ctx, accNum, accAmt, CreateIncrementalAccounts)
 }
 
-func addTestAddrs(bankKeeper bankkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper, ctx sdk.Context, accNum int, accAmt math.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
+func addTestAddrs(bankKeeper bankkeeper.Keeper, stakingKeeper BondDenomProvider, ctx sdk.Context, accNum int, accAmt math.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 	initCoins := sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), accAmt))
 

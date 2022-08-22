@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/simapp"
+
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
@@ -314,7 +315,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 }
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposals() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.legacyQueryClient
+	ctx, queryClient := suite.ctx, suite.legacyQueryClient
 
 	var req *v1beta1.QueryProposalsRequest
 
@@ -587,7 +588,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 	ctx, queryClient := suite.ctx, suite.queryClient
 
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(30000000))
 
 	var (
 		req      *v1.QueryVotesRequest
@@ -688,7 +689,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 	ctx, queryClient := suite.ctx, suite.legacyQueryClient
 
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(30000000))
 
 	var (
 		req      *v1beta1.QueryVotesRequest
@@ -1356,7 +1357,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 	ctx, queryClient := suite.ctx, suite.queryClient
 
-	addrs, _ := createValidators(suite.T(), ctx, app, []int64{5, 5, 5})
+	addrs, _ := createValidators(suite.T(), suite.acctKeeper, suite.bankKeeper, suite.stakingKeeper, ctx, []int64{5, 5, 5})
 
 	var (
 		req      *v1.QueryTallyResultRequest
@@ -1467,7 +1468,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 	ctx, queryClient := suite.ctx, suite.legacyQueryClient
 
-	addrs, _ := createValidators(suite.T(), ctx, app, []int64{5, 5, 5})
+	addrs, _ := createValidators(suite.T(), suite.acctKeeper, suite.bankKeeper, suite.stakingKeeper, ctx, []int64{5, 5, 5})
 
 	var (
 		req      *v1beta1.QueryTallyResultRequest

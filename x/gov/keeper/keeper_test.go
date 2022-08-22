@@ -11,8 +11,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -29,6 +29,8 @@ type KeeperTestSuite struct {
 	cdc               codec.Codec
 	ctx               sdk.Context
 	govKeeper         *keeper.Keeper
+	acctKeeper        *govtestutil.MockAccountKeeper
+	bankKeeper        *govtestutil.MockBankKeeper
 	stakingKeeper     *govtestutil.MockStakingKeeper
 	queryClient       v1.QueryClient
 	legacyQueryClient v1beta1.QueryClient
@@ -38,7 +40,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	govKeeper, bankKeeper, stakingKeeper, encCfg, ctx := setupGovKeeper(suite.T())
+	govKeeper, acctKeeper, bankKeeper, stakingKeeper, encCfg, ctx := setupGovKeeper(suite.T())
 
 	// Populate the gov account with some coins, as the TestProposal we have
 	// is a MsgSend from the gov account.
@@ -57,6 +59,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.ctx = ctx
 	suite.govKeeper = govKeeper
+	suite.acctKeeper = acctKeeper
+	suite.bankKeeper = bankKeeper
 	suite.stakingKeeper = stakingKeeper
 	suite.cdc = encCfg.Codec
 	suite.queryClient = queryClient
@@ -65,11 +69,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	govAcct := govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)
-	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+	suite.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(30000000))
 }
 
 func setupGovKeeper(t *testing.T) (
 	*keeper.Keeper,
+	*govtestutil.MockAccountKeeper,
 	*govtestutil.MockBankKeeper,
 	*govtestutil.MockStakingKeeper,
 	moduletestutil.TestEncodingConfig,
@@ -82,16 +87,16 @@ func setupGovKeeper(t *testing.T) (
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
-	authKeeper := govtestutil.NewMockAccountKeeper(ctrl)
+	acctKeeper := govtestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := govtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := govtestutil.NewMockStakingKeeper(ctrl)
-	govKeeper := keeper.NewKeeper(encCfg.Codec, key, authKeeper, bankKeeper, stakingKeeper, nil, types.DefaultConfig(), "")
+	govKeeper := keeper.NewKeeper(encCfg.Codec, key, acctKeeper, bankKeeper, stakingKeeper, nil, types.DefaultConfig(), "")
 
-	return govKeeper, bankKeeper, stakingKeeper, encCfg, ctx
+	return govKeeper, acctKeeper, bankKeeper, stakingKeeper, encCfg, ctx
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
-	govKeeper, _, _, _, ctx := setupGovKeeper(t)
+	govKeeper, _, _, _, _, ctx := setupGovKeeper(t)
 
 	tp := TestProposal
 	_, err := govKeeper.SubmitProposal(ctx, tp, "")
@@ -111,7 +116,7 @@ func TestIncrementProposalNumber(t *testing.T) {
 }
 
 func TestProposalQueues(t *testing.T) {
-	govKeeper, _, _, _, ctx := setupGovKeeper(t)
+	govKeeper, _, _, _, _, ctx := setupGovKeeper(t)
 
 	// create test proposals
 	tp := TestProposal

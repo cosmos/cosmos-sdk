@@ -16,13 +16,7 @@ jobs:
       - uses: actions/setup-go@v2.1.4
         with:
           go-version: 1.18
-      - uses: technote-space/get-diff-action@v5
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-      - name: run go linters
-        run: make lint-go
-        if: env.GIT_DIFF
+      - uses: golangci/golangci-lint-action@v3.2.0
+        with: 
+          version: latest
+

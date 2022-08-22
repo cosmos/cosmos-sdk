@@ -148,7 +148,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // QuerierRoute returns the bank module's querier route name.
-func (AppModule) QuerierRoute() string { return types.RouterKey }
+func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
 // InitGenesis performs genesis initialization for the bank module. It returns
 // no validator updates.

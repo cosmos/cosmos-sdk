@@ -852,13 +852,13 @@ func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*by
 				bKey := []byte(key)
 				has := smt.Has(bKey)
 				if has {
-					value := smt.Get([]byte(key))
-					proof, err := smt.GetSMTProof([]byte(key))
+					value := smt.Get(bKey)
+					proof, err := smt.GetProof(bKey)
 					if err != nil {
 						return FraudProof{}, err
 					}
-					bKey, bVal := []byte(key), []byte(value)
-					witnessData := WitnessData{bKey, bVal, proof}
+					bVal := []byte(value)
+					witnessData := WitnessData{bKey, bVal, proof.GetOps()[0]}
 					stateWitness.WitnessData = append(stateWitness.WitnessData, witnessData)
 				}
 			}

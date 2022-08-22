@@ -6,9 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/mem"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	smtlib "github.com/lazyledger/smt"
-
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
+
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
@@ -35,7 +34,7 @@ type StateWitness struct {
 type WitnessData struct {
 	Key   []byte
 	Value []byte
-	proof smtlib.SparseMerkleProof
+	proof tmcrypto.ProofOp
 }
 
 func (fraudProof *FraudProof) getModules() []string {
@@ -78,15 +77,18 @@ func (fraudProof *FraudProof) verifyFraudProof() (bool, error) {
 		}
 		// Fraudproof verification on a substore level
 		for _, witness := range stateWitness.WitnessData {
-			smtProof, key, value := witness.proof, witness.Key, witness.Value
-			proofOp := smt.NewProofOp(stateWitness.rootHash, key, smt.SHA256, smtProof)
+			proofOp, key, value := witness.proof, witness.Key, witness.Value
 			if err != nil {
 				return false, err
 			}
 			if !bytes.Equal(key, proofOp.GetKey()) {
 				return false, fmt.Errorf("got key: %s, expected: %s for storeKey: %s", string(key), string(proof.GetKey()), storeKey)
 			}
-			rootHash, err := proofOp.Run([][]byte{value})
+			proof, err := smt.ProofDecoder(proofOp)
+			if err != nil {
+				return false, err
+			}
+			rootHash, err := proof.Run([][]byte{value})
 			if err != nil {
 				return false, err
 			}

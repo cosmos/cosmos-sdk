@@ -66,9 +66,6 @@ Golang generics, allowing developers to focus only on transaction
 ordering. Developers requiring absolute full control can implement their own
 custom mempool implementation.
 
-> Note, there will most likely be a need to modify the AnteHandler method signature
-> to now accept a series of TxRecords.
-
 We define the general mempool interface as follows (subject to change):
 
 ```go

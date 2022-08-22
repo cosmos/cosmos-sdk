@@ -46,7 +46,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome),
 	})
 
-	for acc := range maccPerms {
+	for acc := range GetMaccPerms() {
 		require.True(
 			t,
 			app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)),
@@ -61,11 +61,6 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app2 := NewSimApp(logger2, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 	_, err := app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
-}
-
-func TestGetMaccPerms(t *testing.T) {
-	dup := GetMaccPerms()
-	require.Equal(t, maccPerms, dup, "duplicated module account permissions differed from actual module account permissions")
 }
 
 func TestRunMigrations(t *testing.T) {

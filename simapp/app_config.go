@@ -112,16 +112,8 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		{
 			Name: authtypes.ModuleName,
 			Config: appconfig.WrapAny(&authmodulev1.Module{
-				Bech32Prefix: "cosmos",
-				ModuleAccountPermissions: []*authmodulev1.ModuleAccountPermission{
-					{Account: authtypes.FeeCollectorName},
-					{Account: distrtypes.ModuleName},
-					{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
-					{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
-					{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
-					{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
-					{Account: nft.ModuleName},
-				},
+				Bech32Prefix:             "cosmos",
+				ModuleAccountPermissions: maccPerms,
 			}),
 		},
 		{
@@ -215,3 +207,14 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		},
 	},
 })
+
+// module account permissions
+var maccPerms = []*authmodulev1.ModuleAccountPermission{
+	{Account: authtypes.FeeCollectorName},
+	{Account: distrtypes.ModuleName},
+	{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
+	{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
+	{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
+	{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
+	{Account: nft.ModuleName},
+}

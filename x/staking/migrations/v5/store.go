@@ -34,9 +34,9 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 
 		sort.Slice(creationHeights, func(i, j int) bool { return creationHeights[i] < creationHeights[j] })
 
-		for index := 0; index < len(creationHeights); index++ {
+		for _, h := range creationHeights {
 			var ubdEntry types.UnbondingDelegationEntry
-			for _, entry := range entriesAtSameCreationHeight[creationHeights[index]] {
+			for _, entry := range entriesAtSameCreationHeight[h] {
 				ubdEntry.Balance = ubdEntry.Balance.Add(entry.Balance)
 				ubdEntry.InitialBalance = ubdEntry.InitialBalance.Add(entry.InitialBalance)
 				ubdEntry.CreationHeight = entry.CreationHeight

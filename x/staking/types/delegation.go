@@ -131,7 +131,7 @@ func NewUnbondingDelegation(
 // AddEntry - append entry to the unbonding delegation
 func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance math.Int) {
 	// Check the entries exists with creation_height and complete_time
-	var entryIndex int = -1
+	entryIndex := -1
 	for index, ubdEntry := range ubd.Entries {
 		if ubdEntry.CreationHeight == creationHeight && ubdEntry.CompletionTime.Equal(minTime) {
 			entryIndex = index

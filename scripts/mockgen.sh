@@ -21,3 +21,4 @@ $mockgen_cmd -source=x/authz/expected_keepers.go -package testutil -destination 
 $mockgen_cmd -source=x/bank/types/expected_keepers.go -package testutil -destination x/bank/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/evidence/types/expected_keepers.go -package testutil -destination x/evidence/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/slashing/types/expected_keepers.go -package testutil -destination x/slashing/testutil/expected_keepers_mocks.go
+$mockgen_cmd -source=x/gov/types/expected_keepers.go -package testutil -destination x/gov/testutil/expected_keepers_mocks.go

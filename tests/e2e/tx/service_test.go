@@ -48,7 +48,6 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Parallel()
 
 	s.T().Log("setting up integration test suite")
 

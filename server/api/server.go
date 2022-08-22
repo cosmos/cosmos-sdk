@@ -94,7 +94,7 @@ func (s *Server) Start(cfg config.Config) error {
 	tmCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
 	tmCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
 
-	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg.MaxOpenConnections)
+	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg)
 	if err != nil {
 		s.mtx.Unlock()
 		return err

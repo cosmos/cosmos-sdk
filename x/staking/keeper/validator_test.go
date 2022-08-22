@@ -1,11 +1,9 @@
 package keeper_test
 
 import (
-	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -333,6 +331,90 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 	}
 }
 
-func TestKeeperTestSuite1(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
+func (s *KeeperTestSuite) TestValidatorToken() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	valPubKey := PKs[0]
+	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
+	addTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	delTokens := keeper.TokensFromConsensusPower(ctx, 5)
+
+	validator := teststaking.NewValidator(s.T(), valAddr, valPubKey)
+	validator, _ = keeper.AddValidatorTokensAndShares(ctx, validator, addTokens)
+	require.Equal(addTokens, validator.Tokens)
+	validator, _ = keeper.GetValidator(ctx, valAddr)
+	require.Equal(sdk.NewDecFromInt(addTokens), validator.DelegatorShares)
+
+	keeper.RemoveValidatorTokensAndShares(ctx, validator, sdk.NewDecFromInt(delTokens))
+	validator, _ = keeper.GetValidator(ctx, valAddr)
+	require.Equal(delTokens, validator.Tokens)
+	require.True(validator.DelegatorShares.Equal(sdk.NewDecFromInt(delTokens)))
+
+	keeper.RemoveValidatorTokens(ctx, validator, delTokens)
+	validator, _ = keeper.GetValidator(ctx, valAddr)
+	require.True(validator.Tokens.IsZero())
+}
+
+func (s *KeeperTestSuite) TestUnbondingValidator() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	valPubKey := PKs[0]
+	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
+	validator := teststaking.NewValidator(s.T(), valAddr, valPubKey)
+	addTokens := keeper.TokensFromConsensusPower(ctx, 10)
+
+	// set unbonding validator
+	endTime := time.Now()
+	endHeight := ctx.BlockHeight() + 10
+	keeper.SetUnbondingValidatorsQueue(ctx, endTime, endHeight, []string{valAddr.String()})
+
+	resVals := keeper.GetUnbondingValidators(ctx, endTime, endHeight)
+	require.Equal(1, len(resVals))
+	require.Equal(valAddr.String(), resVals[0])
+
+	// add another unbonding validator
+	valAddr1 := sdk.ValAddress(PKs[1].Address().Bytes())
+	validator1 := teststaking.NewValidator(s.T(), valAddr1, PKs[1])
+	validator1.UnbondingHeight = endHeight
+	validator1.UnbondingTime = endTime
+	keeper.InsertUnbondingValidatorQueue(ctx, validator1)
+
+	resVals = keeper.GetUnbondingValidators(ctx, endTime, endHeight)
+	require.Equal(2, len(resVals))
+
+	// delete unbonding validator from the queue
+	keeper.DeleteValidatorQueue(ctx, validator1)
+	resVals = keeper.GetUnbondingValidators(ctx, endTime, endHeight)
+	require.Equal(1, len(resVals))
+	require.Equal(valAddr.String(), resVals[0])
+
+	// check unbonding mature validators
+	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
+	require.PanicsWithValue("validator in the unbonding queue was not found", func() {
+		keeper.UnbondAllMatureValidators(ctx)
+	})
+
+	keeper.SetValidator(ctx, validator)
+	ctx = ctx.WithBlockHeight(endHeight).WithBlockTime(endTime)
+	require.PanicsWithValue("unexpected validator in unbonding queue; status was not unbonding", func() {
+		keeper.UnbondAllMatureValidators(ctx)
+	})
+
+	validator.Status = stakingtypes.Unbonding
+	keeper.SetValidator(ctx, validator)
+	keeper.UnbondAllMatureValidators(ctx)
+	validator, found := keeper.GetValidator(ctx, valAddr)
+	require.False(found)
+
+	keeper.SetUnbondingValidatorsQueue(ctx, endTime, endHeight, []string{valAddr.String()})
+	validator = teststaking.NewValidator(s.T(), valAddr, valPubKey)
+	validator, _ = validator.AddTokensFromDel(addTokens)
+	validator.Status = stakingtypes.Unbonding
+	keeper.SetValidator(ctx, validator)
+	keeper.UnbondAllMatureValidators(ctx)
+	validator, found = keeper.GetValidator(ctx, valAddr)
+	require.True(found)
+	require.Equal(stakingtypes.Unbonded, validator.Status)
 }

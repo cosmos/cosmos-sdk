@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func TestFormatBytes(t *testing.T) {
+func TestBytesJsonTestCases(t *testing.T) {
 	var testcases []bytesTest
 	// Bytes.json contains bytes that are represented in base64 format, and
 	// their expected results in hex.
@@ -26,13 +26,19 @@ func TestFormatBytes(t *testing.T) {
 		data, err := base64.StdEncoding.DecodeString(tc.base64)
 		require.NoError(t, err)
 
-		r, err := valueRendererOf(data)
+		valrend, err := valueRendererOf(data)
 		require.NoError(t, err)
 
 		b := new(strings.Builder)
-		err = r.Format(context.Background(), protoreflect.ValueOfBytes(data), b)
+		err = valrend.Format(context.Background(), protoreflect.ValueOfBytes(data), b)
 		require.NoError(t, err)
 		require.Equal(t, tc.hex, b.String())
+
+		// Round trip
+		r := strings.NewReader(tc.hex)
+		val, err := valrend.Parse(context.Background(), r)
+		require.NoError(t, err)
+		require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
 	}
 }
 

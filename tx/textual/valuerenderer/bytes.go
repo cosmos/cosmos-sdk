@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"io"
+	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -14,7 +15,7 @@ type bytesValueRenderer struct{}
 var _ ValueRenderer = bytesValueRenderer{}
 
 func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value, w io.Writer) error {
-	_, err := io.WriteString(w, hex.EncodeToString(v.Bytes()))
+	_, err := io.WriteString(w, strings.ToUpper(hex.EncodeToString(v.Bytes())))
 	return err
 }
 

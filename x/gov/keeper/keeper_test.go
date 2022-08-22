@@ -3,14 +3,20 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -20,8 +26,10 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app               *simapp.SimApp
+	cdc               codec.Codec
 	ctx               sdk.Context
+	govKeeper         *keeper.Keeper
+	stakingKeeper     *govtestutil.MockStakingKeeper
 	queryClient       v1.QueryClient
 	legacyQueryClient v1beta1.QueryClient
 	addrs             []sdk.AccAddress
@@ -30,78 +38,99 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	govKeeper, bankKeeper, stakingKeeper, encCfg, ctx := setupGovKeeper(suite.T())
 
 	// Populate the gov account with some coins, as the TestProposal we have
 	// is a MsgSend from the gov account.
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000)))
-	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
+	err := bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
 	suite.NoError(err)
-	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	err = bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
 	suite.NoError(err)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	v1.RegisterQueryServer(queryHelper, app.GovKeeper)
-	legacyQueryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(app.GovKeeper))
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, encCfg.InterfaceRegistry)
+	v1.RegisterQueryServer(queryHelper, suite.govKeeper)
+	legacyQueryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, encCfg.InterfaceRegistry)
+	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(suite.govKeeper))
 	queryClient := v1.NewQueryClient(queryHelper)
 	legacyQueryClient := v1beta1.NewQueryClient(legacyQueryHelper)
 
-	suite.app = app
 	suite.ctx = ctx
+	suite.govKeeper = govKeeper
+	suite.stakingKeeper = stakingKeeper
+	suite.cdc = encCfg.Codec
 	suite.queryClient = queryClient
 	suite.legacyQueryClient = legacyQueryClient
-	suite.msgSrvr = keeper.NewMsgServerImpl(suite.app.GovKeeper)
+	suite.msgSrvr = keeper.NewMsgServerImpl(suite.govKeeper)
 
-	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+	govAcct := govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)
 	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 }
 
+func setupGovKeeper(t *testing.T) (
+	*keeper.Keeper,
+	*govtestutil.MockBankKeeper,
+	*govtestutil.MockStakingKeeper,
+	moduletestutil.TestEncodingConfig,
+	sdk.Context,
+) {
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	encCfg := moduletestutil.MakeTestEncodingConfig()
+
+	// gomock initializations
+	ctrl := gomock.NewController(t)
+	authKeeper := govtestutil.NewMockAccountKeeper(ctrl)
+	bankKeeper := govtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := govtestutil.NewMockStakingKeeper(ctrl)
+	govKeeper := keeper.NewKeeper(encCfg.Codec, key, authKeeper, bankKeeper, stakingKeeper, nil, types.DefaultConfig(), "")
+
+	return govKeeper, bankKeeper, stakingKeeper, encCfg, ctx
+}
+
 func TestIncrementProposalNumber(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	govKeeper, _, _, _, ctx := setupGovKeeper(t)
 
 	tp := TestProposal
-	_, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
+	_, err := govKeeper.SubmitProposal(ctx, tp, "")
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp, "")
+	_, err = govKeeper.SubmitProposal(ctx, tp, "")
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp, "")
+	_, err = govKeeper.SubmitProposal(ctx, tp, "")
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp, "")
+	_, err = govKeeper.SubmitProposal(ctx, tp, "")
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp, "")
+	_, err = govKeeper.SubmitProposal(ctx, tp, "")
 	require.NoError(t, err)
-	proposal6, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
+	proposal6, err := govKeeper.SubmitProposal(ctx, tp, "")
 	require.NoError(t, err)
 
 	require.Equal(t, uint64(6), proposal6.Id)
 }
 
 func TestProposalQueues(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	govKeeper, _, _, _, ctx := setupGovKeeper(t)
 
 	// create test proposals
 	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
+	proposal, err := govKeeper.SubmitProposal(ctx, tp, "")
 	require.NoError(t, err)
 
-	inactiveIterator := app.GovKeeper.InactiveProposalQueueIterator(ctx, *proposal.DepositEndTime)
+	inactiveIterator := govKeeper.InactiveProposalQueueIterator(ctx, *proposal.DepositEndTime)
 	require.True(t, inactiveIterator.Valid())
 
 	proposalID := types.GetProposalIDFromBytes(inactiveIterator.Value())
 	require.Equal(t, proposalID, proposal.Id)
 	inactiveIterator.Close()
 
-	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
+	govKeeper.ActivateVotingPeriod(ctx, proposal)
 
-	proposal, ok := app.GovKeeper.GetProposal(ctx, proposal.Id)
+	proposal, ok := govKeeper.GetProposal(ctx, proposal.Id)
 	require.True(t, ok)
 
-	activeIterator := app.GovKeeper.ActiveProposalQueueIterator(ctx, *proposal.VotingEndTime)
+	activeIterator := govKeeper.ActiveProposalQueueIterator(ctx, *proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
 
 	proposalID, _ = types.SplitActiveProposalQueueKey(activeIterator.Key())

@@ -137,7 +137,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					minttypes.ModuleName,
 					stakingtypes.BondedPoolName,
 					stakingtypes.NotBondedPoolName,
-					govtypes.ModuleName,
 					nft.ModuleName,
 					// We allow the following module accounts to receive funds:
 					// govtypes.ModuleName

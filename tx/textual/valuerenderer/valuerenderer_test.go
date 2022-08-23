@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -21,7 +21,7 @@ import (
 func TestFormatInteger(t *testing.T) {
 	type integerTest []string
 	var testcases []integerTest
-	raw, err := ioutil.ReadFile("../internal/testdata/integers.json")
+	raw, err := os.ReadFile("../internal/testdata/integers.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -68,7 +68,7 @@ func TestFormatInteger(t *testing.T) {
 func TestFormatDecimal(t *testing.T) {
 	type decimalTest []string
 	var testcases []decimalTest
-	raw, err := ioutil.ReadFile("../internal/testdata/decimals.json")
+	raw, err := os.ReadFile("../internal/testdata/decimals.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)

@@ -1,7 +1,6 @@
 package baseapp_test
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
@@ -42,7 +41,7 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 	t.Helper()
 
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey(context.TODO())
+	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 
 	// create validator set with single validator

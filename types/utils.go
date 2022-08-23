@@ -63,17 +63,42 @@ const SortableTimeFormat = "2006-01-02T15:04:05.000000000"
 
 // Formats a time.Time into a []byte that can be sorted
 func FormatTimeBytes(t time.Time) []byte {
-	return []byte(t.UTC().Round(0).Format(SortableTimeFormat))
+	return []byte(FormatTimeString(t))
+}
+
+// Formats a time.Time into a string
+func FormatTimeString(t time.Time) string {
+	return t.UTC().Round(0).Format(SortableTimeFormat)
 }
 
 // Parses a []byte encoded using FormatTimeKey back into a time.Time
 func ParseTimeBytes(bz []byte) (time.Time, error) {
-	str := string(bz)
-	t, err := time.Parse(SortableTimeFormat, str)
-	if err != nil {
-		return t, err
+	return ParseTime(bz)
+}
+
+// Parses an encoded type using FormatTimeKey back into a time.Time
+func ParseTime(T any) (time.Time, error) { //nolint:gocritic
+	var (
+		result time.Time
+		err    error
+	)
+
+	switch t := T.(type) {
+	case time.Time:
+		result, err = t, nil
+	case []byte:
+		result, err = time.Parse(SortableTimeFormat, string(t))
+	case string:
+		result, err = time.Parse(SortableTimeFormat, t)
+	default:
+		return time.Time{}, fmt.Errorf("unexpected type %T", t)
 	}
-	return t.UTC().Round(0), nil
+
+	if err != nil {
+		return result, err
+	}
+
+	return result.UTC().Round(0), nil
 }
 
 // NewLevelDB instantiate a new LevelDB instance according to DBBackend.

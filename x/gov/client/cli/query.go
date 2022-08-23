@@ -509,6 +509,8 @@ $ %s query gov tally 1
 }
 
 // GetCmdQueryParams implements the query params command.
+//
+//nolint:staticcheck // this function contains deprecated commands that we need.
 func GetCmdQueryParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params",
@@ -589,6 +591,7 @@ $ %s query gov param deposit
 			}
 
 			var out fmt.Stringer
+			//nolint:staticcheck // this switch statement contains deprecated commands that we need.
 			switch args[0] {
 			case "voting":
 				out = res.GetVotingParams()

@@ -133,6 +133,6 @@ More information can be found in the gov module [client documentation](https://d
 
 The `third_party/proto` folder that existed in [previous version](https://github.com/cosmos/cosmos-sdk/tree/v0.45.3/third_party/proto) now does not contains directly the [proto files](https://github.com/cosmos/cosmos-sdk/tree/release/v0.46.x/third_party/proto).
 
-Instead, the SDK uses [`buf`](https://buf.build). Clients should have their own `buf.yaml` with `buf.build/cosmos/cosmos-sdk` as dependency, in order to avoid having to copy paste these files.
+Instead, the SDK uses [`buf`](https://buf.build). Clients should have their own [`buf.yaml`](https://docs.buf.build/configuration/v1/buf-yaml) with `buf.build/cosmos/cosmos-sdk` as dependency, in order to avoid having to copy paste these files.
 
 The protos can as well be downloaded using `buf export buf.build/cosmos/cosmos-sdk:$(git log -1 --pretty=format:"%H" v0.46.0) --output <some_folder>`.

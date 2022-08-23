@@ -185,19 +185,6 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	}
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
-<<<<<<< HEAD
-=======
-
-	config, err := serverconfig.GetConfig(ctx.Viper)
-	if err != nil {
-		return err
-	}
-
-	_, err = startTelemetry(config)
-	if err != nil {
-		return err
-	}
->>>>>>> c24c43972 (fix: proper error when parsing telemetry configuration (#12981))
 
 	svr, err := server.NewServer(addr, transport, app)
 	if err != nil {
@@ -255,15 +242,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
-<<<<<<< HEAD
-	config := config.GetConfig(ctx.Viper)
-=======
-	config, err := serverconfig.GetConfig(ctx.Viper)
+	config, err := config.GetConfig(ctx.Viper)
 	if err != nil {
 		return err
 	}
 
->>>>>>> c24c43972 (fix: proper error when parsing telemetry configuration (#12981))
 	if err := config.ValidateBasic(); err != nil {
 		ctx.Logger.Error("WARNING: The minimum-gas-prices config in app.toml is set to the empty string. " +
 			"This defaults to 0 in the current version, but will error in the next version " +

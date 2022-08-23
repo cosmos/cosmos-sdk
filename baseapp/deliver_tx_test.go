@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"os"
 	"testing"
 
 	"cosmossdk.io/depinject"
@@ -61,7 +62,7 @@ func TestDeliverTx(t *testing.T) {
 
 	testCtx := testutil.DefaultContextWithDB(t, capKey1, sdk.NewTransientStoreKey("transient_test"))
 
-	app := appBuilder.Build(log.MustNewDefaultLogger("plain", "info", false), testCtx.DB, nil, anteOpt)
+	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil, anteOpt)
 	app.SetCMS(testCtx.CMS)
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 

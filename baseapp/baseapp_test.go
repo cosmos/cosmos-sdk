@@ -550,6 +550,12 @@ func TestSetMinGasPrices(t *testing.T) {
 	require.Equal(t, minGasPrices, app.minGasPrices)
 }
 
+func TestSetMinGasPricesPanics(t *testing.T) {
+	require.Panics(t, func() {
+		SetMinGasPrices("-5000stake")
+	}, "Setting negative minimum gas price should panic")
+}
+
 func TestInitChainer(t *testing.T) {
 	name := t.Name()
 	// keep the db and logger ourselves so
@@ -2211,4 +2217,90 @@ func TestBaseApp_EndBlock(t *testing.T) {
 	require.Len(t, res.GetValidatorUpdates(), 1)
 	require.Equal(t, int64(100), res.GetValidatorUpdates()[0].Power)
 	require.Equal(t, cp.Block.MaxGas, res.ConsensusParamUpdates.Block.MaxGas)
+}
+
+func TestMessageServiceRouter(t *testing.T) {
+	db := dbm.NewMemDB()
+	name := t.Name()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+
+	app.SetMsgServiceRouter(nil)
+	require.Equal(t, nil, app.MsgServiceRouter())
+
+	app.SetMsgServiceRouter(NewMsgServiceRouter())
+	require.NotEqual(t, nil, app.MsgServiceRouter())
+}
+
+func TestMountKVStores(t *testing.T) {
+	db := dbm.NewMemDB()
+	name := t.Name()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+
+	keys := sdk.NewKVStoreKeys(
+		"acc", "bank", "staking",
+		"mint", "distribution", "slashing",
+		"gov", "params", "upgrade", "feegrant",
+		"evidence", "capability", "authz",
+	)
+
+	// Test everything is mounted
+	// Test all stores have the correct type
+	app.MountKVStores(keys)
+	app.cms.LoadLatestVersion()
+
+	for _, key := range keys {
+		store := app.cms.GetCommitKVStore(key)
+		require.Equal(t, storetypes.StoreTypeIAVL, store.GetStoreType())
+	}
+
+	app = NewBaseApp(name, logger, db, nil)
+	app.fauxMerkleMode = true
+
+	// Test everything is mounted
+	// Test all stores have the correct type
+	app.MountKVStores(keys)
+	app.cms.LoadLatestVersion()
+	for _, key := range keys {
+		store := app.cms.GetCommitKVStore(key)
+		require.Equal(t, storetypes.StoreTypeDB, store.GetStoreType())
+	}
+}
+
+func TestMountTransientStores(t *testing.T) {
+	db := dbm.NewMemDB()
+	name := t.Name()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+
+	// Test everything is mounted
+	// Test all stores have the correct type
+	// Cannot use the defined constant because of circular dependency
+	tkeys := sdk.NewTransientStoreKeys("transient_params")
+	app.MountTransientStores(tkeys)
+	app.cms.LoadLatestVersion()
+
+	for _, key := range tkeys {
+		store := app.cms.GetCommitKVStore(key)
+		require.Equal(t, storetypes.StoreTypeTransient, store.GetStoreType())
+	}
+}
+
+func TestDefaultStoreLoader(t *testing.T) {
+	db := dbm.NewMemDB()
+	name := t.Name()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+
+	keys := sdk.NewKVStoreKeys("acc")
+
+	app.MountKVStores(keys)
+	DefaultStoreLoader(app.cms)
+
+	// This will panic if DefaultStoreLoader doens't correctly work
+	for _, key := range keys {
+		store := app.cms.GetCommitKVStore(key)
+		require.Equal(t, storetypes.StoreTypeIAVL, store.GetStoreType())
+	}
 }

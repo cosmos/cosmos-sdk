@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+* Add support for event data injection into end block handlers (https://github.com/provenance-io/provenance/issues/626)
 
 ---
 

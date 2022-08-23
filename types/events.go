@@ -21,11 +21,25 @@ import (
 // EventManager implements a simple wrapper around a slice of Event objects that
 // can be emitted from.
 type EventManager struct {
-	events Events
+	events  Events
+	history []abci.Event
+}
+
+func NewEventManagerWithHistory(history []abci.Event) *EventManager {
+	return &EventManager{
+		events:  EmptyEvents(),
+		history: history,
+	}
 }
 
 func NewEventManager() *EventManager {
-	return &EventManager{EmptyEvents()}
+	return NewEventManagerWithHistory([]abci.Event{})
+}
+
+// GetEventHistory returns a deep copy of the ABCI events that have been
+// committed to thus far.
+func (em *EventManager) GetABCIEventHistory() []abci.Event {
+	return em.history
 }
 
 func (em *EventManager) Events() Events { return em.events }

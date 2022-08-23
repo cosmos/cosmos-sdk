@@ -274,11 +274,13 @@ func TestManager_EndBlock(t *testing.T) {
 
 	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1)
-	ret := mm.EndBlock(sdk.Context{}, req)
+	ctx := sdk.Context{}.WithEventManager(sdk.NewEventManagerWithHistory([]abci.Event{}))
+	ret := mm.EndBlock(ctx, req)
 	require.Equal(t, []abci.ValidatorUpdate{{}}, ret.ValidatorUpdates)
 
 	// test panic
 	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
-	require.Panics(t, func() { mm.EndBlock(sdk.Context{}, req) })
+	ctx = sdk.Context{}.WithEventManager(sdk.NewEventManagerWithHistory([]abci.Event{}))
+	require.Panics(t, func() { mm.EndBlock(ctx, req) })
 }

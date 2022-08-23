@@ -220,7 +220,9 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	if app.endBlocker != nil {
-		res = app.endBlocker(app.deliverState.ctx, req)
+		// Propagate the event history.
+		em := sdk.NewEventManagerWithHistory(app.deliverState.eventHistory)
+		res = app.endBlocker(app.deliverState.ctx.WithEventManager(em), req)
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 

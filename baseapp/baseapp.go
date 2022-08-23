@@ -409,8 +409,9 @@ func (app *BaseApp) setCheckState(header tmproto.Header) {
 func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
+		ms:           ms,
+		ctx:          sdk.NewContext(ms, header, false, app.logger),
+		eventHistory: []abci.Event{},
 	}
 }
 
@@ -723,6 +724,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			}
 			// Only write the cache if FeeInvoke didn't return an error.
 			msCache.Write()
+			app.deliverState.eventHistory = append(app.deliverState.eventHistory, result.Events...)
 		}
 
 		// If we're in deliver or simulate mode, update the events.

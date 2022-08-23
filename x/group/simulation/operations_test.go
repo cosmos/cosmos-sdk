@@ -23,7 +23,6 @@ import (
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/simulation"
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 type SimTestSuite struct {
@@ -35,7 +34,6 @@ type SimTestSuite struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	accountKeeper     authkeeper.AccountKeeper
 	bankKeeper        bankkeeper.Keeper
-	stakingKeeper     *stakingkeeper.Keeper
 	groupKeeper       groupkeeper.Keeper
 }
 
@@ -46,7 +44,6 @@ func (suite *SimTestSuite) SetupTest() {
 		&suite.interfaceRegistry,
 		&suite.accountKeeper,
 		&suite.bankKeeper,
-		&suite.stakingKeeper,
 		&suite.groupKeeper,
 	)
 	suite.Require().NoError(err)

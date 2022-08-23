@@ -118,8 +118,11 @@ func (s *IntegrationTestSuite) TestQueryBySig() {
 	txb := s.mkTxBuilder()
 	txbz, err := s.cfg.TxConfig.TxEncoder()(txb.GetTx())
 	s.Require().NoError(err)
-	_, err = s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txbz, Mode: tx.BroadcastMode_BROADCAST_MODE_BLOCK})
+	resp, err := s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txbz, Mode: tx.BroadcastMode_BROADCAST_MODE_SYNC})
 	s.Require().NoError(err)
+	s.Require().NotEmpty(resp.TxResponse.TxHash)
+
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// get the signature out of the builder
 	sigs, err := txb.GetTx().GetSignaturesV2()
@@ -608,6 +611,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	s.Require().NoError(err)
 
 	height, err := s.network.LatestHeight()
+	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(height + 1)
 	s.Require().NoError(err)
 
@@ -626,8 +630,10 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
+	s.Require().NoError(err)
 
 	height, err = s.network.LatestHeight()
+	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(height + 1)
 	s.Require().NoError(err)
 
@@ -672,7 +678,9 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 
 	// convert from protoJSON to protoBinary for sim
 	sdkTx, err := val1.ClientCtx.TxConfig.TxJSONDecoder()(multiSigWith2Signatures.Bytes())
+	s.Require().NoError(err)
 	txBytes, err := val1.ClientCtx.TxConfig.TxEncoder()(sdkTx)
+	s.Require().NoError(err)
 
 	// simulate tx
 	sim := &tx.SimulateRequest{TxBytes: txBytes}

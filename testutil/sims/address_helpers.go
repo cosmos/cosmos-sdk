@@ -59,7 +59,7 @@ func initAccountWithCoins(bankKeeper bankkeeper.Keeper, ctx sdk.Context, addr sd
 	}
 }
 
-// createIncrementalAccounts is a strategy used by addTestAddrs() in order to generated addresses in ascending order.
+// CreateIncrementalAccounts is a strategy used by addTestAddrs() in order to generated addresses in ascending order.
 func CreateIncrementalAccounts(accNum int) []sdk.AccAddress {
 	var addresses []sdk.AccAddress
 	var buffer bytes.Buffer

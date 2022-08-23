@@ -55,9 +55,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.NoError(err)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, encCfg.InterfaceRegistry)
-	v1.RegisterQueryServer(queryHelper, suite.govKeeper)
+	v1.RegisterQueryServer(queryHelper, govKeeper)
 	legacyQueryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, encCfg.InterfaceRegistry)
-	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(suite.govKeeper))
+	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(govKeeper))
 	queryClient := v1.NewQueryClient(queryHelper)
 	legacyQueryClient := v1beta1.NewQueryClient(legacyQueryHelper)
 
@@ -103,10 +103,10 @@ func setupGovKeeper(t *testing.T) (
 	stakingKeeper := govtestutil.NewMockStakingKeeper(ctrl)
 	acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
 	acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
-	// The three EXPECTS below happen in `simtestutil`.
-	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(30000000)))
-	bankKeeper.EXPECT().MintCoins(gomock.Any(), minttypes.ModuleName, coins).Return(nil).AnyTimes()
-	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), minttypes.ModuleName, gomock.Any(), coins).AnyTimes()
+	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), types.ModuleName, gomock.Any()).Return(nil).AnyTimes()
+	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	// The EXPECTS below happen only in `simtestutil`.
+	bankKeeper.EXPECT().MintCoins(gomock.Any(), minttypes.ModuleName, gomock.Any()).Return(nil).AnyTimes()
 	stakingKeeper.EXPECT().BondDenom(ctx).Return("stake").AnyTimes()
 
 	// Gov keeper initializations

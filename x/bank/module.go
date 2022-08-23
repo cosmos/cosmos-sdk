@@ -6,22 +6,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
-
-	"cosmossdk.io/core/appmodule"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -230,10 +227,10 @@ type bankOutputs struct {
 }
 
 func provideModule(in bankInputs) bankOutputs {
-	// configure blocked module accounts.
+	// Configure blocked module accounts.
 	//
-	// default behavior for blockedAddresses is to regard any module mentioned in AccountKeeper's module account
-	// permissions as blocked.
+	// Default behavior for blockedAddresses is to regard any module mentioned in
+	// AccountKeeper's module account permissions as blocked.
 	blockedAddresses := make(map[string]bool)
 	if len(in.Config.BlockedModuleAccountsOverride) != 0 {
 		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {

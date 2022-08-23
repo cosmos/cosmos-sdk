@@ -18,8 +18,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// ReformatTx allows chains to optionally reformat transactions before broadcasting
-type ReformatTxFn func(chainID string, key keyring.KeyType, tx TxBuilder) error
+// PreprocessTxFn defines a hook by which chains can preprocess transactions before broadcasting
+type PreprocessTxFn func(chainID string, key keyring.KeyType, tx TxBuilder) error
 
 // Context implements a typical context created in SDK modules for transaction
 // handling and queries.
@@ -53,7 +53,7 @@ type Context struct {
 	FeePayer          sdk.AccAddress
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
-	ReformatTx        ReformatTxFn
+	PreprocessTxHook  PreprocessTxFn
 
 	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
 	IsAux bool
@@ -266,10 +266,10 @@ func (ctx Context) WithAux(isAux bool) Context {
 	return ctx
 }
 
-// WithReformatTx returns the context with the provided reformatting function, which
-// will conditionally reformat the transaction using the builder.
-func (ctx Context) WithReformatTx(reformatFn ReformatTxFn) Context {
-	ctx.ReformatTx = reformatFn
+// WithPreprocessTxHook returns the context with the provided preprocessing hook, which
+// enables chains to preprocess the transaction using the builder.
+func (ctx Context) WithPreprocessTxHook(preprocessFn PreprocessTxFn) Context {
+	ctx.PreprocessTxHook = preprocessFn
 	return ctx
 }
 

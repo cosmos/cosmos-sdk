@@ -331,9 +331,9 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		return fmt.Errorf("Unable to set signatures on payload: %w", err)
 	}
 
-	// Run optional reformatting if desired. By default, this is unset
+	// Run optional preprocessing if specified. By default, this is unset
 	// and will return nil.
-	return txf.ReformatTx(name, txBuilder)
+	return txf.PreprocessTx(name, txBuilder)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

@@ -1,0 +1,22 @@
+syntax = "proto3";
+package testdata;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/baseapp/testutil";
+
+message MsgCounter {
+  int64 counter         = 1;
+  bool  fail_on_handler = 2;
+}
+
+message MsgCounter2 {
+  int64 counter       = 1;
+}
+
+service Counter {
+    rpc IncreaseCounter(MsgCounter) returns (MsgCreateCounterResponse);
+}
+
+message MsgCreateCounterResponse {}

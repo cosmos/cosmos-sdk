@@ -9,11 +9,11 @@ import (
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/stretchr/testify/require"
@@ -28,7 +28,7 @@ type CounterServerImpl struct {
 	deliverKey []byte
 }
 
-func (m CounterServerImpl) IncreaseCounter(ctx context.Context, msg *testdata.MsgCounter) (*testdata.MsgCreateCounterResponse, error) {
+func (m CounterServerImpl) IncreaseCounter(ctx context.Context, msg *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(m.capKey)
 
@@ -41,7 +41,7 @@ func (m CounterServerImpl) IncreaseCounter(ctx context.Context, msg *testdata.Ms
 		return nil, err
 	}
 
-	return &testdata.MsgCreateCounterResponse{}, nil
+	return &baseapptestutil.MsgCreateCounterResponse{}, nil
 }
 
 // Test that successive DeliverTx can see each others' effects
@@ -63,7 +63,7 @@ func TestDeliverTx(t *testing.T) {
 
 	app := appBuilder.Build(log.MustNewDefaultLogger("plain", "info", false), testCtx.DB, nil, anteOpt)
 	app.SetCMS(testCtx.CMS)
-	testdata.RegisterInterfaces(cdc.InterfaceRegistry())
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
 	// patch in TxConfig instead of using an output from x/auth/tx
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
@@ -74,7 +74,7 @@ func TestDeliverTx(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 
 	deliverKey := []byte("deliver-key")
-	testdata.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+	baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
 
 	nBlocks := 3
 	txPerHeight := 5
@@ -117,7 +117,7 @@ func counterEvent(evType string, msgCount int64) sdk.Events {
 func newTxCounter(counter int64, msgCounters ...int64) *txTest {
 	msgs := make([]sdk.Msg, 0, len(msgCounters))
 	for _, c := range msgCounters {
-		msg := &testdata.MsgCounter{Counter: c, FailOnHandler: false}
+		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false}
 		msgs = append(msgs, msg)
 	}
 
@@ -142,8 +142,8 @@ func (tx *txTest) setFailOnAnte(fail bool) {
 
 func (tx *txTest) setFailOnHandler(fail bool) {
 	for i, msg := range tx.Msgs {
-		tx.Msgs[i] = &testdata.MsgCounter{
-			Counter:       msg.(*testdata.MsgCounter).Counter,
+		tx.Msgs[i] = &baseapptestutil.MsgCounter{
+			Counter:       msg.(*baseapptestutil.MsgCounter).Counter,
 			FailOnHandler: fail,
 		}
 	}
@@ -159,7 +159,7 @@ func (tx txTest) ProtoMessage()        {}
 func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.AnteHandler {
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		store := ctx.KVStore(capKey)
-		txTest := tx.GetMsgs()[0].(*testdata.MsgCounter)
+		txTest := tx.GetMsgs()[0].(*baseapptestutil.MsgCounter)
 
 		// if txTest.FailOnAnte {
 		// 	return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")

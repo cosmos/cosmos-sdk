@@ -46,7 +46,7 @@ and percentage. Any chain developer can extend upon these two, by creating
 custom decision policies, as long as they adhere to the `DecisionPolicy`
 interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/group/types.go#L27-L41
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/group/types.go#L27-L41
 
 ### Threshold decision policy
 

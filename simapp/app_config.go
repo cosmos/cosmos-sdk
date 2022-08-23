@@ -3,28 +3,6 @@ package simapp
 import (
 	"time"
 
-	"google.golang.org/protobuf/types/known/durationpb"
-
-	"cosmossdk.io/core/appconfig"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
@@ -46,6 +24,27 @@ import (
 	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
+	"cosmossdk.io/core/appconfig"
+	"google.golang.org/protobuf/types/known/durationpb"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/nft"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // Alternatively the AppConfig can be defined as a YAML or a JSON file.
@@ -130,8 +129,20 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 			Config: appconfig.WrapAny(&vestingmodulev1.Module{}),
 		},
 		{
-			Name:   banktypes.ModuleName,
-			Config: appconfig.WrapAny(&bankmodulev1.Module{}),
+			Name: banktypes.ModuleName,
+			Config: appconfig.WrapAny(&bankmodulev1.Module{
+				BlockedModuleAccountsOverride: []string{
+					authtypes.FeeCollectorName,
+					distrtypes.ModuleName,
+					minttypes.ModuleName,
+					stakingtypes.BondedPoolName,
+					stakingtypes.NotBondedPoolName,
+					govtypes.ModuleName,
+					nft.ModuleName,
+					// We allow the following module accounts to receive funds:
+					// govtypes.ModuleName
+				},
+			}),
 		},
 		{
 			Name:   stakingtypes.ModuleName,

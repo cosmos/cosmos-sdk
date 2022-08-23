@@ -44,4 +44,4 @@ rm -rf github.com
 
 go mod tidy -compat=1.18
 
-./scripts/protocgen2.sh
+./scripts/protocgen-pulsar.sh

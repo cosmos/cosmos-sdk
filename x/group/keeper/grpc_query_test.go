@@ -8,45 +8,63 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/x/group/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group/module"
+	"github.com/golang/mock/gomock"
+	"github.com/tendermint/tendermint/libs/log"
+
+	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
+
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestQueryGroupsByMember(t *testing.T) {
 	var (
-		bankKeeper        bankkeeper.Keeper
 		groupKeeper       groupkeeper.Keeper
-		stakingKeeper     *stakingkeeper.Keeper
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
-	app, err := simtestutil.Setup(
-		testutil.AppConfig,
-		&interfaceRegistry,
-		&bankKeeper,
-		&groupKeeper,
-		&stakingKeeper,
-	)
-	require.NoError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
-	group.RegisterQueryServer(queryHelper, groupKeeper)
-	queryClient := group.NewQueryClient(queryHelper)
+	key := sdk.NewKVStoreKey(group.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+
+	ctx := testCtx.Ctx
+
 	sdkCtx := sdk.WrapSDKContext(ctx)
 
-	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 6, sdk.NewInt(30000000))
+	bApp := baseapp.NewBaseApp(
+		"group",
+		log.NewNopLogger(),
+		testCtx.DB,
+		encCfg.TxConfig.TxDecoder(),
+	)
+
+	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
+
+	addrs := simtestutil.CreateIncrementalAccounts(6)
+	ctrl := gomock.NewController(t)
+	accountKeeper := grouptestutil.NewMockAccountKeeper(ctrl)
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), addrs[0]).Return(authtypes.NewBaseAccountWithAddress(addrs[0])).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), addrs[1]).Return(authtypes.NewBaseAccountWithAddress(addrs[1])).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), addrs[2]).Return(authtypes.NewBaseAccountWithAddress(addrs[2])).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), addrs[3]).Return(authtypes.NewBaseAccountWithAddress(addrs[3])).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), addrs[4]).Return(authtypes.NewBaseAccountWithAddress(addrs[4])).AnyTimes()
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), addrs[5]).Return(authtypes.NewBaseAccountWithAddress(addrs[5])).AnyTimes()
+
+	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
 
 	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{
 		{Address: addrs[2].String(), Weight: "1"}, {Address: addrs[3].String(), Weight: "2"},
 	}
 
-	_, err = groupKeeper.CreateGroup(sdkCtx, &group.MsgCreateGroup{
+	_, err := groupKeeper.CreateGroup(sdkCtx, &group.MsgCreateGroup{
 		Admin:   addrs[0].String(),
 		Members: members,
 	})
@@ -60,6 +78,10 @@ func TestQueryGroupsByMember(t *testing.T) {
 		Members: members,
 	})
 	require.NoError(t, err)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
+	group.RegisterQueryServer(queryHelper, groupKeeper)
+	queryClient := group.NewQueryClient(queryHelper)
 
 	// not part of any group
 	resp, err := queryClient.GroupsByMember(context.Background(), &group.QueryGroupsByMemberRequest{

@@ -145,3 +145,64 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestCommunityPoolSpend() {
+	recipient := sdk.AccAddress([]byte("addr1_______________"))
+
+	testCases := []struct {
+		name      string
+		input     *types.MsgCommunityPoolSpend
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "invalid authority",
+			input: &types.MsgCommunityPoolSpend{
+				Authority: "invalid",
+				Recipient: recipient.String(),
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
+			},
+			expErr:    true,
+			expErrMsg: "invalid authority",
+		},
+		{
+			name: "invalid recipient",
+			input: &types.MsgCommunityPoolSpend{
+				Authority: s.distrKeeper.GetAuthority(),
+				Recipient: "invalid",
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
+			},
+			expErr:    true,
+			expErrMsg: "decoding bech32 failed",
+		},
+		{
+			name: "valid message",
+			input: &types.MsgCommunityPoolSpend{
+				Authority: s.distrKeeper.GetAuthority(),
+				Recipient: recipient.String(),
+				Amount:    sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
+			},
+			expErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			_, err := s.msgServer.CommunityPoolSpend(s.ctx, tc.input)
+
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+
+				r, err := sdk.AccAddressFromBech32(tc.input.Recipient)
+				s.Require().NoError(err)
+
+				b := s.bankKeeper.GetAllBalances(s.ctx, r)
+				s.Require().False(b.IsZero())
+			}
+		})
+	}
+}

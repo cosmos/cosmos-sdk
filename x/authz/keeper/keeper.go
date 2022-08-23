@@ -149,7 +149,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		sdkEvents := make([]sdk.Event, 0, len(events))
 		for _, event := range events {
 			e := event
-			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: "authz_msg_index", Value: strconv.Itoa(i)})
+			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: []byte("authz_msg_index"), Value: []byte(strconv.Itoa(i))})
 
 			sdkEvents = append(sdkEvents, sdk.Event(e))
 		}

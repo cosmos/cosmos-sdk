@@ -61,7 +61,6 @@ vagrant
 # Depinject & Graphviz
 dependency-graph.png
 debug_container.dot
-debug_container.log
 
 # Latex
 *.aux
@@ -69,4 +68,3 @@ debug_container.log
 *.synctex.gz
 /x/genutil/config/priv_validator_key.json
 /x/genutil/data/priv_validator_state.json
-simapp/simapp.test

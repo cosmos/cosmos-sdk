@@ -216,7 +216,13 @@ func start[T types.Application](svrCtx *Context, clientCtx client.Context, appCr
 	}
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
-	_, err = startTelemetry(serverconfig.GetConfig(ctx.Viper))
+
+	config, err := serverconfig.GetConfig(ctx.Viper)
+	if err != nil {
+		return err
+	}
+
+	_, err = startTelemetry(config)
 	if err != nil {
 		return err
 	}
@@ -337,8 +343,12 @@ func startInProcess[T types.Application](svrCtx *Context, svrCfg serverconfig.Co
 		return err
 	}
 
-	config, err := config.GetConfig(ctx.Viper)
+	config, err := serverconfig.GetConfig(ctx.Viper)
 	if err != nil {
+		return err
+	}
+
+	if err := config.ValidateBasic(); err != nil {
 		return err
 	}
 

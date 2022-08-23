@@ -59,6 +59,7 @@ var (
 		{Account: nft.ModuleName},
 	}
 
+	// blocked account addresses
 	blockAccAddrs = []string{
 		authtypes.FeeCollectorName,
 		distrtypes.ModuleName,
@@ -70,8 +71,7 @@ var (
 		// govtypes.ModuleName
 	}
 
-	// Alternatively the AppConfig can be defined as a YAML or a JSON file.
-	// e.g. https://github.com/cosmos/cosmos-sdk/blob/91b1d83f1339e235a1dfa929ecc00084101a19e3/simapp/app.yaml
+	// application configuration (used by depinject)
 	AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		Modules: []*appv1alpha1.ModuleConfig{
 			{

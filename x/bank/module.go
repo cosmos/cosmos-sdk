@@ -12,7 +12,6 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -232,10 +231,9 @@ func provideModule(in bankInputs) bankOutputs {
 	// Default behavior for blockedAddresses is to regard any module mentioned in
 	// AccountKeeper's module account permissions as blocked.
 	blockedAddresses := make(map[string]bool)
-	if len(in.Config.BlockedModuleAccountsOverride) != 0 {
+	if len(in.Config.BlockedModuleAccountsOverride) > 0 {
 		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
-			addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
-			blockedAddresses[addr.String()] = true
+			blockedAddresses[authtypes.NewModuleAddress(moduleName).String()] = true
 		}
 	} else {
 		for _, permission := range in.AccountKeeper.GetModulePermissions() {

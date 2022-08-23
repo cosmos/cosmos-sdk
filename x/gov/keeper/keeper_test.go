@@ -15,6 +15,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -85,12 +87,33 @@ func setupGovKeeper(t *testing.T) (
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
+	// Create MsgServiceRouter, but don't populate it before creating the gov
+	// keeper.
+	msr := baseapp.NewMsgServiceRouter()
+
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	acctKeeper := govtestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := govtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := govtestutil.NewMockStakingKeeper(ctrl)
-	govKeeper := keeper.NewKeeper(encCfg.Codec, key, acctKeeper, bankKeeper, stakingKeeper, nil, types.DefaultConfig(), "")
+	acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
+	acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
+
+	// Gov keeper initializations
+	govKeeper := keeper.NewKeeper(encCfg.Codec, key, acctKeeper, bankKeeper, stakingKeeper, msr, types.DefaultConfig(), govAcct.String())
+	govKeeper.SetProposalID(ctx, 1)
+
+	// Register all handlers for the MegServiceRouter
+	msr.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	v1.RegisterInterfaces(encCfg.InterfaceRegistry)
+	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
+	v1.RegisterMsgServer(msr, keeper.NewMsgServerImpl(govKeeper))
+	banktypes.RegisterMsgServer(msr, nil) // Nil is fine here as long as we never execute the proposal's Msgs.
+
+	// Also register legacy gov handlers to test them too.
+	govRouter := v1beta1.NewRouter()
+	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
+	govKeeper.SetLegacyRouter(govRouter)
 
 	return govKeeper, acctKeeper, bankKeeper, stakingKeeper, encCfg, ctx
 }

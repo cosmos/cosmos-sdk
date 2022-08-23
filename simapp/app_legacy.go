@@ -642,6 +642,8 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 }
 
 // GetMaccPerms returns a copy of the module account permissions
+//
+// NOTE: This is solely to be used for testing purposes.
 func GetMaccPerms() map[string][]string {
 	dupMaccPerms := make(map[string][]string)
 	for k, v := range maccPerms {
@@ -654,7 +656,7 @@ func GetMaccPerms() map[string][]string {
 // ModuleAccountAddrsLegacy returns all the app's module account addresses.
 func ModuleAccountAddrsLegacy() map[string]bool {
 	modAccAddrs := make(map[string]bool)
-	for acc := range maccPerms {
+	for acc := range GetMaccPerms() {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
 

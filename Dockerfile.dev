@@ -1,4 +1,6 @@
-# This dockerfile will be used to bootstrap the docker changes for the cosmos SDK, and will be built hourly.
+# this dockerfile builds daily in the github.com/cosmos/cosmos-sdk repository
+# It can be used to work on the cosmos sdk or work on CosmWamsm smart contracts
+# it is published to ghcr.io/cosmos/cosmos-devenv
 
 FROM manjarolinux/base
 

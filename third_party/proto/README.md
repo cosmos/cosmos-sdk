@@ -3,5 +3,5 @@
 To generate the protos that were present in this folder run:
 
 ```bash
-buf export buf.build/cosmos/cosmos-sdk:$(git log -1 --pretty=format:"%H" <sdk_version_tag>) --output .
+buf export buf.build/cosmos/cosmos-sdk:$(curl -sS https://api.github.com/repos/cosmos/cosmos-sdk/commits/<sdk_version_tag> | jq -r .sha) --output .
 ```

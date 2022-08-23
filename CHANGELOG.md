@@ -39,6 +39,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* nothing
+
+---
+
+## [v0.46.0-pio-1-rc4](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc4) - 2022-08-23
+
 ### Improvements
 
 * Add support for event data injection into end block handlers (https://github.com/provenance-io/provenance/issues/626)

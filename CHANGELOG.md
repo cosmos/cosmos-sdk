@@ -39,7 +39,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
 * Add support for event data injection into end block handlers (https://github.com/provenance-io/provenance/issues/626)
+* Updated the swagger files. [1017](https://github.com/provenance-io/provenance/issues/1017)
 
 ---
 

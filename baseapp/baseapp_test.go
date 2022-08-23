@@ -967,54 +967,6 @@ func TestCheckTx(t *testing.T) {
 	require.Nil(t, storedBytes)
 }
 
-// Test that successive DeliverTx can see each others' effects
-// on the store, both within and across blocks.
-func TestDeliverTx(t *testing.T) {
-	// test increments in the ante
-	anteKey := []byte("ante-key")
-	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
-
-	// test increments in the handler
-	// deliverKey := []byte("deliver-key")
-	// routerOpt := func(bapp *BaseApp) {
-	// 	r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
-	// 	bapp.Router().AddRoute(r)
-	// }
-
-	app := setupBaseApp(t, anteOpt)
-	app.InitChain(abci.RequestInitChain{})
-
-	// Create same codec used in txDecoder
-	codec := codec.NewLegacyAmino()
-	registerTestCodec(codec)
-
-	nBlocks := 3
-	txPerHeight := 5
-
-	for blockN := 0; blockN < nBlocks; blockN++ {
-		header := tmproto.Header{Height: int64(blockN) + 1}
-		app.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-		for i := 0; i < txPerHeight; i++ {
-			counter := int64(blockN*txPerHeight + i)
-			tx := newTxCounter(counter, counter)
-
-			txBytes, err := codec.Marshal(tx)
-			require.NoError(t, err)
-
-			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
-			events := res.GetEvents()
-			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
-			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
-			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0], events[2], "msg handler update counter event")
-		}
-
-		app.EndBlock(abci.RequestEndBlock{})
-		app.Commit()
-	}
-}
-
 // Number of messages doesn't matter to CheckTx.
 func TestMultiMsgCheckTx(t *testing.T) {
 	// TODO: ensure we get the same results

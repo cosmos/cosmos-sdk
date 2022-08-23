@@ -124,9 +124,9 @@ Often times the entity owning that address might not be a single individual. For
 
 To represent weighted vote on chain, we use the following Protobuf message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L33-L43
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L33-L43
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L136-L150
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L136-L150
 
 For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 

@@ -50,10 +50,15 @@ vagrant
 
 # Graphviz
 dependency-graph.png
+debug_container.dot
 
 # Latex
 *.aux
 *.out
 *.synctex.gz
 /x/genutil/config/priv_validator_key.json
+<<<<<<< HEAD
 /x/genutil/data/priv_validator_state.json
+=======
+/x/genutil/data/priv_validator_state.json
+>>>>>>> c76a00b28 (docs: improve UPGRADING.md instructions for v0.46.0 (#12646))

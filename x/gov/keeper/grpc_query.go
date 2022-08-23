@@ -162,6 +162,7 @@ func (q Keeper) Params(c context.Context, req *v1.QueryParamsRequest) (*v1.Query
 
 	response := &v1.QueryParamsResponse{}
 
+	//nolint:staticcheck
 	switch req.ParamsType {
 	case v1.ParamDeposit:
 		depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
@@ -371,11 +372,11 @@ func (q legacyQueryServer) Votes(c context.Context, req *v1beta1.QueryVotesReque
 	}, nil
 }
 
+//nolint:staticcheck
 func (q legacyQueryServer) Params(c context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
 	resp, err := q.keeper.Params(c, &v1.QueryParamsRequest{
 		ParamsType: req.ParamsType,
 	})
-
 	if err != nil {
 		return nil, err
 	}

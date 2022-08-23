@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -62,7 +63,7 @@ func readChunks(chunks <-chan io.ReadCloser) [][]byte {
 }
 
 // snapshotItems serialize a array of bytes as SnapshotItem_ExtensionPayload, and return the chunks.
-func snapshotItems(items [][]byte) [][]byte {
+func snapshotItems(items [][]byte, ext snapshottypes.ExtensionSnapshotter) [][]byte {
 	// copy the same parameters from the code
 	snapshotChunkSize := uint64(10e6)
 	snapshotBufferSize := int(snapshotChunkSize)
@@ -74,8 +75,20 @@ func snapshotItems(items [][]byte) [][]byte {
 		zWriter, _ := zlib.NewWriterLevel(bufWriter, 7)
 		protoWriter := protoio.NewDelimitedWriter(zWriter)
 		for _, item := range items {
-			_ = snapshottypes.WriteExtensionItem(protoWriter, item)
+			_ = snapshottypes.WriteExtensionPayload(protoWriter, item)
 		}
+		// write extension metadata
+		_ = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
+			Item: &snapshottypes.SnapshotItem_Extension{
+				Extension: &snapshottypes.SnapshotExtensionMeta{
+					Name:   ext.SnapshotName(),
+					Format: ext.SnapshotFormat(),
+				},
+			},
+		})
+		_ = ext.SnapshotExtension(0, func(payload []byte) error {
+			return snapshottypes.WriteExtensionPayload(protoWriter, payload)
+		})
 		_ = protoWriter.Close()
 		_ = zWriter.Close()
 		_ = bufWriter.Flush()
@@ -110,10 +123,11 @@ func (m *mockSnapshotter) Restore(
 		return snapshottypes.SnapshotItem{}, errors.New("already has contents")
 	}
 
+	var item snapshottypes.SnapshotItem
 	m.items = [][]byte{}
 	for {
-		item := &snapshottypes.SnapshotItem{}
-		err := protoReader.ReadMsg(item)
+		item.Reset()
+		err := protoReader.ReadMsg(&item)
 		if err == io.EOF {
 			break
 		} else if err != nil {
@@ -121,17 +135,17 @@ func (m *mockSnapshotter) Restore(
 		}
 		payload := item.GetExtensionPayload()
 		if payload == nil {
-			return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
+			break
 		}
 		m.items = append(m.items, payload.Payload)
 	}
 
-	return snapshottypes.SnapshotItem{}, nil
+	return item, nil
 }
 
 func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	for _, item := range m.items {
-		if err := snapshottypes.WriteExtensionItem(protoWriter, item); err != nil {
+		if err := snapshottypes.WriteExtensionPayload(protoWriter, item); err != nil {
 			return err
 		}
 	}
@@ -215,4 +229,53 @@ func (m *hungSnapshotter) Restore(
 	height uint64, format uint32, protoReader protoio.Reader,
 ) (snapshottypes.SnapshotItem, error) {
 	panic("not implemented")
+}
+
+type extSnapshotter struct {
+	state []uint64
+}
+
+func newExtSnapshotter(count int) *extSnapshotter {
+	state := make([]uint64, 0, count)
+	for i := 0; i < count; i++ {
+		state = append(state, uint64(i))
+	}
+	return &extSnapshotter{
+		state,
+	}
+}
+
+func (s *extSnapshotter) SnapshotName() string {
+	return "mock"
+}
+
+func (s *extSnapshotter) SnapshotFormat() uint32 {
+	return 1
+}
+
+func (s *extSnapshotter) SupportedFormats() []uint32 {
+	return []uint32{1}
+}
+
+func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshottypes.ExtensionPayloadWriter) error {
+	for _, i := range s.state {
+		if err := payloadWriter(sdk.Uint64ToBigEndian(uint64(i))); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadReader snapshottypes.ExtensionPayloadReader) error {
+	for {
+		payload, err := payloadReader()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+		s.state = append(s.state, sdk.BigEndianToUint64(payload))
+	}
+	// finalize restoration
+	return nil
 }

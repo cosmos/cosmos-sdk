@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -14,7 +14,7 @@ import (
 
 func TestFormatBytes(t *testing.T) {
 	var testcases []bytesTest
-	raw, err := ioutil.ReadFile("../internal/testdata/bytes.json")
+	raw, err := os.ReadFile("../internal/testdata/bytes.json")
 	require.NoError(t, err)
 
 	err = json.Unmarshal(raw, &testcases)

@@ -68,31 +68,52 @@ func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 	return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
 }
 
+type GenesisAccount struct {
+	authtypes.GenesisAccount
+	Coins sdk.Coins
+}
+
+// StartupConfig defines the startup configuration new a test application.
+//
+// ValidatorSet defines a custom validator set to be validating the app.
+// BaseAppOption defines the additional operations that must be run on baseapp before app start.
+// AtGenesis defines if the app started should already have produced block or not.
+type StartupConfig struct {
+	ValidatorSet    func() (*tmtypes.ValidatorSet, error)
+	BaseAppOption   runtime.BaseAppOption
+	AtGenesis       bool
+	GenesisAccounts []GenesisAccount
+}
+
+func DefaultStartUpConfig() StartupConfig {
+	priv := secp256k1.GenPrivKey()
+	ba := authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), priv.PubKey(), 0, 0)
+	ga := GenesisAccount{ba, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000)))}
+	return StartupConfig{
+		ValidatorSet:    CreateRandomValidatorSet,
+		AtGenesis:       false,
+		GenesisAccounts: []GenesisAccount{ga},
+	}
+}
+
 // Setup initializes a new runtime.App and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func Setup(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	return SetupWithConfiguration(appConfig, CreateRandomValidatorSet, nil, false, extraOutputs...)
+	return SetupWithConfiguration(appConfig, DefaultStartUpConfig(), extraOutputs...)
 }
 
 // SetupAtGenesis initializes a new runtime.App at genesis and can inject values into extraOutputs.
 // It uses SetupWithConfiguration under the hood.
 func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*runtime.App, error) {
-	return SetupWithConfiguration(appConfig, CreateRandomValidatorSet, nil, true, extraOutputs...)
-}
-
-// SetupWithBaseAppOption initializes a new runtime.App and can inject values into extraOutputs.
-// With specific baseApp options. It uses SetupWithConfiguration under the hood.
-func SetupWithBaseAppOption(appConfig depinject.Config, baseAppOption runtime.BaseAppOption, extraOutputs ...interface{}) (*runtime.App, error) {
-	return SetupWithConfiguration(appConfig, CreateRandomValidatorSet, baseAppOption, false, extraOutputs...)
+	cfg := DefaultStartUpConfig()
+	cfg.AtGenesis = true
+	return SetupWithConfiguration(appConfig, cfg, extraOutputs...)
 }
 
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
 // appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
-// validatorSet defines a custom validator set to be validating the app.
-// baseAppOption defines the additional operations that must be run on baseapp before app start.
-// genesis defines if the app started should already have produced block or not.
 // extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
-func SetupWithConfiguration(appConfig depinject.Config, validatorSet func() (*tmtypes.ValidatorSet, error), baseAppOption runtime.BaseAppOption, genesis bool, extraOutputs ...interface{}) (*runtime.App, error) {
+func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupConfig, extraOutputs ...interface{}) (*runtime.App, error) {
 	// create the app with depinject
 	var (
 		app        *runtime.App
@@ -107,8 +128,8 @@ func SetupWithConfiguration(appConfig depinject.Config, validatorSet func() (*tm
 		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
 	}
 
-	if baseAppOption != nil {
-		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil, baseAppOption)
+	if startupConfig.BaseAppOption != nil {
+		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil, startupConfig.BaseAppOption)
 	} else {
 		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
 	}
@@ -117,20 +138,21 @@ func SetupWithConfiguration(appConfig depinject.Config, validatorSet func() (*tm
 	}
 
 	// create validator set
-	valSet, err := validatorSet()
+	valSet, err := startupConfig.ValidatorSet()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create validator set")
 	}
 
-	// generate genesis account
-	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
-	balance := banktypes.Balance{
-		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+	var (
+		balances    []banktypes.Balance
+		genAccounts []authtypes.GenesisAccount
+	)
+	for _, ga := range startupConfig.GenesisAccounts {
+		genAccounts = append(genAccounts, ga.GenesisAccount)
+		balances = append(balances, banktypes.Balance{Address: ga.GenesisAccount.GetAddress().String(), Coins: ga.Coins})
 	}
 
-	genesisState, err := GenesisStateWithValSet(codec, appBuilder.DefaultGenesis(), valSet, []authtypes.GenesisAccount{acc}, balance)
+	genesisState, err := GenesisStateWithValSet(codec, appBuilder.DefaultGenesis(), valSet, genAccounts, balances...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create genesis state: %w", err)
 	}
@@ -151,7 +173,7 @@ func SetupWithConfiguration(appConfig depinject.Config, validatorSet func() (*tm
 	)
 
 	// commit genesis changes
-	if !genesis {
+	if !startupConfig.AtGenesis {
 		app.Commit()
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
 			Height:             app.LastBlockHeight() + 1,

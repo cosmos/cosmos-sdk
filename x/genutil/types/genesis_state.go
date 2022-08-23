@@ -93,9 +93,9 @@ func GenesisStateFromGenFile(genFile string) (genesisState map[string]json.RawMe
 }
 
 // ValidateGenesis validates GenTx transactions
-func ValidateGenesis(genesisState *GenesisState, txJSONDecoder sdk.TxDecoder) error {
+func ValidateGenesis(genesisState *GenesisState, txJSONDecoder sdk.TxDecoder, validator MessageValidator) error {
 	for _, genTx := range genesisState.GenTxs {
-		_, err := ValidateAndGetGenTx(genTx, txJSONDecoder)
+		_, err := ValidateAndGetGenTx(genTx, txJSONDecoder, validator)
 		if err != nil {
 			return err
 		}
@@ -103,27 +103,29 @@ func ValidateGenesis(genesisState *GenesisState, txJSONDecoder sdk.TxDecoder) er
 	return nil
 }
 
+type MessageValidator func([]sdk.Msg) error
+
+func DefaultMessageValidator(msgs []sdk.Msg) error {
+	if len(msgs) != 1 {
+		return fmt.Errorf("unexpected number of GenTx messages; got: %d, expected: 1", len(msgs))
+	}
+	if _, ok := msgs[0].(*stakingtypes.MsgCreateValidator); !ok {
+		return fmt.Errorf("unexpected GenTx message type; expected: MsgCreateValidator, got: %T", msgs[0])
+	}
+	if err := msgs[0].ValidateBasic(); err != nil {
+		return fmt.Errorf("invalid GenTx '%s': %w", msgs[0], err)
+	}
+
+	return nil
+}
+
 // ValidateAndGetGenTx validates the genesis transaction and returns GenTx if valid
 // it cannot verify the signature as it is stateless validation
-func ValidateAndGetGenTx(genTx json.RawMessage, txJSONDecoder sdk.TxDecoder) (sdk.Tx, error) {
+func ValidateAndGetGenTx(genTx json.RawMessage, txJSONDecoder sdk.TxDecoder, validator MessageValidator) (sdk.Tx, error) {
 	tx, err := txJSONDecoder(genTx)
 	if err != nil {
 		return tx, fmt.Errorf("failed to decode gentx: %s, error: %s", genTx, err)
 	}
 
-	msgs := tx.GetMsgs()
-	if len(msgs) != 1 {
-		return tx, fmt.Errorf("unexpected number of GenTx messages; got: %d, expected: 1", len(msgs))
-	}
-
-	// TODO: abstract back to staking
-	if _, ok := msgs[0].(*stakingtypes.MsgCreateValidator); !ok {
-		return tx, fmt.Errorf("unexpected GenTx message type; expected: MsgCreateValidator, got: %T", msgs[0])
-	}
-
-	if err := msgs[0].ValidateBasic(); err != nil {
-		return tx, fmt.Errorf("invalid GenTx '%s': %s", msgs[0], err)
-	}
-
-	return tx, nil
+	return tx, validator(tx.GetMsgs())
 }

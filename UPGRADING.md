@@ -135,4 +135,4 @@ The `third_party/proto` folder that existed in [previous version](https://github
 
 Instead, the SDK uses [`buf`](https://buf.build). Clients should have their own `buf.yaml` with `buf.build/cosmos/cosmos-sdk` as dependency, in order to avoid having to copy paste these files.
 
-The protos can as well be downloaded using `buf export buf.build/cosmos/cosmos-sdk --output <some_folder>`.
+The protos can as well be downloaded using `buf export buf.build/cosmos/cosmos-sdk:$(git log -1 --pretty=format:"%H" v0.46.0) --output <some_folder>`.

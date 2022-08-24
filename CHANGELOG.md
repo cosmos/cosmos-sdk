@@ -45,7 +45,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [#12995](https://github.com/cosmos/cosmos-sdk/pull/12995) Add `FormatTime` and `ParseTimeString` methods
+* [#12981](https://github.com/cosmos/cosmos-sdk/pull/12981) Return proper error when parsing telemetry configuration.
+* [#12995](https://github.com/cosmos/cosmos-sdk/pull/12995) Add `FormatTime` and `ParseTimeString` methods.
 * [#12952](https://github.com/cosmos/cosmos-sdk/pull/12952) Replace keyring module to Cosmos fork.
 * [#12352](https://github.com/cosmos/cosmos-sdk/pull/12352) Move the `RegisterSwaggerAPI` logic into a separate helper function in the server package.
 * [#12876](https://github.com/cosmos/cosmos-sdk/pull/12876) Remove proposer-based rewards.
@@ -113,6 +114,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (appModule) Remove `Route`, `QuerierRoute` and `LegacyQuerierHandler` from AppModule Interface. 
 * (x/modules) Remove all LegacyQueries and related code from modules
 * (store) [#11825](https://github.com/cosmos/cosmos-sdk/pull/11825) Make extension snapshotter interface safer to use, renamed the util function `WriteExtensionItem` to `WriteExtensionPayload`.
+* (x/genutil)[#12956](https://github.com/cosmos/cosmos-sdk/pull/12956) `genutil.AppModuleBasic` has a new attribute: genesis transaction validation function. The existing validation logic is implemented in `genutiltypes.DefaultMessageValidator`. Use `genutil.NewAppModuleBasic` to create a new genutil Module Basic.
 * (codec) [#12964](https://github.com/cosmos/cosmos-sdk/pull/12964) `ProtoCodec.MarshalInterface` now returns an error when serializing unregistered types and a subsequent `ProtoCodec.UnmarshalInterface` would fail.
 * (x/staking) [#12973](https://github.com/cosmos/cosmos-sdk/pull/12973) Removed `stakingkeeper.RandomValidator`. Use `testutil.RandSliceElem(r, sk.GetAllValidators(ctx))` instead.
 

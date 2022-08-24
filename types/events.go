@@ -9,10 +9,10 @@ import (
 
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
-	proto2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/gogo/protobuf/jsonpb"
-	"github.com/gogo/protobuf/proto"
+	gogoproto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -52,7 +52,7 @@ func (em EventManager) ABCIEvents() []abci.Event {
 }
 
 // EmitTypedEvent takes typed event and emits converting it into Event
-func (em *EventManager) EmitTypedEvent(tev proto.Message) error {
+func (em *EventManager) EmitTypedEvent(tev gogoproto.Message) error {
 	event, err := TypedEventToEvent(tev)
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func (em *EventManager) EmitTypedEvent(tev proto.Message) error {
 }
 
 // EmitTypedEvents takes series of typed events and emit
-func (em *EventManager) EmitTypedEvents(tevs ...proto.Message) error {
+func (em *EventManager) EmitTypedEvents(tevs ...gogoproto.Message) error {
 	events := make(Events, len(tevs))
 	for i, tev := range tevs {
 		res, err := TypedEventToEvent(tev)
@@ -78,12 +78,12 @@ func (em *EventManager) EmitTypedEvents(tevs ...proto.Message) error {
 }
 
 // TypedEventToEvent takes typed event and converts to Event object
-func TypedEventToEvent(tev proto.Message) (Event, error) {
+func TypedEventToEvent(tev gogoproto.Message) (Event, error) {
 	var evtType string
-	if pulsarMsg, ok := tev.(proto2.Message); ok {
-		evtType = string(proto2.MessageName(pulsarMsg))
+	if pulsarMsg, ok := tev.(proto.Message); ok {
+		evtType = string(proto.MessageName(pulsarMsg))
 	} else {
-		evtType = proto.MessageName(tev)
+		evtType = gogoproto.MessageName(tev)
 	}
 	evtJSON, err := codec.ProtoMarshalJSON(tev, nil)
 	if err != nil {
@@ -116,8 +116,8 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 }
 
 // ParseTypedEvent converts abci.Event back to typed event
-func ParseTypedEvent(event abci.Event) (proto.Message, error) {
-	concreteGoType := proto.MessageType(event.Type)
+func ParseTypedEvent(event abci.Event) (gogoproto.Message, error) {
+	concreteGoType := gogoproto.MessageType(event.Type)
 	if concreteGoType == nil {
 		return nil, fmt.Errorf("failed to retrieve the message of type %q", event.Type)
 	}
@@ -129,9 +129,9 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 		value = reflect.Zero(concreteGoType)
 	}
 
-	protoMsg, ok := value.Interface().(proto.Message)
+	protoMsg, ok := value.Interface().(gogoproto.Message)
 	if !ok {
-		return nil, fmt.Errorf("%q does not implement proto.Message", event.Type)
+		return nil, fmt.Errorf("%q does not implement gogoproto.Message", event.Type)
 	}
 
 	attrMap := make(map[string]json.RawMessage)

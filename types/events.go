@@ -79,12 +79,13 @@ func (em *EventManager) EmitTypedEvents(tevs ...gogoproto.Message) error {
 
 // TypedEventToEvent takes typed event and converts to Event object
 func TypedEventToEvent(tev gogoproto.Message) (Event, error) {
-	var evtType string
-	if pulsarMsg, ok := tev.(proto.Message); ok {
-		evtType = string(proto.MessageName(pulsarMsg))
-	} else {
-		evtType = gogoproto.MessageName(tev)
+	evtType := gogoproto.MessageName(tev)
+	if evtType == "" {
+		if pulsarMsg, ok := tev.(proto.Message); ok {
+			evtType = string(proto.MessageName(pulsarMsg))
+		}
 	}
+
 	evtJSON, err := codec.ProtoMarshalJSON(tev, nil)
 	if err != nil {
 		return Event{}, err

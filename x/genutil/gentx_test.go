@@ -222,9 +222,6 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			suite.SetupTest()
 			cdc := suite.encodingConfig.Codec
 
-			//suite.stakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
-			//stakingGenesisState := suite.stakingKeeper.ExportGenesis(suite.ctx)
-			//suite.Require().Equal(stakingGenesisState.Params, stakingtypes.DefaultParams())
 
 			stakingGenesis, err := cdc.MarshalJSON(&stakingtypes.GenesisState{Params: stakingtypes.DefaultParams()}) // TODO switch this to use Marshaler
 			suite.Require().NoError(err)

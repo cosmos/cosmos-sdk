@@ -13,10 +13,15 @@ message MsgCounter {
 
 message MsgCounter2 {
   int64 counter       = 1;
+  bool  fail_on_handler = 2;
 }
 
 service Counter {
-    rpc IncreaseCounter(MsgCounter) returns (MsgCreateCounterResponse);
+    rpc IncrementCounter(MsgCounter) returns (MsgCreateCounterResponse);
+}
+
+service Counter2 {
+    rpc IncrementCounter(MsgCounter2) returns (MsgCreateCounterResponse);
 }
 
 message MsgCreateCounterResponse {}

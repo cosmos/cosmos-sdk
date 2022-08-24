@@ -7,8 +7,11 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"reflect"
 	"strconv"
+	"strings"
 	"testing"
+	"unsafe"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -22,6 +25,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -34,20 +38,138 @@ type CounterServerImpl struct {
 	deliverKey []byte
 }
 
-func (m CounterServerImpl) IncreaseCounter(ctx context.Context, msg *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+type Counter2ServerImpl struct {
+	t          *testing.T
+	capKey     storetypes.StoreKey
+	deliverKey []byte
+}
+
+func incrementCounter(ctx context.Context,
+	t *testing.T,
+	capKey storetypes.StoreKey,
+	deliverKey []byte,
+	msg sdk.Msg,
+) (*baseapptestutil.MsgCreateCounterResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	store := sdkCtx.KVStore(m.capKey)
+	store := sdkCtx.KVStore(capKey)
+
+	sdkCtx.GasMeter().ConsumeGas(5, "test")
+
+	var msgCount int64
+
+	switch m := msg.(type) {
+	case *baseapptestutil.MsgCounter:
+		if m.FailOnHandler {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
+		}
+		msgCount = m.Counter
+	case *baseapptestutil.MsgCounter2:
+		if m.FailOnHandler {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
+		}
+		msgCount = m.Counter
+	}
 
 	sdkCtx.EventManager().EmitEvents(
-		counterEvent(sdk.EventTypeMessage, msg.Counter),
+		counterEvent(sdk.EventTypeMessage, msgCount),
 	)
 
-	_, err := incrementingCounter(m.t, store, m.deliverKey, msg.Counter)
+	_, err := incrementingCounter(t, store, deliverKey, msgCount)
 	if err != nil {
 		return nil, err
 	}
 
 	return &baseapptestutil.MsgCreateCounterResponse{}, nil
+}
+
+func (m CounterServerImpl) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	return incrementCounter(ctx, m.t, m.capKey, m.deliverKey, msg)
+}
+
+func (m Counter2ServerImpl) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter2) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	return incrementCounter(ctx, m.t, m.capKey, m.deliverKey, msg)
+}
+
+type CounterServerImplGasMeterOnly struct {
+	gas uint64
+}
+
+func (m CounterServerImplGasMeterOnly) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.GasMeter().ConsumeGas(m.gas, "test")
+	return &baseapptestutil.MsgCreateCounterResponse{}, nil
+}
+
+// Tx processing - CheckTx, DeliverTx, SimulateTx.
+// These tests use the serialized tx as input, while most others will use the
+// Check(), Deliver(), Simulate() methods directly.
+// Ensure that Check/Deliver/Simulate work as expected with the store.
+
+// Test that successive CheckTx can see each others' effects
+// on the store within a block, and that the CheckTx state
+// gets reset to the latest committed state during Commit
+func TestCheckTx(t *testing.T) {
+	// This ante handler reads the key and checks that the value matches the current counter.
+	// This ensures changes to the kvstore persist across successive CheckTx.
+	counterKey := []byte("counter-key")
+
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey)) }
+
+	// Setup baseapp.
+	var (
+		appBuilder *runtime.AppBuilder
+		cdc        codec.ProtoCodecMarshaler
+	)
+	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
+	require.NoError(t, err)
+
+	testCtx := testutil.DefaultContextWithDB(t, capKey1, sdk.NewTransientStoreKey("transient_test"))
+
+	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil, anteOpt)
+	app.SetCMS(testCtx.CMS)
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+	// patch in TxConfig instead of using an output from x/auth/tx
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	// set the TxDecoder in the BaseApp for minimal tx simulations
+	app.SetTxDecoder(txConfig.TxDecoder())
+
+	nTxs := int64(5)
+	app.InitChain(abci.RequestInitChain{})
+
+	baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, counterKey})
+
+	for i := int64(0); i < nTxs; i++ {
+		tx := newTxCounter(txConfig, i, 0) // no messages
+		txBytes, err := txConfig.TxEncoder()(tx)
+		require.NoError(t, err)
+
+		require.NoError(t, err)
+		r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
+		require.Equal(t, testTxPriority, r.Priority)
+		require.Empty(t, r.GetEvents())
+		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
+	}
+
+	checkStateStore := getCheckStateCtx(app).KVStore(capKey1)
+	storedCounter := getIntFromStore(checkStateStore, counterKey)
+
+	// Ensure AnteHandler ran
+	require.Equal(t, nTxs, storedCounter)
+
+	// If a block is committed, CheckTx state should be reset.
+	header := tmproto.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header, Hash: []byte("hash")})
+
+	require.NotNil(t, getCheckStateCtx(app).BlockGasMeter(), "block gas meter should have been set to checkState")
+	require.NotEmpty(t, getCheckStateCtx(app).HeaderHash())
+
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+
+	checkStateStore = getCheckStateCtx(app).KVStore(capKey1)
+	storedBytes := checkStateStore.Get(counterKey)
+	require.Nil(t, storedBytes)
 }
 
 // Test that successive DeliverTx can see each others' effects
@@ -107,6 +229,184 @@ func TestDeliverTx(t *testing.T) {
 	}
 }
 
+// One call to DeliverTx should process all the messages, in order.
+func TestMultiMsgDeliverTx(t *testing.T) {
+	// test increments in the ante
+	anteKey := []byte("ante-key")
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+
+	// Setup baseapp.
+	var (
+		appBuilder *runtime.AppBuilder
+		cdc        codec.ProtoCodecMarshaler
+	)
+	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
+	require.NoError(t, err)
+
+	testCtx := testutil.DefaultContextWithDB(t, capKey1, sdk.NewTransientStoreKey("transient_test"))
+
+	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil, anteOpt)
+	app.SetCMS(testCtx.CMS)
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+	// patch in TxConfig instead of using an output from x/auth/tx
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	// set the TxDecoder in the BaseApp for minimal tx simulations
+	app.SetTxDecoder(txConfig.TxDecoder())
+
+	app.InitChain(abci.RequestInitChain{})
+
+	deliverKey := []byte("deliver-key")
+	baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+	deliverKey2 := []byte("deliver-key2")
+	baseapptestutil.RegisterCounter2Server(app.MsgServiceRouter(), Counter2ServerImpl{t, capKey1, deliverKey2})
+
+	// run a multi-msg tx
+	// with all msgs the same route
+
+	header := tmproto.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	tx := newTxCounter(txConfig, 0, 0, 1, 2)
+	txBytes, err := txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	store := getDeliverStateCtx(app).KVStore(capKey1)
+
+	// tx counter only incremented once
+	txCounter := getIntFromStore(store, anteKey)
+	require.Equal(t, int64(1), txCounter)
+
+	// msg counter incremented three times
+	msgCounter := getIntFromStore(store, deliverKey)
+	require.Equal(t, int64(3), msgCounter)
+
+	// replace the second message with a Counter2
+	tx = newTxCounter(txConfig, 1, 3)
+
+	builder := txConfig.NewTxBuilder()
+	msgs := tx.GetMsgs()
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 0})
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 1})
+
+	builder.SetMsgs(msgs...)
+	builder.SetMemo(tx.GetMemo())
+
+	txBytes, err = txConfig.TxEncoder()(builder.GetTx())
+	require.NoError(t, err)
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	store = getDeliverStateCtx(app).KVStore(capKey1)
+
+	// tx counter only incremented once
+	txCounter = getIntFromStore(store, anteKey)
+	require.Equal(t, int64(2), txCounter)
+
+	// original counter increments by one
+	// new counter increments by two
+	msgCounter = getIntFromStore(store, deliverKey)
+	require.Equal(t, int64(4), msgCounter)
+	msgCounter2 := getIntFromStore(store, deliverKey2)
+	require.Equal(t, int64(2), msgCounter2)
+}
+
+// Simulate a transaction that uses gas to compute the gas.
+// Simulate() and Query("/app/simulate", txBytes) should give
+// the same results.
+func TestSimulateTx(t *testing.T) {
+	gasConsumed := uint64(1033)
+
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
+			return
+		})
+	}
+
+	// Setup baseapp.
+	var (
+		appBuilder *runtime.AppBuilder
+		cdc        codec.ProtoCodecMarshaler
+	)
+	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
+	require.NoError(t, err)
+
+	testCtx := testutil.DefaultContextWithDB(t, capKey1, sdk.NewTransientStoreKey("transient_test"))
+
+	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil, anteOpt)
+	app.SetCMS(testCtx.CMS)
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+	// patch in TxConfig instead of using an output from x/auth/tx
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	// set the TxDecoder in the BaseApp for minimal tx simulations
+	app.SetTxDecoder(txConfig.TxDecoder())
+
+	app.InitChain(abci.RequestInitChain{})
+
+	baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImplGasMeterOnly{gasConsumed})
+
+	nBlocks := 3
+	for blockN := 0; blockN < nBlocks; blockN++ {
+		count := int64(blockN + 1)
+		header := tmproto.Header{Height: count}
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+		tx := newTxCounter(txConfig, count, count)
+
+		txBytes, err := txConfig.TxEncoder()(tx)
+		require.Nil(t, err)
+
+		// simulate a message, check gas reported
+		gInfo, result, err := app.Simulate(txBytes)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		require.Equal(t, gasConsumed, gInfo.GasUsed)
+
+		// simulate again, same result
+		gInfo, result, err = app.Simulate(txBytes)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		require.Equal(t, gasConsumed, gInfo.GasUsed)
+
+		// simulate by calling Query with encoded tx
+		query := abci.RequestQuery{
+			Path: "/app/simulate",
+			Data: txBytes,
+		}
+		queryResult := app.Query(query)
+		require.True(t, queryResult.IsOK(), queryResult.Log)
+
+		var simRes sdk.SimulationResponse
+		require.NoError(t, jsonpb.Unmarshal(strings.NewReader(string(queryResult.Value)), &simRes))
+
+		require.Equal(t, gInfo, simRes.GasInfo)
+		require.Equal(t, result.Log, simRes.Result.Log)
+		require.Equal(t, result.Events, simRes.Result.Events)
+		require.True(t, bytes.Equal(result.Data, simRes.Result.Data))
+
+		app.EndBlock(abci.RequestEndBlock{})
+		app.Commit()
+	}
+}
+
+func getCheckStateCtx(app *runtime.App) sdk.Context {
+	v := reflect.ValueOf(app.BaseApp).Elem()
+	f := v.FieldByName("checkState")
+	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
+	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
+}
+
+func getDeliverStateCtx(app *runtime.App) sdk.Context {
+	v := reflect.ValueOf(app.BaseApp).Elem()
+	f := v.FieldByName("deliverState")
+	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
+	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
+}
+
 func parseTxMemo(tx sdk.Tx) (counter int64, failOnAnte bool) {
 	txWithMemo, ok := tx.(sdk.TxWithMemo)
 	if !ok {
@@ -128,78 +428,6 @@ func parseTxMemo(tx sdk.Tx) (counter int64, failOnAnte bool) {
 	return counter, failOnAnte
 }
 
-// Tx processing - CheckTx, DeliverTx, SimulateTx.
-// These tests use the serialized tx as input, while most others will use the
-// Check(), Deliver(), Simulate() methods directly.
-// Ensure that Check/Deliver/Simulate work as expected with the store.
-
-// Test that successive CheckTx can see each others' effects
-// on the store within a block, and that the CheckTx state
-// gets reset to the latest committed state during Commit
-func TestCheckTx(t *testing.T) {
-	// This ante handler reads the key and checks that the value matches the current counter.
-	// This ensures changes to the kvstore persist across successive CheckTx.
-	counterKey := []byte("counter-key")
-
-	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey)) }
-
-	// Setup baseapp.
-	var (
-		appBuilder *runtime.AppBuilder
-		cdc        codec.ProtoCodecMarshaler
-	)
-	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
-	require.NoError(t, err)
-
-	testCtx := testutil.DefaultContextWithDB(t, capKey1, sdk.NewTransientStoreKey("transient_test"))
-
-	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil, anteOpt)
-	app.SetCMS(testCtx.CMS)
-	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
-
-	// patch in TxConfig instead of using an output from x/auth/tx
-	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
-	// set the TxDecoder in the BaseApp for minimal tx simulations
-	app.SetTxDecoder(txConfig.TxDecoder())
-
-	nTxs := int64(5)
-	app.InitChain(abci.RequestInitChain{})
-
-	baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, counterKey})
-
-	for i := int64(0); i < nTxs; i++ {
-		tx := newTxCounter(txConfig, i, 0) // no messages
-		txBytes, err := txConfig.TxEncoder()(tx)
-		require.NoError(t, err)
-
-		require.NoError(t, err)
-		r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
-		require.Equal(t, testTxPriority, r.Priority)
-		require.Empty(t, r.GetEvents())
-		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
-	}
-
-	checkStateStore := app.BaseApp.GetCheckState().Context().KVStore(capKey1)
-	storedCounter := getIntFromStore(checkStateStore, counterKey)
-
-	// Ensure AnteHandler ran
-	require.Equal(t, nTxs, storedCounter)
-
-	// If a block is committed, CheckTx state should be reset.
-	header := tmproto.Header{Height: 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header, Hash: []byte("hash")})
-
-	require.NotNil(t, app.BaseApp.GetCheckState().Context().BlockGasMeter(), "block gas meter should have been set to checkState")
-	require.NotEmpty(t, app.BaseApp.GetCheckState().Context().HeaderHash())
-
-	app.EndBlock(abci.RequestEndBlock{})
-	app.Commit()
-
-	checkStateStore = testCtx.Ctx.KVStore(capKey1)
-	storedBytes := checkStateStore.Get(counterKey)
-	require.Nil(t, storedBytes)
-}
-
 func counterEvent(evType string, msgCount int64) sdk.Events {
 	return sdk.Events{
 		sdk.NewEvent(
@@ -219,37 +447,10 @@ func newTxCounter(cfg client.TxConfig, counter int64, msgCounters ...int64) sign
 	builder := cfg.NewTxBuilder()
 	builder.SetMsgs(msgs...)
 	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
+	builder.SetGasLimit(999912312)
 
 	return builder.GetTx()
 }
-
-// Simple tx with a list of Msgs.
-type txTest struct {
-	sdk.Tx
-	Msgs       []sdk.Msg
-	Counter    int64
-	FailOnAnte bool
-}
-
-func (tx *txTest) setFailOnAnte(fail bool) {
-	tx.FailOnAnte = fail
-}
-
-func (tx *txTest) setFailOnHandler(fail bool) {
-	for i, msg := range tx.Msgs {
-		tx.Msgs[i] = &baseapptestutil.MsgCounter{
-			Counter:       msg.(*baseapptestutil.MsgCounter).Counter,
-			FailOnHandler: fail,
-		}
-	}
-}
-
-// Implements Tx
-func (tx txTest) GetMsgs() []sdk.Msg   { return tx.Msgs }
-func (tx txTest) ValidateBasic() error { return nil }
-func (tx txTest) Reset()               {}
-func (tx txTest) String() string       { return "TODO" }
-func (tx txTest) ProtoMessage()        {}
 
 func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.AnteHandler {
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {

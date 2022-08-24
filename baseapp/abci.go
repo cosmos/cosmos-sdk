@@ -164,6 +164,41 @@ func (app *BaseApp) GetAppHash(req abci.RequestGetAppHash) (res abci.ResponseGet
 }
 
 func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res abci.ResponseGenerateFraudProof) {
+	cms := app.cms.(*multi.Store)
+	cms.GetStoreKeys()
+	appWithTracing, storeKeyToSubstoreTraceBuf, err := app.enableFraudProofGenerationMode(cms.GetStoreKeys(), nil)
+	if err != nil {
+		panic(err)
+	}
+
+	beginBlockRequest := req.BeginBlockRequest
+	appWithTracing.BeginBlock(beginBlockRequest)
+	deliverTxRequests := req.DeliverTxRequests
+	if deliverTxRequests == nil {
+		// BeginBlock is the fraudulent state transition
+	} else {
+		nonFraudulentRequests, lastDeliverTxRequest := deliverTxRequests[:len(deliverTxRequests)-1], deliverTxRequests[len(deliverTxRequests)]
+		for _, deliverTxRequest := range nonFraudulentRequests {
+			app.DeliverTx(*deliverTxRequest)
+		}
+		endBlockRequest := req.EndBlockRequest
+		for _, buf := range storeKeyToSubstoreTraceBuf {
+			buf.Reset()
+		}
+		if endBlockRequest != nil {
+			// EndBlock is the fraudulent state transition
+			app.EndBlock(*endBlockRequest)
+		} else {
+			// DeliverTx is the fraudulent state transition
+			fraudulentDeliverTx := lastDeliverTxRequest
+			app.DeliverTx(*fraudulentDeliverTx)
+
+			appFraudGen, _, err := app.enableFraudProofGenerationMode(cms.GetStoreKeys(), nil)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
 	res = abci.ResponseGenerateFraudProof{}
 	return res
 }

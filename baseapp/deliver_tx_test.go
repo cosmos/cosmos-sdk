@@ -317,7 +317,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 // Simulate() and Query("/app/simulate", txBytes) should give
 // the same results.
 func TestSimulateTx(t *testing.T) {
-	gasConsumed := uint64(1033)
+	gasConsumed := uint64(5)
 
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {

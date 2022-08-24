@@ -19,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/v2alpha1/multi"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -147,6 +148,24 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 	}
 
 	return abci.ResponseQuery{}
+}
+
+func (app *BaseApp) GetAppHash(req abci.RequestGetAppHash) (res abci.ResponseGetAppHash) {
+	cms := app.cms.(*multi.Store)
+
+	appHash, err := cms.GetAppHash()
+	if err != nil {
+		panic(err)
+	}
+	res = abci.ResponseGetAppHash{
+		AppHash: appHash,
+	}
+	return res
+}
+
+func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res abci.ResponseGenerateFraudProof) {
+	res = abci.ResponseGenerateFraudProof{}
+	return res
 }
 
 // BeginBlock implements the ABCI application interface.

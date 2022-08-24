@@ -2431,7 +2431,7 @@ func TestEndToEndFraudProof(t *testing.T) {
 
 	storeHashB2 := cmsB2.GetSubstoreSMT(capKey2.Name()).Root()
 
-	fraudProof, err := appB2.generateFraudProof(storeKeyToSubstoreTraceBuf, appB2.LastBlockHeight())
+	fraudProof, err := appB2.getFraudProof(storeKeyToSubstoreTraceBuf, appB2.LastBlockHeight())
 	require.Nil(t, err)
 
 	// Light Client
@@ -2655,7 +2655,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	storeKeyToSubstoreTraceBuf[capKey2.Name()] = subStoreTraceBuf
 
 	// Records S2 in fraudproof with keys filtered by (S2 -> S3)
-	fraudProof, err := appFraudGen.generateFraudProof(storeKeyToSubstoreTraceBuf, appB1.LastBlockHeight())
+	fraudProof, err := appFraudGen.getFraudProof(storeKeyToSubstoreTraceBuf, appB1.LastBlockHeight())
 	require.Nil(t, err)
 
 	// Light Client

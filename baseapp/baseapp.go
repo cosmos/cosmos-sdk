@@ -821,7 +821,7 @@ func (app *BaseApp) enableFraudProofGenerationMode(storeKeys []types.StoreKey, r
 }
 
 // Generate a fraudproof for an app with the given trace buffers
-func (app *BaseApp) generateFraudProof(storeKeyToSubstoreTraceBuf map[string]*bytes.Buffer, blockHeight int64) (FraudProof, error) {
+func (app *BaseApp) getFraudProof(storeKeyToSubstoreTraceBuf map[string]*bytes.Buffer, blockHeight int64) (FraudProof, error) {
 	fraudProof := FraudProof{}
 	fraudProof.stateWitness = make(map[string]StateWitness)
 	fraudProof.blockHeight = blockHeight

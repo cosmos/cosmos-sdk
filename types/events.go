@@ -9,9 +9,10 @@ import (
 
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
+	proto2 "google.golang.org/protobuf/proto"
 
 	"github.com/gogo/protobuf/jsonpb"
-	proto "github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -78,7 +79,12 @@ func (em *EventManager) EmitTypedEvents(tevs ...proto.Message) error {
 
 // TypedEventToEvent takes typed event and converts to Event object
 func TypedEventToEvent(tev proto.Message) (Event, error) {
-	evtType := proto.MessageName(tev)
+	var evtType string
+	if pulsarMsg, ok := tev.(proto2.Message); ok {
+		evtType = string(proto2.MessageName(pulsarMsg))
+	} else {
+		evtType = proto.MessageName(tev)
+	}
 	evtJSON, err := codec.ProtoMarshalJSON(tev, nil)
 	if err != nil {
 		return Event{}, err

@@ -8,9 +8,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	nftv1beta1 "cosmossdk.io/api/cosmos/nft/v1beta1"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	testdata "github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 type eventsTestSuite struct {
@@ -252,4 +254,34 @@ func (s *eventsTestSuite) TestMarkEventsToIndex() {
 			s.Require().Equal(tc.expected, sdk.MarkEventsToIndex(tc.events, tc.indexSet))
 		})
 	}
+}
+
+func (s *eventsTestSuite) TestEventProtoCompat() {
+	pulsarEvent := nftv1beta1.EventSend{
+		ClassId:  "foo",
+		Id:       "bar",
+		Sender:   "baz",
+		Receiver: "qux",
+	}
+	em := sdk.NewEventManager()
+	err := em.EmitTypedEvent(&pulsarEvent)
+	s.Require().NoError(err)
+
+	events := em.Events()
+	event := events[len(events)-1]
+	s.Require().NotEmpty(event.Type)
+
+	gogoEvent := nft.EventSend{
+		ClassId:  "corge",
+		Id:       "grault",
+		Sender:   "garply",
+		Receiver: "waldo",
+	}
+	em = sdk.NewEventManager()
+	err = em.EmitTypedEvent(&gogoEvent)
+	s.Require().NoError(err)
+
+	events = em.Events()
+	event = events[len(events)-1]
+	s.Require().NotEmpty(event.Type)
 }

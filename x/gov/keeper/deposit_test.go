@@ -3,14 +3,11 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 const (
@@ -20,9 +17,8 @@ const (
 
 func TestDeposits(t *testing.T) {
 	govKeeper, _, bankKeeper, stakingKeeper, _, ctx := setupGovKeeper(t)
-	initialBalance := sdk.NewInt(10000000)
-	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, gomock.Any(), gomock.Any()).Return(nil).Times(1)
-	TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, initialBalance)
+	trackMockBalances(bankKeeper)
+	TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(10000000))
 
 	tp := TestProposal
 	proposal, err := govKeeper.SubmitProposal(ctx, tp, "")
@@ -31,23 +27,6 @@ func TestDeposits(t *testing.T) {
 
 	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, stakingKeeper.TokensFromConsensusPower(ctx, 4)))
 	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, stakingKeeper.TokensFromConsensusPower(ctx, 5)))
-
-	// Manually track balances with mocks.
-	balances := make(map[string]sdk.Coins)
-	initialCoins := sdk.NewCoins(sdk.NewCoin(stakingKeeper.BondDenom(ctx), initialBalance))
-	balances[TestAddrs[0].String()] = initialCoins
-	balances[TestAddrs[1].String()] = initialCoins
-	bankKeeper.EXPECT().SendCoinsFromAccountToModule(ctx, gomock.Any(), types.ModuleName, gomock.Any()).DoAndReturn(func(_ sdk.Context, sender sdk.AccAddress, _ string, coins sdk.Coins) error {
-		balances[sender.String()] = balances[sender.String()].Sub(coins...)
-		return nil
-	}).AnyTimes()
-	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ sdk.Context, _ string, rcpt sdk.AccAddress, coins sdk.Coins) error {
-		balances[rcpt.String()] = balances[rcpt.String()].Add(coins...)
-		return nil
-	}).AnyTimes()
-	bankKeeper.EXPECT().GetAllBalances(ctx, gomock.Any()).DoAndReturn(func(_ sdk.Context, addr sdk.AccAddress) sdk.Coins {
-		return balances[addr.String()]
-	}).AnyTimes()
 
 	addr0Initial := bankKeeper.GetAllBalances(ctx, TestAddrs[0])
 	addr1Initial := bankKeeper.GetAllBalances(ctx, TestAddrs[1])

@@ -3,21 +3,13 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -48,10 +40,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// Populate the gov account with some coins, as the TestProposal we have
 	// is a MsgSend from the gov account.
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000)))
-	bankKeeper.EXPECT().MintCoins(suite.ctx, minttypes.ModuleName, coins).Return(nil).Times(1)
 	err := bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
 	suite.NoError(err)
-	bankKeeper.EXPECT().SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins).Return(nil).Times(1)
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
 	suite.NoError(err)
 
@@ -75,58 +65,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	govAcct := govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)
 	suite.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(30000000))
-}
-
-func setupGovKeeper(t *testing.T) (
-	*keeper.Keeper,
-	*govtestutil.MockAccountKeeper,
-	*govtestutil.MockBankKeeper,
-	*govtestutil.MockStakingKeeper,
-	moduletestutil.TestEncodingConfig,
-	sdk.Context,
-) {
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig()
-	v1.RegisterInterfaces(encCfg.InterfaceRegistry)
-	v1beta1.RegisterInterfaces(encCfg.InterfaceRegistry)
-	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
-
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
-	msr := baseapp.NewMsgServiceRouter()
-
-	// gomock initializations
-	ctrl := gomock.NewController(t)
-	acctKeeper := govtestutil.NewMockAccountKeeper(ctrl)
-	bankKeeper := govtestutil.NewMockBankKeeper(ctrl)
-	stakingKeeper := govtestutil.NewMockStakingKeeper(ctrl)
-	acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
-	acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
-	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), types.ModuleName, gomock.Any()).Return(nil).AnyTimes()
-	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	stakingKeeper.EXPECT().TokensFromConsensusPower(ctx, gomock.Any()).DoAndReturn(func(ctx sdk.Context, power int64) math.Int {
-		return sdk.TokensFromConsensusPower(power, math.NewIntFromUint64(1000000))
-	}).AnyTimes()
-	// The EXPECTS below happen only in `simtestutil`.
-	bankKeeper.EXPECT().MintCoins(gomock.Any(), minttypes.ModuleName, gomock.Any()).Return(nil).AnyTimes()
-	stakingKeeper.EXPECT().BondDenom(ctx).Return("stake").AnyTimes()
-
-	// Gov keeper initializations
-	govKeeper := keeper.NewKeeper(encCfg.Codec, key, acctKeeper, bankKeeper, stakingKeeper, msr, types.DefaultConfig(), govAcct.String())
-	govKeeper.SetProposalID(ctx, 1)
-	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
-	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
-	govKeeper.SetLegacyRouter(govRouter)
-	govKeeper.SetParams(ctx, v1.DefaultParams())
-
-	// Register all handlers for the MegServiceRouter.
-	msr.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	v1.RegisterMsgServer(msr, keeper.NewMsgServerImpl(govKeeper))
-	banktypes.RegisterMsgServer(msr, nil) // Nil is fine here as long as we never execute the proposal's Msgs.
-
-	return govKeeper, acctKeeper, bankKeeper, stakingKeeper, encCfg, ctx
 }
 
 func TestIncrementProposalNumber(t *testing.T) {

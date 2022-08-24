@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -106,7 +107,11 @@ func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper) {
 
 	// But we do track normal account balances.
 	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), types.ModuleName, gomock.Any()).DoAndReturn(func(_ sdk.Context, sender sdk.AccAddress, _ string, coins sdk.Coins) error {
-		balances[sender.String()] = balances[sender.String()].Sub(coins...)
+		newBalance, negative := balances[sender.String()].SafeSub(coins...)
+		if negative {
+			return fmt.Errorf("not enough balance")
+		}
+		balances[sender.String()] = newBalance
 		return nil
 	}).AnyTimes()
 	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ sdk.Context, module string, rcpt sdk.AccAddress, coins sdk.Coins) error {

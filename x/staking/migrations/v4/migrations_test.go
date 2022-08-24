@@ -45,7 +45,8 @@ func TestMigrate(t *testing.T) {
 	valAddrs := sims.ConvertAddrsToValAddrs(accAddrs)
 	valAddr := valAddrs[0]
 
-	err := createOldStateUnbondind(t, duplicateCreationHeight, valAddr, accAddr, cdc, store)
+	// creating 10 ubdEntries with same height and 10 ubdEntries with different creation height
+	err := createOldStateUnbonding(t, duplicateCreationHeight, valAddr, accAddr, cdc, store)
 	require.NoError(t, err)
 
 	legacySubspace := newMockSubspace(types.DefaultParams())
@@ -77,7 +78,7 @@ func TestMigrate(t *testing.T) {
 				require.NoError(t, cdc.Unmarshal(bz, &res))
 				require.Equal(t, legacySubspace.ps, res)
 
-				// checking the updated balnace for duplicateCreationHeight
+				// checking the updated balance for duplicateCreationHeight
 				for _, ubdEntry := range ubd.Entries {
 					if ubdEntry.CreationHeight == duplicateCreationHeight {
 						require.Equal(t, sdk.NewInt(100*10), ubdEntry.Balance)
@@ -93,12 +94,12 @@ func TestMigrate(t *testing.T) {
 	}
 }
 
-// createOldStateUnbondind will create the ubd entries with duplicate heights
-// 10 duplicate heights and 10 unique ubd creation height
-func createOldStateUnbondind(t *testing.T, creationHeight int64, valAddr sdk.ValAddress, accAddr sdk.AccAddress, cdc codec.BinaryCodec, store storetypes.KVStore) error {
+// createOldStateUnbonding will create the ubd entries with duplicate heights
+// 10 duplicate heights and 10 unique ubd with creation height
+func createOldStateUnbonding(t *testing.T, creationHeight int64, valAddr sdk.ValAddress, accAddr sdk.AccAddress, cdc codec.BinaryCodec, store storetypes.KVStore) error {
 	unbondBalance := sdk.NewInt(100)
 	completionTime := time.Now()
-	udbEntries := make([]types.UnbondingDelegationEntry, 0, 10)
+	ubdEntries := make([]types.UnbondingDelegationEntry, 0, 10)
 
 	for i := int64(0); i < 10; i++ {
 		ubdEntry := types.UnbondingDelegationEntry{
@@ -107,17 +108,17 @@ func createOldStateUnbondind(t *testing.T, creationHeight int64, valAddr sdk.Val
 			InitialBalance: unbondBalance,
 			CompletionTime: completionTime,
 		}
-		udbEntries = append(udbEntries, ubdEntry)
+		ubdEntries = append(ubdEntries, ubdEntry)
 		// creating more entries for testing the creation_heights
 		ubdEntry.CreationHeight = i + 2
 		ubdEntry.CompletionTime = completionTime.Add(time.Minute * 10)
-		udbEntries = append(udbEntries, ubdEntry)
+		ubdEntries = append(ubdEntries, ubdEntry)
 	}
 
 	ubd := types.UnbondingDelegation{
 		ValidatorAddress: valAddr.String(),
 		DelegatorAddress: accAddr.String(),
-		Entries:          udbEntries,
+		Entries:          ubdEntries,
 	}
 
 	// set the unbond delegation with validator and delegator
@@ -128,11 +129,11 @@ func createOldStateUnbondind(t *testing.T, creationHeight int64, valAddr sdk.Val
 }
 
 func getUBD(t *testing.T, accAddr sdk.AccAddress, valAddr sdk.ValAddress, store storetypes.KVStore, cdc codec.BinaryCodec) types.UnbondingDelegation {
-	// get the unbondind delegations
-	var udbRes types.UnbondingDelegation
+	// get the unbonding delegations
+	var ubdRes types.UnbondingDelegation
 	ubdbz := store.Get(getUBDKey(accAddr, valAddr))
-	require.NoError(t, cdc.Unmarshal(ubdbz, &udbRes))
-	return udbRes
+	require.NoError(t, cdc.Unmarshal(ubdbz, &ubdRes))
+	return ubdRes
 }
 
 func getUBDKey(accAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {

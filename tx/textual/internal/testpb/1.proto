@@ -3,6 +3,7 @@ syntax = "proto3";
 option go_package = "cosmossdk.io/tx/textual/internal/testpb";
 
 import "google/protobuf/descriptor.proto";
+import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
@@ -22,6 +23,7 @@ message A {
   cosmos.base.v1beta1.Coin COIN           = 7;
   repeated cosmos.base.v1beta1.Coin COINS = 8;
   bytes                             BYTES = 9;
+  google.protobuf.Timestamp    TIMESTAMP = 10;
 }
 
 // B contains fields that are not parseable by SIGN_MODE_TEXTUAL, some fields

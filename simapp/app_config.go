@@ -47,171 +47,176 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// Alternatively the AppConfig can be defined as a YAML or a JSON file.
-// e.g. https://github.com/cosmos/cosmos-sdk/blob/91b1d83f1339e235a1dfa929ecc00084101a19e3/simapp/app.yaml
+var (
+	// module account permissions
+	moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
+		{Account: authtypes.FeeCollectorName},
+		{Account: distrtypes.ModuleName},
+		{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
+		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
+		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
+		{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
+		{Account: nft.ModuleName},
+	}
 
-var AppConfig = appconfig.Compose(&appv1alpha1.Config{
-	Modules: []*appv1alpha1.ModuleConfig{
-		{
-			Name: "runtime",
-			Config: appconfig.WrapAny(&runtimev1alpha1.Module{
-				AppName: "SimApp",
-				// During begin block slashing happens after distr.BeginBlocker so that
-				// there is nothing left over in the validator fee pool, so as to keep the
-				// CanWithdrawInvariant invariant.
-				// NOTE: staking module is required if HistoricalEntries param > 0
-				// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
-				BeginBlockers: []string{
-					upgradetypes.ModuleName,
-					capabilitytypes.ModuleName,
-					minttypes.ModuleName,
-					distrtypes.ModuleName,
-					slashingtypes.ModuleName,
-					evidencetypes.ModuleName,
-					stakingtypes.ModuleName,
-					authtypes.ModuleName,
-					banktypes.ModuleName,
-					govtypes.ModuleName,
-					crisistypes.ModuleName,
-					genutiltypes.ModuleName,
-					authz.ModuleName,
-					feegrant.ModuleName,
-					nft.ModuleName,
-					group.ModuleName,
-					paramstypes.ModuleName,
-					vestingtypes.ModuleName,
-				},
-				EndBlockers: []string{
-					crisistypes.ModuleName,
-					govtypes.ModuleName,
-					stakingtypes.ModuleName,
-					capabilitytypes.ModuleName,
-					authtypes.ModuleName,
-					banktypes.ModuleName,
-					distrtypes.ModuleName,
-					slashingtypes.ModuleName,
-					minttypes.ModuleName,
-					genutiltypes.ModuleName,
-					evidencetypes.ModuleName,
-					authz.ModuleName,
-					feegrant.ModuleName,
-					nft.ModuleName,
-					group.ModuleName,
-					paramstypes.ModuleName,
-					upgradetypes.ModuleName,
-					vestingtypes.ModuleName,
-				},
-				OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
-					{
-						ModuleName: authtypes.ModuleName,
-						KvStoreKey: "acc",
+	// blocked account addresses
+	blockAccAddrs = []string{
+		authtypes.FeeCollectorName,
+		distrtypes.ModuleName,
+		minttypes.ModuleName,
+		stakingtypes.BondedPoolName,
+		stakingtypes.NotBondedPoolName,
+		nft.ModuleName,
+		// We allow the following module accounts to receive funds:
+		// govtypes.ModuleName
+	}
+
+	// application configuration (used by depinject)
+	AppConfig = appconfig.Compose(&appv1alpha1.Config{
+		Modules: []*appv1alpha1.ModuleConfig{
+			{
+				Name: "runtime",
+				Config: appconfig.WrapAny(&runtimev1alpha1.Module{
+					AppName: "SimApp",
+					// During begin block slashing happens after distr.BeginBlocker so that
+					// there is nothing left over in the validator fee pool, so as to keep the
+					// CanWithdrawInvariant invariant.
+					// NOTE: staking module is required if HistoricalEntries param > 0
+					// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
+					BeginBlockers: []string{
+						upgradetypes.ModuleName,
+						capabilitytypes.ModuleName,
+						minttypes.ModuleName,
+						distrtypes.ModuleName,
+						slashingtypes.ModuleName,
+						evidencetypes.ModuleName,
+						stakingtypes.ModuleName,
+						authtypes.ModuleName,
+						banktypes.ModuleName,
+						govtypes.ModuleName,
+						crisistypes.ModuleName,
+						genutiltypes.ModuleName,
+						authz.ModuleName,
+						feegrant.ModuleName,
+						nft.ModuleName,
+						group.ModuleName,
+						paramstypes.ModuleName,
+						vestingtypes.ModuleName,
 					},
-				},
-			}),
+					EndBlockers: []string{
+						crisistypes.ModuleName,
+						govtypes.ModuleName,
+						stakingtypes.ModuleName,
+						capabilitytypes.ModuleName,
+						authtypes.ModuleName,
+						banktypes.ModuleName,
+						distrtypes.ModuleName,
+						slashingtypes.ModuleName,
+						minttypes.ModuleName,
+						genutiltypes.ModuleName,
+						evidencetypes.ModuleName,
+						authz.ModuleName,
+						feegrant.ModuleName,
+						nft.ModuleName,
+						group.ModuleName,
+						paramstypes.ModuleName,
+						upgradetypes.ModuleName,
+						vestingtypes.ModuleName,
+					},
+					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
+						{
+							ModuleName: authtypes.ModuleName,
+							KvStoreKey: "acc",
+						},
+					},
+				}),
+			},
+			{
+				Name: authtypes.ModuleName,
+				Config: appconfig.WrapAny(&authmodulev1.Module{
+					Bech32Prefix:             "cosmos",
+					ModuleAccountPermissions: moduleAccPerms,
+				}),
+			},
+			{
+				Name:   vestingtypes.ModuleName,
+				Config: appconfig.WrapAny(&vestingmodulev1.Module{}),
+			},
+			{
+				Name: banktypes.ModuleName,
+				Config: appconfig.WrapAny(&bankmodulev1.Module{
+					BlockedModuleAccountsOverride: blockAccAddrs,
+				}),
+			},
+			{
+				Name:   stakingtypes.ModuleName,
+				Config: appconfig.WrapAny(&stakingmodulev1.Module{}),
+			},
+			{
+				Name:   slashingtypes.ModuleName,
+				Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
+			},
+			{
+				Name:   paramstypes.ModuleName,
+				Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
+			},
+			{
+				Name:   "tx",
+				Config: appconfig.WrapAny(&txmodulev1.Module{}),
+			},
+			{
+				Name:   genutiltypes.ModuleName,
+				Config: appconfig.WrapAny(&genutilmodulev1.Module{}),
+			},
+			{
+				Name:   authz.ModuleName,
+				Config: appconfig.WrapAny(&authzmodulev1.Module{}),
+			},
+			{
+				Name:   upgradetypes.ModuleName,
+				Config: appconfig.WrapAny(&upgrademodulev1.Module{}),
+			},
+			{
+				Name:   distrtypes.ModuleName,
+				Config: appconfig.WrapAny(&distrmodulev1.Module{}),
+			},
+			{
+				Name: capabilitytypes.ModuleName,
+				Config: appconfig.WrapAny(&capabilitymodulev1.Module{
+					SealKeeper: true,
+				}),
+			},
+			{
+				Name:   evidencetypes.ModuleName,
+				Config: appconfig.WrapAny(&evidencemodulev1.Module{}),
+			},
+			{
+				Name:   minttypes.ModuleName,
+				Config: appconfig.WrapAny(&mintmodulev1.Module{}),
+			},
+			{
+				Name: group.ModuleName,
+				Config: appconfig.WrapAny(&groupmodulev1.Module{
+					MaxExecutionPeriod: durationpb.New(time.Second * 1209600),
+					MaxMetadataLen:     255,
+				}),
+			},
+			{
+				Name:   nft.ModuleName,
+				Config: appconfig.WrapAny(&nftmodulev1.Module{}),
+			},
+			{
+				Name:   feegrant.ModuleName,
+				Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
+			},
+			{
+				Name:   govtypes.ModuleName,
+				Config: appconfig.WrapAny(&govmodulev1.Module{}),
+			},
+			{
+				Name:   crisistypes.ModuleName,
+				Config: appconfig.WrapAny(&crisismodulev1.Module{}),
+			},
 		},
-		{
-			Name: authtypes.ModuleName,
-			Config: appconfig.WrapAny(&authmodulev1.Module{
-				Bech32Prefix: "cosmos",
-				ModuleAccountPermissions: []*authmodulev1.ModuleAccountPermission{
-					{Account: authtypes.FeeCollectorName},
-					{Account: distrtypes.ModuleName},
-					{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
-					{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
-					{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
-					{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
-					{Account: nft.ModuleName},
-				},
-			}),
-		},
-		{
-			Name:   vestingtypes.ModuleName,
-			Config: appconfig.WrapAny(&vestingmodulev1.Module{}),
-		},
-		{
-			Name: banktypes.ModuleName,
-			Config: appconfig.WrapAny(&bankmodulev1.Module{
-				BlockedModuleAccountsOverride: []string{
-					authtypes.FeeCollectorName,
-					distrtypes.ModuleName,
-					minttypes.ModuleName,
-					stakingtypes.BondedPoolName,
-					stakingtypes.NotBondedPoolName,
-					govtypes.ModuleName,
-					nft.ModuleName,
-					// We allow the following module accounts to receive funds:
-					// govtypes.ModuleName
-				},
-			}),
-		},
-		{
-			Name:   stakingtypes.ModuleName,
-			Config: appconfig.WrapAny(&stakingmodulev1.Module{}),
-		},
-		{
-			Name:   slashingtypes.ModuleName,
-			Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
-		},
-		{
-			Name:   paramstypes.ModuleName,
-			Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
-		},
-		{
-			Name:   "tx",
-			Config: appconfig.WrapAny(&txmodulev1.Module{}),
-		},
-		{
-			Name:   genutiltypes.ModuleName,
-			Config: appconfig.WrapAny(&genutilmodulev1.Module{}),
-		},
-		{
-			Name:   authz.ModuleName,
-			Config: appconfig.WrapAny(&authzmodulev1.Module{}),
-		},
-		{
-			Name:   upgradetypes.ModuleName,
-			Config: appconfig.WrapAny(&upgrademodulev1.Module{}),
-		},
-		{
-			Name:   distrtypes.ModuleName,
-			Config: appconfig.WrapAny(&distrmodulev1.Module{}),
-		},
-		{
-			Name: capabilitytypes.ModuleName,
-			Config: appconfig.WrapAny(&capabilitymodulev1.Module{
-				SealKeeper: true,
-			}),
-		},
-		{
-			Name:   evidencetypes.ModuleName,
-			Config: appconfig.WrapAny(&evidencemodulev1.Module{}),
-		},
-		{
-			Name:   minttypes.ModuleName,
-			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
-		},
-		{
-			Name: group.ModuleName,
-			Config: appconfig.WrapAny(&groupmodulev1.Module{
-				MaxExecutionPeriod: durationpb.New(time.Second * 1209600),
-				MaxMetadataLen:     255,
-			}),
-		},
-		{
-			Name:   nft.ModuleName,
-			Config: appconfig.WrapAny(&nftmodulev1.Module{}),
-		},
-		{
-			Name:   feegrant.ModuleName,
-			Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
-		},
-		{
-			Name:   govtypes.ModuleName,
-			Config: appconfig.WrapAny(&govmodulev1.Module{}),
-		},
-		{
-			Name:   crisistypes.ModuleName,
-			Config: appconfig.WrapAny(&crisismodulev1.Module{}),
-		},
-	},
-})
+	})
+)

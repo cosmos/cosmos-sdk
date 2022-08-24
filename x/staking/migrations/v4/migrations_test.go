@@ -97,18 +97,21 @@ func TestMigrate(t *testing.T) {
 // 10 duplicate heights and 10 unique ubd creation height
 func createOldStateUnbondind(t *testing.T, creationHeight int64, valAddr sdk.ValAddress, accAddr sdk.AccAddress, cdc codec.BinaryCodec, store storetypes.KVStore) error {
 	unbondBalance := sdk.NewInt(100)
+	completionTime := time.Now()
 	udbEntries := make([]types.UnbondingDelegationEntry, 0, 10)
+
 	for i := int64(0); i < 10; i++ {
-		udbEntry := types.UnbondingDelegationEntry{
+		ubdEntry := types.UnbondingDelegationEntry{
 			CreationHeight: creationHeight,
 			Balance:        unbondBalance,
 			InitialBalance: unbondBalance,
-			CompletionTime: time.Now().Add(time.Second * 10),
+			CompletionTime: completionTime,
 		}
-		udbEntries = append(udbEntries, udbEntry)
+		udbEntries = append(udbEntries, ubdEntry)
 		// creating more entries for testing the creation_heights
-		udbEntry.CreationHeight = i + 2
-		udbEntries = append(udbEntries, udbEntry)
+		ubdEntry.CreationHeight = i + 2
+		ubdEntry.CompletionTime = completionTime.Add(time.Minute * 10)
+		udbEntries = append(udbEntries, ubdEntry)
 	}
 
 	ubd := types.UnbondingDelegation{

@@ -86,6 +86,25 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	}, nil
 }
 
+// CancelProposal implements v1.MsgServer
+func (msgServer) CancelProposal(goCtx context.Context, msg *v1.MsgCancelProposal) (*v1.MsgCancelProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	_, err := sdk.AccAddressFromBech32(msg.Proposer)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, govtypes.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Proposer),
+		),
+	)
+
+	return &v1.MsgCancelProposalResponse{}, nil
+}
+
 func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1.MsgExecLegacyContent) (*v1.MsgExecLegacyContentResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

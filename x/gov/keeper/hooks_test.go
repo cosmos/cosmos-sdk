@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -91,9 +89,6 @@ func TestHooks(t *testing.T) {
 	newHeader = ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(*govKeeper.GetParams(ctx).VotingPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
-	stakingKeeper.EXPECT().IterateBondedValidatorsByPower(ctx, gomock.Any())
-	stakingKeeper.EXPECT().IterateDelegations(ctx, gomock.Any(), gomock.Any())
-	stakingKeeper.EXPECT().TotalBondedTokens(ctx).Return(math.NewInt(10000000)).Times(2)
 	gov.EndBlocker(ctx, govKeeper)
 	require.True(t, govHooksReceiver.AfterProposalVotingPeriodEndedValid)
 }

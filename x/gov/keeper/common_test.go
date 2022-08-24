@@ -41,6 +41,7 @@ func getTestProposal() []sdk.Msg {
 	}
 }
 
+// setupGovKeeper creates a govKeeper as well as all its dependencies.
 func setupGovKeeper(t *testing.T) (
 	*keeper.Keeper,
 	*govtestutil.MockAccountKeeper,
@@ -73,6 +74,9 @@ func setupGovKeeper(t *testing.T) (
 		return sdk.TokensFromConsensusPower(power, math.NewIntFromUint64(1000000))
 	}).AnyTimes()
 	stakingKeeper.EXPECT().BondDenom(ctx).Return("stake").AnyTimes()
+	stakingKeeper.EXPECT().IterateBondedValidatorsByPower(gomock.Any(), gomock.Any()).AnyTimes()
+	stakingKeeper.EXPECT().IterateDelegations(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	stakingKeeper.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(10000000)).AnyTimes()
 
 	// Gov keeper initializations
 	govKeeper := keeper.NewKeeper(encCfg.Codec, key, acctKeeper, bankKeeper, stakingKeeper, msr, types.DefaultConfig(), govAcct.String())
@@ -90,12 +94,17 @@ func setupGovKeeper(t *testing.T) (
 	return govKeeper, acctKeeper, bankKeeper, stakingKeeper, encCfg, ctx
 }
 
+// trackMockBalances sets up expected calls on the Mock BankKeeper, and also
+// locally tracks accounts balances (not modules balances).
 func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper) {
 	balances := make(map[string]sdk.Coins)
+
+	// We don't track module account balances.
 	bankKeeper.EXPECT().MintCoins(gomock.Any(), minttypes.ModuleName, gomock.Any()).AnyTimes()
 	bankKeeper.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, gomock.Any()).AnyTimes()
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), minttypes.ModuleName, types.ModuleName, gomock.Any()).AnyTimes()
 
+	// But we do track normal account balances.
 	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), types.ModuleName, gomock.Any()).DoAndReturn(func(_ sdk.Context, sender sdk.AccAddress, _ string, coins sdk.Coins) error {
 		balances[sender.String()] = balances[sender.String()].Sub(coins...)
 		return nil
@@ -107,5 +116,4 @@ func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper) {
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), gomock.Any()).DoAndReturn(func(_ sdk.Context, addr sdk.AccAddress) sdk.Coins {
 		return balances[addr.String()]
 	}).AnyTimes()
-
 }

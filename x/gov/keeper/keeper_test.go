@@ -35,6 +35,10 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupSuite() {
+	suite.reset()
+}
+
+func (suite *KeeperTestSuite) reset() {
 	govKeeper, acctKeeper, bankKeeper, stakingKeeper, encCfg, ctx := setupGovKeeper(suite.T())
 
 	// Populate the gov account with some coins, as the TestProposal we have

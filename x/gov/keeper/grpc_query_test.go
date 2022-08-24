@@ -15,6 +15,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
+	suite.reset()
 	ctx, queryClient := suite.ctx, suite.queryClient
 
 	var (
@@ -37,7 +38,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 		{
 			"non existing proposal request",
 			func() {
-				req = &v1.QueryProposalRequest{ProposalId: 3}
+				req = &v1.QueryProposalRequest{ProposalId: 2}
 			},
 			false,
 		},
@@ -89,6 +90,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 }
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
+	suite.reset()
 	ctx, queryClient := suite.ctx, suite.legacyQueryClient
 
 	var (
@@ -164,6 +166,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
+	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
 
 	testProposals := []*v1.Proposal{}
@@ -315,6 +318,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 }
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposals() {
+	suite.reset()
 	ctx, queryClient := suite.ctx, suite.legacyQueryClient
 
 	var req *v1beta1.QueryProposalsRequest
@@ -586,6 +590,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
+	suite.reset()
 	ctx, queryClient := suite.ctx, suite.queryClient
 
 	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(30000000))
@@ -687,6 +692,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 }
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
+	suite.reset()
 	ctx, queryClient := suite.ctx, suite.legacyQueryClient
 
 	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(30000000))
@@ -962,6 +968,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
+	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
 
 	var (

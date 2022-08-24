@@ -17,6 +17,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestSubmitProposalReq() {
+	suite.reset()
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
@@ -124,6 +125,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 }
 
 func (suite *KeeperTestSuite) TestVoteReq() {
+	suite.reset()
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
@@ -236,6 +238,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 }
 
 func (suite *KeeperTestSuite) TestVoteWeightedReq() {
+	suite.reset()
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
@@ -569,6 +572,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 }
 
 func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
+	suite.reset()
 	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]

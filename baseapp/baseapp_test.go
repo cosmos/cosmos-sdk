@@ -910,7 +910,7 @@ func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, cou
 // Test that successive CheckTx can see each others' effects
 // on the store within a block, and that the CheckTx state
 // gets reset to the latest committed state during Commit
-func TestCheckTx(t *testing.T) {
+func TestCheckTxOld(t *testing.T) {
 	// This ante handler reads the key and checks that the value matches the current counter.
 	// This ensures changes to the kvstore persist across successive CheckTx.
 	counterKey := []byte("counter-key")

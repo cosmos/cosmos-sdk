@@ -11,7 +11,7 @@ In this section we describe the processing of messages for the authz module.
 An authorization grant is created using the `MsgGrant` message.
 If there is already a grant for the `(granter, grantee, Authorization)` triple, then the new grant overwrites the previous one. To update or extend an existing grant, a new grant with the same `(granter, grantee, Authorization)` triple should be created.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/authz/v1beta1/tx.proto#L32-L41
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/authz/v1beta1/tx.proto#L32-L41
 
 The message handling should fail if:
 
@@ -24,7 +24,7 @@ The message handling should fail if:
 
 A grant can be removed with the `MsgRevoke` message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/authz/v1beta1/tx.proto#L66-L72
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/authz/v1beta1/tx.proto#L66-L72
 
 The message handling should fail if:
 
@@ -37,7 +37,7 @@ NOTE: The `MsgExec` message removes a grant if the grant has expired.
 
 When a grantee wants to execute a transaction on behalf of a granter, they must send `MsgExec`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/authz/v1beta1/tx.proto#L51-L59
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/authz/v1beta1/tx.proto#L51-L59
 
 The message handling should fail if:
 

@@ -21,15 +21,14 @@ const (
 	FlagHeight           = "height"
 	FlagForZeroHeight    = "for-zero-height"
 	FlagJailAllowedAddrs = "jail-allowed-addrs"
-	FlagOutputFilePath   = "output-file-path"
 )
 
 // ExportCmd dumps app state to JSON.
 func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "export",
+		Use:   "export [file_path]",
 		Short: "Export state to JSON",
-		Long:  "Export state to JSON. The state will be printed to a file based on the provided path. Default path is ./exported_secret_state.json",
+		Long:  "Export state to JSON. The state will be printed to a file based on the provided path",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -107,7 +106,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return err
 			}
 
-			outputFilePath, _ := cmd.Flags().GetString(FlagOutputFilePath)
+			outputFilePath := args[0]
 			outputFile, err := os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0444)
 			if err != nil {
 				return err
@@ -123,7 +122,6 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 	cmd.Flags().Int64(FlagHeight, -1, "Export state from a particular height (-1 means latest height)")
 	cmd.Flags().Bool(FlagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
 	cmd.Flags().StringSlice(FlagJailAllowedAddrs, []string{}, "Comma-separated list of operator addresses of jailed validators to unjail")
-	cmd.Flags().String(FlagOutputFilePath, "./exported_secret_state.json", "The file that the output will be written to")
 
 	return cmd
 }

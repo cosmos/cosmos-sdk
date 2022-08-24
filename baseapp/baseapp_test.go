@@ -1260,7 +1260,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		bapp.Router().AddRoute(r)
 	}
 
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	app := setupBaseApp(t, AppOptionFunc(anteOpt), AppOptionFunc(routerOpt))
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: &abci.ConsensusParams{
 			Block: &abci.BlockParams{

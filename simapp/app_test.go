@@ -2,6 +2,7 @@ package simapp
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -30,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	group "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+
 	// nft "github.com/cosmos/cosmos-sdk/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -39,7 +41,7 @@ import (
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	db := memdb.NewDB()
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:    logger,
@@ -59,7 +61,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app.Commit()
 	require.NoError(t, app.CloseStore())
 
-	logger2, _ := log.NewDefaultLogger("plain", "info", false)
+	logger2 := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := NewSimApp(logger2, db, nil, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 	require.NoError(t, app2.Init())
@@ -74,7 +76,7 @@ func TestGetMaccPerms(t *testing.T) {
 
 func TestRunMigrations(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimApp(logger, memdb.NewDB(), nil, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 
 	// Create a new baseapp and configurator for the purpose of this test.
@@ -208,7 +210,7 @@ func TestRunMigrations(t *testing.T) {
 func TestInitGenesisOnMigration(t *testing.T) {
 	db := memdb.NewDB()
 	encCfg := MakeTestEncodingConfig()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimApp(logger, db, nil, encCfg, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 	require.NoError(t, app.Init())
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
@@ -254,7 +256,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 func TestUpgradeStateOnGenesis(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	db := memdb.NewDB()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:    logger,
 		DB:        db,

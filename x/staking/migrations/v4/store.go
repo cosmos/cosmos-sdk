@@ -13,6 +13,22 @@ import (
 // MigrateStore performs in-place store migrations from v3 to v4.
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
 	store := ctx.KVStore(storeKey)
+
+	// migrate params
+	if err := migrateParams(ctx, store, cdc, legacySubspace); err != nil {
+		return err
+	}
+
+	// migrate unbondig delegations
+	if err := migrateUBD(ctx, store, cdc, legacySubspace); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// migrateParams will set the params to store from legacySubspace
+func migrateParams(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
 	var legacyParams types.Params
 	legacySubspace.GetParamSet(ctx, &legacyParams)
 
@@ -22,10 +38,12 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 
 	bz := cdc.MustMarshal(&legacyParams)
 	store.Set(types.ParamsKey, bz)
+	return nil
+}
 
-	// this will remove the ubdEntries with same creation_height
-	// and create a new ubdEntry with updated balance and initial_balance
-
+// migrateUBD will remove the ubdEntries with same creation_height
+// and create a new ubdEntry with updated balance and initial_balance
+func migrateUBD(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
 	iterator := sdk.KVStorePrefixIterator(store, types.UnbondingDelegationKey)
 	defer iterator.Close()
 
@@ -47,7 +65,10 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 		ubd.Entries = make([]types.UnbondingDelegationEntry, 0, len(creationHeights))
 
 		for _, h := range creationHeights {
-			var ubdEntry types.UnbondingDelegationEntry
+			ubdEntry := types.UnbondingDelegationEntry{
+				Balance:        sdk.ZeroInt(),
+				InitialBalance: sdk.ZeroInt(),
+			}
 			for _, entry := range entriesAtSameCreationHeight[h] {
 				ubdEntry.Balance = ubdEntry.Balance.Add(entry.Balance)
 				ubdEntry.InitialBalance = ubdEntry.InitialBalance.Add(entry.InitialBalance)
@@ -60,7 +81,6 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 		// set the new ubd to the store
 		setUBDToStore(ctx, store, cdc, ubd)
 	}
-
 	return nil
 }
 

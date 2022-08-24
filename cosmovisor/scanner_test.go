@@ -21,8 +21,8 @@ func TestParseUpgradeInfoFile(t *testing.T) {
 			expectErr:     false,
 		},
 		{
-			filename:      "f2-good.json",
-			expectUpgrade: upgradetypes.Plan{Name: "Upgrade2", Info: "some info", Height: 125},
+			filename:      "f2-normalized-name.json",
+			expectUpgrade: upgradetypes.Plan{Name: "upgrade2", Info: "some info", Height: 125},
 			expectErr:     false,
 		},
 		{
@@ -59,7 +59,8 @@ func TestParseUpgradeInfoFile(t *testing.T) {
 			filename:      "unknown.json",
 			expectUpgrade: upgradetypes.Plan{},
 			expectErr:     true,
-		}}
+		},
+	}
 
 	for i := range cases {
 		tc := cases[i]

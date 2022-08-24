@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/tendermint/tendermint/mempool"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -54,7 +55,7 @@ func CheckTendermintError(err error, tx tmtypes.Tx) *sdk.TxResponse {
 	txHash := fmt.Sprintf("%X", tx.Hash())
 
 	switch {
-	case strings.Contains(errStr, strings.ToLower(tmtypes.ErrTxInCache.Error())):
+	case strings.Contains(errStr, strings.ToLower(mempool.ErrTxInCache.Error())):
 		return &sdk.TxResponse{
 			Code:      sdkerrors.ErrTxInMempoolCache.ABCICode(),
 			Codespace: sdkerrors.ErrTxInMempoolCache.Codespace(),

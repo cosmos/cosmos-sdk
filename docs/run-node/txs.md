@@ -143,7 +143,7 @@ priv2, _, addr2 := testdata.KeyTestPubAddr()
 priv3, _, addr3 := testdata.KeyTestPubAddr()
 ```
 
-Populating the `TxBuilder` can be done via its [methods](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/client/tx_config.go#L33-L50):
+Populating the `TxBuilder` can be done via its [methods](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/client/tx_config.go#L33-L50):
 
 ```go
 import (

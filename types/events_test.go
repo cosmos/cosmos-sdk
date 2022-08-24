@@ -257,6 +257,7 @@ func (s *eventsTestSuite) TestMarkEventsToIndex() {
 }
 
 func (s *eventsTestSuite) TestEventProtoCompat() {
+	expected := "cosmos.nft.v1beta1.EventSend"
 	pulsarEvent := nftv1beta1.EventSend{
 		ClassId:  "foo",
 		Id:       "bar",
@@ -269,7 +270,7 @@ func (s *eventsTestSuite) TestEventProtoCompat() {
 
 	events := em.Events()
 	event := events[len(events)-1]
-	s.Require().NotEmpty(event.Type)
+	s.Require().Equal(expected, event.Type)
 
 	gogoEvent := nft.EventSend{
 		ClassId:  "corge",
@@ -283,5 +284,5 @@ func (s *eventsTestSuite) TestEventProtoCompat() {
 
 	events = em.Events()
 	event = events[len(events)-1]
-	s.Require().NotEmpty(event.Type)
+	s.Require().Equal(expected, event.Type)
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"os"
@@ -31,6 +32,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 )
 
 // Tx processing - CheckTx, DeliverTx, SimulateTx.
@@ -543,6 +545,121 @@ func TestTxGasLimits(t *testing.T) {
 	}
 }
 
+// Test that transactions exceeding gas limits fail
+func TestMaxBlockGasLimits(t *testing.T) {
+	gasGranted := uint64(10)
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
+
+			defer func() {
+				if r := recover(); r != nil {
+					switch rType := r.(type) {
+					case sdk.ErrorOutOfGas:
+						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+					default:
+						panic(r)
+					}
+				}
+			}()
+
+			count, _ := parseTxMemo(tx)
+			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
+
+			return
+		})
+	}
+
+	// Setup baseapp.
+	var (
+		appBuilder *runtime.AppBuilder
+		cdc        codec.ProtoCodecMarshaler
+	)
+	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
+	require.NoError(t, err)
+
+	testCtx := testutil.DefaultContextWithDB(t, capKey1, sdk.NewTransientStoreKey("transient_test"))
+
+	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil, anteOpt)
+	app.SetCMS(testCtx.CMS)
+
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+	baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
+
+	// patch in TxConfig instead of using an output from x/auth/tx
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	// set the TxDecoder in the BaseApp for minimal tx simulations
+	app.SetTxDecoder(txConfig.TxDecoder())
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &abci.ConsensusParams{
+			Block: &abci.BlockParams{
+				MaxGas: 100,
+			},
+		},
+	})
+
+	header := tmproto.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	testCases := []struct {
+		tx                signing.Tx
+		numDelivers       int
+		gasUsedPerDeliver uint64
+		fail              bool
+		failAfterDeliver  int
+	}{
+		{newTxCounter(txConfig, 0, 0), 0, 0, false, 0},
+		{newTxCounter(txConfig, 9, 1), 2, 10, false, 0},
+		{newTxCounter(txConfig, 10, 0), 3, 10, false, 0},
+		{newTxCounter(txConfig, 10, 0), 10, 10, false, 0},
+		{newTxCounter(txConfig, 2, 7), 11, 9, false, 0},
+		{newTxCounter(txConfig, 10, 0), 10, 10, false, 0}, // hit the limit but pass
+
+		{newTxCounter(txConfig, 10, 0), 11, 10, true, 10},
+		{newTxCounter(txConfig, 10, 0), 15, 10, true, 10},
+		{newTxCounter(txConfig, 9, 0), 12, 9, true, 11}, // fly past the limit
+	}
+
+	for i, tc := range testCases {
+		tx := tc.tx
+
+		// reset the block gas
+		header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+		// execute the transaction multiple times
+		for j := 0; j < tc.numDelivers; j++ {
+			_, result, err := app.SimDeliver(txConfig.TxEncoder(), tx)
+
+			ctx := getDeliverStateCtx(app)
+
+			// check for failed transactions
+			if tc.fail && (j+1) > tc.failAfterDeliver {
+				require.Error(t, err, fmt.Sprintf("tc #%d; result: %v, err: %s", i, result, err))
+				require.Nil(t, result, fmt.Sprintf("tc #%d; result: %v, err: %s", i, result, err))
+
+				space, code, _ := sdkerrors.ABCIInfo(err, false)
+				require.EqualValues(t, sdkerrors.ErrOutOfGas.Codespace(), space, err)
+				require.EqualValues(t, sdkerrors.ErrOutOfGas.ABCICode(), code, err)
+				require.True(t, ctx.BlockGasMeter().IsOutOfGas())
+			} else {
+				// check gas used and wanted
+				blockGasUsed := ctx.BlockGasMeter().GasConsumed()
+				expBlockGasUsed := tc.gasUsedPerDeliver * uint64(j+1)
+				require.Equal(
+					t, expBlockGasUsed, blockGasUsed,
+					fmt.Sprintf("%d,%d: %v, %v, %v, %v", i, j, tc, expBlockGasUsed, blockGasUsed, result),
+				)
+
+				require.NotNil(t, result, fmt.Sprintf("tc #%d; currDeliver: %d, result: %v, err: %s", i, j, result, err))
+				require.False(t, ctx.BlockGasMeter().IsPastLimit())
+			}
+		}
+	}
+}
+
 func getCheckStateCtx(app *runtime.App) sdk.Context {
 	v := reflect.ValueOf(app.BaseApp).Elem()
 	f := v.FieldByName("checkState")
@@ -733,4 +850,41 @@ func (m CounterServerImplGasMeterOnly) IncrementCounter(ctx context.Context, msg
 	}
 	sdkCtx.GasMeter().ConsumeGas(gas, "test")
 	return &baseapptestutil.MsgCreateCounterResponse{}, nil
+}
+
+type paramStore struct {
+	db *dbm.MemDB
+}
+
+func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
+	bz, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+
+	ps.db.Set(key, bz)
+}
+
+func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
+	ok, err := ps.db.Has(key)
+	if err != nil {
+		panic(err)
+	}
+
+	return ok
+}
+
+func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
+	bz, err := ps.db.Get(key)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(bz) == 0 {
+		return
+	}
+
+	if err := json.Unmarshal(bz, ptr); err != nil {
+		panic(err)
+	}
 }

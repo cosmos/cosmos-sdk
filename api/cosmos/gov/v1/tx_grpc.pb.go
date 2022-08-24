@@ -38,7 +38,8 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
-	// CancelProposal defines a
+	// CancelProposal defines a method to cancel governance proposal
+	//
 	// Since: cosmos-sdk 0.47
 	CancelProposal(ctx context.Context, in *MsgCancelProposal, opts ...grpc.CallOption) (*MsgCancelProposalResponse, error)
 }
@@ -134,7 +135,8 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
-	// CancelProposal defines a
+	// CancelProposal defines a method to cancel governance proposal
+	//
 	// Since: cosmos-sdk 0.47
 	CancelProposal(context.Context, *MsgCancelProposal) (*MsgCancelProposalResponse, error)
 	mustEmbedUnimplementedMsgServer()

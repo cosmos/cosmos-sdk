@@ -11,7 +11,7 @@ import (
 )
 
 // SubmitProposal creates a new proposal given an array of messages
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata string) (v1.Proposal, error) {
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, proposer sdk.AccAddress, messages []sdk.Msg, metadata string) (v1.Proposal, error) {
 	err := keeper.assertMetadataLength(metadata)
 	if err != nil {
 		return v1.Proposal{}, err
@@ -68,7 +68,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(messages, proposalID, metadata, submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal(messages, proposer, proposalID, metadata, submitTime, submitTime.Add(*depositPeriod))
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -89,6 +89,40 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	)
 
 	return proposal, nil
+}
+
+// CancelProposal will cancel proposal before the voting period ends
+func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer string) error {
+	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	if !ok {
+		return sdkerrors.Wrapf(types.ErrProposalNotFound, "proposal is not found with % id", proposalID)
+	}
+
+	// Check creator of the proposal
+	if proposal.Proposer != proposer {
+		return sdkerrors.Wrapf(types.ErrInvalidProposer, "invalid proposer %s", proposer)
+	}
+
+	// Check if proposal is active or not
+	if (proposal.Status != v1.StatusDepositPeriod) && (proposal.Status != v1.StatusVotingPeriod) {
+		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
+	}
+
+	// Check proposal voting period is ended.
+	if proposal.VotingEndTime != nil && proposal.VotingEndTime.Before(ctx.BlockTime()) {
+		// return sdkerrors.Wrap(errors.New("voting period is already ended for this proposal"))
+		// TODO:  create error
+		return sdkerrors.Wrapf(types.ErrInactiveProposal, "voting period is already ended for this proposal %d", proposalID)
+	}
+
+	// update the status to StatusCanceled
+	proposal.Status = v1.StatusCanceled
+	// set to store
+	keeper.SetProposal(ctx, proposal)
+	// insert the proposal into cancel proposal queue
+	keeper.InsertCanceledProposalQueue(ctx, proposalID)
+
+	return nil
 }
 
 // GetProposal gets a proposal from store by ProposalID.
@@ -135,6 +169,9 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	}
 	if proposal.VotingEndTime != nil {
 		keeper.RemoveFromActiveProposalQueue(ctx, proposalID, *proposal.VotingEndTime)
+	}
+	if proposal.Status == v1.StatusCanceled {
+		keeper.RemoveFromCanceledProposalQueue(ctx, proposalID)
 	}
 
 	store.Delete(types.ProposalKey(proposalID))

@@ -17,6 +17,14 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 	logger := keeper.Logger(ctx)
 
+	// delete the canceled proposals from store and returns theirs deposits.
+	keeper.IterateCanceledProposalQueue(ctx, func(proposal v1.Proposal) (stop bool) {
+		keeper.DeleteProposal(ctx, proposal.Id)
+		// send min deposit to community pool
+		keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
+		return false
+	})
+
 	// delete dead proposals from store and returns theirs deposits.
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {

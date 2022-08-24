@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	_, _, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}, &MsgUpdateParams{}
-	_, _             codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
+	_, _, _, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}, &MsgUpdateParams{}, &MsgCancelProposal{}
+	_, _                codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -291,4 +291,38 @@ func (msg MsgUpdateParams) GetSignBytes() []byte {
 func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{authority}
+}
+
+// NewMsgCancelProposal creates a new MsgCancelProposal instance
+//
+//nolint:interfacer
+func NewMsgCancelProposal(proposer sdk.AccAddress, proposalID uint64) *MsgCancelProposal {
+	return &MsgCancelProposal{proposalID, proposer.String()}
+}
+
+// Route implements Msg
+func (msg MsgCancelProposal) Route() string { return types.RouterKey }
+
+// Type implements Msg
+func (msg MsgCancelProposal) Type() string { return sdk.MsgTypeURL(&msg) }
+
+// ValidateBasic implements Msg
+func (msg MsgCancelProposal) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Proposer); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
+	}
+
+	return nil
+}
+
+// GetSignBytes implements Msg
+func (msg MsgCancelProposal) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners implements Msg
+func (msg MsgCancelProposal) GetSigners() []sdk.AccAddress {
+	proposer, _ := sdk.AccAddressFromBech32(msg.Proposer)
+	return []sdk.AccAddress{proposer}
 }

@@ -70,6 +70,7 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 		NewCmdVote(),
 		NewCmdWeightedVote(),
 		NewCmdSubmitProposal(),
+		NewCmdCancelProposal(),
 
 		// Deprecated
 		cmdSubmitLegacyProp,
@@ -132,6 +133,40 @@ Where proposal.json contains:
 
 	flags.AddTxFlagsToCmd(cmd)
 
+	return cmd
+}
+
+// NewCmdCancelProposal implements submitting a cancel proposal transaction command.
+func NewCmdCancelProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cancel-proposal [proposal-id]",
+		Short: "Cancel governance proposal by proposal before the voting period ends.",
+		Args:  cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`
+		$ %s tx gov cancel-proposal 1 --from mykey
+		`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// validate that the proposal id is a uint
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
+			}
+
+			// Get depositor address
+			from := clientCtx.GetFromAddress()
+
+			msg := v1.NewMsgCancelProposal(from, proposalID)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 

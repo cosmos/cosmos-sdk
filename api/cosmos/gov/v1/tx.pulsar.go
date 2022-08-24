@@ -7160,6 +7160,7 @@ func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
 }
 
 // MsgCancelProposal is the Msg/CancelProposal request type.
+//
 // Since: cosmos-sdk 0.47
 type MsgCancelProposal struct {
 	state         protoimpl.MessageState

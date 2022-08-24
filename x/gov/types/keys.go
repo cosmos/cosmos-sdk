@@ -41,6 +41,7 @@ var (
 	ActiveProposalQueuePrefix   = []byte{0x01}
 	InactiveProposalQueuePrefix = []byte{0x02}
 	ProposalIDKey               = []byte{0x03}
+	CanceledProposalQueuePrefix = []byte{0x04}
 
 	DepositsKeyPrefix = []byte{0x10}
 
@@ -77,6 +78,11 @@ func ActiveProposalByTimeKey(endTime time.Time) []byte {
 // ActiveProposalQueueKey returns the key for a proposalID in the activeProposalQueue
 func ActiveProposalQueueKey(proposalID uint64, endTime time.Time) []byte {
 	return append(ActiveProposalByTimeKey(endTime), GetProposalIDBytes(proposalID)...)
+}
+
+// CanceledProposalQueueKey returns the key for a proposalID in the canceledProposalQueue
+func CanceledProposalQueueKey(proposalID uint64) []byte {
+	return append(CanceledProposalQueuePrefix, GetProposalIDBytes(proposalID)...)
 }
 
 // InactiveProposalByTimeKey gets the inactive proposal queue key by endTime

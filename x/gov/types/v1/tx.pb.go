@@ -651,6 +651,7 @@ func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
 // MsgCancelProposal is the Msg/CancelProposal request type.
+//
 // Since: cosmos-sdk 0.47
 type MsgCancelProposal struct {
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
@@ -848,7 +849,8 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
-	// CancelProposal defines a
+	// CancelProposal defines a method to cancel governance proposal
+	//
 	// Since: cosmos-sdk 0.47
 	CancelProposal(ctx context.Context, in *MsgCancelProposal, opts ...grpc.CallOption) (*MsgCancelProposalResponse, error)
 }
@@ -942,7 +944,8 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
-	// CancelProposal defines a
+	// CancelProposal defines a method to cancel governance proposal
+	//
 	// Since: cosmos-sdk 0.47
 	CancelProposal(context.Context, *MsgCancelProposal) (*MsgCancelProposalResponse, error)
 }

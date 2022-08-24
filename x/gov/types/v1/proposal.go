@@ -20,10 +20,11 @@ const (
 	StatusPassed        = ProposalStatus_PROPOSAL_STATUS_PASSED
 	StatusRejected      = ProposalStatus_PROPOSAL_STATUS_REJECTED
 	StatusFailed        = ProposalStatus_PROPOSAL_STATUS_FAILED
+	StatusCanceled      = ProposalStatus_PROPOSAL_STATUS_CANCELED
 )
 
 // NewProposal creates a new Proposal instance
-func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, depositEndTime time.Time) (Proposal, error) {
+func NewProposal(messages []sdk.Msg, proposer sdk.AccAddress, id uint64, metadata string, submitTime, depositEndTime time.Time) (Proposal, error) {
 	msgs, err := sdktx.SetMsgs(messages)
 	if err != nil {
 		return Proposal{}, err
@@ -39,6 +40,7 @@ func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, dep
 		FinalTallyResult: &tally,
 		SubmitTime:       &submitTime,
 		DepositEndTime:   &depositEndTime,
+		Proposer:         proposer.String(),
 	}
 
 	return p, nil

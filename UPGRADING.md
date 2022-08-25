@@ -42,34 +42,6 @@ modified to set the new parameter to the desired value.
 
 ## [v0.46.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0)
 
-### Client Changes
-
-### `x/gov`
-
-#### `types/v1`
-
-The `gov` module has been greatly improved. The previous API has been moved to `v1beta1` while the new implementation is called `v1`.
-
-In order to submit a proposal with `submit-proposal` you now need to pass a `proposal.json` file.
-You can still use the old way by using `submit-legacy-proposal`. This is not recommended.
-More information can be found in the gov module [client documentation](https://docs.cosmos.network/v0.46/modules/gov/07_client.html).
-
-### Keyring
-
-The keyring has been refactored in v0.46.
-
-* The `Unsafe*` interfaces have been removed from the keyring package. Please use interface casting if you wish to access those unsafe functions.
-* The keys' implementation has been refactored to be serialized as proto.
-* `keyring.NewInMemory` and `keyring.New` takes now a `codec.Codec`.
-* Take `keyring.Record` instead of `Info` as first argument in:
-        * `MkConsKeyOutput`
-        * `MkValKeyOutput`
-        * `MkAccKeyOutput`
-* Rename:
-        * `SavePubKey` to `SaveOfflineKey` and remove the `algo` argument.
-        * `NewMultiInfo`, `NewLedgerInfo`  to `NewLegacyMultiInfo`, `newLegacyLedgerInfo` respectively.
-        * `NewOfflineInfo` to `newLegacyOfflineInfo` and move it to `migration_test.go`.
-
 ### Go API Changes
 
 The `replace google.golang.org/grpc` directive can be removed from the `go.mod`, it is no more required to block the version.
@@ -93,23 +65,37 @@ To improve clarity of the API, some renaming and improvements has been done:
 
 For the exhaustive list of API renaming, please refer to the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/main/CHANGELOG.md).
 
-### new packages
+#### new packages
 
 Additionally, new packages have been introduced in order to further split the codebase. Aliases are available for a new API breaking migration, but it is encouraged to migrate to this new packages:
 
 * `errors` should replace `types/errors` when registering errors or wrapping SDK errors.
 * `math` contains the `Int` or `Uint` types that are used in the SDK.
 
-### `x/authz`
+#### `x/authz`
 
 * `authz.NewMsgGrant` `expiration` is now a pointer. When `nil` is used, then no expiration will be set (grant won't expire).
 * `authz.NewGrant` takes a new argument: block time, to correctly validate expire time.
 
-### State Machine Changes
+### Keyring
 
-#### PostHandler
+The keyring has been refactored in v0.46.
 
-`postHandler` is like an `antehandler`, but is run _after_ the `runMsgs` execution. It is in the same store branch that `runMsgs`, meaning that both `runMsgs` and `postHandler`. This allows to run a custom logic after the execution of the messages.
+* The `Unsafe*` interfaces have been removed from the keyring package. Please use interface casting if you wish to access those unsafe functions.
+* The keys' implementation has been refactored to be serialized as proto.
+* `keyring.NewInMemory` and `keyring.New` takes now a `codec.Codec`.
+* Take `keyring.Record` instead of `Info` as first argument in:
+        * `MkConsKeyOutput`
+        * `MkValKeyOutput`
+        * `MkAccKeyOutput`
+* Rename:
+        * `SavePubKey` to `SaveOfflineKey` and remove the `algo` argument.
+        * `NewMultiInfo`, `NewLedgerInfo`  to `NewLegacyMultiInfo`, `newLegacyLedgerInfo` respectively.
+        * `NewOfflineInfo` to `newLegacyOfflineInfo` and move it to `migration_test.go`.
+
+### PostHandler
+
+A `postHandler` is like an `antehandler`, but is run _after_ the `runMsgs` execution. It is in the same store branch that `runMsgs`, meaning that both `runMsgs` and `postHandler`. This allows to run a custom logic after the execution of the messages.
 
 ### IAVL
 
@@ -130,5 +116,23 @@ mistakes.
 
 ### Modules
 
+#### `x/params`
+
 * The `x/param` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos-SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
-    * The Param module will be maintained until April 18, 2022. At this point the module will reach end of life and be removed from the Cosmos SDK.
+* The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
+
+#### `x/gov`
+
+The `gov` module has been greatly improved. The previous API has been moved to `v1beta1` while the new implementation is called `v1`.
+
+In order to submit a proposal with `submit-proposal` you now need to pass a `proposal.json` file.
+You can still use the old way by using `submit-legacy-proposal`. This is not recommended.
+More information can be found in the gov module [client documentation](https://docs.cosmos.network/v0.46/modules/gov/07_client.html).
+
+### Protobuf
+
+The `third_party/proto` folder that existed in [previous version](https://github.com/cosmos/cosmos-sdk/tree/v0.45.3/third_party/proto) now does not contains directly the [proto files](https://github.com/cosmos/cosmos-sdk/tree/release/v0.46.x/third_party/proto).
+
+Instead, the SDK uses [`buf`](https://buf.build). Clients should have their own [`buf.yaml`](https://docs.buf.build/configuration/v1/buf-yaml) with `buf.build/cosmos/cosmos-sdk` as dependency, in order to avoid having to copy paste these files.
+
+The protos can as well be downloaded using `buf export buf.build/cosmos/cosmos-sdk:$(curl -sS https://api.github.com/repos/cosmos/cosmos-sdk/commits/v0.46.0 | jq -r .sha) --output <some_folder>`.

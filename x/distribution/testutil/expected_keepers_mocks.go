@@ -234,6 +234,20 @@ func (mr *MockStakingKeeperMockRecorder) Delegation(arg0, arg1, arg2 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delegation", reflect.TypeOf((*MockStakingKeeper)(nil).Delegation), arg0, arg1, arg2)
 }
 
+// GetAllDelegatorDelegations mocks base method.
+func (m *MockStakingKeeper) GetAllDelegatorDelegations(ctx types.Context, delegator types.AccAddress) []types1.Delegation {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllDelegatorDelegations", ctx, delegator)
+	ret0, _ := ret[0].([]types1.Delegation)
+	return ret0
+}
+
+// GetAllDelegatorDelegations indicates an expected call of GetAllDelegatorDelegations.
+func (mr *MockStakingKeeperMockRecorder) GetAllDelegatorDelegations(ctx, delegator interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllDelegatorDelegations", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllDelegatorDelegations), ctx, delegator)
+}
+
 // GetAllSDKDelegations mocks base method.
 func (m *MockStakingKeeper) GetAllSDKDelegations(ctx types.Context) []types1.Delegation {
 	m.ctrl.T.Helper()
@@ -246,6 +260,20 @@ func (m *MockStakingKeeper) GetAllSDKDelegations(ctx types.Context) []types1.Del
 func (mr *MockStakingKeeperMockRecorder) GetAllSDKDelegations(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSDKDelegations", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllSDKDelegations), ctx)
+}
+
+// GetAllValidators mocks base method.
+func (m *MockStakingKeeper) GetAllValidators(ctx types.Context) []types1.Validator {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllValidators", ctx)
+	ret0, _ := ret[0].([]types1.Validator)
+	return ret0
+}
+
+// GetAllValidators indicates an expected call of GetAllValidators.
+func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllValidators", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllValidators), ctx)
 }
 
 // IterateDelegations mocks base method.

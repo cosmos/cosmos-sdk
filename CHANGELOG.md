@@ -55,6 +55,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/group) [#12888](https://github.com/cosmos/cosmos-sdk/pull/12888) Fix event propagation to the current context of `x/group` message execution `[]sdk.Result`.
 * (x/upgrade) [#12906](https://github.com/cosmos/cosmos-sdk/pull/12906) Fix upgrade failure by moving downgrade verification logic after store migration.
+<<<<<<< HEAD
+=======
+* (store) [#12945](https://github.com/cosmos/cosmos-sdk/pull/12945) Fix nil end semantics in store/cachekv/iterator when iterating a dirty cache.
+* (export) [#13029](https://github.com/cosmos/cosmos-sdk/pull/13029) Fix exporting the blockParams regression.
+
+### Deprecated
+
+* (x/bank) [#11859](https://github.com/cosmos/cosmos-sdk/pull/11859) The Params.SendEnabled field is deprecated and unusable.
+  The information can now be accessed using the BankKeeper.
+  Setting can be done using MsgSetSendEnabled as a governance proposal.
+  A SendEnabled query has been added to both GRPC and CLI.
+>>>>>>> e1999e41d (fix: exporting the blockParams regression (#13029))
 
 ## [v0.46.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0) - 2022-07-26
 

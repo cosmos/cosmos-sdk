@@ -33,49 +33,19 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
-<<<<<<< HEAD
 	app := simapp.Setup(s.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	authz.RegisterQueryServer(queryHelper, app.AuthzKeeper)
-=======
-	key := sdk.NewKVStoreKey(authzkeeper.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
-	s.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
-	s.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
-
-	s.baseApp = baseapp.NewBaseApp(
-		"authz",
-		log.NewNopLogger(),
-		testCtx.DB,
-		s.encCfg.TxConfig.TxDecoder(),
-	)
-	s.baseApp.SetCMS(testCtx.CMS)
-	s.baseApp.SetInterfaceRegistry(s.encCfg.InterfaceRegistry)
-
-	s.addrs = simtestutil.CreateIncrementalAccounts(7)
-
-	// gomock initializations
-	ctrl := gomock.NewController(s.T())
-	s.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
-	s.bankKeeper = authztestutil.NewMockBankKeeper(ctrl)
-	banktypes.RegisterInterfaces(s.encCfg.InterfaceRegistry)
-	banktypes.RegisterMsgServer(s.baseApp.MsgServiceRouter(), s.bankKeeper)
-
-	s.authzKeeper = authzkeeper.NewKeeper(key, s.encCfg.Codec, s.baseApp.MsgServiceRouter(), s.accountKeeper)
-
-	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.encCfg.InterfaceRegistry)
-	authz.RegisterQueryServer(queryHelper, s.authzKeeper)
->>>>>>> 5e4651eca (feat(x/authz): Add the GetAuthorization function. (#13047))
 	queryClient := authz.NewQueryClient(queryHelper)
 	s.queryClient = queryClient
 
 	s.app = app
 	s.ctx = ctx
 	s.queryClient = queryClient
-	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(30000000))
+	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 7, sdk.NewInt(30000000))
 }
 
 func (s *TestSuite) TestKeeper() {

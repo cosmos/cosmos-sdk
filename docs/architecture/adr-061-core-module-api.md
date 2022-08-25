@@ -449,7 +449,7 @@ func ProvideApp(config *foomodulev2.Module, evtSvc event.EventService, db orm.Mo
 
 ### Runtime Compatibility Version
 
-The `core` module will define a static integer var, `cosmossdk.io/core/RuntimeCompatibilityVersion`, which is
+The `core` module will define a static integer var, `cosmossdk.io/core.RuntimeCompatibilityVersion`, which is
 a minor version indicator of the core module that is accessible at runtime. Correct runtime module implementations
 should check this compatibility version and return an error if the current `RuntimeCompatibilityVersion` is higher
 than the version of the core API that this runtime version can support. When new features are adding to the `core`

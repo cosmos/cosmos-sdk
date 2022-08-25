@@ -1,8 +1,6 @@
 syntax = "proto3";
 package cosmos.consensus_param.v1;
 
-import "cosmos/base/query/v1beta1/pagination.proto";
-import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "tendermint/types/params.proto";
 

@@ -150,8 +150,8 @@ func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID u
 }
 
 // InsertCanceledProposalQueue inserts a ProposalID into the cancel proposal queue
-func (Keeper Keeper) InsertCanceledProposalQueue(ctx sdk.Context, proposalID uint64) {
-	store := ctx.KVStore(Keeper.storeKey)
+func (keeper Keeper) InsertCanceledProposalQueue(ctx sdk.Context, proposalID uint64) {
+	store := ctx.KVStore(keeper.storeKey)
 	bz := types.GetProposalIDBytes(proposalID)
 	store.Set(types.CanceledProposalQueueKey(proposalID), bz)
 }

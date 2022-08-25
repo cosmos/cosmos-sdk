@@ -1,6 +1,8 @@
 package v4
 
 import (
+	"sort"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,15 +44,24 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 // AddProposerAddressToProposal will add proposer to proposal
 // and set to the store
 func AddProposerAddressToProposal(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, proposals map[uint64]string) error {
+	proposalIDS := make([]uint64, 0, len(proposals))
+
+	for proposerID := range proposals {
+		proposalIDS = append(proposalIDS, proposerID)
+	}
+	// sort the proposalIDS
+	sort.Slice(proposalIDS, func(i, j int) bool { return proposalIDS[i] < proposalIDS[j] })
+
 	store := ctx.KVStore(storeKey)
-	for proposerID, proposer := range proposals {
+
+	for _, proposerID := range proposalIDS {
 		bz := store.Get(types.ProposalKey(proposerID))
 		var proposal govv1.Proposal
 		if err := cdc.Unmarshal(bz, &proposal); err != nil {
 			panic(err)
 		}
 
-		proposal.Proposer = proposer
+		proposal.Proposer = proposals[proposerID]
 
 		// set the new proposal with proposer
 		bz, err := cdc.Marshal(&proposal)

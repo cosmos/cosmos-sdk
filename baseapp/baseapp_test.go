@@ -1460,11 +1460,6 @@ type testCustomRouter struct {
 	routes sync.Map
 }
 
-// func (rtr *testCustomRouter) AddRoute(route sdk.Route) sdk.Router {
-// 	rtr.routes.Store(route.Path(), route.Handler())
-// 	return rtr
-// }
-
 func (rtr *testCustomRouter) Route(ctx sdk.Context, path string) sdk.Handler {
 	if v, ok := rtr.routes.Load(path); ok {
 		if h, ok := v.(sdk.Handler); ok {

@@ -423,11 +423,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	path := splitPath(req.Path)
 	if len(path) == 0 {
-<<<<<<< HEAD
-		sdkerrors.QueryResultWithDebug(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
-=======
-		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
->>>>>>> c73171fbd (fix: missing return statement in BaseApp.Query (#13046))
+		return sdkerrors.QueryResultWithDebug(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
 	}
 
 	switch path[0] {

@@ -34,6 +34,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	testCases := []struct {
 		name      string
@@ -112,6 +113,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	testCases := []struct {
 		name           string

@@ -11,10 +11,12 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -564,9 +566,15 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bz, tc.respType), string(bz))
+				s.Require().NoError(s.network.WaitForNextBlock())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				cmd := authcli.QueryTxCmd()
+				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txResp.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+				s.Require().NoError(err)
+
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), txResp), out.String())
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 
 				data, err := hex.DecodeString(txResp.Data)
 				s.Require().NoError(err)
@@ -650,9 +658,15 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(s.network.WaitForNextBlock())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				cmd := authcli.QueryTxCmd()
+				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txResp.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+				s.Require().NoError(err)
+
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), txResp), out.String())
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 
 				data, err := hex.DecodeString(txResp.Data)
 				s.Require().NoError(err)
@@ -733,7 +747,7 @@ func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.checkTx(clientCtx, txResp.TxHash, tc.expectedCode)
 			}
 		})
 	}
@@ -788,8 +802,20 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.checkTx(clientCtx, txResp.TxHash, tc.expectedCode)
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) checkTx(clientCtx client.Context, txHash string, expectedCode uint32) {
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	cmd := authcli.QueryTxCmd()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err)
+
+	var response sdk.TxResponse
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+	s.Require().Equal(expectedCode, response.Code, out.String())
 }

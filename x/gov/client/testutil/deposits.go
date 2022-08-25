@@ -108,6 +108,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	deposit := s.queryDeposit(val, proposalID, false, "")
 	s.Require().NotNil(deposit)
 	s.Require().Equal(sdk.Coins(deposit.Amount).String(), depositAmount)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// query deposits
 	deposits := s.queryDeposits(val, proposalID, false, "")
@@ -125,6 +126,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
 	deposit := s.queryDeposit(val, proposalID, false, "")
 	s.Require().NotNil(deposit)
 	s.Require().Equal(sdk.Coins(deposit.Amount).String(), s.deposits[1].String())
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// query deposits
 	deposits := s.queryDeposits(val, proposalID, false, "")

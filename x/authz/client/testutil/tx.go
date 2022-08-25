@@ -6,7 +6,9 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -14,6 +16,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -50,14 +53,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// Create new account in the keyring.
 	s.grantee[0] = s.createAccount("grantee1")
 	s.msgSendExec(s.grantee[0])
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
 
 	// create a proposal with deposit
 	_, err = govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 1", "Where is the title!?", govv1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govv1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Create new account in the keyring.
 	s.grantee[1] = s.createAccount("grantee2")
@@ -76,10 +78,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
 	})
 	s.Require().NoError(err)
-	s.Require().Contains(out.String(), `"code":0`)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+	var response sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+	s.checkTxCode(val.ClientCtx, response.TxHash, 0)
 
 	// Create new account in the keyring.
 	s.grantee[2] = s.createAccount("grantee3")
@@ -96,6 +98,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
 	})
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Create new accounts in the keyring.
 	s.grantee[3] = s.createAccount("grantee4")
@@ -120,14 +123,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
-	err = s.network.WaitForNextBlock()
-	s.Require().NoError(err)
-
-	var response sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-	s.Require().Equal(int(response.Code), 0)
-	s.Require().NotEqual(int(response.Height), 0)
+	s.checkTxCode(val.ClientCtx, response.TxHash, 0)
 }
 
 func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
@@ -155,6 +154,7 @@ func (s *IntegrationTestSuite) msgSendExec(grantee sdk.AccAddress) {
 	)
 	s.Require().NoError(err)
 	s.Require().Contains(out.String(), `"code":0`)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -514,7 +514,6 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := val.ClientCtx
 			out, err := CreateGrant(
 				val,
 				tc.args,
@@ -525,8 +524,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			} else {
 				var txResp sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+				s.checkTxCode(val.ClientCtx, txResp.TxHash, tc.expectedCode)
 			}
 		})
 	}
@@ -559,6 +558,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// generic-authorization
 	_, err = CreateGrant(
@@ -575,6 +575,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// generic-authorization used for amino testing
 	_, err = CreateGrant(
@@ -592,6 +593,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	testCases := []struct {
 		name         string
@@ -679,7 +681,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.checkTxCode(val.ClientCtx, txResp.TxHash, tc.expectedCode)
 			}
 		})
 	}
@@ -714,7 +716,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	cmd := cli.NewCmdExecAuthorization()
 	clientCtx := val.ClientCtx
 
-	res, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{
 		execMsg.Name(),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -722,7 +724,9 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 	})
 	s.Require().NoError(err)
-	s.Require().Contains(res.String(), authz.ErrNoAuthorizationFound.Error())
+	var response sdk.TxResponse
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+	s.checkTxCode(clientCtx, response.TxHash, authz.ErrNoAuthorizationFound.ABCICode())
 }
 
 func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
@@ -744,6 +748,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// msg vote
 	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
@@ -820,7 +825,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.checkTxCode(val.ClientCtx, txResp.TxHash, tc.expectedCode)
 			}
 		})
 	}
@@ -846,6 +851,8 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	tokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(12)),
 	)
@@ -928,7 +935,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			default:
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().Equal(tc.expectedCode, response.Code, out.String())
+				s.checkTxCode(val.ClientCtx, response.TxHash, tc.expectedCode)
 			}
 		})
 	}
@@ -956,6 +963,7 @@ func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	tokens := sdk.NewCoins(
 		sdk.NewCoin("stake", sdk.NewInt(12)),
@@ -1000,6 +1008,7 @@ func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// test sending to not allowed address
 	args = []string{
@@ -1010,6 +1019,13 @@ func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 	}
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// query tx and check result
+	cmd = authcli.QueryTxCmd()
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, []string{response.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err)
 	s.Contains(out.String(), fmt.Sprintf("cannot send to %s address", notAllowedAddr))
 }
@@ -1034,6 +1050,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	tokens := sdk.NewCoins(
 		sdk.NewCoin("stake", sdk.NewInt(50)),
@@ -1105,7 +1122,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().Equal(tc.expectedCode, response.Code, out.String())
+				s.checkTxCode(val.ClientCtx, response.TxHash, tc.expectedCode)
 			}
 		})
 	}
@@ -1125,6 +1142,8 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	tokens = sdk.NewCoins(
 		sdk.NewCoin("stake", sdk.NewInt(50)),
 	)
@@ -1182,7 +1201,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().Equal(tc.expectedCode, response.Code, out.String())
+				s.checkTxCode(val.ClientCtx, response.TxHash, tc.expectedCode)
 			}
 		})
 	}
@@ -1203,6 +1222,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	args := []string{
 		execMsg.Name(),
@@ -1213,6 +1233,15 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	}
 	cmd := cli.NewCmdExecAuthorization()
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	var response sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+
+	// query tx and check result
+	cmd = authcli.QueryTxCmd()
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, []string{response.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err)
 	s.Contains(out.String(), fmt.Sprintf("cannot delegate/undelegate to %s validator", val.ValAddress.String()))
 }
@@ -1238,6 +1267,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// delegating stakes to validator
 	_, err = execDelegate(
@@ -1326,7 +1356,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().Equal(tc.expectedCode, response.Code, out.String())
+				s.checkTxCode(val.ClientCtx, response.TxHash, tc.expectedCode)
 			}
 		})
 	}
@@ -1346,6 +1376,8 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 		},
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	tokens = sdk.NewCoins(
 		sdk.NewCoin("stake", sdk.NewInt(50)),
 	)
@@ -1405,8 +1437,20 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().Equal(tc.expectedCode, response.Code, out.String())
+				s.checkTxCode(val.ClientCtx, response.TxHash, tc.expectedCode)
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) checkTxCode(clientCtx client.Context, txHash string, expectedCode uint32) {
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	cmd := authcli.QueryTxCmd()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err)
+
+	var response sdk.TxResponse
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+	s.Require().Equal(expectedCode, response.Code, out.String())
 }

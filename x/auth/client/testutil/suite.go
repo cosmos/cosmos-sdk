@@ -1586,8 +1586,9 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 		signedTxFile.Name(),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 	)
-
 	require.NoError(err)
+	require.NoError(s.network.WaitForNextBlock())
+
 	var txRes sdk.TxResponse
 	require.NoError(val0.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 	require.Equal(uint32(0), txRes.Code, txRes.RawLog)

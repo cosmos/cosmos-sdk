@@ -3,14 +3,16 @@ package crisis
 import (
 	"fmt"
 
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/suite"
-
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -73,7 +75,7 @@ func (s *IntegrationTestSuite) TestNewMsgVerifyInvariantTxCmd() {
 			true, 0, nil,
 		},
 		{
-			"valid transaction",
+			"valid traclientCtx.Codec.UnmarshalJSON(out.Bytes(), nsaction",
 			[]string{
 				"bank", "total-supply",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
@@ -100,8 +102,20 @@ func (s *IntegrationTestSuite) TestNewMsgVerifyInvariantTxCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) checkTxCode(clientCtx client.Context, txHash string, expectedCode uint32) {
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	cmd := authcli.QueryTxCmd()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err)
+
+	var response sdk.TxResponse
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+	s.Require().Equal(expectedCode, response.Code, out.String())
 }

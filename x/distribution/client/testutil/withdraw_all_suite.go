@@ -69,6 +69,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	)
 	require.NoError(err)
+	require.NoError(s.network.WaitForNextBlock())
 
 	// delegate 500 tokens to validator1
 	args := []string{
@@ -82,6 +83,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	cmd := stakingcli.NewDelegateCmd()
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
+	require.NoError(s.network.WaitForNextBlock())
 
 	// delegate 500 tokens to validator2
 	args = []string{
@@ -94,6 +96,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	}
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
+	require.NoError(s.network.WaitForNextBlock())
 
 	args = []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),

@@ -124,9 +124,6 @@ func (s *IntegrationTestSuite) TestQueryBySig() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	// wait for tx to be included
-	s.network.WaitForNextBlock()
-
 	// get the signature out of the builder
 	sigs, err := txb.GetTx().GetSignaturesV2()
 	s.Require().NoError(err)

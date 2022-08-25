@@ -119,6 +119,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
 				})
 				s.Require().NoError(err)
+				s.Require().NoError(s.network.WaitForNextBlock())
 			},
 			func(g *authz.QueryGrantsResponse) {
 				s.Require().Len(g.Grants, 2)

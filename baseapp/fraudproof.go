@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
 	smtlib "github.com/lazyledger/smt"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
@@ -118,4 +119,29 @@ func (fraudProof *FraudProof) verifyFraudProof() (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+func (fraudProof *FraudProof) toABCI() abci.FraudProof {
+	abciStateWitness := make(map[string]*abci.StateWitness)
+	for storeKey, stateWitness := range fraudProof.stateWitness {
+		abciWitnessData := make([]*abci.WitnessData, len(stateWitness.WitnessData))
+		for _, witnessData := range stateWitness.WitnessData {
+			abciWitness := abci.WitnessData{
+				Key:   witnessData.Key,
+				Value: witnessData.Value,
+				Proof: &witnessData.proof,
+			}
+			abciWitnessData = append(abciWitnessData, &abciWitness)
+		}
+		abciStateWitness[storeKey] = &abci.StateWitness{
+			ProofOp:     &stateWitness.proof,
+			RootHash:    stateWitness.rootHash,
+			WitnessData: abciWitnessData,
+		}
+	}
+	return abci.FraudProof{
+		BlockHeight:  fraudProof.blockHeight,
+		AppHash:      fraudProof.appHash,
+		StateWitness: abciStateWitness,
+	}
 }

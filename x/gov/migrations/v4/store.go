@@ -5,6 +5,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/exported"
+	types "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
@@ -34,6 +35,30 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 	}
 
 	store.Set(ParamsKey, bz)
+
+	return nil
+}
+
+// AddProposerAddressToProposal will add proposer to proposal
+// and set to the store
+func AddProposerAddressToProposal(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, proposals map[uint64]string) error {
+	store := ctx.KVStore(storeKey)
+	for proposerID, proposer := range proposals {
+		bz := store.Get(types.ProposalKey(proposerID))
+		var proposal govv1.Proposal
+		if err := cdc.Unmarshal(bz, &proposal); err != nil {
+			panic(err)
+		}
+
+		proposal.Proposer = proposer
+
+		// set the new proposal with proposer
+		bz, err := cdc.Marshal(&proposal)
+		if err != nil {
+			panic(err)
+		}
+		store.Set(types.ProposalKey(proposal.Id), bz)
+	}
 
 	return nil
 }

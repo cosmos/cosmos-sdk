@@ -23,6 +23,8 @@ type Keeper struct {
 
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
+	// Distribution Keeper
+	dk types.DistributionKeeper
 
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk types.StakingKeeper
@@ -63,7 +65,7 @@ func (k Keeper) GetAuthority() string {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, sk types.StakingKeeper,
+	bankKeeper types.BankKeeper, sk types.StakingKeeper, dk types.DistributionKeeper,
 	router *baseapp.MsgServiceRouter, config types.Config, authority string,
 ) *Keeper {
 	// ensure governance module account is set
@@ -84,6 +86,7 @@ func NewKeeper(
 		storeKey:   key,
 		authKeeper: authKeeper,
 		bankKeeper: bankKeeper,
+		dk:         dk,
 		sk:         sk,
 		cdc:        cdc,
 		router:     router,
@@ -215,8 +218,7 @@ func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time
 // IterateCanceledProposalQueue iterates over the proposal in the canceled proposal queue
 // and performs a callback function
 func (keeper Keeper) IterateCanceledProposalQueue(ctx sdk.Context, cb func(proposal v1.Proposal) (stop bool)) {
-	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.CanceledProposalQueuePrefix)
+	iterator := keeper.CanceledProposalQueueIterator(ctx)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -247,7 +249,7 @@ func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time
 // InactiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Inactive Queue that expire by endTime
 func (keeper Keeper) CanceledProposalQueueIterator(ctx sdk.Context) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
-	return store.Iterator(types.CanceledProposalQueuePrefix, nil)
+	return sdk.KVStorePrefixIterator(store, types.CanceledProposalQueuePrefix)
 }
 
 // assertMetadataLength returns an error if given metadata length

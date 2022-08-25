@@ -162,6 +162,52 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	return activatedVotingPeriod, nil
 }
 
+// SendMinDepositsOfProposalToCommunityPool will sends the min deposits of proposal to community pool
+// from proposer deposits and updated the deposit store with updated deposit amount.
+func (keeper Keeper) SendMinDepositsOfProposalToCommunityPool(ctx sdk.Context, proposalID uint64, proAddr string) error {
+	proposerAddr := sdk.MustAccAddressFromBech32(proAddr)
+
+	deposit, found := keeper.GetDeposit(ctx, proposalID, proposerAddr)
+	if !found {
+		return nil
+	}
+
+	minDepositeAmount, err := keeper.GetMinDepositsForProposal(ctx)
+	if err != nil {
+		return err
+	}
+
+	// send minDepositeAmount to community pool from proposal deposits (gov module)
+	err = keeper.dk.FundCommunityPool(ctx, minDepositeAmount, keeper.authKeeper.GetModuleAddress(types.ModuleName))
+	if err != nil {
+		return err
+	}
+
+	deposit.Amount = sdk.NewCoins(deposit.Amount...).Sub(minDepositeAmount...)
+	// reset the deposit to store with updated amount
+	keeper.SetDeposit(ctx, deposit)
+	return nil
+}
+
+// GetMinDepositsForProposal will returns minimum deposit amount required for creating the proposal.
+func (keeper Keeper) GetMinDepositsForProposal(ctx sdk.Context) ([]sdk.Coin, error) {
+	params := keeper.GetParams(ctx)
+
+	minInitialDepositRatio, err := sdk.NewDecFromStr(params.MinInitialDepositRatio)
+	if err != nil {
+		return nil, err
+	}
+	if minInitialDepositRatio.IsZero() {
+		return nil, nil
+	}
+	minDepositCoins := params.MinDeposit
+	for i := range minDepositCoins {
+		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
+	}
+
+	return minDepositCoins, nil
+}
+
 // RefundAndDeleteDeposits refunds and deletes all the deposits on a specific proposal.
 func (keeper Keeper) RefundAndDeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)

@@ -168,9 +168,10 @@ type govInputs struct {
 	MsgServiceRouter *baseapp.MsgServiceRouter
 	Authority        map[string]sdk.AccAddress `optional:"true"`
 
-	AccountKeeper govtypes.AccountKeeper
-	BankKeeper    govtypes.BankKeeper
-	StakingKeeper govtypes.StakingKeeper
+	AccountKeeper      govtypes.AccountKeeper
+	BankKeeper         govtypes.BankKeeper
+	StakingKeeper      govtypes.StakingKeeper
+	DistributionKeeper govtypes.DistributionKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace govtypes.ParamSubspace
@@ -201,6 +202,7 @@ func provideModule(in govInputs) govOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.StakingKeeper,
+		in.DistributionKeeper,
 		in.MsgServiceRouter,
 		kConfig,
 		authority.String(),

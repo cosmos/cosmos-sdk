@@ -18,8 +18,10 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 	logger := keeper.Logger(ctx)
 
 	// delete the canceled proposals from store and returns theirs deposits.
+	// move the initial deposit of proposer to community pool and refund remaining deposits.
 	keeper.IterateCanceledProposalQueue(ctx, func(proposal v1.Proposal) (stop bool) {
 		keeper.DeleteProposal(ctx, proposal.Id)
+		keeper.SendMinDepositsOfProposalToCommunityPool(ctx, proposal.Id, proposal.Proposer)
 		// send min deposit to community pool
 		keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
 		return false

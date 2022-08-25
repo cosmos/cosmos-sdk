@@ -12,15 +12,17 @@ import (
 
 var _ types.QueryServer = Querier{}
 
+// Querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over keeper
 type Querier struct {
 	Keeper
 }
 
+// NewQuerier constructor for the Querier struct
 func NewQuerier(keeper Keeper) Querier {
 	return Querier{Keeper: keeper}
 }
 
-// Balance implements the Query/Balance gRPC method
+// Params Balance implements the Query/Balance gRPC method
 func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

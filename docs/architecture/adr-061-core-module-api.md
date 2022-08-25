@@ -67,12 +67,18 @@ third party dependencies such as Tendermint
 
 A "runtime" module is any module which implements the core functionality of composing an ABCI app, which is currently
 handled by `BaseApp` and the `ModuleManager`. Runtime modules which implement the core API are *intentionally* separate
-from the core API in order to enable more forks of the runtime module than is possible with the SDK's current tightly
-coupled `BaseApp` design while still allowing for a high degree of composability and compatibility.
+from the core API in order to enable more parallel versions and forks of the runtime module than is possible with the
+SDK's current tightly coupled `BaseApp` design while still allowing for a high degree of composability and
+compatibility.
 
 Modules which are built only against the core API don't need to know anything about which version of runtime,
 `BaseApp` or Tendermint in order to be compatible. Modules from the core mainline SDK could be easily composed
 with a forked version of runtime with this pattern.
+
+This design is intended to enable matrices of compatible dependency versions. Ideally a given version of any module
+is compatible with multiple versions of the runtime module and other compatible modules. This will allow dependencies
+to be selectively updated based on battle-testing. More conservative projects may want to update some dependencies
+slower than more fast moving projects.
 
 ### Core Services
 

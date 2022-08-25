@@ -13,12 +13,11 @@ PROPOSED Not Implemented
 A new core API is proposed to replace the existing `AppModule` and `sdk.Context` frameworks a set of core services
 and a new `Handler` struct. This core API aims to:
 - be simpler,
-- more extensible
-- and more stable than the current framework
-while also
-- enabling deterministic events and queries, and
-- supporting event listeners
-- and [ADR 033: Protobuf-based Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md) clients.
+- more extensible,
+- more stable than the current framework,
+- enable deterministic events and queries, 
+- support event listeners and
+- [ADR 033: Protobuf-based Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md) clients.
 
 ## Context
 
@@ -60,9 +59,10 @@ third party dependencies such as Tendermint
 * the core API doesn't implement *any* functionality, it just defines types
 * go stable API management principles are followed (TODO: link)
 
-Runtime modules which implement the core API are *intentionally* separate from the core API in order to enable more 
-forks of the runtime module than is possible with the SDK's current tightly coupled `BaseApp` design while still
-allowing for a high degree of composability and compatibility.
+A "runtime" module is any module which implements the core functionality of composing an ABCI app, which is currently
+handled by `BaseApp` and the `ModuleManager`. Runtime modules which implement the core API are *intentionally* separate
+from the core API in order to enable more forks of the runtime module than is possible with the SDK's current tightly
+coupled `BaseApp` design while still allowing for a high degree of composability and compatibility.
 
 Modules which are built only against the core API don't need to know anything about which version of runtime,
 `BaseApp` or Tendermint in order to be compatible. Modules from the core mainline SDK could be easily composed

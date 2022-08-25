@@ -18,6 +18,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -291,6 +292,7 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 
 	app, err := simtestutil.Setup(configurator.NewAppConfig(
 		configurator.AuthModule(),
+		configurator.TxModule(),
 		configurator.ParamsModule(),
 		configurator.BankModule(),
 		configurator.StakingModule(),
@@ -299,9 +301,8 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	// app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
-	// app.MintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
 
+	res.App = app
 	return res, ctx
 }
 

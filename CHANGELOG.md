@@ -45,6 +45,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#12970](https://github.com/cosmos/cosmos-sdk/pull/12970) Bump Tendermint to `v0.34.21` and IAVL to `v0.19.1`.
 * [#12693](https://github.com/cosmos/cosmos-sdk/pull/12693) Make sure the order of each node is consistent when emitting proto events.
 
+### Bug Fixes
+
+* [#13046](https://github.com/cosmos/cosmos-sdk/pull/13046) Fix missing return statement in BaseApp.Query.
+
 ## v0.45.7 - 2022-08-04
 
 ### Features

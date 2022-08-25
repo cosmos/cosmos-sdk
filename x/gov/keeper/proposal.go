@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -54,6 +55,9 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 		if msg, ok := msg.(*v1.MsgExecLegacyContent); ok {
 			cacheCtx, _ := ctx.CacheContext()
 			if _, err := handler(cacheCtx, msg); err != nil {
+				if errors.Is(types.ErrNoProposalHandlerExists, err) {
+					return v1.Proposal{}, err
+				}
 				return v1.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalContent, err.Error())
 			}
 		}

@@ -374,15 +374,15 @@ func (s *TestSuite) TestGetAuthorization() {
 
 	genAuthMulti := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
 	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
-	sendAuth := banktypes.NewSendAuthorization(coins10, nil)
+	sendAuth := banktypes.NewSendAuthorization(coins10)
 
 	start := s.ctx.BlockHeader().Time
 	expired := start.Add(time.Duration(1) * time.Second)
 	notExpired := start.Add(time.Duration(5) * time.Hour)
 
-	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthMulti, nil), "creating grant 1->2")
-	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr3, genAuthSend, &expired), "creating grant 1->3")
-	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr4, sendAuth, &notExpired), "creating grant 1->4")
+	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthMulti, nil), "creating grant 1->2")
+	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(s.ctx, addr1, addr3, genAuthSend, &expired), "creating grant 1->3")
+	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(s.ctx, addr1, addr4, sendAuth, &notExpired), "creating grant 1->4")
 	// Without access to private keeper methods, I don't know how to save a grant with an invalid authorization.
 	newCtx := s.ctx.WithBlockTime(start.Add(time.Duration(1) * time.Minute))
 
@@ -438,7 +438,7 @@ func (s *TestSuite) TestGetAuthorization() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			actAuth, actExp := s.authzKeeper.GetAuthorization(newCtx, tc.grantee, tc.granter, tc.msgType)
+			actAuth, actExp := s.app.AuthzKeeper.GetAuthorization(newCtx, tc.grantee, tc.granter, tc.msgType)
 			s.Assert().Equal(tc.expAuth, actAuth, "authorization")
 			s.Assert().Equal(tc.expExp, actExp, "expiration")
 		})

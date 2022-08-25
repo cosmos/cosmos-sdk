@@ -62,6 +62,12 @@ func AddressAndDenomFromBalancesStore(key []byte) (sdk.AccAddress, string, error
 	return key[1 : addrBound+1], string(key[addrBound+1:]), nil
 }
 
+// CreatePrefixedAccountStoreKey returns the key for the given account and denomination.
+// This method can be used when performing an ABCI query for the balance of an account.
+func CreatePrefixedAccountStoreKey(addr []byte, denom []byte) []byte {
+	return append(CreateAccountBalancesPrefix(addr), denom...)
+}
+
 // CreateAccountBalancesPrefix creates the prefix for an account's balances.
 func CreateAccountBalancesPrefix(addr []byte) []byte {
 	return append(BalancesPrefix, address.MustLengthPrefix(addr)...)

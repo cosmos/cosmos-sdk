@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -17,6 +16,11 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
+// KeeperTestSuite only tests gov's keeper logic around tallying, since it
+// relies on complex interactions with x/staking.
+//
+// It also uses simapp (and not a depinjected app) because we manually set a
+// new app.StakingKeeper in `createValidators`.
 type KeeperTestSuite struct {
 	suite.Suite
 
@@ -57,57 +61,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)
 	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
-}
-
-func TestIncrementProposalNumber(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	tp := TestProposal
-	_, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
-	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp, "")
-	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp, "")
-	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp, "")
-	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp, "")
-	require.NoError(t, err)
-	proposal6, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
-	require.NoError(t, err)
-
-	require.Equal(t, uint64(6), proposal6.Id)
-}
-
-func TestProposalQueues(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	// create test proposals
-	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "")
-	require.NoError(t, err)
-
-	inactiveIterator := app.GovKeeper.InactiveProposalQueueIterator(ctx, *proposal.DepositEndTime)
-	require.True(t, inactiveIterator.Valid())
-
-	proposalID := types.GetProposalIDFromBytes(inactiveIterator.Value())
-	require.Equal(t, proposalID, proposal.Id)
-	inactiveIterator.Close()
-
-	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
-
-	proposal, ok := app.GovKeeper.GetProposal(ctx, proposal.Id)
-	require.True(t, ok)
-
-	activeIterator := app.GovKeeper.ActiveProposalQueueIterator(ctx, *proposal.VotingEndTime)
-	require.True(t, activeIterator.Valid())
-
-	proposalID, _ = types.SplitActiveProposalQueueKey(activeIterator.Key())
-	require.Equal(t, proposalID, proposal.Id)
-
-	activeIterator.Close()
 }
 
 func TestKeeperTestSuite(t *testing.T) {

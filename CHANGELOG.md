@@ -67,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#12455](https://github.com/cosmos/cosmos-sdk/pull/12455) Show attempts count in error for signing. 
 * [#12886](https://github.com/cosmos/cosmos-sdk/pull/12886) Amortize cost of processing cache KV store
 * [#12953](https://github.com/cosmos/cosmos-sdk/pull/12953) Change the default priority mechanism to be based on gas price.
+* [#13048](https://github.com/cosmos/cosmos-sdk/pull/13048) Add handling of AccountNumberStoreKeyPrefix to the x/auth simulation decoder.
 
 ### State Machine Breaking
 

@@ -218,6 +218,7 @@ func (s *KeeperTestSuite) TestUnbondDelegation() {
 	require.True(found)
 
 	remainingTokens := startTokens.Sub(bondTokens)
+
 	require.Equal(remainingTokens, delegation.Shares.RoundInt())
 	require.Equal(remainingTokens, validator.BondedTokens())
 }

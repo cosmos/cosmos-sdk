@@ -83,47 +83,6 @@ func (suite *IntegrationTestSuite) TestGRPCQueryValidators() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGRPCQueryValidator() {
-	app, ctx, queryClient, vals := suite.app, suite.ctx, suite.queryClient, suite.vals
-	validator, found := app.StakingKeeper.GetValidator(ctx, vals[0].GetOperator())
-	suite.True(found)
-	var req *types.QueryValidatorRequest
-	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-	}{
-		{
-			"empty request",
-			func() {
-				req = &types.QueryValidatorRequest{}
-			},
-			false,
-		},
-		{
-			"valid request",
-			func() {
-				req = &types.QueryValidatorRequest{ValidatorAddr: vals[0].OperatorAddress}
-			},
-			true,
-		},
-	}
-
-	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			tc.malleate()
-			res, err := queryClient.Validator(gocontext.Background(), req)
-			if tc.expPass {
-				suite.NoError(err)
-				suite.True(validator.Equal(&res.Validator))
-			} else {
-				suite.Error(err)
-				suite.Nil(res)
-			}
-		})
-	}
-}
-
 func (suite *IntegrationTestSuite) TestGRPCQueryDelegatorValidators() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 	params := app.StakingKeeper.GetParams(ctx)

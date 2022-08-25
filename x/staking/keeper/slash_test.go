@@ -33,3 +33,18 @@ func (s *KeeperTestSuite) TestRevocation() {
 	require.True(found)
 	require.False(val.IsJailed())
 }
+
+// tests Slash at a future height (must panic)
+func (s *KeeperTestSuite) TestSlashAtFutureHeight() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	consAddr := sdk.ConsAddress(PKs[0].Address())
+	validator := teststaking.NewValidator(s.T(), sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0])
+	keeper.SetValidator(ctx, validator)
+	err := keeper.SetValidatorByConsAddr(ctx, validator)
+	require.NoError(err)
+
+	fraction := sdk.NewDecWithPrec(5, 1)
+	require.Panics(func() { keeper.Slash(ctx, consAddr, 1, 10, fraction) })
+}

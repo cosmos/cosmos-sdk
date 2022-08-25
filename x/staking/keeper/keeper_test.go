@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
@@ -32,23 +32,26 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx           sdk.Context
-	stakingKeeper stakingkeeper.Keeper
+	stakingKeeper *stakingkeeper.Keeper
 	bankKeeper    *stakingtestutil.MockBankKeeper
+	accountKeeper *stakingtestutil.MockAccountKeeper
+	queryClient   stakingtypes.QueryClient
+	msgServer     stakingtypes.MsgServer
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (s *KeeperTestSuite) SetupTest() {
 	key := sdk.NewKVStoreKey(stakingtypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
-	ctrl := gomock.NewController(suite.T())
+	ctrl := gomock.NewController(s.T())
 	accountKeeper := stakingtestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.BondedPoolName).Return(bondedAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.NotBondedPoolName).Return(notBondedAcc.GetAddress())
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 
-	keeper := *stakingkeeper.NewKeeper(
+	keeper := stakingkeeper.NewKeeper(
 		encCfg.Codec,
 		key,
 		accountKeeper,
@@ -57,14 +60,21 @@ func (suite *KeeperTestSuite) SetupTest() {
 	)
 	keeper.SetParams(ctx, stakingtypes.DefaultParams())
 
-	suite.ctx = ctx
-	suite.stakingKeeper = keeper
-	suite.bankKeeper = bankKeeper
+	s.ctx = ctx
+	s.stakingKeeper = keeper
+	s.bankKeeper = bankKeeper
+	s.accountKeeper = accountKeeper
+
+	stakingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
+	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: keeper})
+	s.queryClient = stakingtypes.NewQueryClient(queryHelper)
+	s.msgServer = stakingkeeper.NewMsgServerImpl(keeper)
 }
 
-func (suite *KeeperTestSuite) TestParams() {
-	ctx, keeper := suite.ctx, suite.stakingKeeper
-	require := suite.Require()
+func (s *KeeperTestSuite) TestParams() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
 
 	expParams := stakingtypes.DefaultParams()
 	expParams.MaxValidators = 555
@@ -74,9 +84,9 @@ func (suite *KeeperTestSuite) TestParams() {
 	require.True(expParams.Equal(resParams))
 }
 
-func (suite *KeeperTestSuite) TestLastTotalPower() {
-	ctx, keeper := suite.ctx, suite.stakingKeeper
-	require := suite.Require()
+func (s *KeeperTestSuite) TestLastTotalPower() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
 
 	expTotalPower := math.NewInt(10 ^ 9)
 	keeper.SetLastTotalPower(ctx, expTotalPower)

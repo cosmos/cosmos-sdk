@@ -15,8 +15,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func (s *KeeperTestSuite) applyValidatorSetUpdates(expectedUpdatesLen int) []abci.ValidatorUpdate {
-	updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+func (s *KeeperTestSuite) applyValidatorSetUpdates(ctx sdk.Context, keeper *stakingkeeper.Keeper, expectedUpdatesLen int) []abci.ValidatorUpdate {
+	updates, err := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	s.Require().NoError(err)
 	if expectedUpdatesLen >= 0 {
 		s.Require().Equal(expectedUpdatesLen, len(updates), "%v", updates)
@@ -44,7 +44,7 @@ func (s *KeeperTestSuite) TestValidator() {
 
 	// ensure update
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
-	updates := s.applyValidatorSetUpdates(1)
+	updates := s.applyValidatorSetUpdates(ctx, keeper, 1)
 	validator, found := keeper.GetValidator(ctx, valAddr)
 	require.True(found)
 	require.Equal(validator.ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
@@ -114,7 +114,7 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 
 	// set and retrieve a record
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
-	validators[0] = stakingkeeper.TestingUpdateValidator(&keeper, ctx, validators[0], true)
+	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], true)
 	keeper.SetValidatorByConsAddr(ctx, validators[0])
 	resVal, found := keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
 	require.True(found)
@@ -138,7 +138,7 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	validators[0].Status = types.Bonded
 	validators[0].Tokens = keeper.TokensFromConsensusPower(ctx, 10)
 	validators[0].DelegatorShares = sdk.NewDecFromInt(validators[0].Tokens)
-	validators[0] = stakingkeeper.TestingUpdateValidator(&keeper, ctx, validators[0], true)
+	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], true)
 	resVal, found = keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
 	require.True(found)
 	require.True(validators[0].MinEqual(&resVal))
@@ -149,9 +149,9 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 
 	// add other validators
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
-	validators[1] = stakingkeeper.TestingUpdateValidator(&keeper, ctx, validators[1], true)
+	validators[1] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[1], true)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
-	validators[2] = stakingkeeper.TestingUpdateValidator(&keeper, ctx, validators[2], true)
+	validators[2] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[2], true)
 	resVal, found = keeper.GetValidator(ctx, sdk.ValAddress(PKs[1].Address().Bytes()))
 	require.True(found)
 	require.True(validators[1].MinEqual(&resVal))
@@ -196,32 +196,32 @@ func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
 	require.Equal(valTokens, validator.Tokens)
 
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
-	stakingkeeper.TestingUpdateValidator(&keeper, ctx, validator, true)
+	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
 	validator, found := keeper.GetValidator(ctx, valAddr)
 	require.True(found)
 	require.Equal(valTokens, validator.Tokens)
 
 	power := stakingtypes.GetValidatorsByPowerIndexKey(validator, keeper.PowerReduction(ctx))
-	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, &keeper, power))
+	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	// burn half the delegator shares
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, burned := validator.RemoveDelShares(delSharesCreated.Quo(math.LegacyNewDec(2)))
 	require.Equal(keeper.TokensFromConsensusPower(ctx, 50), burned)
-	stakingkeeper.TestingUpdateValidator(&keeper, ctx, validator, true) // update the validator, possibly kicking it out
-	require.False(stakingkeeper.ValidatorByPowerIndexExists(ctx, &keeper, power))
+	stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true) // update the validator, possibly kicking it out
+	require.False(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(found)
 
 	power = stakingtypes.GetValidatorsByPowerIndexKey(validator, keeper.PowerReduction(ctx))
-	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, &keeper, power))
+	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	// set new validator by power index
 	keeper.DeleteValidatorByPowerIndex(ctx, validator)
-	require.False(stakingkeeper.ValidatorByPowerIndexExists(ctx, &keeper, power))
+	require.False(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 	keeper.SetNewValidatorByPowerIndex(ctx, validator)
-	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, &keeper, power))
+	require.True(stakingkeeper.ValidatorByPowerIndexExists(ctx, keeper, power))
 }
 
 func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesPowerDecrease() {
@@ -239,11 +239,11 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesPowerDecrease() {
 	}
 
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
-	validators[0] = stakingkeeper.TestingUpdateValidator(&keeper, ctx, validators[0], false)
+	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], false)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
-	validators[1] = stakingkeeper.TestingUpdateValidator(&keeper, ctx, validators[1], false)
+	validators[1] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[1], false)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
-	s.applyValidatorSetUpdates(2)
+	s.applyValidatorSetUpdates(ctx, keeper, 2)
 
 	// check initial power
 	require.Equal(int64(100), validators[0].GetConsensusPower(keeper.PowerReduction(ctx)))
@@ -255,15 +255,15 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesPowerDecrease() {
 	delTokens2 := keeper.TokensFromConsensusPower(ctx, 30)
 	validators[0], _ = validators[0].RemoveDelShares(sdk.NewDecFromInt(delTokens1))
 	validators[1], _ = validators[1].RemoveDelShares(sdk.NewDecFromInt(delTokens2))
-	validators[0] = stakingkeeper.TestingUpdateValidator(&keeper, ctx, validators[0], false)
-	validators[1] = stakingkeeper.TestingUpdateValidator(&keeper, ctx, validators[1], false)
+	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], false)
+	validators[1] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[1], false)
 
 	// power has changed
 	require.Equal(int64(80), validators[0].GetConsensusPower(keeper.PowerReduction(ctx)))
 	require.Equal(int64(70), validators[1].GetConsensusPower(keeper.PowerReduction(ctx)))
 
 	// Tendermint updates should reflect power change
-	updates := s.applyValidatorSetUpdates(2)
+	updates := s.applyValidatorSetUpdates(ctx, keeper, 2)
 	require.Equal(validators[0].ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
 	require.Equal(validators[1].ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[1])
 }

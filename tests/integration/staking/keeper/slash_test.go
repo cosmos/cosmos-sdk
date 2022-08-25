@@ -49,30 +49,6 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 	return app, ctx, addrDels, addrVals
 }
 
-// tests Jail, Unjail
-func TestRevocation(t *testing.T) {
-	app, ctx, _, addrVals := bootstrapSlashTest(t, 5)
-
-	consAddr := sdk.ConsAddress(PKs[0].Address())
-
-	// initial state
-	val, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
-	require.True(t, found)
-	require.False(t, val.IsJailed())
-
-	// test jail
-	app.StakingKeeper.Jail(ctx, consAddr)
-	val, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
-	require.True(t, found)
-	require.True(t, val.IsJailed())
-
-	// test unjail
-	app.StakingKeeper.Unjail(ctx, consAddr)
-	val, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
-	require.True(t, found)
-	require.False(t, val.IsJailed())
-}
-
 // tests slashUnbondingDelegation
 func TestSlashUnbondingDelegation(t *testing.T) {
 	app, ctx, addrDels, addrVals := bootstrapSlashTest(t, 10)
@@ -182,15 +158,6 @@ func TestSlashRedelegation(t *testing.T) {
 	// pool bonded tokens should decrease
 	burnedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), slashAmount))
 	require.Equal(t, balances.Sub(burnedCoins...), app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()))
-}
-
-// tests Slash at a future height (must panic)
-func TestSlashAtFutureHeight(t *testing.T) {
-	app, ctx, _, _ := bootstrapSlashTest(t, 10)
-
-	consAddr := sdk.ConsAddress(PKs[0].Address())
-	fraction := sdk.NewDecWithPrec(5, 1)
-	require.Panics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 1, 10, fraction) })
 }
 
 // test slash at a negative height

@@ -24,6 +24,9 @@ tools-stamp
 buf-stamp
 artifacts
 
+# Go
+go.work.sum
+
 # Data - ideally these don't exist
 baseapp/data/*
 client/lcd/keys/*

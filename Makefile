@@ -430,9 +430,9 @@ proto-check-breaking:
 
 
 TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.21/proto/tendermint
-GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
-COSMOS_PROTO_URL    = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
-CONFIO_URL          = https://raw.githubusercontent.com/confio/ics23/v0.7.0
+GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/v1.3.3-alpha.regen.1
+COSMOS_PROTO_URL    = https://raw.githubusercontent.com/regen-network/cosmos-proto/v0.3.1
+CONFIO_URL          = https://raw.githubusercontent.com/confio/ics23/go/v0.7.0
 
 TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
 TM_ABCI_TYPES       = third_party/proto/tendermint/abci

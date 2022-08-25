@@ -10,8 +10,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -263,8 +266,15 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 }
 
 // returns context and an app with updated mint keeper
-func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(t, isCheckTx)
+func createTestApp(t *testing.T, isCheckTx bool) (*runtime.App, sdk.Context) {
+	app, err := simtestutil.Setup(configurator.NewAppConfig(
+		configurator.AuthModule(),
+		configurator.ParamsModule(),
+		configurator.BankModule(),
+		configurator.StakingModule(),
+		configurator.TxModule(),
+	))
+	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())

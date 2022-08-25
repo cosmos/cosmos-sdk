@@ -21,11 +21,11 @@ and a new `Handler` struct. This core API aims to:
 
 ## Context
 
-Historically modules have exposed their functionality to the state machine via the `AppModule` and `AppModuleBasic`
+Historically modules have exposed their functionality to the framework via the `AppModule` and `AppModuleBasic`
 interfaces which have the following shortcomings:
-* both `AppModule` and `AppModuleBasic` need to be defined which is counter-intuitive
-* apps need to implement the full interfaces, even parts they don't need
-* interface methods depend heavily on unstable third party dependencies, in particular Tendermint
+* both `AppModule` and `AppModuleBasic` need to be defined and registered which is counter-intuitive
+* apps need to implement the full interfaces, even parts they don't need (although there are workarounds for this),
+* interface methods depend heavily on unstable third party dependencies, in particular Tendermint,
 * legacy required methods have littered these interfaces for far too long
 
 In order to interact with the state machine, modules have needed to do a combination of these things:
@@ -37,6 +37,12 @@ modules are tightly coupled to this type. If there are changes to upstream depen
 or new functionalities are desired (such as alternate store types), the changes need impact `sdk.Context` and all
 consumers of it (basically all modules). Also, all modules now receive `context.Context` and need to convert these
 to `sdk.Context`'s with a non-ergonomic unwrapping function.
+
+Any breaking changes to these interfaces, such as ones imposed by third-party dependencies like Tendermint, have the
+side effect of forcing all modules in the ecosystem to update in lock-step. This means it is almost impossible to have
+a version of the module which can be run with 2 or 3 different versions of the SDK or 2 or 3 different versions of
+another module. This lock-step coupling slows down overall development within the ecosystem and causes updates to
+components to be delayed longer than they would if things were more stable and loosely coupled.
 
 ## Decision
 
@@ -196,9 +202,9 @@ type Service interface {
 Runtime module implementations should provide an instance of `grpc.ClientConnInterface` as core service. This service
 will allow modules to send messages to and make queries against other modules as described in [ADR 033](./adr-033-protobuf-inter-module-comm.md).
 
-A single `grpc.ClientConnInterface` will be used for both MsgClient's and QueryClient's and the state machine will
-make the presence or absence of the protobuf option `cosmos.msg.v1.service` which will be required for all
-valid `Msg` service types.
+A single `grpc.ClientConnInterface` will be used for both MsgClient's and QueryClient's. The protobuf option
+`cosmos.msg.v1.service` will allow the router to detect whether a given service is a query or msg service and
+route requests appropriately.
 
 It will likely be necessary to define which queries and `Msg`'s are available for inter-module communication, possibly
 with an `internal` protobuf option.

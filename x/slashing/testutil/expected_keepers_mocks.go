@@ -267,6 +267,20 @@ func (mr *MockStakingKeeperMockRecorder) Delegation(arg0, arg1, arg2 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delegation", reflect.TypeOf((*MockStakingKeeper)(nil).Delegation), arg0, arg1, arg2)
 }
 
+// GetAllValidators mocks base method.
+func (m *MockStakingKeeper) GetAllValidators(ctx types.Context) []types2.Validator {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllValidators", ctx)
+	ret0, _ := ret[0].([]types2.Validator)
+	return ret0
+}
+
+// GetAllValidators indicates an expected call of GetAllValidators.
+func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllValidators", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllValidators), ctx)
+}
+
 // IterateValidators mocks base method.
 func (m *MockStakingKeeper) IterateValidators(arg0 types.Context, arg1 func(int64, types2.ValidatorI) bool) {
 	m.ctrl.T.Helper()

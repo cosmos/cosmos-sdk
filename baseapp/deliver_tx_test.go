@@ -19,6 +19,7 @@ import (
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -34,6 +35,27 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 )
+
+// Test that txs can be unmarshalled and read and that
+// correct error codes are returned when not
+func TestTxDecoder(t *testing.T) {
+	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+	// patch in TxConfig instead of using an output from x/auth/tx
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+
+	tx := newTxCounter(txConfig, 1, 0)
+	txBytes, err := txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	dTx, err := txConfig.TxDecoder()(txBytes)
+	require.NoError(t, err)
+
+	counter, _ := parseTxMemo(tx)
+	dTxCounter, _ := parseTxMemo(dTx)
+	require.Equal(t, counter, dTxCounter)
+}
 
 // Tx processing - CheckTx, DeliverTx, SimulateTx.
 // These tests use the serialized tx as input, while most others will use the
@@ -799,6 +821,157 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	// commit
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
+}
+
+func TestGasConsumptionBadTx(t *testing.T) {
+	gasWanted := uint64(5)
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasWanted))
+
+			defer func() {
+				if r := recover(); r != nil {
+					switch rType := r.(type) {
+					case sdk.ErrorOutOfGas:
+						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+						err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
+					default:
+						panic(r)
+					}
+				}
+			}()
+
+			counter, failOnAnte := parseTxMemo(tx)
+			newCtx.GasMeter().ConsumeGas(uint64(counter), "counter-ante")
+			if failOnAnte {
+				return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+			}
+
+			return
+		})
+	}
+
+	// Setup baseapp.
+	var (
+		appBuilder *runtime.AppBuilder
+		cdc        codec.ProtoCodecMarshaler
+	)
+	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
+	require.NoError(t, err)
+
+	testCtx := testutil.DefaultContextWithDB(t, capKey1, sdk.NewTransientStoreKey("transient_test"))
+
+	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil, anteOpt)
+	app.SetCMS(testCtx.CMS)
+
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+	baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
+
+	// patch in TxConfig instead of using an output from x/auth/tx
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	// set the TxDecoder in the BaseApp for minimal tx simulations
+	app.SetTxDecoder(txConfig.TxDecoder())
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &abci.ConsensusParams{
+			Block: &abci.BlockParams{
+				MaxGas: 9,
+			},
+		},
+	})
+
+	app.InitChain(abci.RequestInitChain{})
+
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	tx := newTxCounter(txConfig, 5, 0)
+	tx = setFailOnAnte(txConfig, tx, true)
+	txBytes, err := txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	// require next tx to fail due to black gas limit
+	tx = newTxCounter(txConfig, 5, 0)
+	txBytes, err = txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res = app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+}
+
+// Test that we can only query from the latest committed state.
+func TestQuery(t *testing.T) {
+	key, value := []byte("hello"), []byte("goodbye")
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			store := ctx.KVStore(capKey1)
+			store.Set(key, value)
+			return
+		})
+	}
+
+	// Setup baseapp.
+	var (
+		appBuilder *runtime.AppBuilder
+		cdc        codec.ProtoCodecMarshaler
+	)
+	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
+	require.NoError(t, err)
+
+	testCtx := testutil.DefaultContextWithDB(t, capKey1, sdk.NewTransientStoreKey("transient_test"))
+
+	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil, anteOpt)
+	app.SetCMS(testCtx.CMS)
+
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+	baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
+
+	// patch in TxConfig instead of using an output from x/auth/tx
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	// set the TxDecoder in the BaseApp for minimal tx simulations
+	app.SetTxDecoder(txConfig.TxDecoder())
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+
+	app.InitChain(abci.RequestInitChain{})
+
+	// NOTE: "/store/key1" tells us KVStore
+	// and the final "/key" says to use the data as the
+	// key in the given KVStore ...
+	query := abci.RequestQuery{
+		Path: "/store/key1/key",
+		Data: key,
+	}
+	tx := newTxCounter(txConfig, 0, 0)
+
+	// query is empty before we do anything
+	res := app.Query(query)
+	require.Equal(t, 0, len(res.Value))
+
+	// query is still empty after a CheckTx
+	_, resTx, err := app.SimCheck(txConfig.TxEncoder(), tx)
+	require.NoError(t, err)
+	require.NotNil(t, resTx)
+	res = app.Query(query)
+	require.Equal(t, 0, len(res.Value))
+
+	// query is still empty after a DeliverTx before we commit
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	_, resTx, err = app.SimDeliver(txConfig.TxEncoder(), tx)
+	require.NoError(t, err)
+	require.NotNil(t, resTx)
+	res = app.Query(query)
+	require.Equal(t, 0, len(res.Value))
+
+	// query returns correct value after Commit
+	app.Commit()
+	res = app.Query(query)
+	require.Equal(t, value, res.Value)
 }
 
 func getCheckStateCtx(app *runtime.App) sdk.Context {

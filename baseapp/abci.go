@@ -171,7 +171,6 @@ func (app *BaseApp) executeNonFraudulentTransactions(req abci.RequestGenerateFra
 }
 
 func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res abci.ResponseGenerateFraudProof) {
-
 	// Get an app with tracing with block reverted to previous state
 	cms := app.cms.(*multi.Store)
 	cms.GetStoreKeys()

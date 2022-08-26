@@ -2608,13 +2608,19 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	// B1 <- S2
 	beginRequest, txs, deliverRequests, _ := getBlockWithArbitraryTxs(t, appB1, numTransactions, 2)
 
-	// Modify requests to discard second half of the block
-	deliverRequests = deliverRequests[0 : len(deliverRequests)-1]
+	// Modify deliverRequests to discard last tx in the block
+	nonFraudulentDeliverRequests := deliverRequests[0 : len(deliverRequests)-1]
 	txs = txs[0 : len(txs)-1]
 	require.NotEmpty(t, txs)
 	fraudDeliverRequest := getFraudTx(t, txs[0])
 
-	executeBlockWithRequests(t, appB1, beginRequest, deliverRequests, nil, 0)
+	// appB1.GenerateFraudProof(
+	// 	abci.RequestGenerateFraudProof{
+	// 		BeginBlockRequest: *beginRequest, DeliverTxRequests: deliverRequests, EndBlockRequest: nil,
+	// 	},
+	// )
+
+	executeBlockWithRequests(t, appB1, beginRequest, nonFraudulentDeliverRequests, nil, 0)
 
 	// Save appHash, substoreHash here for comparision later
 	appHashB1, err := appB1.cms.(*multi.Store).GetAppHash()
@@ -2648,7 +2654,7 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	require.Nil(t, err)
 
 	// B2 <- S2
-	executeBlockWithRequests(t, appFraudGen, beginRequest, deliverRequests, nil, 1)
+	executeBlockWithRequests(t, appFraudGen, beginRequest, nonFraudulentDeliverRequests, nil, 1)
 
 	// Exports all data inside current multistore into a fraudProof using (S2 -> S3) //
 	storeKeyToSubstoreTraceBuf := make(map[string]*bytes.Buffer)

@@ -33,3 +33,7 @@ type StakingKeeper interface {
 	BondDenom(ctx sdk.Context) string
 	TokensFromConsensusPower(ctx sdk.Context, power int64) math.Int
 }
+
+type DistributionKeeper interface {
+	types.DistributionKeeper
+}

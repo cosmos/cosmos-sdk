@@ -140,6 +140,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
+	proposer := accounts[0].Address
 
 	// setup a proposal
 	content := v1beta1.NewTextProposal("Test", "description")
@@ -149,7 +150,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, proposer, 1, "", submitTime, submitTime.Add(*depositPeriod))
 	require.NoError(t, err)
 
 	app.GovKeeper.SetProposal(ctx, proposal)
@@ -186,6 +187,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
+	proposer := accounts[0].Address
 
 	// setup a proposal
 	govAcc := app.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
@@ -195,7 +197,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, proposer, 1, "", submitTime, submitTime.Add(*depositPeriod))
 	require.NoError(t, err)
 
 	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
@@ -230,6 +232,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
+	proposer := accounts[0].Address
 
 	// setup a proposal
 	govAcc := app.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
@@ -238,7 +241,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, proposer, 1, "", submitTime, submitTime.Add(*depositPeriod))
 	require.NoError(t, err)
 
 	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)

@@ -230,10 +230,6 @@ func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res 
 	return res
 }
 
-func (app *BaseApp) SetRouterOpts(routerOpts map[string]AppOptionFunc) {
-	app.routerOpts = routerOpts
-}
-
 func (app *BaseApp) generateFraudProofWithRouterOpts(req abci.RequestGenerateFraudProof, routerOpts map[string]AppOptionFunc) (res abci.ResponseGenerateFraudProof) {
 	app.SetRouterOpts(routerOpts)
 	return app.GenerateFraudProof(req)

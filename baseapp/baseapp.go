@@ -262,6 +262,10 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 	app.msgServiceRouter = msgServiceRouter
 }
 
+func (app *BaseApp) SetRouterOpts(routerOpts map[string]AppOptionFunc) {
+	app.routerOpts = routerOpts
+}
+
 func (app *BaseApp) CloseStore() error {
 	return app.cms.Close()
 }

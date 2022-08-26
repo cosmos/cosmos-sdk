@@ -79,7 +79,10 @@ func (s *TestSuite) SetupTest() {
 	queryClient := authz.NewQueryClient(queryHelper)
 	s.queryClient = queryClient
 
-	s.msgSrvr = s.authzKeeper
+	s.app = app
+	s.ctx = ctx
+	s.queryClient = queryClient
+	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 7, sdk.NewInt(30000000))
 }
 
 func (s *TestSuite) TestKeeper() {
@@ -477,17 +480,17 @@ func (s *TestSuite) TestGetAuthorization() {
 
 	genAuthMulti := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
 	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
-	sendAuth := banktypes.NewSendAuthorization(coins10, nil, s.accountKeeper.AddressCodec())
+	sendAuth := banktypes.NewSendAuthorization(coins10)
 
-	start := s.ctx.HeaderInfo().Time
+	start := s.ctx.BlockHeader().Time
 	expired := start.Add(time.Duration(1) * time.Second)
 	notExpired := start.Add(time.Duration(5) * time.Hour)
 
-	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthMulti, nil), "creating grant 1->2")
-	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr3, genAuthSend, &expired), "creating grant 1->3")
-	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr4, sendAuth, &notExpired), "creating grant 1->4")
+	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthMulti, nil), "creating grant 1->2")
+	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(s.ctx, addr1, addr3, genAuthSend, &expired), "creating grant 1->3")
+	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(s.ctx, addr1, addr4, sendAuth, &notExpired), "creating grant 1->4")
 	// Without access to private keeper methods, I don't know how to save a grant with an invalid authorization.
-	newCtx := s.ctx.WithHeaderInfo(header.Info{Time: start.Add(time.Duration(1) * time.Minute)})
+	newCtx := s.ctx.WithBlockTime(start.Add(time.Duration(1) * time.Minute))
 
 	tests := []struct {
 		name    string
@@ -541,32 +544,11 @@ func (s *TestSuite) TestGetAuthorization() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			actAuth, actExp := s.authzKeeper.GetAuthorization(newCtx, tc.grantee, tc.granter, tc.msgType)
+			actAuth, actExp := s.app.AuthzKeeper.GetAuthorization(newCtx, tc.grantee, tc.granter, tc.msgType)
 			s.Assert().Equal(tc.expAuth, actAuth, "authorization")
 			s.Assert().Equal(tc.expExp, actExp, "expiration")
 		})
 	}
-}
-
-func (s *TestSuite) TestGetAuthorizations() {
-	require := s.Require()
-	addr1 := s.addrs[1]
-	addr2 := s.addrs[2]
-
-	genAuthMulti := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
-	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
-
-	start := s.ctx.HeaderInfo().Time
-	expired := start.Add(time.Duration(1) * time.Second)
-
-	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthMulti, &expired), "creating multi send grant 1->2")
-	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthSend, &expired), "creating send grant 1->2")
-
-	authzs, err := s.authzKeeper.GetAuthorizations(s.ctx, addr1, addr2)
-	require.NoError(err)
-	require.Len(authzs, 2)
-	require.Equal(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), authzs[0].MsgTypeURL())
-	require.Equal(sdk.MsgTypeURL(&banktypes.MsgSend{}), authzs[1].MsgTypeURL())
 }
 
 func TestTestSuite(t *testing.T) {

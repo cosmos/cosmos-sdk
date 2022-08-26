@@ -330,12 +330,12 @@ func (k Keeper) GetAuthorizations(ctx context.Context, grantee, granter sdk.AccA
 
 // GetAuthorization returns an Authorization and it's expiration time.
 // A nil Authorization is returned under the following circumstances:
-//   - No grant is found.
-//   - A grant is found, but it is expired.
-//   - There was an error getting the authorization from the grant.
-func (k Keeper) GetAuthorization(ctx context.Context, grantee, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time) {
+//	- No grant is found.
+//	- A grant is found, but it is expired.
+//	- There was an error getting the authorization from the grant.
+func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time) {
 	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
-	if !found || (grant.Expiration != nil && grant.Expiration.Before(k.HeaderService.HeaderInfo(ctx).Time)) {
+	if !found || (grant.Expiration != nil && grant.Expiration.Before(ctx.BlockHeader().Time)) {
 		return nil, nil
 	}
 

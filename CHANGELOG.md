@@ -37,9 +37,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* (x/authz) [#13047](https://github.com/cosmos/cosmos-sdk/pull/13047) Add a GetAuthorization function to the keeper.
+
 ### Improvements
 
-* [#13048](https://github.com/cosmos/cosmos-sdk/pull/13048) Add handling of AccountNumberStoreKeyPrefix to the x/auth simulation decoder.
+* (x/auth) [#13048](https://github.com/cosmos/cosmos-sdk/pull/13048) Add handling of AccountNumberStoreKeyPrefix to the simulation decoder.
 
 ### Bug Fixes
 

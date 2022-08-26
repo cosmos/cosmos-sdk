@@ -235,6 +235,24 @@ func (app *BaseApp) generateFraudProofWithRouterOpts(req abci.RequestGenerateFra
 	return app.GenerateFraudProof(req)
 }
 
+func (app *BaseApp) VerifyFraudProof(req abci.RequestVerifyFraudProof) (res abci.ResponseVerifyFraudProof) {
+	abciFraudProof := req.FraudProof
+	fraudProof := FraudProof{}
+	fraudProof.fromABCI(*abciFraudProof)
+
+	// First two levels of verification
+	success, err := fraudProof.verifyFraudProof()
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: third level of verification, state transition needed
+	res = abci.ResponseVerifyFraudProof{
+		Success: success,
+	}
+	return res
+}
+
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 

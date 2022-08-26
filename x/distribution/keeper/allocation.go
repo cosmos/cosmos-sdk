@@ -33,8 +33,10 @@ func (k Keeper) GetNumBlacklistedShares(ctx sdk.Context, valAddr string) sdk.Dec
 
 		// add the delegation share to total
 		delegation := k.stakingKeeper.Delegation(ctx, del, val)
-		shares := delegation.GetShares()
-		total = total.Add(shares)
+		if delegation != nil {
+			shares := delegation.GetShares()
+			total = total.Add(shares)
+		}
 	}
 
 	return total

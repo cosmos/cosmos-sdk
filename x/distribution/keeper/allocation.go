@@ -10,8 +10,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// get a validator's total blacklisted delegation shares
-func (k Keeper) GetNumBlacklistedShares(ctx sdk.Context, valAddr string) sdk.Dec {
+// get a validator's total blacklisted delegation power
+func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) sdk.Int {
 
 	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
 	k.Logger(ctx).Info("Blacklisted delegators", "addrs", blacklistedDelAddrs)
@@ -21,8 +21,9 @@ func (k Keeper) GetNumBlacklistedShares(ctx sdk.Context, valAddr string) sdk.Dec
 		// TODO: panic?
 		panic(error)
 	}
+	valObj := k.stakingKeeper.Validator(ctx, val)
 
-	total := sdk.ZeroDec()
+	total := int64(0)
 	for _, delAddr := range blacklistedDelAddrs {
 		// convert delAddrs to dels
 		del, err := sdk.AccAddressFromBech32(delAddr)
@@ -34,12 +35,16 @@ func (k Keeper) GetNumBlacklistedShares(ctx sdk.Context, valAddr string) sdk.Dec
 		// add the delegation share to total
 		delegation := k.stakingKeeper.Delegation(ctx, del, val)
 		if delegation != nil {
-			shares := delegation.GetShares()
-			total = total.Add(shares)
+			// TODO: why does TokensFromShares return a dec, when all tokens are ints? I truncate manually here -- is that safe?
+			tokens := valObj.TokensFromShares(delegation.GetShares()).TruncateInt()
+			consPower := sdk.TokensToConsensusPower(tokens, sdk.DefaultPowerReduction)
+			k.Logger(ctx).Info(fmt.Sprintf("[BLACKLISTFN] addr %s tokens %d consPower %d defPowerReduction %d", delegation.GetDelegatorAddr(), tokens, consPower, sdk.DefaultPowerReduction.Int64()))
+			// valObj.TokensFromShares(shares).Add(total)
+			total = total + consPower
 		}
 	}
-
-	return total
+	k.Logger(ctx).Info(fmt.Sprintf("[BLACKLISTFN] total %d", total))
+	return sdk.NewInt(total)
 }
 
 // helper
@@ -79,9 +84,8 @@ func (k Keeper) AllocateTokens(
 		k.Logger(ctx).Info(fmt.Sprintf("[BY VALIDATOR] addr %s, power %d", blacklisted_ValAddr, blacklisted_validator.GetConsensusPower(sdk.DefaultPowerReduction)))
 
 		// BY DELEGATOR, SHOULD BE 80% OF TOTAL
-		blacklisted_del_power := k.GetNumBlacklistedShares(ctx, valAddr)
+		blacklisted_del_power := k.GetBlacklistedPower(ctx, valAddr)
 		k.Logger(ctx).Info(fmt.Sprintf("[BY DELEGATOR] addr %s, power: %d", blacklisted_ValAddr, blacklisted_del_power))
-
 	}
 
 	// fetch and clear the collected fees for distribution, since this is

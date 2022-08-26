@@ -32,7 +32,9 @@ func DefaultParams() Params {
 		BonusProposerReward:         sdk.NewDecWithPrec(4, 2), // 4%
 		WithdrawAddrEnabled:         true,
 		NoRewardsValidatorAddresses: []string{"stridevaloper1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrgpwsqm"},
-		NoRewardsDelegatorAddresses: []string{"stride1u20df3trc2c2zdhm8qvh2hdjx9ewh00sv6eyy8"},
+		NoRewardsDelegatorAddresses: []string{"stride1u20df3trc2c2zdhm8qvh2hdjx9ewh00sv6eyy8",
+			"stride1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrt52vv7",
+			"stride12vfkpj7lpqg0n4j68rr5kyffc6wu55dzqewda4"},
 	}
 }
 

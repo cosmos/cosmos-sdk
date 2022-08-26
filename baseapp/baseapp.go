@@ -838,9 +838,6 @@ func (app *BaseApp) getFraudProof(storeKeyToSubstoreTraceBuf map[string]*bytes.B
 	for _, storeKey := range storeKeys {
 		if subStoreTraceBuf, exists := storeKeyToSubstoreTraceBuf[storeKey.Name()]; exists {
 			keys := cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreTraceBuf)
-			if len(keys) == 0 {
-				continue
-			}
 			smt := cms.GetSubstoreSMT(storeKey.Name())
 			if smt.Root() == nil {
 				continue

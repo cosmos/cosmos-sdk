@@ -133,8 +133,9 @@ func (fraudProof *FraudProof) toABCI() abci.FraudProof {
 			}
 			abciWitnessData = append(abciWitnessData, &abciWitness)
 		}
+		proof := stateWitness.Proof
 		abciStateWitness[storeKey] = &abci.StateWitness{
-			ProofOp:     &stateWitness.Proof,
+			ProofOp:     &proof,
 			RootHash:    stateWitness.RootHash,
 			WitnessData: abciWitnessData,
 		}

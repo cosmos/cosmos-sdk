@@ -2568,9 +2568,6 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 		6. Load a fresh baseapp, B2, with the contents of fraud proof data structure from (4) so it can begin from state S1.
 		7. Check if the SMT root hashes of the new app with saved SMT root hash
 
-		Note that the appHash from B1 and B2 will not be the same because the subset of storeKeys in both apps is different
-		so we compare subStores instead
-
 		Tests to write in future:
 
 		1. Block with bad txs: Txs that exceed gas limits, validateBasic fails, unregistered messages (see TestRunInvalidTransaction)
@@ -2660,6 +2657,9 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	registerTestCodec(codec)
 	appB2, err := SetupBaseAppFromFraudProof(t.Name(), defaultLogger(), dbm.NewMemDB(), testTxDecoder(codec), fraudProof, AppOptionFunc(routerOpt))
 	require.Nil(t, err)
+	appB2Hash, err := appB2.cms.(*multi.Store).GetAppHash()
+	require.Nil(t, err)
+	require.Equal(t, appHashB1, appB2Hash)
 	storeHashB2 := appB2.cms.(*multi.Store).GetSubstoreSMT(capKey2.Name()).Root()
 	require.Equal(t, storeHashB1, storeHashB2)
 }

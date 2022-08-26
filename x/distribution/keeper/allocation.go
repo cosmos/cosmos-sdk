@@ -10,6 +10,34 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// get delegation total between list of del and single val
+func (k Keeper) GetValBlacklistedShare(ctx sdk.Context, blacklistedDelAddrs []string, valAddr string) sdk.Dec {
+
+	// get validator
+	val, error := sdk.ValAddressFromBech32(valAddr)
+	if error != nil {
+		// TODO: panic?
+		panic(error)
+	}
+
+	total := sdk.ZeroDec()
+	for _, delAddr := range blacklistedDelAddrs {
+		// convert delAddrs to dels
+		del, err := sdk.AccAddressFromBech32(delAddr)
+		if err != nil {
+			// TODO: panic?
+			panic(err)
+		}
+
+		// add the delegation share to total
+		delegation := k.stakingKeeper.Delegation(ctx, del, val)
+		shares := delegation.GetShares()
+		total = total.Add(shares)
+	}
+
+	return total
+}
+
 // helper
 func stringInSlice(a string, list []string) bool {
 	for _, b := range list {

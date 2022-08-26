@@ -275,10 +275,10 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	return cc, cms.Write
 }
 
-// CacheContextWriteEvents behaves the same as CacheContext except that it
+// CacheContextEmitEvents behaves the same as CacheContext except that it
 // automatically emits the events from the cached context when the caller
 // executes the writeCache function.
-func (c Context) CacheContextWriteEvents() (cc Context, writeCache func()) {
+func (c Context) CacheContextEmitEvents() (cc Context, writeCache func()) {
 	cms := c.MultiStore().CacheMultiStore()
 	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
 

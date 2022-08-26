@@ -173,15 +173,16 @@ func (app *BaseApp) executeNonFraudulentTransactions(req abci.RequestGenerateFra
 func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res abci.ResponseGenerateFraudProof) {
 	// Get an app with tracing with block reverted to previous state
 	cms := app.cms.(*multi.Store)
-	cms.GetStoreKeys()
-	appWithTracing, storeKeyToSubstoreTraceBuf, err := app.enableFraudProofGenerationMode(cms.GetStoreKeys(), nil)
+	appWithTracing, storeKeyToSubstoreTraceBuf, err := app.enableFraudProofGenerationMode(cms.GetStoreKeys(), app.routerOpts)
 	if err != nil {
 		panic(err)
 	}
 
 	// Run this tracing-enabled app through the set of all nonFradulent and fraudulent state transitions
-	isBeginBlockFraudulent := req.DeliverTxRequests != nil
-	app.BeginBlock(req.BeginBlockRequest)
+	beginBlockRequest := req.BeginBlockRequest
+	beginBlockRequest.Header.Height = 1
+	isBeginBlockFraudulent := req.DeliverTxRequests == nil
+	appWithTracing.BeginBlock(beginBlockRequest)
 	if !isBeginBlockFraudulent {
 		// BeginBlock is not the fraudulent state transition
 		appWithTracing.executeNonFraudulentTransactions(req)
@@ -206,13 +207,13 @@ func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res 
 	// SubStore trace buffers now record the trace made by the fradulent state transition
 
 	// Get a new app with block reverted to previous state
-	appFraudGen, _, err := app.enableFraudProofGenerationMode(cms.GetStoreKeys(), nil)
+	appFraudGen, _, err := app.enableFraudProofGenerationMode(cms.GetStoreKeys(), app.routerOpts)
 	if err != nil {
 		panic(err)
 	}
 
 	// Fast-forward to right before fradulent state transition occured
-	appFraudGen.BeginBlock(req.BeginBlockRequest)
+	appFraudGen.BeginBlock(beginBlockRequest)
 	if !isBeginBlockFraudulent {
 		appFraudGen.executeNonFraudulentTransactions(req)
 	}
@@ -227,6 +228,15 @@ func (app *BaseApp) GenerateFraudProof(req abci.RequestGenerateFraudProof) (res 
 		FraudProof: &abciFraudProof,
 	}
 	return res
+}
+
+func (app *BaseApp) SetRouterOpts(routerOpts map[string]AppOptionFunc) {
+	app.routerOpts = routerOpts
+}
+
+func (app *BaseApp) generateFraudProofWithRouterOpts(req abci.RequestGenerateFraudProof, routerOpts map[string]AppOptionFunc) (res abci.ResponseGenerateFraudProof) {
+	app.SetRouterOpts(routerOpts)
+	return app.GenerateFraudProof(req)
 }
 
 // BeginBlock implements the ABCI application interface.

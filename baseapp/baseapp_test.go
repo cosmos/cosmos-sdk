@@ -2614,12 +2614,6 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	require.NotEmpty(t, txs)
 	fraudDeliverRequest := getFraudTx(t, txs[0])
 
-	// appB1.GenerateFraudProof(
-	// 	abci.RequestGenerateFraudProof{
-	// 		BeginBlockRequest: *beginRequest, DeliverTxRequests: deliverRequests, EndBlockRequest: nil,
-	// 	},
-	// )
-
 	executeBlockWithRequests(t, appB1, beginRequest, nonFraudulentDeliverRequests, nil, 0)
 
 	// Save appHash, substoreHash here for comparision later
@@ -2627,44 +2621,34 @@ func TestGenerateAndLoadFraudProof(t *testing.T) {
 	require.Nil(t, err)
 	storeHashB1 := appB1.cms.(*multi.Store).GetSubstoreSMT(capKey2.Name()).Root()
 
-	// Clear all trace logs
-	storeTraceBuf.Reset()
-	subStoreTraceBuf.Reset()
-
-	// B1 <- S3: Execute Fraud Tx with tracing
-	executeBlockWithRequests(t, appB1, nil, []*abci.RequestDeliverTx{fraudDeliverRequest}, nil, 0)
-	// Now, subStoreBuf knows about all the keys accessed in (S2 -> S3)
-
-	// Make new appFraudGen app which creates app with previous state
-	storeKeys := []types.StoreKey{capKey1, capKey2}
 	routerOpts := make(map[string]AppOptionFunc)
 	newRouterOpt := func(bapp *BaseApp) {
 		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			kv := msg.(*msgKeyValue)
 			cms := bapp.cms.(*multi.Store)
-			storeKey := cms.GetStoreKeys()[len(storeKeys)-1]
-			bapp.cms.GetKVStore(storeKey).Set(kv.Key, kv.Value)
+			sKeys := cms.GetStoreKeys()
+			largestKey := sKeys[0]
+			for _, sKey := range sKeys[1:] {
+				if sKey.Name() > largestKey.Name() {
+					largestKey = sKey
+				}
+			}
+			bapp.cms.GetKVStore(largestKey).Set(kv.Key, kv.Value)
 			return &sdk.Result{}, nil
 		}))
 	}
 	routerOpts[capKey2.Name()] = newRouterOpt
 
-	// Get a baseapp with reverted state of B1 which makes B2 <- S1
-	appFraudGen, _, err := appB1.enableFraudProofGenerationMode(storeKeys, routerOpts)
-	require.Nil(t, err)
-
-	// B2 <- S2
-	executeBlockWithRequests(t, appFraudGen, beginRequest, nonFraudulentDeliverRequests, nil, 1)
-
-	// Exports all data inside current multistore into a fraudProof using (S2 -> S3) //
-	storeKeyToSubstoreTraceBuf := make(map[string]*bytes.Buffer)
-	storeKeyToSubstoreTraceBuf[capKey2.Name()] = subStoreTraceBuf
-
-	// Records S2 in fraudproof with keys filtered by (S2 -> S3)
-	fraudProof, err := appFraudGen.getFraudProof(storeKeyToSubstoreTraceBuf, appB1.LastBlockHeight())
-	require.Nil(t, err)
+	resp := appB1.generateFraudProofWithRouterOpts(
+		abci.RequestGenerateFraudProof{
+			BeginBlockRequest: *beginRequest, DeliverTxRequests: append(nonFraudulentDeliverRequests, fraudDeliverRequest), EndBlockRequest: nil,
+		},
+		routerOpts,
+	)
 
 	// Light Client
+	fraudProof := FraudProof{}
+	fraudProof.fromABCI(*resp.FraudProof)
 	require.Equal(t, appHashB1, fraudProof.appHash)
 	fraudProofVerified, err := fraudProof.verifyFraudProof()
 	require.Nil(t, err)

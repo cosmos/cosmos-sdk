@@ -156,6 +156,8 @@ type BaseApp struct { // nolint: maligned
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
 	abciListeners []ABCIListener
+
+	routerOpts map[string]AppOptionFunc
 }
 
 func (opt AppOptionOrdered) Order() OptionOrder { return opt.order }
@@ -836,7 +838,9 @@ func (app *BaseApp) getFraudProof(storeKeyToSubstoreTraceBuf map[string]*bytes.B
 	for _, storeKey := range storeKeys {
 		if subStoreTraceBuf, exists := storeKeyToSubstoreTraceBuf[storeKey.Name()]; exists {
 			keys := cms.GetKVStore(storeKey).(*tracekv.Store).GetAllKeysUsedInTrace(*subStoreTraceBuf)
-
+			if len(keys) == 0 {
+				continue
+			}
 			smt := cms.GetSubstoreSMT(storeKey.Name())
 			if smt.Root() == nil {
 				continue
@@ -846,9 +850,9 @@ func (app *BaseApp) getFraudProof(storeKeyToSubstoreTraceBuf map[string]*bytes.B
 				return FraudProof{}, err
 			}
 			stateWitness := StateWitness{
-				proof:       *proof,
-				rootHash:    smt.Root(),
-				WitnessData: make([]WitnessData, 0, keys.Len()),
+				Proof:       *proof,
+				RootHash:    smt.Root(),
+				WitnessData: make([]WitnessData, 0),
 			}
 			for key := range keys {
 				bKey := []byte(key)

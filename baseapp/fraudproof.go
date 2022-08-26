@@ -26,8 +26,8 @@ type FraudProof struct {
 // State witness with a list of all witness data
 type StateWitness struct {
 	// store level proof
-	proof    tmcrypto.ProofOp
-	rootHash []byte
+	Proof    tmcrypto.ProofOp
+	RootHash []byte
 	// List of witness data
 	WitnessData []WitnessData
 }
@@ -36,7 +36,7 @@ type StateWitness struct {
 type WitnessData struct {
 	Key   []byte
 	Value []byte
-	proof tmcrypto.ProofOp
+	Proof tmcrypto.ProofOp
 }
 
 func (fraudProof *FraudProof) getModules() []string {
@@ -50,10 +50,10 @@ func (fraudProof *FraudProof) getModules() []string {
 func (fraudProof *FraudProof) getSubstoreSMTs() (map[string]*smtlib.SparseMerkleTree, error) {
 	storeKeyToSMT := make(map[string]*smtlib.SparseMerkleTree)
 	for storeKey, stateWitness := range fraudProof.stateWitness {
-		rootHash := stateWitness.rootHash
+		rootHash := stateWitness.RootHash
 		substoreDeepSMT := smtlib.NewDeepSparseMerkleSubTree(smtlib.NewSimpleMap(), smtlib.NewSimpleMap(), sha256.New(), rootHash)
 		for _, witnessData := range stateWitness.WitnessData {
-			proofOp, key, val := witnessData.proof, witnessData.Key, witnessData.Value
+			proofOp, key, val := witnessData.Proof, witnessData.Key, witnessData.Value
 			proof, err := smt.ProofDecoder(proofOp)
 			if err != nil {
 				return nil, err
@@ -81,7 +81,7 @@ func (fraudProof *FraudProof) extractStore() map[string]types.KVStore {
 
 func (fraudProof *FraudProof) verifyFraudProof() (bool, error) {
 	for storeKey, stateWitness := range fraudProof.stateWitness {
-		proofOp := stateWitness.proof
+		proofOp := stateWitness.Proof
 		proof, err := types.CommitmentOpDecoder(proofOp)
 		if err != nil {
 			return false, err
@@ -89,7 +89,7 @@ func (fraudProof *FraudProof) verifyFraudProof() (bool, error) {
 		if !bytes.Equal(proof.GetKey(), []byte(storeKey)) {
 			return false, fmt.Errorf("got storeKey: %s, expected: %s", string(proof.GetKey()), storeKey)
 		}
-		appHash, err := proof.Run([][]byte{stateWitness.rootHash})
+		appHash, err := proof.Run([][]byte{stateWitness.RootHash})
 		if err != nil {
 			return false, err
 		}
@@ -98,7 +98,7 @@ func (fraudProof *FraudProof) verifyFraudProof() (bool, error) {
 		}
 		// Fraudproof verification on a substore level
 		for _, witness := range stateWitness.WitnessData {
-			proofOp, key, value := witness.proof, witness.Key, witness.Value
+			proofOp, key, value := witness.Proof, witness.Key, witness.Value
 			if err != nil {
 				return false, err
 			}
@@ -113,8 +113,8 @@ func (fraudProof *FraudProof) verifyFraudProof() (bool, error) {
 			if err != nil {
 				return false, err
 			}
-			if !bytes.Equal(rootHash[0], stateWitness.rootHash) {
-				return false, fmt.Errorf("got rootHash: %s, expected: %s for storeKey: %s", string(rootHash[0]), string(stateWitness.rootHash), storeKey)
+			if !bytes.Equal(rootHash[0], stateWitness.RootHash) {
+				return false, fmt.Errorf("got rootHash: %s, expected: %s for storeKey: %s", string(rootHash[0]), string(stateWitness.RootHash), storeKey)
 			}
 		}
 	}
@@ -124,18 +124,18 @@ func (fraudProof *FraudProof) verifyFraudProof() (bool, error) {
 func (fraudProof *FraudProof) toABCI() abci.FraudProof {
 	abciStateWitness := make(map[string]*abci.StateWitness)
 	for storeKey, stateWitness := range fraudProof.stateWitness {
-		abciWitnessData := make([]*abci.WitnessData, len(stateWitness.WitnessData))
+		abciWitnessData := make([]*abci.WitnessData, 0, len(stateWitness.WitnessData))
 		for _, witnessData := range stateWitness.WitnessData {
 			abciWitness := abci.WitnessData{
 				Key:   witnessData.Key,
 				Value: witnessData.Value,
-				Proof: &witnessData.proof,
+				Proof: &witnessData.Proof,
 			}
 			abciWitnessData = append(abciWitnessData, &abciWitness)
 		}
 		abciStateWitness[storeKey] = &abci.StateWitness{
-			ProofOp:     &stateWitness.proof,
-			RootHash:    stateWitness.rootHash,
+			ProofOp:     &stateWitness.Proof,
+			RootHash:    stateWitness.RootHash,
 			WitnessData: abciWitnessData,
 		}
 	}
@@ -144,4 +144,27 @@ func (fraudProof *FraudProof) toABCI() abci.FraudProof {
 		AppHash:      fraudProof.appHash,
 		StateWitness: abciStateWitness,
 	}
+}
+
+func (fraudProof *FraudProof) fromABCI(abciFraudProof abci.FraudProof) {
+	stateWitness := make(map[string]StateWitness)
+	for storeKey, abciStateWitness := range abciFraudProof.StateWitness {
+		witnessData := make([]WitnessData, 0, len(abciStateWitness.WitnessData))
+		for _, abciWitnessData := range abciStateWitness.WitnessData {
+			witness := WitnessData{
+				Key:   abciWitnessData.Key,
+				Value: abciWitnessData.Value,
+				Proof: *abciWitnessData.Proof,
+			}
+			witnessData = append(witnessData, witness)
+		}
+		stateWitness[storeKey] = StateWitness{
+			Proof:       *abciStateWitness.ProofOp,
+			RootHash:    abciStateWitness.RootHash,
+			WitnessData: witnessData,
+		}
+	}
+	fraudProof.blockHeight = abciFraudProof.BlockHeight
+	fraudProof.appHash = abciFraudProof.AppHash
+	fraudProof.stateWitness = stateWitness
 }

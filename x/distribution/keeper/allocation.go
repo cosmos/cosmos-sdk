@@ -36,9 +36,12 @@ func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) sdk.Int {
 		delegation := k.stakingKeeper.Delegation(ctx, del, val)
 		if delegation != nil {
 			// TODO: why does TokensFromShares return a dec, when all tokens are ints? I truncate manually here -- is that safe?
-			tokens := valObj.TokensFromShares(delegation.GetShares()).TruncateInt()
+			shares := delegation.GetShares()
+			tokens := valObj.TokensFromShares(shares).TruncateInt()
 			consPower := sdk.TokensToConsensusPower(tokens, sdk.DefaultPowerReduction)
-			k.Logger(ctx).Info(fmt.Sprintf("[BLACKLISTFN] addr %s tokens %d consPower %d defPowerReduction %d", delegation.GetDelegatorAddr(), tokens, consPower, sdk.DefaultPowerReduction.Int64()))
+			k.Logger(ctx).Info(fmt.Sprintf("[BLACKLISTFN] addr %s, shares %s, tokens %s consPower %d defPowerReduction %s", delegation.GetDelegatorAddr(),
+				shares.String(), tokens.String(),
+				consPower, sdk.DefaultPowerReduction.String()))
 			// valObj.TokensFromShares(shares).Add(total)
 			total = total + consPower
 		}

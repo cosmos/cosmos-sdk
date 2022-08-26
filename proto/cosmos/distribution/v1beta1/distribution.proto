@@ -27,6 +27,7 @@ message Params {
   ];
   bool withdraw_addr_enabled = 4 [(gogoproto.moretags) = "yaml:\"withdraw_addr_enabled\""];
   repeated string no_rewards_validator_addresses = 5;
+  repeated string no_rewards_delegator_addresses = 6;
 }
 
 // ValidatorHistoricalRewards represents historical rewards for a validator.
@@ -37,7 +38,7 @@ message Params {
 // which might need to reference this historical entry at any point.
 // ReferenceCount =
 //    number of outstanding delegations which ended the associated period (and
-//    might need to read that record)
+//    might need to read that record)     
 //  + number of slashes which ended the associated period (and might need to
 //  read that record)
 //  + one per validator for the zeroeth period, set on initialization

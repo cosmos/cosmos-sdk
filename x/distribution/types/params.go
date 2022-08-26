@@ -16,6 +16,7 @@ var (
 	ParamStoreKeyBonusProposerReward         = []byte("bonusproposerreward")
 	ParamStoreKeyWithdrawAddrEnabled         = []byte("withdrawaddrenabled")
 	ParamStoreKeyNoRewardsValidatorAddresses = []byte("norewardsvalidatoraddresses")
+	ParamStoreKeyNoRewardsDelegatorAddresses = []byte("norewardsdelegatoraddresses")
 )
 
 // ParamKeyTable returns the parameter key table.
@@ -31,6 +32,7 @@ func DefaultParams() Params {
 		BonusProposerReward:         sdk.NewDecWithPrec(4, 2), // 4%
 		WithdrawAddrEnabled:         true,
 		NoRewardsValidatorAddresses: []string{"stridevaloper1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrgpwsqm"},
+		NoRewardsDelegatorAddresses: []string{"stride1u20df3trc2c2zdhm8qvh2hdjx9ewh00sv6eyy8"},
 	}
 }
 
@@ -47,6 +49,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamStoreKeyBonusProposerReward, &p.BonusProposerReward, validateBonusProposerReward),
 		paramtypes.NewParamSetPair(ParamStoreKeyWithdrawAddrEnabled, &p.WithdrawAddrEnabled, validateWithdrawAddrEnabled),
 		paramtypes.NewParamSetPair(ParamStoreKeyNoRewardsValidatorAddresses, &p.NoRewardsValidatorAddresses, validateNoRewardsValidatorAddresses),
+		paramtypes.NewParamSetPair(ParamStoreKeyNoRewardsDelegatorAddresses, &p.NoRewardsDelegatorAddresses, validateNoRewardsDelegatorAddresses),
 	}
 }
 
@@ -143,6 +146,14 @@ func validateWithdrawAddrEnabled(i interface{}) error {
 }
 
 func validateNoRewardsValidatorAddresses(i interface{}) error {
+	_, ok := i.([]string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
+func validateNoRewardsDelegatorAddresses(i interface{}) error {
 	_, ok := i.([]string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

@@ -10,9 +10,11 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// get delegation total between list of del and single val
-func (k Keeper) GetValBlacklistedShare(ctx sdk.Context, blacklistedDelAddrs []string, valAddr string) sdk.Dec {
+// get a validator's total blacklisted delegation shares
+func (k Keeper) GetNumBlacklistedShares(ctx sdk.Context, valAddr string) sdk.Dec {
 
+	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
+	k.Logger(ctx).Info("Blacklisted delegators", "addrs", blacklistedDelAddrs)
 	// get validator
 	val, error := sdk.ValAddressFromBech32(valAddr)
 	if error != nil {
@@ -68,8 +70,16 @@ func (k Keeper) AllocateTokens(
 		if error != nil {
 			panic(error)
 		}
+
+		// BY VALIDATOR, SHOULD BE TOTAL
 		blacklisted_validator := k.stakingKeeper.Validator(ctx, blacklisted_ValAddr)
 		blacklisted_val_power += blacklisted_validator.GetConsensusPower(sdk.DefaultPowerReduction)
+		k.Logger(ctx).Info(fmt.Sprintf("[BY VALIDATOR] addr %s, power %d", blacklisted_ValAddr, blacklisted_validator.GetConsensusPower(sdk.DefaultPowerReduction)))
+
+		// BY DELEGATOR, SHOULD BE 80% OF TOTAL
+		blacklisted_del_power := k.GetNumBlacklistedShares(ctx, valAddr)
+		k.Logger(ctx).Info(fmt.Sprintf("[BY DELEGATOR] addr %s, power: %d", blacklisted_ValAddr, blacklisted_del_power))
+
 	}
 
 	// fetch and clear the collected fees for distribution, since this is

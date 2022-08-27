@@ -37,6 +37,7 @@ func Cmd() *cobra.Command {
 	cmd.AddCommand(PubkeyRawCmd())
 	cmd.AddCommand(AddrCmd())
 	cmd.AddCommand(RawBytesCmd())
+	cmd.AddCommand(PrefixesCmd())
 
 	return cmd
 }

@@ -147,7 +147,12 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
 	rewardsRaw := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 	if k.StringInSlice(del.GetDelegatorAddr().String(), blacklistedDelAddrs) {
-		k.Logger(ctx).Info(fmt.Sprintf("BLACKLIST_DELEGATION: rewardsRaw: %v", rewardsRaw))
+		denom, err := sdk.GetBaseDenom()
+		if err == nil {
+			newRewardsRaw := sdk.NewDecCoins(sdk.NewDecCoin(denom, sdk.ZeroInt()))
+			k.Logger(ctx).Info(fmt.Sprintf("BLACKLIST_DELEGATION: rewards, non-blacklisted: %v blacklisted: %v", rewardsRaw, newRewardsRaw))
+			rewardsRaw = newRewardsRaw
+		}
 	}
 	outstanding := k.GetValidatorOutstandingRewardsCoins(ctx, del.GetValidatorAddr())
 

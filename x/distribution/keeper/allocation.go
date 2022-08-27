@@ -51,7 +51,7 @@ func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) sdk.Int {
 }
 
 // helper
-func stringInSlice(a string, list []string) bool {
+func (k Keeper) StringInSlice(a string, list []string) bool {
 	for _, b := range list {
 		if b == a {
 			return true
@@ -161,7 +161,7 @@ func (k Keeper) AllocateTokens(
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 
 		valAddr := validator.GetOperator().String()
-		if stringInSlice(valAddr, BLACKLISTED_VAL_ADDRS) {
+		if k.StringInSlice(valAddr, BLACKLISTED_VAL_ADDRS) {
 			k.Logger(ctx).Info(fmt.Sprintf("[DISTR] skipping rewards for BL'd val %s", valAddr))
 			continue
 		}

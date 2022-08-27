@@ -142,9 +142,13 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 		return nil, types.ErrEmptyDelegationDistInfo
 	}
 
+	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
 	// end current period and calculate rewards
 	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
 	rewardsRaw := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+	if k.StringInSlice(del.GetDelegatorAddr().String(), blacklistedDelAddrs) {
+		k.Logger(ctx).Info(fmt.Sprintf("BLACKLIST_DELEGATION: rewardsRaw: %v", rewardsRaw))
+	}
 	outstanding := k.GetValidatorOutstandingRewardsCoins(ctx, del.GetValidatorAddr())
 
 	// defensive edge case may happen on the very final digits

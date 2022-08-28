@@ -133,6 +133,14 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 
 	// calculate rewards for final period
 	rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)...)
+
+	// if the delegator is blacklisted, they should have NO rewards outstanding!
+	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
+	if k.StringInSlice(del.GetDelegatorAddr().String(), blacklistedDelAddrs) {
+		rewards = rewards.MulDec(sdk.NewDec(0))
+		k.Logger(ctx).Info(fmt.Sprintf("WARNING! delegator %s is blacklisted, query will always show NO rewards outstanding.", del.GetDelegatorAddr()))
+	}
+
 	return rewards
 }
 

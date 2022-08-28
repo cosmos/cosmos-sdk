@@ -4,12 +4,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestTokensToConsensusPower() {
-	suite.Require().Equal(int64(0), suite.app.StakingKeeper.TokensToConsensusPower(suite.ctx, sdk.DefaultPowerReduction.Sub(sdk.NewInt(1))))
-	suite.Require().Equal(int64(1), suite.app.StakingKeeper.TokensToConsensusPower(suite.ctx, sdk.DefaultPowerReduction))
+func (s *KeeperTestSuite) TestTokensToConsensusPower() {
+	s.Require().Equal(int64(0), s.stakingKeeper.TokensToConsensusPower(s.ctx, sdk.DefaultPowerReduction.Sub(sdk.NewInt(1))))
+	s.Require().Equal(int64(1), s.stakingKeeper.TokensToConsensusPower(s.ctx, sdk.DefaultPowerReduction))
 }
 
-func (suite *KeeperTestSuite) TestTokensFromConsensusPower() {
-	suite.Require().Equal(sdk.NewInt(0), suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 0))
-	suite.Require().Equal(sdk.DefaultPowerReduction, suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 1))
+func (s *KeeperTestSuite) TestTokensFromConsensusPower() {
+	s.Require().Equal(sdk.NewInt(0), s.stakingKeeper.TokensFromConsensusPower(s.ctx, 0))
+	s.Require().Equal(sdk.DefaultPowerReduction, s.stakingKeeper.TokensFromConsensusPower(s.ctx, 1))
 }

@@ -11,25 +11,21 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (k Keeper) intersectStrSlices(a, b []string) ([]string, error) {
+func (k Keeper) unionStrSlices(a, b []string) []string {
+	m := make(map[string]bool)
 	sort.Strings(a)
 	sort.Strings(b)
-	// uses empty struct (0 bytes) for map values.
-	m := make(map[string]struct{}, len(b))
 
-	// cached
-	for _, v := range b {
-		m[v] = struct{}{}
+	for _, item := range a {
+		m[item] = true
 	}
 
-	var s []string
-	for _, v := range a {
-		if _, ok := m[v]; ok {
-			s = append(s, v)
+	for _, item := range b {
+		if _, ok := m[item]; !ok {
+			a = append(a, item)
 		}
 	}
-
-	return s, nil
+	return a
 }
 
 // iterate the blacklisted delegators to gather a list of validators they're delegated to
@@ -57,10 +53,7 @@ func (k Keeper) GetTaintedValidators(ctx sdk.Context) []string {
 			"stridevaloper1py0fvhdtq4au3d9l88rec6vyda3e0wttx9x92w",
 			"stridevaloper1c5jnf370kaxnv009yhc3jt27f549l5u3edn747"}
 
-		taintedVals, err := k.intersectStrSlices(taintedVals, validators)
-		if err != nil {
-			panic(err)
-		}
+		taintedVals := k.unionStrSlices(taintedVals, validators)
 		k.Logger(ctx).Info(fmt.Sprintf("...updated taintedVals %s", taintedVals))
 	}
 	return taintedVals
@@ -97,14 +90,14 @@ func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int
 			shares := delegation.GetShares()
 			tokens := valObj.TokensFromShares(shares).TruncateInt()
 			consPower := sdk.TokensToConsensusPower(tokens, sdk.DefaultPowerReduction)
-			k.Logger(ctx).Info(fmt.Sprintf("[BLACKLISTFN] addr %s, shares %s, tokens %s consPower %d defPowerReduction %s", delegation.GetDelegatorAddr(),
+			k.Logger(ctx).Info(fmt.Sprintf("... addr %s, shares %s, tokens %s consPower %d defPowerReduction %s", delegation.GetDelegatorAddr(),
 				shares.String(), tokens.String(),
 				consPower, sdk.DefaultPowerReduction.String()))
 			// valObj.TokensFromShares(shares).Add(total)
 			valBlacklistedPower = valBlacklistedPower + consPower
 		}
 	}
-	k.Logger(ctx).Info(fmt.Sprintf("[BLACKLISTFN] valBlacklistedPower %d", valBlacklistedPower))
+	k.Logger(ctx).Info(fmt.Sprintf("Total valBlacklistedPower is %d", valBlacklistedPower))
 	return valTotPower, valBlacklistedPower
 }
 
@@ -130,7 +123,7 @@ func (k Keeper) AllocateTokens(
 
 	// get the blacklisted validators from the param store
 	taintedVals := k.GetTaintedValidators(ctx)
-	k.Logger(ctx).Info("Tainted validators are: %#v", taintedVals)
+	k.Logger(ctx).Info(fmt.Sprintf("Tainted validators are: %#v", taintedVals))
 	// deduct the power of the blacklisted validator from the total power (so that the others are upscaled proportionally!)
 	valsBlacklistedPower := int64(0)
 	taintedValBlacklistAmts := map[string]int64{}
@@ -143,7 +136,7 @@ func (k Keeper) AllocateTokens(
 		valTotalPower, valBlacklistedPower := k.GetBlacklistedPower(ctx, valAddr)
 		valsBlacklistedPower += valBlacklistedPower
 		taintedValBlacklistAmts[valAddr] = valBlacklistedPower
-		k.Logger(ctx).Info(fmt.Sprintf("[BLACKLISTED POWER READING] val %s, blacklistedpower: %d / %d", blacklistedValAddr, valBlacklistedPower, valTotalPower))
+		k.Logger(ctx).Info(fmt.Sprintf("...tainted val %s has blacklistedpower: %d / %d", blacklistedValAddr, valBlacklistedPower, valTotalPower))
 	}
 
 	// fetch and clear the collected fees for distribution, since this is
@@ -222,7 +215,7 @@ func (k Keeper) AllocateTokens(
 
 		// reduce the validator's power if they are tainted
 		if k.StringInSlice(valAddr, taintedVals) {
-			k.Logger(ctx).Info(fmt.Sprintf("[DISTR] reducing val %s power: %d - %d ===> %d ", valAddr, validatorPowerAdj, taintedValBlacklistAmts[valAddr], validatorPowerAdj-taintedValBlacklistAmts[valAddr]))
+			k.Logger(ctx).Info(fmt.Sprintf("...reducing val %s power: %d - %d ===> %d ", valAddr, validatorPowerAdj, taintedValBlacklistAmts[valAddr], validatorPowerAdj-taintedValBlacklistAmts[valAddr]))
 			validatorPowerAdj -= taintedValBlacklistAmts[valAddr]
 		}
 		// TODO consider microslashing for missing votes.
@@ -230,8 +223,6 @@ func (k Keeper) AllocateTokens(
 		powerFraction := sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(adjustedTotalPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
 		k.Logger(ctx).Info(fmt.Sprintf("[DISTR] rewarding val %s with vote %d, total %d, fraction %d, reward %v", valAddr, vote.Validator.Power, validatorPowerAdj, powerFraction, reward))
-
-		k.Logger(ctx).Info(fmt.Sprintf("AllocateTokensToValidator: staking reward for %s to %v", valAddr, reward))
 
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)

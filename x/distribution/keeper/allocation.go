@@ -54,7 +54,7 @@ func (k Keeper) GetTaintedValidators(ctx sdk.Context) []string {
 			"stridevaloper1c5jnf370kaxnv009yhc3jt27f549l5u3edn747"}
 
 		taintedVals = k.unionStrSlices(taintedVals, validators)
-		k.Logger(ctx).Info(fmt.Sprintf("...updated taintedVals %s", taintedVals))
+		// k.Logger(ctx).Info(fmt.Sprintf("...updated taintedVals %s", taintedVals))
 	}
 	k.Logger(ctx).Info(fmt.Sprintf("TaintedVals are %s", taintedVals))
 	return taintedVals

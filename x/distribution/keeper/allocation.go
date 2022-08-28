@@ -53,9 +53,10 @@ func (k Keeper) GetTaintedValidators(ctx sdk.Context) []string {
 			"stridevaloper1py0fvhdtq4au3d9l88rec6vyda3e0wttx9x92w",
 			"stridevaloper1c5jnf370kaxnv009yhc3jt27f549l5u3edn747"}
 
-		taintedVals := k.unionStrSlices(taintedVals, validators)
+		taintedVals = k.unionStrSlices(taintedVals, validators)
 		k.Logger(ctx).Info(fmt.Sprintf("...updated taintedVals %s", taintedVals))
 	}
+	k.Logger(ctx).Info(fmt.Sprintf("TaintedVals are %s", taintedVals))
 	return taintedVals
 }
 
@@ -123,7 +124,7 @@ func (k Keeper) AllocateTokens(
 
 	// get the blacklisted validators from the param store
 	taintedVals := k.GetTaintedValidators(ctx)
-	k.Logger(ctx).Info(fmt.Sprintf("Tainted validators are: %#v", taintedVals))
+	k.Logger(ctx).Info(fmt.Sprintf("Tainted validators are: %v", taintedVals))
 	// deduct the power of the blacklisted validator from the total power (so that the others are upscaled proportionally!)
 	valsBlacklistedPower := int64(0)
 	taintedValBlacklistAmts := map[string]int64{}

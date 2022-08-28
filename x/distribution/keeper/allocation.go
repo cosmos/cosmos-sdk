@@ -139,6 +139,8 @@ func (k Keeper) AllocateTokens(
 		taintedValBlacklistAmts[valAddr] = valBlacklistedPower
 		k.Logger(ctx).Info(fmt.Sprintf("...tainted val %s has blacklistedpower: %d / %d", blacklistedValAddr, valBlacklistedPower, valTotalPower))
 	}
+	k.Logger(ctx).Info(fmt.Sprintf("Total valsBlacklistedPower is %d", valsBlacklistedPower))
+	k.Logger(ctx).Info(fmt.Sprintf("TaintedValBlacklistAmts are %#v", taintedValBlacklistAmts))
 
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
@@ -223,7 +225,6 @@ func (k Keeper) AllocateTokens(
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		powerFraction := sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(adjustedTotalPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
-		k.Logger(ctx).Info(fmt.Sprintf("[DISTR] rewarding val %s with vote %d, total %d, fraction %d, reward %v", valAddr, vote.Validator.Power, validatorPowerAdj, powerFraction, reward))
 
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)

@@ -240,6 +240,8 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
+	//log
+	k.Logger(ctx).Info(fmt.Sprintf("...allocateTokensToValidator: val %s, amount %s", val.GetOperator().String(), shared.String()))
 
 	// update current commission
 	ctx.EventManager().EmitEvent(

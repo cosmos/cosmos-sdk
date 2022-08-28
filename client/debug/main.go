@@ -268,6 +268,7 @@ func PrefixesCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Printf("Bech32 Acc: %s\n", sdk.GetConfig().GetBech32AccountAddrPrefix())
 			cmd.Printf("Bech32 Val: %s\n", sdk.GetConfig().GetBech32ValidatorAddrPrefix())
+			cmd.Printf("Bech32 Con: %s\n", sdk.GetConfig().GetBech32ConsensusAddrPrefix())
 			return nil
 		},
 	}

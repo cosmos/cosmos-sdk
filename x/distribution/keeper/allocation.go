@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"sort"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -9,6 +10,61 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+func (k Keeper) intersectStrSlices(a, b []string) ([]string, error) {
+	sort.Strings(a)
+	sort.Strings(b)
+	// uses empty struct (0 bytes) for map values.
+	m := make(map[string]struct{}, len(b))
+
+	// cached
+	for _, v := range b {
+		m[v] = struct{}{}
+	}
+
+	var s []string
+	for _, v := range a {
+		if _, ok := m[v]; ok {
+			s = append(s, v)
+		}
+	}
+
+	return s, nil
+}
+
+// iterate the blacklisted delegators to gather a list of validators they're delegated to
+func (k Keeper) GetTaintedValidators(ctx sdk.Context) []string {
+	// get the list of blacklisted delegators
+	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
+	k.Logger(ctx).Info("Blacklisted delegators", "addrs", blacklistedDelAddrs)
+	// get the list of validators they're delegated to
+	taintedVals := []string{}
+	for _, delAddr := range blacklistedDelAddrs {
+
+		// get delegator to be used to get its validators
+		del, error := sdk.AccAddressFromBech32(delAddr)
+		if error != nil {
+			// TODO: panic?
+			panic(error)
+		}
+
+		k.Logger(ctx).Info(fmt.Sprintf("...grabbing delegations by blacklisted del... %s", del.String()))
+		// TODO replace with something like stakingKeeper.GetDelegatorVealidators()
+		validators := []string{
+			"stridevaloper1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrgpwsqm",
+			"stridevaloper17kht2x2ped6qytr2kklevtvmxpw7wq9rcfud5c",
+			"stridevaloper1nnurja9zt97huqvsfuartetyjx63tc5zrj5x9f",
+			"stridevaloper1py0fvhdtq4au3d9l88rec6vyda3e0wttx9x92w",
+			"stridevaloper1c5jnf370kaxnv009yhc3jt27f549l5u3edn747"}
+
+		taintedVals, err := k.intersectStrSlices(taintedVals, validators)
+		if err != nil {
+			panic(err)
+		}
+		k.Logger(ctx).Info(fmt.Sprintf("...updated taintedVals %s", taintedVals))
+	}
+	return taintedVals
+}
 
 // get a validator's total blacklisted delegation power
 // 		returns (totalPower, blacklistedPower)
@@ -73,18 +129,20 @@ func (k Keeper) AllocateTokens(
 	logger := k.Logger(ctx)
 
 	// get the blacklisted validators from the param store
-	BLACKLISTED_VAL_ADDRS := k.GetParams(ctx).NoRewardsValidatorAddresses
-	k.Logger(ctx).Info("Blacklisted validators", "addrs", BLACKLISTED_VAL_ADDRS)
+	taintedVals := k.GetTaintedValidators(ctx)
+	k.Logger(ctx).Info("Tainted validators are: %#v", taintedVals)
 	// deduct the power of the blacklisted validator from the total power (so that the others are upscaled proportionally!)
-	blacklisted_vals_power := int64(0)
-	for _, valAddr := range BLACKLISTED_VAL_ADDRS {
+	valsBlacklistedPower := int64(0)
+	taintedValBlacklistAmts := map[string]int64{}
+	// TODO get the list of vals to iterate over from the blacklisted *delegators* so we don't iter all the vals
+	for _, valAddr := range taintedVals {
 		blacklistedValAddr, error := sdk.ValAddressFromBech32(valAddr)
 		if error != nil {
 			panic(error)
 		}
-		// BY DELEGATOR, SHOULD BE 80% OF TOTAL
 		valTotalPower, valBlacklistedPower := k.GetBlacklistedPower(ctx, valAddr)
-		blacklisted_vals_power += valBlacklistedPower
+		valsBlacklistedPower += valBlacklistedPower
+		taintedValBlacklistAmts[valAddr] = valBlacklistedPower
 		k.Logger(ctx).Info(fmt.Sprintf("[BLACKLISTED POWER READING] val %s, blacklistedpower: %d / %d", blacklistedValAddr, valBlacklistedPower, valTotalPower))
 	}
 
@@ -153,20 +211,25 @@ func (k Keeper) AllocateTokens(
 
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
-	adjustedTotalPower := totalPreviousPower - blacklisted_val_power
+	adjustedTotalPower := totalPreviousPower - valsBlacklistedPower
 	for _, vote := range bondedVotes {
-		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 
+		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 		valAddr := validator.GetOperator().String()
-		if k.StringInSlice(valAddr, BLACKLISTED_VAL_ADDRS) {
-			k.Logger(ctx).Info(fmt.Sprintf("[DISTR] skipping rewards for BL'd val %s", valAddr))
-			continue
+
+		// validator's power begins at full power
+		validatorPowerAdj := vote.Validator.Power
+
+		// reduce the validator's power if they are tainted
+		if k.StringInSlice(valAddr, taintedVals) {
+			k.Logger(ctx).Info(fmt.Sprintf("[DISTR] reducing val %s power: %d - %d ===> %d ", valAddr, validatorPowerAdj, taintedValBlacklistAmts[valAddr], validatorPowerAdj-taintedValBlacklistAmts[valAddr]))
+			validatorPowerAdj -= taintedValBlacklistAmts[valAddr]
 		}
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(adjustedTotalPower))
+		powerFraction := sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(adjustedTotalPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
-		k.Logger(ctx).Info(fmt.Sprintf("[DISTR] rewarding val %s with vote %d, total %d, fraction %d, reward %v", valAddr, vote.Validator.Power, adjustedTotalPower, powerFraction, reward))
+		k.Logger(ctx).Info(fmt.Sprintf("[DISTR] rewarding val %s with vote %d, total %d, fraction %d, reward %v", valAddr, vote.Validator.Power, validatorPowerAdj, powerFraction, reward))
 
 		k.Logger(ctx).Info(fmt.Sprintf("AllocateTokensToValidator: staking reward for %s to %v", valAddr, reward))
 

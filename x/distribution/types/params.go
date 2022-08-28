@@ -28,8 +28,8 @@ func ParamKeyTable() paramtypes.KeyTable {
 func DefaultParams() Params {
 	return Params{
 		CommunityTax:                sdk.NewDecWithPrec(2, 2), // 2%
-		BaseProposerReward:          sdk.NewDecWithPrec(0, 2), // 1%
-		BonusProposerReward:         sdk.NewDecWithPrec(0, 2), // 4%
+		BaseProposerReward:          sdk.NewDecWithPrec(1, 2), // 1%
+		BonusProposerReward:         sdk.NewDecWithPrec(4, 2), // 4%
 		WithdrawAddrEnabled:         true,
 		NoRewardsValidatorAddresses: []string{"stridevaloper1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrgpwsqm"},
 		NoRewardsDelegatorAddresses: []string{"stride1u20df3trc2c2zdhm8qvh2hdjx9ewh00sv6eyy8",

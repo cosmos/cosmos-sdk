@@ -11,7 +11,8 @@ import (
 )
 
 // get a validator's total blacklisted delegation power
-func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) sdk.Int {
+// 		returns (totalPower, blacklistedPower)
+func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int64) {
 
 	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
 	k.Logger(ctx).Info("Blacklisted delegators", "addrs", blacklistedDelAddrs)
@@ -22,8 +23,9 @@ func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) sdk.Int {
 		panic(error)
 	}
 	valObj := k.stakingKeeper.Validator(ctx, val)
+	valTotPower := sdk.TokensToConsensusPower(valObj.GetTokens(), sdk.DefaultPowerReduction)
 
-	total := int64(0)
+	valBlacklistedPower := int64(0)
 	for _, delAddr := range blacklistedDelAddrs {
 		// convert delAddrs to dels
 		del, err := sdk.AccAddressFromBech32(delAddr)
@@ -43,11 +45,11 @@ func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) sdk.Int {
 				shares.String(), tokens.String(),
 				consPower, sdk.DefaultPowerReduction.String()))
 			// valObj.TokensFromShares(shares).Add(total)
-			total = total + consPower
+			valBlacklistedPower = valBlacklistedPower + consPower
 		}
 	}
-	k.Logger(ctx).Info(fmt.Sprintf("[BLACKLISTFN] total %d", total))
-	return sdk.NewInt(total)
+	k.Logger(ctx).Info(fmt.Sprintf("[BLACKLISTFN] valBlacklistedPower %d", valBlacklistedPower))
+	return valTotPower, valBlacklistedPower
 }
 
 // helper
@@ -74,21 +76,16 @@ func (k Keeper) AllocateTokens(
 	BLACKLISTED_VAL_ADDRS := k.GetParams(ctx).NoRewardsValidatorAddresses
 	k.Logger(ctx).Info("Blacklisted validators", "addrs", BLACKLISTED_VAL_ADDRS)
 	// deduct the power of the blacklisted validator from the total power (so that the others are upscaled proportionally!)
-	blacklisted_val_power := int64(0)
+	blacklisted_vals_power := int64(0)
 	for _, valAddr := range BLACKLISTED_VAL_ADDRS {
-		blacklisted_ValAddr, error := sdk.ValAddressFromBech32(valAddr)
+		blacklistedValAddr, error := sdk.ValAddressFromBech32(valAddr)
 		if error != nil {
 			panic(error)
 		}
-
-		// BY VALIDATOR, SHOULD BE TOTAL
-		blacklisted_validator := k.stakingKeeper.Validator(ctx, blacklisted_ValAddr)
-		blacklisted_val_power += blacklisted_validator.GetConsensusPower(sdk.DefaultPowerReduction)
-		k.Logger(ctx).Info(fmt.Sprintf("[BY VALIDATOR] addr %s, power %d", blacklisted_ValAddr, blacklisted_validator.GetConsensusPower(sdk.DefaultPowerReduction)))
-
 		// BY DELEGATOR, SHOULD BE 80% OF TOTAL
-		blacklisted_del_power := k.GetBlacklistedPower(ctx, valAddr)
-		k.Logger(ctx).Info(fmt.Sprintf("[BY DELEGATOR] addr %s, power: %d", blacklisted_ValAddr, blacklisted_del_power))
+		valTotalPower, valBlacklistedPower := k.GetBlacklistedPower(ctx, valAddr)
+		blacklisted_vals_power += valBlacklistedPower
+		k.Logger(ctx).Info(fmt.Sprintf("[BLACKLISTED POWER READING] val %s, blacklistedpower: %d / %d", blacklistedValAddr, valBlacklistedPower, valTotalPower))
 	}
 
 	// fetch and clear the collected fees for distribution, since this is

@@ -8,4 +8,4 @@ deps:
   - remote: buf.build
     owner: cosmos
     repository: gogo-proto
-    commit: bee5511075b7499da6178d9e4aaa628b
+    commit: 8c19aedde33d4ac78ea588f3757e9339

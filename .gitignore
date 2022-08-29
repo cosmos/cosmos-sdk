@@ -23,6 +23,7 @@ dist
 tools-stamp
 buf-stamp
 artifacts
+third_party/proto
 
 # Go
 go.work

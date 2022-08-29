@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"reflect"
 
-	_ "github.com/gogo/protobuf/gogoproto" // required so it does register the gogoproto file descriptor
-	gogoproto "github.com/gogo/protobuf/proto"
+	_ "github.com/cosmos/gogoproto/gogoproto" // required so it does register the gogoproto file descriptor
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	//nolint: staticcheck
+	_ "github.com/cosmos/cosmos-proto" // look above
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	_ "github.com/regen-network/cosmos-proto" // look above
 )
 
 var importsToFix = map[string]string{

@@ -35,9 +35,9 @@ const (
 	OpWeightMsgVote         = "op_weight_msg_vote"
 	OpWeightMsgVoteWeighted = "op_weight_msg_weighted_vote"
 
-	DefaultWeightMsgDeposit      = 100 // From simappparams.DefaultWeightMsgDeposit
-	DefaultWeightMsgVote         = 67  // From simappparams.DefaultWeightMsgVote
-	DefaultWeightMsgVoteWeighted = 33  // From simappparams.DefaultWeightMsgVoteWeighted
+	DefaultWeightMsgDeposit      = 100
+	DefaultWeightMsgVote         = 67
+	DefaultWeightMsgVoteWeighted = 33
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

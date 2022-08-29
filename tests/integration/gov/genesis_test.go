@@ -65,9 +65,7 @@ func TestImportExportQueues(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := s1.app.BaseApp.NewContext(false, tmproto.Header{})
-	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 2, valTokens)
-
-	SortAddresses(addrs)
+	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 1, valTokens)
 
 	header := tmproto.Header{Height: s1.app.LastBlockHeight() + 1}
 	s1.app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -109,9 +107,7 @@ func TestImportExportQueues(t *testing.T) {
 	genesisState[distributiontypes.ModuleName] = s1.cdc.MustMarshalJSON(distributionGenState)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
 	s2 := suite{}
 	s2.app, err = simtestutil.SetupWithConfiguration(
@@ -149,7 +145,7 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, proposal2.Status == v1.StatusVotingPeriod)
 
 	macc := s2.GovKeeper.GetGovernanceAccount(ctx2)
-	require.Equal(t, sdk.Coins(s2.GovKeeper.GetParams(ctx2).MinDeposit), s1.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
+	require.Equal(t, sdk.Coins(s2.GovKeeper.GetParams(ctx2).MinDeposit), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
 
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
 	gov.EndBlocker(ctx2, s2.GovKeeper)

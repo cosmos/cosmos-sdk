@@ -32,7 +32,7 @@ func (k Keeper) unionStrSlices(a, b []string) []string {
 func (k Keeper) GetTaintedValidators(ctx sdk.Context) []string {
 	// get the list of blacklisted delegators
 	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
-	k.Logger(ctx).Info("Blacklisted delegators", "addrs", blacklistedDelAddrs)
+	// k.Logger(ctx).Info("Blacklisted delegators", "addrs", blacklistedDelAddrs)
 	// get the list of validators they're delegated to
 	taintedVals := []string{}
 	for _, delAddr := range blacklistedDelAddrs {
@@ -56,7 +56,7 @@ func (k Keeper) GetTaintedValidators(ctx sdk.Context) []string {
 		taintedVals = k.unionStrSlices(taintedVals, validators)
 		// k.Logger(ctx).Info(fmt.Sprintf("...updated taintedVals %s", taintedVals))
 	}
-	k.Logger(ctx).Info(fmt.Sprintf("TaintedVals are %s", taintedVals))
+	// k.Logger(ctx).Info(fmt.Sprintf("TaintedVals are %s", taintedVals))
 	return taintedVals
 }
 
@@ -65,7 +65,7 @@ func (k Keeper) GetTaintedValidators(ctx sdk.Context) []string {
 func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int64) {
 
 	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
-	k.Logger(ctx).Info("Blacklisted delegators", "addrs", blacklistedDelAddrs)
+	// k.Logger(ctx).Info("Blacklisted delegators", "addrs", blacklistedDelAddrs)
 	// get validator
 	val, error := sdk.ValAddressFromBech32(valAddr)
 	if error != nil {
@@ -91,14 +91,14 @@ func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int
 			shares := delegation.GetShares()
 			tokens := valObj.TokensFromShares(shares).TruncateInt()
 			consPower := sdk.TokensToConsensusPower(tokens, sdk.DefaultPowerReduction)
-			k.Logger(ctx).Info(fmt.Sprintf("... addr %s, shares %s, tokens %s consPower %d defPowerReduction %s", delegation.GetDelegatorAddr(),
-				shares.String(), tokens.String(),
-				consPower, sdk.DefaultPowerReduction.String()))
+			// k.Logger(ctx).Info(fmt.Sprintf("... addr %s, shares %s, tokens %s consPower %d defPowerReduction %s", delegation.GetDelegatorAddr(),
+			// shares.String(), tokens.String(),
+			// consPower, sdk.DefaultPowerReduction.String())
 			// valObj.TokensFromShares(shares).Add(total)
 			valBlacklistedPower = valBlacklistedPower + consPower
 		}
 	}
-	k.Logger(ctx).Info(fmt.Sprintf("Total valBlacklistedPower is %d", valBlacklistedPower))
+	// k.Logger(ctx).Info(fmt.Sprintf("Total valBlacklistedPower is %d", valBlacklistedPower))
 	return valTotPower, valBlacklistedPower
 }
 
@@ -116,7 +116,7 @@ func (k Keeper) StringInSlice(a string, list []string) bool {
 func (k Keeper) GetValsWhitelistedPowerShare(ctx sdk.Context) (sdk.Dec, map[string]sdk.Dec, []string) {
 	// get the blacklisted validators from the param store
 	taintedVals := k.GetTaintedValidators(ctx)
-	k.Logger(ctx).Info(fmt.Sprintf("Tainted validators are: %v", taintedVals))
+	// k.Logger(ctx).Info(fmt.Sprintf("Tainted validators are: %v", taintedVals))
 	// deduct the power of the blacklisted validator from the total power (so that the others are upscaled proportionally!)
 	valsBlacklistedPower := int64(0)
 	valsTotalPower := int64(0)
@@ -128,16 +128,16 @@ func (k Keeper) GetValsWhitelistedPowerShare(ctx sdk.Context) (sdk.Dec, map[stri
 			panic(error)
 		}
 		valTotalPower, valBlacklistedPower := k.GetBlacklistedPower(ctx, valAddr)
-		valWhiteListedPowerShare := sdk.NewDec(valBlacklistedPower).Quo(sdk.NewDec(valTotalPower))
+		valWhiteListedPowerShare := sdk.NewDec(1).Sub(sdk.NewDec(valBlacklistedPower).Quo(sdk.NewDec(valTotalPower)))
 		valsBlacklistedPower += valBlacklistedPower
 		valsTotalPower += valTotalPower
 		taintedValsWhitelistedPowerShare[valAddr] = valWhiteListedPowerShare
 		k.Logger(ctx).Info(fmt.Sprintf("...tainted val %s has blacklistedpower: %d / %d", blacklistedValAddr, valBlacklistedPower, valTotalPower))
 	}
-	k.Logger(ctx).Info(fmt.Sprintf("Total valsBlacklistedPower is %d", valsBlacklistedPower))
+	// k.Logger(ctx).Info(fmt.Sprintf("Total valsBlacklistedPower is %d", valsBlacklistedPower))
 
 	totalWhitelistedPowerShare := sdk.NewDec(1).Sub(sdk.NewDec(valsBlacklistedPower).Quo(sdk.NewDec(valsTotalPower)))
-	k.Logger(ctx).Info(fmt.Sprintf("totalWhitelistedPowerShare is %d", totalWhitelistedPowerShare))
+	// k.Logger(ctx).Info(fmt.Sprintf("totalWhitelistedPowerShare is %d", totalWhitelistedPowerShare))
 
 	return totalWhitelistedPowerShare, taintedValsWhitelistedPowerShare, taintedVals
 }
@@ -229,8 +229,7 @@ func (k Keeper) AllocateTokens(
 		// validator's power begins at full power
 		validatorPowerAdj := vote.Validator.Power
 
-		// placeholder val 1, gets updated below
-		powerFraction := sdk.NewDec(1)
+		var powerFraction sdk.Dec
 		// reduce the validator's power if they are tainted
 		if k.StringInSlice(valAddr, taintedVals) {
 			validatorPowerAdjNew := sdk.NewDec(validatorPowerAdj).Mul(taintedValsWhitelistedPowerShare[valAddr]).TruncateInt64()
@@ -245,8 +244,9 @@ func (k Keeper) AllocateTokens(
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
 
-		k.Logger(ctx).Info(fmt.Sprintf("...1allocateTokensToValidator: val %s, amount %#v", validator.GetOperator().String(), reward))
+		// k.Logger(ctx).Info(fmt.Sprintf("...1allocateTokensToValidator: val %s, amount %#v", validator.GetOperator().String(), reward))
 		k.AllocateTokensToValidator(ctx, validator, reward)
+		k.Logger(ctx).Info(fmt.Sprintf("...remaining=%#v, reward=%#v", remaining, reward))
 		remaining = remaining.Sub(reward)
 	}
 
@@ -261,7 +261,7 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
 	//log
-	k.Logger(ctx).Info(fmt.Sprintf("...2allocateTokensToValidator: val %s, amount %#v", val.GetOperator().String(), shared))
+	// k.Logger(ctx).Info(fmt.Sprintf("...2allocateTokensToValidator: val %s, amount %#v", val.GetOperator().String(), shared))
 
 	// update current commission
 	ctx.EventManager().EmitEvent(
@@ -277,9 +277,9 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 
 	// update current rewards
 	currentRewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
-	k.Logger(ctx).Info(fmt.Sprintf("...3allocateTokensToValidator: currentRewards %s, amount %#v", val.GetOperator().String(), currentRewards.Rewards))
+	// k.Logger(ctx).Info(fmt.Sprintf("...3allocateTokensToValidator: currentRewards %s, amount %#v", val.GetOperator().String(), currentRewards.Rewards))
 	currentRewards.Rewards = currentRewards.Rewards.Add(shared...)
-	k.Logger(ctx).Info(fmt.Sprintf("...4allocateTokensToValidator: newRewards %s, amount %#v", val.GetOperator().String(), currentRewards.Rewards))
+	// k.Logger(ctx).Info(fmt.Sprintf("...4allocateTokensToValidator: newRewards %s, amount %#v", val.GetOperator().String(), currentRewards.Rewards))
 	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
 
 	// update outstanding rewards
@@ -291,8 +291,8 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 		),
 	)
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-	k.Logger(ctx).Info(fmt.Sprintf("...3allocateTokensToValidator: currentoutstanding %s, amount %#v", val.GetOperator().String(), outstanding.Rewards))
+	// k.Logger(ctx).Info(fmt.Sprintf("...3allocateTokensToValidator: currentoutstanding %s, amount %#v", val.GetOperator().String(), outstanding.Rewards))
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
-	k.Logger(ctx).Info(fmt.Sprintf("...4allocateTokensToValidator: newoutstanding %s, amount %#v", val.GetOperator().String(), outstanding.Rewards))
+	// k.Logger(ctx).Info(fmt.Sprintf("...4allocateTokensToValidator: newoutstanding %s, amount %#v", val.GetOperator().String(), outstanding.Rewards))
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 }

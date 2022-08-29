@@ -93,6 +93,12 @@ func provideAppBuilder(inputs appInputs) *AppBuilder {
 	for name, wrapper := range inputs.AppModules {
 		mm.Modules[name] = wrapper.AppModule
 	}
+	for name, handler := range inputs.Handlers {
+		mm.Modules[name] = handlerAppModuleWrapper{
+			moduleName: name,
+			Handler:    handler,
+		}
+	}
 	app := inputs.App
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config

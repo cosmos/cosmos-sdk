@@ -26,6 +26,10 @@ type service struct {
 	transientStoreKey *storetypes.TransientStoreKey
 }
 
+func (s service) DerivedClient(key []byte) appmodule.InterModuleClient {
+	panic("ADR-033 isn't implemented yet")
+}
+
 func (s service) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
 	return fmt.Errorf("ADR-033 is not implemented yet")
 }

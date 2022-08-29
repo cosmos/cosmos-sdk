@@ -256,7 +256,7 @@ type Service interface {
 	event.Service
 	blockinfo.Service
 	gas.Service
-    grpc.ClientConnInterface
+    RootInterModuleClient
 }
 ```
 To maintain API compatibility, if new core services are added, a new `cosmossdk.io/coreappmodule/v2.Service` should

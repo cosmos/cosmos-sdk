@@ -247,6 +247,10 @@ func (k Keeper) AllocateTokens(
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	k.Logger(ctx).Info(fmt.Sprintf("\n...\n\n"))
 	adjustedTotalPower := sdk.NewDec(totalPreviousPower).Mul(totalWhitelistedPowerShare).TruncateInt64() // TODO might rounding cause issues later?
+	// If all we have is blacklisted delegations, stop here! | TODO clean up this case
+	if adjustedTotalPower == 0 {
+		return
+	}
 	for _, vote := range bondedVotes {
 
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)

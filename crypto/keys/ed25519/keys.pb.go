@@ -6,8 +6,8 @@ package ed25519
 import (
 	crypto_ed25519 "crypto/ed25519"
 	fmt "fmt"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
-	_ "github.com/gogo/protobuf/gogoproto"
 	io "io"
 	math "math"
 	math_bits "math/bits"

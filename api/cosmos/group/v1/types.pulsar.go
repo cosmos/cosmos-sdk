@@ -5,7 +5,7 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -7533,10 +7533,10 @@ func (x *MemberRequest) GetMetadata() string {
 
 // ThresholdDecisionPolicy is a decision policy where a proposal passes when it
 // satisfies the two following conditions:
-//  1. The sum of all `YES` voters' weights is greater or equal than the defined
-//     `threshold`.
-//  2. The voting and execution periods of the proposal respect the parameters
-//     given by `windows`.
+// 1. The sum of all `YES` voters' weights is greater or equal than the defined
+//    `threshold`.
+// 2. The voting and execution periods of the proposal respect the parameters
+//    given by `windows`.
 type ThresholdDecisionPolicy struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -7585,10 +7585,10 @@ func (x *ThresholdDecisionPolicy) GetWindows() *DecisionPolicyWindows {
 
 // PercentageDecisionPolicy is a decision policy where a proposal passes when
 // it satisfies the two following conditions:
-//  1. The percentage of all `YES` voters' weights out of the total group weight
-//     is greater or equal than the given `percentage`.
-//  2. The voting and execution periods of the proposal respect the parameters
-//     given by `windows`.
+// 1. The percentage of all `YES` voters' weights out of the total group weight
+//    is greater or equal than the given `percentage`.
+// 2. The voting and execution periods of the proposal respect the parameters
+//    given by `windows`.
 type PercentageDecisionPolicy struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

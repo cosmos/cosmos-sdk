@@ -5,7 +5,7 @@ import (
 	v1 "cosmossdk.io/api/cosmos/crypto/hd/v1"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -2554,7 +2554,6 @@ type Record struct {
 	// Record contains one of the following items
 	//
 	// Types that are assignable to Item:
-	//
 	//	*Record_Local_
 	//	*Record_Ledger_
 	//	*Record_Multi_

@@ -6,7 +6,7 @@ import (
 	types "cosmossdk.io/api/tendermint/types"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -27349,7 +27349,6 @@ type Request struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Value:
-	//
 	//	*Request_Echo
 	//	*Request_Flush
 	//	*Request_Info
@@ -28263,7 +28262,6 @@ type Response struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Value:
-	//
 	//	*Response_Exception
 	//	*Response_Echo
 	//	*Response_Flush

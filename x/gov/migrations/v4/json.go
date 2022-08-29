@@ -17,6 +17,9 @@ func MigrateJSON(oldState *v1.GenesisState) (*v1.GenesisState, error) {
 
 	return &v1.GenesisState{
 		StartingProposalId: oldState.StartingProposalId,
+		Deposits:           oldState.Deposits,
+		Votes:              oldState.Votes,
+		Proposals:          oldState.Proposals,
 		Params:             &params,
 	}, nil
 }

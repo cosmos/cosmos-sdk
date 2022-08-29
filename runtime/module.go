@@ -37,6 +37,7 @@ func init() {
 			provideTransientStoreKey,
 			provideMemoryStoreKey,
 			provideDeliverTx,
+			provideCoreAPIService,
 		),
 	)
 }
@@ -81,13 +82,14 @@ type appInputs struct {
 
 	Config         *runtimev1alpha1.Module
 	App            appWrapper
-	Modules        map[string]AppModuleWrapper
+	AppModules     map[string]AppModuleWrapper
 	BaseAppOptions []BaseAppOption
+	Handlers       map[string]appmodule.Handler
 }
 
 func provideAppBuilder(inputs appInputs) *AppBuilder {
 	mm := &module.Manager{Modules: map[string]module.AppModule{}}
-	for name, wrapper := range inputs.Modules {
+	for name, wrapper := range inputs.AppModules {
 		mm.Modules[name] = wrapper.AppModule
 	}
 	app := inputs.App
@@ -140,5 +142,13 @@ func provideMemoryStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.
 func provideDeliverTx(app appWrapper) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
 		return app.BaseApp.DeliverTx(tx)
+	}
+}
+
+func provideCoreAPIService(key *storetypes.KVStoreKey, memKey *storetypes.MemoryStoreKey, tKey *storetypes.TransientStoreKey) appmodule.Service {
+	return &service{
+		kvStoreKey:        key,
+		memoryStoreKey:    memKey,
+		transientStoreKey: tKey,
 	}
 }

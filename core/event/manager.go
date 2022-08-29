@@ -12,7 +12,7 @@ import (
 // build an app via depinject.
 type Service interface {
 	// GetManager returns the event manager for the context or a no-op event manager if one isn't attached.
-	GetManager(context.Context) Manager
+	GetEventManager(context.Context) Manager
 }
 
 // Manager represents an event manager.

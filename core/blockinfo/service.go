@@ -5,8 +5,7 @@ package blockinfo
 
 import (
 	"context"
-
-	"google.golang.org/protobuf/types/known/timestamppb"
+	"time"
 )
 
 // Service is a type which retrieves basic block info from a context independent
@@ -22,16 +21,16 @@ type Service interface {
 
 // BlockInfo represents basic block info independent of any specific Tendermint
 // core version.
-type BlockInfo interface {
-	// ChainID returns the chain ID.
-	ChainID() string
+type BlockInfo struct {
+	// ChainID is the chain ID.
+	ChainID string
 
-	// Height returns the current block height.
-	Height() int64
+	// Height is the current block height.
+	Height int64
 
-	// Time returns the current block timestamp.
-	Time() *timestamppb.Timestamp
+	// Time is the current block timestamp.
+	Time time.Time
 
-	// Hash returns the current block hash.
-	Hash() []byte
+	// Hash is the current block hash.
+	Hash []byte
 }

@@ -47,13 +47,13 @@ func nameInfoKey(name string) []byte {
 
 // implement MsgServer
 func (s keeper) RegisterName(ctx context.Context, msg *MsgRegisterName) (*MsgRegisterNameResponse, error) {
-	kvStore := s.KVStoreKey.Open(ctx)
+	kvStore := s.KVStoreKey.OpenKVStore(ctx)
 	key := nameInfoKey(msg.Name)
 	if kvStore.Has(key) {
 		return nil, status.Error(codes.AlreadyExists, "name already registered")
 	}
 
-	height := s.BlockInfoService.GetBlockInfo(ctx).Height()
+	height := s.BlockInfoService.GetBlockInfo(ctx).Height
 	bz, err := proto.Marshal(&NameInfo{
 		Owner:            msg.Sender,
 		RegisteredHeight: height,
@@ -63,7 +63,7 @@ func (s keeper) RegisterName(ctx context.Context, msg *MsgRegisterName) (*MsgReg
 	}
 
 	kvStore.Set(key, bz)
-	err = s.EventService.GetManager(ctx).Emit(&EventRegisterName{
+	err = s.EventService.GetEventManager(ctx).Emit(&EventRegisterName{
 		Name:  msg.Name,
 		Owner: msg.Sender,
 	})
@@ -72,7 +72,7 @@ func (s keeper) RegisterName(ctx context.Context, msg *MsgRegisterName) (*MsgReg
 
 // implement QueryServer
 func (s keeper) Name(ctx context.Context, request *QueryNameRequest) (*QueryNameResponse, error) {
-	kvStore := s.KVStoreKey.Open(ctx)
+	kvStore := s.KVStoreKey.OpenKVStore(ctx)
 	key := nameInfoKey(request.Name)
 	bz := kvStore.Get(key)
 	if bz == nil {

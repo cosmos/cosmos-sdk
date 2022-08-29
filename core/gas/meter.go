@@ -9,21 +9,21 @@ type Gas = uint64
 // gas.Service is a core API type that should be provided by the runtime module being used to
 // build an app via depinject.
 type Service interface {
-	// GetMeter returns the current transaction-level gas meter. A non-nil meter
+	// GetGasMeter returns the current transaction-level gas meter. A non-nil meter
 	// is always returned. When one is unavailable in the context an infinite gas meter
 	// will be returned.
-	GetMeter(context.Context)
+	GetGasMeter(context.Context) Meter
 
-	// GetBlockMeter returns the current block-level gas meter. A non-nil meter
+	// GetBlockGasMeter returns the current block-level gas meter. A non-nil meter
 	// is always returned. When one is unavailable in the context an infinite gas meter
 	// will be returned.
-	GetBlockMeter(context.Context)
+	GetBlockGasMeter(context.Context) Meter
 
-	// WithMeter returns a new context with the provided transaction-level gas meter.
-	WithMeter(ctx context.Context, meter Meter) context.Context
+	// WithGasMeter returns a new context with the provided transaction-level gas meter.
+	WithGasMeter(ctx context.Context, meter Meter) context.Context
 
-	// WithBlockMeter returns a new context with the provided block-level gas meter.
-	WithBlockMeter(ctx context.Context, meter Meter) context.Context
+	// WithBlockGasMeter returns a new context with the provided block-level gas meter.
+	WithBlockGasMeter(ctx context.Context, meter Meter) context.Context
 }
 
 // Meter represents a gas meter.

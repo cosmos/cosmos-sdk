@@ -169,35 +169,129 @@ func (m *MsgCreateCounterResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateCounterResponse proto.InternalMessageInfo
 
+type MsgKeyValue struct {
+	Key   []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+}
+
+func (m *MsgKeyValue) Reset()         { *m = MsgKeyValue{} }
+func (m *MsgKeyValue) String() string { return proto.CompactTextString(m) }
+func (*MsgKeyValue) ProtoMessage()    {}
+func (*MsgKeyValue) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4dc296cbfe5ffcd5, []int{3}
+}
+func (m *MsgKeyValue) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgKeyValue) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgKeyValue.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgKeyValue) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgKeyValue.Merge(m, src)
+}
+func (m *MsgKeyValue) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgKeyValue) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgKeyValue.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgKeyValue proto.InternalMessageInfo
+
+func (m *MsgKeyValue) GetKey() []byte {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *MsgKeyValue) GetValue() []byte {
+	if m != nil {
+		return m.Value
+	}
+	return nil
+}
+
+type MsgCreateKeyValueResponse struct {
+}
+
+func (m *MsgCreateKeyValueResponse) Reset()         { *m = MsgCreateKeyValueResponse{} }
+func (m *MsgCreateKeyValueResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateKeyValueResponse) ProtoMessage()    {}
+func (*MsgCreateKeyValueResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4dc296cbfe5ffcd5, []int{4}
+}
+func (m *MsgCreateKeyValueResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateKeyValueResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateKeyValueResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateKeyValueResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateKeyValueResponse.Merge(m, src)
+}
+func (m *MsgCreateKeyValueResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateKeyValueResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateKeyValueResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateKeyValueResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgCounter)(nil), "testdata.MsgCounter")
 	proto.RegisterType((*MsgCounter2)(nil), "testdata.MsgCounter2")
 	proto.RegisterType((*MsgCreateCounterResponse)(nil), "testdata.MsgCreateCounterResponse")
+	proto.RegisterType((*MsgKeyValue)(nil), "testdata.MsgKeyValue")
+	proto.RegisterType((*MsgCreateKeyValueResponse)(nil), "testdata.MsgCreateKeyValueResponse")
 }
 
 func init() { proto.RegisterFile("messages.proto", fileDescriptor_4dc296cbfe5ffcd5) }
 
 var fileDescriptor_4dc296cbfe5ffcd5 = []byte{
-	// 298 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xcb, 0x4d, 0x2d, 0x2e,
-	0x4e, 0x4c, 0x4f, 0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x28, 0x49, 0x2d, 0x2e,
-	0x49, 0x49, 0x2c, 0x49, 0x94, 0x12, 0x49, 0xcf, 0x4f, 0xcf, 0x07, 0x0b, 0xea, 0x83, 0x58, 0x10,
-	0x79, 0x29, 0xc9, 0xf4, 0xfc, 0xfc, 0xf4, 0x9c, 0x54, 0x7d, 0x30, 0x2f, 0xa9, 0x34, 0x4d, 0x3f,
-	0x31, 0xaf, 0x12, 0x22, 0xa5, 0xe4, 0xc7, 0xc5, 0xe5, 0x5b, 0x9c, 0xee, 0x9c, 0x5f, 0x9a, 0x57,
-	0x92, 0x5a, 0x24, 0x24, 0xc1, 0xc5, 0x9e, 0x0c, 0x61, 0x4a, 0x30, 0x2a, 0x30, 0x6a, 0x30, 0x07,
-	0xc1, 0xb8, 0x42, 0x6a, 0x5c, 0xfc, 0x69, 0x89, 0x99, 0x39, 0xf1, 0xf9, 0x79, 0xf1, 0x19, 0x89,
-	0x79, 0x29, 0x39, 0xa9, 0x45, 0x12, 0x4c, 0x0a, 0x8c, 0x1a, 0x1c, 0x41, 0xbc, 0x20, 0x61, 0xff,
-	0x3c, 0x0f, 0x88, 0xa0, 0x92, 0x3f, 0x17, 0x37, 0xc2, 0x3c, 0x23, 0x2a, 0x18, 0x28, 0xc5, 0x25,
-	0x01, 0x32, 0xb0, 0x28, 0x35, 0xb1, 0x24, 0x15, 0x6a, 0x6c, 0x50, 0x6a, 0x71, 0x41, 0x7e, 0x5e,
-	0x71, 0xaa, 0x51, 0x38, 0x17, 0x3b, 0xcc, 0xe5, 0x3e, 0x5c, 0x02, 0x9e, 0x79, 0xc9, 0x45, 0xa9,
-	0xb9, 0xa9, 0x79, 0x25, 0x30, 0x31, 0x11, 0x3d, 0x58, 0xb8, 0xe8, 0x21, 0xdc, 0x24, 0xa5, 0x84,
-	0x2a, 0x8a, 0xd5, 0xe0, 0x48, 0x2e, 0x0e, 0xb8, 0x17, 0x7c, 0xb1, 0x98, 0x2c, 0x8a, 0xcd, 0x64,
-	0x23, 0x62, 0x8c, 0x76, 0x72, 0x3f, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f,
-	0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28,
-	0xdd, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0xfd, 0xe4, 0xfc, 0xe2, 0xdc,
-	0xfc, 0x62, 0x28, 0xa5, 0x5b, 0x9c, 0x92, 0xad, 0x9f, 0x94, 0x58, 0x9c, 0x9a, 0x58, 0x50, 0xa0,
-	0x0f, 0xb2, 0xa1, 0xb4, 0x24, 0x33, 0x27, 0x89, 0x0d, 0x1c, 0x81, 0xc6, 0x80, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xa3, 0xb9, 0x48, 0xf4, 0x0d, 0x02, 0x00, 0x00,
+	// 359 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0xc1, 0x4a, 0xc3, 0x40,
+	0x14, 0x45, 0x1b, 0x8b, 0x36, 0x3c, 0xab, 0x96, 0x50, 0x21, 0x8d, 0x10, 0x4a, 0x04, 0xe9, 0xa6,
+	0x09, 0x44, 0xfc, 0x00, 0x75, 0xa1, 0xa2, 0xb5, 0x10, 0x41, 0xd1, 0x4d, 0x99, 0xa4, 0xaf, 0x69,
+	0x69, 0x32, 0x13, 0x32, 0x13, 0xa1, 0x7f, 0xe1, 0x67, 0xb9, 0xec, 0xd2, 0xa5, 0xb4, 0x3f, 0x22,
+	0x49, 0x9a, 0x16, 0x4b, 0x16, 0x2e, 0x5c, 0xe5, 0xbd, 0x7b, 0xc9, 0xb9, 0x33, 0x97, 0x81, 0xc3,
+	0x10, 0x39, 0x27, 0x3e, 0x72, 0x33, 0x8a, 0x99, 0x60, 0x8a, 0x2c, 0x90, 0x8b, 0x21, 0x11, 0x44,
+	0x6b, 0xfa, 0xcc, 0x67, 0x99, 0x68, 0xa5, 0x53, 0xee, 0x6b, 0x2d, 0x9f, 0x31, 0x3f, 0x40, 0x2b,
+	0xdb, 0xdc, 0x64, 0x64, 0x11, 0x3a, 0xcb, 0x2d, 0xe3, 0x11, 0xa0, 0xc7, 0xfd, 0x6b, 0x96, 0x50,
+	0x81, 0xb1, 0xa2, 0x42, 0xcd, 0xcb, 0x47, 0x55, 0x6a, 0x4b, 0x9d, 0xaa, 0x53, 0xac, 0xca, 0x19,
+	0x1c, 0x8d, 0xc8, 0x24, 0x18, 0x30, 0x3a, 0x18, 0x13, 0x3a, 0x0c, 0x30, 0x56, 0x77, 0xda, 0x52,
+	0x47, 0x76, 0x0e, 0x52, 0xb9, 0x4f, 0x6f, 0x73, 0xd1, 0xe8, 0xc3, 0xfe, 0x86, 0x67, 0xff, 0x03,
+	0x50, 0x03, 0x35, 0x05, 0xc6, 0x48, 0x04, 0xae, 0xb0, 0x0e, 0xf2, 0x88, 0x51, 0x8e, 0xc6, 0x45,
+	0x16, 0x76, 0x8f, 0xb3, 0x67, 0x12, 0x24, 0xa8, 0x34, 0xa0, 0x3a, 0xc5, 0x59, 0x16, 0x54, 0x77,
+	0xd2, 0x51, 0x69, 0xc2, 0xee, 0x7b, 0x6a, 0x65, 0xe8, 0xba, 0x93, 0x2f, 0xc6, 0x09, 0xb4, 0xd6,
+	0xc8, 0xe2, 0xe7, 0x82, 0x69, 0xbf, 0x40, 0xad, 0x68, 0xe3, 0x01, 0x1a, 0x77, 0xd4, 0x8b, 0x31,
+	0x44, 0x2a, 0x0a, 0xad, 0x69, 0x16, 0x5d, 0x9b, 0x9b, 0x7b, 0x6a, 0xc6, 0x6f, 0xb5, 0xec, 0xb0,
+	0xf6, 0x2b, 0xc8, 0xeb, 0x5a, 0x7a, 0x25, 0xe4, 0xe3, 0x32, 0xb2, 0xfd, 0x27, 0x74, 0x0f, 0xe4,
+	0x75, 0x09, 0x97, 0x50, 0x7d, 0x42, 0xb1, 0x45, 0x2b, 0x5c, 0xed, 0xb4, 0x84, 0xb6, 0x5d, 0xc1,
+	0xd5, 0xcd, 0xe7, 0x42, 0x97, 0xe6, 0x0b, 0x5d, 0xfa, 0x5e, 0xe8, 0xd2, 0xc7, 0x52, 0xaf, 0xcc,
+	0x97, 0x7a, 0xe5, 0x6b, 0xa9, 0x57, 0xde, 0xba, 0xfe, 0x44, 0x8c, 0x13, 0xd7, 0xf4, 0x58, 0x68,
+	0x79, 0x8c, 0x87, 0x8c, 0xaf, 0x3e, 0x5d, 0x3e, 0x9c, 0x5a, 0x2e, 0xe1, 0x48, 0xa2, 0xc8, 0x4a,
+	0x23, 0x12, 0x31, 0x09, 0xdc, 0xbd, 0xec, 0x8d, 0x9d, 0xff, 0x04, 0x00, 0x00, 0xff, 0xff, 0x30,
+	0x85, 0xd6, 0x4a, 0xb0, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -352,6 +446,78 @@ var _Counter2_serviceDesc = grpc.ServiceDesc{
 	Metadata: "messages.proto",
 }
 
+// KeyValueClient is the client API for KeyValue service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type KeyValueClient interface {
+	Set(ctx context.Context, in *MsgKeyValue, opts ...grpc.CallOption) (*MsgCreateKeyValueResponse, error)
+}
+
+type keyValueClient struct {
+	cc grpc1.ClientConn
+}
+
+func NewKeyValueClient(cc grpc1.ClientConn) KeyValueClient {
+	return &keyValueClient{cc}
+}
+
+func (c *keyValueClient) Set(ctx context.Context, in *MsgKeyValue, opts ...grpc.CallOption) (*MsgCreateKeyValueResponse, error) {
+	out := new(MsgCreateKeyValueResponse)
+	err := c.cc.Invoke(ctx, "/testdata.KeyValue/Set", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// KeyValueServer is the server API for KeyValue service.
+type KeyValueServer interface {
+	Set(context.Context, *MsgKeyValue) (*MsgCreateKeyValueResponse, error)
+}
+
+// UnimplementedKeyValueServer can be embedded to have forward compatible implementations.
+type UnimplementedKeyValueServer struct {
+}
+
+func (*UnimplementedKeyValueServer) Set(ctx context.Context, req *MsgKeyValue) (*MsgCreateKeyValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
+}
+
+func RegisterKeyValueServer(s grpc1.Server, srv KeyValueServer) {
+	s.RegisterService(&_KeyValue_serviceDesc, srv)
+}
+
+func _KeyValue_Set_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgKeyValue)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KeyValueServer).Set(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testdata.KeyValue/Set",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KeyValueServer).Set(ctx, req.(*MsgKeyValue))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _KeyValue_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "testdata.KeyValue",
+	HandlerType: (*KeyValueServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Set",
+			Handler:    _KeyValue_Set_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "messages.proto",
+}
+
 func (m *MsgCounter) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -451,6 +617,66 @@ func (m *MsgCreateCounterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgKeyValue) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgKeyValue) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgKeyValue) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Value) > 0 {
+		i -= len(m.Value)
+		copy(dAtA[i:], m.Value)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.Value)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Key) > 0 {
+		i -= len(m.Key)
+		copy(dAtA[i:], m.Key)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.Key)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateKeyValueResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateKeyValueResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateKeyValueResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintMessages(dAtA []byte, offset int, v uint64) int {
 	offset -= sovMessages(v)
 	base := offset
@@ -493,6 +719,32 @@ func (m *MsgCounter2) Size() (n int) {
 }
 
 func (m *MsgCreateCounterResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgKeyValue) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Key)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	l = len(m.Value)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgCreateKeyValueResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -712,6 +964,174 @@ func (m *MsgCreateCounterResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgCreateCounterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgKeyValue) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgKeyValue: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgKeyValue: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Key = append(m.Key[:0], dAtA[iNdEx:postIndex]...)
+			if m.Key == nil {
+				m.Key = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Value = append(m.Value[:0], dAtA[iNdEx:postIndex]...)
+			if m.Value == nil {
+				m.Value = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateKeyValueResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateKeyValueResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateKeyValueResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

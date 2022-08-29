@@ -28,7 +28,7 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 		// delete deprecated x/gov genesis state
 		delete(appState, v4gov.ModuleName)
 
-		// the respective key.
+		// set the x/gov genesis state with new state.
 		new, err := v4gov.MigrateJSON(&old)
 		if err != nil {
 			panic(err)

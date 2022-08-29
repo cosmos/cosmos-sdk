@@ -5,7 +5,6 @@ import (
 )
 
 func MigrateJSON(oldState *v1.GenesisState) (*v1.GenesisState, error) {
-
 	params := v1.NewParams(
 		oldState.DepositParams.MinDeposit,
 		*oldState.DepositParams.MaxDepositPeriod,

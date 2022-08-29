@@ -1568,8 +1568,6 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 
 // TODO to re-enable in #12274
 func (s *IntegrationTestSuite) TestAuxSigner() {
-	s.T().Skip()
-
 	require := s.Require()
 	val := s.network.Validators[0]
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10))

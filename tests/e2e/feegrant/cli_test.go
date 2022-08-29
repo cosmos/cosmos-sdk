@@ -1,7 +1,7 @@
 //go:build e2e
 // +build e2e
 
-package testutil
+package feegrant
 
 import (
 	"testing"
@@ -16,5 +16,5 @@ import (
 func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 3
-	suite.Run(t, clienttestutil.NewIntegrationTestSuite(cfg))
+	suite.Run(t, NewIntegrationTestSuite(cfg))
 }

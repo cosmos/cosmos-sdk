@@ -27,13 +27,8 @@ func MigrateJSON(oldState *v1beta1.GenesisState) (*v1.GenesisState, error) {
 		Deposits:           convertToNewDeposits(oldState.Deposits),
 		Votes:              newVotes,
 		Proposals:          newProps,
-		Params: &v1.Params{
-			MinDeposit:       depParams.MinDeposit,
-			MaxDepositPeriod: depParams.MaxDepositPeriod,
-			VotingPeriod:     votingParms.VotingPeriod,
-			Quorum:           tallyParams.Quorum,
-			Threshold:        tallyParams.Threshold,
-			VetoThreshold:    tallyParams.VetoThreshold,
-		},
+		DepositParams:      &depParams,
+		VotingParams:       &votingParms,
+		TallyParams:        &tallyParams,
 	}, nil
 }

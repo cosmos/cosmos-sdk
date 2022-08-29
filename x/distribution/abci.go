@@ -16,6 +16,9 @@ import (
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
+	// get valsBlacklistedPower during beginblocker
+	valsBlacklistedPower, taintedValBlacklistAmts, taintedVals := k.GetValsBlacklistedPower(ctx)
+
 	// determine the total power signing the block
 	var previousTotalPower, sumPreviousPrecommitPower int64
 	for _, voteInfo := range req.LastCommitInfo.GetVotes() {
@@ -29,7 +32,9 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	// ref https://github.com/cosmos/cosmos-sdk/issues/3095
 	if ctx.BlockHeight() > 1 {
 		previousProposer := k.GetPreviousProposerConsAddr(ctx)
-		k.AllocateTokens(ctx, sumPreviousPrecommitPower, previousTotalPower, previousProposer, req.LastCommitInfo.GetVotes())
+		k.AllocateTokens(ctx, sumPreviousPrecommitPower, previousTotalPower,
+			previousProposer, req.LastCommitInfo.GetVotes(),
+			valsBlacklistedPower, taintedValBlacklistAmts, taintedVals)
 	}
 
 	// record the proposer for when we payout on the next block

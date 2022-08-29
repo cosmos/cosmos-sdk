@@ -112,16 +112,8 @@ func (k Keeper) StringInSlice(a string, list []string) bool {
 	return false
 }
 
-// AllocateTokens handles distribution of the collected fees
-// bondedVotes is a list of (validator address, validator voted on last block flag) for all
-// validators in the bonded set.
-func (k Keeper) AllocateTokens(
-	ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
-	previousProposer sdk.ConsAddress, bondedVotes []abci.VoteInfo,
-) {
-
-	logger := k.Logger(ctx)
-
+// function to get valsBlacklistedPower and taintedValBlacklistAmts
+func (k Keeper) GetValsBlacklistedPower(ctx sdk.Context) (int64, map[string]int64, []string) {
 	// get the blacklisted validators from the param store
 	taintedVals := k.GetTaintedValidators(ctx)
 	k.Logger(ctx).Info(fmt.Sprintf("Tainted validators are: %v", taintedVals))
@@ -142,6 +134,19 @@ func (k Keeper) AllocateTokens(
 	k.Logger(ctx).Info(fmt.Sprintf("Total valsBlacklistedPower is %d", valsBlacklistedPower))
 	k.Logger(ctx).Info(fmt.Sprintf("TaintedValBlacklistAmts are %#v", taintedValBlacklistAmts))
 
+	return valsBlacklistedPower, taintedValBlacklistAmts, taintedVals
+}
+
+// AllocateTokens handles distribution of the collected fees
+// bondedVotes is a list of (validator address, validator voted on last block flag) for all
+// validators in the bonded set.
+func (k Keeper) AllocateTokens(
+	ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
+	previousProposer sdk.ConsAddress, bondedVotes []abci.VoteInfo,
+	valsBlacklistedPower int64, taintedValBlacklistAmts map[string]int64, taintedVals []string,
+) {
+
+	logger := k.Logger(ctx)
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
@@ -219,10 +224,9 @@ func (k Keeper) AllocateTokens(
 		// reduce the validator's power if they are tainted
 		if k.StringInSlice(valAddr, taintedVals) {
 			k.Logger(ctx).Info(fmt.Sprintf("...reducing val %s power: %d - %d ===> %d ", valAddr, validatorPowerAdj, taintedValBlacklistAmts[valAddr], validatorPowerAdj-taintedValBlacklistAmts[valAddr]))
-			validatorPowerAdj -= taintedValBlacklistAmts[valAddr]
-			if validatorPowerAdj <= 0 {
-				k.Logger(ctx).Info(fmt.Sprintf("...val %s power is 0 or less, skipping.", valAddr))
-				continue
+			validatorPowerAdjNew := validatorPowerAdj - taintedValBlacklistAmts[valAddr]
+			if validatorPowerAdjNew > 0 { // if the adjustment would yield a negative, give simply give last epoch's inflation this epoch, do not go below 0
+				validatorPowerAdj = validatorPowerAdjNew
 			}
 		}
 		// TODO consider microslashing for missing votes.

@@ -467,7 +467,6 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(ctx, disttypes.ModuleName, addr, expCommission)
 	_, err = distrKeeper.WithdrawValidatorCommission(ctx, valAddr)
 	require.Nil(t, err)
-
 }
 
 func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {

@@ -44,6 +44,7 @@ var _ sdk.Msg = &MsgKeyValue{}
 func (msg *MsgKeyValue) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Signer)}
 }
+
 func (msg *MsgKeyValue) ValidateBasic() error {
 	if msg.Key == nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "key cannot be nil")

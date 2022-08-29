@@ -44,14 +44,21 @@ func (k Keeper) GetTaintedValidators(ctx sdk.Context) []string {
 			panic(error)
 		}
 
+		// can we invoke grpc like this? hacky? unsafe?
+		queryValsResp, err := k.DelegatorValidators(ctx.Context(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: del.String()})
+		if err != nil {
+			panic(err)
+		}
+		validators := queryValsResp.Validators
+		k.Logger(ctx).Info(fmt.Sprintf("          ...delegator %s has %v validators", del.String(), validators))
 		k.Logger(ctx).Info(fmt.Sprintf("...grabbing delegations by blacklisted del... %s", del.String()))
 		// TODO replace with something like stakingKeeper.GetDelegatorVealidators()
-		validators := []string{
-			"stridevaloper1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrgpwsqm",
-			"stridevaloper17kht2x2ped6qytr2kklevtvmxpw7wq9rcfud5c",
-			"stridevaloper1nnurja9zt97huqvsfuartetyjx63tc5zrj5x9f",
-			"stridevaloper1py0fvhdtq4au3d9l88rec6vyda3e0wttx9x92w",
-			"stridevaloper1c5jnf370kaxnv009yhc3jt27f549l5u3edn747"}
+		// validators := []string{
+		// 	"stridevaloper1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrgpwsqm",
+		// 	"stridevaloper17kht2x2ped6qytr2kklevtvmxpw7wq9rcfud5c",
+		// 	"stridevaloper1nnurja9zt97huqvsfuartetyjx63tc5zrj5x9f",
+		// 	"stridevaloper1py0fvhdtq4au3d9l88rec6vyda3e0wttx9x92w",
+		// 	"stridevaloper1c5jnf370kaxnv009yhc3jt27f549l5u3edn747"}
 
 		taintedVals = k.unionStrSlices(taintedVals, validators)
 		// k.Logger(ctx).Info(fmt.Sprintf("...updated taintedVals %s", taintedVals))
@@ -220,6 +227,7 @@ func (k Keeper) AllocateTokens(
 
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
+	k.Logger(ctx).Info(fmt.Sprintf("\n...\n\n"))
 	adjustedTotalPower := sdk.NewDec(totalPreviousPower).Mul(totalWhitelistedPowerShare).TruncateInt64() // TODO might rounding cause issues later?
 	for _, vote := range bondedVotes {
 

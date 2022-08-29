@@ -9,9 +9,8 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto" // required so it does register the gogoproto file descriptor
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
-	//nolint: staticcheck
-	_ "github.com/cosmos/cosmos-proto" // look above
-	"github.com/golang/protobuf/proto"
+	_ "github.com/cosmos/cosmos-proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
@@ -87,7 +86,7 @@ func getFileDescriptor(filePath string) []byte {
 	if len(fd) != 0 {
 		return fd
 	}
-	//nolint: staticcheck
+	//nolint:staticcheck
 	return proto.FileDescriptor(filePath)
 }
 
@@ -96,7 +95,7 @@ func getMessageType(name string) reflect.Type {
 	if typ != nil {
 		return typ
 	}
-	//nolint: staticcheck
+	//nolint:staticcheck
 	return proto.MessageType(name)
 }
 
@@ -108,7 +107,7 @@ func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
 		}
 	}
 	// check into proto registry
-	//nolint: staticcheck
+	//nolint:staticcheck
 	for id, desc := range proto.RegisteredExtensions(m) {
 		if id == extID {
 			return &gogoproto.ExtensionDesc{
@@ -134,7 +133,7 @@ func getExtensionsNumbers(m proto.Message) []int32 {
 	if len(out) != 0 {
 		return out
 	}
-	//nolint: staticcheck
+	//nolint:staticcheck
 	protoExts := proto.RegisteredExtensions(m)
 	out = make([]int32, 0, len(protoExts))
 	for id := range protoExts {

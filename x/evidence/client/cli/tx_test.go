@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"strings"
@@ -9,6 +10,8 @@ import (
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -16,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
@@ -29,11 +33,27 @@ type mockTendermintRPC struct {
 	responseQuery abci.ResponseQuery
 }
 
+func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
+	return mockTendermintRPC{responseQuery: respQuery}
+}
+
 func (_ mockTendermintRPC) BroadcastTxCommit(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
 	return &coretypes.ResultBroadcastTxCommit{}, nil
 }
 
+func (m mockTendermintRPC) ABCIQueryWithOptions(
+	_ context.Context,
+	_ string, _ tmbytes.HexBytes,
+	_ rpcclient.ABCIQueryOptions,
+) (*coretypes.ResultABCIQuery, error) {
+	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
+}
+
 func TestGetQueryCmd(t *testing.T) {
+	cmd := cli.GetQueryCmd()
+	cmd.SetOut(io.Discard)
+	assert.NotNil(t, cmd)
+
 	encCfg := testutilmod.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 	kr := keyring.NewInMemory(encCfg.Codec)
 	baseCtx := client.Context{}.
@@ -47,16 +67,31 @@ func TestGetQueryCmd(t *testing.T) {
 
 	testCases := map[string]struct {
 		args           []string
+		ctxGen         func() client.Context
 		expectedOutput string
 		expectErr      bool
 	}{
 		"non-existent evidence": {
 			[]string{"DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"},
+			func() client.Context {
+				bz, _ := encCfg.Codec.Marshal(&sdk.TxResponse{})
+				c := newMockTendermintRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return baseCtx.WithClient(c)
+			},
 			"evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660 not found",
 			true,
 		},
 		"all evidence (default pagination)": {
 			[]string{},
+			func() client.Context {
+				bz, _ := encCfg.Codec.Marshal(&sdk.TxResponse{})
+				c := newMockTendermintRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return baseCtx.WithClient(c)
+			},
 			"evidence: []\npagination:\n  next_key: null\n  total: \"0\"",
 			false,
 		},
@@ -66,18 +101,16 @@ func TestGetQueryCmd(t *testing.T) {
 		tc := tc
 
 		t.Run(name, func(t *testing.T) {
-			ctx := svrcmd.CreateExecuteContext(context.Background())
+			var outBuf bytes.Buffer
 
-			cmd := cli.GetQueryCmd()
-			cmd.SetOut(io.Discard)
-			assert.NotNil(t, cmd)
+			clientCtx := tc.ctxGen().WithOutput(&outBuf)
+			ctx := svrcmd.CreateExecuteContext(context.Background())
 
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
 
-			assert.NoError(t, client.SetCmdClientContextHandler(baseCtx, cmd))
+			assert.NoError(t, client.SetCmdClientContextHandler(clientCtx, cmd))
 
-			// err := cmd.Execute()
 			out, err := clitestutil.ExecTestCLICmd(baseCtx, cmd, tc.args)
 			if tc.expectErr {
 				assert.Error(t, err)

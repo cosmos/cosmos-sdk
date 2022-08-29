@@ -328,7 +328,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 	}
 
 	if err != nil {
-		return fmt.Errorf("Unable to set signatures on payload: %w", err)
+		return fmt.Errorf("unable to set signatures on payload: %w", err)
 	}
 
 	// Run optional preprocessing if specified. By default, this is unset

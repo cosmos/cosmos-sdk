@@ -262,7 +262,7 @@ func (f Factory) PreprocessTx(keyname string, builder client.TxBuilder) error {
 
 	key, err := f.Keybase().Key(keyname)
 	if err != nil {
-		return fmt.Errorf("Error retrieving key from keyring: %w", err)
+		return fmt.Errorf("error retrieving key from keyring: %w", err)
 	}
 
 	return f.preprocessTxHook(f.chainID, key.GetType(), builder)

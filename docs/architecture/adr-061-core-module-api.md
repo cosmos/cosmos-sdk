@@ -192,18 +192,44 @@ type Service interface {
 
 #### Inter-module Client
 
-Runtime module implementations should provide an instance of `grpc.ClientConnInterface` as core service. This service
+Runtime module implementations should provide an instance of the `appmodule.RootInterModuleClient` interface which
 will allow modules to send messages to and make queries against other modules as described in [ADR 033](./adr-033-protobuf-inter-module-comm.md).
 
-A single `grpc.ClientConnInterface` will be used for both MsgClient's and QueryClient's. The protobuf option
+```go
+type InterModuleClient interface {
+    grpc.ClientConnInterface
+	
+	// Address is the ADR-028 address of this client against which messages will be authenticated.
+	Address() []byte
+}
+
+type RootInterModuleClient interface {
+	InterModuleClient
+	
+    DerivedClient(key []byte) InterModuleClient
+}
+```
+
+The `RootInterModuleClient` allows a module to make inter-module calls using its root [ADR 028](./adr-028-public-key-addresses.md)
+address (as returned by the `Address` method).
+
+This client can be used with both `MsgClient`'s and `QueryClient`'s and the protobuf option
 `cosmos.msg.v1.service` will allow the router to detect whether a given service is a query or msg service and
 route requests appropriately.
 
-It will likely be necessary to define which queries and `Msg`'s are available for inter-module communication, possibly
-with an `internal` protobuf option.
+Module clients that use [ADR 028](./adr-028-public-key-addresses.md) derived module addresses
+can be created using the `DerivedClient` method.
 
-The router used by the `grpc.ClientConnInterface` will provide a unified interface for sending `Msg`'s and queries
+By default, all `Msg`'s registered using the core API will be available for inter-module routing. Queries will only
+be exposed for inter-module routing if their `rpc` methods have the protobuf option `cosmos.query.v1.internal`
+set to true.
+
+The inter-module router will provide a unified interface for sending `Msg`'s and queries
 which ensures all required pre-processing steps are uniformly executed by all modules which need such functionality.
+
+Runtime modules may choose to allow different types of "admin" access to individual modules which may allow for
+bypassing certain authentication checks. This could allow `x/authz` to allow sending messages on behalf of all
+addresses, for example.
 
 #### `appmodule.Service` Bundle Service
 
@@ -520,4 +546,5 @@ principles that allow for strong long-term support (LTS).
 * [ADR 033: Protobuf-based Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md)
 * [ADR 057: App Wiring](./adr-057-app-wiring-1.md)
 * [ADR 055: ORM](./adr-055-orm.md)
+* [ADR 028: Public Key Addresses](./adr-028-public-key-addresses.md)
 * [Keeping Your Modules Compatible](https://go.dev/blog/module-compatibility)

@@ -292,8 +292,8 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 		),
 	)
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-	// k.Logger(ctx).Info(fmt.Sprintf("...3allocateTokensToValidator: currentoutstanding %s, amount %#v", val.GetOperator().String(), outstanding.Rewards))
+	k.Logger(ctx).Info(fmt.Sprintf("    ...pre-outstanding %s, amount %d, adding %d tokens", val.GetOperator().String(), outstanding.Rewards.AmountOf("ustrd"), tokens.AmountOf("ustrd")))
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
-	// k.Logger(ctx).Info(fmt.Sprintf("...4allocateTokensToValidator: newoutstanding %s, amount %#v", val.GetOperator().String(), outstanding.Rewards))
+	k.Logger(ctx).Info(fmt.Sprintf("    ...post-outstanding: %s, amount %d", val.GetOperator().String(), outstanding.Rewards.AmountOf("ustrd")))
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 }

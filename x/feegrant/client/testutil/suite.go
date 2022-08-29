@@ -713,8 +713,6 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 }
 
 func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
-	s.T().Skip() // TODO to re-enable in #12274
-
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	granter := val.Address
@@ -804,8 +802,6 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 }
 
 func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
-	s.T().Skip() // TODO to re-enable in #12274
-
 	val := s.network.Validators[0]
 
 	granter := val.Address

@@ -4,9 +4,6 @@ package params
 const (
 	DefaultWeightMsgSend                      int = 100
 	DefaultWeightMsgMultiSend                 int = 10
-	DefaultWeightMsgDeposit                   int = 100
-	DefaultWeightMsgVote                      int = 67
-	DefaultWeightMsgVoteWeighted              int = 33
 	DefaultWeightMsgCreateValidator           int = 100
 	DefaultWeightMsgEditValidator             int = 5
 	DefaultWeightMsgDelegate                  int = 100

@@ -134,18 +134,28 @@ type Service interface {
 }
 
 type Manager interface {
+	// Emit emits events to both clients and state machine listeners. These events MUST be emitted deterministically
+	// and should be assumed to be part of blockchain consensus.
     Emit(proto.Message) error
+	
+	// EmitLegacy emits legacy untyped events to clients only. These events do not need to be emitted deterministically
+	// and are not part of blockchain consensus.
     EmitLegacy(eventType string, attrs ...LegacyEventAttribute) error
+
+    // EmitClientOnly emits events only to clients. These events do not need to be emitted deterministically
+    // and are not part of blockchain consensus.
+    EmitClientOnly(proto.Message) error
 }
 ```
 
-By definition, typed events emitted with `Emit` are part of consensus and can be observed by other modules while
-legacy events emitted by `EmitLegacy` are not considered to be part of consensus and cannot be observed by other
-modules.
+Typed events emitted with `Emit` can be observed by other modules and thus must be deterministic and should be assumed
+to be part of blockchain consensus (whether they are part of the block or app hash is left to the runtime to specify).
+
+Events emitted by `EmitLegacy` and `EmitClientOnly` are not considered to be part of consensus and cannot be observed
+by other modules. If there is a client-side need to add events in patch releases, these methods can be used.
 
 Design questions:
 * should we allow overriding event managers (like `sdk.Context.WithEventManager`)?
-* should there be a way to "silently" emit typed events that aren't part of consensus?
 
 #### Block Info Service
 
@@ -402,6 +412,8 @@ are still supported and described in [ADR 057: App Wiring](./adr-057-app-wiring-
 Only one event listener per event type can be defined per module. Event listeners will be called in a deterministic
 order based on alphabetically sorting module names. If a more customizable order is desired, additional parameters
 to the runtime module config object can be added to support optional custom ordering.
+
+Only events emitted using `EventManager.Emit` are observable using event listeners.
 
 #### Upgrade Handlers
 

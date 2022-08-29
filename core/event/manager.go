@@ -17,12 +17,17 @@ type Service interface {
 
 // Manager represents an event manager.
 type Manager interface {
-
-	// Emit emits a typed protobuf event.
+	// Emit emits events to both clients and state machine listeners. These events MUST be emitted deterministically
+	// and should be assumed to be part of blockchain consensus.
 	Emit(protoiface.MessageV1) error
 
-	// EmitLegacy emits a legacy (untyped) tendermint event.
+	// EmitLegacy emits legacy untyped events to clients only. These events do not need to be emitted deterministically
+	// and are not part of blockchain consensus.
 	EmitLegacy(eventType string, attrs ...LegacyEventAttribute) error
+
+	// EmitClientOnly emits events only to clients. These events do not need to be emitted deterministically
+	// and are not part of blockchain consensus.
+	EmitClientOnly(protoiface.MessageV1) error
 }
 
 // LegacyEventAttribute is a legacy (untyped) event attribute.

@@ -247,7 +247,7 @@ func (k Keeper) AllocateTokens(
 
 		// k.Logger(ctx).Info(fmt.Sprintf("...1allocateTokensToValidator: val %s, amount %#v", validator.GetOperator().String(), reward))
 		k.AllocateTokensToValidator(ctx, validator, reward)
-		k.Logger(ctx).Info(fmt.Sprintf("...subbed val %s, remaining=%d reward=%#d", valAddr, remaining[0].Amount, reward[0].Amount))
+		k.Logger(ctx).Info(fmt.Sprintf("...subbed val %s, remaining=%v reward=%v", valAddr, remaining, reward))
 		remaining = remaining.Sub(reward)
 	}
 

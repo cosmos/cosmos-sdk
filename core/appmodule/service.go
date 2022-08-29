@@ -20,5 +20,5 @@ type Service interface {
 	event.Service
 	blockinfo.Service
 	gas.Service
-	InterModuleClient
+	RootInterModuleClient
 }

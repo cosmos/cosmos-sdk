@@ -13,6 +13,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -145,9 +146,11 @@ func provideDeliverTx(app appWrapper) func(abci.RequestDeliverTx) abci.ResponseD
 	}
 }
 
-func provideCoreAPIService(key *storetypes.KVStoreKey, memKey *storetypes.MemoryStoreKey, tKey *storetypes.TransientStoreKey) appmodule.Service {
+func provideCoreAPIService(moduleKey depinject.ModuleKey, kvStoreKey *storetypes.KVStoreKey, memKey *storetypes.MemoryStoreKey, tKey *storetypes.TransientStoreKey) appmodule.Service {
 	return &service{
-		kvStoreKey:        key,
+		moduleKey:         moduleKey,
+		rootAddress:       address.Module(moduleKey.Name(), nil),
+		kvStoreKey:        kvStoreKey,
 		memoryStoreKey:    memKey,
 		transientStoreKey: tKey,
 	}

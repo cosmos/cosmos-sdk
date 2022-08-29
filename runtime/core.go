@@ -2,8 +2,10 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/core/appmodule"
@@ -11,14 +13,29 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type service struct {
+	moduleKey         depinject.ModuleKey
+	rootAddress       []byte
 	kvStoreKey        *storetypes.KVStoreKey
 	memoryStoreKey    *storetypes.MemoryStoreKey
 	transientStoreKey *storetypes.TransientStoreKey
+}
+
+func (s service) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+	return fmt.Errorf("ADR-033 is not implemented yet")
+}
+
+func (s service) NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+	return nil, fmt.Errorf("streaming clients are not supported")
+}
+
+func (s service) Address() []byte {
+	return s.rootAddress
 }
 
 func (s service) OpenKVStore(ctx context.Context) store.KVStore {
@@ -86,6 +103,10 @@ func (e eventManager) EmitLegacy(eventType string, attrs ...event.LegacyEventAtt
 		Attributes: legacyAttrs,
 	})
 	return nil
+}
+
+func (e eventManager) EmitClientOnly(msg protoiface.MessageV1) error {
+	return e.legacyMgr.EmitTypedEvent(msg)
 }
 
 var _ event.Manager = eventManager{}

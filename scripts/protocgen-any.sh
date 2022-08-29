@@ -11,6 +11,7 @@
 set -eo pipefail
 
 go install github.com/cosmos/gogoproto/protoc-gen-gogotypes
+buf export buf.build/cosmos/gogo-proto --output ./third_party/proto
 buf alpha protoc -I "third_party/proto" --gogotypes_out=./codec/types third_party/proto/google/protobuf/any.proto
 mv codec/types/google/protobuf/any.pb.go codec/types
 rm -rf codec/types/third_party

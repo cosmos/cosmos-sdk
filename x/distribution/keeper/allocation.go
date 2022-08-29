@@ -245,7 +245,7 @@ func (k Keeper) AllocateTokens(
 
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
-	k.Logger(ctx).Info(fmt.Sprintf("\n...\n\n"))
+	k.Logger(ctx).Info(fmt.Sprintf("\n\n\n"))
 	adjustedTotalPower := sdk.NewDec(totalPreviousPower).Mul(totalWhitelistedPowerShare).TruncateInt64() // TODO might rounding cause issues later?
 	for _, vote := range bondedVotes {
 

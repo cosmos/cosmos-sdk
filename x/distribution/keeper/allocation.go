@@ -28,6 +28,24 @@ func (k Keeper) unionStrSlices(a, b []string) []string {
 	return a
 }
 
+// get a delegator's validators, based on grpc_query.go's `DelegatorValidators()`
+func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delAddr string) ([]string, error) {
+	delAdr, err := sdk.AccAddressFromBech32(delAddr)
+	if err != nil {
+		return nil, err
+	}
+	var validators []string
+
+	k.stakingKeeper.IterateDelegations(
+		ctx, delAdr,
+		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
+			validators = append(validators, del.GetValidatorAddr().String())
+			return false
+		},
+	)
+	return validators, nil
+}
+
 // iterate the blacklisted delegators to gather a list of validators they're delegated to
 func (k Keeper) GetTaintedValidators(ctx sdk.Context) []string {
 	// get the list of blacklisted delegators
@@ -45,11 +63,11 @@ func (k Keeper) GetTaintedValidators(ctx sdk.Context) []string {
 		}
 
 		// can we invoke grpc like this? hacky? unsafe?
-		queryValsResp, err := k.DelegatorValidators(ctx.Context(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: del.String()})
+		queryValsResp, err := k.GetDelegatorValidators(ctx, delAddr)
 		if err != nil {
 			panic(err)
 		}
-		validators := queryValsResp.Validators
+		validators := queryValsResp
 		k.Logger(ctx).Info(fmt.Sprintf("          ...delegator %s has %v validators", del.String(), validators))
 		k.Logger(ctx).Info(fmt.Sprintf("...grabbing delegations by blacklisted del... %s", del.String()))
 		// TODO replace with something like stakingKeeper.GetDelegatorVealidators()

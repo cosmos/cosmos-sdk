@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/confio/ics23/go v0.7.0
-	github.com/cosmos/cosmos-sdk v0.46.0
+	github.com/cosmos/cosmos-sdk v0.46.1
 	github.com/cosmos/iavl v0.19.1
 	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
 	github.com/tendermint/tendermint v0.34.21
@@ -27,13 +27,13 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
-	github.com/onsi/gomega v1.19.0 // indirect
+	github.com/onsi/gomega v1.20.0 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/net v0.0.0-20220726230323-06994584191e // indirect
 	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
 	google.golang.org/protobuf v1.28.1 // indirect

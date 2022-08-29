@@ -12,7 +12,7 @@ require (
 	github.com/regen-network/gocuke v0.6.2
 	github.com/stretchr/testify v1.8.0
 	github.com/tendermint/tm-db v0.6.7
-	google.golang.org/grpc v1.48.0
+	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1
 	gotest.tools/v3 v3.3.0
 	pgregory.net/rapid v0.4.8
@@ -43,7 +43,7 @@ require (
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/lib/pq v1.10.6 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
-	github.com/onsi/gomega v1.19.0 // indirect
+	github.com/onsi/gomega v1.20.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect

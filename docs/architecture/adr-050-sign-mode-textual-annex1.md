@@ -203,7 +203,20 @@ Object: /cosmos.gov.v1.Vote
 
 ### `google.protobuf.Timestamp`
 
-Rendered as either ISO8601 (`2021-01-01T12:00:00Z`).
+Rendered using [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339) (a
+simplification of ISO 8601), which is the current recommendation for portable
+time values. The rendering always uses "Z" (UTC) as the timezone. It uses only
+the necessary fractional digits of a second, omitting the fractional part
+entirely if the timestamp has no fractional seconds. (The resulting timestamps
+are not automatically sortable by standard lexicographic order, but we favor
+the legibility of the shorter string.)
+
+#### Examples
+
+The timestamp with 1136214245 seconds and 700000000 nanoseconds is rendered
+as `2006-01-02T15:04:05.7Z`.
+The timestamp with 1136214245 seconds and zero nanoseconds is rendered
+as `2006-01-02T15:04:05Z`.
 
 ### `google.protobuf.Duration` (TODO)
 

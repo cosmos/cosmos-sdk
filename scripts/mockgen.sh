@@ -22,3 +22,6 @@ $mockgen_cmd -source=x/bank/types/expected_keepers.go -package testutil -destina
 $mockgen_cmd -source=x/group/testutil/expected_keepers.go -package testutil -destination x/group/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/evidence/types/expected_keepers.go -package testutil -destination x/evidence/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/slashing/types/expected_keepers.go -package testutil -destination x/slashing/testutil/expected_keepers_mocks.go
+$mockgen_cmd -source=x/genutil/types/expected_keepers.go -package testutil -destination x/genutil/testutil/expected_keepers_mocks.go
+$mockgen_cmd -source=x/gov/testutil/expected_keepers.go -package testutil -destination x/gov/testutil/expected_keepers_mocks.go
+$mockgen_cmd -source=x/staking/types/expected_keepers.go -package testutil -destination x/staking/testutil/expected_keepers_mocks.go

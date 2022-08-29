@@ -35,7 +35,7 @@ import (
 func TestExportCmd_ConsensusParams(t *testing.T) {
 	tempDir := t.TempDir()
 
-	_, ctx, _, cmd := setupApp(t, tempDir)
+	_, ctx, genDoc, cmd := setupApp(t, tempDir)
 
 	output := &bytes.Buffer{}
 	cmd.SetOut(output)
@@ -50,6 +50,7 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 
 	require.Equal(t, simtestutil.DefaultConsensusParams.Block.MaxBytes, exportedGenDoc.ConsensusParams.Block.MaxBytes)
 	require.Equal(t, simtestutil.DefaultConsensusParams.Block.MaxGas, exportedGenDoc.ConsensusParams.Block.MaxGas)
+	require.Equal(t, genDoc.ConsensusParams.Block.TimeIotaMs, exportedGenDoc.ConsensusParams.Block.TimeIotaMs)
 
 	require.Equal(t, simtestutil.DefaultConsensusParams.Evidence.MaxAgeDuration, exportedGenDoc.ConsensusParams.Evidence.MaxAgeDuration)
 	require.Equal(t, simtestutil.DefaultConsensusParams.Evidence.MaxAgeNumBlocks, exportedGenDoc.ConsensusParams.Evidence.MaxAgeNumBlocks)

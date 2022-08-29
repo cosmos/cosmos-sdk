@@ -31,6 +31,7 @@ func (k *Keeper) GetAuthority() string {
 	return k.authority
 }
 
+// Get gets the consensus parameters
 func (k *Keeper) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -50,8 +51,9 @@ func (k *Keeper) Has(ctx sdk.Context) bool {
 	return store.Has(types.ParamStoreKeyConsensusParams)
 }
 
+// Set sets the consensus parameters
 func (k *Keeper) Set(ctx sdk.Context, cp *tmproto.ConsensusParams) {
-	store := ctx.KVStore(k.storeKey)
 
+	store := ctx.KVStore(k.storeKey)
 	store.Set(types.ParamStoreKeyConsensusParams, k.cdc.MustMarshal(cp))
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"reflect"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
@@ -23,11 +24,11 @@ type HandlerOptions struct {
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
-	if options.AccountKeeper == nil {
+	if reflect.ValueOf(options.AccountKeeper).IsNil() || reflect.ValueOf(options.AccountKeeper).IsZero() {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for ante builder")
 	}
 
-	if options.BankKeeper == nil {
+	if reflect.ValueOf(options.BankKeeper).IsNil() || reflect.ValueOf(options.BankKeeper).IsZero() {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for ante builder")
 	}
 

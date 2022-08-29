@@ -70,7 +70,7 @@ The first thing that is created in the execution of a CLI command is a `client.C
 
 * **Codec**: The [encoder/decoder](../core/encoding.md) used by the application, used to marshal the parameters and query before making the Tendermint RPC request and unmarshal the returned response into a JSON object. The default codec used by the CLI is Protobuf.
 * **Account Decoder**: The account decoder from the [`auth`](../../x/auth/spec/README.md) module, which translates `[]byte`s into accounts.
-* **RPC Client**: The Tendermint RPC Client, or node, to which the request will be relayed to.
+* **RPC Client**: The Tendermint RPC Client, or node, to which requests are relayed.
 * **Keyring**: A [Key Manager](../basics/accounts.md#keyring) used to sign transactions and handle other operations with keys.
 * **Output Writer**: A [Writer](https://pkg.go.dev/io/#Writer) used to output the response.
 * **Configurations**: The flags configured by the user for this command, including `--height`, specifying the height of the blockchain to query and `--indent`, which indicates to add an indent to the JSON response.
@@ -87,7 +87,7 @@ At this point in the lifecycle, the user has created a CLI command with all of t
 
 #### Encoding
 
-In our case (querying an address's delegations), `MyQuery` contains an [address](./accounts.md#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it will be relayed to a consensus engine (e.g. Tendermint Core) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `client.Context` is used to marshal the address.
+In our case (querying an address's delegations), `MyQuery` contains an [address](./accounts.md#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it is ultimately relayed to a consensus engine (e.g. Tendermint Core) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `client.Context` is used to marshal the address.
 
 Here is what the code looks like for the CLI command:
 
@@ -95,7 +95,7 @@ Here is what the code looks like for the CLI command:
 
 #### gRPC Query Client Creation
 
-The Cosmos SDK leverages code generated from Protobuf services to make queries. The `staking` module's `MyQuery` service generates a `queryClient`, which the CLI will use to make queries. Here is the relevant code:
+The Cosmos SDK leverages code generated from Protobuf services to make queries. The `staking` module's `MyQuery` service generates a `queryClient`, which the CLI uses to make queries. Here is the relevant code:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/staking/client/cli/query.go#L317-L341
 
@@ -107,13 +107,13 @@ Here is what the code looks like:
 
 ## RPC
 
-With a call to `ABCIQueryWithOptions()`, `MyQuery` is received by a [full-node](../core/encoding.md) which will then process the request. Note that, while the RPC is made to the consensus engine (e.g. Tendermint Core) of a full-node, queries are not part of consensus and will not be broadcasted to the rest of the network, as they do not require anything the network needs to agree upon.
+With a call to `ABCIQueryWithOptions()`, `MyQuery` is received by a [full-node](../core/encoding.md) which then processes the request. Note that, while the RPC is made to the consensus engine (e.g. Tendermint Core) of a full-node, queries are not part of consensus and so are not broadcasted to the rest of the network, as they do not require anything the network needs to agree upon.
 
 Read more about ABCI Clients and Tendermint RPC in the [Tendermint documentation](https://docs.tendermint.com/master/rpc/).
 
 ## Application Query Handling
 
-When a query is received by the full-node after it has been relayed from the underlying consensus engine, it is now being handled within an environment that understands application-specific types and has a copy of the state. [`baseapp`](../core/baseapp.md) implements the ABCI [`Query()`](../core/baseapp.md#query) function and handles gRPC queries. The query route is parsed, and it matches the fully-qualified service method name of an existing service method (most likely in one of the modules), then `baseapp` will relay the request to the relevant module.
+When a query is received by the full-node after it has been relayed from the underlying consensus engine, it is now being handled within an environment that understands application-specific types and has a copy of the state. [`baseapp`](../core/baseapp.md) implements the ABCI [`Query()`](../core/baseapp.md#query) function and handles gRPC queries. The query route is parsed, and it matches the fully-qualified service method name of an existing service method (most likely in one of the modules), then `baseapp` relays the request to the relevant module.
 
 Apart from gRPC routes, `baseapp` also handles four different types of queries: `app`, `store`, `p2p`, and `custom`. The first three types (`app`, `store`, `p2p`) are purely application-level and thus directly handled by `baseapp` or the stores, but the `custom` query type requires `baseapp` to route the query to a module's [legacy queriers](../building-modules/query-services.md#legacy-queriers). To learn more about these queries, please refer to [this guide](../core/grpc_rest.md#tendermint-rpc).
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/tendermint/abci/types"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -22,6 +23,7 @@ import (
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintcli "github.com/cosmos/cosmos-sdk/x/mint/client/cli"
+	"github.com/tendermint/tendermint/libs/bytes"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
@@ -35,6 +37,14 @@ type mockTendermintRPC struct {
 
 func (_ mockTendermintRPC) BroadcastTxCommit(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
 	return &coretypes.ResultBroadcastTxCommit{}, nil
+}
+
+func (m mockTendermintRPC) ABCIQueryWithOptions(
+	_ context.Context,
+	_ string, _ bytes.HexBytes,
+	_ rpcclient.ABCIQueryOptions,
+) (*coretypes.ResultABCIQuery, error) {
+	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
 }
 
 func TestGetCmdQueryParams(t *testing.T) {

@@ -14,8 +14,8 @@
 # go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 # go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
 # go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest
-# go get github.com/regen-network/cosmos-proto@latest # doesn't work in install mode
-# go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@v0.3.1
+# go get github.com/cosmos/cosmos-proto@latest # doesn't work in install mode
+# go get github.com/cosmos/cosmos-proto/protoc-gen-gocosmos@v0.3.1
 
 set -eo pipefail
 

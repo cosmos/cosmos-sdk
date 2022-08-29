@@ -220,6 +220,10 @@ func (k Keeper) AllocateTokens(
 		if k.StringInSlice(valAddr, taintedVals) {
 			k.Logger(ctx).Info(fmt.Sprintf("...reducing val %s power: %d - %d ===> %d ", valAddr, validatorPowerAdj, taintedValBlacklistAmts[valAddr], validatorPowerAdj-taintedValBlacklistAmts[valAddr]))
 			validatorPowerAdj -= taintedValBlacklistAmts[valAddr]
+			if validatorPowerAdj <= 0 {
+				k.Logger(ctx).Info(fmt.Sprintf("...val %s power is 0 or less, skipping.", valAddr))
+				continue
+			}
 		}
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701

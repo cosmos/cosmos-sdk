@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
@@ -45,8 +44,6 @@ const (
 type CLITestSuite struct {
 	suite.Suite
 
-	cfg          network.Config
-	network      *network.Network
 	addedGranter sdk.AccAddress
 	addedGrantee sdk.AccAddress
 	addedGrant   feegrant.Grant
@@ -66,10 +63,6 @@ type mockTendermintRPC struct {
 	responseQuery abci.ResponseQuery
 }
 
-func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
-	return mockTendermintRPC{responseQuery: respQuery}
-}
-
 func (m mockTendermintRPC) ABCIQueryWithOptions(
 	_ context.Context,
 	_ string, _ bytes.HexBytes,
@@ -78,7 +71,7 @@ func (m mockTendermintRPC) ABCIQueryWithOptions(
 	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
 }
 
-func (_ mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+func (m mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return &coretypes.ResultBroadcastTx{Code: 0}, nil
 }
 
@@ -1068,7 +1061,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 				return s.msgSubmitLegacyProposal(s.baseCtx, grantee.String(),
 					"Text Proposal", "No desc", govv1beta1.ProposalTypeText,
 					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
-					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))).String()),
 				)
 			},
 			&sdk.TxResponse{},
@@ -1079,7 +1072,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 			func() error {
 				return s.msgVote(s.baseCtx, grantee.String(), "0", "yes",
 					fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
-					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))).String()),
 				)
 			},
 			&sdk.TxResponse{},

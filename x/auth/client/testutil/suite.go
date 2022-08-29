@@ -1566,7 +1566,6 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
-// TODO to re-enable in #12274
 func (s *IntegrationTestSuite) TestAuxSigner() {
 	require := s.Require()
 	val := s.network.Validators[0]

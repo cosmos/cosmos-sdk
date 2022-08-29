@@ -226,6 +226,7 @@ func (k Keeper) AllocateTokens(
 		powerFraction := sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(adjustedTotalPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
 
+		k.Logger(ctx).Info(fmt.Sprintf("...1allocateTokensToValidator: val %s, amount %#v", validator.GetOperator().String(), reward))
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
 	}
@@ -241,7 +242,7 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
 	//log
-	k.Logger(ctx).Info(fmt.Sprintf("...allocateTokensToValidator: val %s, amount %s", val.GetOperator().String(), shared.String()))
+	k.Logger(ctx).Info(fmt.Sprintf("...2allocateTokensToValidator: val %s, amount %#v", val.GetOperator().String(), shared))
 
 	// update current commission
 	ctx.EventManager().EmitEvent(
@@ -257,7 +258,9 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 
 	// update current rewards
 	currentRewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
+	k.Logger(ctx).Info(fmt.Sprintf("...3allocateTokensToValidator: currentRewards %s, amount %#v", val.GetOperator().String(), currentRewards.Rewards))
 	currentRewards.Rewards = currentRewards.Rewards.Add(shared...)
+	k.Logger(ctx).Info(fmt.Sprintf("...4allocateTokensToValidator: newRewards %s, amount %#v", val.GetOperator().String(), currentRewards.Rewards))
 	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
 
 	// update outstanding rewards
@@ -269,6 +272,8 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 		),
 	)
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
+	k.Logger(ctx).Info(fmt.Sprintf("...3allocateTokensToValidator: currentoutstanding %s, amount %#v", val.GetOperator().String(), outstanding.Rewards))
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
+	k.Logger(ctx).Info(fmt.Sprintf("...4allocateTokensToValidator: newoutstanding %s, amount %#v", val.GetOperator().String(), outstanding.Rewards))
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 }

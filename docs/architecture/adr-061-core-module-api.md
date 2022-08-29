@@ -63,7 +63,7 @@ The design principles of the core API are as follows:
 following the same design principles, this includes functionality that interacts with specific non-stable versions of
 third party dependencies such as Tendermint
 * the core API doesn't implement *any* functionality, it just defines types
-* go stable API management principles are followed (TODO: link)
+* go stable API compatibility guidelines are followed: https://go.dev/blog/module-compatibility
 
 A "runtime" module is any module which implements the core functionality of composing an ABCI app, which is currently
 handled by `BaseApp` and the `ModuleManager`. Runtime modules which implement the core API are *intentionally* separate
@@ -84,48 +84,35 @@ slower than more fast moving projects.
 
 The following "core services" are defined by the core API. All valid runtime module implementations should provide
 implementations of these services to modules via both [dependency injection](./adr-057-app-wiring-1.md) and
-manual wiring.
+manual wiring. The individual services described below are all bundled in a convenient `appmodule.Service`
+"bundle service" so that for simplicity modules can declare a dependency on a single service.
 
 #### Store Services
 
 Store services will be defined in the `cosmossdk.io/core/store` package.
 
-The generic `store.KVStore` interface is the same as current SDK `KVStore` interface. The `store.Service` type is a
-refactoring of the existing store key types which inverts the relationship with the context. Instead of expecting a
-"bag of variables" context type to explicitly know about stores, `StoreService` uses the general-purpose
-`context.Context` just to coordinate state:
+The generic `store.KVStore` interface is the same as current SDK `KVStore` interface. Store keys have been refactored
+into store services which, instead of expecting the context to know about stores, invert the pattern and allow
+retrieving a store from a generic context. There are three store services for the three types of currently supported
+stores - regular kv-store, memory, and transient:
 
 ```go
-type Service interface {
-    // Open retrieves the KVStore from the context.
-	Open(context.Context) KVStore
+type KVStoreService interface {
+    OpenKVStore(context.Context) KVStore
+}
+
+type MemoryStoreService interface {
+    OpenMemoryStore(context.Context) KVStore
+}
+type TransientStoreService interface {
+    OpenTransientStore(context.Context) KVStore
 }
 ```
 
 Modules can use these services like this:
 ```go
 func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
-	store := k.storeService.Open(ctx)
-}
-```
-
-Three specific types of store services (kv-store, memory and transient) are defined by the core API that modules can
-get a reference to via dependency injection or manually:
-
-```go
-type KVStoreService interface {
-    Service
-	IsKVStoreService()
-}
-
-type MemoryStoreService interface {
-    Service
-	IsMemoryStoreService()
-}
-
-type TransientStoreService interface {
-	Service
-	IsTransientStoreService()
+	store := k.kvStoreSvc.OpenKVStore(ctx)
 }
 ```
 
@@ -173,11 +160,11 @@ type Service interface {
     GetBlockInfo(ctx context.Context) BlockInfo
 }
 
-type BlockInfo interface {
-    ChainID() string
-    Height() int64
-    Time() *timestamppb.Timestamp
-    Hash() []byte
+type BlockInfo struct {
+    ChainID string
+    Height int64
+    Time time.Time
+    Hash []byte
 }
 ```
 
@@ -203,7 +190,7 @@ type Service interface {
 }
 ```
 
-#### `grpc.ClientConnInterface`
+#### Inter-module Client
 
 Runtime module implementations should provide an instance of `grpc.ClientConnInterface` as core service. This service
 will allow modules to send messages to and make queries against other modules as described in [ADR 033](./adr-033-protobuf-inter-module-comm.md).
@@ -217,6 +204,39 @@ with an `internal` protobuf option.
 
 The router used by the `grpc.ClientConnInterface` will provide a unified interface for sending `Msg`'s and queries
 which ensures all required pre-processing steps are uniformly executed by all modules which need such functionality.
+
+#### `appmodule.Service` Bundle Service
+
+To allow modules to declare a dependency on a single "bundle" service, runtime modules should provide an implementation
+of the `appmodule.Service` interface:
+
+```go
+package appmodule
+
+type Service interface {
+	store.KVStoreService
+	store.MemoryStoreService
+	store.TransientStoreService
+	event.Service
+	blockinfo.Service
+	gas.Service
+    grpc.ClientConnInterface
+}
+```
+To maintain API compatibility, if new core services are added, a new `cosmossdk.io/coreappmodule/v2.Service` should
+be added which extends this service and bundles the new core services, ex:
+
+```go
+package v2
+
+import "cosmossdk.io/core/appmodule"
+
+type Service interface {
+	appmodule.Service
+	SomeNewService
+	AnotherNewService
+}
+```
 
 ### Core `Handler` Struct
 
@@ -500,3 +520,4 @@ principles that allow for strong long-term support (LTS).
 * [ADR 033: Protobuf-based Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md)
 * [ADR 057: App Wiring](./adr-057-app-wiring-1.md)
 * [ADR 055: ORM](./adr-055-orm.md)
+* [Keeping Your Modules Compatible](https://go.dev/blog/module-compatibility)

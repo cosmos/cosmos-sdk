@@ -274,12 +274,14 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 	}
 
 	tendermintCmd.AddCommand(
-		ShowNodeIDCmd(),
 		ShowValidatorCmd(),
 		ShowAddressCmd(),
 		VersionCmd(),
+		tmcmd.ShowValidatorCmd,
+		tmcmd.ShowNodeIDCmd,
 		tmcmd.ResetAllCmd,
 		tmcmd.ResetStateCmd,
+		tmcmd.ReIndexEventCmd,
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)

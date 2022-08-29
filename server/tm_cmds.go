@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	tversion "github.com/tendermint/tendermint/version"
 	"sigs.k8s.io/yaml"
@@ -15,26 +14,6 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout
-func ShowNodeIDCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "show-node-id",
-		Short: "Show this node's ID",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := GetServerContextFromCmd(cmd)
-			cfg := serverCtx.Config
-
-			nodeKey, err := p2p.LoadNodeKey(cfg.NodeKeyFile())
-			if err != nil {
-				return err
-			}
-
-			fmt.Println(nodeKey.ID())
-			return nil
-		},
-	}
-}
 
 // ShowValidatorCmd - ported from Tendermint, show this node's validator info
 func ShowValidatorCmd() *cobra.Command {

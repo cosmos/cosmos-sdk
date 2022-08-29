@@ -236,6 +236,7 @@ func (k Keeper) AllocateTokens(
 			k.Logger(ctx).Info(fmt.Sprintf("...reducing val %s power: %d * %d ===> %d ", valAddr, validatorPowerAdj, taintedValsWhitelistedPowerShare[valAddr], validatorPowerAdjNew))
 			validatorPowerAdj = validatorPowerAdjNew
 			powerFraction = sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(adjustedTotalPower))
+			k.Logger(ctx).Info(fmt.Sprintf("...reduced val %s voteMultiplier: %d, powerFraction %d", valAddr, voteMultiplier, powerFraction))
 		} else {
 			// if not tainted use the untainted power fraction
 			powerFraction = sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(totalPreviousPower))
@@ -246,7 +247,7 @@ func (k Keeper) AllocateTokens(
 
 		// k.Logger(ctx).Info(fmt.Sprintf("...1allocateTokensToValidator: val %s, amount %#v", validator.GetOperator().String(), reward))
 		k.AllocateTokensToValidator(ctx, validator, reward)
-		k.Logger(ctx).Info(fmt.Sprintf("...remaining=%#v, reward=%#v", remaining, reward))
+		k.Logger(ctx).Info(fmt.Sprintf("...subbed val %s, remaining=%d reward=%#d", valAddr, remaining[0].Amount, reward[0].Amount))
 		remaining = remaining.Sub(reward)
 	}
 

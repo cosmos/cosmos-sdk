@@ -229,14 +229,20 @@ func (k Keeper) AllocateTokens(
 		// validator's power begins at full power
 		validatorPowerAdj := vote.Validator.Power
 
+		// placeholder val 1, gets updated below
+		powerFraction := sdk.NewDec(1)
 		// reduce the validator's power if they are tainted
 		if k.StringInSlice(valAddr, taintedVals) {
 			validatorPowerAdjNew := sdk.NewDec(validatorPowerAdj).Mul(taintedValsWhitelistedPowerShare[valAddr]).TruncateInt64()
 			k.Logger(ctx).Info(fmt.Sprintf("...reducing val %s power: %d * %d ===> %d ", valAddr, validatorPowerAdj, taintedValsWhitelistedPowerShare[valAddr], validatorPowerAdjNew))
+			validatorPowerAdj = validatorPowerAdjNew
+			powerFraction = sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(adjustedTotalPower))
+		} else {
+			// if not tainted use the untainted power fraction
+			powerFraction = sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(totalPreviousPower))
 		}
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		powerFraction := sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(adjustedTotalPower))
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
 
 		k.Logger(ctx).Info(fmt.Sprintf("...1allocateTokensToValidator: val %s, amount %#v", validator.GetOperator().String(), reward))

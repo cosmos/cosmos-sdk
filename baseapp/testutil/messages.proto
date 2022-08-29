@@ -19,8 +19,9 @@ message MsgCounter2 {
 message MsgCreateCounterResponse {}
 
 message MsgKeyValue {
-  bytes key   = 1;
-  bytes value = 2;
+  bytes  key    = 1;
+  bytes  value  = 2;
+  string signer = 3;
 }
 
 message MsgCreateKeyValueResponse {}

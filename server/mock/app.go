@@ -14,7 +14,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -44,7 +43,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &kvstoreTx{})
-	router := baseapp.NewMsgServiceRouter()
+	router := bam.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(interfaceRegistry)
 
 	newDesc := &grpc.ServiceDesc{

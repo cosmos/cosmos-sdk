@@ -1,4 +1,4 @@
-package bank
+package consensus_param
 
 import (
 	"context"
@@ -84,7 +84,7 @@ type AppModule struct {
 	keeper keeper.Keeper
 
 	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace exported.Subspace
+	legacySubspace exported.ParamStore
 }
 
 // RegisterServices registers module services.
@@ -95,7 +95,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ss exported.Subspace) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ss exported.ParamStore) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -140,7 +140,7 @@ type consensusParamInputs struct {
 	Authority map[string]sdk.AccAddress `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
+	LegacySubspace exported.ParamStore
 }
 
 type consensusParamOutputs struct {

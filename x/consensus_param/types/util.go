@@ -4,14 +4,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const (
-	ModuleName = "consensus_param"
-
-	StoreKey = ModuleName
-)
-
-var ParamStoreKeyConsensusParams = []byte("ConsensusParams")
-
 // x/consensus_param module sentinel errors
 var (
 	ErrUnauthorized = sdkerrors.Register(ModuleName, 2, "unauthorized action")

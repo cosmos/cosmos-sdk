@@ -6,12 +6,12 @@ import (
 )
 
 type (
-	// Subspace defines an interface that implements the legacy x/params Subspace
+	// ParamStore defines an interface that implements the legacy x/params Subspace
 	// type.
 	//
 	// NOTE: This is used solely for migration of x/params managed parameters.
-	Subspace interface {
-		Get(ctx sdk.Context) (*tmproto.ConsensusParams, error)
+	ParamStore interface {
+		Get(ctx sdk.Context, key []byte, ptr interface{})
 	}
 
 	// ConsensusParamSetter ProtocolVersionSetter defines the interface fulfilled by BaseApp

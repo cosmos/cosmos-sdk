@@ -1,9 +1,11 @@
 package mock
 
 import (
+	"bytes"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // An sdk.Tx which is its own sdk.Msg.
@@ -51,4 +53,23 @@ func (tx *kvstoreTx) ValidateBasic() error {
 
 func (tx *kvstoreTx) GetSigners() []sdk.AccAddress {
 	return nil
+}
+
+// takes raw transaction bytes and decodes them into an sdk.Tx. An sdk.Tx has
+// all the signatures and can be used to authenticate.
+func decodeTx(txBytes []byte) (sdk.Tx, error) {
+	var tx sdk.Tx
+
+	split := bytes.Split(txBytes, []byte("="))
+	if len(split) == 1 { //nolint:gocritic
+		k := split[0]
+		tx = &kvstoreTx{k, k, txBytes}
+	} else if len(split) == 2 {
+		k, v := split[0], split[1]
+		tx = &kvstoreTx{k, v, txBytes}
+	} else {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "too many '='")
+	}
+
+	return tx, nil
 }

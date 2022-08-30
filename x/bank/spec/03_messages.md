@@ -8,7 +8,7 @@ order: 3
 
 Send coins from one address to another.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L21-L32
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L21-L32
 
 The message will fail under the following conditions:
 
@@ -18,7 +18,7 @@ The message will fail under the following conditions:
 ## MsgMultiSend
 
 Send coins from and to a series of different address. If any of the receiving addresses do not correspond to an existing account, a new account is created.
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L37-L45
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L37-L45
 
 The message will fail under the following conditions:
 

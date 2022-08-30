@@ -194,6 +194,10 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = pc.interfaceRegistry.EnsureRegistered(i)
+	if err != nil {
+		return nil, err
+	}
 
 	return pc.Marshal(any)
 }

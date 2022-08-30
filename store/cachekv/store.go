@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/tendermint/tendermint/libs/math"
 )
 
 // cValue represents a cached value.
@@ -278,10 +279,12 @@ const (
 	stateAlreadySorted
 )
 
+const minSortSize = 1024
+
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
 	startStr, endStr := conv.UnsafeBytesToStr(start), conv.UnsafeBytesToStr(end)
-	if startStr > endStr {
+	if end != nil && startStr > endStr {
 		// Nothing to do here.
 		return
 	}
@@ -294,8 +297,9 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// O(N^2) overhead.
 	// Even without that, too many range checks eventually becomes more expensive
 	// than just not having the cache.
-	if n < 1024 {
+	if n < minSortSize {
 		for key := range store.unsortedCache {
+			// dbm.IsKeyInDomain is nil safe and returns true iff key is greater than start
 			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
 				cacheValue := store.cache[key]
 				unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
@@ -316,13 +320,29 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// Now find the values within the domain
 	//  [start, end)
 	startIndex := findStartIndex(strL, startStr)
-	endIndex := findEndIndex(strL, endStr)
+	if startIndex < 0 {
+		startIndex = 0
+	}
 
+	var endIndex int
+	if end == nil {
+		endIndex = len(strL) - 1
+	} else {
+		endIndex = findEndIndex(strL, endStr)
+	}
 	if endIndex < 0 {
 		endIndex = len(strL) - 1
 	}
-	if startIndex < 0 {
-		startIndex = 0
+
+	// Since we spent cycles to sort the values, we should process and remove a reasonable amount
+	// ensure start to end is at least minSortSize in size
+	// if below minSortSize, expand it to cover additional values
+	// this amortizes the cost of processing elements across multiple calls
+	if endIndex-startIndex < minSortSize {
+		endIndex = math.MinInt(startIndex+minSortSize, len(strL)-1)
+		if endIndex-startIndex < minSortSize {
+			startIndex = math.MaxInt(endIndex-minSortSize, 0)
+		}
 	}
 
 	kvL := make([]*kv.Pair, 0)

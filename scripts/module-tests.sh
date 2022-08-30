@@ -21,7 +21,8 @@ execute_mod_tests() {
 
     echo ">>> running $go_mod tests"
     cd $mod_dir;
-    go test -mod=readonly -timeout 30m -coverprofile=${root_dir}/${coverage_file}.tmp -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build'  ./...
+    # Here we don't use the go.work for ensuring that the modules are correctly tagged and tidy-ed.
+    GOWORK=off go test -mod=readonly -timeout 30m -coverprofile=${root_dir}/${coverage_file}.tmp -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build'  ./...
     local ret=$?
     echo "test return: " $ret;
     cd -;

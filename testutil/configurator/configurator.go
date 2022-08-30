@@ -9,6 +9,7 @@ import (
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
+	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
@@ -193,6 +194,21 @@ func GovModule() ModuleOption {
 		config.moduleConfigs["gov"] = &appv1alpha1.ModuleConfig{
 			Name:   "gov",
 			Config: appconfig.WrapAny(&govmodulev1.Module{}),
+		}
+	}
+}
+
+func MintModule() ModuleOption {
+	return func(config *appConfig) {
+		config.moduleConfigs["mint"] = &appv1alpha1.ModuleConfig{
+			Name:   "mint",
+			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
+			GolangBindings: []*appv1alpha1.GolangBinding{
+				{
+					InterfaceType:  "github.com/cosmos/cosmos-sdk/x/mint/types/types.StakingKeeper",
+					Implementation: "github.com/cosmos/cosmos-sdk/x/staking/keeper/*keeper.Keeper",
+				},
+			},
 		}
 	}
 }

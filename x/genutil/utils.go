@@ -1,7 +1,6 @@
 package genutil
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	tmos "github.com/tendermint/tendermint/libs/os"
+	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -59,36 +59,33 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 	if len(mnemonic) > 0 && !bip39.IsMnemonicValid(mnemonic) {
 		return "", nil, fmt.Errorf("invalid mnemonic")
 	}
-	nodeKey, err := tmtypes.LoadOrGenNodeKey(config.NodeKeyFile())
+	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return "", nil, err
 	}
 
-	nodeID = string(nodeKey.ID)
+	nodeID = string(nodeKey.ID())
 
-	pvKeyFile := config.PrivValidator.KeyFile()
+	pvKeyFile := config.PrivValidatorKeyFile()
 	if err := tmos.EnsureDir(filepath.Dir(pvKeyFile), 0o777); err != nil {
 		return "", nil, err
 	}
 
-	pvStateFile := config.PrivValidator.StateFile()
+	pvStateFile := config.PrivValidatorStateFile()
 	if err := tmos.EnsureDir(filepath.Dir(pvStateFile), 0o777); err != nil {
 		return "", nil, err
 	}
 
 	var filePV *privval.FilePV
 	if len(mnemonic) == 0 {
-		filePV, err = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
-		if err != nil {
-			return "", nil, err
-		}
+		filePV = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
 	} else {
 		privKey := tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
 		filePV = privval.NewFilePV(privKey, pvKeyFile, pvStateFile)
 		filePV.Save()
 	}
 
-	tmValPubKey, err := filePV.GetPubKey(context.TODO())
+	tmValPubKey, err := filePV.GetPubKey()
 	if err != nil {
 		return "", nil, err
 	}

@@ -102,10 +102,12 @@ jobs:
         with:
           name: "${{ github.sha }}-${{ matrix.part }}-coverage"
           path: ./${{ matrix.part }}profile.out
+    env:
+      # Here we don't use the go.work for ensuring that the modules are correctly tagged and tidy-ed.
+      GOWORK: off
 
   sims-notify-success:
-    needs:
-      [tests]
+    needs: [tests]
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
@@ -131,8 +133,7 @@ jobs:
           SLACK_FOOTER: ""
 
   sims-notify-failure:
-    needs:
-      [tests]
+    needs: [tests]
     runs-on: ubuntu-latest
     if: ${{ failure() }}
     steps:

@@ -7,9 +7,9 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	bankv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/bank/v1beta1"
-	basev1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/v1beta1"
-	txv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/tx/v1beta1"
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
 )
 

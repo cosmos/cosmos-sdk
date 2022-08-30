@@ -22,7 +22,7 @@ it can be updated with governance or the address with authority.
 
 * Params: `0x51 | ProtocolBuffer(Params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L285-L306
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L285-L306
 
 ## Validator
 
@@ -75,9 +75,9 @@ is updated during the validator set update process which takes place in [`EndBlo
 
 Each validator's state is stored in a `Validator` struct:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L78-L127
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L78-L127
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L24-L76
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L24-L76
 
 ## Delegation
 
@@ -91,7 +91,7 @@ funds are held in a `Delegation` data structure. It is owned by one
 delegator, and is associated with the shares for one validator. The sender of
 the transaction is the owner of the bond.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L187-L205
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L187-L205
 
 ### Delegator Shares
 
@@ -130,7 +130,7 @@ slashed.
 
 A UnbondingDelegation object is created every time an unbonding is initiated.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L207-L220
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L207-L220
 
 ## Redelegation
 
@@ -158,7 +158,7 @@ A redelegation object is created every time a redelegation occurs. To prevent
 * and, the (re)delegator is attempting to create a _new_ redelegation
   where the source validator for this new redelegation is `Validator X`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L245-L283
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L245-L283
 
 ## Queues
 
@@ -180,7 +180,7 @@ delegations queue is kept.
 
 * UnbondingDelegation: `0x41 | format(time) -> []DVPair`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L151-L161
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L151-L161
 
 ### RedelegationQueue
 
@@ -189,7 +189,7 @@ kept.
 
 * RedelegationQueue: `0x42 | format(time) -> []DVVTriplet`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L168-L179
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L168-L179
 
 ### ValidatorQueue
 
@@ -208,7 +208,7 @@ that multiple validators exist in the queue at the same location.
 HistoricalInfo objects are stored and pruned at each block such that the staking keeper persists
 the `n` most recent historical info defined by staking module parameter: `HistoricalEntries`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L15-L22
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L15-L22
 
 At each BeginBlock, the staking keeper will persist the current Header and the Validators that committed
 the current block in a `HistoricalInfo` object. The Validators are sorted on their address to ensure that

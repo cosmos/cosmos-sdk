@@ -115,7 +115,13 @@ message FeePool {
 // CommunityPoolSpendProposal details a proposal for use of community funds,
 // together with how many coins are proposed to be spent, and to which
 // recipient account.
+//
+// Deprecated: Do not use. As of the Cosmos SDK release v0.47.x, there is no
+// longer a need for an explicit CommunityPoolSpendProposal. To spend community
+// pool funds, a simple MsgCommunityPoolSpend can be invoked from the x/gov
+// module via a v1 governance proposal.
 message CommunityPoolSpendProposal {
+  option deprecated                          = true;
   option (gogoproto.equal)                   = false;
   option (gogoproto.goproto_getters)         = false;
   option (gogoproto.goproto_stringer)        = false;

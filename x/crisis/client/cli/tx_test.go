@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/tendermint/abci/types"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
-	"github.com/tendermint/tendermint/rpc/coretypes"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -42,7 +42,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 		WithKeyring(kr).
 		WithTxConfig(encCfg.TxConfig).
 		WithCodec(encCfg.Codec).
-		WithClient(mockTendermintRPC{Client: rpcclientmock.New()}).
+		WithClient(mockTendermintRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")

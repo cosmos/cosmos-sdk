@@ -13,7 +13,7 @@ The withdraw address cannot be any of the module accounts. These accounts are bl
 
 Response:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L31-L41
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L31-L41
 
 ```go
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error
@@ -63,7 +63,7 @@ The final calculated stake is equivalent to the actual staked coins in the deleg
 
 Response:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L46-L56
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L46-L56
 
 ## WithdrawValidatorCommission
 

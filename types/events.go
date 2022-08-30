@@ -7,6 +7,9 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
+
 	"github.com/gogo/protobuf/jsonpb"
 	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -87,11 +90,16 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 		return Event{}, err
 	}
 
+	// sort the keys to ensure the order is always the same
+	keys := maps.Keys(attrMap)
+	slices.Sort(keys)
+
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
-	for k, v := range attrMap {
+	for _, k := range keys {
+		v := attrMap[k]
 		attrs = append(attrs, abci.EventAttribute{
-			Key:   k,
-			Value: string(v),
+			Key:   []byte(k),
+			Value: v,
 		})
 	}
 
@@ -122,7 +130,7 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 
 	attrMap := make(map[string]json.RawMessage)
 	for _, attr := range event.Attributes {
-		attrMap[attr.Key] = json.RawMessage(attr.Value)
+		attrMap[string(attr.Key)] = json.RawMessage(attr.Value)
 	}
 
 	attrBytes, err := json.Marshal(attrMap)
@@ -178,7 +186,18 @@ func (a Attribute) String() string {
 
 // ToKVPair converts an Attribute object into a Tendermint key/value pair.
 func (a Attribute) ToKVPair() abci.EventAttribute {
-	return abci.EventAttribute{Key: a.Key, Value: a.Value}
+	return abci.EventAttribute{Key: toBytes(a.Key), Value: toBytes(a.Value)}
+}
+
+func toBytes(i interface{}) []byte {
+	switch x := i.(type) {
+	case []uint8:
+		return x
+	case string:
+		return []byte(x)
+	default:
+		panic(i)
+	}
 }
 
 // AppendAttributes adds one or more attributes to an Event.
@@ -276,7 +295,7 @@ func StringifyEvent(e abci.Event) StringEvent {
 	for _, attr := range e.Attributes {
 		res.Attributes = append(
 			res.Attributes,
-			Attribute{Key: attr.Key, Value: attr.Value},
+			Attribute{Key: string(attr.Key), Value: string(attr.Value)},
 		)
 	}
 

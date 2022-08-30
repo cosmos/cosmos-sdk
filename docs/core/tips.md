@@ -26,15 +26,15 @@ The transaction tips flow happens in multiple steps.
 
 2. The tipper drafts a transaction to be executed on the chain A. It can include chain A `Msg`s. However, instead of creating a normal transaction, they create the following `AuxSignerData` document:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L230-L249
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L230-L249
 
 where we have defined `SignDocDirectAux` as:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L67-L93
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L67-L93
 
 where `Tip` is defined as
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L219-L228
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L219-L228
 
 Notice that this document doesn't sign over the final chain A fees. Instead, it includes a `Tip` field. It also doesn't include the whole `AuthInfo` object as in `SIGN_MODE_DIRECT`, only the minimum information needed by the tipper
 
@@ -152,7 +152,7 @@ For both commands, the flag `--sign-mode=amino-json` is still available for hard
 
 ## Programmatic Usage
 
-For the tipper, the SDK exposes a new transaction builder, the `AuxTxBuilder`, for generating an `AuxSignerData`. The API of `AuxTxBuilder` is defined [in `client/tx`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/client/tx/aux_builder.go#L16), and can be used as follows:
+For the tipper, the SDK exposes a new transaction builder, the `AuxTxBuilder`, for generating an `AuxSignerData`. The API of `AuxTxBuilder` is defined [in `client/tx`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/client/tx/aux_builder.go#L16), and can be used as follows:
 
 ```go
 // Note: there's no need to use clientCtx.TxConfig anymore.

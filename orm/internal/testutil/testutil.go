@@ -18,7 +18,7 @@ import (
 // TestFieldSpec defines a test field against the testpb.ExampleTable message.
 type TestFieldSpec struct {
 	FieldName protoreflect.Name
-	Gen       *rapid.Generator
+	Gen       *rapid.Generator[any]
 }
 
 var TestFieldSpecs = []TestFieldSpec{
@@ -80,8 +80,8 @@ var TestFieldSpecs = []TestFieldSpec{
 	{
 		"ts",
 		rapid.Custom(func(t *rapid.T) protoreflect.Message {
-			seconds := rapid.Int64Range(-9999999999, 9999999999).Draw(t, "seconds").(int64)
-			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos").(int32)
+			seconds := rapid.Int64Range(-9999999999, 9999999999).Draw(t, "seconds")
+			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos")
 			return (&timestamppb.Timestamp{
 				Seconds: seconds,
 				Nanos:   nanos,
@@ -91,8 +91,8 @@ var TestFieldSpecs = []TestFieldSpec{
 	{
 		"dur",
 		rapid.Custom(func(t *rapid.T) protoreflect.Message {
-			seconds := rapid.Int64Range(0, 315576000000).Draw(t, "seconds").(int64)
-			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos").(int32)
+			seconds := rapid.Int64Range(0, 315576000000).Draw(t, "seconds")
+			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos")
 			return (&durationpb.Duration{
 				Seconds: seconds,
 				Nanos:   nanos,
@@ -125,10 +125,10 @@ type TestKeyCodec struct {
 	Codec    *ormkv.KeyCodec
 }
 
-func TestFieldSpecsGen(minLen, maxLen int) *rapid.Generator {
+func TestFieldSpecsGen(minLen, maxLen int) *rapid.Generator[[]TestFieldSpec] {
 	return rapid.Custom(func(t *rapid.T) []TestFieldSpec {
 		xs := rapid.SliceOfNDistinct(rapid.IntRange(0, len(TestFieldSpecs)-1), minLen, maxLen, func(i int) int { return i }).
-			Draw(t, "fieldSpecIndexes").([]int)
+			Draw(t, "fieldSpecIndexes")
 
 		var specs []TestFieldSpec
 
@@ -141,16 +141,16 @@ func TestFieldSpecsGen(minLen, maxLen int) *rapid.Generator {
 	})
 }
 
-func TestKeyCodecGen(minLen, maxLen int) *rapid.Generator {
+func TestKeyCodecGen(minLen, maxLen int) *rapid.Generator[TestKeyCodec] {
 	return rapid.Custom(func(t *rapid.T) TestKeyCodec {
-		specs := TestFieldSpecsGen(minLen, maxLen).Draw(t, "fieldSpecs").([]TestFieldSpec)
+		specs := TestFieldSpecsGen(minLen, maxLen).Draw(t, "fieldSpecs")
 
 		var fields []protoreflect.Name
 		for _, spec := range specs {
 			fields = append(fields, spec.FieldName)
 		}
 
-		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
+		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix")
 
 		msgType := (&testpb.ExampleTable{}).ProtoReflect().Type()
 		cdc, err := ormkv.NewKeyCodec(prefix, msgType, fields)

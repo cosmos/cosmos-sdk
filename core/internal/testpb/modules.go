@@ -11,7 +11,7 @@ import (
 
 func init() {
 	appmodule.Register(&TestRuntimeModule{},
-		appmodule.Provide(provideRuntimeState, provideStoreKey, provideApp),
+		appmodule.Provide(ProvideRuntimeState, ProvideStoreKey, ProvideApp),
 	)
 
 	appmodule.Register(&TestModuleA{},
@@ -23,17 +23,17 @@ func init() {
 	)
 }
 
-func provideRuntimeState() *runtimeState {
+func ProvideRuntimeState() *runtimeState {
 	return &runtimeState{}
 }
 
-func provideStoreKey(key depinject.ModuleKey, state *runtimeState) StoreKey {
+func ProvideStoreKey(key depinject.ModuleKey, state *runtimeState) StoreKey {
 	sk := StoreKey{name: key.Name()}
 	state.storeKeys = append(state.storeKeys, sk)
 	return sk
 }
 
-func provideApp(state *runtimeState, handlers map[string]Handler) App {
+func ProvideApp(state *runtimeState, handlers map[string]Handler) App {
 	return func(w io.Writer) {
 		sort.Slice(state.storeKeys, func(i, j int) bool {
 			return state.storeKeys[i].name < state.storeKeys[j].name

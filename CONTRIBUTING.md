@@ -1,28 +1,28 @@
 # Contributing
 
-* [Contributing](#contributing)
-    * [Teams Dev Calls](#teams-dev-calls)
-    * [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
-    * [Development Procedure](#development-procedure)
-        * [Testing](#testing)
-        * [Pull Requests](#pull-requests)
-        * [Pull Request Templates](#pull-request-templates)
-        * [Requesting Reviews](#requesting-reviews)
-        * [Updating Documentation](#updating-documentation)
-    * [Dependencies](#dependencies)
-        * [`go.work`](#gowork)
-    * [Protobuf](#protobuf)
-    * [Branching Model and Release](#branching-model-and-release)
-        * [PR Targeting](#pr-targeting)
-    * [Code Owner Membership](#code-owner-membership)
-    * [Concept & Feature Approval Process](#concept--feature-approval-process)
-        * [Strategy Discovery](#strategy-discovery)
-        * [Concept Approval](#concept-approval)
-            * [Time Bound Period](#time-bound-period)
-            * [Approval Committee & Decision Making](#approval-committee--decision-making)
-            * [Committee Members](#committee-members)
-            * [Committee Criteria](#committee-criteria)
-        * [Implementation & Release Approval](#implementation--release-approval)
+- [Contributing](#contributing)
+  - [Teams Dev Calls](#teams-dev-calls)
+  - [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
+  - [Development Procedure](#development-procedure)
+    - [Testing](#testing)
+    - [Pull Requests](#pull-requests)
+    - [Pull Request Templates](#pull-request-templates)
+    - [Requesting Reviews](#requesting-reviews)
+    - [Updating Documentation](#updating-documentation)
+  - [Dependencies](#dependencies)
+    - [`go.work`](#gowork)
+  - [Protobuf](#protobuf)
+  - [Branching Model and Release](#branching-model-and-release)
+    - [PR Targeting](#pr-targeting)
+  - [Code Owner Membership](#code-owner-membership)
+  - [Concept & Feature Approval Process](#concept--feature-approval-process)
+    - [Strategy Discovery](#strategy-discovery)
+    - [Concept Approval](#concept-approval)
+      - [Time Bound Period](#time-bound-period)
+      - [Approval Committee & Decision Making](#approval-committee--decision-making)
+      - [Committee Members](#committee-members)
+      - [Committee Criteria](#committee-criteria)
+    - [Implementation & Release Approval](#implementation--release-approval)
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
 
@@ -182,7 +182,7 @@ build, in which case we can fall back on `go mod tidy -v`.
 The Cosmos SDK is a multi-module repo, for this reason, the use of a `go.work` file is handy. 
 We provide a [`go.work.example`](./go.work.example) that contains all the modules used in the SDK.
 Do note that contributions modifying multiple Go modules should be submitted as separate PRs, this allows us to tag the changes and avoid `replace`s.
-When using the `go.work`, we recommend that you as well run the local test suite with `GOWORK=off`, this will ensure that the tests are run with the correct dependencies and behave the same than in our CI pipelines.
+For consistency between our CI and the local tests, `GOWORK=off` is set in the `Makefile`. This means that the `go.work` file is not used when using `make test` or any other `make` command.
 
 ## Protobuf
 

@@ -364,7 +364,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 
 	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.stakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk0, sdk.NewInt(100), true)
 
 	staking.EndBlocker(ctx, suite.stakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)

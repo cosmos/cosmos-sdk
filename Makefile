@@ -18,11 +18,9 @@ DOCS_DOMAIN=docs.cosmos.network
 # RocksDB is a native dependency, so we don't assume the library is installed.
 # Instead, it must be explicitly enabled and we warn when it is not.
 ENABLE_ROCKSDB ?= false
-
-export GO111MODULE = on
+GOWORK = off # we disable the `go.work` for consistency with our CI
 
 # process build tags
-
 build_tags = netgo
 ifeq ($(LEDGER_ENABLED),true)
   ifeq ($(OS),Windows_NT)

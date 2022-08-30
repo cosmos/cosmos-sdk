@@ -213,13 +213,11 @@ func (msg MsgUpdateParams) ValidateBasic() error {
 }
 
 // NewMsgSetSendEnabled Construct a message to set one or more SendEnabled entries.
-func NewMsgSetSendEnabled(authority string, sendEnabled []*SendEnabled, useDefaultFor []string, setDefaultSendEnabled, defaultSendEnabled bool) *MsgSetSendEnabled {
+func NewMsgSetSendEnabled(authority string, sendEnabled []*SendEnabled, useDefaultFor []string) *MsgSetSendEnabled {
 	return &MsgSetSendEnabled{
-		Authority:             authority,
-		SendEnabled:           sendEnabled,
-		UseDefaultFor:         useDefaultFor,
-		SetDefaultSendEnabled: setDefaultSendEnabled,
-		DefaultSendEnabled:    defaultSendEnabled,
+		Authority:     authority,
+		SendEnabled:   sendEnabled,
+		UseDefaultFor: useDefaultFor,
 	}
 }
 

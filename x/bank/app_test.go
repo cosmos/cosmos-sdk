@@ -348,7 +348,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	govAddr := app.BankKeeper.GetAuthority()
 	goodGovProp, err := govv1.NewMsgSubmitProposal(
 		[]sdk.Msg{
-			types.NewMsgSetSendEnabled(govAddr, nil, nil, true, true),
+			types.NewMsgSetSendEnabled(govAddr, nil, nil),
 		},
 		sdk.Coins{{"foocoin", sdk.NewInt(5)}},
 		addr1Str,
@@ -357,7 +357,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	require.NoError(t, err, "making goodGovProp")
 	badGovProp, err := govv1.NewMsgSubmitProposal(
 		[]sdk.Msg{
-			types.NewMsgSetSendEnabled(govAddr, []*types.SendEnabled{{"bad coin name!", true}}, nil, true, true),
+			types.NewMsgSetSendEnabled(govAddr, []*types.SendEnabled{{"bad coin name!", true}}, nil),
 		},
 		sdk.Coins{{"foocoin", sdk.NewInt(5)}},
 		addr1Str,
@@ -371,7 +371,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			expSimPass: false,
 			expPass:    false,
 			msgs: []sdk.Msg{
-				types.NewMsgSetSendEnabled(addr1Str, nil, nil, true, true),
+				types.NewMsgSetSendEnabled(addr1Str, nil, nil),
 			},
 			accSeqs: []uint64{0},
 			expInError: []string{
@@ -386,7 +386,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			expSimPass: false,
 			expPass:    false,
 			msgs: []sdk.Msg{
-				types.NewMsgSetSendEnabled(govAddr, nil, nil, true, true),
+				types.NewMsgSetSendEnabled(govAddr, nil, nil),
 			},
 			accSeqs: []uint64{1}, // wrong signer, so this sequence doesn't actually get used.
 			expInError: []string{

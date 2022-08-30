@@ -283,7 +283,7 @@ func TestMsgMultiSendGetSigners(t *testing.T) {
 
 func TestNewMsgSetSendEnabled(t *testing.T) {
 	// Punt. Just setting one to all non-default values and making sure they're as expected.
-	msg := NewMsgSetSendEnabled("milton", []*SendEnabled{{"barrycoin", true}}, []string{"billcoin"}, true, true)
+	msg := NewMsgSetSendEnabled("milton", []*SendEnabled{{"barrycoin", true}}, []string{"billcoin"})
 	assert.Equal(t, "milton", msg.Authority, "msg.Authority")
 	if assert.Len(t, msg.SendEnabled, 1, "msg.SendEnabled length") {
 		assert.Equal(t, "barrycoin", msg.SendEnabled[0].Denom, "msg.SendEnabled[0].Denom")
@@ -292,8 +292,6 @@ func TestNewMsgSetSendEnabled(t *testing.T) {
 	if assert.Len(t, msg.UseDefaultFor, 1, "msg.UseDefault") {
 		assert.Equal(t, "billcoin", msg.UseDefaultFor[0], "msg.UseDefault[0]")
 	}
-	assert.True(t, msg.SetDefaultSendEnabled, "msg.SetDefaultSendEnabled")
-	assert.True(t, msg.DefaultSendEnabled, "msg.DefaultSendEnabled")
 }
 
 func TestMsgSendGetSigners(t *testing.T) {
@@ -305,7 +303,7 @@ func TestMsgSendGetSigners(t *testing.T) {
 }
 
 func TestMsgSetSendEnabledGetSignBytes(t *testing.T) {
-	msg := NewMsgSetSendEnabled("cartman", []*SendEnabled{{"casafiestacoin", false}, {"kylecoin", true}}, nil, false, false)
+	msg := NewMsgSetSendEnabled("cartman", []*SendEnabled{{"casafiestacoin", false}, {"kylecoin", true}}, nil)
 	expected := `{"authority":"cartman","send_enabled":[{"denom":"casafiestacoin"},{"denom":"kylecoin","enabled":true}]}`
 	actualBz := msg.GetSignBytes()
 	actual := string(actualBz)
@@ -314,7 +312,7 @@ func TestMsgSetSendEnabledGetSignBytes(t *testing.T) {
 
 func TestMsgSetSendEnabledGetSigners(t *testing.T) {
 	govModuleAddr := authtypes.NewModuleAddress(govtypes.ModuleName)
-	msg := NewMsgSetSendEnabled(govModuleAddr.String(), nil, nil, false, false)
+	msg := NewMsgSetSendEnabled(govModuleAddr.String(), nil, nil)
 	expected := []sdk.AccAddress{govModuleAddr}
 	actual := msg.GetSigners()
 	assert.Equal(t, expected, actual)

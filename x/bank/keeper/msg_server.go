@@ -137,9 +137,6 @@ func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEn
 	if len(msg.UseDefaultFor) > 0 {
 		k.DeleteSendEnabled(ctx, msg.UseDefaultFor...)
 	}
-	if msg.SetDefaultSendEnabled {
-		k.SetParams(ctx, types.NewParams(msg.DefaultSendEnabled))
-	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

@@ -630,7 +630,7 @@ func checkIteratorAgainstSlice(t assert.TestingT, iterator ormtable.Iterator, da
 	}
 }
 
-func TableDataGen(elemGen *rapid.Generator[*testpb.ExampleTable], n int) *rapid.Generator[*TableData] {
+func TableDataGen[T proto.Message](elemGen *rapid.Generator[T], n int) *rapid.Generator[*TableData] {
 	return rapid.Custom(func(t *rapid.T) *TableData {
 		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix")
 		message := elemGen.Draw(t, "message")

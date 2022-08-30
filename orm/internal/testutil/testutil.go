@@ -24,58 +24,58 @@ type TestFieldSpec struct {
 var TestFieldSpecs = []TestFieldSpec{
 	{
 		"u32",
-		rapid.Uint32(),
+		rapid.Uint32().AsAny(),
 	},
 	{
 		"u64",
-		rapid.Uint64(),
+		rapid.Uint64().AsAny(),
 	},
 	{
 		"str",
 		rapid.String().Filter(func(x string) bool {
 			// filter out null terminators
 			return strings.IndexByte(x, 0) < 0
-		}),
+		}).AsAny(),
 	},
 	{
 		"bz",
-		rapid.SliceOfN(rapid.Byte(), 0, math.MaxUint32),
+		rapid.SliceOfN(rapid.Byte(), 0, math.MaxUint32).AsAny(),
 	},
 	{
 		"i32",
-		rapid.Int32(),
+		rapid.Int32().AsAny(),
 	},
 	{
 		"f32",
-		rapid.Uint32(),
+		rapid.Uint32().AsAny(),
 	},
 	{
 		"s32",
-		rapid.Int32(),
+		rapid.Int32().AsAny(),
 	},
 	{
 		"sf32",
-		rapid.Int32(),
+		rapid.Int32().AsAny(),
 	},
 	{
 		"i64",
-		rapid.Int64(),
+		rapid.Int64().AsAny(),
 	},
 	{
 		"f64",
-		rapid.Uint64(),
+		rapid.Uint64().AsAny(),
 	},
 	{
 		"s64",
-		rapid.Int64(),
+		rapid.Int64().AsAny(),
 	},
 	{
 		"sf64",
-		rapid.Int64(),
+		rapid.Int64().AsAny(),
 	},
 	{
 		"b",
-		rapid.Bool(),
+		rapid.Bool().AsAny(),
 	},
 	{
 		"ts",
@@ -86,7 +86,7 @@ var TestFieldSpecs = []TestFieldSpec{
 				Seconds: seconds,
 				Nanos:   nanos,
 			}).ProtoReflect()
-		}),
+		}).AsAny(),
 	},
 	{
 		"dur",
@@ -97,13 +97,13 @@ var TestFieldSpecs = []TestFieldSpec{
 				Seconds: seconds,
 				Nanos:   nanos,
 			}).ProtoReflect()
-		}),
+		}).AsAny(),
 	},
 	{
 		"e",
-		rapid.Int32().Map(func(x int32) protoreflect.EnumNumber {
+		rapid.Transform(rapid.Int32(), func(x int32) protoreflect.EnumNumber {
 			return protoreflect.EnumNumber(x)
-		}),
+		}).AsAny(),
 	},
 }
 
@@ -169,6 +169,7 @@ func (k TestKeyCodec) Draw(t *rapid.T, id string) []protoreflect.Value {
 	n := len(k.KeySpecs)
 	keyValues := make([]protoreflect.Value, n)
 	for i, k := range k.KeySpecs {
+
 		keyValues[i] = protoreflect.ValueOf(k.Gen.Draw(t, fmt.Sprintf("%s[%d]", id, i)))
 	}
 	return keyValues

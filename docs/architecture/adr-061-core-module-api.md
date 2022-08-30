@@ -10,7 +10,7 @@ PROPOSED Not Implemented
 
 ## Abstract
 
-A new core API is proposed to replace the existing `AppModule` and `sdk.Context` frameworks a set of core services
+A new core API is proposed to be added as a way to develop cosmos-sdk applications that will in the future replace the existing `AppModule` and `sdk.Context` frameworks a set of core services
 and a new `Handler` struct. This core API aims to:
 - be simpler,
 - more extensible,

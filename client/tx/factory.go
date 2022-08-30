@@ -40,6 +40,7 @@ type Factory struct {
 	gasPrices          sdk.DecCoins
 	signMode           signing.SignMode
 	simulateAndExecute bool
+	preprocessTxHook   client.PreprocessTxFn
 }
 
 // NewFactoryCLI creates a new Factory.
@@ -96,6 +97,8 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 
 	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
+
+	f = f.WithPreprocessTxHook(clientCtx.PreprocessTxHook)
 
 	return f
 }
@@ -240,6 +243,29 @@ func (f Factory) WithFeeGranter(fg sdk.AccAddress) Factory {
 func (f Factory) WithFeePayer(fp sdk.AccAddress) Factory {
 	f.feePayer = fp
 	return f
+}
+
+// WithPreprocessTxHook returns a copy of the Factory with an updated preprocess tx function,
+// allows for preprocessing of transaction data using the TxBuilder.
+func (f Factory) WithPreprocessTxHook(preprocessFn client.PreprocessTxFn) Factory {
+	f.preprocessTxHook = preprocessFn
+	return f
+}
+
+// PreprocessTx calls the preprocessing hook with the factory parameters and
+// returns the result.
+func (f Factory) PreprocessTx(keyname string, builder client.TxBuilder) error {
+	if f.preprocessTxHook == nil {
+		// Allow pass-through
+		return nil
+	}
+
+	key, err := f.Keybase().Key(keyname)
+	if err != nil {
+		return fmt.Errorf("error retrieving key from keyring: %w", err)
+	}
+
+	return f.preprocessTxHook(f.chainID, key.GetType(), builder)
 }
 
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.

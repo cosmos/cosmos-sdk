@@ -1,66 +1,31 @@
 package keeper
 
 import (
-	"fmt"
-	"sort"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (k Keeper) unionStrSlices(a, b []string) []string {
-	m := make(map[string]bool)
-	sort.Strings(a)
-	sort.Strings(b)
-
-	for _, item := range a {
-		m[item] = true
-	}
-
-	for _, item := range b {
-		if _, ok := m[item]; !ok {
-			a = append(a, item)
-		}
-	}
-	return a
-}
-
-// get a delegator's validators, based on grpc_query.go's `DelegatorValidators()`
-func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delAddr string) ([]string, error) {
-	delAdr, err := sdk.AccAddressFromBech32(delAddr)
-	if err != nil {
-		return nil, err
-	}
-	var validators []string
-
-	k.stakingKeeper.IterateDelegations(
-		ctx, delAdr,
-		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
-			validators = append(validators, del.GetValidatorAddr().String())
+func (k Keeper) GetAllValidators(ctx sdk.Context) (validatorAddresses []string) {
+	k.stakingKeeper.IterateValidators(
+		ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+			// Only consider active validators; inactive validators can't have signed the last block (CHECK ASSUMPTION)
+			if !val.IsBonded() {
+				validatorAddresses = append(validatorAddresses, val.GetOperator().String())
+			}
 			return false
 		},
 	)
-	return validators, nil
+	return
 }
 
-// iterate the blacklisted delegators to gather a list of validators they're delegated to
-func (k Keeper) GetTaintedValidators(ctx sdk.Context) []string {
-	// get the list of blacklisted delegators
-	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
-	// get the list of validators they're delegated to
-	taintedVals := []string{}
-	for _, delAddr := range blacklistedDelAddrs {
-
-		// can we invoke grpc like this? hacky? unsafe?
-		queryValsResp, err := k.GetDelegatorValidators(ctx, delAddr)
-		if err != nil {
-			panic(err)
+// helper
+func (k Keeper) StringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
 		}
-		validators := queryValsResp
-		taintedVals = k.unionStrSlices(taintedVals, validators)
 	}
-	k.Logger(ctx).Info(fmt.Sprintf("taintedvals: %#v", taintedVals))
-	return taintedVals
+	return false
 }
 
 // get a validator's total blacklisted delegation power
@@ -101,29 +66,18 @@ func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int
 	return valTotPower, valBlacklistedPower
 }
 
-// helper
-func (k Keeper) StringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
 // function to get totalBlacklistedPowerShare and taintedValsBlacklistedPowerShare
-func (k Keeper) GetValsBlacklistedPowerShare(ctx sdk.Context) (sdk.Dec, map[string]sdk.Dec, []string) {
-	// get the blacklisted validators from the param store
-	taintedVals := k.GetTaintedValidators(ctx)
-	valsBlacklistedPower := int64(0)
-	valsTotalPower := int64(0)
-	taintedValsBlacklistedPowerShare := map[string]sdk.Dec{}
-	for _, valAddr := range taintedVals {
-		valTotalPower, valBlacklistedPower := k.GetBlacklistedPower(ctx, valAddr)
-		valBlacklistedPowerShare := sdk.NewDec(valBlacklistedPower).Quo(sdk.NewDec(valTotalPower))
-		valsBlacklistedPower += valBlacklistedPower
-		valsTotalPower += valTotalPower
-		taintedValsBlacklistedPowerShare[valAddr] = valBlacklistedPowerShare
+func (k Keeper) GetValsBlacklistedPowerShare(ctx sdk.Context) (totalBlacklistedPower sdk.Dec, powerShareByValidator map[string]sdk.Dec) {
+	vals := k.GetAllValidators(ctx)
+	// runtime is n*m, where n is len(valAddrs) and m is len(blacklistedDelAddrs)
+	// in practice, we'd expect n ~= 150 and m ~= 100
+	for _, valAddr := range vals {
+		// update validator stats
+		valPower, valBlacklistedPower := k.GetBlacklistedPower(ctx, valAddr)
+		valBlacklistedPowerShare := sdk.NewDec(valBlacklistedPower).Quo(sdk.NewDec(valPower))
+		powerShareByValidator[valAddr] = valBlacklistedPowerShare
+		// update summary stats
+		totalBlacklistedPower = totalBlacklistedPower.Add(sdk.NewDec(valBlacklistedPower))
 	}
-	return sdk.NewDec(valsBlacklistedPower), taintedValsBlacklistedPowerShare, taintedVals
+	return totalBlacklistedPower, powerShareByValidator
 }

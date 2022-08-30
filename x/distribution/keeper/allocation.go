@@ -21,13 +21,9 @@ func (k Keeper) AllocateTokens(
 	logger := k.Logger(ctx)
 
 	// fetch values needed for blacklist logic
-	valsBlacklistedPower, taintedValsBlacklistedPowerShare, taintedVals := k.GetValsBlacklistedPowerShare(ctx)
-	fmt.Println(valsBlacklistedPower.Quo(sdk.NewDec(totalPreviousPower)))
-	totalWhitelistedPowerShare := sdk.NewDec(1).Sub(valsBlacklistedPower.Quo(sdk.NewDec(totalPreviousPower)))
-	if valsBlacklistedPower.GT(sdk.NewDec(totalPreviousPower)) {
-		k.Logger(ctx).Info("\nSkipping inflation this epoch! New blacklisted vote share GT prev existing total voteshare.\n\n\n")
-		return
-	}
+	totalBlacklistedPower, blacklistedPowerShareByValidator := k.GetValsBlacklistedPowerShare(ctx)
+	fmt.Println(totalBlacklistedPower.Quo(sdk.NewDec(totalPreviousPower)))
+	totalWhitelistedPowerShare := sdk.NewDec(1).Sub(totalBlacklistedPower.Quo(sdk.NewDec(totalPreviousPower)))
 
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
@@ -104,8 +100,8 @@ func (k Keeper) AllocateTokens(
 
 		var powerFraction sdk.Dec
 		// reduce the validator's power if they are tainted
-		if k.StringInSlice(valAddr, taintedVals) && adjustedTotalPower != 0 { // If all we have is blacklisted delegations, process normally | TODO clean up this case
-			valWhitelistedPowerShare := sdk.NewDec(1).Sub(taintedValsBlacklistedPowerShare[valAddr])
+		if adjustedTotalPower != 0 { // If all we have is blacklisted delegations, process normally | TODO clean up this case
+			valWhitelistedPowerShare := sdk.NewDec(1).Sub(blacklistedPowerShareByValidator[valAddr])
 			validatorPowerAdj := sdk.NewDec(vote.Validator.Power).Mul(valWhitelistedPowerShare).RoundInt64()
 			// k.Logger(ctx).Info(fmt.Sprintf("\t\t...tainted %s power: %d * %d ===> %d ", valAddr, vote.Validator.Power, valWhitelistedPowerShare, validatorPowerAdj))
 			powerFraction = sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(adjustedTotalPower))

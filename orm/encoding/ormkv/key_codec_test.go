@@ -17,7 +17,7 @@ import (
 
 func TestKeyCodec(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
-		key := testutil.TestKeyCodecGen(0, 5).Draw(t, "key").(testutil.TestKeyCodec)
+		key := testutil.TestKeyCodecGen(0, 5).Draw(t, "key")
 		for i := 0; i < 100; i++ {
 			keyValues := key.Draw(t, "values")
 

@@ -320,10 +320,19 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 	}
 
 	if overwriteSig {
-		return txBuilder.SetSignatures(sig)
+		err = txBuilder.SetSignatures(sig)
+	} else {
+		prevSignatures = append(prevSignatures, sig)
+		err = txBuilder.SetSignatures(prevSignatures...)
 	}
-	prevSignatures = append(prevSignatures, sig)
-	return txBuilder.SetSignatures(prevSignatures...)
+
+	if err != nil {
+		return fmt.Errorf("unable to set signatures on payload: %w", err)
+	}
+
+	// Run optional preprocessing if specified. By default, this is unset
+	// and will return nil.
+	return txf.PreprocessTx(name, txBuilder)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

@@ -11,9 +11,9 @@ In this section we describe the processing of the staking messages and the corre
 A validator is created using the `MsgCreateValidator` message.
 The validator must be created with an initial delegation from the operator.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L18-L19
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L18-L19
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L43-L65
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L43-L65
 
 This message is expected to fail if:
 
@@ -36,9 +36,9 @@ in the first end-block.
 The `Description`, `CommissionRate` of a validator can be updated using the
 `MsgEditValidator` message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L21-L22
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L21-L22
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L70-L88
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L70-L88
 
 This message is expected to fail if:
 
@@ -55,9 +55,9 @@ Within this message the delegator provides coins, and in return receives
 some amount of their validator's (newly created) delegator-shares that are
 assigned to `Delegation.Shares`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L24-L26
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L24-L26
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L93-L104
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L93-L104
 
 This message is expected to fail if:
 
@@ -87,13 +87,13 @@ will not be added to the power index until it is unjailed.
 The `MsgUndelegate` message allows delegators to undelegate their tokens from
 validator.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L32-L34
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L32-L34
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L128-L139
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L128-L139
 
 This message returns a response containing the completion time of the undelegation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L128-L144
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L128-L144
 
 This message is expected to fail if:
 
@@ -120,9 +120,9 @@ When this message is processed the following actions occur:
 
 The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and deleagate back to a previous validator.
 
-+++ hhttps://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L36-L40
++++ hhttps://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L36-L40
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L146-L165
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L146-L165
 
 This message is expected to fail if:
 
@@ -143,13 +143,13 @@ The redelegation command allows delegators to instantly switch validators. Once
 the unbonding period has passed, the redelegation is automatically completed in
 the EndBlocker.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L28-L30
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L28-L30
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L109-L121
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L109-L121
 
 This message returns a response containing the completion time of the redelegation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L123-L126
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L123-L126
 
 This message is expected to fail if:
 

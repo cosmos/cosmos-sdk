@@ -2,7 +2,7 @@ package client
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 
 	"github.com/gogo/protobuf/proto"
@@ -419,7 +419,7 @@ func (s *EndToEndTestSuite) TestNewSendTxCmdDryRun() {
 	s.Require().NoError(err)
 
 	w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = oldSterr
 
 	s.Require().Regexp("gas estimate: [0-9]+", string(out))

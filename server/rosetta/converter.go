@@ -11,7 +11,7 @@ import (
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	tmcoretypes "github.com/tendermint/tendermint/rpc/coretypes"
+	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -31,9 +31,9 @@ import (
 // Converter is a utility that can be used to convert
 // back and forth from rosetta to sdk and tendermint types
 // IMPORTANT NOTES:
-// - IT SHOULD BE USED ONLY TO DEAL WITH THINGS
-//   IN A STATELESS WAY! IT SHOULD NEVER INTERACT DIRECTLY
-//   WITH TENDERMINT RPC AND COSMOS GRPC
+//   - IT SHOULD BE USED ONLY TO DEAL WITH THINGS
+//     IN A STATELESS WAY! IT SHOULD NEVER INTERACT DIRECTLY
+//     WITH TENDERMINT RPC AND COSMOS GRPC
 //
 // - IT SHOULD RETURN cosmos rosetta gateway error types!
 type Converter interface {
@@ -338,8 +338,8 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 	default:
 		return nil, false
 	case banktypes.EventTypeCoinSpent:
-		spender := sdk.MustAccAddressFromBech32(event.Attributes[0].Value)
-		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
+		spender := sdk.MustAccAddressFromBech32(string(event.Attributes[0].Value))
+		coins, err := sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
 		if err != nil {
 			panic(err)
 		}
@@ -349,8 +349,8 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 		accountIdentifier = spender.String()
 
 	case banktypes.EventTypeCoinReceived:
-		receiver := sdk.MustAccAddressFromBech32(event.Attributes[0].Value)
-		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
+		receiver := sdk.MustAccAddressFromBech32(string(event.Attributes[0].Value))
+		coins, err := sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
 		if err != nil {
 			panic(err)
 		}
@@ -362,7 +362,7 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 	// rosetta does not have the concept of burning coins, so we need to mock
 	// the burn as a send to an address that cannot be resolved to anything
 	case banktypes.EventTypeCoinBurn:
-		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
+		coins, err := sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
 		if err != nil {
 			panic(err)
 		}
@@ -558,9 +558,9 @@ func (c converter) Peers(peers []tmcoretypes.Peer) []*rosettatypes.Peer {
 
 	for i, peer := range peers {
 		converted[i] = &rosettatypes.Peer{
-			PeerID: string(peer.ID),
+			PeerID: peer.NodeInfo.Moniker,
 			Metadata: map[string]interface{}{
-				"addr": peer.URL,
+				"addr": peer.NodeInfo.ListenAddr,
 			},
 		}
 	}

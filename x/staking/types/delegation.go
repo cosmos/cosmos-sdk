@@ -28,6 +28,7 @@ func (dvv DVVTriplet) String() string {
 }
 
 // NewDelegation creates a new delegation object
+//
 //nolint:interfacer
 func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
 	return Delegation{
@@ -112,6 +113,7 @@ func (e UnbondingDelegationEntry) IsMature(currentTime time.Time) bool {
 }
 
 // NewUnbondingDelegation - create a new unbonding delegation object
+//
 //nolint:interfacer
 func NewUnbondingDelegation(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
@@ -128,8 +130,27 @@ func NewUnbondingDelegation(
 
 // AddEntry - append entry to the unbonding delegation
 func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance math.Int) {
-	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance)
-	ubd.Entries = append(ubd.Entries, entry)
+	// Check the entries exists with creation_height and complete_time
+	entryIndex := -1
+	for index, ubdEntry := range ubd.Entries {
+		if ubdEntry.CreationHeight == creationHeight && ubdEntry.CompletionTime.Equal(minTime) {
+			entryIndex = index
+			break
+		}
+	}
+	// entryIndex exists
+	if entryIndex != -1 {
+		ubdEntry := ubd.Entries[entryIndex]
+		ubdEntry.Balance = ubdEntry.Balance.Add(balance)
+		ubdEntry.InitialBalance = ubdEntry.InitialBalance.Add(balance)
+
+		// update the entry
+		ubd.Entries[entryIndex] = ubdEntry
+	} else {
+		// append the new unbond delegation entry
+		entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance)
+		ubd.Entries = append(ubd.Entries, entry)
+	}
 }
 
 // RemoveEntry - remove entry at index i to the unbonding delegation
@@ -333,6 +354,7 @@ func (d DelegationResponses) String() (out string) {
 }
 
 // NewRedelegationResponse crates a new RedelegationEntryResponse instance.
+//
 //nolint:interfacer
 func NewRedelegationResponse(
 	delegatorAddr sdk.AccAddress, validatorSrc, validatorDst sdk.ValAddress, entries []RedelegationEntryResponse,

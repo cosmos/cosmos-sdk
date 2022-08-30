@@ -23,5 +23,7 @@ following hooks can registered with staking:
     * called when a delegation is created
 * `BeforeDelegationSharesModified(Context, AccAddress, ValAddress) error`
     * called when a delegation's shares are modified
+* `AfterDelegationModified(Context, AccAddress, ValAddress) error`
+    * called when a delegation is created or modified
 * `BeforeDelegationRemoved(Context, AccAddress, ValAddress) error`
     * called when a delegation is removed

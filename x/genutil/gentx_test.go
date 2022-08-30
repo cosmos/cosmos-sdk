@@ -1,26 +1,27 @@
 package genutil_test
 
 import (
+	"cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltestutil "github.com/cosmos/cosmos-sdk/x/genutil/testutil"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"math/rand"
 	"testing"
 	"time"
-
-	"cosmossdk.io/math"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -38,23 +39,24 @@ var (
 type GenTxTestSuite struct {
 	suite.Suite
 
-	ctx            sdk.Context
-	app            *simapp.SimApp
+	ctx sdk.Context
+
+	stakingKeeper  *genutiltestutil.MockStakingKeeper
 	encodingConfig moduletestutil.TestEncodingConfig
 	msg1, msg2     *stakingtypes.MsgCreateValidator
 }
 
 func (suite *GenTxTestSuite) SetupTest() {
-	checkTx := false
-	app := simapp.Setup(suite.T(), checkTx)
-	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
-	suite.app = app
-	suite.encodingConfig = moduletestutil.TestEncodingConfig{
-		InterfaceRegistry: app.InterfaceRegistry(),
-		Codec:             app.AppCodec(),
-		TxConfig:          app.TxConfig(),
-		Amino:             app.LegacyAmino(),
-	}
+	suite.encodingConfig = moduletestutil.MakeTestEncodingConfig(genutil.AppModuleBasic{})
+	key := sdk.NewKVStoreKey("a_Store_Key")
+	tkey := sdk.NewTransientStoreKey("a_transient_store")
+	suite.ctx = testutil.DefaultContext(key, tkey)
+
+	ctrl := gomock.NewController(suite.T())
+	suite.stakingKeeper = genutiltestutil.NewMockStakingKeeper(ctrl)
+
+	stakingtypes.RegisterInterfaces(suite.encodingConfig.InterfaceRegistry)
+	banktypes.RegisterInterfaces(suite.encodingConfig.InterfaceRegistry)
 
 	var err error
 	amount := sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)
@@ -67,14 +69,32 @@ func (suite *GenTxTestSuite) SetupTest() {
 	suite.NoError(err)
 }
 
-func (suite *GenTxTestSuite) setAccountBalance(addr sdk.AccAddress, amount int64) json.RawMessage {
-	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+func (suite *GenTxTestSuite) setAccountBalance(balances []banktypes.Balance) json.RawMessage {
+	bankGenesisState := banktypes.GenesisState{
+		Params: banktypes.Params{DefaultSendEnabled: true},
+		Balances: []banktypes.Balance{
+			{
+				Address: "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh",
+				Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)},
+			},
+			{
+				Address: "cosmos1jv65s3grqf6v6jl3dp4t6c9t9rk99cd88lyufl",
+				Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2059726)},
+			},
+			{
+				Address: "cosmos1k5lndq46x9xpejdxq52q3ql3ycrphg4qxlfqn7",
+				Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000000000)},
+			},
+		},
+		Supply: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+	}
+	for _, balance := range balances {
+		bankGenesisState.Balances = append(bankGenesisState.Balances, balance)
 
-	err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, amount)})
-	suite.Require().NoError(err)
-
-	bankGenesisState := suite.app.BankKeeper.ExportGenesis(suite.ctx)
+	}
+	for _, balance := range bankGenesisState.Balances {
+		bankGenesisState.Supply.Add(balance.Coins...)
+	}
 	bankGenesis, err := suite.encodingConfig.Amino.MarshalJSON(bankGenesisState) // TODO switch this to use Marshaler
 	suite.Require().NoError(err)
 
@@ -160,7 +180,11 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			"account without balance in the genesis state",
 			func() {
 				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)}
-				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(addr2, 50)
+				balances := banktypes.Balance{
+					Address: addr2.String(),
+					Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)},
+				}
+				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance([]banktypes.Balance{balances})
 			},
 			false,
 		},
@@ -168,7 +192,11 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			"account without enough funds of default bond denom",
 			func() {
 				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}
-				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(addr1, 25)
+				balances := banktypes.Balance{
+					Address: addr1.String(),
+					Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)},
+				}
+				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance([]banktypes.Balance{balances})
 			},
 			false,
 		},
@@ -176,7 +204,11 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			"account with enough funds of default bond denom",
 			func() {
 				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)}
-				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(addr1, 25)
+				balances := banktypes.Balance{
+					Address: addr1.String(),
+					Coins:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)},
+				}
+				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance([]banktypes.Balance{balances})
 			},
 			true,
 		},
@@ -186,10 +218,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			suite.SetupTest()
 			cdc := suite.encodingConfig.Codec
 
-			suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
-			stakingGenesisState := suite.app.StakingKeeper.ExportGenesis(suite.ctx)
-			suite.Require().Equal(stakingGenesisState.Params, stakingtypes.DefaultParams())
-			stakingGenesis, err := cdc.MarshalJSON(stakingGenesisState) // TODO switch this to use Marshaler
+			stakingGenesis, err := cdc.MarshalJSON(&stakingtypes.GenesisState{Params: stakingtypes.DefaultParams()}) // TODO switch this to use Marshaler
 			suite.Require().NoError(err)
 			appGenesisState[stakingtypes.ModuleName] = stakingGenesis
 
@@ -215,9 +244,10 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 	)
 
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg         string
+		malleate    func()
+		deliverTxFn func(abci.RequestDeliverTx) abci.ResponseDeliverTx
+		expPass     bool
 	}{
 		{
 			"no signature supplied",
@@ -230,14 +260,20 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				suite.Require().NoError(err)
 				genTxs[0] = tx
 			},
+			func(_ abci.RequestDeliverTx) abci.ResponseDeliverTx {
+
+				return abci.ResponseDeliverTx{
+					Code:      sdkerrors.ErrNoSignatures.ABCICode(),
+					GasWanted: int64(10000000),
+					GasUsed:   int64(41913),
+					Log:       "no signatures supplied",
+				}
+			},
 			false,
 		},
 		{
 			"success",
 			func() {
-				_ = suite.setAccountBalance(addr1, 50)
-				_ = suite.setAccountBalance(addr2, 1)
-
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				msg := banktypes.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)})
 				tx, err := simtestutil.GenSignedMockTx(
@@ -258,6 +294,15 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				suite.Require().NoError(err)
 				genTxs[0] = genTx
 			},
+			func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
+				return abci.ResponseDeliverTx{
+					Code:      sdkerrors.ErrUnauthorized.ABCICode(),
+					GasWanted: int64(10000000),
+					GasUsed:   int64(41353),
+					Log:       "signature verification failed; please verify account number (4) and chain-id (): unauthorized",
+					Codespace: "sdk",
+				}
+			},
 			true,
 		},
 	}
@@ -271,13 +316,13 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 			if tc.expPass {
 				suite.Require().NotPanics(func() {
 					genutil.DeliverGenTxs(
-						suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
+						suite.ctx, genTxs, suite.stakingKeeper, tc.deliverTxFn,
 						suite.encodingConfig.TxConfig,
 					)
 				})
 			} else {
 				_, err := genutil.DeliverGenTxs(
-					suite.ctx, genTxs, suite.app.StakingKeeper, suite.app.BaseApp.DeliverTx,
+					suite.ctx, genTxs, suite.stakingKeeper, tc.deliverTxFn,
 					suite.encodingConfig.TxConfig,
 				)
 

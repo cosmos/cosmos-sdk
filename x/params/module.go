@@ -3,7 +3,6 @@ package params
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
 
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
@@ -111,11 +110,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // ProposalContents returns all the params content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
-// RandomizedParams creates randomized distribution param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return nil
 }
 

@@ -3,13 +3,14 @@ package keeper_test
 import (
 	"encoding/hex"
 	"fmt"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidencetestutil "github.com/cosmos/cosmos-sdk/x/evidence/testutil"
 	"github.com/golang/mock/gomock"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

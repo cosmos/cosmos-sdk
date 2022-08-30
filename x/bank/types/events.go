@@ -26,7 +26,6 @@ const (
 )
 
 // NewCoinSpentEvent constructs a new coin spent sdk.Event
-// nolint: interfacer
 func NewCoinSpentEvent(spender sdk.AccAddress, amount sdk.Coins) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeCoinSpent,
@@ -36,7 +35,6 @@ func NewCoinSpentEvent(spender sdk.AccAddress, amount sdk.Coins) sdk.Event {
 }
 
 // NewCoinReceivedEvent constructs a new coin received sdk.Event
-// nolint: interfacer
 func NewCoinReceivedEvent(receiver sdk.AccAddress, amount sdk.Coins) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeCoinReceived,
@@ -46,7 +44,6 @@ func NewCoinReceivedEvent(receiver sdk.AccAddress, amount sdk.Coins) sdk.Event {
 }
 
 // NewCoinMintEvent construct a new coin minted sdk.Event
-// nolint: interfacer
 func NewCoinMintEvent(minter sdk.AccAddress, amount sdk.Coins) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeCoinMint,
@@ -56,7 +53,6 @@ func NewCoinMintEvent(minter sdk.AccAddress, amount sdk.Coins) sdk.Event {
 }
 
 // NewCoinBurnEvent constructs a new coin burned sdk.Event
-// nolint: interfacer
 func NewCoinBurnEvent(burner sdk.AccAddress, amount sdk.Coins) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeCoinBurn,

@@ -50,8 +50,9 @@ func ParseInfo(infoStr string) (*Info, error) {
 // ValidateFull does all possible validation of this Info.
 // The provided daemonName is the name of the executable file expected in all downloaded directories.
 // It checks that:
-//  * Binaries.ValidateBasic() doesn't return an error
-//  * Binaries.CheckURLs(daemonName) doesn't return an error.
+//   - Binaries.ValidateBasic() doesn't return an error
+//   - Binaries.CheckURLs(daemonName) doesn't return an error.
+//
 // Warning: This is an expensive process. See BinaryDownloadURLMap.CheckURLs for more info.
 func (m Info) ValidateFull(daemonName string) error {
 	if err := m.Binaries.ValidateBasic(); err != nil {
@@ -65,10 +66,10 @@ func (m Info) ValidateFull(daemonName string) error {
 
 // ValidateBasic does stateless validation of this BinaryDownloadURLMap.
 // It validates that:
-//  * This has at least one entry.
-//  * All entry keys have the format "os/arch" or are "any".
-//  * All entry values are valid URLs.
-//  * All URLs contain a checksum query parameter.
+//   - This has at least one entry.
+//   - All entry keys have the format "os/arch" or are "any".
+//   - All entry values are valid URLs.
+//   - All URLs contain a checksum query parameter.
 func (m BinaryDownloadURLMap) ValidateBasic() error {
 	// Make sure there's at least one.
 	if len(m) == 0 {

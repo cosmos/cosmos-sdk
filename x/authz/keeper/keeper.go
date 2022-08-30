@@ -149,7 +149,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		sdkEvents := make([]sdk.Event, 0, len(events))
 		for _, event := range events {
 			e := event
-			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: "authz_msg_index", Value: strconv.Itoa(i)})
+			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: []byte("authz_msg_index"), Value: []byte(strconv.Itoa(i))})
 
 			sdkEvents = append(sdkEvents, sdk.Event(e))
 		}
@@ -248,6 +248,25 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 	}
 
 	return authorizations, nil
+}
+
+// GetAuthorization returns an Authorization and it's expiration time.
+// A nil Authorization is returned under the following circumstances:
+//	- No grant is found.
+//	- A grant is found, but it is expired.
+//	- There was an error getting the authorization from the grant.
+func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time) {
+	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
+	if !found || (grant.Expiration != nil && grant.Expiration.Before(ctx.BlockHeader().Time)) {
+		return nil, nil
+	}
+
+	auth, err := grant.GetAuthorization()
+	if err != nil {
+		return nil, nil
+	}
+
+	return auth, grant.Expiration
 }
 
 // IterateGrants iterates over all authorization grants

@@ -33,7 +33,7 @@ import (
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app.go for an example of this setup.
 //
-// nolint:unused
+//nolint:unused
 type App struct {
 	*baseapp.BaseApp
 

@@ -3,7 +3,6 @@ package file
 import (
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
@@ -54,7 +53,7 @@ var (
 	}
 	testEndBlockRes = abci.ResponseEndBlock{
 		Events:                []abci.Event{},
-		ConsensusParamUpdates: &types1.ConsensusParams{},
+		ConsensusParamUpdates: &abci.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
 	}
 	mockTxBytes1      = []byte{9, 8, 7, 6, 5, 4, 3, 2, 1}
@@ -369,7 +368,7 @@ func testListenEndBlock(t *testing.T) {
 
 func readInFile(name string) ([]byte, error) {
 	path := filepath.Join(testDir, name)
-	return ioutil.ReadFile(path)
+	return os.ReadFile(path)
 }
 
 // segmentBytes returns all of the protobuf messages contained in the byte array as an array of byte arrays

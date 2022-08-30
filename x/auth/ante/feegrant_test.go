@@ -31,17 +31,18 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		valid    bool
 		err      error
 		malleate func(*AnteTestSuite) (signer TestAccount, feeAcc sdk.AccAddress)
-	}{"paying with low funds": {
-		fee:   50,
-		valid: false,
-		err:   sdkerrors.ErrInsufficientFunds,
-		malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
-			accs := suite.CreateTestAccounts(1)
-			// 2 calls are needed because we run the ante twice
-			suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), authtypes.FeeCollectorName, gomock.Any()).Return(sdkerrors.ErrInsufficientFunds).Times(2)
-			return accs[0], nil
+	}{
+		"paying with low funds": {
+			fee:   50,
+			valid: false,
+			err:   sdkerrors.ErrInsufficientFunds,
+			malleate: func(suite *AnteTestSuite) (TestAccount, sdk.AccAddress) {
+				accs := suite.CreateTestAccounts(1)
+				// 2 calls are needed because we run the ante twice
+				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), authtypes.FeeCollectorName, gomock.Any()).Return(sdkerrors.ErrInsufficientFunds).Times(2)
+				return accs[0], nil
+			},
 		},
-	},
 		"paying with good funds": {
 			fee:   50,
 			valid: true,

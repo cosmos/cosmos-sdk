@@ -1,8 +1,9 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

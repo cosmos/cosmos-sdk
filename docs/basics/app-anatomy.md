@@ -53,13 +53,13 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 
 See an example of application type definition from `simapp`, the Cosmos SDK's own app used for demo and testing purposes:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L151-L193
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L151-L193
 
 ### Constructor Function
 
 This function constructs a new application of the type defined in the section above. It must fulfill the `AppCreator` signature in order to be used in the [`start` command](../core/node.md#start-command) of the application's daemon command.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/server/types/app.go#L57-L59
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/server/types/app.go#L57-L59
 
 Here are the main actions performed by this function:
 
@@ -81,7 +81,7 @@ Note that this function only creates an instance of the app, while the actual st
 
 See an example of application constructor from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L204-L474
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L204-L474
 
 ### InitChainer
 
@@ -91,7 +91,7 @@ In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../build
 
 See an example of an `InitChainer` from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L524-L532
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L524-L532
 
 ### BeginBlocker and EndBlocker
 
@@ -103,13 +103,13 @@ As a sidenote, it is important to remember that application-specific blockchains
 
 See an example of `BeginBlocker` and `EndBlocker` functions from `simapp`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L514-L522
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L514-L522
 
 ### Register Codec
 
 The `EncodingConfig` structure is the last important part of the `app.go` file. The goal of this structure is to define the codecs that will be used throughout the app.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/params/encoding.go#L9-L16
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/params/encoding.go#L9-L16
 
 Here are descriptions of what each of the four fields means:
 
@@ -126,7 +126,7 @@ NOTE: This function is deprecated and should only be used to create an app or in
 
 See an example of a `MakeTestEncodingConfig` from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/encoding.go#L8-L19
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/encoding.go#L8-L19
 
 ## Modules
 
@@ -155,7 +155,7 @@ For a more details look at a transaction [lifecycle](./tx-lifecycle.md).
 
 Module developers create custom `Msg` services when they build their own module. The general practice is to define the `Msg` Protobuf service in a `tx.proto` file. For example, the `x/bank` module defines a service with two methods to transfer tokens:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L12-L19
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L12-L19
 
 Service methods use `keeper` in order to update the module state.
 

@@ -311,7 +311,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 		return err
 	}
 	_, err = f.Write(bz)
-        return err
+	return err
 }
 
 func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {

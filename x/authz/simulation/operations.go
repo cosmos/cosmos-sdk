@@ -26,6 +26,7 @@ var (
 )
 
 // Simulation operation weights constants
+//
 //nolint:gosec // these are not hardcoded credentials.
 const (
 	OpWeightMsgGrant = "op_weight_msg_grant"

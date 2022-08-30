@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/rpc/coretypes"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -159,8 +159,8 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 					Type: "message",
 					Attributes: []abci.EventAttribute{
 						{
-							Key:   "action",
-							Value: "foo",
+							Key:   []byte("action"),
+							Value: []byte("foo"),
 							Index: true,
 						},
 					},
@@ -184,8 +184,8 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 					Type: "message",
 					Attributes: []abci.EventAttribute{
 						{
-							Key:   "action",
-							Value: "foo",
+							Key:   []byte("action"),
+							Value: []byte("foo"),
 							Index: true,
 						},
 					},
@@ -209,8 +209,8 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 				Type: "message",
 				Attributes: []abci.EventAttribute{
 					{
-						Key:   "action",
-						Value: "foo",
+						Key:   []byte("action"),
+						Value: []byte("foo"),
 						Index: true,
 					},
 				},

@@ -3,7 +3,6 @@ package capability
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"cosmossdk.io/core/appmodule"
@@ -156,11 +155,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents performs a no-op
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
-// RandomizedParams creates randomized capability param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return nil
 }
 

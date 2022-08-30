@@ -53,8 +53,9 @@ func (c *cosmovisorInitEnv) Set(envVar, envVal string) {
 
 // clearEnv clears environment variables and returns what they were.
 // Designed to be used like this:
-//    initialEnv := clearEnv()
-//    defer setEnv(nil, initialEnv)
+//
+//	initialEnv := clearEnv()
+//	defer setEnv(nil, initialEnv)
 func (s *InitTestSuite) clearEnv() *cosmovisorInitEnv {
 	s.T().Logf("Clearing environment variables.")
 	rv := cosmovisorInitEnv{}
@@ -137,8 +138,9 @@ func NewBufferedPipe(name string, replicateTo ...io.Writer) (BufferedPipe, error
 // StartNewBufferedPipe creates a new BufferedPipe and starts it.
 //
 // This is functionally equivalent to:
-//    p, _ := NewBufferedPipe(name, replicateTo...)
-//    p.Start()
+//
+//	p, _ := NewBufferedPipe(name, replicateTo...)
+//	p.Start()
 func StartNewBufferedPipe(name string, replicateTo ...io.Writer) (BufferedPipe, error) {
 	p, err := NewBufferedPipe(name, replicateTo...)
 	if err != nil {

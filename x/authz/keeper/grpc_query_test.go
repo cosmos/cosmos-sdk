@@ -69,7 +69,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			func(require *require.Assertions, res *authz.QueryGrantsResponse) {
 				var auth authz.Authorization
 				require.Equal(1, len(res.Grants))
-				err := suite.interfaceRegistry.UnpackAny(res.Grants[0].Authorization, &auth)
+				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Grants[0].Authorization, &auth)
 				require.NoError(err)
 				require.NotNil(auth)
 				require.Equal(auth.String(), expAuthorization.String())
@@ -135,7 +135,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 			func(res *authz.QueryGrantsResponse) {
 				var auth authz.Authorization
 				suite.Require().Equal(1, len(res.Grants))
-				err := suite.interfaceRegistry.UnpackAny(res.Grants[0].Authorization, &auth)
+				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Grants[0].Authorization, &auth)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(auth)
 				suite.Require().Equal(auth.String(), expAuthorization.String())

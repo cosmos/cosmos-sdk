@@ -10,8 +10,6 @@ before:
 
 builds:
   - main: ./cmd/cosmovisor
-    ldflags:
-      - -X 'github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor/cmd.Version={{ replace .Version "cosmovisor/" "" }}'
     goos:
       - linux
       - windows
@@ -32,9 +30,9 @@ checksum:
   name_template: 'SHA256SUMS-{{ replace .Version "cosmovisor/" "cosmovisor-" }}.txt'
   algorithm: sha256
 changelog:
-  skip: true
+  skip: false
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - "^docs:"
+      - "^test:"

@@ -6,17 +6,15 @@ import (
 	"fmt"
 	"reflect"
 
-	_ "github.com/cosmos/gogoproto/gogoproto" // required so it does register the gogoproto file descriptor
-	gogoproto "github.com/cosmos/gogoproto/proto"
+	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 
 	_ "github.com/cosmos/cosmos-proto"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
-	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	_ "github.com/cosmos/gogoproto/gogoproto" // required so it does register the gogoproto file descriptor
+	"github.com/cosmos/gogoproto/proto"
 )
 
 var importsToFix = map[string]string{
-	"gogo.proto":   "gogoproto/gogo.proto",
-	"cosmos.proto": "cosmos_proto/cosmos.proto",
+	"gogo.proto": "gogoproto/gogo.proto",
 }
 
 // fixRegistration is required because certain files register themselves in a way
@@ -25,7 +23,7 @@ var importsToFix = map[string]string{
 // Currently every cosmos-sdk proto file is importing gogo.proto as gogoproto/gogo.proto,
 // but gogo.proto registers itself as gogo.proto, same goes for cosmos.proto.
 func fixRegistration(registeredAs, importedAs string) error {
-	raw := gogoproto.FileDescriptor(registeredAs)
+	raw := proto.FileDescriptor(registeredAs)
 	if len(raw) == 0 {
 		return fmt.Errorf("file descriptor not found for %s", registeredAs)
 	}
@@ -41,7 +39,7 @@ func fixRegistration(registeredAs, importedAs string) error {
 	if err != nil {
 		return fmt.Errorf("unable to compress: %w", err)
 	}
-	gogoproto.RegisterFile(importedAs, fixedRaw)
+	proto.RegisterFile(importedAs, fixedRaw)
 	return nil
 }
 
@@ -82,7 +80,7 @@ func compress(fd *dpb.FileDescriptorProto) ([]byte, error) {
 func getFileDescriptor(filePath string) []byte {
 	// since we got well known descriptors which are not registered into gogoproto registry
 	// but are instead registered into the proto one, we need to check both
-	fd := gogoproto.FileDescriptor(filePath)
+	fd := proto.FileDescriptor(filePath)
 	if len(fd) != 0 {
 		return fd
 	}
@@ -91,7 +89,7 @@ func getFileDescriptor(filePath string) []byte {
 }
 
 func getMessageType(name string) reflect.Type {
-	typ := gogoproto.MessageType(name)
+	typ := proto.MessageType(name)
 	if typ != nil {
 		return typ
 	}
@@ -99,9 +97,9 @@ func getMessageType(name string) reflect.Type {
 	return proto.MessageType(name)
 }
 
-func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
+func getExtension(extID int32, m proto.Message) *proto.ExtensionDesc {
 	// check first in gogoproto registry
-	for id, desc := range gogoproto.RegisteredExtensions(m) {
+	for id, desc := range proto.RegisteredExtensions(m) {
 		if id == extID {
 			return desc
 		}
@@ -110,7 +108,7 @@ func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
 	//nolint:staticcheck
 	for id, desc := range proto.RegisteredExtensions(m) {
 		if id == extID {
-			return &gogoproto.ExtensionDesc{
+			return &proto.ExtensionDesc{
 				ExtendedType:  desc.ExtendedType,
 				ExtensionType: desc.ExtensionType,
 				Field:         desc.Field,
@@ -125,7 +123,7 @@ func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
 }
 
 func getExtensionsNumbers(m proto.Message) []int32 {
-	gogoProtoExts := gogoproto.RegisteredExtensions(m)
+	gogoProtoExts := proto.RegisteredExtensions(m)
 	out := make([]int32, 0, len(gogoProtoExts))
 	for id := range gogoProtoExts {
 		out = append(out, id)

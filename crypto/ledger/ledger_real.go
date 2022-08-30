@@ -9,7 +9,7 @@ import ledger "github.com/cosmos/ledger-cosmos-go"
 // set the discoverLedger function which is responsible for loading the Ledger
 // device at runtime or returning an error.
 func init() {
-	discoverLedger = func() (SECP256K1, error) {
+	options.discoverLedger = func() (SECP256K1, error) {
 		device, err := ledger.FindLedgerCosmosUserApp()
 		if err != nil {
 			return nil, err
@@ -17,4 +17,6 @@ func init() {
 
 		return device, nil
 	}
+
+	initOptionsDefault()
 }

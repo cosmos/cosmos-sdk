@@ -1,45 +1,11 @@
 package keeper_test
 
 import (
-	"testing"
-
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-func TestParams(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	key := sdk.NewKVStoreKey(disttypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
-
-	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
-	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
-
-	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
-
-	distrKeeper := keeper.NewKeeper(
-		encCfg.Codec,
-		key,
-		accountKeeper,
-		bankKeeper,
-		stakingKeeper,
-		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
-	)
-
+func (s *KeeperTestSuite) TestParams() {
 	// default params
 	communityTax := sdk.NewDecWithPrec(2, 2)        // 2%
 	baseProposerReward := sdk.NewDecWithPrec(1, 2)  // 1%
@@ -132,20 +98,20 @@ func TestParams(t *testing.T) {
 
 	for _, tc := range testCases {
 		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			expected := distrKeeper.GetParams(ctx)
-			err := distrKeeper.SetParams(ctx, tc.input)
+		s.Run(tc.name, func() {
+			expected := s.distrKeeper.GetParams(s.ctx)
+			err := s.distrKeeper.SetParams(s.ctx, tc.input)
 
 			if tc.expErr {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.expErrMsg)
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				expected = tc.input
-				require.NoError(t, err)
+				s.Require().NoError(err)
 			}
 
-			params := distrKeeper.GetParams(ctx)
-			require.Equal(t, expected, params)
+			params := s.distrKeeper.GetParams(s.ctx)
+			s.Require().Equal(expected, params)
 		})
 	}
 }

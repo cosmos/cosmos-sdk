@@ -104,18 +104,6 @@ message MsgSetSendEnabled {
   // If a denom is included that doesn't have a SendEnabled entry,
   // it will be ignored.
   repeated string use_default_for = 3;
-
-  // set_default_send_enabled defines whether to update the
-  // params.default_send_enabled value. If true, params.default_send_enabled
-  // will be updated to match the provided default_send_enabled. If false,
-  // the default_send_enabled in this message is ignored.
-  bool set_default_send_enabled = 4;
-
-  // default_send_enabled is the desired default send enabled value.
-  // If set_default_send_enabled is true, params.default_send_enabled
-  // will be updated to this value. If set_default_send_enabled is false,
-  // this field is ignored.
-  bool default_send_enabled = 5;
 }
 
 // MsgSetSendEnabledResponse defines the Msg/SetSendEnabled response type.

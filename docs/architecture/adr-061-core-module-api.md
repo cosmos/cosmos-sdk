@@ -50,7 +50,7 @@ The `core` API proposes a set of core APIs that modules can rely on to interact 
 functionalities to it that are designed in a principled way such that:
 * tight coupling of dependencies and unrelated functionalities is minimized or eliminated
 * APIs can have long-term stability guarantees
-* the SDK framework is extensible in a safe a straightforward way
+* the SDK framework is extensible in a safe and straightforward way
 
 The design principles of the core API are as follows:
 * everything that a module wants to interact with in the state machine is a service

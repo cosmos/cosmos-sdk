@@ -157,3 +157,25 @@ message CommunityPoolSpendProposalWithDeposit {
   string amount      = 4 [(gogoproto.moretags) = "yaml:\"amount\""];
   string deposit     = 5 [(gogoproto.moretags) = "yaml:\"deposit\""];
 }
+
+// ValidatorBlacklistedPower tracks the total amount of power blacklisted for a
+// validator.
+message ValidatorBlacklistedPower {
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string blacklisted_power_share = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// BlacklistedPower tracks the share of tokens that are staked but blacklisted from distribution,
+// per distribution epoch
+message BlacklistedPower {
+  string total_blacklisted_power_share = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  repeated ValidatorBlacklistedPower validator_blacklisted_powers = 2 [
+    (gogoproto.nullable) = false
+  ];
+}

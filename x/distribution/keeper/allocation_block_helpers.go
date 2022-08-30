@@ -67,7 +67,7 @@ func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int
 }
 
 // function to get totalBlacklistedPowerShare and taintedValsBlacklistedPowerShare
-func (k Keeper) GetValsBlacklistedPowerShare(ctx sdk.Context) (totalBlacklistedPower sdk.Dec, powerShareByValidator map[string]sdk.Dec) {
+func (k Keeper) GetValsBlacklistedPowerShare(ctx sdk.Context) (totalBlacklistedPower sdk.Dec, blacklistedPowerShareByValidator map[string]sdk.Dec) {
 	vals := k.GetAllValidators(ctx)
 	// runtime is n*m, where n is len(valAddrs) and m is len(blacklistedDelAddrs)
 	// in practice, we'd expect n ~= 150 and m ~= 100
@@ -75,9 +75,9 @@ func (k Keeper) GetValsBlacklistedPowerShare(ctx sdk.Context) (totalBlacklistedP
 		// update validator stats
 		valPower, valBlacklistedPower := k.GetBlacklistedPower(ctx, valAddr)
 		valBlacklistedPowerShare := sdk.NewDec(valBlacklistedPower).Quo(sdk.NewDec(valPower))
-		powerShareByValidator[valAddr] = valBlacklistedPowerShare
+		blacklistedPowerShareByValidator[valAddr] = valBlacklistedPowerShare
 		// update summary stats
 		totalBlacklistedPower = totalBlacklistedPower.Add(sdk.NewDec(valBlacklistedPower))
 	}
-	return totalBlacklistedPower, powerShareByValidator
+	return totalBlacklistedPower, blacklistedPowerShareByValidator
 }

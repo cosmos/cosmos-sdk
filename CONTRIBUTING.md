@@ -1,27 +1,28 @@
 # Contributing
 
-* [Contributing](#contributing)
-    * [Teams Dev Calls](#teams-dev-calls)
-    * [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
-    * [Development Procedure](#development-procedure)
-        * [Testing](#testing)
-        * [Pull Requests](#pull-requests)
-        * [Pull Request Templates](#pull-request-templates)
-        * [Requesting Reviews](#requesting-reviews)
-        * [Updating Documentation](#updating-documentation)
-    * [Dependencies](#dependencies)
-    * [Protobuf](#protobuf)
-    * [Branching Model and Release](#branching-model-and-release)
-        * [PR Targeting](#pr-targeting)
-    * [Code Owner Membership](#code-owner-membership)
-    * [Concept & Feature Approval Process](#concept--feature-approval-process)
-        * [Strategy Discovery](#strategy-discovery)
-        * [Concept Approval](#concept-approval)
-            * [Time Bound Period](#time-bound-period)
-            * [Approval Committee & Decision Making](#approval-committee--decision-making)
-            * [Committee Members](#committee-members)
-            * [Committee Criteria](#committee-criteria)
-        * [Implementation & Release Approval](#implementation--release-approval)
+- [Contributing](#contributing)
+  - [Teams Dev Calls](#teams-dev-calls)
+  - [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
+  - [Development Procedure](#development-procedure)
+    - [Testing](#testing)
+    - [Pull Requests](#pull-requests)
+    - [Pull Request Templates](#pull-request-templates)
+    - [Requesting Reviews](#requesting-reviews)
+    - [Updating Documentation](#updating-documentation)
+  - [Dependencies](#dependencies)
+    - [`go.work`](#gowork)
+  - [Protobuf](#protobuf)
+  - [Branching Model and Release](#branching-model-and-release)
+    - [PR Targeting](#pr-targeting)
+  - [Code Owner Membership](#code-owner-membership)
+  - [Concept & Feature Approval Process](#concept--feature-approval-process)
+    - [Strategy Discovery](#strategy-discovery)
+    - [Concept Approval](#concept-approval)
+      - [Time Bound Period](#time-bound-period)
+      - [Approval Committee & Decision Making](#approval-committee--decision-making)
+      - [Committee Members](#committee-members)
+      - [Committee Criteria](#committee-criteria)
+    - [Implementation & Release Approval](#implementation--release-approval)
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
 
@@ -65,7 +66,7 @@ To synchronize we have few major meetings:
 * Cosmos Community SDK Development Call on the last Wednesday of every month at 17:00 UTC.
 * Cosmos Roadmap Prioritization every 4 weeks on Tuesday at 15:00 UTC (limited participation).
 
-If you would like to join one of those calls, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Cory Levinson from Regen Network (cory@regen.network).
+If you would like to join one of those calls, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Marko (@marbar3778).
 
 ## Architecture Decision Records (ADR)
 
@@ -175,6 +176,13 @@ get away with telling people they can just `go get` our software.
 
 Since some dependencies are not under our control, a third party may break our
 build, in which case we can fall back on `go mod tidy -v`.
+
+### `go.work`
+
+The Cosmos SDK is a multi-module repo, for this reason, the use of a `go.work` file is handy. 
+We provide a [`go.work.example`](./go.work.example) that contains all the modules used in the SDK.
+Do note that contributions modifying multiple Go modules should be submitted as separate PRs, this allows us to tag the changes and avoid `replace`s.
+When using the `go.work`, we recommend that you as well run the local test suite with `GOWORK=off`, this will ensure that the tests are run with the correct dependencies and behave the same than in our CI pipelines.
 
 ## Protobuf
 

@@ -247,6 +247,7 @@ func (k Keeper) AllocateTokens(
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	k.Logger(ctx).Info(fmt.Sprintf("\n\n\n"))
 	adjustedTotalPower := sdk.NewDec(totalPreviousPower).Mul(totalWhitelistedPowerShare).TruncateInt64() // TODO might rounding cause issues later?
+	k.Logger(ctx).Info(fmt.Sprintf("\n... voteMultiplier %d, totalWhitelistedPowerShare %d\n\n", voteMultiplier, totalWhitelistedPowerShare))
 	for _, vote := range bondedVotes {
 
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
@@ -267,6 +268,7 @@ func (k Keeper) AllocateTokens(
 			// if not tainted use the untainted power fraction
 			powerFraction = sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(totalPreviousPower))
 		}
+		k.Logger(ctx).Info(fmt.Sprintf("...val has powerFraction %d", powerFraction))
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)

@@ -259,7 +259,7 @@ type Service interface {
     RootInterModuleClient
 }
 ```
-To maintain API compatibility, if new core services are added, a new `cosmossdk.io/coreappmodule/v2.Service` should
+To maintain API compatibility, if new core services are added, a new `cosmossdk.io/core/appmodule/v2.Service` should
 be added which extends this service and bundles the new core services, ex:
 
 ```go

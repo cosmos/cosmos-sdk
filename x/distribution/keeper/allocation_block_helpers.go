@@ -85,3 +85,11 @@ func (k Keeper) GetValsBlacklistedPowerShare(ctx sdk.Context) (totalBlacklistedP
 	}
 	return totalBlacklistedPower, blacklistedPowerShareByValidator
 }
+
+func (k Keeper) GetBlacklistedPowerShareByValidator(ctx sdk.Context, validatorBlacklistedPowers []types.ValidatorBlacklistedPower) (blacklistedPowerShareByValidator map[string]sdk.Dec) {
+	blacklistedPowerShareByValidator = make(map[string]sdk.Dec)
+	for _, valBlacklistedPower := range validatorBlacklistedPowers {
+		blacklistedPowerShareByValidator[valBlacklistedPower.ValidatorAddress] = valBlacklistedPower.BlacklistedPowerShare
+	}
+	return blacklistedPowerShareByValidator
+}

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -21,7 +22,19 @@ func (k Keeper) AllocateTokens(
 	logger := k.Logger(ctx)
 
 	// fetch values needed for blacklist logic
-	totalBlacklistedPower, blacklistedPowerShareByValidator := k.GetValsBlacklistedPowerShare(ctx)
+	height := strconv.FormatInt(ctx.BlockHeight(), 10)
+	blacklistedPower, found := k.GetBlacklistedPower(ctx, height)
+	if !found {
+		k.Logger(ctx).Error(fmt.Sprintf("no blacklisted power found for current block height%s", height))
+		return
+	}
+	totalBlacklistedPower := blacklistedPower.TotalBlacklistedPowerShare
+	validatorBlacklistedPowers := blacklistedPower.ValidatorBlacklistedPowers
+	if len(validatorBlacklistedPowers) == 0 {
+		k.Logger(ctx).Error(fmt.Sprintf("no validator blacklisted power found for current block height%s", height))
+		return
+	}
+	blacklistedPowerShareByValidator := k.GetBlacklistedPowerShareByValidator(ctx, validatorBlacklistedPowers)
 	fmt.Println(totalBlacklistedPower.Quo(sdk.NewDec(totalPreviousPower)))
 	totalWhitelistedPowerShare := sdk.NewDec(1).Sub(totalBlacklistedPower.Quo(sdk.NewDec(totalPreviousPower)))
 

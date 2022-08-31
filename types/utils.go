@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	dbm "github.com/tendermint/tm-db"
 )
 
 // This is set at compile time. Could be cleveldb, defaults is goleveldb.
@@ -103,7 +103,7 @@ func ParseTime(T any) (time.Time, error) { //nolint:gocritic
 
 // NewLevelDB instantiate a new LevelDB instance according to DBBackend.
 //
-// Deprecated: Use NewDB (from "github.com/tendermint/tm-db") instead. Suggested backendType is tendermint config's DBBackend value.
+// Deprecated: Use NewDB (from "github.com/cosmos/cosmos-db") instead. Suggested backendType is tendermint config's DBBackend value.
 func NewLevelDB(name, dir string) (db dbm.DB, err error) {
 	defer func() {
 		if r := recover(); r != nil {

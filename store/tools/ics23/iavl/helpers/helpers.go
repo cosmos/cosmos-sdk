@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"sort"
 
+	db "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	"github.com/tendermint/tendermint/libs/rand"
-	db "github.com/tendermint/tm-db"
 
 	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
 )

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
+	dbm "github.com/cosmos/cosmos-db"
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tm-db"
 
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"

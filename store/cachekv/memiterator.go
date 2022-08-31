@@ -3,7 +3,7 @@ package cachekv
 import (
 	"bytes"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 )

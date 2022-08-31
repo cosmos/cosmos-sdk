@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"

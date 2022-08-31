@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	db "github.com/cosmos/cosmos-db"
 	"github.com/tendermint/tendermint/types"
-	db "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
 
 	abci "github.com/tendermint/tendermint/abci/types"

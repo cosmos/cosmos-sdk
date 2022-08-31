@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"testing"
 
+	db "github.com/cosmos/cosmos-db"
 	iavlproofs "github.com/cosmos/cosmos-sdk/store/tools/ics23/iavl"
 	"github.com/cosmos/iavl"
-	db "github.com/tendermint/tm-db"
 )
 
 type serialize struct {

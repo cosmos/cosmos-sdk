@@ -8,13 +8,13 @@ import (
 	"strings"
 	"sync"
 
+	dbm "github.com/cosmos/cosmos-db"
 	iavltree "github.com/cosmos/iavl"
 	protoio "github.com/gogo/protobuf/io"
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/pruning"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"

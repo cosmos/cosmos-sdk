@@ -214,18 +214,8 @@ type CommitMultiStore interface {
 	// SetIAVLCacheSize sets the cache size of the IAVL tree.
 	SetIAVLCacheSize(size int)
 
-	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
-	SetIAVLDisableFastNode(disable bool)
-
 	// RollbackToVersion rollback the db to specific version(height).
 	RollbackToVersion(version int64) error
-
-	// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
-	ListeningEnabled(key StoreKey) bool
-
-	// AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
-	// It appends the listeners to a current set, if one already exists
-	AddListeners(key StoreKey, listeners []WriteListener)
 }
 
 //---------subsp-------------------------------

@@ -34,6 +34,7 @@ type (
 		SetInitialVersion(version uint64)
 		Iterator(start, end []byte, ascending bool) (types.Iterator, error)
 		AvailableVersions() []int
+		LoadVersionForOverwriting(targetVersion int64) (int64, error)
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree
@@ -90,6 +91,10 @@ func (it *immutableTree) GetImmutable(version int64) (*iavl.ImmutableTree, error
 	}
 
 	return it.ImmutableTree, nil
+}
+
+func (it *immutableTree) LoadVersionForOverwriting(targetVersion int64) (int64, error) {
+	panic("cannot call 'LoadVersionForOverwriting' on an immutable IAVL tree")
 }
 
 func (it *immutableTree) LoadVersionForOverwriting(targetVersion int64) (int64, error) {

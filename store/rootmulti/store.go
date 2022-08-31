@@ -1014,6 +1014,28 @@ func (rs *Store) RollbackToVersion(target int64) error {
 		}
 	}
 
+	rs.flushMetadata(rs.db, target, rs.buildCommitInfo(target))
+
+	return rs.LoadLatestVersion()
+}
+
+func (rs *Store) flushMetadata(db dbm.DB, version int64, cInfo *types.CommitInfo) {
+	rs.logger.Debug("flushing metadata", "height", version)
+	batch := db.NewBatch()
+	defer batch.Close()
+
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.GetCommitKVStore(key)
+			_, err := store.(*iavl.Store).LoadVersionForOverwriting(target)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	flushMetadata(rs.db, target, rs.buildCommitInfo(target), []int64{})
 
 	return rs.LoadLatestVersion()

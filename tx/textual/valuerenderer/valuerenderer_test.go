@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	tspb "google.golang.org/protobuf/types/known/timestamppb"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/math"
@@ -21,7 +22,7 @@ import (
 func TestFormatInteger(t *testing.T) {
 	type integerTest []string
 	var testcases []integerTest
-	raw, err := ioutil.ReadFile("../internal/testdata/integers.json")
+	raw, err := os.ReadFile("../internal/testdata/integers.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -68,21 +69,24 @@ func TestFormatInteger(t *testing.T) {
 func TestFormatDecimal(t *testing.T) {
 	type decimalTest []string
 	var testcases []decimalTest
-	raw, err := ioutil.ReadFile("../internal/testdata/decimals.json")
+	raw, err := os.ReadFile("../internal/testdata/decimals.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
 	for _, tc := range testcases {
-		d, err := math.LegacyNewDecFromStr(tc[0])
-		require.NoError(t, err)
-		r, err := valueRendererOf(d)
-		require.NoError(t, err)
-		b := new(strings.Builder)
-		err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
-		require.NoError(t, err)
+		tc := tc
+		t.Run(tc[0], func(t *testing.T) {
+			d, err := math.LegacyNewDecFromStr(tc[0])
+			require.NoError(t, err)
+			r, err := valueRendererOf(d)
+			require.NoError(t, err)
+			b := new(strings.Builder)
+			err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
+			require.NoError(t, err)
 
-		require.Equal(t, tc[1], b.String())
+			require.Equal(t, tc[1], b.String())
+		})
 	}
 }
 
@@ -114,6 +118,14 @@ func TestGetADR050ValueRenderer(t *testing.T) {
 	}
 }
 
+func TestTimestampDispatch(t *testing.T) {
+	a := (&testpb.A{}).ProtoReflect().Descriptor().Fields()
+	textual := valuerenderer.NewTextual()
+	rend, err := textual.GetValueRenderer(a.ByName(protoreflect.Name("TIMESTAMP")))
+	require.NoError(t, err)
+	require.IsType(t, valuerenderer.NewTimestampValueRenderer(), rend)
+}
+
 // valueRendererOf is like GetADR050ValueRenderer, but taking a Go type
 // as input instead of a protoreflect.FieldDescriptor.
 func valueRendererOf(v interface{}) (valuerenderer.ValueRenderer, error) {
@@ -140,6 +152,8 @@ func valueRendererOf(v interface{}) (valuerenderer.ValueRenderer, error) {
 		return textual.GetValueRenderer(a.ByName(protoreflect.Name("COIN")))
 	case []*basev1beta1.Coin:
 		return textual.GetValueRenderer(a.ByName(protoreflect.Name("COINS")))
+	case tspb.Timestamp:
+		return textual.GetValueRenderer(a.ByName(protoreflect.Name("TIMESTAMP")))
 
 	// Invalid types for SIGN_MODE_TEXTUAL
 	case float32:

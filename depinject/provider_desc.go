@@ -9,7 +9,8 @@ import (
 // ProviderDescriptor defines a special provider type that is defined by
 // reflection. It should be passed as a value to the Provide function.
 // Ex:
-//   option.Provide(ProviderDescriptor{ ... })
+//
+//	option.Provide(ProviderDescriptor{ ... })
 type ProviderDescriptor struct {
 	// Inputs defines the in parameter types to Fn.
 	Inputs []ProviderInput

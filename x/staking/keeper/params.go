@@ -45,7 +45,7 @@ func (k Keeper) PowerReduction(ctx sdk.Context) math.Int {
 }
 
 // MinCommissionRate - Minimum validator commission rate
-func (k Keeper) MinCommissionRate(ctx sdk.Context) sdk.Dec {
+func (k Keeper) MinCommissionRate(ctx sdk.Context) math.LegacyDec {
 	return k.GetParams(ctx).MinCommissionRate
 }
 

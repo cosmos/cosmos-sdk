@@ -5,7 +5,9 @@ parent:
   title: "params"
 -->
 
-# `params`
+# `params` (Deprecated)
+
+> Note: The Params module has been depreacted in favour of each module housing its own parameters. 
 
 ## Abstract
 

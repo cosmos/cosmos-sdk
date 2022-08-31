@@ -6,17 +6,15 @@ package testutil
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	testutil2 "github.com/cosmos/cosmos-sdk/x/auth/vesting/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/testutil"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
-	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
-	require.NoError(t, err)
+	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
 	suite.Run(t, testutil2.NewIntegrationTestSuite(cfg))
 }

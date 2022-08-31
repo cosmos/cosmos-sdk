@@ -76,7 +76,7 @@ func GetAuxToFeeCommand() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
+
 	return cmd
 }
 

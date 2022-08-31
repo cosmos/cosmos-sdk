@@ -36,7 +36,7 @@ Value Renderers describe how values of different Protobuf types should be encode
 ### `coin`
 
 - Applies to `cosmos.base.v1beta1.Coin`.
-- Denoms are converted to `display` denoms using `Metadata` (if available). **This requires a state query**. The definition of `Metadata` can be found in the [bank Protobuf definition](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/bank/v1beta1/bank.proto#L79-L108). If the `display` field is empty or nil, then we do not perform any denom conversion.
+- Denoms are converted to `display` denoms using `Metadata` (if available). **This requires a state query**. The definition of `Metadata` can be found in the [bank Protobuf definition](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/bank.proto#L79-L108). If the `display` field is empty or nil, then we do not perform any denom conversion.
 - Amounts are converted to `display` denom amounts and rendered as `number`s above
   - We do not change the capitalization of the denom. In practice, `display` denoms are stored in lowercase in state (e.g. `10 atom`), however they are often showed in UPPERCASE in everyday life (e.g. `10 ATOM`). Value renderers keep the case used in state, but we may recommend chains changing the denom metadata to be uppercase for better user display.
 - One space between the denom and amount (e.g. `10 atom`).
@@ -203,7 +203,20 @@ Object: /cosmos.gov.v1.Vote
 
 ### `google.protobuf.Timestamp`
 
-Rendered as either ISO8601 (`2021-01-01T12:00:00Z`).
+Rendered using [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339) (a
+simplification of ISO 8601), which is the current recommendation for portable
+time values. The rendering always uses "Z" (UTC) as the timezone. It uses only
+the necessary fractional digits of a second, omitting the fractional part
+entirely if the timestamp has no fractional seconds. (The resulting timestamps
+are not automatically sortable by standard lexicographic order, but we favor
+the legibility of the shorter string.)
+
+#### Examples
+
+The timestamp with 1136214245 seconds and 700000000 nanoseconds is rendered
+as `2006-01-02T15:04:05.7Z`.
+The timestamp with 1136214245 seconds and zero nanoseconds is rendered
+as `2006-01-02T15:04:05Z`.
 
 ### `google.protobuf.Duration` (TODO)
 
@@ -214,7 +227,7 @@ Rendered as either ISO8601 (`2021-01-01T12:00:00Z`).
 
 ### bytes
 
-- Bytes are rendered in base64.
+- Bytes are rendered in hexadecimal, all capital letters, without the `0x` prefix.
 
 ### address bytes
 

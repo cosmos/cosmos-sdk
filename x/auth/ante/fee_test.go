@@ -3,6 +3,7 @@ package ante_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,7 +59,7 @@ func TestEnsureMempoolFees(t *testing.T) {
 	// msg and signatures
 	msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
 	feeAmount := testdata.NewTestFeeAmount()
-	gasLimit := testdata.NewTestGasLimit()
+	gasLimit := uint64(15)
 	require.NoError(t, s.txBuilder.SetMsgs(msg))
 	s.txBuilder.SetFeeAmount(feeAmount)
 	s.txBuilder.SetGasLimit(gasLimit)
@@ -70,7 +71,7 @@ func TestEnsureMempoolFees(t *testing.T) {
 	require.NoError(t, err)
 
 	// Set high gas price so standard test fee fails
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(200).Quo(sdk.NewDec(100000)))
+	atomPrice := sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(20))
 	highGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 
@@ -96,15 +97,15 @@ func TestEnsureMempoolFees(t *testing.T) {
 	// Set IsCheckTx back to true for testing sufficient mempool fee
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	atomPrice = sdk.NewDecCoinFromDec("atom", sdk.NewDec(0).Quo(sdk.NewDec(100000)))
+	atomPrice = sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(0).Quo(math.LegacyNewDec(100000)))
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(lowGasPrice)
 
 	newCtx, err := antehandler(s.ctx, tx, false)
 	require.Nil(t, err, "Decorator should not have errored on fee higher than local gasPrice")
-	// Priority is the smallest amount in any denom. Since we have only 1 fee
-	// of 150atom, the priority here is 150.
-	require.Equal(t, feeAmount.AmountOf("atom").Int64(), newCtx.Priority())
+	// Priority is the smallest gas price amount in any denom. Since we have only 1 gas price
+	// of 10atom, the priority here is 10.
+	require.Equal(t, int64(10), newCtx.Priority())
 }
 
 func TestDeductFees(t *testing.T) {

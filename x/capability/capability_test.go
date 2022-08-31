@@ -33,10 +33,13 @@ type CapabilityTestSuite struct {
 func (suite *CapabilityTestSuite) SetupTest() {
 	suite.memKey = storetypes.NewMemoryStoreKey("testingkey")
 
-	app, err := simtestutil.SetupWithBaseAppOption(testutil.AppConfig,
-		func(ba *baseapp.BaseApp) {
-			ba.MountStores(suite.memKey)
-		},
+	startupCfg := simtestutil.DefaultStartUpConfig()
+	startupCfg.BaseAppOption = func(ba *baseapp.BaseApp) {
+		ba.MountStores(suite.memKey)
+	}
+
+	app, err := simtestutil.SetupWithConfiguration(testutil.AppConfig,
+		startupCfg,
 		&suite.cdc,
 		&suite.keeper,
 	)

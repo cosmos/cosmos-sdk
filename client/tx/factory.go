@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/math"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -39,6 +40,7 @@ type Factory struct {
 	gasPrices          sdk.DecCoins
 	signMode           signing.SignMode
 	simulateAndExecute bool
+	preprocessTxHook   client.PreprocessTxFn
 }
 
 // NewFactoryCLI creates a new Factory.
@@ -95,6 +97,8 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 
 	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
+
+	f = f.WithPreprocessTxHook(clientCtx.PreprocessTxHook)
 
 	return f
 }
@@ -241,6 +245,29 @@ func (f Factory) WithFeePayer(fp sdk.AccAddress) Factory {
 	return f
 }
 
+// WithPreprocessTxHook returns a copy of the Factory with an updated preprocess tx function,
+// allows for preprocessing of transaction data using the TxBuilder.
+func (f Factory) WithPreprocessTxHook(preprocessFn client.PreprocessTxFn) Factory {
+	f.preprocessTxHook = preprocessFn
+	return f
+}
+
+// PreprocessTx calls the preprocessing hook with the factory parameters and
+// returns the result.
+func (f Factory) PreprocessTx(keyname string, builder client.TxBuilder) error {
+	if f.preprocessTxHook == nil {
+		// Allow pass-through
+		return nil
+	}
+
+	key, err := f.Keybase().Key(keyname)
+	if err != nil {
+		return fmt.Errorf("error retrieving key from keyring: %w", err)
+	}
+
+	return f.preprocessTxHook(f.chainID, key.GetType(), builder)
+}
+
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
 func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
@@ -259,7 +286,7 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 			return nil, errors.New("cannot provide both fees and gas prices")
 		}
 
-		glDec := sdk.NewDec(int64(f.gas))
+		glDec := math.LegacyNewDec(int64(f.gas))
 
 		// Derive the fees based on the provided gas prices, where
 		// fee = ceil(gasPrice * gasLimit).
@@ -391,7 +418,6 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 // the updated fields will be returned.
 func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 	fc := f
-
 	from := clientCtx.GetFromAddress()
 
 	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {

@@ -55,12 +55,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					nft.ModuleName,
 					paramstypes.ModuleName,
 				},
-				OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
-					{
-						ModuleName: authtypes.ModuleName,
-						KvStoreKey: "acc",
-					},
-				},
 				InitGenesis: []string{
 					authtypes.ModuleName,
 					banktypes.ModuleName,

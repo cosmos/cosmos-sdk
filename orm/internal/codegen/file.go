@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 
-	ormv1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1"
+	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
 )
 
 type fileGen struct {

@@ -104,10 +104,10 @@ func First(it Iterator, dest codec.ProtoMarshaler) (RowID, error) {
 // an non-nil pointer to a slice.
 //
 // If pageRequest is nil, then we will use these default values:
-//  - Offset: 0
-//  - Key: nil
-//  - Limit: 100
-//  - CountTotal: true
+//   - Offset: 0
+//   - Key: nil
+//   - Limit: 100
+//   - CountTotal: true
 //
 // If pageRequest.Key was provided, it got used beforehand to instantiate the Iterator,
 // using for instance UInt64Index.GetPaginated method. Only one of pageRequest.Offset or
@@ -229,10 +229,10 @@ type ModelSlicePtr interface{}
 // The slice can be empty when the iterator does not return any values but not nil. The iterator
 // is closed afterwards.
 // Example:
-// 			var loaded []testdata.GroupInfo
-//			rowIDs, err := ReadAll(it, &loaded)
-//			require.NoError(t, err)
 //
+//	var loaded []testdata.GroupInfo
+//	rowIDs, err := ReadAll(it, &loaded)
+//	require.NoError(t, err)
 func ReadAll(it Iterator, dest ModelSlicePtr) ([]RowID, error) {
 	if it == nil {
 		return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "iterator must not be nil")

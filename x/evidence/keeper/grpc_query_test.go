@@ -49,7 +49,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 			true,
 			func(res *types.QueryEvidenceResponse) {
 				var evi exported.Evidence
-				err := suite.interfaceRegistry.UnpackAny(res.Evidence, &evi)
+				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Evidence, &evi)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(evi)
 				suite.Require().Equal(evi, evidence[0])

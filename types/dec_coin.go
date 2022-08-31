@@ -182,10 +182,14 @@ func sanitizeDecCoins(decCoins []DecCoin) DecCoins {
 // NewDecCoinsFromCoins constructs a new coin set with decimal values
 // from regular Coins.
 func NewDecCoinsFromCoins(coins ...Coin) DecCoins {
-	decCoins := make(DecCoins, len(coins))
+	if len(coins) == 0 {
+		return DecCoins{}
+	}
+
+	decCoins := make([]DecCoin, 0, len(coins))
 	newCoins := NewCoins(coins...)
-	for i, coin := range newCoins {
-		decCoins[i] = NewDecCoinFromCoin(coin)
+	for _, coin := range newCoins {
+		decCoins = append(decCoins, NewDecCoinFromCoin(coin))
 	}
 
 	return decCoins

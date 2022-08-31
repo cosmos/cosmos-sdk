@@ -18,7 +18,7 @@ func TestValidateGenesis(t *testing.T) {
 	pk := ed25519.GenPrivKey().PubKey()
 	genValidators1[0] = teststaking.NewValidator(t, sdk.ValAddress(pk.Address()), pk)
 	genValidators1[0].Tokens = math.OneInt()
-	genValidators1[0].DelegatorShares = sdk.OneDec()
+	genValidators1[0].DelegatorShares = math.LegacyOneDec()
 
 	tests := []struct {
 		name    string
@@ -33,7 +33,7 @@ func TestValidateGenesis(t *testing.T) {
 		}, true},
 		{"no delegator shares", func(data *types.GenesisState) {
 			data.Validators = genValidators1
-			data.Validators[0].DelegatorShares = sdk.ZeroDec()
+			data.Validators[0].DelegatorShares = math.LegacyZeroDec()
 		}, true},
 		{"jailed and bonded validator", func(data *types.GenesisState) {
 			data.Validators = genValidators1

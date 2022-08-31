@@ -200,14 +200,6 @@ func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 	app.storeLoader = loader
 }
 
-// SetRouter allows us to customize the router.
-func (app *BaseApp) SetRouter(router sdk.Router) {
-	if app.sealed {
-		panic("SetRouter() on sealed BaseApp")
-	}
-	app.router = router
-}
-
 // SetSnapshot sets the snapshot store and options.
 func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) {
 	if app.sealed {

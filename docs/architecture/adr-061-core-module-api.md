@@ -112,7 +112,7 @@ type TransientStoreService interface {
 Modules can use these services like this:
 ```go
 func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
-	store := k.kvStoreSvc.OpenKVStore(ctx)
+    store := k.kvStoreSvc.OpenKVStore(ctx)
 }
 ```
 
@@ -134,12 +134,12 @@ type Service interface {
 }
 
 type Manager interface {
-	// Emit emits events to both clients and state machine listeners. These events MUST be emitted deterministically
-	// and should be assumed to be part of blockchain consensus.
+    // Emit emits events to both clients and state machine listeners. These events MUST be emitted deterministically
+    // and should be assumed to be part of blockchain consensus.
     Emit(proto.Message) error
-	
-	// EmitLegacy emits legacy untyped events to clients only. These events do not need to be emitted deterministically
-	// and are not part of blockchain consensus.
+    
+    // EmitLegacy emits legacy untyped events to clients only. These events do not need to be emitted deterministically
+    // and are not part of blockchain consensus.
     EmitLegacy(eventType string, attrs ...LegacyEventAttribute) error
 
     // EmitClientOnly emits events only to clients. These events do not need to be emitted deterministically
@@ -193,10 +193,10 @@ for overriding the gas meter passed to child calls:
 package gas
 
 type Service interface {
-	GetMeter(context.Context) Meter
-	GetBlockMeter(context.Context) Meter
-	WithMeter(ctx context.Context, meter Meter) context.Context
-	WithBlockMeter(ctx context.Context, meter Meter) context.Context
+    GetMeter(context.Context) Meter
+    GetBlockMeter(context.Context) Meter
+    WithMeter(ctx context.Context, meter Meter) context.Context
+    WithBlockMeter(ctx context.Context, meter Meter) context.Context
 }
 ```
 
@@ -208,14 +208,14 @@ will allow modules to send messages to and make queries against other modules as
 ```go
 type InterModuleClient interface {
     grpc.ClientConnInterface
-	
-	// Address is the ADR-028 address of this client against which messages will be authenticated.
-	Address() []byte
+    
+    // Address is the ADR-028 address of this client against which messages will be authenticated.
+    Address() []byte
 }
 
 type RootInterModuleClient interface {
-	InterModuleClient
-	
+    InterModuleClient
+    
     DerivedClient(key []byte) InterModuleClient
 }
 ```
@@ -250,12 +250,12 @@ of the `appmodule.Service` interface:
 package appmodule
 
 type Service interface {
-	store.KVStoreService
-	store.MemoryStoreService
-	store.TransientStoreService
-	event.Service
-	blockinfo.Service
-	gas.Service
+    store.KVStoreService
+    store.MemoryStoreService
+    store.TransientStoreService
+    event.Service
+    blockinfo.Service
+    gas.Service
     RootInterModuleClient
 }
 ```
@@ -268,9 +268,9 @@ package v2
 import "cosmossdk.io/core/appmodule"
 
 type Service interface {
-	appmodule.Service
-	SomeNewService
-	AnotherNewService
+    appmodule.Service
+    SomeNewService
+    AnotherNewService
 }
 ```
 
@@ -287,18 +287,18 @@ type Handler struct {
     // Services are the Msg and Query services for the module. Msg services
     // must be annotated with the option cosmos.msg.v1.service = true.
     Services []ServiceImpl
-	
-	DefaultGenesis func(GenesisTarget)
+    
+    DefaultGenesis func(GenesisTarget)
     ValidateGenesis func(GenesisSource) error
     InitGenesis func(context.Context, GenesisSource) error
     ExportGenesis func(context.Context, GenesisTarget)
 
     BeginBlocker func(context.Context) error
-	EndBlocker func(context.Context) error
-	
-	EventListeners []EventListener
-	
-	UpgradeHandlers []UpgradeHandler
+    EndBlocker func(context.Context) error
+    
+    EventListeners []EventListener
+    
+    UpgradeHandlers []UpgradeHandler
 }
 ```
 
@@ -315,15 +315,15 @@ The `Handler` struct type will implement `grpc.ServiceRegistrar` interface which
 `MsgServer` and `QueryServer` implementations directly with the `Handler` struct like this:
 ```go
     h := &appmodule.Handler{}
-	types.RegisterMsgServer(h, keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(h, am.keeper)
+    types.RegisterMsgServer(h, keeper.NewMsgServerImpl(am.keeper))
+    types.RegisterQueryServer(h, am.keeper)
 ```
 
 Service registrations will be stored in the `Handler.Services` field using the `ServiceImpl` struct:
 ```go
 type ServiceImpl struct {
-	Desc *grpc.ServiceDesc
-	Impl interface{}
+    Desc *grpc.ServiceDesc
+    Impl interface{}
 }
 ```
 
@@ -339,9 +339,9 @@ interacting with genesis data represented by single `proto.Message` types.
 
 ```go
 type GenesisSource interface {
-	ReadMessage(proto.Message) error
-	OpenReader(field string) (io.ReadCloser, error)
-	ReadRawJSON() (json.RawMessage, error)
+    ReadMessage(proto.Message) error
+    OpenReader(field string) (io.ReadCloser, error)
+    ReadRawJSON() (json.RawMessage, error)
 }
 
 type GenesisTarget interface {
@@ -381,11 +381,11 @@ In order for `BeginBlock`, `EndBlock` and `InitGenesis` to send back validator u
 block headers, the runtime module for a specific version of Tendermint could provide services like this:
 ```go
 type ValidatorUpdateService interface {
-	SetValidatorUpdates(context.Context, []abci.ValidatorUpdate)
+    SetValidatorUpdates(context.Context, []abci.ValidatorUpdate)
 }
 
 type BeginBlockService interface {
-	GetBeginBlockRequest(context.Context) abci.RequestBeginBlock 
+    GetBeginBlockRequest(context.Context) abci.RequestBeginBlock 
 }
 ```
 
@@ -420,8 +420,8 @@ Only events emitted using `EventManager.Emit` are observable using event listene
 Upgrade handlers can be specified using the `UpgradeHandlers` field that takes an array of `UpgradeHandler` structs:
 ```go
 type UpgradeHandler struct {
-	FromModule protoreflect.FullName
-	Handler func(context.Context) error
+    FromModule protoreflect.FullName
+    Handler func(context.Context) error
 }
 ```
 
@@ -469,7 +469,7 @@ automatically in the future. So for now, the runtime module should probably prov
 this registration ex:
 ```go
 type GrpcGatewayInfo struct {
-	Handlers []GrpcGatewayHandler
+    Handlers []GrpcGatewayHandler
 }
 
 type GrpcGatewayHandler func(ctx context.Context, mux *runtime.ServeMux, client QueryClient) error
@@ -478,9 +478,9 @@ type GrpcGatewayHandler func(ctx context.Context, mux *runtime.ServeMux, client 
 which modules can return in a provider:
 ```go
 func ProvideGrpcGateway() GrpcGatewayInfo {
-	return GrpcGatewayinfo {
+    return GrpcGatewayinfo {
         Handlers: []Handler {types.RegisterQueryHandlerClient}
-	}
+    }
 }
 ```
 
@@ -494,14 +494,14 @@ management and genesis.
 
 ```go
 func ProvideApp(config *foomodulev2.Module, evtSvc event.EventService, db orm.ModuleDB) (Keeper, *Handler){
-	k := &Keeper{db: db, evtSvc: evtSvc}
-	h := &Handler{}
-	foov1.RegisterMsgServer(h, k)
+    k := &Keeper{db: db, evtSvc: evtSvc}
+    h := &Handler{}
+    foov1.RegisterMsgServer(h, k)
     foov1.RegisterQueryServer(h, k)
-	h.RegisterBeginBlocker(k.BeginBlock)
+    h.RegisterBeginBlocker(k.BeginBlock)
     db.RegisterGenesis(h)
     h.RegisterUpgradeHandler("foo.module.v1.Module", k.MigrateFromV1)
-	return k, h
+    return k, h
 }
 ```
 

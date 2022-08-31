@@ -59,7 +59,7 @@ func (s *TestSuite) SetupTest() {
 	s.baseApp.SetCMS(testCtx.CMS)
 	s.baseApp.SetInterfaceRegistry(s.encCfg.InterfaceRegistry)
 
-	s.addrs = simtestutil.CreateIncrementalAccounts(3)
+	s.addrs = simtestutil.CreateIncrementalAccounts(7)
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
@@ -390,6 +390,85 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	authzs, err = s.authzKeeper.GetAuthorizations(newCtx, granter, grantee)
 	require.NoError(err)
 	require.Len(authzs, 1)
+}
+
+func (s *TestSuite) TestGetAuthorization() {
+	addr1 := s.addrs[3]
+	addr2 := s.addrs[4]
+	addr3 := s.addrs[5]
+	addr4 := s.addrs[6]
+
+	genAuthMulti := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
+	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
+	sendAuth := banktypes.NewSendAuthorization(coins10, nil)
+
+	start := s.ctx.BlockHeader().Time
+	expired := start.Add(time.Duration(1) * time.Second)
+	notExpired := start.Add(time.Duration(5) * time.Hour)
+
+	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthMulti, nil), "creating grant 1->2")
+	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr3, genAuthSend, &expired), "creating grant 1->3")
+	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr4, sendAuth, &notExpired), "creating grant 1->4")
+	// Without access to private keeper methods, I don't know how to save a grant with an invalid authorization.
+	newCtx := s.ctx.WithBlockTime(start.Add(time.Duration(1) * time.Minute))
+
+	tests := []struct {
+		name    string
+		grantee sdk.AccAddress
+		granter sdk.AccAddress
+		msgType string
+		expAuth authz.Authorization
+		expExp  *time.Time
+	}{
+		{
+			name:    "grant has nil exp and is returned",
+			grantee: addr1,
+			granter: addr2,
+			msgType: genAuthMulti.MsgTypeURL(),
+			expAuth: genAuthMulti,
+			expExp:  nil,
+		},
+		{
+			name:    "grant is expired not returned",
+			grantee: addr1,
+			granter: addr3,
+			msgType: genAuthSend.MsgTypeURL(),
+			expAuth: nil,
+			expExp:  nil,
+		},
+		{
+			name:    "grant is not expired and is returned",
+			grantee: addr1,
+			granter: addr4,
+			msgType: sendAuth.MsgTypeURL(),
+			expAuth: sendAuth,
+			expExp:  &notExpired,
+		},
+		{
+			name:    "grant is not expired but wrong msg type returns nil",
+			grantee: addr1,
+			granter: addr4,
+			msgType: genAuthMulti.MsgTypeURL(),
+			expAuth: nil,
+			expExp:  nil,
+		},
+		{
+			name:    "no grant exists between the two",
+			grantee: addr2,
+			granter: addr3,
+			msgType: genAuthSend.MsgTypeURL(),
+			expAuth: nil,
+			expExp:  nil,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actAuth, actExp := s.authzKeeper.GetAuthorization(newCtx, tc.grantee, tc.granter, tc.msgType)
+			s.Assert().Equal(tc.expAuth, actAuth, "authorization")
+			s.Assert().Equal(tc.expExp, actExp, "expiration")
+		})
+	}
 }
 
 func TestTestSuite(t *testing.T) {

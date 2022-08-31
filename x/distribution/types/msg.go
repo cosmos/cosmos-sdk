@@ -12,10 +12,17 @@ const (
 	TypeMsgWithdrawValidatorCommission = "withdraw_validator_commission"
 	TypeMsgFundCommunityPool           = "fund_community_pool"
 	TypeMsgUpdateParams                = "update_params"
+	TypeMsgCommunityPoolSpend          = "community_pool_spend"
 )
 
 // Verify interface at compile time
-var _, _, _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorCommission{}, &MsgUpdateParams{}
+var (
+	_ sdk.Msg = (*MsgSetWithdrawAddress)(nil)
+	_ sdk.Msg = (*MsgWithdrawDelegatorReward)(nil)
+	_ sdk.Msg = (*MsgWithdrawValidatorCommission)(nil)
+	_ sdk.Msg = (*MsgUpdateParams)(nil)
+	_ sdk.Msg = (*MsgCommunityPoolSpend)(nil)
+)
 
 func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithdrawAddress {
 	return &MsgSetWithdrawAddress{
@@ -180,4 +187,33 @@ func (msg MsgUpdateParams) ValidateBasic() error {
 	}
 
 	return msg.Params.ValidateBasic()
+}
+
+// Route returns the MsgCommunityPoolSpend message route.
+func (msg MsgCommunityPoolSpend) Route() string { return ModuleName }
+
+// Type returns the MsgCommunityPoolSpend message type.
+func (msg MsgCommunityPoolSpend) Type() string { return TypeMsgCommunityPoolSpend }
+
+// GetSigners returns the signer addresses that are expected to sign the result
+// of GetSignBytes, which is the authority.
+func (msg MsgCommunityPoolSpend) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
+}
+
+// GetSignBytes returns the raw bytes for a MsgCommunityPoolSpend message that
+// the expected signer needs to sign.
+func (msg MsgCommunityPoolSpend) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic performs basic MsgCommunityPoolSpend message validation.
+func (msg MsgCommunityPoolSpend) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+	}
+
+	return msg.Amount.Validate()
 }

@@ -22,9 +22,17 @@ func (k Keeper) AllocateTokens(
 	logger := k.Logger(ctx)
 
 	// fetch values needed for blacklist logic
-	height := strconv.FormatInt(ctx.BlockHeight(), 10)
+	// for block n, we are distributing rewards for block n-1
+	// the validator set finalzied at n-3 signs n-1
+	// see: https://github.com/tendermint/tendermint/pull/1815 and
+	// https://github.com/tendermint/tendermint/blob/7b40167f58789803610747a4c385c0deee030f90/UPGRADING.md#validator-set-updates
+	// for more details
+	height := strconv.FormatInt(ctx.BlockHeight()-3, 10)
+	fmt.Println("MOOSE")
+	fmt.Println(height)
 	blacklistedPower, found := k.GetBlacklistedPower(ctx, height)
 	if !found {
+		fmt.Println(blacklistedPower)
 		k.Logger(ctx).Error(fmt.Sprintf("no blacklisted power found for current block height%s", height))
 		return
 	}
@@ -101,13 +109,18 @@ func (k Keeper) AllocateTokens(
 	communityTax := k.GetCommunityTax(ctx)
 	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
 
+	fmt.Println("voteMultiplier", voteMultiplier)
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	adjustedTotalPower := sdk.NewDec(totalPreviousPower).Mul(totalWhitelistedPowerShare).RoundInt64() // TODO might rounding cause issues later?
+	fmt.Println("adjustedTotalPower", adjustedTotalPower)
+	fmt.Println("totalPreviousPower", totalPreviousPower)
+	fmt.Println("totalWhitelistedPowerShare", totalWhitelistedPowerShare)
 	// k.Logger(ctx).Info(fmt.Sprintf("\n... voteMultiplier %v, totalWhitelistedPowerShare %v, adjustedTotalPower %d \n", voteMultiplier, totalWhitelistedPowerShare, adjustedTotalPower))
 	// fmt.Println("", adjustedTotalPower, voteMultiplier, totalWhitelistedPowerShare)
 	for _, vote := range bondedVotes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+		fmt.Println(validator.GetOperator())
 		valAddr := validator.GetOperator().String()
 		// k.Logger(ctx).Info(fmt.Sprintf("...%s", valAddr))
 
@@ -116,6 +129,10 @@ func (k Keeper) AllocateTokens(
 		if adjustedTotalPower != 0 { // If all we have is blacklisted delegations, process normally | TODO clean up this case
 			valWhitelistedPowerShare := sdk.NewDec(1).Sub(blacklistedPowerShareByValidator[valAddr])
 			validatorPowerAdj := sdk.NewDec(vote.Validator.Power).Mul(valWhitelistedPowerShare).RoundInt64()
+			fmt.Println("vote.Validator.Power", vote.Validator.Power)
+			fmt.Println("valWhitelistedPowerShare", valWhitelistedPowerShare)
+			fmt.Println("validatorPowerAdj", validatorPowerAdj)
+			fmt.Println("adjustedTotalPower", adjustedTotalPower)
 			// k.Logger(ctx).Info(fmt.Sprintf("\t\t...tainted %s power: %d * %d ===> %d ", valAddr, vote.Validator.Power, valWhitelistedPowerShare, validatorPowerAdj))
 			powerFraction = sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(adjustedTotalPower))
 		} else {

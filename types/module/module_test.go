@@ -82,8 +82,6 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 
 	// no-op
 	goam.RegisterInvariants(mockInvariantRegistry)
-	goam.BeginBlock(sdk.Context{}, abci.RequestBeginBlock{})
-	require.Equal(t, []abci.ValidatorUpdate{}, goam.EndBlock(sdk.Context{}, abci.RequestEndBlock{}))
 }
 
 func TestManagerOrderSetters(t *testing.T) {

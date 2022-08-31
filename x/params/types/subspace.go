@@ -223,6 +223,15 @@ func (s Subspace) GetParamSet(ctx sdk.Context, ps ParamSet) {
 	}
 }
 
+// GetParamSetIfExists iterates through each ParamSetPair where for each pair, it will
+// retrieve the value and set it to the corresponding value pointer provided
+// in the ParamSetPair by calling Subspace#GetIfExists.
+func (s Subspace) GetParamSetIfExists(ctx sdk.Context, ps ParamSet) {
+	for _, pair := range ps.ParamSetPairs() {
+		s.GetIfExists(ctx, pair.Key, pair.Value)
+	}
+}
+
 // SetParamSet iterates through each ParamSetPair and sets the value with the
 // corresponding parameter key in the Subspace's KVStore.
 func (s Subspace) SetParamSet(ctx sdk.Context, ps ParamSet) {

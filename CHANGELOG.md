@@ -71,6 +71,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#12953](https://github.com/cosmos/cosmos-sdk/pull/12953) Change the default priority mechanism to be based on gas price.
 * [#13048](https://github.com/cosmos/cosmos-sdk/pull/13048) Add handling of AccountNumberStoreKeyPrefix to the x/auth simulation decoder.
 * [#13101](https://github.com/cosmos/cosmos-sdk/pull/13101) Remove weights from `simapp/params` and `testutil/sims`. They are now in their respective modules.
+* (simapp) [#13107](https://github.com/cosmos/cosmos-sdk/pull/13107) Call `SetIAVLCacheSize` with the configured value in simapp.
+
 
 ### State Machine Breaking
 

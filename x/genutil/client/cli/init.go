@@ -119,7 +119,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			// use os.Stat to check if the file exists
 			_, err = os.Stat(genFile)
-
 			if !overwrite && !os.IsNotExist(err) {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}

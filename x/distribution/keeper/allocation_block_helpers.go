@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -34,6 +36,7 @@ func (k Keeper) StringInSlice(a string, list []string) bool {
 func (k Keeper) GetTotalBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int64) {
 
 	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
+	fmt.Println("blacklistedDelAddrs", blacklistedDelAddrs)
 	// k.Logger(ctx).Info("Blacklisted delegators", "addrs", blacklistedDelAddrs)
 	// get validator
 	val, error := sdk.ValAddressFromBech32(valAddr)
@@ -70,11 +73,15 @@ func (k Keeper) GetTotalBlacklistedPower(ctx sdk.Context, valAddr string) (int64
 // function to get totalBlacklistedPowerShare and taintedValsBlacklistedPowerShare
 func (k Keeper) GetValsBlacklistedPowerShare(ctx sdk.Context) (totalBlacklistedPower sdk.Dec, blacklistedPowerShareByValidator []types.ValidatorBlacklistedPower) {
 	vals := k.GetAllValidators(ctx)
+	fmt.Println("GetValsBlacklistedPowerShare vals", vals)
 	// runtime is n*m, where n is len(valAddrs) and m is len(blacklistedDelAddrs)
 	// in practice, we'd expect n ~= 150 and m ~= 100
 	for _, valAddr := range vals {
 		// update validator stats
+		fmt.Println("valAddr", valAddr)
 		valPower, valBlacklistedPower := k.GetTotalBlacklistedPower(ctx, valAddr)
+		fmt.Println("valPower", valPower)
+		fmt.Println("valBlacklistedPower", valBlacklistedPower)
 		valBlacklistedPowerShare := sdk.NewDec(valBlacklistedPower).Quo(sdk.NewDec(valPower))
 		blacklistedPowerShareByValidator = append(blacklistedPowerShareByValidator, types.ValidatorBlacklistedPower{
 			ValidatorAddress:      valAddr,

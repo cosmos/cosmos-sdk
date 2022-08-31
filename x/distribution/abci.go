@@ -1,6 +1,7 @@
 package distribution
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -64,6 +65,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 			TotalBlacklistedPowerShare: totalBlacklistedPower,
 			ValidatorBlacklistedPowers: validatorBlacklistedPowers,
 		}
+		fmt.Println("abci blacklistedPower", blacklistedPower)
 		// Note: we set the blacklisted power for the previous block height, because
 		// the current block hasn't yet processed
 		height := strconv.FormatInt(ctx.BlockHeight()-1, 10)

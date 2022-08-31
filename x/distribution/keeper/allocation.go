@@ -39,6 +39,7 @@ func (k Keeper) AllocateTokens(
 	totalBlacklistedPower := blacklistedPower.TotalBlacklistedPowerShare
 	validatorBlacklistedPowers := blacklistedPower.ValidatorBlacklistedPowers
 	if len(validatorBlacklistedPowers) == 0 {
+		// TODO we should still distribute rewards, even if no delegators are blacklisted
 		k.Logger(ctx).Error(fmt.Sprintf("no validator blacklisted power found for current block height%s", height))
 		return
 	}

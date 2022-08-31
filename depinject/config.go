@@ -27,9 +27,9 @@ func Provide(providers ...interface{}) Config {
 // ProvideInModule defines container configuration which registers the provided dependency
 // injection providers that are to be run in the named module. Each provider
 // will be called at most once. All provider functions must be declared, exported functions not
-//// internal packages and all of their input and output types must also be declared
-//// and exported and not in internal packages. Note that generic type parameters
-//// will not be checked, but they should also be exported so that codegen is possible.
+// internal packages and all of their input and output types must also be declared
+// and exported and not in internal packages. Note that generic type parameters
+// will not be checked, but they should also be exported so that codegen is possible.
 func ProvideInModule(moduleName string, providers ...interface{}) Config {
 	return containerConfig(func(ctr *container) error {
 		if moduleName == "" {

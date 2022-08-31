@@ -54,14 +54,12 @@ const (
 	FlagTrace              = "trace"
 	FlagInvCheckPeriod     = "inv-check-period"
 
-	FlagPruning             = "pruning"
-	FlagPruningKeepRecent   = "pruning-keep-recent"
-	FlagPruningKeepEvery    = "pruning-keep-every"
-	FlagPruningInterval     = "pruning-interval"
-	FlagIndexEvents         = "index-events"
-	FlagMinRetainBlocks     = "min-retain-blocks"
-	FlagIAVLCacheSize       = "iavl-cache-size"
-	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
+	FlagPruning           = "pruning"
+	FlagPruningKeepRecent = "pruning-keep-recent"
+	FlagPruningInterval   = "pruning-interval"
+	FlagIndexEvents       = "index-events"
+	FlagMinRetainBlocks   = "min-retain-blocks"
+	FlagIAVLCacheSize     = "iavl-cache-size"
 
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"

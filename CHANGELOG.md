@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (x/auth) [#13048](https://github.com/cosmos/cosmos-sdk/pull/13048) Add handling of AccountNumberStoreKeyPrefix to the simulation decoder.
+* (simapp) [#13108](https://github.com/cosmos/cosmos-sdk/pull/13108) Call `SetIAVLCacheSize` with the configured value in simapp.
 
 ### Bug Fixes
 

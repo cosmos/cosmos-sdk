@@ -27,13 +27,13 @@ func (k Keeper) AllocateTokens(
 	// see: https://github.com/tendermint/tendermint/pull/1815 and
 	// https://github.com/tendermint/tendermint/blob/7b40167f58789803610747a4c385c0deee030f90/UPGRADING.md#validator-set-updates
 	// for more details
-	height := strconv.FormatInt(ctx.BlockHeight()-1, 10)
+	height := strconv.FormatInt(ctx.BlockHeight()-2, 10)
 	fmt.Println("MOOSE")
 	fmt.Println(height)
 	blacklistedPower, found := k.GetBlacklistedPower(ctx, height)
 	if !found {
 		fmt.Println(blacklistedPower)
-		k.Logger(ctx).Error(fmt.Sprintf("no blacklisted power found for current block height%s", height))
+		k.Logger(ctx).Error(fmt.Sprintf("no blacklisted power found for block height%s", height))
 		return
 	}
 	totalBlacklistedPower := blacklistedPower.TotalBlacklistedPowerShare

@@ -38,6 +38,7 @@ const (
 	DefaultWeightMsgDeposit      = 100
 	DefaultWeightMsgVote         = 67
 	DefaultWeightMsgVoteWeighted = 33
+	DefaultWeightTextProposal    = 5
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

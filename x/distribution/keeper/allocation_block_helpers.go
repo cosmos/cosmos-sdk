@@ -60,10 +60,15 @@ func (k Keeper) GetTotalBlacklistedPower(ctx sdk.Context, valAddr string) (int64
 		delegation := k.stakingKeeper.Delegation(ctx, del, val)
 		if delegation != nil {
 			// TODO: why does TokensFromShares return a dec, when all tokens are ints? I truncate manually here -- is that safe?
+			fmt.Println("BEAR")
 			shares := delegation.GetShares()
+			fmt.Println("shares", shares)
 			tokens := valObj.TokensFromShares(shares).TruncateInt()
+			fmt.Println("tokens", tokens)
 			consPower := sdk.TokensToConsensusPower(tokens, sdk.DefaultPowerReduction)
+			fmt.Println("consPower", consPower)
 			valBlacklistedPower = valBlacklistedPower + consPower
+			fmt.Println("valBlacklistedPower", valBlacklistedPower)
 		}
 	}
 	// k.Logger(ctx).Info(fmt.Sprintf("Total valBlacklistedPower is %d", valBlacklistedPower))
@@ -74,7 +79,7 @@ func (k Keeper) GetTotalBlacklistedPower(ctx sdk.Context, valAddr string) (int64
 func (k Keeper) GetValsBlacklistedPowerShare(ctx sdk.Context) (totalBlacklistedPower sdk.Dec, blacklistedPowerShareByValidator []types.ValidatorBlacklistedPower) {
 	vals := k.GetAllValidators(ctx)
 	fmt.Println("GetValsBlacklistedPowerShare vals", vals)
-	totalBlacklistedPower = sdk.ZeroDec()
+	totalBlacklistedPower
 	// runtime is n*m, where n is len(valAddrs) and m is len(blacklistedDelAddrs)
 	// in practice, we'd expect n ~= 150 and m ~= 100
 	for _, valAddr := range vals {

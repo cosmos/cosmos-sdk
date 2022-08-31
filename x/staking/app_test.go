@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// nolint:deadcode,unused,varcheck
 var (
 	priv1 = secp256k1.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
@@ -31,8 +30,6 @@ var (
 
 	valKey          = ed25519.GenPrivKey()
 	commissionRates = types.NewCommissionRates(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
-
-	PKs = simtestutil.CreateTestPubKeys(500)
 )
 
 func TestStakingMsgs(t *testing.T) {

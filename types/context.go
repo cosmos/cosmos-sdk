@@ -268,17 +268,9 @@ func (c Context) TransientStore(key storetypes.StoreKey) KVStore {
 
 // CacheContext returns a new Context with the multi-store cached and a new
 // EventManager. The cached context is written to the context when writeCache
-// is called.
+// is called. Note, events are automatically emitted on the parent context's
+// EventManager when the caller executes the write.
 func (c Context) CacheContext() (cc Context, writeCache func()) {
-	cms := c.MultiStore().CacheMultiStore()
-	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
-	return cc, cms.Write
-}
-
-// CacheContextEmitEvents behaves the same as CacheContext except that it
-// automatically emits the events from the cached context when the caller
-// executes the writeCache function.
-func (c Context) CacheContextEmitEvents() (cc Context, writeCache func()) {
 	cms := c.MultiStore().CacheMultiStore()
 	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
 
@@ -288,6 +280,15 @@ func (c Context) CacheContextEmitEvents() (cc Context, writeCache func()) {
 	}
 
 	return cc, writeCache
+}
+
+// CacheContextWithoutEmitEvents behaves the same as CacheContext except that it
+// does not automatically emit events from the cached context when the caller
+// executes the writeCache function.
+func (c Context) CacheContextWithoutEmitEvents() (cc Context, writeCache func()) {
+	cms := c.MultiStore().CacheMultiStore()
+	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
+	return cc, cms.Write
 }
 
 var _ context.Context = Context{}

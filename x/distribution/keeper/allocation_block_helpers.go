@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -21,7 +19,6 @@ func (k Keeper) GetAllValidators(ctx sdk.Context) (validatorAddresses []string) 
 	return
 }
 
-// helper
 func (k Keeper) StringInSlice(a string, list []string) bool {
 	for _, b := range list {
 		if b == a {
@@ -36,58 +33,50 @@ func (k Keeper) StringInSlice(a string, list []string) bool {
 func (k Keeper) GetTotalBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int64) {
 
 	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
-	fmt.Println("blacklistedDelAddrs", blacklistedDelAddrs)
-	// k.Logger(ctx).Info("Blacklisted delegators", "addrs", blacklistedDelAddrs)
-	// get validator
 	val, error := sdk.ValAddressFromBech32(valAddr)
 	if error != nil {
-		// TODO: panic?
-		panic(error)
+		// something went wrong
+		return 0, 0
 	}
 	valObj := k.stakingKeeper.Validator(ctx, val)
 	valTotPower := sdk.TokensToConsensusPower(valObj.GetTokens(), sdk.DefaultPowerReduction)
 
 	valBlacklistedPower := int64(0)
 	for _, delAddr := range blacklistedDelAddrs {
-		// convert delAddrs to dels
+		// there is a check in params.go that prevents invalid addresses from being added
+		// so this check should never error
 		del, err := sdk.AccAddressFromBech32(delAddr)
 		if err != nil {
-			// TODO: panic?
-			panic(err)
+			// something went wrong
+			return 0, 0
 		}
 
 		// add the delegation share to total
 		delegation := k.stakingKeeper.Delegation(ctx, del, val)
 		if delegation != nil {
 			// TODO: why does TokensFromShares return a dec, when all tokens are ints? I truncate manually here -- is that safe?
-			fmt.Println("BEAR")
 			shares := delegation.GetShares()
-			fmt.Println("shares", shares)
 			tokens := valObj.TokensFromShares(shares).TruncateInt()
-			fmt.Println("tokens", tokens)
 			consPower := sdk.TokensToConsensusPower(tokens, sdk.DefaultPowerReduction)
-			fmt.Println("consPower", consPower)
 			valBlacklistedPower = valBlacklistedPower + consPower
-			fmt.Println("valBlacklistedPower", valBlacklistedPower)
 		}
 	}
-	// k.Logger(ctx).Info(fmt.Sprintf("Total valBlacklistedPower is %d", valBlacklistedPower))
 	return valTotPower, valBlacklistedPower
 }
 
 // function to get totalBlacklistedPowerShare and taintedValsBlacklistedPowerShare
 func (k Keeper) GetValsBlacklistedPowerShare(ctx sdk.Context) (totalBlacklistedPower sdk.Dec, blacklistedPowerShareByValidator []types.ValidatorBlacklistedPower) {
 	vals := k.GetAllValidators(ctx)
-	fmt.Println("GetValsBlacklistedPowerShare vals", vals)
 	totalBlacklistedPower = sdk.ZeroDec()
 	// runtime is n*m, where n is len(valAddrs) and m is len(blacklistedDelAddrs)
 	// in practice, we'd expect n ~= 150 and m ~= 100
 	for _, valAddr := range vals {
 		// update validator stats
-		fmt.Println("valAddr", valAddr)
 		valPower, valBlacklistedPower := k.GetTotalBlacklistedPower(ctx, valAddr)
-		fmt.Println("valPower", valPower)
-		fmt.Println("valBlacklistedPower", valBlacklistedPower)
+		if valBlacklistedPower == 0 {
+			// something went wrong
+			continue
+		}
 		valBlacklistedPowerShare := sdk.NewDec(valBlacklistedPower).Quo(sdk.NewDec(valPower))
 		blacklistedPowerShareByValidator = append(blacklistedPowerShareByValidator, types.ValidatorBlacklistedPower{
 			ValidatorAddress:      valAddr,

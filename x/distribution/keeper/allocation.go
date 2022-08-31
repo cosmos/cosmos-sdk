@@ -28,11 +28,8 @@ func (k Keeper) AllocateTokens(
 	// https://github.com/tendermint/tendermint/blob/7b40167f58789803610747a4c385c0deee030f90/UPGRADING.md#validator-set-updates
 	// for more details
 	height := strconv.FormatInt(ctx.BlockHeight()-3, 10)
-	fmt.Println("MOOSE")
-	fmt.Println(height)
 	blacklistedPower, found := k.GetBlacklistedPower(ctx, height)
 	if !found {
-		fmt.Println(blacklistedPower)
 		k.Logger(ctx).Error(fmt.Sprintf("no blacklisted power found for block height%s", height))
 		return
 	}
@@ -44,7 +41,6 @@ func (k Keeper) AllocateTokens(
 		return
 	}
 	blacklistedPowerShareByValidator := k.GetBlacklistedPowerShareByValidator(ctx, validatorBlacklistedPowers)
-	fmt.Println(totalBlacklistedPower.Quo(sdk.NewDec(totalPreviousPower)))
 	totalWhitelistedPowerShare := sdk.NewDec(1).Sub(totalBlacklistedPower.Quo(sdk.NewDec(totalPreviousPower)))
 
 	// fetch and clear the collected fees for distribution, since this is
@@ -110,18 +106,13 @@ func (k Keeper) AllocateTokens(
 	communityTax := k.GetCommunityTax(ctx)
 	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
 
-	fmt.Println("voteMultiplier", voteMultiplier)
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	adjustedTotalPower := sdk.NewDec(totalPreviousPower).Mul(totalWhitelistedPowerShare).RoundInt64() // TODO might rounding cause issues later?
-	fmt.Println("adjustedTotalPower", adjustedTotalPower)
-	fmt.Println("totalPreviousPower", totalPreviousPower)
-	fmt.Println("totalWhitelistedPowerShare", totalWhitelistedPowerShare)
 	// k.Logger(ctx).Info(fmt.Sprintf("\n... voteMultiplier %v, totalWhitelistedPowerShare %v, adjustedTotalPower %d \n", voteMultiplier, totalWhitelistedPowerShare, adjustedTotalPower))
 	// fmt.Println("", adjustedTotalPower, voteMultiplier, totalWhitelistedPowerShare)
 	for _, vote := range bondedVotes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
-		fmt.Println(validator.GetOperator())
 		valAddr := validator.GetOperator().String()
 		// k.Logger(ctx).Info(fmt.Sprintf("...%s", valAddr))
 
@@ -130,26 +121,16 @@ func (k Keeper) AllocateTokens(
 		if adjustedTotalPower != 0 { // If all we have is blacklisted delegations, process normally | TODO clean up this case
 			valWhitelistedPowerShare := sdk.NewDec(1).Sub(blacklistedPowerShareByValidator[valAddr])
 			validatorPowerAdj := sdk.NewDec(vote.Validator.Power).Mul(valWhitelistedPowerShare).RoundInt64()
-			fmt.Println("vote.Validator.Power", vote.Validator.Power)
-			fmt.Println("valWhitelistedPowerShare", valWhitelistedPowerShare)
-			fmt.Println("validatorPowerAdj", validatorPowerAdj)
-			fmt.Println("adjustedTotalPower", adjustedTotalPower)
-			// k.Logger(ctx).Info(fmt.Sprintf("\t\t...tainted %s power: %d * %d ===> %d ", valAddr, vote.Validator.Power, valWhitelistedPowerShare, validatorPowerAdj))
 			powerFraction = sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(adjustedTotalPower))
 		} else {
 			// if not tainted use the untainted power fraction
 			powerFraction = sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(adjustedTotalPower))
 		}
-		// k.Logger(ctx).Info(fmt.Sprintf("\t\t...powerFraction %d", powerFraction))
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		// if powerFraction.GT(sdk.OneDec()) {
-		// 	powerFraction = powerFraction.Quo(sdk.NewDec(2))
-		// }
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
 
 		k.AllocateTokensToValidator(ctx, validator, reward)
-		// k.Logger(ctx).Info(fmt.Sprintf("\t\t... %#v to %s, remaining=%v", reward.AmountOf("ustrd"), validator.GetOperator().String(), remaining.AmountOf("ustrd")))
 		remaining = remaining.Sub(reward)
 	}
 
@@ -163,8 +144,6 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
-	//log
-	// k.Logger(ctx).Info(fmt.Sprintf("...2allocateTokensToValidator: val %s, amount %#v", val.GetOperator().String(), shared))
 
 	// update current commission
 	ctx.EventManager().EmitEvent(
@@ -180,9 +159,7 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 
 	// update current rewards
 	currentRewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
-	// k.Logger(ctx).Info(fmt.Sprintf("...3allocateTokensToValidator: currentRewards %s, amount %#v", val.GetOperator().String(), currentRewards.Rewards))
 	currentRewards.Rewards = currentRewards.Rewards.Add(shared...)
-	// k.Logger(ctx).Info(fmt.Sprintf("...4allocateTokensToValidator: newRewards %s, amount %#v", val.GetOperator().String(), currentRewards.Rewards))
 	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
 
 	// update outstanding rewards
@@ -194,8 +171,6 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 		),
 	)
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-	// k.Logger(ctx).Info(fmt.Sprintf("    ...pre-outstanding %s, amount %d, adding %d tokens", val.GetOperator().String(), outstanding.Rewards.AmountOf("ustrd"), tokens.AmountOf("ustrd")))
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
-	// k.Logger(ctx).Info(fmt.Sprintf("    ...post-outstanding: %s, amount %d", val.GetOperator().String(), outstanding.Rewards.AmountOf("ustrd")))
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 }

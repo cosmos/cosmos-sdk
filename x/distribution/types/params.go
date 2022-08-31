@@ -157,6 +157,12 @@ func validateNoRewardsValidatorAddresses(i interface{}) error {
 
 func validateNoRewardsDelegatorAddresses(i interface{}) error {
 	_, ok := i.([]string)
+	for _, addr := range i.([]string) {
+		_, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return fmt.Errorf("could not parse address!: %s", addr)
+		}
+	}
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

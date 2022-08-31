@@ -36,7 +36,7 @@ func NewStore(db db.DB, dir string) (*Store, error) {
 	if dir == "" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "snapshot directory not given")
 	}
-	err := os.MkdirAll(dir, 0755)
+	err := os.MkdirAll(dir, 0o755)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to create snapshot directory %q", dir)
 	}
@@ -261,7 +261,7 @@ func (s *Store) Save(
 	for chunkBody := range chunks {
 		defer chunkBody.Close() // nolint: staticcheck
 		dir := s.pathSnapshot(height, format)
-		err = os.MkdirAll(dir, 0755)
+		err = os.MkdirAll(dir, 0o755)
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to create snapshot directory %q", dir)
 		}

@@ -73,7 +73,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 // DispatchActions attempts to execute the provided messages via authorization
 // grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
-	var results = make([][]byte, len(msgs))
+	results := make([][]byte, len(msgs))
 	for i, msg := range msgs {
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
@@ -198,7 +198,8 @@ func (k Keeper) GetCleanAuthorization(ctx sdk.Context, grantee sdk.AccAddress, g
 // This function should be used with caution because it can involve significant IO operations.
 // It should not be used in query or msg services without charging additional gas.
 func (k Keeper) IterateGrants(ctx sdk.Context,
-	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant authz.Grant) bool) {
+	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant authz.Grant) bool,
+) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, GrantKey)
 	defer iter.Close()
@@ -232,20 +233,14 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *authz.GenesisState {
 // InitGenesis new authz genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 	for _, entry := range data.Authorization {
-		grantee, err := sdk.AccAddressFromBech32(entry.Grantee)
-		if err != nil {
-			panic(err)
-		}
-		granter, err := sdk.AccAddressFromBech32(entry.Granter)
-		if err != nil {
-			panic(err)
-		}
+		grantee := sdk.MustAccAddressFromBech32(entry.Grantee)
+		granter := sdk.MustAccAddressFromBech32(entry.Granter)
 		a, ok := entry.Authorization.GetCachedValue().(authz.Authorization)
 		if !ok {
 			panic("expected authorization")
 		}
 
-		err = k.SaveGrant(ctx, grantee, granter, a, entry.Expiration)
+		err := k.SaveGrant(ctx, grantee, granter, a, entry.Expiration)
 		if err != nil {
 			panic(err)
 		}

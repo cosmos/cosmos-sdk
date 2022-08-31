@@ -13,6 +13,9 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding"
+	"google.golang.org/grpc/encoding/proto"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
@@ -98,12 +101,28 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	if val.AppConfig.GRPC.Enable {
-		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC.Address)
+		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
 		if err != nil {
 			return err
 		}
 
 		val.grpc = grpcSrv
+
+		// If grpc is enabled, configure grpc client.
+		grpcClient, err := grpc.Dial(
+			val.AppConfig.GRPC.Address,
+			grpc.WithInsecure(),
+			grpc.WithDefaultCallOptions(
+				grpc.ForceCodec(encoding.GetCodec(proto.Name)),
+				grpc.MaxCallRecvMsgSize(val.AppConfig.GRPC.MaxRecvMsgSize),
+				grpc.MaxCallSendMsgSize(val.AppConfig.GRPC.MaxSendMsgSize),
+			),
+		)
+		if err != nil {
+			return err
+		}
+
+		val.ClientCtx = val.ClientCtx.WithGRPCClient(grpcClient)
 
 		if val.AppConfig.GRPCWeb.Enable {
 			val.grpcWeb, err = servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)
@@ -152,7 +171,6 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 }
 
 func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance, genFiles []string) error {
-
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
 	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[authtypes.ModuleName], &authGenState)
@@ -197,12 +215,12 @@ func writeFile(name string, dir string, contents []byte) error {
 	writePath := filepath.Join(dir)
 	file := filepath.Join(writePath, name)
 
-	err := tmos.EnsureDir(writePath, 0755)
+	err := tmos.EnsureDir(writePath, 0o755)
 	if err != nil {
 		return err
 	}
 
-	err = tmos.WriteFile(file, contents, 0644)
+	err = tmos.WriteFile(file, contents, 0o644)
 	if err != nil {
 		return err
 	}

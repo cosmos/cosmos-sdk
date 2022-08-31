@@ -157,7 +157,8 @@ type ValidatorDistInfo struct {
 
 // NewValidatorDistInfo creates a new instance of ValidatorDistInfo.
 func NewValidatorDistInfo(operatorAddr sdk.AccAddress, rewards sdk.DecCoins,
-	commission types.ValidatorAccumulatedCommission) ValidatorDistInfo {
+	commission types.ValidatorAccumulatedCommission,
+) ValidatorDistInfo {
 	return ValidatorDistInfo{
 		OperatorAddress:     operatorAddr,
 		SelfBondRewards:     rewards,
@@ -326,7 +327,6 @@ func outstandingRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 func checkResponseQueryDelegationRewards(
 	w http.ResponseWriter, clientCtx client.Context, delAddr, valAddr string,
 ) (res []byte, height int64, ok bool) {
-
 	res, height, err := common.QueryDelegationRewards(clientCtx, delAddr, valAddr)
 	if rest.CheckInternalServerError(w, err) {
 		return nil, 0, false

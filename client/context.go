@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 
 	"gopkg.in/yaml.v2"
 
@@ -28,6 +29,7 @@ type Context struct {
 	ChainID     string
 	// Deprecated: Codec codec will be changed to Codec: codec.Codec
 	JSONCodec         codec.JSONCodec
+	GRPCClient        *grpc.ClientConn
 	Codec             codec.Codec
 	InterfaceRegistry codectypes.InterfaceRegistry
 	Input             io.Reader
@@ -40,6 +42,7 @@ type Context struct {
 	KeyringDir        string
 	From              string
 	BroadcastMode     string
+	GRPCConcurrency   bool
 	FromName          string
 	SignModeStr       string
 	UseLedger         bool
@@ -55,6 +58,13 @@ type Context struct {
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
+}
+
+// WithGRPCClient returns a copy of the context with an updated GRPC client
+// instance.
+func (ctx Context) WithGRPCClient(grpcClient *grpc.ClientConn) Context {
+	ctx.GRPCClient = grpcClient
+	return ctx
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.
@@ -240,6 +250,11 @@ func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 // WithInterfaceRegistry returns the context with an updated InterfaceRegistry
 func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) Context {
 	ctx.InterfaceRegistry = interfaceRegistry
+	return ctx
+}
+
+func (ctx Context) WithConcurrency(grpcConcurrency bool) Context {
+	ctx.GRPCConcurrency = grpcConcurrency
 	return ctx
 }
 

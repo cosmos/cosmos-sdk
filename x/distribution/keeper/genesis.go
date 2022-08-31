@@ -15,15 +15,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	k.SetParams(ctx, data.Params)
 
 	for _, dwi := range data.DelegatorWithdrawInfos {
-		delegatorAddress, err := sdk.AccAddressFromBech32(dwi.DelegatorAddress)
-		if err != nil {
-			panic(err)
-		}
-		withdrawAddress, err := sdk.AccAddressFromBech32(dwi.WithdrawAddress)
-		if err != nil {
-			panic(err)
-		}
-
+		delegatorAddress := sdk.MustAccAddressFromBech32(dwi.DelegatorAddress)
+		withdrawAddress := sdk.MustAccAddressFromBech32(dwi.WithdrawAddress)
 		k.SetDelegatorWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
 	}
 
@@ -72,10 +65,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		delegatorAddress, err := sdk.AccAddressFromBech32(del.DelegatorAddress)
-		if err != nil {
-			panic(err)
-		}
+		delegatorAddress := sdk.MustAccAddressFromBech32(del.DelegatorAddress)
+
 		k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
 	}
 	for _, evt := range data.ValidatorSlashEvents {

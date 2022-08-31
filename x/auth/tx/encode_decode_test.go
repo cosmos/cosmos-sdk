@@ -198,7 +198,7 @@ func TestRejectNonADR027(t *testing.T) {
 
 	// bodyBz's length prefix is 5, with `5` as varint encoding. We also try a
 	// longer varint encoding for 5: `133 00`.
-	longVarintBodyBz := append(append([]byte{bodyBz[0]}, byte(133), byte(00)), bodyBz[2:]...)
+	longVarintBodyBz := append(append([]byte{bodyBz[0]}, byte(133), byte(0o0)), bodyBz[2:]...)
 
 	tests := []struct {
 		name      string
@@ -259,15 +259,24 @@ func TestVarintMinLength(t *testing.T) {
 	tests := []struct {
 		n uint64
 	}{
-		{1<<7 - 1}, {1 << 7},
-		{1<<14 - 1}, {1 << 14},
-		{1<<21 - 1}, {1 << 21},
-		{1<<28 - 1}, {1 << 28},
-		{1<<35 - 1}, {1 << 35},
-		{1<<42 - 1}, {1 << 42},
-		{1<<49 - 1}, {1 << 49},
-		{1<<56 - 1}, {1 << 56},
-		{1<<63 - 1}, {1 << 63},
+		{1<<7 - 1},
+		{1 << 7},
+		{1<<14 - 1},
+		{1 << 14},
+		{1<<21 - 1},
+		{1 << 21},
+		{1<<28 - 1},
+		{1 << 28},
+		{1<<35 - 1},
+		{1 << 35},
+		{1<<42 - 1},
+		{1 << 42},
+		{1<<49 - 1},
+		{1 << 49},
+		{1<<56 - 1},
+		{1 << 56},
+		{1<<63 - 1},
+		{1 << 63},
 		{math.MaxUint64},
 	}
 

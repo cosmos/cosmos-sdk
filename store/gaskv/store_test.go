@@ -35,7 +35,7 @@ func TestGasKVStoreBasic(t *testing.T) {
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 	st.Delete(keyFmt(1))
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
-	require.Equal(t, meter.GasConsumed(), types.Gas(6858))
+	require.Equal(t, types.Gas(766), meter.GasConsumed())
 }
 
 func TestGasKVStoreIterator(t *testing.T) {
@@ -75,16 +75,16 @@ func TestGasKVStoreIterator(t *testing.T) {
 	require.Equal(t, vb, valFmt(2))
 	iterator.Next()
 
-	require.Equal(t, types.Gas(14565), meter.GasConsumed())
+	require.Equal(t, types.Gas(1680), meter.GasConsumed())
 	kc := iterator.Key()
 	require.Equal(t, kc, keyFmt(3))
 	vc := iterator.Value()
 	require.Equal(t, vc, valFmt(0))
 	iterator.Next()
-	require.Equal(t, types.Gas(14667), meter.GasConsumed())
+	require.Equal(t, types.Gas(1709), meter.GasConsumed())
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Equal(t, types.Gas(14697), meter.GasConsumed())
+	require.Equal(t, types.Gas(1714), meter.GasConsumed())
 
 	require.NoError(t, iterator.Error())
 
@@ -103,7 +103,7 @@ func TestGasKVStoreIterator(t *testing.T) {
 	require.False(t, reverseIterator.Valid())
 	require.Panics(t, reverseIterator.Next)
 
-	require.Equal(t, types.Gas(15135), meter.GasConsumed())
+	require.Equal(t, types.Gas(1835), meter.GasConsumed())
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {

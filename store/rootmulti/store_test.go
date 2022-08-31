@@ -314,7 +314,6 @@ func TestParsePath(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, substore, "bang")
 	require.Equal(t, subsubpath, "/baz")
-
 }
 
 func TestMultiStoreRestart(t *testing.T) {

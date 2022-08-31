@@ -211,7 +211,8 @@ func TestManager_InitGenesis(t *testing.T) {
 	// test panic
 	genesisData = map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key": "value"}`),
-		"module2": json.RawMessage(`{"key": "value"}`)}
+		"module2": json.RawMessage(`{"key": "value"}`),
+	}
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
@@ -237,7 +238,8 @@ func TestManager_ExportGenesis(t *testing.T) {
 
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key1": "value1"}`),
-		"module2": json.RawMessage(`{"key2": "value2"}`)}
+		"module2": json.RawMessage(`{"key2": "value2"}`),
+	}
 	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
 }
 

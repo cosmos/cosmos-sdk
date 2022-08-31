@@ -34,7 +34,6 @@ type PaginatedIterator struct {
 
 	page, limit uint // provided during initialization
 	iterated    uint // incremented in a call to Next
-
 }
 
 func (pi *PaginatedIterator) skip() {

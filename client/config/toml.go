@@ -26,6 +26,10 @@ output = "{{ .Output }}"
 node = "{{ .Node }}"
 # Transaction broadcasting mode (sync|async|block)
 broadcast-mode = "{{ .BroadcastMode }}"
+# Concurrency defines if node queries should be done in parallel.
+# This is experimental and has led to node failures, so enable with caution.
+# The default value is false.
+grpc-concurrency = {{ .GRPCConcurrency }}
 `
 
 // writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to
@@ -43,7 +47,7 @@ func writeConfigToFile(configFilePath string, config *ClientConfig) error {
 		return err
 	}
 
-	return ioutil.WriteFile(configFilePath, buffer.Bytes(), 0600)
+	return ioutil.WriteFile(configFilePath, buffer.Bytes(), 0o600)
 }
 
 // ensureConfigPath creates a directory configPath if it does not exist

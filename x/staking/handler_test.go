@@ -325,7 +325,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		tstaking.Ctx = ctx
 		tstaking.Delegate(delegatorAddr, validatorAddr, bondAmount)
 
-		//Check that the accounts and the bond account have the appropriate values
+		// Check that the accounts and the bond account have the appropriate values
 		validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddr)
 		require.True(t, found)
 		bond, found := app.StakingKeeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
@@ -486,8 +486,8 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 
 	// these are more than we have bonded now
 	errorCases := []sdk.Int{
-		//1<<64 - 1, // more than int64 power
-		//1<<63 + 1, // more than int64 power
+		// 1<<64 - 1, // more than int64 power
+		// 1<<63 + 1, // more than int64 power
 		app.StakingKeeper.TokensFromConsensusPower(ctx, 1<<63-1),
 		app.StakingKeeper.TokensFromConsensusPower(ctx, 1<<31),
 		initBond,

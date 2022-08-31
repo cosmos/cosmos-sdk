@@ -12,7 +12,7 @@ func (k Keeper) GetAllValidators(ctx sdk.Context) (validatorAddresses []string) 
 	k.stakingKeeper.IterateValidators(
 		ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 			// Only consider active validators; inactive validators can't have signed the last block (CHECK ASSUMPTION)
-			if !val.IsBonded() {
+			if val.IsBonded() {
 				validatorAddresses = append(validatorAddresses, val.GetOperator().String())
 			}
 			return false

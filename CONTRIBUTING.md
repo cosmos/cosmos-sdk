@@ -10,6 +10,7 @@
         * [Requesting Reviews](#requesting-reviews)
         * [Updating Documentation](#updating-documentation)
     * [Dependencies](#dependencies)
+        * [`go.work`](#gowork)
     * [Protobuf](#protobuf)
     * [Branching Model and Release](#branching-model-and-release)
         * [PR Targeting](#pr-targeting)
@@ -65,7 +66,7 @@ To synchronize we have few major meetings:
 * Cosmos Community SDK Development Call on the last Wednesday of every month at 17:00 UTC.
 * Cosmos Roadmap Prioritization every 4 weeks on Tuesday at 15:00 UTC (limited participation).
 
-If you would like to join one of those calls, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Cory Levinson from Regen Network (cory@regen.network).
+If you would like to join one of those calls, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Marko (@marbar3778).
 
 ## Architecture Decision Records (ADR)
 
@@ -175,6 +176,13 @@ get away with telling people they can just `go get` our software.
 
 Since some dependencies are not under our control, a third party may break our
 build, in which case we can fall back on `go mod tidy -v`.
+
+### `go.work`
+
+The Cosmos SDK is a multi-module repo, for this reason, the use of a `go.work` file is handy. 
+We provide a [`go.work.example`](./go.work.example) that contains all the modules used in the SDK.
+Do note that contributions modifying multiple Go modules should be submitted as separate PRs, this allows us to tag the changes and avoid `replace`s.
+For consistency between our CI and the local tests, `GOWORK=off` is set in the `Makefile`. This means that the `go.work` file is not used when using `make test` or any other `make` command.
 
 ## Protobuf
 

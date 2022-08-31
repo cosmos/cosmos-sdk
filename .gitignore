@@ -25,6 +25,7 @@ buf-stamp
 artifacts
 
 # Go
+go.work
 go.work.sum
 
 # Data - ideally these don't exist

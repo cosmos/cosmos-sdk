@@ -1,6 +1,7 @@
 package distribution
 
 import (
+	"strconv"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -31,6 +32,16 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 		previousProposer := k.GetPreviousProposerConsAddr(ctx)
 		k.AllocateTokens(ctx, sumPreviousPrecommitPower, previousTotalPower,
 			previousProposer, req.LastCommitInfo.GetVotes())
+		//   block (n)	  			begin blocker (n+1) 										  block (n+1)         begin blocker (n+2)
+		//   ---- n ---- | --- n + 1 --- distribute(tokens, bp_n, vpb_n), set(bp_n+1 + vpb_n+1) | --- txs ---- | --- n + 2 --- distribute(tokens, bp, vpb), set(bp + vpb)
+		// Set BlacklistedPower and ValidatorBlacklistedPower
+		totalBlacklistedPower, validatorBlacklistedPowers := k.GetValsBlacklistedPowerShare(ctx)
+		blacklistedPower := types.BlacklistedPower{
+			TotalBlacklistedPowerShare: totalBlacklistedPower,
+			ValidatorBlacklistedPowers: validatorBlacklistedPowers,
+		}
+		height := strconv.FormatInt(ctx.BlockHeight(), 10)
+		k.SetBlacklistedPower(ctx, height, blacklistedPower)
 	}
 
 	// record the proposer for when we payout on the next block

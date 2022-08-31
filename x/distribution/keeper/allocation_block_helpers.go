@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -30,7 +31,7 @@ func (k Keeper) StringInSlice(a string, list []string) bool {
 
 // get a validator's total blacklisted delegation power
 // 		returns (totalPower, blacklistedPower)
-func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int64) {
+func (k Keeper) GetTotalBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int64) {
 
 	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
 	// k.Logger(ctx).Info("Blacklisted delegators", "addrs", blacklistedDelAddrs)
@@ -67,15 +68,18 @@ func (k Keeper) GetBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int
 }
 
 // function to get totalBlacklistedPowerShare and taintedValsBlacklistedPowerShare
-func (k Keeper) GetValsBlacklistedPowerShare(ctx sdk.Context) (totalBlacklistedPower sdk.Dec, blacklistedPowerShareByValidator map[string]sdk.Dec) {
+func (k Keeper) GetValsBlacklistedPowerShare(ctx sdk.Context) (totalBlacklistedPower sdk.Dec, blacklistedPowerShareByValidator []types.ValidatorBlacklistedPower) {
 	vals := k.GetAllValidators(ctx)
 	// runtime is n*m, where n is len(valAddrs) and m is len(blacklistedDelAddrs)
 	// in practice, we'd expect n ~= 150 and m ~= 100
 	for _, valAddr := range vals {
 		// update validator stats
-		valPower, valBlacklistedPower := k.GetBlacklistedPower(ctx, valAddr)
+		valPower, valBlacklistedPower := k.GetTotalBlacklistedPower(ctx, valAddr)
 		valBlacklistedPowerShare := sdk.NewDec(valBlacklistedPower).Quo(sdk.NewDec(valPower))
-		blacklistedPowerShareByValidator[valAddr] = valBlacklistedPowerShare
+		blacklistedPowerShareByValidator = append(blacklistedPowerShareByValidator, types.ValidatorBlacklistedPower{
+			ValidatorAddress:      valAddr,
+			BlacklistedPowerShare: valBlacklistedPowerShare,
+		})
 		// update summary stats
 		totalBlacklistedPower = totalBlacklistedPower.Add(sdk.NewDec(valBlacklistedPower))
 	}

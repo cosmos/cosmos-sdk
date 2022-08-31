@@ -184,15 +184,15 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(provideModuleBasic, provideModule),
 	)
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type AuthInputs struct {
+type authInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -203,14 +203,14 @@ type AuthInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-type AuthOutputs struct {
+type authOutputs struct {
 	depinject.Out
 
 	AccountKeeper keeper.AccountKeeper
 	Module        runtime.AppModuleWrapper
 }
 
-func ProvideModule(in AuthInputs) AuthOutputs {
+func provideModule(in authInputs) authOutputs {
 	maccPerms := map[string][]string{}
 	for _, permission := range in.Config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
@@ -219,5 +219,5 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 	k := keeper.NewAccountKeeper(in.Cdc, in.Key, types.ProtoBaseAccount, maccPerms, in.Config.Bech32Prefix, types.NewModuleAddress(govtypes.ModuleName).String())
 	m := NewAppModule(in.Cdc, k, simulation.RandomGenesisAccounts, in.LegacySubspace)
 
-	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}
+	return authOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}
 }

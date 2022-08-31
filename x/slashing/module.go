@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -200,17 +199,17 @@ func init() {
 	appmodule.Register(
 		&modulev1.Module{},
 		appmodule.Provide(
-			ProvideModuleBasic,
-			ProvideModule,
+			provideModuleBasic,
+			provideModule,
 		),
 	)
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type SlashingInputs struct {
+type slashingInputs struct {
 	depinject.In
 
 	ModuleKey   depinject.OwnModuleKey
@@ -227,7 +226,7 @@ type SlashingInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-type SlashingOutputs struct {
+type slashingOutputs struct {
 	depinject.Out
 
 	Keeper keeper.Keeper
@@ -235,7 +234,7 @@ type SlashingOutputs struct {
 	Hooks  staking.StakingHooksWrapper
 }
 
-func ProvideModule(in SlashingInputs) SlashingOutputs {
+func provideModule(in slashingInputs) slashingOutputs {
 	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
 	if !ok {
 		// default to governance authority if not provided
@@ -244,7 +243,7 @@ func ProvideModule(in SlashingInputs) SlashingOutputs {
 
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.Key, in.StakingKeeper, authority.String())
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
-	return SlashingOutputs{
+	return slashingOutputs{
 		Keeper: k,
 		Module: runtime.WrapAppModule(m),
 		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},

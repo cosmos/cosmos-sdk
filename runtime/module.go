@@ -31,21 +31,21 @@ type appWrapper *App
 func init() {
 	appmodule.Register(&runtimev1alpha1.Module{},
 		appmodule.Provide(
-			ProvideCodecs,
-			ProvideKVStoreKey,
-			ProvideTransientStoreKey,
-			ProvideMemoryStoreKey,
-			ProvideDeliverTx,
+			provideCodecs,
+			provideAppBuilder,
+			provideKVStoreKey,
+			provideTransientStoreKey,
+			provideMemoryStoreKey,
+			provideDeliverTx,
 		),
-		appmodule.Invoke(SetupAppBuilder),
 	)
 }
 
-func ProvideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
+func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 	codectypes.InterfaceRegistry,
 	codec.Codec,
 	*codec.LegacyAmino,
-	*AppBuilder,
+	appWrapper,
 	codec.ProtoCodecMarshaler,
 	*baseapp.MsgServiceRouter,
 ) {
@@ -64,15 +64,13 @@ func ProvideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgServiceRouter := baseapp.NewMsgServiceRouter()
-	app := &AppBuilder{
-		&App{
-			storeKeys:         nil,
-			interfaceRegistry: interfaceRegistry,
-			cdc:               cdc,
-			amino:             amino,
-			basicManager:      basicManager,
-			msgServiceRouter:  msgServiceRouter,
-		},
+	app := &App{
+		storeKeys:         nil,
+		interfaceRegistry: interfaceRegistry,
+		cdc:               cdc,
+		amino:             amino,
+		basicManager:      basicManager,
+		msgServiceRouter:  msgServiceRouter,
 	}
 
 	return interfaceRegistry, cdc, amino, app, cdc, msgServiceRouter
@@ -82,20 +80,21 @@ type appInputs struct {
 	depinject.In
 
 	Config         *runtimev1alpha1.Module
-	AppBuilder     *AppBuilder
+	App            appWrapper
 	Modules        map[string]AppModuleWrapper
 	BaseAppOptions []BaseAppOption
 }
 
-func SetupAppBuilder(inputs appInputs) {
+func provideAppBuilder(inputs appInputs) *AppBuilder {
 	mm := &module.Manager{Modules: map[string]module.AppModule{}}
 	for name, wrapper := range inputs.Modules {
 		mm.Modules[name] = wrapper.AppModule
 	}
-	app := inputs.AppBuilder.app
+	app := inputs.App
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
 	app.ModuleManager = mm
+	return &AppBuilder{app: app}
 }
 
 func registerStoreKey(wrapper appWrapper, key storetypes.StoreKey) {
@@ -111,7 +110,7 @@ func storeKeyOverride(config *runtimev1alpha1.Module, moduleName string) *runtim
 	return nil
 }
 
-func ProvideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app appWrapper) *storetypes.KVStoreKey {
+func provideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app appWrapper) *storetypes.KVStoreKey {
 	override := storeKeyOverride(config, key.Name())
 
 	var storeKeyName string
@@ -126,19 +125,19 @@ func ProvideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, 
 	return storeKey
 }
 
-func ProvideTransientStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.TransientStoreKey {
+func provideTransientStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.TransientStoreKey {
 	storeKey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func ProvideMemoryStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.MemoryStoreKey {
+func provideMemoryStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.MemoryStoreKey {
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func ProvideDeliverTx(app appWrapper) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
+func provideDeliverTx(app appWrapper) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
 		return app.BaseApp.DeliverTx(tx)
 	}

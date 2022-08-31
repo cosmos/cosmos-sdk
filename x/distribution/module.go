@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -201,15 +200,15 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(provideModuleBasic, provideModule),
 	)
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type DistrInputs struct {
+type distrInputs struct {
 	depinject.In
 
 	ModuleKey depinject.OwnModuleKey
@@ -226,7 +225,7 @@ type DistrInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-type DistrOutputs struct {
+type distrOutputs struct {
 	depinject.Out
 
 	DistrKeeper keeper.Keeper
@@ -234,7 +233,7 @@ type DistrOutputs struct {
 	Hooks       staking.StakingHooksWrapper
 }
 
-func ProvideModule(in DistrInputs) DistrOutputs {
+func provideModule(in distrInputs) distrOutputs {
 	feeCollectorName := in.Config.FeeCollectorName
 	if feeCollectorName == "" {
 		feeCollectorName = authtypes.FeeCollectorName
@@ -258,7 +257,7 @@ func ProvideModule(in DistrInputs) DistrOutputs {
 
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
 
-	return DistrOutputs{
+	return distrOutputs{
 		DistrKeeper: k,
 		Module:      runtime.WrapAppModule(m),
 		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},

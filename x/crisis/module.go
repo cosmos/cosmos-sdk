@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
-
-	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -180,11 +179,11 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(provideModuleBasic, provideModule),
 	)
 }
 
-type CrisisInputs struct {
+type crisisInputs struct {
 	depinject.In
 
 	ModuleKey depinject.OwnModuleKey
@@ -200,18 +199,18 @@ type CrisisInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-type CrisisOutputs struct {
+type crisisOutputs struct {
 	depinject.Out
 
 	Module       runtime.AppModuleWrapper
 	CrisisKeeper *keeper.Keeper
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-func ProvideModule(in CrisisInputs) CrisisOutputs {
+func provideModule(in crisisInputs) crisisOutputs {
 	invalidCheckPeriod := cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
 
 	feeCollectorName := in.Config.FeeCollectorName
@@ -238,5 +237,5 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 
 	m := NewAppModule(k, skipGenesisInvariants, in.LegacySubspace)
 
-	return CrisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
+	return crisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
 }

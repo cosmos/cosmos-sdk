@@ -186,16 +186,16 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(provideModuleBasic, provideModule),
 		appmodule.Invoke(invokeSetStakingHooks),
 	)
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type StakingInputs struct {
+type stakingInputs struct {
 	depinject.In
 
 	Config        *modulev1.Module
@@ -210,14 +210,14 @@ type StakingInputs struct {
 }
 
 // Dependency Injection Outputs
-type StakingOutputs struct {
+type stakingOutputs struct {
 	depinject.Out
 
 	StakingKeeper *keeper.Keeper
 	Module        runtime.AppModuleWrapper
 }
 
-func ProvideModule(in StakingInputs) StakingOutputs {
+func provideModule(in stakingInputs) stakingOutputs {
 	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
 	if !ok {
 		// default to governance authority if not provided
@@ -232,7 +232,7 @@ func ProvideModule(in StakingInputs) StakingOutputs {
 		authority.String(),
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
-	return StakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
+	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 
 func invokeSetStakingHooks(

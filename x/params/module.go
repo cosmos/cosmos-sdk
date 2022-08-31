@@ -136,17 +136,17 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
-			ProvideModuleBasic,
-			ProvideModule,
-			ProvideSubspace,
+			provideModuleBasic,
+			provideModule,
+			provideSubspace,
 		))
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type ParamsInputs struct {
+type paramsInputs struct {
 	depinject.In
 
 	KvStoreKey        *store.KVStoreKey
@@ -155,7 +155,7 @@ type ParamsInputs struct {
 	LegacyAmino       *codec.LegacyAmino
 }
 
-type ParamsOutputs struct {
+type paramsOutputs struct {
 	depinject.Out
 
 	ParamsKeeper  keeper.Keeper
@@ -164,7 +164,7 @@ type ParamsOutputs struct {
 	GovHandler    govv1beta1.HandlerRoute
 }
 
-func ProvideModule(in ParamsInputs) ParamsOutputs {
+func provideModule(in paramsInputs) paramsOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.KvStoreKey, in.TransientStoreKey)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		app.SetParamStore(k.Subspace(baseapp.Paramspace).WithKeyTable(types.ConsensusParamsKeyTable()))
@@ -172,10 +172,10 @@ func ProvideModule(in ParamsInputs) ParamsOutputs {
 	m := runtime.WrapAppModule(NewAppModule(k))
 	govHandler := govv1beta1.HandlerRoute{RouteKey: proposal.RouterKey, Handler: NewParamChangeProposalHandler(k)}
 
-	return ParamsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m, GovHandler: govHandler}
+	return paramsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m, GovHandler: govHandler}
 }
 
-type SubspaceInputs struct {
+type subspaceInputs struct {
 	depinject.In
 
 	Key       depinject.ModuleKey
@@ -183,7 +183,7 @@ type SubspaceInputs struct {
 	KeyTables map[string]types.KeyTable
 }
 
-func ProvideSubspace(in SubspaceInputs) types.Subspace {
+func provideSubspace(in subspaceInputs) types.Subspace {
 	moduleName := in.Key.Name()
 	kt, exists := in.KeyTables[moduleName]
 	if !exists {

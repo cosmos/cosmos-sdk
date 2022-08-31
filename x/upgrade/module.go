@@ -144,15 +144,15 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(provideModuleBasic, provideModule),
 	)
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type UpgradeInputs struct {
+type upgradeInputs struct {
 	depinject.In
 
 	ModuleKey depinject.OwnModuleKey
@@ -164,7 +164,7 @@ type UpgradeInputs struct {
 	Authority map[string]sdk.AccAddress `optional:"true"`
 }
 
-type UpgradeOutputs struct {
+type upgradeOutputs struct {
 	depinject.Out
 
 	UpgradeKeeper keeper.Keeper
@@ -172,7 +172,7 @@ type UpgradeOutputs struct {
 	GovHandler    govv1beta1.HandlerRoute
 }
 
-func ProvideModule(in UpgradeInputs) UpgradeOutputs {
+func provideModule(in upgradeInputs) upgradeOutputs {
 	var (
 		homePath           string
 		skipUpgradeHeights = make(map[int64]bool)
@@ -197,5 +197,5 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	m := NewAppModule(k)
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
-	return UpgradeOutputs{UpgradeKeeper: k, Module: runtime.WrapAppModule(m), GovHandler: gh}
+	return upgradeOutputs{UpgradeKeeper: k, Module: runtime.WrapAppModule(m), GovHandler: gh}
 }

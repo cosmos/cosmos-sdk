@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -196,15 +195,15 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
-			ProvideModuleBasic,
-			ProvideModule))
+			provideModuleBasic,
+			provideModule))
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type BankInputs struct {
+type bankInputs struct {
 	depinject.In
 
 	ModuleKey depinject.OwnModuleKey
@@ -219,14 +218,14 @@ type BankInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-type BankOutputs struct {
+type bankOutputs struct {
 	depinject.Out
 
 	BankKeeper keeper.BaseKeeper
 	Module     runtime.AppModuleWrapper
 }
 
-func ProvideModule(in BankInputs) BankOutputs {
+func provideModule(in bankInputs) bankOutputs {
 	// Configure blocked module accounts.
 	//
 	// Default behavior for blockedAddresses is to regard any module mentioned in
@@ -257,5 +256,5 @@ func ProvideModule(in BankInputs) BankOutputs {
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper, in.LegacySubspace)
 
-	return BankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
+	return bankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
 }

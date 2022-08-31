@@ -120,15 +120,15 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(provideModuleBasic, provideModule),
 	)
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type GenutilInputs struct {
+type genutilInputs struct {
 	depinject.In
 
 	AccountKeeper types.AccountKeeper
@@ -137,7 +137,7 @@ type GenutilInputs struct {
 	Config        client.TxConfig
 }
 
-func ProvideModule(in GenutilInputs) runtime.AppModuleWrapper {
+func provideModule(in genutilInputs) runtime.AppModuleWrapper {
 	m := NewAppModule(in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config)
 	return runtime.WrapAppModule(m)
 }

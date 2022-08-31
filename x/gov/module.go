@@ -150,15 +150,15 @@ func NewAppModule(
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule, ProvideKeyTable),
-		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
+		appmodule.Provide(provideModuleBasic, provideModule, provideKeyTable),
+		appmodule.Invoke(invokeAddRoutes, invokeSetHooks))
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type GovInputs struct {
+type govInputs struct {
 	depinject.In
 
 	Config           *modulev1.Module
@@ -176,7 +176,7 @@ type GovInputs struct {
 	LegacySubspace govtypes.ParamSubspace
 }
 
-type GovOutputs struct {
+type govOutputs struct {
 	depinject.Out
 
 	Module       runtime.AppModuleWrapper
@@ -184,7 +184,7 @@ type GovOutputs struct {
 	HandlerRoute v1beta1.HandlerRoute
 }
 
-func ProvideModule(in GovInputs) GovOutputs {
+func provideModule(in govInputs) govOutputs {
 	kConfig := govtypes.DefaultConfig()
 	if in.Config.MaxMetadataLen != 0 {
 		kConfig.MaxMetadataLen = in.Config.MaxMetadataLen
@@ -208,14 +208,14 @@ func ProvideModule(in GovInputs) GovOutputs {
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
-	return GovOutputs{Module: runtime.WrapAppModule(m), Keeper: k, HandlerRoute: hr}
+	return govOutputs{Module: runtime.WrapAppModule(m), Keeper: k, HandlerRoute: hr}
 }
 
-func ProvideKeyTable() paramtypes.KeyTable {
+func provideKeyTable() paramtypes.KeyTable {
 	return v1.ParamKeyTable()
 }
 
-func InvokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
+func invokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
 	if keeper == nil || routes == nil {
 		return
 	}
@@ -233,7 +233,7 @@ func InvokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
 	keeper.SetLegacyRouter(router)
 }
 
-func InvokeSetHooks(keeper *keeper.Keeper, govHooks map[string]govtypes.GovHooksWrapper) error {
+func invokeSetHooks(keeper *keeper.Keeper, govHooks map[string]govtypes.GovHooksWrapper) error {
 	if keeper == nil || govHooks == nil {
 		return nil
 	}

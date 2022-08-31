@@ -116,29 +116,29 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(provideModuleBasic, provideModule),
 	)
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type VestingInputs struct {
+type vestingInputs struct {
 	depinject.In
 
 	AccountKeeper keeper.AccountKeeper
 	BankKeeper    types.BankKeeper
 }
 
-type VestingOutputs struct {
+type vestingOutputs struct {
 	depinject.Out
 
 	Module runtime.AppModuleWrapper
 }
 
-func ProvideModule(in VestingInputs) VestingOutputs {
+func provideModule(in vestingInputs) vestingOutputs {
 	m := NewAppModule(in.AccountKeeper, in.BankKeeper)
 
-	return VestingOutputs{Module: runtime.WrapAppModule(m)}
+	return vestingOutputs{Module: runtime.WrapAppModule(m)}
 }

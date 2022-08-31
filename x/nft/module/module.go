@@ -178,15 +178,15 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(provideModuleBasic, provideModule),
 	)
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type NftInputs struct {
+type nftInputs struct {
 	depinject.In
 
 	Key      *store.KVStoreKey
@@ -197,16 +197,16 @@ type NftInputs struct {
 	BankKeeper    nft.BankKeeper
 }
 
-type NftOutputs struct {
+type nftOutputs struct {
 	depinject.Out
 
 	NFTKeeper keeper.Keeper
 	Module    runtime.AppModuleWrapper
 }
 
-func ProvideModule(in NftInputs) NftOutputs {
+func provideModule(in nftInputs) nftOutputs {
 	k := keeper.NewKeeper(in.Key, in.Cdc, in.AccountKeeper, in.BankKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 
-	return NftOutputs{NFTKeeper: k, Module: runtime.WrapAppModule(m)}
+	return nftOutputs{NFTKeeper: k, Module: runtime.WrapAppModule(m)}
 }

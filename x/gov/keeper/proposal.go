@@ -99,7 +99,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, proposer sdk.AccAddress, me
 func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer string) error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return sdkerrors.Wrapf(types.ErrProposalNotFound, "proposal is not found with % id", proposalID)
+		return sdkerrors.Wrapf(types.ErrProposalNotFound, "proposal is not found with %d id", proposalID)
 	}
 
 	// Check creator of the proposal

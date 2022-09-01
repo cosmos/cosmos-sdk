@@ -70,6 +70,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
+	// create a proposal4 with deposit for check the cancel proposal cli tx
+	_, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 4", "Where is the title!?", v1beta1.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
 	// vote for proposal3 as val
 	_, err = MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
 	s.Require().NoError(err)
@@ -255,6 +263,80 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestNewCmdCancelProposal() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectedCode uint32
+	}{
+		{
+			"without proposal id",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0,
+		},
+		{
+			"invalid proposal id",
+			[]string{
+				"asdasd",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0,
+		},
+		{
+			"valid proposer",
+			[]string{
+				"4",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 0,
+		},
+		{
+			"proposal not exists after cancel",
+			[]string{
+				"4",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 17,
+		},
+	}
+
+	for _, tc := range testCases {
+		var resp sdk.TxResponse
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewCmdCancelProposal()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().Equal(tc.expectedCode, resp.Code, out.String())
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 	val := s.network.Validators[0]
 
@@ -299,7 +381,7 @@ func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 			false, 2,
 		},
 		{
-			"deposit on non existing proposal",
+			"deposit on existing proposal",
 			[]string{
 				"1",
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), // 10stake

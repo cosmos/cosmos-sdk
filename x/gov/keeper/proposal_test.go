@@ -143,6 +143,52 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestCancelProposal() {
+	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress().String()
+	tp := v1beta1.TextProposal{Title: "title", Description: "description"}
+	prop, err := v1.NewLegacyContent(&tp, govAcct)
+	suite.Require().NoError(err)
+	proposalResp, err := suite.govKeeper.SubmitProposal(suite.ctx, suite.addrs[0], []sdk.Msg{prop}, "")
+	proposalID := proposalResp.Id
+
+	testCases := []struct {
+		name        string
+		proposalID  uint64
+		proposer    string
+		expectedErr bool
+	}{
+		{
+			name:        "invalid proposal id",
+			proposalID:  1,
+			proposer:    string(suite.addrs[0]),
+			expectedErr: true,
+		},
+		{
+			name:        "valid proposalID but invalid proposer",
+			proposalID:  proposalID,
+			proposer:    suite.addrs[1].String(),
+			expectedErr: true,
+		},
+		{
+			name:        "valid proposer and proposal id",
+			proposalID:  proposalID,
+			proposer:    suite.addrs[0].String(),
+			expectedErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			err = suite.govKeeper.CancelProposal(suite.ctx, tc.proposalID, tc.proposer)
+			if tc.expectedErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+			}
+		})
+	}
+}
+
 func TestMigrateProposalMessages(t *testing.T) {
 	content := v1beta1.NewTextProposal("Test", "description")
 	contentMsg, err := v1.NewLegacyContent(content, sdk.AccAddress("test1").String())

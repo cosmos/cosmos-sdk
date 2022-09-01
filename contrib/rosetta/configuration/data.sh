@@ -7,7 +7,7 @@ wait_simd() {
 }
 # this script is used to recreate the data dir
 echo clearing /root/.simapp
-rm -rf /root/.simapp
+rm -rf /root/.simapp/*
 echo initting new chain
 # init config files
 simd init simd --chain-id testing

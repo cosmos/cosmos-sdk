@@ -1,13 +1,11 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-// get the delegator withdraw address, defaulting to the delegator address
+// get the blacklisted power
 func (k Keeper) GetBlacklistedPower(ctx sdk.Context, blockHeight string) (val types.BlacklistedPower, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.GetBlacklistedPowerKey(blockHeight))
@@ -22,10 +20,7 @@ func (k Keeper) GetBlacklistedPower(ctx sdk.Context, blockHeight string) (val ty
 func (k Keeper) SetBlacklistedPower(ctx sdk.Context, blockHeight string, blacklistedPower types.BlacklistedPower) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&blacklistedPower)
-	fmt.Println("types.GetBlacklistedPowerKey(blockHeight)", types.GetBlacklistedPowerKey(blockHeight))
-	fmt.Println("b", b)
 	store.Set(types.GetBlacklistedPowerKey(blockHeight), b)
-	fmt.Println("blacklistedPower set ")
 }
 
 // delete a blacklisted power entry

@@ -214,7 +214,7 @@ func GetValidatorSlashEventKey(v sdk.ValAddress, height, period uint64) []byte {
 	return append(prefix, periodBz...)
 }
 
-// GetDelegatorWithdrawAddrKey creates the key for a delegator's withdraw addr.
+// GetBlacklistedPowerKey creates the key for a delegator's withdraw addr.
 func GetBlacklistedPowerKey(blockHeight string) []byte {
 	return append(BlacklistedPowerPrefix, []byte(blockHeight)...)
 }

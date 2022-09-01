@@ -15,7 +15,6 @@ var (
 	ParamStoreKeyBaseProposerReward          = []byte("baseproposerreward")
 	ParamStoreKeyBonusProposerReward         = []byte("bonusproposerreward")
 	ParamStoreKeyWithdrawAddrEnabled         = []byte("withdrawaddrenabled")
-	ParamStoreKeyNoRewardsValidatorAddresses = []byte("norewardsvalidatoraddresses")
 	ParamStoreKeyNoRewardsDelegatorAddresses = []byte("norewardsdelegatoraddresses")
 )
 
@@ -27,11 +26,10 @@ func ParamKeyTable() paramtypes.KeyTable {
 // DefaultParams returns default distribution parameters
 func DefaultParams() Params {
 	return Params{
-		CommunityTax:                sdk.NewDecWithPrec(2, 2), // 2%
-		BaseProposerReward:          sdk.NewDecWithPrec(1, 2), // 1%
-		BonusProposerReward:         sdk.NewDecWithPrec(4, 2), // 4%
-		WithdrawAddrEnabled:         true,
-		NoRewardsValidatorAddresses: []string{"stridevaloper1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrgpwsqm"},
+		CommunityTax:        sdk.NewDecWithPrec(2, 2), // 2%
+		BaseProposerReward:  sdk.NewDecWithPrec(1, 2), // 1%
+		BonusProposerReward: sdk.NewDecWithPrec(4, 2), // 4%
+		WithdrawAddrEnabled: true,
 		NoRewardsDelegatorAddresses: []string{"stride1u20df3trc2c2zdhm8qvh2hdjx9ewh00sv6eyy8",
 			"stride1uk4ze0x4nvh4fk0xm4jdud58eqn4yxhrt52vv7",
 			"stride12vfkpj7lpqg0n4j68rr5kyffc6wu55dzqewda4"},
@@ -50,7 +48,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamStoreKeyBaseProposerReward, &p.BaseProposerReward, validateBaseProposerReward),
 		paramtypes.NewParamSetPair(ParamStoreKeyBonusProposerReward, &p.BonusProposerReward, validateBonusProposerReward),
 		paramtypes.NewParamSetPair(ParamStoreKeyWithdrawAddrEnabled, &p.WithdrawAddrEnabled, validateWithdrawAddrEnabled),
-		paramtypes.NewParamSetPair(ParamStoreKeyNoRewardsValidatorAddresses, &p.NoRewardsValidatorAddresses, validateNoRewardsValidatorAddresses),
 		paramtypes.NewParamSetPair(ParamStoreKeyNoRewardsDelegatorAddresses, &p.NoRewardsDelegatorAddresses, validateNoRewardsDelegatorAddresses),
 	}
 }
@@ -144,14 +141,6 @@ func validateWithdrawAddrEnabled(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	return nil
-}
-
-func validateNoRewardsValidatorAddresses(i interface{}) error {
-	_, ok := i.([]string)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
 	return nil
 }
 

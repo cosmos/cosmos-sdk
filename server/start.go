@@ -234,7 +234,7 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 
 	defer func() {
 		if err = svr.Stop(); err != nil {
-			fmt.Printf(err.Error() + "\n")
+			fmt.Printfln(err.Error())
 			os.Exit(1)
 		}
 	}()

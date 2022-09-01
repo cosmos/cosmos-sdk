@@ -214,7 +214,7 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 			expErr:    true,
 			expErrMsg: "already exists",
 		},
-		"create a valid permanent locked account": {
+		"create a valid periodic vesting account": {
 			preRun: func() {
 				s.bankKeeper.EXPECT().SendCoins(gomock.Any(), fromAddr, to2Addr, gomock.Any()).Return(nil)
 			},

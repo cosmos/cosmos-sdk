@@ -282,15 +282,6 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	return cc, writeCache
 }
 
-// CacheContextWithoutEmitEvents behaves the same as CacheContext except that it
-// does not automatically emit events from the cached context when the caller
-// executes the writeCache function.
-func (c Context) CacheContextWithoutEmitEvents() (cc Context, writeCache func()) {
-	cms := c.MultiStore().CacheMultiStore()
-	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
-	return cc, cms.Write
-}
-
 var _ context.Context = Context{}
 
 // ContextKey defines a type alias for a stdlib Context key.

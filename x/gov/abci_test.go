@@ -300,7 +300,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NotNil(t, macc)
 	initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
+	proposal, err := suite.GovKeeper.SubmitProposal(ctx, proposer, []sdk.Msg{mkTestLegacyContent(t)}, "")
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10))}
@@ -331,6 +331,91 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.True(t, suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).IsEqual(initialModuleAccCoins))
 }
 
+func TestProposalCanceledEndblocker(t *testing.T) {
+	suite := createTestSuite(t)
+	app := suite.App
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
+
+	SortAddresses(addrs)
+
+	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
+	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
+
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	valAddr := sdk.ValAddress(addrs[0])
+	proposer := addrs[0]
+	depositer := addrs[1]
+
+	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
+	staking.EndBlocker(ctx, suite.StakingKeeper)
+
+	macc := suite.GovKeeper.GetGovernanceAccount(ctx)
+	require.NotNil(t, macc)
+	initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+	intitalProposerBalance := suite.BankKeeper.GetAllBalances(ctx, proposer)
+	depositerBalance := suite.BankKeeper.GetAllBalances(ctx, depositer)
+
+	proposal, err := suite.GovKeeper.SubmitProposal(ctx, proposer, []sdk.Msg{mkTestLegacyContent(t)}, "")
+	require.NoError(t, err)
+
+	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10))}
+	newDepositMsg := v1.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
+
+	res, err := govMsgSvr.Deposit(sdk.WrapSDKContext(ctx), newDepositMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	newDepositMsg = v1.NewMsgDeposit(addrs[1], proposal.Id, proposalCoins)
+	res, err = govMsgSvr.Deposit(sdk.WrapSDKContext(ctx), newDepositMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	// check the balances of depositer and proposer
+	require.True(t, suite.BankKeeper.GetAllBalances(ctx, depositer).IsEqual(depositerBalance.Sub(proposalCoins...)))
+	require.True(t, suite.BankKeeper.GetAllBalances(ctx, proposer).IsEqual(intitalProposerBalance.Sub(proposalCoins...)))
+
+	canceledProposalQueue := suite.GovKeeper.CanceledProposalQueueIterator(ctx)
+	require.False(t, canceledProposalQueue.Valid())
+	canceledProposalQueue.Close()
+
+	macc = suite.GovKeeper.GetGovernanceAccount(ctx)
+	require.NotNil(t, macc)
+	moduleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+
+	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...).Add(proposalCoins...)
+	require.True(t, moduleAccCoins.IsEqual(deposits))
+
+	err = suite.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
+	require.NoError(t, err)
+
+	minDepositsForProposal, err := suite.GovKeeper.GetMinDepositsForProposal(ctx)
+	minDepositsForProposalInDec := sdk.NewDecCoinsFromCoins(minDepositsForProposal...)
+	require.NoError(t, err)
+
+	// get the community pool funds
+	beforeCommunityFund := suite.DistributionKeeper.GetFeePoolCommunityCoins(ctx)
+	// cancel the gov proposal
+	err = suite.GovKeeper.CancelProposal(ctx, proposal.Id, addrs[0].String())
+	require.NoError(t, err)
+
+	canceledProposalQueue = suite.GovKeeper.CanceledProposalQueueIterator(ctx)
+	require.True(t, canceledProposalQueue.Valid())
+	canceledProposalQueue.Close()
+
+	gov.EndBlocker(ctx, suite.GovKeeper)
+	afterCommunityFund := suite.DistributionKeeper.GetFeePoolCommunityCoins(ctx)
+
+	macc = suite.GovKeeper.GetGovernanceAccount(ctx)
+	require.NotNil(t, macc)
+	require.Equal(t, beforeCommunityFund.Add(minDepositsForProposalInDec...), afterCommunityFund)
+	require.True(t, suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).IsEqual(initialModuleAccCoins))
+	require.True(t, suite.BankKeeper.GetAllBalances(ctx, proposer).IsEqual(intitalProposerBalance.Sub(minDepositsForProposal...)))
+	require.True(t, suite.BankKeeper.GetAllBalances(ctx, depositer).IsEqual(depositerBalance))
+}
+
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App
@@ -352,7 +437,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	// Create a proposal where the handler will pass for the test proposal
 	// because the value of contextKeyBadProposal is true.
 	ctx = ctx.WithValue(contextKeyBadProposal, true)
-	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
+	proposal, err := suite.GovKeeper.SubmitProposal(ctx, proposer, []sdk.Msg{mkTestLegacyContent(t)}, "")
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10)))

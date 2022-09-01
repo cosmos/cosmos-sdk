@@ -307,7 +307,7 @@ func (s *IntegrationTestSuite) TestCmdGetProposals() {
 				var proposals v1.QueryProposalsResponse
 
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &proposals), out.String())
-				s.Require().Len(proposals.Proposals, 3)
+				s.Require().Len(proposals.Proposals, 4)
 			}
 		})
 	}

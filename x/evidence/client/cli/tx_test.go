@@ -80,7 +80,7 @@ func TestGetQueryCmd(t *testing.T) {
 				})
 				return baseCtx.WithClient(c)
 			},
-			"evidence: []\npagination:\n  next_key: null\n  total: \"0\"",
+			"evidence: []\npagination: null",
 			false,
 		},
 	}

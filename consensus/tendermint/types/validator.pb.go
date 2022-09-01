@@ -7,7 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	crypto "github.com/cosmos/cosmos-sdk/types/tendermint/crypto"
+	crypto "github.com/cosmos/cosmos-sdk/consensus/tendermint/crypto"
 	io "io"
 	math "math"
 	math_bits "math/bits"

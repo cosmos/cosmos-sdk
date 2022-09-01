@@ -37,13 +37,13 @@ echo "Generate baseapp test messages"
 
 echo "Move proto files to the right places"
 cp -r github.com/cosmos/cosmos-sdk/* ./
-cp -r github.com/tendermint/tendermint/proto/tendermint/* ./types/tendermint/
-cp -r github.com/tendermint/tendermint/abci* ./types/tendermint
+cp -r github.com/tendermint/tendermint/proto/tendermint/* ./consensus/tendermint/
+cp -r github.com/tendermint/tendermint/abci* ./consensus/tendermint
 rm -rf github.com
 
-echo "Rewrite tendermint proto files"
-find ./types/tendermint -type f -exec sed -i 's/github.com\/tendermint\/tendermint\/proto\/tendermint/github.com\/cosmos\/cosmos-sdk\/types\/tendermint/' {} \;
-find ./types/tendermint -type f -exec sed -i 's/github.com\/tendermint\/tendermint\/abci\/types/github.com\/cosmos\/cosmos-sdk\/types\/abci\/types/' {} \;
+echo "Rewrite consensus/tendermint proto imports"
+find ./consensus/tendermint -type f -exec sed -i 's/github.com\/tendermint\/tendermint\/proto\/tendermint/github.com\/cosmos\/cosmos-sdk\/consensus\/tendermint/' {} \;
+find ./consensus/tendermint -type f -exec sed -i 's/github.com\/tendermint\/tendermint\/abci\/types/github.com\/cosmos\/cosmos-sdk\/consensus\/tendermint\/abci\/types/' {} \;
 
 go mod tidy
 

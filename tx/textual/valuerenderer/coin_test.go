@@ -13,6 +13,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	"cosmossdk.io/tx/textual/valuerenderer"
 )
 
 // mockCoinMetadataKey is used in the mock coin metadata querier.
@@ -38,6 +39,8 @@ func TestFormatCoin(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
+	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
+
 	for _, tc := range testcases {
 		metadata := &bankv1beta1.Metadata{
 			Display:    tc.metadata.Denom,
@@ -45,7 +48,7 @@ func TestFormatCoin(t *testing.T) {
 		}
 		ctx := context.WithValue(context.Background(), mockCoinMetadataKey(tc.coin.Denom), metadata)
 
-		r, err := valueRendererOf(tc.coin)
+		r, err := textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
 		require.NoError(t, err)
 		b := new(strings.Builder)
 		err = r.Format(ctx, protoreflect.ValueOf(tc.coin.ProtoReflect()), b)

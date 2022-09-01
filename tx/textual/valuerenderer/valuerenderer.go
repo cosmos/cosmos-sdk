@@ -61,7 +61,7 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 			return vr, nil
 		}
 	case fd.Kind() == protoreflect.BytesKind:
-		return bytesValueRenderer{}, nil
+		return NewBytesValueRenderer(), nil
 
 	// Integers
 	case fd.Kind() == protoreflect.Uint32Kind ||
@@ -69,7 +69,7 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 		fd.Kind() == protoreflect.Int32Kind ||
 		fd.Kind() == protoreflect.Int64Kind:
 		{
-			return intValueRenderer{}, nil
+			return NewIntValueRenderer(), nil
 		}
 
 	case fd.Kind() == protoreflect.MessageKind:
@@ -91,7 +91,7 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 func (r *Textual) init() {
 	if r.scalars == nil {
 		r.scalars = map[string]ValueRenderer{}
-		r.scalars["cosmos.Int"] = intValueRenderer{}
+		r.scalars["cosmos.Int"] = NewIntValueRenderer()
 		r.scalars["cosmos.Dec"] = decValueRenderer{}
 	}
 	if r.messages == nil {

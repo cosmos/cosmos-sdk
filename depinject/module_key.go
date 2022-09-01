@@ -45,8 +45,8 @@ type OwnModuleKey ModuleKey
 
 var ownModuleKeyType = reflect.TypeOf((*OwnModuleKey)(nil)).Elem()
 
-// ModuleKeyContext context defines a context for non-forgeable module keys.
-// All module keys with the same name in the same context should be equal
+// ModuleKeyContext defines a context for non-forgeable module keys.
+// All module keys with the same name from the same context should be equal
 // and module keys with the same name but from different contexts should be
 // not equal.
 //

@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
+	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
 )
 
@@ -44,6 +45,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		configurator.GenutilModule(),
 		configurator.StakingModule(),
 		configurator.GovModule(),
+		configurator.DistributionModule(),
 		configurator.TxModule())
 
 	cfg, err := network.DefaultConfigWithAppConfig(appConfig)

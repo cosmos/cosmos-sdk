@@ -67,16 +67,17 @@ func TestImportExportQueues(t *testing.T) {
 	ctx := s1.app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 1, valTokens)
 
+	proposer := addrs[0]
 	header := tmproto.Header{Height: s1.app.LastBlockHeight() + 1}
 	s1.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	ctx = s1.app.BaseApp.NewContext(false, tmproto.Header{})
 	// Create two proposals, put the second into the voting period
-	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
+	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, proposer, []sdk.Msg{mkTestLegacyContent(t)}, "")
 	require.NoError(t, err)
 	proposalID1 := proposal1.Id
 
-	proposal2, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
+	proposal2, err := s1.GovKeeper.SubmitProposal(ctx, proposer, []sdk.Msg{mkTestLegacyContent(t)}, "")
 	require.NoError(t, err)
 	proposalID2 := proposal2.Id
 

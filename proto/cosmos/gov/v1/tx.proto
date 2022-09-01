@@ -135,7 +135,7 @@ message MsgUpdateParamsResponse {}
 //
 // Since: cosmos-sdk 0.47 
 message MsgCancelProposal{
-  option (cosmos.msg.v1.signer) = "depositor";
+  option (cosmos.msg.v1.signer) = "proposer";
   
   uint64  proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
   string  proposer    = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];

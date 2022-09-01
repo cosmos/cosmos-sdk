@@ -309,7 +309,7 @@ func (msg MsgCancelProposal) Type() string { return sdk.MsgTypeURL(&msg) }
 // ValidateBasic implements Msg
 func (msg MsgCancelProposal) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Proposer); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
 
 	return nil

@@ -16,50 +16,42 @@ type kvstoreTx struct {
 }
 
 // dummy implementation of proto.Message
-func (msg kvstoreTx) Reset()         {}
-func (msg kvstoreTx) String() string { return "TODO" }
-func (msg kvstoreTx) ProtoMessage()  {}
+func (msg *kvstoreTx) Reset()         {}
+func (msg *kvstoreTx) String() string { return "TODO" }
+func (msg *kvstoreTx) ProtoMessage()  {}
 
 var (
-	_ sdk.Tx  = kvstoreTx{}
-	_ sdk.Msg = kvstoreTx{}
+	_ sdk.Tx  = &kvstoreTx{}
+	_ sdk.Msg = &kvstoreTx{}
 )
 
-func NewTx(key, value string) kvstoreTx {
+func NewTx(key, value string) *kvstoreTx {
 	bytes := fmt.Sprintf("%s=%s", key, value)
-	return kvstoreTx{
+	return &kvstoreTx{
 		key:   []byte(key),
 		value: []byte(value),
 		bytes: []byte(bytes),
 	}
 }
 
-func (tx kvstoreTx) Route() string {
-	return "kvstore"
-}
-
-func (tx kvstoreTx) Type() string {
+func (tx *kvstoreTx) Type() string {
 	return "kvstore_tx"
 }
 
-func (tx kvstoreTx) GetMsgs() []sdk.Msg {
+func (tx *kvstoreTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{tx}
 }
 
-func (tx kvstoreTx) GetMemo() string {
-	return ""
-}
-
-func (tx kvstoreTx) GetSignBytes() []byte {
+func (tx *kvstoreTx) GetSignBytes() []byte {
 	return tx.bytes
 }
 
 // Should the app be calling this? Or only handlers?
-func (tx kvstoreTx) ValidateBasic() error {
+func (tx *kvstoreTx) ValidateBasic() error {
 	return nil
 }
 
-func (tx kvstoreTx) GetSigners() []sdk.AccAddress {
+func (tx *kvstoreTx) GetSigners() []sdk.AccAddress {
 	return nil
 }
 
@@ -71,10 +63,10 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 	split := bytes.Split(txBytes, []byte("="))
 	if len(split) == 1 { //nolint:gocritic
 		k := split[0]
-		tx = kvstoreTx{k, k, txBytes}
+		tx = &kvstoreTx{k, k, txBytes}
 	} else if len(split) == 2 {
 		k, v := split[0], split[1]
-		tx = kvstoreTx{k, v, txBytes}
+		tx = &kvstoreTx{k, v, txBytes}
 	} else {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "too many '='")
 	}

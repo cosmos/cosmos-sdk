@@ -162,7 +162,7 @@ func (rs *Store) StoreKeysByName() map[string]types.StoreKey {
 
 // LoadLatestVersionAndUpgrade implements CommitMultiStore
 func (rs *Store) LoadLatestVersionAndUpgrade(upgrades *types.StoreUpgrades) error {
-	ver := getLatestVersion(rs.db)
+	ver := GetLatestVersion(rs.db)
 	return rs.loadVersion(ver, upgrades)
 }
 
@@ -173,7 +173,7 @@ func (rs *Store) LoadVersionAndUpgrade(ver int64, upgrades *types.StoreUpgrades)
 
 // LoadLatestVersion implements CommitMultiStore.
 func (rs *Store) LoadLatestVersion() error {
-	ver := getLatestVersion(rs.db)
+	ver := GetLatestVersion(rs.db)
 	return rs.loadVersion(ver, nil)
 }
 
@@ -391,7 +391,7 @@ func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
 func (rs *Store) LastCommitID() types.CommitID {
 	if rs.lastCommitInfo == nil {
 		return types.CommitID{
-			Version: getLatestVersion(rs.db),
+			Version: GetLatestVersion(rs.db),
 		}
 	}
 
@@ -539,17 +539,28 @@ func (rs *Store) handlePruning(version int64) error {
 	}
 	rs.logger.Info("prune start", "height", version)
 	defer rs.logger.Info("prune end", "height", version)
-	return rs.pruneStores()
+	return rs.PruneStores(true, nil)
 }
 
-func (rs *Store) pruneStores() error {
-	pruningHeights, err := rs.pruningManager.GetFlushAndResetPruningHeights()
-	if err != nil {
-		return err
+// PruneStores prunes the specific heights of the multi store.
+// If clearPruningManager is true, the pruning manager will return the pruning heights,
+// and they are appended to the pruningHeights to be pruned.
+func (rs *Store) PruneStores(clearPruningManager bool, pruningHeights []int64) (err error) {
+	if clearPruningManager {
+		heights, err := rs.pruningManager.GetFlushAndResetPruningHeights()
+		if err != nil {
+			return err
+		}
+
+		if len(heights) == 0 {
+			rs.logger.Debug("no heights to be pruned from pruning manager")
+		}
+
+		pruningHeights = append(pruningHeights, heights...)
 	}
 
 	if len(pruningHeights) == 0 {
-		rs.logger.Debug("pruning skipped; no heights to prune")
+		rs.logger.Debug("no heights need to be pruned")
 		return nil
 	}
 
@@ -689,7 +700,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	if height == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot snapshot height 0")
 	}
-	if height > uint64(getLatestVersion(rs.db)) {
+	if height > uint64(GetLatestVersion(rs.db)) {
 		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot snapshot future height %v", height)
 	}
 
@@ -981,7 +992,7 @@ type storeParams struct {
 	initialVersion uint64
 }
 
-func getLatestVersion(db dbm.DB) int64 {
+func GetLatestVersion(db dbm.DB) int64 {
 	bz, err := db.Get([]byte(latestVersionKey))
 	if err != nil {
 		panic(err)

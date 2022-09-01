@@ -53,13 +53,13 @@ func ValidateGenesis(data GenesisState) error {
 	}
 
 	downtimeJail := data.Params.DowntimeJailDuration
-	if downtimeJail < 1*time.Minute {
-		return fmt.Errorf("downtime unjail duration must be at least 1 minute, is %s", downtimeJail.String())
+	if downtimeJail < 2*time.Second {
+		return fmt.Errorf("downtime unjail duration must be at least 2 seconds, is %s", downtimeJail.String())
 	}
 
 	signedWindow := data.Params.SignedBlocksWindow
-	if signedWindow < 10 {
-		return fmt.Errorf("signed blocks window must be at least 10, is %d", signedWindow)
+	if signedWindow < 2 {
+		return fmt.Errorf("signed blocks window must be at least 2, is %d", signedWindow)
 	}
 
 	return nil

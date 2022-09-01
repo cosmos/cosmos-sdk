@@ -36,7 +36,6 @@ type SimTestSuite struct {
 }
 
 func (suite *SimTestSuite) SetupTest() {
-
 	var (
 		appBuilder *runtime.AppBuilder
 		err        error

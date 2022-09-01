@@ -27,6 +27,7 @@ func (k Keeper) AllocateTokens(
 	// see: https://github.com/tendermint/tendermint/pull/1815 and
 	// https://github.com/tendermint/tendermint/blob/7b40167f58789803610747a4c385c0deee030f90/UPGRADING.md#validator-set-updates
 	// for more details
+	totalWhitelistedPowerShare := sdk.NewDec(1)
 	height := strconv.FormatInt(ctx.BlockHeight()-3, 10)
 	blacklistedPower, found := k.GetBlacklistedPower(ctx, height)
 	if !found {
@@ -35,13 +36,12 @@ func (k Keeper) AllocateTokens(
 	}
 	totalBlacklistedPower := blacklistedPower.TotalBlacklistedPowerShare
 	validatorBlacklistedPowers := blacklistedPower.ValidatorBlacklistedPowers
-	if len(validatorBlacklistedPowers) == 0 {
-		// TODO we should still distribute rewards, even if no delegators are blacklisted
-		k.Logger(ctx).Error(fmt.Sprintf("no validator blacklisted power found for current block height%s", height))
-		return
+	if len(validatorBlacklistedPowers) != 0 {
+		totalWhitelistedPowerShare = sdk.NewDec(1).Sub(totalBlacklistedPower.Quo(sdk.NewDec(totalPreviousPower)))
+	} else {
+		k.Logger(ctx).Error(fmt.Sprintf("no validator blacklisted power found for current block height: %s", height))
 	}
 	blacklistedPowerShareByValidator := k.GetBlacklistedPowerShareByValidator(ctx, validatorBlacklistedPowers)
-	totalWhitelistedPowerShare := sdk.NewDec(1).Sub(totalBlacklistedPower.Quo(sdk.NewDec(totalPreviousPower)))
 
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
@@ -108,24 +108,36 @@ func (k Keeper) AllocateTokens(
 
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
-	adjustedTotalPower := sdk.NewDec(totalPreviousPower).Mul(totalWhitelistedPowerShare).RoundInt64() // TODO might rounding cause issues later?
-	// k.Logger(ctx).Info(fmt.Sprintf("\n... voteMultiplier %v, totalWhitelistedPowerShare %v, adjustedTotalPower %d \n", voteMultiplier, totalWhitelistedPowerShare, adjustedTotalPower))
-	// fmt.Println("", adjustedTotalPower, voteMultiplier, totalWhitelistedPowerShare)
+	totalWhitelistedPower := sdk.NewDec(totalPreviousPower).Mul(totalWhitelistedPowerShare).RoundInt64() // TODO might rounding cause issues later?
+	if totalWhitelistedPower == 0 {
+		// can't distribute rewards
+		k.Logger(ctx).Info("all stake is blacklisted, no rewards can be allocated")
+		return
+	}
+	// assert that all validators that signed are contained in the map
+	for _, vote := range bondedVotes {
+		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+		valAddr := validator.GetOperator().String()
+		if _, ok := blacklistedPowerShareByValidator[valAddr]; !ok {
+			// can't distribute rewards!
+			k.Logger(ctx).Error(fmt.Sprintf("validator %s signed block %d, but is missing from blacklistedPowerShareByValidator! %v", valAddr, ctx.BlockHeight(), blacklistedPowerShareByValidator))
+			return
+		}
+	}
 	for _, vote := range bondedVotes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 		valAddr := validator.GetOperator().String()
 		// k.Logger(ctx).Info(fmt.Sprintf("...%s", valAddr))
 
 		var powerFraction sdk.Dec
-		// reduce the validator's power if they are tainted
-		if adjustedTotalPower != 0 { // If all we have is blacklisted delegations, process normally | TODO clean up this case
-			valWhitelistedPowerShare := sdk.NewDec(1).Sub(blacklistedPowerShareByValidator[valAddr])
-			validatorPowerAdj := sdk.NewDec(vote.Validator.Power).Mul(valWhitelistedPowerShare).RoundInt64()
-			powerFraction = sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(adjustedTotalPower))
-		} else {
-			// if not tainted use the untainted power fraction
-			powerFraction = sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(adjustedTotalPower))
+		// reduce the validator's power if they have blacklisted delegations
+		validatorBlacklistedShare, found := blacklistedPowerShareByValidator[valAddr]
+		if !found {
+			panic("valAddr should always be found in blacklistedPowerShareByValidator")
 		}
+		valWhitelistedPowerShare := sdk.NewDec(1).Sub(validatorBlacklistedShare)
+		validatorPowerAdj := sdk.NewDec(vote.Validator.Power).Mul(valWhitelistedPowerShare).RoundInt64()
+		powerFraction = sdk.NewDec(validatorPowerAdj).QuoTruncate(sdk.NewDec(totalWhitelistedPower))
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)

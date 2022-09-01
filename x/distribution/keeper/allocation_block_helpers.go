@@ -30,13 +30,14 @@ func (k Keeper) StringInSlice(a string, list []string) bool {
 
 // get a validator's total blacklisted delegation power
 // 		returns (totalPower, blacklistedPower)
-func (k Keeper) GetTotalBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int64) {
+func (k Keeper) GetTotalBlacklistedPower(ctx sdk.Context, valAddr string) (int64, int64, error) {
 
 	blacklistedDelAddrs := k.GetParams(ctx).NoRewardsDelegatorAddresses
-	val, error := sdk.ValAddressFromBech32(valAddr)
-	if error != nil {
+	val, err := sdk.ValAddressFromBech32(valAddr)
+	if err != nil {
 		// something went wrong
-		return 0, 0
+		k.Logger(ctx).Error("failed to parse delegator address %s, err %s", val, err.Error())
+		return 0, 0, err
 	}
 	valObj := k.stakingKeeper.Validator(ctx, val)
 	valTotPower := sdk.TokensToConsensusPower(valObj.GetTokens(), sdk.DefaultPowerReduction)
@@ -48,7 +49,8 @@ func (k Keeper) GetTotalBlacklistedPower(ctx sdk.Context, valAddr string) (int64
 		del, err := sdk.AccAddressFromBech32(delAddr)
 		if err != nil {
 			// something went wrong
-			return 0, 0
+			k.Logger(ctx).Error("failed to parse delegator address %s, err %s", delAddr, err.Error())
+			return 0, 0, err
 		}
 
 		// add the delegation share to total
@@ -61,7 +63,7 @@ func (k Keeper) GetTotalBlacklistedPower(ctx sdk.Context, valAddr string) (int64
 			valBlacklistedPower = valBlacklistedPower + consPower
 		}
 	}
-	return valTotPower, valBlacklistedPower
+	return valTotPower, valBlacklistedPower, nil
 }
 
 // function to get totalBlacklistedPowerShare and taintedValsBlacklistedPowerShare
@@ -72,8 +74,8 @@ func (k Keeper) GetValsBlacklistedPowerShare(ctx sdk.Context) (totalBlacklistedP
 	// in practice, we'd expect n ~= 150 and m ~= 100
 	for _, valAddr := range vals {
 		// update validator stats
-		valPower, valBlacklistedPower := k.GetTotalBlacklistedPower(ctx, valAddr)
-		if valBlacklistedPower == 0 {
+		valPower, valBlacklistedPower, err := k.GetTotalBlacklistedPower(ctx, valAddr)
+		if err != nil {
 			// something went wrong
 			continue
 		}

@@ -238,7 +238,7 @@ func NewSimApp(
 	// configure state listening capabilities using AppOptions
 	// we are doing nothing with the returned streamingServices and waitGroup in this case
 	if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, keys); err != nil {
-		fmt.Printf(err.Error() + "\n")
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 
@@ -482,7 +482,7 @@ func NewSimApp(
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
-			fmt.Printf(err.Error() + "\n")
+			fmt.Println(err.Error())
 			os.Exit(1)
 		}
 	}

@@ -77,6 +77,10 @@ A concrete use case is implemented in [transaction tips](./tips.md): the tipper 
 
 `SIGN_MODE_TEXTUAL` is a new sign mode for delivering a better signing experience on hardware wallets, it is currently still under implementation. If you wish to learn more, please refer to [ADR-050](https://github.com/cosmos/cosmos-sdk/pull/10701).
 
+#### Custom Sign modes
+
+There is the the opportunity to add your own custom sign mode to the Cosmos-SDK.  While we can not accept the implementation of the sign mode to the repository, we can accept a pull request to add the custom signmode to the SignMode enum located [here](https://github.com/cosmos/cosmos-sdk/blob/084e129fcf62d47366f398cf1066ed14e29af471/proto/cosmos/tx/signing/v1beta1/signing.proto#L17)
+
 ## Transaction Process
 
 The process of an end-user sending a transaction is:

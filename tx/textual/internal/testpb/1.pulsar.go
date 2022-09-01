@@ -1802,7 +1802,7 @@ func (Enumeration) EnumDescriptor() ([]byte, []int) {
 	return file__1_proto_rawDescGZIP(), []int{0}
 }
 
-// A contains
+// A is used for testing value renderers.
 type A struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

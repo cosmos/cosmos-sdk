@@ -42,7 +42,7 @@ func (s *contextTestSuite) TestCacheContext() {
 	s.Require().Equal(v1, cstore.Get(k1))
 	s.Require().Nil(cstore.Get(k2))
 
-	// emit some evens
+	// emit some events
 	cctx.EventManager().EmitEvent(types.NewEvent("foo", types.NewAttribute("key", "value")))
 	cctx.EventManager().EmitEvent(types.NewEvent("bar", types.NewAttribute("key", "value")))
 

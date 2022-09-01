@@ -71,18 +71,6 @@ func TestGetQueryCmd(t *testing.T) {
 		expectedOutput string
 		expectErr      bool
 	}{
-		"non-existent evidence": {
-			[]string{"DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"},
-			func() client.Context {
-				bz, _ := encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
-					Value: bz,
-				})
-				return baseCtx.WithClient(c)
-			},
-			"evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660 not found",
-			true,
-		},
 		"all evidence (default pagination)": {
 			[]string{},
 			func() client.Context {

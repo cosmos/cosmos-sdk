@@ -6,8 +6,10 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
@@ -22,14 +24,20 @@ type Textual struct {
 	// state.
 	coinMetadataQuerier CoinMetadataQueryFn
 	// scalars defines a registry for Cosmos scalars.
-	scalars  map[string]ValueRenderer
+	scalars map[string]ValueRenderer
+	// messages defines a registry for custom message renderers, as defined in
+	// point #9 in the spec. Note that we also use this same registry for the
+	// following messages, as they can be thought of custom message rendering:
+	// - SDK coin and coins
+	// - Protobuf timestamp
+	// - Protobuf duration
 	messages map[protoreflect.FullName]ValueRenderer
 }
 
 // NewTextual returns a new Textual which provides
 // value renderers.
-func NewTextual() Textual {
-	t := Textual{}
+func NewTextual(q CoinMetadataQueryFn) Textual {
+	t := Textual{coinMetadataQuerier: q}
 	t.init()
 	return t
 }
@@ -88,7 +96,8 @@ func (r *Textual) init() {
 	}
 	if r.messages == nil {
 		r.messages = map[protoreflect.FullName]ValueRenderer{}
-		r.messages["google.protobuf.Timestamp"] = NewTimestampValueRenderer()
+		r.messages[(&basev1beta1.Coin{}).ProtoReflect().Descriptor().FullName()] = NewCoinsValueRenderer(r.coinMetadataQuerier)
+		r.messages[(&timestamppb.Timestamp{}).ProtoReflect().Descriptor().FullName()] = NewTimestampValueRenderer()
 	}
 }
 

@@ -120,7 +120,7 @@ func TestGetADR050ValueRenderer(t *testing.T) {
 
 func TestTimestampDispatch(t *testing.T) {
 	a := (&testpb.A{}).ProtoReflect().Descriptor().Fields()
-	textual := valuerenderer.NewTextual()
+	textual := valuerenderer.NewTextual(nil)
 	rend, err := textual.GetValueRenderer(a.ByName(protoreflect.Name("TIMESTAMP")))
 	require.NoError(t, err)
 	require.IsType(t, valuerenderer.NewTimestampValueRenderer(), rend)

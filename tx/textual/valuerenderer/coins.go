@@ -12,6 +12,15 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// NewTimestampValueRenderer returns a ValueRenderer for SDK Coin and Coins.
+func NewCoinsValueRenderer(q CoinMetadataQueryFn, fd protoreflect.FieldDescriptor) ValueRenderer {
+	if fd.Cardinality() == protoreflect.Repeated {
+		return coinsValueRenderer{q}
+	}
+
+	return coinValueRenderer{q}
+}
+
 type coinsValueRenderer struct {
 	// coinMetadataQuerier defines a function to query the coin metadata from
 	// state.
@@ -21,6 +30,7 @@ type coinsValueRenderer struct {
 var _ ValueRenderer = coinsValueRenderer{}
 
 func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value, w io.Writer) error {
+	v.Message().Type()
 	if vr.coinMetadataQuerier == nil {
 		return fmt.Errorf("expected non-nil coin metadata querier")
 	}

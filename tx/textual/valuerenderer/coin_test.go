@@ -15,6 +15,7 @@ import (
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 )
 
+// mockCoinMetadataKey is used in the mock coin metadata querier.
 func mockCoinMetadataKey(denom string) string {
 	return fmt.Sprintf("%s-%s", "coin-metadata", denom)
 }

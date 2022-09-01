@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -52,7 +52,7 @@ func (m mockTendermintRPC) ABCIQueryWithOptions(
 func TestGetQueryCmd(t *testing.T) {
 	cmd := cli.GetQueryCmd()
 	cmd.SetOut(io.Discard)
-	assert.NotNil(t, cmd)
+	require.NotNil(t, cmd)
 
 	encCfg := testutilmod.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 	kr := keyring.NewInMemory(encCfg.Codec)
@@ -97,15 +97,15 @@ func TestGetQueryCmd(t *testing.T) {
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
 
-			assert.NoError(t, client.SetCmdClientContextHandler(clientCtx, cmd))
+			require.NoError(t, client.SetCmdClientContextHandler(clientCtx, cmd))
 
 			out, err := clitestutil.ExecTestCLICmd(baseCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
-			assert.Contains(t, strings.TrimSpace(out.String()), tc.expectedOutput)
+			require.Contains(t, strings.TrimSpace(out.String()), tc.expectedOutput)
 		})
 	}
 }

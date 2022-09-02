@@ -60,3 +60,6 @@ staking token of the chain.
     * [CLI](07_client.md#cli)
     * [gRPC](07_client.md#grpc)
     * [REST](07_client.md#rest)
+8. **[Metadata](08_metadata.md)**
+    * [Proposal](08_metadata.md#proposal)
+    * [Vote](08_metadata.md#vote)

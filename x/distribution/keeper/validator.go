@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -29,6 +30,10 @@ func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.Valid
 	// fetch current rewards
 	rewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
 
+	height := strconv.FormatInt(ctx.BlockHeight()-3, 10)
+	blacklistedPower, _ := k.GetBlacklistedPower(ctx, height)
+	blacklistedPowerShareByValidator := k.GetBlacklistedPowerShareByValidator(ctx, blacklistedPower.ValidatorBlacklistedPowers)
+
 	// calculate current ratio
 	var current sdk.DecCoins
 	if val.GetTokens().IsZero() {
@@ -45,7 +50,10 @@ func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.Valid
 		current = sdk.DecCoins{}
 	} else {
 		// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-		current = rewards.Rewards.QuoDecTruncate(val.GetTokens().ToDec())
+		// divide by whitelisted tokens
+		blacklistedTokensForValidator := blacklistedPowerShareByValidator[val.GetOperator().String()].Mul(val.GetTokens().ToDec())
+		whitelistedTokens := val.GetTokens().ToDec().Sub(blacklistedTokensForValidator)
+		current = rewards.Rewards.QuoDecTruncate(whitelistedTokens)
 	}
 
 	// fetch historical rewards for last period

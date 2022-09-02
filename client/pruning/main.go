@@ -9,11 +9,10 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 )
@@ -39,8 +38,7 @@ func PruningCmd(appCreator servertypes.AppCreator) *cobra.Command {
 		'--home' and '--app-db-backend'.
 		valid app-db-backend type includes 'goleveldb', 'cleveldb', 'rocksdb', 'boltdb', and 'badgerdb'.
 		`,
-		Example: `prune --home './' --app-db-backend 'goleveldb' --pruning 'custom' --pruning-keep-recent 100 --
-		pruning-keep-every 10, --pruning-interval 10`,
+		Example: "prune --home './' --app-db-backend 'goleveldb' --pruning 'custom' --pruning-keep-recent 100",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			vp := viper.New()
 
@@ -52,12 +50,13 @@ func PruningCmd(appCreator servertypes.AppCreator) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("get pruning options from command flags, keep-recent: %v\n",
+			fmt.Printf("get pruning options from command flags, strategy: %v, keep-recent: %v\n",
+				pruningOptions.Strategy,
 				pruningOptions.KeepRecent,
 			)
 
 			home := vp.GetString(flags.FlagHome)
-			db, err := openDB(home)
+			db, err := openDB(home, server.GetAppDBBackend(vp))
 			if err != nil {
 				return err
 			}
@@ -92,7 +91,7 @@ func PruningCmd(appCreator servertypes.AppCreator) *cobra.Command {
 				pruningHeights[len(pruningHeights)-1],
 			)
 
-			rootMultiStore.PruneStores(false, pruningHeights)
+			err = rootMultiStore.PruneStores(false, pruningHeights)
 			if err != nil {
 				return err
 			}
@@ -103,11 +102,8 @@ func PruningCmd(appCreator servertypes.AppCreator) *cobra.Command {
 
 	cmd.Flags().String(flags.FlagHome, "", "The database home directory")
 	cmd.Flags().String(FlagAppDBBackend, "", "The type of database for application and snapshots databases")
-	cmd.Flags().String(server.FlagPruning, storetypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
+	cmd.Flags().String(server.FlagPruning, pruningtypes.PruningOptionDefault, "Pruning strategy (default|nothing|everything|custom)")
 	cmd.Flags().Uint64(server.FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
-	cmd.Flags().Uint64(server.FlagPruningKeepEvery, 0,
-		`Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom'),
-		this is not used by this command but kept for compatibility with the complete pruning options`)
 	cmd.Flags().Uint64(server.FlagPruningInterval, 10,
 		`Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom'), 
 		this is not used by this command but kept for compatibility with the complete pruning options`)
@@ -115,7 +111,7 @@ func PruningCmd(appCreator servertypes.AppCreator) *cobra.Command {
 	return cmd
 }
 
-func openDB(rootDir string) (dbm.DB, error) {
+func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 	dataDir := filepath.Join(rootDir, "data")
-	return sdk.NewLevelDB("application", dataDir)
+	return dbm.NewDB("application", backendType, dataDir)
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ServerStartTime defines the time duration that the server need to stay running after startup
@@ -57,18 +58,11 @@ type (
 		// RegisterNodeService registers the node gRPC Query service.
 		RegisterNodeService(client.Context, config.Config)
 
-		// CommitMultiStore return the multistore instance
-		CommitMultiStore() storetypes.CommitMultiStore
+		// RegisterTendermintService registers the gRPC Query service for tendermint queries.
+		RegisterTendermintService(clientCtx client.Context)
 
-		// SnapshotManager return the snapshot manager
-		SnapshotManager() *snapshots.Manager
-
-		// ValidatorKeyProvider returns a function that generates a validator key
-		ValidatorKeyProvider() func() (cmtcrypto.PrivKey, error)
-
-		// Close is called in start cmd to gracefully cleanup resources.
-		// Must be safe to be called multiple times.
-		Close() error
+		// CommitMultiStore Returns the multistore instance
+		CommitMultiStore() sdk.CommitMultiStore
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

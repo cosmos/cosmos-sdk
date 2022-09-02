@@ -444,8 +444,7 @@ func (rs *Store) LastCommitID() types.CommitID {
 		emptyHash := sha256.Sum256([]byte{})
 		appHash := emptyHash[:]
 		return types.CommitID{
-			Version: rs.lastCommitInfo.Version,
-			Hash:    appHash, // set empty apphash to sha256([]byte{}) if hash is nil
+			Version: GetLatestVersion(rs.db),
 		}
 	}
 
@@ -508,8 +507,10 @@ func (rs *Store) Commit() types.CommitID {
 		}
 	}
 
-	// reset the removalMap
-	rs.removalMap = make(map[types.StoreKey]bool)
+	// batch prune if the current height is a pruning interval height
+	if rs.pruningOpts.Interval > 0 && version%int64(rs.pruningOpts.Interval) == 0 {
+		rs.PruneStores(true, nil)
+	}
 
 	if err := rs.handlePruning(version); err != nil {
 		rs.logger.Error(
@@ -524,35 +525,33 @@ func (rs *Store) Commit() types.CommitID {
 	}
 }
 
-// WorkingHash returns the current hash of the store.
-// it will be used to get the current app hash before commit.
-func (rs *Store) WorkingHash() []byte {
-	storeInfos := make([]types.StoreInfo, 0, len(rs.stores))
-	storeKeys := keysFromStoreKeyMap(rs.stores)
+// PruneStores will batch delete a list of heights from each mounted sub-store.
+// If clearStorePruningHeihgts is true, store's pruneHeights is appended to the
+// pruningHeights and reset after finishing pruning.
+func (rs *Store) PruneStores(clearStorePruningHeihgts bool, pruningHeights []int64) {
+	if clearStorePruningHeihgts {
+		pruningHeights = append(pruningHeights, rs.pruneHeights...)
+	}
+
+	if len(rs.pruneHeights) == 0 {
+		return
+	}
 
 	for _, key := range storeKeys {
 		store := rs.stores[key]
 
-		if store.GetStoreType() != types.StoreTypeIAVL {
-			continue
-		}
-
-		if !rs.removalMap[key] {
-			si := types.StoreInfo{
-				Name: key.Name(),
-				CommitId: types.CommitID{
-					Hash: store.WorkingHash(),
-				},
+			if err := store.(*iavl.Store).DeleteVersions(pruningHeights...); err != nil {
+				if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
+					panic(err)
+				}
 			}
 			storeInfos = append(storeInfos, si)
 		}
 	}
 
-	sort.SliceStable(storeInfos, func(i, j int) bool {
-		return storeInfos[i].Name < storeInfos[j].Name
-	})
-
-	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
+	if clearStorePruningHeihgts {
+		rs.pruneHeights = make([]int64, 0)
+	}
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.
@@ -1041,14 +1040,14 @@ func (rs *Store) RollbackToVersion(target int64) int64 {
 	if target < 0 {
 		panic("Negative rollback target")
 	}
-	current := getLatestVersion(rs.db)
+	current := GetLatestVersion(rs.db)
 	if target >= current {
 		return current
 	}
 	for ; current > target; current-- {
 		rs.pruneHeights = append(rs.pruneHeights, current)
 	}
-	rs.pruneStores()
+	rs.PruneStores(true, nil)
 
 	// update latest height
 	bz, err := gogotypes.StdInt64Marshal(current)
@@ -1067,16 +1066,7 @@ type storeParams struct {
 	initialVersion uint64
 }
 
-func newStoreParams(key types.StoreKey, db corestore.KVStoreWithBatch, typ types.StoreType, initialVersion uint64) storeParams {
-	return storeParams{
-		key:            key,
-		db:             db,
-		typ:            typ,
-		initialVersion: initialVersion,
-	}
-}
-
-func GetLatestVersion(db corestore.KVStoreWithBatch) int64 {
+func GetLatestVersion(db dbm.DB) int64 {
 	bz, err := db.Get([]byte(latestVersionKey))
 	if err != nil {
 		panic(err)

@@ -420,7 +420,7 @@ func (rs *Store) Commit() types.CommitID {
 
 	// batch prune if the current height is a pruning interval height
 	if rs.pruningOpts.Interval > 0 && version%int64(rs.pruningOpts.Interval) == 0 {
-		rs.pruneStores()
+		rs.PruneStores(true, nil)
 	}
 
 	flushMetadata(rs.db, version, rs.lastCommitInfo, rs.pruneHeights)
@@ -431,9 +431,14 @@ func (rs *Store) Commit() types.CommitID {
 	}
 }
 
-// pruneStores will batch delete a list of heights from each mounted sub-store.
-// Afterwards, pruneHeights is reset.
-func (rs *Store) pruneStores() {
+// PruneStores will batch delete a list of heights from each mounted sub-store.
+// If clearStorePruningHeihgts is true, store's pruneHeights is appended to the
+// pruningHeights and reset after finishing pruning.
+func (rs *Store) PruneStores(clearStorePruningHeihgts bool, pruningHeights []int64) {
+	if clearStorePruningHeihgts {
+		pruningHeights = append(pruningHeights, rs.pruneHeights...)
+	}
+
 	if len(rs.pruneHeights) == 0 {
 		return
 	}
@@ -444,7 +449,7 @@ func (rs *Store) pruneStores() {
 			// it to get the underlying IAVL store.
 			store = rs.GetCommitKVStore(key)
 
-			if err := store.(*iavl.Store).DeleteVersions(rs.pruneHeights...); err != nil {
+			if err := store.(*iavl.Store).DeleteVersions(pruningHeights...); err != nil {
 				if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
 					panic(err)
 				}
@@ -452,7 +457,9 @@ func (rs *Store) pruneStores() {
 		}
 	}
 
-	rs.pruneHeights = make([]int64, 0)
+	if clearStorePruningHeihgts {
+		rs.pruneHeights = make([]int64, 0)
+	}
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.
@@ -548,66 +555,7 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	return store
 }
 
-<<<<<<< HEAD
 // GetStoreByName performs a lookup of a StoreKey given a store name typically
-=======
-func (rs *Store) handlePruning(version int64) error {
-	rs.pruningManager.HandleHeight(version - 1) // we should never prune the current version.
-	if !rs.pruningManager.ShouldPruneAtHeight(version) {
-		return nil
-	}
-	rs.logger.Info("prune start", "height", version)
-	defer rs.logger.Info("prune end", "height", version)
-	return rs.PruneStores(true, nil)
-}
-
-// PruneStores prunes the specific heights of the multi store.
-// If clearPruningManager is true, the pruning manager will return the pruning heights,
-// and they are appended to the pruningHeights to be pruned.
-func (rs *Store) PruneStores(clearPruningManager bool, pruningHeights []int64) (err error) {
-	if clearPruningManager {
-		heights, err := rs.pruningManager.GetFlushAndResetPruningHeights()
-		if err != nil {
-			return err
-		}
-
-		if len(heights) == 0 {
-			rs.logger.Debug("no heights to be pruned from pruning manager")
-		}
-
-		pruningHeights = append(pruningHeights, heights...)
-	}
-
-	if len(pruningHeights) == 0 {
-		rs.logger.Debug("no heights need to be pruned")
-		return nil
-	}
-
-	rs.logger.Debug("pruning heights", "heights", pruningHeights)
-
-	for key, store := range rs.stores {
-		// If the store is wrapped with an inter-block cache, we must first unwrap
-		// it to get the underlying IAVL store.
-		if store.GetStoreType() != types.StoreTypeIAVL {
-			continue
-		}
-
-		store = rs.GetCommitKVStore(key)
-
-		err := store.(*iavl.Store).DeleteVersions(pruningHeights...)
-		if err == nil {
-			continue
-		}
-
-		if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
-			return err
-		}
-	}
-	return nil
-}
-
-// getStoreByName performs a lookup of a StoreKey given a store name typically
->>>>>>> d874acee4 (feat: Add a cli cmd to prune old states according to current settings (#12742))
 // provided in a path. The StoreKey is then used to perform a lookup and return
 // a Store. If the Store is wrapped in an inter-block cache, it will be unwrapped
 // prior to being returned. If the StoreKey does not exist, nil is returned.
@@ -720,11 +668,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	if height == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot snapshot height 0")
 	}
-<<<<<<< HEAD
 	if height > uint64(rs.LastCommitID().Version) {
-=======
-	if height > uint64(GetLatestVersion(rs.db)) {
->>>>>>> d874acee4 (feat: Add a cli cmd to prune old states according to current settings (#12742))
 		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot snapshot future height %v", height)
 	}
 
@@ -963,14 +907,14 @@ func (rs *Store) RollbackToVersion(target int64) int64 {
 	if target < 0 {
 		panic("Negative rollback target")
 	}
-	current := getLatestVersion(rs.db)
+	current := GetLatestVersion(rs.db)
 	if target >= current {
 		return current
 	}
 	for ; current > target; current-- {
 		rs.pruneHeights = append(rs.pruneHeights, current)
 	}
-	rs.pruneStores()
+	rs.PruneStores(true, nil)
 
 	// update latest height
 	bz, err := gogotypes.StdInt64Marshal(current)

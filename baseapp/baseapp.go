@@ -43,14 +43,13 @@ type (
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { //nolint: maligned
 	// initialized on creation
-	logger      log.Logger
-	name        string               // application name from abci.Info
-	db          dbm.DB               // common DB backend
-	cms         sdk.CommitMultiStore // Main (uncached) state
-	storeLoader StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-
-	grpcQueryRouter   *GRPCQueryRouter  // router for redirecting gRPC query calls
-	msgServiceRouter  *MsgServiceRouter // router for redirecting Msg service messages
+	logger            log.Logger
+	name              string               // application name from abci.Info
+	db                dbm.DB               // common DB backend
+	cms               sdk.CommitMultiStore // Main (uncached) state
+	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
+	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
+	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 

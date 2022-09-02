@@ -3,8 +3,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
-	tmos "github.com/tendermint/tendermint/libs/os"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -78,7 +78,7 @@ func GenesisStateFromGenDoc(genDoc tmtypes.GenesisDoc) (genesisState map[string]
 //
 // NOTE: The pubkey input is this machines pubkey.
 func GenesisStateFromGenFile(genFile string) (genesisState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, err error) {
-	if !tmos.FileExists(genFile) {
+	if _, err := os.Stat(genFile); os.IsNotExist(err) {
 		return genesisState, genDoc,
 			fmt.Errorf("%s does not exist, run `init` first", genFile)
 	}

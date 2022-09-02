@@ -107,10 +107,15 @@ func (k msgServer) CancelProposal(goCtx context.Context, msg *v1.MsgCancelPropos
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, govtypes.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Proposer),
+			sdk.NewAttribute(govtypes.AttributeKeyProposalID, fmt.Sprint(msg.ProposalId)),
 		),
 	)
 
-	return &v1.MsgCancelProposalResponse{}, nil
+	return &v1.MsgCancelProposalResponse{
+		ProposalId:     msg.ProposalId,
+		CanceledTime:   ctx.BlockTime(),
+		CanceledHeight: uint64(ctx.BlockHeight()),
+	}, nil
 }
 
 func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1.MsgExecLegacyContent) (*v1.MsgExecLegacyContentResponse, error) {

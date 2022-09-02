@@ -412,7 +412,7 @@ func SimulateMsgCancelProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := v1.NewMsgCancelProposal(account.GetAddress(), proposal.Id)
+		msg := v1.NewMsgCancelProposal(proposal.Id, account.GetAddress())
 
 		txCtx := simulation.OperationInput{
 			R:               r,

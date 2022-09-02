@@ -140,7 +140,7 @@ Where proposal.json contains:
 func NewCmdCancelProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "cancel-proposal [proposal-id]",
-		Short:   "Cancel governance proposal by proposal before the voting period ends.",
+		Short:   "Cancel governance proposal before the voting period ends.",
 		Args:    cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`$ %s tx gov cancel-proposal 1 --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -158,7 +158,7 @@ func NewCmdCancelProposal() *cobra.Command {
 			// Get proposer address
 			from := clientCtx.GetFromAddress()
 
-			msg := v1.NewMsgCancelProposal(from, proposalID)
+			msg := v1.NewMsgCancelProposal(proposalID, from)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

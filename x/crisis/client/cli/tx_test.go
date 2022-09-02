@@ -6,7 +6,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -97,19 +97,19 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 
 			cmd := cli.NewMsgVerifyInvariantTxCmd()
 			cmd.SetOut(io.Discard)
-			assert.NotNil(t, cmd)
+			require.NotNil(t, cmd)
 
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)
 
-			assert.NoError(t, client.SetCmdClientContextHandler(baseCtx, cmd))
+			require.NoError(t, client.SetCmdClientContextHandler(baseCtx, cmd))
 
 			err := cmd.Execute()
 			if tc.expectErr {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.errString)
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errString)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 		})
 	}

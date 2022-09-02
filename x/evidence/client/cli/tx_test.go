@@ -3,6 +3,7 @@ package cli_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -68,9 +69,23 @@ func TestGetQueryCmd(t *testing.T) {
 	testCases := map[string]struct {
 		args           []string
 		ctxGen         func() client.Context
+		expCmdOutput   string
 		expectedOutput string
 		expectErr      bool
 	}{
+		"non-existent evidence": {
+			[]string{"DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"},
+			func() client.Context {
+				bz, _ := encCfg.Codec.Marshal(&sdk.TxResponse{})
+				c := newMockTendermintRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return baseCtx.WithClient(c)
+			},
+			"DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660",
+			"",
+			true,
+		},
 		"all evidence (default pagination)": {
 			[]string{},
 			func() client.Context {
@@ -80,6 +95,7 @@ func TestGetQueryCmd(t *testing.T) {
 				})
 				return baseCtx.WithClient(c)
 			},
+			"",
 			"evidence: []\npagination: null",
 			false,
 		},
@@ -99,12 +115,17 @@ func TestGetQueryCmd(t *testing.T) {
 
 			require.NoError(t, client.SetCmdClientContextHandler(clientCtx, cmd))
 
+			if len(tc.args) != 0 {
+				require.Contains(t, fmt.Sprint(cmd), tc.expCmdOutput)
+			}
+
 			out, err := clitestutil.ExecTestCLICmd(baseCtx, cmd, tc.args)
 			if tc.expectErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 			}
+			require.Contains(t, fmt.Sprint(cmd), "evidence [] [] Query for evidence by hash or for all (paginated) submitted evidence")
 			require.Contains(t, strings.TrimSpace(out.String()), tc.expectedOutput)
 		})
 	}

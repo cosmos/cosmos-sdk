@@ -256,7 +256,7 @@ type Proposal struct {
 	VotingEndTime    *time.Time   `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time,omitempty"`
 	// metadata is any arbitrary metadata attached to the proposal.
 	Metadata string `protobuf:"bytes,10,opt,name=metadata,proto3" json:"metadata,omitempty"`
-	// proposer defines an address of creater of the proposal.
+	// proposer defines the address of the proposal's proposer.
 	Proposer string `protobuf:"bytes,11,opt,name=proposer,proto3" json:"proposer,omitempty"`
 }
 

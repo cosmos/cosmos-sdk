@@ -162,14 +162,14 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	return activatedVotingPeriod, nil
 }
 
-// SendMinDepositsOfProposalToCommunityPool will sends the min deposits of proposal to community pool
+// SendProposalMinDepositToCommunityPool will sends the min deposits of proposal to community pool
 // from proposer deposits and updated the deposit store with updated deposit amount.
-func (keeper Keeper) SendMinDepositsOfProposalToCommunityPool(ctx sdk.Context, proposalID uint64, proAddr string) error {
+func (keeper Keeper) SendProposalMinDepositToCommunityPool(ctx sdk.Context, proposalID uint64, proAddr string) error {
 	proposerAddr := sdk.MustAccAddressFromBech32(proAddr)
 
 	deposit, found := keeper.GetDeposit(ctx, proposalID, proposerAddr)
 	if !found {
-		return nil
+		return sdkerrors.Wrapf(types.ErrNoDeposits, "proposer %s doesn't deposited to proposal %d", proAddr, proposalID)
 	}
 
 	minDepositeAmount, err := keeper.GetMinDepositsForProposal(ctx)
@@ -189,7 +189,7 @@ func (keeper Keeper) SendMinDepositsOfProposalToCommunityPool(ctx sdk.Context, p
 	return nil
 }
 
-// GetMinDepositsForProposal will returns minimum deposit amount required for creating the proposal.
+// GetMinDepositsForProposal returns minimum deposit amount required for creating the proposal.
 func (keeper Keeper) GetMinDepositsForProposal(ctx sdk.Context) ([]sdk.Coin, error) {
 	params := keeper.GetParams(ctx)
 

@@ -57,7 +57,7 @@ message Proposal {
   // metadata is any arbitrary metadata attached to the proposal.
   string metadata = 10;
 
-  // proposer defines an address of creater of the proposal.
+  // proposer defines the address of the proposal's proposer.
   string proposer = 11 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 

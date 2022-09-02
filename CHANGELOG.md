@@ -45,7 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client) [#12936](https://github.com/cosmos/cosmos-sdk/pull/12936) Add capability to preprocess transactions before broadcasting from a higher level chain.
 * (x/authz) [#13047](https://github.com/cosmos/cosmos-sdk/pull/13047) Add a GetAuthorization function to the keeper.
 * (cli) [#12742](https://github.com/cosmos/cosmos-sdk/pull/12742) Add the `prune` CLI cmd to manually prune app store history versions based on the pruning options.
-* (x/gov) [#13010](https://github.com/cosmos/cosmos-sdk/pull/13010) Add the `cancel-proposal` feature to proposers. Now proposers can cancel the proposal before voting period finished.
+* (x/gov) [#13010](https://github.com/cosmos/cosmos-sdk/pull/13010) Add `cancel-proposal` feature to proposals. Now proposers can cancel the proposal prior to the voting-period-end-time.
 
 ### Improvements
 
@@ -91,7 +91,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [#11859](https://github.com/cosmos/cosmos-sdk/pull/11859) Move the SendEnabled information out of the Params and into the state store directly.
 * (x/gov) [#12771](https://github.com/cosmos/cosmos-sdk/pull/12771) Initial deposit requirement for proposals at submission time.
 * (x/staking) [#12967](https://github.com/cosmos/cosmos-sdk/pull/12967) `unbond` now creates only one unbonding delegation entry when multiple unbondings exist at a single height (e.g. through multiple messages in a transaction).
-* (x/gov) [#13010](https://github.com/cosmos/cosmos-sdk/pull/13010) `submit-proposal` gov cli tx will add `proposer` field to proposal.
+* (x/gov) [#13010](https://github.com/cosmos/cosmos-sdk/pull/13010) `submit-proposal` gov cli tx adds `proposer` field to proposal.
 
 ### API Breaking Changes
 

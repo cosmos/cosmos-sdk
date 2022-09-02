@@ -24,4 +24,5 @@ var (
 	ErrMinDepositTooSmall      = sdkerrors.Register(ModuleName, 16, "minimum deposit is too small")
 	ErrProposalNotFound        = sdkerrors.Register(ModuleName, 17, "proposal is not found")
 	ErrInvalidProposer         = sdkerrors.Register(ModuleName, 18, "invalid proposer")
+	ErrNoDeposits              = sdkerrors.Register(ModuleName, 19, "no deposits found")
 )

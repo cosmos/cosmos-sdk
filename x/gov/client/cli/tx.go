@@ -139,12 +139,10 @@ Where proposal.json contains:
 // NewCmdCancelProposal implements submitting a cancel proposal transaction command.
 func NewCmdCancelProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel-proposal [proposal-id]",
-		Short: "Cancel governance proposal by proposal before the voting period ends.",
-		Args:  cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`
-		$ %s tx gov cancel-proposal 1 --from mykey
-		`, version.AppName),
+		Use:     "cancel-proposal [proposal-id]",
+		Short:   "Cancel governance proposal by proposal before the voting period ends.",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`$ %s tx gov cancel-proposal 1 --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -157,7 +155,7 @@ func NewCmdCancelProposal() *cobra.Command {
 				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
 			}
 
-			// Get depositor address
+			// Get proposer address
 			from := clientCtx.GetFromAddress()
 
 			msg := v1.NewMsgCancelProposal(from, proposalID)

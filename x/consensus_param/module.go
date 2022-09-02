@@ -2,13 +2,11 @@ package consensus_param
 
 import (
 	"context"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
+	//"cosmossdk.io/depinject"
 	"encoding/json"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	//authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	//govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -21,8 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/consensus_param/exported"
 	"github.com/cosmos/cosmos-sdk/x/consensus_param/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus_param/types"
-
-	modulev1 "cosmossdk.io/api/cosmos/consensus_param/module/v1"
 )
 
 // ConsensusVersion defines the current x/bank module consensus version.
@@ -120,43 +116,44 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
-	)
-}
+//func init() {
+//	appmodule.Register(
+//		&modulev1.Module{},
+//		appmodule.Provide(provideModuleBasic, provideModule),
+//	)
+//}
 
 func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type consensusParamInputs struct {
-	depinject.In
+//
+//type consensusParamInputs struct {
+//	depinject.In
+//
+//	Cdc       codec.Codec
+//	Key       *store.KVStoreKey
+//	ModuleKey depinject.OwnModuleKey
+//	Authority map[string]sdk.AccAddress `optional:"true"`
+//
+//	// LegacySubspace is used solely for migration of x/params managed parameters
+//	LegacySubspace exported.ParamStore
+//}
+//
+//type consensusParamOutputs struct {
+//	depinject.Out
+//
+//	consensusParamKeeper keeper.Keeper
+//	Module               runtime.AppModuleWrapper
+//}
 
-	Cdc       codec.Codec
-	Key       *store.KVStoreKey
-	ModuleKey depinject.OwnModuleKey
-	Authority map[string]sdk.AccAddress `optional:"true"`
-
-	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.ParamStore
-}
-
-type consensusParamOutputs struct {
-	depinject.Out
-
-	consensusParamKeeper keeper.Keeper
-	Module               runtime.AppModuleWrapper
-}
-
-func provideModule(in consensusParamInputs) consensusParamOutputs {
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		// default to governance authority if not provided
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
-	}
-	k := keeper.NewKeeper(in.Cdc, in.Key, authority.String())
-	m := NewAppModule(in.Cdc, k, in.LegacySubspace)
-	return consensusParamOutputs{consensusParamKeeper: k, Module: runtime.WrapAppModule(m)}
-}
+//func provideModule(in consensusParamInputs) consensusParamOutputs {
+//	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+//	if !ok {
+//		// default to governance authority if not provided
+//		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+//	}
+//	k := keeper.NewKeeper(in.Cdc, in.Key, authority.String())
+//	m := NewAppModule(in.Cdc, k, in.LegacySubspace)
+//	return consensusParamOutputs{consensusParamKeeper: k, Module: runtime.WrapAppModule(m)}
+//}

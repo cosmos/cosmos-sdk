@@ -156,7 +156,7 @@ func (rs *Store) GetStores() map[types.StoreKey]types.CommitKVStore {
 
 // LoadLatestVersionAndUpgrade implements CommitMultiStore
 func (rs *Store) LoadLatestVersionAndUpgrade(upgrades *types.StoreUpgrades) error {
-	ver := getLatestVersion(rs.db)
+	ver := GetLatestVersion(rs.db)
 	return rs.loadVersion(ver, upgrades)
 }
 
@@ -167,7 +167,7 @@ func (rs *Store) LoadVersionAndUpgrade(ver int64, upgrades *types.StoreUpgrades)
 
 // LoadLatestVersion implements CommitMultiStore.
 func (rs *Store) LoadLatestVersion() error {
-	ver := getLatestVersion(rs.db)
+	ver := GetLatestVersion(rs.db)
 	return rs.loadVersion(ver, nil)
 }
 
@@ -378,7 +378,7 @@ func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
 func (rs *Store) LastCommitID() types.CommitID {
 	if rs.lastCommitInfo == nil {
 		return types.CommitID{
-			Version: getLatestVersion(rs.db),
+			Version: GetLatestVersion(rs.db),
 		}
 	}
 
@@ -420,7 +420,7 @@ func (rs *Store) Commit() types.CommitID {
 
 	// batch prune if the current height is a pruning interval height
 	if rs.pruningOpts.Interval > 0 && version%int64(rs.pruningOpts.Interval) == 0 {
-		rs.pruneStores()
+		rs.PruneStores(true, nil)
 	}
 
 	flushMetadata(rs.db, version, rs.lastCommitInfo, rs.pruneHeights)
@@ -431,9 +431,14 @@ func (rs *Store) Commit() types.CommitID {
 	}
 }
 
-// pruneStores will batch delete a list of heights from each mounted sub-store.
-// Afterwards, pruneHeights is reset.
-func (rs *Store) pruneStores() {
+// PruneStores will batch delete a list of heights from each mounted sub-store.
+// If clearStorePruningHeihgts is true, store's pruneHeights is appended to the
+// pruningHeights and reset after finishing pruning.
+func (rs *Store) PruneStores(clearStorePruningHeihgts bool, pruningHeights []int64) {
+	if clearStorePruningHeihgts {
+		pruningHeights = append(pruningHeights, rs.pruneHeights...)
+	}
+
 	if len(rs.pruneHeights) == 0 {
 		return
 	}
@@ -444,7 +449,7 @@ func (rs *Store) pruneStores() {
 			// it to get the underlying IAVL store.
 			store = rs.GetCommitKVStore(key)
 
-			if err := store.(*iavl.Store).DeleteVersions(rs.pruneHeights...); err != nil {
+			if err := store.(*iavl.Store).DeleteVersions(pruningHeights...); err != nil {
 				if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
 					panic(err)
 				}
@@ -452,7 +457,9 @@ func (rs *Store) pruneStores() {
 		}
 	}
 
-	rs.pruneHeights = make([]int64, 0)
+	if clearStorePruningHeihgts {
+		rs.pruneHeights = make([]int64, 0)
+	}
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.
@@ -900,14 +907,14 @@ func (rs *Store) RollbackToVersion(target int64) int64 {
 	if target < 0 {
 		panic("Negative rollback target")
 	}
-	current := getLatestVersion(rs.db)
+	current := GetLatestVersion(rs.db)
 	if target >= current {
 		return current
 	}
 	for ; current > target; current-- {
 		rs.pruneHeights = append(rs.pruneHeights, current)
 	}
-	rs.pruneStores()
+	rs.PruneStores(true, nil)
 
 	// update latest height
 	bz, err := gogotypes.StdInt64Marshal(current)
@@ -926,7 +933,7 @@ type storeParams struct {
 	initialVersion uint64
 }
 
-func getLatestVersion(db dbm.DB) int64 {
+func GetLatestVersion(db dbm.DB) int64 {
 	bz, err := db.Get([]byte(latestVersionKey))
 	if err != nil {
 		panic(err)

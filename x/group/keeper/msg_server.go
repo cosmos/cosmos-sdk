@@ -754,19 +754,13 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 			return nil, err
 		}
 
-		results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr)
-		if err != nil {
+		if _, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr); err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", id, err.Error())
 			k.Logger(ctx).Info("proposal execution failed", "cause", err, "proposalID", id)
 		} else {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_SUCCESS
 			flush()
-
-			for _, res := range results {
-				// NOTE: The sdk msg handler creates a new EventManager, so events must be correctly propagated back to the current context
-				ctx.EventManager().EmitEvents(res.GetEvents())
-			}
 		}
 	}
 

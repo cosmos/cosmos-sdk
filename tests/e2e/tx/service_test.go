@@ -118,8 +118,11 @@ func (s *IntegrationTestSuite) TestQueryBySig() {
 	txb := s.mkTxBuilder()
 	txbz, err := s.cfg.TxConfig.TxEncoder()(txb.GetTx())
 	s.Require().NoError(err)
-	_, err = s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txbz, Mode: tx.BroadcastMode_BROADCAST_MODE_BLOCK})
+	resp, err := s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txbz, Mode: tx.BroadcastMode_BROADCAST_MODE_SYNC})
 	s.Require().NoError(err)
+	s.Require().NotEmpty(resp.TxResponse.TxHash)
+
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// get the signature out of the builder
 	sigs, err := txb.GetTx().GetSignaturesV2()

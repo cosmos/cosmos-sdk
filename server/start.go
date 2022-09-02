@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
@@ -56,6 +55,7 @@ const (
 	FlagPruningInterval   = "pruning-interval"
 	FlagIndexEvents       = "index-events"
 	FlagMinRetainBlocks   = "min-retain-blocks"
+	FlagIAVLCacheSize     = "iavl-cache-size"
 
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
@@ -208,7 +208,13 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	}
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
-	_, err = startTelemetry(serverconfig.GetConfig(ctx.Viper))
+
+	config, err := serverconfig.GetConfig(ctx.Viper)
+	if err != nil {
+		return err
+	}
+
+	_, err = startTelemetry(config)
 	if err != nil {
 		return err
 	}
@@ -222,12 +228,14 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 
 	err = svr.Start()
 	if err != nil {
-		tmos.Exit(err.Error())
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 
 	defer func() {
 		if err = svr.Stop(); err != nil {
-			tmos.Exit(err.Error())
+			fmt.Println(err.Error())
+			os.Exit(1)
 		}
 	}()
 
@@ -271,7 +279,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
-	config := serverconfig.GetConfig(ctx.Viper)
+	config, err := serverconfig.GetConfig(ctx.Viper)
+	if err != nil {
+		return err
+	}
+
 	if err := config.ValidateBasic(); err != nil {
 		return err
 	}

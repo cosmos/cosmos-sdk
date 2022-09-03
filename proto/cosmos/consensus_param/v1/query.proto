@@ -8,16 +8,16 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/consensus_param/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Params queries the parameters of x/bank module.
+  // Params queries the parameters of x/consensus_param module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/params";
+    option (google.api.http).get = "/cosmos/consensus_param/v1/params";
   }
 }
 
-// QueryParamsRequest defines the request type for querying x/bank parameters.
+// QueryParamsRequest defines the request type for querying x/consensus_param parameters.
 message QueryParamsRequest {}
 
-// QueryParamsResponse defines the response type for querying x/bank parameters.
+// QueryParamsResponse defines the response type for querying x/consensus_param parameters.
 message QueryParamsResponse {
   tendermint.types.ConsensusParams params = 1;
 }

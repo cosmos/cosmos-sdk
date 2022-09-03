@@ -17,8 +17,6 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 
 	consensusParams := new(tmproto.ConsensusParams)
 
-	consensusParams.Version = &tmproto.VersionParams{}
-
 	var bp tmproto.BlockParams
 	legacySubspace.Get(ctx, v1.ParamStoreKeyBlockParams, &bp)
 	consensusParams.Block = &bp

@@ -27,7 +27,9 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	k.Set(ctx, &req.Params)
+
+	consensusParams := req.ToProtoConsensusParams()
+	k.Set(ctx, &consensusParams)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

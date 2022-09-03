@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -29,6 +30,23 @@ func (msg MsgUpdateParams) GetSignBytes() []byte {
 
 // ValidateBasic performs basic MsgUpdateParams message validation.
 func (msg MsgUpdateParams) ValidateBasic() error {
-	params := tmtypes.ConsensusParamsFromProto(msg.Params)
+	params := tmtypes.ConsensusParamsFromProto(msg.ToProtoConsensusParams())
 	return Validate(params)
+}
+
+func (msg MsgUpdateParams) ToProtoConsensusParams() tmproto.ConsensusParams {
+	return tmproto.ConsensusParams{
+		Block: &tmproto.BlockParams{
+			MaxBytes: msg.Block.MaxBytes,
+			MaxGas:   msg.Block.MaxGas,
+		},
+		Evidence: &tmproto.EvidenceParams{
+			MaxAgeNumBlocks: msg.Evidence.MaxAgeNumBlocks,
+			MaxAgeDuration:  msg.Evidence.MaxAgeDuration,
+			MaxBytes:        msg.Evidence.MaxBytes,
+		},
+		Validator: &tmproto.ValidatorParams{
+			PubKeyTypes: msg.Validator.PubKeyTypes,
+		},
+	}
 }

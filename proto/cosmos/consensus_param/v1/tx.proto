@@ -10,7 +10,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/consensus_param/types";
 
 // Msg defines the bank Msg service.
 service Msg {
-  // UpdateParams defines a governance operation for updating the x/bank module parameters.
+  // UpdateParams defines a governance operation for updating the x/consensus_param module parameters.
   // The authority is defined in the keeper.
   //
   // Since: cosmos-sdk 0.47
@@ -29,7 +29,9 @@ message MsgUpdateParams {
   // params defines the x/consensus_params parameters to update.
   //
   // NOTE: All parameters must be supplied.
-  tendermint.types.ConsensusParams params = 2 [(gogoproto.nullable) = false];
+  tendermint.types.BlockParams     block     = 2 [(gogoproto.nullable) = false];
+  tendermint.types.EvidenceParams  evidence  = 3 [(gogoproto.nullable) = false];
+  tendermint.types.ValidatorParams validator = 4 [(gogoproto.nullable) = false];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a

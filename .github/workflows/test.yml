@@ -62,7 +62,7 @@ jobs:
 
   test-submodules:
     runs-on: buildjet-4vcpu-ubuntu-2004
-    container: tendermintdev/docker-tm-db-testing
+    container: ghcr.io/notional-labs/cosmos    
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3

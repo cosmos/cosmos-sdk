@@ -38,7 +38,7 @@ jobs:
 
   test-submodules:
     runs-on: ubuntu-latest
-    container: tendermintdev/docker-tm-db-testing
+    container: ghcr.io/notional-labs/cosmos    
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3

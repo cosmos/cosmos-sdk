@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,6 +31,52 @@ func (k Querier) Params(c context.Context, req *types.QueryParamsRequest) (*type
 	params := k.GetParams(ctx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
+}
+
+// ValidatorDistributionInfo query validator's commission and self-delegation rewards
+func (k Querier) ValidatorDistributionInfo(c context.Context, req *types.QueryValidatorDistributionInfoRequest) (*types.QueryValidatorDistributionInfoResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ValidatorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty validator address")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// self-delegation rewards
+	val := k.stakingKeeper.Validator(ctx, valAdr)
+	if val == nil {
+		return nil, sdkerrors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
+	}
+
+	delAdr, err := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAdr.Bytes()))
+	if err != nil {
+		return nil, err
+	}
+
+	del := k.stakingKeeper.Delegation(ctx, delAdr, valAdr)
+	if del == nil {
+		return nil, types.ErrNoDelegationExists
+	}
+
+	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
+	rewards := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// validator's commission
+	validatorCommission := k.GetValidatorAccumulatedCommission(ctx, valAdr)
+
+	return &types.QueryValidatorDistributionInfoResponse{
+		Commission:      validatorCommission.Commission,
+		OperatorAddress: delAdr.String(),
+		SelfBondRewards: rewards,
+	}, nil
 }
 
 // ValidatorOutstandingRewards queries rewards of a validator address

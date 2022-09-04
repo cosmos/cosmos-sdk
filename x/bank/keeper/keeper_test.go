@@ -643,15 +643,15 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: []byte(accAddrs[1].String())},
+		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[1].String()},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: []byte(accAddrs[0].String())},
+		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
+		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
 	)
 
 	event2 := sdk.Event{
@@ -660,7 +660,7 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: []byte(accAddrs[0].String())},
+		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
 	)
 
 	// events are shifted due to the funding account events
@@ -713,7 +713,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: []byte(accAddrs[0].String())},
+		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
 	)
 	require.Equal(abci.Event(event1), events[7])
 
@@ -738,22 +738,22 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: []byte(accAddrs[2].String())},
+		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[2].String()},
 	)
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
+		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()})
 	event3 := sdk.Event{
 		Type:       banktypes.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
 	}
 	event3.Attributes = append(
 		event3.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: []byte(accAddrs[3].String())},
+		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[3].String()},
 	)
 	event3.Attributes = append(
 		event3.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
+		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
 	)
 	// events are shifted due to the funding account events
 	require.Equal(abci.Event(event1), events[25])

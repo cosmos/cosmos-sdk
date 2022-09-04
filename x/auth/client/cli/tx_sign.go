@@ -338,6 +338,7 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 
 	return err
 }
+
 func marshalSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, signatureOnly bool) ([]byte, error) {
 	parsedTx := txBldr.GetTx()
 	if signatureOnly {

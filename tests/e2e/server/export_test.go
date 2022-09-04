@@ -35,7 +35,7 @@ import (
 func TestExportCmd_ConsensusParams(t *testing.T) {
 	tempDir := t.TempDir()
 
-	_, ctx, genDoc, cmd := setupApp(t, tempDir)
+	_, ctx, _, cmd := setupApp(t, tempDir)
 
 	output := &bytes.Buffer{}
 	cmd.SetOut(output)

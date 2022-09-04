@@ -29,6 +29,80 @@ type BroadcastReq struct {
 	Mode string         `json:"mode" yaml:"mode"`
 }
 
+// GetMultiMsgSignCommand returns the multi-msg-sign cmd
+func GetMultiMsgSignCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "multi-msg-sign [file] [file]...",
+		Aliases: []string{"multimsgsign"},
+		Short:   "Combine messages from transactions which are generated offline.",
+		PreRun:  preSignCmd,
+		Example: fmt.Sprintf("%s tx multi-msg-sign tx1.json tx2.json tx3.json ", version.AppName),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(
+				`Combine the transactions created with the --generate-only flag and Sign those transactions.
+
+Example: 
+$ %s tx multi-msg-sign tx1.json tx2.json tx3.json 
+
+It will read a transactions from [files], sign it, and print its JSON encoding.
+3EFBCD425B719FD8CF960552D33E7721C26B0114D33E49D5EBD79E3B70618775
+The --offline flag makes sure that the client will not reach out to full node.
+As a result, the account and sequence number queries will not be performed and
+it is required to set such parameters manually. Note, invalid values will cause
+the transaction to fail.
+
+The --multisig=<multisig_key> flag generates a signature on behalf of a multisig account
+key. It implies --signature-only. Full multisig signed transactions may eventually
+be generated via the 'multisign' command.
+`, version.AppName,
+			)),
+
+		RunE: makeMultiMsgSignCmd(),
+	}
+
+	cmd.Flags().String(flagMultisig, "", "Address or key name of the multisig account on behalf of which the transaction shall be signed")
+	cmd.Flags().Bool(flagOverwrite, false, "Overwrite existing signatures with a new one. If disabled, new signature will be appended")
+	cmd.Flags().Bool(flagSigOnly, false, "Print only the signatures")
+	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
+	cmd.Flags().Bool(flagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
+	flags.AddTxFlagsToCmd(cmd)
+
+	cmd.MarkFlagRequired(flags.FlagFrom)
+
+	return cmd
+}
+
+func makeMultiMsgSignCmd() func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		clientCtx, err := client.GetClientTxContext(cmd)
+		if err != nil {
+			return err
+		}
+
+		newb := clientCtx.TxConfig.NewTxBuilder()
+		msgs := make([]sdk.Msg, 0)
+		for i := 0; i < len(args); i++ {
+			parsedTx, err := authclient.ReadTxFromFile(clientCtx, args[i])
+			if err != nil {
+				return err
+			}
+			fe, err := clientCtx.TxConfig.WrapTxBuilder(parsedTx)
+			if err != nil {
+				return err
+			}
+			msgs = append(msgs, parsedTx.GetMsgs()...)
+			newb.SetMemo(fe.GetTx().GetMemo())
+			newb.SetTip(fe.GetTx().GetTip())
+			newb.SetGasLimit(fe.GetTx().GetGas())
+		}
+
+		newb.SetMsgs(msgs...)
+		newb.SetGasLimit(newb.GetTx().GetGas() * uint64(len(msgs)))
+
+		return signTx(cmd, clientCtx, tx.NewFactoryCLI(clientCtx, cmd.Flags()), newb.GetTx())
+	}
+}
+
 // GetSignCommand returns the sign command
 func GetMultiSignCommand() *cobra.Command {
 	cmd := &cobra.Command{

@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/types"
 
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
@@ -216,131 +217,127 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		f := cmd.Flags()
 
 		clientCtx, txF, newTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
 			return err
 		}
 
-		txCfg := clientCtx.TxConfig
-		txBuilder, err := txCfg.WrapTxBuilder(newTx)
-		if err != nil {
-			return err
-		}
-
-		printSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
-		multisig, _ := cmd.Flags().GetString(flagMultisig)
-		if err != nil {
-			return err
-		}
-		from, _ := cmd.Flags().GetString(flags.FlagFrom)
-		_, fromName, _, err := client.GetFromFields(clientCtx, txF.Keybase(), from)
-		if err != nil {
-			return fmt.Errorf("error getting account from keybase: %w", err)
-		}
-
-		overwrite, _ := f.GetBool(flagOverwrite)
-		if multisig != "" {
-			// Bech32 decode error, maybe it's a name, we try to fetch from keyring
-			multisigAddr, multisigName, _, err := client.GetFromFields(clientCtx, txF.Keybase(), multisig)
-			if err != nil {
-				return fmt.Errorf("error getting account from keybase: %w", err)
-			}
-			multisigkey, err := getMultisigRecord(clientCtx, multisigName)
-			if err != nil {
-				return err
-			}
-			multisigPubKey, err := multisigkey.GetPubKey()
-			if err != nil {
-				return err
-			}
-			multisigLegacyPub := multisigPubKey.(*kmultisig.LegacyAminoPubKey)
-
-			fromRecord, err := clientCtx.Keyring.Key(fromName)
-			if err != nil {
-				return fmt.Errorf("error getting account from keybase: %w", err)
-			}
-			fromPubKey, err := fromRecord.GetPubKey()
-			if err != nil {
-				return err
-			}
-
-			var found bool
-			for _, pubkey := range multisigLegacyPub.GetPubKeys() {
-				if pubkey.Equals(fromPubKey) {
-					found = true
-				}
-			}
-			if !found {
-				return fmt.Errorf("signing key is not a part of multisig key")
-			}
-			err = authclient.SignTxWithSignerAddress(
-				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
-			if err != nil {
-				return err
-			}
-			printSignatureOnly = true
-		} else {
-			err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, overwrite)
-		}
-		if err != nil {
-			return err
-		}
-
-		aminoJSON, err := f.GetBool(flagAmino)
-		if err != nil {
-			return err
-		}
-
-		bMode, err := f.GetString(flags.FlagBroadcastMode)
-		if err != nil {
-			return err
-		}
-
-		var json []byte
-		if aminoJSON {
-			stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBuilder.GetTx())
-			if err != nil {
-				return err
-			}
-			req := BroadcastReq{
-				Tx:   stdTx,
-				Mode: bMode,
-			}
-			json, err = clientCtx.LegacyAmino.MarshalJSON(req)
-			if err != nil {
-				return err
-			}
-		} else {
-			json, err = marshalSignatureJSON(txCfg, txBuilder, printSignatureOnly)
-			if err != nil {
-				return err
-			}
-		}
-
-		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
-		if outputDoc == "" {
-			cmd.Printf("%s\n", json)
-			return nil
-		}
-
-		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			err2 := fp.Close()
-			if err == nil {
-				err = err2
-			}
-		}()
-
-		_, err = fp.Write(append(json, '\n'))
-		return err
+		return signTx(cmd, clientCtx, txF, newTx)
 	}
 }
 
+func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx types.Tx) error {
+	f := cmd.Flags()
+	txCfg := clientCtx.TxConfig
+	txBuilder, err := txCfg.WrapTxBuilder(newTx)
+	if err != nil {
+		return err
+	}
+
+	printSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
+	multisig, _ := cmd.Flags().GetString(flagMultisig)
+	if err != nil {
+		return err
+	}
+	from, _ := cmd.Flags().GetString(flags.FlagFrom)
+	_, fromName, _, err := client.GetFromFields(clientCtx, txF.Keybase(), from)
+	if err != nil {
+		return fmt.Errorf("error getting account from keybase: %w", err)
+	}
+
+	overwrite, _ := f.GetBool(flagOverwrite)
+	if multisig != "" {
+		// Bech32 decode error, maybe it's a name, we try to fetch from keyring
+		multisigAddr, multisigName, _, err := client.GetFromFields(clientCtx, txF.Keybase(), multisig)
+		if err != nil {
+			return fmt.Errorf("error getting account from keybase: %w", err)
+		}
+		multisigkey, err := getMultisigRecord(clientCtx, multisigName)
+		if err != nil {
+			return err
+		}
+		multisigPubKey, err := multisigkey.GetPubKey()
+		if err != nil {
+			return err
+		}
+		multisigLegacyPub := multisigPubKey.(*kmultisig.LegacyAminoPubKey)
+
+		fromRecord, err := clientCtx.Keyring.Key(fromName)
+		if err != nil {
+			return fmt.Errorf("error getting account from keybase: %w", err)
+		}
+		fromPubKey, err := fromRecord.GetPubKey()
+		if err != nil {
+			return err
+		}
+
+		var found bool
+		for _, pubkey := range multisigLegacyPub.GetPubKeys() {
+			if pubkey.Equals(fromPubKey) {
+				found = true
+			}
+		}
+		if !found {
+			return fmt.Errorf("signing key is not a part of multisig key")
+		}
+		err = authclient.SignTxWithSignerAddress(
+			txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
+		if err != nil {
+			return err
+		}
+		printSignatureOnly = true
+	} else {
+		err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, overwrite)
+	}
+	if err != nil {
+		return err
+	}
+
+	aminoJSON, err := f.GetBool(flagAmino)
+	if err != nil {
+		return err
+	}
+
+	bMode, err := f.GetString(flags.FlagBroadcastMode)
+	if err != nil {
+		return err
+	}
+
+	// set output
+	closeFunc, err := setOutputFile(cmd)
+	if err != nil {
+		return err
+	}
+
+	defer closeFunc()
+	clientCtx.WithOutput(cmd.OutOrStdout())
+
+	var json []byte
+	if aminoJSON {
+		stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBuilder.GetTx())
+		if err != nil {
+			return err
+		}
+		req := BroadcastReq{
+			Tx:   stdTx,
+			Mode: bMode,
+		}
+		json, err = clientCtx.LegacyAmino.MarshalJSON(req)
+		if err != nil {
+			return err
+		}
+	} else {
+		json, err = marshalSignatureJSON(txCfg, txBuilder, printSignatureOnly)
+		if err != nil {
+			return err
+		}
+	}
+
+	cmd.Printf("%s\n", json)
+
+	return err
+}
 func marshalSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, signatureOnly bool) ([]byte, error) {
 	parsedTx := txBldr.GetTx()
 	if signatureOnly {

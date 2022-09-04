@@ -3,6 +3,7 @@ package memdb
 import (
 	"bytes"
 	"context"
+	"sync"
 
 	"github.com/cosmos/cosmos-sdk/db"
 	"github.com/google/btree"
@@ -13,15 +14,20 @@ const (
 	// channel causes two context switches per item sent, while buffering allows more work per
 	// context switch. Tuned with benchmarks.
 	chBufferSize = 64
+	sliceSize    = 64
 )
 
 // memDBIterator is a memDB iterator.
 type memDBIterator struct {
-	ch     <-chan *item
+	ch     <-chan []*item
 	cancel context.CancelFunc
-	item   *item
 	start  []byte
 	end    []byte
+
+	items     []*item
+	cursor    int
+	buffer    []*item
+	buffermtx sync.RWMutex
 }
 
 var _ db.Iterator = (*memDBIterator)(nil)
@@ -32,12 +38,15 @@ var _ db.Iterator = (*memDBIterator)(nil)
 // The reverse case needs some special handling, since we use [start, end) while btree uses (start, end]
 func newMemDBIterator(tx *dbTxn, start []byte, end []byte, reverse bool) *memDBIterator {
 	ctx, cancel := context.WithCancel(context.Background())
-	ch := make(chan *item, chBufferSize)
+	ch := make(chan []*item, chBufferSize)
 	iter := &memDBIterator{
 		ch:     ch,
 		cancel: cancel,
 		start:  start,
 		end:    end,
+		cursor: -1,
+		buffer: make([]*item, 0, sliceSize),
+		items:  make([]*item, 0, sliceSize),
 	}
 
 	go func() {
@@ -49,18 +58,43 @@ func newMemDBIterator(tx *dbTxn, start []byte, end []byte, reverse bool) *memDBI
 			abortLessThan []byte
 		)
 		visitor := func(i btree.Item) bool {
-			item := i.(*item)
-			if skipEqual != nil && bytes.Equal(item.key, skipEqual) {
+			nitem := i.(*item)
+			if skipEqual != nil && bytes.Equal(nitem.key, skipEqual) {
 				skipEqual = nil
+				if len(iter.buffer) > 0 {
+					iter.buffermtx.Lock()
+					ch <- iter.buffer
+					iter.buffer = make([]*item, 0, sliceSize)
+					iter.buffermtx.Unlock()
+				}
 				return true
 			}
-			if abortLessThan != nil && bytes.Compare(item.key, abortLessThan) == -1 {
+			if abortLessThan != nil && bytes.Compare(nitem.key, abortLessThan) == -1 {
+				if len(iter.buffer) > 0 {
+					iter.buffermtx.Lock()
+					ch <- iter.buffer
+					iter.buffer = make([]*item, 0, sliceSize)
+					iter.buffermtx.Unlock()
+				}
 				return false
 			}
+
+			iter.buffer = append(iter.buffer, nitem)
+			if len(iter.buffer) == sliceSize {
+				iter.buffermtx.Lock()
+				ch <- iter.buffer
+				iter.buffer = make([]*item, 0, sliceSize)
+				iter.buffermtx.Unlock()
+			}
+
 			select {
 			case <-ctx.Done():
+				iter.buffermtx.Lock()
+				ch <- iter.buffer
+				iter.buffer = make([]*item, 0, sliceSize)
+				iter.buffermtx.Unlock()
 				return false
-			case ch <- item:
+			default:
 				return true
 			}
 		}
@@ -94,7 +128,7 @@ func (i *memDBIterator) Close() error {
 	i.cancel()
 	for range i.ch { // drain channel
 	}
-	i.item = nil
+	i.items = nil
 	return nil
 }
 
@@ -105,14 +139,27 @@ func (i *memDBIterator) Domain() ([]byte, []byte) {
 
 // Next implements Iterator.
 func (i *memDBIterator) Next() bool {
-	item, ok := <-i.ch
+	i.cursor++
+	if i.cursor < len(i.items) && i.cursor != sliceSize {
+		return i.items[i.cursor] != nil
+	} else {
+		i.cursor = 0
+	}
+
+	it, ok := <-i.ch
 	switch {
 	case ok:
-		i.item = item
+		i.items = it
+	case len(i.buffer) > 0:
+		i.buffermtx.RLock()
+		defer i.buffermtx.RUnlock()
+		i.items = i.buffer
+		i.buffer = nil
+		return i.items[i.cursor] != nil
 	default:
-		i.item = nil
+		return false
 	}
-	return i.item != nil
+	return i.items[i.cursor] != nil
 }
 
 // Error implements Iterator.
@@ -123,17 +170,17 @@ func (i *memDBIterator) Error() error {
 // Key implements Iterator.
 func (i *memDBIterator) Key() []byte {
 	i.assertIsValid()
-	return i.item.key
+	return i.items[i.cursor].key
 }
 
 // Value implements Iterator.
 func (i *memDBIterator) Value() []byte {
 	i.assertIsValid()
-	return i.item.value
+	return i.items[i.cursor].value
 }
 
 func (i *memDBIterator) assertIsValid() {
-	if i.item == nil {
+	if i.items[i.cursor] == nil {
 		panic("iterator is invalid")
 	}
 }

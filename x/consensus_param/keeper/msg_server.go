@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -29,6 +30,9 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	consensusParams := req.ToProtoConsensusParams()
+	if err := types.Validate(tmtypes.ConsensusParamsFromProto(consensusParams)); err != nil {
+		return nil, err
+	}
 	k.Set(ctx, &consensusParams)
 
 	ctx.EventManager().EmitEvent(

@@ -48,5 +48,6 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() tmproto.ConsensusParams {
 		Validator: &tmproto.ValidatorParams{
 			PubKeyTypes: msg.Validator.PubKeyTypes,
 		},
+		Version: tmtypes.DefaultConsensusParams().ToProto().Version,
 	}
 }

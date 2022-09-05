@@ -235,18 +235,31 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 		return err
 	}
 
-	printSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
-	multisig, _ := cmd.Flags().GetString(flagMultisig)
+	printSignatureOnly, err := cmd.Flags().GetBool(flagSigOnly)
 	if err != nil {
 		return err
 	}
-	from, _ := cmd.Flags().GetString(flags.FlagFrom)
+
+	multisig, err := cmd.Flags().GetString(flagMultisig)
+	if err != nil {
+		return err
+	}
+
+	from, err := cmd.Flags().GetString(flags.FlagFrom)
+	if err != nil {
+		return err
+	}
+
 	_, fromName, _, err := client.GetFromFields(clientCtx, txF.Keybase(), from)
 	if err != nil {
 		return fmt.Errorf("error getting account from keybase: %w", err)
 	}
 
-	overwrite, _ := f.GetBool(flagOverwrite)
+	overwrite, err := f.GetBool(flagOverwrite)
+	if err != nil {
+		return err
+	}
+
 	if multisig != "" {
 		// Bech32 decode error, maybe it's a name, we try to fetch from keyring
 		multisigAddr, multisigName, _, err := client.GetFromFields(clientCtx, txF.Keybase(), multisig)

@@ -33,7 +33,6 @@ type BroadcastReq struct {
 func GetMultiMsgSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "multi-msg-sign [file] [file]...",
-		Aliases: []string{"multimsgsign"},
 		Short:   "Combine messages from transactions which are generated offline.",
 		PreRun:  preSignCmd,
 		Example: fmt.Sprintf("%s tx multi-msg-sign tx1.json tx2.json tx3.json ", version.AppName),
@@ -45,7 +44,7 @@ Example:
 $ %s tx multi-msg-sign tx1.json tx2.json tx3.json 
 
 It will read a transactions from [files], sign it, and print its JSON encoding.
-3EFBCD425B719FD8CF960552D33E7721C26B0114D33E49D5EBD79E3B70618775
+
 The --offline flag makes sure that the client will not reach out to full node.
 As a result, the account and sequence number queries will not be performed and
 it is required to set such parameters manually. Note, invalid values will cause
@@ -79,7 +78,7 @@ func makeMultiMsgSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		newb := clientCtx.TxConfig.NewTxBuilder()
+		txBuilder := clientCtx.TxConfig.NewTxBuilder()
 		msgs := make([]sdk.Msg, 0)
 		for i := 0; i < len(args); i++ {
 			parsedTx, err := authclient.ReadTxFromFile(clientCtx, args[i])
@@ -91,15 +90,15 @@ func makeMultiMsgSignCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 			msgs = append(msgs, parsedTx.GetMsgs()...)
-			newb.SetMemo(fe.GetTx().GetMemo())
-			newb.SetTip(fe.GetTx().GetTip())
-			newb.SetGasLimit(fe.GetTx().GetGas())
+			txBuilder.SetMemo(fe.GetTx().GetMemo())
+			txBuilder.SetTip(fe.GetTx().GetTip())
+			txBuilder.SetGasLimit(fe.GetTx().GetGas())
 		}
 
-		newb.SetMsgs(msgs...)
-		newb.SetGasLimit(newb.GetTx().GetGas() * uint64(len(msgs)))
+		txBuilder.SetMsgs(msgs...)
+		txBuilder.SetGasLimit(txBuilder.GetTx().GetGas() * uint64(len(msgs)))
 
-		return signTx(cmd, clientCtx, tx.NewFactoryCLI(clientCtx, cmd.Flags()), newb.GetTx())
+		return signTx(cmd, clientCtx, tx.NewFactoryCLI(clientCtx, cmd.Flags()), txBuilder.GetTx())
 	}
 }
 

@@ -142,19 +142,21 @@ func (i *memDBIterator) Next() bool {
 	i.cursor++
 	if i.cursor < len(i.items) && i.cursor != sliceSize {
 		return i.items[i.cursor] != nil
-	} else {
-		i.cursor = 0
 	}
 
 	it, ok := <-i.ch
 	switch {
 	case ok:
 		i.items = it
+		i.cursor = 0
 	case len(i.buffer) > 0:
 		i.buffermtx.RLock()
 		defer i.buffermtx.RUnlock()
 		i.items = i.buffer
 		i.buffer = nil
+		if len(i.items) > 0 {
+			i.cursor = 0
+		}
 		return i.items[i.cursor] != nil
 	default:
 		return false

@@ -1,14 +1,13 @@
 //go:build e2e
 // +build e2e
 
-package testutil
+package group
 
 import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	clienttestutil "github.com/cosmos/cosmos-sdk/x/group/client/testutil"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -16,5 +15,5 @@ import (
 func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 2
-	suite.Run(t, clienttestutil.NewIntegrationTestSuite(cfg))
+	suite.Run(t, NewIntegrationTestSuite(cfg))
 }

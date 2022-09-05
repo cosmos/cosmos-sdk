@@ -34,11 +34,18 @@ type MsgClient interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
-	// UpdateParams defines a governance operation for updating the x/distribution module
-	// parameters. The authority is defined in the keeper.
+	// UpdateParams defines a governance operation for updating the x/distribution
+	// module parameters. The authority is defined in the keeper.
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// CommunityPoolSpend defines a governance operation for sending tokens from
+	// the community pool in the x/distribution module to another account, which
+	// could be the governance module itself. The authority is defined in the
+	// keeper.
+	//
+	// Since: cosmos-sdk 0.47
+	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
 }
 
 type msgClient struct {
@@ -94,6 +101,15 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error) {
+	out := new(MsgCommunityPoolSpendResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/CommunityPoolSpend", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -110,11 +126,18 @@ type MsgServer interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
-	// UpdateParams defines a governance operation for updating the x/distribution module
-	// parameters. The authority is defined in the keeper.
+	// UpdateParams defines a governance operation for updating the x/distribution
+	// module parameters. The authority is defined in the keeper.
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// CommunityPoolSpend defines a governance operation for sending tokens from
+	// the community pool in the x/distribution module to another account, which
+	// could be the governance module itself. The authority is defined in the
+	// keeper.
+	//
+	// Since: cosmos-sdk 0.47
+	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -136,6 +159,9 @@ func (UnimplementedMsgServer) FundCommunityPool(context.Context, *MsgFundCommuni
 }
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (UnimplementedMsgServer) CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CommunityPoolSpend not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -240,6 +266,24 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CommunityPoolSpend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCommunityPoolSpend)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CommunityPoolSpend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/CommunityPoolSpend",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CommunityPoolSpend(ctx, req.(*MsgCommunityPoolSpend))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -266,6 +310,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "CommunityPoolSpend",
+			Handler:    _Msg_CommunityPoolSpend_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

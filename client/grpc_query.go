@@ -176,3 +176,7 @@ func (f failingInterfaceRegistry) ListAllInterfaces() []string {
 func (f failingInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string {
 	panic("cannot be called")
 }
+
+func (f failingInterfaceRegistry) EnsureRegistered(iface interface{}) error {
+	panic("cannot be called")
+}

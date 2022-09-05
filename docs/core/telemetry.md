@@ -17,7 +17,7 @@ To query active metrics (see retention note above) you have to enable API server
 
 If telemetry is enabled via configuration, a single global metrics collector is registered via the
 [go-metrics](https://github.com/armon/go-metrics) library. This allows emitting and collecting
-metrics through simple [API](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/telemetry/wrapper.go). Example:
+metrics through simple [API](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/telemetry/wrapper.go). Example:
 
 ```go
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {

@@ -59,7 +59,6 @@ type GenTxTestSuite struct {
 }
 
 func (suite *GenTxTestSuite) SetupTest() {
-
 	encCfg := moduletestutil.TestEncodingConfig{}
 
 	app, err := simtestutil.SetupWithConfiguration(

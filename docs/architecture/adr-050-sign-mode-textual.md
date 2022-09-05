@@ -94,7 +94,7 @@ We define "transaction envelope" as all data in a transaction that is not in the
 ```
 Chain ID: <string>
 Account number: <uint64>
-*Public Key: <base64_string>
+*Public Key: <hex_string>
 Sequence: <uint64>
 <TxBody>                                                    // See #8.
 Fee: <coins>                                                // See value renderers for coins encoding.
@@ -113,7 +113,7 @@ Tip: <string>
 *<repeated Any>
 *This transaction has <int> other signers:                  // Skipped if there is only one signer
 *Signer (<int>/<int>):
-*Public Key: <base64_string>
+*Public Key: <hex_string>
 *Sequence: <uint64>
 *End of other signers
 *Hash of raw bytes: <hex_string>                            // Hex encoding of bytes defined in #10, to prevent tx hash malleability.
@@ -243,7 +243,7 @@ SIGN_MODE_TEXTUAL:
 ```
 Chain ID: simapp-1
 Account number: 10
-*Public Key: iQ...==        // Base64 pubkey
+*Public Key: iQ...==        // Hex pubkey
 Sequence: 2
 This transaction has 1 message:
 Message (1/1): bank v1beta1 send coins
@@ -505,7 +505,7 @@ SIGN_MODE_TEXTUAL is purely additive, and doesn't break any backwards compatibil
 
 ### Negative
 
-- Some fields are still encoded in non-human-readable ways, such as public keys in base64.
+- Some fields are still encoded in non-human-readable ways, such as public keys in hexadecimal.
 - New ledger app needs to be released, still unclear
 
 ### Neutral

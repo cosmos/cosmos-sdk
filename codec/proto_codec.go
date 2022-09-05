@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	legacyproto "github.com/golang/protobuf/proto" //nolint:staticcheck // we're aware this is deprecated and using it anyhow.
+	legacyproto "github.com/golang/protobuf/proto" //nolint:staticcheck
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 
@@ -191,6 +191,10 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 		return nil, err
 	}
 	any, err := types.NewAnyWithValue(i)
+	if err != nil {
+		return nil, err
+	}
+	err = pc.interfaceRegistry.EnsureRegistered(i)
 	if err != nil {
 		return nil, err
 	}

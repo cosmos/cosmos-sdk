@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"context"
+	"os"
 	"sync"
 	"testing"
 
@@ -58,7 +59,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(log.MustNewDefaultLogger("plain", "info", false), db, nil)
+	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {

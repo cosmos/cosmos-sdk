@@ -7,8 +7,9 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -19,6 +20,13 @@ import (
 //
 //nolint:gosec // these are not hardcoded credentials
 const (
+	DefaultWeightMsgCreateValidator           int = 100
+	DefaultWeightMsgEditValidator             int = 5
+	DefaultWeightMsgDelegate                  int = 100
+	DefaultWeightMsgUndelegate                int = 100
+	DefaultWeightMsgBeginRedelegate           int = 100
+	DefaultWeightMsgCancelUnbondingDelegation int = 100
+
 	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"
 	OpWeightMsgDelegate                  = "op_weight_msg_delegate"
@@ -43,37 +51,37 @@ func WeightedOperations(
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
 		func(_ *rand.Rand) {
-			weightMsgCreateValidator = simappparams.DefaultWeightMsgCreateValidator
+			weightMsgCreateValidator = DefaultWeightMsgCreateValidator
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgEditValidator, &weightMsgEditValidator, nil,
 		func(_ *rand.Rand) {
-			weightMsgEditValidator = simappparams.DefaultWeightMsgEditValidator
+			weightMsgEditValidator = DefaultWeightMsgEditValidator
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgDelegate, &weightMsgDelegate, nil,
 		func(_ *rand.Rand) {
-			weightMsgDelegate = simappparams.DefaultWeightMsgDelegate
+			weightMsgDelegate = DefaultWeightMsgDelegate
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgUndelegate, &weightMsgUndelegate, nil,
 		func(_ *rand.Rand) {
-			weightMsgUndelegate = simappparams.DefaultWeightMsgUndelegate
+			weightMsgUndelegate = DefaultWeightMsgUndelegate
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgBeginRedelegate, &weightMsgBeginRedelegate, nil,
 		func(_ *rand.Rand) {
-			weightMsgBeginRedelegate = simappparams.DefaultWeightMsgBeginRedelegate
+			weightMsgBeginRedelegate = DefaultWeightMsgBeginRedelegate
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
 		func(_ *rand.Rand) {
-			weightMsgCancelUnbondingDelegation = simappparams.DefaultWeightMsgCancelUnbondingDelegation
+			weightMsgCancelUnbondingDelegation = DefaultWeightMsgCancelUnbondingDelegation
 		},
 	)
 
@@ -169,7 +177,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k *
 		txCtx := simulation.OperationInput{
 			R:             r,
 			App:           app,
-			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:         moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,
 			Msg:           msg,
 			MsgType:       msg.Type(),
@@ -192,13 +200,12 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k *ke
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgEditValidator, "number of validators equal zero"), nil, nil
 		}
 
-		val, ok := keeper.RandomValidator(r, k, ctx)
+		val, ok := testutil.RandSliceElem(r, k.GetAllValidators(ctx))
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgEditValidator, "unable to pick a validator"), nil, nil
 		}
 
 		address := val.GetOperator()
-
 		newCommissionRate := simtypes.RandomDecAmount(r, val.Commission.MaxRate)
 
 		if err := val.Commission.ValidateNewRate(newCommissionRate, ctx.BlockHeader().Time); err != nil {
@@ -227,7 +234,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k *ke
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
@@ -255,7 +262,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.
 		}
 
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		val, ok := keeper.RandomValidator(r, k, ctx)
+		val, ok := testutil.RandSliceElem(r, k.GetAllValidators(ctx))
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDelegate, "unable to pick a validator"), nil, nil
 		}
@@ -294,7 +301,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.
 		txCtx := simulation.OperationInput{
 			R:             r,
 			App:           app,
-			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:         moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,
 			Msg:           msg,
 			MsgType:       msg.Type(),
@@ -313,14 +320,13 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k *keepe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// get random validator
-		validator, ok := keeper.RandomValidator(r, k, ctx)
+		val, ok := testutil.RandSliceElem(r, k.GetAllValidators(ctx))
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "validator is not ok"), nil, nil
 		}
 
-		valAddr := validator.GetOperator()
-		delegations := k.GetValidatorDelegations(ctx, validator.GetOperator())
+		valAddr := val.GetOperator()
+		delegations := k.GetValidatorDelegations(ctx, val.GetOperator())
 		if delegations == nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "keeper does have any delegation entries"), nil, nil
 		}
@@ -333,7 +339,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k *keepe
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "keeper does have a max unbonding delegation entries"), nil, nil
 		}
 
-		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
+		totalBond := val.TokensFromShares(delegation.GetShares()).TruncateInt()
 		if !totalBond.IsPositive() {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "total bond is negative"), nil, nil
 		}
@@ -371,7 +377,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k *keepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
@@ -395,19 +401,17 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 		if len(k.GetAllValidators(ctx)) == 0 {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDelegate, "number of validators equal zero"), nil, nil
 		}
-		// get random account
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		// get random validator
-		validator, ok := keeper.RandomValidator(r, k, ctx)
+		val, ok := testutil.RandSliceElem(r, k.GetAllValidators(ctx))
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "validator is not ok"), nil, nil
 		}
 
-		if validator.IsJailed() || validator.InvalidExRate() {
+		if val.IsJailed() || val.InvalidExRate() {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "validator is jailed"), nil, nil
 		}
 
-		valAddr := validator.GetOperator()
+		valAddr := val.GetOperator()
 		unbondingDelegation, found := k.GetUnbondingDelegation(ctx, simAccount.Address, valAddr)
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "account does have any unbonding delegation"), nil, nil
@@ -453,7 +457,7 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
@@ -474,8 +478,8 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k *
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// get random source validator
-		srcVal, ok := keeper.RandomValidator(r, k, ctx)
+		allVals := k.GetAllValidators(ctx)
+		srcVal, ok := testutil.RandSliceElem(r, allVals)
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "unable to pick validator"), nil, nil
 		}
@@ -495,7 +499,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k *
 		}
 
 		// get random destination validator
-		destVal, ok := keeper.RandomValidator(r, k, ctx)
+		destVal, ok := testutil.RandSliceElem(r, allVals)
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "unable to pick validator"), nil, nil
 		}
@@ -555,7 +559,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k *
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),

@@ -6,17 +6,17 @@
 * [Design](#design)
 * [Contributing](#contributing)
 * [Setup](#setup)
-  * [Installation](#installation)
-  * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
-  * [Folder Layout](#folder-layout)
+    * [Installation](#installation)
+    * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
+    * [Folder Layout](#folder-layout)
 * [Usage](#usage)
-  * [Initialization](#initialization)
-  * [Detecting Upgrades](#detecting-upgrades)
-  * [Auto-Download](#auto-download)
+    * [Initialization](#initialization)
+    * [Detecting Upgrades](#detecting-upgrades)
+    * [Auto-Download](#auto-download)
 * [Example: SimApp Upgrade](#example-simapp-upgrade)
-  * [Chain Setup](#chain-setup)
-    * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
-    * [Update App](#update-app)
+    * [Chain Setup](#chain-setup)
+        * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+        * [Update App](#update-app)
 
 ## Design
 
@@ -115,7 +115,7 @@ All arguments passed to `cosmovisor run` will be passed to the application binar
         └── upgrade-info.json
 ```
 
-The `cosmovisor/` directory incudes a subdirectory for each version of the application (i.e. `genesis` or `upgrades/<name>`). Within each subdirectory is the application binary (i.e. `bin/$DAEMON_NAME`) and any additional auxiliary files associated with each binary. `current` is a symbolic link to the currently active directory (i.e. `genesis` or `upgrades/<name>`). The `name` variable in `upgrades/<name>` is the URI-encoded name of the upgrade as specified in the upgrade module plan.
+The `cosmovisor/` directory incudes a subdirectory for each version of the application (i.e. `genesis` or `upgrades/<name>`). Within each subdirectory is the application binary (i.e. `bin/$DAEMON_NAME`) and any additional auxiliary files associated with each binary. `current` is a symbolic link to the currently active directory (i.e. `genesis` or `upgrades/<name>`). The `name` variable in `upgrades/<name>` is the lowercased URI-encoded name of the upgrade as specified in the upgrade module plan. Note that the upgrade name path are normalized to be lowercased: for instance, `MyUpgrade` is normalized to `myupgrade`, and its path is `upgrades/myupgrade`.
 
 Please note that `$DAEMON_HOME/cosmovisor` only stores the *application binaries*. The `cosmovisor` binary itself can be stored in any typical location (e.g. `/usr/local/bin`). The application will continue to store its data in the default data directory (e.g. `$HOME/.gaiad`) or the data directory specified with the `--home` flag. `$DAEMON_HOME` is independent of the data directory and can be set to any location. If you set `$DAEMON_HOME` to the same directory as the data directory, you will end up with a configuation like the following:
 

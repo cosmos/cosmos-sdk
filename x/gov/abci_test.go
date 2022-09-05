@@ -391,7 +391,7 @@ func TestProposalCanceledEndblocker(t *testing.T) {
 	err = suite.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
 	require.NoError(t, err)
 
-	minDepositsForProposal, err := suite.GovKeeper.GetMinDepositsForProposal(ctx)
+	minDepositsForProposal, err := suite.GovKeeper.GetProposalMinDeposit(ctx)
 	minDepositsForProposalInDec := sdk.NewDecCoinsFromCoins(minDepositsForProposal...)
 	require.NoError(t, err)
 

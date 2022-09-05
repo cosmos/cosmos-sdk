@@ -4,10 +4,11 @@ mkdir -p modules
 
 for D in ../x/*; do
   if [ -d "${D}" ]; then
-    rm -rf "modules/$(echo $D | awk -F/ '{print $NF}')"
-    mkdir -p "modules/$(echo $D | awk -F/ '{print $NF}')" && cp -r $D/README.md "$_"
-    if [ -f "modules/$(echo $D | awk -F/ '{print $NF}')/README.md" ]; then
-      cd "modules/$(echo $D | awk -F/ '{print $NF}')"
+    MODDOC=modules/$(echo $D | awk -F/ '{print $NF}')
+    rm -rf $MODDOC
+    mkdir -p $MODDOC && cp -r $D/README.md "$_"
+    if [ -f "$MODDOC/README.md" ]; then
+      cd $MODDOC
       # This ensures that we have multiples pages for the modules documantation
       # This is easier to read for the user
       # In order to split pages, we need to add a <!-- order: X --> in the module README.md, for each pages that we want.

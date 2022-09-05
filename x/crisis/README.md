@@ -5,7 +5,7 @@ parent:
   title: "crisis"
 -->
 
-# `crisis`
+# `x/crisis`
 
 ## Overview
 

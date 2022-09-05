@@ -1,5 +1,5 @@
 <!--
-order: 8
+order: 0
 title: Epoching Overview
 parent:
   title: "epoching"

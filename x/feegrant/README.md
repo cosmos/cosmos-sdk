@@ -1,11 +1,11 @@
 <!--
 order: 0
-title: Fee grant
+title: Fee grant Overview
 parent:
   title: "feegrant"
 -->
 
-# Fee grant
+# `x/feegrant`
 
 ## Abstract
 
@@ -31,9 +31,7 @@ This module allows accounts to grant fee allowances and to use fees from their a
     * [CLI](#cli)
     * [gRPC](#grpc)
 
-<!--
-order: 1
--->
+<!--order: 1 -->
 
 # Concepts
 
@@ -125,9 +123,7 @@ In order to prevent DoS attacks, using a filtered `x/feegrant` incurs gas. The S
 
 A queue in the state maintained with the prefix of expiration of the grants and checks them on EndBlock with the current block time for every block to prune.
 
-<!--
-order: 2
--->
+<!--order: 2 -->
 
 # State
 
@@ -149,9 +145,7 @@ Fee allowance queue keys are stored in the state as follows:
 
 * Grant: `0x01 | expiration_bytes | grantee_addr_len (1 byte) | grantee_addr_bytes |  granter_addr_len (1 byte) | granter_addr_bytes -> EmptyBytes`
 
-<!--
-order: 3
--->
+<!--order: 3 -->
 
 # Messages
 
@@ -167,9 +161,7 @@ An allowed grant fee allowance can be removed with the `MsgRevokeAllowance` mess
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/feegrant/v1beta1/tx.proto#L41-L50
 
-<!--
-order: 4
--->
+<!--order: 4 -->
 
 # Events
 
@@ -201,9 +193,7 @@ The feegrant module emits the following events:
 | message | granter       | {granterAddress} |
 | message | grantee       | {granteeAddress} |
 
-<!--
-order: 6
--->
+<!--order: 6 -->
 
 # Client
 

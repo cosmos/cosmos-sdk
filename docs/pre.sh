@@ -6,6 +6,12 @@ for D in ../x/*; do
   if [ -d "${D}" ]; then
     rm -rf "modules/$(echo $D | awk -F/ '{print $NF}')"
     mkdir -p "modules/$(echo $D | awk -F/ '{print $NF}')" && cp -r $D/README.md "$_"
+    if [ -f "modules/$(echo $D | awk -F/ '{print $NF}')/README.md" ]; then
+      cd "modules/$(echo $D | awk -F/ '{print $NF}')"
+      csplit -k -q README.md '/<!-- order:/' '{*}' --prefix='section_' --suffix-format='%02d.md'
+      rm README.md
+      cd ../..
+    fi
   fi
 done
 

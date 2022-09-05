@@ -5,7 +5,7 @@ parent:
   title: "gov"
 -->
 
-# `gov`
+# `x/gov`
 
 ## Abstract
 
@@ -81,9 +81,7 @@ staking token of the chain.
     * [REST](#rest)
 * [Metadata](#metadata)
 
-<!--
-order: 1
--->
+<!-- order: 1 -->
 
 # Concepts
 
@@ -285,9 +283,7 @@ new version of the software.
 
 Validators and full nodes can use an automation tool, such as [Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/main/cosmovisor/README.md), for automatically switching version of the chain.
 
-<!--
-order: 2
--->
+<!-- order: 2 -->
 
 # State
 
@@ -505,9 +501,7 @@ While proposals should use the new implementation of the governance proposal, we
 
 More information on how to submit proposals in the [client section](07_client.md).
 
-<!--
-order: 3
--->
+<!-- order: 3 -->
 
 # Messages
 
@@ -689,9 +683,7 @@ handled:
         store(Governance, <txGovVote.ProposalID|'addresses'|sender>, txGovVote.Vote)   // Voters can vote multiple times. Re-voting overrides previous vote. This is ok because tallying is done once at the end.
 ```
 
-<!--
-order: 4
--->
+<!-- order: 4 -->
 
 # Events
 
@@ -755,9 +747,7 @@ The governance module emits the following events:
 
 * [0] Event only emitted if the voting period starts during the submission.
 
-<!--
-order: 5
--->
+<!-- order: 5 -->
 
 # Future Improvements
 
@@ -786,9 +776,7 @@ governance module. Future improvements may include:
   `proposal.Deposit`, one for anti-spam (same as in MVP) and an other one to
   reward third party auditors.
 
-<!--
-order: 6
--->
+<!-- order: 6 -->
 
 # Parameters
 
@@ -815,9 +803,7 @@ The governance module contains the following parameters:
 modules. If only a subset of parameters are desired to be changed, only they need
 to be included and not the entire parameter object structure.
 
-<!--
-order: 7
--->
+<!-- order: 7 -->
 
 # Client
 
@@ -2610,9 +2596,7 @@ Example Output:
 }
 ```
 
-<!--
-order: 8
--->
+<!-- order: 8 -->
 
 # Metadata
 

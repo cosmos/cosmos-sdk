@@ -58,9 +58,7 @@ This module allows the creation and management of on-chain multisig accounts and
     * [REST](#rest)
 * [Metadata](#metadata)
 
-<!--
-order: 1
--->
+<!--order: 1 -->
 
 # Concepts
 
@@ -216,9 +214,7 @@ Proposals are pruned:
 
 whichever happens first.
 
-<!--
-order: 2
--->
+<!--order: 2 -->
 
 # State
 
@@ -322,9 +318,7 @@ The `voteTable` is a primary key table and its `PrimaryKey` is given by
 `voteByVoterIndex` allows to retrieve votes by voter address:
 `0x42 | len([]byte(voter.Address)) | []byte(voter.Address) | PrimaryKey -> []byte()`.
 
-<!--
-order: 3
--->
+<!--order: 3 -->
 
 # Msg Service
 
@@ -482,9 +476,7 @@ It's expected to fail if:
 * the group member is not part of the group.
 * for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated group.
 
-<!--
-order: 4
--->
+<!--order: 4 -->
 
 # Events
 
@@ -555,9 +547,7 @@ The group module emits the following events:
 | cosmos.group.v1.EventLeaveGroup | proposal_id   | {proposalId}                    |
 | cosmos.group.v1.EventLeaveGroup | address       | {address}                       |
 
-<!--
-order: 5
--->
+<!--order: 5 -->
 
 # Client
 
@@ -2067,9 +2057,7 @@ Example Output:
 }
 ```
 
-<!--
-order: 6
--->
+<!--order: 6 -->
 
 # Metadata
 

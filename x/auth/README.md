@@ -5,7 +5,7 @@ parent:
   title: "auth"
 -->
 
-# `auth`
+# `x/auth`
 
 ## Abstract
 

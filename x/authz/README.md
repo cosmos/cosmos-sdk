@@ -5,7 +5,7 @@ parent:
   title: "authz"
 -->
 
-# `authz`
+# `x/authz`
 
 ## Abstract
 

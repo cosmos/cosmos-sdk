@@ -5,7 +5,7 @@ parent:
   title: "mint"
 -->
 
-# `mint`
+# `x/mint`
 
 ## Contents
 

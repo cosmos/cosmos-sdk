@@ -5,7 +5,7 @@ parent:
   title: "capability"
 -->
 
-# `capability`
+# `x/capability`
 
 * [Concepts](#concepts)
     * [Capabilities](#capabilities)

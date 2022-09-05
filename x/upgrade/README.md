@@ -5,7 +5,7 @@ parent:
   title: "upgrade"
 -->
 
-# `upgrade`
+# `x/upgrade`
 
 ## Abstract
 

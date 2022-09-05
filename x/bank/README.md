@@ -5,7 +5,7 @@ parent:
   title: "bank"
 -->
 
-# x/bank
+# `x/bank`
 
 ## Abstract
 

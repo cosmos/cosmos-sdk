@@ -5,7 +5,7 @@ parent:
   title: "nft"
 -->
 
-# `nft`
+# `x/nft`
 
 ## Contents
 

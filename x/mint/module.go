@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	"cosmossdk.io/core/appmodule"
@@ -185,15 +184,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents doesn't return any content functions for governance proposals.
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
-}
-
-// RandomizedParams creates randomized mint param changes for the simulator.
-//
-// TODO: Returns an empty slice which will make parameter changes a no-op during
-// simulations. Once all modules are migrated, remove RandomizedParams from
-// the simulation interface.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for mint module's types.

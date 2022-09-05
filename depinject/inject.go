@@ -7,8 +7,9 @@ package depinject
 // can be provided by the container.
 //
 // Ex:
-//  var x int
-//  Inject(Provide(func() int { return 1 }), &x)
+//
+//	var x int
+//	Inject(Provide(func() int { return 1 }), &x)
 //
 // Inject uses the debug mode provided by AutoDebug which means there will be
 // verbose debugging information if there is an error and nothing upon success.

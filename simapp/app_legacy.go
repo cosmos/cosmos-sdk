@@ -4,17 +4,14 @@ package simapp
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 
-	"github.com/gorilla/mux"
-	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -59,7 +56,6 @@ import (
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -100,9 +96,6 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	// unnamed import of statik for swagger UI support
-	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
 const appName = "SimApp"
@@ -116,14 +109,18 @@ var (
 	// and genesis verification.
 	ModuleBasics = module.NewBasicManager(
 		auth.AppModuleBasic{},
-		genutil.AppModuleBasic{},
+		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 		bank.AppModuleBasic{},
 		capability.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
-			[]govclient.ProposalHandler{paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler},
+			[]govclient.ProposalHandler{
+				paramsclient.ProposalHandler,
+				upgradeclient.LegacyProposalHandler,
+				upgradeclient.LegacyCancelProposalHandler,
+			},
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -235,6 +232,7 @@ func NewSimApp(
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
 		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey,
 	)
+
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
 	// not include this key.
@@ -243,7 +241,8 @@ func NewSimApp(
 	// configure state listening capabilities using AppOptions
 	// we are doing nothing with the returned streamingServices and waitGroup in this case
 	if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, keys); err != nil {
-		tmos.Exit(err.Error())
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 
 	app := &SimApp{
@@ -273,7 +272,11 @@ func NewSimApp(
 	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, keys[authtypes.StoreKey], authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.ModuleAccountAddrs(), authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec,
+		keys[banktypes.StoreKey],
+		app.AccountKeeper,
+		BlockedAddresses(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -307,6 +310,15 @@ func NewSimApp(
 	*/
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, groupConfig)
 
+	// get skipUpgradeHeights from the app options
+	skipUpgradeHeights := map[int64]bool{}
+	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
+		skipUpgradeHeights[int64(h)] = true
+	}
+	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
+	// set the governance module account as the authority for conducting upgrades
+	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
 	// Register the proposal types
 	// Deprecated: Avoid adding new handlers, instead use the new proposal flow
 	// by granting the governance module the right to execute the message.
@@ -314,7 +326,6 @@ func NewSimApp(
 	govRouter := govv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper))
 	govConfig := govtypes.DefaultConfig()
 	/*
@@ -331,15 +342,6 @@ func NewSimApp(
 		// register the governance hooks
 		),
 	)
-
-	// get skipUpgradeHeights from the app options
-	skipUpgradeHeights := map[int64]bool{}
-	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
-		skipUpgradeHeights[int64(h)] = true
-	}
-	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
-	// set the governance module account as the authority for conducting upgrades
-	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades
 	app.RegisterUpgradeHandlers()
@@ -485,7 +487,8 @@ func NewSimApp(
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
-			tmos.Exit(err.Error())
+			fmt.Println(err.Error())
+			os.Exit(1)
 		}
 	}
 
@@ -550,16 +553,6 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.
 // LoadHeight loads a particular height
 func (app *SimApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
-}
-
-// ModuleAccountAddrs returns all the app's module account addresses.
-func (app *SimApp) ModuleAccountAddrs() map[string]bool {
-	modAccAddrs := make(map[string]bool)
-	for acc := range maccPerms {
-		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
-	}
-
-	return modAccAddrs
 }
 
 // LegacyAmino returns SimApp's amino codec.
@@ -635,8 +628,8 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API from root so that other applications can override easily
-	if apiConfig.Swagger {
-		RegisterSwaggerAPI(clientCtx, apiSvr.Router)
+	if err := server.RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger); err != nil {
+		panic(err)
 	}
 }
 
@@ -655,24 +648,36 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 	)
 }
 
-// RegisterSwaggerAPI registers swagger route with API Server
-func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router) {
-	statikFS, err := fs.New()
-	if err != nil {
-		panic(err)
-	}
-
-	staticServer := http.FileServer(statikFS)
-	rtr.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
-}
-
 // GetMaccPerms returns a copy of the module account permissions
+//
+// NOTE: This is solely to be used for testing purposes.
 func GetMaccPerms() map[string][]string {
 	dupMaccPerms := make(map[string][]string)
 	for k, v := range maccPerms {
 		dupMaccPerms[k] = v
 	}
+
 	return dupMaccPerms
+}
+
+// ModuleAccountAddrsLegacy returns all the app's module account addresses.
+func ModuleAccountAddrsLegacy() map[string]bool {
+	modAccAddrs := make(map[string]bool)
+	for acc := range GetMaccPerms() {
+		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
+	}
+
+	return modAccAddrs
+}
+
+// BlockedAddresses returns all the app's blocked account addresses.
+func BlockedAddresses() map[string]bool {
+	modAccAddrs := ModuleAccountAddrsLegacy()
+
+	// allow the following addresses to receive funds
+	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
+	return modAccAddrs
 }
 
 // initParamsKeeper init params keeper and its subspaces

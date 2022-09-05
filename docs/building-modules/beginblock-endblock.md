@@ -28,11 +28,11 @@ It is possible for developers to define the order of execution between the `Begi
 
 See an example implementation of `BeginBlocker` from the `distribution` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/distribution/abci.go#L14-L38
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/distribution/abci.go#L14-L38
 
 and an example implementation of `EndBlocker` from the `staking` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/staking/abci.go#L22-L27
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/abci.go#L22-L27
 
 ## Next {hide}
 

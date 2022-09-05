@@ -243,7 +243,11 @@ It may be useful if test suites could be run in integration mode (with mocked te
 with e2e fixtures (with real tendermint and many nodes). Integration fixtures could be used
 for quicker runs, e2e fixures could be used for more battle hardening.
 
-A PoC is in progress for `x/gov` unit tests demonstrating BDD, helping to determine if
-BDD feature tests are recommended when building up illustrative and journey scenarios.
+A PoC `x/gov` was completed in PR [#12847](https://github.com/cosmos/cosmos-sdk/pull/12847) 
+is in progress for unit tests demonstrating BDD.
+Observing that a strength of BDD specifications is their readability, and a con is the
+cognitive load while writing and maintaining, current consensus is to reserve BDD use
+for places in the SDK where complex rules and module interactions are demonstrated.
+More straightforward or low level test cases will continue to rely on go table tests.
 
 Levels are network mocking in integration and e2e tests are still being worked on and formalized.

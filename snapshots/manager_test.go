@@ -68,11 +68,15 @@ func TestManager_Take(t *testing.T) {
 		items:         items,
 		prunedHeights: make(map[int64]struct{}),
 	}
-	expectChunks := snapshotItems(items)
+	extSnapshotter := newExtSnapshotter(10)
+
+	expectChunks := snapshotItems(items, extSnapshotter)
 	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
+	err := manager.RegisterExtensions(extSnapshotter)
+	require.NoError(t, err)
 
 	// nil manager should return error
-	_, err := (*snapshots.Manager)(nil).Create(1)
+	_, err = (*snapshots.Manager)(nil).Create(1)
 	require.Error(t, err)
 
 	// creating a snapshot at a lower height than the latest should error
@@ -91,7 +95,7 @@ func TestManager_Take(t *testing.T) {
 		Height: 5,
 		Format: snapshotter.SnapshotFormat(),
 		Chunks: 1,
-		Hash:   []uint8{0xcd, 0x17, 0x9e, 0x7f, 0x28, 0xb6, 0x82, 0x90, 0xc7, 0x25, 0xf3, 0x42, 0xac, 0x65, 0x73, 0x50, 0xaa, 0xa0, 0x10, 0x5c, 0x40, 0x8c, 0xd5, 0x1, 0xed, 0x82, 0xb5, 0xca, 0x8b, 0xe0, 0x83, 0xa2},
+		Hash:   []uint8{0x89, 0xfa, 0x18, 0xbc, 0x5a, 0xe3, 0xdc, 0x36, 0xa6, 0x95, 0x5, 0x17, 0xf9, 0x2, 0x1a, 0x55, 0x36, 0x16, 0x5d, 0x4b, 0x8b, 0x2b, 0x3d, 0xfd, 0xe, 0x2f, 0xb6, 0x40, 0x6b, 0xc3, 0xbc, 0x23},
 		Metadata: types.Metadata{
 			ChunkHashes: checksums(expectChunks),
 		},
@@ -133,7 +137,10 @@ func TestManager_Restore(t *testing.T) {
 	target := &mockSnapshotter{
 		prunedHeights: make(map[int64]struct{}),
 	}
+	extSnapshotter := newExtSnapshotter(0)
 	manager := snapshots.NewManager(store, opts, target, nil, log.NewNopLogger())
+	err := manager.RegisterExtensions(extSnapshotter)
+	require.NoError(t, err)
 
 	expectItems := [][]byte{
 		{1, 2, 3},
@@ -141,10 +148,10 @@ func TestManager_Restore(t *testing.T) {
 		{7, 8, 9},
 	}
 
-	chunks := snapshotItems(expectItems)
+	chunks := snapshotItems(expectItems, newExtSnapshotter(10))
 
 	// Restore errors on invalid format
-	err := manager.Restore(types.Snapshot{
+	err = manager.Restore(types.Snapshot{
 		Height:   3,
 		Format:   0,
 		Hash:     []byte{1, 2, 3},
@@ -204,6 +211,7 @@ func TestManager_Restore(t *testing.T) {
 	}
 
 	assert.Equal(t, expectItems, target.items)
+	assert.Equal(t, 10, len(extSnapshotter.state))
 
 	// Starting a new restore should fail now, because the target already has contents.
 	err = manager.Restore(types.Snapshot{

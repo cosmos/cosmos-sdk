@@ -53,6 +53,8 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 }
 
 // ExportGenesis - output genesis parameters
+//
+//nolint:staticcheck
 func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v1.GenesisState {
 	startingProposalID, _ := k.GetProposalID(ctx)
 	proposals := k.GetProposals(ctx)

@@ -50,6 +50,7 @@ type StakingKeeper interface {
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
 	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingtypes.DelegationI
+	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(sdk.Context) uint32

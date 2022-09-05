@@ -6,14 +6,12 @@ run:
 linters:
   disable-all: true
   enable:
-    - deadcode
     - depguard
     - dogsled
     - exportloopref
     - goconst
     - gocritic
-    - gofmt
-    - goimports
+    - gofumpt
     - gosec
     - gosimple
     - govet
@@ -32,12 +30,6 @@ issues:
     - text: "Use of weak random number generator"
       linters:
         - gosec
-    - text: "comment on exported var"
-      linters:
-        - golint
-    - text: "don't use an underscore in package name"
-      linters:
-        - golint
     - text: "ST1003:"
       linters:
         - stylecheck

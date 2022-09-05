@@ -75,7 +75,6 @@ func DefaultParams() Params {
 }
 
 func (p Params) ValidateBasic() error {
-
 	if minDeposit := sdk.Coins(p.MinDeposit); minDeposit.Empty() || !minDeposit.IsValid() {
 		return fmt.Errorf("invalid minimum deposit: %s", minDeposit)
 	}

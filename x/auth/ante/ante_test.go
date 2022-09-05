@@ -69,7 +69,8 @@ func TestSimulateGasCost(t *testing.T) {
 					testdata.NewTestMsg(accs[1].acc.GetAddress(), accs[2].acc.GetAddress()),
 				}
 
-				return TestCaseArgs{accNums: []uint64{0, 1, 2},
+				return TestCaseArgs{
+					accNums:   []uint64{0, 1, 2},
 					accSeqs:   []uint64{0, 0, 0},
 					feeAmount: feeAmount,
 					gasLimit:  simulatedGas,
@@ -867,7 +868,8 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 
 				privs, accNums, accSeqs = []cryptotypes.PrivKey{accs[0].priv, accs[1].priv, accs[2].priv}, []uint64{0, 1, 2}, []uint64{1, 1, 1}
 
-				return TestCaseArgs{accNums: accNums,
+				return TestCaseArgs{
+					accNums: accNums,
 					accSeqs: accSeqs,
 					msgs:    msgs,
 					privs:   privs,
@@ -950,7 +952,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 				return TestCaseArgs{
 					chainID:   suite.ctx.ChainID(),
 					accNums:   []uint64{0},
-					accSeqs:   []uint64{2}, //wrong accSeq
+					accSeqs:   []uint64{2}, // wrong accSeq
 					feeAmount: feeAmount,
 					gasLimit:  gasLimit,
 					msgs:      []sdk.Msg{msg0},
@@ -1018,7 +1020,6 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 					msgs:      []sdk.Msg{msg0},
 					privs:     []cryptotypes.PrivKey{accs[1].priv},
 				}
-
 			},
 			false,
 			false,

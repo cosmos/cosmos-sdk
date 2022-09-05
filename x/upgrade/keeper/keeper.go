@@ -3,13 +3,13 @@ package keeper
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 
 	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -392,9 +392,8 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 // GetUpgradeInfoPath returns the upgrade info file path
 func (k Keeper) GetUpgradeInfoPath() (string, error) {
 	upgradeInfoFileDir := path.Join(k.getHomeDir(), "data")
-	err := tmos.EnsureDir(upgradeInfoFileDir, os.ModePerm)
-	if err != nil {
-		return "", err
+	if err := os.MkdirAll(upgradeInfoFileDir, os.ModePerm); err != nil {
+		return "", fmt.Errorf("could not create directory %q: %w", upgradeInfoFileDir, err)
 	}
 
 	return filepath.Join(upgradeInfoFileDir, types.UpgradeInfoFilename), nil

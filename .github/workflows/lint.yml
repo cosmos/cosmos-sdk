@@ -20,6 +20,7 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
+      - uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v6.1.0
         id: git_diff
         with:

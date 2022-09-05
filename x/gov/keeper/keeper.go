@@ -19,7 +19,7 @@ import (
 // Keeper defines the governance module Keeper
 type Keeper struct {
 	// The reference to the Paramstore to get and set gov specific params
-	paramSpace types.ParamSubspace
+	paramSpace types.ParamSubspace //nolint:unused
 
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper

@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/rpc/coretypes"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/tendermint/tendermint/p2p"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -26,7 +26,7 @@ type validatorInfo struct {
 // ResultStatus is node's info, same as Tendermint, except that we use our own
 // PubKey.
 type resultStatus struct {
-	NodeInfo      tmtypes.NodeInfo
+	NodeInfo      p2p.DefaultNodeInfo
 	SyncInfo      coretypes.SyncInfo
 	ValidatorInfo validatorInfo
 }

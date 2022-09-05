@@ -8,20 +8,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-// RegisterLegacyAminoCodec registers the necessary x/distribution interfaces and concrete types
-// on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
+// RegisterLegacyAminoCodec registers the necessary x/distribution interfaces
+// and concrete types on the provided LegacyAmino codec. These types are used
+// for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward")
 	legacy.RegisterAminoMsg(cdc, &MsgWithdrawValidatorCommission{}, "cosmos-sdk/MsgWithdrawValCommission")
 	legacy.RegisterAminoMsg(cdc, &MsgSetWithdrawAddress{}, "cosmos-sdk/MsgModifyWithdrawAddress")
 	legacy.RegisterAminoMsg(cdc, &MsgFundCommunityPool{}, "cosmos-sdk/MsgFundCommunityPool")
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/distribution/MsgUpdateParams")
+	legacy.RegisterAminoMsg(cdc, &MsgCommunityPoolSpend{}, "cosmos-sdk/distr/MsgCommunityPoolSpend")
 
 	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/distribution/Params", nil)
-	cdc.RegisterConcrete(&CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -32,10 +32,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgSetWithdrawAddress{},
 		&MsgFundCommunityPool{},
 		&MsgUpdateParams{},
-	)
-	registry.RegisterImplementations(
-		(*govtypes.Content)(nil),
-		&CommunityPoolSpendProposal{},
+		&MsgCommunityPoolSpend{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
@@ -51,7 +48,8 @@ func init() {
 	cryptocodec.RegisterCrypto(amino)
 	sdk.RegisterLegacyAminoCodec(amino)
 
-	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
-	// used to properly serialize MsgGrant and MsgExec instances
+	// Register all Amino interfaces and concrete types on the authz Amino codec
+	// so that this can later be used to properly serialize MsgGrant and MsgExec
+	// instances.
 	RegisterLegacyAminoCodec(authzcodec.Amino)
 }

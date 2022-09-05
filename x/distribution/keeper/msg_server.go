@@ -166,3 +166,37 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }
+
+func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
+	if k.authority != req.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	recipient, err := sdk.AccAddressFromBech32(req.Recipient)
+	if err != nil {
+		return nil, err
+	}
+
+	if k.bankKeeper.BlockedAddr(recipient) {
+		return nil, errors.Wrapf(errors.ErrUnauthorized, "%s is not allowed to receive external funds", req.Recipient)
+	}
+
+	if err := k.DistributeFromFeePool(ctx, req.Amount, recipient); err != nil {
+		return nil, err
+	}
+
+	logger := k.Logger(ctx)
+	logger.Info("transferred from the community pool to recipient", "amount", req.Amount.String(), "recipient", req.Recipient)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, req.Authority),
+		),
+	)
+
+	return &types.MsgCommunityPoolSpendResponse{}, nil
+}

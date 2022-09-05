@@ -966,7 +966,6 @@ func TestBaseApp_EndBlock(t *testing.T) {
 	}
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,
 	})
@@ -1562,7 +1561,6 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: &tmproto.ConsensusParams{
@@ -1821,7 +1819,6 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: &tmproto.ConsensusParams{
@@ -1884,7 +1881,6 @@ func TestQuery(t *testing.T) {
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
 	app.InitChain(abci.RequestInitChain{})
 

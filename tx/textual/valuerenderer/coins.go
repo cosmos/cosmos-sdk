@@ -20,7 +20,7 @@ func NewCoinsValueRenderer(q CoinMetadataQueryFn) ValueRenderer {
 
 type coinsValueRenderer struct {
 	// coinMetadataQuerier defines a function to query the coin metadata from
-	// state.
+	// state. It should be set to the bank module's `DenomsMetadata` gRPC query.
 	coinMetadataQuerier CoinMetadataQueryFn
 }
 
@@ -147,7 +147,7 @@ func formatCoin(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata) (string,
 // at the same index.
 func formatCoins(coins []*basev1beta1.Coin, metadata []*bankv1beta1.Metadata) (string, error) {
 	if len(coins) != len(metadata) {
-		return "", fmt.Errorf("formatCoins expect one metadata for each coin; expected %d, got %d", len(coins), len(metadata))
+		panic(fmt.Errorf("formatCoins expect one metadata for each coin; expected %d, got %d", len(coins), len(metadata)))
 	}
 
 	formatted := make([]string, len(coins))

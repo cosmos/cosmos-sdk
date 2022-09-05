@@ -907,7 +907,6 @@ func (rs *Store) RollbackToVersion(target int64) error {
 	if target <= 0 {
 		return fmt.Errorf("invalid rollback height target: %d", target)
 	}
-	rs.PruneStores(true, nil)
 
 	for key, store := range rs.stores {
 		if store.GetStoreType() == types.StoreTypeIAVL {
@@ -921,7 +920,7 @@ func (rs *Store) RollbackToVersion(target int64) error {
 		}
 	}
 
-	flushMetadata(rs.db, target, rs.lastCommitInfo, rs.pruneHeights)
+	flushMetadata(rs.db, target, rs.buildCommitInfo(target), []int64{})
 
 	return rs.LoadLatestVersion()
 }

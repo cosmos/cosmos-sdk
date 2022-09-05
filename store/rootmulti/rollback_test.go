@@ -1,6 +1,7 @@
 package rootmulti_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -12,18 +13,41 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
+func setup(withGenesis bool, invCheckPeriod uint, db dbm.DB) (*simapp.SimApp, simapp.GenesisState) {
+	encCdc := simapp.MakeTestEncodingConfig()
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, invCheckPeriod, encCdc, simapp.EmptyAppOptions{})
+	if withGenesis {
+		return app, simapp.NewDefaultGenesisState(encCdc.Marshaler)
+	}
+	return app, simapp.GenesisState{}
+}
+
+// Setup initializes a new SimApp. A Nop logger is set in SimApp.
+func SetupWithDB(isCheckTx bool, db dbm.DB) *simapp.SimApp {
+	app, genesisState := setup(!isCheckTx, 5, db)
+	if !isCheckTx {
+		// init chain must be called to stop deliverState from being nil
+		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+		if err != nil {
+			panic(err)
+		}
+
+		// Initialize the chain
+		app.InitChain(
+			abci.RequestInitChain{
+				Validators:      []abci.ValidatorUpdate{},
+				ConsensusParams: simapp.DefaultConsensusParams,
+				AppStateBytes:   stateBytes,
+			},
+		)
+	}
+
+	return app
+}
+
 func TestRollback(t *testing.T) {
 	db := dbm.NewMemDB()
-	options := simapp.SetupOptions{
-		Logger:             log.NewNopLogger(),
-		DB:                 db,
-		InvCheckPeriod:     0,
-		EncConfig:          simapp.MakeTestEncodingConfig(),
-		HomePath:           simapp.DefaultNodeHome,
-		SkipUpgradeHeights: map[int64]bool{},
-		AppOpts:            simapp.EmptyAppOptions{},
-	}
-	app := simapp.NewSimappWithCustomOptions(t, false, options)
+	app := SetupWithDB(false, db)
 	app.Commit()
 	ver0 := app.LastBlockHeight()
 	// commit 10 blocks
@@ -49,7 +73,8 @@ func TestRollback(t *testing.T) {
 	require.Equal(t, target, app.LastBlockHeight())
 
 	// recreate app to have clean check state
-	app = simapp.NewSimApp(options.Logger, options.DB, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, options.InvCheckPeriod, options.EncConfig, options.AppOpts)
+	encCdc := simapp.MakeTestEncodingConfig()
+	app = simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 5, encCdc, simapp.EmptyAppOptions{})
 	store = app.NewContext(true, tmproto.Header{}).KVStore(app.GetKey("bank"))
 	require.Equal(t, []byte("value5"), store.Get([]byte("key")))
 

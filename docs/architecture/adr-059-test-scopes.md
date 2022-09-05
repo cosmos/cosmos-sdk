@@ -126,20 +126,20 @@ gap in current simulation test coverage.
 
 Modules not returning simulation operations: 
 
-- `auth`
-- `capability`
-- `evidence`
-- `mint`
-- `params`
+* `auth`
+* `capability`
+* `evidence`
+* `mint`
+* `params`
 
 A separate binary, [runsim](https://github.com/cosmos/tools/tree/master/cmd/runsim), is responsible for kicking off some of these tests and
 managing their life cycle.
 
 #### Limitations
 
-- [A success](https://github.com/cosmos/cosmos-sdk/runs/7606931983?check_suite_focus=true) may take a long time to run, 7-10 minutes per simulation in CI. 
-- [Timeouts](https://github.com/cosmos/cosmos-sdk/runs/7606932295?check_suite_focus=true) sometimes occur on apparent successes without any indication why.
-- Useful error messages not provided on [failure](https://github.com/cosmos/cosmos-sdk/runs/7606932548?check_suite_focus=true) from CI, requiring a developer to run
+* [A success](https://github.com/cosmos/cosmos-sdk/runs/7606931983?check_suite_focus=true) may take a long time to run, 7-10 minutes per simulation in CI. 
+* [Timeouts](https://github.com/cosmos/cosmos-sdk/runs/7606932295?check_suite_focus=true) sometimes occur on apparent successes without any indication why.
+* Useful error messages not provided on [failure](https://github.com/cosmos/cosmos-sdk/runs/7606932548?check_suite_focus=true) from CI, requiring a developer to run
   the simulation locally to reproduce.
 
 ### E2E tests
@@ -220,22 +220,22 @@ demonstrated in [PR#12706](https://github.com/cosmos/cosmos-sdk/pull/12706).
 
 ### Positive
 
-- test coverage is increased
-- test organization is improved
-- reduced dependency graph size in modules
-- simapp removed as a dependency from modules
-- inter-module dependencies introduced in test code are removed
-- reduced CI run time after transitioning away from in process Tendermint
+* test coverage is increased
+* test organization is improved
+* reduced dependency graph size in modules
+* simapp removed as a dependency from modules
+* inter-module dependencies introduced in test code are removed
+* reduced CI run time after transitioning away from in process Tendermint
 
 ### Negative
 
-- some test logic duplication between unit and integration tests during transition
-- test written using dockertest DX may be a bit worse
+* some test logic duplication between unit and integration tests during transition
+* test written using dockertest DX may be a bit worse
 
 ### Neutral
 
-- learning curve for BDD style tests
-- some discovery required for e2e transition to dockertest
+* learning curve for BDD style tests
+* some discovery required for e2e transition to dockertest
 
 ## Further Discussions
 

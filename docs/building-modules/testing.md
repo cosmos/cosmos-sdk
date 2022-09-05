@@ -4,33 +4,32 @@ order: 15
 
 # Module & App Testing
 
-The Cosmos SDK contains different types of tests. The following are some of the types of tests that are available and their goals.
+The Cosmos SDK contains different types of [tests](https://martinfowler.com/articles/practical-test-pyramid.html). The following are some of the types of tests that are available and their goals.
 It is adviced, as a chain developer, to test your application and module in a similar way.
 
-## End-to-End Tests
-
-* Where: [`tests/e2e`](https://github.com/cosmos/cosmos-sdk/tree/main/tests/e2e).
-
-End-to-End tests are tests that run against the chain (`SimApp`). They are useful for testing the full functionality of a module against the application.
-As a chain developer, you can test your own chain against the end-to-end tests of the SDK.
+The rationale behind testing can be found in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html).
 
 ## Unit Tests
 
-* Where: `x/{mod}/keeper`
+Unit tests are the lowest of the [test pyramid](https://martinfowler.com/articles/practical-test-pyramid.html).
+All modules should have mocked unit test coverage. This means mocking keepers or external dependencies.
+The SDK uses `mockgen` to generate mocks for keepers:
 
-The SDK uses mocking for unit testing. It allows us to test the behavior of a module without the need to run the full chain.
-The expected keepers of a module are mocked:
++++ https://github.com/cosmos/cosmos-sdk/blob/dd556936b23d7443cb7fb1da394c35117efa9da7/scripts/mockgen.sh#L12-L29
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/main/x/auth/testutil/expected_keepers_mocks.go
++++ https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/keeper_test.go#L21-L35
+
+## Integration Tests
 
 ## Simulations
 
-* Where: `x/{mod}/simulation`
+## End-to-end Tests
 
-Simulation tests are using `AppConfig`, which allows us to test a module without depending on the full chain and all its modules.
+## Summary
 
-## CLI Tests
-
-https://github.com/cosmos/cosmos-sdk/issues/12696
-
-TBD.
+| Scope       | App Fixture | Mocks? |
+| ----------- | ----------- | ------ |
+| Unit        | None        | Yes    |
+| Integration | `depinject` | Some   |
+| Simulation  | simapp      | No     |
+| E2E         | simapp      | No     |

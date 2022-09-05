@@ -3,20 +3,19 @@ package file
 import (
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var (
@@ -29,12 +28,12 @@ var (
 	// test abci message types
 	mockHash          = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
 	testBeginBlockReq = abci.RequestBeginBlock{
-		Header: types1.Header{
+		Header: tmproto.Header{
 			Height: 1,
 		},
-		ByzantineValidators: []abci.Evidence{},
+		ByzantineValidators: []abci.Misbehavior{},
 		Hash:                mockHash,
-		LastCommitInfo: abci.LastCommitInfo{
+		LastCommitInfo: abci.CommitInfo{
 			Round: 1,
 			Votes: []abci.VoteInfo{},
 		},
@@ -54,7 +53,7 @@ var (
 	}
 	testEndBlockRes = abci.ResponseEndBlock{
 		Events:                []abci.Event{},
-		ConsensusParamUpdates: &types1.ConsensusParams{},
+		ConsensusParamUpdates: &tmproto.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
 	}
 	mockTxBytes1      = []byte{9, 8, 7, 6, 5, 4, 3, 2, 1}
@@ -369,7 +368,7 @@ func testListenEndBlock(t *testing.T) {
 
 func readInFile(name string) ([]byte, error) {
 	path := filepath.Join(testDir, name)
-	return ioutil.ReadFile(path)
+	return os.ReadFile(path)
 }
 
 // segmentBytes returns all of the protobuf messages contained in the byte array as an array of byte arrays

@@ -3,7 +3,6 @@ package module
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
 
 	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -140,21 +139,6 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the feegrant module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the feegrant module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// NewHandler returns an sdk.Handler for the feegrant module.
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
-}
-
-// QuerierRoute returns the feegrant module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return ""
-}
-
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
@@ -227,11 +211,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents returns all the feegrant content functions used to
 // simulate governance proposals.
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
-// RandomizedParams creates randomized feegrant param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return nil
 }
 

@@ -128,12 +128,15 @@ func LegacyNewDecFromIntWithPrec(i Int, prec int64) LegacyDec {
 
 // create a decimal from an input decimal string.
 // valid must come in the form:
-//   (-) whole integers (.) decimal integers
+//
+//	(-) whole integers (.) decimal integers
+//
 // examples of acceptable input include:
-//   -123.456
-//   456.7890
-//   345
-//   -456789
+//
+//	-123.456
+//	456.7890
+//	345
+//	-456789
 //
 // NOTE - An error will return if more decimal places
 // are provided in the string than the constant Precision.
@@ -342,11 +345,12 @@ func (d LegacyDec) Quo(d2 LegacyDec) LegacyDec {
 	return d.ImmutOp(LegacyDec.QuoMut, d2)
 }
 
+var squaredPrecisionReuse = new(big.Int).Mul(precisionReuse, precisionReuse)
+
 // mutable quotient
 func (d LegacyDec) QuoMut(d2 LegacyDec) LegacyDec {
-	// multiply precision twice
-	d.i.Mul(d.i, precisionReuse)
-	d.i.Mul(d.i, precisionReuse)
+	// multiply by precision twice
+	d.i.Mul(d.i, squaredPrecisionReuse)
 	d.i.Quo(d.i, d2.i)
 
 	chopPrecisionAndRound(d.i)
@@ -364,8 +368,7 @@ func (d LegacyDec) QuoTruncate(d2 LegacyDec) LegacyDec {
 // mutable quotient truncate
 func (d LegacyDec) QuoTruncateMut(d2 LegacyDec) LegacyDec {
 	// multiply precision twice
-	d.i.Mul(d.i, precisionReuse)
-	d.i.Mul(d.i, precisionReuse)
+	d.i.Mul(d.i, squaredPrecisionReuse)
 	d.i.Quo(d.i, d2.i)
 
 	chopPrecisionAndTruncate(d.i)
@@ -383,8 +386,7 @@ func (d LegacyDec) QuoRoundUp(d2 LegacyDec) LegacyDec {
 // mutable quotient, round up
 func (d LegacyDec) QuoRoundupMut(d2 LegacyDec) LegacyDec {
 	// multiply precision twice
-	d.i.Mul(d.i, precisionReuse)
-	d.i.Mul(d.i, precisionReuse)
+	d.i.Mul(d.i, squaredPrecisionReuse)
 	d.i.Quo(d.i, d2.i)
 
 	chopPrecisionAndRoundUp(d.i)

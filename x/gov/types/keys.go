@@ -18,9 +18,6 @@ const (
 
 	// RouterKey is the message route for gov
 	RouterKey = ModuleName
-
-	// QuerierRoute is the querier route for gov
-	QuerierRoute = ModuleName
 )
 
 // Keys for governance store
@@ -37,6 +34,8 @@ const (
 // - 0x10<proposalID_Bytes><depositorAddrLen (1 Byte)><depositorAddr_Bytes>: Deposit
 //
 // - 0x20<proposalID_Bytes><voterAddrLen (1 Byte)><voterAddr_Bytes>: Voter
+//
+// - 0x30: Params
 var (
 	ProposalsKeyPrefix          = []byte{0x00}
 	ActiveProposalQueuePrefix   = []byte{0x01}
@@ -46,6 +45,9 @@ var (
 	DepositsKeyPrefix = []byte{0x10}
 
 	VotesKeyPrefix = []byte{0x20}
+
+	// ParamsKey is the key to query all gov params
+	ParamsKey = []byte{0x30}
 )
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))

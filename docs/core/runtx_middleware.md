@@ -8,11 +8,11 @@ order: 12
 Depending on the panic type different handler is used, for instance the default one prints an error log message.
 Recovery middleware is used to add custom panic recovery for Cosmos SDK application developers.
 
-More context can found in the corresponding [ADR-022](../architecture/adr-022-custom-panic-handling.md) and the implementation in [recovery.go](https://github.com/cosmos/cosmos-sdk/tree/v0.46.0-rc1/baseapp/recovery.go).
+More context can found in the corresponding [ADR-022](../architecture/adr-022-custom-panic-handling.md) and the implementation in [recovery.go](https://github.com/cosmos/cosmos-sdk/tree/v0.46.0/baseapp/recovery.go).
 
 ## Interface
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/baseapp/recovery.go#L11-L14
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/recovery.go#L11-L14
 
 `recoveryObj` is a return value for `recover()` function from the `buildin` Go package.
 

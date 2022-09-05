@@ -16,7 +16,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
@@ -146,7 +145,7 @@ func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
 func (s *IntegrationTestSuite) msgSendExec(grantee sdk.AccAddress) {
 	val := s.network.Validators[0]
 	// Send some funds to the new account.
-	out, err := banktestutil.MsgSendExec(
+	out, err := clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		grantee,
@@ -850,7 +849,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	tokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(12)),
 	)
-	normalGeneratedTx, err := banktestutil.MsgSendExec(
+	normalGeneratedTx, err := clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		grantee,
@@ -962,7 +961,7 @@ func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
 		sdk.NewCoin("stake", sdk.NewInt(12)),
 	)
 
-	validGeneratedTx, err := banktestutil.MsgSendExec(
+	validGeneratedTx, err := clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		allowedAddr,
@@ -975,7 +974,7 @@ func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
 	s.Require().NoError(err)
 	execMsg := testutil.WriteToNewTempFile(s.T(), validGeneratedTx.String())
 
-	invalidGeneratedTx, err := banktestutil.MsgSendExec(
+	invalidGeneratedTx, err := clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		notAllowedAddr,

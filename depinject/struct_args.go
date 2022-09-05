@@ -1,6 +1,7 @@
 package depinject
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -12,9 +13,10 @@ import (
 // positional parameters.
 //
 // Fields of the struct may support the following tags:
-//		optional	if set to true, the dependency is optional and will
-//					be set to its default value if not found, rather than causing
-//					an error
+//
+//	optional	if set to true, the dependency is optional and will
+//				be set to its default value if not found, rather than causing
+//				an error
 type In struct{}
 
 func (In) isIn() {}
@@ -35,15 +37,15 @@ type isOut interface{ isOut() }
 
 var isOutType = reflect.TypeOf((*isOut)(nil)).Elem()
 
-func expandStructArgsProvider(provider ProviderDescriptor) (ProviderDescriptor, error) {
+func expandStructArgsProvider(provider providerDescriptor) (providerDescriptor, error) {
 	var structArgsInInput bool
-	var newIn []ProviderInput
+	var newIn []providerInput
 	for _, in := range provider.Inputs {
 		if in.Type.AssignableTo(isInType) {
 			structArgsInInput = true
 			inTypes, err := structArgsInTypes(in.Type)
 			if err != nil {
-				return ProviderDescriptor{}, err
+				return providerDescriptor{}, err
 			}
 			newIn = append(newIn, inTypes...)
 		} else {
@@ -54,7 +56,7 @@ func expandStructArgsProvider(provider ProviderDescriptor) (ProviderDescriptor, 
 	newOut, structArgsInOutput := expandStructArgsOutTypes(provider.Outputs)
 
 	if structArgsInInput || structArgsInOutput {
-		return ProviderDescriptor{
+		return providerDescriptor{
 			Inputs:   newIn,
 			Outputs:  newOut,
 			Fn:       expandStructArgsFn(provider),
@@ -65,7 +67,7 @@ func expandStructArgsProvider(provider ProviderDescriptor) (ProviderDescriptor, 
 	return provider, nil
 }
 
-func expandStructArgsFn(provider ProviderDescriptor) func(inputs []reflect.Value) ([]reflect.Value, error) {
+func expandStructArgsFn(provider providerDescriptor) func(inputs []reflect.Value) ([]reflect.Value, error) {
 	fn := provider.Fn
 	inParams := provider.Inputs
 	outParams := provider.Outputs
@@ -74,7 +76,10 @@ func expandStructArgsFn(provider ProviderDescriptor) func(inputs []reflect.Value
 		inputs1 := make([]reflect.Value, len(inParams))
 		for i, in := range inParams {
 			if in.Type.AssignableTo(isInType) {
-				v, n := buildIn(in.Type, inputs[j:])
+				v, n, err := buildIn(in.Type, inputs[j:])
+				if err != nil {
+					return []reflect.Value{}, err
+				}
 				inputs1[i] = v
 				j += n
 			} else {
@@ -101,9 +106,9 @@ func expandStructArgsFn(provider ProviderDescriptor) func(inputs []reflect.Value
 	}
 }
 
-func structArgsInTypes(typ reflect.Type) ([]ProviderInput, error) {
+func structArgsInTypes(typ reflect.Type) ([]providerInput, error) {
 	n := typ.NumField()
-	var res []ProviderInput
+	var res []providerInput
 	for i := 0; i < n; i++ {
 		f := typ.Field(i)
 		if f.Type.AssignableTo(isInType) {
@@ -120,7 +125,7 @@ func structArgsInTypes(typ reflect.Type) ([]ProviderInput, error) {
 			}
 		}
 
-		res = append(res, ProviderInput{
+		res = append(res, providerInput{
 			Type:     f.Type,
 			Optional: optional,
 		})
@@ -128,9 +133,9 @@ func structArgsInTypes(typ reflect.Type) ([]ProviderInput, error) {
 	return res, nil
 }
 
-func expandStructArgsOutTypes(outputs []ProviderOutput) ([]ProviderOutput, bool) {
+func expandStructArgsOutTypes(outputs []providerOutput) ([]providerOutput, bool) {
 	foundStructArgs := false
-	var newOut []ProviderOutput
+	var newOut []providerOutput
 	for _, out := range outputs {
 		if out.Type.AssignableTo(isOutType) {
 			foundStructArgs = true
@@ -142,23 +147,23 @@ func expandStructArgsOutTypes(outputs []ProviderOutput) ([]ProviderOutput, bool)
 	return newOut, foundStructArgs
 }
 
-func structArgsOutTypes(typ reflect.Type) []ProviderOutput {
+func structArgsOutTypes(typ reflect.Type) []providerOutput {
 	n := typ.NumField()
-	var res []ProviderOutput
+	var res []providerOutput
 	for i := 0; i < n; i++ {
 		f := typ.Field(i)
 		if f.Type.AssignableTo(isOutType) {
 			continue
 		}
 
-		res = append(res, ProviderOutput{
+		res = append(res, providerOutput{
 			Type: f.Type,
 		})
 	}
 	return res
 }
 
-func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int) {
+func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int, error) {
 	numFields := typ.NumField()
 	j := 0
 	res := reflect.New(typ)
@@ -167,11 +172,17 @@ func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int) {
 		if f.Type.AssignableTo(isInType) {
 			continue
 		}
+		if !res.Elem().Field(i).CanSet() {
+			return reflect.Value{}, 0, fmt.Errorf("depinject.In struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath)
+		}
+		if !values[j].CanInterface() {
+			return reflect.Value{}, 0, fmt.Errorf("depinject.Out struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath)
+		}
 
 		res.Elem().Field(i).Set(values[j])
 		j++
 	}
-	return res.Elem(), j
+	return res.Elem(), j, nil
 }
 
 func extractFromOut(typ reflect.Type, value reflect.Value) []reflect.Value {

@@ -9,6 +9,7 @@ on:
     paths:
       - "docs/**"
       - "x/**/*.md"
+      - .github/workflows/deploy-docs.yml
 
 permissions:
   contents: read
@@ -19,7 +20,7 @@ jobs:
       contents: write # for JamesIves/github-pages-deploy-action to push changes in repo
     runs-on: ubuntu-latest
     container:
-      image: tendermintdev/docker-website-deployment
+      image: ghcr.io/cosmos/website-deployment
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v3
@@ -27,9 +28,8 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Install and Build 🔧
+      - name: Build 🔧
         run: |
-          apk add rsync
           make build-docs LEDGER_ENABLED=false
 
       - name: Deploy 🚀

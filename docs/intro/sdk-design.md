@@ -19,7 +19,7 @@ Here is a simplified view of how transactions are handled by an application buil
 
 Here is an example of this from `simapp`, the Cosmos SDK demonstration app:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/simapp/app.go#L154-L193
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L154-L193
 
 The goal of `baseapp` is to provide a secure interface between the store and the extensible state machine while defining as little about the state machine as possible (staying true to the ABCI).
 

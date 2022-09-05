@@ -210,7 +210,7 @@ func (k Keeper) IterateDelegatorUnbondingDelegations(ctx sdk.Context, delegator 
 
 // GetDelegatorBonded returs the total amount a delegator has bonded.
 func (k Keeper) GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) math.Int {
-	bonded := sdk.ZeroDec()
+	bonded := math.LegacyZeroDec()
 
 	k.IterateDelegatorDelegations(ctx, delegator, func(delegation types.Delegation) bool {
 		validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
@@ -619,13 +619,13 @@ func (k Keeper) Delegate(
 	// Validator loses all tokens due to slashing. In this case,
 	// make all future delegations invalid.
 	if validator.InvalidExRate() {
-		return sdk.ZeroDec(), types.ErrDelegatorShareExRateInvalid
+		return math.LegacyZeroDec(), types.ErrDelegatorShareExRateInvalid
 	}
 
 	// Get or create the delegation object
 	delegation, found := k.GetDelegation(ctx, delAddr, validator.GetOperator())
 	if !found {
-		delegation = types.NewDelegation(delAddr, validator.GetOperator(), sdk.ZeroDec())
+		delegation = types.NewDelegation(delAddr, validator.GetOperator(), math.LegacyZeroDec())
 	}
 
 	// call the appropriate hook if present
@@ -636,7 +636,7 @@ func (k Keeper) Delegate(
 	}
 
 	if err != nil {
-		return sdk.ZeroDec(), err
+		return math.LegacyZeroDec(), err
 	}
 
 	delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)

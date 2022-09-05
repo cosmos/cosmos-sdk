@@ -3,6 +3,7 @@ package codec_test
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -44,6 +45,70 @@ type lyingProtoMarshaler struct {
 
 func (lpm *lyingProtoMarshaler) Size() int {
 	return lpm.falseSize
+}
+
+func TestEnsureRegistered(t *testing.T) {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cat := &testdata.Cat{Moniker: "Garfield"}
+
+	err := interfaceRegistry.EnsureRegistered(*cat)
+	require.ErrorContains(t, err, "testdata.Cat is not a pointer")
+
+	err = interfaceRegistry.EnsureRegistered(cat)
+	require.ErrorContains(t, err, "testdata.Cat does not have a registered interface")
+
+	interfaceRegistry.RegisterInterface("testdata.Animal",
+		(*testdata.Animal)(nil),
+		&testdata.Cat{},
+	)
+
+	require.NoError(t, interfaceRegistry.EnsureRegistered(cat))
+}
+
+func TestProtoCodecMarshal(t *testing.T) {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	interfaceRegistry.RegisterInterface("testdata.Animal",
+		(*testdata.Animal)(nil),
+		&testdata.Cat{},
+	)
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+
+	cartonRegistry := types.NewInterfaceRegistry()
+	cartonRegistry.RegisterInterface("testdata.Cartoon",
+		(*testdata.Cartoon)(nil),
+		&testdata.Bird{},
+	)
+	cartoonCdc := codec.NewProtoCodec(cartonRegistry)
+
+	cat := &testdata.Cat{Moniker: "Garfield", Lives: 6}
+	bird := &testdata.Bird{Species: "Passerina ciris"}
+	require.NoError(t, interfaceRegistry.EnsureRegistered(cat))
+
+	var (
+		animal  testdata.Animal
+		cartoon testdata.Cartoon
+	)
+
+	// sanity check
+	require.True(t, reflect.TypeOf(cat).Implements(reflect.TypeOf((*testdata.Animal)(nil)).Elem()))
+
+	bz, err := cdc.MarshalInterface(cat)
+	require.NoError(t, err)
+
+	err = cdc.UnmarshalInterface(bz, &animal)
+	require.NoError(t, err)
+
+	bz, err = cdc.MarshalInterface(bird)
+	require.ErrorContains(t, err, "does not have a registered interface")
+
+	bz, err = cartoonCdc.MarshalInterface(bird)
+	require.NoError(t, err)
+
+	err = cdc.UnmarshalInterface(bz, &cartoon)
+	require.ErrorContains(t, err, "no registered implementations")
+
+	err = cartoonCdc.UnmarshalInterface(bz, &cartoon)
+	require.NoError(t, err)
 }
 
 func TestProtoCodecUnmarshalLengthPrefixedChecks(t *testing.T) {

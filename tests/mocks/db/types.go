@@ -177,31 +177,31 @@ func (mr *MockConnectionMockRecorder) Writer() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Writer", reflect.TypeOf((*MockConnection)(nil).Writer))
 }
 
-// MockDBReader is a mock of DBReader interface.
-type MockDBReader struct {
+// MockReader is a mock of Reader interface.
+type MockReader struct {
 	ctrl     *gomock.Controller
-	recorder *MockDBReaderMockRecorder
+	recorder *MockReaderMockRecorder
 }
 
-// MockDBReaderMockRecorder is the mock recorder for MockDBReader.
-type MockDBReaderMockRecorder struct {
-	mock *MockDBReader
+// MockReaderMockRecorder is the mock recorder for MockReader.
+type MockReaderMockRecorder struct {
+	mock *MockReader
 }
 
-// NewMockDBReader creates a new mock instance.
-func NewMockDBReader(ctrl *gomock.Controller) *MockDBReader {
-	mock := &MockDBReader{ctrl: ctrl}
-	mock.recorder = &MockDBReaderMockRecorder{mock}
+// NewMockReader creates a new mock instance.
+func NewMockReader(ctrl *gomock.Controller) *MockReader {
+	mock := &MockReader{ctrl: ctrl}
+	mock.recorder = &MockReaderMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDBReader) EXPECT() *MockDBReaderMockRecorder {
+func (m *MockReader) EXPECT() *MockReaderMockRecorder {
 	return m.recorder
 }
 
 // Discard mocks base method.
-func (m *MockDBReader) Discard() error {
+func (m *MockReader) Discard() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Discard")
 	ret0, _ := ret[0].(error)
@@ -209,13 +209,13 @@ func (m *MockDBReader) Discard() error {
 }
 
 // Discard indicates an expected call of Discard.
-func (mr *MockDBReaderMockRecorder) Discard() *gomock.Call {
+func (mr *MockReaderMockRecorder) Discard() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Discard", reflect.TypeOf((*MockDBReader)(nil).Discard))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Discard", reflect.TypeOf((*MockReader)(nil).Discard))
 }
 
 // Get mocks base method.
-func (m *MockDBReader) Get(arg0 []byte) ([]byte, error) {
+func (m *MockReader) Get(arg0 []byte) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0)
 	ret0, _ := ret[0].([]byte)
@@ -224,13 +224,13 @@ func (m *MockDBReader) Get(arg0 []byte) ([]byte, error) {
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockDBReaderMockRecorder) Get(arg0 interface{}) *gomock.Call {
+func (mr *MockReaderMockRecorder) Get(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockDBReader)(nil).Get), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockReader)(nil).Get), arg0)
 }
 
 // Has mocks base method.
-func (m *MockDBReader) Has(key []byte) (bool, error) {
+func (m *MockReader) Has(key []byte) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Has", key)
 	ret0, _ := ret[0].(bool)
@@ -239,13 +239,13 @@ func (m *MockDBReader) Has(key []byte) (bool, error) {
 }
 
 // Has indicates an expected call of Has.
-func (mr *MockDBReaderMockRecorder) Has(key interface{}) *gomock.Call {
+func (mr *MockReaderMockRecorder) Has(key interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Has", reflect.TypeOf((*MockDBReader)(nil).Has), key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Has", reflect.TypeOf((*MockReader)(nil).Has), key)
 }
 
 // Iterator mocks base method.
-func (m *MockDBReader) Iterator(start, end []byte) (db.Iterator, error) {
+func (m *MockReader) Iterator(start, end []byte) (db.Iterator, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Iterator", start, end)
 	ret0, _ := ret[0].(db.Iterator)
@@ -254,13 +254,13 @@ func (m *MockDBReader) Iterator(start, end []byte) (db.Iterator, error) {
 }
 
 // Iterator indicates an expected call of Iterator.
-func (mr *MockDBReaderMockRecorder) Iterator(start, end interface{}) *gomock.Call {
+func (mr *MockReaderMockRecorder) Iterator(start, end interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Iterator", reflect.TypeOf((*MockDBReader)(nil).Iterator), start, end)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Iterator", reflect.TypeOf((*MockReader)(nil).Iterator), start, end)
 }
 
 // ReverseIterator mocks base method.
-func (m *MockDBReader) ReverseIterator(start, end []byte) (db.Iterator, error) {
+func (m *MockReader) ReverseIterator(start, end []byte) (db.Iterator, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReverseIterator", start, end)
 	ret0, _ := ret[0].(db.Iterator)
@@ -269,36 +269,36 @@ func (m *MockDBReader) ReverseIterator(start, end []byte) (db.Iterator, error) {
 }
 
 // ReverseIterator indicates an expected call of ReverseIterator.
-func (mr *MockDBReaderMockRecorder) ReverseIterator(start, end interface{}) *gomock.Call {
+func (mr *MockReaderMockRecorder) ReverseIterator(start, end interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseIterator", reflect.TypeOf((*MockDBReader)(nil).ReverseIterator), start, end)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseIterator", reflect.TypeOf((*MockReader)(nil).ReverseIterator), start, end)
 }
 
-// MockDBWriter is a mock of DBWriter interface.
-type MockDBWriter struct {
+// MockWriter is a mock of Writer interface.
+type MockWriter struct {
 	ctrl     *gomock.Controller
-	recorder *MockDBWriterMockRecorder
+	recorder *MockWriterMockRecorder
 }
 
-// MockDBWriterMockRecorder is the mock recorder for MockDBWriter.
-type MockDBWriterMockRecorder struct {
-	mock *MockDBWriter
+// MockWriterMockRecorder is the mock recorder for MockWriter.
+type MockWriterMockRecorder struct {
+	mock *MockWriter
 }
 
-// NewMockDBWriter creates a new mock instance.
-func NewMockDBWriter(ctrl *gomock.Controller) *MockDBWriter {
-	mock := &MockDBWriter{ctrl: ctrl}
-	mock.recorder = &MockDBWriterMockRecorder{mock}
+// NewMockWriter creates a new mock instance.
+func NewMockWriter(ctrl *gomock.Controller) *MockWriter {
+	mock := &MockWriter{ctrl: ctrl}
+	mock.recorder = &MockWriterMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDBWriter) EXPECT() *MockDBWriterMockRecorder {
+func (m *MockWriter) EXPECT() *MockWriterMockRecorder {
 	return m.recorder
 }
 
 // Commit mocks base method.
-func (m *MockDBWriter) Commit() error {
+func (m *MockWriter) Commit() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Commit")
 	ret0, _ := ret[0].(error)
@@ -306,13 +306,13 @@ func (m *MockDBWriter) Commit() error {
 }
 
 // Commit indicates an expected call of Commit.
-func (mr *MockDBWriterMockRecorder) Commit() *gomock.Call {
+func (mr *MockWriterMockRecorder) Commit() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockDBWriter)(nil).Commit))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockWriter)(nil).Commit))
 }
 
 // Delete mocks base method.
-func (m *MockDBWriter) Delete(arg0 []byte) error {
+func (m *MockWriter) Delete(arg0 []byte) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0)
 	ret0, _ := ret[0].(error)
@@ -320,13 +320,13 @@ func (m *MockDBWriter) Delete(arg0 []byte) error {
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockDBWriterMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+func (mr *MockWriterMockRecorder) Delete(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockDBWriter)(nil).Delete), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockWriter)(nil).Delete), arg0)
 }
 
 // Discard mocks base method.
-func (m *MockDBWriter) Discard() error {
+func (m *MockWriter) Discard() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Discard")
 	ret0, _ := ret[0].(error)
@@ -334,13 +334,13 @@ func (m *MockDBWriter) Discard() error {
 }
 
 // Discard indicates an expected call of Discard.
-func (mr *MockDBWriterMockRecorder) Discard() *gomock.Call {
+func (mr *MockWriterMockRecorder) Discard() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Discard", reflect.TypeOf((*MockDBWriter)(nil).Discard))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Discard", reflect.TypeOf((*MockWriter)(nil).Discard))
 }
 
 // Set mocks base method.
-func (m *MockDBWriter) Set(arg0, arg1 []byte) error {
+func (m *MockWriter) Set(arg0, arg1 []byte) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Set", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -348,36 +348,36 @@ func (m *MockDBWriter) Set(arg0, arg1 []byte) error {
 }
 
 // Set indicates an expected call of Set.
-func (mr *MockDBWriterMockRecorder) Set(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockWriterMockRecorder) Set(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockDBWriter)(nil).Set), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockWriter)(nil).Set), arg0, arg1)
 }
 
-// MockDBReadWriter is a mock of DBReadWriter interface.
-type MockDBReadWriter struct {
+// MockReadWriter is a mock of ReadWriter interface.
+type MockReadWriter struct {
 	ctrl     *gomock.Controller
-	recorder *MockDBReadWriterMockRecorder
+	recorder *MockReadWriterMockRecorder
 }
 
-// MockDBReadWriterMockRecorder is the mock recorder for MockDBReadWriter.
-type MockDBReadWriterMockRecorder struct {
-	mock *MockDBReadWriter
+// MockReadWriterMockRecorder is the mock recorder for MockReadWriter.
+type MockReadWriterMockRecorder struct {
+	mock *MockReadWriter
 }
 
-// NewMockDBReadWriter creates a new mock instance.
-func NewMockDBReadWriter(ctrl *gomock.Controller) *MockDBReadWriter {
-	mock := &MockDBReadWriter{ctrl: ctrl}
-	mock.recorder = &MockDBReadWriterMockRecorder{mock}
+// NewMockReadWriter creates a new mock instance.
+func NewMockReadWriter(ctrl *gomock.Controller) *MockReadWriter {
+	mock := &MockReadWriter{ctrl: ctrl}
+	mock.recorder = &MockReadWriterMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDBReadWriter) EXPECT() *MockDBReadWriterMockRecorder {
+func (m *MockReadWriter) EXPECT() *MockReadWriterMockRecorder {
 	return m.recorder
 }
 
 // Commit mocks base method.
-func (m *MockDBReadWriter) Commit() error {
+func (m *MockReadWriter) Commit() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Commit")
 	ret0, _ := ret[0].(error)
@@ -385,13 +385,13 @@ func (m *MockDBReadWriter) Commit() error {
 }
 
 // Commit indicates an expected call of Commit.
-func (mr *MockDBReadWriterMockRecorder) Commit() *gomock.Call {
+func (mr *MockReadWriterMockRecorder) Commit() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockDBReadWriter)(nil).Commit))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockReadWriter)(nil).Commit))
 }
 
 // Delete mocks base method.
-func (m *MockDBReadWriter) Delete(arg0 []byte) error {
+func (m *MockReadWriter) Delete(arg0 []byte) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0)
 	ret0, _ := ret[0].(error)
@@ -399,13 +399,13 @@ func (m *MockDBReadWriter) Delete(arg0 []byte) error {
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockDBReadWriterMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+func (mr *MockReadWriterMockRecorder) Delete(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockDBReadWriter)(nil).Delete), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockReadWriter)(nil).Delete), arg0)
 }
 
 // Discard mocks base method.
-func (m *MockDBReadWriter) Discard() error {
+func (m *MockReadWriter) Discard() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Discard")
 	ret0, _ := ret[0].(error)
@@ -413,13 +413,13 @@ func (m *MockDBReadWriter) Discard() error {
 }
 
 // Discard indicates an expected call of Discard.
-func (mr *MockDBReadWriterMockRecorder) Discard() *gomock.Call {
+func (mr *MockReadWriterMockRecorder) Discard() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Discard", reflect.TypeOf((*MockDBReadWriter)(nil).Discard))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Discard", reflect.TypeOf((*MockReadWriter)(nil).Discard))
 }
 
 // Get mocks base method.
-func (m *MockDBReadWriter) Get(arg0 []byte) ([]byte, error) {
+func (m *MockReadWriter) Get(arg0 []byte) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0)
 	ret0, _ := ret[0].([]byte)
@@ -428,13 +428,13 @@ func (m *MockDBReadWriter) Get(arg0 []byte) ([]byte, error) {
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockDBReadWriterMockRecorder) Get(arg0 interface{}) *gomock.Call {
+func (mr *MockReadWriterMockRecorder) Get(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockDBReadWriter)(nil).Get), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockReadWriter)(nil).Get), arg0)
 }
 
 // Has mocks base method.
-func (m *MockDBReadWriter) Has(key []byte) (bool, error) {
+func (m *MockReadWriter) Has(key []byte) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Has", key)
 	ret0, _ := ret[0].(bool)
@@ -443,13 +443,13 @@ func (m *MockDBReadWriter) Has(key []byte) (bool, error) {
 }
 
 // Has indicates an expected call of Has.
-func (mr *MockDBReadWriterMockRecorder) Has(key interface{}) *gomock.Call {
+func (mr *MockReadWriterMockRecorder) Has(key interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Has", reflect.TypeOf((*MockDBReadWriter)(nil).Has), key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Has", reflect.TypeOf((*MockReadWriter)(nil).Has), key)
 }
 
 // Iterator mocks base method.
-func (m *MockDBReadWriter) Iterator(start, end []byte) (db.Iterator, error) {
+func (m *MockReadWriter) Iterator(start, end []byte) (db.Iterator, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Iterator", start, end)
 	ret0, _ := ret[0].(db.Iterator)
@@ -458,13 +458,13 @@ func (m *MockDBReadWriter) Iterator(start, end []byte) (db.Iterator, error) {
 }
 
 // Iterator indicates an expected call of Iterator.
-func (mr *MockDBReadWriterMockRecorder) Iterator(start, end interface{}) *gomock.Call {
+func (mr *MockReadWriterMockRecorder) Iterator(start, end interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Iterator", reflect.TypeOf((*MockDBReadWriter)(nil).Iterator), start, end)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Iterator", reflect.TypeOf((*MockReadWriter)(nil).Iterator), start, end)
 }
 
 // ReverseIterator mocks base method.
-func (m *MockDBReadWriter) ReverseIterator(start, end []byte) (db.Iterator, error) {
+func (m *MockReadWriter) ReverseIterator(start, end []byte) (db.Iterator, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReverseIterator", start, end)
 	ret0, _ := ret[0].(db.Iterator)
@@ -473,13 +473,13 @@ func (m *MockDBReadWriter) ReverseIterator(start, end []byte) (db.Iterator, erro
 }
 
 // ReverseIterator indicates an expected call of ReverseIterator.
-func (mr *MockDBReadWriterMockRecorder) ReverseIterator(start, end interface{}) *gomock.Call {
+func (mr *MockReadWriterMockRecorder) ReverseIterator(start, end interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseIterator", reflect.TypeOf((*MockDBReadWriter)(nil).ReverseIterator), start, end)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseIterator", reflect.TypeOf((*MockReadWriter)(nil).ReverseIterator), start, end)
 }
 
 // Set mocks base method.
-func (m *MockDBReadWriter) Set(arg0, arg1 []byte) error {
+func (m *MockReadWriter) Set(arg0, arg1 []byte) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Set", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -487,9 +487,9 @@ func (m *MockDBReadWriter) Set(arg0, arg1 []byte) error {
 }
 
 // Set indicates an expected call of Set.
-func (mr *MockDBReadWriterMockRecorder) Set(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockReadWriterMockRecorder) Set(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockDBReadWriter)(nil).Set), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockReadWriter)(nil).Set), arg0, arg1)
 }
 
 // MockIterator is a mock of Iterator interface.

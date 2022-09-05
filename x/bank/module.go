@@ -4,15 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"time"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
-	"cosmossdk.io/depinject"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/tendermint/tendermint/crypto"
-
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -21,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -146,18 +143,8 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-// Deprecated: Route returns the message routing key for the bank module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 // QuerierRoute returns the bank module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
-
-// LegacyQuerierHandler returns the bank module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
-}
 
 // InitGenesis performs genesis initialization for the bank module. It returns
 // no validator updates.
@@ -191,15 +178,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents doesn't return any content functions for governance proposals.
 func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
-}
-
-// RandomizedParams creates randomized distribution param changes for the simulator.
-
-// TODO: Returns an empty slice which will make parameter changes a no-op during
-// simulations. Once all modules are migrated, remove RandomizedParams from
-// the simulation interface.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
@@ -237,7 +215,7 @@ type bankInputs struct {
 	Authority     map[string]sdk.AccAddress `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
+	LegacySubspace exported.Subspace `optional:"true"`
 }
 
 type bankOutputs struct {
@@ -248,15 +226,14 @@ type bankOutputs struct {
 }
 
 func provideModule(in bankInputs) bankOutputs {
-	// configure blocked module accounts.
+	// Configure blocked module accounts.
 	//
-	// default behavior for blockedAddresses is to regard any module mentioned in AccountKeeper's module account
-	// permissions as blocked.
+	// Default behavior for blockedAddresses is to regard any module mentioned in
+	// AccountKeeper's module account permissions as blocked.
 	blockedAddresses := make(map[string]bool)
-	if len(in.Config.BlockedModuleAccountsOverride) != 0 {
+	if len(in.Config.BlockedModuleAccountsOverride) > 0 {
 		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
-			addr := sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
-			blockedAddresses[addr.String()] = true
+			blockedAddresses[authtypes.NewModuleAddress(moduleName).String()] = true
 		}
 	} else {
 		for _, permission := range in.AccountKeeper.GetModulePermissions() {

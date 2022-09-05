@@ -10,6 +10,7 @@ on:
       - "docs/**"
       - "x/**/*.md"
       - .github/workflows/deploy-docs.yml
+  pull_request:
 
 permissions:
   contents: read
@@ -27,6 +28,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+          path: "."
 
       - name: Build 🔧
         run: |

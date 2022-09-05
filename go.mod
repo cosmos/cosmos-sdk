@@ -45,7 +45,7 @@ require (
 	github.com/prometheus/common v0.37.0
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
-	github.com/rs/zerolog v1.27.0
+	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
@@ -61,7 +61,7 @@ require (
 	google.golang.org/genproto v0.0.0-20220725144611-272f38e5d71b
 	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1
-	pgregory.net/rapid v0.4.8
+	pgregory.net/rapid v0.5.2
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -292,6 +292,9 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
+	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
+	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1

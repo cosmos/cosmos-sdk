@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
-	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
 
@@ -118,7 +117,9 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			overwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
 			stakingBondDenom, _ := cmd.Flags().GetString(FlagStakingBondDenom)
 
-			if !overwrite && tmos.FileExists(genFile) {
+			// use os.Stat to check if the file exists
+			_, err = os.Stat(genFile)
+			if !overwrite && !os.IsNotExist(err) {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
 

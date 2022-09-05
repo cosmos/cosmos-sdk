@@ -144,7 +144,7 @@ message BaseAccount {
 
 ### Vesting Account
 
-See [Vesting](05_vesting.md).
+See [Vesting](https://docs.cosmos.network/main/modules/vesting/).
 
 # AnteHandlers
 

@@ -1,5 +1,5 @@
 <!--
-order: 1
+order: 0
 title: "Vesting Overview"
 parent:
   title: "vesting"

@@ -7,36 +7,30 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-
 	"strings"
-
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/cli"
-
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-
-	"github.com/cosmos/cosmos-sdk/x/group"
-	groupcli "github.com/cosmos/cosmos-sdk/x/group/client/cli"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	groupcli "github.com/cosmos/cosmos-sdk/x/group/client/cli"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
 
 const validMetadata = "metadata"

@@ -5,7 +5,7 @@ parent:
   title: "epoching"
 -->
 
-## `x/epoching`
+# `x/epoching`
 
 ## Abstract
 

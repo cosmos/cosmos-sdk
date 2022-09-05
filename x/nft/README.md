@@ -13,12 +13,12 @@ parent:
 
 `x/nft` is an implementation of a Cosmos SDK module, per [ADR 43](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-043-nft-module.md), that allows you to create nft classification, create nft, transfer nft, update nft, and support various queries by integrating the module. It is fully compatible with the ERC721 specification.
 
-*[Concept](#concepts)
-  * [Class](#Class)
-  * [NFT](#NFT)
+* [Concept](#concepts)
+    * [Class](#class)
+    * [NFT](#nft)
 *[State](#state)
 *[Messages](#messages)
-  * [MsgSend](#MsgSend)
+    * [MsgSend](#msgsend)
 *[Events](#events)
 
 # Concepts

@@ -3,7 +3,7 @@ package valuerenderer_test
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -16,7 +16,7 @@ import (
 
 func TestFormatCoins(t *testing.T) {
 	var testcases []coinsTest
-	raw, err := ioutil.ReadFile("../internal/testdata/coins.json")
+	raw, err := os.ReadFile("../internal/testdata/coins.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -24,27 +24,29 @@ func TestFormatCoins(t *testing.T) {
 	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
 
 	for _, tc := range testcases {
-		// Create a context.Context containing all coins metadata, to simulate
-		// that they are in state.
-		ctx := context.Background()
-		for _, coin := range tc.coins {
-			m := tc.metadataMap[coin.Denom]
-			metadata := &bankv1beta1.Metadata{
-				Display:    m.Denom,
-				DenomUnits: []*bankv1beta1.DenomUnit{{Denom: coin.Denom, Exponent: 0}, {Denom: m.Denom, Exponent: m.Exponent}},
+		t.Run(tc.expRes, func(t *testing.T) {
+			// Create a context.Context containing all coins metadata, to simulate
+			// that they are in state.
+			ctx := context.Background()
+			for _, coin := range tc.coins {
+				m := tc.metadataMap[coin.Denom]
+				metadata := &bankv1beta1.Metadata{
+					Display:    m.Denom,
+					DenomUnits: []*bankv1beta1.DenomUnit{{Denom: coin.Denom, Exponent: 0}, {Denom: m.Denom, Exponent: m.Exponent}},
+				}
+
+				ctx = context.WithValue(ctx, mockCoinMetadataKey(coin.Denom), metadata)
 			}
 
-			ctx = context.WithValue(ctx, mockCoinMetadataKey(coin.Denom), metadata)
-		}
+			r, err := textual.GetValueRenderer(fieldDescriptorFromName("COINS"))
+			require.NoError(t, err)
+			b := new(strings.Builder)
+			listValue := NewGenericList(tc.coins)
+			err = r.Format(ctx, protoreflect.ValueOf(listValue), b)
+			require.NoError(t, err)
 
-		r, err := textual.GetValueRenderer(fieldDescriptorFromName("COINS"))
-		require.NoError(t, err)
-		b := new(strings.Builder)
-		listValue := NewGenericList(tc.coins)
-		err = r.Format(ctx, protoreflect.ValueOf(listValue), b)
-		require.NoError(t, err)
-
-		require.Equal(t, tc.expRes, b.String())
+			require.Equal(t, tc.expRes, b.String())
+		})
 	}
 }
 

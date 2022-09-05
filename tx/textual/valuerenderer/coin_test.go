@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -34,7 +34,7 @@ func mockCoinMetadataQuerier(ctx context.Context, denom string) (*bankv1beta1.Me
 
 func TestFormatCoin(t *testing.T) {
 	var testcases []coinTest
-	raw, err := ioutil.ReadFile("../internal/testdata/coin.json")
+	raw, err := os.ReadFile("../internal/testdata/coin.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -42,19 +42,21 @@ func TestFormatCoin(t *testing.T) {
 	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
 
 	for _, tc := range testcases {
-		metadata := &bankv1beta1.Metadata{
-			Display:    tc.metadata.Denom,
-			DenomUnits: []*bankv1beta1.DenomUnit{{Denom: tc.coin.Denom, Exponent: 0}, {Denom: tc.metadata.Denom, Exponent: tc.metadata.Exponent}},
-		}
-		ctx := context.WithValue(context.Background(), mockCoinMetadataKey(tc.coin.Denom), metadata)
+		t.Run(tc.expRes, func(t *testing.T) {
+			metadata := &bankv1beta1.Metadata{
+				Display:    tc.metadata.Denom,
+				DenomUnits: []*bankv1beta1.DenomUnit{{Denom: tc.coin.Denom, Exponent: 0}, {Denom: tc.metadata.Denom, Exponent: tc.metadata.Exponent}},
+			}
+			ctx := context.WithValue(context.Background(), mockCoinMetadataKey(tc.coin.Denom), metadata)
 
-		r, err := textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
-		require.NoError(t, err)
-		b := new(strings.Builder)
-		err = r.Format(ctx, protoreflect.ValueOf(tc.coin.ProtoReflect()), b)
-		require.NoError(t, err)
+			r, err := textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
+			require.NoError(t, err)
+			b := new(strings.Builder)
+			err = r.Format(ctx, protoreflect.ValueOf(tc.coin.ProtoReflect()), b)
+			require.NoError(t, err)
 
-		require.Equal(t, tc.expRes, b.String())
+			require.Equal(t, tc.expRes, b.String())
+		})
 	}
 }
 

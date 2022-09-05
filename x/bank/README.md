@@ -2,62 +2,10 @@
 order: 0
 title: Bank Overview
 parent:
-  title: "x/bank"
+  title: "bank"
 -->
 
 # x/bank
-
-- [x/bank](#xbank)
-  - [Abstract](#abstract)
-  - [Supply](#supply)
-    - [Total Supply](#total-supply)
-  - [Module Accounts](#module-accounts)
-    - [Permissions](#permissions)
-  - [State](#state)
-  - [Params](#params)
-  - [Keepers](#keepers)
-    - [Denied Addresses](#denied-addresses)
-    - [Common Types](#common-types)
-      - [Input](#input)
-      - [Output](#output)
-    - [BaseKeeper](#basekeeper)
-    - [SendKeeper](#sendkeeper)
-    - [ViewKeeper](#viewkeeper)
-  - [Messages](#messages)
-    - [MsgSend](#msgsend)
-    - [MsgMultiSend](#msgmultisend)
-    - [MsgUpdateParams](#msgupdateparams)
-  - [Events](#events)
-    - [Message Events](#message-events)
-      - [MsgSend](#msgsend-1)
-      - [MsgMultiSend](#msgmultisend-1)
-    - [Keeper Events](#keeper-events)
-      - [MintCoins](#mintcoins)
-      - [BurnCoins](#burncoins)
-      - [addCoins](#addcoins)
-      - [subUnlockedCoins/DelegateCoins](#subunlockedcoinsdelegatecoins)
-  - [Parameters](#parameters)
-    - [SendEnabled](#sendenabled)
-    - [DefaultSendEnabled](#defaultsendenabled)
-  - [Client](#client)
-    - [CLI](#cli)
-    - [Query](#query)
-      - [balances](#balances)
-      - [denom-metadata](#denom-metadata)
-      - [total](#total)
-      - [send-enabled](#send-enabled)
-    - [Transactions](#transactions)
-      - [send](#send)
-  - [gRPC](#grpc)
-    - [Balance](#balance)
-    - [AllBalances](#allbalances)
-    - [DenomMetadata](#denommetadata)
-    - [DenomsMetadata](#denomsmetadata)
-    - [DenomOwners](#denomowners)
-    - [TotalSupply](#totalsupply)
-    - [SupplyOf](#supplyof)
-    - [Params](#params-1)
-    - [SendEnabled](#sendenabled-1)
 
 ## Abstract
 
@@ -72,7 +20,29 @@ interaction with other modules which must alter user balances.
 In addition, the bank module tracks and provides query support for the total
 supply of all assets used in the application.
 
-This module will be used in the Cosmos Hub.
+This module is used in the Cosmos Hub.
+
+## Contents
+
+* [Supply](#supply)
+    * [Total Supply](#total-supply)
+* [Module Accounts](#module-accounts)
+    * [Permissions](#permissions)
+* [State](#state)
+* [Params](#params)
+* [Keepers](#keepers)
+* [Messages](#messages)
+* [Events](#events)
+    * [Message Events](#message-events)
+    * [Keeper Events](#keeper-events)
+* [Parameters](#parameters)
+    * [SendEnabled](#sendenabled)
+    * [DefaultSendEnabled](#defaultsendenabled)
+* [Client](#client)
+    * [CLI](#cli)
+    * [Query](#query)
+    * [Transactions](#transactions)
+* [gRPC](#grpc)
 
 ## Supply
 

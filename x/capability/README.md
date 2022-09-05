@@ -1,8 +1,18 @@
 <!--
 order: 0
+title: Capability Overview
+parent:
+  title: "capability"
 -->
 
 # `capability`
+
+* [Concepts](#concepts)
+    * [Capabilities](#capabilities)
+    * [Stores](#stores)
+* [State](#state)
+    * [In persisted KV store](#in-persisted-kv-store)
+    * [In-memory KV store](#in-memory-kv-store)
 
 ## Overview
 
@@ -107,6 +117,7 @@ not own.
 * KeyStore
 
 # State
+
 ## In persisted KV store
 
 1. Global unique capability index

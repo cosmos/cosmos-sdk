@@ -20,21 +20,19 @@ This module is used in the Cosmos Hub.
 
 ## Contents
 
-*[Concepts](#concepts)
-  * [Gas & Fees](#gas-&-fees)
-*[State](#state)
- * [Accounts](##accounts)
-*[AnteHandlers](#antehandlers)
-*[Keepers](#keepers)
- * [Account Keeper](#account-keeper)
-*[Parameters](#params)
-*[Client](#client)
- * [Auth](#auth)
+* [Concepts](#concepts)
+    * [Gas & Fees](#gas--fees)
+* [State](#state)
+    * [Accounts](#accounts)
+* [AnteHandlers](#antehandlers)
+* [Keepers](#keepers)
+    * [Account Keeper](#account-keeper)
+* [Parameters](#parameters)
+* [Client](#client)
+* [Auth](#auth-1)
     * [CLI](#cli)
     * [gRPC](#grpc)
     * [REST](#rest)
-
-
 
 # Concepts
 

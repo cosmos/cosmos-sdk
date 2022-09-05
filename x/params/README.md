@@ -1,5 +1,8 @@
 <!--
 order: 0
+title: Params Overview
+parent:
+  title: "params (depreacated)"
 -->
 
 # `params` (Deprecated)
@@ -21,11 +24,11 @@ The following contents explains how to use params module for master and user mod
 
 ## Contents
 
-*[Keeper](#keeper)
-*[Subspace](#subspace)
-  * [Key](#key)
-  * [KeyTable](#keytable)
-	* [ParamSet](#paramset)
+* [Keeper](#keeper)
+* [Subspace](#subspace)
+    * [Key](#key)
+    * [KeyTable](#keytable)
+    * [ParamSet](#paramset)
 
 # Keeper
 

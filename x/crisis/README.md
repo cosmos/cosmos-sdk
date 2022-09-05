@@ -1,5 +1,8 @@
 <!--
 order: 0
+title: Crisis Overview
+parent:
+  title: "crisis"
 -->
 
 # `crisis`
@@ -12,15 +15,12 @@ application initialization process.
 
 ## Contents
 
-*[State](#state)
-  * [ConstantFee](#constantfee)
-*[Messages](#messages)
-  * [MsgVerifyInvariant](#msgverifyinvariant)
-*[Events](#events)
-  * [Handlers](#handlers)
-*[Parameters](#params)
-*[Client](#client)*
-  * [CLI](#cli)
+* [State](#state)
+* [Messages](#messages)
+* [Events](#events)
+* [Parameters](#parameters)
+* [Client](#client)
+    * [CLI](#cli)
 
 # State
 

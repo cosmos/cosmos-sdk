@@ -7,28 +7,29 @@ parent:
 
 # `authz`
 
-## Contents
-
 ## Abstract
 
 `x/authz` is an implementation of a Cosmos SDK module, per [ADR 30](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-030-authz-module.md), that allows
 granting arbitrary privileges from one account (the granter) to another account (the grantee). Authorizations must be granted for a particular Msg service method one by one using an implementation of the `Authorization` interface.
 
-*[Concept](#concepts)
-	* [Authorization and Grant](#Authorization-and-Grant)
-	* [Built-in Authorizations](#Built-in-Authorizations)
-	* [Gas](#gas)
-*[State](#state)
-*[Messages](#messages)
-	* [MsgGrant](#MsgGrant)
-	* [MsgRevoke](#MsgRevoke)
-	* [MsgExec](#MsgExec)
-*[Events](#events)
-*[Client](#client)
-  * [CLI](#cli)
-  * [gRPC](#grpc)
-  * [REST](#rest)
+## Contents
 
+* [Concepts](#concepts)
+    * [Authorization and Grant](#authorization-and-grant)
+    * [Built-in Authorizations](#built-in-authorizations)
+    * [Gas](#gas)
+* [State](#state)
+    * [Grant](#grant)
+    * [GrantQueue](#grantqueue)
+* [Messages](#messages)
+    * [MsgGrant](#msggrant)
+    * [MsgRevoke](#msgrevoke)
+    * [MsgExec](#msgexec)
+* [Events](#events)
+* [Client](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 
 # Concepts
 

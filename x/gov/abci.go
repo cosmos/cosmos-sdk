@@ -20,11 +20,12 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 	// delete the canceled proposals from store.
 	// move the min initial deposit of the proposal to community-pool and refund remaining deposits.
 	keeper.IterateCanceledProposalQueue(ctx, func(proposal v1.Proposal) (stop bool) {
-		keeper.DeleteProposal(ctx, proposal.Id)
 		// send min proposal deposit amount to the community-pool from proposer deposit.
 		keeper.SendProposalMinDepositToCommunityPool(ctx, proposal.Id, proposal.Proposer)
-		// refund deposits of proposal to depositors
+		// refund deposits of proposal to depositors.
 		keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
+		// delete the proposal.
+		keeper.DeleteProposal(ctx, proposal.Id)
 		return false
 	})
 

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/hex"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -56,10 +55,7 @@ func (k Querier) ValidatorDistributionInfo(c context.Context, req *types.QueryVa
 		return nil, sdkerrors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
-	delAdr, err := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAdr.Bytes()))
-	if err != nil {
-		return nil, err
-	}
+	delAdr := sdk.AccAddress(valAdr)
 
 	del := k.stakingKeeper.Delegation(ctx, delAdr, valAdr)
 	if del == nil {

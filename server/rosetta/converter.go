@@ -338,8 +338,8 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 	default:
 		return nil, false
 	case banktypes.EventTypeCoinSpent:
-		spender := sdk.MustAccAddressFromBech32(string(event.Attributes[0].Value))
-		coins, err := sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
+		spender := sdk.MustAccAddressFromBech32(event.Attributes[0].Value)
+		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
 		if err != nil {
 			panic(err)
 		}
@@ -349,8 +349,8 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 		accountIdentifier = spender.String()
 
 	case banktypes.EventTypeCoinReceived:
-		receiver := sdk.MustAccAddressFromBech32(string(event.Attributes[0].Value))
-		coins, err := sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
+		receiver := sdk.MustAccAddressFromBech32(event.Attributes[0].Value)
+		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
 		if err != nil {
 			panic(err)
 		}
@@ -362,7 +362,7 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 	// rosetta does not have the concept of burning coins, so we need to mock
 	// the burn as a send to an address that cannot be resolved to anything
 	case banktypes.EventTypeCoinBurn:
-		coins, err := sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
+		coins, err := sdk.ParseCoinsNormalized(event.Attributes[1].Value)
 		if err != nil {
 			panic(err)
 		}

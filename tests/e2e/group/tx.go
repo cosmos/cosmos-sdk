@@ -1,4 +1,4 @@
-package testutil
+package group
 
 import (
 	"encoding/base64"

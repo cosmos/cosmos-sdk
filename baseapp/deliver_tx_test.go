@@ -959,8 +959,8 @@ func TestBaseApp_EndBlock(t *testing.T) {
 	name := t.Name()
 	logger := defaultLogger()
 
-	cp := &abci.ConsensusParams{
-		Block: &abci.BlockParams{
+	cp := &tmproto.ConsensusParams{
+		Block: &tmproto.BlockParams{
 			MaxGas: 5000000,
 		},
 	}
@@ -1565,8 +1565,8 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
 	app.InitChain(abci.RequestInitChain{
-		ConsensusParams: &abci.ConsensusParams{
-			Block: &abci.BlockParams{
+		ConsensusParams: &tmproto.ConsensusParams{
+			Block: &tmproto.BlockParams{
 				MaxGas: 100,
 			},
 		},
@@ -1824,8 +1824,8 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
 	app.InitChain(abci.RequestInitChain{
-		ConsensusParams: &abci.ConsensusParams{
-			Block: &abci.BlockParams{
+		ConsensusParams: &tmproto.ConsensusParams{
+			Block: &tmproto.BlockParams{
 				MaxGas: 9,
 			},
 		},

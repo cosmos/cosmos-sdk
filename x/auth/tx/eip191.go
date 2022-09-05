@@ -1,6 +1,8 @@
 package tx
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -55,6 +57,13 @@ func (s signModeEIP191Handler) GetSignBytes(mode signingtypes.SignMode, data sig
 		tx.GetMsgs(), protoTx.GetMemo(),
 	)
 
+	aminoJSONPrettyString, err := prettyAmino(string(aminoJSONBz))
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("SignMode_SIGN_MODE_EIP_191 cannot parse into pretty amino json: '%v': '%+v'", string(aminoJSONBz), err))
+	}
+
+	aminoJSONBz = []byte(aminoJSONPrettyString)
+
 	bz := append(
 		[]byte(EIP191MessagePrefix),
 		[]byte(strconv.Itoa(len(aminoJSONBz)))...,
@@ -63,4 +72,12 @@ func (s signModeEIP191Handler) GetSignBytes(mode signingtypes.SignMode, data sig
 	bz = append(bz, aminoJSONBz...)
 
 	return bz, nil
+}
+
+func prettyAmino(str string) (string, error) {
+	var prettyJSON bytes.Buffer
+	if err := json.Indent(&prettyJSON, []byte(str), "", "    "); err != nil {
+		return "", err
+	}
+	return prettyJSON.String(), nil
 }

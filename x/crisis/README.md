@@ -22,6 +22,8 @@ application initialization process.
 * [Client](#client)
     * [CLI](#cli)
 
+<!-- order: 1 -->
+
 # State
 
 ## ConstantFee
@@ -36,6 +38,8 @@ The ConstantFee param is stored in the module params state with the prefix of `0
 it can be updated with governance or the address with authority.
 
 * Params: `mint/params -> legacy_amino(sdk.Coin)`
+
+<!-- order: 2 -->
 
 # Messages
 
@@ -59,6 +63,8 @@ never deducted as the transaction is never committed to a block (equivalent to
 being refunded). However, if the invariant is not broken, the constant fee will
 not be refunded.
 
+<!-- order: 3 -->
+
 # Events
 
 The crisis module emits the following events:
@@ -81,6 +87,8 @@ The crisis module contains the following parameters:
 | Key         | Type          | Example                           |
 |-------------|---------------|-----------------------------------|
 | ConstantFee | object (coin) | {"denom":"uatom","amount":"1000"} |
+
+<!-- order: 4 -->
 
 # Client
 

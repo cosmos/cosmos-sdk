@@ -36,6 +36,8 @@ func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey) Keeper {
 
 * [State](#state)
 
+<!-- order: 1 -->
+
 # State
 
 ## Messages queue

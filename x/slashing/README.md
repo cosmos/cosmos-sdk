@@ -45,7 +45,7 @@ This module will be used by the Cosmos Hub, the first hub in the Cosmos ecosyste
     * [gRPC](#grpc)
     * [REST](#rest)
 
-<!--order: 1 -->
+<!-- order: 1 -->
 
 # Concepts
 
@@ -101,7 +101,7 @@ Multiple infractions are committed and then later discovered, at which point the
 validator is jailed and slashed for only one infraction. Because the validator
 is also tombstoned, they can not rejoin the validator set.
 
-<!--order: 2 -->
+<!-- order: 2 -->
 
 # State
 
@@ -160,7 +160,7 @@ it can be updated with governance or the address with authority.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc3/proto/cosmos/slashing/v1beta1/slashing.proto#L35-L45
 
-<!--order: 3 -->
+<!-- order: 3 -->
 
 # Messages
 
@@ -210,7 +210,7 @@ If the validator has enough stake to be in the top `n = MaximumBondedValidators`
 and all delegators still delegated to the validator will be rebonded and begin to again collect
 provisions and rewards.
 
-<!--order: 4 -->
+<!-- order: 4 -->
 
 # BeginBlock
 
@@ -306,7 +306,7 @@ for vote in block.LastCommitInfo.Votes {
   SetValidatorSigningInfo(vote.Validator.Address, signInfo)
 }
 ```
-<!--order: 5 -->
+<!-- order: 5 -->
 
 # Hooks
 
@@ -349,7 +349,7 @@ onValidatorBonded(address sdk.ValAddress)
 
   return
 ```
-<!--order: 6 -->
+<!-- order: 6 -->
 
 # Events
 
@@ -394,7 +394,7 @@ The slashing module emits the following events:
 | ----- | ------------- | ------------------ |
 | slash | jailed        | {validatorAddress} |
 
-<!--order: 7 -->
+<!-- order: 7 -->
 
 # Staking Tombstone
 
@@ -520,7 +520,7 @@ want to slash them equally, and thus we can enact the above change.
 > not for a different consensus algorithm or future versions of Tendermint that
 > may want to punish at different levels (for example, partial slashing).
 
-<!--order: 8 -->
+<!-- order: 8 -->
 
 # Parameters
 
@@ -534,7 +534,7 @@ The slashing module contains the following parameters:
 | SlashFractionDoubleSign | string (dec)   | "0.050000000000000000" |
 | SlashFractionDowntime   | string (dec)   | "0.010000000000000000" |
 
-<!--order: 9 -->
+<!-- order: 9 -->
 
 # CLI
 

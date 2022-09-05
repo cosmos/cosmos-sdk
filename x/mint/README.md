@@ -9,21 +9,20 @@ parent:
 
 ## Contents
 
-*[Concept](#concepts)
-*[State](#state)
-  * [Minter](#minter)
-  * [Params](#params)
-*[Begin-Block](#begin_block)
-  * [NextInflationRate](#nextinflationrate)
-  * [NextAnnualProvisions](#nextannualprovisions)
-  * [BlockProvision](#blockprovision)
-*[Parameters](#params)
-*[Events](#events)
-  * [BeginBlocker](#beginblocker)
-*[Client](#client)
-    * [CLI](#cli)
-    * [gRPC](#grpc)
-    * [REST](#rest)
+* [State](#state)
+    * [Minter](#minter)
+    * [Params](#params)
+* [Begin-Block](#begin-block)
+    * [NextInflationRate](#nextinflationrate)
+    * [NextAnnualProvisions](#nextannualprovisions)
+    * [BlockProvision](#blockprovision)
+* [Parameters](#parameters)
+* [Events](#events)
+    * [BeginBlocker](#beginblocker)
+* [Client](#client)
+        * [CLI](#cli)
+        * [gRPC](#grpc)
+        * [REST](#rest)
 
 # Concepts
 
@@ -50,6 +49,8 @@ It can be broken down in the following way:
 * If the inflation rate is above the goal %-bonded the inflation rate will
    decrease until a minimum value is reached
 
+<!-- order: 1 -->
+
 # State
 
 ## Minter
@@ -68,6 +69,8 @@ it can be updated with governance or the address with authority.
 * Params: `mint/params -> legacy_amino(params)`
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/mint/v1beta1/mint.proto#L25-L57
+
+<!-- order: 2 -->
 
 # Begin-Block
 
@@ -132,6 +135,8 @@ BlockProvision(params Params) sdk.Coin {
 	return sdk.NewCoin(params.MintDenom, provisionAmt.Truncate())
 ```
 
+<!-- order: 3 -->
+
 # Parameters
 
 The minting module contains the following parameters:
@@ -144,6 +149,8 @@ The minting module contains the following parameters:
 | InflationMin        | string (dec)    | "0.070000000000000000" |
 | GoalBonded          | string (dec)    | "0.670000000000000000" |
 | BlocksPerYear       | string (uint64) | "6311520"              |
+
+<!-- order: 4 -->
 
 # Events
 
@@ -158,6 +165,7 @@ The minting module emits the following events:
 | mint | annual_provisions | {annualProvisions} |
 | mint | amount            | {amount}           |
 
+<!-- order: 5 -->
 
 # Client
 

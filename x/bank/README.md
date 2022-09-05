@@ -109,6 +109,8 @@ The available permissions are:
 * `Burner`: allows for a module to burn a specific amount of coins.
 * `Staking`: allows for a module to delegate and undelegate a specific amount of coins.
 
+<!-- order: 1 -->
+
 ## State
 
 The `x/bank` module keeps state of the following primary objects:
@@ -134,6 +136,8 @@ it can be updated with governance or the address with authority.
 * Params: `0x05 | ProtocolBuffer(Params)`
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc3/proto/cosmos/bank/v1beta1/bank.proto#L11-L16
+
+<!-- order: 2 -->
 
 ## Keepers
 
@@ -280,6 +284,8 @@ type ViewKeeper interface {
 }
 ```
 
+<!-- order: 3 -->
+
 ## Messages
 
 ### MsgSend
@@ -314,6 +320,8 @@ The `bank` module params can be updated through `MsgUpdateParams`, which can be 
 The message handling can fail if:
 
 * signer is not the gov module account address.
+
+<!-- order: 4 -->
 
 ## Events
 
@@ -461,6 +469,8 @@ In addition to message events, the bank keeper will produce events when the foll
 }
 ```
 
+<!-- order: 5 -->
+
 ## Parameters
 
 The bank module contains the following parameters
@@ -476,6 +486,8 @@ with state store records.
 The default send enabled value controls send transfer capability for all
 coin denominations unless specifically included in the array of `SendEnabled`
 parameters.
+
+<!-- order: 6 -->
 
 ## Client
 

@@ -7,13 +7,6 @@ parent:
 
 # `x/capability`
 
-* [Concepts](#concepts)
-    * [Capabilities](#capabilities)
-    * [Stores](#stores)
-* [State](#state)
-    * [In persisted KV store](#in-persisted-kv-store)
-    * [In-memory KV store](#in-memory-kv-store)
-
 ## Overview
 
 `x/capability` is an implementation of a Cosmos SDK module, per [ADR 003](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-003-dynamic-capability-store.md),
@@ -80,9 +73,14 @@ func NewApp(...) *App {
 
 ## Contents
 
-*[Concepts](#concepts)
-*[State](#state)
+* [Concepts](#concepts)
+    * [Capabilities](#capabilities)
+    * [Stores](#stores)
+* [State](#state)
+    * [In persisted KV store](#in-persisted-kv-store)
+    * [In-memory KV store](#in-memory-kv-store)
 
+<!-- order: 1 -->
 
 # Concepts
 
@@ -115,6 +113,8 @@ not own.
 
 * MemStore
 * KeyStore
+
+<!-- order: 2 -->
 
 # State
 

@@ -31,6 +31,8 @@ parent:
 
 The full name of NFT is Non-Fungible Tokens. Because of the irreplaceable nature of NFT, it means that it can be used to represent unique things. The nft implemented by this module is fully compatible with Ethereum ERC721 standard.
 
+<!-- order: 1 -->
+
 # State
 
 ## Class
@@ -63,6 +65,7 @@ TotalSupply is responsible for tracking the number of all nfts under a certain c
 
 * OwnerKey: `0x05 | classID |-> totalSupply`
 
+<!-- order: 2 -->
 
 # Messages
 
@@ -77,6 +80,8 @@ The message handling should fail if:
 * provided `ClassID` is not exist.
 * provided `Id` is not exist.
 * provided `Sender` is not the owner of nft.
+
+<!-- order: 3 -->
 
 # Events
 

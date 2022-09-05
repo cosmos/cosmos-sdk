@@ -32,7 +32,7 @@ jobs:
 
       - name: Build 🔧
         run: |
-          cat .git/config
+          git config --global --add safe.directory /__w/cosmos-sdk/cosmos-sdk
           make build-docs LEDGER_ENABLED=false
 
       - name: Deploy 🚀

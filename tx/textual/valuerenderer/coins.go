@@ -80,7 +80,8 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value, w
 }
 
 func (vr coinsValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
-	panic("implement me")
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/13153
+	panic("implement me, see #13153")
 }
 
 // formatCoin formats a sdk.Coin into a value-rendered string, using the

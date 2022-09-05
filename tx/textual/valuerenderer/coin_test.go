@@ -44,12 +44,14 @@ func TestMetadataQuerier(t *testing.T) {
 
 	// Errors if metadata querier returns an error
 	expErr := fmt.Errorf("mock error")
-	textual = valuerenderer.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
+	textual = valuerenderer.NewTextual(func(_ context.Context, _ string) (*bankv1beta1.Metadata, error) {
 		return nil, expErr
 	})
 	vr, err = textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
 	err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()), b)
+	require.ErrorIs(t, err, expErr)
+	err = vr.Format(context.Background(), protoreflect.ValueOf(NewGenericList([]*basev1beta1.Coin{{}})), b)
 	require.ErrorIs(t, err, expErr)
 }
 

@@ -360,7 +360,7 @@ func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.A
 		tendermintCmd,
 		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
-		NewRollbackCmd(defaultNodeHome),
+		NewRollbackCmd(appCreator, defaultNodeHome),
 	)
 }
 

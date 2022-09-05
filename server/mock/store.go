@@ -159,15 +159,11 @@ func (ms multiStore) Restore(
 	panic("not implemented")
 }
 
-func (ms multiStore) LatestVersion() int64 {
+func (ms multiStore) RollbackToVersion(version int64) error {
 	panic("not implemented")
 }
 
-func (ms multiStore) WorkingHash() []byte {
-	panic("not implemented")
-}
-
-var _ storetypes.KVStore = kvStore{}
+var _ sdk.KVStore = kvStore{}
 
 type kvStore struct {
 	store map[string][]byte

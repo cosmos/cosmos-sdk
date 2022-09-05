@@ -40,7 +40,7 @@ func TestFormatCoin(t *testing.T) {
 	require.NoError(t, err)
 
 	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
-	r, err := textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
+	vr, err := textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
 
 	for _, tc := range testcases {
@@ -48,7 +48,7 @@ func TestFormatCoin(t *testing.T) {
 			if tc.Proto != nil {
 				ctx := context.WithValue(context.Background(), mockCoinMetadataKey(tc.Proto.Denom), tc.Metadata)
 				b := new(strings.Builder)
-				err = r.Format(ctx, protoreflect.ValueOf(tc.Proto.ProtoReflect()), b)
+				err = vr.Format(ctx, protoreflect.ValueOf(tc.Proto.ProtoReflect()), b)
 
 				if tc.Error {
 					require.Error(t, err)

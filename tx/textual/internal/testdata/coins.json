@@ -48,5 +48,10 @@
       "uxc1": {"display": "xC1", "denom_units": [{"denom": "xC1", "exponent": 6}, {"denom": "uxc1", "exponent": 0}]}
     },
     "text": "0.000001 xA, 0.000002 xB, 0.000003 xC, 0.000004 xC1"
-  }
+  },
+  {"text": "0.000001AA, 0.000002 BB, 0.000003 atom", "error": true},
+  {"text": "0.000001 AA, 0.000002  BB, 0.000003 atom", "error": true},
+  {"text": "0.000001 AA, 0.000002 BB,  0.000003 atom", "error": true},
+  {"text": " 0.000001 AA, 0.000002 BB,  0.000003 atom", "error": true},
+  {"text": "0.000001 AA, 0.000002 BB,  0.000003 atom ", "error": true}
 ]

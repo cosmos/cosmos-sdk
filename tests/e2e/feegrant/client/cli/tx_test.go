@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -11,7 +12,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/bytes"
+	tmlibs "github.com/tendermint/tendermint/libs/bytes"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -22,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
@@ -48,9 +50,10 @@ type CLITestSuite struct {
 	addedGrantee sdk.AccAddress
 	addedGrant   feegrant.Grant
 
-	kr      keyring.Keyring
-	baseCtx client.Context
-	encCfg  testutilmod.TestEncodingConfig
+	kr        keyring.Keyring
+	baseCtx   client.Context
+	encCfg    testutilmod.TestEncodingConfig
+	clientCtx client.Context
 
 	accounts []sdk.AccAddress
 }
@@ -63,9 +66,13 @@ type mockTendermintRPC struct {
 	responseQuery abci.ResponseQuery
 }
 
+func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
+	return mockTendermintRPC{responseQuery: respQuery}
+}
+
 func (m mockTendermintRPC) ABCIQueryWithOptions(
 	_ context.Context,
-	_ string, _ bytes.HexBytes,
+	_ string, _ tmlibs.HexBytes,
 	_ rpcclient.ABCIQueryOptions,
 ) (*coretypes.ResultABCIQuery, error) {
 	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
@@ -92,6 +99,16 @@ func (s *CLITestSuite) SetupSuite() {
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
+
+	var outBuf bytes.Buffer
+	ctxGen := func() client.Context {
+		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
+		c := newMockTendermintRPC(abci.ResponseQuery{
+			Value: bz,
+		})
+		return s.baseCtx.WithClient(c)
+	}
+	s.clientCtx = ctxGen().WithOutput(&outBuf)
 
 	if testing.Short() {
 		s.T().Skip("skipping test in unit-tests mode.")
@@ -139,15 +156,13 @@ func (s *CLITestSuite) createGrant(granter, grantee sdk.Address) {
 		commonFlags...,
 	)
 
-	ctx := svrcmd.CreateExecuteContext(context.Background())
-
 	cmd := cli.NewCmdFeeGrant()
-	cmd.SetOutput(io.Discard)
-	cmd.SetContext(ctx)
-	cmd.SetArgs(args)
-	s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-	err := cmd.Execute()
+	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 	s.Require().NoError(err)
+
+	var resp sdk.TxResponse
+	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+	s.Require().Equal(resp.Code, uint32(0))
 }
 
 // func (s *CLITestSuite) TearDownSuite() {
@@ -164,7 +179,7 @@ func (s *CLITestSuite) TestCmdGetFeeGrant() {
 		args         []string
 		expectErrMsg string
 		expectErr    bool
-		respType     *feegrant.Grant
+		respType     *feegrant.QueryAllowanceResponse
 		resp         *feegrant.Grant
 	}{
 		{
@@ -187,16 +202,16 @@ func (s *CLITestSuite) TestCmdGetFeeGrant() {
 			"decoding bech32 failed",
 			true, nil, nil,
 		},
-		{
-			"non existed grant",
-			[]string{
-				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			"fee-grant not found",
-			true, nil, nil,
-		},
+		// {
+		// 	"non existed grant",
+		// 	[]string{
+		// 		"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
+		// 		grantee.String(),
+		// 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+		// 	},
+		// 	"fee-grant not found",
+		// 	true, nil, nil,
+		// },
 		{
 			"valid req",
 			[]string{
@@ -206,7 +221,7 @@ func (s *CLITestSuite) TestCmdGetFeeGrant() {
 			},
 			"",
 			false,
-			&feegrant.Grant{},
+			&feegrant.QueryAllowanceResponse{},
 			&s.addedGrant,
 		},
 	}
@@ -221,35 +236,22 @@ func (s *CLITestSuite) TestCmdGetFeeGrant() {
 			cmd.SetArgs(tc.args)
 			cmd.SetContext(ctx)
 			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-			err := cmd.Execute()
-			// ctx := svrcmd.CreateExecuteContext(context.Background())
-			// out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
 				s.Require().Error(err)
-				// s.Require().Contains(err.Error(), tc.expectErrMsg)
+				s.Require().Contains(err.Error(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err)
-				// s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				// s.Require().Equal(tc.respType.Grantee, tc.respType.Grantee)
-				// s.Require().Equal(tc.respType.Granter, tc.respType.Granter)
-				// grant, err := tc.respType.GetGrant()
-				// s.Require().NoError(err)
-				// grant1, err1 := tc.resp.GetGrant()
-				// s.Require().NoError(err1)
-				// s.Require().Equal(
-				// 	grant.(*feegrant.BasicAllowance).SpendLimit,
-				// 	grant1.(*feegrant.BasicAllowance).SpendLimit,
-				// )
+				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			}
 		})
 	}
 }
 
 func (s *CLITestSuite) TestCmdGetFeeGrantsByGrantee() {
-	// val := s.addedGranter
 	grantee := s.addedGrantee
-	// clientCtx := val.ClientCtx
+	clientCtx := s.clientCtx
 
 	testCases := []struct {
 		name         string
@@ -288,22 +290,20 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGrantee() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			ctx := svrcmd.CreateExecuteContext(context.Background())
-
 			cmd := cli.GetCmdQueryFeeGrantsByGrantee()
-			cmd.SetOutput(io.Discard)
-			cmd.SetArgs(tc.args)
-			cmd.SetContext(ctx)
-			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-			err := cmd.Execute()
+			// cmd.SetOutput(io.Discard)
+			// cmd.SetArgs(tc.args)
+			// cmd.SetContext(ctx)
+			// s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
+			// err := cmd.Execute()
 
-			// out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				// s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.resp), out.String())
 				// s.Require().Len(tc.resp.Allowances, tc.expectLength)
 			}
 		})
@@ -311,9 +311,8 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGrantee() {
 }
 
 func (s *CLITestSuite) TestCmdGetFeeGrantsByGranter() {
-	// val := s.network.Validators[0]
 	granter := s.addedGranter
-	// clientCtx := val.ClientCtx
+	clientCtx := s.clientCtx
 
 	testCases := []struct {
 		name         string
@@ -352,31 +351,23 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGranter() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			ctx := svrcmd.CreateExecuteContext(context.Background())
 			cmd := cli.GetCmdQueryFeeGrantsByGranter()
-			cmd.SetOutput(io.Discard)
-			cmd.SetArgs(tc.args)
-			cmd.SetContext(ctx)
-			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-			err := cmd.Execute()
-			// out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				// s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.resp), out.String())
-				// s.Require().Len(tc.resp.Allowances, tc.expectLength)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.resp), out.String())
 			}
 		})
 	}
 }
 
 func (s *CLITestSuite) TestNewCmdFeeGrant() {
-	// val := s.network.Validators[0]
 	granter := s.accounts[0]
 	alreadyExistedGrantee := s.addedGrantee
-	// clientCtx := val.ClientCtx
+	clientCtx := s.clientCtx
 
 	fromAddr, fromName, _, err := client.GetFromFields(s.baseCtx, s.kr, granter.String())
 	s.Require().Equal(fromAddr, granter)
@@ -652,32 +643,22 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdFeeGrant()
-			ctx := svrcmd.CreateExecuteContext(context.Background())
-
-			cmd.SetOutput(io.Discard)
-			cmd.SetArgs(tc.args)
-			cmd.SetContext(ctx)
-			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-			err := cmd.Execute()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				// s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				// txResp := tc.respType.(*sdk.TxResponse)
-				// s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			}
 		})
 	}
 }
 
 func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
-	// val := s.network.Validators[0]
 	granter := s.addedGranter
 	grantee := s.addedGrantee
-	// clientCtx := val.ClientCtx
+	clientCtx := s.clientCtx
 
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -765,23 +746,13 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdRevokeFeegrant()
-			ctx := svrcmd.CreateExecuteContext(context.Background())
-
-			cmd.SetOutput(io.Discard)
-			cmd.SetArgs(tc.args)
-			cmd.SetContext(ctx)
-			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-			err := cmd.Execute()
-			// out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				// s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				// txResp := tc.respType.(*sdk.TxResponse)
-				// s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			}
 		})
 	}
@@ -790,8 +761,7 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 func (s *CLITestSuite) TestTxWithFeeGrant() {
 	// s.T().Skip() // TODO to re-enable in #12274
 
-	// val := s.addedGranter
-	// clientCtx := val.ClientCtx
+	clientCtx := s.clientCtx
 	granter := s.addedGranter
 
 	// creating an account manually (This account won't be exist in state)
@@ -821,19 +791,11 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 	)
 
 	cmd := cli.NewCmdFeeGrant()
-	ctx := svrcmd.CreateExecuteContext(context.Background())
 
-	cmd.SetOutput(io.Discard)
-	cmd.SetArgs(args)
-	cmd.SetContext(ctx)
-	s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-	err = cmd.Execute()
+	var res sdk.TxResponse
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
-
-	// _, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	// s.Require().NoError(err)
-	// _, err = s.network.WaitForHeight(1)
-	// s.Require().NoError(err)
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &res), out.String())
 
 	testcases := []struct {
 		name       string
@@ -879,9 +841,8 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 			)
 			s.Require().NoError(err)
 
-			// var resp sdk.TxResponse
-			// s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-			// s.Require().Equal(tc.expErrCode, resp.Code, resp)
+			var resp sdk.TxResponse
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 		})
 	}
 }
@@ -903,23 +864,23 @@ func (s *CLITestSuite) msgSubmitLegacyProposal(clientCtx client.Context, from, t
 
 	args = append(args, extraArgs...)
 
-	ctx := svrcmd.CreateExecuteContext(context.Background())
+	// ctx := svrcmd.CreateExecuteContext(context.Background())
 
 	cmd := govcli.NewCmdSubmitLegacyProposal()
-	cmd.SetOutput(io.Discard)
-	cmd.SetArgs(args)
-	cmd.SetContext(ctx)
-	s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-	err := cmd.Execute()
+	// cmd.SetOutput(io.Discard)
+	// cmd.SetArgs(args)
+	// cmd.SetContext(ctx)
+	// s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
+
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err)
+	var resp sdk.TxResponse
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 
 	return err
 }
 
 func (s *CLITestSuite) TestFilteredFeeAllowance() {
-	// s.T().Skip() // TODO to re-enable in #12274
-
-	// val := s.network.Validators[0]
-
 	granter := s.addedGranter
 	k, _, err := s.baseCtx.Keyring.NewMnemonic("grantee1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
@@ -927,7 +888,7 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 	s.Require().NoError(err)
 	grantee := sdk.AccAddress(pub.Address())
 
-	// clientCtx := val.ClientCtx
+	clientCtx := s.clientCtx
 
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -994,19 +955,13 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdFeeGrant()
-			ctx := svrcmd.CreateExecuteContext(context.Background())
-			cmd.SetOutput(io.Discard)
-			cmd.SetArgs(tc.args)
-			cmd.SetContext(ctx)
-			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-			err := cmd.Execute()
-			// out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				// s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				// txResp := tc.respType.(*sdk.TxResponse)
 				// s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -1022,31 +977,11 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 
 	// get filtered fee allowance and check info
 	cmd := cli.GetCmdQueryFeeGrant()
-	ctx := svrcmd.CreateExecuteContext(context.Background())
-	cmd.SetOutput(io.Discard)
-	cmd.SetArgs(args)
-	cmd.SetContext(ctx)
-	s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-	err = cmd.Execute()
-	// out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
-	// resp := &feegrant.Grant{}
-
-	// s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), resp), out.String())
-	// s.Require().Equal(resp.Grantee, resp.Grantee)
-	// s.Require().Equal(resp.Granter, resp.Granter)
-
-	// grant := s.addedGrant
-	// s.Require().NoError(err)
-
-	// filteredFeeGrant, err := grant.(*feegrant.AllowedMsgAllowance).GetAllowance()
-	// s.Require().NoError(err)
-
-	// s.Require().Equal(
-	// filteredFeeGrant.(*feegrant.BasicAllowance).SpendLimit.String(),
-	// spendLimit.String(),
-	// )
+	var resp feegrant.QueryAllowanceResponse
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 
 	// exec filtered fee allowance
 	cases := []struct {
@@ -1092,12 +1027,10 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 				)
 
 				cmd := cli.NewCmdFeeGrant()
-				ctx := svrcmd.CreateExecuteContext(context.Background())
-				cmd.SetOutput(io.Discard)
-				cmd.SetArgs(args)
-				cmd.SetContext(ctx)
-				s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-				return cmd.Execute()
+				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+
+				return err
 			},
 			&sdk.TxResponse{},
 			7,
@@ -1110,9 +1043,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 		s.Run(tc.name, func() {
 			err := tc.malleate()
 			s.Require().NoError(err)
-			// s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-			// txResp := tc.respType.(*sdk.TxResponse)
-			// s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 		})
 	}
 }
@@ -1131,15 +1061,13 @@ func (s *CLITestSuite) msgVote(clientCtx client.Context, from, id, vote string, 
 	}, commonArgs...)
 
 	args = append(args, extraArgs...)
-
-	ctx := svrcmd.CreateExecuteContext(context.Background())
-
 	cmd := govcli.NewCmdWeightedVote()
-	cmd.SetOutput(io.Discard)
-	cmd.SetArgs(args)
-	cmd.SetContext(ctx)
-	s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-	return cmd.Execute()
+
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
+
+	return err
 }
 
 func getFormattedExpiration(duration int64) string {

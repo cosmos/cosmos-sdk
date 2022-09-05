@@ -2,11 +2,11 @@
 package testpb
 
 import (
+	v1beta11 "cosmossdk.io/api/cosmos/base/query/v1beta1"
+	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	v1beta11 "cosmossdk.io/api/cosmos/base/query/v1beta1"
-	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"

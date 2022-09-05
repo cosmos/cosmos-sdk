@@ -18,11 +18,9 @@ DOCS_DOMAIN=docs.cosmos.network
 # RocksDB is a native dependency, so we don't assume the library is installed.
 # Instead, it must be explicitly enabled and we warn when it is not.
 ENABLE_ROCKSDB ?= false
-
-export GO111MODULE = on
+GOWORK = off # we disable the `go.work` for consistency with our CI
 
 # process build tags
-
 build_tags = netgo
 ifeq ($(LEDGER_ENABLED),true)
   ifeq ($(OS),Windows_NT)
@@ -429,7 +427,7 @@ proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 
-TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.21/proto/tendermint
+TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.37.0-alpha.1/proto/tendermint
 GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/v1.3.3-alpha.regen.1
 COSMOS_PROTO_URL    = https://raw.githubusercontent.com/regen-network/cosmos-proto/v0.3.1
 CONFIO_URL          = https://raw.githubusercontent.com/confio/ics23/go/v0.7.0
@@ -479,8 +477,8 @@ proto-update-deps:
 	@mkdir -p $(TM_P2P)
 	@curl -sSL $(TM_URL)/p2p/types.proto > $(TM_P2P)/types.proto
 
-	@mkdir -p $(CONFIO_TYPES)
-	@curl -sSL $(CONFIO_URL)/proofs.proto > $(CONFIO_TYPES)/proofs.proto
+
+	
 ## insert go package option into proofs.proto file
 ## Issue link: https://github.com/confio/ics23/issues/32
 	@sed -i '4ioption go_package = "github.com/confio/ics23/go";' $(CONFIO_TYPES)/proofs.proto

@@ -18,7 +18,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 const (
@@ -49,8 +48,6 @@ type BaseApp struct { //nolint: maligned
 	db                dbm.DB               // common DB backend
 	cms               sdk.CommitMultiStore // Main (uncached) state
 	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-	router            sdk.Router           // handle any kind of legacy message
-	queryRouter       sdk.QueryRouter      // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -149,8 +146,6 @@ func NewBaseApp(
 		db:               db,
 		cms:              store.NewCommitMultiStore(db),
 		storeLoader:      DefaultStoreLoader,
-		router:           NewRouter(),
-		queryRouter:      NewQueryRouter(),
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
@@ -283,11 +278,8 @@ func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
 
 // CommitMultiStore returns the root multi-store.
 // App constructor can use this to access the `cms`.
-// UNSAFE: only safe to use during app initialization.
+// UNSAFE: must not be used during the abci life cycle.
 func (app *BaseApp) CommitMultiStore() sdk.CommitMultiStore {
-	if app.sealed {
-		panic("cannot call CommitMultiStore() after baseapp is sealed")
-	}
 	return app.cms
 }
 
@@ -370,20 +362,6 @@ func (app *BaseApp) setIndexEvents(ie []string) {
 	}
 }
 
-// Router returns the legacy router of the BaseApp.
-func (app *BaseApp) Router() sdk.Router {
-	if app.sealed {
-		// We cannot return a Router when the app is sealed because we can't have
-		// any routes modified which would cause unexpected routing behavior.
-		panic("Router() on sealed BaseApp")
-	}
-
-	return app.router
-}
-
-// QueryRouter returns the QueryRouter of a BaseApp.
-func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
-
 // Seal seals a BaseApp. It prohibits any further modifications to a BaseApp.
 func (app *BaseApp) Seal() { app.sealed = true }
 
@@ -416,15 +394,15 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
-func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
+func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams {
 	if app.paramStore == nil {
 		return nil
 	}
 
-	cp := new(abci.ConsensusParams)
+	cp := new(tmproto.ConsensusParams)
 
 	if app.paramStore.Has(ctx, ParamStoreKeyBlockParams) {
-		var bp abci.BlockParams
+		var bp tmproto.BlockParams
 
 		app.paramStore.Get(ctx, ParamStoreKeyBlockParams, &bp)
 		cp.Block = &bp
@@ -455,7 +433,7 @@ func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
 }
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
-func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusParams) {
+func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusParams) {
 	if app.paramStore == nil {
 		panic("cannot store consensus params with no params store set")
 	}
@@ -752,20 +730,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			// ADR 031 request type routing
 			msgResult, err = handler(ctx, msg)
 			eventMsgName = sdk.MsgTypeURL(msg)
-		} else if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
-			// legacy sdk.Msg routing
-			// Assuming that the app developer has migrated all their Msgs to
-			// proto messages and has registered all `Msg services`, then this
-			// path should never be called, because all those Msgs should be
-			// registered within the `msgServiceRouter` already.
-			msgRoute := legacyMsg.Route()
-			eventMsgName = legacyMsg.Type()
-			handler := app.router.Route(ctx, msgRoute)
-			if handler == nil {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
-			}
-
-			msgResult, err = handler(ctx, msg)
 		} else {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 		}

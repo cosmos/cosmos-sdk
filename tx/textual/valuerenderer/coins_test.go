@@ -15,48 +15,53 @@ import (
 )
 
 func TestFormatCoins(t *testing.T) {
-	var testcases []coinsTest
+	var testcases []coinsJsonTest
 	raw, err := os.ReadFile("../internal/testdata/coins.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
 	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
+	r, err := textual.GetValueRenderer(fieldDescriptorFromName("COINS"))
+	require.NoError(t, err)
 
 	for _, tc := range testcases {
-		t.Run(tc.expRes, func(t *testing.T) {
-			// Create a context.Context containing all coins metadata, to simulate
-			// that they are in state.
-			ctx := context.Background()
-			for _, coin := range tc.coins {
-				m := tc.metadataMap[coin.Denom]
-				metadata := &bankv1beta1.Metadata{
-					Display:    m.Denom,
-					DenomUnits: []*bankv1beta1.DenomUnit{{Denom: coin.Denom, Exponent: 0}, {Denom: m.Denom, Exponent: m.Exponent}},
+		t.Run(tc.Text, func(t *testing.T) {
+			if tc.Proto != nil {
+				// Create a context.Context containing all coins metadata, to simulate
+				// that they are in state.
+				ctx := context.Background()
+				for _, coin := range tc.Proto {
+					ctx = context.WithValue(ctx, mockCoinMetadataKey(coin.Denom), tc.Metadata[coin.Denom])
 				}
 
-				ctx = context.WithValue(ctx, mockCoinMetadataKey(coin.Denom), metadata)
+				b := new(strings.Builder)
+				listValue := NewGenericList(tc.Proto)
+				err = r.Format(ctx, protoreflect.ValueOf(listValue), b)
+
+				if tc.Error {
+					require.Error(t, err)
+					return
+				}
+
+				require.NoError(t, err)
+				require.Equal(t, tc.Text, b.String())
 			}
 
-			r, err := textual.GetValueRenderer(fieldDescriptorFromName("COINS"))
-			require.NoError(t, err)
-			b := new(strings.Builder)
-			listValue := NewGenericList(tc.coins)
-			err = r.Format(ctx, protoreflect.ValueOf(listValue), b)
-			require.NoError(t, err)
-
-			require.Equal(t, tc.expRes, b.String())
+			// TODO Add parsing tests
+			// https://github.com/cosmos/cosmos-sdk/issues/13153
 		})
 	}
 }
 
-type coinsTest struct {
-	coins       []*basev1beta1.Coin
-	metadataMap map[string]coinTestMetadata
-	expRes      string
-}
-
-func (t *coinsTest) UnmarshalJSON(b []byte) error {
-	a := []interface{}{&t.coins, &t.metadataMap, &t.expRes}
-	return json.Unmarshal(b, &a)
+// coinsJsonTest is the type of test cases in the testdata file.
+// If the test case has a Proto, try to Format() it. If Error is set, expect
+// an error, otherwise match Text, then Parse() the text and expect it to
+// match (via proto.Equals()) the original Proto. If the test case has no
+// Proto, try to Parse() the Text and expect an error if Error is set.
+type coinsJsonTest struct {
+	Proto    []*basev1beta1.Coin
+	Metadata map[string]*bankv1beta1.Metadata
+	Text     string
+	Error    bool
 }

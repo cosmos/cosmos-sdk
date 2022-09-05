@@ -60,6 +60,7 @@ func TestFormatCoin(t *testing.T) {
 			}
 
 			// TODO Add parsing tests
+			// https://github.com/cosmos/cosmos-sdk/issues/13153
 		})
 	}
 }

@@ -32,7 +32,28 @@ func mockCoinMetadataQuerier(ctx context.Context, denom string) (*bankv1beta1.Me
 	return v.(*bankv1beta1.Metadata), nil
 }
 
-func TestFormatCoin(t *testing.T) {
+func TestMetadataQuerier(t *testing.T) {
+	b := new(strings.Builder)
+
+	// Errors on nil metadata querier
+	textual := valuerenderer.NewTextual(nil)
+	vr, err := textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
+	require.NoError(t, err)
+	err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()), b)
+	require.Error(t, err)
+
+	// Errors if metadata querier returns an error
+	expErr := fmt.Errorf("mock error")
+	textual = valuerenderer.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
+		return nil, expErr
+	})
+	vr, err = textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
+	require.NoError(t, err)
+	err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()), b)
+	require.ErrorIs(t, err, expErr)
+}
+
+func TestCoinJsonTestcases(t *testing.T) {
 	var testcases []coinJsonTest
 	raw, err := os.ReadFile("../internal/testdata/coin.json")
 	require.NoError(t, err)

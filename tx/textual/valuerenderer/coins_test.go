@@ -14,7 +14,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func TestFormatCoins(t *testing.T) {
+func TestCoinsJsonTestcases(t *testing.T) {
 	var testcases []coinsJsonTest
 	raw, err := os.ReadFile("../internal/testdata/coins.json")
 	require.NoError(t, err)

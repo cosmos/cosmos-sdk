@@ -92,7 +92,7 @@ func (r *Textual) init() {
 	if r.scalars == nil {
 		r.scalars = map[string]ValueRenderer{}
 		r.scalars["cosmos.Int"] = NewIntValueRenderer()
-		r.scalars["cosmos.Dec"] = decValueRenderer{}
+		r.scalars["cosmos.Dec"] = NewDecValueRenderer()
 	}
 	if r.messages == nil {
 		r.messages = map[protoreflect.FullName]ValueRenderer{}

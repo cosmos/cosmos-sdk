@@ -116,7 +116,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 
-		// tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 		tc.bapp.InitChain(abci.RequestInitChain{
 			ConsensusParams: &tmproto.ConsensusParams{
 				Evidence: &tmproto.EvidenceParams{
@@ -177,17 +177,19 @@ type paramStore struct {
 	db *dbm.MemDB
 }
 
-func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
+var ParamstoreKey = []byte("paramstore")
+
+func (ps *paramStore) Set(_ sdk.Context, value *tmproto.ConsensusParams) {
 	bz, err := json.Marshal(value)
 	if err != nil {
 		panic(err)
 	}
 
-	ps.db.Set(key, bz)
+	ps.db.Set(ParamstoreKey, bz)
 }
 
-func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
-	ok, err := ps.db.Has(key)
+func (ps *paramStore) Has(_ sdk.Context) bool {
+	ok, err := ps.db.Has(ParamstoreKey)
 	if err != nil {
 		panic(err)
 	}
@@ -195,17 +197,21 @@ func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
 	return ok
 }
 
-func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
-	bz, err := ps.db.Get(key)
+func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
+	bz, err := ps.db.Get(ParamstoreKey)
 	if err != nil {
 		panic(err)
 	}
 
 	if len(bz) == 0 {
-		return
+		return nil, nil
 	}
 
-	if err := json.Unmarshal(bz, ptr); err != nil {
+	var params *tmproto.ConsensusParams
+
+	if err := json.Unmarshal(bz, params); err != nil {
 		panic(err)
 	}
+
+	return params, nil
 }

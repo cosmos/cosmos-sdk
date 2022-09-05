@@ -10,7 +10,6 @@ on:
       - "docs/**"
       - "x/**/*.md"
       - .github/workflows/deploy-docs.yml
-  pull_request:
 
 permissions:
   contents: read

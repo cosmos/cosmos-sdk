@@ -9,6 +9,7 @@ on:
     paths:
       - "docs/**"
       - "x/**/*.md"
+      - .github/workflows/deploy-docs.yml
 
 permissions:
   contents: read
@@ -29,7 +30,7 @@ jobs:
 
       - name: Install and Build 🔧
         run: |
-          apk add rsync
+          apk add rsync csplit
           make build-docs LEDGER_ENABLED=false
 
       - name: Deploy 🚀

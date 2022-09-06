@@ -130,6 +130,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 			configurator.BankModule(),
 			configurator.StakingModule(),
 			configurator.ParamsModule(),
+			configurator.ConsensusModule(),
 			configurator.VestingModule()),
 		&suite.accountKeeper, &suite.bankKeeper, &suite.stakingKeeper,
 		&interfaceRegistry, &suite.appCodec, &suite.authConfig)

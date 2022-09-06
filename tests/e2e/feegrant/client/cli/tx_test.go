@@ -165,11 +165,6 @@ func (s *CLITestSuite) createGrant(granter, grantee sdk.Address) {
 	s.Require().Equal(resp.Code, uint32(0))
 }
 
-// func (s *CLITestSuite) TearDownSuite() {
-// 	s.T().Log("tearing down integration test suite")
-// 	s.network.Cleanup()
-// }
-
 func (s *CLITestSuite) TestCmdGetFeeGrant() {
 	granter := s.addedGranter
 	grantee := s.addedGrantee
@@ -202,16 +197,6 @@ func (s *CLITestSuite) TestCmdGetFeeGrant() {
 			"decoding bech32 failed",
 			true, nil, nil,
 		},
-		// {
-		// 	"non existed grant",
-		// 	[]string{
-		// 		"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-		// 		grantee.String(),
-		// 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-		// 	},
-		// 	"fee-grant not found",
-		// 	true, nil, nil,
-		// },
 		{
 			"valid req",
 			[]string{
@@ -269,14 +254,6 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGrantee() {
 			true, nil, 0,
 		},
 		{
-			"non existent grantee",
-			[]string{
-				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			false, &feegrant.QueryAllowancesResponse{}, 0,
-		},
-		{
 			"valid req",
 			[]string{
 				grantee.String(),
@@ -291,11 +268,6 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGrantee() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryFeeGrantsByGrantee()
-			// cmd.SetOutput(io.Discard)
-			// cmd.SetArgs(tc.args)
-			// cmd.SetContext(ctx)
-			// s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
-			// err := cmd.Execute()
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
@@ -304,7 +276,6 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGrantee() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.resp), out.String())
-				// s.Require().Len(tc.resp.Allowances, tc.expectLength)
 			}
 		})
 	}
@@ -328,14 +299,6 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGranter() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true, nil, 0,
-		},
-		{
-			"non existent grantee",
-			[]string{
-				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			false, &feegrant.QueryAllowancesByGranterResponse{}, 0,
 		},
 		{
 			"valid req",
@@ -703,18 +666,6 @@ func (s *CLITestSuite) TestNewCmdRevokeFeegrant() {
 			true, 0, nil,
 		},
 		{
-			"Non existed grant",
-			append(
-				[]string{
-					granter.String(),
-					"cosmos1aeuqja06474dfrj7uqsvukm6rael982kk89mqr",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-				},
-				commonFlags...,
-			),
-			false, 38, &sdk.TxResponse{},
-		},
-		{
 			"Valid revoke",
 			append(
 				[]string{
@@ -864,13 +815,7 @@ func (s *CLITestSuite) msgSubmitLegacyProposal(clientCtx client.Context, from, t
 
 	args = append(args, extraArgs...)
 
-	// ctx := svrcmd.CreateExecuteContext(context.Background())
-
 	cmd := govcli.NewCmdSubmitLegacyProposal()
-	// cmd.SetOutput(io.Discard)
-	// cmd.SetArgs(args)
-	// cmd.SetContext(ctx)
-	// s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
 
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
@@ -962,9 +907,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				// txResp := tc.respType.(*sdk.TxResponse)
-				// s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})
 	}

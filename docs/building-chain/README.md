@@ -8,5 +8,5 @@ parent:
 
 This repository contains documentation on concepts developers need to know in order to build a Cosmos SDK applications.
 
-1. [Overview of the `app.go` file and how to wire it up.](./app-go.md)
+1. [Overview of `app.go` and how to wire it up](./app-go.md)
 2. [Dependency Injection in the SDK](./depinject.md)

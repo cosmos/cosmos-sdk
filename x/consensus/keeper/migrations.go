@@ -2,8 +2,8 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/consensus_param/exported"
-	v2 "github.com/cosmos/cosmos-sdk/x/consensus_param/migrations/v2"
+	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
+	v2 "github.com/cosmos/cosmos-sdk/x/consensus/migrations/v2"
 )
 
 // Migrator is a struct for handling in-place store migrations.

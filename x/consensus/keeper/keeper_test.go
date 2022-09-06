@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus_param/keeper"
-	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus_param/types"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 

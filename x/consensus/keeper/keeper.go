@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/consensus_param/exported"
-	"github.com/cosmos/cosmos-sdk/x/consensus_param/types"
+	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
+	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 var _ exported.ConsensusParamSetter = (*Keeper)(nil)

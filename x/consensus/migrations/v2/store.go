@@ -4,9 +4,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/consensus_param/exported"
-	v1 "github.com/cosmos/cosmos-sdk/x/consensus_param/migrations/v1"
-	"github.com/cosmos/cosmos-sdk/x/consensus_param/types"
+	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
+	v1 "github.com/cosmos/cosmos-sdk/x/consensus/migrations/v1"
+	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	tmtypes "github.com/tendermint/tendermint/types"

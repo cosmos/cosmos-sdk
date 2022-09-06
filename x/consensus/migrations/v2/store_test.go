@@ -6,9 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/consensus_param"
-	v1 "github.com/cosmos/cosmos-sdk/x/consensus_param/migrations/v1"
-	v2 "github.com/cosmos/cosmos-sdk/x/consensus_param/migrations/v2"
+	"github.com/cosmos/cosmos-sdk/x/consensus"
+	v1 "github.com/cosmos/cosmos-sdk/x/consensus/migrations/v1"
+	v2 "github.com/cosmos/cosmos-sdk/x/consensus/migrations/v2"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 

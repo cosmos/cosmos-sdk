@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -156,7 +157,12 @@ func provideModule(in consensusParamInputs) consensusParamOutputs {
 		// default to governance authority if not provided
 		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
 	}
+
 	k := keeper.NewKeeper(in.Cdc, in.Key, authority.String())
 	m := NewAppModule(in.Cdc, k, in.LegacySubspace)
-	return consensusParamOutputs{consensusParamKeeper: k, Module: runtime.WrapAppModule(m)}
+
+	return consensusParamOutputs{
+		consensusParamKeeper: k,
+		Module:               runtime.WrapAppModule(m),
+	}
 }

@@ -189,17 +189,3 @@ message MsgUpdateParams {
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParamsResponse {};
-
-// InfractionType indicates the infraction type a validator commited.
-enum InfractionType {
-  // UNSPECIFIED defines an empty infraction type.
-  INFRACTION_TYPE_UNSPECIFIED = 0;
-  // DOUBLE_SIGN defines a validator that double-signs a block.
-  INFRACTION_TYPE_DOUBLE_SIGN = 1;
-  // DOWNTIME defines a validator that missed signing too many blocks.
-  INFRACTION_TYPE_DOWNTIME = 2;
-}
-
-message ValidatorUpdates {
-  repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false];
-}

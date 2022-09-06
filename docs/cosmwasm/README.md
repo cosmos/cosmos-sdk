@@ -1,7 +1,7 @@
 <!--
 order: 1
 parent:
-  order: 8
+  order: 9
 -->
 
 # CosmWasm smart contracts

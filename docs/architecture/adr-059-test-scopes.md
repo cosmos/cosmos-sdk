@@ -44,13 +44,13 @@ ideal state in the SDK.
 
 Unit tests exercise the code contained in a single module (e.g. `/x/bank`) or package
 (e.g. `/client`) in isolation from the rest of the code base. Within this we identify two
-levels of unit tests, _illustrative_ and _journey_. The definitions below lean heavily on
+levels of unit tests, *illustrative* and *journey*. The definitions below lean heavily on
 [The BDD Books - Formulation](https://leanpub.com/bddbooks-formulation) section 1.3.
 
-_Illustrative_ tests exercise an atomic part of a module in isolation - in this case we
+*Illustrative* tests exercise an atomic part of a module in isolation - in this case we
 might do fixture setup/mocking of other parts of the module.
 
-Tests which exercise a whole module's function with dependencies mocked, are _journeys_.
+Tests which exercise a whole module's function with dependencies mocked, are *journeys*.
 These are almost like integration tests in that they exercise many things together but still
 use mocks.
 
@@ -114,7 +114,7 @@ of app-wiring refactors.
 
 Simulations (also called generative testing) are a special case of integration tests where
 deterministically random module operations are executed against a running simapp, building
-blocks on the chain until a specified height is reached. No _specific_ assertions are
+blocks on the chain until a specified height is reached. No *specific* assertions are
 made for the state transitions resulting from module operations but any error will halt and
 fail the simulation. Since `crisis` is included in simapp and the simulation runs
 EndBlockers at the end of each block any module invariant violations will also fail

@@ -6,6 +6,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/tendermint/tendermint/libs/math"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
@@ -13,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/tendermint/tendermint/libs/math"
 )
 
 // cValue represents a cached value.
@@ -378,11 +378,14 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sort
 		if item.Value == nil {
 			// deleted element, tracked by store.deleted
 			// setting arbitrary value
-			store.sortedCache.Set(item.Key, []byte{})
+			if err := store.sortedCache.Set(item.Key, []byte{}); err != nil {
+				panic(err)
+			}
+
 			continue
 		}
-		err := store.sortedCache.Set(item.Key, item.Value)
-		if err != nil {
+
+		if err := store.sortedCache.Set(item.Key, item.Value); err != nil {
 			panic(err)
 		}
 	}

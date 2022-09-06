@@ -140,6 +140,7 @@ func MinimumAppConfig() depinject.Config {
 		configurator.BankModule(),
 		configurator.GenutilModule(),
 		configurator.StakingModule(),
+		configurator.ConsensusModule(),
 		configurator.TxModule())
 }
 

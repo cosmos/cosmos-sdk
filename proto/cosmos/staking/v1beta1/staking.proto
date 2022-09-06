@@ -223,7 +223,7 @@ message UnbondingDelegation {
   // validator_address is the bech32-encoded address of the validator.
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // entries are the unbonding delegation entries.
-  repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false]; // unbonding delegation entries
+  repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false];  // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry defines an unbonding object with relevant metadata.
@@ -247,6 +247,11 @@ message UnbondingDelegationEntry {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
+  // Incrementing id that uniquely identifies this entry
+  uint64 unbonding_id = 5;
+
+  // Strictly positive if this entry's unbonding has been stopped by external modules
+  int64 unbonding_on_hold_ref_count = 6;
 }
 
 // RedelegationEntry defines a redelegation object with relevant metadata.
@@ -270,6 +275,11 @@ message RedelegationEntry {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+  // Incrementing id that uniquely identifies this entry
+  uint64 unbonding_id = 5;
+
+  // Strictly positive if this entry's unbonding has been stopped by external modules
+  int64 unbonding_on_hold_ref_count = 6;
 }
 
 // Redelegation contains the list of a particular delegator's redelegating bonds
@@ -286,7 +296,7 @@ message Redelegation {
   // validator_dst_address is the validator redelegation destination operator address.
   string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // entries are the redelegation entries.
-  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries
+  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false];  // redelegation entries
 }
 
 // Params defines the parameters for the x/staking module.

@@ -1,11 +1,10 @@
-package v2
+package v1
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
-	v1 "github.com/cosmos/cosmos-sdk/x/consensus/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -18,15 +17,15 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 	consensusParams := new(tmproto.ConsensusParams)
 
 	var bp tmproto.BlockParams
-	legacySubspace.Get(ctx, v1.ParamStoreKeyBlockParams, &bp)
+	legacySubspace.Get(ctx, ParamStoreKeyBlockParams, &bp)
 	consensusParams.Block = &bp
 
 	var ep tmproto.EvidenceParams
-	legacySubspace.Get(ctx, v1.ParamStoreKeyEvidenceParams, &ep)
+	legacySubspace.Get(ctx, ParamStoreKeyEvidenceParams, &ep)
 	consensusParams.Evidence = &ep
 
 	var vp tmproto.ValidatorParams
-	legacySubspace.Get(ctx, v1.ParamStoreKeyValidatorParams, &vp)
+	legacySubspace.Get(ctx, ParamStoreKeyValidatorParams, &vp)
 	consensusParams.Validator = &vp
 
 	var versionParams tmproto.VersionParams

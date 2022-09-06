@@ -1,4 +1,4 @@
-package v2_test
+package v1_test
 
 import (
 	"testing"
@@ -7,8 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
+
 	v1 "github.com/cosmos/cosmos-sdk/x/consensus/migrations/v1"
-	v2 "github.com/cosmos/cosmos-sdk/x/consensus/migrations/v2"
+	v2 "github.com/cosmos/cosmos-sdk/x/consensus/migrations/v1"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -40,7 +42,7 @@ func TestMigrate(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(consensus.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := sdk.NewKVStoreKey(v2.ModuleName)
+	storeKey := sdk.NewKVStoreKey(consensustypes.ModuleName)
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
@@ -49,7 +51,7 @@ func TestMigrate(t *testing.T) {
 	require.NoError(t, v2.MigrateStore(ctx, storeKey, cdc, legacyParamStore))
 
 	var res tmproto.ConsensusParams
-	bz := store.Get(v2.ParamStoreKeyConsensusParams)
+	bz := store.Get(consensustypes.ParamStoreKeyConsensusParams)
 	require.NoError(t, cdc.Unmarshal(bz, &res))
 	require.Equal(t, legacyParamStore.ps, res)
 }

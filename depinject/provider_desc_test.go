@@ -1,28 +1,55 @@
-package depinject_test
+package depinject
 
 import (
 	"reflect"
 	"testing"
 
-	"cosmossdk.io/depinject"
+	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/depinject/internal/codegen"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 type StructIn struct {
-	depinject.In
+	In
 	X int
 	Y float64 `optional:"true"`
 }
 
 type BadOptional struct {
-	depinject.In
+	In
 	X int `optional:"foo"`
 }
 
 type StructOut struct {
-	depinject.Out
+	Out
 	X string
 	Y []byte
 }
+
+func privateProvider(int, float64) (string, []byte) { return "", nil }
+
+func PrivateInAndOut(containerConfig) *container { return nil }
+
+func InternalInAndOut(graphviz.Attributes) *codegen.FileGen { return nil }
+
+type SomeStruct struct{}
+
+func (SomeStruct) privateMethod() int { return 0 }
+
+func SimpleArgs(int, float64) (string, []byte) { return "", nil }
+
+func SimpleArgsWithError(int, float64) (string, []byte, error) { return "", nil, nil }
+
+func StructInAndOut(_ float32, _ StructIn, _ byte) (int16, StructOut, int32, error) {
+	return int16(0), StructOut{}, int32(0), nil
+}
+
+func BadErrorPosition() (error, int) { return nil, 0 }
+
+func BadOptionalFn(_ BadOptional) int { return 0 }
+
+func Variadic(...float64) int { return 0 }
 
 func TestExtractProviderDescriptor(t *testing.T) {
 	var (
@@ -39,67 +66,102 @@ func TestExtractProviderDescriptor(t *testing.T) {
 	tests := []struct {
 		name    string
 		ctr     interface{}
-		wantIn  []depinject.ProviderInput
-		wantOut []depinject.ProviderOutput
-		wantErr bool
+		wantIn  []providerInput
+		wantOut []providerOutput
+		wantErr string
 	}{
 		{
+			"private",
+			privateProvider,
+			nil,
+			nil,
+			"function must be exported",
+		},
+		{
+			"private method",
+			SomeStruct.privateMethod,
+			nil,
+			nil,
+			"function must be exported",
+		},
+		{
+			"private in and out",
+			PrivateInAndOut,
+			nil,
+			nil,
+			"type must be exported",
+		},
+		{
+			"internal in and out",
+			InternalInAndOut,
+			nil,
+			nil,
+			"internal",
+		},
+		{
+			"struct",
+			SomeStruct{},
+			nil,
+			nil,
+			"expected a Func type",
+		},
+		{
 			"simple args",
-			func(x int, y float64) (string, []byte) { return "", nil },
-			[]depinject.ProviderInput{{Type: intType}, {Type: float64Type}},
-			[]depinject.ProviderOutput{{Type: stringType}, {Type: bytesTyp}},
-			false,
+			SimpleArgs,
+			[]providerInput{{Type: intType}, {Type: float64Type}},
+			[]providerOutput{{Type: stringType}, {Type: bytesTyp}},
+			"",
 		},
 		{
 			"simple args with error",
-			func(x int, y float64) (string, []byte, error) { return "", nil, nil },
-			[]depinject.ProviderInput{{Type: intType}, {Type: float64Type}},
-			[]depinject.ProviderOutput{{Type: stringType}, {Type: bytesTyp}},
-			false,
+			SimpleArgsWithError,
+			[]providerInput{{Type: intType}, {Type: float64Type}},
+			[]providerOutput{{Type: stringType}, {Type: bytesTyp}},
+			"",
 		},
 		{
 			"struct in and out",
-			func(_ float32, _ StructIn, _ byte) (int16, StructOut, int32, error) {
-				return int16(0), StructOut{}, int32(0), nil
-			},
-			[]depinject.ProviderInput{{Type: float32Type}, {Type: intType}, {Type: float64Type, Optional: true}, {Type: byteTyp}},
-			[]depinject.ProviderOutput{{Type: int16Type}, {Type: stringType}, {Type: bytesTyp}, {Type: int32Type}},
-			false,
+			StructInAndOut,
+			[]providerInput{{Type: float32Type}, {Type: intType}, {Type: float64Type, Optional: true}, {Type: byteTyp}},
+			[]providerOutput{{Type: int16Type}, {Type: stringType}, {Type: bytesTyp}, {Type: int32Type}},
+			"",
 		},
 		{
 			"error bad position",
-			func() (error, int) { return nil, 0 },
+			BadErrorPosition,
 			nil,
 			nil,
-			true,
+			"error parameter is not last parameter",
 		},
 		{
 			"bad optional",
-			func(_ BadOptional) int { return 0 },
+			BadOptionalFn,
 			nil,
 			nil,
-			true,
+			"bad optional tag",
 		},
 		{
 			"variadic",
-			func(...float64) int { return 0 },
+			Variadic,
 			nil,
 			nil,
-			true,
+			"variadic function can't be used",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := depinject.ExtractProviderDescriptor(tt.ctr)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ExtractProviderDescriptor() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got.Inputs, tt.wantIn) {
-				t.Errorf("ExtractProviderDescriptor() got = %v, want %v", got.Inputs, tt.wantIn)
-			}
-			if !reflect.DeepEqual(got.Outputs, tt.wantOut) {
-				t.Errorf("ExtractProviderDescriptor() got = %v, want %v", got.Outputs, tt.wantOut)
+			got, err := extractProviderDescriptor(tt.ctr)
+			if tt.wantErr != "" {
+				assert.ErrorContains(t, err, tt.wantErr)
+			} else {
+				assert.NilError(t, err)
+
+				if !reflect.DeepEqual(got.Inputs, tt.wantIn) {
+					t.Errorf("extractProviderDescriptor() got = %v, want %v", got.Inputs, tt.wantIn)
+				}
+				if !reflect.DeepEqual(got.Outputs, tt.wantOut) {
+					t.Errorf("extractProviderDescriptor() got = %v, want %v", got.Outputs, tt.wantOut)
+				}
 			}
 		})
 	}

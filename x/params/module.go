@@ -157,10 +157,9 @@ type paramsInputs struct {
 type paramsOutputs struct {
 	depinject.Out
 
-	ParamsKeeper  keeper.Keeper
-	BaseAppOption runtime.BaseAppOption
-	Module        runtime.AppModuleWrapper
-	GovHandler    govv1beta1.HandlerRoute
+	ParamsKeeper keeper.Keeper
+	Module       runtime.AppModuleWrapper
+	GovHandler   govv1beta1.HandlerRoute
 }
 
 func provideModule(in paramsInputs) paramsOutputs {

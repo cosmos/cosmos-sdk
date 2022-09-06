@@ -136,12 +136,12 @@ func makeTestConfig() depinject.Config {
 				Config: appconfig.WrapAny(&mintmodulev1.Module{}),
 			},
 			{
-				Name:   "tx",
-				Config: appconfig.WrapAny(&txmodulev1.Module{}),
-			},
-			{
 				Name:   "consensus",
 				Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
+			},
+			{
+				Name:   "tx",
+				Config: appconfig.WrapAny(&txmodulev1.Module{}),
 			},
 		},
 	})

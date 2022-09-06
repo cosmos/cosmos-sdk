@@ -83,7 +83,7 @@ Memo: foo\""
 
 However, hardware devices often have limited character display capabilities, so they MAY convert UTF-8 characters into a subset of their own displayable characters. For the offical [Cosmos Ledger app](https://github.com/cosmos/ledger-cosmos) developed by the [Zondax](https://zondax.ch) team, only ASCII characters in the 32-127 range are allowed.
 
-The algorithm to convert from UTF-8 to displayable characters is left to the discretion of the signing device software implementers. For the offical [Cosmos Ledger app](https://github.com/cosmos/ledger-cosmos), we propose the following algorithm to convert UTF-8 characters into ASCII 37-127:
+The algorithm to convert from UTF-8 to displayable characters is left to the discretion of the signing device software implementers. For the offical [Cosmos Ledger app](https://github.com/cosmos/ledger-cosmos), we propose the following algorithm to convert UTF-8 characters into ASCII 32-127:
 
 ```
 // Given an item `s` of the SignDoc's string array.

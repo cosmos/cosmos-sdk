@@ -1,12 +1,12 @@
 syntax = "proto3";
-package cosmos.consensus_param.v1;
+package cosmos.consensus.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "tendermint/types/params.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/consensus_param/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/consensus/types";
 
 // Msg defines the bank Msg service.
 service Msg {

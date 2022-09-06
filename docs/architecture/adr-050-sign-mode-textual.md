@@ -70,20 +70,20 @@ Memo: \"foo\"
 Memo: foo"\n"bar                  // Where \n is the single line-feed character
 
 // JSON: {"memo": "foo\"\n\"bar"}
-Memo: foo""\n""bar                // Where \n is the single line-feed character
+Memo: foo\""\n"\"bar                // Where \n is the single line-feed character
 ```
 
 If the signing device is capable of displaying UTF-8 characters (e.g. mobile phones used for offline signing), then it should display the rendered strings without any modification.
 
-Taking the 4th example above, the signing device would display the following:
+Taking the 4th example above, an UTF-8-enabled signing device would display the following:
 ```
 Memo: foo\""
 "\"bar
 ```
 
-However, hardware devices often have limited character display capabilities, so they MAY convert UTF-8 characters into a subset of their own displayable characters. For the offical [Cosmos Ledger app](https://github.com/cosmos/ledger-cosmos) developed by the [Zondax](https://zondax.ch), only ASCII characters in the 32-127 range are desirable.
+However, hardware devices often have limited character display capabilities, so they MAY convert UTF-8 characters into a subset of their own displayable characters. For the offical [Cosmos Ledger app](https://github.com/cosmos/ledger-cosmos) developed by the [Zondax](https://zondax.ch) team, only ASCII characters in the 32-127 range are allowed.
 
-The algorithm to convert from UTF-8 to displayable characters is left to the discretion of the signing device software implementers. For the offical [Cosmos Ledger app](https://github.com/cosmos/ledger-cosmos), we propose the following algorithm to convert UTF-8 characters into ASCII:
+The algorithm to convert from UTF-8 to displayable characters is left to the discretion of the signing device software implementers. For the offical [Cosmos Ledger app](https://github.com/cosmos/ledger-cosmos), we propose the following algorithm to convert UTF-8 characters into ASCII 37-127:
 
 ```
 // Given an item `s` of the SignDoc's string array.
@@ -99,10 +99,10 @@ for _, char in range s {
 // display_code converts an UTF-8 character into its code point, displayed as
 // "U+" concatenated with a 4-letter-minimum capital hexadecimal string,
 // left-padded with 0s if necessary, and everything surrounded by quotation
-// marks "".
+// marks.
 //
 // Example:
-// display_code("€") // "\"U+20AC\""
+// display_code("€") // `"U+20AC"`
 func display_code(c rune) string {}
 ```
 

@@ -20,7 +20,8 @@ func NewCoinsValueRenderer(q CoinMetadataQueryFn) ValueRenderer {
 
 type coinsValueRenderer struct {
 	// coinMetadataQuerier defines a function to query the coin metadata from
-	// state. It should be set to the bank module's `DenomsMetadata` gRPC query.
+	// state. It should use bank module's `DenomsMetadata` gRPC query to fetch
+	// each denom's associated metadata.
 	coinMetadataQuerier CoinMetadataQueryFn
 }
 

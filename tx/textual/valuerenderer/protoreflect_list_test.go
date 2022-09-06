@@ -49,7 +49,7 @@ func (x *genericList[T]) AppendMutable() protoreflect.Value {
 
 func (x *genericList[T]) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
+		(*x.list)[i] = *new(T)
 	}
 	*x.list = (*x.list)[:n]
 }

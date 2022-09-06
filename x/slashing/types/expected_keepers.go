@@ -1,5 +1,3 @@
-// noalias
-// DONTCOVER
 package types
 
 import (

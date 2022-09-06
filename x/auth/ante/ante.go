@@ -1,8 +1,6 @@
 package ante
 
 import (
-	"reflect"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -25,11 +23,11 @@ type HandlerOptions struct {
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
-	if reflect.ValueOf(options.AccountKeeper).IsNil() || reflect.ValueOf(options.AccountKeeper).IsZero() {
+	if options.AccountKeeper == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for ante builder")
 	}
 
-	if reflect.ValueOf(options.BankKeeper).IsNil() || reflect.ValueOf(options.BankKeeper).IsZero() {
+	if options.BankKeeper == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for ante builder")
 	}
 

@@ -27,9 +27,11 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+          path: "."
 
       - name: Build 🔧
         run: |
+          git config --global --add safe.directory /__w/cosmos-sdk/cosmos-sdk
           make build-docs LEDGER_ENABLED=false
 
       - name: Deploy 🚀

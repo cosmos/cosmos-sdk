@@ -17,7 +17,7 @@ type container struct {
 	interfaceBindings map[string]interfaceBinding
 	invokers          []invoker
 
-	moduleKeys map[string]*moduleKey
+	moduleKeyContext *ModuleKeyContext
 
 	resolveStack []resolveFrame
 	callerStack  []Location
@@ -48,7 +48,7 @@ func newContainer(cfg *debugConfig) *container {
 	return &container{
 		debugConfig:       cfg,
 		resolvers:         map[string]resolver{},
-		moduleKeys:        map[string]*moduleKey{},
+		moduleKeyContext:  &ModuleKeyContext{},
 		interfaceBindings: map[string]interfaceBinding{},
 		callerStack:       nil,
 		callerMap:         map[Location]bool{},
@@ -496,15 +496,6 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 	c.logf("Done calling invokers")
 
 	return nil
-}
-
-func (c container) createOrGetModuleKey(name string) *moduleKey {
-	if s, ok := c.moduleKeys[name]; ok {
-		return s
-	}
-	s := &moduleKey{name}
-	c.moduleKeys[name] = s
-	return s
 }
 
 func (c container) formatResolveStack() string {

@@ -36,7 +36,7 @@ func ProvideInModule(moduleName string, providers ...interface{}) Config {
 			return errors.Errorf("expected non-empty module name")
 		}
 
-		return provide(ctr, ctr.createOrGetModuleKey(moduleName), providers)
+		return provide(ctr, ctr.moduleKeyContext.createOrGetModuleKey(moduleName), providers)
 	})
 }
 
@@ -83,7 +83,7 @@ func InvokeInModule(moduleName string, invokers ...interface{}) Config {
 			return errors.Errorf("expected non-empty module name")
 		}
 
-		return invoke(ctr, ctr.createOrGetModuleKey(moduleName), invokers)
+		return invoke(ctr, ctr.moduleKeyContext.createOrGetModuleKey(moduleName), invokers)
 	})
 }
 

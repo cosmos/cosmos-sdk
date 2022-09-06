@@ -41,7 +41,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	consensusparamtypes.RegisterQueryServer(queryHelper, consensusparamkeeper.NewQuerier(keeper))
 	s.queryClient = consensusparamtypes.NewQueryClient(queryHelper)
 	s.msgServer = consensusparamkeeper.NewMsgServerImpl(keeper)
-
 }
 
 func TestKeeperTestSuite(t *testing.T) {

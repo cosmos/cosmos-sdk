@@ -201,6 +201,7 @@ func GovModule() ModuleOption {
 		}
 	}
 }
+
 func ConsensusModule() ModuleOption {
 	return func(config *appConfig) {
 		config.moduleConfigs["consensus"] = &appv1alpha1.ModuleConfig{

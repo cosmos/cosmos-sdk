@@ -52,5 +52,4 @@ func TestMigrate(t *testing.T) {
 	bz := store.Get(v2.ParamStoreKeyConsensusParams)
 	require.NoError(t, cdc.Unmarshal(bz, &res))
 	require.Equal(t, legacyParamStore.ps, res)
-
 }

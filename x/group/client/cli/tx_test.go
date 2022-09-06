@@ -286,7 +286,6 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -541,7 +540,6 @@ func (s *CLITestSuite) TestTxUpdateGroupMetadata() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -674,7 +672,6 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -859,7 +856,6 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1055,7 +1051,6 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1183,7 +1178,6 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyAdmin() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1364,7 +1358,6 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1380,7 +1373,6 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			}
 		})
 	}
-
 }
 
 func (s *CLITestSuite) TestTxUpdateGroupPolicyMetadata() {
@@ -1502,7 +1494,6 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyMetadata() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1620,7 +1611,6 @@ func (s *CLITestSuite) TestTxSubmitProposal() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1743,7 +1733,6 @@ func (s *CLITestSuite) TestTxVote() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1819,7 +1808,6 @@ func (s *CLITestSuite) TestTxWithdrawProposal() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)

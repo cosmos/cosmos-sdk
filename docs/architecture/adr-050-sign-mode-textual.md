@@ -51,7 +51,7 @@ This also prevents users signing over any hashed transaction data (fee, transact
 
 We propose to maintain functional tests using bijectivity in the SDK.
 
-### 2. UTF-8 characters allowed, but signing devices MAY convert them to ASCII
+### 2. UTF-8 characters allowed, but signing devices MAY convert them before display
 
 The SIGN_MODE_TEXTUAL specification allows all UTF-8 characters. The rendered string will render all characters as-is, with the one modification below:
 - the line feed `\n` character (ASCII: 10) is escaped using quotation marks: `"\n"`. This is to disambiguate with the `\n` control character used to signal a screen change on the signing device.

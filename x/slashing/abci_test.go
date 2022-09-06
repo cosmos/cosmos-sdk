@@ -60,7 +60,7 @@ func TestBeginBlocker(t *testing.T) {
 
 	// mark the validator as having signed
 	req := abci.RequestBeginBlock{
-		LastCommitInfo: abci.LastCommitInfo{
+		LastCommitInfo: abci.CommitInfo{
 			Votes: []abci.VoteInfo{{
 				Validator:       val,
 				SignedLastBlock: true,
@@ -83,7 +83,7 @@ func TestBeginBlocker(t *testing.T) {
 	for ; height < slashingKeeper.SignedBlocksWindow(ctx); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
-			LastCommitInfo: abci.LastCommitInfo{
+			LastCommitInfo: abci.CommitInfo{
 				Votes: []abci.VoteInfo{{
 					Validator:       val,
 					SignedLastBlock: true,
@@ -98,7 +98,7 @@ func TestBeginBlocker(t *testing.T) {
 	for ; height < ((slashingKeeper.SignedBlocksWindow(ctx) * 2) - slashingKeeper.MinSignedPerWindow(ctx) + 1); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
-			LastCommitInfo: abci.LastCommitInfo{
+			LastCommitInfo: abci.CommitInfo{
 				Votes: []abci.VoteInfo{{
 					Validator:       val,
 					SignedLastBlock: false,

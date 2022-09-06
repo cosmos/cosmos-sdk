@@ -14,8 +14,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmlibs "github.com/tendermint/tendermint/libs/bytes"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -32,9 +34,6 @@ import (
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const (

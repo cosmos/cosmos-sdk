@@ -1,7 +1,10 @@
 <!--
 order: 0
+title: Consensus Overview
+parent:
+  title: "consensus"
 -->
 
-# Consensus Parameters
+# `x/consensus`
 
-* [ConsensusParams](spec/README.md) - Functionality to modify consensus params.
+Functionality to modify consensus params.

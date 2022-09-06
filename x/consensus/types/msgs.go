@@ -11,9 +11,7 @@ const (
 	TypeMsgUpdateParams = "update_params"
 )
 
-var (
-	_ sdk.Msg = &MsgUpdateParams{}
-)
+var _ sdk.Msg = &MsgUpdateParams{}
 
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes.

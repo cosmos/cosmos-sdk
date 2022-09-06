@@ -53,7 +53,6 @@ func (k *Keeper) Has(ctx sdk.Context) bool {
 
 // Set sets the consensus parameters
 func (k *Keeper) Set(ctx sdk.Context, cp *tmproto.ConsensusParams) {
-
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.ParamStoreKeyConsensusParams, k.cdc.MustMarshal(cp))
 }

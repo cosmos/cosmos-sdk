@@ -7,7 +7,6 @@ import (
 // Validate all  module parameters
 func Validate(p tmtypes.ConsensusParams) error {
 	return p.ValidateBasic()
-
 }
 
 // String implements the Stringer interface.

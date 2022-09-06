@@ -1,9 +1,9 @@
 package v2
 
 const (
-	ModuleName = "consensus_param"
+	ModuleName = "consensus"
 
 	StoreKey = ModuleName
 )
 
-var ParamStoreKeyConsensusParams = []byte("ConsensusParams")
+var ParamStoreKeyConsensusParams = []byte("Consensus")

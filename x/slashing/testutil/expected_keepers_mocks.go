@@ -281,6 +281,20 @@ func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllValidators", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllValidators), ctx)
 }
 
+// IsValidatorJailed mocks base method.
+func (m *MockStakingKeeper) IsValidatorJailed(ctx types.Context, addr types.ConsAddress) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsValidatorJailed", ctx, addr)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsValidatorJailed indicates an expected call of IsValidatorJailed.
+func (mr *MockStakingKeeperMockRecorder) IsValidatorJailed(ctx, addr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsValidatorJailed", reflect.TypeOf((*MockStakingKeeper)(nil).IsValidatorJailed), ctx, addr)
+}
+
 // IterateValidators mocks base method.
 func (m *MockStakingKeeper) IterateValidators(arg0 types.Context, arg1 func(int64, types2.ValidatorI) bool) {
 	m.ctrl.T.Helper()
@@ -320,17 +334,17 @@ func (mr *MockStakingKeeperMockRecorder) MaxValidators(arg0 interface{}) *gomock
 }
 
 // Slash mocks base method.
-func (m *MockStakingKeeper) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec) math.Int {
+func (m *MockStakingKeeper) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec, arg5 types2.Infraction) math.Int {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(math.Int)
 	return ret0
 }
 
 // Slash indicates an expected call of Slash.
-func (mr *MockStakingKeeperMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Slash", reflect.TypeOf((*MockStakingKeeper)(nil).Slash), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Slash", reflect.TypeOf((*MockStakingKeeper)(nil).Slash), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // Unjail mocks base method.

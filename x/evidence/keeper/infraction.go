@@ -125,7 +125,7 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 		consAddr,
 		k.slashingKeeper.SlashFractionDoubleSign(ctx),
 		evidence.GetValidatorPower(), distributionHeight,
-		stakingtypes.DoubleSign,
+		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
 	)
 
 	// Jail the validator if not already jailed. This will begin unbonding the

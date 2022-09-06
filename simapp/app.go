@@ -46,7 +46,8 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus"
-	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -161,7 +162,7 @@ type SimApp struct {
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	GroupKeeper           groupkeeper.Keeper
 	NFTKeeper             nftkeeper.Keeper
-	ConsensusParamsKeeper consensusparamkeeper.Keeper
+	ConsensusParamsKeeper consensuskeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -259,7 +260,7 @@ func NewSimApp(
 		distrtypes.ModuleName, stakingtypes.ModuleName, slashingtypes.ModuleName, govtypes.ModuleName,
 		minttypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName, nft.ModuleName, group.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName,
-		vestingtypes.ModuleName,
+		vestingtypes.ModuleName, consensustypes.ModuleName,
 	}
 	app.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
 	app.ModuleManager.SetOrderExportGenesis(genesisModuleOrder...)

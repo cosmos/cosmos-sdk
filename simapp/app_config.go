@@ -104,6 +104,7 @@ var (
 						group.ModuleName,
 						paramstypes.ModuleName,
 						vestingtypes.ModuleName,
+						consensustypes.ModuleName,
 					},
 					EndBlockers: []string{
 						crisistypes.ModuleName,
@@ -122,6 +123,7 @@ var (
 						nft.ModuleName,
 						group.ModuleName,
 						paramstypes.ModuleName,
+						consensustypes.ModuleName,
 						upgradetypes.ModuleName,
 						vestingtypes.ModuleName,
 					},

@@ -93,6 +93,11 @@ type AppModule struct {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
+	m := keeper.NewMigrator(&am.keeper, am.legacySubspace)
+	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // NewAppModule creates a new AppModule object

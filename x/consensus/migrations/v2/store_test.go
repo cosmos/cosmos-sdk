@@ -1,4 +1,4 @@
-package v1_test
+package v2_test
 
 import (
 	"testing"
@@ -7,9 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
-
-	v1 "github.com/cosmos/cosmos-sdk/x/consensus/migrations/v1"
-	v2 "github.com/cosmos/cosmos-sdk/x/consensus/migrations/v1"
+	v2 "github.com/cosmos/cosmos-sdk/x/consensus/migrations/v2"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -27,11 +25,11 @@ func newMockSubspace(consensusParams tmproto.ConsensusParams) mockParamStore {
 
 func (ms mockParamStore) Get(ctx sdk.Context, key []byte, ps interface{}) {
 	switch stringKey := string(key); stringKey {
-	case string(v1.ParamStoreKeyBlockParams):
+	case string(v2.ParamStoreKeyBlockParams):
 		*ps.(*tmproto.BlockParams) = *ms.ps.Block
-	case string(v1.ParamStoreKeyValidatorParams):
+	case string(v2.ParamStoreKeyValidatorParams):
 		*ps.(*tmproto.ValidatorParams) = *ms.ps.Validator
-	case string(v1.ParamStoreKeyEvidenceParams):
+	case string(v2.ParamStoreKeyEvidenceParams):
 		*ps.(*tmproto.EvidenceParams) = *ms.ps.Evidence
 	default:
 		*ps.(*tmproto.VersionParams) = tmproto.VersionParams{App: 0}

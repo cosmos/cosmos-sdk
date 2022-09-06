@@ -48,6 +48,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 // DefaultGenesis returns default genesis state as raw bytes for the consensus_param
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	// nil is returned since default genesis of consensus params is handled by tendermint
 	return nil
 }
 
@@ -108,11 +109,15 @@ func (AppModule) Name() string { return types.ModuleName }
 
 // InitGenesis is handled by for init genesis of consensus_param
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+	// nil is returned since initgenesis of consensus params is handled by tendermint
 	return nil
 }
 
 // ExportGenesis is handled by tendermint export of genesis
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage { return nil }
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+	// nil is returned since ExportGenesis of consensus params is handled by tendermint and baseapp
+	return nil
+}
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }

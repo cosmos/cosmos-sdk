@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 
-SIMAPP_REGEX="cosmossdk.io/simapp|github.com/cosmos/cosmos-sdk/simapp"
+set -o errexit
 
-for d in $(find . -name 'go.mod' | xargs -L 1 dirname)
+SIMAPP_REGEX="cosmossdk.io/simapp"
+CWD=$(pwd)
+
+
+find . -type f -name 'go.mod' -print0 | while IFS= read -r -d '' file
 do
-    if $(cd $d && go list -f '{{ .Imports }}' ./... | grep -E '${SIMAPP_REGEX}'); then
-        echo "${d} has a dependency on simapp!"
-        exit 1
-    fi
+  d=$(dirname "$file")
+  if [[ "$d" =~ \./simapp$|\./test$ ]]; then
+    continue
+  fi
+
+  if cd "$CWD/$d" && go list -test -f '{{ .Imports }}' ./... | grep -q -E "${SIMAPP_REGEX}"; then
+    echo "${d} has a dependency on simapp!"
+    exit 1
+  fi
 done

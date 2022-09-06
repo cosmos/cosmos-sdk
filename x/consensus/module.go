@@ -146,8 +146,8 @@ type consensusParamInputs struct {
 type consensusParamOutputs struct {
 	depinject.Out
 
-	consensusParamKeeper keeper.Keeper
-	Module               runtime.AppModuleWrapper
+	Keeper keeper.Keeper
+	Module runtime.AppModuleWrapper
 }
 
 func provideModule(in consensusParamInputs) consensusParamOutputs {
@@ -161,7 +161,7 @@ func provideModule(in consensusParamInputs) consensusParamOutputs {
 	m := NewAppModule(in.Cdc, k, in.LegacySubspace)
 
 	return consensusParamOutputs{
-		consensusParamKeeper: k,
-		Module:               runtime.WrapAppModule(m),
+		Keeper: k,
+		Module: runtime.WrapAppModule(m),
 	}
 }

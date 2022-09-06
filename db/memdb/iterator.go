@@ -9,19 +9,26 @@ import (
 )
 
 const (
-	// Size of the channel buffer between traversal goroutine and iterator. Using an unbuffered
-	// channel causes two context switches per item sent, while buffering allows more work per
-	// context switch. Tuned with benchmarks.
-	chBufferSize = 64
+	// TODO: this neeeds to be tuned or maybe even made configurable
+	bufferSize = 1024
 )
 
 // memDBIterator is a memDB iterator.
 type memDBIterator struct {
-	ch     <-chan *item
-	cancel context.CancelFunc
-	item   *item
-	start  []byte
-	end    []byte
+	ctx     context.Context
+	cancel  context.CancelFunc
+	start   []byte
+	end     []byte
+	reverse bool
+	tx      *dbTxn
+
+	// Because we use [start, end) for reverse ranges, while btree uses (start, end], we need
+	// the following variables to handle some reverse iteration conditions ourselves.
+	skipEqual     []byte
+	abortLessThan []byte
+
+	items  []*item
+	cursor int
 }
 
 var _ db.Iterator = (*memDBIterator)(nil)
@@ -32,59 +39,18 @@ var _ db.Iterator = (*memDBIterator)(nil)
 // The reverse case needs some special handling, since we use [start, end) while btree uses (start, end]
 func newMemDBIterator(tx *dbTxn, start []byte, end []byte, reverse bool) *memDBIterator {
 	ctx, cancel := context.WithCancel(context.Background())
-	ch := make(chan *item, chBufferSize)
 	iter := &memDBIterator{
-		ch:     ch,
-		cancel: cancel,
-		start:  start,
-		end:    end,
+		ctx:     ctx,
+		cancel:  cancel,
+		start:   start,
+		end:     end,
+		reverse: reverse,
+		cursor:  -1,
+		items:   make([]*item, 0, bufferSize),
+		tx:      tx,
 	}
 
-	go func() {
-		defer close(ch)
-		// Because we use [start, end) for reverse ranges, while btree uses (start, end], we need
-		// the following variables to handle some reverse iteration conditions ourselves.
-		var (
-			skipEqual     []byte
-			abortLessThan []byte
-		)
-		visitor := func(i btree.Item) bool {
-			item := i.(*item)
-			if skipEqual != nil && bytes.Equal(item.key, skipEqual) {
-				skipEqual = nil
-				return true
-			}
-			if abortLessThan != nil && bytes.Compare(item.key, abortLessThan) == -1 {
-				return false
-			}
-			select {
-			case <-ctx.Done():
-				return false
-			case ch <- item:
-				return true
-			}
-		}
-		switch {
-		case start == nil && end == nil && !reverse:
-			tx.btree.Ascend(visitor)
-		case start == nil && end == nil && reverse:
-			tx.btree.Descend(visitor)
-		case end == nil && !reverse:
-			// must handle this specially, since nil is considered less than anything else
-			tx.btree.AscendGreaterOrEqual(newKey(start), visitor)
-		case !reverse:
-			tx.btree.AscendRange(newKey(start), newKey(end), visitor)
-		case end == nil:
-			// abort after start, since we use [start, end) while btree uses (start, end]
-			abortLessThan = start
-			tx.btree.Descend(visitor)
-		default:
-			// skip end and abort after start, since we use [start, end) while btree uses (start, end]
-			skipEqual = end
-			abortLessThan = start
-			tx.btree.DescendLessOrEqual(newKey(end), visitor)
-		}
-	}()
+	iter.loadMore()
 
 	return iter
 }
@@ -92,9 +58,7 @@ func newMemDBIterator(tx *dbTxn, start []byte, end []byte, reverse bool) *memDBI
 // Close implements Iterator.
 func (i *memDBIterator) Close() error {
 	i.cancel()
-	for range i.ch { // drain channel
-	}
-	i.item = nil
+	i.items = nil
 	return nil
 }
 
@@ -105,14 +69,72 @@ func (i *memDBIterator) Domain() ([]byte, []byte) {
 
 // Next implements Iterator.
 func (i *memDBIterator) Next() bool {
-	item, ok := <-i.ch
-	switch {
-	case ok:
-		i.item = item
-	default:
-		i.item = nil
+	i.cursor++
+	if i.cursor < len(i.items) {
+		return i.items[i.cursor] != nil
 	}
-	return i.item != nil
+
+	// If the cursor is already over the current items length and the length is less than the buffer size;
+	// It means we've reached the end
+	if len(i.items) < bufferSize {
+		return false
+	}
+
+	i.start = i.items[len(i.items)-1].key
+	i.cursor = 0
+	// skip the first item, since it's already loaded
+	i.skipEqual = i.start
+	i.loadMore()
+
+	return len(i.items) > 0 && i.items[i.cursor] != nil
+}
+
+// loadMore starts or continues the iteration
+func (i *memDBIterator) loadMore() {
+	i.items = make([]*item, 0, bufferSize)
+	visitor := func(it btree.Item) bool {
+		nitem := it.(*item)
+		if i.skipEqual != nil && bytes.Equal(nitem.key, i.skipEqual) {
+			i.skipEqual = nil
+			return true
+		}
+		if i.abortLessThan != nil && bytes.Compare(nitem.key, i.abortLessThan) == -1 {
+			return false
+		}
+
+		select {
+		case <-i.ctx.Done():
+			return false
+		default:
+			i.items = append(i.items, nitem)
+			// once the buffer is full, stop the iteration
+			if len(i.items) == bufferSize {
+				return false
+			}
+			return true
+		}
+	}
+	switch {
+	case i.start == nil && i.end == nil && !i.reverse:
+		i.tx.btree.Ascend(visitor)
+	case i.start == nil && i.end == nil && i.reverse:
+		i.tx.btree.Descend(visitor)
+	case i.end == nil && !i.reverse:
+		// must handle this specially, since nil is considered less than anything else
+		i.tx.btree.AscendGreaterOrEqual(newKey(i.start), visitor)
+	case !i.reverse:
+		i.tx.btree.AscendRange(newKey(i.start), newKey(i.end), visitor)
+	case i.end == nil:
+		// abort after start, since we use [start, end) while btree uses (start, end]
+		i.abortLessThan = i.start
+		i.tx.btree.Descend(visitor)
+	default:
+		// skip end and abort after start, since we use [start, end) while btree uses (start, end]
+		i.skipEqual = i.end
+		i.abortLessThan = i.start
+		i.tx.btree.DescendLessOrEqual(newKey(i.end), visitor)
+	}
+
 }
 
 // Error implements Iterator.
@@ -123,17 +145,17 @@ func (i *memDBIterator) Error() error {
 // Key implements Iterator.
 func (i *memDBIterator) Key() []byte {
 	i.assertIsValid()
-	return i.item.key
+	return i.items[i.cursor].key
 }
 
 // Value implements Iterator.
 func (i *memDBIterator) Value() []byte {
 	i.assertIsValid()
-	return i.item.value
+	return i.items[i.cursor].value
 }
 
 func (i *memDBIterator) assertIsValid() {
-	if i.item == nil {
+	if i.items[i.cursor] == nil {
 		panic("iterator is invalid")
 	}
 }

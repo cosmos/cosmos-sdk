@@ -32,7 +32,7 @@ func (ms mockParamStore) Get(ctx sdk.Context, key []byte, ps interface{}) {
 	case string(v1.ParamStoreKeyEvidenceParams):
 		*ps.(*tmproto.EvidenceParams) = *ms.ps.Evidence
 	default:
-		*ps.(*tmproto.VersionParams) = tmproto.VersionParams{AppVersion: 0}
+		*ps.(*tmproto.VersionParams) = tmproto.VersionParams{App: 0}
 	}
 }
 

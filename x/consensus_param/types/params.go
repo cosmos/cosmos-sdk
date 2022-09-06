@@ -6,7 +6,7 @@ import (
 
 // Validate all  module parameters
 func Validate(p tmtypes.ConsensusParams) error {
-	return p.ValidateConsensusParams()
+	return p.ValidateBasic()
 
 }
 

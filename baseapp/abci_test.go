@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"testing"
 
@@ -197,21 +198,21 @@ func (ps *paramStore) Has(_ sdk.Context) bool {
 	return ok
 }
 
-func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
+func (ps paramStore) Get(_ sdk.Context) (*tmproto.ConsensusParams, error) {
 	bz, err := ps.db.Get(ParamstoreKey)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if len(bz) == 0 {
-		return nil, nil
+		return nil, errors.New("no consensus params")
 	}
 
-	var params *tmproto.ConsensusParams
+	var params tmproto.ConsensusParams
 
-	if err := json.Unmarshal(bz, params); err != nil {
+	if err := json.Unmarshal(bz, &params); err != nil {
 		panic(err)
 	}
 
-	return params, nil
+	return &params, nil
 }

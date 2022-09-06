@@ -103,6 +103,7 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 	require.Equal(t, t.Name(), app.Name())
 
 	app.MountStores(capKey1, capKey2)
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
 	// stores are mounted
 	err := app.LoadLatestVersion()

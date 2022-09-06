@@ -2182,11 +2182,11 @@ func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
 		return nil, nil
 	}
 
-	var params *tmproto.ConsensusParams
+	var params tmproto.ConsensusParams
 
-	if err := json.Unmarshal(bz, params); err != nil {
+	if err := json.Unmarshal(bz, &params); err != nil {
 		panic(err)
 	}
 
-	return params, nil
+	return &params, nil
 }

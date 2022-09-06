@@ -416,7 +416,6 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusP
 	if cp == nil {
 		return
 	}
-
 	app.paramStore.Set(ctx, cp)
 	// We're explicitly not storing the Tendermint app_version in the param store. It's
 	// stored instead in the x/upgrade store, with its own bump logic.

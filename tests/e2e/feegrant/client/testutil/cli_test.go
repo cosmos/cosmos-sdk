@@ -6,7 +6,7 @@ package testutil
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	clienttestutil "github.com/cosmos/cosmos-sdk/x/feegrant/client/testutil"
 

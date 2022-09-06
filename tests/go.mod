@@ -5,8 +5,8 @@ go 1.18
 require (
 	cosmossdk.io/api v0.1.0-alpha9
 	cosmossdk.io/math v1.0.0-beta.3
+	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.46.1
-	github.com/cosmos/cosmos-sdk/simapp v0.0.0-00010101000000-000000000000
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/uuid v1.3.0
 	github.com/spf13/cobra v1.5.0
@@ -153,9 +153,9 @@ require (
 )
 
 replace (
+	cosmossdk.io/simapp => ../simapp
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	github.com/cosmos/cosmos-sdk => ../.
-	github.com/cosmos/cosmos-sdk/simapp => ../simapp
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 )

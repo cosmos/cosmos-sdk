@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	clienttestutil "github.com/cosmos/cosmos-sdk/x/feegrant/client/testutil"
 
 	"github.com/stretchr/testify/suite"
 )

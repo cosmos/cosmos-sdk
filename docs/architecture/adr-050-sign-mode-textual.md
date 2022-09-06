@@ -26,7 +26,7 @@ In an effort to remove Amino from the SDK, a new sign mode needs to be created f
 
 ## Decision
 
-We propose to have SIGN_MODE_TEXTUAL’s signing payload `SignDocTextual` to be an array of strings, encoded as a `\n`-delimited string (see point #9). Each string corresponds to one "screen" on the hardware wallet device, with no (or little) additional formatting done by the hardware wallet itself.
+We propose to have SIGN_MODE_TEXTUAL’s signing payload `SignDocTextual` to be an array of strings, encoded as a `\n`-delimited (ASCII: 10) string (see point #9). Each string corresponds to one "screen" on the hardware wallet device, with no (or little) additional formatting done by the hardware wallet itself.
 
 ```proto
 message SignDocTextual {
@@ -51,11 +51,71 @@ This also prevents users signing over any hashed transaction data (fee, transact
 
 We propose to maintain functional tests using bijectivity in the SDK.
 
-### 2. Only ASCII 32-127 characters allowed
+### 2. UTF-8 characters allowed, but signing devices MAY convert them to ASCII
 
-Ledger devices have limited character display capabilities, so all strings MUST only contain ASCII characters in the 32-127 range.
+The SIGN_MODE_TEXTUAL specification allows all UTF-8 characters. The rendered string will render all characters as-is, with the one modification below:
+- the line feed `\n` character (ASCII: 10) is escaped using quotation marks: `"\n"`. This is to disambiguate with the `\n` control character used to signal a screen change on the signing device.
+- the quotation mark character `"` (ASCII: 34) is escaped by a backslash prefix: `\"`. This is to allow bijectivity if the signing device decides to convert UTF-8 characters into its own set of displayable characters, using `"` as a control character.
 
-In particular, the newline `"\n"` (ASCII: 10) character is forbidden.
+For example, consider the transaction's `memo` field:
+
+```
+// JSON: {"memo": "foo"}
+Memo: foo
+
+// JSON: {"memo": "\"foo\""}
+Memo: \"foo\"
+
+// JSON: {"memo": "foo\nbar"}
+Memo: foo"\n"bar                  // Where \n is the single line feed character
+
+// JSON: {"memo": "foo\"\n\"bar"}
+Memo: foo""\n""bar                // Where \n is the single line feed character
+```
+
+If the signing device is capable of displaying UTF-8 characters (e.g. mobile phones used for offline signing), then it should display the rendered strings without any modification.
+
+Taking the 4th example above, the signing device would display the following:
+```
+Memo: foo\""
+"\"bar
+```
+
+However, hardware devices often have limited character display capabilities, so they MAY convert UTF-8 characters into a subset of their own displayable characters. For the offical [Cosmos Ledger app](https://github.com/cosmos/ledger-cosmos) developed by the [Zondax](https://zondax.ch), only ASCII characters in the 32-127 range are desirable.
+
+The algorithm to convert from UTF-8 to displayable characters is left to the discretion of the signing device software implementers. For the offical [Cosmos Ledger app](https://github.com/cosmos/ledger-cosmos), we propose the following algorithm to convert UTF-8 characters into ASCII:
+
+```
+// Given an item `s` of the SignDoc's string array.
+res := ""
+for _, char in range s {
+  if char < 32 || char > 127 {
+    res += display_code(char)
+  } else {
+    res += char
+  }
+}
+
+// display_code converts an UTF-8 character into its code point, displayed as
+// "U+" concatenated with a 4-letter-minimum capital hexadecimal string,
+// left-padded with 0s if necessary, and everything surrounded by quotation
+// marks "".
+//
+// Example:
+// display_code("€") // "\"U+20AC\""
+func display_code(c rune) string {}
+```
+
+Examples:
+
+```
+// JSON: {"memo": "paid 23€"}
+Memo: paid 23"U+20AC"
+
+// JSON: {"memo": "paid 23€\n\"😃\""}
+Memo: paid 23"U+20AC""U+000A"\""U+1F603"\"
+```
+
 
 ### 3. Strings SHOULD have the `<key>: <value>` format
 

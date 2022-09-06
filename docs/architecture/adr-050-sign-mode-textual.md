@@ -67,10 +67,10 @@ Memo: foo
 Memo: \"foo\"
 
 // JSON: {"memo": "foo\nbar"}
-Memo: foo"\n"bar                  // Where \n is the single line feed character
+Memo: foo"\n"bar                  // Where \n is the single line-feed character
 
 // JSON: {"memo": "foo\"\n\"bar"}
-Memo: foo""\n""bar                // Where \n is the single line feed character
+Memo: foo""\n""bar                // Where \n is the single line-feed character
 ```
 
 If the signing device is capable of displaying UTF-8 characters (e.g. mobile phones used for offline signing), then it should display the rendered strings without any modification.

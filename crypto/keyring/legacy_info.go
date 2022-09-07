@@ -255,7 +255,6 @@ func unMarshalLegacyInfo(bz []byte) (info LegacyInfo, err error) {
 
 // privKeyFromLegacyInfo exports a private key from LegacyInfo
 func privKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) {
-
 	switch linfo := info.(type) {
 	case legacyLocalInfo:
 		if linfo.PrivKeyArmor == "" {

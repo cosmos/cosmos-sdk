@@ -39,7 +39,7 @@ func AssertKeyPanics(t *testing.T, itr dbm.Iterator) {
 	assert.Panics(t, func() { itr.Key() }, "checkKeyPanics expected panic but didn't")
 }
 
-func AssertValue(t *testing.T, db dbm.DBReader, key, valueWanted []byte) {
+func AssertValue(t *testing.T, db dbm.Reader, key, valueWanted []byte) {
 	t.Helper()
 	valueGot, err := db.Get(key)
 	assert.NoError(t, err)

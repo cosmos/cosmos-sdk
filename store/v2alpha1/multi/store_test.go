@@ -47,7 +47,7 @@ func storeConfig123(t *testing.T) StoreConfig {
 	return opts
 }
 
-func newSubStoreWithData(t *testing.T, db dbm.DBConnection, storeData map[string]string) (*Store, types.KVStore) {
+func newSubStoreWithData(t *testing.T, db dbm.Connection, storeData map[string]string) (*Store, types.KVStore) {
 	root, err := NewStore(db, simpleStoreConfig(t))
 	require.NoError(t, err)
 
@@ -163,7 +163,7 @@ func TestIterators(t *testing.T) {
 		string([]byte{0x01}):       "1",
 	})
 
-	var testCase = func(t *testing.T, iter types.Iterator, expected []string) {
+	testCase := func(t *testing.T, iter types.Iterator, expected []string) {
 		var i int
 		for i = 0; iter.Valid(); iter.Next() {
 			expectedValue := expected[i]
@@ -259,8 +259,9 @@ func TestCommit(t *testing.T) {
 	// test that we can recover from a failed commit
 	testFailedCommit := func(t *testing.T,
 		store *Store,
-		db dbm.DBConnection,
-		opts StoreConfig) {
+		db dbm.Connection,
+		opts StoreConfig,
+	) {
 		if db == nil {
 			db = store.stateDB
 		}
@@ -298,7 +299,7 @@ func TestCommit(t *testing.T) {
 	// committed data that belongs to no version: non-atomic behavior from the Store user's perspective.
 	// So, that data must be reverted when the store is reloaded.
 	t.Run("recover after failed SaveVersion and Revert", func(t *testing.T) {
-		var db dbm.DBConnection
+		var db dbm.Connection
 		db = dbSaveVersionFails{memdb.NewDB()}
 		// Revert should succeed in initial NewStore call, but fail during Commit
 		db = dbRevertFails{db, []bool{false, true}}
@@ -314,7 +315,7 @@ func TestCommit(t *testing.T) {
 		testFailedCommit(t, store, nil, opts)
 	})
 	t.Run("recover after failed StateCommitmentDB SaveVersion and Revert", func(t *testing.T) {
-		var db dbm.DBConnection
+		var db dbm.Connection
 		db = dbSaveVersionFails{memdb.NewDB()}
 		db = dbRevertFails{db, []bool{false, true}}
 		opts.StateCommitmentDB = db
@@ -405,7 +406,7 @@ func TestPruning(t *testing.T) {
 	}
 
 	for tci, tc := range testCases {
-		dbs := []dbm.DBConnection{memdb.NewDB(), memdb.NewDB()}
+		dbs := []dbm.Connection{memdb.NewDB(), memdb.NewDB()}
 		opts := simpleStoreConfig(t)
 		opts.Pruning = tc.PruningOptions
 		opts.StateCommitmentDB = dbs[1]
@@ -936,8 +937,8 @@ func TestListeners(t *testing.T) {
 		},
 	}
 
-	var interfaceRegistry = codecTypes.NewInterfaceRegistry()
-	var marshaller = codec.NewProtoCodec(interfaceRegistry)
+	interfaceRegistry := codecTypes.NewInterfaceRegistry()
+	marshaller := codec.NewProtoCodec(interfaceRegistry)
 
 	db := memdb.NewDB()
 	opts := simpleStoreConfig(t)

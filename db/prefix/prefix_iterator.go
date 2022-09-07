@@ -9,7 +9,7 @@ import (
 
 // IteratePrefix is a convenience function for iterating over a key domain
 // restricted by prefix.
-func IteratePrefix(dbr db.DBReader, prefix []byte) (db.Iterator, error) {
+func IteratePrefix(dbr db.Reader, prefix []byte) (db.Iterator, error) {
 	var start, end []byte
 	if len(prefix) != 0 {
 		start = prefix

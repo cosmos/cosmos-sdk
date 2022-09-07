@@ -26,6 +26,7 @@ var (
 )
 
 // NewBaseAccount creates a new BaseAccount object
+//
 //nolint:interfacer
 func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNumber, sequence uint64) *BaseAccount {
 	acc := &BaseAccount{
@@ -203,7 +204,7 @@ func (ma ModuleAccount) HasPermission(permission string) bool {
 	return false
 }
 
-// GetName returns the the name of the holder's module
+// GetName returns the name of the holder's module
 func (ma ModuleAccount) GetName() string {
 	return ma.Name
 }

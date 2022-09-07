@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
@@ -106,7 +106,7 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GenTxCmd(
-				simapp.ModuleBasics,
+				module.NewBasicManager(),
 				val.ClientCtx.TxConfig,
 				banktypes.GenesisBalancesIterator{},
 				val.ClientCtx.HomeDir)

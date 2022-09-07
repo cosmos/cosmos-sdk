@@ -241,6 +241,8 @@ func (m *QueryAllowancesResponse) GetPagination() *query.PageResponse {
 }
 
 // QueryAllowancesByGranterRequest is the request type for the Query/AllowancesByGranter RPC method.
+//
+// Since: cosmos-sdk 0.46
 type QueryAllowancesByGranterRequest struct {
 	Granter string `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
 	// pagination defines an pagination for the request.
@@ -295,6 +297,8 @@ func (m *QueryAllowancesByGranterRequest) GetPagination() *query.PageRequest {
 }
 
 // QueryAllowancesByGranterResponse is the response type for the Query/AllowancesByGranter RPC method.
+//
+// Since: cosmos-sdk 0.46
 type QueryAllowancesByGranterResponse struct {
 	// allowances that have been issued by the granter.
 	Allowances []*Grant `protobuf:"bytes,1,rep,name=allowances,proto3" json:"allowances,omitempty"`
@@ -416,7 +420,8 @@ type QueryClient interface {
 	// Allowances returns all the grants for address.
 	Allowances(ctx context.Context, in *QueryAllowancesRequest, opts ...grpc.CallOption) (*QueryAllowancesResponse, error)
 	// AllowancesByGranter returns all the grants given by an address
-	// Since v0.46
+	//
+	// Since: cosmos-sdk 0.46
 	AllowancesByGranter(ctx context.Context, in *QueryAllowancesByGranterRequest, opts ...grpc.CallOption) (*QueryAllowancesByGranterResponse, error)
 }
 
@@ -462,7 +467,8 @@ type QueryServer interface {
 	// Allowances returns all the grants for address.
 	Allowances(context.Context, *QueryAllowancesRequest) (*QueryAllowancesResponse, error)
 	// AllowancesByGranter returns all the grants given by an address
-	// Since v0.46
+	//
+	// Since: cosmos-sdk 0.46
 	AllowancesByGranter(context.Context, *QueryAllowancesByGranterRequest) (*QueryAllowancesByGranterResponse, error)
 }
 

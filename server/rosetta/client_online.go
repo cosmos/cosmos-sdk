@@ -16,6 +16,7 @@ import (
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/tendermint/tendermint/rpc/client/http"
@@ -36,7 +37,10 @@ import (
 // interface assertion
 var _ crgtypes.Client = (*Client)(nil)
 
-const defaultNodeTimeout = time.Minute
+const (
+	defaultNodeTimeout = time.Minute
+	tmWebsocketPath    = "/websocket"
+)
 
 // Client implements a single network client to interact with cosmos based chains
 type Client struct {
@@ -98,12 +102,12 @@ func NewClient(cfg *Config) (*Client, error) {
 
 // Bootstrap is gonna connect the client to the endpoints
 func (c *Client) Bootstrap() error {
-	grpcConn, err := grpc.Dial(c.config.GRPCEndpoint, grpc.WithInsecure())
+	grpcConn, err := grpc.Dial(c.config.GRPCEndpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
 
-	tmRPC, err := http.New(c.config.TendermintRPC)
+	tmRPC, err := http.New(c.config.TendermintRPC, tmWebsocketPath)
 	if err != nil {
 		return err
 	}
@@ -255,7 +259,8 @@ func (c *Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes [
 }
 
 // GetTx returns a transaction given its hash. For Rosetta we  make a synthetic transaction for BeginBlock
-//  and EndBlock to adhere to balance tracking rules.
+//
+//	and EndBlock to adhere to balance tracking rules.
 func (c *Client) GetTx(ctx context.Context, hash string) (*rosettatypes.Transaction, error) {
 	hashBytes, err := hex.DecodeString(hash)
 	if err != nil {

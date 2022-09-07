@@ -100,6 +100,11 @@ func (k *Keeper) Seal() {
 	k.sealed = true
 }
 
+// IsSealed returns if the keeper is sealed.
+func (k *Keeper) IsSealed() bool {
+	return k.sealed
+}
+
 // InitMemStore will assure that the module store is a memory store (it will panic if it's not)
 // and willl initialize it. The function is safe to be called multiple times.
 // InitMemStore must be called every time the app starts before the keeper is used (so
@@ -197,7 +202,6 @@ func (k Keeper) GetOwners(ctx sdk.Context, index uint64) (types.CapabilityOwners
 // and sets the fwd and reverse keys for each owner in the memstore.
 // It is used during initialization from genesis.
 func (k Keeper) InitializeCapability(ctx sdk.Context, index uint64, owners types.CapabilityOwners) {
-
 	memStore := ctx.KVStore(k.memKey)
 
 	cap := types.NewCapability(index)
@@ -215,7 +219,6 @@ func (k Keeper) InitializeCapability(ctx sdk.Context, index uint64, owners types
 		// Set the mapping from index from index to in-memory capability in the go map
 		k.capMap[index] = cap
 	}
-
 }
 
 // NewCapability attempts to create a new capability with a given name. If the

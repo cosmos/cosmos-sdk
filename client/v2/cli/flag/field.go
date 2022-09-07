@@ -20,7 +20,6 @@ type FieldValueBinder interface {
 
 // Options specifies options for specific flags.
 type Options struct {
-
 	// Prefix is a prefix to prepend to all flags.
 	Prefix string
 }

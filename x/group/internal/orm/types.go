@@ -113,12 +113,12 @@ func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec
 		}
 
 		pStore := prefix.NewStore(store, prefixKey[:])
-		it := pStore.Iterator(PrefixRange(rowID))
-		defer it.Close()
-		if !it.Valid() {
+		bz := pStore.Get(rowID)
+		if len(bz) == 0 {
 			return sdkerrors.ErrNotFound
 		}
-		return cdc.Unmarshal(it.Value(), dest)
+
+		return cdc.Unmarshal(bz, dest)
 	}
 }
 

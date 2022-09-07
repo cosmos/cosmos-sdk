@@ -32,11 +32,11 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// BasicAllowance implements Allowance with a one-time grant of tokens
+// BasicAllowance implements Allowance with a one-time grant of coins
 // that optionally expires. The grantee can use up to SpendLimit to cover fees.
 type BasicAllowance struct {
-	// spend_limit specifies the maximum amount of tokens that can be spent
-	// by this allowance and will be updated as tokens are spent. If it is
+	// spend_limit specifies the maximum amount of coins that can be spent
+	// by this allowance and will be updated as coins are spent. If it is
 	// empty, there is no spend limit and any amount of coins can be spent.
 	SpendLimit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=spend_limit,json=spendLimit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"spend_limit"`
 	// expiration specifies an optional time when this allowance expires

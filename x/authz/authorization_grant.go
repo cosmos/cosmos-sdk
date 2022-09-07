@@ -30,9 +30,7 @@ func NewGrant(blockTime time.Time, a Authorization, expiration *time.Time) (Gran
 	}, nil
 }
 
-var (
-	_ cdctypes.UnpackInterfacesMessage = &Grant{}
-)
+var _ cdctypes.UnpackInterfacesMessage = &Grant{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (g Grant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
@@ -45,9 +43,10 @@ func (g Grant) GetAuthorization() (Authorization, error) {
 	if g.Authorization == nil {
 		return nil, sdkerrors.ErrInvalidType.Wrap("authorization is nil")
 	}
-	a, ok := g.Authorization.GetCachedValue().(Authorization)
+	av := g.Authorization.GetCachedValue()
+	a, ok := av.(Authorization)
 	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (Authorization)(nil), g.Authorization.GetCachedValue())
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (Authorization)(nil), av)
 	}
 	return a, nil
 }

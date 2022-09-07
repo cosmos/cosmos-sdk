@@ -2,7 +2,6 @@ package client_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"os"
 	"strings"
@@ -17,8 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func TestMain(m *testing.M) {
@@ -144,22 +143,8 @@ x: "10"
 `, buf.String())
 }
 
-func TestCLIQueryConn(t *testing.T) {
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
-
-	n, err := network.New(t, t.TempDir(), cfg)
-	require.NoError(t, err)
-	defer n.Cleanup()
-
-	testClient := testdata.NewQueryClient(n.Validators[0].ClientCtx)
-	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
-	require.NoError(t, err)
-	require.Equal(t, "hello", res.Message)
-}
-
 func TestGetFromFields(t *testing.T) {
-	cfg := network.DefaultConfig()
+	cfg := testutil.MakeTestEncodingConfig()
 	path := hd.CreateHDPath(118, 0, 0).String()
 
 	testCases := []struct {

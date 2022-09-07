@@ -47,8 +47,9 @@ func (c *cosmovisorHelpEnv) Set(envVar, envVal string) {
 
 // clearEnv clears environment variables and returns what they were.
 // Designed to be used like this:
-//    initialEnv := clearEnv()
-//    defer setEnv(nil, initialEnv)
+//
+//	initialEnv := clearEnv()
+//	defer setEnv(nil, initialEnv)
 func (s *HelpTestSuite) clearEnv() *cosmovisorHelpEnv {
 	s.T().Logf("Clearing environment variables.")
 	rv := cosmovisorHelpEnv{}
@@ -89,7 +90,7 @@ func (s *HelpTestSuite) setEnv(t *testing.T, env *cosmovisorHelpEnv) {
 
 func (s *HelpTestSuite) TestGetHelpText() {
 	expectedPieces := []string{
-		"Cosmosvisor",
+		"Cosmovisor",
 		cosmovisor.EnvName, cosmovisor.EnvHome,
 		"https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor/README.md",
 	}

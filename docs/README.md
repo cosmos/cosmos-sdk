@@ -56,7 +56,7 @@ aside: false
 * **[Basics](./basics/)**: Basic concepts of the Cosmos SDK, including the standard anatomy of an application, the transaction lifecycle, and accounts management.
 * **[Core](./core/)**: Core concepts of the Cosmos SDK, including `baseapp`, the `store`, or the `server`.
 * **[Building Modules](./building-modules/)**: Important concepts for module developers like `message`, `keeper`, and `querier`.
-* **[IBC](./ibc/)**: IBC protocol integration and concepts.
+* **[IBC](https://ibc.cosmos.network/)**: IBC protocol integration and concepts.
 * **[Running a Node, API, CLI](./run-node/)**: How to run a node and interact with the node using the CLI and the API.
 * **[Migrations](./migrations/)**: Migration guides for updating to newer versions of Cosmos SDK.
 
@@ -64,7 +64,7 @@ aside: false
 
 * **[Module Directory](../x/)**: Cosmos SDK module implementations and their respective documentation.
 * **[Specifications](./spec/)**: Specifications of modules and other parts of the Cosmos SDK.
-* **[Cosmos SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk)**: Godocs of the Cosmos SDK.
+* **[Cosmos SDK API Reference](https://pkg.go.dev/github.com/cosmos/cosmos-sdk)**: Godocs of the Cosmos SDK.
 * **[REST and RPC Endpoints](https://cosmos.network/rpc/)**: List of endpoints to interact with a `gaia` full-node.
 * **[Rosetta API](./run-node/rosetta.md)**: Rosetta API integration.
 

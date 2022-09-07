@@ -8,7 +8,7 @@ import (
 
 // GetHelpText creates the help text multi-line string.
 func GetHelpText() string {
-	return fmt.Sprintf(`Cosmosvisor - A process manager for Cosmos SDK application binaries.
+	return fmt.Sprintf(`Cosmovisor - A process manager for Cosmos SDK application binaries.
 
 Cosmovisor is a wrapper for a Cosmos SDK based App (set using the required %s env variable).
 It starts the App by passing all provided arguments and monitors the %s/data/upgrade-info.json

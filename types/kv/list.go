@@ -1,6 +1,6 @@
 package kv
 
-// This code was copied from golang.org/pkg/container/list, but specially adapted
+// This code was copied from pkg.go.dev/container/list, but specially adapted
 // for use with kv.Pair to avoid the type assertion CPU expense of using Value with
 // an interface, per https://github.com/cosmos/cosmos-sdk/issues/8810
 //
@@ -113,7 +113,6 @@ func (l *List) remove(e *Element) *Element {
 }
 
 // move moves e to next to at and returns e.
-// nolint: unparam
 func (l *List) move(e, at *Element) *Element {
 	if e == at {
 		return e

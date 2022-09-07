@@ -10,21 +10,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/tools/ics23/smt/helpers"
 )
 
-var numKeys = 50
-var cases = map[string]struct {
-	size int
-	loc  tmproofs.Where
-}{
-	"tiny left":    {size: 10, loc: tmproofs.Left},
-	"tiny middle":  {size: 10, loc: tmproofs.Middle},
-	"tiny right":   {size: 10, loc: tmproofs.Right},
-	"small left":   {size: 100, loc: tmproofs.Left},
-	"small middle": {size: 100, loc: tmproofs.Middle},
-	"small right":  {size: 100, loc: tmproofs.Right},
-	"big left":     {size: 5431, loc: tmproofs.Left},
-	"big middle":   {size: 5431, loc: tmproofs.Middle},
-	"big right":    {size: 5431, loc: tmproofs.Right},
-}
+var (
+	numKeys = 50
+	cases   = map[string]struct {
+		size int
+		loc  tmproofs.Where
+	}{
+		"tiny left":    {size: 10, loc: tmproofs.Left},
+		"tiny middle":  {size: 10, loc: tmproofs.Middle},
+		"tiny right":   {size: 10, loc: tmproofs.Right},
+		"small left":   {size: 100, loc: tmproofs.Left},
+		"small middle": {size: 100, loc: tmproofs.Middle},
+		"small right":  {size: 100, loc: tmproofs.Right},
+		"big left":     {size: 5431, loc: tmproofs.Left},
+		"big middle":   {size: 5431, loc: tmproofs.Middle},
+		"big right":    {size: 5431, loc: tmproofs.Right},
+	}
+)
 
 func TestCreateMembership(t *testing.T) {
 	for name, tc := range cases {

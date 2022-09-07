@@ -3,9 +3,9 @@ package types_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -30,9 +30,9 @@ func Test_validateParams(t *testing.T) {
 	require.NoError(t, params.Validate())
 
 	// validate mincommision
-	params.MinCommissionRate = sdk.NewDec(-1)
+	params.MinCommissionRate = math.LegacyNewDec(-1)
 	require.Error(t, params.Validate())
 
-	params.MinCommissionRate = sdk.NewDec(2)
+	params.MinCommissionRate = math.LegacyNewDec(2)
 	require.Error(t, params.Validate())
 }

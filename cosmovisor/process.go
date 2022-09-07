@@ -64,22 +64,29 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 		}
 	}()
 
-	needsUpdate, err := l.WaitForUpgradeOrExit(cmd)
-	if err != nil || !needsUpdate {
+	if needsUpdate, err := l.WaitForUpgradeOrExit(cmd); err != nil || !needsUpdate {
 		return false, err
 	}
 
 	if !IsSkipUpgradeHeight(args, l.fw.currentInfo) {
+		l.cfg.WaitRestartDelay()
+
 		if err := l.doBackup(); err != nil {
+			return false, err
+		}
+
+		if err := UpgradeBinary(l.logger, l.cfg, l.fw.currentInfo); err != nil {
 			return false, err
 		}
 
 		if err = l.doPreUpgrade(); err != nil {
 			return false, err
 		}
+
+		return true, nil
 	}
 
-	return true, DoUpgrade(l.logger, l.cfg, l.fw.currentInfo)
+	return false, nil
 }
 
 // WaitForUpgradeOrExit checks upgrade plan file created by the app.
@@ -95,7 +102,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 		l.logger.Error().Err(err)
 	}
 
-	var cmdDone = make(chan error)
+	cmdDone := make(chan error)
 	go func() {
 		cmdDone <- cmd.Wait()
 	}()
@@ -130,8 +137,7 @@ func (l Launcher) doBackup() error {
 			return fmt.Errorf("error while reading upgrade-info.json: %w", err)
 		}
 
-		err = json.Unmarshal(upgradeInfoFile, &uInfo)
-		if err != nil {
+		if err = json.Unmarshal(upgradeInfoFile, &uInfo); err != nil {
 			return err
 		}
 
@@ -147,9 +153,7 @@ func (l Launcher) doBackup() error {
 		l.logger.Info().Time("backup start time", st).Msg("starting to take backup of data directory")
 
 		// copy the $DAEMON_HOME/data to a backup dir
-		err = copy.Copy(filepath.Join(l.cfg.Home, "data"), dst)
-
-		if err != nil {
+		if err = copy.Copy(filepath.Join(l.cfg.Home, "data"), dst); err != nil {
 			return fmt.Errorf("error while taking data backup: %w", err)
 		}
 
@@ -161,8 +165,9 @@ func (l Launcher) doBackup() error {
 	return nil
 }
 
-// doPreUpgrade runs the pre-upgrade command defined by the application and handles respective error codes
-// cfg contains the cosmovisor config from env var
+// doPreUpgrade runs the pre-upgrade command defined by the application and handles respective error codes.
+// cfg contains the cosmovisor config from env var.
+// doPreUpgrade runs the new APP binary in order to process the upgrade (post-upgrade for cosmovisor).
 func (l *Launcher) doPreUpgrade() error {
 	counter := 0
 	for {
@@ -170,18 +175,16 @@ func (l *Launcher) doPreUpgrade() error {
 			return fmt.Errorf("pre-upgrade command failed. reached max attempt of retries - %d", l.cfg.PreupgradeMaxRetries)
 		}
 
-		err := l.executePreUpgradeCmd()
-		counter += 1
+		if err := l.executePreUpgradeCmd(); err != nil {
+			counter += 1
 
-		if err != nil {
-			if err.(*exec.ExitError).ProcessState.ExitCode() == 1 {
+			switch err.(*exec.ExitError).ProcessState.ExitCode() {
+			case 1:
 				l.logger.Info().Msg("pre-upgrade command does not exist. continuing the upgrade.")
 				return nil
-			}
-			if err.(*exec.ExitError).ProcessState.ExitCode() == 30 {
+			case 30:
 				return fmt.Errorf("pre-upgrade command failed : %w", err)
-			}
-			if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
+			case 31:
 				l.logger.Error().Err(err).Int("attempt", counter).Msg("pre-upgrade command failed. retrying")
 				continue
 			}
@@ -193,32 +196,36 @@ func (l *Launcher) doPreUpgrade() error {
 }
 
 // executePreUpgradeCmd runs the pre-upgrade command defined by the application
-// cfg contains the cosmosvisor config from the env vars
+// cfg contains the cosmovisor config from the env vars
 func (l *Launcher) executePreUpgradeCmd() error {
 	bin, err := l.cfg.CurrentBin()
+	if err != nil {
+		return fmt.Errorf("error while getting current binary path: %w", err)
+	}
+
+	result, err := exec.Command(bin, "pre-upgrade").Output()
 	if err != nil {
 		return err
 	}
 
-	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
-	_, err = preUpgradeCmd.Output()
-	return err
+	l.logger.Info().Bytes("result", result).Msg("pre-upgrade result")
+	return nil
 }
 
-// IsSkipUpgradeHeight checks if pre-upgrade script must be run. If the height in the upgrade plan matches any of the heights provided in --safe-skip-upgrade, the script is not run
+// IsSkipUpgradeHeight checks if pre-upgrade script must be run.
+// If the height in the upgrade plan matches any of the heights provided in --unsafe-skip-upgrades, the script is not run.
 func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
 	skipUpgradeHeights := UpgradeSkipHeights(args)
 	for _, h := range skipUpgradeHeights {
 		if h == int(upgradeInfo.Height) {
 			return true
 		}
-
 	}
 	return false
 }
 
 // UpgradeSkipHeights gets all the heights provided when
-// 		simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
+// simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
 func UpgradeSkipHeights(args []string) []int {
 	var heights []int
 	for i, arg := range args {

@@ -130,3 +130,32 @@ message TallyParams {
   //  vetoed. Default value: 1/3.
   string veto_threshold = 3 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.jsontag) = "veto_threshold,omitempty"];
 }
+
+// Params defines the parameters for the x/gov module.
+//
+// Since: cosmos-sdk 0.47
+message Params {
+  //  Minimum deposit for a proposal to enter voting period.
+  repeated cosmos.base.v1beta1.Coin min_deposit = 1 [(gogoproto.nullable) = false];
+
+  //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2
+  //  months.
+  google.protobuf.Duration max_deposit_period = 2 [(gogoproto.stdduration) = true];
+
+  //  Length of the voting period.
+  google.protobuf.Duration voting_period = 3 [(gogoproto.stdduration) = true];
+
+  //  Minimum percentage of total stake needed to vote for a result to be
+  //  considered valid.
+  string quorum = 4 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  //  Minimum proportion of Yes votes for proposal to pass. Default value: 0.5.
+  string threshold = 5 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  //  Minimum value of Veto votes to Total votes ratio for proposal to be
+  //  vetoed. Default value: 1/3.
+  string veto_threshold = 6 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  //  The ratio representing the proportion of the deposit value that must be paid at proposal submission.
+  string min_initial_deposit_ratio = 7 [(cosmos_proto.scalar) = "cosmos.Dec"];
+}

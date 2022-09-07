@@ -4,18 +4,21 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	v046 "github.com/cosmos/cosmos-sdk/x/feegrant/migrations/v046"
+	feegranttestutil "github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMigration(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
-	cdc := encCfg.Codec
+	var cdc codec.Codec
+	depinject.Inject(feegranttestutil.AppConfig, &cdc)
+
 	feegrantKey := sdk.NewKVStoreKey(v046.ModuleName)
 	ctx := testutil.DefaultContext(feegrantKey, sdk.NewTransientStoreKey("transient_test"))
 	granter1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())

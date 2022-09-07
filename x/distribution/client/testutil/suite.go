@@ -6,16 +6,17 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -38,7 +39,8 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := network.DefaultConfig()
+	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
+	s.Require().NoError(err)
 	cfg.NumValidators = 1
 	s.cfg = cfg
 
@@ -102,6 +104,48 @@ withdraw_addr_enabled: true`,
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryValidatorDistributionInfo() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"invalid val address",
+			[]string{"invalid address", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"json output",
+			[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+		{
+			"text output",
+			[]string{val.ValAddress.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryValidatorDistributionInfo()
+			clientCtx := val.ClientCtx
+
+			_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
 		})
 	}
 }
@@ -472,7 +516,8 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, 0, nil, []string{},
+			true, 0, nil,
+			[]string{},
 		},
 		{
 			"valid transaction",
@@ -483,7 +528,8 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, []string{
+			false, 0, &sdk.TxResponse{},
+			[]string{
 				"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
 			},
 		},
@@ -497,7 +543,8 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, []string{
+			false, 0, &sdk.TxResponse{},
+			[]string{
 				"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
 				"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse",
 			},
@@ -535,14 +582,14 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 						// can't use unpackAny as response types are not registered.
 						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
 						s.Require().NoError(err)
-						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))),
+						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))),
 							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
 					case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse":
 						var resp distrtypes.MsgWithdrawValidatorCommissionResponse
 						// can't use unpackAny as response types are not registered.
 						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
 						s.Require().NoError(err)
-						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))),
+						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))),
 							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
 					}
 				}
@@ -570,7 +617,8 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, 0, nil, []string{},
+			true, 0, nil,
+			[]string{},
 		},
 		{
 			"valid transaction",
@@ -580,7 +628,8 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{}, []string{
+			false, 0, &sdk.TxResponse{},
+			[]string{
 				"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
 			},
 		},
@@ -590,7 +639,6 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			cmd := cli.NewWithdrawAllRewardsCmd()
 			clientCtx := val.ClientCtx
 
@@ -620,14 +668,14 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 						// can't use unpackAny as response types are not registered.
 						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
 						s.Require().NoError(err)
-						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))),
+						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))),
 							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
 					case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse":
 						var resp distrtypes.MsgWithdrawValidatorCommissionResponse
 						// can't use unpackAny as response types are not registered.
 						err = s.cfg.Codec.Unmarshal(msgResponse.Value, &resp)
 						s.Require().NoError(err)
-						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))),
+						s.Require().True(resp.Amount.IsAllGT(sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))),
 							fmt.Sprintf("expected a positive coin value, got %v", resp.Amount))
 					}
 				}
@@ -741,94 +789,6 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
-	val := s.network.Validators[0]
-	invalidProp := `{
-  "title": "",
-  "description": "Pay me some Atoms!",
-  "recipient": "foo",
-  "amount": "-343foocoin",
-  "deposit": -324foocoin
-}`
-
-	// fund some tokens to the community pool
-	args := []string{sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431))).String(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String())}
-
-	invalidPropFile := testutil.WriteToNewTempFile(s.T(), invalidProp)
-	cmd := cli.NewFundCommunityPoolCmd()
-	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	s.Require().NoError(err)
-
-	var txResp sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().Equal(uint32(0), txResp.Code)
-
-	validProp := fmt.Sprintf(`{
-  "title": "Community Pool Spend",
-  "description": "Pay me some Atoms!",
-  "recipient": "%s",
-  "amount": "%s",
-  "deposit": "%s"
-}`, val.Address.String(), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
-
-	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectedCode uint32
-		respType     proto.Message
-	}{
-		{
-			"invalid proposal",
-			[]string{
-				invalidPropFile.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true, 0, nil,
-		},
-		{
-			"valid transaction",
-			[]string{
-				validPropFile.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, 0, &sdk.TxResponse{},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdSubmitProposal()
-			clientCtx := val.ClientCtx
-			flags.AddTxFlagsToCmd(cmd)
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})
 	}

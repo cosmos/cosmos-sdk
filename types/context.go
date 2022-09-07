@@ -38,6 +38,7 @@ type Context struct {
 	minGasPrice   DecCoins
 	consParams    *tmproto.ConsensusParams
 	eventManager  *EventManager
+	priority      int64 // The tx priority, only relevant in CheckTx
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -58,10 +59,11 @@ func (c Context) IsCheckTx() bool             { return c.checkTx }
 func (c Context) IsReCheckTx() bool           { return c.recheckTx }
 func (c Context) MinGasPrices() DecCoins      { return c.minGasPrice }
 func (c Context) EventManager() *EventManager { return c.eventManager }
+func (c Context) Priority() int64             { return c.priority }
 
 // clone the header before returning
 func (c Context) BlockHeader() tmproto.Header {
-	var msg = proto.Clone(&c.header).(*tmproto.Header)
+	msg := proto.Clone(&c.header).(*tmproto.Header)
 	return *msg
 }
 
@@ -226,6 +228,12 @@ func (c Context) WithEventManager(em *EventManager) Context {
 	return c
 }
 
+// WithEventManager returns a Context with an updated tx priority
+func (c Context) WithPriority(p int64) Context {
+	c.priority = p
+	return c
+}
+
 // TODO: remove???
 func (c Context) IsZero() bool {
 	return c.ms == nil
@@ -260,11 +268,18 @@ func (c Context) TransientStore(key storetypes.StoreKey) KVStore {
 
 // CacheContext returns a new Context with the multi-store cached and a new
 // EventManager. The cached context is written to the context when writeCache
-// is called.
+// is called. Note, events are automatically emitted on the parent context's
+// EventManager when the caller executes the write.
 func (c Context) CacheContext() (cc Context, writeCache func()) {
 	cms := c.MultiStore().CacheMultiStore()
 	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
-	return cc, cms.Write
+
+	writeCache = func() {
+		c.EventManager().EmitEvents(cc.EventManager().Events())
+		cms.Write()
+	}
+
+	return cc, writeCache
 }
 
 var _ context.Context = Context{}

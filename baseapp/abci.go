@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -17,9 +18,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // Supported ABCI Query prefixes
@@ -143,7 +144,6 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
@@ -209,7 +209,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 // EndBlock implements the ABCI interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-
 	if app.deliverState.ms.TracingEnabled() {
 		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
 	}
@@ -233,6 +232,18 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	return res
 }
 
+// ProcessProposal implements the ability for the application to verify and/or modify transactions in a block proposal.
+func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	// treated as a noop until app side mempool is implemented
+	return abci.ResponsePrepareProposal{Txs: req.Txs}
+}
+
+// ProcessProposal implements the ability for the application to verify transactions in a block proposal, and decide if they should accept the block or not.
+func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	// accept all proposed blocks until app side mempool is implemented
+	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+}
+
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
 // CheckTx mode, messages are not executed. This means messages are only validated
 // and only the AnteHandler is executed. State is persisted to the BaseApp's
@@ -240,7 +251,6 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // will contain releveant error information. Regardless of tx execution outcome,
 // the ResponseCheckTx will contain relevant gas execution context.
 func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
-
 	var mode runTxMode
 
 	switch {
@@ -254,18 +264,19 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
 	}
 
-	ctx := app.getContextForTx(mode, req.Tx)
-	res, checkRes, err := app.txHandler.CheckTx(ctx, tx.Request{TxBytes: req.Tx}, tx.RequestCheckTx{Type: req.Type})
+	gInfo, result, anteEvents, priority, err := app.runTx(mode, req.Tx)
 	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+		return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace)
 	}
 
-	abciRes, err := convertTxResponseToCheckTx(res, checkRes)
-	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+	return abci.ResponseCheckTx{
+		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+		Priority:  priority,
 	}
-
-	return abciRes
 }
 
 // DeliverTx implements the ABCI interface and executes a tx in DeliverTx mode.
@@ -274,30 +285,29 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
+	gInfo := sdk.GasInfo{}
+	resultStr := "successful"
 
-	var abciRes abci.ResponseDeliverTx
 	defer func() {
-		for _, streamingListener := range app.abciListeners {
-			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
-				app.logger.Error("DeliverTx listening hook failed", "err", err)
-			}
-		}
+		telemetry.IncrCounter(1, "tx", "count")
+		telemetry.IncrCounter(1, "tx", resultStr)
+		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
+		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
 	}()
 
-	ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
-	res, err := app.txHandler.DeliverTx(ctx, tx.Request{TxBytes: req.Tx})
+	gInfo, result, anteEvents, _, err := app.runTx(runTxModeDeliver, req.Tx)
 	if err != nil {
-		abciRes = sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
-		return abciRes
+		resultStr = "failed"
+		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, sdk.MarkEventsToIndex(anteEvents, app.indexEvents), app.trace)
 	}
 
-	abciRes, err = convertTxResponseToDeliverTx(res)
-	if err != nil {
-		return sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+	return abci.ResponseDeliverTx{
+		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
-
-	return abciRes
-
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in
@@ -308,7 +318,6 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
-
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
@@ -392,6 +401,10 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		req.Height = app.LastBlockHeight()
 	}
 
+	telemetry.IncrCounter(1, "query", "count")
+	telemetry.IncrCounter(1, "query", req.Path)
+	defer telemetry.MeasureSince(time.Now(), req.Path)
+
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths
 	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {
@@ -400,7 +413,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	path := SplitABCIQueryPath(req.Path)
 	if len(path) == 0 {
-		sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
+		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
 	}
 
 	switch path[0] {
@@ -413,9 +426,6 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	case QueryPathP2P:
 		return handleQueryP2P(app, path)
-
-	case QueryPathCustom:
-		return handleQueryCustom(app, path, req)
 	}
 
 	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), app.trace)
@@ -809,43 +819,6 @@ func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 	return resp
 }
 
-func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
-	// path[0] should be "custom" because "/custom" prefix is required for keeper
-	// queries.
-	//
-	// The QueryRouter routes using path[1]. For example, in the path
-	// "custom/gov/proposal", QueryRouter routes using "gov".
-	if len(path) < 2 || path[1] == "" {
-		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no route for custom query specified"), app.trace)
-	}
-
-	querier := app.queryRouter.Route(path[1])
-	if querier == nil {
-		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no custom querier found for route %s", path[1]), app.trace)
-	}
-
-	ctx, err := app.createQueryContext(req.Height, req.Prove)
-	if err != nil {
-		return sdkerrors.QueryResult(err, app.trace)
-	}
-
-	// Passes the rest of the path as an argument to the querier.
-	//
-	// For example, in the path "custom/gov/proposal/test", the gov querier gets
-	// []string{"proposal", "test"} as the path.
-	resBytes, err := querier(ctx, path[2:], req)
-	if err != nil {
-		res := sdkerrors.QueryResult(err, app.trace)
-		res.Height = req.Height
-		return res
-	}
-
-	return abci.ResponseQuery{
-		Height: req.Height,
-		Value:  resBytes,
-	}
-}
-
 // SplitABCIQueryPath splits a string path using the delimiter '/'.
 //
 // e.g. "this/is/funny" becomes []string{"this", "is", "funny"}
@@ -858,38 +831,4 @@ func SplitABCIQueryPath(requestPath string) (path []string) {
 	}
 
 	return path
-}
-
-// makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.
-func makeABCIData(txRes tx.Response) ([]byte, error) {
-	return proto.Marshal(&sdk.TxMsgData{MsgResponses: txRes.MsgResponses})
-}
-
-// convertTxResponseToCheckTx converts a tx.Response into a abci.ResponseCheckTx.
-func convertTxResponseToCheckTx(txRes tx.Response, checkRes tx.ResponseCheckTx) (abci.ResponseCheckTx, error) {
-	data, err := makeABCIData(txRes)
-	if err != nil {
-		return abci.ResponseCheckTx{}, nil
-	}
-
-	return abci.ResponseCheckTx{
-		Data:     data,
-		Log:      txRes.Log,
-		Events:   txRes.Events,
-		Priority: checkRes.Priority,
-	}, nil
-}
-
-// convertTxResponseToDeliverTx converts a tx.Response into a abci.ResponseDeliverTx.
-func convertTxResponseToDeliverTx(txRes tx.Response) (abci.ResponseDeliverTx, error) {
-	data, err := makeABCIData(txRes)
-	if err != nil {
-		return abci.ResponseDeliverTx{}, nil
-	}
-
-	return abci.ResponseDeliverTx{
-		Data:   data,
-		Log:    txRes.Log,
-		Events: txRes.Events,
-	}, nil
 }

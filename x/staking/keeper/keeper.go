@@ -3,12 +3,13 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -18,26 +19,24 @@ var _ types.ValidatorSet = Keeper{}
 // Implements DelegationSet interface
 var _ types.DelegationSet = Keeper{}
 
-// keeper of the staking store
+// Keeper of the x/staking store
 type Keeper struct {
 	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
 	hooks      types.StakingHooks
-	paramstore paramtypes.Subspace
+	authority  string
 }
 
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, key storetypes.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
-	ps paramtypes.Subspace,
-) Keeper {
-	// set KeyTable if it has not already been set
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
-	}
-
+	cdc codec.BinaryCodec,
+	key storetypes.StoreKey,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	authority string,
+) *Keeper {
 	// ensure bonded and not bonded module accounts are set
 	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
@@ -47,13 +46,18 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
-	return Keeper{
+	// ensure that authority is a valid AccAddress
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(("authority is not a valid acc address"))
+	}
+
+	return &Keeper{
 		storeKey:   key,
 		cdc:        cdc,
 		authKeeper: ak,
 		bankKeeper: bk,
-		paramstore: ps,
 		hooks:      nil,
+		authority:  authority,
 	}
 }
 
@@ -62,24 +66,22 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// Set the validator hooks
-func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
+// SetHooks Set the validator hooks
+func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	if k.hooks != nil {
 		panic("cannot set validator hooks twice")
 	}
 
 	k.hooks = sh
-
-	return k
 }
 
-// Load the last total validator power.
-func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
+// GetLastTotalPower Load the last total validator power.
+func (k Keeper) GetLastTotalPower(ctx sdk.Context) math.Int {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.LastTotalPowerKey)
 
 	if bz == nil {
-		return sdk.ZeroInt()
+		return math.ZeroInt()
 	}
 
 	ip := sdk.IntProto{}
@@ -88,9 +90,14 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 	return ip.Int
 }
 
-// Set the last total validator power.
-func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
+// SetLastTotalPower Set the last total validator power.
+func (k Keeper) SetLastTotalPower(ctx sdk.Context, power math.Int) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: power})
 	store.Set(types.LastTotalPowerKey, bz)
+}
+
+// GetAuthority returns the x/staking module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }

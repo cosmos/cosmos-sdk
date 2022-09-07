@@ -151,7 +151,6 @@ func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNF
 		return nil, nft.ErrNFTNotExists.Wrapf("not found nft: class: %s, id: %s", r.ClassId, r.Id)
 	}
 	return &nft.QueryNFTResponse{Nft: &n}, nil
-
 }
 
 // Class return an NFT class based on its id
@@ -191,7 +190,6 @@ func (k Keeper) Classes(goCtx context.Context, r *nft.QueryClassesRequest) (*nft
 		classes = append(classes, &class)
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}

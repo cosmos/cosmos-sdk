@@ -28,7 +28,7 @@ func NewLocalRecord(name string, priv cryptotypes.PrivKey, pk cryptotypes.PubKey
 		return nil, err
 	}
 
-	recordLocal := &Record_Local{any, priv.Type()}
+	recordLocal := &Record_Local{any}
 	recordLocalItem := &Record_Local_{recordLocal}
 
 	return newRecord(name, pk, recordLocalItem)

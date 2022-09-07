@@ -117,6 +117,8 @@ message Validator {
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false];
   // min_self_delegation is the validator's self declared minimum self delegation.
+  //
+  // Since: cosmos-sdk 0.46
   string min_self_delegation = 11 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -280,7 +282,7 @@ message Redelegation {
   repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries
 }
 
-// Params defines the parameters for the staking module.
+// Params defines the parameters for the x/staking module.
 message Params {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;

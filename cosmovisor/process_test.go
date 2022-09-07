@@ -6,6 +6,7 @@ package cosmovisor_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -32,7 +33,7 @@ func (s *processTestSuite) TestLaunchProcess() {
 	logger := cosmovisor.NewLogger()
 
 	// should run the genesis binary and produce expected output
-	var stdout, stderr = NewBuffer(), NewBuffer()
+	stdout, stderr := NewBuffer(), NewBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(err)
 	require.Equal(cfg.GenesisBin(), currentBin)
@@ -47,11 +48,9 @@ func (s *processTestSuite) TestLaunchProcess() {
 	require.NoError(err)
 	require.True(doUpgrade)
 	require.Equal("", stderr.String())
-	require.Equal(fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", upgradeFile),
-		stdout.String())
+	require.Equal(fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", upgradeFile), stdout.String())
 
 	// ensure this is upgraded now and produces new output
-
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(err)
 
@@ -68,6 +67,37 @@ func (s *processTestSuite) TestLaunchProcess() {
 
 	// ended without other upgrade
 	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
+}
+
+func (s *processTestSuite) TestLaunchProcessWithRestartDelay() {
+	// binaries from testdata/validate directory
+	require := s.Require()
+	home := copyTestData(s.T(), "validate")
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", RestartDelay: 5 * time.Second, PollInterval: 20, UnsafeSkipBackup: true}
+	logger := cosmovisor.NewLogger()
+
+	// should run the genesis binary and produce expected output
+	stdout, stderr := NewBuffer(), NewBuffer()
+	currentBin, err := cfg.CurrentBin()
+	require.NoError(err)
+	require.Equal(cfg.GenesisBin(), currentBin)
+
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
+	require.NoError(err)
+
+	upgradeFile := cfg.UpgradeInfoFilePath()
+
+	start := time.Now()
+
+	doUpgrade, err := launcher.Run([]string{"foo", "bar", "1234", upgradeFile}, stdout, stderr)
+	require.NoError(err)
+	require.True(doUpgrade)
+
+	// may not be the best way but the fastest way to check we meet the delay
+	// in addition to comparing both the runtime of this test and TestLaunchProcess in addition
+	if time.Since(start) < cfg.RestartDelay {
+		require.FailNow("restart delay not met")
+	}
 }
 
 // TestLaunchProcess will try running the script a few times and watch upgrades work properly
@@ -91,7 +121,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(err)
 
-	var stdout, stderr = NewBuffer(), NewBuffer()
+	stdout, stderr := NewBuffer(), NewBuffer()
 	args := []string{"some", "args", upgradeFilename}
 	doUpgrade, err := launcher.Run(args, stdout, stderr)
 

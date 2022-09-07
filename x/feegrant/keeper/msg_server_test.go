@@ -6,7 +6,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestGrantAllowance() {
-	oneYear := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
+	oneYear := suite.ctx.BlockTime().AddDate(1, 0, 0)
 
 	testCases := []struct {
 		name      string
@@ -127,7 +127,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestRevokeAllowance() {
-	oneYear := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
+	oneYear := suite.ctx.BlockTime().AddDate(1, 0, 0)
 
 	testCases := []struct {
 		name      string
@@ -218,5 +218,4 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			}
 		})
 	}
-
 }

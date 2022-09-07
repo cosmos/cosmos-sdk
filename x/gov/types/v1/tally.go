@@ -1,22 +1,23 @@
 package v1
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ValidatorGovInfo used for tallying
 type ValidatorGovInfo struct {
 	Address             sdk.ValAddress      // address of the validator operator
-	BondedTokens        sdk.Int             // Power of a Validator
-	DelegatorShares     sdk.Dec             // Total outstanding delegator shares
-	DelegatorDeductions sdk.Dec             // Delegator deductions from validator's delegators voting independently
+	BondedTokens        math.Int            // Power of a Validator
+	DelegatorShares     math.LegacyDec      // Total outstanding delegator shares
+	DelegatorDeductions math.LegacyDec      // Delegator deductions from validator's delegators voting independently
 	Vote                WeightedVoteOptions // Vote of the validator
 }
 
 // NewValidatorGovInfo creates a ValidatorGovInfo instance
-func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegatorShares,
-	delegatorDeductions sdk.Dec, options WeightedVoteOptions) ValidatorGovInfo {
-
+func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens math.Int, delegatorShares,
+	delegatorDeductions sdk.Dec, options WeightedVoteOptions,
+) ValidatorGovInfo {
 	return ValidatorGovInfo{
 		Address:             address,
 		BondedTokens:        bondedTokens,
@@ -27,7 +28,7 @@ func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegator
 }
 
 // NewTallyResult creates a new TallyResult instance
-func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
+func NewTallyResult(yes, abstain, no, noWithVeto math.Int) TallyResult {
 	return TallyResult{
 		YesCount:        yes.String(),
 		AbstainCount:    abstain.String(),
@@ -48,7 +49,7 @@ func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
 
 // EmptyTallyResult returns an empty TallyResult.
 func EmptyTallyResult() TallyResult {
-	return NewTallyResult(sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt())
+	return NewTallyResult(math.ZeroInt(), math.ZeroInt(), math.ZeroInt(), math.ZeroInt())
 }
 
 // Equals returns if two tally results are equal.

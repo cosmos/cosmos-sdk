@@ -87,8 +87,12 @@ message SignDocDirectAux {
   // sequence is the sequence number of the signing account.
   uint64 sequence = 5;
 
-  // Tip is the optional tip used for meta-transactions. It should be left
-  // empty if the signer is not the tipper for this transaction.
+  // Tip is the optional tip used for transactions fees paid in another denom.
+  // It should be left empty if the signer is not the tipper for this
+  // transaction.
+  //
+  // This field is ignored if the chain didn't enable tips, i.e. didn't add the
+  // `TipDecorator` in its posthandler.
   Tip tip = 6;
 }
 
@@ -138,7 +142,10 @@ message AuthInfo {
   // of the signers. This can be estimated via simulation.
   Fee fee = 2;
 
-  // Tip is the optional tip used for meta-transactions.
+  // Tip is the optional tip used for transactions fees paid in another denom.
+  //
+  // This field is ignored if the chain didn't enable tips, i.e. didn't add the
+  // `TipDecorator` in its posthandler.
   //
   // Since: cosmos-sdk 0.46
   Tip tip = 3;

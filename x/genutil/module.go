@@ -4,14 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
+	"cosmossdk.io/core/appmodule"
+
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -23,7 +27,15 @@ var (
 )
 
 // AppModuleBasic defines the basic application module used by the genutil module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	GenTxValidator types.MessageValidator
+}
+
+// NewAppModuleBasic creates AppModuleBasic, validator is a function used to validate genesis
+// transactions.
+func NewAppModuleBasic(validator types.MessageValidator) AppModuleBasic {
+	return AppModuleBasic{validator}
+}
 
 // Name returns the genutil module's name.
 func (AppModuleBasic) Name() string {
@@ -49,11 +61,11 @@ func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, txEncodingConfig cl
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(&data, txEncodingConfig.TxJSONDecoder())
+	return types.ValidateGenesis(&data, txEncodingConfig.TxJSONDecoder(), b.GenTxValidator)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the genutil module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.ServeMux) {
 }
 
 // GetTxCmd returns no root tx command for the genutil module.
@@ -77,7 +89,6 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
 	txEncodingConfig client.TxEncodingConfig,
 ) module.AppModule {
-
 	return module.NewGenesisOnlyAppModule(AppModule{
 		AppModuleBasic:   AppModuleBasic{},
 		accountKeeper:    accountKeeper,
@@ -87,8 +98,7 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 	})
 }
 
-// InitGenesis performs genesis initialization for the genutil module. It returns
-// no validator updates.
+// InitGenesis performs genesis initialization for the genutil module.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
@@ -107,3 +117,27 @@ func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMe
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(provideModuleBasic, provideModule),
+	)
+}
+
+func provideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type genutilInputs struct {
+	depinject.In
+
+	AccountKeeper types.AccountKeeper
+	StakingKeeper types.StakingKeeper
+	DeliverTx     func(abci.RequestDeliverTx) abci.ResponseDeliverTx
+	Config        client.TxConfig
+}
+
+func provideModule(in genutilInputs) runtime.AppModuleWrapper {
+	m := NewAppModule(in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config)
+	return runtime.WrapAppModule(m)
+}

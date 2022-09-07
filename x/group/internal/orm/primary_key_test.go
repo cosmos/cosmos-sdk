@@ -223,7 +223,6 @@ func TestContains(t *testing.T) {
 		src PrimaryKeyed
 		exp bool
 	}{
-
 		"same object": {src: &obj, exp: true},
 		"clone": {
 			src: &testdata.TableModel{

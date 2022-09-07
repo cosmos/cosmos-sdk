@@ -92,7 +92,7 @@ func (s *upgradeTestSuite) assertCurrentLink(cfg cosmovisor.Config, target strin
 }
 
 // TODO: test with download (and test all download functions)
-func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
+func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 	home := copyTestData(s.T(), "validate")
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", AllowDownloadBinaries: true}
 	logger := cosmovisor.NewLogger()
@@ -105,7 +105,7 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 	// do upgrade ignores bad files
 	for _, name := range []string{"missing", "nobin", "noexec"} {
 		info := upgradetypes.Plan{Name: name}
-		err = cosmovisor.DoUpgrade(logger, cfg, info)
+		err = cosmovisor.UpgradeBinary(logger, cfg, info)
 		s.Require().Error(err, name)
 		currentBin, err := cfg.CurrentBin()
 		s.Require().NoError(err)
@@ -116,7 +116,7 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 	for _, upgrade := range []string{"chain2", "chain3"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
 		info := upgradetypes.Plan{Name: upgrade}
-		err = cosmovisor.DoUpgrade(logger, cfg, info)
+		err = cosmovisor.UpgradeBinary(logger, cfg, info)
 		s.Require().NoError(err)
 		// we should see current point to the new upgrade dir
 		upgradeBin := cfg.UpgradeBin(upgrade)

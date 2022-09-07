@@ -72,8 +72,9 @@ func (s queryServer) GetLatestBlock(ctx context.Context, _ *GetLatestBlockReques
 	}
 
 	return &GetLatestBlockResponse{
-		BlockId: &protoBlockID,
-		Block:   protoBlock,
+		BlockId:  &protoBlockID,
+		Block:    protoBlock,
+		SdkBlock: convertBlock(protoBlock),
 	}, nil
 }
 
@@ -94,8 +95,9 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeight
 	}
 
 	return &GetBlockByHeightResponse{
-		BlockId: &protoBlockID,
-		Block:   protoBlock,
+		BlockId:  &protoBlockID,
+		Block:    protoBlock,
+		SdkBlock: convertBlock(protoBlock),
 	}, nil
 }
 
@@ -201,7 +203,7 @@ func (s queryServer) GetNodeInfo(ctx context.Context, req *GetNodeInfoRequest) (
 	}
 
 	resp := GetNodeInfoResponse{
-		NodeInfo: protoNodeInfo,
+		DefaultNodeInfo: protoNodeInfo,
 		ApplicationVersion: &VersionInfo{
 			AppName:          nodeInfo.AppName,
 			Name:             nodeInfo.Name,

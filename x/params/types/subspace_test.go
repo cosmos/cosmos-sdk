@@ -6,23 +6,24 @@ import (
 	"testing"
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params/testutil"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type SubspaceTestSuite struct {
 	suite.Suite
 
-	cdc   codec.BinaryCodec
+	cdc   codec.Codec
 	amino *codec.LegacyAmino
 	ctx   sdk.Context
 	ss    types.Subspace
@@ -36,11 +37,13 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	ms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())
 
-	encCfg := simapp.MakeTestEncodingConfig()
-	ss := types.NewSubspace(encCfg.Codec, encCfg.Amino, key, tkey, "testsubspace")
+	err := depinject.Inject(testutil.AppConfig,
+		&suite.cdc,
+		&suite.amino,
+	)
+	suite.NoError(err)
 
-	suite.cdc = encCfg.Codec
-	suite.amino = encCfg.Amino
+	ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace")
 	suite.ctx = sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
 	suite.ss = ss.WithKeyTable(paramKeyTable())
 }
@@ -197,6 +200,29 @@ func (suite *SubspaceTestSuite) TestGetParamSet() {
 	suite.Require().Equal(a.UnbondingTime, b.UnbondingTime)
 	suite.Require().Equal(a.MaxValidators, b.MaxValidators)
 	suite.Require().Equal(a.BondDenom, b.BondDenom)
+}
+
+func (suite *SubspaceTestSuite) TestGetParamSetIfExists() {
+	a := params{
+		UnbondingTime: time.Hour * 48,
+		MaxValidators: 100,
+		BondDenom:     "stake",
+	}
+	suite.Require().NotPanics(func() {
+		suite.ss.Set(suite.ctx, keyUnbondingTime, a.UnbondingTime)
+		suite.ss.Set(suite.ctx, keyMaxValidators, a.MaxValidators)
+		suite.ss.Set(suite.ctx, keyBondDenom, a.BondDenom)
+	})
+
+	b := paramsV2{}
+	suite.Require().NotPanics(func() {
+		suite.ss.GetParamSetIfExists(suite.ctx, &b)
+	})
+	suite.Require().Equal(a.UnbondingTime, b.UnbondingTime)
+	suite.Require().Equal(a.MaxValidators, b.MaxValidators)
+	suite.Require().Equal(a.BondDenom, b.BondDenom)
+	suite.Require().Zero(b.MaxRedelegationEntries)
+	suite.Require().False(suite.ss.Has(suite.ctx, keyMaxRedelegationEntries), "key from the new param version should not yet exist")
 }
 
 func (suite *SubspaceTestSuite) TestSetParamSet() {

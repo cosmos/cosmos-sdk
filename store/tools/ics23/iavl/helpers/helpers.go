@@ -1,7 +1,7 @@
 /*
 Package helpers contains functions to build sample data for tests/testgen
 
-In it's own package to avoid poluting the godoc for ics23-iavl
+In it's own package to avoid polluting the godoc for ics23-iavl
 */
 package helpers
 
@@ -45,7 +45,7 @@ func GenerateIavlResult(size int, loc tmproofs.Where) (*IavlResult, error) {
 	if len(proof.Leaves) != 1 {
 		return nil, fmt.Errorf("GetWithProof returned %d leaves", len(proof.Leaves))
 	}
-	root := tree.WorkingHash()
+	root, _ := tree.WorkingHash()
 
 	res := &IavlResult{
 		Key:      key,
@@ -56,7 +56,7 @@ func GenerateIavlResult(size int, loc tmproofs.Where) (*IavlResult, error) {
 	return res, nil
 }
 
-// GetKey this returns a key, on Left/Right/Middle
+// GetKey returns a key, on Left/Right/Middle
 func GetKey(allkeys [][]byte, loc tmproofs.Where) []byte {
 	if loc == tmproofs.Left {
 		return allkeys[0]
@@ -65,7 +65,7 @@ func GetKey(allkeys [][]byte, loc tmproofs.Where) []byte {
 		return allkeys[len(allkeys)-1]
 	}
 	// select a random index between 1 and allkeys-2
-	idx := rand.Int()%(len(allkeys)-2) + 1
+	idx := rand.NewRand().Int()%(len(allkeys)-2) + 1
 	return allkeys[idx]
 }
 

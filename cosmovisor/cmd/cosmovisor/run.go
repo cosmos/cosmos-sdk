@@ -40,11 +40,12 @@ func Run(logger *zerolog.Logger, args []string, options ...RunOption) error {
 	}
 
 	doUpgrade, err := launcher.Run(args, runCfg.StdOut, runCfg.StdErr)
-	// if RestartAfterUpgrade, we launch after a successful upgrade (only condition LaunchProcess returns nil)
+	// if RestartAfterUpgrade, we launch after a successful upgrade (given that condition launcher.Run returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
 		logger.Info().Str("app", cfg.Name).Msg("upgrade detected, relaunching")
 		doUpgrade, err = launcher.Run(args, runCfg.StdOut, runCfg.StdErr)
 	}
+
 	if doUpgrade && err == nil {
 		logger.Info().Msg("upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
 	}

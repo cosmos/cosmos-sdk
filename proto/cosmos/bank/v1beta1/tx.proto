@@ -16,6 +16,12 @@ service Msg {
 
   // MultiSend defines a method for sending coins from some accounts to other accounts.
   rpc MultiSend(MsgMultiSend) returns (MsgMultiSendResponse);
+
+  // UpdateParams defines a governance operation for updating the x/bank module parameters.
+  // The authority is defined in the keeper.
+  //
+  // Since: cosmos-sdk 0.47
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 // MsgSend represents a message to send coins from one account to another.
@@ -40,9 +46,32 @@ message MsgMultiSend {
 
   option (gogoproto.equal) = false;
 
+  // Inputs, despite being `repeated`, only allows one sender input. This is
+  // checked in MsgMultiSend's ValidateBasic.
   repeated Input  inputs  = 1 [(gogoproto.nullable) = false];
   repeated Output outputs = 2 [(gogoproto.nullable) = false];
 }
 
 // MsgMultiSendResponse defines the Msg/MultiSend response type.
 message MsgMultiSendResponse {}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+//
+// Since: cosmos-sdk 0.47
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the governance account.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the x/bank parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+//
+// Since: cosmos-sdk 0.47
+message MsgUpdateParamsResponse {}

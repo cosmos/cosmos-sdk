@@ -43,21 +43,22 @@ func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 
 // Terminator AnteDecorator will get added to the chain to simplify decorator code
 // Don't need to check if next == nil further up the chain
-//                        ______
-//                     <((((((\\\
-//                     /      . }\
-//                     ;--..--._|}
-//  (\                 '--/\--'  )
-//   \\                | '-'  :'|
-//    \\               . -==- .-|
-//     \\               \.__.'   \--._
-//     [\\          __.--|       //  _/'--.
-//     \ \\       .'-._ ('-----'/ __/      \
-//      \ \\     /   __>|      | '--.       |
-//       \ \\   |   \   |     /    /       /
-//        \ '\ /     \  |     |  _/       /
-//         \  \       \ |     | /        /
-//   snd    \  \      \        /
+//
+//	                      ______
+//	                   <((((((\\\
+//	                   /      . }\
+//	                   ;--..--._|}
+//	(\                 '--/\--'  )
+//	 \\                | '-'  :'|
+//	  \\               . -==- .-|
+//	   \\               \.__.'   \--._
+//	   [\\          __.--|       //  _/'--.
+//	   \ \\       .'-._ ('-----'/ __/      \
+//	    \ \\     /   __>|      | '--.       |
+//	     \ \\   |   \   |     /    /       /
+//	      \ '\ /     \  |     |  _/       /
+//	       \  \       \ |     | /        /
+//	 snd    \  \      \        /
 type Terminator struct{}
 
 // Simply return provided Context and nil error

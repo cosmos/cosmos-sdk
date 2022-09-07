@@ -1,4 +1,4 @@
-//nolint
+// nolint
 package mock
 
 import (

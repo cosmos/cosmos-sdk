@@ -11,6 +11,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // Msg defines the bank Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // Send defines a method for sending coins from one account to another account.
   rpc Send(MsgSend) returns (MsgSendResponse);
 

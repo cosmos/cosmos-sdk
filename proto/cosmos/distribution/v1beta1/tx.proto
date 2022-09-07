@@ -12,6 +12,8 @@ import "cosmos/distribution/v1beta1/distribution.proto";
 
 // Msg defines the distribution Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // SetWithdrawAddress defines a method to change the withdraw address
   // for a delegator (or validator self-delegation).
   rpc SetWithdrawAddress(MsgSetWithdrawAddress)

@@ -10,6 +10,8 @@ import "cosmos_proto/cosmos.proto";
 
 // Msg defines the x/mint Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // UpdateParams defines a governance operation for updating the x/mint module
   // parameters. The authority is hard-coded to the x/gov module account.
   //

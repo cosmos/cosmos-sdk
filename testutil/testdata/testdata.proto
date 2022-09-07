@@ -16,6 +16,11 @@ message Cat {
   int32  lives   = 2;
 }
 
+message Bird {
+  string species = 1;
+  int32  color = 2;
+}
+
 message HasAnimal {
   google.protobuf.Any animal = 1;
   int64               x      = 2;

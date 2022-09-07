@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	tspb "google.golang.org/protobuf/types/known/timestamppb"
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/tx/textual/internal/testpb"
@@ -20,7 +21,7 @@ import (
 func TestFormatInteger(t *testing.T) {
 	type integerTest []string
 	var testcases []integerTest
-	raw, err := ioutil.ReadFile("../internal/testdata/integers.json")
+	raw, err := os.ReadFile("../internal/testdata/integers.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -67,7 +68,7 @@ func TestFormatInteger(t *testing.T) {
 func TestFormatDecimal(t *testing.T) {
 	type decimalTest []string
 	var testcases []decimalTest
-	raw, err := ioutil.ReadFile("../internal/testdata/decimals.json")
+	raw, err := os.ReadFile("../internal/testdata/decimals.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -116,6 +117,14 @@ func TestGetADR050ValueRenderer(t *testing.T) {
 	}
 }
 
+func TestTimestampDispatch(t *testing.T) {
+	a := (&testpb.A{}).ProtoReflect().Descriptor().Fields()
+	textual := valuerenderer.NewTextual()
+	rend, err := textual.GetValueRenderer(a.ByName(protoreflect.Name("TIMESTAMP")))
+	require.NoError(t, err)
+	require.IsType(t, valuerenderer.NewTimestampValueRenderer(), rend)
+}
+
 // valueRendererOf is like GetADR050ValueRenderer, but taking a Go type
 // as input instead of a protoreflect.FieldDescriptor.
 func valueRendererOf(v interface{}) (valuerenderer.ValueRenderer, error) {
@@ -138,6 +147,8 @@ func valueRendererOf(v interface{}) (valuerenderer.ValueRenderer, error) {
 		return textual.GetValueRenderer(a.ByName(protoreflect.Name("SDKINT")))
 	case math.LegacyDec:
 		return textual.GetValueRenderer(a.ByName(protoreflect.Name("SDKDEC")))
+	case tspb.Timestamp:
+		return textual.GetValueRenderer(a.ByName(protoreflect.Name("TIMESTAMP")))
 
 	// Invalid types for SIGN_MODE_TEXTUAL
 	case float32:

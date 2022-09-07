@@ -23,7 +23,6 @@ import (
 )
 
 func TestExpiredGrantsQueue(t *testing.T) {
-
 	key := sdk.NewKVStoreKey(keeper.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})

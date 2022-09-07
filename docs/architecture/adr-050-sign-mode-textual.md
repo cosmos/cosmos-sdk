@@ -5,7 +5,9 @@
 - Dec 06, 2021: Initial Draft.
 - Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
 - May 16, 2022: Change status to Accepted.
-- Aug 01, 2022: Add custom `Msg`-renderers.
+- Aug 11, 2022: Require signing over tx raw bytes.
+- Sep 07, 2022: Add custom `Msg`-renderers.
+
 
 ## Status
 
@@ -94,7 +96,7 @@ We define "transaction envelope" as all data in a transaction that is not in the
 ```
 Chain ID: <string>
 Account number: <uint64>
-*Public Key: <base64_string>
+*Public Key: <hex_string>
 Sequence: <uint64>
 <TxBody>                                                    // See #8.
 Fee: <coins>                                                // See value renderers for coins encoding.
@@ -113,9 +115,10 @@ Tip: <string>
 *<repeated Any>
 *This transaction has <int> other signers:                  // Skipped if there is only one signer
 *Signer (<int>/<int>):
-*Public Key: <base64_string>
+*Public Key: <hex_string>
 *Sequence: <uint64>
 *End of other signers
+*Hash of raw bytes: <hex_string>                            // Hex encoding of bytes defined in #10, to prevent tx hash malleability.
 ```
 
 ### 8. Encoding of the Transaction Body
@@ -199,6 +202,27 @@ pass_check()
 
 ### 10. Signing Payload and Wire Format
 
+### 10. Require signing over the `TxBody` and `AuthInfo` raw bytes
+
+Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L33), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:
+
+```
+*Hash of raw bytes: <HEX(sha256(len(body_bytes) ++ body_bytes ++ len(auth_info_bytes) ++ auth_info_bytes))>
+```
+
+where:
+- `++` denotes concatenation,
+- `HEX` is the hexadecimal representation of the bytes, all in capital letters, no `0x` prefix,
+- and `len()` is encoded as a Big-Endian uint64.
+
+This is to prevent transaction hash malleability. The point #1 about bijectivity assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could intercept a transaction, modify its transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL (by tweaking the byte ordering inside `body_bytes` or `auth_info_bytes`), and then submit it to Tendermint.
+
+By including this hash in the SIGN_MODE_TEXTUAL signing payload, we keep the same level of guarantees as [SIGN_MODE_DIRECT](./adr-020-protobuf-transaction-encoding.md).
+
+These bytes are only shown in expert mode, hence the leading `*`.
+
+### 11. Signing Payload and Wire Format
+
 This string array is encoded as a single `\n`-delimited string before transmitted to the hardware device, and this long string is the signing payload signed by the hardware wallet.
 
 ## Additional Formatting by the Hardware Device
@@ -261,7 +285,7 @@ SIGN_MODE_TEXTUAL:
 ```
 Chain ID: simapp-1
 Account number: 10
-*Public Key: iQ...==        // Base64 pubkey
+*Public Key: iQ...==        // Hex pubkey
 Sequence: 2
 This transaction has 1 message:
 Message (1/1): bank v1beta1 send coins
@@ -271,6 +295,7 @@ Amount: 10 atom            // Conversion from uatom to atom using value renderer
 End of transaction messages
 Fee: 0.002 atom
 *Gas: 100'000
+*Hash of raw bytes: <hex_string>
 ```
 
 #### Example 2: Multi-Msg Transaction with 3 signers
@@ -359,6 +384,7 @@ Tip: 200 ibc/CDC4587874B85BEA4FCEC3CEA5A1195139799A1FEE711A07D972537E18FDA39D
 *Sign mode: Direct Aux
 *Sequence: 42
 *End of other signers
+*Hash of raw bytes: <hex_string>
 ```
 
 #### Example 5: Complex Transaction with Nested Messages
@@ -505,6 +531,7 @@ Fee: 0.002 atom
 *Sign mode: Direct
 *Sequence: 42
 *End of other signers
+*Hash of raw bytes: <hex_string>
 ```
 
 ## Consequences
@@ -520,7 +547,7 @@ SIGN_MODE_TEXTUAL is purely additive, and doesn't break any backwards compatibil
 
 ### Negative
 
-- Some fields are still encoded in non-human-readable ways, such as public keys in base64.
+- Some fields are still encoded in non-human-readable ways, such as public keys in hexadecimal.
 - New ledger app needs to be released, still unclear
 
 ### Neutral

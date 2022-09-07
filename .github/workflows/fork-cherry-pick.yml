@@ -1,3 +1,5 @@
+#This CI is disabled on main and meant to be enabled on forks as an easy way to cherry pick fork commits into main.
+name: Cherry pick PR to Cosmos SDK
 on:
   #Set to trigger on every merge to main, not just a closed PR.
   workflow_dispatch:
@@ -27,7 +29,7 @@ jobs:
             git fetch --all                                   # Get the latest code
             git checkout -b pr-patch upstream/main    # Create new branch based on main branch
             git cherry-pick ${{github.event.pull_request.head.sha}}  # Cherry pick the latest commit of PR
-            git push -u origin pr-patch               # Push your changes to the remote branch
+            git push -u origin pr-patch-${{github.event.pull_request.head.sha}} # Push your changes to the remote branch
       - name: Autocreate PR
         shell: bash
         env: 
@@ -40,7 +42,7 @@ jobs:
             --data '{
               "title": "Automated PR for commit: ${{github.event.pull_request.head.sha}}",
               "body":"Please merge these awesome changes in!",
-              "head":"${{github.event.pull_request.user.login}}:pr-patch",
+              "head":"${{github.event.pull_request.user.login}}:pr-patch-${{github.event.pull_request.head.sha}}",
               "base":"main"
               }' \
             --fail

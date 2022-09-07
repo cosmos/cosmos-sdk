@@ -11,7 +11,8 @@ import (
 // NewSoftwareUpgradeProposalHandler creates a governance handler to manage new proposal types.
 // It enables SoftwareUpgradeProposal to propose an Upgrade, and CancelSoftwareUpgradeProposal
 // to abort a previously voted upgrade.
-//nolint: staticcheck // we are intentionally using a deprecated proposal here.
+//
+//nolint:staticcheck // we are intentionally using a deprecated proposal here.
 func NewSoftwareUpgradeProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {

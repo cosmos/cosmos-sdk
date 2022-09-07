@@ -8,17 +8,20 @@ import (
 )
 
 func (s *KeeperTestSuite) TestParams() {
+	ctx, keeper := s.ctx, s.slashingKeeper
+	require := s.Require()
+
 	minSignedPerWindow, err := sdk.NewDecFromStr("0.60")
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	slashFractionDoubleSign, err := sdk.NewDecFromStr("0.022")
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	slashFractionDowntime, err := sdk.NewDecFromStr("0.0089")
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	invalidVal, err := sdk.NewDecFromStr("-1")
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	testCases := []struct {
 		name      string
@@ -101,19 +104,24 @@ func (s *KeeperTestSuite) TestParams() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			expected := s.slashingKeeper.GetParams(s.ctx)
-			err := s.slashingKeeper.SetParams(s.ctx, tc.input)
+			expected := keeper.GetParams(ctx)
+			err := keeper.SetParams(ctx, tc.input)
 
 			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expErrMsg)
+				require.Error(err)
+				require.Contains(err.Error(), tc.expErrMsg)
 			} else {
 				expected = tc.input
-				s.Require().NoError(err)
+				require.NoError(err)
 			}
 
-			params := s.slashingKeeper.GetParams(s.ctx)
-			s.Require().Equal(expected, params)
+			params := keeper.GetParams(ctx)
+			require.Equal(params, expected)
+			require.Equal(keeper.SignedBlocksWindow(ctx), expected.SignedBlocksWindow)
+			require.Equal(keeper.MinSignedPerWindow(ctx), expected.MinSignedPerWindow.MulInt64(expected.SignedBlocksWindow).RoundInt64())
+			require.Equal(keeper.DowntimeJailDuration(ctx), expected.DowntimeJailDuration)
+			require.Equal(keeper.SlashFractionDoubleSign(ctx), expected.SlashFractionDoubleSign)
+			require.Equal(keeper.SlashFractionDowntime(ctx), expected.SlashFractionDowntime)
 		})
 	}
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ServerStartTime defines the time duration that the server need to stay running after startup
@@ -52,6 +53,9 @@ type (
 
 		// RegisterTendermintService registers the gRPC Query service for tendermint queries.
 		RegisterTendermintService(clientCtx client.Context)
+
+		// Return the multistore instance
+		CommitMultiStore() sdk.CommitMultiStore
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

@@ -144,6 +144,15 @@ type Options struct {
 	SupportedAlgos SigningAlgoList
 	// supported signing algorithms for Ledger
 	SupportedAlgosLedger SigningAlgoList
+	// define Ledger Derivation function
+	LedgerDerivation func() (ledger.SECP256K1, error)
+	// define Ledger key generation function
+	LedgerCreateKey func([]byte) types.PubKey
+	// define Ledger app name
+	LedgerAppName string
+	// indicate whether Ledger should skip DER Conversion on signature,
+	// depending on which format (DER or BER) the Ledger app returns signatures
+	LedgerSigSkipDERConv bool
 }
 
 // NewInMemory creates a transient keyring useful for testing
@@ -211,6 +220,22 @@ func newKeystore(kr keyring.Keyring, cdc codec.Codec, backend string, opts ...Op
 
 	for _, optionFn := range opts {
 		optionFn(&options)
+	}
+
+	if options.LedgerDerivation != nil {
+		ledger.SetDiscoverLedger(options.LedgerDerivation)
+	}
+
+	if options.LedgerCreateKey != nil {
+		ledger.SetCreatePubkey(options.LedgerCreateKey)
+	}
+
+	if options.LedgerAppName != "" {
+		ledger.SetAppName(options.LedgerAppName)
+	}
+
+	if options.LedgerSigSkipDERConv {
+		ledger.SetSkipDERConversion()
 	}
 
 	return keystore{
@@ -714,7 +739,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			}
 
 			buf := bufio.NewReader(buf)
-			pass, err := input.GetPassword("Enter keyring passphrase:", buf)
+			pass, err := input.GetPassword(fmt.Sprintf("Enter keyring passphrase (attempt %d/%d):", failureCounter, maxPassphraseEntryAttempts), buf)
 			if err != nil {
 				// NOTE: LGTM.io reports a false positive alert that states we are printing the password,
 				// but we only log the error.

@@ -110,6 +110,12 @@ func (s *utilsTestSuite) TestFormatTimeBytes() {
 	s.Require().Equal("2020-03-03T19:54:00.000000000", string(sdk.FormatTimeBytes(tm)))
 }
 
+func (s *utilsTestSuite) TestFormatTimeString() {
+	tm, err := time.Parse("Jan 2, 2006 at 3:04pm (MST)", "Mar 3, 2020 at 7:54pm (UTC)")
+	s.Require().NoError(err)
+	s.Require().Equal("2020-03-03T19:54:00.000000000", sdk.FormatTimeString(tm))
+}
+
 func (s *utilsTestSuite) TestParseTimeBytes() {
 	tm, err := sdk.ParseTimeBytes([]byte("2020-03-03T19:54:00.000000000"))
 	s.Require().NoError(err)
@@ -117,6 +123,58 @@ func (s *utilsTestSuite) TestParseTimeBytes() {
 
 	_, err = sdk.ParseTimeBytes([]byte{})
 	s.Require().Error(err)
+}
+
+func (s *utilsTestSuite) TestParseTime() {
+	testCases := []struct {
+		name           string
+		input          any
+		expectErr      bool
+		expectedOutput string
+	}{
+		{
+			name:      "valid time string",
+			input:     "2020-03-03T19:54:00.000000000",
+			expectErr: false,
+		},
+		{
+			name:      "valid time []byte",
+			input:     []byte("2020-03-03T19:54:00.000000000"),
+			expectErr: false,
+		},
+		{
+			name:      "valid time",
+			input:     time.Date(2020, 3, 3, 19, 54, 0, 0, time.UTC),
+			expectErr: false,
+		},
+		{
+			name: "valid time different timezone",
+			input: func() time.Time {
+				ams, _ := time.LoadLocation("Asia/Seoul") // no daylight saving time
+				return time.Date(2020, 3, 4, 4, 54, 0, 0, ams)
+			}(),
+			expectErr: false,
+		},
+		{
+			name:      "invalid time",
+			input:     struct{}{},
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			tm, err := sdk.ParseTime(tc.input)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().True(tm.Equal(time.Date(2020, 3, 3, 19, 54, 0, 0, time.UTC)))
+			}
+		})
+	}
 }
 
 func (s *utilsTestSuite) TestAppendParseBytes() {

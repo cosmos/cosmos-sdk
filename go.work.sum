@@ -1,8 +1,0 @@
-cosmossdk.io/core v0.1.1-0.20220726092710-f848e4300a8a/go.mod h1:NI7jc1kHeG47qN5RCEHuJQ8hpuy+I5l4iQ595nFCZno=
-cosmossdk.io/math v1.0.0-beta.3.0.20220726092710-f848e4300a8a/go.mod h1:3LYasri3Zna4XpbrTNdKsWmD5fHHkaNAod/mNT9XdE4=
-github.com/DataDog/zstd v1.5.2/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=
-github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1/go.mod h1:JUMM2MxF9wuwzRWZJjb8BjXsn1BmPmdBd3a75pIct4I=
-github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c/go.mod h1:Yg+htXGokKKdzcwhuNDwVvN+uBxDGXJ7G/VN1d8fa64=
-github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4/go.mod h1:5tD+neXqOorC30/tWg0LCSkrqj/AR6gu8yY8/fpw1q0=
-github.com/tendermint/tendermint v0.34.20-rc1/go.mod h1:u2xI6q3IeLQQ2NdIpRKLUKBNog0o7EzBpvDCE0/OTmg=
-github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=

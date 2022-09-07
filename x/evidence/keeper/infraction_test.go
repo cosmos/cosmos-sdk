@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -18,7 +20,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"time"
 )
 
 type InfractionTestSuite struct {
@@ -38,9 +39,7 @@ type InfractionTestSuite struct {
 }
 
 func (suite *InfractionTestSuite) SetupTest() {
-	var (
-		evidenceKeeper keeper.Keeper
-	)
+	var evidenceKeeper keeper.Keeper
 
 	app, err := simtestutil.Setup(testutil.AppConfig,
 		&evidenceKeeper,

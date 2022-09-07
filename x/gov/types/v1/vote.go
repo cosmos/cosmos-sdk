@@ -17,6 +17,7 @@ const (
 )
 
 // NewVote creates a new Vote instance
+//
 //nolint:interfacer
 func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions, metadata string) Vote {
 	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options, Metadata: metadata}
@@ -140,17 +141,6 @@ func ValidVoteOption(option VoteOption) bool {
 		return true
 	}
 	return false
-}
-
-// Marshal needed for protobuf compatibility.
-func (vo VoteOption) Marshal() ([]byte, error) {
-	return []byte{byte(vo)}, nil
-}
-
-// Unmarshal needed for protobuf compatibility.
-func (vo *VoteOption) Unmarshal(data []byte) error {
-	*vo = VoteOption(data[0])
-	return nil
 }
 
 // Format implements the fmt.Formatter interface.

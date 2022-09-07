@@ -27,6 +27,9 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// ChangePubKey allows accounts to update the public key associated with their
+	// account, while keeping the address the same.
+	ChangePubKey(ctx context.Context, in *MsgChangePubKey, opts ...grpc.CallOption) (*MsgChangePubKeyResponse, error)
 }
 
 type msgClient struct {
@@ -46,6 +49,15 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) ChangePubKey(ctx context.Context, in *MsgChangePubKey, opts ...grpc.CallOption) (*MsgChangePubKeyResponse, error) {
+	out := new(MsgChangePubKeyResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.Msg/ChangePubKey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -55,6 +67,9 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// ChangePubKey allows accounts to update the public key associated with their
+	// account, while keeping the address the same.
+	ChangePubKey(context.Context, *MsgChangePubKey) (*MsgChangePubKeyResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -64,6 +79,9 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (UnimplementedMsgServer) ChangePubKey(context.Context, *MsgChangePubKey) (*MsgChangePubKeyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangePubKey not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -96,6 +114,24 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ChangePubKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgChangePubKey)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ChangePubKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.auth.v1beta1.Msg/ChangePubKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ChangePubKey(ctx, req.(*MsgChangePubKey))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -106,6 +142,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "ChangePubKey",
+			Handler:    _Msg_ChangePubKey_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

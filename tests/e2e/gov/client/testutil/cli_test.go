@@ -20,7 +20,11 @@ func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
 	suite.Run(t, testutil.NewIntegrationTestSuite(cfg))
+}
 
+func TestDepositTestSuite(t *testing.T) {
+	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
+	cfg.NumValidators = 1
 	genesisState := v1.DefaultGenesisState()
 	maxDepPeriod := time.Duration(15) * time.Second
 	votingPeriod := time.Duration(5) * time.Second

@@ -794,7 +794,7 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 
 			var resp sdk.TxResponse
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-			s.Require().Equal(tc.expErrCode, resp.Code, resp)
+			s.checkTxCode(clientCtx, resp.TxHash, tc.expErrCode)
 		})
 	}
 }

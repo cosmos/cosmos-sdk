@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var (
@@ -87,7 +87,7 @@ func ParseTimeBytes(bz []byte) (time.Time, error) {
 
 // NewLevelDB instantiate a new LevelDB instance according to DBBackend.
 //
-// Deprecated: Use NewDB (from "github.com/tendermint/tm-db") instead. Suggested backendType is tendermint config's DBBackend value.
+// Deprecated: Use NewDB (from "github.com/cosmos/cosmos-db") instead. Suggested backendType is tendermint config's DBBackend value.
 func NewLevelDB(name, dir string) (db dbm.DB, err error) {
 	defer func() {
 		if r := recover(); r != nil {

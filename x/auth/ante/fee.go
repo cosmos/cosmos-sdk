@@ -47,10 +47,10 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	var (
-	  priority int64
-	  err error
+		priority int64
+		err      error
 	)
-	
+
 	fee := feeTx.GetFee()
 	if !simulate {
 		fee, priority, err = dfd.txFeeChecker(ctx, tx)

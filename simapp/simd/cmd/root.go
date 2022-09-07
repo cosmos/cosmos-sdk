@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

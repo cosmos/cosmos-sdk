@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	db "github.com/tendermint/tm-db"
+	db "github.com/cosmos/cosmos-db"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

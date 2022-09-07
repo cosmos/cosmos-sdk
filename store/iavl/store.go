@@ -7,11 +7,11 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
-	dbm "github.com/tendermint/tm-db"
 
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
@@ -171,7 +171,7 @@ func (st *Store) VersionExists(version int64) bool {
 
 // GetAllVersions returns all versions in the iavl tree
 func (st *Store) GetAllVersions() []int {
-	return st.tree.AvailableVersions()
+	return st.tree.(*iavl.MutableTree).AvailableVersions()
 }
 
 // Implements Store.
@@ -232,12 +232,6 @@ func (st *Store) Delete(key []byte) {
 // happen in a single batch with a single commit.
 func (st *Store) DeleteVersions(versions ...int64) error {
 	return st.tree.DeleteVersions(versions...)
-}
-
-// LoadVersionForOverwriting attempts to load a tree at a previously committed
-// version, or the latest version below it. Any versions greater than targetVersion will be deleted.
-func (st *Store) LoadVersionForOverwriting(targetVersion int64) (int64, error) {
-	return st.tree.LoadVersionForOverwriting(targetVersion)
 }
 
 // Implements types.KVStore.
@@ -311,7 +305,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "query")
 
 	if len(req.Data) == 0 {
-		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrTxDecode, "query cannot be zero length"), false)
+		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrTxDecode, "query cannot be zero length"))
 	}
 
 	tree := st.tree
@@ -376,7 +370,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		res.Value = bz
 
 	default:
-		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unexpected query path: %v", req.Path), false)
+		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unexpected query path: %v", req.Path))
 	}
 
 	return res
@@ -413,7 +407,7 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto
 
 //----------------------------------------
 
-// iavlIterator implements types.Iterator.
+// Implements types.Iterator.
 type iavlIterator struct {
 	dbm.Iterator
 }

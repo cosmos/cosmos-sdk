@@ -3,6 +3,7 @@ package streaming_test
 import (
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -13,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/stretchr/testify/require"
 )
@@ -81,7 +81,6 @@ func TestLoadStreamingServices(t *testing.T) {
 			require.Equal(t, tc.activeStreamersLen, len(activeStreamers))
 		})
 	}
-
 }
 
 type streamingAppOptions struct {

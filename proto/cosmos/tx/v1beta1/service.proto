@@ -8,7 +8,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "tendermint/types/block.proto";
 import "tendermint/types/types.proto";
 
-option go_package                       = "github.com/cosmos/cosmos-sdk/types/tx";
+option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
 // Service defines a gRPC service for interacting with transactions.
 service Service {
@@ -49,8 +49,9 @@ message GetTxsEventRequest {
   repeated string events = 1;
   // pagination defines a pagination for the request.
   // Deprecated post v0.46.x: use page and limit instead.
-  cosmos.base.query.v1beta1.PageRequest pagination = 2 [deprecated = true];;
-  OrderBy                               order_by   = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2 [deprecated = true];
+  ;
+  OrderBy order_by = 3;
   // page is the page number to query, starts at 1. If not provided, will default to first page.
   uint64 page = 4;
   // limit is the total number of results to be returned in the result page.
@@ -164,9 +165,9 @@ message GetBlockWithTxsRequest {
 // Since: cosmos-sdk 0.45.2
 message GetBlockWithTxsResponse {
   // txs are the transactions in the block.
-  repeated cosmos.tx.v1beta1.Tx txs = 1;
-  .tendermint.types.BlockID block_id = 2;
-  .tendermint.types.Block   block    = 3;
+  repeated cosmos.tx.v1beta1.Tx txs      = 1;
+  .tendermint.types.BlockID     block_id = 2;
+  .tendermint.types.Block       block    = 3;
   // pagination defines a pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 4;
 }

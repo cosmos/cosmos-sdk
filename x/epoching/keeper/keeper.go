@@ -3,11 +3,11 @@ package keeper
 import (
 	"time"
 
+	db "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	db "github.com/tendermint/tm-db"
 )
 
 const (

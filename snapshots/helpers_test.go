@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
+	db "github.com/cosmos/cosmos-db"
 	protoio "github.com/gogo/protobuf/io"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
-	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"

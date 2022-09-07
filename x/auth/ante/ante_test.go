@@ -511,7 +511,6 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 

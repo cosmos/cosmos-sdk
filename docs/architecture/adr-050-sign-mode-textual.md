@@ -6,6 +6,7 @@
 - Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
 - May 16, 2022: Change status to Accepted.
 - Aug 11, 2022: Require signing over tx raw bytes.
+- Sep 07, 2022: Add custom `Msg`-renderers.
 
 ## Status
 
@@ -158,6 +159,44 @@ Msg (1/1): authz v1beta1 grant
 Granter: cosmos1abc...def
 Grantee: cosmos1ghi...jkl
 End of transaction messages
+```
+
+### 9. Custom `Msg` Renderers
+
+Application developers may choose to not follow default renderer value output for their own `Msg`s. In this case, they can implement their own custom `Msg` renderer. This is similar to [EIP4430](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4430.md), where the smart contract developer chooses the description string to be shown to the end user.
+
+This is done by setting the `cosmos.msg.v1.textual.expert_custom_renderer` Protobuf option to a non-empty string. This option CAN ONLY be set on a Protobuf message representing transaction message object (implementing `sdk.Msg` interface).
+
+```proto
+message MsgFooBar {
+  // Optional comments to describe in human-readable language the formatting
+  // rules of the custom renderer.
+  option (cosmos.msg.v1.textual.expert_custom_renderer) = "<unique algorithm identifier>";
+
+  // proto fields
+}
+```
+
+When this option is set on a `Msg`, a registered function will transform the `Msg` into an array of one or more strings, which MAY use the key/value format (described in point #3) with the expert field prefix (described in point #5) and arbitrary indentation (point #6). These strings MAY be rendered from a `Msg` field using a default value renderer, or they may be generated from several fields using custom logic.
+
+The `<unique algorithm identifier>` is a string convention chosen by the application developer and is used to identify the custom `Msg` renderer. For example, the documentation or specification of this custom algorithm can reference this identifier. This identifier CAN have a versioned suffix (e.g. `_v1`) to adapt for future changes (which would be consensus-breaking). We also recommend adding Protobuf comments to describe in human language the custom logic used.
+
+Moreover, the renderer must provide 2 functions: one for formatting from Protobuf to string, and one for parsing string to Protobuf. These 2 functions are provided by the application developer. To satisfy point #1, these 2 functions MUST be bijective with each other. Bijectivity of these 2 functions will not be checked by the SDK at runtime. However, we strongly recommend the application developer to include a comprehensive suite in their app repo to test bijectivity, as to not introduce security bugs. A simple bijectivity test looks like:
+
+```
+// for renderer, msg, and ctx of the right type
+keyvals, err := renderer.Format(ctx, msg)
+if err != nil {
+    fail_check()
+}
+msg2, err := renderer.Parse(ctx, keyvals)
+if err != nil {
+    fail_check()
+}
+if !proto.Equal(msg, msg2) {
+    fail_check()
+}
+pass_check()
 ```
 
 ### 10. Require signing over the `TxBody` and `AuthInfo` raw bytes

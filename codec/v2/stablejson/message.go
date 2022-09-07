@@ -24,6 +24,8 @@ func (opts MarshalOptions) marshalMessage(writer *strings.Builder, value protore
 	case boolValueFullName, int32ValueFullName, int64ValueFullName, uint32ValueFullName, uint64ValueFullName,
 		stringValueFullName, bytesValueFullName, floatValueFullName, doubleValueFullName:
 		return false, opts.marshalWrapper(writer, value)
+	case fieldMaskFullName:
+		return false, marshalFieldMask(writer, value)
 	}
 
 	writer.WriteString("{")

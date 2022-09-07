@@ -24,11 +24,17 @@ type MarshalOptions struct {
 func (opts MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 	writer := &strings.Builder{}
 	firstStack := []bool{true}
+	skipNext := false
 	err := protorange.Options{
 		Stable: true,
 	}.Range(message.ProtoReflect(),
 		// push
 		func(p protopath.Values) error {
+			if skipNext {
+				skipNext = false
+				return protorange.Break
+			}
+
 			// Starting printing the value.
 			if !firstStack[len(firstStack)-1] {
 				writer.WriteString(",")
@@ -67,7 +73,8 @@ func (opts MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 				}
 
 				if !continueRange {
-					return protorange.Break
+					skipNext = true
+					return nil
 				}
 
 				firstStack = append(firstStack, true)

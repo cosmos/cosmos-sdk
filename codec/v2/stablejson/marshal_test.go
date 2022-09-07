@@ -86,7 +86,7 @@ func TestStableJSON(t *testing.T) {
 		StringValue: &wrapperspb.StringValue{Value: "gfedcba"},
 		Uint32Value: &wrapperspb.UInt32Value{Value: 37492},
 		Uint64Value: &wrapperspb.UInt64Value{Value: 1892409137358391},
-		FieldMask:   &fieldmaskpb.FieldMask{Paths: []string{"f", "a", "b"}},
+		FieldMask:   &fieldmaskpb.FieldMask{Paths: []string{"a.b", "a.c", "b"}},
 		ListValue:   &structpb.ListValue{Values: nil},
 		Value:       &structpb.Value{},
 		NullValue:   structpb.NullValue_NULL_VALUE,

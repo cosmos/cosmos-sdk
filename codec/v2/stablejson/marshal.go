@@ -13,6 +13,17 @@ import (
 )
 
 func Marshal(message proto.Message) ([]byte, error) {
+	return MarshalOptions{}.Marshal(message)
+}
+
+type MarshalOptions struct {
+	// HexBytes specifies whether bytes fields should be marshaled as upper-case
+	// hex strings. If set to false, bytes fields will be encoded as padded
+	// URL-safe base64 strings as specified by the official proto3 JSON mapping.
+	HexBytes bool
+}
+
+func (o MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	firstStack := []bool{true}
 	err := protorange.Options{

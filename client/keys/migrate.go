@@ -3,7 +3,6 @@ package keys
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/pkg/errors"
@@ -68,7 +67,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	)
 
 	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
-		tmpDir, err = ioutil.TempDir("", "migrator-migrate-dryrun")
+		tmpDir, err = os.MkdirTemp("", "migrator-migrate-dryrun")
 		if err != nil {
 			return errors.Wrap(err, "failed to create temporary directory for dryrun migration")
 		}

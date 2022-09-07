@@ -2,7 +2,6 @@ package mock
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -14,7 +13,7 @@ import (
 func SetupApp() (abci.Application, func(), error) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 		With("module", "mock")
-	rootDir, err := ioutil.TempDir("", "mock-sdk")
+	rootDir, err := os.MkdirTemp("", "mock-sdk")
 	if err != nil {
 		return nil, nil, err
 	}

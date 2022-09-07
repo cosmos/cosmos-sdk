@@ -34,6 +34,7 @@ handwritten CLI commands. This will mean that when developing a module, it will 
 testing CLI commands as that can all be taken care of by the framework.
 
 The basic design for automatically generating CLI commands is to:
+
 * create one CLI command for each `rpc` method in a protobuf `Query` or `Msg` service
 * create a CLI flag for each field in the `rpc` request type
 * for `query` commands call gRPC and print the response as protobuf JSON or YAML

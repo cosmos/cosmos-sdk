@@ -1,0 +1,9 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: cosmossdk.io/codec/v2/internal
+plugins:
+  - name: go-pulsar
+    out: .
+    opt: paths=source_relative

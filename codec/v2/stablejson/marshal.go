@@ -34,25 +34,37 @@ func Marshal(message proto.Message) ([]byte, error) {
 			case protopath.FieldAccessStep:
 				fd = last.Step.FieldDescriptor()
 				_, _ = fmt.Fprintf(buf, "%q:", fd.Name())
+
 			case protopath.ListIndexStep:
 				fd = beforeLast.Step.FieldDescriptor() // lists always appear in the context of a repeated field
+
 			case protopath.MapIndexStep:
 				fd = beforeLast.Step.FieldDescriptor() // maps always appear in the context of a repeated field
-				_, _ = fmt.Fprintf(buf, "%v:", last.Step.MapIndex().Interface())
+				_, _ = fmt.Fprintf(buf, "%q:", last.Step.MapIndex().String())
+				//last.Step.MapIndex().Interface().(type) {
+				//switch mapKey := last.Step.MapIndex().Interface().(type) {
+				//case string:
+				//	_, _ = fmt.Fprintf(buf, "%q", mapKey)
+				//default:
+				//	_, _ = fmt.Fprintf(buf, "%v", mapKey)
+				//}
+				//_, _ = fmt.Fprint(buf, ":")
+
 			case protopath.AnyExpandStep:
 				_, _ = fmt.Fprintf(buf, `"@type":%q`, last.Value.Message().Descriptor().FullName())
 				return nil
+
 			case protopath.UnknownAccessStep:
 				_, _ = fmt.Fprintf(buf, "?: ")
 			}
 
-			switch v := last.Value.Interface().(type) {
+			switch value := last.Value.Interface().(type) {
 			case protoreflect.Message:
-				if v.Descriptor().FullName() == timestampFullName {
+				if value.Descriptor().FullName() == timestampFullName {
 					return protorange.Break
 				}
 
-				if v.Descriptor().FullName() == durationFullName {
+				if value.Descriptor().FullName() == durationFullName {
 					return protorange.Break
 				}
 
@@ -67,17 +79,19 @@ func Marshal(message proto.Message) ([]byte, error) {
 			case protoreflect.EnumNumber:
 				var ev protoreflect.EnumValueDescriptor
 				if fd != nil {
-					ev = fd.Enum().Values().ByNumber(v)
+					ev = fd.Enum().Values().ByNumber(value)
 				}
 				if ev != nil {
-					_, _ = fmt.Fprintf(buf, "%v", ev.Name())
+					_, _ = fmt.Fprintf(buf, "%q", ev.Name())
 				} else {
-					_, _ = fmt.Fprintf(buf, "%v", v)
+					_, _ = fmt.Fprintf(buf, "%v", value)
 				}
-			case string, []byte:
-				_, _ = fmt.Fprintf(buf, "%q", v)
+			case string:
+				_, _ = fmt.Fprintf(buf, "%q", value)
+			case []byte:
+				_, _ = fmt.Fprintf(buf, "%X", value)
 			default:
-				_, _ = fmt.Fprintf(buf, "%v", v)
+				_, _ = fmt.Fprintf(buf, "%v", value)
 			}
 			return nil
 		},

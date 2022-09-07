@@ -9,10 +9,6 @@ on:
     # paths:
       # - "contrib/devtools/Dockerfile"
 
-permissions:
-  contents: read
-  packages: write
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: cosmos/proto-builder
@@ -25,6 +21,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       # set VERSION to new version when making changes, when merged to main the image will automatically be pushed
       - uses: actions/checkout@v3

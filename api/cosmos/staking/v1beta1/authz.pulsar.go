@@ -1286,6 +1286,7 @@ type StakeAuthorization struct {
 	// validators is the oneof that represents either allow_list or deny_list
 	//
 	// Types that are assignable to Validators:
+	//
 	//	*StakeAuthorization_AllowList
 	//	*StakeAuthorization_DenyList
 	Validators isStakeAuthorization_Validators `protobuf_oneof:"validators"`

@@ -200,8 +200,6 @@ if !proto.Equal(msg, msg2) {
 pass_check()
 ```
 
-### 10. Signing Payload and Wire Format
-
 ### 10. Require signing over the `TxBody` and `AuthInfo` raw bytes
 
 Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L33), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:

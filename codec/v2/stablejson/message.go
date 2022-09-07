@@ -6,20 +6,24 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func marshalMessage(writer *strings.Builder, value protoreflect.Message) (closingBrace bool, error error) {
+func (opts MarshalOptions) marshalMessage(writer *strings.Builder, value protoreflect.Message) (continueRange bool, error error) {
 	switch value.Descriptor().FullName() {
 	case timestampFullName:
 		return false, marshalTimestamp(writer, value)
 	case durationFullName:
 		return false, marshalDuration(writer, value)
 	case structFullName:
-		// here we let protorange marshal the fields, but just omit braces
-		return false, nil
+		return false, marshalStruct(writer, value)
 	case listValueFullName:
-		// here we let protorange marshal the values, but just omit braces
-		return false, nil
+		return false, marshalListValue(writer, value)
 	case valueFullName:
 		return false, marshalValue(writer, value)
+	case nullValueFullName:
+		writer.WriteString("null")
+		return false, nil
+	case boolValueFullName, int32ValueFullName, int64ValueFullName, uint32ValueFullName, uint64ValueFullName,
+		stringValueFullName, bytesValueFullName, floatValueFullName, doubleValueFullName:
+		return false, opts.marshalWrapper(writer, value)
 	}
 
 	writer.WriteString("{")
@@ -33,7 +37,6 @@ const (
 	valueFullName                             = "google.protobuf.Value"
 	listValueFullName                         = "google.protobuf.ListValue"
 	nullValueFullName                         = "google.protobuf.NullValue"
-	emptyFullName                             = "google.protobuf.Empty"
 	boolValueFullName                         = "google.protobuf.BoolValue"
 	stringValueFullName                       = "google.protobuf.StringValue"
 	bytesValueFullName                        = "google.protobuf.BytesValue"

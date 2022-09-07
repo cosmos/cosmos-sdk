@@ -1,7 +1,6 @@
 package stablejson
 
 import (
-	"encoding/base64"
 	"fmt"
 	"strings"
 
@@ -17,15 +16,14 @@ func Marshal(message proto.Message) ([]byte, error) {
 
 type MarshalOptions struct {
 	// HexBytes specifies whether bytes fields should be marshaled as upper-case
-	// hex strings. If set to false, bytes fields will be encoded as padded
-	// URL-safe base64 strings as specified by the official proto3 JSON mapping.
+	// hex strings. If set to false, bytes fields will be encoded as standard
+	// base64 strings as specified by the official proto3 JSON mapping.
 	HexBytes bool
 }
 
 func (opts MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 	writer := &strings.Builder{}
 	firstStack := []bool{true}
-	closingBraceStack := []bool{}
 	err := protorange.Options{
 		Stable: true,
 	}.Range(message.ProtoReflect(),
@@ -44,10 +42,7 @@ func (opts MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 			switch last.Step.Kind() {
 			case protopath.FieldAccessStep:
 				fd = last.Step.FieldDescriptor()
-				fullName := fd.FullName()
-				if fullName != structFieldsFullName && fullName != listValueValuesFullName {
-					_, _ = fmt.Fprintf(writer, "%q:", fd.Name())
-				}
+				_, _ = fmt.Fprintf(writer, "%q:", fd.Name())
 
 			case protopath.ListIndexStep:
 				fd = beforeLast.Step.FieldDescriptor() // lists always appear in the context of a repeated field
@@ -66,13 +61,16 @@ func (opts MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 
 			switch value := last.Value.Interface().(type) {
 			case protoreflect.Message:
-				closingBrace, err := marshalMessage(writer, value)
+				continueRange, err := opts.marshalMessage(writer, value)
 				if err != nil {
 					return err
 				}
 
+				if !continueRange {
+					return protorange.Break
+				}
+
 				firstStack = append(firstStack, true)
-				closingBraceStack = append(closingBraceStack, closingBrace)
 			case protoreflect.List:
 				writer.WriteString("[")
 				firstStack = append(firstStack, true)
@@ -91,31 +89,8 @@ func (opts MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 				}
 			case string:
 				_, _ = fmt.Fprintf(writer, "%q", value)
-			case []byte:
-				writer.WriteString(`"`)
-				if opts.HexBytes {
-					_, _ = fmt.Fprintf(writer, "%X", value)
-				} else {
-					b64 := base64.URLEncoding.EncodeToString(value)
-					writer.WriteString(b64)
-				}
-				writer.WriteString(`"`)
-			case bool:
-				_, _ = fmt.Fprintf(writer, "%t", value)
-			case int32:
-				_, _ = fmt.Fprintf(writer, "%d", value)
-			case uint32:
-				_, _ = fmt.Fprintf(writer, "%d", value)
-			case int64:
-				_, _ = fmt.Fprintf(writer, `"%d"`, value) // quoted
-			case uint64:
-				_, _ = fmt.Fprintf(writer, `"%d"`, value) // quoted
-			case float32:
-				marshalFloat(writer, float64(value))
-			case float64:
-				marshalFloat(writer, value)
 			default:
-				return fmt.Errorf("unexpected type %T", value)
+				return opts.marshalScalar(writer, value)
 			}
 			return nil
 		},
@@ -125,13 +100,7 @@ func (opts MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 			switch last.Value.Interface().(type) {
 			case protoreflect.Message:
 				if last.Step.Kind() != protopath.AnyExpandStep {
-					n := len(closingBraceStack)
-					if n > 0 {
-						if closingBraceStack[n-1] {
-							_, _ = fmt.Fprintf(writer, "}")
-						}
-						closingBraceStack = closingBraceStack[:n-1]
-					}
+					_, _ = fmt.Fprintf(writer, "}")
 				}
 			case protoreflect.List:
 				_, _ = fmt.Fprintf(writer, "]")

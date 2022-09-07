@@ -57,10 +57,14 @@ a whole protobuf `service` definition. It should be possible to mix and match au
 Existing modules can mix and match auto-generated and handwritten CLI commands so it is up to them as to whether they
 make breaking changes by replacing handwritten commands with slightly different auto-generated ones.
 
+For now the SDK will maintain the existing set of CLI commands for backwards compatibility but new commands will use
+this functionality.
+
 ### Positive
 
 * module developers will not need to write CLI commands
 * module developers will not need to test CLI commands
+* [lens](https://github.com/strangelove-ventures/lens) may benefit from this
 
 ### Negative
 
@@ -68,11 +72,18 @@ make breaking changes by replacing handwritten commands with slightly different 
 
 ## Further Discussions
 
-At some point in the future, we should allow customization of the short and long usage strings for commands as
-well as allowing shorthand aliases for flags (ex. `-a` for `--amount`). We may also consider a way to specify that
-certain arguments should be positional parameters rather than flags if the UX merits this. It is an [open discussion](https://github.com/cosmos/cosmos-sdk/pull/11725#issuecomment-1108676129)
-as to whether these customizations options should live the .proto files themselves, in separate config files, or
-in directly in code. Providing the options in .proto files would allow a dynamic client to automatically generate
+We would like to be able to customize:
+* short and long usage strings for commands
+* aliases for flags (ex. `-a` for `--amount`)
+* which fields are positional parameters rather than flags
+
+It is an [open discussion](https://github.com/cosmos/cosmos-sdk/pull/11725#issuecomment-1108676129)
+as to whether these customizations options should line in:
+* the .proto files themselves,
+* separate config files (ex. YAML), or
+* directly in code
+
+Providing the options in .proto files would allow a dynamic client to automatically generate
 CLI commands on the fly. However, that may pollute the .proto files themselves with information that is only relevant
 for a small subset of users.
 

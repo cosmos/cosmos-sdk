@@ -7,6 +7,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func marshalTimestamp(writer *strings.Builder, message protoreflect.Message) error {
+const ()
+
+func marshalDuration(writer *strings.Builder, message protoreflect.Message) error {
 	return protorange.Break
 }

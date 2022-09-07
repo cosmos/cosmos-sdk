@@ -4,6 +4,6 @@ managed:
   go_package_prefix:
     default: cosmossdk.io/codec/v2/internal
 plugins:
-  - name: go-pulsar
+  - name: go
     out: .
     opt: paths=source_relative

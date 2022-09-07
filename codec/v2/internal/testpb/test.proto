@@ -28,7 +28,7 @@ message ABitOfEverything {
   // repeated
   repeated int32 repeated = 6;
 
-  string string = 7;
+  string str = 7;
 
   bool bool = 8;
 

@@ -32,14 +32,9 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
-//
-// Since: cosmos-sdk 0.47
 type MsgUpdateParams struct {
 	// authority is the address of the governance account.
-	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// params defines the x/consensus_params parameters to update.
-	//
-	// NOTE: All parameters must be supplied.
+	Authority string                `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	Block     types.BlockParams     `protobuf:"bytes,2,opt,name=block,proto3" json:"block"`
 	Evidence  types.EvidenceParams  `protobuf:"bytes,3,opt,name=evidence,proto3" json:"evidence"`
 	Validator types.ValidatorParams `protobuf:"bytes,4,opt,name=validator,proto3" json:"validator"`
@@ -108,8 +103,6 @@ func (m *MsgUpdateParams) GetValidator() types.ValidatorParams {
 
 // MsgUpdateParamsResponse defines the response structure for executing a
 // MsgUpdateParams message.
-//
-// Since: cosmos-sdk 0.47
 type MsgUpdateParamsResponse struct {
 }
 

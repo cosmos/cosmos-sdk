@@ -1,3 +1,4 @@
+// Since: cosmos-sdk 0.47
 syntax = "proto3";
 package cosmos.consensus.v1;
 

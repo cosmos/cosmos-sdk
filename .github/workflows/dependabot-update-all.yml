@@ -1,0 +1,39 @@
+name: Dependabot Update All Go Modules
+on: pull_request
+
+permissions:
+  pull-requests: write
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v1.1.1
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      # The following properties are now available:
+      #  - steps.metadata.outputs.dependency-names
+      #  - steps.metadata.outputs.dependency-type
+      #  - steps.metadata.outputs.update-type
+      - name: Update all Go modules
+        # if: ${{ steps.metadata.outputs.package-ecosystem == 'gomod' }}
+        run: |
+          echo ${{ steps.metadata.outputs }}
+          gh pr checkout "$PR_URL"
+          ./scripts/go-update-dep-all.sh ${{ steps.dependabot-metadata.outputs.updated-dependencies-json }}
+          ./scripts/go-mod-tidy-all.sh
+          git config --global user.email "dependabot[bot]@users.noreply.github.com"
+          git config --global user.name "dependabot[bot]"
+          git add -A
+          git commit -m "chore(deps): update all go modules"
+          git push
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

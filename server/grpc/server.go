@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/cosmos/cosmos-sdk/server/grpc/gogoreflection"
-	reflection "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
+	reflectionv2 "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -39,7 +39,7 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config
 	// Reflection allows consumers to build dynamic clients that can write to any
 	// Cosmos SDK application without relying on application packages at compile
 	// time.
-	err := reflection.Register(grpcSrv, reflection.Config{
+	err := reflectionv2.Register(grpcSrv, reflectionv2.Config{
 		SigningModes: func() map[string]int32 {
 			modes := make(map[string]int32, len(clientCtx.TxConfig.SignModeHandler().Modes()))
 			for _, m := range clientCtx.TxConfig.SignModeHandler().Modes() {
@@ -57,7 +57,7 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config
 
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.
-	gogoreflection.Register(grpcSrv)
+	reflection.Register(grpcSrv)
 
 	listener, err := net.Listen("tcp", cfg.Address)
 	if err != nil {

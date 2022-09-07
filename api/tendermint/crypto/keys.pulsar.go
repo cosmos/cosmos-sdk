@@ -563,6 +563,7 @@ type PublicKey struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Sum:
+	//
 	//	*PublicKey_Ed25519
 	//	*PublicKey_Secp256K1
 	Sum isPublicKey_Sum `protobuf_oneof:"sum"`

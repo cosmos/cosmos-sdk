@@ -392,7 +392,6 @@ devdoc-update:
 protoVer=0.8
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
-containerProtoGenAny=$(PROJECT_NAME)-proto-gen-any-$(protoVer)
 containerProtoGenSwagger=$(PROJECT_NAME)-proto-gen-swagger-$(protoVer)
 containerProtoFmt=$(PROJECT_NAME)-proto-fmt-$(protoVer)
 
@@ -403,12 +402,6 @@ proto-gen:
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
 		sh ./scripts/protocgen.sh; fi
 
-# This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
-proto-gen-any:
-	@echo "Generating Protobuf Any"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenAny}$$"; then docker start -a $(containerProtoGenAny); else docker run --name $(containerProtoGenAny) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		sh ./scripts/protocgen-any.sh; fi
-
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then docker start -a $(containerProtoGenSwagger); else docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
@@ -417,7 +410,7 @@ proto-swagger-gen:
 proto-format:
 	@echo "Formatting Protobuf files"
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
-		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
+		find ./ -name "*.proto" -exec clang-format -i {} \; ; fi
 
 
 proto-lint:
@@ -428,7 +421,6 @@ proto-check-breaking:
 
 TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.37.0-alpha.1/proto/tendermint
 
-PROTO_DIR		   =  third_party/proto
 TM_CRYPTO_TYPES     = proto/tendermint/crypto
 TM_ABCI_TYPES       = proto/tendermint/abci
 TM_TYPES            = proto/tendermint/types
@@ -438,7 +430,6 @@ TM_P2P              = proto/tendermint/p2p
 
 proto-update-deps:
 	@echo "Updating Protobuf dependencies"
-	@buf export buf.build/cosmos/cosmos-sdk --output $(PROTO_DIR)
 
 	@mkdir -p $(TM_ABCI_TYPES)
 	@curl -sSL $(TM_URL)/abci/types.proto > $(TM_ABCI_TYPES)/types.proto
@@ -463,7 +454,7 @@ proto-update-deps:
 	@mkdir -p $(TM_P2P)
 	@curl -sSL $(TM_URL)/p2p/types.proto > $(TM_P2P)/types.proto
 
-.PHONY: proto-all proto-gen proto-gen-any proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
+.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
 
 ###############################################################################
 ###                                Localnet                                 ###

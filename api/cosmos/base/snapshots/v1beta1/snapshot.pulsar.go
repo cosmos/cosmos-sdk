@@ -5122,6 +5122,7 @@ type SnapshotItem struct {
 	// item is the specific type of snapshot item.
 	//
 	// Types that are assignable to Item:
+	//
 	//	*SnapshotItem_Store
 	//	*SnapshotItem_Iavl
 	//	*SnapshotItem_Extension

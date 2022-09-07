@@ -41,4 +41,5 @@ require (
 
 replace (
 	github.com/cosmos/cosmos-sdk/store/tools/ics23 => ./
+	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 )

@@ -2554,6 +2554,7 @@ type Record struct {
 	// Record contains one of the following items
 	//
 	// Types that are assignable to Item:
+	//
 	//	*Record_Local_
 	//	*Record_Ledger_
 	//	*Record_Multi_

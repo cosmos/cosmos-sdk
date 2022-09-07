@@ -2542,6 +2542,7 @@ type Evidence struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Sum:
+	//
 	//	*Evidence_DuplicateVoteEvidence
 	//	*Evidence_LightClientAttackEvidence
 	Sum isEvidence_Sum `protobuf_oneof:"sum"`

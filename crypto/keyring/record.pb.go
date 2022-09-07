@@ -8,7 +8,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	hd "github.com/cosmos/cosmos-sdk/crypto/hd"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/cosmos/gogoproto/proto"
+	proto "github.com/golang/protobuf/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"

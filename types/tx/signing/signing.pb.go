@@ -213,6 +213,7 @@ type SignatureDescriptor_Data struct {
 	// sum is the oneof that specifies whether this represents single or multi-signature data
 	//
 	// Types that are valid to be assigned to Sum:
+	//
 	//	*SignatureDescriptor_Data_Single_
 	//	*SignatureDescriptor_Data_Multi_
 	Sum isSignatureDescriptor_Data_Sum `protobuf_oneof:"sum"`

@@ -103,3 +103,27 @@ updates:
     labels:
       - "A:automerge"
       - dependencies
+  - package-ecosystem: gomod
+    directory: "/tx"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/simapp"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/tests"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    labels:
+      - "A:automerge"
+      - dependencies

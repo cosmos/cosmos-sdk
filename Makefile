@@ -389,8 +389,8 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=v0.8
-protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
+protoVer=0.8
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
 containerProtoGenAny=$(PROJECT_NAME)-proto-gen-any-$(protoVer)
 containerProtoGenSwagger=$(PROJECT_NAME)-proto-gen-swagger-$(protoVer)

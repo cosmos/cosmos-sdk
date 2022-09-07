@@ -71,7 +71,7 @@ $ %s query feegrant grant [granter] [grantee]
 				return err
 			}
 
-			return clientCtx.PrintProto(res)
+			return clientCtx.PrintProto(res.Allowance)
 		},
 	}
 

@@ -1,12 +1,8 @@
 package cli_test
 
 import (
-	"context"
 	"fmt"
-	"io"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
@@ -45,30 +41,13 @@ func (s *CLITestSuite) TestCmdGetFeeGrant() {
 			"decoding bech32 failed",
 			true, nil, nil,
 		},
-		{
-			"valid req",
-			[]string{
-				granter.String(),
-				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			"",
-			false,
-			&feegrant.QueryAllowanceResponse{},
-			&s.addedGrant,
-		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			ctx := svrcmd.CreateExecuteContext(context.Background())
 			cmd := cli.GetCmdQueryFeeGrant()
-			cmd.SetOutput(io.Discard)
-			cmd.SetArgs(tc.args)
-			cmd.SetContext(ctx)
-			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 
 			if tc.expectErr {

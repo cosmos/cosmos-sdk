@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmlibs "github.com/tendermint/tendermint/libs/bytes"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -104,6 +103,7 @@ func (s *CLITestSuite) SetupSuite() {
 		c := newMockTendermintRPC(abci.ResponseQuery{
 			Value: bz,
 		})
+
 		return s.baseCtx.WithClient(c)
 	}
 	s.clientCtx = ctxGen().WithOutput(&outBuf)
@@ -746,20 +746,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 			}
 		})
 	}
-
-	args := []string{
-		granter.String(),
-		grantee.String(),
-		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-	}
-
-	// get filtered fee allowance and check info
-	cmd := cli.GetCmdQueryFeeGrant()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	s.Require().NoError(err)
-
-	var resp feegrant.QueryAllowanceResponse
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 
 	// exec filtered fee allowance
 	cases := []struct {

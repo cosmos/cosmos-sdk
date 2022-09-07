@@ -11,6 +11,11 @@ on:
 
 permissions:
   contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: cosmos/proto-builder
 
 jobs:
   build:
@@ -22,7 +27,7 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=tendermintdev/sdk-proto-gen
-          VERSION=latest
+          VERSION=0.8
           TAGS="${DOCKER_IMAGE}:${VERSION}"
           echo ::set-output name=tags::${TAGS}
 
@@ -38,8 +43,8 @@ jobs:
         uses: docker/login-action@v2 
         if: ${{ github.event_name != 'pull_request' }}
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           
 

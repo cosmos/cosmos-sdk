@@ -1,20 +1,12 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
-	"reflect"
 	"sort"
 	"strings"
 
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
-
-	"github.com/gogo/protobuf/jsonpb"
 	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // ----------------------------------------------------------------------------
@@ -74,76 +66,6 @@ func (em *EventManager) EmitTypedEvents(tevs ...proto.Message) error {
 
 	em.EmitEvents(events)
 	return nil
-}
-
-// TypedEventToEvent takes typed event and converts to Event object
-func TypedEventToEvent(tev proto.Message) (Event, error) {
-	evtType := proto.MessageName(tev)
-	evtJSON, err := codec.ProtoMarshalJSON(tev, nil)
-	if err != nil {
-		return Event{}, err
-	}
-
-	var attrMap map[string]json.RawMessage
-	err = json.Unmarshal(evtJSON, &attrMap)
-	if err != nil {
-		return Event{}, err
-	}
-
-	// sort the keys to ensure the order is always the same
-	keys := maps.Keys(attrMap)
-	slices.Sort(keys)
-
-	attrs := make([]abci.EventAttribute, 0, len(attrMap))
-	for _, k := range keys {
-		v := attrMap[k]
-		attrs = append(attrs, abci.EventAttribute{
-			Key:   k,
-			Value: string(v),
-		})
-	}
-
-	return Event{
-		Type:       evtType,
-		Attributes: attrs,
-	}, nil
-}
-
-// ParseTypedEvent converts abci.Event back to typed event
-func ParseTypedEvent(event abci.Event) (proto.Message, error) {
-	concreteGoType := proto.MessageType(event.Type)
-	if concreteGoType == nil {
-		return nil, fmt.Errorf("failed to retrieve the message of type %q", event.Type)
-	}
-
-	var value reflect.Value
-	if concreteGoType.Kind() == reflect.Ptr {
-		value = reflect.New(concreteGoType.Elem())
-	} else {
-		value = reflect.Zero(concreteGoType)
-	}
-
-	protoMsg, ok := value.Interface().(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("%q does not implement proto.Message", event.Type)
-	}
-
-	attrMap := make(map[string]json.RawMessage)
-	for _, attr := range event.Attributes {
-		attrMap[attr.Key] = json.RawMessage(attr.Value)
-	}
-
-	attrBytes, err := json.Marshal(attrMap)
-	if err != nil {
-		return nil, err
-	}
-
-	err = jsonpb.Unmarshal(strings.NewReader(string(attrBytes)), protoMsg)
-	if err != nil {
-		return nil, err
-	}
-
-	return protoMsg, nil
 }
 
 // ----------------------------------------------------------------------------

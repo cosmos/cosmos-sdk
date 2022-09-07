@@ -6,8 +6,8 @@ on:
     paths:
       - "contrib/devtools/Dockerfile"
   pull_request:
-    # paths:
-      # - "contrib/devtools/Dockerfile"
+    paths:
+      - "contrib/devtools/Dockerfile"
 
 env:
   REGISTRY: ghcr.io

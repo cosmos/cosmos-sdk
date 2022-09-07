@@ -27173,6 +27173,7 @@ type Request struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Value:
+	//
 	//	*Request_Echo
 	//	*Request_Flush
 	//	*Request_Info
@@ -28086,6 +28087,7 @@ type Response struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Value:
+	//
 	//	*Response_Exception
 	//	*Response_Echo
 	//	*Response_Flush

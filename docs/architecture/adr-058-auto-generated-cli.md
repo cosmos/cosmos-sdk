@@ -30,7 +30,7 @@ tests with unit tests as there still needs to be some way to test these CLI comm
 
 To make module development simpler, we provide infrastructure - in the new [`client/v2`](https://github.com/cosmos/cosmos-sdk/tree/main/client/v2)
 go module - for automatically generating CLI commands based on protobuf definitions to either replace or complement
-handwritten CLI commands. This will mean that when developing a module, it will be possibly to skip both writing and
+handwritten CLI commands. This will mean that when developing a module, it will be possible to skip both writing and
 testing CLI commands as that can all be taken care of by the framework.
 
 The basic design for automatically generating CLI commands is to:

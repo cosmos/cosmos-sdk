@@ -26,7 +26,7 @@ jobs:
         if: ${{ steps.metadata.outputs.package-ecosystem == 'gomod' }}
         run: |
           gh pr checkout "$PR_URL"
-          ./scripts/go-update-dep-all.sh
+          ./scripts/go-update-dep-all.sh ${{ steps.dependabot-metadata.outputs.updated-dependencies-json }}
           ./scripts/go-mod-tidy-all.sh
           git config --global user.email "dependabot[bot]@users.noreply.github.com"
           git config --global user.name "dependabot[bot]"

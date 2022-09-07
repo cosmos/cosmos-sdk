@@ -8,7 +8,6 @@
 - Aug 11, 2022: Require signing over tx raw bytes.
 - Sep 07, 2022: Add custom `Msg`-renderers.
 
-
 ## Status
 
 Accepted. Implementation started. Small value renderers details still need to be polished.

@@ -1,7 +1,7 @@
 <!--
 order: false
 parent:
-  order: 5
+  order: 6
 -->
 
 # Running a Node, API and CLI

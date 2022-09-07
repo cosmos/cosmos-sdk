@@ -37,7 +37,7 @@ The basic design for automatically generating CLI commands is to:
 
 * create one CLI command for each `rpc` method in a protobuf `Query` or `Msg` service
 * create a CLI flag for each field in the `rpc` request type
-* for `query` commands call gRPC and print the response as protobuf JSON or YAML
+* for `query` commands call gRPC and print the response as protobuf JSON or YAML (via the `-o`/`--output` flag)
 * for `tx` commands, create a transaction and apply common transaction flags
 
 In order to make the auto-generated CLI as easy to use (or easier) than handwritten CLI, we need to do custom handling

@@ -7,7 +7,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.46.1
 	github.com/cosmos/iavl v0.19.1
 	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
-	github.com/tendermint/tendermint v0.34.21
+	github.com/tendermint/tendermint v0.38.0-dev.0.20220907191341-037b967ab0f3
 	github.com/tendermint/tm-db v0.6.7
 )
 
@@ -30,7 +30,7 @@ require (
 	github.com/onsi/gomega v1.20.0 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
+	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect

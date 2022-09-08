@@ -28,6 +28,13 @@ The constructor, `NewSimApp` has been simplified:
 `simapp.MakeTestEncodingConfig()` was deprecated and has been removed. Instead you can use the `TestEncodingConfig` from the `types/module/testutil` package.
 This means you can replace your usage of `simapp.MakeTestEncodingConfig` in tests to `moduletestutil.MakeTestEncodingConfig`, which takes a series of relevant `AppModuleBasic` as input (the module being tested and any potential dependencies).
 
+### Protobuf
+
+The SDK has migrated from `gogo/protobuf` (which is currently unmaintained), to our own maintained fork, [`cosmos/gogoproto`](https://github.com/cosmos/gogoproto).
+
+This means you should replace all imports of `github.com/gogo/protobuf` to `github.com/cosmos/gogoproto`.
+This allows you to remove the replace directive `replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1` from your `go.mod` file.
+
 ### `x/gov`
 
 #### Minimum Proposal Deposit At Time of Submission

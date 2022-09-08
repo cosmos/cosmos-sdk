@@ -28,15 +28,6 @@ message CommandDescriptor {
   // By default if the command is is the root tx or query command descriptor for
   // a module then its name will simply be the module name. If it is a
   // sub-command it will be the lower kebab-case short name of the service.
-  //
-  // Any field names specified with the format {name} will be marked as
-  // positional parameters and not configured as flags. The name provided
-  // must either be the name of the protobuf field or the alternate name
-  // specified in this field's options.
-  //
-  // A field can be made into a varargs positional parameter using the syntax
-  // {amount...}. Such a parameter must be a repeated field and the last
-  // parameter in the usage text.
   string use = 2;
 
   // method_options are options for specific methods on the service.

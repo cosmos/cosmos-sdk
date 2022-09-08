@@ -5,7 +5,7 @@ package msgservice
 
 import (
 	fmt "fmt"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
 	math "math"
 )

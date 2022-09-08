@@ -3,14 +3,15 @@
 // Chanes:
 // + AnteHandler(...): calling `next` at the end of the function to run all anthe handler chain.
 
-// Package mocks is a generated GoMock package.
-package mocks
+// Package mock is a generated GoMock package.
+package mock
 
 import (
 	reflect "reflect"
 
-	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
+
+	types "github.com/cosmos/cosmos-sdk/types"
 )
 
 // MockAnteDecorator is a mock of AnteDecorator interface.

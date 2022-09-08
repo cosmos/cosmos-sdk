@@ -27,7 +27,7 @@ func (ak AccountKeeper) ChangePubKey(ctx sdk.Context, acc types.AccountI, pubKey
 	return nil
 }
 
-func (ak AccountKeeper) GetPubKeyFromStore(ctx sdk.Context, addr sdk.AccAddress) (cryptotypes.PubKey, error) {
+func (ak AccountKeeper) PubKeyFromStore(ctx sdk.Context, addr sdk.AccAddress) (cryptotypes.PubKey, error) {
 	store := ctx.KVStore(ak.storeKey)
 
 	bz := store.Get(getAddressKey(addr.String()))

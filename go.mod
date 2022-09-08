@@ -3,7 +3,7 @@ go 1.18
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.1.0-alpha9
+	cosmossdk.io/api v0.1.0-alpha8
 	cosmossdk.io/core v0.2.0
 	cosmossdk.io/depinject v1.0.0-alpha.2
 	cosmossdk.io/errors v1.0.0-beta.7
@@ -291,7 +291,7 @@ require (
 
 replace (
 	// TODO MUST BE REMOVED IN THE NEXT FOLLOWING PR (or this PR needs to be split and cosmossdk.io/api tagged)
-	cosmossdk.io/api => ./api
+	cosmossdk.io/api => cosmossdk.io/api v0.1.0-alpha10
 
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.

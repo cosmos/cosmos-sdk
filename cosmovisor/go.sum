@@ -581,6 +581,8 @@ github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 h1:hqAk8riJvK4RM
 github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15/go.mod h1:z4YtwM70uOnk8h0pjJYlj3zdYwi9l03By6iAIF5j/Pk=
 github.com/tendermint/go-amino v0.16.0 h1:GyhmgQKvqF82e2oZeuMSp9JTN0N09emoSZlb2lyGa2E=
 github.com/tendermint/go-amino v0.16.0/go.mod h1:TQU0M1i/ImAo+tYpZi73AU3V/dKeCoMC9Sphe2ZwGME=
+github.com/tendermint/tendermint v0.34.21 h1:UiGGnBFHVrZhoQVQ7EfwSOLuCtarqCSsRf8VrklqB7s=
+github.com/tendermint/tendermint v0.34.21/go.mod h1:XDvfg6U7grcFTDx7VkzxnhazQ/bspGJAn4DZ6DcLLjQ=
 github.com/tendermint/tendermint v0.38.0-dev.0.20220907191341-037b967ab0f3 h1:GhV71JSy5lErbxKIlwwjJbh/B5cwCLVnMsRV5Rb8r8s=
 github.com/tendermint/tendermint v0.38.0-dev.0.20220907191341-037b967ab0f3/go.mod h1:DSnBfCufF48DhIpmU2inmVo8YiEGus6uInwf46Iu01k=
 github.com/tendermint/tm-db v0.6.7 h1:fE00Cbl0jayAoqlExN6oyQJ7fR/ZtoVOmvPJ//+shu8=

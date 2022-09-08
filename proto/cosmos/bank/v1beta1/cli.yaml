@@ -1,8 +1,8 @@
 tx:
   service: cosmos.bank.v1beta1.Msg
-  methods:
+  method_options:
     Send:
-      fields:
+      field_options:
         from_address:
           position: 0
         to_address:
@@ -11,9 +11,9 @@ tx:
           position: 2
 query:
   service: cosmos.bank.v1beta1.Query
-  methods:
+  method_options:
     Balance:
-      fields:
+      field_options:
         address:
           position: 0
         denom:

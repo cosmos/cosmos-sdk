@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package cosmos.base.cli.v1;
+package cosmos.autocli.v1;
 
 import "google/protobuf/descriptor.proto";
 

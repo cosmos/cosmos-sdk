@@ -82,7 +82,7 @@ The values are overwritten in every block.
 
 * ValidatorUpdates `0x51 -> []abci.ValidatorUpdate`
 
- ## UnbondingId
+## UnbondingId
 
 UnbondingId stores the ID of the latest unbonding operation. It enables to create unique IDs for unbonding operation, i.e., UnbondingId is incremented every time a new unbonding operation (validator unbonding, unbonding delegation, redelegation) is initiated.
 

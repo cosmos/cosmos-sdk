@@ -35,7 +35,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.46.7-regen-1](https://github.com/regen/cosmos-sdk/releases/tag/v0.46.7-regen-1) - 2022-12-XX
+
+### State Machine Breaking
+
+* (codec) [#13196](https://github.com/cosmos/cosmos-sdk/pull/13196) Register all modules' `Msg`s with gov's ModuleCdc so that Amino sign bytes are correctly generated.
 
 ## [v0.46.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.7) - 2022-12-13
 

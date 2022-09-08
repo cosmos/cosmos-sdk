@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -184,15 +183,10 @@ func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.Add
 	return &types.AddressStringToBytesResponse{AddressBytes: bz}, nil
 }
 
-func (ak AccountKeeper) GetPubKeyFromStore(c context.Context, req *types.GetPubKeyFromStoreRequest) (*types.GetPubKeyFromStoreResponse, error) {
+func (ak AccountKeeper) GetPubKeyFromStore(c context.Context, req *types.GetPubKeyFromStoreRequest) (*types.GetPubKeyFromStoreResponse,error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	pubKey, err := ak.PubKeyFromStore(ctx, sdk.AccAddress(req.AddressString))
-	if err != nil {
-		return &types.GetPubKeyFromStoreResponse{}, err
-	}
+	addrToPubKey := ak.PubKeyFromStore(ctx, sdk.AccAddress(req.AddressString))
 
-	pubKeyString := crypto.ArmorPubKeyBytes(pubKey.Bytes(), pubKey.Type())
-
-	return &types.GetPubKeyFromStoreResponse{PubKey: pubKeyString}, nil
+	return &types.GetPubKeyFromStoreResponse{AddressToPubKey: addrToPubKey},nil
 }

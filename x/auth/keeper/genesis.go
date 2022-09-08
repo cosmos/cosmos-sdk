@@ -26,6 +26,10 @@ func (ak AccountKeeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	}
 
 	ak.GetModuleAccount(ctx, types.FeeCollectorName)
+
+	for _, pubKeyMapping := range data.AddressToPubKeys {
+		ak.SavePubKeyMapping(ctx, pubKeyMapping)
+	}
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper
@@ -39,5 +43,7 @@ func (ak AccountKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
-	return types.NewGenesisState(params, genAccounts)
+	pubKeyMappings := ak.GetAllPubKeys(ctx)
+
+	return types.NewGenesisState(params, genAccounts, pubKeyMappings)
 }

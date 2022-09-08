@@ -123,7 +123,9 @@ func RandomizedGenState(simState *module.SimulationState, randGenAccountsFn type
 		sigVerifyCostED25519, sigVerifyCostSECP256K1)
 	genesisAccs := randGenAccountsFn(simState)
 
-	authGenesis := types.NewGenesisState(params, genesisAccs)
+	genesisPubKeyMappings := getGenesisPubKeyMappings(genesisAccs)
+
+	authGenesis := types.NewGenesisState(params, genesisAccs, genesisPubKeyMappings)
 
 	bz, err := json.MarshalIndent(&authGenesis.Params, "", " ")
 	if err != nil {
@@ -131,4 +133,17 @@ func RandomizedGenState(simState *module.SimulationState, randGenAccountsFn type
 	}
 	fmt.Printf("Selected randomly generated auth parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(authGenesis)
+}
+
+func getGenesisPubKeyMappings(genesisAccs types.GenesisAccounts) []*types.AddressToPubKey {
+	var genesisPubKeyMappings []*types.AddressToPubKey
+	for _, acc := range genesisAccs {
+		pubKeyMapping := &types.AddressToPubKey{
+			Address: acc.GetAddress().String(),
+			PubKey:  acc.GetPubKey().String(),
+		}
+		genesisPubKeyMappings = append(genesisPubKeyMappings, pubKeyMapping)
+	}
+
+	return genesisPubKeyMappings
 }

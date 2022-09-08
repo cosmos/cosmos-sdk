@@ -178,5 +178,5 @@ message GetPubKeyFromStoreRequest {
 }
 
 message GetPubKeyFromStoreResponse {
-  string pub_key = 2 [(gogoproto.jsontag) = "public_key"];
+  AddressToPubKey addressToPubKey = 1;
 }

@@ -2,10 +2,7 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -42,18 +39,8 @@ func (ms msgServer) ChangePubKey(goCtx context.Context, req *types.MsgChangePubK
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	pubKeyBytes, _, err := crypto.UnarmorPubKeyBytes(req.PubKey)
-	if err != nil {
-		return &types.MsgChangePubKeyResponse{}, fmt.Errorf("invalid public key: %w", err)
-	}
-
-	var pubKey cryptotypes.PubKey
-	if err := ms.cdc.UnmarshalInterface(pubKeyBytes, &pubKey); err != nil {
-		return &types.MsgChangePubKeyResponse{}, fmt.Errorf("cannont unmarshal public key: %w", err)
-	}
-
 	acc := ms.AccountKeeper.GetAccount(ctx, sdk.AccAddress(req.Address))
-	ms.AccountKeeper.ChangePubKey(ctx, acc, pubKey)
+	ms.AccountKeeper.ChangePubKey(ctx, acc, req.PubKey)
 
 	return &types.MsgChangePubKeyResponse{}, nil
 }

@@ -68,7 +68,7 @@ func (x *_GenesisState_2_list) IsValid() bool {
 var _ protoreflect.List = (*_GenesisState_3_list)(nil)
 
 type _GenesisState_3_list struct {
-	list *[]*anypb.Any
+	list *[]*AddressToPubKey
 }
 
 func (x *_GenesisState_3_list) Len() int {
@@ -84,18 +84,18 @@ func (x *_GenesisState_3_list) Get(i int) protoreflect.Value {
 
 func (x *_GenesisState_3_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	concreteValue := valueUnwrapped.Interface().(*AddressToPubKey)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_GenesisState_3_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	concreteValue := valueUnwrapped.Interface().(*AddressToPubKey)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_GenesisState_3_list) AppendMutable() protoreflect.Value {
-	v := new(anypb.Any)
+	v := new(AddressToPubKey)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -108,7 +108,7 @@ func (x *_GenesisState_3_list) Truncate(n int) {
 }
 
 func (x *_GenesisState_3_list) NewElement() protoreflect.Value {
-	v := new(anypb.Any)
+	v := new(AddressToPubKey)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -117,10 +117,10 @@ func (x *_GenesisState_3_list) IsValid() bool {
 }
 
 var (
-	md_GenesisState          protoreflect.MessageDescriptor
-	fd_GenesisState_params   protoreflect.FieldDescriptor
-	fd_GenesisState_accounts protoreflect.FieldDescriptor
-	fd_GenesisState_pubKeys  protoreflect.FieldDescriptor
+	md_GenesisState                  protoreflect.MessageDescriptor
+	fd_GenesisState_params           protoreflect.FieldDescriptor
+	fd_GenesisState_accounts         protoreflect.FieldDescriptor
+	fd_GenesisState_addressToPubKeys protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -128,7 +128,7 @@ func init() {
 	md_GenesisState = File_cosmos_auth_v1beta1_genesis_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_params = md_GenesisState.Fields().ByName("params")
 	fd_GenesisState_accounts = md_GenesisState.Fields().ByName("accounts")
-	fd_GenesisState_pubKeys = md_GenesisState.Fields().ByName("pubKeys")
+	fd_GenesisState_addressToPubKeys = md_GenesisState.Fields().ByName("addressToPubKeys")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -208,9 +208,9 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
-	if len(x.PubKeys) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_3_list{list: &x.PubKeys})
-		if !f(fd_GenesisState_pubKeys, value) {
+	if len(x.AddressToPubKeys) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_3_list{list: &x.AddressToPubKeys})
+		if !f(fd_GenesisState_addressToPubKeys, value) {
 			return
 		}
 	}
@@ -233,8 +233,8 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return x.Params != nil
 	case "cosmos.auth.v1beta1.GenesisState.accounts":
 		return len(x.Accounts) != 0
-	case "cosmos.auth.v1beta1.GenesisState.pubKeys":
-		return len(x.PubKeys) != 0
+	case "cosmos.auth.v1beta1.GenesisState.addressToPubKeys":
+		return len(x.AddressToPubKeys) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.GenesisState"))
@@ -255,8 +255,8 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.Params = nil
 	case "cosmos.auth.v1beta1.GenesisState.accounts":
 		x.Accounts = nil
-	case "cosmos.auth.v1beta1.GenesisState.pubKeys":
-		x.PubKeys = nil
+	case "cosmos.auth.v1beta1.GenesisState.addressToPubKeys":
+		x.AddressToPubKeys = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.GenesisState"))
@@ -282,11 +282,11 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 		}
 		listValue := &_GenesisState_2_list{list: &x.Accounts}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.auth.v1beta1.GenesisState.pubKeys":
-		if len(x.PubKeys) == 0 {
+	case "cosmos.auth.v1beta1.GenesisState.addressToPubKeys":
+		if len(x.AddressToPubKeys) == 0 {
 			return protoreflect.ValueOfList(&_GenesisState_3_list{})
 		}
-		listValue := &_GenesisState_3_list{list: &x.PubKeys}
+		listValue := &_GenesisState_3_list{list: &x.AddressToPubKeys}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
@@ -314,10 +314,10 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		lv := value.List()
 		clv := lv.(*_GenesisState_2_list)
 		x.Accounts = *clv.list
-	case "cosmos.auth.v1beta1.GenesisState.pubKeys":
+	case "cosmos.auth.v1beta1.GenesisState.addressToPubKeys":
 		lv := value.List()
 		clv := lv.(*_GenesisState_3_list)
-		x.PubKeys = *clv.list
+		x.AddressToPubKeys = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.GenesisState"))
@@ -349,11 +349,11 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		}
 		value := &_GenesisState_2_list{list: &x.Accounts}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.auth.v1beta1.GenesisState.pubKeys":
-		if x.PubKeys == nil {
-			x.PubKeys = []*anypb.Any{}
+	case "cosmos.auth.v1beta1.GenesisState.addressToPubKeys":
+		if x.AddressToPubKeys == nil {
+			x.AddressToPubKeys = []*AddressToPubKey{}
 		}
-		value := &_GenesisState_3_list{list: &x.PubKeys}
+		value := &_GenesisState_3_list{list: &x.AddressToPubKeys}
 		return protoreflect.ValueOfList(value)
 	default:
 		if fd.IsExtension() {
@@ -374,8 +374,8 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "cosmos.auth.v1beta1.GenesisState.accounts":
 		list := []*anypb.Any{}
 		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
-	case "cosmos.auth.v1beta1.GenesisState.pubKeys":
-		list := []*anypb.Any{}
+	case "cosmos.auth.v1beta1.GenesisState.addressToPubKeys":
+		list := []*AddressToPubKey{}
 		return protoreflect.ValueOfList(&_GenesisState_3_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -456,8 +456,8 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
-		if len(x.PubKeys) > 0 {
-			for _, e := range x.PubKeys {
+		if len(x.AddressToPubKeys) > 0 {
+			for _, e := range x.AddressToPubKeys {
 				l = options.Size(e)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
@@ -491,9 +491,9 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.PubKeys) > 0 {
-			for iNdEx := len(x.PubKeys) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.PubKeys[iNdEx])
+		if len(x.AddressToPubKeys) > 0 {
+			for iNdEx := len(x.AddressToPubKeys) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.AddressToPubKeys[iNdEx])
 				if err != nil {
 					return protoiface.MarshalOutput{
 						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -658,7 +658,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PubKeys", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AddressToPubKeys", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -685,8 +685,8 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.PubKeys = append(x.PubKeys, &anypb.Any{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PubKeys[len(x.PubKeys)-1]); err != nil {
+				x.AddressToPubKeys = append(x.AddressToPubKeys, &AddressToPubKey{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.AddressToPubKeys[len(x.AddressToPubKeys)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -748,8 +748,8 @@ type GenesisState struct {
 	Params *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 	// accounts are the accounts present at genesis.
 	Accounts []*anypb.Any `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitempty"`
-	// pubkeys are the account address to pubkeys mappings
-	PubKeys []*anypb.Any `protobuf:"bytes,3,rep,name=pubKeys,proto3" json:"pubKeys,omitempty"`
+	// addressToPubKeys are the account address to pubkeys mappings
+	AddressToPubKeys []*AddressToPubKey `protobuf:"bytes,3,rep,name=addressToPubKeys,proto3" json:"addressToPubKeys,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -786,9 +786,9 @@ func (x *GenesisState) GetAccounts() []*anypb.Any {
 	return nil
 }
 
-func (x *GenesisState) GetPubKeys() []*anypb.Any {
+func (x *GenesisState) GetAddressToPubKeys() []*AddressToPubKey {
 	if x != nil {
-		return x.PubKeys
+		return x.AddressToPubKeys
 	}
 	return nil
 }
@@ -804,7 +804,7 @@ var file_cosmos_auth_v1beta1_genesis_proto_rawDesc = []byte{
 	0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67,
 	0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x61,
-	0x75, 0x74, 0x68, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xab, 0x01, 0x0a, 0x0c, 0x47, 0x65,
+	0x75, 0x74, 0x68, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xcd, 0x01, 0x0a, 0x0c, 0x47, 0x65,
 	0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x39, 0x0a, 0x06, 0x70, 0x61,
 	0x72, 0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
@@ -812,23 +812,25 @@ var file_cosmos_auth_v1beta1_genesis_proto_rawDesc = []byte{
 	0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x30, 0x0a, 0x08, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
 	0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x61,
-	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x12, 0x2e, 0x0a, 0x07, 0x70, 0x75, 0x62, 0x4b, 0x65,
-	0x79, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
-	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x07,
-	0x70, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x73, 0x42, 0xc7, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
-	0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74,
-	0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x61, 0x75, 0x74, 0x68, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x75, 0x74, 0x68, 0x5c,
-	0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x5c, 0x41, 0x75, 0x74, 0x68, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50,
-	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x75, 0x74, 0x68, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x12, 0x50, 0x0a, 0x10, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x54, 0x6f, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x54,
+	0x6f, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x52, 0x10, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x54, 0x6f, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x73, 0x42, 0xc7, 0x01, 0x0a, 0x17, 0x63, 0x6f,
+	0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b,
+	0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61,
+	0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x61, 0x75, 0x74, 0x68,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x13,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x2e, 0x56, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x75, 0x74,
+	0x68, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x5c, 0x41, 0x75, 0x74, 0x68, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c,
+	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x75, 0x74, 0x68, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -845,14 +847,15 @@ func file_cosmos_auth_v1beta1_genesis_proto_rawDescGZIP() []byte {
 
 var file_cosmos_auth_v1beta1_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_cosmos_auth_v1beta1_genesis_proto_goTypes = []interface{}{
-	(*GenesisState)(nil), // 0: cosmos.auth.v1beta1.GenesisState
-	(*Params)(nil),       // 1: cosmos.auth.v1beta1.Params
-	(*anypb.Any)(nil),    // 2: google.protobuf.Any
+	(*GenesisState)(nil),    // 0: cosmos.auth.v1beta1.GenesisState
+	(*Params)(nil),          // 1: cosmos.auth.v1beta1.Params
+	(*anypb.Any)(nil),       // 2: google.protobuf.Any
+	(*AddressToPubKey)(nil), // 3: cosmos.auth.v1beta1.AddressToPubKey
 }
 var file_cosmos_auth_v1beta1_genesis_proto_depIdxs = []int32{
 	1, // 0: cosmos.auth.v1beta1.GenesisState.params:type_name -> cosmos.auth.v1beta1.Params
 	2, // 1: cosmos.auth.v1beta1.GenesisState.accounts:type_name -> google.protobuf.Any
-	2, // 2: cosmos.auth.v1beta1.GenesisState.pubKeys:type_name -> google.protobuf.Any
+	3, // 2: cosmos.auth.v1beta1.GenesisState.addressToPubKeys:type_name -> cosmos.auth.v1beta1.AddressToPubKey
 	3, // [3:3] is the sub-list for method output_type
 	3, // [3:3] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name

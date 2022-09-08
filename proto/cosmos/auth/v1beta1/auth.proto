@@ -45,3 +45,11 @@ message Params {
   uint64 sig_verify_cost_ed25519   = 4 [(gogoproto.customname) = "SigVerifyCostED25519"];
   uint64 sig_verify_cost_secp256k1 = 5 [(gogoproto.customname) = "SigVerifyCostSecp256k1"];
 }
+
+message AddressToPubKey {
+  // address defines the account address
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pub_key defines the pub_key in use for the given account
+  string pub_key = 2 [(gogoproto.jsontag) = "public_key"];
+}

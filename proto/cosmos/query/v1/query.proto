@@ -12,6 +12,7 @@ extend google.protobuf.MethodOptions {
   // deterministic is set to true when the query is guaranteed to return a
   // deterministic response. Concretely, it means that the query has been
   // tested on the SDK to return the exact same response upon multiple calls.
+  // Each of these queries also handles its own gas consumption.
   //
   // When set to true, the query can safely be called from within the state
   // machine, for example via ADR-033 calls or from CosmWasm contracts.

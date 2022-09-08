@@ -419,7 +419,7 @@ proto-lint:
 proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
-TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/037b967ab0f3cadb0b7ac00b99ed93f3507c5a10/proto/tendermint
+TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.37.0-alpha.2/proto/tendermint
 
 TM_CRYPTO_TYPES     = proto/tendermint/crypto
 TM_ABCI_TYPES       = proto/tendermint/abci

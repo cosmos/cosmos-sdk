@@ -7,7 +7,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.46.1
 	github.com/cosmos/iavl v0.19.1
 	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
-	github.com/tendermint/tendermint v0.38.0-dev.0.20220907191341-037b967ab0f3
+	github.com/tendermint/tendermint v0.37.0-alpha.2
 	github.com/tendermint/tm-db v0.6.7
 )
 
@@ -40,6 +40,4 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 )
 
-replace (
-	github.com/cosmos/cosmos-sdk/store/tools/ics23 => ./
-)
+replace github.com/cosmos/cosmos-sdk/store/tools/ics23 => ./

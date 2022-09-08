@@ -22,11 +22,22 @@ message CommandDescriptor {
   // service is the fully qualified name of the service to build the command from.
   string service = 1;
 
-  // name is the alternate name to use for the command. By default if this
-  // is the root tx or query command descriptor for a module then it will
-  // simply be the module name. If it is a sub-command it will be the lower
-  // kebab-case short name of the service.
-  string name = 2;
+  // use is the one-line usage method. It also allows specifying an alternate
+  // name for the command as the first word of the usage text.
+  //
+  // By default if the command is is the root tx or query command descriptor for
+  // a module then its name will simply be the module name. If it is a
+  // sub-command it will be the lower kebab-case short name of the service.
+  //
+  // Any field names specified with the format {name} will be marked as
+  // positional parameters and not configured as flags. The name provided
+  // must either be the name of the protobuf field or the alternate name
+  // specified in this field's options.
+  //
+  // A field can be made into a varargs positional parameter using the syntax
+  // {amount...}. Such a parameter must be a repeated field and the last
+  // parameter in the usage text.
+  string use = 2;
 
   // method_options are options for specific methods on the service.
   map<string, MethodOptions> method_options = 3;
@@ -71,7 +82,7 @@ message MethodOptions {
 // of the field.
 message FieldOptions {
 
-  // name is an alternate name to use for the field flag.
+  // name is an name to use for the field flag.
   string name = 1;
 
   // shorthand is a one-letter abbreviated flag.
@@ -97,4 +108,9 @@ message FieldOptions {
 
   // position makes this flag a positional parameter with the given order instead of a flag.
   uint32 position = 9;
+
+  // varargs makes a positional parameter a varargs parameter, position must also
+  // be specified. This can only be applied to the last positional parameter and the
+  // field must a repeated field.
+  bool varargs = 10;
 }

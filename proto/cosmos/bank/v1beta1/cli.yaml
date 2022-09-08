@@ -2,6 +2,7 @@ tx:
   service: cosmos.bank.v1beta1.Msg
   method_options:
     Send:
+      use: send [from_key_or_address] [to_address] [amount...]
       field_options:
         from_address:
           position: 0
@@ -9,6 +10,7 @@ tx:
           position: 1
         amount:
           position: 2
+          varargs: true
 query:
   service: cosmos.bank.v1beta1.Query
   method_options:

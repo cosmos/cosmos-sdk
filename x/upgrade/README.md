@@ -48,12 +48,7 @@ automatically upgrade to.
 
 If an operator running the application binary also runs a sidecar process to assist
 in the automatic download and upgrade of a binary, the `Info` allows this process to
-be seamless. Namely, the `x/upgrade` module fulfills the
-[cosmosd Upgradeable Binary Specification](https://github.com/regen-network/cosmosd#upgradeable-binary-specification)
-specification and `cosmosd` can optionally be used to fully automate the upgrade
-process for node operators. By populating the `Info` field with the necessary information,
-binaries can automatically be downloaded. See [here](https://github.com/regen-network/cosmosd#auto-download)
-for more info.
+be seamless. This tool is [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor#readme).
 
 ```go
 type Plan struct {

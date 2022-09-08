@@ -38,12 +38,12 @@ func GetMultiMsgSignCommand() *cobra.Command {
 		Example: fmt.Sprintf("%s tx multi-msg-sign tx1.json tx2.json tx3.json ", version.AppName),
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
-				`Combine the transactions created with the --generate-only flag and Sign those transactions.
+				`Combine the unsigned transactions generated with the --generate-only flag and sign those transactions to construct a signle signed multi msg transaction.
 
 Example: 
 $ %s tx multi-msg-sign tx1.json tx2.json tx3.json 
 
-It will read a transactions from [files], sign it, and print its JSON encoding.
+It will read all the transactions from [files], sign it, and print its JSON encoding.
 
 The --offline flag makes sure that the client will not reach out to full node.
 As a result, the account and sequence number queries will not be performed and
@@ -55,8 +55,8 @@ key. It implies --signature-only. Full multisig signed transactions may eventual
 be generated via the 'multisign' command.
 `, version.AppName,
 			)),
-
 		RunE: makeMultiMsgSignCmd(),
+		Args: cobra.MinimumNArgs(1),
 	}
 
 	cmd.Flags().String(flagMultisig, "", "Address or key name of the multisig account on behalf of which the transaction shall be signed")
@@ -80,25 +80,40 @@ func makeMultiMsgSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		txBuilder := clientCtx.TxConfig.NewTxBuilder()
 		msgs := make([]sdk.Msg, 0)
+		newGasLimit := uint64(0)
+
 		for i := 0; i < len(args); i++ {
 			parsedTx, err := authclient.ReadTxFromFile(clientCtx, args[i])
 			if err != nil {
 				return err
 			}
+
 			fe, err := clientCtx.TxConfig.WrapTxBuilder(parsedTx)
 			if err != nil {
 				return err
 			}
+
+			// increment the gas which
+			newGasLimit += fe.GetTx().GetGas()
 			msgs = append(msgs, parsedTx.GetMsgs()...)
-			txBuilder.SetMemo(fe.GetTx().GetMemo())
-			txBuilder.SetTip(fe.GetTx().GetTip())
-			txBuilder.SetGasLimit(fe.GetTx().GetGas())
 		}
 
-		txBuilder.SetMsgs(msgs...)
-		txBuilder.SetGasLimit(txBuilder.GetTx().GetGas() * uint64(len(msgs)))
+		// new factory cli with cmd flags
+		txf := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
-		return signTx(cmd, clientCtx, tx.NewFactoryCLI(clientCtx, cmd.Flags()), txBuilder.GetTx())
+		// set the new appened msgs into builder
+		txBuilder.SetMsgs(msgs...)
+
+		// set the memo,fees,feeGranter,feePayer from cmd flags
+		txBuilder.SetMemo(txf.Memo())
+		txBuilder.SetFeeAmount(txf.Fees())
+		txBuilder.SetFeeGranter(clientCtx.FeeGranter)
+		txBuilder.SetFeePayer(clientCtx.FeePayer)
+
+		// set the gasLimit
+		txBuilder.SetGasLimit(newGasLimit)
+
+		return signTx(cmd, clientCtx, txf, txBuilder.GetTx())
 	}
 }
 

@@ -62,33 +62,39 @@ message MethodOptions {
   // command does not define one.
   string version = 7;
 
-  // annotations are key/value pairs that can be used by applications to identify or
-  // group commands.
-  repeated Annotation annotation = 8;
-
   // field_options are options for specific fields on the method request type.
-  map<string, FieldOptions> field_options = 9;
+  map<string, FieldOptions> field_options = 8;
 }
 
 // FieldOptions are options for specific fields on the method request type.
-// By default, fields are configured as flags based on the k
+// By default, fields are configured as flags based on the kebab-case name
+// of the field.
 message FieldOptions {
 
-  // name is an alternate name to use for the field
+  // name is an alternate name to use for the field flag.
   string name = 1;
+
+  // shorthand is a one-letter abbreviated flag.
   string shorthand = 2;
+
+  // usage is a help message.
   string usage = 3;
+
+  // default_value is the default value as text.
   string default_value = 4;
+
+  // default value is the default value as text if the flag is used without any value.
   string no_opt_default_value = 5;
-  string field_deprecated = 6;
+
+  // deprecated is the usage text to show if this flag is deprecated.
+  string deprecated = 6;
+
+  // shorthand_deprecated is the usage text to show if the shorthand of this flag is deprecated.
   string shorthand_deprecated = 7;
+
+  // hidden hides the flag from help/usage text
   bool hidden = 8;
-  repeated Annotation annotations = 9;
-  uint32 position = 10;
-}
 
-message Annotation {
-  string key = 1;
-  string value = 2;
+  // position makes this flag a positional parameter with the given order instead of a flag.
+  uint32 position = 9;
 }
-

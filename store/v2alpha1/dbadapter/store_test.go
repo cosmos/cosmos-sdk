@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/dbadapter"
-	mocks "github.com/cosmos/cosmos-sdk/tests/mocks/db"
+	mocks "github.com/cosmos/cosmos-sdk/testutil/mock/db"
 )
 
 var errFoo = errors.New("dummy")

@@ -1,0 +1,20 @@
+tx:
+  service: cosmos.bank.v1beta1.Msg
+  methods:
+    Send:
+      fields:
+        from_address:
+          position: 0
+        to_address:
+          position: 1
+        amount:
+          position: 2
+query:
+  service: cosmos.bank.v1beta1.Query
+  methods:
+    Balance:
+      fields:
+        address:
+          position: 0
+        denom:
+          position: 1

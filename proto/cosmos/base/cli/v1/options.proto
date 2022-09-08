@@ -6,15 +6,85 @@ import "google/protobuf/descriptor.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/api/cosmos/base/cli/v1;cliv1";
 
-extend google.protobuf.MethodOptions {
-  string long = 357349126;
-  string short = 357349127;
-  string example = 357349128;
-  repeated string alias = 357349129;
-  repeated string suggest_for = 357349130;
-  string command_deprecated = 357349131;
-  string version = 357349132;
-  repeated Annotation annotation = 357349133;
+// ModuleOptions describes the CLI options for a Cosmos SDK module.
+message ModuleOptions {
+
+  // tx describes the tx command for the module.
+  CommandDescriptor tx = 1;
+
+  // query describes the tx command for the module.
+  CommandDescriptor query = 2;
+}
+
+// CommandDescriptor describes a CLI command based on protobuf services.
+message CommandDescriptor {
+
+  // service is the fully qualified name of the service to build the command from.
+  string service = 1;
+
+  // name is the alternate name to use for the command. By default if this
+  // is the root tx or query command descriptor for a module then it will
+  // simply be the module name. If it is a sub-command it will be the lower
+  // kebab-case short name of the service.
+  string name = 2;
+
+  // method_options are options for specific methods on the service.
+  map<string, MethodOptions> method_options = 3;
+
+  // sub_commands are optional sub-commands for a command.
+  repeated CommandDescriptor sub_commands = 4;
+}
+
+message MethodOptions {
+
+  // long is the long message shown in the 'help <this-command>' output.
+  string long = 1;
+
+  // short is the short description shown in the 'help' output.
+  string short = 2;
+
+  // example is examples of how to use the command.
+  string example = 3;
+
+  // alias is an array of aliases that can be used instead of the first word in Use.
+  repeated string alias = 4;
+
+  // suggest_for is an array of command names for which this command will be suggested -
+  // similar to aliases but only suggests.
+  repeated string suggest_for = 5;
+
+  // deprecated defines, if this command is deprecated and should print this string when used.
+  string deprecated = 6;
+
+  // version defines the version for this command. If this value is non-empty and the command does not
+  // define a "version" flag, a "version" boolean flag will be added to the command and, if specified,
+  // will print content of the "Version" variable. A shorthand "v" flag will also be added if the
+  // command does not define one.
+  string version = 7;
+
+  // annotations are key/value pairs that can be used by applications to identify or
+  // group commands.
+  repeated Annotation annotation = 8;
+
+  // field_options are options for specific fields on the method request type.
+  map<string, FieldOptions> field_options = 9;
+}
+
+// FieldOptions are options for specific fields on the method request type.
+// By default, fields are configured as flags based on the k
+message FieldOptions {
+
+  // name is an alternate name to use for the field
+  string name = 1;
+  string shorthand = 2;
+  string usage = 3;
+  string default_value = 4;
+  string no_opt_default_value = 5;
+  string field_deprecated = 6;
+  string shorthand_deprecated = 7;
+  bool hidden = 8;
+  repeated Annotation annotations = 9;
+  uint32 position = 10;
 }
 
 message Annotation {
@@ -22,14 +92,3 @@ message Annotation {
   string value = 2;
 }
 
-extend google.protobuf.FieldOptions {
-  string name = 357349140;
-  string shorthand = 357349141;
-  string usage = 357349142;
-  string default_value = 357349143;
-  string no_opt_default_value = 357349144;
-  string field_deprecated = 357349145;
-  string shorthand_deprecated = 357349146;
-  bool hidden = 357349147;
-  repeated Annotation annotations = 357349148;
-}

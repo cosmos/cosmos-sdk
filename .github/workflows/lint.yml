@@ -1,4 +1,4 @@
-name: golangci-lint
+name: Lint
 on:
   push:
     tags:
@@ -12,7 +12,7 @@ permissions:
   # pull-requests: read
 jobs:
   golangci:
-    name: lint
+    name: golangci-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v3
@@ -24,4 +24,3 @@ jobs:
         with:
           # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
           version: latest
-

@@ -15,5 +15,5 @@ const (
 
 	EventTypeUpdateParam = "update_param"
 
-	AttributeKeyParamUpdater = "param_updaterssh ubuntu@54.38.45.152 "
+	AttributeKeyParamUpdater = "param_updater"
 )

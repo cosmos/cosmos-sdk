@@ -1,7 +1,7 @@
+// Since: cosmos-sdk 0.47
 syntax = "proto3";
 package cosmos.consensus.v1;
 
-import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "tendermint/types/params.proto";
@@ -18,8 +18,6 @@ service Msg {
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
-//
-// Since: cosmos-sdk 0.47
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
 
@@ -29,13 +27,11 @@ message MsgUpdateParams {
   // params defines the x/consensus_params parameters to update.
   //
   // NOTE: All parameters must be supplied.
-  tendermint.types.BlockParams     block     = 2 [(gogoproto.nullable) = false];
-  tendermint.types.EvidenceParams  evidence  = 3 [(gogoproto.nullable) = false];
-  tendermint.types.ValidatorParams validator = 4 [(gogoproto.nullable) = false];
+  tendermint.types.BlockParams     block     = 2;
+  tendermint.types.EvidenceParams  evidence  = 3;
+  tendermint.types.ValidatorParams validator = 4;
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a
 // MsgUpdateParams message.
-//
-// Since: cosmos-sdk 0.47
 message MsgUpdateParamsResponse {}

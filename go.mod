@@ -27,7 +27,6 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.49.0
-	github.com/google/uuid v1.3.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
@@ -290,9 +289,9 @@ require (
 )
 
 replace (
-
 	// TODO MUST BE REMOVED IN THE NEXT FOLLOWING PR (or this PR needs to be split and cosmossdk.io/api tagged)
 	cosmossdk.io/api => ./api
+
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134

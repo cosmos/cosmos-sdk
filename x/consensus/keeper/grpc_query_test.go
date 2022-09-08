@@ -23,9 +23,9 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 			func() {
 				input := &types.MsgUpdateParams{
 					Authority: s.consensusParamsKeeper.GetAuthority(),
-					Block:     *defaultConsensusParams.Block,
-					Validator: *defaultConsensusParams.Validator,
-					Evidence:  *defaultConsensusParams.Evidence,
+					Block:     defaultConsensusParams.Block,
+					Validator: defaultConsensusParams.Validator,
+					Evidence:  defaultConsensusParams.Evidence,
 				}
 				s.msgServer.UpdateParams(s.ctx, input)
 			},

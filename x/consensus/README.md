@@ -7,4 +7,4 @@ parent:
 
 # `x/consensus`
 
-Functionality to modify consensus params.
+Functionality to modify Tendermint's ABCI consensus params.

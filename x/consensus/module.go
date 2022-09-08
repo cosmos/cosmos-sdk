@@ -1,4 +1,4 @@
-package consensus_param
+package consensus
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -49,6 +48,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 // DefaultGenesis returns default genesis state as raw bytes for the consensus_param
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	// nil is returned since default genesis of consensus params is handled by tendermint
 	return nil
 }
 
@@ -109,11 +109,15 @@ func (AppModule) Name() string { return types.ModuleName }
 
 // InitGenesis is handled by for init genesis of consensus_param
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+	// nil is returned since initgenesis of consensus params is handled by tendermint
 	return nil
 }
 
 // ExportGenesis is handled by tendermint export of genesis
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage { return nil }
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+	// nil is returned since ExportGenesis of consensus params is handled by tendermint and baseapp
+	return nil
+}
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
@@ -161,13 +165,13 @@ func provideModule(in consensusParamInputs) consensusParamOutputs {
 
 	k := keeper.NewKeeper(in.Cdc, in.Key, authority.String())
 	m := NewAppModule(in.Cdc, k, in.LegacySubspace)
-	baseappOpt := func(app *baseapp.BaseApp) {
-		app.SetParamStore(&k)
-	}
+	// baseappOpt := func(app *baseapp.BaseApp) {
+	// 	app.SetParamStore(&k)
+	// }
 
 	return consensusParamOutputs{
-		Keeper:        k,
-		Module:        runtime.WrapAppModule(m),
-		BaseAppOption: baseappOpt,
+		Keeper: k,
+		Module: runtime.WrapAppModule(m),
+		// BaseAppOption: baseappOpt,
 	}
 }

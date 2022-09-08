@@ -6668,11 +6668,12 @@ func (x *Params) GetWithdrawAddrEnabled() bool {
 // The reference count indicates the number of objects
 // which might need to reference this historical entry at any point.
 // ReferenceCount =
-//    number of outstanding delegations which ended the associated period (and
-//    might need to read that record)
-//  + number of slashes which ended the associated period (and might need to
-//  read that record)
-//  + one per validator for the zeroeth period, set on initialization
+//
+//	  number of outstanding delegations which ended the associated period (and
+//	  might need to read that record)
+//	+ number of slashes which ended the associated period (and might need to
+//	read that record)
+//	+ one per validator for the zeroeth period, set on initialization
 type ValidatorHistoricalRewards struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

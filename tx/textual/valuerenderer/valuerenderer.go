@@ -22,7 +22,8 @@ type CoinMetadataQueryFn func(ctx context.Context, denom string) (*bankv1beta1.M
 type Textual struct {
 	// coinMetadataQuerier defines a function to query the coin metadata from
 	// state. It should use bank module's `DenomsMetadata` gRPC query to fetch
-	// each denom's associated metadata.
+	// each denom's associated metadata, either using the bank keeper (for
+	// server-side code) or a gRPC query client (for client-side code).
 	coinMetadataQuerier CoinMetadataQueryFn
 	// scalars defines a registry for Cosmos scalars.
 	scalars map[string]ValueRenderer

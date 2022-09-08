@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -303,6 +304,10 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 	// only one caller/test can create and use a network at a time
 	l.Log("acquiring test network lock")
 	lock.Lock()
+
+	baseDir, err := os.MkdirTemp(t.TempDir(), cfg.ChainID)
+	require.NoError(t, err)
+	t.Logf("created temporary directory: %s", baseDir)
 
 	network := &Network{
 		Logger:     l,

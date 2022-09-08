@@ -120,7 +120,7 @@ func getQueryBaseapp(t *testing.T) *baseapp.BaseApp {
 func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...func(*baseapp.BaseApp)) *BaseAppSuite {
 	t.Helper()
 	snapshotTimeout := 1 * time.Minute
-	snapshotStore, err := snapshots.NewStore(coretesting.NewMemDB(), testutil.GetTempDir(t))
+	snapshotDir, err := os.MkdirTemp("", "baseapp")
 	require.NoError(t, err)
 
 	suite := NewBaseAppSuite(

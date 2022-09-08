@@ -13,30 +13,23 @@ const (
 )
 
 // NewQueryBalanceRequest creates a new instance of QueryBalanceRequest.
-func NewQueryBalanceRequest(addr, denom string) *QueryBalanceRequest {
-	return &QueryBalanceRequest{Address: addr, Denom: denom}
+//
+//nolint:interfacer
+func NewQueryBalanceRequest(addr sdk.AccAddress, denom string) *QueryBalanceRequest {
+	return &QueryBalanceRequest{Address: addr.String(), Denom: denom}
 }
 
 // NewQueryAllBalancesRequest creates a new instance of QueryAllBalancesRequest.
-func NewQueryAllBalancesRequest(addr string, req *query.PageRequest, resolveDenom bool) *QueryAllBalancesRequest {
-	return &QueryAllBalancesRequest{Address: addr, Pagination: req, ResolveDenom: resolveDenom}
+//
+//nolint:interfacer
+func NewQueryAllBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *QueryAllBalancesRequest {
+	return &QueryAllBalancesRequest{Address: addr.String(), Pagination: req}
 }
 
 // NewQuerySpendableBalancesRequest creates a new instance of a
 // QuerySpendableBalancesRequest.
-func NewQuerySpendableBalancesRequest(addr string, req *query.PageRequest) *QuerySpendableBalancesRequest {
-	return &QuerySpendableBalancesRequest{Address: addr, Pagination: req}
-}
-
-// NewQuerySpendableBalanceByDenomRequest creates a new instance of a
-// QuerySpendableBalanceByDenomRequest.
-func NewQuerySpendableBalanceByDenomRequest(addr, denom string) *QuerySpendableBalanceByDenomRequest {
-	return &QuerySpendableBalanceByDenomRequest{Address: addr, Denom: denom}
-}
-
-// NewQuerySpendableBalancesRequest creates a new instance of a
-// QuerySpendableBalancesRequest.
-// nolint:interfacer
+//
+//nolint:interfacer
 func NewQuerySpendableBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *QuerySpendableBalancesRequest {
 	return &QuerySpendableBalancesRequest{Address: addr.String(), Pagination: req}
 }

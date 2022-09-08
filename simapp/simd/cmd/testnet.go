@@ -505,8 +505,9 @@ func calculateIP(ip string, i int) (string, error) {
 	return ipv4.String(), nil
 }
 
-func writeFile(name, dir string, contents []byte) error {
-	file := filepath.Join(dir, name)
+func writeFile(name string, dir string, contents []byte) error {
+	writePath := filepath.Join(dir) //nolint:gocritic
+	file := filepath.Join(writePath, name)
 
 	err := tmos.EnsureDir(writePath, 0o755)
 	if err != nil {

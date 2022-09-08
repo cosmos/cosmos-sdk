@@ -52,7 +52,7 @@ var _ abci.Application = (*BaseApp)(nil)
 var _ servertypes.ABCI = (*BaseApp)(nil)
 
 // BaseApp reflects the ABCI application implementation.
-type BaseApp struct {
+type BaseApp struct { //nolint: maligned
 	// initialized on creation
 	mu                sync.Mutex // mu protects the fields below.
 	logger            log.Logger

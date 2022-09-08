@@ -21,7 +21,9 @@ var (
 )
 
 // NewMsgGrant creates a new MsgGrant
-func NewMsgGrant(granter, grantee string, a Authorization, expiration *time.Time) (*MsgGrant, error) {
+//
+//nolint:interfacer
+func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration time.Time) (*MsgGrant, error) {
 	m := &MsgGrant{
 		Granter: granter,
 		Grantee: grantee,
@@ -72,7 +74,9 @@ func (msg MsgGrant) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 }
 
 // NewMsgRevoke creates a new MsgRevoke
-func NewMsgRevoke(granter, grantee, msgTypeURL string) MsgRevoke {
+//
+//nolint:interfacer
+func NewMsgRevoke(granter sdk.AccAddress, grantee sdk.AccAddress, msgTypeURL string) MsgRevoke {
 	return MsgRevoke{
 		Granter:    granter,
 		Grantee:    grantee,
@@ -81,7 +85,9 @@ func NewMsgRevoke(granter, grantee, msgTypeURL string) MsgRevoke {
 }
 
 // NewMsgExec creates a new MsgExecAuthorized
-func NewMsgExec(grantee string, msgs []sdk.Msg) MsgExec {
+//
+//nolint:interfacer
+func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
 	msgsAny := make([]*cdctypes.Any, len(msgs))
 	for i, msg := range msgs {
 		any, err := cdctypes.NewAnyWithValue(msg)

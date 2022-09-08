@@ -1,6 +1,7 @@
 package genutil_test
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"

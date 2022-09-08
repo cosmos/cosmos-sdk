@@ -2,6 +2,7 @@ package config_test
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"testing"
 
@@ -60,75 +61,14 @@ func TestCustomTemplateAndConfig(t *testing.T) {
 		GasAdjustment float64 `mapstructure:"gas-adjustment"`
 	}
 
-	type CustomClientConfig struct {
-		config.Config `mapstructure:",squash"`
-
-		GasConfig GasConfig `mapstructure:"gas"`
-
-		Note string `mapstructure:"note"`
-	}
-
-	clientCfg := config.DefaultConfig()
-	// Overwrite the default keyring backend.
-	clientCfg.KeyringBackend = "test"
-
-	customClientConfig := CustomClientConfig{
-		Config: *clientCfg,
-		GasConfig: GasConfig{
-			GasAdjustment: 1.5,
-		},
-		Note: "Sent from the CLI.",
-	}
-
-	customClientConfigTemplate := config.DefaultClientConfigTemplate + `
-# This is the gas adjustment factor used by the tx commands.
-# Sets the default and can be overwritten by the --gas-adjustment flag in tx commands.
-gas-adjustment = {{ .GasConfig.GasAdjustment }}
-# Memo to include in all transactions.
-note = "{{ .Note }}"
-`
-	t.Run("custom template and config provided", func(t *testing.T) {
-		clientCtx, cleanup, err := initClientContextWithTemplate(t, "", customClientConfigTemplate, customClientConfig)
-		defer func() {
-			cleanup()
-		}()
-
-		require.NoError(t, err)
-		require.Equal(t, customClientConfig.KeyringBackend, clientCtx.Viper.Get(flags.FlagKeyringBackend))
-		require.Equal(t, customClientConfig.GasConfig.GasAdjustment, clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment))
-		require.Equal(t, customClientConfig.Note, clientCtx.Viper.GetString(flags.FlagNote))
-	})
-
-	t.Run("no template and custom config provided", func(t *testing.T) {
-		_, cleanup, err := initClientContextWithTemplate(t, "", "", customClientConfig)
-		defer func() {
-			cleanup()
-		}()
-
-		require.Error(t, err)
-	})
-
-	t.Run("default template and custom config provided", func(t *testing.T) {
-		clientCtx, cleanup, err := initClientContextWithTemplate(t, "", config.DefaultClientConfigTemplate, customClientConfig)
-		defer func() {
-			cleanup()
-		}()
-
-		require.NoError(t, err)
-		require.Equal(t, customClientConfig.KeyringBackend, clientCtx.Viper.Get(flags.FlagKeyringBackend))
-		require.Nil(t, clientCtx.Viper.Get(flags.FlagGasAdjustment)) // nil because we do not read the flags
-	})
-
-	t.Run("no template and no config provided", func(t *testing.T) {
-		clientCtx, cleanup, err := initClientContextWithTemplate(t, "", "", nil)
-		defer func() {
-			cleanup()
-		}()
-
-		require.NoError(t, err)
-		require.Equal(t, config.DefaultConfig().KeyringBackend, clientCtx.Viper.Get(flags.FlagKeyringBackend))
-		require.Nil(t, clientCtx.Viper.Get(flags.FlagGasAdjustment)) // nil because we do not read the flags
-	})
+	//./build/simd config node //http://localhost:1
+	b := bytes.NewBufferString("")
+	cmd.SetOut(b)
+	cmd.SetArgs([]string{"node"})
+	cmd.Execute()
+	out, err := io.ReadAll(b)
+	require.NoError(t, err)
+	require.Equal(t, string(out), testNode1+"\n")
 }
 
 func TestConfigCmdEnvFlag(t *testing.T) {

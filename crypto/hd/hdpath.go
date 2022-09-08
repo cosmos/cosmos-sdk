@@ -217,7 +217,7 @@ func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]b
 // It returns the new private key and new chain code.
 // For more information on hardened keys see:
 //   - https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
-func derivePrivateKey(privKeyBytes, chainCode [32]byte, index uint32, harden bool) ([32]byte, [32]byte) {
+func derivePrivateKey(privKeyBytes [32]byte, chainCode [32]byte, index uint32, harden bool) ([32]byte, [32]byte) {
 	var data []byte
 
 	if harden {

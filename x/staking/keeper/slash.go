@@ -33,8 +33,10 @@ import (
 // CONTRACT:
 //
 //	Infraction was committed at the current height or at a past height,
-//	but not at a height in the future
-func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec) (math.Int, error) {
+//	not at a height in the future
+func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) {
+	logger := k.Logger(ctx)
+
 	if slashFactor.IsNegative() {
 		return math.NewInt(0), fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor)
 	}

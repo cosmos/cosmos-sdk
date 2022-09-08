@@ -5,6 +5,8 @@ import (
 )
 
 // NewValidatorSigningInfo creates a new ValidatorSigningInfo instance
+//
+//nolint:interfacer
 func NewValidatorSigningInfo(
 	consAddr string, startHeight int64,
 	jailedUntil time.Time, tombstoned bool, missedBlocksCounter int64,

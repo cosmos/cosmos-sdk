@@ -1,7 +1,7 @@
 // Package v040 is taken from:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.40.1/x/staking/types/genesis.pb.go
 // by copy-pasted only the relevants parts for Genesis.
-// nolint
+//nolint
 package v040
 
 import (

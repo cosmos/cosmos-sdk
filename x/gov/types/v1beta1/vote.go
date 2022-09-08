@@ -7,9 +7,16 @@ import (
 	sdkmath "cosmossdk.io/math"
 )
 
-// Empty returns whether a vote is empty.
-func (v Vote) Empty() bool {
-	return v.String() == (&Vote{}).String()
+// NewVote creates a new Vote instance
+//
+//nolint:interfacer
+func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions) Vote {
+	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options}
+}
+
+func (v Vote) String() string {
+	out, _ := yaml.Marshal(v)
+	return string(out)
 }
 
 // Votes is an array of vote

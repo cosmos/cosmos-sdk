@@ -59,7 +59,7 @@ func setConfigTemplate(customTemplate string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(configFilePath, buffer.Bytes(), 0o600)
+	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
 }
 
 // writeConfigFile renders config using the template and writes it to

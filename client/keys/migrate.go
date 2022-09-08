@@ -1,6 +1,11 @@
 package keys
 
 import (
+	"bufio"
+	"fmt"
+	"os"
+
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -38,6 +43,89 @@ func runMigrateCmd(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cmd.Println("Keys migration has been successfully executed.")
-	return nil
+	buf := bufio.NewReader(cmd.InOrStdin())
+	keyringServiceName := sdk.KeyringServiceName()
+
+	var (
+		tmpDir   string
+		migrator keyring.Importer
+	)
+
+	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
+		tmpDir, err = os.MkdirTemp("", "migrator-migrate-dryrun")
+		if err != nil {
+			return errors.Wrap(err, "failed to create temporary directory for dryrun migration")
+		}
+
+		defer func() { _ = os.RemoveAll(tmpDir) }()
+
+		migrator, err = keyring.New(keyringServiceName, keyring.BackendTest, tmpDir, buf)
+	} else {
+		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
+		migrator, err = keyring.New(keyringServiceName, backend, rootDir, buf)
+	}
+
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf(
+			"failed to initialize keybase for service %s at directory %s",
+			keyringServiceName, rootDir,
+		))
+	}
+
+	if len(oldKeys) == 0 {
+		cmd.PrintErrln("Migration Aborted: no keys to migrate")
+		return nil
+	}
+
+	for _, oldInfo := range oldKeys {
+		keyName := oldInfo.GetName()
+		keyType := oldInfo.GetType()
+
+		cmd.PrintErrf("Migrating key: '%s (%s)' ...\n", keyName, keyType)
+
+		// allow user to skip migrating specific keys
+		ok, err := input.GetConfirmation("Skip key migration?", buf, cmd.ErrOrStderr())
+		if err != nil {
+			return err
+		}
+		if ok {
+			continue
+		}
+
+		// TypeLocal needs an additional step to ask password.
+		// The other keyring types are handled by ImportInfo.
+		if keyType != keyring.TypeLocal {
+			infoImporter, ok := migrator.(keyring.LegacyInfoImporter)
+			if !ok {
+				return fmt.Errorf("the Keyring implementation does not support import operations of Info types")
+			}
+
+			if err = infoImporter.ImportInfo(oldInfo); err != nil {
+				return err
+			}
+
+			continue
+		}
+
+		password, err := input.GetPassword("Enter passphrase to decrypt key:", buf)
+		if err != nil {
+			return err
+		}
+
+		// NOTE: A passphrase is not actually needed here as when the key information
+		// is imported into the Keyring-based Keybase it only needs the password
+		// (see: writeLocalKey).
+		armoredPriv, err := legacyKb.ExportPrivKey(keyName, password, migratePassphrase)
+		if err != nil {
+			return err
+		}
+
+		if err := migrator.ImportPrivKey(keyName, armoredPriv, migratePassphrase); err != nil {
+			return err
+		}
+
+	}
+	cmd.PrintErrln("Migration complete.")
+
+	return err
 }

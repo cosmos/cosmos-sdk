@@ -17,7 +17,9 @@ var (
 )
 
 // NewMsgGrantAllowance creates a new MsgGrantAllowance.
-func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee string) (*MsgGrantAllowance, error) {
+//
+//nolint:interfacer
+func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantAllowance, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
@@ -52,6 +54,48 @@ func (msg MsgGrantAllowance) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker)
 
 // NewMsgRevokeAllowance returns a message to revoke a fee allowance for a given
 // granter and grantee
-func NewMsgRevokeAllowance(granter, grantee string) MsgRevokeAllowance {
-	return MsgRevokeAllowance{Granter: granter, Grantee: grantee}
+//
+//nolint:interfacer
+func NewMsgRevokeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeAllowance {
+	return MsgRevokeAllowance{Granter: granter.String(), Grantee: grantee.String()}
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgRevokeAllowance) ValidateBasic() error {
+	if msg.Granter == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
+	}
+	if msg.Grantee == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+	}
+	if msg.Grantee == msg.Granter {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
+	}
+
+	return nil
+}
+
+// GetSigners gets the granter address associated with an Allowance
+// to revoke.
+func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
+	granter, err := sdk.AccAddressFromBech32(msg.Granter)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{granter}
+}
+
+// Type implements the LegacyMsg.Type method.
+func (msg MsgRevokeAllowance) Type() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+// Route implements the LegacyMsg.Route method.
+func (msg MsgRevokeAllowance) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
+func (msg MsgRevokeAllowance) GetSignBytes() []byte {
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }

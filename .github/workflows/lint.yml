@@ -1,61 +1,26 @@
 name: Lint
 on:
   push:
+    tags:
+      - v*
     branches:
       - main
-      - release/**
   pull_request:
-  merge_group:
 permissions:
   contents: read
-
+  # Optional: allow read access to pull request. Use with `only-new-issues` option.
+  # pull-requests: read
 jobs:
   golangci:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v2.1.4
+      - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - uses: technote-space/get-diff-action@v5
-        id: git_diff
+          go-version: 1.19
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
         with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-      - name: run go linters
-        run: make lint-go
-        if: env.GIT_DIFF
-        id: lint_long
-        run: |
-          make lint
-        env:
-          ROCKSDB: 1
-      - uses: technote-space/get-diff-action@v6.1.2
-        if: steps.lint_long.outcome == 'skipped'
-        with:
-          PATTERNS: |
-            **/*.go
-            *.go
-            !store/**
-      - name: run linting (short)
-        if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
-        run: |
-          make lint
-        env:
-          GIT_DIFF: ${{ env.GIT_DIFF }}
-          LINT_DIFF: 1
-      - uses: technote-space/get-diff-action@v6.1.2
-        if: steps.lint_long.outcome == 'skipped'
-        with:
-          PATTERNS: |
-            store/**
-      - name: run linting (short)
-        if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
-        run: |
-          make lint
-        env:
-          GIT_DIFF: ${{ env.GIT_DIFF }}
-          LINT_DIFF: 1
-          ROCKSDB: 1
+          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
+          version: latest

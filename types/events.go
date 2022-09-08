@@ -3,15 +3,16 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 	"reflect"
 	"slices"
 	"strings"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	"github.com/cosmos/gogoproto/jsonpb"
-	"github.com/cosmos/gogoproto/proto"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
+
+	"github.com/gogo/protobuf/jsonpb"
+	proto "github.com/gogo/protobuf/proto"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

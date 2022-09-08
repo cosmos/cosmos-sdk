@@ -596,9 +596,8 @@ func (s *KeeperTestSuite) TestUnbondDelegation() {
 
 // // test undelegating self delegation from a validator pushing it below MinSelfDelegation
 // // shift it from the bonded to unbonding state and jailed
-func (s *KeeperTestSuite) TestUndelegateSelfDelegationBelowMinSelfDelegation() {
-	ctx, keeper := s.ctx, s.stakingKeeper
-	require := s.Require()
+func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
+	_, app, ctx := createTestInput()
 
 	addrDels, valAddrs := createValAddrs(1)
 	delTokens := keeper.TokensFromConsensusPower(ctx, 10)

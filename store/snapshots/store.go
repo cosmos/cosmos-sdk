@@ -270,7 +270,7 @@ func (s *Store) Save(
 	snapshotHasher := sha256.New()
 	chunkHasher := sha256.New()
 	for chunkBody := range chunks {
-		defer chunkBody.Close() // nolint: staticcheck
+		defer chunkBody.Close() //nolint: staticcheck
 		dir := s.pathSnapshot(height, format)
 		err = os.MkdirAll(dir, 0o755)
 		if err != nil {
@@ -281,7 +281,7 @@ func (s *Store) Save(
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to create snapshot chunk file %q", path)
 		}
-		defer file.Close() // nolint: staticcheck
+		defer file.Close() //nolint: staticcheck
 
 			dirCreated = true
 		}

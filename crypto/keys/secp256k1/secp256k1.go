@@ -9,12 +9,9 @@ import (
 	"io"
 	"math/big"
 
-	"github.com/cometbft/cometbft/crypto"
-	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
-	"gitlab.com/yawning/secp256k1-voi/secec"
-	"golang.org/x/crypto/ripemd160" //nolint:staticcheck,gosec // keep around for backwards compatibility
-
-	errorsmod "cosmossdk.io/errors"
+	secp256k1 "github.com/btcsuite/btcd/btcec"
+	"github.com/tendermint/tendermint/crypto"
+	"golang.org/x/crypto/ripemd160" //nolint: staticcheck // necessary for Bitcoin address format
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

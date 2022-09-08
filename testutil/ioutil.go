@@ -67,8 +67,8 @@ func WriteToNewTempFile(tb testing.TB, s string) *os.File {
 func TempFile(tb testing.TB) *os.File {
 	tb.Helper()
 
-	fp, err := os.CreateTemp(GetTempDir(tb), "")
-	require.NoError(tb, err)
+	fp, err := os.CreateTemp(t.TempDir(), "")
+	require.NoError(t, err)
 
 	return fp
 }

@@ -8,6 +8,9 @@ import (
 const RootCodespace = "sdk"
 
 var (
+	// errInternal should never be exposed, but we reserve this code for non-specified errors
+	errInternal = Register(UndefinedCodespace, 1, "internal") //nolint:unused
+
 	// ErrTxDecode is returned if we cannot parse a transaction
 	ErrTxDecode = errorsmod.Register(RootCodespace, 2, "tx parse error")
 

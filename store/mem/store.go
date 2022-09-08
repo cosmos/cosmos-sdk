@@ -27,7 +27,7 @@ func NewStore() *Store {
 	return NewStoreWithDB(coretesting.NewMemDB())
 }
 
-func NewStoreWithDB(db corestore.KVStoreWithBatch) *Store { //nolint: interfacer // Concrete return type is fine here.
+func NewStoreWithDB(db *dbm.MemDB) *Store { //nolint: interfacer
 	return &Store{Store: dbadapter.Store{DB: db}}
 }
 

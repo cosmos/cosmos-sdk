@@ -19,7 +19,9 @@ var (
 )
 
 // NewMsgSubmitEvidence returns a new MsgSubmitEvidence with a signer/submitter.
-func NewMsgSubmitEvidence(s string, evi exported.Evidence) (*MsgSubmitEvidence, error) {
+//
+//nolint:interfacer
+func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEvidence, error) {
 	msg, ok := evi.(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("cannot proto marshal %T", evi)

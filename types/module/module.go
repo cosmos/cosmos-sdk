@@ -1,6 +1,8 @@
 /*
 Package module contains application module patterns and associated "manager" functionality.
 The module pattern has been broken down by:
+  - independent module functionality (AppModuleBasic)
+  - inter-dependent module genesis functionality (AppModuleGenesis)
   - inter-dependent module simulation functionality (AppModuleSimulation)
   - inter-dependent module full functionality (AppModule)
 
@@ -587,7 +589,7 @@ type VersionMap map[string]uint64
 // Example:
 //
 //	cfg := module.NewConfigurator(...)
-//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //	    return app.mm.RunMigrations(ctx, cfg, fromVM)
 //	})
 //
@@ -614,7 +616,7 @@ type VersionMap map[string]uint64
 // Example:
 //
 //	cfg := module.NewConfigurator(...)
-//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //	    // Assume "foo" is a new module.
 //	    // `fromVM` is fetched from existing x/upgrade store. Since foo didn't exist
 //	    // before this upgrade, `v, exists := fromVM["foo"]; exists == false`, and RunMigration will by default

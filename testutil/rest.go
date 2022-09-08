@@ -1,8 +1,6 @@
 package testutil
 
 import (
-	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 )

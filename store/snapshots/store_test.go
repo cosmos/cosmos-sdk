@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -16,8 +18,14 @@ import (
 )
 
 func setupStore(t *testing.T) *snapshots.Store {
-	t.Helper()
-	store, err := snapshots.NewStore(coretesting.NewMemDB(), GetTempDir(t))
+	// os.MkdirTemp() is used instead of testing.T.TempDir()
+	// see https://github.com/cosmos/cosmos-sdk/pull/8475 for
+	// this change's rationale.
+	tempdir, err := os.MkdirTemp("", "")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
+
+	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 	require.NoError(t, err)
 
 	_, err = store.Save(1, 1, makeChunks([][]byte{

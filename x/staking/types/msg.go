@@ -102,7 +102,9 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker
 }
 
 // NewMsgEditValidator creates a new MsgEditValidator instance
-func NewMsgEditValidator(valAddr string, description Description, newRate *math.LegacyDec, newMinSelfDelegation *math.Int) *MsgEditValidator {
+//
+//nolint:interfacer
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *sdk.Int) *MsgEditValidator {
 	return &MsgEditValidator{
 		Description:       description,
 		CommissionRate:    newRate,
@@ -112,7 +114,9 @@ func NewMsgEditValidator(valAddr string, description Description, newRate *math.
 }
 
 // NewMsgDelegate creates a new MsgDelegate instance.
-func NewMsgDelegate(delAddr, valAddr string, amount sdk.Coin) *MsgDelegate {
+//
+//nolint:interfacer
+func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgDelegate {
 	return &MsgDelegate{
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
@@ -121,6 +125,8 @@ func NewMsgDelegate(delAddr, valAddr string, amount sdk.Coin) *MsgDelegate {
 }
 
 // NewMsgBeginRedelegate creates a new MsgBeginRedelegate instance.
+//
+//nolint:interfacer
 func NewMsgBeginRedelegate(
 	delAddr, valSrcAddr, valDstAddr string, amount sdk.Coin,
 ) *MsgBeginRedelegate {
@@ -133,7 +139,9 @@ func NewMsgBeginRedelegate(
 }
 
 // NewMsgUndelegate creates a new MsgUndelegate instance.
-func NewMsgUndelegate(delAddr, valAddr string, amount sdk.Coin) *MsgUndelegate {
+//
+//nolint:interfacer
+func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgUndelegate {
 	return &MsgUndelegate{
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,

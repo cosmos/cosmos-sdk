@@ -40,6 +40,12 @@ By default, the new `MinInitialDepositRatio` parameter is set to zero during mig
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
 
+### Ledger
+
+Ledger support has been generalized to enable use of different apps and keytypes that use `secp256k1`. The Ledger interface remains the same, but it can now be provided through the Keyring `Options`, allowing higher-level chains to connect to different Ledger apps or use custom implementations. In addition, higher-level chains can provide custom key implementations around the Ledger public key, to enable greater flexibility with address generation and signing.
+
+This is not a breaking change, as all values will default to use the standard Cosmos app implementation unless specified otherwise.
+
 ## [v0.46.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0)
 
 ### Go API Changes

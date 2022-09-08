@@ -1833,7 +1833,7 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 					tc.feePayerArgs...,
 				)
 
-				if tc.expectErrBroadCast {
+				if tc.expectErrBroadCast { //nolint:gocritic
 					require.Error(err)
 				} else if tc.errMsg != "" {
 					require.NoError(err)

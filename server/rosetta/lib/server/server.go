@@ -41,7 +41,7 @@ type Server struct {
 }
 
 func (h Server) Start() error {
-	return http.ListenAndServe(h.addr, h.h) //nolint:gosec
+	return http.ListenAndServe(h.addr, h.h)
 }
 
 func NewServer(settings Settings) (Server, error) {

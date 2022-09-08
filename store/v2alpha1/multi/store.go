@@ -336,7 +336,7 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 		}
 	}
 	ret.schema = reg.StoreSchema
-	return
+	return ret, nil
 }
 
 func (s *Store) Close() error {

@@ -191,7 +191,8 @@ func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawM
 	balances ...banktypes.Balance,
 ) (map[string]json.RawMessage, error) {
 	// set genesis accounts
-	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
+	genPubKeyMappings := getGenesisPubKeyMappings(genAccs)
+	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs, genPubKeyMappings)
 	genesisState[authtypes.ModuleName] = codec.MustMarshalJSON(authGenesis)
 
 	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
@@ -279,4 +280,17 @@ func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
 	return AppOptionsMap{
 		flags.FlagHome: homePath,
 	}
+}
+
+func getGenesisPubKeyMappings(genesisAccs authtypes.GenesisAccounts) []*authtypes.AddressToPubKey {
+	var genesisPubKeyMappings []*authtypes.AddressToPubKey
+	for _, acc := range genesisAccs {
+		pubKeyMapping := &authtypes.AddressToPubKey{
+			Address: acc.GetAddress().String(),
+			PubKey:  acc.GetPubKey().String(),
+		}
+		genesisPubKeyMappings = append(genesisPubKeyMappings, pubKeyMapping)
+	}
+
+	return genesisPubKeyMappings
 }

@@ -24,7 +24,7 @@ jobs:
       - name: Update all Go modules
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr checkout "$PR_URL"
           ./scripts/go-update-dep-all.sh ${{ format('{0}@v{1}', steps.deps.outputs.name, steps.deps.outputs.version) }}
@@ -32,4 +32,4 @@ jobs:
           git config --global user.name "dependabot[bot]"
           git add -A
           git commit -m "build(deps): update all go modules"
-          gh push
+          git push

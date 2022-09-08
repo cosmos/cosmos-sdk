@@ -6,46 +6,30 @@ run:
 linters:
   disable-all: true
   enable:
-    - bodyclose
-    - deadcode
     - depguard
     - dogsled
-    # - errcheck
+    - exportloopref
     - goconst
     - gocritic
-    - gofmt
-    - goimports
+    - gofumpt
     - gosec
     - gosimple
     - govet
     - ineffassign
     - misspell
     - nakedret
-    - prealloc
-    - revive
-    - exportloopref
+    - nolintlint
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unused
-    - unparam
-    - misspell
-    # - wsl
-    - nolintlint
 
 issues:
   exclude-rules:
     - text: "Use of weak random number generator"
       linters:
         - gosec
-    - text: "comment on exported var"
-      linters:
-        - golint
-    - text: "don't use an underscore in package name"
-      linters:
-        - golint
     - text: "ST1003:"
       linters:
         - stylecheck
@@ -54,7 +38,10 @@ issues:
     - text: "ST1016:"
       linters:
         - stylecheck
-    - path: "legacy"
+    - text: "should be written without leading space as"
+      linters:
+        - nolintlint
+    - path: "migrations"
       text: "SA1019:"
       linters:
         - staticcheck
@@ -70,6 +57,5 @@ linters-settings:
     suggest-new: true
   nolintlint:
     allow-unused: false
-    allow-leading-space: true
     require-explanation: false
     require-specific: false

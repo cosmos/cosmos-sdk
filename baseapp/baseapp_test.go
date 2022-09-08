@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"strings"
@@ -134,7 +133,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 
 	snapshotInterval := uint64(2)
 	snapshotTimeout := 1 * time.Minute
-	snapshotDir, err := ioutil.TempDir("", "baseapp")
+	snapshotDir, err := os.MkdirTemp("", "baseapp")
 	require.NoError(t, err)
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snapshotDir)
 	require.NoError(t, err)

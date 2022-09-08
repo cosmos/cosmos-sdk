@@ -7,31 +7,38 @@
   {
     "proto": {"amount": "1", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
-    "text": "0.000001 COSM"},
+    "text": "0.000001 COSM"
+  },
   {
     "proto": {"amount": "10", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
-    "text": "0.00001 COSM"},
+    "text": "0.00001 COSM"
+  },
   {
     "proto": {"amount": "100", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
-    "text": "0.0001 COSM"},
+    "text": "0.0001 COSM"
+  },
   {
     "proto": {"amount": "1000", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
-    "text": "0.001 COSM"},
+    "text": "0.001 COSM"
+  },
   {
     "proto": {"amount": "10000", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
-    "text": "0.01 COSM"},
+    "text": "0.01 COSM"
+  },
   {
     "proto": {"amount": "100000", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
-    "text": "0.1 COSM"},
+    "text": "0.1 COSM"
+  },
   {
     "proto": {"amount": "1000000", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
-    "text": "1 COSM"},
+    "text": "1 COSM"
+  },
   {
     "proto": {"amount": "10000000", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
@@ -55,7 +62,8 @@
   {
     "proto": {"amount": "0.0001", "denom": "COSM"},
     "metadata": {"display": "ucosm", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
-    "text": "100 ucosm"},
+    "text": "100 ucosm"
+  },
   {
     "proto": {"amount": "0.001", "denom": "COSM"},
     "metadata": {"display": "ucosm", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
@@ -99,7 +107,8 @@
   {
     "proto": {"amount": "100", "denom": "ucosm"},
     "metadata": {"denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
-    "text": "100 ucosm"},
+    "text": "100 ucosm"
+  },
   {
     "proto": {"amount": "1000", "denom": "ucosm"},
     "metadata": {"denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
@@ -139,7 +148,8 @@
   },
   {
     "proto": {"amount": "100", "denom": "ucosm"},
-    "text": "100 ucosm"},
+    "text": "100 ucosm"
+  },
   {
     "proto": {"amount": "1000", "denom": "ucosm"},
     "text": "1'000 ucosm"
@@ -178,7 +188,8 @@
   {
     "proto": {"amount": "100", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 2}]},
-    "text": "100 ucosm"},
+    "text": "100 ucosm"
+  },
   {
     "proto": {"amount": "1000", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 2}]},
@@ -212,15 +223,18 @@
   {
     "proto": {"amount": "1", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 2}, {"denom": "ucosm", "exponent": 0}]},
-    "text": "0.01 COSM"},
+    "text": "0.01 COSM"
+  },
   {
     "proto": {"amount": "10", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 2}, {"denom": "ucosm", "exponent": 0}]},
-    "text": "0.1 COSM"},
+    "text": "0.1 COSM"
+  },
   {
     "proto": {"amount": "100", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 2}, {"denom": "ucosm", "exponent": 0}]},
-    "text": "1 COSM"},
+    "text": "1 COSM"
+  },
   {
     "proto": {"amount": "1000", "denom": "ucosm"},
     "metadata": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 2}, {"denom": "ucosm", "exponent": 0}]},
@@ -254,7 +268,8 @@
   {
     "proto": {"amount": "1", "denom": "point"},
     "metadata": {"display": "POINT", "denom_units": [{"denom": "point", "exponent": 0}, {"denom": "POINT", "exponent": 0}]},
-    "text": "1 POINT"},
+    "text": "1 POINT"
+  },
   {
     "proto": {"amount": "10", "denom": "point"},
     "metadata": {"display": "POINT", "denom_units": [{"denom": "point", "exponent": 0}, {"denom": "POINT", "exponent": 0}]},

@@ -34,6 +34,8 @@ message ServiceCommandDescriptor {
   map<string, ServiceCommandDescriptor> sub_commands = 3;
 }
 
+// RpcCommandOptions specifies options for commands generated from protobuf
+// rpc methods.
 message RpcCommandOptions {
   // rpc_method is short name of the protobuf rpc method that this command is
   // generated from.

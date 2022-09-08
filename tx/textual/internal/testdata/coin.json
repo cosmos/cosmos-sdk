@@ -53,7 +53,7 @@
     "text": "10 ucosm"
   },
   {
-    "proto": {"amount": "0.00001", "denom": "COSM"},
+    "proto": {"amount": "0.0001", "denom": "COSM"},
     "metadata": {"display": "ucosm", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
     "text": "100 ucosm"},
   {

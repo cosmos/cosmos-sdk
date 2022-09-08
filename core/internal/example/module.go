@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/store"
 	"github.com/cosmos/cosmos-sdk/depinject"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 func init() {
@@ -31,10 +32,12 @@ func init() {
 type keeper struct {
 	depinject.In
 
-	KVStoreKey       store.KVStoreService
-	BlockInfoService blockinfo.Service
-	EventService     event.Service
-	GasService       gas.Service
+	KVStoreKey            store.KVStoreService
+	BlockInfoService      blockinfo.Service
+	EventService          event.Service
+	GasService            gas.Service
+	RootInterModuleClient appmodule.RootInterModuleClient
+	AddressCodec          address.Codec
 }
 
 const (

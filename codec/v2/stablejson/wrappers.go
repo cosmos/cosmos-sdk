@@ -12,5 +12,5 @@ const (
 
 func (opts MarshalOptions) marshalWrapper(writer io.Writer, message protoreflect.Message) error {
 	value := message.Get(message.Descriptor().Fields().ByName(valueField))
-	return opts.marshalScalar(writer, value.Interface())
+	return opts.marshalPrimitive(writer, value.Interface())
 }

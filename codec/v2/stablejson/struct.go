@@ -50,7 +50,7 @@ func marshalStruct(writer io.Writer, value protoreflect.Message) error {
 		first = false
 		_, _ = fmt.Fprintf(writer, "%q:", k)
 
-		err := marshalValue(writer, m2[k])
+		err := marshalStructValue(writer, m2[k])
 		if err != nil {
 			return err
 		}
@@ -80,7 +80,7 @@ func marshalListValue(writer io.Writer, value protoreflect.Message) error {
 		}
 		first = false
 
-		err := marshalValue(writer, list.Get(i).Message())
+		err := marshalStructValue(writer, list.Get(i).Message())
 		if err != nil {
 			return err
 		}
@@ -90,7 +90,7 @@ func marshalListValue(writer io.Writer, value protoreflect.Message) error {
 	return err
 }
 
-func marshalValue(writer io.Writer, value protoreflect.Message) error {
+func marshalStructValue(writer io.Writer, value protoreflect.Message) error {
 	field := value.WhichOneof(value.Descriptor().Oneofs().ByName(kindOneOf))
 	if field == nil {
 		return nil

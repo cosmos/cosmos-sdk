@@ -1,35 +1,87 @@
 package stablejson
 
 import (
+	"fmt"
 	"io"
+	"sort"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func (opts MarshalOptions) marshalMessage(writer io.Writer, value protoreflect.Message) (continueRange bool, error error) {
-	switch value.Descriptor().FullName() {
+func (opts MarshalOptions) marshalMessage(message protoreflect.Message, writer io.Writer) error {
+	switch message.Descriptor().FullName() {
 	case timestampFullName:
-		return false, marshalTimestamp(writer, value)
+		return marshalTimestamp(writer, message)
 	case durationFullName:
-		return false, marshalDuration(writer, value)
+		return marshalDuration(writer, message)
 	case structFullName:
-		return false, marshalStruct(writer, value)
+		return marshalStruct(writer, message)
 	case listValueFullName:
-		return false, marshalListValue(writer, value)
+		return marshalListValue(writer, message)
 	case valueFullName:
-		return false, marshalValue(writer, value)
+		return marshalStructValue(writer, message)
 	case nullValueFullName:
 		_, err := writer.Write([]byte("null"))
-		return false, err
+		return err
 	case boolValueFullName, int32ValueFullName, int64ValueFullName, uint32ValueFullName, uint64ValueFullName,
 		stringValueFullName, bytesValueFullName, floatValueFullName, doubleValueFullName:
-		return false, opts.marshalWrapper(writer, value)
+		return opts.marshalWrapper(writer, message)
 	case fieldMaskFullName:
-		return false, marshalFieldMask(writer, value)
+		return marshalFieldMask(writer, message)
+	case anyFullName:
+		return opts.marshalAny(message, writer)
 	}
 
 	_, err := writer.Write([]byte("{"))
-	return true, err
+	if err != nil {
+		return err
+	}
+
+	err = opts.marshalMessageFields(message, writer, true)
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write([]byte("}"))
+	return err
+}
+
+func (opts MarshalOptions) marshalMessageFields(message protoreflect.Message, writer io.Writer, first bool) error {
+	fields := message.Descriptor().Fields()
+	numFields := fields.Len()
+	allFields := make([]protoreflect.FieldDescriptor, numFields)
+	for i := 0; i < numFields; i++ {
+		allFields[i] = fields.Get(i)
+	}
+	sort.Slice(allFields, func(i, j int) bool {
+		return allFields[i].Number() < allFields[j].Number()
+	})
+
+	for _, field := range allFields {
+		if !message.Has(field) {
+			continue
+		}
+
+		if !first {
+			_, err := writer.Write([]byte(","))
+			if err != nil {
+				return err
+			}
+		}
+		first = false
+
+		_, err := fmt.Fprintf(writer, "%q:", field.Name())
+		if err != nil {
+			return err
+		}
+
+		err = opts.MarshalFieldValue(field, message.Get(field), writer)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 const (
@@ -49,4 +101,5 @@ const (
 	floatValueFullName                        = "google.protobuf.FloatValue"
 	doubleValueFullName                       = "google.protobuf.DoubleValue"
 	fieldMaskFullName                         = "google.protobuf.FieldMask"
+	anyFullName                               = "google.protobuf.Any"
 )

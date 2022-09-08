@@ -5,7 +5,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  dependabot:
+  update-all:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
@@ -13,26 +13,23 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - name: Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@v1.1.1
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-      # The following properties are now available:
-      #  - steps.metadata.outputs.dependency-names
-      #  - steps.metadata.outputs.dependency-type
-      #  - steps.metadata.outputs.update-type
+      - name: Extract updated dependency
+        id: deps
+        run: |
+          # Extract the dependency name from the PR title
+          # Example: "build(deps): Bump github.com/cosmos/cosmos-sdk from 0.46.0 to 0.47.0"
+          # Extracts "github.com/cosmos/cosmos-sdk" and "0.47.0"
+          echo "::set-output name=name::$(echo "${{ github.event.pull_request.title }}" | cut -d ' ' -f 3)"
+          echo "::set-output name=version::$(echo "${{ github.event.pull_request.title }}" | cut -d ' ' -f 7)"
       - name: Update all Go modules
-        if: ${{ steps.metadata.outputs.package-ecosystem == 'gomod' }}
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr checkout "$PR_URL"
-          ./scripts/go-update-dep-all.sh ${{ steps.dependabot-metadata.outputs.updated-dependencies-json }}
-          ./scripts/go-mod-tidy-all.sh
+          ./scripts/go-update-dep-all.sh ${{ format('{0}@v{1}', steps.deps.outputs.name, steps.deps.outputs.version) }}
           git config --global user.email "dependabot[bot]@users.noreply.github.com"
           git config --global user.name "dependabot[bot]"
           git add -A
-          git commit -m "chore(deps): update all go modules"
-          git push
-        env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          git commit -m "build(deps): update all go modules"
+          gh push

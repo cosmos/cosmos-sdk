@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"strings"
 
-	legacyproto "github.com/golang/protobuf/proto" //nolint:staticcheck // we're aware this is deprecated and using it anyhow.
+	legacyproto "github.com/golang/protobuf/proto" //nolint:staticcheck
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/gogo/protobuf/jsonpb"
-	gogoproto "github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/jsonpb"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )

@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/grpc/codes"
@@ -109,12 +109,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		Validators:      res.Validators,
 		AppHash:         appHash,
 	}
-}
-
-// SetOption implements the ABCI interface.
-func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
-	// TODO: Implement!
-	return
 }
 
 // Info implements the ABCI interface.
@@ -236,6 +230,18 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	return res
+}
+
+// ProcessProposal implements the ability for the application to verify and/or modify transactions in a block proposal.
+func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	// treated as a noop until app side mempool is implemented
+	return abci.ResponsePrepareProposal{Txs: req.Txs}
+}
+
+// ProcessProposal implements the ability for the application to verify transactions in a block proposal, and decide if they should accept the block or not.
+func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	// accept all proposed blocks until app side mempool is implemented
+	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
@@ -420,9 +426,6 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	case QueryPathP2P:
 		return handleQueryP2P(app, path)
-
-	case QueryPathCustom:
-		return handleQueryCustom(app, path, req)
 	}
 
 	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), app.trace)
@@ -814,43 +817,6 @@ func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 	}
 
 	return resp
-}
-
-func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
-	// path[0] should be "custom" because "/custom" prefix is required for keeper
-	// queries.
-	//
-	// The QueryRouter routes using path[1]. For example, in the path
-	// "custom/gov/proposal", QueryRouter routes using "gov".
-	if len(path) < 2 || path[1] == "" {
-		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no route for custom query specified"), app.trace)
-	}
-
-	querier := app.queryRouter.Route(path[1])
-	if querier == nil {
-		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no custom querier found for route %s", path[1]), app.trace)
-	}
-
-	ctx, err := app.createQueryContext(req.Height, req.Prove)
-	if err != nil {
-		return sdkerrors.QueryResult(err, app.trace)
-	}
-
-	// Passes the rest of the path as an argument to the querier.
-	//
-	// For example, in the path "custom/gov/proposal/test", the gov querier gets
-	// []string{"proposal", "test"} as the path.
-	resBytes, err := querier(ctx, path[2:], req)
-	if err != nil {
-		res := sdkerrors.QueryResult(err, app.trace)
-		res.Height = req.Height
-		return res
-	}
-
-	return abci.ResponseQuery{
-		Height: req.Height,
-		Value:  resBytes,
-	}
 }
 
 // SplitABCIQueryPath splits a string path using the delimiter '/'.

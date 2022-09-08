@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"sigs.k8s.io/yaml"
@@ -53,6 +53,7 @@ type Context struct {
 	FeePayer          sdk.AccAddress
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
+	LedgerHasProtobuf bool
 	PreprocessTxHook  PreprocessTxFn
 
 	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
@@ -263,6 +264,13 @@ func (ctx Context) WithViper(prefix string) Context {
 // WithAux returns a copy of the context with an updated IsAux value.
 func (ctx Context) WithAux(isAux bool) Context {
 	ctx.IsAux = isAux
+	return ctx
+}
+
+// WithLedgerHasProto returns the context with the provided boolean value, indicating
+// whether the target Ledger application can support Protobuf payloads.
+func (ctx Context) WithLedgerHasProtobuf(val bool) Context {
+	ctx.LedgerHasProtobuf = val
 	return ctx
 }
 

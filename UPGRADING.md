@@ -28,6 +28,13 @@ The constructor, `NewSimApp` has been simplified:
 `simapp.MakeTestEncodingConfig()` was deprecated and has been removed. Instead you can use the `TestEncodingConfig` from the `types/module/testutil` package.
 This means you can replace your usage of `simapp.MakeTestEncodingConfig` in tests to `moduletestutil.MakeTestEncodingConfig`, which takes a series of relevant `AppModuleBasic` as input (the module being tested and any potential dependencies).
 
+### Protobuf
+
+The SDK has migrated from `gogo/protobuf` (which is currently unmaintained), to our own maintained fork, [`cosmos/gogoproto`](https://github.com/cosmos/gogoproto).
+
+This means you should replace all imports of `github.com/gogo/protobuf` to `github.com/cosmos/gogoproto`.
+This allows you to remove the replace directive `replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1` from your `go.mod` file.
+
 ### `x/gov`
 
 #### Minimum Proposal Deposit At Time of Submission
@@ -39,6 +46,12 @@ the necessary proportion of coins needed at the proposal submission time. The mo
 By default, the new `MinInitialDepositRatio` parameter is set to zero during migration. The value of zero signifies that this 
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
+
+### Ledger
+
+Ledger support has been generalized to enable use of different apps and keytypes that use `secp256k1`. The Ledger interface remains the same, but it can now be provided through the Keyring `Options`, allowing higher-level chains to connect to different Ledger apps or use custom implementations. In addition, higher-level chains can provide custom key implementations around the Ledger public key, to enable greater flexibility with address generation and signing.
+
+This is not a breaking change, as all values will default to use the standard Cosmos app implementation unless specified otherwise.
 
 ## [v0.46.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0)
 

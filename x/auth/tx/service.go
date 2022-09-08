@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/query"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/golang/protobuf/proto" // nolint: staticcheck
@@ -18,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	pagination "github.com/cosmos/cosmos-sdk/types/query"
+	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
@@ -62,7 +61,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 
 	limit := int(req.Limit)
 	if limit == 0 {
-		limit = query.DefaultLimit
+		limit = querytypes.DefaultLimit
 	}
 	orderBy := parseOrderBy(req.OrderBy)
 
@@ -198,7 +197,7 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		limit = req.Pagination.Limit
 	} else {
 		offset = 0
-		limit = pagination.DefaultLimit
+		limit = querytypes.DefaultLimit
 	}
 
 	blockTxs := block.Data.Txs
@@ -238,7 +237,7 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		Txs:     txs,
 		BlockId: &blockID,
 		Block:   block,
-		Pagination: &pagination.PageResponse{
+		Pagination: &querytypes.PageResponse{
 			Total: blockTxsLn,
 		},
 	}, nil

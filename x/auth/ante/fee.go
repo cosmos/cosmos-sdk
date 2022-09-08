@@ -47,10 +47,10 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	var (
-	  priority int64
-	  err error
+		priority int64
+		err      error
 	)
-	
+
 	fee := feeTx.GetFee()
 	if !simulate {
 		fee, priority, err = dfd.txFeeChecker(ctx, tx)
@@ -74,7 +74,7 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 	}
 
 	if addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return fmt.Errorf("Fee collector module account (%s) has not been set", types.FeeCollectorName)
+		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
 	feePayer := feeTx.FeePayer()

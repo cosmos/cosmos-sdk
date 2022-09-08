@@ -29,9 +29,9 @@ var (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgDeposit      = "op_weight_msg_deposit"
-	OpWeightMsgVote         = "op_weight_msg_vote"
-	OpWeightMsgVoteWeighted = "op_weight_msg_weighted_vote"
+	OpWeightMsgDeposit      = "op_weight_msg_deposit"       //nolint:gosec
+	OpWeightMsgVote         = "op_weight_msg_vote"          //nolint:gosec
+	OpWeightMsgVoteWeighted = "op_weight_msg_weighted_vote" //nolint:gosec
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -438,7 +438,7 @@ func randomProposalID(r *rand.Rand, k keeper.Keeper,
 	}
 
 	proposal, ok := k.GetProposal(ctx, proposalID)
-	if !ok || v1.ProposalStatus(proposal.Status) != status {
+	if !ok || proposal.Status != status {
 		return proposalID, false
 	}
 

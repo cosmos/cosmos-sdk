@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"github.com/tendermint/crypto/bcrypt"
 	"github.com/tendermint/tendermint/crypto"
@@ -235,7 +235,7 @@ func DecodeArmor(armorStr string) (blockType string, headers map[string]string, 
 	if err != nil {
 		return "", nil, nil, err
 	}
-	data, err = ioutil.ReadAll(block.Body)
+	data, err = io.ReadAll(block.Body)
 	if err != nil {
 		return "", nil, nil, err
 	}

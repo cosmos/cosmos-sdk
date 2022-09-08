@@ -32,7 +32,7 @@ func migrateSupply(store sdk.KVStore, cdc codec.BinaryCodec) error {
 
 	// We're sure that SupplyI is a Supply struct, there's no other
 	// implementation.
-	oldSupply := oldSupplyI.(*types.Supply)
+	oldSupply := oldSupplyI.(*types.Supply) //nolint:staticcheck
 	for i := range oldSupply.Total {
 		coin := oldSupply.Total[i]
 		coinBz, err := coin.Amount.Marshal()

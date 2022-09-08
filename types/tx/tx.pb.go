@@ -594,6 +594,7 @@ type ModeInfo struct {
 	// multisig signer
 	//
 	// Types that are valid to be assigned to Sum:
+	//
 	//	*ModeInfo_Single_
 	//	*ModeInfo_Multi_
 	Sum isModeInfo_Sum `protobuf_oneof:"sum"`

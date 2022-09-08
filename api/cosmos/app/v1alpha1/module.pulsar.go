@@ -1715,10 +1715,10 @@ type PackageReference struct {
 	// with pinned file descriptors to make sure there are no incompatible changes.
 	//
 	// This behavior ensures that:
-	// * pinned proto images are up-to-date
-	// * protobuf files are carefully annotated with revision comments which
-	//   are important good client UX
-	// * protobuf files are changed in backwards and forwards compatible ways
+	//   - pinned proto images are up-to-date
+	//   - protobuf files are carefully annotated with revision comments which
+	//     are important good client UX
+	//   - protobuf files are changed in backwards and forwards compatible ways
 	Revision uint32 `protobuf:"varint,2,opt,name=revision,proto3" json:"revision,omitempty"`
 }
 

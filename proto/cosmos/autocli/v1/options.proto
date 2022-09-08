@@ -65,21 +65,24 @@ message MethodOptions {
   string version = 7;
 
   // field_options are options for specific fields on the method request type.
+  // If options are not specified for a field, a flag will be created for that
+  // field with the default options.
   map<string, FieldOptions> field_options = 8;
 }
 
 // FieldOptions are options for specific fields on the method request type.
 // By default, fields are configured as flags based on the kebab-case name
-// of the field.
+// of the field. Fields can be turned into positional parameters by
+// specifying position.
 message FieldOptions {
 
-  // name is an name to use for the field flag.
+  // name is an alternate name to use for the field flag.
   string name = 1;
 
   // shorthand is a one-letter abbreviated flag.
   string shorthand = 2;
 
-  // usage is a help message.
+  // usage is the help message.
   string usage = 3;
 
   // default_value is the default value as text.
@@ -97,7 +100,7 @@ message FieldOptions {
   // hidden hides the flag from help/usage text
   bool hidden = 8;
 
-  // position makes this flag a positional parameter with the given order instead of a flag.
+  // position makes this flag a positional parameter with given 1-based position instead of a flag.
   uint32 position = 9;
 
   // varargs makes a positional parameter a varargs parameter, position must also

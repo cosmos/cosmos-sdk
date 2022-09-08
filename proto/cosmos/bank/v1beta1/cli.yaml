@@ -5,11 +5,11 @@ tx:
       use: send [from_key_or_address] [to_address] [amount...]
       field_options:
         from_address:
-          position: 0
-        to_address:
           position: 1
-        amount:
+        to_address:
           position: 2
+        amount:
+          position: 3
           varargs: true
 query:
   service: cosmos.bank.v1beta1.Query
@@ -17,6 +17,6 @@ query:
     Balance:
       field_options:
         address:
-          position: 0
-        denom:
           position: 1
+        denom:
+          position: 2

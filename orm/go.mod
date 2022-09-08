@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/orm
 go 1.18
 
 require (
-	cosmossdk.io/api v0.1.0-alpha9
+	cosmossdk.io/api v0.2.0
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/golang/mock v1.6.0
@@ -23,6 +23,7 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cockroachdb/apd/v3 v3.1.0 // indirect
+	github.com/cosmos/gogoproto v1.4.1 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cucumber/common/gherkin/go/v22 v22.0.0 // indirect
 	github.com/cucumber/common/messages/go/v17 v17.1.1 // indirect
@@ -33,7 +34,6 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect

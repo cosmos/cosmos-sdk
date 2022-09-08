@@ -1,22 +1,18 @@
 tx:
   service: cosmos.bank.v1beta1.Msg
-  method_options:
-    Send:
+  rpc_command_options:
+    - rpc_method: Send
       use: send [from_key_or_address] [to_address] [amount...]
-      field_options:
-        from_address:
-          position: 1
-        to_address:
-          position: 2
-        amount:
-          position: 3
+      positional_args:
+        - proto_field: from_address
+        - proto_field: to_address
+        - proto_field: amount
           varargs: true
 query:
   service: cosmos.bank.v1beta1.Query
-  method_options:
-    Balance:
-      field_options:
-        address:
-          position: 1
-        denom:
-          position: 2
+  rpc_command_options:
+    - rpc_method: Balance
+      use: balance [address] [denom]
+      positional_args:
+        - proto_field: address
+        - proto_field: denom

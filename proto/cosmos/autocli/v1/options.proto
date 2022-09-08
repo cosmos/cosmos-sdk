@@ -8,73 +8,86 @@ option go_package = "github.com/cosmos/cosmos-sdk/api/cosmos/base/cli/v1;cliv1";
 
 // ModuleOptions describes the CLI options for a Cosmos SDK module.
 message ModuleOptions {
-
   // tx describes the tx command for the module.
-  CommandDescriptor tx = 1;
+  ServiceCommandDescriptor tx = 1;
 
   // query describes the tx command for the module.
-  CommandDescriptor query = 2;
+  ServiceCommandDescriptor query = 2;
 }
 
-// CommandDescriptor describes a CLI command based on protobuf services.
-message CommandDescriptor {
+// ServiceCommandDescriptor describes a CLI command based on a protobuf service.
+message ServiceCommandDescriptor {
 
-  // service is the fully qualified name of the service to build the command from.
+  // service is the fully qualified name of the protobuf service to build
+  // the command from. It can be left empty if sub_commands are used instead
+  // which may be the case if a module provides multiple tx and/or query services.
   string service = 1;
+
+  // rpc_command_options are options for commands generated from rpc methods.
+  // If no options are specified for a given rpc method on the service, a
+  // command will be generated for that method with the default options.
+  repeated RpcCommandOptions rpc_command_options = 2;
+
+  // sub_commands is a map of optional sub-commands for this command based on
+  // different protobuf services. The map key is used as the name of the
+  // sub-command.
+  map<string, ServiceCommandDescriptor> sub_commands = 3;
+}
+
+message RpcCommandOptions {
+  // rpc_method is short name of the protobuf rpc method that this command is
+  // generated from.
+  string rpc_method = 1;
 
   // use is the one-line usage method. It also allows specifying an alternate
   // name for the command as the first word of the usage text.
   //
-  // By default if the command is is the root tx or query command descriptor for
-  // a module then its name will simply be the module name. If it is a
-  // sub-command it will be the lower kebab-case short name of the service.
+  // By default the name of an rpc command is the kebab-case short name of the
+  // rpc method.
   string use = 2;
 
-  // method_options are options for specific methods on the service.
-  map<string, MethodOptions> method_options = 3;
-
-  // sub_commands are optional sub-commands for a command.
-  repeated CommandDescriptor sub_commands = 4;
-}
-
-message MethodOptions {
-
   // long is the long message shown in the 'help <this-command>' output.
-  string long = 1;
+  string long = 3;
 
   // short is the short description shown in the 'help' output.
-  string short = 2;
+  string short = 4;
 
   // example is examples of how to use the command.
-  string example = 3;
+  string example = 5;
 
   // alias is an array of aliases that can be used instead of the first word in Use.
-  repeated string alias = 4;
+  repeated string alias = 6;
 
   // suggest_for is an array of command names for which this command will be suggested -
   // similar to aliases but only suggests.
-  repeated string suggest_for = 5;
+  repeated string suggest_for = 7;
 
   // deprecated defines, if this command is deprecated and should print this string when used.
-  string deprecated = 6;
+  string deprecated = 8;
 
   // version defines the version for this command. If this value is non-empty and the command does not
   // define a "version" flag, a "version" boolean flag will be added to the command and, if specified,
   // will print content of the "Version" variable. A shorthand "v" flag will also be added if the
   // command does not define one.
-  string version = 7;
+  string version = 9;
 
-  // field_options are options for specific fields on the method request type.
-  // If options are not specified for a field, a flag will be created for that
-  // field with the default options.
-  map<string, FieldOptions> field_options = 8;
+  // flag_options are options for flags generated from rpc request fields.
+  // By default all request fields are configured as flags. They can
+  // also be configured as positional args instead using positional_args.
+  map<string, FlagOptions> flag_options = 10;
+
+  // positional_args specifies positional arguments for the command.
+  repeated PositionalArgDescriptor positional_args = 11;
+
+  // skip specifies whether to skip this rpc method when generating commands.
+  bool skip = 12;
 }
 
-// FieldOptions are options for specific fields on the method request type.
-// By default, fields are configured as flags based on the kebab-case name
-// of the field. Fields can be turned into positional parameters by
-// specifying position.
-message FieldOptions {
+// FlagOptions are options for flags generated from rpc request fields.
+// By default, all request fields are configured as flags based on the
+// kebab-case name of the field. Fields can be turned into positional arguments
+// instead by using RpcCommandOptions.positional_args.
+message FlagOptions {
 
   // name is an alternate name to use for the field flag.
   string name = 1;
@@ -99,12 +112,16 @@ message FieldOptions {
 
   // hidden hides the flag from help/usage text
   bool hidden = 8;
+}
 
-  // position makes this flag a positional parameter with given 1-based position instead of a flag.
-  uint32 position = 9;
+// PositionalArgDescriptor describes a positional argument.
+message PositionalArgDescriptor {
+  // proto_field specifies the proto field to use as the positional arg. Any
+  // fields used as positional args will not have a flag generated.
+  string proto_field = 1;
 
-  // varargs makes a positional parameter a varargs parameter, position must also
-  // be specified. This can only be applied to the last positional parameter and the
-  // field must a repeated field.
-  bool varargs = 10;
+  // varargs makes a positional parameter a varargs parameter. This can only be
+  // applied to last positional parameter and the proto_field must a repeated
+  // field.
+  bool varargs = 2;
 }

@@ -1,13 +1,13 @@
 package stablejson
 
 import (
-	"strings"
+	io "io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 const ()
 
-func marshalDuration(writer *strings.Builder, message protoreflect.Message) error {
+func marshalDuration(writer io.Writer, message protoreflect.Message) error {
 	return nil
 }

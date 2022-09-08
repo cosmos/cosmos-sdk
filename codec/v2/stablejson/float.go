@@ -1,23 +1,25 @@
 package stablejson
 
 import (
+	"io"
 	"math"
 	"strconv"
-	"strings"
 )
 
-func marshalFloat(writer *strings.Builder, x float64) {
+func marshalFloat(writer io.Writer, x float64) error {
 	// PROTO3 SPEC:
 	// JSON value will be a number or one of the special string values "NaN", "Infinity", and "-Infinity".
 	// Either numbers or strings are accepted. Exponent notation is also accepted.
 	// -0 is considered equivalent to 0.
+	var err error
 	if math.IsInf(x, -1) {
-		writer.WriteString("-Infinity")
+		_, err = writer.Write([]byte("-Infinity"))
 	} else if math.IsInf(x, 1) {
-		writer.WriteString("Infinity")
+		_, err = writer.Write([]byte("Infinity"))
 	} else if math.IsNaN(x) {
-		writer.WriteString("NaN")
+		_, err = writer.Write([]byte("NaN"))
 	} else {
-		writer.WriteString(strconv.FormatFloat(x, 'f', -1, 64))
+		_, err = writer.Write([]byte(strconv.FormatFloat(x, 'f', -1, 64)))
 	}
+	return err
 }

@@ -2,9 +2,8 @@ package stablejson
 
 import (
 	"fmt"
+	io "io"
 	"sort"
-	"strconv"
-	"strings"
 
 	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -22,11 +21,14 @@ const (
 	listValueField   protoreflect.Name = "list_value"
 )
 
-func marshalStruct(writer *strings.Builder, value protoreflect.Message) error {
+func marshalStruct(writer io.Writer, value protoreflect.Message) error {
 	field := value.Descriptor().Fields().ByName(fieldsField)
 	m1 := value.Get(field).Map()
 
-	writer.WriteString("{")
+	_, err := writer.Write([]byte("{"))
+	if err != nil {
+		return err
+	}
 
 	m2 := map[string]protoreflect.Message{}
 	m1.Range(func(key protoreflect.MapKey, value protoreflect.Value) bool {
@@ -39,7 +41,10 @@ func marshalStruct(writer *strings.Builder, value protoreflect.Message) error {
 	first := true
 	for _, k := range keys {
 		if !first {
-			writer.WriteString(",")
+			_, err := writer.Write([]byte(","))
+			if err != nil {
+				return err
+			}
 		}
 
 		first = false
@@ -51,20 +56,27 @@ func marshalStruct(writer *strings.Builder, value protoreflect.Message) error {
 		}
 	}
 
-	writer.WriteString("}")
-	return nil
+	_, err = writer.Write([]byte("}"))
+	return err
 }
 
-func marshalListValue(writer *strings.Builder, value protoreflect.Message) error {
+func marshalListValue(writer io.Writer, value protoreflect.Message) error {
 	field := value.Descriptor().Fields().ByName(valuesField)
 	list := value.Get(field).List()
 	n := list.Len()
 
-	writer.WriteString("[")
+	_, err := writer.Write([]byte("["))
+	if err != nil {
+		return err
+	}
+
 	first := true
 	for i := 0; i < n; i++ {
 		if !first {
-			writer.WriteString(",")
+			_, err = writer.Write([]byte(","))
+			if err != nil {
+				return err
+			}
 		}
 		first = false
 
@@ -73,26 +85,27 @@ func marshalListValue(writer *strings.Builder, value protoreflect.Message) error
 			return err
 		}
 	}
-	writer.WriteString("]")
 
-	return nil
+	_, err = writer.Write([]byte("]"))
+	return err
 }
 
-func marshalValue(writer *strings.Builder, value protoreflect.Message) error {
+func marshalValue(writer io.Writer, value protoreflect.Message) error {
 	field := value.WhichOneof(value.Descriptor().Oneofs().ByName(kindOneOf))
 	if field == nil {
 		return nil
 	}
 
+	var err error
 	switch field.Name() {
 	case nullValueField:
-		writer.WriteString("null")
+		_, err = writer.Write([]byte("null"))
 	case numberValueField:
-		marshalFloat(writer, value.Get(field).Float())
+		err = marshalFloat(writer, value.Get(field).Float())
 	case stringValueField:
-		_, _ = fmt.Fprintf(writer, "%q", value.Get(field).String())
+		_, err = fmt.Fprintf(writer, "%q", value.Get(field).String())
 	case boolValueField:
-		writer.WriteString(strconv.FormatBool(value.Get(field).Bool()))
+		_, err = fmt.Fprintf(writer, "%t", value.Get(field).Bool())
 	case structValueField:
 		return marshalStruct(writer, value.Get(field).Message())
 	case listValueField:
@@ -100,5 +113,5 @@ func marshalValue(writer *strings.Builder, value protoreflect.Message) error {
 	default:
 		return fmt.Errorf("unexpected field in google.protobuf.Value: %v", field)
 	}
-	return nil
+	return err
 }

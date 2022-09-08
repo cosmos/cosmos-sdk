@@ -2,6 +2,7 @@ package stablejson
 
 import (
 	"fmt"
+	io "io"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -11,7 +12,7 @@ const (
 	pathsName protoreflect.Name = "paths"
 )
 
-func marshalFieldMask(writer *strings.Builder, value protoreflect.Message) error {
+func marshalFieldMask(writer io.Writer, value protoreflect.Message) error {
 	field := value.Descriptor().Fields().ByName(pathsName)
 	if field == nil {
 		return fmt.Errorf("expected to find field %s", pathsName)

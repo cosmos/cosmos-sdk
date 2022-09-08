@@ -1,11 +1,11 @@
 package stablejson
 
 import (
-	"strings"
+	io "io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func marshalTimestamp(writer *strings.Builder, message protoreflect.Message) error {
+func marshalTimestamp(writer io.Writer, message protoreflect.Message) error {
 	return nil
 }

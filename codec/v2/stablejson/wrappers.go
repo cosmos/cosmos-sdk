@@ -1,7 +1,7 @@
 package stablejson
 
 import (
-	"strings"
+	io "io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -10,7 +10,7 @@ const (
 	valueField = "value"
 )
 
-func (opts MarshalOptions) marshalWrapper(writer *strings.Builder, message protoreflect.Message) error {
+func (opts MarshalOptions) marshalWrapper(writer io.Writer, message protoreflect.Message) error {
 	value := message.Get(message.Descriptor().Fields().ByName(valueField))
 	return opts.marshalScalar(writer, value.Interface())
 }

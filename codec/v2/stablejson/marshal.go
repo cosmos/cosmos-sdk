@@ -1,8 +1,9 @@
 package stablejson
 
 import (
+	"bytes"
 	"fmt"
-	"strings"
+	"io"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protopath"
@@ -22,10 +23,15 @@ type MarshalOptions struct {
 }
 
 func (opts MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
-	writer := &strings.Builder{}
+	buf := &bytes.Buffer{}
+	err := opts.MarshalTo(message, buf)
+	return buf.Bytes(), err
+}
+
+func (opts MarshalOptions) MarshalTo(message proto.Message, writer io.Writer) error {
 	firstStack := []bool{true}
 	skipNext := false
-	err := protorange.Options{
+	return protorange.Options{
 		Stable: true,
 	}.Range(message.ProtoReflect(),
 		// push
@@ -37,7 +43,10 @@ func (opts MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 
 			// Starting printing the value.
 			if !firstStack[len(firstStack)-1] {
-				writer.WriteString(",")
+				_, err := writer.Write([]byte(","))
+				if err != nil {
+					return err
+				}
 			}
 			firstStack[len(firstStack)-1] = false
 
@@ -48,21 +57,27 @@ func (opts MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 			switch last.Step.Kind() {
 			case protopath.FieldAccessStep:
 				fd = last.Step.FieldDescriptor()
-				_, _ = fmt.Fprintf(writer, "%q:", fd.Name())
+				_, err := fmt.Fprintf(writer, "%q:", fd.Name())
+				if err != nil {
+					return err
+				}
 
 			case protopath.ListIndexStep:
 				fd = beforeLast.Step.FieldDescriptor() // lists always appear in the context of a repeated field
 
 			case protopath.MapIndexStep:
 				fd = beforeLast.Step.FieldDescriptor() // maps always appear in the context of a repeated field
-				_, _ = fmt.Fprintf(writer, "%q:", last.Step.MapIndex().String())
+				_, err := fmt.Fprintf(writer, "%q:", last.Step.MapIndex().String())
+				if err != nil {
+					return err
+				}
 
 			case protopath.AnyExpandStep:
-				_, _ = fmt.Fprintf(writer, `"@type":%q`, last.Value.Message().Descriptor().FullName())
-				return nil
+				_, err := fmt.Fprintf(writer, `"@type":%q`, last.Value.Message().Descriptor().FullName())
+				return err
 
 			case protopath.UnknownAccessStep:
-				writer.WriteString("?:")
+				return fmt.Errorf("unexpected %s", protopath.UnknownAccessStep)
 			}
 
 			switch value := last.Value.Interface().(type) {
@@ -79,23 +94,36 @@ func (opts MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 
 				firstStack = append(firstStack, true)
 			case protoreflect.List:
-				writer.WriteString("[")
+				_, err := writer.Write([]byte("["))
+				if err != nil {
+					return err
+				}
 				firstStack = append(firstStack, true)
 			case protoreflect.Map:
-				_, _ = fmt.Fprintf(writer, "{")
+				_, err := fmt.Fprintf(writer, "{")
+				if err != nil {
+					return err
+				}
 				firstStack = append(firstStack, true)
 			case protoreflect.EnumNumber:
 				var ev protoreflect.EnumValueDescriptor
 				if fd != nil {
 					ev = fd.Enum().Values().ByNumber(value)
 				}
+				var err error
 				if ev != nil {
-					_, _ = fmt.Fprintf(writer, "%q", ev.Name())
+					_, err = fmt.Fprintf(writer, "%q", ev.Name())
 				} else {
-					_, _ = fmt.Fprintf(writer, "%v", value)
+					_, err = fmt.Fprintf(writer, "%v", value)
+				}
+				if err != nil {
+					return err
 				}
 			case string:
-				_, _ = fmt.Fprintf(writer, "%q", value)
+				_, err := fmt.Fprintf(writer, "%q", value)
+				if err != nil {
+					return err
+				}
 			default:
 				return opts.marshalScalar(writer, value)
 			}
@@ -119,5 +147,4 @@ func (opts MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 			return nil
 		},
 	)
-	return []byte(writer.String()), err
 }

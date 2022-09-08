@@ -3,21 +3,21 @@ package stablejson
 import (
 	"encoding/base64"
 	"fmt"
-	"strings"
+	"io"
 )
 
-func (opts MarshalOptions) marshalScalar(writer *strings.Builder, value interface{}) error {
+func (opts MarshalOptions) marshalScalar(writer io.Writer, value interface{}) error {
 	switch value := value.(type) {
 	case string:
 		_, _ = fmt.Fprintf(writer, "%q", value)
 	case []byte:
-		writer.WriteString(`"`)
+		_, _ = writer.Write([]byte(`"`))
 		if opts.HexBytes {
 			_, _ = fmt.Fprintf(writer, "%X", value)
 		} else {
-			writer.WriteString(base64.StdEncoding.EncodeToString(value))
+			_, _ = writer.Write([]byte(base64.StdEncoding.EncodeToString(value)))
 		}
-		writer.WriteString(`"`)
+		_, _ = writer.Write([]byte(`"`))
 	case bool:
 		_, _ = fmt.Fprintf(writer, "%t", value)
 	case int32:

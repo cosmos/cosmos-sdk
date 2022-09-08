@@ -1,12 +1,12 @@
 package stablejson
 
 import (
-	"strings"
+	"io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func (opts MarshalOptions) marshalMessage(writer *strings.Builder, value protoreflect.Message) (continueRange bool, error error) {
+func (opts MarshalOptions) marshalMessage(writer io.Writer, value protoreflect.Message) (continueRange bool, error error) {
 	switch value.Descriptor().FullName() {
 	case timestampFullName:
 		return false, marshalTimestamp(writer, value)
@@ -19,8 +19,8 @@ func (opts MarshalOptions) marshalMessage(writer *strings.Builder, value protore
 	case valueFullName:
 		return false, marshalValue(writer, value)
 	case nullValueFullName:
-		writer.WriteString("null")
-		return false, nil
+		_, err := writer.Write([]byte("null"))
+		return false, err
 	case boolValueFullName, int32ValueFullName, int64ValueFullName, uint32ValueFullName, uint64ValueFullName,
 		stringValueFullName, bytesValueFullName, floatValueFullName, doubleValueFullName:
 		return false, opts.marshalWrapper(writer, value)
@@ -28,8 +28,8 @@ func (opts MarshalOptions) marshalMessage(writer *strings.Builder, value protore
 		return false, marshalFieldMask(writer, value)
 	}
 
-	writer.WriteString("{")
-	return true, nil
+	_, err := writer.Write([]byte("{"))
+	return true, err
 }
 
 const (

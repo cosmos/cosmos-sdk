@@ -1,13 +1,21 @@
-package streaming
+package streaming_test
 
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/store/streaming"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/stretchr/testify/require"
 )
@@ -24,12 +32,12 @@ var (
 )
 
 func TestStreamingServiceConstructor(t *testing.T) {
-	_, err := NewServiceConstructor("unexpectedName")
+	_, err := streaming.NewServiceConstructor("unexpectedName")
 	require.NotNil(t, err)
 
-	constructor, err := NewServiceConstructor("file")
+	constructor, err := streaming.NewServiceConstructor("file")
 	require.Nil(t, err)
-	var expectedType ServiceConstructor
+	var expectedType streaming.ServiceConstructor
 	require.IsType(t, expectedType, constructor)
 
 	serv, err := constructor(mockOptions, mockKeys, testMarshaller)
@@ -39,5 +47,55 @@ func TestStreamingServiceConstructor(t *testing.T) {
 	for _, key := range mockKeys {
 		_, ok := listeners[key]
 		require.True(t, ok)
+	}
+}
+
+func TestLoadStreamingServices(t *testing.T) {
+	db := dbm.NewMemDB()
+	encCdc := testutil.MakeTestEncodingConfig()
+	keys := sdk.NewKVStoreKeys("mockKey1", "mockKey2")
+	bApp := baseapp.NewBaseApp("appName", log.NewNopLogger(), db, nil)
+
+	testCases := map[string]struct {
+		appOpts            serverTypes.AppOptions
+		activeStreamersLen int
+	}{
+		"empty app options": {
+			appOpts: simtestutil.EmptyAppOptions{},
+		},
+		"all StoreKeys exposed": {
+			appOpts:            streamingAppOptions{keys: []string{"*"}},
+			activeStreamersLen: 1,
+		},
+		"some StoreKey exposed": {
+			appOpts:            streamingAppOptions{keys: []string{"mockKey1"}},
+			activeStreamersLen: 1,
+		},
+		"not exposing anything": {
+			appOpts: streamingAppOptions{keys: []string{"mockKey3"}},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			activeStreamers, _, err := streaming.LoadStreamingServices(bApp, tc.appOpts, encCdc.Codec, keys)
+			require.NoError(t, err)
+			require.Equal(t, tc.activeStreamersLen, len(activeStreamers))
+		})
+	}
+}
+
+type streamingAppOptions struct {
+	keys []string
+}
+
+func (ao streamingAppOptions) Get(o string) interface{} {
+	switch o {
+	case "store.streamers":
+		return []string{"file"}
+	case "streamers.file.keys":
+		return ao.keys
+	default:
+		return nil
 	}
 }

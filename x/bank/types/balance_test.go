@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -49,7 +50,7 @@ func TestBalanceValidate(t *testing.T) {
 			bank.Balance{
 				Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 				Coins: sdk.Coins{
-					sdk.Coin{Denom: "", Amount: sdk.OneInt()},
+					sdk.Coin{Denom: "", Amount: math.OneInt()},
 				},
 			},
 			true,
@@ -104,7 +105,6 @@ func TestBalanceValidate(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-
 			err := tc.balance.Validate()
 
 			if tc.expErr {

@@ -10,7 +10,7 @@
 //
 // A declared persistent substore is initially empty and stores nothing in the backing DB until a value is set.
 // A non-empty store is stored within a prefixed subdomain of the backing DB (using db/prefix).
-// If the MultiStore is configured to use a separate DBConnection for StateCommitmentDB, it will store the
+// If the MultiStore is configured to use a separate Connection for StateCommitmentDB, it will store the
 // state commitment (SC) store (as an SMT) in subdomains there, and the "flat" state is stored in the main DB.
 // Each substore's SC is allocated as an independent SMT, and query proofs contain two components: a proof
 // of a key's (non)existence within the substore SMT, and a proof of the substore's existence within the

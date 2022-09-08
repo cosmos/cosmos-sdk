@@ -6,7 +6,7 @@ Databases supporting mappings of arbitrary byte sequences.
 
 The database interface types consist of objects to encapsulate the singular connection to the DB, transactions being made to it, historical version state, and iteration.
 
-### `DBConnection`
+### `Connection`
 
 This interface represents a connection to a versioned key-value database. All versioning operations are performed using methods on this type.
 

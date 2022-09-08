@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"encoding/binary"
-	"fmt"
 	"testing"
 	"time"
 
@@ -33,19 +32,22 @@ func addressStringCaller(require *require.Assertions, prefix byte, max uint32, c
 }
 
 func (s *addressTestSuite) TestAddressRace() {
-	fmt.Println("starting test")
 	if testing.Short() {
 		s.T().Skip("AddressRace test is not short")
 	}
+
 	workers := 4
 	done := make(chan bool, workers)
 	cancel := make(chan bool)
+
 	for i := byte(1); i <= 2; i++ { // workes which will loop in first 100 addresses
 		go addressStringCaller(s.Require(), i, 100, cancel, done)
 	}
+
 	for i := byte(1); i <= 2; i++ { // workes which will generate 1e6 new addresses
 		go addressStringCaller(s.Require(), i, 1000000, cancel, done)
 	}
+
 	<-time.After(time.Millisecond * 30)
 	close(cancel)
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -15,7 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	_ "github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -110,7 +112,8 @@ func TestVerifyMultisignature(t *testing.T) {
 				pk = genPk
 			},
 			true,
-		}, {
+		},
+		{
 			"wrong size for sig bit array",
 			func(require *require.Assertions) {
 				pubKeys := generatePubKeys(3)
@@ -165,7 +168,8 @@ func TestVerifyMultisignature(t *testing.T) {
 				)
 			},
 			true,
-		}, {
+		},
+		{
 			"duplicate signatures",
 			func(require *require.Assertions) {
 				pubKeys, sigs := generatePubKeysAndSignatures(5, msg)
@@ -178,7 +182,8 @@ func TestVerifyMultisignature(t *testing.T) {
 				sig.Signatures = append(sig.Signatures, sigs[0])
 			},
 			false,
-		}, {
+		},
+		{
 			"duplicated key",
 			func(require *require.Assertions) {
 				// here we test an edge case where we create a multi sig with two same
@@ -191,7 +196,8 @@ func TestVerifyMultisignature(t *testing.T) {
 				multisig.AddSignature(sig, sigs[0], 1)
 			},
 			true,
-		}, {
+		},
+		{
 			"same key used twice",
 			func(require *require.Assertions) {
 				pubkeys, sigs := generatePubKeysAndSignatures(3, msg)
@@ -201,7 +207,8 @@ func TestVerifyMultisignature(t *testing.T) {
 				multisig.AddSignature(sig, sigs[0], 1)
 			},
 			false,
-		}, {
+		},
+		{
 			"unable to verify signature",
 			func(require *require.Assertions) {
 				pubKeys := generatePubKeys(2)
@@ -351,8 +358,10 @@ func TestDisplay(t *testing.T) {
 	require.PanicsWithValue("reflect.Value.Interface: cannot return value obtained from unexported field or method",
 		func() { require.Empty(msig.String()) },
 	)
-	ccfg := simapp.MakeTestEncodingConfig()
-	bz, err := ccfg.Codec.MarshalInterfaceJSON(msig)
+	var cdc codec.Codec
+	err := depinject.Inject(configurator.NewAppConfig(), &cdc)
+	require.NoError(err)
+	bz, err := cdc.MarshalInterfaceJSON(msig)
 	require.NoError(err)
 	expectedPrefix := `{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":2,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey"`
 	require.True(strings.HasPrefix(string(bz), expectedPrefix))

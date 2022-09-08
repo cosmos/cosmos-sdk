@@ -7,7 +7,7 @@ wait_simd() {
 }
 # this script is used to recreate the data dir
 echo clearing /root/.simapp
-rm -rf /root/.simapp
+rm -rf /root/.simapp/*
 echo initting new chain
 # init config files
 simd init simd --chain-id testing
@@ -33,7 +33,7 @@ sed -i 's/127.0.0.1/0.0.0.0/g' /root/.simapp/config/config.toml
 
 # start simd
 echo starting simd...
-simd start --pruning=nothing --mode validator &
+simd start --pruning=nothing &
 pid=$!
 echo simd started with PID $pid
 

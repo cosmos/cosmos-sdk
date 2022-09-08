@@ -6,10 +6,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
@@ -161,6 +160,6 @@ func (s *IntegrationTestSuite) initAccount() {
 	s.Require().NoError(err)
 
 	amount := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200)))
-	_, err = banktestutil.MsgSendExec(ctx, val.Address, s.owner, amount, args...)
+	_, err = cli.MsgSendExec(ctx, val.Address, s.owner, amount, args...)
 	s.Require().NoError(err)
 }

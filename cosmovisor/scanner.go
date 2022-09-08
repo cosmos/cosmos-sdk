@@ -10,9 +10,12 @@ import (
 	"time"
 
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/rs/zerolog"
 )
 
 type fileWatcher struct {
+	logger *zerolog.Logger
+
 	// full path to a watched file
 	filename string
 	interval time.Duration
@@ -26,7 +29,7 @@ type fileWatcher struct {
 	initialized bool
 }
 
-func newUpgradeFileWatcher(filename string, interval time.Duration) (*fileWatcher, error) {
+func newUpgradeFileWatcher(logger *zerolog.Logger, filename string, interval time.Duration) (*fileWatcher, error) {
 	if filename == "" {
 		return nil, errors.New("filename undefined")
 	}
@@ -44,6 +47,7 @@ func newUpgradeFileWatcher(filename string, interval time.Duration) (*fileWatche
 	}
 
 	return &fileWatcher{
+		logger:      logger,
 		filename:    filenameAbs,
 		interval:    interval,
 		currentInfo: upgradetypes.Plan{},
@@ -106,7 +110,7 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 
 	info, err := parseUpgradeInfoFile(fw.filename)
 	if err != nil {
-		Logger.Fatal().Err(err).Msg("failed to parse upgrade info file")
+		fw.logger.Fatal().Err(err).Msg("failed to parse upgrade info file")
 		return false
 	}
 
@@ -154,8 +158,7 @@ func parseUpgradeInfoFile(filename string) (upgradetypes.Plan, error) {
 		return upgradetypes.Plan{}, fmt.Errorf("invalid upgrade-info.json content; name and height must be not empty; got: %v", ui)
 	}
 
-	// Normalize name to prevent operator error in upgrade name case sensitivity
-	// errors.
+	// normalize name to prevent operator error in upgrade name case sensitivity errors.
 	ui.Name = strings.ToLower(ui.Name)
 
 	return ui, err

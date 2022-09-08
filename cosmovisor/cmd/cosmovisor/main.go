@@ -1,17 +1,19 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	"github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor/cmd"
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 )
 
 func main() {
-	cosmovisor.SetupLogging()
-	if err := cmd.RunCosmovisorCommand(os.Args[1:]); err != nil {
-		cverrors.LogErrors(cosmovisor.Logger, "", err)
+	logger := cosmovisor.NewLogger()
+	ctx := context.WithValue(context.Background(), cosmovisor.LoggerKey, logger)
+
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
+		cverrors.LogErrors(logger, "", err)
 		os.Exit(1)
 	}
 }

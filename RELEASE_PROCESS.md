@@ -31,6 +31,7 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     * create new release candidate tags after bugs are fixed.
 * After the team feels the release branch is stable and everything works, create a full release:
     * update `CHANGELOG.md`.
+    * run `gofumpt -w -l .` to format the code.
     * create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
     * Create a GitHub release.
 
@@ -126,7 +127,7 @@ To smoothen the update to the latest stable release, the SDK includes a set of C
 ### What does not qualify as SRU
 
 * State machine changes.
-* Breaking changes in Protobuf definitions, as specified in [ADR-044](./docs/architecture/adr-044-protobuf-updates-guidelines.md).
+* Breaking changes in Protobuf definitions, as specified in [ADR-044](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-044-protobuf-updates-guidelines.md).
 * Changes that introduces API breakages (e.g. public functions and interfaces removal/renaming).
 * Client-breaking changes in gRPC and HTTP request and response types.
 * CLI-breaking changes.
@@ -148,7 +149,7 @@ Pull requests that fix bugs and add features that fall in the following categori
 As rule of thumb, the following changes will **NOT** be automatically accepted into stable point-releases:
 
 * **State machine changes**.
-* **Protobug-breaking changes**, as specified in [ADR-044](./docs/architecture/adr-044-protobuf-updates-       guidelines.md).
+* **Protobug-breaking changes**, as specified in [ADR-044](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-044-protobuf-updates-       guidelines.md).
 * **Client-breaking changes**, i.e. changes that prevent gRPC, HTTP and RPC clients to continue interacting with the node without any change.
 * **API-breaking changes**, i.e. changes that prevent client applications to _build without modifications_ to the client application's source code.
 * **CLI-breaking changes**, i.e. changes that require usage changes for CLI users.

@@ -35,7 +35,8 @@ func (k Keeper) AppliedPlan(c context.Context, req *types.QueryAppliedPlanReques
 }
 
 // UpgradedConsensusState implements the Query/UpgradedConsensusState gRPC method
-// nolint: staticcheck
+//
+//nolint:staticcheck
 func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -71,7 +72,7 @@ func (k Keeper) ModuleVersions(c context.Context, req *types.QueryModuleVersions
 	}, nil
 }
 
-// Authority implementsthe the Query/Authority gRPC method, returning the account capable of performing upgrades
+// Authority implements the Query/Authority gRPC method, returning the account capable of performing upgrades
 func (k Keeper) Authority(c context.Context, req *types.QueryAuthorityRequest) (*types.QueryAuthorityResponse, error) {
 	return &types.QueryAuthorityResponse{Address: k.authority}, nil
 }

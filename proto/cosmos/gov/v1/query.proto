@@ -130,12 +130,19 @@ message QueryParamsRequest {
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
+  // Deprecated: Prefer to use `params` instead.
   // voting_params defines the parameters related to voting.
-  VotingParams voting_params = 1;
+  VotingParams voting_params = 1 [deprecated = true];
+  // Deprecated: Prefer to use `params` instead.
   // deposit_params defines the parameters related to deposit.
-  DepositParams deposit_params = 2;
+  DepositParams deposit_params = 2 [deprecated = true];
+  // Deprecated: Prefer to use `params` instead.
   // tally_params defines the parameters related to tally.
-  TallyParams tally_params = 3;
+  TallyParams tally_params = 3 [deprecated = true];
+  // params defines all the paramaters of x/gov module.
+  //
+  // Since: cosmos-sdk 0.47
+  Params params = 4;
 }
 
 // QueryDepositRequest is the request type for the Query/Deposit RPC method.

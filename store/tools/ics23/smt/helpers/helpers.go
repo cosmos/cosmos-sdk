@@ -1,7 +1,7 @@
 /*
 Package helpers contains functions to build sample data for tests/testgen
 
-In it's own package to avoid poluting the godoc for ics23-smt
+In it's own package to avoid polluting the godoc for ics23-smt
 */
 package helpers
 

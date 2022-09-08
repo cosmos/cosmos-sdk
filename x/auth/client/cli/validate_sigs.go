@@ -30,7 +30,6 @@ transaction will be not be performed as that will require RPC communication with
 		Args:   cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

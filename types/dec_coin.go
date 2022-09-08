@@ -17,7 +17,7 @@ func NewDecCoin(denom string, amount Int) DecCoin {
 
 	return DecCoin{
 		Denom:  coin.Denom,
-		Amount: coin.Amount.ToDec(),
+		Amount: NewDecFromInt(coin.Amount),
 	}
 }
 
@@ -43,7 +43,7 @@ func NewDecCoinFromCoin(coin Coin) DecCoin {
 
 	return DecCoin{
 		Denom:  coin.Denom,
-		Amount: coin.Amount.ToDec(),
+		Amount: NewDecFromInt(coin.Amount),
 	}
 }
 
@@ -111,7 +111,7 @@ func (coin DecCoin) Sub(coinB DecCoin) DecCoin {
 // change. Note, the change may be zero.
 func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
 	truncated := coin.Amount.TruncateInt()
-	change := coin.Amount.Sub(truncated.ToDec())
+	change := coin.Amount.Sub(NewDecFromInt(truncated))
 	return NewCoin(coin.Denom, truncated), NewDecCoinFromDec(coin.Denom, change)
 }
 
@@ -182,10 +182,14 @@ func sanitizeDecCoins(decCoins []DecCoin) DecCoins {
 // NewDecCoinsFromCoins constructs a new coin set with decimal values
 // from regular Coins.
 func NewDecCoinsFromCoins(coins ...Coin) DecCoins {
-	decCoins := make(DecCoins, len(coins))
+	if len(coins) == 0 {
+		return DecCoins{}
+	}
+
+	decCoins := make([]DecCoin, 0, len(coins))
 	newCoins := NewCoins(coins...)
-	for i, coin := range newCoins {
-		decCoins[i] = NewDecCoinFromCoin(coin)
+	for _, coin := range newCoins {
+		decCoins = append(decCoins, NewDecCoinFromCoin(coin))
 	}
 
 	return decCoins

@@ -9,7 +9,7 @@ import "cosmos_proto/cosmos.proto";
 
 // GenesisState defines the slashing module's genesis state.
 message GenesisState {
-  // params defines all the paramaters of related to deposit.
+  // params defines all the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
 
   // signing_infos represents a map between validator addresses and their

@@ -4,6 +4,7 @@
 
 * 2021-05-01: Initial Draft
 * 2021-07-02: Review updates
+* 2022-06-15: Add batch operation
 
 ## Status
 
@@ -113,24 +114,31 @@ This ADR doesn't specify values that `data` can take; however, best practices re
 
 ```go
 type Keeper interface {
-  NewClass(class Class)
-  UpdateClass(class Class)
+  NewClass(ctx sdk.Context,class Class)
+  UpdateClass(ctx sdk.Context,class Class)
 
-  Mint(nft NFT，receiver sdk.AccAddress)   // updates totalSupply
-  Burn(classId string, nftId string)    // updates totalSupply
-  Update(nft NFT)
-  Transfer(classId string, nftId string, receiver sdk.AccAddress)
+  Mint(ctx sdk.Context,nft NFT，receiver sdk.AccAddress)   // updates totalSupply
+  BatchMint(ctx sdk.Context, tokens []NFT,receiver sdk.AccAddress) error
 
-  GetClass(classId string) Class
-  GetClasses() []Class
+  Burn(ctx sdk.Context, classId string, nftId string)    // updates totalSupply
+  BatchBurn(ctx sdk.Context, classID string, nftIDs []string) error
 
-  GetNFT(classId string, nftId string) NFT
-  GetNFTsOfClassByOwner(classId string, owner sdk.AccAddress) []NFT
-  GetNFTsOfClass(classId string) []NFT
+  Update(ctx sdk.Context, nft NFT)
+  BatchUpdate(ctx sdk.Context, tokens []NFT) error
 
-  GetOwner(classId string, nftId string) sdk.AccAddress
-  GetBalance(classId string, owner sdk.AccAddress) uint64
-  GetTotalSupply(classId string) uint64
+  Transfer(ctx sdk.Context, classId string, nftId string, receiver sdk.AccAddress)
+  BatchTransfer(ctx sdk.Context, classID string, nftIDs []string, receiver sdk.AccAddress) error
+
+  GetClass(ctx sdk.Context, classId string) Class
+  GetClasses(ctx sdk.Context) []Class
+
+  GetNFT(ctx sdk.Context, classId string, nftId string) NFT
+  GetNFTsOfClassByOwner(ctx sdk.Context, classId string, owner sdk.AccAddress) []NFT
+  GetNFTsOfClass(ctx sdk.Context, classId string) []NFT
+
+  GetOwner(ctx sdk.Context, classId string, nftId string) sdk.AccAddress
+  GetBalance(ctx sdk.Context, classId string, owner sdk.AccAddress) uint64
+  GetTotalSupply(ctx sdk.Context, classId string) uint64
 }
 ```
 
@@ -337,4 +345,4 @@ Other networks in the Cosmos ecosystem could design and implement their own NFT 
 
 * Initial discussion: https://github.com/cosmos/cosmos-sdk/discussions/9065
 * x/nft: initialize module: https://github.com/cosmos/cosmos-sdk/pull/9174
-* [ADR 033](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-033-protobuf-inter-module-comm.md)
+* [ADR 033](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-033-protobuf-inter-module-comm.md)

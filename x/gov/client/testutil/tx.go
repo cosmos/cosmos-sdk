@@ -165,18 +165,18 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 	val := s.network.Validators[0]
 	invalidProp := `{
-  "title": "",
-	"description": "Where is the title!?",
-	"type": "Text",
-  "deposit": "-324foocoin"
-}`
+	  "title": "",
+		"description": "Where is the title!?",
+		"type": "Text",
+	  "deposit": "-324foocoin"
+	}`
 	invalidPropFile := testutil.WriteToNewTempFile(s.T(), invalidProp)
 	validProp := fmt.Sprintf(`{
-  "title": "Text Proposal",
-	"description": "Hello, World!",
-	"type": "Text",
-  "deposit": "%s"
-}`, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
+	  "title": "Text Proposal",
+		"description": "Hello, World!",
+		"type": "Text",
+	  "deposit": "%s"
+	}`, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
 	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
 	testCases := []struct {
 		name         string
@@ -188,7 +188,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 		{
 			"invalid proposal (file)",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagProposal, invalidPropFile.Name()),
+				fmt.Sprintf("--%s=%s", cli.FlagProposal, invalidPropFile.Name()), //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -198,8 +198,8 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 		{
 			"invalid proposal",
 			[]string{
-				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
-				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText),
+				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -209,6 +209,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 		},
 		{
 			"valid transaction (file)",
+			//nolint:staticcheck // we are intentionally using a deprecated flag here.
 			[]string{
 				fmt.Sprintf("--%s=%s", cli.FlagProposal, validPropFile.Name()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
@@ -221,9 +222,9 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 		{
 			"valid transaction",
 			[]string{
-				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
-				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
-				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText),
+				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),                     //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

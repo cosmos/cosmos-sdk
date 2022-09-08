@@ -27,7 +27,7 @@ func TestInitializeNodeValidatorFilesFromMnemonic(t *testing.T) {
 
 	cfg := config.TestConfig()
 	cfg.RootDir = t.TempDir()
-	require.NoError(t, os.MkdirAll(filepath.Join(cfg.RootDir, "config"), 0755))
+	require.NoError(t, os.MkdirAll(filepath.Join(cfg.RootDir, "config"), 0o755))
 
 	tests := []struct {
 		name     string
@@ -62,9 +62,9 @@ func TestInitializeNodeValidatorFilesFromMnemonic(t *testing.T) {
 				require.NoError(t, err)
 
 				if tt.mnemonic != "" {
-					actualPVFile, _ := privval.LoadFilePV(cfg.PrivValidator.KeyFile(), cfg.PrivValidator.StateFile())
+					actualPVFile := privval.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 					expectedPrivateKey := tmed25519.GenPrivKeyFromSecret([]byte(tt.mnemonic))
-					expectedFile := privval.NewFilePV(expectedPrivateKey, cfg.PrivValidator.KeyFile(), cfg.PrivValidator.StateFile())
+					expectedFile := privval.NewFilePV(expectedPrivateKey, cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 					require.Equal(t, expectedFile, actualPVFile)
 				}
 			}

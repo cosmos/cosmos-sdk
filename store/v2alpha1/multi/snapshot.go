@@ -107,7 +107,7 @@ func (rs *Store) Restore(
 	}
 
 	var subStore *substore
-	var storeSchemaReceived = false
+	storeSchemaReceived := false
 
 	var snapshotItem snapshottypes.SnapshotItem
 

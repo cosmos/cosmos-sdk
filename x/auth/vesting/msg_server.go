@@ -3,14 +3,13 @@ package vesting
 import (
 	"context"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
@@ -53,22 +52,18 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
-	baseAccount := ak.NewAccountWithAddress(ctx, to)
-	if _, ok := baseAccount.(*authtypes.BaseAccount); !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected: BaseAccount, got: %T", baseAccount)
-	}
+	baseAccount := authtypes.NewBaseAccountWithAddress(to)
+	baseAccount = ak.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+	baseVestingAccount := types.NewBaseVestingAccount(baseAccount, msg.Amount.Sort(), msg.EndTime)
 
-	baseVestingAccount := types.NewBaseVestingAccount(baseAccount.(*authtypes.BaseAccount), msg.Amount.Sort(), msg.EndTime)
-
-	var acc authtypes.AccountI
-
+	var vestingAccount authtypes.AccountI
 	if msg.Delayed {
-		acc = types.NewDelayedVestingAccountRaw(baseVestingAccount)
+		vestingAccount = types.NewDelayedVestingAccountRaw(baseVestingAccount)
 	} else {
-		acc = types.NewContinuousVestingAccountRaw(baseVestingAccount, ctx.BlockTime().Unix())
+		vestingAccount = types.NewContinuousVestingAccountRaw(baseVestingAccount, ctx.BlockTime().Unix())
 	}
 
-	ak.SetAccount(ctx, acc)
+	ak.SetAccount(ctx, vestingAccount)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")
@@ -125,16 +120,11 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
-	baseAccountI := ak.NewAccountWithAddress(ctx, to)
+	baseAccount := authtypes.NewBaseAccountWithAddress(to)
+	baseAccount = ak.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+	vestingAccount := types.NewPermanentLockedAccount(baseAccount, msg.Amount)
 
-	baseAcc, ok := baseAccountI.(*authtypes.BaseAccount)
-	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected: BaseAccount, got: %T", baseAccountI)
-	}
-
-	var acc authtypes.AccountI = types.NewPermanentLockedAccount(baseAcc, msg.Amount)
-
-	ak.SetAccount(ctx, acc)
+	ak.SetAccount(ctx, vestingAccount)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")
@@ -190,11 +180,11 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		totalCoins = totalCoins.Add(period.Amount...)
 	}
 
-	baseAccount := ak.NewAccountWithAddress(ctx, to)
+	baseAccount := authtypes.NewBaseAccountWithAddress(to)
+	baseAccount = ak.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+	vestingAccount := types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
 
-	acc := types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
-
-	ak.SetAccount(ctx, acc)
+	ak.SetAccount(ctx, vestingAccount)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")
@@ -222,5 +212,4 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		),
 	)
 	return &types.MsgCreatePeriodicVestingAccountResponse{}, nil
-
 }

@@ -222,7 +222,7 @@ Signature verifiers do:
    * Pull account number and sequence from the state.
    * Obtain the public key either from state or `AuthInfo`'s `signer_infos`.
    * Create a `SignDoc` and serialize it using [ADR 027](./adr-027-deterministic-protobuf-serialization.md).
-   * Verify the signature at the the same list position against the serialized `SignDoc`.
+   * Verify the signature at the same list position against the serialized `SignDoc`.
 
 #### `SIGN_MODE_LEGACY_AMINO`
 

@@ -29,13 +29,13 @@ func TestCreateMembership(t *testing.T) {
 				t.Fatalf("Creating tree: %+v", err)
 			}
 			key := helpers.GetKey(allkeys, tc.loc)
-			_, val := tree.Get(key)
+			val, err := tree.Get(key)
 			proof, err := CreateMembershipProof(tree, key)
 			if err != nil {
 				t.Fatalf("Creating Proof: %+v", err)
 			}
 
-			root := tree.WorkingHash()
+			root, _ := tree.WorkingHash()
 			valid := ics23.VerifyMembership(IavlSpec, root, proof, key, val)
 			if !valid {
 				t.Fatalf("Membership Proof Invalid")
@@ -70,7 +70,7 @@ func TestCreateNonMembership(t *testing.T) {
 				t.Fatalf("Creating Proof: %+v", err)
 			}
 
-			root := tree.WorkingHash()
+			root, _ := tree.WorkingHash()
 			valid := ics23.VerifyNonMembership(IavlSpec, root, proof, key)
 			if !valid {
 				t.Fatalf("Non Membership Proof Invalid")

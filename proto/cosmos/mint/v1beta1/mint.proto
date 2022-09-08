@@ -22,7 +22,7 @@ message Minter {
   ];
 }
 
-// Params holds parameters for the mint module.
+// Params defines the parameters for the x/mint module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
 

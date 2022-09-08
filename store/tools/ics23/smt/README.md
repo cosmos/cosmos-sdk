@@ -10,7 +10,7 @@ It exposes a two main functions :
 produces a CommitmentProof that the given key exists in the SMT (and contains the current value). This returns an error if the key does not exist in the tree.
 
 `func CreateNonMembershipProof(tree *smt.SparseMerkleTree, key []byte, preimages PreimageMap) (*ics23.CommitmentProof, error)`
-produces a CommitmentProof that the given key doesn't exist in the SMT. This returns an error if the key does not exist in the tree.
+produces a CommitmentProof that the given key doesn't exist in the SMT. This returns an error if the key exists in the tree.
 This relies on an auxiliary `PreimageMap` object which provides access to the preimages of all keys in the tree based on their (hashed) path ordering.
 
 

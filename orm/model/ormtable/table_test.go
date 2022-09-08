@@ -22,8 +22,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 
-	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
-	sdkerrors "github.com/cosmos/cosmos-sdk/errors"
+	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
+	sdkerrors "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
@@ -97,7 +98,6 @@ func TestPaginationLimitCountTotal(t *testing.T) {
 	pr := it.PageResponse()
 	assert.Check(t, pr != nil)
 	assert.Equal(t, uint64(3), pr.Total)
-
 }
 
 func TestImportedMessageIterator(t *testing.T) {
@@ -186,7 +186,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 			assert.Assert(t, it.Next())
 			msg, err := it.GetMessage()
 			assert.NilError(t, err)
-			//t.Logf("data[%d] %v == %v", i, data[i], msg)
+			// t.Logf("data[%d] %v == %v", i, data[i], msg)
 			assert.DeepEqual(t, data[i], msg, protocmp.Transform())
 		}
 		// make sure the iterator is done
@@ -497,11 +497,10 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 	it, err = store.List(ctx, testpb.ExampleTablePrimaryKey{})
 	assert.NilError(t, err)
 	assertIteratorItems(it, 2, 6, 10)
-
 }
 
 func TestRandomTableData(t *testing.T) {
-	testTable(t, TableDataGen(testutil.GenA, 100).Example().(*TableData))
+	testTable(t, TableDataGen(testutil.GenA, 100).Example())
 }
 
 func testTable(t *testing.T, tableData *TableData) {
@@ -554,8 +553,8 @@ func testIndex(t *testing.T, model *IndexModel) {
 		checkIteratorAgainstSlice(t, it, reverseData(model.data))
 
 		rapid.Check(t, func(t *rapid.T) {
-			i := rapid.IntRange(0, len(model.data)-2).Draw(t, "i").(int)
-			j := rapid.IntRange(i+1, len(model.data)-1).Draw(t, "j").(int)
+			i := rapid.IntRange(0, len(model.data)-2).Draw(t, "i")
+			j := rapid.IntRange(i+1, len(model.data)-1).Draw(t, "j")
 
 			start, _, err := model.index.(ormkv.IndexCodec).EncodeKeyFromMessage(model.data[i].ProtoReflect())
 			assert.NilError(t, err)
@@ -603,7 +602,6 @@ func testIndex(t *testing.T, model *IndexModel) {
 			assert.DeepEqual(t, model.data[i], data2[i], protocmp.Transform())
 		}
 	}
-
 }
 
 func reverseData(data []proto.Message) []proto.Message {
@@ -632,10 +630,10 @@ func checkIteratorAgainstSlice(t assert.TestingT, iterator ormtable.Iterator, da
 	}
 }
 
-func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
+func TableDataGen[T proto.Message](elemGen *rapid.Generator[T], n int) *rapid.Generator[*TableData] {
 	return rapid.Custom(func(t *rapid.T) *TableData {
-		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
-		message := elemGen.Draw(t, "message").(proto.Message)
+		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix")
+		message := elemGen.Draw(t, "message")
 		table, err := ormtable.Build(ormtable.Options{
 			Prefix:      prefix,
 			MessageType: message.ProtoReflect().Type(),
@@ -648,7 +646,7 @@ func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 		store := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 
 		for i := 0; i < n; {
-			message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i)).(proto.Message)
+			message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i))
 			err := table.Insert(store, message)
 			if sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
 				continue
@@ -725,7 +723,7 @@ func TestJSONExportImport(t *testing.T) {
 	store := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 
 	for i := 0; i < 100; {
-		x := testutil.GenA.Example().(proto.Message)
+		x := testutil.GenA.Example()
 		err = table.Insert(store, x)
 		if sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
 			continue
@@ -789,4 +787,19 @@ func TestReadonly(t *testing.T) {
 	})
 	ctx := ormtable.WrapContextDefault(readBackend)
 	assert.ErrorIs(t, ormerrors.ReadOnly, table.Insert(ctx, &testpb.ExampleTable{}))
+}
+
+func TestInsertReturningFieldName(t *testing.T) {
+	table, err := ormtable.Build(ormtable.Options{
+		MessageType: (&testpb.ExampleAutoIncFieldName{}).ProtoReflect().Type(),
+	})
+	backend := testkv.NewSplitMemBackend()
+	ctx := ormtable.WrapContextDefault(backend)
+	store, err := testpb.NewExampleAutoIncFieldNameTable(table)
+	assert.NilError(t, err)
+	foo, err := store.InsertReturningFoo(ctx, &testpb.ExampleAutoIncFieldName{
+		Bar: 45,
+	})
+	assert.NilError(t, err)
+	assert.Equal(t, uint64(1), foo)
 }

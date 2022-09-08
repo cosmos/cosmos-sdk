@@ -11,7 +11,7 @@ import (
 	dbm "github.com/cosmos/cosmos-sdk/db"
 )
 
-type Loader func(*testing.T, string) dbm.DBConnection
+type Loader func(*testing.T, string) dbm.Connection
 
 func ikey(i int) []byte { return []byte(fmt.Sprintf("key-%03d", i)) }
 func ival(i int) []byte { return []byte(fmt.Sprintf("val-%03d", i)) }
@@ -20,10 +20,9 @@ func DoTestGetSetHasDelete(t *testing.T, load Loader) {
 	t.Helper()
 	db := load(t, t.TempDir())
 
-	var txn dbm.DBReadWriter
-	var view dbm.DBReader
+	var txn dbm.ReadWriter
+	view := db.Reader()
 
-	view = db.Reader()
 	require.NotNil(t, view)
 
 	// A nonexistent key should return nil.
@@ -261,11 +260,11 @@ func DoTestVersioning(t *testing.T, load Loader) {
 	require.False(t, has)
 	require.NoError(t, view.Discard())
 
-	view, err = db.ReaderAt(versions.Last() + 1)
+	view, err = db.ReaderAt(versions.Last() + 1) //nolint:staticcheck // we nolint here because we are checking for the absence of an error.
 	require.Equal(t, dbm.ErrVersionDoesNotExist, err, "should fail to read a nonexistent version")
 
 	require.NoError(t, db.DeleteVersion(v2), "should delete version v2")
-	view, err = db.ReaderAt(v2)
+	view, err = db.ReaderAt(v2) //nolint:staticcheck // we nolint here because we are checking for the absence of an error.
 	require.Equal(t, dbm.ErrVersionDoesNotExist, err)
 
 	// Ensure latest version is accurate
@@ -298,9 +297,9 @@ func DoTestTransactions(t *testing.T, load Loader, multipleWriters bool) {
 	t.Helper()
 	db := load(t, t.TempDir())
 	// Both methods should work in a DBWriter context
-	writerFuncs := []func() dbm.DBWriter{
+	writerFuncs := []func() dbm.Writer{
 		db.Writer,
-		func() dbm.DBWriter { return db.ReadWriter() },
+		func() dbm.Writer { return db.ReadWriter() },
 	}
 
 	for _, getWriter := range writerFuncs {
@@ -397,7 +396,7 @@ func DoTestRevert(t *testing.T, load Loader, reload bool) {
 	t.Helper()
 	dirname := t.TempDir()
 	db := load(t, dirname)
-	var txn dbm.DBWriter
+	var txn dbm.Writer
 
 	initContents := func() {
 		txn = db.Writer()

@@ -7,6 +7,9 @@ on:
     paths: 
     - "docs/**"
 
+permissions:
+  contents: read
+
 jobs:
   check-docs-build:
     if: ${{ github.event.label.name == 'docs' }}

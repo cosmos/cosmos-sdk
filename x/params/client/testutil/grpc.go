@@ -27,53 +27,40 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 			map[string]string{},
 			true,
 			&proposal.QueryParamsResponse{},
-			&proposal.QueryParamsResponse{
-				Param: proposal.ParamChange{
-					Subspace: "staking",
-					Key:      "MaxValidators",
-					Value:    "100",
-				},
-			},
+			nil,
 		},
 		{
 			"with wrong subspace",
-			fmt.Sprintf("%s/cosmos/params/v1beta1/params?subspace=%s&key=%s", baseURL, "wrongSubspace", "MaxValidators"),
+			fmt.Sprintf("%s/cosmos/params/v1beta1/params?subspace=%s&key=%s", baseURL, "wrongSubspace", "foo"),
 			map[string]string{},
 			true,
 			&proposal.QueryParamsResponse{},
-			&proposal.QueryParamsResponse{
-				Param: proposal.ParamChange{
-					Subspace: "staking",
-					Key:      "MaxValidators",
-					Value:    "100",
-				},
-			},
+			nil,
 		},
 		{
 			"with wrong key",
-			fmt.Sprintf("%s/cosmos/params/v1beta1/params?subspace=%s&key=%s", baseURL, "staking", "wrongKey"),
+			fmt.Sprintf("%s/cosmos/params/v1beta1/params?subspace=%s&key=%s", baseURL, mySubspace, "wrongKey"),
 			map[string]string{},
 			false,
 			&proposal.QueryParamsResponse{},
 			&proposal.QueryParamsResponse{
 				Param: proposal.ParamChange{
-					Subspace: "staking",
+					Subspace: mySubspace,
 					Key:      "wrongKey",
-					Value:    "",
 				},
 			},
 		},
 		{
 			"params",
-			fmt.Sprintf("%s/cosmos/params/v1beta1/params?subspace=%s&key=%s", baseURL, "staking", "MaxValidators"),
+			fmt.Sprintf("%s/cosmos/params/v1beta1/params?subspace=%s&key=%s", baseURL, mySubspace, "bar"),
 			map[string]string{},
 			false,
 			&proposal.QueryParamsResponse{},
 			&proposal.QueryParamsResponse{
 				Param: proposal.ParamChange{
-					Subspace: "staking",
-					Key:      "MaxValidators",
-					Value:    "100",
+					Subspace: mySubspace,
+					Key:      "bar",
+					Value:    `"1234"`,
 				},
 			},
 		},

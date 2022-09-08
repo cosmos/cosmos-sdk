@@ -7,26 +7,31 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"cosmossdk.io/depinject"
+	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/simulation"
+	"github.com/cosmos/cosmos-sdk/x/group/testutil"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	app := simapp.Setup(t, false)
+	var cdc codec.Codec
+	err := depinject.Inject(testutil.AppConfig, &cdc)
+	require.NoError(t, err)
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          app.AppCodec(),
+		Cdc:          cdc,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: 1000,
+		InitialStake: sdkmath.NewInt(1000),
 		GenState:     make(map[string]json.RawMessage),
 	}
 
@@ -42,5 +47,4 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, int(groupGenesis.ProposalSeq), len(simState.Accounts))
 	require.Len(t, groupGenesis.Proposals, len(simState.Accounts))
 	require.Len(t, groupGenesis.Votes, len(simState.Accounts))
-
 }

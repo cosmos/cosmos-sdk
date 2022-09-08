@@ -3,6 +3,7 @@ package tx
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -87,12 +88,14 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if !clientCtx.SkipConfirm {
-		out, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
+		txBytes, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
 		if err != nil {
 			return err
 		}
 
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", out)
+		if err := clientCtx.PrintRaw(json.RawMessage(txBytes)); err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", txBytes)
+		}
 
 		buf := bufio.NewReader(os.Stdin)
 		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
@@ -103,8 +106,6 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	tx.SetFeeGranter(clientCtx.GetFeeGranterAddress())
-	tx.SetFeePayer(clientCtx.GetFeePayerAddress())
 	err = Sign(txf, clientCtx.GetFromName(), tx, true)
 	if err != nil {
 		return err
@@ -285,7 +286,8 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 	if overwriteSig {
 		sigs = []signing.SignatureV2{sig}
 	} else {
-		sigs = append(prevSignatures, sig)
+		sigs = append(sigs, prevSignatures...)
+		sigs = append(sigs, sig)
 	}
 	if err := txBuilder.SetSignatures(sigs...); err != nil {
 		return err
@@ -319,10 +321,19 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 	}
 
 	if overwriteSig {
-		return txBuilder.SetSignatures(sig)
+		err = txBuilder.SetSignatures(sig)
+	} else {
+		prevSignatures = append(prevSignatures, sig)
+		err = txBuilder.SetSignatures(prevSignatures...)
 	}
-	prevSignatures = append(prevSignatures, sig)
-	return txBuilder.SetSignatures(prevSignatures...)
+
+	if err != nil {
+		return fmt.Errorf("unable to set signatures on payload: %w", err)
+	}
+
+	// Run optional preprocessing if specified. By default, this is unset
+	// and will return nil.
+	return txf.PreprocessTx(name, txBuilder)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

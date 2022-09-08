@@ -132,6 +132,8 @@ func (m *QueryParamsResponse) GetParam() ParamChange {
 
 // QuerySubspacesRequest defines a request type for querying for all registered
 // subspaces and all keys for a subspace.
+//
+// Since: cosmos-sdk 0.46
 type QuerySubspacesRequest struct {
 }
 
@@ -170,6 +172,8 @@ var xxx_messageInfo_QuerySubspacesRequest proto.InternalMessageInfo
 
 // QuerySubspacesResponse defines the response types for querying for all
 // registered subspaces and all keys for a subspace.
+//
+// Since: cosmos-sdk 0.46
 type QuerySubspacesResponse struct {
 	Subspaces []*Subspace `protobuf:"bytes,1,rep,name=subspaces,proto3" json:"subspaces,omitempty"`
 }
@@ -216,6 +220,8 @@ func (m *QuerySubspacesResponse) GetSubspaces() []*Subspace {
 
 // Subspace defines a parameter subspace name and all the keys that exist for
 // the subspace.
+//
+// Since: cosmos-sdk 0.46
 type Subspace struct {
 	Subspace string   `protobuf:"bytes,1,opt,name=subspace,proto3" json:"subspace,omitempty"`
 	Keys     []string `protobuf:"bytes,2,rep,name=keys,proto3" json:"keys,omitempty"`
@@ -324,6 +330,8 @@ type QueryClient interface {
 	// key.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Subspaces queries for all registered subspaces and all keys for a subspace.
+	//
+	// Since: cosmos-sdk 0.46
 	Subspaces(ctx context.Context, in *QuerySubspacesRequest, opts ...grpc.CallOption) (*QuerySubspacesResponse, error)
 }
 
@@ -359,6 +367,8 @@ type QueryServer interface {
 	// key.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Subspaces queries for all registered subspaces and all keys for a subspace.
+	//
+	// Since: cosmos-sdk 0.46
 	Subspaces(context.Context, *QuerySubspacesRequest) (*QuerySubspacesResponse, error)
 }
 

@@ -16,7 +16,7 @@ var (
 // Store is a wrapper for a memory store which does not persist data.
 type Store struct {
 	dbadapter.Store
-	conn dbm.DBConnection
+	conn dbm.Connection
 }
 
 // NewStore constructs a new transient store.

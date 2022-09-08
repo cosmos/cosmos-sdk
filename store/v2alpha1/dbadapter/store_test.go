@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/store/v2alpha1/dbadapter"
-	mocks "github.com/cosmos/cosmos-sdk/tests/mocks/db"
+	mocks "github.com/cosmos/cosmos-sdk/testutil/mock/db"
 )
 
 var errFoo = errors.New("dummy")
@@ -20,7 +20,7 @@ func TestAccessors(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	mockDB := mocks.NewMockDBReadWriter(mockCtrl)
+	mockDB := mocks.NewMockReadWriter(mockCtrl)
 	store := dbadapter.Store{mockDB}
 	key := []byte("test")
 	value := []byte("testvalue")
@@ -64,7 +64,7 @@ func TestIterators(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	mockDB := mocks.NewMockDBReadWriter(mockCtrl)
+	mockDB := mocks.NewMockReadWriter(mockCtrl)
 	store := dbadapter.Store{mockDB}
 	key := []byte("test")
 	value := []byte("testvalue")
@@ -91,7 +91,7 @@ func TestIterators(t *testing.T) {
 
 func TestCacheWraps(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	mockDB := mocks.NewMockDBReadWriter(mockCtrl)
+	mockDB := mocks.NewMockReadWriter(mockCtrl)
 	store := dbadapter.Store{mockDB}
 
 	cacheWrapper := store.CacheWrap()

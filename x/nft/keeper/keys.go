@@ -55,7 +55,7 @@ func nftOfClassByOwnerStoreKey(owner sdk.AccAddress, classID string) []byte {
 	owner = address.MustLengthPrefix(owner)
 	classIDBz := conv.UnsafeStrToBytes(classID)
 
-	var key = make([]byte, len(NFTOfClassByOwnerKey)+len(owner)+len(Delimiter)+len(classIDBz)+len(Delimiter))
+	key := make([]byte, len(NFTOfClassByOwnerKey)+len(owner)+len(Delimiter)+len(classIDBz)+len(Delimiter))
 	copy(key, NFTOfClassByOwnerKey)
 	copy(key[len(NFTOfClassByOwnerKey):], owner)
 	copy(key[len(NFTOfClassByOwnerKey)+len(owner):], Delimiter)
@@ -70,7 +70,7 @@ func nftOfClassByOwnerStoreKey(owner sdk.AccAddress, classID string) []byte {
 func prefixNftOfClassByOwnerStoreKey(owner sdk.AccAddress) []byte {
 	owner = address.MustLengthPrefix(owner)
 
-	var key = make([]byte, len(NFTOfClassByOwnerKey)+len(owner)+len(Delimiter))
+	key := make([]byte, len(NFTOfClassByOwnerKey)+len(owner)+len(Delimiter))
 	copy(key, NFTOfClassByOwnerKey)
 	copy(key[len(NFTOfClassByOwnerKey):], owner)
 	copy(key[len(NFTOfClassByOwnerKey)+len(owner):], Delimiter)
@@ -97,7 +97,7 @@ func ownerStoreKey(classID, nftID string) []byte {
 	classIDBz := conv.UnsafeStrToBytes(classID)
 	nftIDBz := conv.UnsafeStrToBytes(nftID)
 
-	var key = make([]byte, len(OwnerKey)+len(classIDBz)+len(Delimiter)+len(nftIDBz))
+	key := make([]byte, len(OwnerKey)+len(classIDBz)+len(Delimiter)+len(nftIDBz))
 	copy(key, OwnerKey)
 	copy(key[len(OwnerKey):], classIDBz)
 	copy(key[len(OwnerKey)+len(classIDBz):], Delimiter)

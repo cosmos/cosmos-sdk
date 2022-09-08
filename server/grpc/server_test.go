@@ -1,12 +1,8 @@
-//go:build norace
-// +build norace
-
 package grpc_test
 
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"testing"
 	"time"
 
@@ -14,6 +10,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -23,7 +21,6 @@ import (
 	reflectionv1 "github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	reflectionv2 "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,19 +36,19 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app     *simapp.SimApp
 	cfg     network.Config
 	network *network.Network
 	conn    *grpc.ClientConn
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	var err error
 	s.T().Log("setting up integration test suite")
-	s.app = simapp.Setup(s.T(), false)
-	s.cfg = network.DefaultConfig()
+
+	s.cfg, err = network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
+	s.NoError(err)
 	s.cfg.NumValidators = 1
 
-	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
@@ -62,7 +59,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.conn, err = grpc.Dial(
 		val0.AppConfig.GRPC.Address,
 		grpc.WithInsecure(), // Or else we get "no transport security set"
-		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.app.InterfaceRegistry()).GRPCCodec())),
+		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.cfg.InterfaceRegistry).GRPCCodec())),
 	)
 	s.Require().NoError(err)
 }
@@ -225,7 +222,7 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 // TestGRPCUnpacker - tests the grpc endpoint for Validator and using the interface registry unpack and extract the
 // ConsAddr. (ref: https://github.com/cosmos/cosmos-sdk/issues/8045)
 func (s *IntegrationTestSuite) TestGRPCUnpacker() {
-	ir := s.app.InterfaceRegistry()
+	ir := s.cfg.InterfaceRegistry
 	queryClient := stakingtypes.NewQueryClient(s.conn)
 	validator, err := queryClient.Validator(context.Background(),
 		&stakingtypes.QueryValidatorRequest{ValidatorAddr: s.network.Validators[0].ValAddress.String()})

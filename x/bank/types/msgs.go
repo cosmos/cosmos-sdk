@@ -211,3 +211,49 @@ func (msg MsgUpdateParams) GetSignBytes() []byte {
 func (msg MsgUpdateParams) ValidateBasic() error {
 	return msg.Params.Validate()
 }
+
+// NewMsgSetSendEnabled Construct a message to set one or more SendEnabled entries.
+func NewMsgSetSendEnabled(authority string, sendEnabled []*SendEnabled, useDefaultFor []string) *MsgSetSendEnabled {
+	return &MsgSetSendEnabled{
+		Authority:     authority,
+		SendEnabled:   sendEnabled,
+		UseDefaultFor: useDefaultFor,
+	}
+}
+
+// GetSignBytes implements the LegacyMsg interface.
+func (msg MsgSetSendEnabled) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners returns the expected signers for MsgSoftwareUpgrade.
+func (msg MsgSetSendEnabled) GetSigners() []sdk.AccAddress {
+	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+// ValidateBasic runs basic validation on this MsgSetSendEnabled.
+func (msg MsgSetSendEnabled) ValidateBasic() error {
+	if len(msg.Authority) > 0 {
+		_, err := sdk.AccAddressFromBech32(msg.Authority)
+		if err != nil {
+			return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+		}
+	}
+	seen := map[string]bool{}
+	for _, se := range msg.SendEnabled {
+		if _, alreadySeen := seen[se.Denom]; alreadySeen {
+			return sdkerrors.ErrInvalidRequest.Wrapf("duplicate denom entries found for %q", se.Denom)
+		}
+		seen[se.Denom] = true
+		if err := se.Validate(); err != nil {
+			return sdkerrors.ErrInvalidRequest.Wrapf("invalid SendEnabled denom %q: %s", se.Denom, err)
+		}
+	}
+	for _, denom := range msg.UseDefaultFor {
+		if err := sdk.ValidateDenom(denom); err != nil {
+			return sdkerrors.ErrInvalidRequest.Wrapf("invalid UseDefaultFor denom %q: %s", denom, err)
+		}
+	}
+	return nil
+}

@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package cosmos.query.v1;
+
+import "google/protobuf/descriptor.proto";
+
+// TODO: once we fully migrate to protov2 the go_package needs to be updated.
+// We need this right now because gogoproto codegen needs to import the extension.
+option go_package = "github.com/cosmos/cosmos-sdk/types/query";
+
+extend google.protobuf.MethodOptions {
+  // deterministic is set to true when the query is guaranteed to return a
+  // deterministic response. Concretely, it means that the query has been
+  // tested on the SDK to return the exact same response upon multiple calls.
+  // Each of these queries also handles its own gas consumption.
+  //
+  // When set to true, the query can safely be called from within the state
+  // machine, for example via ADR-033 calls or from CosmWasm contracts.
+  bool deterministic = 11110001;
+}

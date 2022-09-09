@@ -9,9 +9,9 @@ import (
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
@@ -355,7 +355,7 @@ func (m *BasicAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Expiration != nil {
-		n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.Expiration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.Expiration):])
+		n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.Expiration, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.Expiration):])
 		if err1 != nil {
 			return 0, err1
 		}
@@ -401,7 +401,7 @@ func (m *PeriodicAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.PeriodReset, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.PeriodReset):])
+	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.PeriodReset, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.PeriodReset):])
 	if err2 != nil {
 		return 0, err2
 	}
@@ -437,7 +437,7 @@ func (m *PeriodicAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x1a
 		}
 	}
-	n3, err3 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Period, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Period):])
+	n3, err3 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.Period, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Period):])
 	if err3 != nil {
 		return 0, err3
 	}
@@ -575,7 +575,7 @@ func (m *BasicAllowance) Size() (n int) {
 		}
 	}
 	if m.Expiration != nil {
-		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.Expiration)
+		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.Expiration)
 		n += 1 + l + sovFeegrant(uint64(l))
 	}
 	return n
@@ -589,7 +589,7 @@ func (m *PeriodicAllowance) Size() (n int) {
 	_ = l
 	l = m.Basic.Size()
 	n += 1 + l + sovFeegrant(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Period)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Period)
 	n += 1 + l + sovFeegrant(uint64(l))
 	if len(m.PeriodSpendLimit) > 0 {
 		for _, e := range m.PeriodSpendLimit {
@@ -603,7 +603,7 @@ func (m *PeriodicAllowance) Size() (n int) {
 			n += 1 + l + sovFeegrant(uint64(l))
 		}
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.PeriodReset)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.PeriodReset)
 	n += 1 + l + sovFeegrant(uint64(l))
 	return n
 }
@@ -749,7 +749,7 @@ func (m *BasicAllowance) Unmarshal(dAtA []byte) error {
 			if m.Expiration == nil {
 				m.Expiration = new(time.Time)
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.Expiration, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.Expiration, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -865,7 +865,7 @@ func (m *PeriodicAllowance) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.Period, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.Period, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -966,7 +966,7 @@ func (m *PeriodicAllowance) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.PeriodReset, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.PeriodReset, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

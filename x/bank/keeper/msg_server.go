@@ -124,3 +124,27 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }
+
+func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEnabled) (*types.MsgSetSendEnabledResponse, error) {
+	if k.GetAuthority() != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if len(msg.SendEnabled) > 0 {
+		k.SetAllSendEnabled(ctx, msg.SendEnabled)
+	}
+	if len(msg.UseDefaultFor) > 0 {
+		k.DeleteSendEnabled(ctx, msg.UseDefaultFor...)
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Authority),
+		),
+	)
+
+	return &types.MsgSetSendEnabledResponse{}, nil
+}

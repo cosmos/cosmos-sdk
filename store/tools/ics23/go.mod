@@ -7,14 +7,13 @@ require (
 	github.com/cosmos/cosmos-sdk v0.46.1
 	github.com/cosmos/iavl v0.19.1
 	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
-	github.com/tendermint/tendermint v0.37.0-alpha.2
+	github.com/tendermint/tendermint v0.38.0-dev
 	github.com/tendermint/tm-db v0.6.7
 )
 
 require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/cosmos/gogoproto v1.4.1 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect

@@ -7,6 +7,7 @@ import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/query/v1/query.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
@@ -16,21 +17,25 @@ service Query {
   //
   // Since: cosmos-sdk 0.43
   rpc Accounts(QueryAccountsRequest) returns (QueryAccountsResponse) {
+    option (cosmos.query.v1.deterministic) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/accounts";
   }
 
   // Account returns account details based on address.
   rpc Account(QueryAccountRequest) returns (QueryAccountResponse) {
+    option (cosmos.query.v1.deterministic) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
   }
 
   // AccountAddressByID returns account address based on account id
   rpc AccountAddressByID(QueryAccountAddressByIDRequest) returns (QueryAccountAddressByIDResponse) {
+    option (cosmos.query.v1.deterministic) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/address_by_id/{id}";
   }
 
   // Params queries all parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (cosmos.query.v1.deterministic) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/params";
   }
 
@@ -38,6 +43,7 @@ service Query {
   //
   // Since: cosmos-sdk 0.46
   rpc ModuleAccounts(QueryModuleAccountsRequest) returns (QueryModuleAccountsResponse) {
+    option (cosmos.query.v1.deterministic) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/module_accounts";
   }
 
@@ -45,6 +51,7 @@ service Query {
   //
   // Since: cosmos-sdk 0.46
   rpc Bech32Prefix(Bech32PrefixRequest) returns (Bech32PrefixResponse) {
+    option (cosmos.query.v1.deterministic) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }
 
@@ -52,6 +59,7 @@ service Query {
   //
   // Since: cosmos-sdk 0.46
   rpc AddressBytesToString(AddressBytesToStringRequest) returns (AddressBytesToStringResponse) {
+    option (cosmos.query.v1.deterministic) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32/{address_bytes}";
   }
 
@@ -59,6 +67,7 @@ service Query {
   //
   // Since: cosmos-sdk 0.46
   rpc AddressStringToBytes(AddressStringToBytesRequest) returns (AddressStringToBytesResponse) {
+    option (cosmos.query.v1.deterministic) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32/{address_string}";
   }
 }

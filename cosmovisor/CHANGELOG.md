@@ -36,8 +36,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* [\12921](https://github.com/cosmos/cosmos-sdk/pull/12918) Add documentation about expected plan path name.
-* [\12918](https://github.com/cosmos/cosmos-sdk/pull/12918) Automatically set version using module version.
+* [#13221](https://github.com/cosmos/cosmos-sdk/pull/13221) Fix `go install`.
+* [#12921](https://github.com/cosmos/cosmos-sdk/pull/12918) Add documentation about expected plan path name.
+* [#12918](https://github.com/cosmos/cosmos-sdk/pull/12918) Automatically set version using module version.
 
 ## v1.2.0 2022-07-26
 

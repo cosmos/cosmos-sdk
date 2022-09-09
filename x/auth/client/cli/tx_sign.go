@@ -95,10 +95,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		scanner := authclient.NewBatchScanner(txCfg, infile)
 
 		if !clientCtx.Offline {
-			if ms != "" {
-				txFactory = txFactory.WithAccountNumber(0).WithSequence(0)
-			} else {
-
+			if ms == "" {
 				from, err := cmd.Flags().GetString(flags.FlagFrom)
 				if err != nil {
 					return err
@@ -115,6 +112,8 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				}
 
 				txFactory = txFactory.WithAccountNumber(acc.GetAccountNumber()).WithSequence(acc.GetSequence())
+			} else {
+				txFactory = txFactory.WithAccountNumber(0).WithSequence(0)
 			}
 		}
 

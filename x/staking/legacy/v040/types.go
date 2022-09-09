@@ -131,47 +131,6 @@ func (ubds UnbondingDelegations) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-// String implements the Stringer interface for a RedelegationEntry object.
-func (e RedelegationEntry) String() string {
-	out, _ := yaml.Marshal(e)
-	return string(out)
-}
-
-// String returns a human readable string representation of a Redelegation.
-func (red Redelegation) String() string {
-	out := fmt.Sprintf(`Redelegations between:
-  Delegator:                 %s
-  Source Validator:          %s
-  Destination Validator:     %s
-  Entries:
-`,
-		red.DelegatorAddress, red.ValidatorSrcAddress, red.ValidatorDstAddress,
-	)
-
-	for i, entry := range red.Entries {
-		out += fmt.Sprintf(`    Redelegation Entry #%d:
-      Creation height:           %v
-      Min time to unbond (unix): %v
-      Dest Shares:               %s
-`,
-			i, entry.CreationHeight, entry.CompletionTime, entry.SharesDst,
-		)
-	}
-
-	return strings.TrimRight(out, "\n")
-}
-
-// Redelegations are a collection of Redelegation
-type Redelegations []Redelegation
-
-func (d Redelegations) String() (out string) {
-	for _, red := range d {
-		out += red.String() + "\n"
-	}
-
-	return strings.TrimSpace(out)
-}
-
 // String implements the Stringer interface for DelegationResponse.
 func (d DelegationResponse) String() string {
 	return fmt.Sprintf("%s\n  Balance:   %s", d.Delegation.String(), d.Balance)

@@ -26,10 +26,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgBeginRedelegate:
-			res, err := msgServer.BeginRedelegate(sdk.WrapSDKContext(ctx), msg)
-			return sdk.WrapServiceResult(ctx, res, err)
-
 		case *types.MsgUndelegate:
 			res, err := msgServer.Undelegate(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)

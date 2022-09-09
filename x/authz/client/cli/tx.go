@@ -27,7 +27,6 @@ const (
 	FlagAllowedValidators = "allowed-validators"
 	FlagDenyValidators    = "deny-validators"
 	delegate              = "delegate"
-	redelegate            = "redelegate"
 	unbond                = "unbond"
 )
 
@@ -53,7 +52,7 @@ func GetTxCmd() *cobra.Command {
 
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
+		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"> --from <granter>",
 		Short: "Grant authorization to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`grant authorization to an address to execute a transaction on your behalf:
@@ -105,7 +104,7 @@ Examples:
 				}
 
 				authorization = authz.NewGenericAuthorization(msgType)
-			case delegate, unbond, redelegate:
+			case delegate, unbond:
 				limit, err := cmd.Flags().GetString(FlagSpendLimit)
 				if err != nil {
 					return err
@@ -147,10 +146,8 @@ Examples:
 				switch args[1] {
 				case delegate:
 					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, delegateLimit)
-				case unbond:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, delegateLimit)
 				default:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, delegateLimit)
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, delegateLimit)
 				}
 				if err != nil {
 					return err

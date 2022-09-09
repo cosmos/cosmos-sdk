@@ -34,9 +34,6 @@ message GenesisState {
   repeated UnbondingDelegation unbonding_delegations = 6
       [(gogoproto.moretags) = "yaml:\"unbonding_delegations\"", (gogoproto.nullable) = false];
 
-  // redelegations defines the redelegations active at genesis.
-  repeated Redelegation redelegations = 7 [(gogoproto.nullable) = false];
-
   bool exported = 8;
 }
 

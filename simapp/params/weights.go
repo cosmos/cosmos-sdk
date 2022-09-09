@@ -16,7 +16,6 @@ const (
 	DefaultWeightMsgEditValidator               int = 5
 	DefaultWeightMsgDelegate                    int = 100
 	DefaultWeightMsgUndelegate                  int = 100
-	DefaultWeightMsgBeginRedelegate             int = 100
 
 	DefaultWeightCommunitySpendProposal int = 5
 	DefaultWeightTextProposal           int = 5

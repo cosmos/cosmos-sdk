@@ -42,9 +42,7 @@ type GenesisState struct {
 	Delegations []Delegation `protobuf:"bytes,5,rep,name=delegations,proto3" json:"delegations"`
 	// unbonding_delegations defines the unbonding delegations active at genesis.
 	UnbondingDelegations []UnbondingDelegation `protobuf:"bytes,6,rep,name=unbonding_delegations,json=unbondingDelegations,proto3" json:"unbonding_delegations" yaml:"unbonding_delegations"`
-	// redelegations defines the redelegations active at genesis.
-	Redelegations []Redelegation `protobuf:"bytes,7,rep,name=redelegations,proto3" json:"redelegations"`
-	Exported      bool           `protobuf:"varint,8,opt,name=exported,proto3" json:"exported,omitempty"`
+	Exported      bool           `protobuf:"varint,7,opt,name=exported,proto3" json:"exported,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -111,13 +109,6 @@ func (m *GenesisState) GetDelegations() []Delegation {
 func (m *GenesisState) GetUnbondingDelegations() []UnbondingDelegation {
 	if m != nil {
 		return m.UnbondingDelegations
-	}
-	return nil
-}
-
-func (m *GenesisState) GetRedelegations() []Redelegation {
-	if m != nil {
-		return m.Redelegations
 	}
 	return nil
 }
@@ -243,20 +234,6 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 		i--
 		dAtA[i] = 0x40
-	}
-	if len(m.Redelegations) > 0 {
-		for iNdEx := len(m.Redelegations) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Redelegations[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintGenesis(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x3a
-		}
 	}
 	if len(m.UnbondingDelegations) > 0 {
 		for iNdEx := len(m.UnbondingDelegations) - 1; iNdEx >= 0; iNdEx-- {
@@ -413,12 +390,6 @@ func (m *GenesisState) Size() (n int) {
 	}
 	if len(m.UnbondingDelegations) > 0 {
 		for _, e := range m.UnbondingDelegations {
-			l = e.Size()
-			n += 1 + l + sovGenesis(uint64(l))
-		}
-	}
-	if len(m.Redelegations) > 0 {
-		for _, e := range m.Redelegations {
 			l = e.Size()
 			n += 1 + l + sovGenesis(uint64(l))
 		}
@@ -683,40 +654,6 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Redelegations", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Redelegations = append(m.Redelegations, Redelegation{})
-			if err := m.Redelegations[len(m.Redelegations)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Exported", wireType)
 			}

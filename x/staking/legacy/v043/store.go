@@ -70,9 +70,6 @@ func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	v043distribution.MigratePrefixAddressAddress(store, v040staking.DelegationKey)
 	v043distribution.MigratePrefixAddressAddress(store, v040staking.UnbondingDelegationKey)
 	v043distribution.MigratePrefixAddressAddress(store, v040staking.UnbondingDelegationByValIndexKey)
-	migratePrefixAddressAddressAddress(store, v040staking.RedelegationKey)
-	migratePrefixAddressAddressAddress(store, v040staking.RedelegationByValSrcIndexKey)
-	migratePrefixAddressAddressAddress(store, v040staking.RedelegationByValDstIndexKey)
 
 	return nil
 }

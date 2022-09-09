@@ -20,7 +20,6 @@ const (
 	OpWeightMsgEditValidator   = "op_weight_msg_edit_validator"
 	OpWeightMsgDelegate        = "op_weight_msg_delegate"
 	OpWeightMsgUndelegate      = "op_weight_msg_undelegate"
-	OpWeightMsgBeginRedelegate = "op_weight_msg_begin_redelegate"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -33,7 +32,6 @@ func WeightedOperations(
 		weightMsgEditValidator   int
 		weightMsgDelegate        int
 		weightMsgUndelegate      int
-		weightMsgBeginRedelegate int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
@@ -60,12 +58,6 @@ func WeightedOperations(
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgBeginRedelegate, &weightMsgBeginRedelegate, nil,
-		func(_ *rand.Rand) {
-			weightMsgBeginRedelegate = simappparams.DefaultWeightMsgBeginRedelegate
-		},
-	)
-
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreateValidator,
@@ -82,10 +74,6 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgUndelegate,
 			SimulateMsgUndelegate(ak, bk, k),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgBeginRedelegate,
-			SimulateMsgBeginRedelegate(ak, bk, k),
 		),
 	}
 }
@@ -350,108 +338,6 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 
 		account := ak.GetAccount(ctx, delAddr)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
-
-		txCtx := simulation.OperationInput{
-			R:               r,
-			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:             nil,
-			Msg:             msg,
-			MsgType:         msg.Type(),
-			Context:         ctx,
-			SimAccount:      simAccount,
-			AccountKeeper:   ak,
-			Bankkeeper:      bk,
-			ModuleName:      types.ModuleName,
-			CoinsSpentInMsg: spendable,
-		}
-
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
-	}
-}
-
-// SimulateMsgBeginRedelegate generates a MsgBeginRedelegate with random values
-func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// get random source validator
-		srcVal, ok := keeper.RandomValidator(r, k, ctx)
-		if !ok {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "unable to pick validator"), nil, nil
-		}
-
-		srcAddr := srcVal.GetOperator()
-		delegations := k.GetValidatorDelegations(ctx, srcAddr)
-		if delegations == nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "keeper does have any delegation entries"), nil, nil
-		}
-
-		// get random delegator from src validator
-		delegation := delegations[r.Intn(len(delegations))]
-		delAddr := delegation.GetDelegatorAddr()
-
-		if k.HasReceivingRedelegation(ctx, delAddr, srcAddr) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "receveing redelegation is not allowed"), nil, nil // skip
-		}
-
-		// get random destination validator
-		destVal, ok := keeper.RandomValidator(r, k, ctx)
-		if !ok {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "unable to pick validator"), nil, nil
-		}
-
-		destAddr := destVal.GetOperator()
-		if srcAddr.Equals(destAddr) || destVal.InvalidExRate() || k.HasMaxRedelegationEntries(ctx, delAddr, srcAddr, destAddr) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "checks failed"), nil, nil
-		}
-
-		totalBond := srcVal.TokensFromShares(delegation.GetShares()).TruncateInt()
-		if !totalBond.IsPositive() {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "total bond is negative"), nil, nil
-		}
-
-		redAmt, err := simtypes.RandPositiveInt(r, totalBond)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "unable to generate positive amount"), nil, err
-		}
-
-		if redAmt.IsZero() {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "amount is zero"), nil, nil
-		}
-
-		// check if the shares truncate to zero
-		shares, err := srcVal.SharesFromTokens(redAmt)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "invalid shares"), nil, err
-		}
-
-		if srcVal.TokensFromShares(shares).TruncateInt().IsZero() {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "shares truncate to zero"), nil, nil // skip
-		}
-
-		// need to retrieve the simulation account associated with delegation to retrieve PrivKey
-		var simAccount simtypes.Account
-
-		for _, simAcc := range accs {
-			if simAcc.Address.Equals(delAddr) {
-				simAccount = simAcc
-				break
-			}
-		}
-
-		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
-		if simAccount.PrivKey == nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "account private key is nil"), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
-		}
-
-		account := ak.GetAccount(ctx, delAddr)
-		spendable := bk.SpendableCoins(ctx, account.GetAddress())
-
-		msg := types.NewMsgBeginRedelegate(
-			delAddr, srcAddr, destAddr,
-			sdk.NewCoin(k.BondDenom(ctx), redAmt),
-		)
 
 		txCtx := simulation.OperationInput{
 			R:               r,

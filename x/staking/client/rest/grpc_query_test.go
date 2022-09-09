@@ -9,7 +9,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -34,7 +33,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
-	cfg.NumValidators = 2
+	cfg.NumValidators = 1
 
 	s.cfg = cfg
 	s.network = network.New(s.T(), cfg)
@@ -46,19 +45,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
 
-	// redelegate
-	_, err = stakingtestutil.MsgRedelegateExec(
-		val.ClientCtx,
-		val.Address,
-		val.ValAddress,
-		val2.ValAddress,
-		unbond,
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 254000),
-	) // expected gas is 202987
-
-	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
@@ -280,7 +267,6 @@ func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 
 func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -320,17 +306,17 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, val2.ValAddress.String(), val.Address.String()),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, val.ValAddress.String(), val.Address.String()),
 			false,
 			&types.QueryDelegationResponse{},
 			&types.QueryDelegationResponse{
 				DelegationResponse: &types.DelegationResponse{
 					Delegation: types.Delegation{
 						DelegatorAddress: val.Address.String(),
-						ValidatorAddress: val2.ValAddress.String(),
-						Shares:           sdk.NewDec(10),
+						ValidatorAddress: val.ValAddress.String(),
+						Shares:           sdk.NewDec(99999990),
 					},
-					Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
+					Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(99999990)),
 				},
 			},
 		},
@@ -543,71 +529,6 @@ func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
-	baseURL := val.APIAddress
-
-	testCases := []struct {
-		name  string
-		url   string
-		error bool
-	}{
-		{
-			"wrong validator address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations", baseURL, "wrongValAddress"),
-			true,
-		},
-		{
-			"with no validator address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations", baseURL, ""),
-			true,
-		},
-		{
-			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations", baseURL, val.Address.String()),
-			false,
-		},
-		{
-			"valid request with src address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s", baseURL, val.Address.String(), val.ValAddress.String()),
-			false,
-		},
-		{
-			"valid request with dst address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?dst_validator_addr=%s", baseURL, val.Address.String(), val2.ValAddress.String()),
-			false,
-		},
-		{
-			"valid request with dst address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s&dst_validator_addr=%s", baseURL, val.Address.String(), val.ValAddress.String(), val2.ValAddress.String()),
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
-			s.Require().NoError(err)
-			var redelegations types.QueryRedelegationsResponse
-
-			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &redelegations)
-
-			if tc.error {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-
-				s.Require().Len(redelegations.RedelegationResponses, 1)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
-			}
-		})
-	}
-}
-
 func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
@@ -805,7 +726,7 @@ func (s *IntegrationTestSuite) TestQueryPoolGRPC() {
 			&types.QueryPoolResponse{
 				Pool: types.Pool{
 					NotBondedTokens: sdk.NewInt(10),
-					BondedTokens:    cli.DefaultTokens.Mul(sdk.NewInt(2)).Sub(sdk.NewInt(10)),
+					BondedTokens:    cli.DefaultTokens.Sub(sdk.NewInt(10)),
 				},
 			},
 		},

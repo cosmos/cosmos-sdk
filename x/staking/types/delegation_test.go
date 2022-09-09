@@ -53,32 +53,6 @@ func TestUnbondingDelegationString(t *testing.T) {
 	require.NotEmpty(t, ubd.String())
 }
 
-func TestRedelegationEqual(t *testing.T) {
-	r1 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
-		time.Unix(0, 0), sdk.NewInt(0),
-		sdk.NewDec(0))
-	r2 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
-		time.Unix(0, 0), sdk.NewInt(0),
-		sdk.NewDec(0))
-
-	ok := r1.String() == r2.String()
-	require.True(t, ok)
-
-	r2.Entries[0].SharesDst = sdk.NewDec(10)
-	r2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
-
-	ok = r1.String() == r2.String()
-	require.False(t, ok)
-}
-
-func TestRedelegationString(t *testing.T) {
-	r := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
-		time.Unix(0, 0), sdk.NewInt(0),
-		sdk.NewDec(10))
-
-	require.NotEmpty(t, r.String())
-}
-
 func TestDelegationResponses(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
 	dr1 := types.NewDelegationResp(sdk.AccAddress(valAddr1), valAddr2, sdk.NewDec(5),
@@ -106,39 +80,4 @@ func TestDelegationResponses(t *testing.T) {
 	var drs2 types.DelegationResponses
 	require.NoError(t, cdc.UnmarshalJSON(bz2, &drs2))
 	require.Equal(t, drs, drs2)
-}
-
-func TestRedelegationResponses(t *testing.T) {
-	cdc := codec.NewLegacyAmino()
-	entries := []types.RedelegationEntryResponse{
-		types.NewRedelegationEntryResponse(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5)),
-		types.NewRedelegationEntryResponse(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5)),
-	}
-	rdr1 := types.NewRedelegationResponse(sdk.AccAddress(valAddr1), valAddr2, valAddr3, entries)
-	rdr2 := types.NewRedelegationResponse(sdk.AccAddress(valAddr2), valAddr1, valAddr3, entries)
-	rdrs := types.RedelegationResponses{rdr1, rdr2}
-
-	bz1, err := json.Marshal(rdr1)
-	require.NoError(t, err)
-
-	bz2, err := cdc.MarshalJSON(rdr1)
-	require.NoError(t, err)
-
-	require.Equal(t, bz1, bz2)
-
-	bz1, err = json.Marshal(rdrs)
-	require.NoError(t, err)
-
-	bz2, err = cdc.MarshalJSON(rdrs)
-	require.NoError(t, err)
-
-	require.Equal(t, bz1, bz2)
-
-	var rdrs2 types.RedelegationResponses
-	require.NoError(t, cdc.UnmarshalJSON(bz2, &rdrs2))
-
-	bz3, err := cdc.MarshalJSON(rdrs2)
-	require.NoError(t, err)
-
-	require.Equal(t, bz2, bz3)
 }

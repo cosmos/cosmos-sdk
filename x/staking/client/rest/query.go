@@ -58,12 +58,6 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 		unbondingDelegationHandlerFn(clientCtx),
 	).Methods("GET")
 
-	// Query redelegations (filters in query params)
-	r.HandleFunc(
-		"/staking/redelegations",
-		redelegationsHandlerFn(clientCtx),
-	).Methods("GET")
-
 	// Get all validators
 	r.HandleFunc(
 		"/staking/validators",
@@ -144,7 +138,6 @@ func delegatorTxsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		noQuery := len(typesQuerySlice) == 0
 		isBondTx := contains(typesQuerySlice, "bond")
 		isUnbondTx := contains(typesQuerySlice, "unbond")
-		isRedTx := contains(typesQuerySlice, "redelegate")
 
 		var (
 			txs     []*sdk.SearchTxsResult
@@ -162,13 +155,9 @@ func delegatorTxsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		case isUnbondTx:
 			actions = append(actions, types.TypeMsgUndelegate)
 
-		case isRedTx:
-			actions = append(actions, types.TypeMsgBeginRedelegate)
-
 		case noQuery:
 			actions = append(actions, types.TypeMsgDelegate)
 			actions = append(actions, types.TypeMsgUndelegate)
-			actions = append(actions, types.TypeMsgBeginRedelegate)
 
 		default:
 			w.WriteHeader(http.StatusNoContent)
@@ -196,62 +185,6 @@ func delegatorTxsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // HTTP request handler to query an unbonding-delegation
 func unbondingDelegationHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return queryBonds(cliCtx, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryUnbondingDelegation))
-}
-
-// HTTP request handler to query redelegations
-func redelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var params types.QueryRedelegationParams
-
-		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
-		if !ok {
-			return
-		}
-
-		bechDelegatorAddr := r.URL.Query().Get("delegator")
-		bechSrcValidatorAddr := r.URL.Query().Get("validator_from")
-		bechDstValidatorAddr := r.URL.Query().Get("validator_to")
-
-		if len(bechDelegatorAddr) != 0 {
-			delegatorAddr, err := sdk.AccAddressFromBech32(bechDelegatorAddr)
-			if rest.CheckBadRequestError(w, err) {
-				return
-			}
-
-			params.DelegatorAddr = delegatorAddr
-		}
-
-		if len(bechSrcValidatorAddr) != 0 {
-			srcValidatorAddr, err := sdk.ValAddressFromBech32(bechSrcValidatorAddr)
-			if rest.CheckBadRequestError(w, err) {
-				return
-			}
-
-			params.SrcValidatorAddr = srcValidatorAddr
-		}
-
-		if len(bechDstValidatorAddr) != 0 {
-			dstValidatorAddr, err := sdk.ValAddressFromBech32(bechDstValidatorAddr)
-			if rest.CheckBadRequestError(w, err) {
-				return
-			}
-
-			params.DstValidatorAddr = dstValidatorAddr
-		}
-
-		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-
-		res, height, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryRedelegations), bz)
-		if rest.CheckInternalServerError(w, err) {
-			return
-		}
-
-		clientCtx = clientCtx.WithHeight(height)
-		rest.PostProcessResponse(w, clientCtx, res)
-	}
 }
 
 // HTTP request handler to query a delegation

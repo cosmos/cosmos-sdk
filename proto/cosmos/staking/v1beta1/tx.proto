@@ -23,10 +23,6 @@ service Msg {
   // from a delegator to a validator.
   rpc Delegate(MsgDelegate) returns (MsgDelegateResponse);
 
-  // BeginRedelegate defines a method for performing a redelegation
-  // of coins from a delegator and source validator to a destination validator.
-  rpc BeginRedelegate(MsgBeginRedelegate) returns (MsgBeginRedelegateResponse);
-
   // Undelegate defines a method for performing an undelegation from a
   // delegate and a validator.
   rpc Undelegate(MsgUndelegate) returns (MsgUndelegateResponse);
@@ -91,23 +87,6 @@ message MsgDelegate {
 
 // MsgDelegateResponse defines the Msg/Delegate response type.
 message MsgDelegateResponse {}
-
-// MsgBeginRedelegate defines a SDK message for performing a redelegation
-// of coins from a delegator and source validator to a destination validator.
-message MsgBeginRedelegate {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  string                   delegator_address     = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string                   validator_src_address = 2 [(gogoproto.moretags) = "yaml:\"validator_src_address\""];
-  string                   validator_dst_address = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
-  cosmos.base.v1beta1.Coin amount                = 4 [(gogoproto.nullable) = false];
-}
-
-// MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
-message MsgBeginRedelegateResponse {
-  google.protobuf.Timestamp completion_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-}
 
 // MsgUndelegate defines a SDK message for performing an undelegation from a
 // delegate and a validator.

@@ -69,9 +69,6 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 	case *MsgUndelegate:
 		validatorAddress = msg.ValidatorAddress
 		amount = msg.Amount
-	case *MsgBeginRedelegate:
-		validatorAddress = msg.ValidatorDstAddress
-		amount = msg.Amount
 	default:
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrap("unknown msg type")
 	}
@@ -142,8 +139,6 @@ func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 		return sdk.MsgTypeURL(&MsgDelegate{}), nil
 	case AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE:
 		return sdk.MsgTypeURL(&MsgUndelegate{}), nil
-	case AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE:
-		return sdk.MsgTypeURL(&MsgBeginRedelegate{}), nil
 	default:
 		return "", sdkerrors.ErrInvalidType.Wrapf("unknown authorization type %T", authzType)
 	}

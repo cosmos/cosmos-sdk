@@ -25,8 +25,6 @@ func TestStoreMigration(t *testing.T) {
 	_, pk1, addr1 := testdata.KeyTestPubAddr()
 	valAddr1 := sdk.ValAddress(addr1)
 	val := teststaking.NewValidator(t, valAddr1, pk1)
-	_, pk1, addr2 := testdata.KeyTestPubAddr()
-	valAddr2 := sdk.ValAddress(addr2)
 	_, _, addr3 := testdata.KeyTestPubAddr()
 	consAddr := sdk.ConsAddress(addr3.String())
 	_, _, addr4 := testdata.KeyTestPubAddr()
@@ -80,29 +78,9 @@ func TestStoreMigration(t *testing.T) {
 			types.GetUBDByValIndexKey(addr4, valAddr1),
 		},
 		{
-			"RedelegationKey",
-			v040staking.GetREDKey(addr4, valAddr1, valAddr2),
-			types.GetREDKey(addr4, valAddr1, valAddr2),
-		},
-		{
-			"RedelegationByValSrcIndexKey",
-			v040staking.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
-			types.GetREDByValSrcIndexKey(addr4, valAddr1, valAddr2),
-		},
-		{
-			"RedelegationByValDstIndexKey",
-			v040staking.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
-			types.GetREDByValDstIndexKey(addr4, valAddr1, valAddr2),
-		},
-		{
 			"UnbondingQueueKey",
 			v040staking.GetUnbondingDelegationTimeKey(now),
 			types.GetUnbondingDelegationTimeKey(now),
-		},
-		{
-			"RedelegationQueueKey",
-			v040staking.GetRedelegationTimeKey(now),
-			types.GetRedelegationTimeKey(now),
 		},
 		{
 			"ValidatorQueueKey",

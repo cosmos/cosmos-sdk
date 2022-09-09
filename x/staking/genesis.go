@@ -86,14 +86,6 @@ func InitGenesis(
 		}
 	}
 
-	for _, red := range data.Redelegations {
-		keeper.SetRedelegation(ctx, red)
-
-		for _, entry := range red.Entries {
-			keeper.InsertRedelegationQueue(ctx, red, entry.CompletionTime)
-		}
-	}
-
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, bondedTokens))
 	notBondedCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, notBondedTokens))
 
@@ -164,13 +156,6 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 		return false
 	})
 
-	var redelegations []types.Redelegation
-
-	keeper.IterateRedelegations(ctx, func(_ int64, red types.Redelegation) (stop bool) {
-		redelegations = append(redelegations, red)
-		return false
-	})
-
 	var lastValidatorPowers []types.LastValidatorPower
 
 	keeper.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power int64) (stop bool) {
@@ -185,7 +170,6 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 		Validators:           keeper.GetAllValidators(ctx),
 		Delegations:          keeper.GetAllDelegations(ctx),
 		UnbondingDelegations: unbondingDelegations,
-		Redelegations:        redelegations,
 		Exported:             true,
 	}
 }

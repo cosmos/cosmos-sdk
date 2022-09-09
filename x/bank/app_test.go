@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -22,6 +21,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/gov"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
@@ -109,7 +109,9 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 		configurator.AuthModule(),
 		configurator.StakingModule(),
 		configurator.TxModule(),
-		configurator.BankModule()),
+		configurator.BankModule(),
+		configurator.GovModule(),
+	),
 		startupCfg, &res.BankKeeper, &res.AccountKeeper)
 
 	res.App = app
@@ -340,12 +342,14 @@ func TestMsgMultiSendDependent(t *testing.T) {
 
 func TestMsgSetSendEnabled(t *testing.T) {
 	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+
 	genAccs := []authtypes.GenesisAccount{acc1}
-	app := simapp.SetupWithGenesisAccounts(t, genAccs)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
+	s := createTestSuite(t, genAccs)
+
+	ctx := s.App.BaseApp.NewContext(false, tmproto.Header{})
+	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
 	addr1Str := addr1.String()
-	govAddr := app.BankKeeper.GetAuthority()
+	govAddr := s.BankKeeper.GetAuthority()
 	goodGovProp, err := govv1.NewMsgSubmitProposal(
 		[]sdk.Msg{
 			types.NewMsgSetSendEnabled(govAddr, nil, nil),
@@ -423,9 +427,9 @@ func TestMsgSetSendEnabled(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(tt *testing.T) {
-			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+			header := tmproto.Header{Height: s.App.LastBlockHeight() + 1}
 			txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
-			_, _, err = simtestutil.SignCheckDeliver(tt, txGen, app.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
+			_, _, err = simtestutil.SignCheckDeliver(tt, txGen, s.App.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
 			if len(tc.expInError) > 0 {
 				require.Error(tt, err)
 				for _, exp := range tc.expInError {

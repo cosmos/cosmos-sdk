@@ -176,7 +176,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome,
 			gentxModule.GenTxValidator),
 		genutilcli.MigrateGenesisCmd(),
-
 		genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig,
 			banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),

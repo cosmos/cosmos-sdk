@@ -191,12 +191,12 @@ func (s *MigrationTestSuite) TestMigrateAllLegacyMultiOffline() {
 
 	s.Require().NoError(s.ks.SetItem(item))
 
-	err = s.kb.MigrateAll()
+	_, err = s.kb.MigrateAll()
 	s.Require().NoError(err)
 }
 
 func (s *MigrationTestSuite) TestMigrateAllNoItem() {
-	err := s.kb.MigrateAll()
+	_, err := s.kb.MigrateAll()
 	s.Require().NoError(err)
 }
 

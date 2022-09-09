@@ -14,4 +14,9 @@ where the base primitive interface, for which other interfaces build off of, is
 the `Store` type. The `Store` interface defines the ability to tell the type of
 the implementing store and the ability to cache wrap via the `CacheWrapper` interface.
 
-### CacheWrapper
+### CacheWrapper & CacheWrap
+
+One of the most important features a store has the ability to perform is the
+ability to cache wrap. Cache wrapping is essentially the underlying store wrapping
+itself within another store type that performs caching for both reads and writes
+with the ability to flush writes via `Write`.

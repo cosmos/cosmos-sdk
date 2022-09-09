@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/99designs/keyring"
@@ -868,6 +869,7 @@ func (ks keystore) MigrateAll() ([]*Record, error) {
 		return nil, nil
 	}
 
+	sort.Strings(keys)
 	var recs []*Record
 	for _, key := range keys {
 		// The keyring items only with `.info` consists the key info.

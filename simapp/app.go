@@ -3,12 +3,15 @@
 package simapp
 
 import (
+	"bytes"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -17,6 +20,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -166,6 +170,12 @@ type SimApp struct {
 
 	// simulation manager
 	sm *module.SimulationManager
+
+	// the root folder of the app config and data
+	homepath string
+
+	// the path for the genesis state exporting
+	exportpath string
 }
 
 func init() {
@@ -239,6 +249,12 @@ func NewSimApp(
 	}
 
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
+	app.homepath = cast.ToString(appOpts.Get(flags.FlagHome))
+
+	ep := cast.ToString(appOpts.Get(flags.FlagGenesisFilePath))
+	if len(ep) > 0 {
+		app.exportpath = filepath.Join(ep, "genesis")
+	}
 
 	// configure state listening capabilities using AppOptions
 	// we are doing nothing with the returned streamingServices and waitGroup in this case
@@ -309,6 +325,18 @@ func (app *SimApp) Name() string { return app.BaseApp.Name() }
 
 // InitChainer application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	jsonObj := make(map[string]json.RawMessage)
+	jsonObj["module_genesis_state"] = []byte("true")
+	loadAppStateFromFolder, _ := json.Marshal(jsonObj)
+	var genesisState GenesisState
+	if bytes.Equal(loadAppStateFromFolder, req.AppStateBytes) {
+		app.ModuleManager.SetGenesisPath(filepath.Join(app.homepath, "config", "genesis"))
+	} else {
+		if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
+			panic(err)
+		}
+	}
+
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	return app.App.InitChainer(ctx, req)
 }

@@ -1,14 +1,8 @@
 package cli_test
 
 import (
-	"bytes"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
@@ -96,18 +90,9 @@ func (s *CLITestSuite) TestValidateGenesis() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			var outBuf bytes.Buffer
-			ctxGen := func() client.Context {
-				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
-					Value: bz,
-				})
-				return s.baseCtx.WithClient(c)
-			}
-			clientCtx := ctxGen().WithOutput(&outBuf)
 
 			genesisFile := testutil.WriteToNewTempFile(s.T(), tc.genesis)
-			_, err := clitestutil.ExecTestCLICmd(clientCtx, cli.ValidateGenesisCmd(nil), []string{genesisFile.Name()})
+			_, err := clitestutil.ExecTestCLICmd(s.clientCtx, cli.ValidateGenesisCmd(nil), []string{genesisFile.Name()})
 			if tc.expErr {
 				s.Require().Contains(err.Error(), "Make sure that you have correctly migrated all Tendermint consensus params")
 			} else {

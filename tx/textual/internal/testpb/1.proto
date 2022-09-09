@@ -14,16 +14,16 @@ enum Enumeration {
 
 // A contains fields that are parseable by SIGN_MODE_TEXTUAL.
 message A {
-  uint32                   UINT32         = 1;
-  uint64                   UINT64         = 2;
-  int32                    INT32          = 3;
-  int64                    INT64          = 4;
-  string                   SDKINT         = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
-  string                   SDKDEC         = 6 [(cosmos_proto.scalar) = "cosmos.Dec"];
-  cosmos.base.v1beta1.Coin COIN           = 7;
-  repeated cosmos.base.v1beta1.Coin COINS = 8;
-  bytes                             BYTES = 9;
-  google.protobuf.Timestamp    TIMESTAMP = 10;
+  uint32                   UINT32             = 1;
+  uint64                   UINT64             = 2;
+  int32                    INT32              = 3;
+  int64                    INT64              = 4;
+  string                   SDKINT             = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string                   SDKDEC             = 6 [(cosmos_proto.scalar) = "cosmos.Dec"];
+  cosmos.base.v1beta1.Coin COIN               = 7;
+  repeated cosmos.base.v1beta1.Coin COINS     = 8;
+  bytes                             BYTES     = 9;
+  google.protobuf.Timestamp         TIMESTAMP = 10;
 }
 
 // B contains fields that are not parseable by SIGN_MODE_TEXTUAL, some fields

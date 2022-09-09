@@ -111,11 +111,6 @@ The following snippet shows how to query the state using gRPC inside a Go progra
 
 #### Install Cosmos SDK
 
-Add below line to `go.mod` to replace protobuf, read more [#8469](https://github.com/cosmos/cosmos-sdk/issues/8469)
-
-```go
-replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-```
 
 ```bash
 go get github.com/cosmos/cosmos-sdk@main

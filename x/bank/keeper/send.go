@@ -28,7 +28,7 @@ type SendKeeper interface {
 	GetSendEnabledEntry(ctx sdk.Context, denom string) (types.SendEnabled, bool)
 	SetSendEnabled(ctx sdk.Context, denom string, value bool)
 	SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types.SendEnabled)
-	DeleteSendEnabled(ctx sdk.Context, denom string)
+	DeleteSendEnabled(ctx sdk.Context, denoms ...string)
 	IterateSendEnabledEntries(ctx sdk.Context, cb func(denom string, sendEnabled bool) (stop bool))
 	GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEnabled
 
@@ -426,10 +426,13 @@ func (k BaseSendKeeper) setSendEnabledEntry(store sdk.KVStore, denom string, val
 	store.Set(key, []byte{val})
 }
 
-// DeleteSendEnabled deletes a SendEnabled flag for a denom.
-func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denom string) {
+// DeleteSendEnabled deletes the SendEnabled flags for one or more denoms.
+// If a denom is provided that doesn't have a SendEnabled entry, it is ignored.
+func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denoms ...string) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.CreateSendEnabledKey(denom))
+	for _, denom := range denoms {
+		store.Delete(types.CreateSendEnabledKey(denom))
+	}
 }
 
 // getSendEnabledPrefixStore gets a prefix store for the SendEnabled entries.

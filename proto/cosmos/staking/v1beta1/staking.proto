@@ -228,44 +228,6 @@ message UnbondingDelegationEntry {
   string balance = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
-// RedelegationEntry defines a redelegation object with relevant metadata.
-message RedelegationEntry {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
-
-  // creation_height  defines the height which the redelegation took place.
-  int64 creation_height = 1 [(gogoproto.moretags) = "yaml:\"creation_height\""];
-  // completion_time defines the unix time for redelegation completion.
-  google.protobuf.Timestamp completion_time = 2
-      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"completion_time\""];
-  // initial_balance defines the initial balance when redelegation started.
-  string initial_balance = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable)   = false,
-    (gogoproto.moretags)   = "yaml:\"initial_balance\""
-  ];
-  // shares_dst is the amount of destination-validator shares created by redelegation.
-  string shares_dst = 4
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-}
-
-// Redelegation contains the list of a particular delegator's redelegating bonds
-// from a particular source validator to a particular destination validator.
-message Redelegation {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
-
-  // delegator_address is the bech32-encoded address of the delegator.
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  // validator_src_address is the validator redelegation source operator address.
-  string validator_src_address = 2 [(gogoproto.moretags) = "yaml:\"validator_src_address\""];
-  // validator_dst_address is the validator redelegation destination operator address.
-  string validator_dst_address = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
-  // entries are the redelegation entries.
-  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries
-}
-
 // Params defines the parameters for the staking module.
 message Params {
   option (gogoproto.equal)            = true;
@@ -293,26 +255,6 @@ message DelegationResponse {
   Delegation delegation = 1 [(gogoproto.nullable) = false];
 
   cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];
-}
-
-// RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
-// contains a balance in addition to shares which is more suitable for client
-// responses.
-message RedelegationEntryResponse {
-  option (gogoproto.equal) = true;
-
-  RedelegationEntry redelegation_entry = 1 [(gogoproto.nullable) = false];
-  string balance = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-}
-
-// RedelegationResponse is equivalent to a Redelegation except that its entries
-// contain a balance in addition to shares which is more suitable for client
-// responses.
-message RedelegationResponse {
-  option (gogoproto.equal) = false;
-
-  Redelegation                       redelegation = 1 [(gogoproto.nullable) = false];
-  repeated RedelegationEntryResponse entries      = 2 [(gogoproto.nullable) = false];
 }
 
 // Pool is used for tracking bonded and not-bonded token supply of the bond

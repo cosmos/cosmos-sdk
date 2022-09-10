@@ -114,20 +114,6 @@ type (
 		Entries          []UnbondingDelegationEntry `json:"entries"`
 	}
 
-	RedelegationEntry struct {
-		CreationHeight int64     `json:"creation_height"`
-		CompletionTime time.Time `json:"completion_time"`
-		InitialBalance sdk.Int   `json:"initial_balance"`
-		SharesDst      sdk.Dec   `json:"shares_dst"`
-	}
-
-	Redelegation struct {
-		DelegatorAddress    sdk.AccAddress      `json:"delegator_address"`
-		ValidatorSrcAddress sdk.ValAddress      `json:"validator_src_address"`
-		ValidatorDstAddress sdk.ValAddress      `json:"validator_dst_address"`
-		Entries             []RedelegationEntry `json:"entries"`
-	}
-
 	GenesisState struct {
 		Pool                 Pool                  `json:"pool"`
 		Params               Params                `json:"params"`
@@ -136,7 +122,6 @@ type (
 		Validators           Validators            `json:"validators"`
 		Delegations          Delegations           `json:"delegations"`
 		UnbondingDelegations []UnbondingDelegation `json:"unbonding_delegations"`
-		Redelegations        []Redelegation        `json:"redelegations"`
 		Exported             bool                  `json:"exported"`
 	}
 )

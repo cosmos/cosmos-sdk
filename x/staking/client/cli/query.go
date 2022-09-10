@@ -29,13 +29,10 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryDelegations(),
 		GetCmdQueryUnbondingDelegation(),
 		GetCmdQueryUnbondingDelegations(),
-		GetCmdQueryRedelegation(),
-		GetCmdQueryRedelegations(),
 		GetCmdQueryValidator(),
 		GetCmdQueryValidators(),
 		GetCmdQueryValidatorDelegations(),
 		GetCmdQueryValidatorUnbondingDelegations(),
-		GetCmdQueryValidatorRedelegations(),
 		GetCmdQueryHistoricalInfo(),
 		GetCmdQueryParams(),
 		GetCmdQueryPool(),
@@ -182,61 +179,6 @@ $ %s query staking unbonding-delegations-from %s1gghjut3ccd8ay0zduzj64hwre2fxs9l
 
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "unbonding delegations")
-
-	return cmd
-}
-
-// GetCmdQueryValidatorRedelegations implements the query all redelegatations
-// from a validator command.
-func GetCmdQueryValidatorRedelegations() *cobra.Command {
-	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
-
-	cmd := &cobra.Command{
-		Use:   "redelegations-from [validator-addr]",
-		Short: "Query all outgoing redelegatations from a validator",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query delegations that are redelegating _from_ a validator.
-
-Example:
-$ %s query staking redelegations-from %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-`,
-				version.AppName, bech32PrefixValAddr,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			params := &types.QueryRedelegationsRequest{
-				SrcValidatorAddr: valSrcAddr.String(),
-				Pagination:       pageReq,
-			}
-
-			res, err := queryClient.Redelegations(cmd.Context(), params)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "validator redelegations")
 
 	return cmd
 }
@@ -511,122 +453,6 @@ $ %s query staking unbonding-delegations %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru
 
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "unbonding delegations")
-
-	return cmd
-}
-
-// GetCmdQueryRedelegation implements the command to query a single
-// redelegation record.
-func GetCmdQueryRedelegation() *cobra.Command {
-	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
-
-	cmd := &cobra.Command{
-		Use:   "redelegation [delegator-addr] [src-validator-addr] [dst-validator-addr]",
-		Short: "Query a redelegation record based on delegator and a source and destination validator address",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query a redelegation record for an individual delegator between a source and destination validator.
-
-Example:
-$ %s query staking redelegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
-`,
-				version.AppName, bech32PrefixAccAddr, bech32PrefixValAddr, bech32PrefixValAddr,
-			),
-		),
-		Args: cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			delAddr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
-			valSrcAddr, err := sdk.ValAddressFromBech32(args[1])
-			if err != nil {
-				return err
-			}
-
-			valDstAddr, err := sdk.ValAddressFromBech32(args[2])
-			if err != nil {
-				return err
-			}
-
-			params := &types.QueryRedelegationsRequest{
-				DelegatorAddr:    delAddr.String(),
-				DstValidatorAddr: valDstAddr.String(),
-				SrcValidatorAddr: valSrcAddr.String(),
-			}
-
-			res, err := queryClient.Redelegations(cmd.Context(), params)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// GetCmdQueryRedelegations implements the command to query all the
-// redelegation records for a delegator.
-func GetCmdQueryRedelegations() *cobra.Command {
-	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-
-	cmd := &cobra.Command{
-		Use:   "redelegations [delegator-addr]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Query all redelegations records for one delegator",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query all redelegation records for an individual delegator.
-
-Example:
-$ %s query staking redelegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
-`,
-				version.AppName, bech32PrefixAccAddr,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			delAddr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			params := &types.QueryRedelegationsRequest{
-				DelegatorAddr: delAddr.String(),
-				Pagination:    pageReq,
-			}
-
-			res, err := queryClient.Redelegations(cmd.Context(), params)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "delegator redelegations")
 
 	return cmd
 }

@@ -89,17 +89,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
 		}
-
-		// Iterate through redelegations from slashed source validator
-		redelegations := k.GetRedelegationsFromSrcValidator(ctx, operatorAddress)
-		for _, redelegation := range redelegations {
-			amountSlashed := k.SlashRedelegation(ctx, validator, redelegation, infractionHeight, slashFactor)
-			if amountSlashed.IsZero() {
-				continue
-			}
-
-			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
-		}
 	}
 
 	// cannot decrease balance below zero
@@ -204,91 +193,6 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 	}
 
 	if err := k.burnNotBondedTokens(ctx, burnedAmount); err != nil {
-		panic(err)
-	}
-
-	return totalSlashAmount
-}
-
-// slash a redelegation and update the pool
-// return the amount that would have been slashed assuming
-// the unbonding delegation had enough stake to slash
-// (the amount actually slashed may be less if there's
-// insufficient stake remaining)
-// NOTE this is only slashing for prior infractions from the source validator
-func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
-	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
-	now := ctx.BlockHeader().Time
-	totalSlashAmount = sdk.ZeroInt()
-	bondedBurnedAmount, notBondedBurnedAmount := sdk.ZeroInt(), sdk.ZeroInt()
-
-	// perform slashing on all entries within the redelegation
-	for _, entry := range redelegation.Entries {
-		// If redelegation started before this height, stake didn't contribute to infraction
-		if entry.CreationHeight < infractionHeight {
-			continue
-		}
-
-		if entry.IsMature(now) {
-			// Redelegation no longer eligible for slashing, skip it
-			continue
-		}
-
-		// Calculate slash amount proportional to stake contributing to infraction
-		slashAmountDec := slashFactor.MulInt(entry.InitialBalance)
-		slashAmount := slashAmountDec.TruncateInt()
-		totalSlashAmount = totalSlashAmount.Add(slashAmount)
-
-		// Unbond from target validator
-		sharesToUnbond := slashFactor.Mul(entry.SharesDst)
-		if sharesToUnbond.IsZero() {
-			continue
-		}
-
-		valDstAddr, err := sdk.ValAddressFromBech32(redelegation.ValidatorDstAddress)
-		if err != nil {
-			panic(err)
-		}
-
-		delegatorAddress := sdk.MustAccAddressFromBech32(redelegation.DelegatorAddress)
-
-		delegation, found := k.GetDelegation(ctx, delegatorAddress, valDstAddr)
-		if !found {
-			// If deleted, delegation has zero shares, and we can't unbond any more
-			continue
-		}
-
-		if sharesToUnbond.GT(delegation.Shares) {
-			sharesToUnbond = delegation.Shares
-		}
-
-		tokensToBurn, err := k.Unbond(ctx, delegatorAddress, valDstAddr, sharesToUnbond)
-		if err != nil {
-			panic(fmt.Errorf("error unbonding delegator: %v", err))
-		}
-
-		dstValidator, found := k.GetValidator(ctx, valDstAddr)
-		if !found {
-			panic("destination validator not found")
-		}
-
-		// tokens of a redelegation currently live in the destination validator
-		// therefor we must burn tokens from the destination-validator's bonding status
-		switch {
-		case dstValidator.IsBonded():
-			bondedBurnedAmount = bondedBurnedAmount.Add(tokensToBurn)
-		case dstValidator.IsUnbonded() || dstValidator.IsUnbonding():
-			notBondedBurnedAmount = notBondedBurnedAmount.Add(tokensToBurn)
-		default:
-			panic("unknown validator status")
-		}
-	}
-
-	if err := k.burnBondedTokens(ctx, bondedBurnedAmount); err != nil {
-		panic(err)
-	}
-
-	if err := k.burnNotBondedTokens(ctx, notBondedBurnedAmount); err != nil {
 		panic(err)
 	}
 

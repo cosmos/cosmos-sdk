@@ -10,9 +10,7 @@ const (
 	QueryValidator                     = "validator"
 	QueryDelegatorDelegations          = "delegatorDelegations"
 	QueryDelegatorUnbondingDelegations = "delegatorUnbondingDelegations"
-	QueryRedelegations                 = "redelegations"
 	QueryValidatorDelegations          = "validatorDelegations"
-	QueryValidatorRedelegations        = "validatorRedelegations"
 	QueryValidatorUnbondingDelegations = "validatorUnbondingDelegations"
 	QueryDelegation                    = "delegation"
 	QueryUnbondingDelegation           = "unbondingDelegation"
@@ -51,22 +49,6 @@ func NewQueryValidatorParams(validatorAddr sdk.ValAddress, page, limit int) Quer
 		ValidatorAddr: validatorAddr,
 		Page:          page,
 		Limit:         limit,
-	}
-}
-
-// defines the params for the following queries:
-// - 'custom/staking/redelegation'
-type QueryRedelegationParams struct {
-	DelegatorAddr    sdk.AccAddress
-	SrcValidatorAddr sdk.ValAddress
-	DstValidatorAddr sdk.ValAddress
-}
-
-func NewQueryRedelegationParams(delegatorAddr sdk.AccAddress, srcValidatorAddr, dstValidatorAddr sdk.ValAddress) QueryRedelegationParams {
-	return QueryRedelegationParams{
-		DelegatorAddr:    delegatorAddr,
-		SrcValidatorAddr: srcValidatorAddr,
-		DstValidatorAddr: dstValidatorAddr,
 	}
 }
 

@@ -73,7 +73,6 @@ type (
 		Validators           Validators                        `json:"validators"`
 		Delegations          v034staking.Delegations           `json:"delegations"`
 		UnbondingDelegations []v034staking.UnbondingDelegation `json:"unbonding_delegations"`
-		Redelegations        []v034staking.Redelegation        `json:"redelegations"`
 		Exported             bool                              `json:"exported"`
 	}
 )
@@ -93,7 +92,7 @@ func NewDescription(moniker, identity, website, securityContact, details string)
 func NewGenesisState(
 	params v034staking.Params, lastTotalPower sdk.Int, lastValPowers []v034staking.LastValidatorPower,
 	validators Validators, delegations v034staking.Delegations,
-	ubds []v034staking.UnbondingDelegation, reds []v034staking.Redelegation, exported bool,
+	ubds []v034staking.UnbondingDelegation, exported bool,
 ) GenesisState {
 
 	return GenesisState{
@@ -109,7 +108,6 @@ func NewGenesisState(
 		Validators:           validators,
 		Delegations:          delegations,
 		UnbondingDelegations: ubds,
-		Redelegations:        reds,
 		Exported:             exported,
 	}
 }

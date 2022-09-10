@@ -41,9 +41,6 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		case types.QueryDelegatorUnbondingDelegations:
 			return queryDelegatorUnbondingDelegations(ctx, req, k, legacyQuerierCdc)
 
-		case types.QueryRedelegations:
-			return queryRedelegations(ctx, req, k, legacyQuerierCdc)
-
 		case types.QueryDelegatorValidators:
 			return queryDelegatorValidators(ctx, req, k, legacyQuerierCdc)
 
@@ -349,47 +346,6 @@ func queryUnbondingDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper, 
 	return res, nil
 }
 
-func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	var params types.QueryRedelegationParams
-
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
-	}
-
-	var redels []types.Redelegation
-
-	switch {
-	case !params.DelegatorAddr.Empty() && !params.SrcValidatorAddr.Empty() && !params.DstValidatorAddr.Empty():
-		redel, found := k.GetRedelegation(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
-		if !found {
-			return nil, types.ErrNoRedelegation
-		}
-
-		redels = []types.Redelegation{redel}
-	case params.DelegatorAddr.Empty() && !params.SrcValidatorAddr.Empty() && params.DstValidatorAddr.Empty():
-		redels = k.GetRedelegationsFromSrcValidator(ctx, params.SrcValidatorAddr)
-	default:
-		redels = k.GetAllRedelegations(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
-	}
-
-	redelResponses, err := RedelegationsToRedelegationResponses(ctx, k, redels)
-	if err != nil {
-		return nil, err
-	}
-
-	if redelResponses == nil {
-		redelResponses = types.RedelegationResponses{}
-	}
-
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, redelResponses)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	}
-
-	return res, nil
-}
-
 func queryHistoricalInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryHistoricalInfoRequest
 
@@ -477,50 +433,6 @@ func DelegationsToDelegationResponses(
 		}
 
 		resp[i] = delResp
-	}
-
-	return resp, nil
-}
-
-func RedelegationsToRedelegationResponses(
-	ctx sdk.Context, k Keeper, redels types.Redelegations,
-) (types.RedelegationResponses, error) {
-	resp := make(types.RedelegationResponses, len(redels))
-
-	for i, redel := range redels {
-		valSrcAddr, err := sdk.ValAddressFromBech32(redel.ValidatorSrcAddress)
-		if err != nil {
-			panic(err)
-		}
-		valDstAddr, err := sdk.ValAddressFromBech32(redel.ValidatorDstAddress)
-		if err != nil {
-			panic(err)
-		}
-
-		delegatorAddress := sdk.MustAccAddressFromBech32(redel.DelegatorAddress)
-
-		val, found := k.GetValidator(ctx, valDstAddr)
-		if !found {
-			return nil, types.ErrNoValidatorFound
-		}
-
-		entryResponses := make([]types.RedelegationEntryResponse, len(redel.Entries))
-		for j, entry := range redel.Entries {
-			entryResponses[j] = types.NewRedelegationEntryResponse(
-				entry.CreationHeight,
-				entry.CompletionTime,
-				entry.SharesDst,
-				entry.InitialBalance,
-				val.TokensFromShares(entry.SharesDst).TruncateInt(),
-			)
-		}
-
-		resp[i] = types.NewRedelegationResponse(
-			delegatorAddress,
-			valSrcAddr,
-			valDstAddr,
-			entryResponses,
-		)
 	}
 
 	return resp, nil

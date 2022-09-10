@@ -212,7 +212,6 @@
       "validators": null,
       "delegations": null,
       "unbonding_delegations": null,
-      "redelegations": null,
       "exported": false
     }
   }

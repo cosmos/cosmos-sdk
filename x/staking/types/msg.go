@@ -15,7 +15,6 @@ const (
 	TypeMsgEditValidator   = "edit_validator"
 	TypeMsgCreateValidator = "create_validator"
 	TypeMsgDelegate        = "delegate"
-	TypeMsgBeginRedelegate = "begin_redelegate"
 )
 
 var (
@@ -25,7 +24,6 @@ var (
 	_ sdk.Msg                            = &MsgEditValidator{}
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
-	_ sdk.Msg                            = &MsgBeginRedelegate{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -252,64 +250,6 @@ func (msg MsgDelegate) ValidateBasic() error {
 		return sdkerrors.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid delegation amount",
-		)
-	}
-
-	return nil
-}
-
-// NewMsgBeginRedelegate creates a new MsgBeginRedelegate instance.
-//nolint:interfacer
-func NewMsgBeginRedelegate(
-	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount sdk.Coin,
-) *MsgBeginRedelegate {
-	return &MsgBeginRedelegate{
-		DelegatorAddress:    delAddr.String(),
-		ValidatorSrcAddress: valSrcAddr.String(),
-		ValidatorDstAddress: valDstAddr.String(),
-		Amount:              amount,
-	}
-}
-
-// Route implements the sdk.Msg interface.
-func (msg MsgBeginRedelegate) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface
-func (msg MsgBeginRedelegate) Type() string { return TypeMsgBeginRedelegate }
-
-// GetSigners implements the sdk.Msg interface
-func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{delAddr}
-}
-
-// GetSignBytes implements the sdk.Msg interface.
-func (msg MsgBeginRedelegate) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgBeginRedelegate) ValidateBasic() error {
-	if msg.DelegatorAddress == "" {
-		return ErrEmptyDelegatorAddr
-	}
-
-	if msg.ValidatorSrcAddress == "" {
-		return ErrEmptyValidatorAddr
-	}
-
-	if msg.ValidatorDstAddress == "" {
-		return ErrEmptyValidatorAddr
-	}
-
-	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"invalid shares amount",
 		)
 	}
 

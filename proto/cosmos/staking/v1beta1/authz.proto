@@ -42,6 +42,4 @@ enum AuthorizationType {
   AUTHORIZATION_TYPE_DELEGATE = 1;
   // AUTHORIZATION_TYPE_UNDELEGATE defines an authorization type for Msg/Undelegate
   AUTHORIZATION_TYPE_UNDELEGATE = 2;
-  // AUTHORIZATION_TYPE_REDELEGATE defines an authorization type for Msg/BeginRedelegate
-  AUTHORIZATION_TYPE_REDELEGATE = 3;
 }

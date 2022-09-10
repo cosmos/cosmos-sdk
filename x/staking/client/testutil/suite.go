@@ -52,18 +52,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
-
-	// redelegate
-	_, err = MsgRedelegateExec(
-		val.ClientCtx,
-		val.Address,
-		val.ValAddress,
-		val2.ValAddress,
-		unbond,
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
-	)
-	s.Require().NoError(err)
+	
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 	// unbonding
@@ -303,7 +292,6 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 
 func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
 
 	testCases := []struct {
 		name     string
@@ -316,7 +304,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 			"with wrong delegator address",
 			[]string{
 				"wrongDelAddr",
-				val2.ValAddress.String(),
+				val.ValAddress.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true, nil, nil,
@@ -334,7 +322,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 			"with json output",
 			[]string{
 				val.Address.String(),
-				val2.ValAddress.String(),
+				val.ValAddress.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
@@ -342,10 +330,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 			&types.DelegationResponse{
 				Delegation: types.Delegation{
 					DelegatorAddress: val.Address.String(),
-					ValidatorAddress: val2.ValAddress.String(),
-					Shares:           sdk.NewDec(10),
+					ValidatorAddress: val.ValAddress.String(),
+					Shares:           sdk.NewDec(99999990),
 				},
-				Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
+				Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(99999990)),
 			},
 		},
 	}
@@ -631,186 +619,6 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
 				s.Require().NoError(err)
 				s.Require().Len(ubds.UnbondingResponses, 1)
 				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address.String())
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestGetCmdQueryRedelegations() {
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
-
-	testCases := []struct {
-		name   string
-		args   []string
-		expErr bool
-	}{
-		{
-			"wrong delegator address",
-			[]string{
-				"wrongdeladdr",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			true,
-		},
-		{
-			"valid request",
-			[]string{
-				val.Address.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryRedelegations()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-
-			if tc.expErr {
-				s.Require().Error(err)
-			} else {
-				var redelegations types.QueryRedelegationsResponse
-				err = val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &redelegations)
-
-				s.Require().NoError(err)
-
-				s.Require().Len(redelegations.RedelegationResponses, 1)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
-
-	testCases := []struct {
-		name   string
-		args   []string
-		expErr bool
-	}{
-		{
-			"wrong delegator address",
-			[]string{
-				"wrongdeladdr",
-				val.ValAddress.String(),
-				val2.ValAddress.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			true,
-		},
-		{
-			"wrong source validator address address",
-			[]string{
-				val.Address.String(),
-				"wrongSrcValAddress",
-				val2.ValAddress.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			true,
-		},
-		{
-			"wrong destination validator address address",
-			[]string{
-				val.Address.String(),
-				val.ValAddress.String(),
-				"wrongDestValAddress",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			true,
-		},
-		{
-			"valid request",
-			[]string{
-				val.Address.String(),
-				val.ValAddress.String(),
-				val2.ValAddress.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryRedelegation()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-
-			if tc.expErr {
-				s.Require().Error(err)
-			} else {
-				var redelegations types.QueryRedelegationsResponse
-
-				err = val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &redelegations)
-				s.Require().NoError(err)
-
-				s.Require().Len(redelegations.RedelegationResponses, 1)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestGetCmdQueryValidatorRedelegations() {
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
-
-	testCases := []struct {
-		name   string
-		args   []string
-		expErr bool
-	}{
-		{
-			"wrong validator address",
-			[]string{
-				"wrongValAddr",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			true,
-		},
-		{
-			"valid request",
-			[]string{
-				val.ValAddress.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryValidatorRedelegations()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-
-			if tc.expErr {
-				s.Require().Error(err)
-			} else {
-				var redelegations types.QueryRedelegationsResponse
-				err = val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &redelegations)
-
-				s.Require().NoError(err)
-
-				s.Require().Len(redelegations.RedelegationResponses, 1)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
 			}
 		})
 	}
@@ -1115,92 +923,6 @@ func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewDelegateCmd()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
-
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectedCode uint32
-		respType     proto.Message
-	}{
-		{
-			"without amount",
-			[]string{
-				val.ValAddress.String(),  // src-validator-addr
-				val2.ValAddress.String(), // dst-validator-addr
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true, 0, nil,
-		},
-		{
-			"with wrong source validator address",
-			[]string{
-				`cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj`, // src-validator-addr
-				val2.ValAddress.String(),                               // dst-validator-addr
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(), // amount
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, 3, &sdk.TxResponse{},
-		},
-		{
-			"with wrong destination validator address",
-			[]string{
-				val.ValAddress.String(),                                // dst-validator-addr
-				`cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj`, // src-validator-addr
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(), // amount
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, 31, &sdk.TxResponse{},
-		},
-		{
-			"valid transaction of delegate",
-			[]string{
-				val.ValAddress.String(),                                // src-validator-addr
-				val2.ValAddress.String(),                               // dst-validator-addr
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(), // amount
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, "auto"),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, 0, &sdk.TxResponse{},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.NewRedelegateCmd()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

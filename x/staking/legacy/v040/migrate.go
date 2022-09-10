@@ -101,26 +101,6 @@ func Migrate(stakingState v038staking.GenesisState) *GenesisState {
 		}
 	}
 
-	newRedelegations := make([]Redelegation, len(stakingState.Redelegations))
-	for i, oldRedelegation := range stakingState.Redelegations {
-		newEntries := make([]RedelegationEntry, len(oldRedelegation.Entries))
-		for j, oldEntry := range oldRedelegation.Entries {
-			newEntries[j] = RedelegationEntry{
-				CreationHeight: oldEntry.CreationHeight,
-				CompletionTime: oldEntry.CompletionTime,
-				InitialBalance: oldEntry.InitialBalance,
-				SharesDst:      oldEntry.SharesDst,
-			}
-		}
-
-		newRedelegations[i] = Redelegation{
-			DelegatorAddress:    oldRedelegation.DelegatorAddress.String(),
-			ValidatorSrcAddress: oldRedelegation.ValidatorSrcAddress.String(),
-			ValidatorDstAddress: oldRedelegation.ValidatorDstAddress.String(),
-			Entries:             newEntries,
-		}
-	}
-
 	return &GenesisState{
 		Params: Params{
 			UnbondingTime:     stakingState.Params.UnbondingTime,
@@ -134,7 +114,6 @@ func Migrate(stakingState v038staking.GenesisState) *GenesisState {
 		Validators:           newValidators,
 		Delegations:          newDelegations,
 		UnbondingDelegations: newUnbondingDelegations,
-		Redelegations:        newRedelegations,
 		Exported:             stakingState.Exported,
 	}
 }

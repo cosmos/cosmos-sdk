@@ -375,37 +375,6 @@ func (k Querier) HistoricalInfo(c context.Context, req *types.QueryHistoricalInf
 	return &types.QueryHistoricalInfoResponse{Hist: &hi}, nil
 }
 
-// Redelegations queries redelegations of given address
-func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsRequest) (*types.QueryRedelegationsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	var redels types.Redelegations
-	var pageRes *query.PageResponse
-	var err error
-
-	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
-	switch {
-	case req.DelegatorAddr != "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr != "":
-		redels, err = queryRedelegation(ctx, k, req)
-	case req.DelegatorAddr == "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr == "":
-		redels, pageRes, err = queryRedelegationsFromSrcValidator(store, k, req)
-	default:
-		redels, pageRes, err = queryAllRedelegations(store, k, req)
-	}
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	redelResponses, err := RedelegationsToRedelegationResponses(ctx, k.Keeper, redels)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryRedelegationsResponse{RedelegationResponses: redelResponses, Pagination: pageRes}, nil
-}
-
 // DelegatorValidators queries all validators info for given delegator address
 func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegatorValidatorsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
 	if req == nil {
@@ -468,74 +437,4 @@ func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 	params := k.GetParams(ctx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
-}
-
-func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, err error) {
-
-	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	srcValAddr, err := sdk.ValAddressFromBech32(req.SrcValidatorAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	dstValAddr, err := sdk.ValAddressFromBech32(req.DstValidatorAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	redel, found := k.GetRedelegation(ctx, delAddr, srcValAddr, dstValAddr)
-	if !found {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"redelegation not found for delegator address %s from validator address %s",
-			req.DelegatorAddr, req.SrcValidatorAddr)
-	}
-	redels = []types.Redelegation{redel}
-
-	return redels, err
-}
-
-func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
-	valAddr, err := sdk.ValAddressFromBech32(req.SrcValidatorAddr)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	srcValPrefix := types.GetREDsFromValSrcIndexKey(valAddr)
-	redStore := prefix.NewStore(store, srcValPrefix)
-	res, err = query.Paginate(redStore, req.Pagination, func(key []byte, value []byte) error {
-		storeKey := types.GetREDKeyFromValSrcIndexKey(append(srcValPrefix, key...))
-		storeValue := store.Get(storeKey)
-		red, err := types.UnmarshalRED(k.cdc, storeValue)
-		if err != nil {
-			return err
-		}
-		redels = append(redels, red)
-		return nil
-	})
-
-	return redels, res, err
-}
-
-func queryAllRedelegations(store sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
-	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	redStore := prefix.NewStore(store, types.GetREDsKey(delAddr))
-	res, err = query.Paginate(redStore, req.Pagination, func(key []byte, value []byte) error {
-		redelegation, err := types.UnmarshalRED(k.cdc, value)
-		if err != nil {
-			return err
-		}
-		redels = append(redels, redelegation)
-		return nil
-	})
-
-	return redels, res, err
 }

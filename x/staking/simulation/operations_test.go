@@ -46,7 +46,6 @@ func TestWeightedOperations(t *testing.T) {
 		{simappparams.DefaultWeightMsgEditValidator, types.ModuleName, types.TypeMsgEditValidator},
 		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgDelegate},
 		{simappparams.DefaultWeightMsgUndelegate, types.ModuleName, types.TypeMsgUndelegate},
-		{simappparams.DefaultWeightMsgBeginRedelegate, types.ModuleName, types.TypeMsgBeginRedelegate},
 	}
 
 	for i, w := range weightesOps {
@@ -207,56 +206,6 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	require.Equal(t, "stake", msg.Amount.Denom)
 	require.Equal(t, types.TypeMsgUndelegate, msg.Type())
 	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
-	require.Len(t, futureOperations, 0)
-
-}
-
-// TestSimulateMsgBeginRedelegate tests the normal scenario of a valid message of type TypeMsgBeginRedelegate.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
-func TestSimulateMsgBeginRedelegate(t *testing.T) {
-	app, ctx := createTestApp(false)
-	blockTime := time.Now().UTC()
-	ctx = ctx.WithBlockTime(blockTime)
-
-	// setup 3 accounts
-	s := rand.NewSource(5)
-	r := rand.New(s)
-	accounts := getTestingAccounts(t, r, app, ctx, 3)
-
-	// setup accounts[0] as validator0 and accounts[1] as validator1
-	validator0 := getTestingValidator0(t, app, ctx, accounts)
-	validator1 := getTestingValidator1(t, app, ctx, accounts)
-
-	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
-	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
-
-	// setup accounts[2] as delegator
-	delegator := accounts[2]
-	delegation := types.NewDelegation(delegator.Address, validator1.GetOperator(), issuedShares)
-	app.StakingKeeper.SetDelegation(ctx, delegation)
-	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator1.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
-
-	setupValidatorRewards(app, ctx, validator0.GetOperator())
-	setupValidatorRewards(app, ctx, validator1.GetOperator())
-
-	// begin a new block
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
-
-	// execute operation
-	op := simulation.SimulateMsgBeginRedelegate(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
-	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
-	require.NoError(t, err)
-
-	var msg types.MsgBeginRedelegate
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
-	require.True(t, operationMsg.OK)
-	require.Equal(t, "cosmos12gwd9jchc69wck8dhstxgwz3z8qs8yv67ps8mu", msg.DelegatorAddress)
-	require.Equal(t, "489348507626016866", msg.Amount.Amount.String())
-	require.Equal(t, "stake", msg.Amount.Denom)
-	require.Equal(t, types.TypeMsgBeginRedelegate, msg.Type())
-	require.Equal(t, "cosmosvaloper1h6a7shta7jyc72hyznkys683z98z36e0zdk8g9", msg.ValidatorDstAddress)
-	require.Equal(t, "cosmosvaloper17s94pzwhsn4ah25tec27w70n65h5t2scgxzkv2", msg.ValidatorSrcAddress)
 	require.Len(t, futureOperations, 0)
 
 }

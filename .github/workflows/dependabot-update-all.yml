@@ -33,5 +33,5 @@ jobs:
       - name: Commit changes
         uses: EndBug/add-and-commit@v9
         with:
-          default_author: github_actor
-          message: "${{ github.event.pull_request.title } for all modules"
+          default_author: github_actions
+          message: "${{ github.event.pull_request.title }} for all modules"

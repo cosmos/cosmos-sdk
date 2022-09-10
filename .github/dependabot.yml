@@ -7,107 +7,16 @@ updates:
     directory: "/"
     schedule:
       interval: daily
-    open-pull-requests-limit: 10
 
   - package-ecosystem: npm
     directory: "/docs"
     schedule:
       interval: daily
-    open-pull-requests-limit: 10
 
   - package-ecosystem: gomod
     directory: "/"
     schedule:
       interval: daily
-    open-pull-requests-limit: 20
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/db"
-    schedule:
-      interval: daily
-    open-pull-requests-limit: 10
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/api"
-    schedule:
-      interval: daily
-    open-pull-requests-limit: 10
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/orm"
-    schedule:
-      interval: daily
-    open-pull-requests-limit: 10
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/core"
-    schedule:
-      interval: daily
-    open-pull-requests-limit: 10
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/cosmovisor"
-    schedule:
-      interval: daily
-    open-pull-requests-limit: 10
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/depinject"
-    schedule:
-      interval: daily
-    open-pull-requests-limit: 10
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/errors"
-    schedule:
-      interval: daily
-    open-pull-requests-limit: 10
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/math"
-    schedule:
-      interval: daily
-    open-pull-requests-limit: 10
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/client/v2"
-    schedule:
-      interval: daily
-    open-pull-requests-limit: 10
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/store/tools/ics23"
-    schedule:
-      interval: daily
-    open-pull-requests-limit: 10
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/tx"
-    schedule:
-      interval: daily
-    open-pull-requests-limit: 10
     labels:
       - "A:automerge"
       - dependencies
@@ -115,7 +24,6 @@ updates:
     directory: "/simapp"
     schedule:
       interval: daily
-    open-pull-requests-limit: 10
     labels:
       - "A:automerge"
       - dependencies
@@ -123,7 +31,83 @@ updates:
     directory: "/tests"
     schedule:
       interval: daily
-    open-pull-requests-limit: 10
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/db"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/api"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/orm"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/core"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/cosmovisor"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/depinject"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/errors"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/math"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/client/v2"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/store/tools/ics23"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/tx"
+    schedule:
+      interval: weekly
     labels:
       - "A:automerge"
       - dependencies

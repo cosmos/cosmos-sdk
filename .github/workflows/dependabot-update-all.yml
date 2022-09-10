@@ -10,6 +10,11 @@ jobs:
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          # Secret to be added in the repo under Settings > Secrets > Dependabot
+          token: ${{ secrets.PRBOT_PAT }}
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
@@ -22,14 +27,11 @@ jobs:
           echo "::set-output name=name::$(echo "${{ github.event.pull_request.title }}" | cut -d ' ' -f 3)"
           echo "::set-output name=version::$(echo "${{ github.event.pull_request.title }}" | cut -d ' ' -f 7)"
       - name: Update all Go modules
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr checkout "$PR_URL"
           ./scripts/go-update-dep-all.sh ${{ format('{0}@v{1}', steps.deps.outputs.name, steps.deps.outputs.version) }}
-          git config --global user.email "dependabot[bot]@users.noreply.github.com"
-          git config --global user.name "dependabot[bot]"
-          git add -A
-          git commit -m "build(deps): update all go modules"
-          git push
+          ./scripts/go-mod-tidy-all.sh
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actor
+          message: "${{ github.event.pull_request.title } for all modules"

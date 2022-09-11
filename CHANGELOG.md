@@ -82,6 +82,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#12398](https://github.com/cosmos/cosmos-sdk/issues/12398) Refactor all `x` modules to unit-test via mocks and decouple `simapp`.
 * [#13144](https://github.com/cosmos/cosmos-sdk/pull/13144) Add validator distribution info grpc gateway get endpoint.
 * [#13168](https://github.com/cosmos/cosmos-sdk/pull/13168) Migrate tendermintdev/proto-builder to ghcr.io. New image `ghcr.io/cosmos/proto-builder:0.8`
+* [#13233](https://github.com/cosmos/cosmos-sdk/pull/13233) Add `--append` to `add-genesis-account` sub-command to append new tokens after an account is already created.
 
 ### State Machine Breaking
 

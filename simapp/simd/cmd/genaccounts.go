@@ -150,11 +150,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 						return fmt.Errorf("failed to parse coins: %w", err)
 					}
 
-					// deletes the account from bank balances
-					bankGenState.Balances = append(bankGenState.Balances[:idx], bankGenState.Balances[idx+1:]...)
-
-					// append the updated account balance to bankGenState.Balances
-					bankGenState.Balances = append(bankGenState.Balances, banktypes.Balance{Address: addr.String(), Coins: new_coins.Sort()})
+					bankGenState.Balances[idx] = banktypes.Balance{Address: addr.String(), Coins: new_coins.Sort()}
 					break
 				}
 			} else {

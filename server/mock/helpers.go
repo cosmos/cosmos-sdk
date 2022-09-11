@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rs/zerolog"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmlog "github.com/tendermint/tendermint/libs/log"
-
-	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // SetupApp returns an application as well as a clean-up function
@@ -16,11 +13,7 @@ import (
 func SetupApp() (abci.Application, func(), error) {
 	var logger tmlog.Logger
 
-	logWriter := zerolog.ConsoleWriter{Out: os.Stderr}
-	logger = server.ZeroLogWrapper{
-		Logger: zerolog.New(logWriter).Level(zerolog.InfoLevel).With().Timestamp().Logger(),
-	}
-	logger = logger.With("module", "mock")
+	logger = tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout)).With("module", "mock")
 
 	rootDir, err := os.MkdirTemp("", "mock-sdk")
 	if err != nil {

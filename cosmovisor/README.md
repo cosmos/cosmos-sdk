@@ -35,13 +35,13 @@ Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
 
 Cosmovisor is part of the Cosmos SDK monorepo, but it's a separate module with it's own release schedule.
 
-Release branches have the following format `release/cosmovisor/vA.B.x`, where A and B are a number (e.g. `release/cosmovisor/v1.2.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
+Release branches have the following format `release/cosmovisor/vA.B.x`, where A and B are a number (e.g. `release/cosmovisor/v1.3.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
 
 ## Setup
 
 ### Installation
 
-You can download Cosmovisor from the [Github releases](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv1.2.1).
+You can download Cosmovisor from the [GitHub releases](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv1.3.0).
 
 To install the latest version of `cosmovisor`, run the following command:
 

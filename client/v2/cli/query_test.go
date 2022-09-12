@@ -1,4 +1,4 @@
-package autocli
+package cli
 
 import (
 	"bytes"
@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -38,8 +37,8 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 			return conn
 		},
 	}
-	cmd := &cobra.Command{Use: "test"}
-	b.AddQueryServiceCommands(cmd, &autocliv1.ServiceCommandDescriptor{Service: testpb.Query_ServiceDesc.ServiceName})
+	cmd, err := b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{Service: testpb.Query_ServiceDesc.ServiceName})
+	assert.NilError(t, err)
 	cmd.SetArgs(args)
 	cmd.SetOut(conn.out)
 	assert.NilError(t, cmd.Execute())

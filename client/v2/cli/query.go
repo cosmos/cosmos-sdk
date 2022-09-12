@@ -1,4 +1,4 @@
-package autocli
+package cli
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"github.com/cosmos/cosmos-sdk/client/v2/autocli/flag"
+	"github.com/cosmos/cosmos-sdk/client/v2/cli/flag"
 
 	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
@@ -87,7 +87,12 @@ func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor 
 
 // CreateQueryMethodCommand creates a gRPC query command for the given service method.
 func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
-	if options != nil && options.Skip {
+	if options == nil {
+		// use the defaults
+		options = &autocliv1.RpcCommandOptions{}
+	}
+
+	if options.Skip {
 		return nil, nil
 	}
 
@@ -106,7 +111,7 @@ func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescrip
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
 
 	use := options.Use
-	if use != "" {
+	if use == "" {
 		use = protoNameToCliName(descriptor.Name())
 	}
 

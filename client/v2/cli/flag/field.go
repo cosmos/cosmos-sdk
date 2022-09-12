@@ -27,6 +27,11 @@ type Options struct {
 
 // AddFieldFlag adds a flag for the provided field to the flag set.
 func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, opts *autocliv1.FlagOptions, options Options) (FieldValueBinder, error) {
+	if opts == nil {
+		// use defaults
+		opts = &autocliv1.FlagOptions{}
+	}
+
 	if field.Kind() == protoreflect.MessageKind && field.Message().FullName() == "cosmos.base.query.v1beta1.PageRequest" {
 		return b.bindPageRequest(ctx, flagSet, field)
 	}

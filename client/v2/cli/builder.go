@@ -1,11 +1,11 @@
-package autocli
+package cli
 
 import (
 	"context"
 
 	"google.golang.org/grpc"
 
-	"github.com/cosmos/cosmos-sdk/client/v2/autocli/flag"
+	"github.com/cosmos/cosmos-sdk/client/v2/cli/flag"
 )
 
 // Builder manages options for building CLI commands.

@@ -1,4 +1,4 @@
-package autocli
+package cli
 
 import (
 	"errors"

@@ -136,6 +136,7 @@ func (btm *btreeMempool) Remove(context Context, tx MempoolTx) error {
 		return fmt.Errorf("tx %X not found", hash)
 	}
 
+	// TODO handle tx arrays
 	i := btm.btree.Delete(&btreeItem{priority: priority})
 	if i == nil {
 		return fmt.Errorf("tx with priority %v not found", priority)

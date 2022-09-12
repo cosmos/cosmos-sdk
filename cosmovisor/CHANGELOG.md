@@ -36,8 +36,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* [\12921](https://github.com/cosmos/cosmos-sdk/pull/12918) Add documentation about expected plan path name.
-* [\12918](https://github.com/cosmos/cosmos-sdk/pull/12918) Automatically set version using module version.
+## v1.3.0 2022-09-11
+
+### Improvements
+
+* [#12921](https://github.com/cosmos/cosmos-sdk/pull/12918) Add documentation about expected plan path name.
+* [#12918](https://github.com/cosmos/cosmos-sdk/pull/12918) Automatically set version using module version.
+
+### Bug Fixes
+
+* [#13221](https://github.com/cosmos/cosmos-sdk/pull/13221) Fix `go install`.
 
 ## v1.2.0 2022-07-26
 
@@ -48,7 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#11823](https://github.com/cosmos/cosmos-sdk/pull/11823) Refactor `cosmovisor` CLI to use `cobra`.
 * [\#11731](https://github.com/cosmos/cosmos-sdk/pull/11731) `cosmovisor version -o json` returns the cosmovisor version and the result of `simd --output json --long` in one JSON object.
 
-### Bugfix
+### Bug Fixes
 
 * [\#12005](https://github.com/cosmos/cosmos-sdk/pull/12005) Fix cosmovisor binary usage for pre-upgrade
 

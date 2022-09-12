@@ -23,6 +23,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -129,7 +130,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgSubmitProposal
-	err = v1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -177,7 +178,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgDeposit
-	err = v1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
@@ -224,7 +225,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgVote
-	v1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
@@ -268,7 +269,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg v1.MsgVoteWeighted
-	v1.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	govcodec.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)

@@ -10,8 +10,8 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
-	"github.com/gogo/protobuf/jsonpb"
-	proto "github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/jsonpb"
+	proto "github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -244,10 +244,10 @@ func (se StringEvents) String() string {
 	var sb strings.Builder
 
 	for _, e := range se {
-		sb.WriteString(fmt.Sprintf("\t\t- %s\n", e.Type))
+		fmt.Fprintf(&sb, "\t\t- %s\n", e.Type)
 
 		for _, attr := range e.Attributes {
-			sb.WriteString(fmt.Sprintf("\t\t\t- %s\n", attr.String()))
+			fmt.Fprintf(&sb, "\t\t\t- %s\n", attr)
 		}
 	}
 

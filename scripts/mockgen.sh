@@ -7,7 +7,7 @@ $mockgen_cmd -source db/types.go -package mock -destination testutil/mock/db/typ
 $mockgen_cmd -source=types/module/module.go -package mock -destination testutil/mock/types_module_module.go
 $mockgen_cmd -source=types/invariant.go -package mock -destination testutil/mock/types_invariant.go
 $mockgen_cmd -source=types/router.go -package mock -destination testutil/mock/types_router.go
-$mockgen_cmd -package mock -destination testutil/mock/grpc_server.go github.com/gogo/protobuf/grpc Server
+$mockgen_cmd -package mock -destination testutil/mock/grpc_server.go github.com/cosmos/gogoproto/grpc Server
 $mockgen_cmd -package mock -destination testutil/mock/tendermint_tendermint_libs_log_DB.go github.com/tendermint/tendermint/libs/log Logger
 $mockgen_cmd -source=orm/model/ormtable/hooks.go -package ormmocks -destination orm/testing/ormmocks/hooks.go
 $mockgen_cmd -source=x/nft/expected_keepers.go -package testutil -destination x/nft/testutil/expected_keepers_mocks.go

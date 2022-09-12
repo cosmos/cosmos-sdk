@@ -3,7 +3,7 @@ package baseapp
 import (
 	"fmt"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"

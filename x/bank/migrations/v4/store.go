@@ -35,9 +35,9 @@ func migrateParams(ctx sdk.Context, legacySubspace exported.Subspace, store stor
 	return nil
 }
 
-// verifyDenoms doesn't do any store modifications, it only iterates through
+// verifyMetadata doesn't do any store modifications, it only iterates through
 // all existing coin metadata in state, and verify that their denoms are valid.
-func verifyDenoms(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+func verifyMetadata(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataPrefix)
 
 	iterator := denomMetaDataStore.Iterator(nil, nil)
@@ -66,5 +66,5 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace 
 		return err
 	}
 
-	return verifyDenoms(ctx, store, cdc)
+	return verifyMetadata(ctx, store, cdc)
 }

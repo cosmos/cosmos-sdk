@@ -302,19 +302,8 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metad
 
 // SetDenomMetaData sets the denominations metadata
 func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata) {
-	err := sdk.ValidateDenom(denomMetaData.Base)
-	if err != nil {
+	if err := denomMetaData.Validate(); err != nil {
 		panic(err)
-	}
-	err = sdk.ValidateDenom(denomMetaData.Display)
-	if err != nil {
-		panic(err)
-	}
-	for _, unit := range denomMetaData.DenomUnits {
-		err := sdk.ValidateDenom(unit.Denom)
-		if err != nil {
-			panic(err)
-		}
 	}
 
 	store := ctx.KVStore(k.storeKey)

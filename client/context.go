@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"sigs.k8s.io/yaml"

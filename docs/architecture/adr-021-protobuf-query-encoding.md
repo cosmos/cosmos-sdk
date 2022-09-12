@@ -71,7 +71,7 @@ message AnyProposal {
 
 ### Custom Query Implementation
 
-In order to implement the query service, we can reuse the existing [gogo protobuf](https://github.com/gogo/protobuf)
+In order to implement the query service, we can reuse the existing [gogo protobuf](https://github.com/cosmos/gogoproto)
 grpc plugin, which for a service named `Query` generates an interface named
 `QueryServer` as below:
 

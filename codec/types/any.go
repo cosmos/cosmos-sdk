@@ -3,7 +3,7 @@ package types
 import (
 	fmt "fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

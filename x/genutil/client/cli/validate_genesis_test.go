@@ -1,4 +1,4 @@
-package testutil
+package cli_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -66,8 +66,9 @@ var v040Valid = `{
 	"validators": []
 }`
 
-func (s *IntegrationTestSuite) TestValidateGenesis() {
-	val0 := s.network.Validators[0]
+func (s *CLITestSuite) TestValidateGenesis() {
+	// accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
+	// val0 := accounts[0]
 
 	testCases := []struct {
 		name    string
@@ -89,8 +90,9 @@ func (s *IntegrationTestSuite) TestValidateGenesis() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+
 			genesisFile := testutil.WriteToNewTempFile(s.T(), tc.genesis)
-			_, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.ValidateGenesisCmd(nil), []string{genesisFile.Name()})
+			_, err := clitestutil.ExecTestCLICmd(s.clientCtx, cli.ValidateGenesisCmd(nil), []string{genesisFile.Name()})
 			if tc.expErr {
 				s.Require().Contains(err.Error(), "Make sure that you have correctly migrated all Tendermint consensus params")
 			} else {

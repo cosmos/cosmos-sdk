@@ -1830,27 +1830,27 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_AddressToPubKey         protoreflect.MessageDescriptor
-	fd_AddressToPubKey_address protoreflect.FieldDescriptor
-	fd_AddressToPubKey_pub_key protoreflect.FieldDescriptor
+	md_PubKeyMapping         protoreflect.MessageDescriptor
+	fd_PubKeyMapping_address protoreflect.FieldDescriptor
+	fd_PubKeyMapping_pub_key protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_auth_v1beta1_auth_proto_init()
-	md_AddressToPubKey = File_cosmos_auth_v1beta1_auth_proto.Messages().ByName("AddressToPubKey")
-	fd_AddressToPubKey_address = md_AddressToPubKey.Fields().ByName("address")
-	fd_AddressToPubKey_pub_key = md_AddressToPubKey.Fields().ByName("pub_key")
+	md_PubKeyMapping = File_cosmos_auth_v1beta1_auth_proto.Messages().ByName("PubKeyMapping")
+	fd_PubKeyMapping_address = md_PubKeyMapping.Fields().ByName("address")
+	fd_PubKeyMapping_pub_key = md_PubKeyMapping.Fields().ByName("pub_key")
 }
 
-var _ protoreflect.Message = (*fastReflection_AddressToPubKey)(nil)
+var _ protoreflect.Message = (*fastReflection_PubKeyMapping)(nil)
 
-type fastReflection_AddressToPubKey AddressToPubKey
+type fastReflection_PubKeyMapping PubKeyMapping
 
-func (x *AddressToPubKey) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_AddressToPubKey)(x)
+func (x *PubKeyMapping) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_PubKeyMapping)(x)
 }
 
-func (x *AddressToPubKey) slowProtoReflect() protoreflect.Message {
+func (x *PubKeyMapping) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_auth_v1beta1_auth_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1862,43 +1862,43 @@ func (x *AddressToPubKey) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_AddressToPubKey_messageType fastReflection_AddressToPubKey_messageType
-var _ protoreflect.MessageType = fastReflection_AddressToPubKey_messageType{}
+var _fastReflection_PubKeyMapping_messageType fastReflection_PubKeyMapping_messageType
+var _ protoreflect.MessageType = fastReflection_PubKeyMapping_messageType{}
 
-type fastReflection_AddressToPubKey_messageType struct{}
+type fastReflection_PubKeyMapping_messageType struct{}
 
-func (x fastReflection_AddressToPubKey_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_AddressToPubKey)(nil)
+func (x fastReflection_PubKeyMapping_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_PubKeyMapping)(nil)
 }
-func (x fastReflection_AddressToPubKey_messageType) New() protoreflect.Message {
-	return new(fastReflection_AddressToPubKey)
+func (x fastReflection_PubKeyMapping_messageType) New() protoreflect.Message {
+	return new(fastReflection_PubKeyMapping)
 }
-func (x fastReflection_AddressToPubKey_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_AddressToPubKey
+func (x fastReflection_PubKeyMapping_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_PubKeyMapping
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_AddressToPubKey) Descriptor() protoreflect.MessageDescriptor {
-	return md_AddressToPubKey
+func (x *fastReflection_PubKeyMapping) Descriptor() protoreflect.MessageDescriptor {
+	return md_PubKeyMapping
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_AddressToPubKey) Type() protoreflect.MessageType {
-	return _fastReflection_AddressToPubKey_messageType
+func (x *fastReflection_PubKeyMapping) Type() protoreflect.MessageType {
+	return _fastReflection_PubKeyMapping_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_AddressToPubKey) New() protoreflect.Message {
-	return new(fastReflection_AddressToPubKey)
+func (x *fastReflection_PubKeyMapping) New() protoreflect.Message {
+	return new(fastReflection_PubKeyMapping)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_AddressToPubKey) Interface() protoreflect.ProtoMessage {
-	return (*AddressToPubKey)(x)
+func (x *fastReflection_PubKeyMapping) Interface() protoreflect.ProtoMessage {
+	return (*PubKeyMapping)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1906,16 +1906,16 @@ func (x *fastReflection_AddressToPubKey) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_AddressToPubKey) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_PubKeyMapping) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Address != "" {
 		value := protoreflect.ValueOfString(x.Address)
-		if !f(fd_AddressToPubKey_address, value) {
+		if !f(fd_PubKeyMapping_address, value) {
 			return
 		}
 	}
 	if x.PubKey != "" {
 		value := protoreflect.ValueOfString(x.PubKey)
-		if !f(fd_AddressToPubKey_pub_key, value) {
+		if !f(fd_PubKeyMapping_pub_key, value) {
 			return
 		}
 	}
@@ -1932,17 +1932,17 @@ func (x *fastReflection_AddressToPubKey) Range(f func(protoreflect.FieldDescript
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_AddressToPubKey) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_PubKeyMapping) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.AddressToPubKey.address":
+	case "cosmos.auth.v1beta1.PubKeyMapping.address":
 		return x.Address != ""
-	case "cosmos.auth.v1beta1.AddressToPubKey.pub_key":
+	case "cosmos.auth.v1beta1.PubKeyMapping.pub_key":
 		return x.PubKey != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.AddressToPubKey"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.PubKeyMapping"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.AddressToPubKey does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.PubKeyMapping does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1952,17 +1952,17 @@ func (x *fastReflection_AddressToPubKey) Has(fd protoreflect.FieldDescriptor) bo
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_AddressToPubKey) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_PubKeyMapping) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.AddressToPubKey.address":
+	case "cosmos.auth.v1beta1.PubKeyMapping.address":
 		x.Address = ""
-	case "cosmos.auth.v1beta1.AddressToPubKey.pub_key":
+	case "cosmos.auth.v1beta1.PubKeyMapping.pub_key":
 		x.PubKey = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.AddressToPubKey"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.PubKeyMapping"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.AddressToPubKey does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.PubKeyMapping does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1972,19 +1972,19 @@ func (x *fastReflection_AddressToPubKey) Clear(fd protoreflect.FieldDescriptor) 
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_AddressToPubKey) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_PubKeyMapping) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.auth.v1beta1.AddressToPubKey.address":
+	case "cosmos.auth.v1beta1.PubKeyMapping.address":
 		value := x.Address
 		return protoreflect.ValueOfString(value)
-	case "cosmos.auth.v1beta1.AddressToPubKey.pub_key":
+	case "cosmos.auth.v1beta1.PubKeyMapping.pub_key":
 		value := x.PubKey
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.AddressToPubKey"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.PubKeyMapping"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.AddressToPubKey does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.PubKeyMapping does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1998,17 +1998,17 @@ func (x *fastReflection_AddressToPubKey) Get(descriptor protoreflect.FieldDescri
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_AddressToPubKey) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_PubKeyMapping) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.AddressToPubKey.address":
+	case "cosmos.auth.v1beta1.PubKeyMapping.address":
 		x.Address = value.Interface().(string)
-	case "cosmos.auth.v1beta1.AddressToPubKey.pub_key":
+	case "cosmos.auth.v1beta1.PubKeyMapping.pub_key":
 		x.PubKey = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.AddressToPubKey"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.PubKeyMapping"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.AddressToPubKey does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.PubKeyMapping does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2022,44 +2022,44 @@ func (x *fastReflection_AddressToPubKey) Set(fd protoreflect.FieldDescriptor, va
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_AddressToPubKey) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_PubKeyMapping) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.AddressToPubKey.address":
-		panic(fmt.Errorf("field address of message cosmos.auth.v1beta1.AddressToPubKey is not mutable"))
-	case "cosmos.auth.v1beta1.AddressToPubKey.pub_key":
-		panic(fmt.Errorf("field pub_key of message cosmos.auth.v1beta1.AddressToPubKey is not mutable"))
+	case "cosmos.auth.v1beta1.PubKeyMapping.address":
+		panic(fmt.Errorf("field address of message cosmos.auth.v1beta1.PubKeyMapping is not mutable"))
+	case "cosmos.auth.v1beta1.PubKeyMapping.pub_key":
+		panic(fmt.Errorf("field pub_key of message cosmos.auth.v1beta1.PubKeyMapping is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.AddressToPubKey"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.PubKeyMapping"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.AddressToPubKey does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.PubKeyMapping does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_AddressToPubKey) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_PubKeyMapping) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.auth.v1beta1.AddressToPubKey.address":
+	case "cosmos.auth.v1beta1.PubKeyMapping.address":
 		return protoreflect.ValueOfString("")
-	case "cosmos.auth.v1beta1.AddressToPubKey.pub_key":
+	case "cosmos.auth.v1beta1.PubKeyMapping.pub_key":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.AddressToPubKey"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.PubKeyMapping"))
 		}
-		panic(fmt.Errorf("message cosmos.auth.v1beta1.AddressToPubKey does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.auth.v1beta1.PubKeyMapping does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_AddressToPubKey) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_PubKeyMapping) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.auth.v1beta1.AddressToPubKey", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.auth.v1beta1.PubKeyMapping", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2067,7 +2067,7 @@ func (x *fastReflection_AddressToPubKey) WhichOneof(d protoreflect.OneofDescript
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_AddressToPubKey) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_PubKeyMapping) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -2078,7 +2078,7 @@ func (x *fastReflection_AddressToPubKey) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_AddressToPubKey) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_PubKeyMapping) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -2090,7 +2090,7 @@ func (x *fastReflection_AddressToPubKey) SetUnknown(fields protoreflect.RawField
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_AddressToPubKey) IsValid() bool {
+func (x *fastReflection_PubKeyMapping) IsValid() bool {
 	return x != nil
 }
 
@@ -2100,9 +2100,9 @@ func (x *fastReflection_AddressToPubKey) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_AddressToPubKey) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_PubKeyMapping) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*AddressToPubKey)
+		x := input.Message.Interface().(*PubKeyMapping)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2132,7 +2132,7 @@ func (x *fastReflection_AddressToPubKey) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*AddressToPubKey)
+		x := input.Message.Interface().(*PubKeyMapping)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2176,7 +2176,7 @@ func (x *fastReflection_AddressToPubKey) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*AddressToPubKey)
+		x := input.Message.Interface().(*PubKeyMapping)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2208,10 +2208,10 @@ func (x *fastReflection_AddressToPubKey) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: AddressToPubKey: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PubKeyMapping: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: AddressToPubKey: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PubKeyMapping: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -2508,7 +2508,7 @@ func (x *Params) GetSigVerifyCostSecp256K1() uint64 {
 	return 0
 }
 
-type AddressToPubKey struct {
+type PubKeyMapping struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -2519,8 +2519,8 @@ type AddressToPubKey struct {
 	PubKey string `protobuf:"bytes,2,opt,name=pub_key,json=pubKey,proto3" json:"pub_key,omitempty"`
 }
 
-func (x *AddressToPubKey) Reset() {
-	*x = AddressToPubKey{}
+func (x *PubKeyMapping) Reset() {
+	*x = PubKeyMapping{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_auth_v1beta1_auth_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2528,25 +2528,25 @@ func (x *AddressToPubKey) Reset() {
 	}
 }
 
-func (x *AddressToPubKey) String() string {
+func (x *PubKeyMapping) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AddressToPubKey) ProtoMessage() {}
+func (*PubKeyMapping) ProtoMessage() {}
 
-// Deprecated: Use AddressToPubKey.ProtoReflect.Descriptor instead.
-func (*AddressToPubKey) Descriptor() ([]byte, []int) {
+// Deprecated: Use PubKeyMapping.ProtoReflect.Descriptor instead.
+func (*PubKeyMapping) Descriptor() ([]byte, []int) {
 	return file_cosmos_auth_v1beta1_auth_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *AddressToPubKey) GetAddress() string {
+func (x *PubKeyMapping) GetAddress() string {
 	if x != nil {
 		return x.Address
 	}
 	return ""
 }
 
-func (x *AddressToPubKey) GetPubKey() string {
+func (x *PubKeyMapping) GetPubKey() string {
 	if x != nil {
 		return x.PubKey
 	}
@@ -2609,27 +2609,27 @@ var file_cosmos_auth_v1beta1_auth_proto_rawDesc = []byte{
 	0xde, 0x1f, 0x16, 0x53, 0x69, 0x67, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x43, 0x6f, 0x73, 0x74,
 	0x53, 0x65, 0x63, 0x70, 0x32, 0x35, 0x36, 0x6b, 0x31, 0x52, 0x16, 0x73, 0x69, 0x67, 0x56, 0x65,
 	0x72, 0x69, 0x66, 0x79, 0x43, 0x6f, 0x73, 0x74, 0x53, 0x65, 0x63, 0x70, 0x32, 0x35, 0x36, 0x6b,
-	0x31, 0x3a, 0x08, 0x98, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x01, 0x22, 0x6e, 0x0a, 0x0f, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x54, 0x6f, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x12, 0x32,
-	0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
-	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x12, 0x27, 0x0a, 0x07, 0x70, 0x75, 0x62, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x42, 0x0e, 0xea, 0xde, 0x1f, 0x0a, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x5f,
-	0x6b, 0x65, 0x79, 0x52, 0x06, 0x70, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x42, 0xc4, 0x01, 0x0a, 0x17,
-	0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x09, 0x41, 0x75, 0x74, 0x68, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e,
-	0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75,
-	0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x61, 0x75, 0x74, 0x68, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x13, 0x43,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x75, 0x74, 0x68,
-	0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x5c, 0x41, 0x75, 0x74, 0x68, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47,
-	0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x75, 0x74, 0x68, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x31, 0x3a, 0x08, 0x98, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x01, 0x22, 0x6c, 0x0a, 0x0d, 0x50,
+	0x75, 0x62, 0x4b, 0x65, 0x79, 0x4d, 0x61, 0x70, 0x70, 0x69, 0x6e, 0x67, 0x12, 0x32, 0x0a, 0x07,
+	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
+	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x12, 0x27, 0x0a, 0x07, 0x70, 0x75, 0x62, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x0e, 0xea, 0xde, 0x1f, 0x0a, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x5f, 0x6b, 0x65,
+	0x79, 0x52, 0x06, 0x70, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x42, 0xc4, 0x01, 0x0a, 0x17, 0x63, 0x6f,
+	0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x09, 0x41, 0x75, 0x74, 0x68, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68,
+	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x61, 0x75, 0x74, 0x68, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41, 0x58, 0xaa, 0x02, 0x13, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0xca, 0x02, 0x13, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x75, 0x74, 0x68, 0x5c, 0x56,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x1f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
+	0x41, 0x75, 0x74, 0x68, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42,
+	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x15, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x3a, 0x3a, 0x41, 0x75, 0x74, 0x68, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2646,11 +2646,11 @@ func file_cosmos_auth_v1beta1_auth_proto_rawDescGZIP() []byte {
 
 var file_cosmos_auth_v1beta1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_cosmos_auth_v1beta1_auth_proto_goTypes = []interface{}{
-	(*BaseAccount)(nil),     // 0: cosmos.auth.v1beta1.BaseAccount
-	(*ModuleAccount)(nil),   // 1: cosmos.auth.v1beta1.ModuleAccount
-	(*Params)(nil),          // 2: cosmos.auth.v1beta1.Params
-	(*AddressToPubKey)(nil), // 3: cosmos.auth.v1beta1.AddressToPubKey
-	(*anypb.Any)(nil),       // 4: google.protobuf.Any
+	(*BaseAccount)(nil),   // 0: cosmos.auth.v1beta1.BaseAccount
+	(*ModuleAccount)(nil), // 1: cosmos.auth.v1beta1.ModuleAccount
+	(*Params)(nil),        // 2: cosmos.auth.v1beta1.Params
+	(*PubKeyMapping)(nil), // 3: cosmos.auth.v1beta1.PubKeyMapping
+	(*anypb.Any)(nil),     // 4: google.protobuf.Any
 }
 var file_cosmos_auth_v1beta1_auth_proto_depIdxs = []int32{
 	4, // 0: cosmos.auth.v1beta1.BaseAccount.pub_key:type_name -> google.protobuf.Any
@@ -2705,7 +2705,7 @@ func file_cosmos_auth_v1beta1_auth_proto_init() {
 			}
 		}
 		file_cosmos_auth_v1beta1_auth_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddressToPubKey); i {
+			switch v := v.(*PubKeyMapping); i {
 			case 0:
 				return &v.state
 			case 1:

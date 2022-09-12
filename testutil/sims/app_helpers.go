@@ -282,10 +282,10 @@ func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
 	}
 }
 
-func getGenesisPubKeyMappings(genesisAccs authtypes.GenesisAccounts) []*authtypes.AddressToPubKey {
-	var genesisPubKeyMappings []*authtypes.AddressToPubKey
+func getGenesisPubKeyMappings(genesisAccs authtypes.GenesisAccounts) []*authtypes.PubKeyMapping {
+	var genesisPubKeyMappings []*authtypes.PubKeyMapping
 	for _, acc := range genesisAccs {
-		pubKeyMapping := &authtypes.AddressToPubKey{
+		pubKeyMapping := &authtypes.PubKeyMapping{
 			Address: acc.GetAddress().String(),
 			PubKey:  acc.GetPubKey().String(),
 		}

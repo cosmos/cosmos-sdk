@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	addressToPubKeyPrefix = []byte{0x9}
+	pubKeyMappingPrefix = []byte{0x9}
 )
 
 func (ak AccountKeeper) ChangePubKey(ctx sdk.Context, acc types.AccountI, pubKeyString string) error {
@@ -22,14 +22,14 @@ func (ak AccountKeeper) ChangePubKey(ctx sdk.Context, acc types.AccountI, pubKey
 
 	store := ctx.KVStore(ak.storeKey)
 
-	addressToPubKey := &types.AddressToPubKey{
+	pubKeyMapping := &types.PubKeyMapping{
 		Address: acc.GetAddress().String(),
 		PubKey:  pubKeyString,
 	}
 
-	bz, err := ak.cdc.Marshal(addressToPubKey)
+	bz, err := ak.cdc.Marshal(pubKeyMapping)
 	if err != nil {
-		return fmt.Errorf("cannot marshal addressToPubKey, Error: %w", err)
+		return fmt.Errorf("cannot marshal pubKeyMapping, Error: %w", err)
 	}
 
 	store.Set(getAddressKey(acc.GetAddress().String()), bz)
@@ -37,19 +37,19 @@ func (ak AccountKeeper) ChangePubKey(ctx sdk.Context, acc types.AccountI, pubKey
 	return nil
 }
 
-func (ak AccountKeeper) PubKeyFromStore(ctx sdk.Context, addr sdk.AccAddress) *types.AddressToPubKey {
+func (ak AccountKeeper) PubKeyFromStore(ctx sdk.Context, addr sdk.AccAddress) *types.PubKeyMapping {
 	store := ctx.KVStore(ak.storeKey)
 
 	bz := store.Get(getAddressKey(addr.String()))
 
-	var addressToPubKey types.AddressToPubKey
-	ak.cdc.MustUnmarshal(bz, &addressToPubKey)
+	var pubKeyMapping types.PubKeyMapping
+	ak.cdc.MustUnmarshal(bz, &pubKeyMapping)
 
-	return &addressToPubKey
+	return &pubKeyMapping
 }
 
 func getAddressKey(address string) []byte {
-	return append(addressToPubKeyPrefix, []byte(address)...)
+	return append(pubKeyMappingPrefix, []byte(address)...)
 }
 
 func (ak AccountKeeper) StringToPubKey(pubKeyString string) (cryptotypes.PubKey, error) {
@@ -66,24 +66,24 @@ func (ak AccountKeeper) StringToPubKey(pubKeyString string) (cryptotypes.PubKey,
 	return pubKey, nil
 }
 
-func (ak AccountKeeper) GetAllPubKeys(ctx sdk.Context) []*types.AddressToPubKey {
+func (ak AccountKeeper) GetAllPubKeys(ctx sdk.Context) []*types.PubKeyMapping {
 	store := ctx.KVStore(ak.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, addressToPubKeyPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, pubKeyMappingPrefix)
 	defer iterator.Close()
 
-	var pubkeyMappings []*types.AddressToPubKey
+	var pubkeyMappings []*types.PubKeyMapping
 	for ; iterator.Valid(); iterator.Next() {
-		var addressToPubKey types.AddressToPubKey
-		ak.cdc.MustUnmarshal(iterator.Value(), &addressToPubKey)
+		var pubKeyMapping types.PubKeyMapping
+		ak.cdc.MustUnmarshal(iterator.Value(), &pubKeyMapping)
 
-		pubkeyMappings = append(pubkeyMappings, &addressToPubKey)
+		pubkeyMappings = append(pubkeyMappings, &pubKeyMapping)
 	}
 
 	return pubkeyMappings
 }
 
-func (ak AccountKeeper) SavePubKeyMapping(ctx sdk.Context, pubKeyMapping *types.AddressToPubKey) {
+func (ak AccountKeeper) SavePubKeyMapping(ctx sdk.Context, pubKeyMapping *types.PubKeyMapping) {
 	store := ctx.KVStore(ak.storeKey)
 
 	key := getAddressKey(pubKeyMapping.Address)

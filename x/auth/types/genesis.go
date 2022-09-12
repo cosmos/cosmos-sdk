@@ -18,15 +18,15 @@ var _ types.UnpackInterfacesMessage = GenesisState{}
 type RandomGenesisAccountsFn func(simState *module.SimulationState) GenesisAccounts
 
 // NewGenesisState - Create a new genesis state
-func NewGenesisState(params Params, accounts GenesisAccounts, pubKeyMappings []*AddressToPubKey) *GenesisState {
+func NewGenesisState(params Params, accounts GenesisAccounts, pubKeyMappings []*PubKeyMapping) *GenesisState {
 	genAccounts, err := PackAccounts(accounts)
 	if err != nil {
 		panic(err)
 	}
 	return &GenesisState{
-		Params:           params,
-		Accounts:         genAccounts,
-		AddressToPubKeys: pubKeyMappings,
+		Params:         params,
+		Accounts:       genAccounts,
+		PubKeyMappings: pubKeyMappings,
 	}
 }
 
@@ -44,7 +44,7 @@ func (g GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 
 // DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() *GenesisState {
-	return NewGenesisState(DefaultParams(), GenesisAccounts{}, []*AddressToPubKey{})
+	return NewGenesisState(DefaultParams(), GenesisAccounts{}, []*PubKeyMapping{})
 }
 
 // GetGenesisStateFromAppState returns x/auth GenesisState given raw application

@@ -183,10 +183,10 @@ func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.Add
 	return &types.AddressStringToBytesResponse{AddressBytes: bz}, nil
 }
 
-func (ak AccountKeeper) GetPubKeyFromStore(c context.Context, req *types.GetPubKeyFromStoreRequest) (*types.GetPubKeyFromStoreResponse,error) {
+func (ak AccountKeeper) GetPubKeyFromStore(c context.Context, req *types.GetPubKeyFromStoreRequest) (*types.GetPubKeyFromStoreResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	addrToPubKey := ak.PubKeyFromStore(ctx, sdk.AccAddress(req.AddressString))
+	pubKeyMapping := ak.PubKeyFromStore(ctx, sdk.AccAddress(req.AddressString))
 
-	return &types.GetPubKeyFromStoreResponse{AddressToPubKey: addrToPubKey},nil
+	return &types.GetPubKeyFromStoreResponse{PubKeyMapping: pubKeyMapping}, nil
 }

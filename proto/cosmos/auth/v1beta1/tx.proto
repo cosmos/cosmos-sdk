@@ -46,6 +46,8 @@ message MsgUpdateParamsResponse {}
 // MsgChangePubKey is the Msg/ChangePubKey request type.
 message MsgChangePubKey {
 
+  option (cosmos.msg.v1.signer) = "address";
+
   // address defines the account that needs to be updated with the new pub key
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 

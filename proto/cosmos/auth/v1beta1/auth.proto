@@ -46,7 +46,7 @@ message Params {
   uint64 sig_verify_cost_secp256k1 = 5 [(gogoproto.customname) = "SigVerifyCostSecp256k1"];
 }
 
-message AddressToPubKey {
+message PubKeyMapping {
   // address defines the account address
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 

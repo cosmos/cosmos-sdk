@@ -15,6 +15,6 @@ message GenesisState {
   // accounts are the accounts present at genesis.
   repeated google.protobuf.Any accounts = 2;
 
-  // addressToPubKeys are the account address to pubkeys mappings
-  repeated AddressToPubKey addressToPubKeys = 3;
+  // pubKeyMappings are the account address to pubkeys mappings
+  repeated PubKeyMapping pubKeyMappings = 3;
 }

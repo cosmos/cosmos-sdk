@@ -178,5 +178,5 @@ message GetPubKeyFromStoreRequest {
 }
 
 message GetPubKeyFromStoreResponse {
-  AddressToPubKey addressToPubKey = 1;
+  PubKeyMapping pubKeyMapping = 1;
 }

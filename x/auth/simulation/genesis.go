@@ -135,10 +135,10 @@ func RandomizedGenState(simState *module.SimulationState, randGenAccountsFn type
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(authGenesis)
 }
 
-func getGenesisPubKeyMappings(genesisAccs types.GenesisAccounts) []*types.AddressToPubKey {
-	var genesisPubKeyMappings []*types.AddressToPubKey
+func getGenesisPubKeyMappings(genesisAccs types.GenesisAccounts) []*types.PubKeyMapping {
+	var genesisPubKeyMappings []*types.PubKeyMapping
 	for _, acc := range genesisAccs {
-		pubKeyMapping := &types.AddressToPubKey{
+		pubKeyMapping := &types.PubKeyMapping{
 			Address: acc.GetAddress().String(),
 			PubKey:  acc.GetPubKey().String(),
 		}

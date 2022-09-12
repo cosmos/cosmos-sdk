@@ -27,7 +27,7 @@ func (ak AccountKeeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 
 	ak.GetModuleAccount(ctx, types.FeeCollectorName)
 
-	for _, pubKeyMapping := range data.AddressToPubKeys {
+	for _, pubKeyMapping := range data.PubKeyMappings {
 		ak.SavePubKeyMapping(ctx, pubKeyMapping)
 	}
 }

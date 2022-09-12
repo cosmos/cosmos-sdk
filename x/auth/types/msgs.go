@@ -5,7 +5,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ sdk.Msg = &MsgUpdateParams{}
+var (
+	_ sdk.Msg = &MsgUpdateParams{}
+	_ sdk.Msg = &MsgChangePubKey{}
+)
 
 // GetSignBytes implements the LegacyMsg interface.
 func (msg MsgUpdateParams) GetSignBytes() []byte {
@@ -28,5 +31,29 @@ func (msg *MsgUpdateParams) ValidateBasic() error {
 		return err
 	}
 
+	return nil
+}
+
+func NewMsgChangePubKey(signerAddress sdk.Address, pubKey string) MsgChangePubKey {
+	return MsgChangePubKey{
+		Address: signerAddress.String(),
+		PubKey:  pubKey,
+	}
+}
+
+// GetSignBytes implements the LegacyMsg interface.
+func (msg MsgChangePubKey) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners returns the expected signers for a MsgChangePubKey message.
+func (msg *MsgChangePubKey) GetSigners() []sdk.AccAddress {
+	addr, _ := sdk.AccAddressFromBech32(msg.Address)
+	return []sdk.AccAddress{addr}
+}
+
+// ValidateBasic does a sanity check on the provided data.
+func (msg *MsgChangePubKey) ValidateBasic() error {
+	// check signer address and address param matches
 	return nil
 }

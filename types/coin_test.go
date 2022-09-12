@@ -107,7 +107,7 @@ func (s *coinTestSuite) TestCoinIsValid() {
 	}
 }
 
-func (s *coinTestSuite) TestEmoji() {
+func (s *coinTestSuite) TestCoinDenoms() {
 	cases := []struct {
 		coin       sdk.Coin
 		expectPass bool

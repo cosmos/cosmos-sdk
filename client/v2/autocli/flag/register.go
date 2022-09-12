@@ -18,6 +18,17 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 	}
 	for i := 0; i < numFields; i++ {
 		field := fields.Get(i)
+		skip := false
+		for _, arg := range commandOptions.PositionalArgs {
+			if arg.ProtoField == string(field.Name()) {
+				skip = true
+				break
+			}
+		}
+		if skip {
+			continue
+		}
+
 		flagOpts := commandOptions.FlagOptions[string(field.Name())]
 		binder := b.AddFieldFlag(ctx, set, field, flagOpts, options)
 		if binder == nil {

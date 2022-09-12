@@ -2,6 +2,7 @@ name: Build & Push
 # Build & Push builds the simapp docker image on every push to main and
 # and pushes the image to https://hub.docker.com/r/interchainio/simapp/tags
 on:
+  pull_request:
   push:
     branches:
       - main
@@ -54,5 +55,6 @@ jobs:
       - name: Publish to Docker Hub
         uses: docker/build-push-action@v3
         with:
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}

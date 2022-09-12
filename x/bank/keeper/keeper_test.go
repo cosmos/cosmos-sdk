@@ -1096,20 +1096,42 @@ func (suite *KeeperTestSuite) TestSetDenomMetaData() {
 
 	metadata := suite.getTestMetadata()
 
-	for i := range []int{1, 2} {
-		suite.bankKeeper.SetDenomMetaData(ctx, metadata[i])
+	testcases := []struct {
+		name   string
+		meta   banktypes.Metadata
+		expErr bool
+	}{
+		{"incorrect base denom", banktypes.Metadata{Base: "1"}, true},
+		{"incorrect display denom", banktypes.Metadata{Base: "foo", Display: "1"}, true},
+		{"incorrect denom unit", banktypes.Metadata{Base: "foo", Display: "bar", DenomUnits: []*banktypes.DenomUnit{{Denom: "1"}}}, true},
+		{"correct metadata 1", metadata[0], false},
+		{"correct metadata 1", metadata[1], false},
 	}
 
-	actualMetadata, found := suite.bankKeeper.GetDenomMetaData(ctx, metadata[1].Base)
-	require.True(found)
-	found = suite.bankKeeper.HasDenomMetaData(ctx, metadata[1].Base)
-	require.True(found)
-	require.Equal(metadata[1].GetBase(), actualMetadata.GetBase())
-	require.Equal(metadata[1].GetDisplay(), actualMetadata.GetDisplay())
-	require.Equal(metadata[1].GetDescription(), actualMetadata.GetDescription())
-	require.Equal(metadata[1].GetDenomUnits()[1].GetDenom(), actualMetadata.GetDenomUnits()[1].GetDenom())
-	require.Equal(metadata[1].GetDenomUnits()[1].GetExponent(), actualMetadata.GetDenomUnits()[1].GetExponent())
-	require.Equal(metadata[1].GetDenomUnits()[1].GetAliases(), actualMetadata.GetDenomUnits()[1].GetAliases())
+	for _, tc := range testcases {
+		suite.Run(tc.name, func() {
+			if tc.expErr {
+				require.Panics(func() {
+					suite.bankKeeper.SetDenomMetaData(ctx, tc.meta)
+				})
+
+				return
+			}
+
+			suite.bankKeeper.SetDenomMetaData(ctx, tc.meta)
+
+			actualMetadata, found := suite.bankKeeper.GetDenomMetaData(ctx, tc.meta.Base)
+			require.True(found)
+			found = suite.bankKeeper.HasDenomMetaData(ctx, tc.meta.Base)
+			require.True(found)
+			require.Equal(tc.meta.GetBase(), actualMetadata.GetBase())
+			require.Equal(tc.meta.GetDisplay(), actualMetadata.GetDisplay())
+			require.Equal(tc.meta.GetDescription(), actualMetadata.GetDescription())
+			require.Equal(tc.meta.GetDenomUnits()[1].GetDenom(), actualMetadata.GetDenomUnits()[1].GetDenom())
+			require.Equal(tc.meta.GetDenomUnits()[1].GetExponent(), actualMetadata.GetDenomUnits()[1].GetExponent())
+			require.Equal(tc.meta.GetDenomUnits()[1].GetAliases(), actualMetadata.GetDenomUnits()[1].GetAliases())
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestIterateAllDenomMetaData() {
@@ -1243,9 +1265,9 @@ func (suite *KeeperTestSuite) getTestMetadata() []banktypes.Metadata {
 			Symbol:      "TOKEN",
 			Description: "The native staking token of the Token Hub.",
 			DenomUnits: []*banktypes.DenomUnit{
-				{Denom: "1token", Exponent: uint32(5), Aliases: []string{"decitoken"}},
-				{Denom: "2token", Exponent: uint32(4), Aliases: []string{"centitoken"}},
-				{Denom: "3token", Exponent: uint32(7), Aliases: []string{"dekatoken"}},
+				{Denom: "decitoken", Exponent: uint32(5), Aliases: []string{"1token"}},
+				{Denom: "centitoken", Exponent: uint32(4), Aliases: []string{"2token"}},
+				{Denom: "dekatoken", Exponent: uint32(7), Aliases: []string{"3token"}},
 			},
 			Base:    "utoken",
 			Display: "token",

@@ -863,8 +863,9 @@ func (coins Coins) Sort() Coins {
 
 var (
 	// Denominations can be 3 ~ 128 characters long and support letters, followed by either
-	// a letter, a number or a separator ('/', ':', '.', '_' or '-').
-	reDnmString = `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
+	// a letter, a number or a separator ('/', ':', '.', '_' or '-'), or an emoji.
+	reDnmString = fmt.Sprintf(`([a-zA-Z]|%s)([a-zA-Z0-9/:._-]|%s){1,127}`, reEmoji, reEmoji)
+	reEmoji     = `\x{00a9}|\x{00ae}|[\x{2000}-\x{3300}]|\x{d83c}[\x{d000}-\x{dfff}]|\x{d83d}[\x{d000}-\x{dfff}]|\x{d83e}[\x{d000}-\x{dfff}]`
 	reDecAmt    = `[[:digit:]]+(?:\.[[:digit:]]+)?|\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`
 	reDnm       *regexp.Regexp
@@ -872,24 +873,13 @@ var (
 )
 
 func init() {
-	SetCoinDenomRegex(DefaultCoinDenomRegex)
+	reDnm = regexp.MustCompile(fmt.Sprintf(`^%s$`, DefaultCoinDenomRegex()))
+	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, DefaultCoinDenomRegex()))
 }
 
 // DefaultCoinDenomRegex returns the default regex string
 func DefaultCoinDenomRegex() string {
 	return reDnmString
-}
-
-// coinDenomRegex returns the current regex string and can be overwritten for custom validation
-var coinDenomRegex = DefaultCoinDenomRegex
-
-// SetCoinDenomRegex allows for coin's custom validation by overriding the regular
-// expression string used for denom validation.
-func SetCoinDenomRegex(reFn func() string) {
-	coinDenomRegex = reFn
-
-	reDnm = regexp.MustCompile(fmt.Sprintf(`^%s$`, coinDenomRegex()))
-	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, coinDenomRegex()))
 }
 
 // ValidateDenom is the default validation function for Coin.Denom.

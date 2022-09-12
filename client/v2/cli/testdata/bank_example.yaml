@@ -16,3 +16,13 @@ query:
       positional_args:
         - proto_field: address
         - proto_field: denom
+    - rpc_method: SupplyOf
+      # this is a contrived example of how to customize flag options
+      # we would likely prefer positional args here, but this demonstrates usage
+      use: supply-of --denom [denom]
+      flag_options:
+        # flag_options is a map of proto field names to customization options
+        denom:
+          shorthand: d
+          usage: the denom to query
+

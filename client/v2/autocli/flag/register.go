@@ -93,10 +93,10 @@ type MessageBinder struct {
 }
 
 // BuildMessage builds and returns a new message for the bound flags.
-func (m MessageBinder) BuildMessage(positionalArgs []string) protoreflect.Message {
+func (m MessageBinder) BuildMessage(positionalArgs []string) (protoreflect.Message, error) {
 	msg := m.messageType.New()
-	m.Bind(msg, positionalArgs)
-	return msg
+	err := m.Bind(msg, positionalArgs)
+	return msg, err
 }
 
 // Bind binds the flag values to an existing protobuf message.
@@ -130,6 +130,7 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 }
 
 // Get calls BuildMessage and wraps the result in a protoreflect.Value.
-func (m MessageBinder) Get() protoreflect.Value {
-	return protoreflect.ValueOfMessage(m.BuildMessage(nil))
+func (m MessageBinder) Get() (protoreflect.Value, error) {
+	msg, err := m.BuildMessage(nil)
+	return protoreflect.ValueOfMessage(msg), err
 }

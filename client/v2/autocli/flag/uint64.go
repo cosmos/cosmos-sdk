@@ -9,14 +9,13 @@ import (
 
 type uint64Type struct{}
 
-func (u uint64Type) NewValue(ctx context.Context, builder *Builder) Value {
+func (t uint64Type) NewValue(context.Context, *Builder) Value {
 	v := new(uint64)
 	return (*uint64Value)(v)
 }
 
-func (u uint64Type) DefaultValue() string {
-	//TODO implement me
-	panic("implement me")
+func (t uint64Type) DefaultValue() string {
+	return defaultDefaultValue(t)
 }
 
 var _ Type = uint64Type{}

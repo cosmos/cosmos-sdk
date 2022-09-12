@@ -4,55 +4,49 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func bindSimpleListFlag(flagSet *pflag.FlagSet, kind protoreflect.Kind, name, shorthand, usage string) ListValue {
-	switch kind {
-	case protoreflect.StringKind:
-		val := flagSet.StringSliceP(name, shorthand, nil, usage)
-		return listValue(func(list protoreflect.List) {
-			for _, x := range *val {
-				list.Append(protoreflect.ValueOfString(x))
-			}
-		})
-	case protoreflect.BytesKind:
-		// TODO
-		return nil
-	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind,
-		protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
-		val := flagSet.UintSliceP(name, shorthand, nil, usage)
-		return listValue(func(list protoreflect.List) {
-			for _, x := range *val {
-				list.Append(protoreflect.ValueOfUint64(uint64(x)))
-			}
-		})
-	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind,
-		protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-		val := flagSet.IntSliceP(name, shorthand, nil, usage)
-		return listValue(func(list protoreflect.List) {
-			for _, x := range *val {
-				list.Append(protoreflect.ValueOfInt64(int64(x)))
-			}
-		})
-	case protoreflect.BoolKind:
-		val := flagSet.BoolSliceP(name, shorthand, nil, usage)
-		return listValue(func(list protoreflect.List) {
-			for _, x := range *val {
-				list.Append(protoreflect.ValueOfBool(x))
-			}
-		})
-	default:
-		return nil
-	}
-}
-
-type listValue func(protoreflect.List)
-
-func (f listValue) AppendTo(list protoreflect.List) {
-	f(list)
-}
+// TODO
+//func bindSimpleListFlag(flagSet *pflag.FlagSet, kind protoreflect.Kind, name, shorthand, usage string) ListValue {
+//	switch kind {
+//	case protoreflect.StringKind:
+//		val := flagSet.StringSliceP(name, shorthand, nil, usage)
+//		return listValue(func(list protoreflect.List) {
+//			for _, x := range *val {
+//				list.Append(protoreflect.ValueOfString(x))
+//			}
+//		})
+//	case protoreflect.BytesKind:
+//		// TODO
+//		return nil
+//	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind,
+//		protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
+//		val := flagSet.UintSliceP(name, shorthand, nil, usage)
+//		return listValue(func(list protoreflect.List) {
+//			for _, x := range *val {
+//				list.Append(protoreflect.ValueOfUint64(uint64(x)))
+//			}
+//		})
+//	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind,
+//		protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
+//		val := flagSet.IntSliceP(name, shorthand, nil, usage)
+//		return listValue(func(list protoreflect.List) {
+//			for _, x := range *val {
+//				list.Append(protoreflect.ValueOfInt64(int64(x)))
+//			}
+//		})
+//	case protoreflect.BoolKind:
+//		val := flagSet.BoolSliceP(name, shorthand, nil, usage)
+//		return listValue(func(list protoreflect.List) {
+//			for _, x := range *val {
+//				list.Append(protoreflect.ValueOfBool(x))
+//			}
+//		})
+//	default:
+//		return nil
+//	}
+//}
 
 type compositeListType struct {
 	simpleType Type
@@ -102,7 +96,11 @@ func (c *compositeListValue) Set(val string) error {
 	if err != nil {
 		return err
 	}
-	c.values = append(c.values, simpleVal.(SimpleValue).Get())
+	v, err := simpleVal.(SimpleValue).Get()
+	if err != nil {
+		return err
+	}
+	c.values = append(c.values, v)
 	return nil
 }
 

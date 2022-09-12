@@ -9,14 +9,13 @@ import (
 
 type int32Type struct{}
 
-func (u int32Type) NewValue(ctx context.Context, builder *Builder) Value {
+func (t int32Type) NewValue(context.Context, *Builder) Value {
 	v := new(int32)
 	return (*int32Value)(v)
 }
 
-func (u int32Type) DefaultValue() string {
-	//TODO implement me
-	panic("implement me")
+func (t int32Type) DefaultValue() string {
+	return defaultDefaultValue(t)
 }
 
 var _ Type = int32Type{}

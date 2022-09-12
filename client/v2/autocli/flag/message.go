@@ -38,11 +38,11 @@ func (j jsonMessageFlagValue) Bind(message protoreflect.Message, field protorefl
 	message.Set(field, protoreflect.ValueOfMessage(j.message.ProtoReflect()))
 }
 
-func (j jsonMessageFlagValue) Get() protoreflect.Value {
+func (j jsonMessageFlagValue) Get() (protoreflect.Value, error) {
 	if j.message == nil {
-		return protoreflect.Value{}
+		return protoreflect.Value{}, nil
 	}
-	return protoreflect.ValueOfMessage(j.message.ProtoReflect())
+	return protoreflect.ValueOfMessage(j.message.ProtoReflect()), nil
 }
 
 func (j jsonMessageFlagValue) String() string {

@@ -4,14 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type timestampType struct{}
 
-func (t timestampType) NewValue(context.Context, *Builder) pflag.Value {
+func (t timestampType) NewValue(context.Context, *Builder) Value {
 	return &timestampValue{}
 }
 
@@ -23,11 +22,15 @@ type timestampValue struct {
 	value *timestamppb.Timestamp
 }
 
-func (t timestampValue) Get() protoreflect.Value {
+func (t timestampValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
+	message.Set(field, protoreflect.ValueOfMessage(t.value.ProtoReflect()))
+}
+
+func (t timestampValue) Get() (protoreflect.Value, error) {
 	if t.value == nil {
-		return protoreflect.Value{}
+		return protoreflect.Value{}, nil
 	}
-	return protoreflect.ValueOfMessage(t.value.ProtoReflect())
+	return protoreflect.ValueOfMessage(t.value.ProtoReflect()), nil
 }
 
 func (v timestampValue) String() string {

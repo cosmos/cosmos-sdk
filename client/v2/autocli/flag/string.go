@@ -8,7 +8,7 @@ import (
 
 type stringType struct{}
 
-func (s stringType) NewValue(ctx context.Context, builder *Builder) Value {
+func (s stringType) NewValue(context.Context, *Builder) Value {
 	v := new(string)
 	return (*stringValue)(v)
 }

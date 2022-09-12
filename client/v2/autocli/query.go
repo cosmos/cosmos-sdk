@@ -137,9 +137,13 @@ func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescrip
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 		clientConn := getClientConn(ctx)
-		input := binder.BuildMessage(args)
+		input, err := binder.BuildMessage(args)
+		if err != nil {
+			return err
+		}
+
 		output := outputType.New()
-		err := clientConn.Invoke(ctx, methodName, input.Interface(), output.Interface())
+		err = clientConn.Invoke(ctx, methodName, input.Interface(), output.Interface())
 		if err != nil {
 			return err
 		}

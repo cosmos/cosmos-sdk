@@ -44,8 +44,8 @@ func (e enumValue) Bind(message protoreflect.Message, field protoreflect.FieldDe
 	message.Set(field, protoreflect.ValueOfEnum(e.value))
 }
 
-func (e enumValue) Get() protoreflect.Value {
-	return protoreflect.ValueOfEnum(e.value)
+func (e enumValue) Get() (protoreflect.Value, error) {
+	return protoreflect.ValueOfEnum(e.value), nil
 }
 
 func enumValueName(enum protoreflect.EnumDescriptor, enumValue protoreflect.EnumValueDescriptor) string {

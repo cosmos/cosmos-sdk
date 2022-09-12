@@ -14,5 +14,5 @@ func (b *Builder) bindPageRequest(ctx context.Context, flagSet *pflag.FlagSet, f
 	if err != nil {
 		return nil, err
 	}
-	return simpleValueBinder{handler}, nil
+	return simpleValueBinder{value: handler}, nil
 }

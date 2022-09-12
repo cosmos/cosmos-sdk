@@ -4,14 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 type durationType struct{}
 
-func (t durationType) NewValue(context.Context, *Builder) pflag.Value {
+func (t durationType) NewValue(context.Context, *Builder) Value {
 	return &durationValue{}
 }
 
@@ -23,11 +22,15 @@ type durationValue struct {
 	value *durationpb.Duration
 }
 
-func (t durationValue) Get() protoreflect.Value {
+func (t durationValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
+	message.Set(field, protoreflect.ValueOfMessage(t.value.ProtoReflect()))
+}
+
+func (t durationValue) Get() (protoreflect.Value, error) {
 	if t.value == nil {
-		return protoreflect.Value{}
+		return protoreflect.Value{}, nil
 	}
-	return protoreflect.ValueOfMessage(t.value.ProtoReflect())
+	return protoreflect.ValueOfMessage(t.value.ProtoReflect()), nil
 }
 
 func (v durationValue) String() string {

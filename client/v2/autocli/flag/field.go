@@ -70,16 +70,16 @@ func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 }
 
 func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
-	typ := b.resolveFlagTypeBasic(field)
 	if field.IsList() {
+		typ := b.resolveFlagTypeBasic(field)
 		if typ != nil {
 			return compositeListType{simpleType: typ}
 		}
 
 		return nil
+	} else {
+		return b.resolveFlagTypeBasic(field)
 	}
-
-	return typ
 }
 
 func (b *Builder) resolveFlagTypeBasic(field protoreflect.FieldDescriptor) Type {
@@ -92,6 +92,20 @@ func (b *Builder) resolveFlagTypeBasic(field protoreflect.FieldDescriptor) Type 
 	}
 
 	switch field.Kind() {
+	case protoreflect.BytesKind:
+		return bytesBase64Type{}
+	case protoreflect.StringKind:
+		return stringType{}
+	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
+		return uint32Type{}
+	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
+		return uint64Type{}
+	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
+		return int32Type{}
+	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
+		return int64Type{}
+	case protoreflect.BoolKind:
+		return boolType{}
 	case protoreflect.EnumKind:
 		return enumType{enum: field.Enum()}
 	case protoreflect.MessageKind:
@@ -109,22 +123,20 @@ func (b *Builder) resolveFlagTypeBasic(field protoreflect.FieldDescriptor) Type 
 }
 
 type simpleValueBinder struct {
-	SimpleValue
+	value interface {
+		Get() (protoreflect.Value, error)
+	}
 }
 
 func (s simpleValueBinder) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
-	val := s.Get()
+	val, err := s.value.Get()
+	if err != nil {
+		panic(err)
+	}
+
 	if val.IsValid() {
 		message.Set(field, val)
 	} else {
 		message.Clear(field)
 	}
-}
-
-type listValueBinder struct {
-	ListValue
-}
-
-func (s listValueBinder) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
-	s.AppendTo(message.NewField(field).List())
 }

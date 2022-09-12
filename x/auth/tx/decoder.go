@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"crypto/sha256"
 	"fmt"
 
 	"google.golang.org/protobuf/encoding/protowire"
@@ -70,6 +71,7 @@ func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 			tx:                           theTx,
 			bodyBz:                       raw.BodyBytes,
 			authInfoBz:                   raw.AuthInfoBytes,
+			hash:                         sha256.Sum256(txBytes),
 			txBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
 		}, nil
 	}

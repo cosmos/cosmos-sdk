@@ -30,6 +30,8 @@ type wrapper struct {
 	// from the client using TxRaw if the tx was decoded from the wire
 	authInfoBz []byte
 
+	hash [32]byte
+
 	txBodyHasUnknownNonCriticals bool
 }
 
@@ -41,6 +43,7 @@ var (
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
 	_ tx.TipTx                   = &wrapper{}
 	_ sdk.MempoolTx              = &wrapper{}
+	_ sdk.HashableTx             = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -65,6 +68,10 @@ func newBuilder(cdc codec.Codec) *wrapper {
 
 func (w *wrapper) Size() int {
 	return len(w.bodyBz) + len(w.authInfoBz)
+}
+
+func (w *wrapper) GetHash() [32]byte {
+	return w.hash
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {

@@ -57,13 +57,7 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 				}
 
 				for _, b := range mbm {
-					f, err := module.OpenGenesisModuleFile(filepath.Join(genesisFilePath, b.Name()), b.Name())
-					if err != nil {
-						return err
-					}
-					defer f.Close()
-
-					bz, err := module.FileRead(f)
+					bz, err := module.FileRead(filepath.Join(genesisFilePath, b.Name()), b.Name())
 					if err != nil {
 						return err
 					}

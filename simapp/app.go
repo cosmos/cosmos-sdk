@@ -250,7 +250,6 @@ func NewSimApp(
 
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 	app.homepath = cast.ToString(appOpts.Get(flags.FlagHome))
-
 	ep := cast.ToString(appOpts.Get(flags.FlagGenesisFilePath))
 	if len(ep) > 0 {
 		app.exportpath = filepath.Join(ep, "genesis")

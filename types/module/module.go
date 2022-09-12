@@ -29,8 +29,11 @@ needlessly defining many placeholder functions
 package module
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -308,13 +311,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			modulePath := filepath.Join(m.GenesisPath, moduleName)
 			ctx.Logger().Info("loading module genesis state from", "path", modulePath)
 
-			f, err := OpenGenesisModuleFile(modulePath, moduleName)
-			if err != nil {
-				panic(fmt.Sprintf("failed to open genesis file from module %s: %v", moduleName, err))
-			}
-			defer f.Close()
-
-			bz, err := FileRead(f)
+			bz, err := FileRead(modulePath, moduleName)
 			if err != nil {
 				panic(fmt.Sprintf("failed to read the genesis state from file: %v", err))
 			}
@@ -364,13 +361,7 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 			fmt.Printf("exporting module: %s,path: %s\n", moduleName, modulePath)
 
 			bz := m.Modules[moduleName].ExportGenesis(ctx, cdc)
-			f, err := CreateGenesisExportFile(modulePath, moduleName)
-			if err != nil {
-				return nil, err
-			}
-			defer f.Close()
-
-			if err := FileWrite(f, bz); err != nil {
+			if err := fileWrite(modulePath, moduleName, bz); err != nil {
 				return nil, fmt.Errorf("ExportGenesis to file failed, module=%s err=%v", moduleName, err)
 			}
 		}
@@ -623,12 +614,12 @@ func DefaultMigrationsOrder(modules []string) []string {
 	return out
 }
 
-func CreateGenesisExportFile(exportPath string, moduleName string) (*os.File, error) {
+func createExportFile(exportPath string, moduleName string, index int) (*os.File, error) {
 	if err := os.MkdirAll(exportPath, 0o700); err != nil {
 		return nil, fmt.Errorf("failed to create directory: %w", err)
 	}
 
-	fp := filepath.Join(exportPath, fmt.Sprintf("genesis_%s.bin", moduleName))
+	fp := filepath.Join(exportPath, fmt.Sprintf("genesis_%s_%d.bin", moduleName, index))
 	f, err := os.Create(fp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file: %w", err)
@@ -637,8 +628,8 @@ func CreateGenesisExportFile(exportPath string, moduleName string) (*os.File, er
 	return f, nil
 }
 
-func OpenGenesisModuleFile(importPath string, moduleName string) (*os.File, error) {
-	fp := filepath.Join(importPath, fmt.Sprintf("genesis_%s.bin", moduleName))
+func openModuleStateFile(importPath string, moduleName string, index int) (*os.File, error) {
+	fp := filepath.Join(importPath, fmt.Sprintf("genesis_%s_%d.bin", moduleName, index))
 	f, err := os.OpenFile(fp, os.O_RDONLY, 0o600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
@@ -647,27 +638,85 @@ func OpenGenesisModuleFile(importPath string, moduleName string) (*os.File, erro
 	return f, nil
 }
 
-func FileWrite(f *os.File, bz []byte) error {
-	if n, err := f.Write(bz); err != nil {
-		return fmt.Errorf("failed to write genesis file: %w", err)
-	} else if n != len(bz) {
-		return fmt.Errorf("genesis file was not fully written: %w", err)
+const stateChunkSize = 100000000 // 100 MB
+
+// byteChunk returns the chunk at a given index from the full byte slice.
+func byteChunk(bz []byte, index int) []byte {
+	start := index * stateChunkSize
+	end := (index + 1) * stateChunkSize
+	switch {
+	case start >= len(bz):
+		return nil
+	case end >= len(bz):
+		return bz[start:]
+	default:
+		return bz[start:end]
 	}
+}
+
+// byteChunks calculates the number of chunks in the byte slice.
+func byteChunks(bz []byte) int {
+	return int(math.Ceil(float64(len(bz)) / float64(stateChunkSize)))
+}
+
+// fileWrite writes the module's genesis state into files, each file containing
+// maximum 100 MB of data
+func fileWrite(modulePath, moduleName string, bz []byte) error {
+	chunks := byteChunks(bz)
+	// if the genesis state is empty, still create a new file to write nothing
+	if chunks == 0 {
+		chunks++
+	}
+	totalWritten := 0
+	for i := 0; i < chunks; i++ {
+		f, err := createExportFile(modulePath, moduleName, i)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		n, err := f.Write(byteChunk(bz, i))
+		if err != nil {
+			return fmt.Errorf("failed to write genesis file: %w", err)
+		}
+		totalWritten += n
+	}
+
+	if totalWritten != len(bz) {
+		return fmt.Errorf("genesis file was not fully written: written %d/ total %d", totalWritten, len(bz))
+	}
+
 	return nil
 }
 
-func FileRead(f *os.File) ([]byte, error) {
-	fi, err := f.Stat()
+// FileRead reads the module's genesus state given the file path and the module name, returns json encoded
+// data
+func FileRead(modulePath string, moduleName string) ([]byte, error) {
+	files, err := ioutil.ReadDir(modulePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to stat file: %w", err)
+		return nil, fmt.Errorf("failed to read folder from %s: %w", modulePath, err)
 	}
 
-	bz := make([]byte, fi.Size())
-	if n, err := f.Read(bz); err != nil {
-		return nil, fmt.Errorf("failed to read genesis file: %w", err)
-	} else if n != int(fi.Size()) {
-		return nil, fmt.Errorf("couldn't read entire genesis file, read: %d, file size: %d", n, fi.Size())
+	var buf bytes.Buffer
+	for i := 0; i < len(files); i++ {
+		f, err := openModuleStateFile(modulePath, moduleName, i)
+		if err != nil {
+			panic(fmt.Sprintf("failed to open genesis file from module %s: %v", moduleName, err))
+		}
+		defer f.Close()
+
+		fi, err := f.Stat()
+		if err != nil {
+			return nil, fmt.Errorf("failed to stat file: %w", err)
+		}
+
+		n, err := buf.ReadFrom(f)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read file %s: %w", f.Name(), err)
+		} else if n != fi.Size() {
+			return nil, fmt.Errorf("couldn't read entire file: %s, read: %d, file size: %d", f.Name(), n, fi.Size())
+		}
 	}
 
-	return bz, nil
+	return buf.Bytes(), nil
 }

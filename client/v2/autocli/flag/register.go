@@ -35,13 +35,18 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 			hasVarargs = true
 		}
 
-		// TODO binder
+		typ := b.resolveFlagType(field)
+		if typ == nil {
+			return nil, fmt.Errorf("can't resolve field %v", field)
+		}
+
+		value := typ.NewValue(ctx, b)
 
 		handler.positionalArgs = append(handler.positionalArgs, struct {
-			binder  positionalArg
+			binder  Value
 			field   protoreflect.FieldDescriptor
 			varargs bool
-		}{binder: nil, field: field, varargs: arg.Varargs})
+		}{binder: value, field: field, varargs: arg.Varargs})
 	}
 
 	if hasVarargs {
@@ -75,7 +80,7 @@ type MessageBinder struct {
 	CobraArgs cobra.PositionalArgs
 
 	positionalArgs []struct {
-		binder  positionalArg
+		binder  Value
 		field   protoreflect.FieldDescriptor
 		varargs bool
 	}
@@ -95,7 +100,7 @@ func (m MessageBinder) BuildMessage(positionalArgs []string) protoreflect.Messag
 }
 
 // Bind binds the flag values to an existing protobuf message.
-func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) {
+func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) error {
 	n := len(positionalArgs)
 	for i, arg := range m.positionalArgs {
 		if i >= n {
@@ -103,15 +108,25 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) {
 		}
 
 		if arg.varargs {
-			arg.binder.Set(positionalArgs[i:]...)
+			for _, v := range positionalArgs[i:] {
+				err := arg.binder.Set(v)
+				if err != nil {
+					return err
+				}
+			}
 		} else {
-			arg.binder.Set(positionalArgs[i])
+			err := arg.binder.Set(positionalArgs[i])
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	for _, pair := range m.flagFieldPairs {
 		pair.binder.Bind(msg, pair.field)
 	}
+
+	return nil
 }
 
 // Get calls BuildMessage and wraps the result in a protoreflect.Value.

@@ -58,7 +58,7 @@ type compositeListType struct {
 	simpleType Type
 }
 
-func (t compositeListType) NewValue(ctx context.Context, opts *Builder) pflag.Value {
+func (t compositeListType) NewValue(ctx context.Context, opts *Builder) Value {
 	return &compositeListValue{
 		simpleType: t.simpleType,
 		values:     nil,
@@ -76,6 +76,10 @@ type compositeListValue struct {
 	values     []protoreflect.Value
 	ctx        context.Context
 	opts       *Builder
+}
+
+func (c compositeListValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
+	c.AppendTo(message.NewField(field).List())
 }
 
 func (c compositeListValue) AppendTo(list protoreflect.List) {

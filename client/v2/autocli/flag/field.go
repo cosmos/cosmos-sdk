@@ -73,8 +73,7 @@ func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 	typ := b.resolveFlagTypeBasic(field)
 	if field.IsList() {
 		if typ != nil {
-			//return compositeListType{simpleType: typ}
-			panic("TODO")
+			return compositeListType{simpleType: typ}
 		}
 
 		return nil

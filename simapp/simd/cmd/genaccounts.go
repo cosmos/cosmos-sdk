@@ -144,8 +144,8 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 						continue
 					}
 
-					updated_coins := acc.Coins.Add(coins...)
-					bankGenState.Balances[idx] = banktypes.Balance{Address: addr.String(), Coins: updated_coins.Sort()}
+					updatedCoins := acc.Coins.Add(coins...)
+					bankGenState.Balances[idx] = banktypes.Balance{Address: addr.String(), Coins: updatedCoins.Sort()}
 					break
 				}
 			} else {

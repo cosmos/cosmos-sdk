@@ -4,19 +4,28 @@ package cosmos.auth.v1;
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 
+// Query is the comos.auth.v1 query service.
 service Query {
+
+  // AccountInfo queries account info by account address.
   rpc AccountInfo(QueryAccountInfoRequest) returns (QueryAccountInfoResponse);
 }
 
+// QueryAccountInfoRequest is the Query/AccountInfo request type.
 message QueryAccountInfoRequest {
+
+  // address is the account address string.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
+// QueryAccountInfoResponse is the Query/AccountInfo response type.
 message QueryAccountInfoResponse {
+
+  // info is the account info.
   AccountInfo info = 1;
 }
 
-// AccountInfo
+// AccountInfo describes basic account info for all account types.
 message AccountInfo {
   // address is the account address string.
   string              address_string = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];

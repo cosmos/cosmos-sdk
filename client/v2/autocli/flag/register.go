@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // AddMessageFlags adds flags for each field in the message to the flag set.
-func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messageType protoreflect.MessageType, options Options) *MessageBinder {
+func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messageType protoreflect.MessageType, commandOptions *autocliv1.RpcCommandOptions, options Options) *MessageBinder {
 	fields := messageType.Descriptor().Fields()
 	numFields := fields.Len()
 	handler := &MessageBinder{
@@ -17,7 +18,8 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 	}
 	for i := 0; i < numFields; i++ {
 		field := fields.Get(i)
-		binder := b.AddFieldFlag(ctx, set, field, options)
+		flagOpts := commandOptions.FlagOptions[string(field.Name())]
+		binder := b.AddFieldFlag(ctx, set, field, flagOpts, options)
 		if binder == nil {
 			fmt.Printf("unable to bind field %s to a flag, support will be added soon\n", field)
 			continue

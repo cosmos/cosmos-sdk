@@ -74,7 +74,9 @@ func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor 
 			}
 		}
 		cmd := b.CreateQueryMethodCommand(methodDescriptor, methodOpts)
-		command.AddCommand(cmd)
+		if cmd != nil {
+			command.AddCommand(cmd)
+		}
 	}
 
 	for cmdName, subCmd := range cmdDescriptor.SubCommands {
@@ -85,20 +87,41 @@ func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor 
 
 // CreateQueryMethodCommand creates a gRPC query command for the given service method.
 func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) *cobra.Command {
+	if options != nil && options.Skip {
+		return nil
+	}
+
 	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
-	docs := util.DescriptorDocs(descriptor)
+
+	long := options.Long
+	if long == "" {
+		long = util.DescriptorDocs(descriptor)
+	}
+
 	getClientConn := b.GetClientConn
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
 
 	inputDesc := descriptor.Input()
 	inputType := util.ResolveMessageType(b.TypeResolver, inputDesc)
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
-	cmd := &cobra.Command{
-		Use:  protoNameToCliName(descriptor.Name()),
-		Long: docs,
+
+	use := options.Use
+	if use != "" {
+		use = protoNameToCliName(descriptor.Name())
 	}
 
-	binder := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, flag.Options{})
+	cmd := &cobra.Command{
+		Use:        use,
+		Long:       long,
+		Short:      options.Short,
+		Example:    options.Example,
+		Aliases:    options.Alias,
+		SuggestFor: options.SuggestFor,
+		Deprecated: options.Deprecated,
+		Version:    options.Version,
+	}
+
+	binder := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options, flag.Options{})
 
 	jsonMarshalOptions := protojson.MarshalOptions{
 		Indent:          "  ",

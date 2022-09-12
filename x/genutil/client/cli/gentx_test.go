@@ -96,7 +96,6 @@ func (s *CLITestSuite) TestGenTxCmd() {
 	tests := []struct {
 		name         string
 		args         []string
-		expError     bool
 		expCmdOutput string
 	}{
 		{
@@ -107,7 +106,6 @@ func (s *CLITestSuite) TestGenTxCmd() {
 				"node0",
 				amount.String(),
 			},
-			expError:     true,
 			expCmdOutput: fmt.Sprintf("--%s=%s --%s=1 %s %s", flags.FlagChainID, s.baseCtx.ChainID, stakingcli.FlagCommissionRate, "node0", amount.String()),
 		},
 		{
@@ -117,7 +115,6 @@ func (s *CLITestSuite) TestGenTxCmd() {
 				"node0",
 				amount.String(),
 			},
-			expError:     false,
 			expCmdOutput: fmt.Sprintf("--%s=%s %s %s", flags.FlagChainID, s.baseCtx.ChainID, "node0", amount.String()),
 		},
 		{
@@ -128,7 +125,6 @@ func (s *CLITestSuite) TestGenTxCmd() {
 				"node0",
 				amount.String(),
 			},
-			expError:     true,
 			expCmdOutput: fmt.Sprintf("--%s=test-chain-1 --%s={\"key\":\"BOIkjkFruMpfOFC9oNPhiJGfmY2pHF/gwHdLDLnrnS0=\"} %s %s ", flags.FlagChainID, stakingcli.FlagPubKey, "node0", amount.String()),
 		},
 		{
@@ -139,7 +135,6 @@ func (s *CLITestSuite) TestGenTxCmd() {
 				"node0",
 				amount.String(),
 			},
-			expError:     false,
 			expCmdOutput: fmt.Sprintf("--%s=test-chain-1 --%s={\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"BOIkjkFruMpfOFC9oNPhiJGfmY2pHF/gwHdLDLnrnS0=\"} %s %s ", flags.FlagChainID, stakingcli.FlagPubKey, "node0", amount.String()),
 		},
 	}
@@ -170,33 +165,6 @@ func (s *CLITestSuite) TestGenTxCmd() {
 			if len(tc.args) != 0 {
 				s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
 			}
-
-			// out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			// if tc.expError {
-			// 	s.Require().Error(err)
-			// 	_, err = os.Open(genTxFile)
-			// 	s.Require().Error(err)
-			// } else {
-			// 	s.Require().NoError(err, "test: %s\noutput: %s", tc.name, out.String())
-
-			// 	// validate generated transaction.
-			// 	open, err := os.Open(genTxFile)
-			// 	s.Require().NoError(err)
-
-			// 	all, err := io.ReadAll(open)
-			// 	s.Require().NoError(err)
-
-			// 	tx, err := s.encCfg.TxConfig.TxJSONDecoder()(all)
-			// 	s.Require().NoError(err)
-
-			// 	msgs := tx.GetMsgs()
-			// 	s.Require().Len(msgs, 1)
-
-			// s.Require().Equal(sdk.MsgTypeURL(&types.MsgCreateValidator{}), sdk.MsgTypeURL(msgs[0]))
-			// s.Require().True(val.Address.Equals(msgs[0].GetSigners()[0]))
-			// s.Require().Equal(amount, msgs[0].(*types.MsgCreateValidator).Value)
-			// s.Require().NoError(tx.ValidateBasic())
-			// }
 		})
 	}
 }

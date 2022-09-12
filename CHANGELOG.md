@@ -85,6 +85,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* (bank) [#13247](https://github.com/cosmos/cosmos-sdk/pull/13247) When adding coin metadata into state, only allow valid metadata (e.g. with valid denoms). Also, the coin denom regex has been changed to be more permissive.
 * (codec) [#13196](https://github.com/cosmos/cosmos-sdk/pull/13196) Register all modules' `Msg`s with gov's ModuleCdc so that Amino sign bytes are correctly generated.
 * (x/distribution) [#12852](https://github.com/cosmos/cosmos-sdk/pull/12852) Deprecate `CommunityPoolSpendProposal`. Please execute a `MsgCommunityPoolSpend` message via the new v1 `x/gov` module instead. This message can be used to directly fund the `x/gov` module account.
 * (x/bank) [#12610](https://github.com/cosmos/cosmos-sdk/pull/12610) `MsgMultiSend` now allows only a single input.
@@ -102,6 +103,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (bank) [#13247](https://github.com/cosmos/cosmos-sdk/pull/13247) Remove `sdk.SetCoinDenomRegex`, and remove the reliance on a mutable global variable. The regex is now fixed for all chains.
 * (context) [#13063](https://github.com/cosmos/cosmos-sdk/pull/13063) Update `Context#CacheContext` to automatically emit all events on the parent context's `EventManager`.
 * (x/bank) [#12706](https://github.com/cosmos/cosmos-sdk/pull/12706) Removed the `testutil` package from the `x/bank/client` package.
 * (simapp) [#12747](https://github.com/cosmos/cosmos-sdk/pull/12747) Remove `simapp.MakeTestEncodingConfig`. Please use `moduletestutil.MakeTestEncodingConfig` (`types/module/testutil`) in tests instead.

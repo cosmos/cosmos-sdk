@@ -1,4 +1,4 @@
-package cli
+package autocli
 
 import (
 	"fmt"
@@ -9,7 +9,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"github.com/cosmos/cosmos-sdk/client/v2/cli/flag"
+	"github.com/cosmos/cosmos-sdk/client/v2/autocli/flag"
+
 	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
 

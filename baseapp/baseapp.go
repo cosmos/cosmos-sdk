@@ -666,6 +666,14 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		anteEvents = events.ToABCIEvents()
 	}
 
+	if mode == runTxModeCheck {
+		// TODO add the tx to the mempool
+		err = app.mempool.Insert(ctx, tx.(sdk.MempoolTx))
+		if err != nil {
+			return gInfo, nil, anteEvents, priority, err
+		}
+	}
+
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
@@ -675,9 +683,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
+
 	if err == nil {
-		// TODO add the tx to the mempool
-		app.mempool.Insert(tx)
 
 		// Run optional postHandlers.
 		//

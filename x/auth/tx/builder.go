@@ -40,6 +40,7 @@ var (
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
 	_ tx.TipTx                   = &wrapper{}
+	_ sdk.MempoolTx              = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -60,6 +61,10 @@ func newBuilder(cdc codec.Codec) *wrapper {
 			},
 		},
 	}
+}
+
+func (w *wrapper) Size() int {
+	return len(w.getBodyBytes()) + len(w.getAuthInfoBytes())
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {

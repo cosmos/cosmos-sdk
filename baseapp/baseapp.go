@@ -70,7 +70,7 @@ type BaseApp struct { //nolint: maligned
 	//
 	// checkState is set on InitChain and reset on Commit
 	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
-	checkState   *state // for CheckTx5
+	checkState   *state // for CheckTx
 	deliverState *state // for DeliverTx
 
 	// an inter-block write-through cache provided to the context during deliverState

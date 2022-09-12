@@ -57,10 +57,10 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	var (
-	  priority int64
-	  err error
+		priority int64
+		err      error
 	)
-	
+
 	fee := feeTx.GetFee()
 	if !simulate {
 		fee, priority, err = dfd.txFeeChecker(ctx, tx)
@@ -91,23 +91,7 @@ func (dfd *DeductFeeDecorator) innerValidateTx(ctx context.Context, tx transacti
 		}
 	}
 
-	if err := dfd.checkDeductFee(ctx, feeTx, fee); err != nil {
-		return 0, err
-	}
-
-	return priority, nil
-}
-
-// ValidateTx implements an TxValidator for DeductFeeDecorator
-// Note: This method is applicable only for transactions that implement the sdk.FeeTx interface.
-func (dfd *DeductFeeDecorator) ValidateTx(ctx context.Context, tx transaction.Tx) error {
-	_, err := dfd.innerValidateTx(ctx, tx)
-	return err
-}
-
-func (dfd *DeductFeeDecorator) checkDeductFee(ctx context.Context, feeTx sdk.FeeTx, fee sdk.Coins) error {
-	addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName)
-	if len(addr) == 0 {
+	if addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
 		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 

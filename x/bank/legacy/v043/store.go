@@ -1,6 +1,7 @@
 package v043
 
 import (
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -117,7 +118,7 @@ func pruneZeroSupply(store sdk.KVStore) error {
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var amount sdk.Int
+		var amount math.Int
 		if err := amount.Unmarshal(iterator.Value()); err != nil {
 			return err
 		}

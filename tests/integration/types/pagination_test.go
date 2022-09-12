@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/depinject"
@@ -371,7 +371,7 @@ func (s *paginationTestSuite) TestPaginate() {
 	authStore := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
 	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
-	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key, value []byte) error {
+	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
 		var amount math.Int
 		err := amount.Unmarshal(value)
 		if err != nil {

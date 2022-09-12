@@ -276,8 +276,13 @@ func WriteConfigFile(configFilePath string, config interface{}) error {
 		return err
 	}
 
-	if err := os.WriteFile(configFilePath, buffer.Bytes(), 0o600); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
+	mustWriteFile(configFilePath, buffer.Bytes(), 0o644)
+}
+
+func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {
+	if err := os.WriteFile(filePath, contents, mode); err != nil {
+		fmt.Printf(fmt.Sprintf("failed to write file: %v", err) + "\n")
+		os.Exit(1)
 	}
 
 	tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)

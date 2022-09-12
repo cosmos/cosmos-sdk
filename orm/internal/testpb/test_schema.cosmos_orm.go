@@ -4,10 +4,10 @@ package testpb
 
 import (
 	context "context"
-	ormlist "cosmossdk.io/orm/model/ormlist"
-	ormtable "cosmossdk.io/orm/model/ormtable"
-	ormerrors "cosmossdk.io/orm/types/ormerrors"
-	durationpb "google.golang.org/protobuf/types/known/durationpb"
+
+	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
+	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 

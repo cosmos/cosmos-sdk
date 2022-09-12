@@ -1,14 +1,8 @@
 package keeper
 
 import (
-	"context"
-	"fmt"
-
-	"cosmossdk.io/collections"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/mint/types"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -74,7 +68,7 @@ func (k Keeper) GetAuthority() string {
 
 // StakingTokenSupply implements an alias call to the underlying staking keeper's
 // StakingTokenSupply to be used in BeginBlocker.
-func (k Keeper) StakingTokenSupply(ctx context.Context) (math.Int, error) {
+func (k Keeper) StakingTokenSupply(ctx sdk.Context) math.Int {
 	return k.stakingKeeper.StakingTokenSupply(ctx)
 }
 

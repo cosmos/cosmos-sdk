@@ -327,17 +327,7 @@ func testListenBlock(t *testing.T) {
 
 func readInFile(name string) ([]byte, error) {
 	path := filepath.Join(testDir, name)
-	bz, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	size := sdk.BigEndianToUint64(bz[:8])
-	if len(bz) != int(size)+8 {
-		return nil, errors.New("incomplete file ")
-	}
-
-	return bz[8:], nil
+	return os.ReadFile(path)
 }
 
 // segmentBytes returns all of the protobuf messages contained in the byte array

@@ -396,14 +396,8 @@ func printCreate(ctx client.Context, cmd *cobra.Command, k *keyring.Record, show
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
-			if showMnemonicIndiscreetly {
-				if _, err = fmt.Fprintf(cmd.ErrOrStderr(), "\n**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.\n\n%s\n", mnemonic); err != nil {
-					return fmt.Errorf("failed to print mnemonic: %w", err)
-				}
-			} else {
-				if err = printDiscreetly(ctx, cmd.ErrOrStderr(), "**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.", mnemonic); err != nil {
-					return fmt.Errorf("failed to print mnemonic: %w", err)
-				}
+			if _, err := fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("\n**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.\n\n%s\n", mnemonic)); err != nil { //nolint:gosimple
+				return fmt.Errorf("failed to print mnemonic: %v", err)
 			}
 		}
 	case flags.OutputFormatJSON:

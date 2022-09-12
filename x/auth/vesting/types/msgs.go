@@ -96,7 +96,7 @@ func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{from}
 }
 
-// NewMsgCreatePeriodicVestingAccount returns a reference to a new MsgCreatePeriodicVestingAccount.
+// NewMsgCreatePermanentLockedAccount returns a reference to a new MsgCreatePermanentLockedAccount.
 //
 //nolint:interfacer
 func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime int64, periods []Period, merge bool) *MsgCreatePeriodicVestingAccount {
@@ -160,7 +160,19 @@ func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgCreateClawbackVestingAccount returns a reference to a new MsgCreateClawbackVestingAccount.
+// GetSignBytes returns the bytes all expected signers must sign over for a
+// MsgCreatePermanentLockedAccount.
+func (msg MsgCreatePermanentLockedAccount) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners returns the expected signers for a MsgCreatePermanentLockedAccount.
+func (msg MsgCreatePermanentLockedAccount) GetSigners() []sdk.AccAddress {
+	from, _ := sdk.AccAddressFromBech32(msg.FromAddress)
+	return []sdk.AccAddress{from}
+}
+
+// NewMsgCreatePeriodicVestingAccount returns a reference to a new MsgCreatePeriodicVestingAccount.
 //
 //nolint:interfacer
 func NewMsgCreateClawbackVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime int64, lockupPeriods, vestingPeriods []Period, merge bool) *MsgCreateClawbackVestingAccount {

@@ -2,9 +2,18 @@ package cli
 
 import (
 	"github.com/spf13/pflag"
-
-	"cosmossdk.io/x/upgrade/types"
 )
+
+func parseArgsToContent(fs *pflag.FlagSet, name string) (gov.Content, error) {
+	title, err := fs.GetString(cli.FlagTitle) //nolint:staticcheck
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := fs.GetString(cli.FlagDescription) //nolint:staticcheck
+	if err != nil {
+		return nil, err
+	}
 
 func parsePlan(fs *pflag.FlagSet, name string) (types.Plan, error) {
 	height, err := fs.GetInt64(FlagUpgradeHeight)

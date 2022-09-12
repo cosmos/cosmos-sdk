@@ -10,6 +10,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
+// used to reject malleable signatures
+// see:
+//   - https://github.com/ethereum/go-ethereum/blob/f9401ae011ddf7f8d2d95020b7446c17f8d98dc1/crypto/signature_nocgo.go#L90-L93
+//   - https://github.com/ethereum/go-ethereum/blob/f9401ae011ddf7f8d2d95020b7446c17f8d98dc1/crypto/crypto.go#L39
+var secp256k1halfN = new(big.Int).Rsh(secp256k1.S256().N, 1)
+
 // Sign creates an ECDSA signature on curve Secp256k1, using SHA256 on the msg.
 // The returned signature will be of the form R || S (in lower-S form).
 func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {

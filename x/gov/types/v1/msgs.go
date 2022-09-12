@@ -19,12 +19,9 @@ var (
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
-func NewMsgSubmitProposal(
-	messages []sdk.Msg,
-	initialDeposit sdk.Coins,
-	proposer, metadata, title, summary string,
-	proposalType ProposalType,
-) (*MsgSubmitProposal, error) {
+//
+//nolint:interfacer
+func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer string, metadata string) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer,
@@ -66,23 +63,67 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) e
 	return sdktx.UnpackInterfaces(unpacker, m.Messages)
 }
 
-// NewMsgSubmitMultipleChoiceProposal creates a new MsgSubmitMultipleChoiceProposal.
-func NewMultipleChoiceMsgSubmitProposal(
-	initialDeposit sdk.Coins,
-	proposer, metadata, title, summary string,
-	votingOptions *ProposalVoteOptions,
-) (*MsgSubmitMultipleChoiceProposal, error) {
-	if votingOptions == nil {
-		return nil, errors.New("voting options cannot be nil")
+// NewMsgDeposit creates a new MsgDeposit instance
+//
+//nolint:interfacer
+func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) *MsgDeposit {
+	return &MsgDeposit{proposalID, depositor.String(), amount}
+}
+
+// Route implements Msg
+func (msg MsgDeposit) Route() string { return types.RouterKey }
+
+// Type implements Msg
+func (msg MsgDeposit) Type() string { return sdk.MsgTypeURL(&msg) }
+
+// ValidateBasic implements Msg
+func (msg MsgDeposit) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
+	}
+	amount := sdk.NewCoins(msg.Amount...)
+	if !amount.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
+	}
+	if amount.IsAnyNegative() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amount.String())
 	}
 
-	m := &MsgSubmitMultipleChoiceProposal{
-		InitialDeposit: initialDeposit,
-		Proposer:       proposer,
-		Metadata:       metadata,
-		Title:          title,
-		Summary:        summary,
-		VoteOptions:    votingOptions,
+	return nil
+}
+
+// GetSignBytes implements Msg
+func (msg MsgDeposit) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners implements Msg
+func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
+	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
+	return []sdk.AccAddress{depositor}
+}
+
+// NewMsgVote creates a message to cast a vote on an active proposal
+//
+//nolint:interfacer
+func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption, metadata string) *MsgVote {
+	return &MsgVote{proposalID, voter.String(), option, metadata}
+}
+
+// Route implements Msg
+func (msg MsgVote) Route() string { return types.RouterKey }
+
+// Type implements Msg
+func (msg MsgVote) Type() string { return sdk.MsgTypeURL(&msg) }
+
+// ValidateBasic implements Msg
+func (msg MsgVote) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
+	}
+	if !ValidVoteOption(msg.Option) {
+		return sdkerrors.Wrap(types.ErrInvalidVote, msg.Option.String())
 	}
 
 	return m, nil
@@ -99,8 +140,65 @@ func NewMsgVote(voter string, proposalID uint64, option VoteOption, metadata str
 }
 
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal
-func NewMsgVoteWeighted(voter string, proposalID uint64, options WeightedVoteOptions, metadata string) *MsgVoteWeighted {
-	return &MsgVoteWeighted{proposalID, voter, options, metadata}
+//
+//nolint:interfacer
+func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions, metadata string) *MsgVoteWeighted {
+	return &MsgVoteWeighted{proposalID, voter.String(), options, metadata}
+}
+
+// Route implements Msg
+func (msg MsgVoteWeighted) Route() string { return types.RouterKey }
+
+// Type implements Msg
+func (msg MsgVoteWeighted) Type() string { return sdk.MsgTypeURL(&msg) }
+
+// ValidateBasic implements Msg
+func (msg MsgVoteWeighted) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
+	}
+	if len(msg.Options) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
+	}
+
+	totalWeight := sdk.NewDec(0)
+	usedOptions := make(map[VoteOption]bool)
+	for _, option := range msg.Options {
+		if !option.IsValid() {
+			return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
+		}
+		weight, err := sdk.NewDecFromStr(option.Weight)
+		if err != nil {
+			return sdkerrors.Wrapf(types.ErrInvalidVote, "Invalid weight: %s", err)
+		}
+		totalWeight = totalWeight.Add(weight)
+		if usedOptions[option.Option] {
+			return sdkerrors.Wrap(types.ErrInvalidVote, "Duplicated vote option")
+		}
+		usedOptions[option.Option] = true
+	}
+
+	if totalWeight.GT(sdk.NewDec(1)) {
+		return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight overflow 1.00")
+	}
+
+	if totalWeight.LT(sdk.NewDec(1)) {
+		return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight lower than 1.00")
+	}
+
+	return nil
+}
+
+// GetSignBytes implements Msg
+func (msg MsgVoteWeighted) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners implements Msg
+func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
+	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
+	return []sdk.AccAddress{voter}
 }
 
 // NewMsgExecLegacyContent creates a new MsgExecLegacyContent instance.

@@ -23,8 +23,10 @@ const (
 )
 
 // NewVote creates a new Vote instance
-func NewVote(proposalID uint64, voter string, options WeightedVoteOptions, metadata string) Vote {
-	return Vote{ProposalId: proposalID, Voter: voter, Options: options, Metadata: metadata}
+//
+//nolint:interfacer
+func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions, metadata string) Vote {
+	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options, Metadata: metadata}
 }
 
 // Empty returns whether a vote is empty.

@@ -48,8 +48,8 @@ const (
 	OpMsgUpdateGroupMetadata             = "op_wieght_msg_update_group_metadata"
 	OpMsgUpdateGroupMembers              = "op_weight_msg_update_group_members"
 	OpMsgCreateGroupPolicy               = "op_weight_msg_create_group_account"
-	OpMsgCreateGroupWithPolicy           = "op_weight_msg_create_group_with_policy"
-	OpMsgUpdateGroupPolicyAdmin          = "op_weight_msg_update_group_account_admin"
+	OpMsgCreateGroupWithPolicy           = "op_weight_msg_create_group_with_policy"   //nolint:gosec
+	OpMsgUpdateGroupPolicyAdmin          = "op_weight_msg_update_group_account_admin" //nolint:gosec
 	OpMsgUpdateGroupPolicyDecisionPolicy = "op_weight_msg_update_group_account_decision_policy"
 	OpMsgUpdateGroupPolicyMetaData       = "op_weight_msg_update_group_account_metadata"
 	OpMsgSubmitProposal                  = "op_weight_msg_submit_proposal"

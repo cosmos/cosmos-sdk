@@ -659,6 +659,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 		},
 	}
 
+	//nolint:gocritic // else if chain should be refactored to switch
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {

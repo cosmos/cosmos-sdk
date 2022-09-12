@@ -1,9 +1,10 @@
 package cachekv
 
 import (
-	db "github.com/tendermint/tm-db"
 	"strconv"
 	"testing"
+
+	db "github.com/tendermint/tm-db"
 )
 
 func BenchmarkLargeUnsortedMisses(b *testing.B) {

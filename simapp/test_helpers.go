@@ -9,9 +9,7 @@ import (
 	"strconv"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmttypes "github.com/cometbft/cometbft/types"
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
@@ -226,13 +224,63 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 	return genesisState
 }
 
-// AddTestAddrsIncremental constructs and returns accNum amount of accounts with an
-// initial balance of accAmt in random order
-func AddTestAddrsIncremental(app *SimApp, ctx sdk.Context, accNum int, accAmt sdkmath.Int) []sdk.AccAddress {
-	return addTestAddrs(app, ctx, accNum, accAmt, simtestutil.CreateIncrementalAccounts)
+type GenerateAccountStrategy func(int) []sdk.AccAddress
+
+// createRandomAccounts is a strategy used by addTestAddrs() in order to generated addresses in random order.
+func createRandomAccounts(accNum int) []sdk.AccAddress {
+	testAddrs := make([]sdk.AccAddress, accNum)
+	for i := 0; i < accNum; i++ {
+		pk := ed25519.GenPrivKey().PubKey()
+		testAddrs[i] = sdk.AccAddress(pk.Address())
+	}
+
+	return testAddrs
 }
 
-func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdkmath.Int, strategy simtestutil.GenerateAccountStrategy) []sdk.AccAddress {
+// createIncrementalAccounts is a strategy used by addTestAddrs() in order to generated addresses in ascending order.
+func createIncrementalAccounts(accNum int) []sdk.AccAddress {
+	var addresses []sdk.AccAddress
+	var buffer bytes.Buffer
+
+	// start at 100 so we can make up to 999 test addresses with valid test addresses
+	for i := 100; i < (accNum + 100); i++ {
+		numString := strconv.Itoa(i)
+		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA6") // base address string
+
+		buffer.WriteString(numString) // adding on final two digits to make addresses unique
+		res, _ := sdk.AccAddressFromHexUnsafe(buffer.String())
+		bech := res.String()
+		addr, _ := TestAddr(buffer.String(), bech)
+
+		addresses = append(addresses, addr)
+		buffer.Reset()
+	}
+
+	return addresses
+}
+
+// AddTestAddrsFromPubKeys adds the addresses into the SimApp providing only the public keys.
+func AddTestAddrsFromPubKeys(app *SimApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt math.Int) {
+	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
+
+	for _, pk := range pubKeys {
+		initAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
+	}
+}
+
+// AddTestAddrs constructs and returns accNum amount of accounts with an
+// initial balance of accAmt in random order
+func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
+	return addTestAddrs(app, ctx, accNum, accAmt, createRandomAccounts)
+}
+
+// AddTestAddrsIncremental constructs and returns accNum amount of accounts with an
+// initial balance of accAmt in random order
+func AddTestAddrsIncremental(app *SimApp, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
+	return addTestAddrs(app, ctx, accNum, accAmt, createIncrementalAccounts)
+}
+
+func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt math.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 	bondDenom, err := app.StakingKeeper.BondDenom(ctx)
 	if err != nil {

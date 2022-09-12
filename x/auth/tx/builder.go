@@ -27,8 +27,12 @@ import (
 )
 
 var (
-	_ client.TxBuilder          = &builder{}
-	_ ExtensionOptionsTxBuilder = &builder{}
+	_ authsigning.Tx             = &wrapper{}
+	_ client.TxBuilder           = &wrapper{}
+	_ tx.TipTx                   = &wrapper{}
+	_ ante.HasExtensionOptionsTx = &wrapper{}
+	_ ExtensionOptionsTxBuilder  = &wrapper{}
+	_ tx.TipTx                   = &wrapper{}
 )
 
 func newBuilder(addressCodec address.Codec, decoder *decode.Decoder, codec codec.BinaryCodec) *builder {

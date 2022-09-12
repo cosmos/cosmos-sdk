@@ -8,7 +8,6 @@ import (
 	"unsafe"
 
 	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -41,9 +40,9 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// RandPositiveInt get a rand positive math.Int
+// RandPositiveInt get a rand positive sdk.Int
 func RandPositiveInt(r *rand.Rand, max math.Int) (math.Int, error) {
-	if !max.GTE(math.OneInt()) {
+	if !max.GTE(sdk.OneInt()) {
 		return math.Int{}, errors.New("max too small")
 	}
 
@@ -54,7 +53,7 @@ func RandPositiveInt(r *rand.Rand, max math.Int) (math.Int, error) {
 
 // RandomAmount generates a random amount
 // Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
+func RandomAmount(r *rand.Rand, max math.Int) math.Int {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {

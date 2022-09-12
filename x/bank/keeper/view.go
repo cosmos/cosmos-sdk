@@ -4,12 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/indexes"
-	"cosmossdk.io/core/appmodule"
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/bank/types"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -149,24 +145,51 @@ func (k BaseViewKeeper) GetBalance(ctx context.Context, addr sdk.AccAddress, den
 // IterateAccountBalances iterates over the balances of a single account and
 // provides the token balance to a callback. If true is returned from the
 // callback, iteration is halted.
-func (k BaseViewKeeper) IterateAccountBalances(ctx context.Context, addr sdk.AccAddress, cb func(sdk.Coin) bool) {
-	err := k.Balances.Walk(ctx, collections.NewPrefixedPairRange[sdk.AccAddress, string](addr), func(key collections.Pair[sdk.AccAddress, string], value math.Int) (stop bool, err error) {
-		return cb(sdk.NewCoin(key.K2(), value)), nil
-	})
-	if err != nil {
-		panic(err)
+func (k BaseViewKeeper) IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(sdk.Coin) bool) {
+	accountStore := k.getAccountStore(ctx, addr)
+
+	iterator := accountStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var amount math.Int
+		if err := amount.Unmarshal(iterator.Value()); err != nil {
+			panic(err)
+		}
+
+		if cb(sdk.NewCoin(string(iterator.Key()), amount)) {
+			break
+		}
 	}
 }
 
 // IterateAllBalances iterates over all the balances of all accounts and
 // denominations that are provided to a callback. If true is returned from the
 // callback, iteration is halted.
-func (k BaseViewKeeper) IterateAllBalances(ctx context.Context, cb func(sdk.AccAddress, sdk.Coin) bool) {
-	err := k.Balances.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, string], value math.Int) (stop bool, err error) {
-		return cb(key.K1(), sdk.NewCoin(key.K2(), value)), nil
-	})
-	if err != nil {
-		panic(err)
+func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddress, sdk.Coin) bool) {
+	store := ctx.KVStore(k.storeKey)
+	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
+
+	iterator := balancesStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		address, denom, err := types.AddressAndDenomFromBalancesStore(iterator.Key())
+		if err != nil {
+			k.Logger(ctx).With("key", iterator.Key(), "err", err).Error("failed to get address from balances store")
+			// TODO: revisit, for now, panic here to keep same behavior as in 0.42
+			// ref: https://github.com/cosmos/cosmos-sdk/issues/7409
+			panic(err)
+		}
+
+		var amount math.Int
+		if err := amount.Unmarshal(iterator.Value()); err != nil {
+			panic(err)
+		}
+
+		if cb(address, sdk.NewCoin(denom, amount)) {
+			break
+		}
 	}
 }
 

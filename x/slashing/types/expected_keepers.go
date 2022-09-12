@@ -1,13 +1,7 @@
 package types
 
 import (
-	"context"
-
-	st "cosmossdk.io/api/cosmos/staking/v1beta1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	stakingtypes "cosmossdk.io/x/staking/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -36,11 +30,10 @@ type StakingKeeper interface {
 	Validator(context.Context, sdk.ValAddress) (sdk.ValidatorI, error)            // get a particular validator by operator address
 	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (sdk.ValidatorI, error) // get a particular validator by consensus address
 
-	// slash the validator and delegators of the validator, specifying offense height, offense power, and slash fraction
-	Slash(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec) (math.Int, error)
-	SlashWithInfractionReason(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, st.Infraction) (math.Int, error)
-	Jail(context.Context, sdk.ConsAddress) error   // jail a validator
-	Unjail(context.Context, sdk.ConsAddress) error // unjail a validator
+	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
+	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) math.Int
+	Jail(sdk.Context, sdk.ConsAddress)   // jail a validator
+	Unjail(sdk.Context, sdk.ConsAddress) // unjail a validator
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.

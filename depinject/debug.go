@@ -261,7 +261,7 @@ func (c *debugConfig) enableLogVisualizer() {
 func (c *debugConfig) addFileVisualizer(filename string) {
 	c.visualizers = append(c.visualizers, func(_ string) {
 		dotStr := c.graph.String()
-		err := os.WriteFile(filename, []byte(dotStr), 0o600)
+		err := os.WriteFile(filename, []byte(dotStr), 0o644)
 		if err != nil {
 			c.logf("Error saving graphviz file %s: %+v", filename, err)
 		} else {

@@ -7,12 +7,10 @@ import (
 	"strings"
 	"time"
 
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
-
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -257,11 +255,10 @@ func (d Description) EnsureLength() (Description, error) {
 	return d, nil
 }
 
-// ModuleValidatorUpdate returns a appmodule.ValidatorUpdate from a staking validator type
-// with the full validator power.
-// It replaces the previous ABCIValidatorUpdate function.
-func (v Validator) ModuleValidatorUpdate(r math.Int) appmodule.ValidatorUpdate {
-	consPk, err := v.ConsPubKey()
+// ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
+// with the full validator power
+func (v Validator) ABCIValidatorUpdate(r math.Int) abci.ValidatorUpdate {
+	tmProtoPk, err := v.TmConsPublicKey()
 	if err != nil {
 		panic(err)
 	}
@@ -326,7 +323,7 @@ func (v Validator) TokensFromSharesRoundUp(shares math.LegacyDec) math.LegacyDec
 
 // SharesFromTokens returns the shares of a delegation given a bond amount. It
 // returns an error if the validator has no tokens.
-func (v Validator) SharesFromTokens(amt math.Int) (math.LegacyDec, error) {
+func (v Validator) SharesFromTokens(amt math.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
 		return math.LegacyZeroDec(), ErrInsufficientShares
 	}
@@ -336,7 +333,7 @@ func (v Validator) SharesFromTokens(amt math.Int) (math.LegacyDec, error) {
 
 // SharesFromTokensTruncated returns the truncated shares of a delegation given
 // a bond amount. It returns an error if the validator has no tokens.
-func (v Validator) SharesFromTokensTruncated(amt math.Int) (math.LegacyDec, error) {
+func (v Validator) SharesFromTokensTruncated(amt math.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
 		return math.LegacyZeroDec(), ErrInsufficientShares
 	}
@@ -376,7 +373,7 @@ func (v Validator) UpdateStatus(newStatus BondStatus) Validator {
 }
 
 // AddTokensFromDel adds tokens to a validator
-func (v Validator) AddTokensFromDel(amount math.Int) (Validator, math.LegacyDec) {
+func (v Validator) AddTokensFromDel(amount math.Int) (Validator, sdk.Dec) {
 	// calculate the shares to issue
 	var issuedShares math.LegacyDec
 	if v.DelegatorShares.IsZero() {
@@ -416,7 +413,7 @@ func (v Validator) RemoveTokens(tokens math.Int) Validator {
 // NOTE: because token fractions are left in the valiadator,
 //
 //	the exchange rate of future shares of this validator can increase.
-func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
+func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, math.Int) {
 	remainingShares := v.DelegatorShares.Sub(delShares)
 
 	var issuedTokens math.Int
@@ -508,9 +505,9 @@ func (v Validator) GetBondedTokens() math.Int { return v.BondedTokens() }
 func (v Validator) GetConsensusPower(r math.Int) int64 {
 	return v.ConsensusPower(r)
 }
-func (v Validator) GetCommission() math.LegacyDec      { return v.Commission.Rate }
-func (v Validator) GetMinSelfDelegation() math.Int     { return v.MinSelfDelegation }
-func (v Validator) GetDelegatorShares() math.LegacyDec { return v.DelegatorShares }
+func (v Validator) GetCommission() sdk.Dec         { return v.Commission.Rate }
+func (v Validator) GetMinSelfDelegation() math.Int { return v.MinSelfDelegation }
+func (v Validator) GetDelegatorShares() sdk.Dec    { return v.DelegatorShares }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validator) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {

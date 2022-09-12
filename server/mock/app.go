@@ -20,9 +20,9 @@ import (
 
 // NewApp creates a simple mock kvstore app for testing. It should work
 // similar to a real app. Make sure rootDir is empty before running the test,
-// in order to guarantee consistent results.
-func NewApp(rootDir string, logger log.Logger) (servertypes.ABCI, error) {
-	db, err := dbm.NewGoLevelDB("mock", filepath.Join(rootDir, "data"), nil)
+// in order to guarantee consistent results
+func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
+	db, err := sdk.NewLevelDB("mock", filepath.Join(rootDir, "data")) //nolint: staticcheck
 	if err != nil {
 		return nil, err
 	}

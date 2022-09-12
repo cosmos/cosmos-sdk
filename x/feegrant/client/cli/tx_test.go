@@ -626,8 +626,8 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 			name: "use --fee-payer and --fee-granter together works",
 			from: granteeAddr,
 			flags: []string{
-				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, granteeAddr),
-				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granterAddr),
+				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
 			},
 		},
 	}

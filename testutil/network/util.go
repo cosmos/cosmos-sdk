@@ -3,7 +3,7 @@ package network
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -238,7 +238,7 @@ func writeFile(name string, dir string, contents []byte) error {
 		return err
 	}
 
-	err = tmos.WriteFile(file, contents, 0o644)
+	err = os.WriteFile(file, contents, 0o644) // nolint: gosec
 	if err != nil {
 		return err
 	}

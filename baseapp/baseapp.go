@@ -4,30 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"maps"
-	"math"
-	"slices"
-	"strconv"
-	"sync"
+	"strings"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	"github.com/cometbft/cometbft/crypto/tmhash"
-	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/gogo/protobuf/proto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/tmhash"
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
-	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/server"
-	corestore "cosmossdk.io/core/store"
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/snapshots"
-	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/baseapp/oe"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -61,8 +46,15 @@ type BaseApp struct { //nolint: maligned
 	// initialized on creation
 	mu                sync.Mutex // mu protects the fields below.
 	logger            log.Logger
-	name              string // application name from abci.Info
-	interfaceRegistry types.InterfaceRegistry
+	name              string               // application name from abci.Info
+	db                dbm.DB               // common DB backend
+	cms               sdk.CommitMultiStore // Main (uncached) state
+	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
+	router            sdk.Router           // handle any kind of legacy message
+	queryRouter       sdk.QueryRouter      // router for redirecting query calls
+	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
+	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
+	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
 	anteHandler sdk.AnteHandler // ante handler for fee and auth

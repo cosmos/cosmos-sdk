@@ -395,3 +395,46 @@ func checkEqualVotes(t *testing.T, vote1, vote2 types.Vote) {
 	require.Equal(t, vote1.Voter, vote2.Voter)
 	require.Equal(t, vote1.ProposalId, vote2.ProposalId)
 }
+
+// checkEqualProposal checks that 2 proposals are equal.
+// When decoding with Amino, there are weird cases where the voting times
+// are actually equal, but `require.Equal()` says they are not:
+//
+// Diff:
+// --- Expected
+// +++ Actual
+// @@ -68,3 +68,7 @@
+//
+//	},
+//
+// - VotingStartTime: (*time.Time)(<nil>),
+// + VotingStartTime: (*time.Time)({
+// +  wall: (uint64) 0,
+// +  ext: (int64) 0,
+// +  loc: (*time.Location)(<nil>)
+// + }),
+func checkEqualProposal(t *testing.T, p1, p2 v1.Proposal) {
+	require.Equal(t, p1.Id, p2.Id)
+	require.Equal(t, p1.Messages, p2.Messages)
+	require.Equal(t, p1.Status, p2.Status)
+	require.Equal(t, p1.FinalTallyResult, p2.FinalTallyResult)
+	require.Equal(t, p1.SubmitTime, p2.SubmitTime)
+	require.Equal(t, p1.DepositEndTime, p2.DepositEndTime)
+	require.Equal(t, p1.TotalDeposit, p2.TotalDeposit)
+	require.Equal(t, convertNilToDefault(p1.VotingStartTime), convertNilToDefault(p2.VotingStartTime))
+	require.Equal(t, convertNilToDefault(p1.VotingEndTime), convertNilToDefault(p2.VotingEndTime))
+}
+
+// convertNilToDefault converts a (*time.Time)(<nil>) into a (*time.Time)(<default>)).
+// In proto structs dealing with time, we use *time.Time, which can be nil.
+// However, when using Amino, a nil time is unmarshalled into
+// (*time.Time)(<default>)), which is Jan 1st 1970.
+// This function converts a nil time to a default time, to check that they are
+// actually equal.
+func convertNilToDefault(t *time.Time) *time.Time {
+	if t == nil {
+		return &time.Time{}
+	}
+
+	return t
+}

@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-proto/anyutil"
-	"github.com/cosmos/gogoproto/jsonpb"
-	gogoproto "github.com/cosmos/gogoproto/proto"
+	legacyproto "github.com/golang/protobuf/proto" //nolint:staticcheck
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"

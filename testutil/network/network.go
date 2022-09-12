@@ -18,7 +18,8 @@ import (
 	"testing"
 	"time"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
+	"cosmossdk.io/math"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/node"
@@ -108,9 +109,9 @@ type Config struct {
 	Mnemonics        []string                   // custom user-provided validator operator mnemonics
 	BondDenom        string                     // the staking bond denomination
 	MinGasPrices     string                     // the minimum gas prices each validator will accept
-	AccountTokens    sdkmath.Int                // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens    sdkmath.Int                // the amount of tokens each validator has available to stake
-	BondedTokens     sdkmath.Int                // the amount of tokens each validator stakes
+	AccountTokens    math.Int                   // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens    math.Int                   // the amount of tokens each validator has available to stake
+	BondedTokens     math.Int                   // the amount of tokens each validator stakes
 	PruningStrategy  string                     // the pruning strategy each validator will have
 	EnableLogging    bool                       // enable logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup

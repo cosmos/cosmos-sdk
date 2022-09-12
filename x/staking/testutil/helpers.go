@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
@@ -80,8 +81,8 @@ func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, co
 	}
 }
 
-// Delegate calls staking module `MsgServer/Delegate` to delegate stake for a validator
-func (sh *Helper) Delegate(delegator, val string, amount math.Int) {
+// Delegate calls staking module staking module `MsgServer/Delegate` to delegate stake for a validator
+func (sh *Helper) Delegate(delegator sdk.AccAddress, val sdk.ValAddress, amount math.Int) {
 	coin := sdk.NewCoin(sh.Denom, amount)
 	msg := stakingtypes.NewMsgDelegate(delegator, val, coin)
 	res, err := sh.msgSrvr.Delegate(sh.Ctx, msg)
@@ -99,7 +100,7 @@ func (sh *Helper) DelegateWithPower(delegator, val string, power int64) {
 }
 
 // Undelegate calls staking module `MsgServer/Undelegate` to unbound some stake from a validator.
-func (sh *Helper) Undelegate(delegator, val string, amount math.Int, ok bool) {
+func (sh *Helper) Undelegate(delegator sdk.AccAddress, val sdk.ValAddress, amount math.Int, ok bool) {
 	unbondAmt := sdk.NewCoin(sh.Denom, amount)
 	msg := stakingtypes.NewMsgUndelegate(delegator, val, unbondAmt)
 	res, err := sh.msgSrvr.Undelegate(sh.Ctx, msg)

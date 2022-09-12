@@ -305,6 +305,25 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 			clientCtx = clientCtx.WithSignModeStr(flags.SignModeLegacyAminoJSON)
 		}
 	}
+
+	if !clientCtx.IsAux || flagSet.Changed(flags.FlagAux) {
+		isAux, _ := flagSet.GetBool(flags.FlagAux)
+		clientCtx = clientCtx.WithAux(isAux)
+		if isAux {
+			// If the user didn't explicitly set an --output flag, use JSON by
+			// default.
+			if clientCtx.OutputFormat == "" || !flagSet.Changed(cli.OutputFlag) {
+				clientCtx = clientCtx.WithOutputFormat("json")
+			}
+
+			// If the user didn't explicitly set a --sign-mode flag, use
+			// DIRECT_AUX by default.
+			if clientCtx.SignModeStr == "" || !flagSet.Changed(flags.FlagSignMode) {
+				clientCtx = clientCtx.WithSignModeStr(flags.SignModeDirectAux)
+			}
+		}
+	}
+
 	return clientCtx, nil
 }
 

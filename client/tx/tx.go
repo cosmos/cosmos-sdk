@@ -446,8 +446,7 @@ func Sign(ctx client.Context, txf Factory, name string, txBuilder client.TxBuild
 	if overwriteSig {
 		sigs = []signing.SignatureV2{sig}
 	} else {
-		sigs = append(sigs, prevSignatures...)
-		sigs = append(sigs, sig)
+		sigs = append(prevSignatures, sig) //nolint:gocritic
 	}
 	if err := txBuilder.SetSignatures(sigs...); err != nil {
 		return err

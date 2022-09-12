@@ -101,7 +101,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 		}
 	})
 
-	return err
+	return nil
 }
 
 // InterceptConfigsPreRunHandler is identical to InterceptConfigsAndCreateContext

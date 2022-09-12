@@ -20,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // we do old keys, they're keys after all.
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
+
+	legacybech32 "github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck
 )
 
 var (
@@ -128,7 +130,7 @@ func PubkeyCmd() *cobra.Command {
 }
 
 func bytesToPubkey(bz []byte, keytype string) (cryptotypes.PubKey, bool) {
-	if keytype == ed {
+	if keytype == "ed25519" { //nolint:goconst
 		if len(bz) == ed25519.PubKeySize {
 			return &ed25519.PubKey{Key: bz}, true
 		}
@@ -161,17 +163,17 @@ func getPubKeyFromRawString(pkstr, keytype string) (cryptotypes.PubKey, error) {
 		}
 	}
 
-	pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pkstr)
+	pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, pkstr) //nolint:staticcheck
 	if err == nil {
 		return pk, nil
 	}
 
-	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ValPK, pkstr)
+	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ValPK, pkstr) //nolint:staticcheck
 	if err == nil {
 		return pk, nil
 	}
 
-	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ConsPK, pkstr)
+	pk, err = legacybech32.UnmarshalPubKey(legacybech32.ConsPK, pkstr) //nolint:staticcheck
 	if err == nil {
 		return pk, nil
 	}
@@ -201,8 +203,8 @@ func PubkeyRawCmd() *cobra.Command {
 
 			var consensusPub string
 			edPK, ok := pk.(*ed25519.PubKey)
-			if ok && pubkeyType == ed {
-				consensusPub, err = legacybech32.MarshalPubKey(legacybech32.ConsPK, edPK)
+			if ok && pubkeyType == "ed25519" {
+				consensusPub, err = legacybech32.MarshalPubKey(legacybech32.ConsPK, edPK) //nolint:staticcheck
 				if err != nil {
 					return err
 				}
@@ -215,11 +217,11 @@ func PubkeyRawCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			accPub, err := legacybech32.MarshalPubKey(legacybech32.AccPK, pk)
+			accPub, err := legacybech32.MarshalPubKey(legacybech32.AccPK, pk) //nolint:staticcheck
 			if err != nil {
 				return err
 			}
-			valPub, err := legacybech32.MarshalPubKey(legacybech32.ValPK, pk)
+			valPub, err := legacybech32.MarshalPubKey(legacybech32.ValPK, pk) //nolint:staticcheck
 			if err != nil {
 				return err
 			}

@@ -2,7 +2,6 @@ package v1
 
 import (
 	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -10,14 +9,14 @@ import (
 type ValidatorGovInfo struct {
 	Address             sdk.ValAddress      // address of the validator operator
 	BondedTokens        math.Int            // Power of a Validator
-	DelegatorShares     math.LegacyDec      // Total outstanding delegator shares
-	DelegatorDeductions math.LegacyDec      // Delegator deductions from validator's delegators voting independently
+	DelegatorShares     sdk.Dec             // Total outstanding delegator shares
+	DelegatorDeductions sdk.Dec             // Delegator deductions from validator's delegators voting independently
 	Vote                WeightedVoteOptions // Vote of the validator
 }
 
 // NewValidatorGovInfo creates a ValidatorGovInfo instance
 func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens math.Int, delegatorShares,
-	delegatorDeductions math.LegacyDec, options WeightedVoteOptions,
+	delegatorDeductions sdk.Dec, options WeightedVoteOptions,
 ) ValidatorGovInfo {
 	return ValidatorGovInfo{
 		Address:             address,
@@ -29,7 +28,7 @@ func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens math.Int, delegato
 }
 
 // NewTallyResult creates a new TallyResult instance
-func NewTallyResult(option1, option2, option3, option4, spam math.Int) TallyResult {
+func NewTallyResult(yes, abstain, no, noWithVeto math.Int) TallyResult {
 	return TallyResult{
 		YesCount:         option1.String(), // deprecated, kept for client backwards compatibility
 		AbstainCount:     option2.String(), // deprecated, kept for client backwards compatibility

@@ -98,8 +98,8 @@ func (m Info) ValidateFull(daemonName string) error {
 //   - This has at least one entry.
 //   - All entry keys have the format "os/arch" or are "any".
 //   - All entry values are valid URLs.
-//   - When `enforceChecksum` is true all URLs must contain a checksum query parameter.
-func (m BinaryDownloadURLMap) ValidateBasic(enforceChecksum bool) error {
+//   - All URLs contain a checksum query parameter.
+func (m BinaryDownloadURLMap) ValidateBasic() error {
 	// Make sure there's at least one.
 	if len(m) == 0 {
 		return errors.New("no \"binaries\" entries found")

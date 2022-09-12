@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/btcsuite/btcd/btcec/v2"
+	"cosmossdk.io/math"
+	"github.com/btcsuite/btcd/btcec"
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -402,7 +403,7 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 // Amounts converts []sdk.Coin to rosetta amounts
 func (c converter) Amounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*rosettatypes.Amount {
 	amounts := make([]*rosettatypes.Amount, len(availableCoins))
-	ownedCoinsMap := make(map[string]sdk.Int, len(availableCoins))
+	ownedCoinsMap := make(map[string]math.Int, len(availableCoins))
 
 	for _, ownedCoin := range ownedCoins {
 		ownedCoinsMap[ownedCoin.Denom] = ownedCoin.Amount
@@ -557,7 +558,7 @@ func (c converter) Peers(peers []tmcoretypes.Peer) []*rosettatypes.Peer {
 
 	for i, peer := range peers {
 		converted[i] = &rosettatypes.Peer{
-			PeerID: string(peer.NodeInfo.Moniker),
+			PeerID: peer.NodeInfo.Moniker,
 			Metadata: map[string]interface{}{
 				"addr": peer.NodeInfo.ListenAddr,
 			},

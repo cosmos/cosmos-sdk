@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/math"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -86,10 +87,9 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(_, value []byte) error {
-		var result sdk.Coin
-		err := k.cdc.Unmarshal(value, &result)
-		if err != nil {
+	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
+		var amount math.Int
+		if err := amount.Unmarshal(value); err != nil {
 			return err
 		}
 		balances = append(balances, result)

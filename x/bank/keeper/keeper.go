@@ -4,12 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/bank/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -64,9 +59,22 @@ type BaseKeeper struct {
 type MintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
-func (k BaseKeeper) GetPaginatedTotalSupply(ctx context.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
-	coins, pageResp, err := query.CollectionPaginate(ctx, k.Supply, pagination, func(key string, value math.Int) (sdk.Coin, error) {
-		return sdk.NewCoin(key, value), nil
+func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	supply := sdk.NewCoins()
+
+	pageRes, err := query.Paginate(supplyStore, pagination, func(key, value []byte) error {
+		var amount math.Int
+		err := amount.Unmarshal(value)
+		if err != nil {
+			return fmt.Errorf("unable to convert amount string to Int %v", err)
+		}
+
+		// `Add` omits the 0 coins addition to the `supply`.
+		supply = supply.Add(sdk.NewCoin(string(key), amount))
+		return nil
 	})
 	if err != nil {
 		return nil, nil, err
@@ -212,8 +220,20 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 }
 
 // GetSupply retrieves the Supply from store
-func (k BaseKeeper) GetSupply(ctx context.Context, denom string) sdk.Coin {
-	amt, err := k.Supply.Get(ctx, denom)
+func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	bz := supplyStore.Get(conv.UnsafeStrToBytes(denom))
+	if bz == nil {
+		return sdk.Coin{
+			Denom:  denom,
+			Amount: sdk.NewInt(0),
+		}
+	}
+
+	var amount math.Int
+	err := amount.Unmarshal(bz)
 	if err != nil {
 		return sdk.NewCoin(denom, math.ZeroInt())
 	}
@@ -504,11 +524,27 @@ func (k BaseKeeper) trackUndelegation(ctx context.Context, addr sdk.AccAddress, 
 // IterateTotalSupply iterates over the total supply calling the given cb (callback) function
 // with the balance of each coin.
 // The iteration stops if the callback returns true.
-func (k BaseViewKeeper) IterateTotalSupply(ctx context.Context, cb func(sdk.Coin) bool) {
-	err := k.Supply.Walk(ctx, nil, func(s string, m math.Int) (bool, error) {
-		return cb(sdk.NewCoin(s, m)), nil
-	})
-	if err != nil {
-		panic(err)
+func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool) {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	iterator := supplyStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var amount math.Int
+		err := amount.Unmarshal(iterator.Value())
+		if err != nil {
+			panic(fmt.Errorf("unable to unmarshal supply value %v", err))
+		}
+
+		balance := sdk.Coin{
+			Denom:  string(iterator.Key()),
+			Amount: amount,
+		}
+
+		if cb(balance) {
+			break
+		}
 	}
 }

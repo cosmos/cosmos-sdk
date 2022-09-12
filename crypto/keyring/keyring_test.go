@@ -225,10 +225,14 @@ func TestNewKey(t *testing.T) {
 			_, err = kb.KeyByAddress(addr)
 			require.NoError(t, err)
 
-			addr, err = codectestutil.CodecOptions{}.GetAddressCodec().StringToBytes("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
-			require.NoError(t, err)
-			_, err = kb.KeyByAddress(addr)
-			require.NotNil(t, err)
+	// create some random directory inside the keyring directory to check migrate ignores
+	// all files other than *.info
+	newPath := filepath.Join(tempDir, "random")
+	require.NoError(t, os.Mkdir(newPath, 0o755))
+	items, err := os.ReadDir(tempDir)
+	require.GreaterOrEqual(t, len(items), 2)
+	keyS, err = kb.List()
+	require.NoError(t, err)
 
 			// list shows them in order
 			keyS, err := kb.List()

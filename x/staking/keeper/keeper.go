@@ -4,16 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	gogotypes "github.com/cosmos/gogoproto/types"
-
-	"cosmossdk.io/collections"
-	collcodec "cosmossdk.io/collections/codec"
-	"cosmossdk.io/collections/indexes"
-	addresscodec "cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -319,17 +312,26 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	k.hooks = sh
 }
 
-// GetAuthority returns the x/staking module's authority.
-func (k Keeper) GetAuthority() string {
-	return k.authority
-}
+// Load the last total validator power.
+func (k Keeper) GetLastTotalPower(ctx sdk.Context) math.Int {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.LastTotalPowerKey)
+
+	if bz == nil {
+		return sdk.ZeroInt()
+	}
+
+	ip := sdk.IntProto{}
+	k.cdc.MustUnmarshal(bz, &ip)
 
 // ValidatorAddressCodec returns the app validator address codec.
 func (k Keeper) ValidatorAddressCodec() addresscodec.Codec {
 	return k.validatorAddressCodec
 }
 
-// ConsensusAddressCodec returns the app consensus address codec.
-func (k Keeper) ConsensusAddressCodec() addresscodec.Codec {
-	return k.consensusAddressCodec
+// Set the last total validator power.
+func (k Keeper) SetLastTotalPower(ctx sdk.Context, power math.Int) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: power})
+	store.Set(types.LastTotalPowerKey, bz)
 }

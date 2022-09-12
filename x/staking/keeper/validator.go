@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	gogotypes "github.com/cosmos/gogoproto/types"
+	"cosmossdk.io/math"
+	gogotypes "github.com/gogo/protobuf/types"
 
 	"cosmossdk.io/collections"
 	corestore "cosmossdk.io/core/store"
@@ -126,7 +127,7 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx context.Context, validator types
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
-	tokensToAdd sdk.Int,
+	tokensToAdd math.Int,
 ) (valOut types.Validator, addedShares sdk.Dec) {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, addedShares = validator.AddTokensFromDel(tokensToAdd)
@@ -142,7 +143,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
 	sharesToRemove sdk.Dec,
-) (valOut types.Validator, removedTokens sdk.Int) {
+) (valOut types.Validator, removedTokens math.Int) {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, removedTokens = validator.RemoveDelShares(sharesToRemove)
 	err = k.SetValidator(ctx, validator)
@@ -156,7 +157,7 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
-	validator types.Validator, tokensToRemove sdk.Int,
+	validator types.Validator, tokensToRemove math.Int,
 ) types.Validator {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator = validator.RemoveTokens(tokensToRemove)

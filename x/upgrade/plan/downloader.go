@@ -22,6 +22,7 @@ import (
 //	If the archive does not contain a /bin/{daemonName} file, then this will attempt to move /{daemonName} to /bin/{daemonName}.
 //	If the archive does not contain either /bin/{daemonName} or /{daemonName}, an error is returned.
 //
+// Note: Because a checksum is required, this function cannot be used to download non-archive directories.
 // If dstRoot already exists, some or all of its contents might be updated.
 // NOTE: This functions does not check the provided url for validity.
 func DownloadUpgrade(dstRoot, url, daemonName string) error {
@@ -101,12 +102,15 @@ func EnsureBinary(path string) error {
 // The provided url can contain a checksum parameter that matches the file being downloaded.
 // If there isn't an error, the content returned by the url will be returned as a string.
 // Returns an error if:
-//   - The url is not a URL or does not contain a checksum parameter (when required).
+//   - The url is not a URL or does not contain a checksum parameter.
 //   - Downloading the URL fails.
 //   - The checksum does not match what is returned by the URL.
 //   - The URL does not return a regular file.
 //   - The downloaded file is empty or only whitespace.
-func DownloadURL(url string) (string, error) {
+func DownloadURLWithChecksum(url string) (string, error) {
+	if err := ValidateIsURLWithChecksum(url); err != nil {
+		return "", err
+	}
 	tempDir, err := os.MkdirTemp("", "reference")
 	if err != nil {
 		return "", fmt.Errorf("could not create temp directory: %w", err)

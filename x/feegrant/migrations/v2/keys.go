@@ -23,12 +23,10 @@ var (
 //
 // Key format:
 // - <0x01><exp_bytes><len(grantee_address_bytes)><grantee_address_bytes><len(granter_address_bytes)><granter_address_bytes>
-func FeeAllowancePrefixQueue(exp *time.Time, granterAddrBz []byte) []byte {
-	// no need of appending len(exp_bytes) here, `FormatTimeBytes` gives const length every time.
-	var key []byte
-	key = append(key, FeeAllowanceQueueKeyPrefix...)
-	key = append(key, sdk.FormatTimeBytes(*exp)...)
-	return append(key, granterAddrBz...)
+func FeeAllowancePrefixQueue(exp *time.Time, key []byte) []byte {
+	// no need of appending len(exp_bytes) here, `FormatTimeBytes` gives const length everytime.
+	allowanceByExpTimeKey := append(FeeAllowanceQueueKeyPrefix, sdk.FormatTimeBytes(*exp)...) //nolint:gocritic
+	return append(allowanceByExpTimeKey, key...)
 }
 
 // FeeAllowanceKey is the canonical key to store a grant from granter to grantee

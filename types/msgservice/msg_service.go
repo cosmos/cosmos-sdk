@@ -1,6 +1,10 @@
 package msgservice
 
 import (
+	"bytes"
+	"compress/gzip"
+	"fmt"
+	"io"
 	"reflect"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -37,4 +41,15 @@ func RegisterMsgServiceDesc(registrar registry.InterfaceRegistrar, sd *grpc.Serv
 			registrar.RegisterImplementations((*tx.MsgResponse)(nil), res.(proto.Message))
 		}
 	}
+	r, err := gzip.NewReader(bytes.NewReader(b))
+	if err != nil {
+		panic(err)
+	}
+
+	unzipped, err := io.ReadAll(r)
+	if err != nil {
+		panic(err)
+	}
+
+	return unzipped
 }

@@ -75,8 +75,8 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 		}
 	}
 
-	granterStr, err := k.authKeeper.AddressCodec().BytesToString(granter)
-	if err != nil {
+	newExp, err := feeAllowance.ExpiresAt()
+	if err != nil { //nolint:gocritic // should be rewritten to a switch statement
 		return err
 	}
 	granteeStr, err := k.authKeeper.AddressCodec().BytesToString(grantee)

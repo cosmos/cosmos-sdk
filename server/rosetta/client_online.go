@@ -36,8 +36,10 @@ import (
 // interface assertion
 var _ crgtypes.Client = (*Client)(nil)
 
-const defaultNodeTimeout = time.Minute
-const tmWebsocketPath = "/websocket"
+const (
+	defaultNodeTimeout = time.Minute
+	tmWebsocketPath    = "/websocket"
+)
 
 // Client implements a single network client to interact with cosmos based chains
 type Client struct {
@@ -99,7 +101,7 @@ func NewClient(cfg *Config) (*Client, error) {
 
 // Bootstrap is gonna connect the client to the endpoints
 func (c *Client) Bootstrap() error {
-	grpcConn, err := grpc.Dial(c.config.GRPCEndpoint, grpc.WithInsecure())
+	grpcConn, err := grpc.Dial(c.config.GRPCEndpoint, grpc.WithInsecure()) //nolint:staticcheck
 	if err != nil {
 		return err
 	}

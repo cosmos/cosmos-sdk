@@ -4283,12 +4283,12 @@ BREAKING CHANGES
     - [x/gov] [\#1914](https://github.com/cosmos/cosmos-sdk/issues/1914) added TallyResult type that gets stored in Proposal after tallying is finished
 
 * SDK
-    - [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
-    - [baseapp] NewBaseApp constructor takes sdk.TxDecoder as argument instead of wire.Codec
-    - [types] sdk.NewCoin takes sdk.Int, sdk.NewInt64Coin takes int64
-    - [x/auth] Default TxDecoder can be found in `x/auth` rather than baseapp
-    - [client] [\#1551](https://github.com/cosmos/cosmos-sdk/issues/1551): Refactored `CoreContext` to `TxContext` and `QueryContext`
-        - Removed all tx related fields and logic (building & signing) to separate
+    * [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
+    * [baseapp] NewBaseApp constructor takes sdk.TxDecoder as argument instead of wire.Codec
+    * [types] sdk.NewCoin takes math.Int, sdk.NewInt64Coin takes int64
+    * [x/auth] Default TxDecoder can be found in `x/auth` rather than baseapp
+    * [client] [\#1551](https://github.com/cosmos/cosmos-sdk/issues/1551): Refactored `CoreContext` to `TxContext` and `QueryContext`
+        * Removed all tx related fields and logic (building & signing) to separate
         structure `TxContext` in `x/auth/client/context`
 
 * Tendermint
@@ -4610,7 +4610,7 @@ BREAKING CHANGES
 
 * msg.GetSignBytes() now returns bech32-encoded addresses in all cases
 * [lcd] REST end-points now include gas
-* sdk.Coin now uses sdk.Int, a big.Int wrapper with 256bit range cap
+* sdk.Coin now uses math.Int, a big.Int wrapper with 256bit range cap
 
 FEATURES
 

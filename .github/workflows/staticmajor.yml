@@ -1,0 +1,21 @@
+name: Staticmajor
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  run_staticmajor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Staticmajor action
+        id: staticmajor
+        uses: orijtech/staticmajor-action@main
+        with:
+            packages: ./...
+            resleak: true
+            structslop: false

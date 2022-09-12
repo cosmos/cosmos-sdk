@@ -862,7 +862,7 @@ func (coins Coins) Sort() Coins {
 // Parsing
 
 var (
-	// Denominations can be 3 ~ 128 characters long and support letters, followed by either
+	// Denominations can be 3 ~ 128 characters long and support letters and emojis, followed by either
 	// a letter, a number or a separator ('/', ':', '.', '_' or '-'), or an emoji.
 	reDnmString = fmt.Sprintf(`([a-zA-Z]|%s)([a-zA-Z0-9/:._-]|%s){1,127}`, reEmoji, reEmoji)
 	reEmoji     = `\x{00a9}|\x{00ae}|[\x{2000}-\x{3300}]|\x{d83c}[\x{d000}-\x{dfff}]|\x{d83d}[\x{d000}-\x{dfff}]|\x{d83e}[\x{d000}-\x{dfff}]`

@@ -144,13 +144,8 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 						continue
 					}
 
-					// Create a new coins based on the accounts old coins + new coin appended
-					new_coins, err := sdk.ParseCoinsNormalized(acc.Coins.Add(coins...).String())
-					if err != nil {
-						return fmt.Errorf("failed to parse coins: %w", err)
-					}
-
-					bankGenState.Balances[idx] = banktypes.Balance{Address: addr.String(), Coins: new_coins.Sort()}
+					updated_coins := acc.Coins.Add(coins...).Sort()
+					bankGenState.Balances[idx] = banktypes.Balance{Address: addr.String(), Coins: updated_coins.Sort()}
 					break
 				}
 			} else {

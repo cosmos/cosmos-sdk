@@ -84,19 +84,17 @@ type ResultValidatorsOutput struct {
 func (rvo ResultValidatorsOutput) String() string {
 	var b strings.Builder
 
-	b.WriteString(fmt.Sprintf("block height: %d\n", rvo.BlockHeight))
-	b.WriteString(fmt.Sprintf("total count: %d\n", rvo.Total))
+	fmt.Fprintf(&b, "block height: %d\n", rvo.BlockHeight)
+	fmt.Fprintf(&b, "total count: %d\n", rvo.Total)
 
 	for _, val := range rvo.Validators {
-		b.WriteString(
-			fmt.Sprintf(`
+		fmt.Fprintf(&b, `
   Address:          %s
   Pubkey:           %s
   ProposerPriority: %d
   VotingPower:      %d
 		`,
-				val.Address, val.PubKey, val.ProposerPriority, val.VotingPower,
-			),
+			val.Address, val.PubKey, val.ProposerPriority, val.VotingPower,
 		)
 	}
 

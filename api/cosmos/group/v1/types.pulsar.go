@@ -3,18 +3,19 @@ package groupv1
 
 import (
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var (
@@ -7950,7 +7951,7 @@ type Proposal struct {
 	// whichever happens first.
 	FinalTallyResult *TallyResult `protobuf:"bytes,9,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result,omitempty"`
 	// voting_period_end is the timestamp before which voting must be done.
-	// Unless a successfull MsgExec is called before (to execute a proposal whose
+	// Unless a successful MsgExec is called before (to execute a proposal whose
 	// tally is successful before the voting period ends), tallying will be done
 	// at this point, and the `final_tally_result`and `status` fields will be
 	// accordingly updated.

@@ -10,10 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/rs/zerolog"
 )
 
 // environment variable names
@@ -379,7 +380,7 @@ func (cfg Config) DetailString() string {
 	var sb strings.Builder
 	sb.WriteString("Configurable Values:\n")
 	for _, kv := range configEntries {
-		sb.WriteString(fmt.Sprintf("  %s: %s\n", kv.name, kv.value))
+		fmt.Fprintf(&sb, "  %s: %s\n", kv.name, kv.value)
 	}
 	sb.WriteString("Derived Values:\n")
 	dnl := 0
@@ -390,7 +391,7 @@ func (cfg Config) DetailString() string {
 	}
 	dFmt := fmt.Sprintf("  %%%ds: %%s\n", dnl)
 	for _, kv := range derivedEntries {
-		sb.WriteString(fmt.Sprintf(dFmt, kv.name, kv.value))
+		fmt.Fprintf(&sb, dFmt, kv.name, kv.value)
 	}
 	return sb.String()
 }

@@ -2,6 +2,7 @@ name: Build & Push
 # Build & Push builds the simapp docker image on every push to main and
 # and pushes the image to https://hub.docker.com/r/interchainio/simapp/tags
 on:
+  pull_request:
   push:
     branches:
       - main

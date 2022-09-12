@@ -22,7 +22,6 @@ message QueryAccountInfoRequest {
 
 // QueryAccountInfoResponse is the Query/AccountInfo response type.
 message QueryAccountInfoResponse {
-
   // info is the account info.
   AccountInfo info = 1;
 }

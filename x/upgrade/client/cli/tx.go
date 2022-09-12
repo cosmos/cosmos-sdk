@@ -59,7 +59,7 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 				return err
 			}
 			if !noValidate {
-				prop := content.(*types.SoftwareUpgradeProposal)
+				prop := content.(*types.SoftwareUpgradeProposal) //nolint:staticcheck
 				var daemonName string
 				if daemonName, err = cmd.Flags().GetString(FlagDaemonName); err != nil {
 					return err
@@ -93,8 +93,8 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")             //nolint:staticcheck
+	cmd.Flags().String(cli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
 	cmd.Flags().String(FlagUpgradeInfo, "", "Info for the upgrade plan such as new version download urls, etc.")
@@ -129,12 +129,12 @@ func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			title, err := cmd.Flags().GetString(cli.FlagTitle)
+			title, err := cmd.Flags().GetString(cli.FlagTitle) //nolint:staticcheck
 			if err != nil {
 				return err
 			}
 
-			description, err := cmd.Flags().GetString(cli.FlagDescription)
+			description, err := cmd.Flags().GetString(cli.FlagDescription) //nolint:staticcheck
 			if err != nil {
 				return err
 			}
@@ -150,11 +150,11 @@ func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")             //nolint:staticcheck
+	cmd.Flags().String(cli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	cmd.MarkFlagRequired(cli.FlagTitle)
-	cmd.MarkFlagRequired(cli.FlagDescription)
+	cmd.MarkFlagRequired(cli.FlagTitle)       //nolint:staticcheck
+	cmd.MarkFlagRequired(cli.FlagDescription) //nolint:staticcheck
 
 	return cmd
 }

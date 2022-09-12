@@ -217,7 +217,8 @@ func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
 }
 
 // UpgradeSkipHeights gets all the heights provided when
-// 		simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
+//
+//	simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
 func UpgradeSkipHeights(args []string) []int {
 	var heights []int
 	for i, arg := range args {

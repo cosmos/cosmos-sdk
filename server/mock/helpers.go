@@ -2,7 +2,6 @@ package mock
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/rs/zerolog"
@@ -23,7 +22,7 @@ func SetupApp() (abci.Application, func(), error) {
 	}
 	logger = logger.With("module", "mock")
 
-	rootDir, err := ioutil.TempDir("", "mock-sdk")
+	rootDir, err := os.MkdirTemp("", "mock-sdk")
 	if err != nil {
 		return nil, nil, err
 	}

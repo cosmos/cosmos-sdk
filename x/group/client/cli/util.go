@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,7 +15,7 @@ func parseDecisionPolicy(cdc codec.Codec, decisionPolicyFile string) (group.Deci
 		return nil, fmt.Errorf("decision policy is required")
 	}
 
-	contents, err := ioutil.ReadFile(decisionPolicyFile)
+	contents, err := os.ReadFile(decisionPolicyFile)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +35,7 @@ func parseMembers(membersFile string) ([]group.MemberRequest, error) {
 		return members.Members, nil
 	}
 
-	contents, err := ioutil.ReadFile(membersFile)
+	contents, err := os.ReadFile(membersFile)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +50,7 @@ func parseMembers(membersFile string) ([]group.MemberRequest, error) {
 
 func execFromString(execStr string) group.Exec {
 	exec := group.Exec_EXEC_UNSPECIFIED
-	switch execStr {
+	switch execStr { //nolint:gocritic
 	case ExecTry:
 		exec = group.Exec_EXEC_TRY
 	}

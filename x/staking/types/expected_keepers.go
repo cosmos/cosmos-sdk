@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -55,11 +56,11 @@ type ValidatorSet interface {
 
 	Validator(sdk.Context, sdk.ValAddress) ValidatorI            // get a particular validator by operator address
 	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) ValidatorI // get a particular validator by consensus address
-	TotalBondedTokens(sdk.Context) sdk.Int                       // total bonded tokens within the validator set
-	StakingTokenSupply(sdk.Context) sdk.Int                      // total staking token supply
+	TotalBondedTokens(sdk.Context) math.Int                      // total bonded tokens within the validator set
+	StakingTokenSupply(sdk.Context) math.Int                     // total staking token supply
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
-	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) sdk.Int
+	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) math.Int
 	Jail(sdk.Context, sdk.ConsAddress)   // jail a validator
 	Unjail(sdk.Context, sdk.ConsAddress) // unjail a validator
 

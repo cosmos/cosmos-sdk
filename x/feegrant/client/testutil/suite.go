@@ -781,7 +781,8 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 			from: grantee.String(),
 			flags: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFeePayer, grantee.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String())},
+				fmt.Sprintf("--%s=%s", flags.FlagFeeGranter, granter.String()),
+			},
 		},
 	}
 
@@ -798,7 +799,6 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 			s.Require().Equal(tc.expErrCode, resp.Code, resp)
 		})
 	}
-
 }
 
 func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {

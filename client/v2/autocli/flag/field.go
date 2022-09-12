@@ -26,7 +26,7 @@ type Options struct {
 }
 
 // AddFieldFlag adds a flag for the provided field to the flag set.
-func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, opts *autocliv1.FlagOptions, options Options) FieldValueBinder {
+func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, opts *autocliv1.FlagOptions, options Options) (FieldValueBinder, error) {
 	if field.Kind() == protoreflect.MessageKind && field.Message().FullName() == "cosmos.base.query.v1beta1.PageRequest" {
 		return b.bindPageRequest(ctx, flagSet, field)
 	}
@@ -43,53 +43,38 @@ func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 
 	shorthand := opts.Shorthand
 
-	if typ := b.resolveFlagType(field); typ != nil {
-		defaultValue := opts.DefaultValue
-		if defaultValue == "" {
-			defaultValue = typ.DefaultValue()
-		}
-
-		val := typ.NewValue(ctx, b)
-		flagSet.AddFlag(&pflag.Flag{
-			Name:                name,
-			Shorthand:           shorthand,
-			Usage:               usage,
-			DefValue:            defaultValue,
-			Deprecated:          opts.Deprecated,
-			ShorthandDeprecated: opts.ShorthandDeprecated,
-			Hidden:              opts.Hidden,
-			NoOptDefVal:         opts.NoOptDefaultValue,
-			Value:               val,
-		})
-		switch val := val.(type) {
-		case SimpleValue:
-			return simpleValueBinder{val}
-		case ListValue:
-			return listValueBinder{val}
-		default:
-			panic(fmt.Errorf("%T does not implement SimpleValue or ListValue", val))
-		}
+	typ := b.resolveFlagType(field)
+	if typ == nil {
+		return nil, fmt.Errorf("unable to bind field %v", field)
 	}
 
-	if field.IsList() {
-		if value := bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage); value != nil {
-			return listValueBinder{value}
-		}
-		return nil
+	defaultValue := opts.DefaultValue
+	if defaultValue == "" {
+		defaultValue = typ.DefaultValue()
 	}
 
-	if value := bindSimpleFlag(flagSet, field.Kind(), name, shorthand, usage); value != nil {
-		return simpleValueBinder{value}
-	}
+	val := typ.NewValue(ctx, b)
+	flagSet.AddFlag(&pflag.Flag{
+		Name:                name,
+		Shorthand:           shorthand,
+		Usage:               usage,
+		DefValue:            defaultValue,
+		Deprecated:          opts.Deprecated,
+		ShorthandDeprecated: opts.ShorthandDeprecated,
+		Hidden:              opts.Hidden,
+		NoOptDefVal:         opts.NoOptDefaultValue,
+		Value:               val,
+	})
 
-	return nil
+	return val, nil
 }
 
 func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 	typ := b.resolveFlagTypeBasic(field)
 	if field.IsList() {
 		if typ != nil {
-			return compositeListType{simpleType: typ}
+			//return compositeListType{simpleType: typ}
+			panic("TODO")
 		}
 
 		return nil

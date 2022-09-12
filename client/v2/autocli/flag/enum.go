@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
-	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -14,7 +13,7 @@ type enumType struct {
 	enum protoreflect.EnumDescriptor
 }
 
-func (b enumType) NewValue(context.Context, *Builder) pflag.Value {
+func (b enumType) NewValue(context.Context, *Builder) Value {
 	val := &enumValue{
 		enum:   b.enum,
 		valMap: map[string]protoreflect.EnumValueDescriptor{},
@@ -39,6 +38,10 @@ type enumValue struct {
 	enum   protoreflect.EnumDescriptor
 	value  protoreflect.EnumNumber
 	valMap map[string]protoreflect.EnumValueDescriptor
+}
+
+func (e enumValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
+	message.Set(field, protoreflect.ValueOfEnum(e.value))
 }
 
 func (e enumValue) Get() protoreflect.Value {

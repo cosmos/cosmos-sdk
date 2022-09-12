@@ -1,6 +1,7 @@
 package flag
 
 import (
+	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -14,4 +15,9 @@ type SimpleValue interface {
 type ListValue interface {
 	// AppendTo appends the values to the provided list.
 	AppendTo(protoreflect.List)
+}
+
+type Value interface {
+	pflag.Value
+	FieldValueBinder
 }

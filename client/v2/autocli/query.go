@@ -73,7 +73,7 @@ func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor 
 				methodOpts = option
 			}
 		}
-		cmd := b.CreateQueryMethodCommand(methodDescriptor, methodOpts)
+		cmd, _ := b.CreateQueryMethodCommand(methodDescriptor, methodOpts)
 		if cmd != nil {
 			command.AddCommand(cmd)
 		}
@@ -86,9 +86,9 @@ func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor 
 }
 
 // CreateQueryMethodCommand creates a gRPC query command for the given service method.
-func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) *cobra.Command {
+func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
 	if options != nil && options.Skip {
-		return nil
+		return nil, nil
 	}
 
 	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
@@ -121,7 +121,10 @@ func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescrip
 		Version:    options.Version,
 	}
 
-	binder := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options, flag.Options{})
+	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options, flag.Options{})
+	if err != nil {
+		return nil, err
+	}
 
 	jsonMarshalOptions := protojson.MarshalOptions{
 		Indent:          "  ",
@@ -134,7 +137,7 @@ func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescrip
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 		clientConn := getClientConn(ctx)
-		input := binder.BuildMessage()
+		input := binder.BuildMessage(args)
 		output := outputType.New()
 		err := clientConn.Invoke(ctx, methodName, input.Interface(), output.Interface())
 		if err != nil {
@@ -150,7 +153,7 @@ func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescrip
 		return err
 	}
 
-	return cmd
+	return cmd, nil
 }
 
 func protoNameToCliName(name protoreflect.Name) string {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -16,7 +15,7 @@ type jsonMessageFlagType struct {
 	messageDesc protoreflect.MessageDescriptor
 }
 
-func (j jsonMessageFlagType) NewValue(_ context.Context, builder *Builder) pflag.Value {
+func (j jsonMessageFlagType) NewValue(_ context.Context, builder *Builder) Value {
 	return &jsonMessageFlagValue{
 		messageType:          util.ResolveMessageType(builder.TypeResolver, j.messageDesc),
 		jsonMarshalOptions:   protojson.MarshalOptions{Resolver: builder.TypeResolver},
@@ -33,6 +32,10 @@ type jsonMessageFlagValue struct {
 	jsonUnmarshalOptions protojson.UnmarshalOptions
 	messageType          protoreflect.MessageType
 	message              proto.Message
+}
+
+func (j jsonMessageFlagValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
+	message.Set(field, protoreflect.ValueOfMessage(j.message.ProtoReflect()))
 }
 
 func (j jsonMessageFlagValue) Get() protoreflect.Value {

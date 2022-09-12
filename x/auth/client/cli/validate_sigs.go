@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -82,16 +83,27 @@ func printAndValidateSigs(
 	}
 
 	for i, sig := range sigs {
+		acc, err := clientCtx.AccountRetriever.GetAccount(clientCtx, signers[i])
+		if err != nil {
+			cmd.PrintErrf("failed to get account: %s. Error: %w", signers[i], err)
+			return false
+		}
+
 		var (
 			pubKey         = sig.PubKey
 			multiSigHeader string
 			multiSigMsg    string
-			sigAddr        = sdk.AccAddress(pubKey.Address())
+			sigAddr        = acc.GetAddress()
 			sigSanity      = "OK"
 		)
 
 		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
 			sigSanity = "ERROR: signature does not match its respective signer"
+			success = false
+		}
+
+		if !bytes.Equal(sig.PubKey.Address(), acc.GetPubKey().Address()) {
+			sigSanity = "ERROR: signature pubkey does not match its respective signer's pubkey"
 			success = false
 		}
 

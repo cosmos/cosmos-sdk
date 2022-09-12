@@ -1,17 +1,14 @@
 package types
 
-import (
-	"github.com/cosmos/cosmos-sdk/codec"
-)
-
 // MempoolTx we define an app-side mempool transaction interface that is as
 // minimal as possible, only requiring applications to define the size of the
 // transaction to be used when reaping and getting the transaction itself.
 // Interface type casting can be used in the actual app-side mempool implementation.
 type MempoolTx interface {
+	Tx
+
 	// Size returns the size of the transaction in bytes.
-	Size(codec.Codec) int
-	Tx() Tx
+	Size() int
 }
 
 type Mempool interface {

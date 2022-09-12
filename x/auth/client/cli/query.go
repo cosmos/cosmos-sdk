@@ -391,6 +391,35 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 	return cmd
 }
 
+// GetPubKeyFromStore gets the pubkey mapping of the account from store
+func GetPubKeyFromStore() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pubkey [address]",
+		Short: "Get pubkey from the account store",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			address := args[0]
+
+			res, err := queryClient.GetPubKeyFromStore(cmd.Context(), &types.GetPubKeyFromStoreRequest{AddressString: address})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // ParseSigArgs parses comma-separated signatures from the CLI arguments.
 func ParseSigArgs(args []string) ([]string, error) {
 	if len(args) != 1 || args[0] == "" {

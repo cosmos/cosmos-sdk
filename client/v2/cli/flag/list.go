@@ -48,17 +48,16 @@ import (
 //	}
 //}
 
-func compositeListType(simpleType Type) Type {
-	return Type{
-		NewValue: func(ctx context.Context, builder *Builder) Value {
+type compositeListType struct {
+	simpleType Type
+}
 
-			return &compositeListValue{
-				simpleType: simpleType,
-				values:     nil,
-				ctx:        ctx,
-				opts:       builder,
-			}
-		},
+func (t compositeListType) NewValue(ctx context.Context, opts *Builder) Value {
+	return &compositeListValue{
+		simpleType: t.simpleType,
+		values:     nil,
+		ctx:        ctx,
+		opts:       opts,
 	}
 }
 

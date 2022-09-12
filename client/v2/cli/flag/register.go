@@ -35,9 +35,9 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 			hasVarargs = true
 		}
 
-		typ, err := b.resolveFlagType(field)
-		if err != nil {
-			return nil, err
+		typ := b.resolveFlagType(field)
+		if typ == nil {
+			return nil, fmt.Errorf("can't resolve field %v", field)
 		}
 
 		value := typ.NewValue(ctx, b)

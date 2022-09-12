@@ -7,12 +7,14 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-var int32Type = Type{
-	NewValue: func(ctx context.Context, builder *Builder) Value {
-		v := new(int32)
-		return (*int32Value)(v)
-	},
+type int32Type struct{}
+
+func (t int32Type) NewValue(context.Context, *Builder) Value {
+	v := new(int32)
+	return (*int32Value)(v)
 }
+
+var _ Type = int32Type{}
 
 type int32Value int32
 

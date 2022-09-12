@@ -48,90 +48,92 @@ func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 
 	shorthand := opts.Shorthand
 
-	typ, found := b.resolveFlagType(field)
-	if !found {
-		return nil, fmt.Errorf("can't resolve field %v", field)
+	typ := b.resolveFlagType(field)
+	if typ == nil {
+		return nil, fmt.Errorf("unable to bind field %v", field)
 	}
 
 	defaultValue := opts.DefaultValue
 	if defaultValue == "" {
-		defaultValue = typ.DefaultValue
+		if hasDefaultValue, ok := typ.(HasDefaultValue); ok {
+			defaultValue = hasDefaultValue.DefaultValue()
+		}
 	}
 
-	noOptDefVal := opts.NoOptDefaultValue
-	if noOptDefVal == "" {
-		noOptDefVal = typ.NoOptDefaultValue
+	noOptDefaultValue := opts.NoOptDefaultValue
+	if noOptDefaultValue == "" {
+		if hasNoOptDefaultValue, ok := typ.(HasNoOptDefaultValue); ok {
+			noOptDefaultValue = hasNoOptDefaultValue.NoOptDefaultValue()
+		}
 	}
 
 	val := typ.NewValue(ctx, b)
 	flagSet.AddFlag(&pflag.Flag{
 		Name:                name,
+		Value:               val,
 		Shorthand:           shorthand,
 		Usage:               usage,
 		DefValue:            defaultValue,
+		NoOptDefVal:         noOptDefaultValue,
 		Deprecated:          opts.Deprecated,
 		ShorthandDeprecated: opts.ShorthandDeprecated,
 		Hidden:              opts.Hidden,
-		NoOptDefVal:         noOptDefVal,
-		Value:               val,
 	})
 
 	return val, nil
 }
 
-func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) (typ Type, found bool) {
+func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
 	if field.IsList() {
-		typ, found := b.resolveFlagTypeBasic(field)
-		if found {
-			return compositeListType(typ), true
+		typ := b.resolveFlagTypeBasic(field)
+		if typ != nil {
+			return compositeListType{simpleType: typ}
 		}
 
-		return Type{}, false
+		return nil
 	} else {
 		return b.resolveFlagTypeBasic(field)
 	}
 }
 
-func (b *Builder) resolveFlagTypeBasic(field protoreflect.FieldDescriptor) (typ Type, found bool) {
+func (b *Builder) resolveFlagTypeBasic(field protoreflect.FieldDescriptor) Type {
 	scalar := proto.GetExtension(field.Options(), cosmos_proto.E_Scalar)
 	if scalar != nil {
 		b.init()
 		if typ, ok := b.scalarFlagTypes[scalar.(string)]; ok {
-			return typ, true
+			return typ
 		}
 	}
 
 	switch field.Kind() {
 	case protoreflect.BytesKind:
-		typ = bytesBase64Type
+		return bytesBase64Type{}
 	case protoreflect.StringKind:
-		typ = stringType
+		return stringType{}
 	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
-		typ = uint32Type
+		return uint32Type{}
 	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
 		return uint64Type{}
 	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-		typ = int32Type
+		return int32Type{}
 	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
 		return int64Type{}
 	case protoreflect.BoolKind:
-		typ = boolType
+		return boolType{}
 	case protoreflect.EnumKind:
-		typ = enumType(field.Enum())
+		return enumType{enum: field.Enum()}
 	case protoreflect.MessageKind:
 		b.init()
 		if flagType, ok := b.messageFlagTypes[field.Message().FullName()]; ok {
-			return flagType, true
+			return flagType
 		}
 
-		typ = jsonMessageFlagType{
+		return jsonMessageFlagType{
 			messageDesc: field.Message(),
 		}
 	default:
-		return Type{}, false
+		return nil
 	}
-
-	return typ, true
 }
 
 type simpleValueBinder struct {

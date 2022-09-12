@@ -9,27 +9,29 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func enumType(enum protoreflect.EnumDescriptor) Type {
-	defValue := ""
-	if def := enum.Values().ByNumber(0); def != nil {
-		defValue = enumValueName(enum, def)
-	}
+type enumType struct {
+	enum protoreflect.EnumDescriptor
+}
 
-	return Type{
-		NewValue: func(ctx context.Context, builder *Builder) Value {
-			val := &enumValue{
-				enum:   enum,
-				valMap: map[string]protoreflect.EnumValueDescriptor{},
-			}
-			n := enum.Values().Len()
-			for i := 0; i < n; i++ {
-				valDesc := enum.Values().Get(i)
-				val.valMap[enumValueName(enum, valDesc)] = valDesc
-			}
-			return val
-		},
-		DefaultValue: defValue,
+func (b enumType) NewValue(context.Context, *Builder) Value {
+	val := &enumValue{
+		enum:   b.enum,
+		valMap: map[string]protoreflect.EnumValueDescriptor{},
 	}
+	n := b.enum.Values().Len()
+	for i := 0; i < n; i++ {
+		valDesc := b.enum.Values().Get(i)
+		val.valMap[enumValueName(b.enum, valDesc)] = valDesc
+	}
+	return val
+}
+
+func (b enumType) DefaultValue() string {
+	defValue := ""
+	if def := b.enum.Values().ByNumber(0); def != nil {
+		defValue = enumValueName(b.enum, def)
+	}
+	return defValue
 }
 
 type enumValue struct {

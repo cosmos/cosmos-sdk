@@ -114,6 +114,8 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
       - name: Get previous workflow status
         uses: ./.github/actions/last-workflow-status
         id: last_status

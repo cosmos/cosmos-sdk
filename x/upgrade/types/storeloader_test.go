@@ -6,16 +6,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmlog "github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,10 +27,7 @@ func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*ba
 }
 
 func defaultLogger() log.Logger {
-	writer := zerolog.ConsoleWriter{Out: os.Stderr}
-	return server.ZeroLogWrapper{
-		Logger: zerolog.New(writer).Level(zerolog.InfoLevel).With().Timestamp().Logger(),
-	}
+	return tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {

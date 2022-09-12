@@ -6,10 +6,10 @@ import (
 	"net"
 	"testing"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
@@ -38,7 +38,8 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 			return conn
 		},
 	}
-	cmd := b.AddQueryServiceCommands(&cobra.Command{Use: "test"}, protoreflect.FullName(testpb.Query_ServiceDesc.ServiceName))
+	cmd := &cobra.Command{Use: "test"}
+	b.AddQueryServiceCommands(cmd, &autocliv1.ServiceCommandDescriptor{Service: testpb.Query_ServiceDesc.ServiceName})
 	cmd.SetArgs(args)
 	cmd.SetOut(conn.out)
 	assert.NilError(t, cmd.Execute())

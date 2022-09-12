@@ -191,6 +191,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
+		//
 		queryCommand(),
 		txCommand(),
 		keys.Commands(simapp.DefaultNodeHome),

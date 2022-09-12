@@ -3,6 +3,7 @@ package autocli
 import (
 	"fmt"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -14,14 +15,49 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
 
+func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
+	queryCmd := topLevelCmd("query", "Querying subcommands")
+	queryCmd.Aliases = []string{"q"}
+	for moduleName, modOpts := range moduleOptions {
+		if customCmds[moduleName] != nil {
+			// custom commands get added lower down
+			continue
+		}
+
+		queryCmdDesc := modOpts.Query
+		if queryCmdDesc != nil {
+			cmd, err := b.BuildModuleQueryCommand(moduleName, queryCmdDesc)
+			if err != nil {
+				return nil, err
+			}
+
+			queryCmd.AddCommand(cmd)
+		}
+	}
+
+	for _, cmd := range customCmds {
+		queryCmd.AddCommand(cmd)
+	}
+
+	return queryCmd, nil
+}
+
+func (b *Builder) BuildModuleQueryCommand(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
+	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+
+	b.AddQueryServiceCommands(cmd, cmdDescriptor)
+
+	return cmd, nil
+}
+
 // AddQueryServiceCommands adds a sub-command to the provided command for each
 // method in the specified service and returns the command.
-func (b *Builder) AddQueryServiceCommands(command *cobra.Command, serviceName protoreflect.FullName) *cobra.Command {
+func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) {
 	resolver := b.FileResolver
 	if resolver == nil {
 		resolver = protoregistry.GlobalFiles
 	}
-	descriptor, err := resolver.FindDescriptorByName(serviceName)
+	descriptor, err := resolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
 	if err != nil {
 		panic(err)
 	}
@@ -30,14 +66,25 @@ func (b *Builder) AddQueryServiceCommands(command *cobra.Command, serviceName pr
 	methods := service.Methods()
 	n := methods.Len()
 	for i := 0; i < n; i++ {
-		cmd := b.CreateQueryMethodCommand(methods.Get(i))
+		methodDescriptor := methods.Get(i)
+		var methodOpts *autocliv1.RpcCommandOptions
+		for _, option := range cmdDescriptor.RpcCommandOptions {
+			if protoreflect.Name(option.RpcMethod) == methodDescriptor.Name() {
+				methodOpts = option
+			}
+		}
+		cmd := b.CreateQueryMethodCommand(methodDescriptor, methodOpts)
 		command.AddCommand(cmd)
 	}
-	return command
+
+	for cmdName, subCmd := range cmdDescriptor.SubCommands {
+		cmd := topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmd.Service))
+		b.AddQueryServiceCommands(cmd, subCmd)
+	}
 }
 
 // CreateQueryMethodCommand creates a gRPC query command for the given service method.
-func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescriptor) *cobra.Command {
+func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) *cobra.Command {
 	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
 	docs := util.DescriptorDocs(descriptor)
 	getClientConn := b.GetClientConn
@@ -85,4 +132,14 @@ func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescrip
 
 func protoNameToCliName(name protoreflect.Name) string {
 	return strcase.ToKebab(string(name))
+}
+
+func topLevelCmd(use, short string) *cobra.Command {
+	return &cobra.Command{
+		Use:                        use,
+		Short:                      short,
+		DisableFlagParsing:         false,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       ValidateCmd,
+	}
 }

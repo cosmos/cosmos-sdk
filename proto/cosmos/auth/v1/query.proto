@@ -4,6 +4,8 @@ package cosmos.auth.v1;
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types/v1;authv1";
+
 // Query is the comos.auth.v1 query service.
 service Query {
 

@@ -8,18 +8,12 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type bytesBase64Type struct{}
-
-func (b bytesBase64Type) NewValue(context.Context, *Builder) Value {
-	x := new([]byte)
-	return (*bytesBase64Value)(x)
+var bytesBase64Type = Type{
+	NewValue: func(ctx context.Context, builder *Builder) Value {
+		x := new([]byte)
+		return (*bytesBase64Value)(x)
+	},
 }
-
-func (b bytesBase64Type) DefaultValue() string {
-	return defaultDefaultValue(b)
-}
-
-var _ Type = bytesBase64Type{}
 
 // BytesBase64 adapts []byte for use as a flag. Value of flag is Base64 encoded
 type bytesBase64Value []byte

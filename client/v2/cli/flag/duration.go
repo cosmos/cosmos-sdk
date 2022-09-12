@@ -8,14 +8,11 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
-type durationType struct{}
-
-func (t durationType) NewValue(context.Context, *Builder) Value {
-	return &durationValue{}
-}
-
-func (t durationType) DefaultValue() string {
-	return ""
+var durationType = Type{
+	NewValue: func(ctx context.Context, builder *Builder) Value {
+		return &durationValue{}
+	},
+	DefaultValue: "",
 }
 
 type durationValue struct {

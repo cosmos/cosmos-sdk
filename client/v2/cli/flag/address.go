@@ -6,14 +6,10 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type addressStringType struct{}
-
-func (a addressStringType) NewValue(_ context.Context, _ *Builder) Value {
-	return &addressValue{}
-}
-
-func (a addressStringType) DefaultValue() string {
-	return ""
+var addressStringType = Type{
+	NewValue: func(ctx context.Context, builder *Builder) Value {
+		return &addressValue{}
+	},
 }
 
 type addressValue struct {

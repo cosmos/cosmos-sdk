@@ -7,19 +7,12 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type int64Type struct{}
-
-func (u int64Type) NewValue(context.Context, *Builder) Value {
-	v := new(int64)
-	return (*int64Value)(v)
+var int64Type = Type{
+	NewValue: func(ctx context.Context, builder *Builder) Value {
+		v := new(int64)
+		return (*int64Value)(v)
+	},
 }
-
-func (u int64Type) DefaultValue() string {
-
-	return "0"
-}
-
-var _ Type = int64Type{}
 
 type int64Value int64
 

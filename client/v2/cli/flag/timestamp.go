@@ -8,14 +8,11 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type timestampType struct{}
-
-func (t timestampType) NewValue(context.Context, *Builder) Value {
-	return &timestampValue{}
-}
-
-func (t timestampType) DefaultValue() string {
-	return ""
+var timestampType = Type{
+	NewValue: func(ctx context.Context, builder *Builder) Value {
+		return &timestampValue{}
+	},
+	DefaultValue: "",
 }
 
 type timestampValue struct {

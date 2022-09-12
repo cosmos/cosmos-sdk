@@ -6,18 +6,12 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type stringType struct{}
-
-func (s stringType) NewValue(context.Context, *Builder) Value {
-	v := new(string)
-	return (*stringValue)(v)
+var stringType = Type{
+	NewValue: func(ctx context.Context, builder *Builder) Value {
+		v := new(string)
+		return (*stringValue)(v)
+	},
 }
-
-func (s stringType) DefaultValue() string {
-	return ""
-}
-
-var _ Type = stringType{}
 
 type stringValue string
 

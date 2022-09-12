@@ -1,67 +1,66 @@
 package flag
 
 import (
-	"context"
-	"fmt"
-
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
+	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
 
-type jsonMessageFlagType struct {
-	messageDesc protoreflect.MessageDescriptor
-}
+// MessageBinder binds multiple flags in a flag set to a protobuf message.
+type MessageBinder struct {
+	CobraArgs cobra.PositionalArgs
 
-func (j jsonMessageFlagType) NewValue(_ context.Context, builder *Builder) Value {
-	return &jsonMessageFlagValue{
-		messageType:          util.ResolveMessageType(builder.TypeResolver, j.messageDesc),
-		jsonMarshalOptions:   protojson.MarshalOptions{Resolver: builder.TypeResolver},
-		jsonUnmarshalOptions: protojson.UnmarshalOptions{Resolver: builder.TypeResolver},
-	}
-}
-
-func (j jsonMessageFlagType) DefaultValue() string {
-	return ""
-}
-
-type jsonMessageFlagValue struct {
-	jsonMarshalOptions   protojson.MarshalOptions
-	jsonUnmarshalOptions protojson.UnmarshalOptions
-	messageType          protoreflect.MessageType
-	message              proto.Message
-}
-
-func (j jsonMessageFlagValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
-	message.Set(field, protoreflect.ValueOfMessage(j.message.ProtoReflect()))
-}
-
-func (j jsonMessageFlagValue) Get() (protoreflect.Value, error) {
-	if j.message == nil {
-		return protoreflect.Value{}, nil
-	}
-	return protoreflect.ValueOfMessage(j.message.ProtoReflect()), nil
-}
-
-func (j jsonMessageFlagValue) String() string {
-	if j.message == nil {
-		return ""
+	positionalArgs []struct {
+		binder  Value
+		field   protoreflect.FieldDescriptor
+		varargs bool
 	}
 
-	bz, err := j.jsonMarshalOptions.Marshal(j.message)
-	if err != nil {
-		return err.Error()
+	flagFieldPairs []struct {
+		binder FieldValueBinder
+		field  protoreflect.FieldDescriptor
 	}
-	return string(bz)
+	messageType protoreflect.MessageType
 }
 
-func (j *jsonMessageFlagValue) Set(s string) error {
-	j.message = j.messageType.New().Interface()
-	return j.jsonUnmarshalOptions.Unmarshal([]byte(s), j.message)
+// BuildMessage builds and returns a new message for the bound flags.
+func (m MessageBinder) BuildMessage(positionalArgs []string) (protoreflect.Message, error) {
+	msg := m.messageType.New()
+	err := m.Bind(msg, positionalArgs)
+	return msg, err
 }
 
-func (j jsonMessageFlagValue) Type() string {
-	return fmt.Sprintf("%s (json)", j.messageType.Descriptor().FullName())
+// Bind binds the flag values to an existing protobuf message.
+func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) error {
+	n := len(positionalArgs)
+	for i, arg := range m.positionalArgs {
+		if i >= n {
+			panic("unexpected: validate args should have caught this")
+		}
+
+		if arg.varargs {
+			for _, v := range positionalArgs[i:] {
+				err := arg.binder.Set(v)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			err := arg.binder.Set(positionalArgs[i])
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	for _, pair := range m.flagFieldPairs {
+		pair.binder.Bind(msg, pair.field)
+	}
+
+	return nil
+}
+
+// Get calls BuildMessage and wraps the result in a protoreflect.Value.
+func (m MessageBinder) Get() (protoreflect.Value, error) {
+	msg, err := m.BuildMessage(nil)
+	return protoreflect.ValueOfMessage(msg), err
 }

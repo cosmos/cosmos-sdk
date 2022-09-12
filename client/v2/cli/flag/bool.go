@@ -7,18 +7,14 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type boolType struct{}
-
-func (b boolType) NewValue(context.Context, *Builder) Value {
-	v := new(bool)
-	return (*boolValue)(v)
+var boolType = Type{
+	NewValue: func(ctx context.Context, builder *Builder) Value {
+		v := new(bool)
+		return (*boolValue)(v)
+	},
+	DefaultValue:      "",
+	NoOptDefaultValue: "",
 }
-
-func (b boolType) DefaultValue() string {
-	return defaultDefaultValue(b)
-}
-
-var _ Type = boolType{}
 
 type boolValue bool
 

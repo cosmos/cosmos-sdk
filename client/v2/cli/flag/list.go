@@ -48,21 +48,18 @@ import (
 //	}
 //}
 
-type compositeListType struct {
-	simpleType Type
-}
+func compositeListType(simpleType Type) Type {
+	return Type{
+		NewValue: func(ctx context.Context, builder *Builder) Value {
 
-func (t compositeListType) NewValue(ctx context.Context, opts *Builder) Value {
-	return &compositeListValue{
-		simpleType: t.simpleType,
-		values:     nil,
-		ctx:        ctx,
-		opts:       opts,
+			return &compositeListValue{
+				simpleType: simpleType,
+				values:     nil,
+				ctx:        ctx,
+				opts:       builder,
+			}
+		},
 	}
-}
-
-func (t compositeListType) DefaultValue() string {
-	return ""
 }
 
 type compositeListValue struct {
@@ -72,17 +69,17 @@ type compositeListValue struct {
 	opts       *Builder
 }
 
-func (c compositeListValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
+func (c *compositeListValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
 	c.AppendTo(message.NewField(field).List())
 }
 
-func (c compositeListValue) AppendTo(list protoreflect.List) {
+func (c *compositeListValue) AppendTo(list protoreflect.List) {
 	for _, value := range c.values {
 		list.Append(value)
 	}
 }
 
-func (c compositeListValue) String() string {
+func (c *compositeListValue) String() string {
 	if len(c.values) == 0 {
 		return ""
 	}
@@ -104,6 +101,6 @@ func (c *compositeListValue) Set(val string) error {
 	return nil
 }
 
-func (c compositeListValue) Type() string {
+func (c *compositeListValue) Type() string {
 	return fmt.Sprintf("%s (repeated)", c.simpleType.NewValue(c.ctx, c.opts).Type())
 }

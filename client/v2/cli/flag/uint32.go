@@ -7,18 +7,12 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type uint32Type struct{}
-
-func (t uint32Type) NewValue(context.Context, *Builder) Value {
-	v := new(uint32)
-	return (*uint32Value)(v)
+var uint32Type = Type{
+	NewValue: func(ctx context.Context, builder *Builder) Value {
+		v := new(uint32)
+		return (*uint32Value)(v)
+	},
 }
-
-func (t uint32Type) DefaultValue() string {
-	return defaultDefaultValue(t)
-}
-
-var _ Type = uint32Type{}
 
 type uint32Value uint32
 

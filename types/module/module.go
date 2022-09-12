@@ -189,9 +189,6 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
 // RegisterInvariants is a placeholder function register no invariants
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route empty module message route
-func (GenesisOnlyAppModule) Route() sdk.Route { return sdk.Route{} }
-
 // QuerierRoute returns an empty module querier route
 func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 

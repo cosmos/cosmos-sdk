@@ -11,7 +11,7 @@ import (
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	tmcoretypes "github.com/tendermint/tendermint/rpc/coretypes"
+	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -558,9 +558,9 @@ func (c converter) Peers(peers []tmcoretypes.Peer) []*rosettatypes.Peer {
 
 	for i, peer := range peers {
 		converted[i] = &rosettatypes.Peer{
-			PeerID: string(peer.ID),
+			PeerID: peer.NodeInfo.Moniker,
 			Metadata: map[string]interface{}{
-				"addr": peer.URL,
+				"addr": peer.NodeInfo.ListenAddr,
 			},
 		}
 	}

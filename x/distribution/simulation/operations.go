@@ -8,14 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 // Simulation operation weights constants
@@ -26,6 +25,11 @@ const (
 	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"
 	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission"
 	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"
+
+	DefaultWeightMsgSetWithdrawAddress          int = 50
+	DefaultWeightMsgWithdrawDelegationReward    int = 50
+	DefaultWeightMsgWithdrawValidatorCommission int = 50
+	DefaultWeightMsgFundCommunityPool           int = 50
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -33,32 +37,30 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 	var weightMsgSetWithdrawAddress int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
 		func(_ *rand.Rand) {
-			weightMsgSetWithdrawAddress = simtestutil.DefaultWeightMsgSetWithdrawAddress
+			weightMsgSetWithdrawAddress = DefaultWeightMsgSetWithdrawAddress
 		},
 	)
 
 	var weightMsgWithdrawDelegationReward int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil,
 		func(_ *rand.Rand) {
-			weightMsgWithdrawDelegationReward = simtestutil.DefaultWeightMsgWithdrawDelegationReward
+			weightMsgWithdrawDelegationReward = DefaultWeightMsgWithdrawDelegationReward
 		},
 	)
 
 	var weightMsgWithdrawValidatorCommission int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil,
 		func(_ *rand.Rand) {
-			weightMsgWithdrawValidatorCommission = simtestutil.DefaultWeightMsgWithdrawValidatorCommission
+			weightMsgWithdrawValidatorCommission = DefaultWeightMsgWithdrawValidatorCommission
 		},
 	)
 
 	var weightMsgFundCommunityPool int
 	appParams.GetOrGenerate(cdc, OpWeightMsgFundCommunityPool, &weightMsgFundCommunityPool, nil,
 		func(_ *rand.Rand) {
-			weightMsgFundCommunityPool = simtestutil.DefaultWeightMsgFundCommunityPool
+			weightMsgFundCommunityPool = DefaultWeightMsgFundCommunityPool
 		},
 	)
-
-	stakeKeeper := sk.(*stakingkeeper.Keeper)
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	txConfig := tx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), tx.DefaultSignModes)
@@ -70,15 +72,15 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		),
 		simulation.NewWeightedOperation(
 			weightMsgWithdrawDelegationReward,
-			SimulateMsgWithdrawDelegatorReward(txConfig, ak, bk, k, stakeKeeper),
+			SimulateMsgWithdrawDelegatorReward(txConfig, ak, bk, k, sk),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgWithdrawValidatorCommission,
-			SimulateMsgWithdrawValidatorCommission(txConfig, ak, bk, k, stakeKeeper),
+			SimulateMsgWithdrawValidatorCommission(txConfig, ak, bk, k, sk),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgFundCommunityPool,
-			SimulateMsgFundCommunityPool(txConfig, ak, bk, k, stakeKeeper),
+			SimulateMsgFundCommunityPool(txConfig, ak, bk, k, sk),
 		),
 	}
 }
@@ -120,7 +122,7 @@ func SimulateMsgSetWithdrawAddress(txConfig client.TxConfig, ak types.AccountKee
 }
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
-func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk *stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -162,11 +164,11 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 }
 
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
-func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk *stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
+		validator, ok := testutil.RandSliceElem(r, sk.GetAllValidators(ctx))
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawValidatorCommission, "random validator is not ok"), nil, nil
 		}
@@ -207,7 +209,7 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 
 // SimulateMsgFundCommunityPool simulates MsgFundCommunityPool execution where
 // a random account sends a random amount of its funds to the community pool.
-func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk *stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

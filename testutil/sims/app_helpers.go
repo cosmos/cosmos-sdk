@@ -1,7 +1,6 @@
 package sims
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -57,7 +56,7 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 // CreateRandomValidatorSet creates a validator set with one random validator
 func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey(context.TODO())
+	pubKey, err := privVal.GetPubKey()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pub key: %w", err)
 	}

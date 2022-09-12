@@ -500,7 +500,7 @@ func runTestScenario(t *testing.T, table ormtable.Table, backend ormtable.Backen
 }
 
 func TestRandomTableData(t *testing.T) {
-	testTable(t, TableDataGen(testutil.GenA, 100).Example().(*TableData))
+	testTable(t, TableDataGen(testutil.GenA, 100).Example())
 }
 
 func testTable(t *testing.T, tableData *TableData) {
@@ -553,8 +553,8 @@ func testIndex(t *testing.T, model *IndexModel) {
 		checkIteratorAgainstSlice(t, it, reverseData(model.data))
 
 		rapid.Check(t, func(t *rapid.T) {
-			i := rapid.IntRange(0, len(model.data)-2).Draw(t, "i").(int)
-			j := rapid.IntRange(i+1, len(model.data)-1).Draw(t, "j").(int)
+			i := rapid.IntRange(0, len(model.data)-2).Draw(t, "i")
+			j := rapid.IntRange(i+1, len(model.data)-1).Draw(t, "j")
 
 			start, _, err := model.index.(ormkv.IndexCodec).EncodeKeyFromMessage(model.data[i].ProtoReflect())
 			assert.NilError(t, err)
@@ -630,10 +630,10 @@ func checkIteratorAgainstSlice(t assert.TestingT, iterator ormtable.Iterator, da
 	}
 }
 
-func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
+func TableDataGen[T proto.Message](elemGen *rapid.Generator[T], n int) *rapid.Generator[*TableData] {
 	return rapid.Custom(func(t *rapid.T) *TableData {
-		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
-		message := elemGen.Draw(t, "message").(proto.Message)
+		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix")
+		message := elemGen.Draw(t, "message")
 		table, err := ormtable.Build(ormtable.Options{
 			Prefix:      prefix,
 			MessageType: message.ProtoReflect().Type(),
@@ -646,7 +646,7 @@ func TableDataGen(elemGen *rapid.Generator, n int) *rapid.Generator {
 		store := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 
 		for i := 0; i < n; {
-			message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i)).(proto.Message)
+			message = elemGen.Draw(t, fmt.Sprintf("message[%d]", i))
 			err := table.Insert(store, message)
 			if sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
 				continue
@@ -723,7 +723,7 @@ func TestJSONExportImport(t *testing.T) {
 	store := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 
 	for i := 0; i < 100; {
-		x := testutil.GenA.Example().(proto.Message)
+		x := testutil.GenA.Example()
 		err = table.Insert(store, x)
 		if sdkerrors.IsOf(err, ormerrors.PrimaryKeyConstraintViolation, ormerrors.UniqueKeyViolation) {
 			continue

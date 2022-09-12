@@ -3,7 +3,7 @@ package testutil
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
@@ -71,6 +71,44 @@ func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
 			s.Require().NoError(err)
 			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected, tc.respType)
+		})
+	}
+}
+
+func (s *GRPCQueryTestSuite) TestQueryValidatorDistributionInfoGRPC() {
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
+
+	testCases := []struct {
+		name     string
+		url      string
+		expErr   bool
+		respType proto.Message
+	}{
+		{
+			"gRPC request with wrong validator address",
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s", baseURL, "wrongAddress"),
+			true,
+			&types.QueryValidatorDistributionInfoResponse{},
+		},
+		{
+			"gRPC request with valid validator address ",
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s", baseURL, val.ValAddress.String()),
+			false,
+			&types.QueryValidatorDistributionInfoResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		resp, err := rest.GetRequest(tc.url)
+		s.Run(tc.name, func() {
+			if tc.expErr {
+				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+			}
 		})
 	}
 }

@@ -15,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
 
+// BuildQueryCommand builds the query commands for all the provided modules. If a custom command is provided for a
+// module, this is used instead of any automatically generated CLI commands.
 func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
 	queryCmd := topLevelCmd("query", "Querying subcommands")
 	queryCmd.Aliases = []string{"q"}
@@ -42,6 +44,7 @@ func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOp
 	return queryCmd, nil
 }
 
+// BuildModuleQueryCommand builds the query command for a single module.
 func (b *Builder) BuildModuleQueryCommand(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
 	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
 
@@ -51,7 +54,8 @@ func (b *Builder) BuildModuleQueryCommand(moduleName string, cmdDescriptor *auto
 }
 
 // AddQueryServiceCommands adds a sub-command to the provided command for each
-// method in the specified service and returns the command.
+// method in the specified service and returns the command. This can be used in
+// order to add auto-generated commands to an existing command.
 func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) error {
 	resolver := b.FileResolver
 	if resolver == nil {
@@ -93,7 +97,8 @@ func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor 
 	return nil
 }
 
-// CreateQueryMethodCommand creates a gRPC query command for the given service method.
+// CreateQueryMethodCommand creates a gRPC query command for the given service method. This can be used to auto-generate
+// just a single command for a single service rpc method.
 func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
 	if options == nil {
 		// use the defaults

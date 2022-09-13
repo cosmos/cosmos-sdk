@@ -131,41 +131,15 @@ func (s *CLITestSuite) TestQueryNFTs() {
 			ClassID string
 			Owner   string
 		}
-		expectErr    bool
-		expectResult []*nft.NFT
+		expectErr bool
 	}{
-		{
-			name: "class id does not exist",
-			args: struct {
-				ClassID string
-				Owner   string
-			}{
-				ClassID: "class",
-				Owner:   accounts[0].Address.String(),
-			},
-			expectErr:    false,
-			expectResult: []*nft.NFT{},
-		},
-		{
-			name: "owner does not exist",
-			args: struct {
-				ClassID string
-				Owner   string
-			}{
-				ClassID: testClassID,
-				Owner:   s.owner.String(),
-			},
-			expectErr:    false,
-			expectResult: []*nft.NFT{},
-		},
 		{
 			name: "class id and owner both does not exist",
 			args: struct {
 				ClassID string
 				Owner   string
 			}{},
-			expectErr:    true,
-			expectResult: []*nft.NFT{},
+			expectErr: true,
 		},
 		{
 			name: "nft exist",
@@ -176,8 +150,7 @@ func (s *CLITestSuite) TestQueryNFTs() {
 				ClassID: testClassID,
 				Owner:   accounts[0].Address.String(),
 			},
-			expectErr:    false,
-			expectResult: []*nft.NFT{&ExpNFT},
+			expectErr: false,
 		},
 	}
 
@@ -211,28 +184,6 @@ func (s *CLITestSuite) TestQueryOwner() {
 		}
 		expectErr bool
 	}{
-		{
-			name: "class id does not exist",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: "class",
-				ID:      testID,
-			},
-			expectErr: false,
-		},
-		{
-			name: "nft id does not exist",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: testClassID,
-				ID:      "nft-id",
-			},
-			expectErr: false,
-		},
 		{
 			name: "nft exist",
 			args: struct {
@@ -279,28 +230,6 @@ func (s *CLITestSuite) TestQueryBalance() {
 		expectErr bool
 	}{
 		{
-			name: "class id does not exist",
-			args: struct {
-				ClassID string
-				Owner   string
-			}{
-				ClassID: "class",
-				Owner:   accounts[0].Address.String(),
-			},
-			expectErr: false,
-		},
-		{
-			name: "owner does not exist",
-			args: struct {
-				ClassID string
-				Owner   string
-			}{
-				ClassID: testClassID,
-				Owner:   s.owner.String(),
-			},
-			expectErr: false,
-		},
-		{
 			name: "nft exist",
 			args: struct {
 				ClassID string
@@ -342,15 +271,6 @@ func (s *CLITestSuite) TestQuerySupply() {
 		}
 		expectErr bool
 	}{
-		{
-			name: "class id does not exist",
-			args: struct {
-				ClassID string
-			}{
-				ClassID: "class",
-			},
-			expectErr: false,
-		},
 		{
 			name: "class id exist",
 			args: struct {

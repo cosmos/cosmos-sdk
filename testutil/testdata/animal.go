@@ -42,11 +42,11 @@ func (m HasAnimal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return unpacker.UnpackAny(m.Animal, &animal)
 }
 
-type HasAnimalI interface {
+type IAnimal interface {
 	TheAnimal() Animal
 }
 
-var _ HasAnimalI = &HasAnimal{}
+var _ IAnimal = &HasAnimal{}
 
 func (m HasAnimal) TheAnimal() Animal {
 	return m.Animal.GetCachedValue().(Animal)
@@ -58,7 +58,7 @@ type HasHasAnimalI interface {
 
 var _ HasHasAnimalI = &HasHasAnimal{}
 
-func (m HasHasAnimal) TheHasAnimal() HasAnimalI {
+func (m HasHasAnimal) TheHasAnimal() IAnimal {
 	return m.HasAnimal.GetCachedValue().(HasAnimalI)
 }
 

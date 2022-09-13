@@ -8,7 +8,8 @@ import (
 
 // Unjail calls the staking Unjail function to unjail a validator if the
 // jailed period has concluded
-func (k Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress) error {
+// force is a flag that ignores unjailing period (used to manually recover from tombstone)
+func (k Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress, ignoreJailPeriod bool) error {
 	validator := k.sk.Validator(ctx, validatorAddr)
 	if validator == nil {
 		return types.ErrNoValidatorForAddress
@@ -52,9 +53,11 @@ func (k Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress) error {
 			return types.ErrValidatorJailed
 		}
 
-		// cannot be unjailed until out of jail
-		if ctx.BlockHeader().Time.Before(info.JailedUntil) {
-			return types.ErrValidatorJailed
+		if !ignoreJailPeriod {
+			// cannot be unjailed until out of jail
+			if ctx.BlockHeader().Time.Before(info.JailedUntil) {
+				return types.ErrValidatorJailed
+			}
 		}
 	}
 

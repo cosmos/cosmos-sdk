@@ -29,7 +29,7 @@ func (k msgServer) Unjail(goCtx context.Context, msg *types.MsgUnjail) (*types.M
 	if valErr != nil {
 		return nil, valErr
 	}
-	err := k.Keeper.Unjail(ctx, valAddr)
+	err := k.Keeper.Unjail(ctx, valAddr, false)
 	if err != nil {
 		return nil, err
 	}

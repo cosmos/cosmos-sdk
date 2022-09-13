@@ -129,6 +129,22 @@ func (k Keeper) Tombstone(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
+// Tombstone attempts to tombstone a validator. It will panic if signing info for
+// the given validator does not exist.
+func (k Keeper) RevertTombstone(ctx sdk.Context, consAddr sdk.ConsAddress) {
+	signInfo, ok := k.GetValidatorSigningInfo(ctx, consAddr)
+	if !ok {
+		panic("cannot tombstone validator that does not have any signing information")
+	}
+
+	if !signInfo.Tombstoned {
+		panic("cannot untombstone a validator that is not tombstoned")
+	}
+
+	signInfo.Tombstoned = false
+	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+}
+
 // IsTombstoned returns if a given validator by consensus address is tombstoned.
 func (k Keeper) IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
 	signInfo, ok := k.GetValidatorSigningInfo(ctx, consAddr)

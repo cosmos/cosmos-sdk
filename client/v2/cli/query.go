@@ -56,7 +56,7 @@ func (b *Builder) BuildModuleQueryCommand(moduleName string, cmdDescriptor *auto
 // AddQueryServiceCommands adds a sub-command to the provided command for each
 // method in the specified service and returns the command. This can be used in
 // order to add auto-generated commands to an existing command.
-func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) error {
+func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) error {
 	resolver := b.FileResolver
 	if resolver == nil {
 		resolver = protoregistry.GlobalFiles
@@ -77,22 +77,24 @@ func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor 
 				methodOpts = option
 			}
 		}
-		cmd, err := b.CreateQueryMethodCommand(methodDescriptor, methodOpts)
+		methodCmd, err := b.CreateQueryMethodCommand(methodDescriptor, methodOpts)
 		if err != nil {
 			return err
 		}
 
-		if cmd != nil {
-			command.AddCommand(cmd)
+		if methodCmd != nil {
+			cmd.AddCommand(methodCmd)
 		}
 	}
 
-	for cmdName, subCmd := range cmdDescriptor.SubCommands {
-		cmd := topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmd.Service))
-		err = b.AddQueryServiceCommands(cmd, subCmd)
+	for cmdName, subCmdDesc := range cmdDescriptor.SubCommands {
+		subCmd := topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDesc.Service))
+		err = b.AddQueryServiceCommands(subCmd, subCmdDesc)
 		if err != nil {
 			return err
 		}
+
+		cmd.AddCommand(subCmd)
 	}
 	return nil
 }

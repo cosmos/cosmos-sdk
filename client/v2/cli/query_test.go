@@ -20,8 +20,14 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 	Service: testpb.Query_ServiceDesc.ServiceName,
 	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 		{
-			RpcMethod: "Echo",
-			Use:       "echo [pos1] [pos2] [pos3...]",
+			RpcMethod:  "Echo",
+			Use:        "echo [pos1] [pos2] [pos3...]",
+			Version:    "1.0",
+			Alias:      []string{"e"},
+			SuggestFor: []string{"eco"},
+			Example:    "echo 1 abc {}",
+			Short:      "echo echos the value provided by the user",
+			Long:       "echo echos the value provided by the user as a proto JSON object with populated with the provided fields and positional arguments",
 			PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 				{
 					ProtoField: "positional1",
@@ -54,6 +60,30 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 				"shorthand_deprecated_field": {
 					Shorthand:  "s",
 					Deprecated: "bad idea",
+				},
+				"hidden_bool": {
+					Hidden: true,
+				},
+			},
+		},
+	},
+	SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
+		// we test the sub-command functionality using the same service with different options
+		"deprecatedecho": {
+			Service: testpb.Query_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod:  "Echo",
+					Deprecated: "don't use this",
+				},
+			},
+		},
+		"skipecho": {
+			Service: testpb.Query_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "Echo",
+					Skip:      true,
 				},
 			},
 		},
@@ -148,8 +178,17 @@ func TestOptions(t *testing.T) {
 }
 
 func TestHelp(t *testing.T) {
-	conn := testExec(t, "echo", "-h")
-	golden.Assert(t, conn.out.String(), "help.golden")
+	conn := testExec(t, "-h")
+	golden.Assert(t, conn.out.String(), "help-toplevel.golden")
+
+	conn = testExec(t, "echo", "-h")
+	golden.Assert(t, conn.out.String(), "help-echo.golden")
+
+	conn = testExec(t, "deprecatedecho", "echo", "-h")
+	golden.Assert(t, conn.out.String(), "help-deprecated.golden")
+
+	conn = testExec(t, "skipecho", "-h")
+	golden.Assert(t, conn.out.String(), "help-skip.golden")
 }
 
 type testClientConn struct {

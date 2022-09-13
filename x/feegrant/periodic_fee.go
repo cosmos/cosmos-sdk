@@ -7,7 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ FeeAllowanceI = (*PeriodicAllowance)(nil)
+var _ IFeeAllowance = (*PeriodicAllowance)(nil)
 
 // Accept can use fee payment requested as well as timestamp of the current block
 // to determine whether or not to process this. This is checked in

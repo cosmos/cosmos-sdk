@@ -19,7 +19,7 @@ var (
 // NewMsgGrantAllowance creates a new MsgGrantAllowance.
 //
 //nolint:interfacer
-func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantAllowance, error) {
+func NewMsgGrantAllowance(feeAllowance IFeeAllowance, granter, grantee sdk.AccAddress) (*MsgGrantAllowance, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
@@ -47,7 +47,7 @@ func (msg MsgGrantAllowance) ValidateBasic() error {
 	if msg.Grantee == msg.Granter {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
-	allowance, err := msg.GetFeeAllowanceI()
+	allowance, err := msg.GetIFeeAllowance()
 	if err != nil {
 		return err
 	}
@@ -76,9 +76,9 @@ func (msg MsgGrantAllowance) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-// GetFeeAllowanceI returns unpacked FeeAllowance
-func (msg MsgGrantAllowance) GetFeeAllowanceI() (FeeAllowanceI, error) {
-	allowance, ok := msg.Allowance.GetCachedValue().(FeeAllowanceI)
+// GetIFeeAllowance returns unpacked FeeAllowance
+func (msg MsgGrantAllowance) GetIFeeAllowance() (IFeeAllowance, error) {
+	allowance, ok := msg.Allowance.GetCachedValue().(IFeeAllowance)
 	if !ok {
 		return nil, sdkerrors.Wrap(ErrNoAllowance, "failed to get allowance")
 	}
@@ -88,7 +88,7 @@ func (msg MsgGrantAllowance) GetFeeAllowanceI() (FeeAllowanceI, error) {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgGrantAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var allowance FeeAllowanceI
+	var allowance IFeeAllowance
 	return unpacker.UnpackAny(msg.Allowance, &allowance)
 }
 

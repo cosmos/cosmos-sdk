@@ -8,7 +8,7 @@ import (
 
 // FeeAllowance implementations are tied to a given fee delegator and delegatee,
 // and are used to enforce fee grant limits.
-type FeeAllowanceI interface {
+type IFeeAllowance interface {
 	// Accept can use fee payment requested as well as timestamp of the current block
 	// to determine whether or not to process this. This is checked in
 	// Keeper.UseGrantedFees and the return values should match how it is handled there.

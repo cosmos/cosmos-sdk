@@ -2,8 +2,8 @@
 
 ## Changelog
 
-* 2020/08/18: Initial Draft
-* 2021/05/05: Removed height based expiration support and simplified naming.
+- 2020/08/18: Initial Draft
+- 2021/05/05: Removed height based expiration support and simplified naming.
 
 ## Status
 
@@ -35,10 +35,10 @@ the resources of the organization setting up the pool.
 As a solution we propose a module, `x/feegrant` which allows one account, the "granter" to grant another account, the "grantee"
 an allowance to spend the granter's account balance for fees within certain well-defined limits.
 
-Fee allowances are defined by the extensible `FeeAllowanceI` interface:
+Fee allowances are defined by the extensible `IFeeAllowance` interface:
 
 ```go
-type FeeAllowanceI {
+type IFeeAllowance {
   // Accept can use fee payment requested as well as timestamp of the current block
   // to determine whether or not to process this. This is checked in
   // Keeper.UseGrantedFees and the return values should match how it is handled there.
@@ -60,7 +60,7 @@ type FeeAllowanceI {
 Two basic fee allowance types, `BasicAllowance` and `PeriodicAllowance` are defined to support known use cases:
 
 ```proto
-// BasicAllowance implements FeeAllowanceI with a one-time grant of tokens
+// BasicAllowance implements IFeeAllowance with a one-time grant of tokens
 // that optionally expires. The delegatee can use up to SpendLimit to cover fees.
 message BasicAllowance {
   // spend_limit specifies the maximum amount of tokens that can be spent
@@ -72,7 +72,7 @@ message BasicAllowance {
   google.protobuf.Timestamp expiration = 2;
 }
 
-// PeriodicAllowance extends FeeAllowanceI to allow for both a maximum cap,
+// PeriodicAllowance extends IFeeAllowance to allow for both a maximum cap,
 // as well as a limit per time period.
 message PeriodicAllowance {
   BasicAllowance basic = 1;
@@ -137,17 +137,17 @@ set and correctly deduct fees based on fee allowances.
 
 ### Positive
 
-* improved UX for use cases where it is cumbersome to maintain an account balance just for fees
+- improved UX for use cases where it is cumbersome to maintain an account balance just for fees
 
 ### Negative
 
 ### Neutral
 
-* a new field must be added to the transaction `Fee` message and a new `AnteDecorator` must be
-created to use it
+- a new field must be added to the transaction `Fee` message and a new `AnteDecorator` must be
+  created to use it
 
 ## References
 
-* Blog article describing initial work: https://medium.com/regen-network/hacking-the-cosmos-cosmwasm-and-key-management-a08b9f561d1b
-* Initial public specification: https://gist.github.com/aaronc/b60628017352df5983791cad30babe56
-* Original subkeys proposal from B-harvest which influenced this design: https://github.com/cosmos/cosmos-sdk/issues/4480
+- Blog article describing initial work: https://medium.com/regen-network/hacking-the-cosmos-cosmwasm-and-key-management-a08b9f561d1b
+- Initial public specification: https://gist.github.com/aaronc/b60628017352df5983791cad30babe56
+- Original subkeys proposal from B-harvest which influenced this design: https://github.com/cosmos/cosmos-sdk/issues/4480

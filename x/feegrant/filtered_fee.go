@@ -17,18 +17,18 @@ const (
 )
 
 var (
-	_ FeeAllowanceI                 = (*AllowedMsgAllowance)(nil)
+	_ IFeeAllowance                 = (*AllowedMsgAllowance)(nil)
 	_ types.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
 )
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var allowance FeeAllowanceI
+	var allowance IFeeAllowance
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }
 
 // NewAllowedMsgFeeAllowance creates new filtered fee allowance.
-func NewAllowedMsgAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*AllowedMsgAllowance, error) {
+func NewAllowedMsgAllowance(allowance IFeeAllowance, allowedMsgs []string) (*AllowedMsgAllowance, error) {
 	msg, ok := allowance.(proto.Message)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
@@ -45,8 +45,8 @@ func NewAllowedMsgAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*All
 }
 
 // GetAllowance returns allowed fee allowance.
-func (a *AllowedMsgAllowance) GetAllowance() (FeeAllowanceI, error) {
-	allowance, ok := a.Allowance.GetCachedValue().(FeeAllowanceI)
+func (a *AllowedMsgAllowance) GetAllowance() (IFeeAllowance, error) {
+	allowance, ok := a.Allowance.GetCachedValue().(IFeeAllowance)
 	if !ok {
 		return nil, sdkerrors.Wrap(ErrNoAllowance, "failed to get allowance")
 	}
@@ -55,7 +55,7 @@ func (a *AllowedMsgAllowance) GetAllowance() (FeeAllowanceI, error) {
 }
 
 // SetAllowance sets allowed fee allowance.
-func (a *AllowedMsgAllowance) SetAllowance(allowance FeeAllowanceI) error {
+func (a *AllowedMsgAllowance) SetAllowance(allowance IFeeAllowance) error {
 	var err error
 	a.Allowance, err = types.NewAnyWithValue(allowance.(proto.Message))
 	if err != nil {

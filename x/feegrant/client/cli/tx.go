@@ -56,7 +56,7 @@ func NewCmdFeeGrant() *cobra.Command {
 Examples:
 %s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 2022-01-30T15:04:05Z or
 %s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --period 3600 --period-limit 10stake --expiration 2022-01-30T15:04:05Z or
-%s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 2022-01-30T15:04:05Z 
+%s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 2022-01-30T15:04:05Z
 	--allowed-messages "/cosmos.gov.v1beta1.MsgSubmitProposal,/cosmos.gov.v1beta1.MsgVote"
 				`, version.AppName, feegrant.ModuleName, version.AppName, feegrant.ModuleName, version.AppName, feegrant.ModuleName,
 			),
@@ -104,7 +104,7 @@ Examples:
 				basic.Expiration = &expiresAtTime
 			}
 
-			var grant feegrant.FeeAllowanceI
+			var grant feegrant.IFeeAllowance
 			grant = &basic
 
 			periodClock, err := cmd.Flags().GetInt64(FlagPeriod)

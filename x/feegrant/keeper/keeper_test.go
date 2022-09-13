@@ -113,7 +113,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	cases := map[string]struct {
 		grantee   sdk.AccAddress
 		granter   sdk.AccAddress
-		allowance feegrant.FeeAllowanceI
+		allowance feegrant.IFeeAllowance
 	}{
 		"addr revoked": {
 			granter: suite.addrs[0],
@@ -187,7 +187,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 		granter sdk.AccAddress
 		fee     sdk.Coins
 		allowed bool
-		final   feegrant.FeeAllowanceI
+		final   feegrant.IFeeAllowance
 	}{
 		"use entire pot": {
 			granter: suite.addrs[0],
@@ -288,7 +288,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		ctx       sdk.Context
 		granter   sdk.AccAddress
 		grantee   sdk.AccAddress
-		allowance feegrant.FeeAllowanceI
+		allowance feegrant.IFeeAllowance
 		expErrMsg string
 		preRun    func()
 		postRun   func()

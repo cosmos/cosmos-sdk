@@ -40,7 +40,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GrantAllowance creates a new grant
-func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
+func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.IFeeAllowance) error {
 	// create the account if it is not in account state
 	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
 	if granteeAcc == nil {
@@ -124,7 +124,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 }
 
 // UpdateAllowance updates the existing grant.
-func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
+func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.IFeeAllowance) error {
 	store := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 
@@ -180,7 +180,7 @@ func (k Keeper) revokeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 // GetAllowance returns the allowance between the granter and grantee.
 // If there is none, it returns nil, nil.
 // Returns an error on parsing issues
-func (k Keeper) GetAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error) {
+func (k Keeper) GetAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (feegrant.IFeeAllowance, error) {
 	grant, err := k.getGrant(ctx, granter, grantee)
 	if err != nil {
 		return nil, err

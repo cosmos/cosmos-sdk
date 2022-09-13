@@ -67,7 +67,7 @@ func TestMsgGrantAllowance(t *testing.T) {
 			addrSlice := msg.GetSigners()
 			require.True(t, tc.granter.Equals(addrSlice[0]))
 
-			allowance, err := msg.GetFeeAllowanceI()
+			allowance, err := msg.GetIFeeAllowance()
 			require.NoError(t, err)
 			require.Equal(t, tc.grant, allowance)
 

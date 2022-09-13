@@ -13,7 +13,7 @@ var _ types.UnpackInterfacesMessage = &Grant{}
 // NewGrant creates a new FeeAllowanceGrant.
 //
 //nolint:interfacer
-func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Grant, error) {
+func NewGrant(granter, grantee sdk.AccAddress, feeAllowance IFeeAllowance) (Grant, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
 		return Grant{}, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", feeAllowance)
@@ -53,8 +53,8 @@ func (a Grant) ValidateBasic() error {
 }
 
 // GetGrant unpacks allowance
-func (a Grant) GetGrant() (FeeAllowanceI, error) {
-	allowance, ok := a.Allowance.GetCachedValue().(FeeAllowanceI)
+func (a Grant) GetGrant() (IFeeAllowance, error) {
+	allowance, ok := a.Allowance.GetCachedValue().(IFeeAllowance)
 	if !ok {
 		return nil, sdkerrors.Wrap(ErrNoAllowance, "failed to get allowance")
 	}
@@ -64,6 +64,6 @@ func (a Grant) GetGrant() (FeeAllowanceI, error) {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (a Grant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var allowance FeeAllowanceI
+	var allowance IFeeAllowance
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }

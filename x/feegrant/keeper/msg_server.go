@@ -42,7 +42,7 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantA
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
 	}
 
-	allowance, err := msg.GetFeeAllowanceI()
+	allowance, err := msg.GetIFeeAllowance()
 	if err != nil {
 		return nil, err
 	}

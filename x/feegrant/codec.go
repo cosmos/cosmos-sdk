@@ -17,7 +17,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgGrantAllowance{}, "cosmos-sdk/MsgGrantAllowance")
 	legacy.RegisterAminoMsg(cdc, &MsgRevokeAllowance{}, "cosmos-sdk/MsgRevokeAllowance")
 
-	cdc.RegisterInterface((*FeeAllowanceI)(nil), nil)
+	cdc.RegisterInterface((*IFeeAllowance)(nil), nil)
 	cdc.RegisterConcrete(&BasicAllowance{}, "cosmos-sdk/BasicAllowance", nil)
 	cdc.RegisterConcrete(&PeriodicAllowance{}, "cosmos-sdk/PeriodicAllowance", nil)
 	cdc.RegisterConcrete(&AllowedMsgAllowance{}, "cosmos-sdk/AllowedMsgAllowance", nil)
@@ -31,8 +31,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterInterface(
-		"cosmos.feegrant.v1beta1.FeeAllowanceI",
-		(*FeeAllowanceI)(nil),
+		"cosmos.feegrant.v1beta1.IFeeAllowance",
+		(*IFeeAllowance)(nil),
 		&BasicAllowance{},
 		&PeriodicAllowance{},
 		&AllowedMsgAllowance{},

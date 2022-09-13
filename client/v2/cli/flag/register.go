@@ -11,7 +11,7 @@ import (
 )
 
 // AddMessageFlags adds flags for each field in the message to the flag set.
-func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messageType protoreflect.MessageType, commandOptions *autocliv1.RpcCommandOptions, options Options) (*MessageBinder, error) {
+func (b *Builder) AddMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, messageType protoreflect.MessageType, commandOptions *autocliv1.RpcCommandOptions, options Options) (*MessageBinder, error) {
 	fields := messageType.Descriptor().Fields()
 	numFields := fields.Len()
 	handler := &MessageBinder{
@@ -21,6 +21,7 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 	isPositional := map[string]bool{}
 	hasVarargs := false
 	n := len(commandOptions.PositionalArgs)
+	// positional args are also parsed using a FlagSet so that we can reuse all the same parsers
 	handler.positionalFlagSet = pflag.NewFlagSet("positional", pflag.ContinueOnError)
 	for i, arg := range commandOptions.PositionalArgs {
 		isPositional[arg.ProtoField] = true
@@ -70,7 +71,7 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 		}
 
 		flagOpts := commandOptions.FlagOptions[string(field.Name())]
-		name, hasValue, err := b.addFieldFlag(ctx, set, field, flagOpts, options)
+		name, hasValue, err := b.addFieldFlag(ctx, flagSet, field, flagOpts, options)
 		flagOptsByFlagName[name] = flagOpts
 		if err != nil {
 			return nil, err
@@ -82,9 +83,10 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 		})
 	}
 
-	set.VisitAll(func(flag *pflag.Flag) {
+	flagSet.VisitAll(func(flag *pflag.Flag) {
 		opts := flagOptsByFlagName[flag.Name]
 		if opts != nil {
+			// This is a bit of hacking around the pflag API, but
 			// we need to set these options here using Flag.VisitAll because the flag
 			// constructors that pflag gives us (StringP, Int32P, etc.) do not
 			// actually return the *Flag instance

@@ -1,10 +1,13 @@
 package keeper_test
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -15,22 +18,21 @@ import (
 	"pgregory.net/rapid"
 )
 
-type RapidTestSuite struct {
+type DeterministicTestSuite struct {
 	suite.Suite
 
 	ctx sdk.Context
 
 	queryClient   types.QueryClient
 	accountKeeper keeper.AccountKeeper
-	msgServer     types.MsgServer
 	encCfg        moduletestutil.TestEncodingConfig
 }
 
-func TestRapidTestSuite(t *testing.T) {
-	suite.Run(t, new(RapidTestSuite))
+func TestDeterministicTestSuite(t *testing.T) {
+	suite.Run(t, new(DeterministicTestSuite))
 }
 
-func (suite *RapidTestSuite) SetupTest() {
+func (suite *DeterministicTestSuite) SetupTest() {
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 
 	key := sdk.NewKVStoreKey(types.StoreKey)
@@ -55,18 +57,24 @@ func (suite *RapidTestSuite) SetupTest() {
 		types.NewModuleAddress("gov").String(),
 	)
 
-	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, suite.accountKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
-func (suite *RapidTestSuite) TestGRPCQueryAccounts() {
+func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
-		pkBz := rapid.SliceOfN(rapid.Byte(), 20, 20).Draw(t, "hex")
-		addr := sdk.AccAddress(pkBz)
+		addr := testdata.AddrTestDeterministic(t)
 		suite.accountKeeper.SetAccount(suite.ctx,
 			suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr))
+
+		acc, err := suite.queryClient.Account(suite.ctx, &types.QueryAccountRequest{Address: addr.String()})
+		suite.Require().NoError(err)
+		suite.Require().NotNil(acc)
+
+		var prevRes types.AccountI
+		err = suite.encCfg.InterfaceRegistry.UnpackAny(acc.Account, &prevRes)
+		suite.Require().NoError(err)
 
 		for i := 0; i < 1000; i++ {
 			acc, err := suite.queryClient.Account(suite.ctx, &types.QueryAccountRequest{Address: addr.String()})
@@ -77,6 +85,38 @@ func (suite *RapidTestSuite) TestGRPCQueryAccounts() {
 			err = suite.encCfg.InterfaceRegistry.UnpackAny(acc.Account, &account)
 			suite.Require().NoError(err)
 			suite.Require().Equal(account.GetAddress(), addr)
+
+			// check with previous response too.
+			suite.Require().Equal(account.GetAddress(), prevRes.GetAddress())
+			suite.Require().Equal(account.GetPubKey(), prevRes.GetPubKey())
+			suite.Require().Equal(account.GetSequence(), prevRes.GetSequence())
+			suite.Require().Equal(account.GetAccountNumber(), prevRes.GetAccountNumber())
+			prevRes = account
 		}
+	})
+
+	priv := secp256k1.GenPrivKey()
+	pub := priv.PubKey()
+	addr1 := sdk.AccAddress(priv.PubKey().Address())
+	// randAccNumber :=
+	accNum := uint64(rand.Intn(100) + 10000) // range 10000 to 10100
+	seq := uint64(0)
+
+	acc1 := types.NewBaseAccount(addr1, pub, accNum, seq)
+	suite.accountKeeper.SetAccount(suite.ctx, acc1)
+
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		acc, err := suite.queryClient.Account(suite.ctx, &types.QueryAccountRequest{Address: addr1.String()})
+		suite.Require().NoError(err)
+		suite.Require().NotNil(acc)
+		var account types.AccountI
+
+		err = suite.encCfg.InterfaceRegistry.UnpackAny(acc.Account, &account)
+		suite.Require().NoError(err)
+
+		suite.Require().Equal(account.GetAddress(), addr1)
+		suite.Require().Equal(account.GetPubKey(), pub)
+		suite.Require().Equal(account.GetAccountNumber(), accNum)
+		suite.Require().Equal(account.GetSequence(), seq)
 	})
 }

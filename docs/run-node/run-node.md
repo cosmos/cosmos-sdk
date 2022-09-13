@@ -123,6 +123,18 @@ The previous command allow you to run a single node. This is enough for the next
 
 The naive way would be to run the same commands again in separate terminal windows. This is possible, however in the Cosmos SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the Cosmos SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/docker-compose.yml).
 
+## Logging
+
+Logging provides a way to see what is going on with a node. By default the info level is set. This is a global level and all info logs will be outputted to the terminal. If you would like to filter specific logs to the terminal instead of all, then setting `module:log_level` is how this can work. 
+
+Example: 
+
+In config.toml:
+
+```toml
+log_level: "state:info,p2p:info,consensus:info,x/staking:info,x/ibc:info,*error"
+```
+
 ## Next {hide}
 
 Read about the [Interacting with your Node](./interact-node.md) {hide}

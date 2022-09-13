@@ -6,20 +6,33 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authv1types "github.com/cosmos/cosmos-sdk/x/auth/types/v1"
 )
 
-var _ types.QueryServer = AccountKeeper{}
+var (
+	_ types.QueryServer       = Querier{}
+	_ authv1types.QueryServer = Querier{}
+)
 
-func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAccountAddressByIDRequest) (*types.QueryAccountAddressByIDResponse, error) {
+// Querier defines a wrapper around the x/auth keeper that implements the gRPC
+// query service handler interface.
+type Querier struct {
+	AccountKeeper
+}
+
+func NewQuerier(k AccountKeeper) Querier {
+	return Querier{k}
+}
+
+func (q Querier) AccountAddressByID(c context.Context, req *types.QueryAccountAddressByIDRequest) (*types.QueryAccountAddressByIDResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -29,7 +42,7 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	address := ak.GetAccountAddressByID(ctx, uint64(req.GetId()))
+	address := q.GetAccountAddressByID(ctx, uint64(req.GetId()))
 	if len(address) == 0 {
 		return nil, status.Errorf(codes.NotFound, "account address not found with id %d", req.Id)
 	}
@@ -37,18 +50,18 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil
 }
 
-func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {
+func (q Querier) Accounts(c context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(ak.storeKey)
+	store := ctx.KVStore(q.storeKey)
 	accountsStore := prefix.NewStore(store, types.AddressStoreKeyPrefix)
 
 	var accounts []*codectypes.Any
 	pageRes, err := query.Paginate(accountsStore, req.Pagination, func(key, value []byte) error {
-		account := ak.decodeAccount(value)
+		account := q.decodeAccount(value)
 		any, err := codectypes.NewAnyWithValue(account)
 		if err != nil {
 			return err
@@ -65,7 +78,7 @@ func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequ
 }
 
 // Account returns account details based on address
-func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {
+func (q Querier) Account(c context.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -79,7 +92,8 @@ func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountReques
 	if err != nil {
 		return nil, err
 	}
-	account := ak.GetAccount(ctx, addr)
+
+	account := q.GetAccount(ctx, addr)
 	if account == nil {
 		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
@@ -93,18 +107,19 @@ func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountReques
 }
 
 // Params returns parameters of auth module
-func (ak AccountKeeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (q Querier) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+
 	ctx := sdk.UnwrapSDKContext(c)
-	params := ak.GetParams(ctx)
+	params := q.GetParams(ctx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
 // ModuleAccounts returns all the existing Module Accounts
-func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModuleAccountsRequest) (*types.QueryModuleAccountsResponse, error) {
+func (q Querier) ModuleAccounts(c context.Context, req *types.QueryModuleAccountsRequest) (*types.QueryModuleAccountsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -112,23 +127,25 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// For deterministic output, sort the permAddrs by module name.
-	sortedPermAddrs := make([]string, 0, len(ak.permAddrs))
-	for moduleName := range ak.permAddrs {
+	sortedPermAddrs := make([]string, 0, len(q.permAddrs))
+	for moduleName := range q.permAddrs {
 		sortedPermAddrs = append(sortedPermAddrs, moduleName)
 	}
+
 	sort.Strings(sortedPermAddrs)
 
-	modAccounts := make([]*codectypes.Any, 0, len(ak.permAddrs))
-
+	modAccounts := make([]*codectypes.Any, 0, len(q.permAddrs))
 	for _, moduleName := range sortedPermAddrs {
-		account := ak.GetModuleAccount(ctx, moduleName)
+		account := q.GetModuleAccount(ctx, moduleName)
 		if account == nil {
 			return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
 		}
+
 		any, err := codectypes.NewAnyWithValue(account)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}
+
 		modAccounts = append(modAccounts, any)
 	}
 
@@ -136,8 +153,8 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 }
 
 // Bech32Prefix returns the keeper internally stored bech32 prefix.
-func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
-	bech32Prefix, err := ak.getBech32Prefix()
+func (q Querier) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
+	bech32Prefix, err := q.getBech32Prefix()
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +164,7 @@ func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32Prefi
 
 // AddressBytesToString converts an address from bytes to string, using the
 // keeper's bech32 prefix.
-func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.AddressBytesToStringRequest) (*types.AddressBytesToStringResponse, error) {
+func (q Querier) AddressBytesToString(ctx context.Context, req *types.AddressBytesToStringRequest) (*types.AddressBytesToStringResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -156,7 +173,7 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 		return nil, errors.New("empty address bytes is not allowed")
 	}
 
-	text, err := ak.addressCdc.BytesToString(req.AddressBytes)
+	text, err := q.addressCdc.BytesToString(req.AddressBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +183,7 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 
 // AddressStringToBytes converts an address from string to bytes, using the
 // keeper's bech32 prefix.
-func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.AddressStringToBytesRequest) (*types.AddressStringToBytesResponse, error) {
+func (q Querier) AddressStringToBytes(ctx context.Context, req *types.AddressStringToBytesRequest) (*types.AddressStringToBytesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -175,10 +192,45 @@ func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.Add
 		return nil, errors.New("empty address string is not allowed")
 	}
 
-	bz, err := ak.addressCdc.StringToBytes(req.AddressString)
+	bz, err := q.addressCdc.StringToBytes(req.AddressString)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.AddressStringToBytesResponse{AddressBytes: bz}, nil
+}
+
+func (q Querier) AccountInfo(goCtx context.Context, req *authv1types.QueryAccountInfoRequest) (*authv1types.QueryAccountInfoResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Address == "" {
+		return nil, status.Error(codes.InvalidArgument, "Address cannot be empty")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	account := q.GetAccount(ctx, addr)
+	if account == nil {
+		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
+	}
+
+	pkAny, err := codectypes.NewAnyWithValue(account.GetPubKey())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &authv1types.QueryAccountInfoResponse{
+		Info: &authv1types.AccountInfo{
+			AddressString: addr.String(),
+			Credential:    pkAny,
+			AccountNumber: account.GetAccountNumber(),
+			Sequence:      account.GetSequence(),
+		},
+	}, nil
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// NewAccountWithAddress implements AccountKeeperI.
+// NewAccountWithAddress implements IAccountKeeper.
 func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.IAccount {
 	acc := ak.proto()
 	err := acc.SetAddress(addr)
@@ -25,7 +25,7 @@ func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc types.IAccount) types.IA
 	return acc
 }
 
-// HasAccount implements AccountKeeperI.
+// HasAccount implements IAccountKeeper.
 func (ak AccountKeeper) HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 	store := ctx.KVStore(ak.storeKey)
 	return store.Has(types.AddressStoreKey(addr))
@@ -37,7 +37,7 @@ func (ak AccountKeeper) HasAccountAddressByID(ctx sdk.Context, id uint64) bool {
 	return store.Has(types.AccountNumberStoreKey(id))
 }
 
-// GetAccount implements AccountKeeperI.
+// GetAccount implements IAccountKeeper.
 func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.IAccount {
 	store := ctx.KVStore(ak.storeKey)
 	bz := store.Get(types.AddressStoreKey(addr))
@@ -68,7 +68,7 @@ func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []types.IAccou
 	return accounts
 }
 
-// SetAccount implements AccountKeeperI.
+// SetAccount implements IAccountKeeper.
 func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.IAccount) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.storeKey)

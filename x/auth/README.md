@@ -198,8 +198,8 @@ Presently only one fully-permissioned account keeper is exposed, which has the a
 all fields of all accounts, and to iterate over all stored accounts.
 
 ```go
-// AccountKeeperI is the interface contract that x/auth's keeper implements.
-type AccountKeeperI interface {
+// IAccountKeeper is the interface contract that x/auth's keeper implements.
+type IAccountKeeper interface {
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
 	NewAccountWithAddress(sdk.Context, sdk.AccAddress) types.IAccount
 

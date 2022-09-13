@@ -18,7 +18,7 @@ type MempoolTx interface {
 }
 
 // HashableTx defines an interface for a transaction that can be hashed.
-// TODO Consider merging with MemPoolTx.
+// TODO Consider merging with MemPoolTx or using signatures instead.
 type HashableTx interface {
 	GetHash() [32]byte
 }
@@ -54,6 +54,7 @@ type btreeMempool struct {
 }
 
 type btreeItem struct {
+	// TODO use linked list instead of slice if we opt for a Btree
 	txs      []MempoolTx
 	priority int64
 }
@@ -79,28 +80,29 @@ func (btm *btreeMempool) Insert(ctx Context, tx MempoolTx) error {
 		return ErrNoTxHash
 	}
 	txSize := tx.Size()
+	priority := ctx.Priority()
+
 	if btm.txBytes+txSize > btm.maxTxBytes {
 		return ErrMempoolIsFull
 	}
 
-	var bi *btreeItem
-	key := &btreeItem{priority: ctx.Priority()}
-	if btm.btree.Has(key) {
-		bi = btm.btree.Get(key).(*btreeItem)
+	key := &btreeItem{priority: priority}
+	var bi = btm.btree.Get(key).(*btreeItem)
+	if bi != nil {
 		bi.txs = append(bi.txs, tx)
 	} else {
-		bi = &btreeItem{txs: []MempoolTx{tx}, priority: ctx.Priority()}
+		bi = &btreeItem{txs: []MempoolTx{tx}, priority: priority}
 	}
 
 	btm.btree.ReplaceOrInsert(bi)
-	btm.hashes[hashTx.GetHash()] = ctx.Priority()
+	btm.hashes[hashTx.GetHash()] = priority
 	btm.txBytes += txSize
 	btm.txCount++
 
 	return nil
 }
 
-func (btm *btreeMempool) Select(ctx Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+func (btm *btreeMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
 	// TODO sequence no. validation
 
 	txBytes := 0
@@ -124,7 +126,7 @@ func (btm *btreeMempool) CountTx() int {
 	return btm.txCount
 }
 
-func (btm *btreeMempool) Remove(context Context, tx MempoolTx) error {
+func (btm *btreeMempool) Remove(_ Context, tx MempoolTx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -136,12 +138,30 @@ func (btm *btreeMempool) Remove(context Context, tx MempoolTx) error {
 		return fmt.Errorf("tx %X not found", hash)
 	}
 
-	// TODO handle tx arrays
-	i := btm.btree.Delete(&btreeItem{priority: priority})
+	i := btm.btree.Get(&btreeItem{priority: priority})
 	if i == nil {
 		return fmt.Errorf("tx with priority %v not found", priority)
 	}
 
+	item := i.(*btreeItem)
+	if len(item.txs) == 1 {
+		btm.btree.Delete(i)
+	} else {
+		found := false
+		for j, t := range item.txs {
+			if t.(HashableTx).GetHash() == hash {
+				item.txs = append(item.txs[:j], item.txs[j+1:]...)
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("tx %X not found at priority %v", hash, priority)
+		}
+		btm.btree.ReplaceOrInsert(item)
+	}
+
 	delete(btm.hashes, hash)
+
 	return nil
 }

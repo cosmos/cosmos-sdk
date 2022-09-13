@@ -63,10 +63,6 @@ func newBuilder(cdc codec.Codec) *wrapper {
 	}
 }
 
-func (w *wrapper) Size() int {
-	return len(w.bodyBz) + len(w.authInfoBz)
-}
-
 func (w *wrapper) GetMsgs() []sdk.Msg {
 	return w.tx.GetMsgs()
 }

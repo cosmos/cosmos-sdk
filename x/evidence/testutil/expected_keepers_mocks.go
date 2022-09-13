@@ -218,7 +218,7 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(ctx types0.Context, acc types1.AccountI) {
+func (m *MockAccountKeeper) SetAccount(ctx types0.Context, acc types1.IAccount) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", ctx, acc)
 }

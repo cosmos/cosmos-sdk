@@ -355,7 +355,7 @@ func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	// query account info
 	queryResJSON, err := QueryAccountExec(val1.ClientCtx, val1.Address)
 	require.NoError(err)
-	var account authtypes.AccountI
+	var account authtypes.IAccount
 	require.NoError(val1.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
 
 	/****  test signature-only  ****/
@@ -1270,7 +1270,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 
 	queryResJSON, err := QueryAccountExec(val.ClientCtx, addr)
 	s.Require().NoError(err)
-	var account authtypes.AccountI
+	var account authtypes.IAccount
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
 
 	// sign-batch file
@@ -1336,7 +1336,7 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())
 			} else {
-				var acc authtypes.AccountI
+				var acc authtypes.IAccount
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &acc))
 				s.Require().Equal(val.Address, acc.GetAddress())
 			}

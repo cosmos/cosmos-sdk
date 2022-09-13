@@ -8,11 +8,11 @@ import (
 // AccountKeeper defines the expected auth Account Keeper (noalias)
 type AccountKeeper interface {
 	GetModuleAddress(moduleName string) sdk.AccAddress
-	GetModuleAccount(ctx sdk.Context, moduleName string) auth.ModuleAccountI
+	GetModuleAccount(ctx sdk.Context, moduleName string) auth.ModuleIAccount
 
-	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) auth.AccountI
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) auth.AccountI
-	SetAccount(ctx sdk.Context, acc auth.AccountI)
+	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) auth.IAccount
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) auth.IAccount
+	SetAccount(ctx sdk.Context, acc auth.IAccount)
 }
 
 // BankKeeper defines the expected supply Keeper (noalias)

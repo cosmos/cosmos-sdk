@@ -7,13 +7,13 @@ import (
 
 type AccountKeeper interface {
 	// Return a new account with the next account number. Does not save the new account to the store.
-	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
+	NewAccount(sdk.Context, authtypes.IAccount) authtypes.IAccount
 
 	// Retrieve an account from the store.
-	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
+	GetAccount(sdk.Context, sdk.AccAddress) authtypes.IAccount
 
 	// Set an account in the store.
-	SetAccount(sdk.Context, authtypes.AccountI)
+	SetAccount(sdk.Context, authtypes.IAccount)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

@@ -18,9 +18,9 @@ type StakingKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	NewAccount(sdk.Context, auth.AccountI) auth.AccountI
-	SetAccount(sdk.Context, auth.AccountI)
-	IterateAccounts(ctx sdk.Context, process func(auth.AccountI) (stop bool))
+	NewAccount(sdk.Context, auth.IAccount) auth.IAccount
+	SetAccount(sdk.Context, auth.IAccount)
+	IterateAccounts(ctx sdk.Context, process func(auth.IAccount) (stop bool))
 }
 
 // GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)
@@ -28,7 +28,7 @@ type GenesisAccountsIterator interface {
 	IterateGenesisAccounts(
 		cdc *codec.LegacyAmino,
 		appGenesis map[string]json.RawMessage,
-		cb func(auth.AccountI) (stop bool),
+		cb func(auth.IAccount) (stop bool),
 	)
 }
 

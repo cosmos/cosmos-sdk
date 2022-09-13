@@ -13,7 +13,7 @@ import (
 )
 
 type AuthUnmarshaler interface {
-	UnmarshalAccount([]byte) (types.AccountI, error)
+	UnmarshalAccount([]byte) (types.IAccount, error)
 	GetCodec() codec.BinaryCodec
 }
 

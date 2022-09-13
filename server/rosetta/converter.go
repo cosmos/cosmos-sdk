@@ -755,7 +755,7 @@ func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMe
 
 // SignerData converts the given any account to signer data
 func (c converter) SignerData(anyAccount *codectypes.Any) (*SignerData, error) {
-	var acc auth.AccountI
+	var acc auth.IAccount
 	err := c.ir.UnpackAny(anyAccount, &acc)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())

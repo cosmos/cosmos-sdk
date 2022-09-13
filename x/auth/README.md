@@ -20,18 +20,18 @@ This module is used in the Cosmos Hub.
 
 ## Contents
 
-* [Concepts](#concepts)
-    * [Gas & Fees](#gas--fees)
-* [State](#state)
-    * [Accounts](#accounts)
-* [AnteHandlers](#antehandlers)
-* [Keepers](#keepers)
-    * [Account Keeper](#account-keeper)
-* [Parameters](#parameters)
-* [Client](#client)
-  * [CLI](#cli)
-  * [gRPC](#grpc)
-  * [REST](#rest)
+- [Concepts](#concepts)
+  - [Gas & Fees](#gas--fees)
+- [State](#state)
+  - [Accounts](#accounts)
+- [AnteHandlers](#antehandlers)
+- [Keepers](#keepers)
+  - [Account Keeper](#account-keeper)
+- [Parameters](#parameters)
+- [Client](#client)
+  - [CLI](#cli)
+  - [gRPC](#grpc)
+  - [REST](#rest)
 
 <!-- order: 1 -->
 
@@ -41,8 +41,8 @@ This module is used in the Cosmos Hub.
 
 The differences are:
 
-* `auth` - authentication of accounts and transactions for Cosmos SDK applications and is responsible for specifying the base transaction and account types.
-* `authz` - authorization for accounts to perform actions on behalf of other accounts and enables a granter to grant authorizations to a grantee that allows the grantee to execute messages on behalf of the granter.
+- `auth` - authentication of accounts and transactions for Cosmos SDK applications and is responsible for specifying the base transaction and account types.
+- `authz` - authorization for accounts to perform actions on behalf of other accounts and enables a granter to grant authorizations to a grantee that allows the grantee to execute messages on behalf of the granter.
 
 ## Gas & Fees
 
@@ -73,7 +73,7 @@ minimum gas prices set, such a mechanism could be implemented by node operators.
 
 Because the market value for tokens will fluctuate, validators are expected to
 dynamically adjust their minimum gas prices to a level that would encourage the
-use of the network.		
+use of the network.
 
 <!-- order: 2 -->
 
@@ -90,7 +90,7 @@ Accounts are exposed externally as an interface, and stored internally as
 either a base account or vesting account. Module clients wishing to add more
 account types may do so.
 
-* `0x01 | Address -> ProtocolBuffer(account)`
+- `0x01 | Address -> ProtocolBuffer(account)`
 
 ### Account Interface
 
@@ -100,13 +100,13 @@ interface - in order to write the account to the store, the account keeper will
 need to be used.
 
 ```go
-// AccountI is an interface used to store coins at a given address within state.
+// IAccount is an interface used to store coins at a given address within state.
 // It presumes a notion of sequence numbers for replay protection,
 // a notion of account numbers for replay protection for previously pruned accounts,
 // and a pubkey for authentication purposes.
 //
-// Many complex conditions can be used in the concrete struct which implements AccountI.
-type AccountI interface {
+// Many complex conditions can be used in the concrete struct which implements IAccount.
+type IAccount interface {
 	proto.Message
 
 	GetAddress() sdk.AccAddress
@@ -160,31 +160,31 @@ Note that the `AnteHandler` is called on both `CheckTx` and `DeliverTx`, as Tend
 
 The auth module provides `AnteDecorator`s that are recursively chained together into a single `AnteHandler` in the following order:
 
-* `SetUpContextDecorator`: Sets the `GasMeter` in the `Context` and wraps the next `AnteHandler` with a defer clause to recover from any downstream `OutOfGas` panics in the `AnteHandler` chain to return an error with information on gas provided and gas used.
+- `SetUpContextDecorator`: Sets the `GasMeter` in the `Context` and wraps the next `AnteHandler` with a defer clause to recover from any downstream `OutOfGas` panics in the `AnteHandler` chain to return an error with information on gas provided and gas used.
 
-* `RejectExtensionOptionsDecorator`: Rejects all extension options which can optionally be included in protobuf transactions.
+- `RejectExtensionOptionsDecorator`: Rejects all extension options which can optionally be included in protobuf transactions.
 
-* `MempoolFeeDecorator`: Checks if the `tx` fee is above local mempool `minFee` parameter during `CheckTx`.
+- `MempoolFeeDecorator`: Checks if the `tx` fee is above local mempool `minFee` parameter during `CheckTx`.
 
-* `ValidateBasicDecorator`: Calls `tx.ValidateBasic` and returns any non-nil error.
+- `ValidateBasicDecorator`: Calls `tx.ValidateBasic` and returns any non-nil error.
 
-* `TxTimeoutHeightDecorator`: Check for a `tx` height timeout.
+- `TxTimeoutHeightDecorator`: Check for a `tx` height timeout.
 
-* `ValidateMemoDecorator`: Validates `tx` memo with application parameters and returns any non-nil error.
+- `ValidateMemoDecorator`: Validates `tx` memo with application parameters and returns any non-nil error.
 
-* `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the `tx` size based on application parameters.
+- `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the `tx` size based on application parameters.
 
-* `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the `tx`. If the `x/feegrant` module is enabled and a fee granter is set, it deducts fees from the fee granter account.
+- `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the `tx`. If the `x/feegrant` module is enabled and a fee granter is set, it deducts fees from the fee granter account.
 
-* `SetPubKeyDecorator`: Sets the pubkey from a `tx`'s signers that does not already have its corresponding pubkey saved in the state machine and in the current context.
+- `SetPubKeyDecorator`: Sets the pubkey from a `tx`'s signers that does not already have its corresponding pubkey saved in the state machine and in the current context.
 
-* `ValidateSigCountDecorator`: Validates the number of signatures in `tx` based on app-parameters.
+- `ValidateSigCountDecorator`: Validates the number of signatures in `tx` based on app-parameters.
 
-* `SigGasConsumeDecorator`: Consumes parameter-defined amount of gas for each signature. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
+- `SigGasConsumeDecorator`: Consumes parameter-defined amount of gas for each signature. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
 
-* `SigVerificationDecorator`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
+- `SigVerificationDecorator`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
 
-* `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
+- `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 
 <!-- order: 4 -->
 
@@ -201,25 +201,25 @@ all fields of all accounts, and to iterate over all stored accounts.
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
 type AccountKeeperI interface {
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
-	NewAccountWithAddress(sdk.Context, sdk.AccAddress) types.AccountI
+	NewAccountWithAddress(sdk.Context, sdk.AccAddress) types.IAccount
 
 	// Return a new account with the next account number. Does not save the new account to the store.
-	NewAccount(sdk.Context, types.AccountI) types.AccountI
+	NewAccount(sdk.Context, types.IAccount) types.IAccount
 
 	// Check if an account exists in the store.
 	HasAccount(sdk.Context, sdk.AccAddress) bool
 
 	// Retrieve an account from the store.
-	GetAccount(sdk.Context, sdk.AccAddress) types.AccountI
+	GetAccount(sdk.Context, sdk.AccAddress) types.IAccount
 
 	// Set an account in the store.
-	SetAccount(sdk.Context, types.AccountI)
+	SetAccount(sdk.Context, types.IAccount)
 
 	// Remove an account from the store.
-	RemoveAccount(sdk.Context, types.AccountI)
+	RemoveAccount(sdk.Context, types.IAccount)
 
 	// Iterate over all accounts, calling the provided function. Stop iteration when it returns true.
-	IterateAccounts(sdk.Context, func(types.AccountI) bool)
+	IterateAccounts(sdk.Context, func(types.IAccount) bool)
 
 	// Fetch the public key of an account at a specified address
 	GetPubKey(sdk.Context, sdk.AccAddress) (crypto.PubKey, error)
@@ -238,13 +238,13 @@ type AccountKeeperI interface {
 
 The auth module contains the following parameters:
 
-| Key                    | Type            | Example |
-| ---------------------- | --------------- | ------- |
-| MaxMemoCharacters      |      uint64     | 256     |
-| TxSigLimit             |      uint64     | 7       |
-| TxSizeCostPerByte      |      uint64     | 10      |
-| SigVerifyCostED25519   |      uint64     | 590     |
-| SigVerifyCostSecp256k1 |      uint64     | 1000    |
+| Key                    | Type   | Example |
+| ---------------------- | ------ | ------- |
+| MaxMemoCharacters      | uint64 | 256     |
+| TxSigLimit             | uint64 | 7       |
+| TxSizeCostPerByte      | uint64 | 10      |
+| SigVerifyCostED25519   | uint64 | 590     |
+| SigVerifyCostSecp256k1 | uint64 | 1000    |
 
 <!-- order: 6 -->
 

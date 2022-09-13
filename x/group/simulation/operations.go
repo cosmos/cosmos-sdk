@@ -1201,7 +1201,7 @@ func SimulateMsgLeaveGroup(cdc *codec.ProtoCodec, k keeper.Keeper, ak group.Acco
 
 func randomGroup(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	ctx sdk.Context, accounts []simtypes.Account,
-) (groupInfo *group.GroupInfo, acc simtypes.Account, account authtypes.AccountI, err error) {
+) (groupInfo *group.GroupInfo, acc simtypes.Account, account authtypes.IAccount, err error) {
 	groupID := k.GetGroupSequence(ctx)
 
 	switch {
@@ -1239,7 +1239,7 @@ func randomGroup(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 
 func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	ctx sdk.Context, accounts []simtypes.Account,
-) (groupInfo *group.GroupInfo, groupPolicyInfo *group.GroupPolicyInfo, acc simtypes.Account, account authtypes.AccountI, err error) {
+) (groupInfo *group.GroupInfo, groupPolicyInfo *group.GroupPolicyInfo, acc simtypes.Account, account authtypes.IAccount, err error) {
 	groupInfo, _, _, err = randomGroup(r, k, ak, ctx, accounts)
 	if err != nil {
 		return nil, nil, simtypes.Account{}, nil, err
@@ -1271,7 +1271,7 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 
 func randomMember(ctx context.Context, r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	accounts []simtypes.Account, groupID uint64,
-) (acc simtypes.Account, account authtypes.AccountI, err error) {
+) (acc simtypes.Account, account authtypes.IAccount, err error) {
 	res, err := k.GroupMembers(ctx, &group.QueryGroupMembersRequest{
 		GroupId: groupID,
 	})

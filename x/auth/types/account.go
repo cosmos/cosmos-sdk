@@ -18,11 +18,11 @@ import (
 )
 
 var (
-	_ AccountI                           = (*BaseAccount)(nil)
+	_ IAccount                           = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*BaseAccount)(nil)
 	_ codectypes.UnpackInterfacesMessage = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*ModuleAccount)(nil)
-	_ ModuleAccountI                     = (*ModuleAccount)(nil)
+	_ ModuleIAccount                     = (*ModuleAccount)(nil)
 )
 
 // NewBaseAccount creates a new BaseAccount object
@@ -44,7 +44,7 @@ func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNu
 }
 
 // ProtoBaseAccount - a prototype function for BaseAccount
-func ProtoBaseAccount() AccountI {
+func ProtoBaseAccount() IAccount {
 	return &BaseAccount{}
 }
 
@@ -56,13 +56,13 @@ func NewBaseAccountWithAddress(addr sdk.AccAddress) *BaseAccount {
 	}
 }
 
-// GetAddress - Implements sdk.AccountI.
+// GetAddress - Implements sdk.IAccount.
 func (acc BaseAccount) GetAddress() sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(acc.Address)
 	return addr
 }
 
-// SetAddress - Implements sdk.AccountI.
+// SetAddress - Implements sdk.IAccount.
 func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 	if len(acc.Address) != 0 {
 		return errors.New("cannot override BaseAccount address")
@@ -72,7 +72,7 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 	return nil
 }
 
-// GetPubKey - Implements sdk.AccountI.
+// GetPubKey - Implements sdk.IAccount.
 func (acc BaseAccount) GetPubKey() (pk cryptotypes.PubKey) {
 	if acc.PubKey == nil {
 		return nil
@@ -84,7 +84,7 @@ func (acc BaseAccount) GetPubKey() (pk cryptotypes.PubKey) {
 	return content
 }
 
-// SetPubKey - Implements sdk.AccountI.
+// SetPubKey - Implements sdk.IAccount.
 func (acc *BaseAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
 	if pubKey == nil {
 		acc.PubKey = nil
@@ -97,23 +97,23 @@ func (acc *BaseAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
 	return err
 }
 
-// GetAccountNumber - Implements AccountI
+// GetAccountNumber - Implements IAccount
 func (acc BaseAccount) GetAccountNumber() uint64 {
 	return acc.AccountNumber
 }
 
-// SetAccountNumber - Implements AccountI
+// SetAccountNumber - Implements IAccount
 func (acc *BaseAccount) SetAccountNumber(accNumber uint64) error {
 	acc.AccountNumber = accNumber
 	return nil
 }
 
-// GetSequence - Implements sdk.AccountI.
+// GetSequence - Implements sdk.IAccount.
 func (acc BaseAccount) GetSequence() uint64 {
 	return acc.Sequence
 }
 
-// SetSequence - Implements sdk.AccountI.
+// SetSequence - Implements sdk.IAccount.
 func (acc *BaseAccount) SetSequence(seq uint64) error {
 	acc.Sequence = seq
 	return nil
@@ -214,7 +214,7 @@ func (ma ModuleAccount) GetPermissions() []string {
 	return ma.Permissions
 }
 
-// SetPubKey - Implements AccountI
+// SetPubKey - Implements IAccount
 func (ma ModuleAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
 	return fmt.Errorf("not supported for module accounts")
 }
@@ -299,13 +299,13 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
-// AccountI is an interface used to store coins at a given address within state.
+// IAccount is an interface used to store coins at a given address within state.
 // It presumes a notion of sequence numbers for replay protection,
 // a notion of account numbers for replay protection for previously pruned accounts,
 // and a pubkey for authentication purposes.
 //
-// Many complex conditions can be used in the concrete struct which implements AccountI.
-type AccountI interface {
+// Many complex conditions can be used in the concrete struct which implements IAccount.
+type IAccount interface {
 	proto.Message
 
 	GetAddress() sdk.AccAddress
@@ -324,10 +324,10 @@ type AccountI interface {
 	String() string
 }
 
-// ModuleAccountI defines an account interface for modules that hold tokens in
+// ModuleIAccount defines an account interface for modules that hold tokens in
 // an escrow.
-type ModuleAccountI interface {
-	AccountI
+type ModuleIAccount interface {
+	IAccount
 
 	GetName() string
 	GetPermissions() []string
@@ -349,9 +349,9 @@ func (ga GenesisAccounts) Contains(addr sdk.Address) bool {
 	return false
 }
 
-// GenesisAccount defines a genesis account that embeds an AccountI with validation capabilities.
+// GenesisAccount defines a genesis account that embeds an IAccount with validation capabilities.
 type GenesisAccount interface {
-	AccountI
+	IAccount
 
 	Validate() error
 }

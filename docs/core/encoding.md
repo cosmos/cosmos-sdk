@@ -8,7 +8,7 @@ While encoding in the Cosmos SDK used to be mainly handled by `go-amino` codec, 
 
 ## Pre-requisite Readings
 
-* [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
+- [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
 
 ## Encoding
 
@@ -86,8 +86,8 @@ init() {
 }
 ```
 
-This will allow the `x/authz` module to properly serialize and de-serializes `MsgExec` instances using Amino, 
-which is required when signing this kind of messages using a Ledger. 
+This will allow the `x/authz` module to properly serialize and de-serializes `MsgExec` instances using Amino,
+which is required when signing this kind of messages using a Ledger.
 
 ### Gogoproto
 
@@ -97,10 +97,10 @@ Modules are encouraged to utilize Protobuf encoding for their respective types. 
 
 In addition to [following official Protocol Buffer guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend using these annotations in .proto files when dealing with interfaces:
 
-* use `cosmos_proto.accepts_interface` to annote fields that accept interfaces
-* pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
-* annotate interface implementations with `cosmos_proto.implements_interface`
-* pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+- use `cosmos_proto.accepts_interface` to annote fields that accept interfaces
+- pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+- annotate interface implementations with `cosmos_proto.implements_interface`
+- pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
 
 ### Transaction Encoding
 
@@ -110,8 +110,8 @@ the Cosmos SDK but are then passed to the underlying consensus engine to be rela
 other peers. Since the underlying consensus engine is agnostic to the application,
 the consensus engine accepts only transactions in the form of raw bytes.
 
-* The `TxEncoder` object performs the encoding.
-* The `TxDecoder` object performs the decoding.
+- The `TxEncoder` object performs the encoding.
+- The `TxDecoder` object performs the decoding.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/tx_msg.go#L72-L76
 
@@ -146,7 +146,7 @@ In [ADR-019](../architecture/adr-019-protobuf-state-encoding.md), it has been de
 message Profile {
   // account is the account associated to a profile.
   google.protobuf.Any account = 1 [
-    (cosmos_proto.accepts_interface) = "AccountI"; // Asserts that this field only accepts Go types implementing `AccountI`. It is purely informational for now.
+    (cosmos_proto.accepts_interface) = "IAccount"; // Asserts that this field only accepts Go types implementing `AccountI`. It is purely informational for now.
   ];
   // bio is a short description of the account.
   string bio = 4;
@@ -156,7 +156,7 @@ message Profile {
 To add an account inside a profile, we need to "pack" it inside an `Any` first, using `codectypes.NewAnyWithValue`:
 
 ```go
-var myAccount AccountI
+var myAccount IAccount
 myAccount = ... // Can be a BaseAccount, a ContinuousVestingAccount or any struct implementing `AccountI`
 
 // Pack the account into an Any
@@ -191,7 +191,7 @@ fmt.Printf("%T\n", myProfile.Account)                  // Prints "Any"
 fmt.Printf("%T\n", myProfile.Account.GetCachedValue()) // Prints "BaseAccount", "ContinuousVestingAccount" or whatever was initially packed in the Any.
 
 // Get the address of the accountt.
-accAddr := myProfile.Account.GetCachedValue().(AccountI).GetAddress()
+accAddr := myProfile.Account.GetCachedValue().(IAccount).GetAddress()
 ```
 
 It is important to note that for `GetCachedValue()` to work, `Profile` (and any other structs embedding `Profile`) must implement the `UnpackInterfaces` method:
@@ -199,7 +199,7 @@ It is important to note that for `GetCachedValue()` to work, `Profile` (and any 
 ```go
 func (p *Profile) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
   if p.Account != nil {
-    var account AccountI
+    var account IAccount
     return unpacker.UnpackAny(p.Account, &account)
   }
 
@@ -215,12 +215,12 @@ For more information about interface encoding, and especially on `UnpackInterfac
 
 The above `Profile` example is a fictive example used for educational purposes. In the Cosmos SDK, we use `Any` encoding in several places (non-exhaustive list):
 
-* the `cryptotypes.PubKey` interface for encoding different types of public keys,
-* the `sdk.Msg` interface for encoding different `Msg`s in a transaction,
-* the `AccountI` interface for encodinig different types of accounts (similar to the above example) in the x/auth query responses,
-* the `Evidencei` interface for encoding different types of evidences in the x/evidence module,
-* the `AuthorizationI` interface for encoding different types of x/authz authorizations,
-* the [`Validator`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/types/staking.pb.go#L306-L339) struct that contains information about a validator.
+- the `cryptotypes.PubKey` interface for encoding different types of public keys,
+- the `sdk.Msg` interface for encoding different `Msg`s in a transaction,
+- the `AccountI` interface for encodinig different types of accounts (similar to the above example) in the x/auth query responses,
+- the `Evidencei` interface for encoding different types of evidences in the x/evidence module,
+- the `AuthorizationI` interface for encoding different types of x/authz authorizations,
+- the [`Validator`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/types/staking.pb.go#L306-L339) struct that contains information about a validator.
 
 A real-life example of encoding the pubkey as `Any` inside the Validator struct in x/staking is shown in the following example:
 
@@ -234,10 +234,10 @@ A real-life example of encoding the pubkey as `Any` inside the Validator struct 
 
 Protobuf types can be defined to encode:
 
-* state
-* [`Msg`s](../building-modules/messages-and-queries.md#messages)
-* [Query services](../building-modules/query-services.md)
-* [genesis](../building-modules/genesis.md)
+- state
+- [`Msg`s](../building-modules/messages-and-queries.md#messages)
+- [Query services](../building-modules/query-services.md)
+- [genesis](../building-modules/genesis.md)
 
 #### Naming and conventions
 

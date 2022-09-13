@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Account defines a read-only version of the auth module's AccountI.
+// Account defines a read-only version of the auth module's IAccount.
 type Account interface {
 	GetAddress() sdk.AccAddress
 	GetPubKey() cryptotypes.PubKey // can return nil.

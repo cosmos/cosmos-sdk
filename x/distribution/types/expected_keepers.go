@@ -34,10 +34,10 @@ type BankKeeper interface {
 type StakingKeeper interface {
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(sdk.Context,
-		func(index int64, validator stakingtypes.ValidatorI) (stop bool))
+		func(index int64, validator stakingtypes.IValidator) (stop bool))
 
-	Validator(sdk.Context, sdk.ValAddress) stakingtypes.ValidatorI            // get a particular validator by operator address
-	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI // get a particular validator by consensus address
+	Validator(sdk.Context, sdk.ValAddress) stakingtypes.IValidator            // get a particular validator by operator address
+	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.IValidator // get a particular validator by consensus address
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.

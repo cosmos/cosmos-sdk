@@ -17,7 +17,7 @@ type ParamSubspace interface {
 type StakingKeeper interface {
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(
-		sdk.Context, func(index int64, validator stakingtypes.ValidatorI) (stop bool),
+		sdk.Context, func(index int64, validator stakingtypes.IValidator) (stop bool),
 	)
 
 	TotalBondedTokens(sdk.Context) math.Int // total bonded tokens within the validator set

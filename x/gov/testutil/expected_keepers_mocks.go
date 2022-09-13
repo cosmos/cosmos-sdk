@@ -956,7 +956,7 @@ func (mr *MockStakingKeeperMockRecorder) BondDenom(ctx interface{}) *gomock.Call
 }
 
 // IterateBondedValidatorsByPower mocks base method.
-func (m *MockStakingKeeper) IterateBondedValidatorsByPower(arg0 types.Context, arg1 func(int64, types2.ValidatorI) bool) {
+func (m *MockStakingKeeper) IterateBondedValidatorsByPower(arg0 types.Context, arg1 func(int64, types2.IValidator) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateBondedValidatorsByPower", arg0, arg1)
 }

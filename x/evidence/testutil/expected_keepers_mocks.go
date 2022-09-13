@@ -53,10 +53,10 @@ func (mr *MockStakingKeeperMockRecorder) GetParams(ctx interface{}) *gomock.Call
 }
 
 // ValidatorByConsAddr mocks base method.
-func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types0.Context, arg1 types0.ConsAddress) types2.ValidatorI {
+func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types0.Context, arg1 types0.ConsAddress) types2.IValidator {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(types2.ValidatorI)
+	ret0, _ := ret[0].(types2.IValidator)
 	return ret0
 }
 

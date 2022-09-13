@@ -36,7 +36,7 @@ var (
 	BondStatusBonded      = BondStatus_name[int32(Bonded)]
 )
 
-var _ ValidatorI = Validator{}
+var _ IValidator = Validator{}
 
 // NewValidator constructs a new Validator
 //
@@ -89,7 +89,7 @@ func (v Validators) String() (out string) {
 }
 
 // ToSDKValidators -  convenience function convert []Validator to []sdk.ValidatorI
-func (v Validators) ToSDKValidators() (validators []ValidatorI) {
+func (v Validators) ToSDKValidators() (validators []IValidator) {
 	for _, val := range v {
 		validators = append(validators, val)
 	}

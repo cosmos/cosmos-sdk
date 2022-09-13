@@ -341,7 +341,7 @@ func (mr *MockValidatorSetMockRecorder) Delegation(arg0, arg1, arg2 interface{})
 }
 
 // IterateBondedValidatorsByPower mocks base method.
-func (m *MockValidatorSet) IterateBondedValidatorsByPower(arg0 types.Context, arg1 func(int64, types1.ValidatorI) bool) {
+func (m *MockValidatorSet) IterateBondedValidatorsByPower(arg0 types.Context, arg1 func(int64, types1.IValidator) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateBondedValidatorsByPower", arg0, arg1)
 }
@@ -353,7 +353,7 @@ func (mr *MockValidatorSetMockRecorder) IterateBondedValidatorsByPower(arg0, arg
 }
 
 // IterateLastValidators mocks base method.
-func (m *MockValidatorSet) IterateLastValidators(arg0 types.Context, arg1 func(int64, types1.ValidatorI) bool) {
+func (m *MockValidatorSet) IterateLastValidators(arg0 types.Context, arg1 func(int64, types1.IValidator) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateLastValidators", arg0, arg1)
 }
@@ -365,7 +365,7 @@ func (mr *MockValidatorSetMockRecorder) IterateLastValidators(arg0, arg1 interfa
 }
 
 // IterateValidators mocks base method.
-func (m *MockValidatorSet) IterateValidators(arg0 types.Context, arg1 func(int64, types1.ValidatorI) bool) {
+func (m *MockValidatorSet) IterateValidators(arg0 types.Context, arg1 func(int64, types1.IValidator) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateValidators", arg0, arg1)
 }
@@ -457,10 +457,10 @@ func (mr *MockValidatorSetMockRecorder) Unjail(arg0, arg1 interface{}) *gomock.C
 }
 
 // Validator mocks base method.
-func (m *MockValidatorSet) Validator(arg0 types.Context, arg1 types.ValAddress) types1.ValidatorI {
+func (m *MockValidatorSet) Validator(arg0 types.Context, arg1 types.ValAddress) types1.IValidator {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Validator", arg0, arg1)
-	ret0, _ := ret[0].(types1.ValidatorI)
+	ret0, _ := ret[0].(types1.IValidator)
 	return ret0
 }
 
@@ -471,10 +471,10 @@ func (mr *MockValidatorSetMockRecorder) Validator(arg0, arg1 interface{}) *gomoc
 }
 
 // ValidatorByConsAddr mocks base method.
-func (m *MockValidatorSet) ValidatorByConsAddr(arg0 types.Context, arg1 types.ConsAddress) types1.ValidatorI {
+func (m *MockValidatorSet) ValidatorByConsAddr(arg0 types.Context, arg1 types.ConsAddress) types1.IValidator {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(types1.ValidatorI)
+	ret0, _ := ret[0].(types1.IValidator)
 	return ret0
 }
 

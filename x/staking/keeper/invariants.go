@@ -53,7 +53,7 @@ func ModuleAccountInvariants(k *Keeper) sdk.Invariant {
 		notBondedPool := k.GetNotBondedPool(ctx)
 		bondDenom := k.BondDenom(ctx)
 
-		k.IterateValidators(ctx, func(_ int64, validator types.ValidatorI) bool {
+		k.IterateValidators(ctx, func(_ int64, validator types.IValidator) bool {
 			switch validator.GetStatus() {
 			case types.Bonded:
 				bonded = bonded.Add(validator.GetTokens())

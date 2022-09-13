@@ -10,7 +10,7 @@ import (
 // and the keeper's address to pubkey map
 func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
 	stakingKeeper.IterateValidators(ctx,
-		func(index int64, validator stakingtypes.ValidatorI) bool {
+		func(index int64, validator stakingtypes.IValidator) bool {
 			consPk, err := validator.ConsPubKey()
 			if err != nil {
 				panic(err)

@@ -289,7 +289,7 @@ func (mr *MockStakingKeeperMockRecorder) IterateDelegations(ctx, delegator, fn i
 }
 
 // IterateValidators mocks base method.
-func (m *MockStakingKeeper) IterateValidators(arg0 types.Context, arg1 func(int64, types1.ValidatorI) bool) {
+func (m *MockStakingKeeper) IterateValidators(arg0 types.Context, arg1 func(int64, types1.IValidator) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateValidators", arg0, arg1)
 }
@@ -301,10 +301,10 @@ func (mr *MockStakingKeeperMockRecorder) IterateValidators(arg0, arg1 interface{
 }
 
 // Validator mocks base method.
-func (m *MockStakingKeeper) Validator(arg0 types.Context, arg1 types.ValAddress) types1.ValidatorI {
+func (m *MockStakingKeeper) Validator(arg0 types.Context, arg1 types.ValAddress) types1.IValidator {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Validator", arg0, arg1)
-	ret0, _ := ret[0].(types1.ValidatorI)
+	ret0, _ := ret[0].(types1.IValidator)
 	return ret0
 }
 
@@ -315,10 +315,10 @@ func (mr *MockStakingKeeperMockRecorder) Validator(arg0, arg1 interface{}) *gomo
 }
 
 // ValidatorByConsAddr mocks base method.
-func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types.Context, arg1 types.ConsAddress) types1.ValidatorI {
+func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types.Context, arg1 types.ConsAddress) types1.IValidator {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(types1.ValidatorI)
+	ret0, _ := ret[0].(types1.IValidator)
 	return ret0
 }
 

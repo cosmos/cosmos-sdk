@@ -22,7 +22,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes bool, 
 	currValidators := make(map[string]v1.ValidatorGovInfo)
 
 	// fetch all the bonded validators, insert them into currValidators
-	keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+	keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.IValidator) (stop bool) {
 		currValidators[validator.GetOperator().String()] = v1.NewValidatorGovInfo(
 			validator.GetOperator(),
 			validator.GetBondedTokens(),

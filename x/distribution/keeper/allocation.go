@@ -58,7 +58,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, totalPreviousPower int64, bonded
 }
 
 // AllocateTokensToValidator allocate tokens to a particular validator, splitting according to commission
-func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.ValidatorI, tokens sdk.DecCoins) {
+func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.IValidator, tokens sdk.DecCoins) {
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)

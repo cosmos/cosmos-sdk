@@ -15,8 +15,8 @@ type IDelegation interface {
 	GetShares() math.LegacyDec        // amount of validator's shares held in this delegation
 }
 
-// ValidatorI expected validator functions
-type ValidatorI interface {
+// IValidator expected validator functions
+type IValidator interface {
 	IsJailed() bool                                          // whether the validator is jailed
 	GetMoniker() string                                      // moniker of the validator
 	GetStatus() BondStatus                                   // status of the validator

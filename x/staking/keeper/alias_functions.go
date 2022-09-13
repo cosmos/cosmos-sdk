@@ -103,7 +103,7 @@ func (k Keeper) GetValidatorSet() types.ValidatorSet {
 }
 
 // Delegation get the delegation interface for a particular set of delegator and validator addresses
-func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) types.DelegationI {
+func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) types.IDelegation {
 	bond, ok := k.GetDelegation(ctx, addrDel, addrVal)
 	if !ok {
 		return nil
@@ -114,7 +114,7 @@ func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.
 
 // iterate through all of the delegations from a delegator
 func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
-	fn func(index int64, del types.DelegationI) (stop bool),
+	fn func(index int64, del types.IDelegation) (stop bool),
 ) {
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetDelegationsKey(delAddr)

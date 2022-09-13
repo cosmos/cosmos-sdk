@@ -23,7 +23,7 @@ type StakingKeeper interface {
 	TotalBondedTokens(sdk.Context) math.Int // total bonded tokens within the validator set
 	IterateDelegations(
 		ctx sdk.Context, delegator sdk.AccAddress,
-		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool),
+		fn func(index int64, delegation stakingtypes.IDelegation) (stop bool),
 	)
 }
 

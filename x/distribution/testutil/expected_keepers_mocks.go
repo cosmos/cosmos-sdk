@@ -221,10 +221,10 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // Delegation mocks base method.
-func (m *MockStakingKeeper) Delegation(arg0 types.Context, arg1 types.AccAddress, arg2 types.ValAddress) types1.DelegationI {
+func (m *MockStakingKeeper) Delegation(arg0 types.Context, arg1 types.AccAddress, arg2 types.ValAddress) types1.IDelegation {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delegation", arg0, arg1, arg2)
-	ret0, _ := ret[0].(types1.DelegationI)
+	ret0, _ := ret[0].(types1.IDelegation)
 	return ret0
 }
 
@@ -277,7 +277,7 @@ func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomo
 }
 
 // IterateDelegations mocks base method.
-func (m *MockStakingKeeper) IterateDelegations(ctx types.Context, delegator types.AccAddress, fn func(int64, types1.DelegationI) bool) {
+func (m *MockStakingKeeper) IterateDelegations(ctx types.Context, delegator types.AccAddress, fn func(int64, types1.IDelegation) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateDelegations", ctx, delegator, fn)
 }

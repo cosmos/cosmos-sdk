@@ -968,7 +968,7 @@ func (mr *MockStakingKeeperMockRecorder) IterateBondedValidatorsByPower(arg0, ar
 }
 
 // IterateDelegations mocks base method.
-func (m *MockStakingKeeper) IterateDelegations(ctx types.Context, delegator types.AccAddress, fn func(int64, types2.DelegationI) bool) {
+func (m *MockStakingKeeper) IterateDelegations(ctx types.Context, delegator types.AccAddress, fn func(int64, types2.IDelegation) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateDelegations", ctx, delegator, fn)
 }

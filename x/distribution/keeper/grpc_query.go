@@ -223,7 +223,7 @@ func (k Querier) DelegationTotalRewards(c context.Context, req *types.QueryDeleg
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, delAdr,
-		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
+		func(_ int64, del stakingtypes.IDelegation) (stop bool) {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
 			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
@@ -257,7 +257,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, delAdr,
-		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
+		func(_ int64, del stakingtypes.IDelegation) (stop bool) {
 			validators = append(validators, del.GetValidatorAddr().String())
 			return false
 		},

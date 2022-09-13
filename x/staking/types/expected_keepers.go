@@ -67,7 +67,7 @@ type ValidatorSet interface {
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
-	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) DelegationI
+	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) IDelegation
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(sdk.Context) uint32
@@ -80,7 +80,7 @@ type DelegationSet interface {
 	// iterate through all delegations from one delegator by validator-AccAddress,
 	//   execute func for each validator
 	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-		fn func(index int64, delegation DelegationI) (stop bool))
+		fn func(index int64, delegation IDelegation) (stop bool))
 }
 
 // Event Hooks

@@ -41,10 +41,10 @@ type StakingKeeper interface {
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
-	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingtypes.DelegationI
+	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingtypes.IDelegation
 
 	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool))
+		fn func(index int64, delegation stakingtypes.IDelegation) (stop bool))
 
 	GetAllSDKDelegations(ctx sdk.Context) []stakingtypes.Delegation
 	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)

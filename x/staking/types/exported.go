@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// DelegationI delegation bond for a delegated proof of stake system
-type DelegationI interface {
+// IDelegation delegation bond for a delegated proof of stake system
+type IDelegation interface {
 	GetDelegatorAddr() sdk.AccAddress // delegator sdk.AccAddress for the bond
 	GetValidatorAddr() sdk.ValAddress // validator operator address
 	GetShares() math.LegacyDec        // amount of validator's shares held in this delegation

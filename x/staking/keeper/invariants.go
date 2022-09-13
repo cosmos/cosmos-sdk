@@ -16,7 +16,7 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k *Keeper) {
 	ir.RegisterRoute(types.ModuleName, "nonnegative-power",
 		NonNegativePowerInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "positive-delegation",
-		PositiveDelegationInvariant(k))
+		PositiveIDelegationnvariant(k))
 	ir.RegisterRoute(types.ModuleName, "delegator-shares",
 		DelegatorSharesInvariant(k))
 }
@@ -34,7 +34,7 @@ func AllInvariants(k *Keeper) sdk.Invariant {
 			return res, stop
 		}
 
-		res, stop = PositiveDelegationInvariant(k)(ctx)
+		res, stop = PositiveIDelegationnvariant(k)(ctx)
 		if stop {
 			return res, stop
 		}
@@ -126,8 +126,8 @@ func NonNegativePowerInvariant(k *Keeper) sdk.Invariant {
 	}
 }
 
-// PositiveDelegationInvariant checks that all stored delegations have > 0 shares.
-func PositiveDelegationInvariant(k *Keeper) sdk.Invariant {
+// PositiveIDelegationnvariant checks that all stored delegations have > 0 shares.
+func PositiveIDelegationnvariant(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var (
 			msg   string

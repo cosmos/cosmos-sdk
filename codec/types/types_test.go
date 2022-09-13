@@ -27,7 +27,7 @@ func TestAnyPackUnpack(t *testing.T) {
 	require.Equal(t, spot, animal)
 }
 
-type TestI interface {
+type ITest interface {
 	DoSomething()
 }
 
@@ -50,7 +50,7 @@ func (dog FakeDog) Greet() string           { return "fakedog" }
 func TestRegister(t *testing.T) {
 	registry := types.NewInterfaceRegistry()
 	registry.RegisterInterface("Animal", (*testdata.Animal)(nil))
-	registry.RegisterInterface("TestI", (*TestI)(nil))
+	registry.RegisterInterface("ITest", (*ITest)(nil))
 
 	// Happy path.
 	require.NotPanics(t, func() {
@@ -59,12 +59,12 @@ func TestRegister(t *testing.T) {
 
 	// testdata.Dog doesn't implement TestI
 	require.Panics(t, func() {
-		registry.RegisterImplementations((*TestI)(nil), &testdata.Dog{})
+		registry.RegisterImplementations((*ITest)(nil), &testdata.Dog{})
 	})
 
 	// nil proto message
 	require.Panics(t, func() {
-		registry.RegisterImplementations((*TestI)(nil), nil)
+		registry.RegisterImplementations((*ITest)(nil), nil)
 	})
 
 	// Not an interface.

@@ -33,7 +33,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -656,7 +655,12 @@ func byteChunk(bz []byte, index int) []byte {
 
 // byteChunks calculates the number of chunks in the byte slice.
 func byteChunks(bz []byte) int {
-	return int(math.Ceil(float64(len(bz)) / float64(stateChunkSize)))
+	bzs := len(bz)
+	if bzs%stateChunkSize == 0 {
+		return bzs / stateChunkSize
+	}
+
+	return bzs/stateChunkSize + 1
 }
 
 // fileWrite writes the module's genesis state into files, each file containing

@@ -53,20 +53,24 @@ func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 			Shorthand: shorthand,
 			Usage:     usage,
 			DefValue:  defaultValue,
-			// TODO: these need to be set on all flags - not just ones for custom types
-			Value: val,
+			Value:     val,
 		})
 		return name, val, nil
 	}
 
+	// use the built-in pflag StringP, Int32P, etc. functions
+	var val HasValue
 	if field.IsList() {
-		val := bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage, defaultValue)
-		return name, val, nil
+		val = bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage)
 
+	} else {
+		val = bindSimpleFlag(flagSet, field.Kind(), name, shorthand, usage)
 	}
 
-	val := bindSimpleFlag(flagSet, field.Kind(), name, shorthand, usage, defaultValue)
-	return name, val, nil
+	// set the defaultValue in this way because this is much easier than trying
+	// to parse the string into the types that StringSliceP, Int32P, etc. expect
+	err = flagSet.Set(name, defaultValue)
+	return name, val, err
 }
 
 func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {

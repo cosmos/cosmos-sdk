@@ -5,13 +5,13 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func bindSimpleFlag(flagSet *pflag.FlagSet, kind protoreflect.Kind, name, shorthand, usage, defaultValue string) HasValue {
+func bindSimpleFlag(flagSet *pflag.FlagSet, kind protoreflect.Kind, name, shorthand, usage string) HasValue {
 	switch kind {
 	case protoreflect.BytesKind:
 		val := flagSet.BytesBase64P(name, shorthand, nil, usage)
 		return newSimpleValue(val, protoreflect.ValueOfBytes)
 	case protoreflect.StringKind:
-		val := flagSet.StringP(name, shorthand, defaultValue, usage)
+		val := flagSet.StringP(name, shorthand, "", usage)
 		return newSimpleValue(val, protoreflect.ValueOfString)
 	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
 		val := flagSet.Uint32P(name, shorthand, 0, usage)

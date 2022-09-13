@@ -29,7 +29,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&HasAnimal{},
 	)
 	registry.RegisterImplementations(
-		(*HasHasAnimalI)(nil),
+		(*IHasHasAnimal)(nil),
 		&HasHasAnimal{},
 	)
 	registry.RegisterImplementations(
@@ -49,7 +49,7 @@ func NewTestAmino() *amino.Codec {
 	cdc.RegisterInterface((*IHasAnimal)(nil), nil)
 	cdc.RegisterConcrete(&HasAnimal{}, "testdata/HasAnimal", nil)
 
-	cdc.RegisterInterface((*HasHasAnimalI)(nil), nil)
+	cdc.RegisterInterface((*IHasHasAnimal)(nil), nil)
 	cdc.RegisterConcrete(&HasHasAnimal{}, "testdata/HasHasAnimal", nil)
 
 	return cdc

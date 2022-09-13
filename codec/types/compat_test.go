@@ -84,7 +84,7 @@ func (s *Suite) TestAminoJSON() {
 
 func (s *Suite) TestNested() {
 	s.cdc.RegisterInterface((*testdata.IHasAnimal)(nil), nil)
-	s.cdc.RegisterInterface((*testdata.HasHasAnimalI)(nil), nil)
+	s.cdc.RegisterInterface((*testdata.IHasHasAnimal)(nil), nil)
 	s.cdc.RegisterConcrete(&testdata.HasAnimal{}, "testdata/HasAnimal", nil)
 	s.cdc.RegisterConcrete(&testdata.HasHasAnimal{}, "testdata/HasHasAnimal", nil)
 	s.cdc.RegisterConcrete(&testdata.HasHasHasAnimal{}, "testdata/HasHasHasAnimal", nil)

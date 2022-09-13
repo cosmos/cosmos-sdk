@@ -52,11 +52,11 @@ func (m HasAnimal) TheAnimal() Animal {
 	return m.Animal.GetCachedValue().(Animal)
 }
 
-type HasHasAnimalI interface {
+type IHasHasAnimal interface {
 	TheHasAnimal() IHasAnimal
 }
 
-var _ HasHasAnimalI = &HasHasAnimal{}
+var _ IHasHasAnimal = &HasHasAnimal{}
 
 func (m HasHasAnimal) TheHasAnimal() IHasAnimal {
 	return m.HasAnimal.GetCachedValue().(IHasAnimal)
@@ -69,19 +69,19 @@ func (m HasHasAnimal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return unpacker.UnpackAny(m.HasAnimal, &animal)
 }
 
-type HasHasHasAnimalI interface {
-	TheHasHasAnimal() HasHasAnimalI
+type IHasHasHasAnimal interface {
+	TheHasHasAnimal() IHasHasAnimal
 }
 
-var _ HasHasAnimalI = &HasHasAnimal{}
+var _ IHasHasAnimal = &HasHasAnimal{}
 
-func (m HasHasHasAnimal) TheHasHasAnimal() HasHasAnimalI {
-	return m.HasHasAnimal.GetCachedValue().(HasHasAnimalI)
+func (m HasHasHasAnimal) TheHasHasAnimal() IHasHasAnimal {
+	return m.HasHasAnimal.GetCachedValue().(IHasHasAnimal)
 }
 
 var _ types.UnpackInterfacesMessage = HasHasHasAnimal{}
 
 func (m HasHasHasAnimal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var animal HasHasAnimalI
+	var animal IHasHasAnimal
 	return unpacker.UnpackAny(m.HasHasAnimal, &animal)
 }

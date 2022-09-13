@@ -39,6 +39,10 @@ message EchoRequest {
   int32 positional1 = 27;
   string positional2 = 28;
   repeated cosmos.base.v1beta1.Coin positional3_varargs = 29;
+
+  string proto_deprecated_field = 30 [deprecated = true];
+  string cli_deprecated_field = 31;
+  string shorthand_deprecated_field = 32;
 }
 
 enum Enum {

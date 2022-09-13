@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func bindSimpleListFlag(flagSet *pflag.FlagSet, kind protoreflect.Kind, name, shorthand, usage string) HasValue {
+func bindSimpleListFlag(flagSet *pflag.FlagSet, kind protoreflect.Kind, name, shorthand, usage, defaultValue string) HasValue {
 	switch kind {
 	case protoreflect.StringKind:
 		val := flagSet.StringSliceP(name, shorthand, nil, usage)

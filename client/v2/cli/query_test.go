@@ -16,6 +16,50 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/v2/internal/testpb"
 )
 
+var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
+	Service: testpb.Query_ServiceDesc.ServiceName,
+	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		{
+			RpcMethod: "Echo",
+			Use:       "echo [pos1] [pos2] [pos3...]",
+			PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+				{
+					ProtoField: "positional1",
+				},
+				{
+					ProtoField: "positional2",
+				},
+				{
+					ProtoField: "positional3_varargs",
+					Varargs:    true,
+				},
+			},
+			FlagOptions: map[string]*autocliv1.FlagOptions{
+				"u32": {
+					Name:      "uint32",
+					Shorthand: "u",
+					Usage:     "some random uint32",
+				},
+				"i32": {
+					Usage:        "some random int32",
+					DefaultValue: "3",
+				},
+				"u64": {
+					Usage:             "some random uint64",
+					NoOptDefaultValue: "5",
+				},
+				"cli_deprecated_field": {
+					Deprecated: "don't use this",
+				},
+				"shorthand_deprecated_field": {
+					Shorthand:  "s",
+					Deprecated: "bad idea",
+				},
+			},
+		},
+	},
+}
+
 func testExec(t *testing.T, args ...string) *testClientConn {
 	server := grpc.NewServer()
 	testpb.RegisterQueryServer(server, &testEchoServer{})
@@ -37,30 +81,7 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 			return conn
 		},
 	}
-	cmd, err := b.BuildModuleQueryCommand(
-		"test",
-		&autocliv1.ServiceCommandDescriptor{
-			Service: testpb.Query_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-				{
-					RpcMethod: "Echo",
-					Use:       "echo [pos1] [pos2] [pos3...]",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{
-							ProtoField: "positional1",
-						},
-						{
-							ProtoField: "positional2",
-						},
-						{
-							ProtoField: "positional3_varargs",
-							Varargs:    true,
-						},
-					},
-				},
-			},
-		},
-	)
+	cmd, err := b.BuildModuleQueryCommand("test", testCmdDesc)
 	assert.NilError(t, err)
 	cmd.SetArgs(args)
 	cmd.SetOut(conn.out)
@@ -68,7 +89,7 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 	return conn
 }
 
-func TestEcho(t *testing.T) {
+func TestEverything(t *testing.T) {
 	conn := testExec(t,
 		"echo",
 		"1",
@@ -79,7 +100,7 @@ func TestEcho(t *testing.T) {
 		"--an-enum", "one",
 		"--a-message", `{"bar":"abc", "baz":-3}`,
 		"--duration", "4h3s",
-		"--u-32", "27",
+		"--uint32", "27",
 		"--u-64", "3267246890",
 		"--i-32", "-253",
 		"--i-64", "-234602347",
@@ -111,6 +132,39 @@ func TestEcho(t *testing.T) {
 		"--uints", "4",
 	)
 	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
+}
+
+func TestOptions(t *testing.T) {
+	conn := testExec(t,
+		"echo",
+		"1", "abc", `{"denom":"foo","amount":"1"}`,
+		"-u", "27", // shorthand
+		"--u-64", // no opt default value
+	)
+	lastReq := conn.lastRequest.(*testpb.EchoRequest)
+	assert.Equal(t, uint32(27), lastReq.U32) // shorthand got set
+	assert.Equal(t, int32(3), lastReq.I32)   // default value got set
+	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
+}
+
+func TestDeprecated(t *testing.T) {
+	// deprecated field in proto file
+	testExec(t,
+		"echo", "1", "abc", `{}`,
+		"--proto-deprecated-field", "abc",
+	)
+
+	// deprecated field in cli options
+	testExec(t,
+		"echo", "1", "abc", `{}`,
+		"--cli-deprecated-field", "abc",
+	)
+
+	// deprecated shorthand in cli options
+	testExec(t,
+		"echo", "1", "abc", `{}`,
+		"-s", "abc",
+	)
 }
 
 func TestHelp(t *testing.T) {

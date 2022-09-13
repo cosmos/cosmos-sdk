@@ -83,10 +83,17 @@ type fieldBinding struct {
 }
 
 func (f fieldBinding) bind(msg protoreflect.Message) error {
-	val, err := f.hasValue.Get(msg.NewField(f.field))
+	field := f.field
+	val, err := f.hasValue.Get(msg.NewField(field))
 	if err != nil {
 		return err
 	}
-	msg.Set(f.field, val)
+	kind := f.field.Kind()
+	if !(field.IsList() ||
+		field.IsMap() ||
+		kind == protoreflect.MessageKind ||
+		kind == protoreflect.GroupKind) {
+		msg.Set(f.field, val)
+	}
 	return nil
 }

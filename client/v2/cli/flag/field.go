@@ -18,17 +18,18 @@ type Options struct {
 	Prefix string
 }
 
-// AddFieldFlag adds a flag for the provided field to the flag set.
-func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, opts *autocliv1.FlagOptions, options Options) (HasValue, error) {
+// addFieldFlag adds a flag for the provided field to the flag set.
+func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, opts *autocliv1.FlagOptions, options Options) (name string, hasValue HasValue, err error) {
 	if opts == nil {
 		opts = &autocliv1.FlagOptions{}
 	}
 
 	if field.Kind() == protoreflect.MessageKind && field.Message().FullName() == "cosmos.base.query.v1beta1.PageRequest" {
-		return b.bindPageRequest(ctx, flagSet, field)
+		hasValue, err := b.bindPageRequest(ctx, flagSet, field)
+		return "", hasValue, err
 	}
 
-	name := opts.Name
+	name = opts.Name
 	if name == "" {
 		name = options.Prefix + util.DescriptorKebabName(field)
 	}
@@ -39,9 +40,9 @@ func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 	}
 
 	shorthand := opts.Shorthand
+	defaultValue := opts.DefaultValue
 
 	if typ := b.resolveFlagType(field); typ != nil {
-		defaultValue := opts.DefaultValue
 		if defaultValue == "" {
 			defaultValue = typ.DefaultValue()
 		}
@@ -53,23 +54,19 @@ func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 			Usage:     usage,
 			DefValue:  defaultValue,
 			// TODO: these need to be set on all flags - not just ones for custom types
-			Deprecated:          opts.Deprecated,
-			ShorthandDeprecated: opts.ShorthandDeprecated,
-			Hidden:              opts.Hidden,
-			NoOptDefVal:         opts.NoOptDefaultValue,
-			Value:               val,
+			Value: val,
 		})
-		return val, nil
+		return name, val, nil
 	}
 
 	if field.IsList() {
-		val := bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage)
-		return val, nil
+		val := bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage, defaultValue)
+		return name, val, nil
 
 	}
 
-	val := bindSimpleFlag(flagSet, field.Kind(), name, shorthand, usage)
-	return val, nil
+	val := bindSimpleFlag(flagSet, field.Kind(), name, shorthand, usage, defaultValue)
+	return name, val, nil
 }
 
 func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {

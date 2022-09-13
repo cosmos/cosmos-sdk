@@ -38,7 +38,7 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 			hasVarargs = true
 		}
 
-		hasValue, err := b.AddFieldFlag(
+		_, hasValue, err := b.addFieldFlag(
 			ctx,
 			handler.positionalFlagSet,
 			field,
@@ -62,6 +62,7 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 		handler.CobraArgs = cobra.ExactArgs(n)
 	}
 
+	flagOptsByFlagName := map[string]*autocliv1.FlagOptions{}
 	for i := 0; i < numFields; i++ {
 		field := fields.Get(i)
 		if isPositional[string(field.Name())] {
@@ -69,7 +70,8 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 		}
 
 		flagOpts := commandOptions.FlagOptions[string(field.Name())]
-		hasValue, err := b.AddFieldFlag(ctx, set, field, flagOpts, options)
+		name, hasValue, err := b.addFieldFlag(ctx, set, field, flagOpts, options)
+		flagOptsByFlagName[name] = flagOpts
 		if err != nil {
 			return nil, err
 		}
@@ -79,5 +81,19 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 			field:    field,
 		})
 	}
+
+	set.VisitAll(func(flag *pflag.Flag) {
+		opts := flagOptsByFlagName[flag.Name]
+		if opts != nil {
+			// we need to set these options here using Flag.VisitAll because the flag
+			// constructors that pflag gives us (StringP, Int32P, etc.) do not
+			// actually return the *Flag instance
+			flag.Deprecated = opts.Deprecated
+			flag.ShorthandDeprecated = opts.ShorthandDeprecated
+			flag.Hidden = opts.Hidden
+			flag.NoOptDefVal = opts.NoOptDefaultValue
+		}
+	})
+
 	return handler, nil
 }

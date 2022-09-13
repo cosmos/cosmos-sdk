@@ -126,8 +126,10 @@ include contrib/devtools/Makefile
 BUILD_TARGETS := build install
 
 build: BUILD_ARGS=-o $(BUILDDIR)/
+
 build-linux-amd64:
 	GOOS=linux GOARCH=amd64 LEDGER_ENABLED=false $(MAKE) build
+	
 build-linux-arm64:
 	GOOS=linux GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
 

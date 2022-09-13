@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -95,11 +96,21 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 	testpb.RegisterQueryServer(server, &testEchoServer{})
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	assert.NilError(t, err)
-	go server.Serve(listener)
+	go func() {
+		err := server.Serve(listener)
+		if err != nil {
+			panic(err)
+		}
+	}()
 	defer server.GracefulStop()
 	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
-	defer clientConn.Close()
+	defer func() {
+		err := clientConn.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	conn := &testClientConn{
 		ClientConn: clientConn,
@@ -189,6 +200,24 @@ func TestHelp(t *testing.T) {
 
 	conn = testExec(t, "skipecho", "-h")
 	golden.Assert(t, conn.out.String(), "help-skip.golden")
+}
+
+func TestBuildCustomQueryCommand(t *testing.T) {
+	b := &Builder{}
+	customCommandCalled := false
+	cmd, err := b.BuildQueryCommand(map[string]*autocliv1.ModuleOptions{
+		"test": {
+			Query: testCmdDesc,
+		},
+	}, map[string]*cobra.Command{
+		"test": {Use: "test", Run: func(cmd *cobra.Command, args []string) {
+			customCommandCalled = true
+		}},
+	})
+	assert.NilError(t, err)
+	cmd.SetArgs([]string{"test", "query"})
+	assert.NilError(t, cmd.Execute())
+	assert.Assert(t, customCommandCalled)
 }
 
 type testClientConn struct {

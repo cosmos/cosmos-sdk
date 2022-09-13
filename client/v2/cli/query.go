@@ -16,7 +16,8 @@ import (
 )
 
 // BuildQueryCommand builds the query commands for all the provided modules. If a custom command is provided for a
-// module, this is used instead of any automatically generated CLI commands.
+// module, this is used instead of any automatically generated CLI commands. This allows apps to a fully dynamic client
+// with a more customized experience if a binary with custom commands is downloaded.
 func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
 	queryCmd := topLevelCmd("query", "Querying subcommands")
 	queryCmd.Aliases = []string{"q"}

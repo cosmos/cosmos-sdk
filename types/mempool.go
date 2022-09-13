@@ -102,19 +102,26 @@ func (btm *btreeMempool) Insert(ctx Context, tx MempoolTx) error {
 	return nil
 }
 
-func (btm *btreeMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
-	// TODO sequence no. validation
+func (btm *btreeMempool) validateSequenceNumber(tx Tx) bool {
+	// TODO
+	return true
+}
 
+func (btm *btreeMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
 	txBytes := 0
 	var selectedTxs []MempoolTx
 	btm.btree.Descend(func(i btree.Item) bool {
 		txs := i.(*btreeItem).txs
 		for _, tx := range txs {
-			txBytes += tx.Size()
-			if txBytes < maxBytes {
+			txSize := tx.Size()
+			if txBytes+txSize < maxBytes {
 				return false
 			}
+			if !btm.validateSequenceNumber(tx) {
+				continue
+			}
 			selectedTxs = append(selectedTxs, tx)
+			txBytes += txSize
 		}
 
 		return true

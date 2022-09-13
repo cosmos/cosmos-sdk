@@ -303,28 +303,82 @@ func (x *_EchoRequest_26_list) IsValid() bool {
 	return x.list != nil
 }
 
+var _ protoreflect.List = (*_EchoRequest_29_list)(nil)
+
+type _EchoRequest_29_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_EchoRequest_29_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_EchoRequest_29_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_EchoRequest_29_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_EchoRequest_29_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_EchoRequest_29_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_EchoRequest_29_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_EchoRequest_29_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_EchoRequest_29_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_EchoRequest               protoreflect.MessageDescriptor
-	fd_EchoRequest_u32           protoreflect.FieldDescriptor
-	fd_EchoRequest_u64           protoreflect.FieldDescriptor
-	fd_EchoRequest_str           protoreflect.FieldDescriptor
-	fd_EchoRequest_bz            protoreflect.FieldDescriptor
-	fd_EchoRequest_timestamp     protoreflect.FieldDescriptor
-	fd_EchoRequest_duration      protoreflect.FieldDescriptor
-	fd_EchoRequest_i32           protoreflect.FieldDescriptor
-	fd_EchoRequest_i64           protoreflect.FieldDescriptor
-	fd_EchoRequest_a_bool        protoreflect.FieldDescriptor
-	fd_EchoRequest_an_enum       protoreflect.FieldDescriptor
-	fd_EchoRequest_a_message     protoreflect.FieldDescriptor
-	fd_EchoRequest_a_coin        protoreflect.FieldDescriptor
-	fd_EchoRequest_an_address    protoreflect.FieldDescriptor
-	fd_EchoRequest_page          protoreflect.FieldDescriptor
-	fd_EchoRequest_bools         protoreflect.FieldDescriptor
-	fd_EchoRequest_uints         protoreflect.FieldDescriptor
-	fd_EchoRequest_strings       protoreflect.FieldDescriptor
-	fd_EchoRequest_enums         protoreflect.FieldDescriptor
-	fd_EchoRequest_durations     protoreflect.FieldDescriptor
-	fd_EchoRequest_some_messages protoreflect.FieldDescriptor
+	md_EchoRequest                     protoreflect.MessageDescriptor
+	fd_EchoRequest_u32                 protoreflect.FieldDescriptor
+	fd_EchoRequest_u64                 protoreflect.FieldDescriptor
+	fd_EchoRequest_str                 protoreflect.FieldDescriptor
+	fd_EchoRequest_bz                  protoreflect.FieldDescriptor
+	fd_EchoRequest_timestamp           protoreflect.FieldDescriptor
+	fd_EchoRequest_duration            protoreflect.FieldDescriptor
+	fd_EchoRequest_i32                 protoreflect.FieldDescriptor
+	fd_EchoRequest_i64                 protoreflect.FieldDescriptor
+	fd_EchoRequest_a_bool              protoreflect.FieldDescriptor
+	fd_EchoRequest_an_enum             protoreflect.FieldDescriptor
+	fd_EchoRequest_a_message           protoreflect.FieldDescriptor
+	fd_EchoRequest_a_coin              protoreflect.FieldDescriptor
+	fd_EchoRequest_an_address          protoreflect.FieldDescriptor
+	fd_EchoRequest_page                protoreflect.FieldDescriptor
+	fd_EchoRequest_bools               protoreflect.FieldDescriptor
+	fd_EchoRequest_uints               protoreflect.FieldDescriptor
+	fd_EchoRequest_strings             protoreflect.FieldDescriptor
+	fd_EchoRequest_enums               protoreflect.FieldDescriptor
+	fd_EchoRequest_durations           protoreflect.FieldDescriptor
+	fd_EchoRequest_some_messages       protoreflect.FieldDescriptor
+	fd_EchoRequest_positional1         protoreflect.FieldDescriptor
+	fd_EchoRequest_positional2         protoreflect.FieldDescriptor
+	fd_EchoRequest_positional3_varargs protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -350,6 +404,9 @@ func init() {
 	fd_EchoRequest_enums = md_EchoRequest.Fields().ByName("enums")
 	fd_EchoRequest_durations = md_EchoRequest.Fields().ByName("durations")
 	fd_EchoRequest_some_messages = md_EchoRequest.Fields().ByName("some_messages")
+	fd_EchoRequest_positional1 = md_EchoRequest.Fields().ByName("positional1")
+	fd_EchoRequest_positional2 = md_EchoRequest.Fields().ByName("positional2")
+	fd_EchoRequest_positional3_varargs = md_EchoRequest.Fields().ByName("positional3_varargs")
 }
 
 var _ protoreflect.Message = (*fastReflection_EchoRequest)(nil)
@@ -537,6 +594,24 @@ func (x *fastReflection_EchoRequest) Range(f func(protoreflect.FieldDescriptor, 
 			return
 		}
 	}
+	if x.Positional1 != int32(0) {
+		value := protoreflect.ValueOfInt32(x.Positional1)
+		if !f(fd_EchoRequest_positional1, value) {
+			return
+		}
+	}
+	if x.Positional2 != "" {
+		value := protoreflect.ValueOfString(x.Positional2)
+		if !f(fd_EchoRequest_positional2, value) {
+			return
+		}
+	}
+	if len(x.Positional3Varargs) != 0 {
+		value := protoreflect.ValueOfList(&_EchoRequest_29_list{list: &x.Positional3Varargs})
+		if !f(fd_EchoRequest_positional3_varargs, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -592,6 +667,12 @@ func (x *fastReflection_EchoRequest) Has(fd protoreflect.FieldDescriptor) bool {
 		return len(x.Durations) != 0
 	case "testpb.EchoRequest.some_messages":
 		return len(x.SomeMessages) != 0
+	case "testpb.EchoRequest.positional1":
+		return x.Positional1 != int32(0)
+	case "testpb.EchoRequest.positional2":
+		return x.Positional2 != ""
+	case "testpb.EchoRequest.positional3_varargs":
+		return len(x.Positional3Varargs) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
@@ -648,6 +729,12 @@ func (x *fastReflection_EchoRequest) Clear(fd protoreflect.FieldDescriptor) {
 		x.Durations = nil
 	case "testpb.EchoRequest.some_messages":
 		x.SomeMessages = nil
+	case "testpb.EchoRequest.positional1":
+		x.Positional1 = int32(0)
+	case "testpb.EchoRequest.positional2":
+		x.Positional2 = ""
+	case "testpb.EchoRequest.positional3_varargs":
+		x.Positional3Varargs = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
@@ -742,6 +829,18 @@ func (x *fastReflection_EchoRequest) Get(descriptor protoreflect.FieldDescriptor
 		}
 		listValue := &_EchoRequest_26_list{list: &x.SomeMessages}
 		return protoreflect.ValueOfList(listValue)
+	case "testpb.EchoRequest.positional1":
+		value := x.Positional1
+		return protoreflect.ValueOfInt32(value)
+	case "testpb.EchoRequest.positional2":
+		value := x.Positional2
+		return protoreflect.ValueOfString(value)
+	case "testpb.EchoRequest.positional3_varargs":
+		if len(x.Positional3Varargs) == 0 {
+			return protoreflect.ValueOfList(&_EchoRequest_29_list{})
+		}
+		listValue := &_EchoRequest_29_list{list: &x.Positional3Varargs}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
@@ -814,6 +913,14 @@ func (x *fastReflection_EchoRequest) Set(fd protoreflect.FieldDescriptor, value 
 		lv := value.List()
 		clv := lv.(*_EchoRequest_26_list)
 		x.SomeMessages = *clv.list
+	case "testpb.EchoRequest.positional1":
+		x.Positional1 = int32(value.Int())
+	case "testpb.EchoRequest.positional2":
+		x.Positional2 = value.Interface().(string)
+	case "testpb.EchoRequest.positional3_varargs":
+		lv := value.List()
+		clv := lv.(*_EchoRequest_29_list)
+		x.Positional3Varargs = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
@@ -895,6 +1002,12 @@ func (x *fastReflection_EchoRequest) Mutable(fd protoreflect.FieldDescriptor) pr
 		}
 		value := &_EchoRequest_26_list{list: &x.SomeMessages}
 		return protoreflect.ValueOfList(value)
+	case "testpb.EchoRequest.positional3_varargs":
+		if x.Positional3Varargs == nil {
+			x.Positional3Varargs = []*v1beta1.Coin{}
+		}
+		value := &_EchoRequest_29_list{list: &x.Positional3Varargs}
+		return protoreflect.ValueOfList(value)
 	case "testpb.EchoRequest.u32":
 		panic(fmt.Errorf("field u32 of message testpb.EchoRequest is not mutable"))
 	case "testpb.EchoRequest.u64":
@@ -913,6 +1026,10 @@ func (x *fastReflection_EchoRequest) Mutable(fd protoreflect.FieldDescriptor) pr
 		panic(fmt.Errorf("field an_enum of message testpb.EchoRequest is not mutable"))
 	case "testpb.EchoRequest.an_address":
 		panic(fmt.Errorf("field an_address of message testpb.EchoRequest is not mutable"))
+	case "testpb.EchoRequest.positional1":
+		panic(fmt.Errorf("field positional1 of message testpb.EchoRequest is not mutable"))
+	case "testpb.EchoRequest.positional2":
+		panic(fmt.Errorf("field positional2 of message testpb.EchoRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
@@ -977,6 +1094,13 @@ func (x *fastReflection_EchoRequest) NewField(fd protoreflect.FieldDescriptor) p
 	case "testpb.EchoRequest.some_messages":
 		list := []*AMessage{}
 		return protoreflect.ValueOfList(&_EchoRequest_26_list{list: &list})
+	case "testpb.EchoRequest.positional1":
+		return protoreflect.ValueOfInt32(int32(0))
+	case "testpb.EchoRequest.positional2":
+		return protoreflect.ValueOfString("")
+	case "testpb.EchoRequest.positional3_varargs":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_EchoRequest_29_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: testpb.EchoRequest"))
@@ -1131,6 +1255,19 @@ func (x *fastReflection_EchoRequest) ProtoMethods() *protoiface.Methods {
 				n += 2 + l + runtime.Sov(uint64(l))
 			}
 		}
+		if x.Positional1 != 0 {
+			n += 2 + runtime.Sov(uint64(x.Positional1))
+		}
+		l = len(x.Positional2)
+		if l > 0 {
+			n += 2 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.Positional3Varargs) > 0 {
+			for _, e := range x.Positional3Varargs {
+				l = options.Size(e)
+				n += 2 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1159,6 +1296,40 @@ func (x *fastReflection_EchoRequest) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Positional3Varargs) > 0 {
+			for iNdEx := len(x.Positional3Varargs) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Positional3Varargs[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1
+				i--
+				dAtA[i] = 0xea
+			}
+		}
+		if len(x.Positional2) > 0 {
+			i -= len(x.Positional2)
+			copy(dAtA[i:], x.Positional2)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Positional2)))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xe2
+		}
+		if x.Positional1 != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Positional1))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xd8
 		}
 		if len(x.SomeMessages) > 0 {
 			for iNdEx := len(x.SomeMessages) - 1; iNdEx >= 0; iNdEx-- {
@@ -2157,6 +2328,91 @@ func (x *fastReflection_EchoRequest) ProtoMethods() *protoiface.Methods {
 				}
 				x.SomeMessages = append(x.SomeMessages, &AMessage{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.SomeMessages[len(x.SomeMessages)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 27:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Positional1", wireType)
+				}
+				x.Positional1 = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Positional1 |= int32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 28:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Positional2", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Positional2 = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 29:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Positional3Varargs", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Positional3Varargs = append(x.Positional3Varargs, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Positional3Varargs[len(x.Positional3Varargs)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -3172,26 +3428,29 @@ type EchoRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// u32 is an uint32
-	U32          uint32                 `protobuf:"varint,1,opt,name=u32,proto3" json:"u32,omitempty"`
-	U64          uint64                 `protobuf:"varint,2,opt,name=u64,proto3" json:"u64,omitempty"`
-	Str          string                 `protobuf:"bytes,3,opt,name=str,proto3" json:"str,omitempty"`
-	Bz           []byte                 `protobuf:"bytes,4,opt,name=bz,proto3" json:"bz,omitempty"`
-	Timestamp    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	Duration     *durationpb.Duration   `protobuf:"bytes,6,opt,name=duration,proto3" json:"duration,omitempty"`
-	I32          int32                  `protobuf:"varint,7,opt,name=i32,proto3" json:"i32,omitempty"`
-	I64          int64                  `protobuf:"varint,10,opt,name=i64,proto3" json:"i64,omitempty"`
-	ABool        bool                   `protobuf:"varint,15,opt,name=a_bool,json=aBool,proto3" json:"a_bool,omitempty"`
-	AnEnum       Enum                   `protobuf:"varint,16,opt,name=an_enum,json=anEnum,proto3,enum=testpb.Enum" json:"an_enum,omitempty"`
-	AMessage     *AMessage              `protobuf:"bytes,17,opt,name=a_message,json=aMessage,proto3" json:"a_message,omitempty"`
-	ACoin        *v1beta1.Coin          `protobuf:"bytes,18,opt,name=a_coin,json=aCoin,proto3" json:"a_coin,omitempty"`
-	AnAddress    string                 `protobuf:"bytes,19,opt,name=an_address,json=anAddress,proto3" json:"an_address,omitempty"`
-	Page         *v1beta11.PageRequest  `protobuf:"bytes,20,opt,name=page,proto3" json:"page,omitempty"`
-	Bools        []bool                 `protobuf:"varint,21,rep,packed,name=bools,proto3" json:"bools,omitempty"`
-	Uints        []uint32               `protobuf:"varint,22,rep,packed,name=uints,proto3" json:"uints,omitempty"`
-	Strings      []string               `protobuf:"bytes,23,rep,name=strings,proto3" json:"strings,omitempty"`
-	Enums        []Enum                 `protobuf:"varint,24,rep,packed,name=enums,proto3,enum=testpb.Enum" json:"enums,omitempty"`
-	Durations    []*durationpb.Duration `protobuf:"bytes,25,rep,name=durations,proto3" json:"durations,omitempty"`
-	SomeMessages []*AMessage            `protobuf:"bytes,26,rep,name=some_messages,json=someMessages,proto3" json:"some_messages,omitempty"`
+	U32                uint32                 `protobuf:"varint,1,opt,name=u32,proto3" json:"u32,omitempty"`
+	U64                uint64                 `protobuf:"varint,2,opt,name=u64,proto3" json:"u64,omitempty"`
+	Str                string                 `protobuf:"bytes,3,opt,name=str,proto3" json:"str,omitempty"`
+	Bz                 []byte                 `protobuf:"bytes,4,opt,name=bz,proto3" json:"bz,omitempty"`
+	Timestamp          *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Duration           *durationpb.Duration   `protobuf:"bytes,6,opt,name=duration,proto3" json:"duration,omitempty"`
+	I32                int32                  `protobuf:"varint,7,opt,name=i32,proto3" json:"i32,omitempty"`
+	I64                int64                  `protobuf:"varint,10,opt,name=i64,proto3" json:"i64,omitempty"`
+	ABool              bool                   `protobuf:"varint,15,opt,name=a_bool,json=aBool,proto3" json:"a_bool,omitempty"`
+	AnEnum             Enum                   `protobuf:"varint,16,opt,name=an_enum,json=anEnum,proto3,enum=testpb.Enum" json:"an_enum,omitempty"`
+	AMessage           *AMessage              `protobuf:"bytes,17,opt,name=a_message,json=aMessage,proto3" json:"a_message,omitempty"`
+	ACoin              *v1beta1.Coin          `protobuf:"bytes,18,opt,name=a_coin,json=aCoin,proto3" json:"a_coin,omitempty"`
+	AnAddress          string                 `protobuf:"bytes,19,opt,name=an_address,json=anAddress,proto3" json:"an_address,omitempty"`
+	Page               *v1beta11.PageRequest  `protobuf:"bytes,20,opt,name=page,proto3" json:"page,omitempty"`
+	Bools              []bool                 `protobuf:"varint,21,rep,packed,name=bools,proto3" json:"bools,omitempty"`
+	Uints              []uint32               `protobuf:"varint,22,rep,packed,name=uints,proto3" json:"uints,omitempty"`
+	Strings            []string               `protobuf:"bytes,23,rep,name=strings,proto3" json:"strings,omitempty"`
+	Enums              []Enum                 `protobuf:"varint,24,rep,packed,name=enums,proto3,enum=testpb.Enum" json:"enums,omitempty"`
+	Durations          []*durationpb.Duration `protobuf:"bytes,25,rep,name=durations,proto3" json:"durations,omitempty"`
+	SomeMessages       []*AMessage            `protobuf:"bytes,26,rep,name=some_messages,json=someMessages,proto3" json:"some_messages,omitempty"`
+	Positional1        int32                  `protobuf:"varint,27,opt,name=positional1,proto3" json:"positional1,omitempty"`
+	Positional2        string                 `protobuf:"bytes,28,opt,name=positional2,proto3" json:"positional2,omitempty"`
+	Positional3Varargs []*v1beta1.Coin        `protobuf:"bytes,29,rep,name=positional3_varargs,json=positional3Varargs,proto3" json:"positional3_varargs,omitempty"`
 }
 
 func (x *EchoRequest) Reset() {
@@ -3354,6 +3613,27 @@ func (x *EchoRequest) GetSomeMessages() []*AMessage {
 	return nil
 }
 
+func (x *EchoRequest) GetPositional1() int32 {
+	if x != nil {
+		return x.Positional1
+	}
+	return 0
+}
+
+func (x *EchoRequest) GetPositional2() string {
+	if x != nil {
+		return x.Positional2
+	}
+	return ""
+}
+
+func (x *EchoRequest) GetPositional3Varargs() []*v1beta1.Coin {
+	if x != nil {
+		return x.Positional3Varargs
+	}
+	return nil
+}
+
 type AMessage struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3447,7 +3727,7 @@ var file_testpb_query_proto_rawDesc = []byte{
 	0x74, 0x61, 0x31, 0x2f, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73,
 	0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x22, 0xd6, 0x05, 0x0a, 0x0b, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x71,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0xe6, 0x06, 0x0a, 0x0b, 0x45, 0x63, 0x68, 0x6f, 0x52, 0x65, 0x71,
 	0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x33, 0x32, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x0d, 0x52, 0x03, 0x75, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x36, 0x34, 0x18, 0x02, 0x20,
 	0x01, 0x28, 0x04, 0x52, 0x03, 0x75, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18,
@@ -3492,7 +3772,16 @@ var file_testpb_query_proto_rawDesc = []byte{
 	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x35, 0x0a, 0x0d, 0x73, 0x6f, 0x6d, 0x65, 0x5f, 0x6d,
 	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x1a, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x10, 0x2e,
 	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x41, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52,
-	0x0c, 0x73, 0x6f, 0x6d, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x22, 0x2e, 0x0a,
+	0x0c, 0x73, 0x6f, 0x6d, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x12, 0x20, 0x0a,
+	0x0b, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x6c, 0x31, 0x18, 0x1b, 0x20, 0x01,
+	0x28, 0x05, 0x52, 0x0b, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x6c, 0x31, 0x12,
+	0x20, 0x0a, 0x0b, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x6c, 0x32, 0x18, 0x1c,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x6c,
+	0x32, 0x12, 0x4a, 0x0a, 0x13, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x6c, 0x33,
+	0x5f, 0x76, 0x61, 0x72, 0x61, 0x72, 0x67, 0x73, 0x18, 0x1d, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x12, 0x70, 0x6f, 0x73, 0x69, 0x74,
+	0x69, 0x6f, 0x6e, 0x61, 0x6c, 0x33, 0x56, 0x61, 0x72, 0x61, 0x72, 0x67, 0x73, 0x22, 0x2e, 0x0a,
 	0x08, 0x41, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x62, 0x61, 0x72,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x62, 0x61, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x62,
 	0x61, 0x7a, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x62, 0x61, 0x7a, 0x22, 0x3d, 0x0a,
@@ -3556,14 +3845,15 @@ var file_testpb_query_proto_depIdxs = []int32{
 	0,  // 6: testpb.EchoRequest.enums:type_name -> testpb.Enum
 	5,  // 7: testpb.EchoRequest.durations:type_name -> google.protobuf.Duration
 	2,  // 8: testpb.EchoRequest.some_messages:type_name -> testpb.AMessage
-	1,  // 9: testpb.EchoResponse.request:type_name -> testpb.EchoRequest
-	1,  // 10: testpb.Query.Echo:input_type -> testpb.EchoRequest
-	3,  // 11: testpb.Query.Echo:output_type -> testpb.EchoResponse
-	11, // [11:12] is the sub-list for method output_type
-	10, // [10:11] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	6,  // 9: testpb.EchoRequest.positional3_varargs:type_name -> cosmos.base.v1beta1.Coin
+	1,  // 10: testpb.EchoResponse.request:type_name -> testpb.EchoRequest
+	1,  // 11: testpb.Query.Echo:input_type -> testpb.EchoRequest
+	3,  // 12: testpb.Query.Echo:output_type -> testpb.EchoResponse
+	12, // [12:13] is the sub-list for method output_type
+	11, // [11:12] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_testpb_query_proto_init() }

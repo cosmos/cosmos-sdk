@@ -21,6 +21,7 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 	isPositional := map[string]bool{}
 	hasVarargs := false
 	n := len(commandOptions.PositionalArgs)
+	handler.positionalFlagSet = pflag.NewFlagSet("positional", pflag.ContinueOnError)
 	for i, arg := range commandOptions.PositionalArgs {
 		isPositional[arg.ProtoField] = true
 
@@ -37,22 +38,26 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 			hasVarargs = true
 		}
 
-		typ := b.resolveFlagType(field)
-		if typ == nil {
-			return nil, fmt.Errorf("can't resolve field %v", field)
+		hasValue, err := b.AddFieldFlag(
+			ctx,
+			handler.positionalFlagSet,
+			field,
+			&autocliv1.FlagOptions{Name: fmt.Sprintf("%d", i)},
+			Options{},
+		)
+		if err != nil {
+			return nil, err
 		}
 
-		//value := typ.NewValue(ctx, b)
-		//
-		//handler.positionalArgs = append(handler.positionalArgs, struct {
-		//	binder  Value
-		//	field   protoreflect.FieldDescriptor
-		//	varargs bool
-		//}{binder: value, field: field, varargs: arg.Varargs})
+		handler.positionalArgs = append(handler.positionalArgs, fieldBinding{
+			field:    field,
+			hasValue: hasValue,
+		})
 	}
 
 	if hasVarargs {
 		handler.CobraArgs = cobra.MinimumNArgs(n)
+		handler.hasVarargs = true
 	} else {
 		handler.CobraArgs = cobra.ExactArgs(n)
 	}
@@ -64,15 +69,15 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 		}
 
 		flagOpts := commandOptions.FlagOptions[string(field.Name())]
-		binder, err := b.AddFieldFlag(ctx, set, field, flagOpts, options)
+		hasValue, err := b.AddFieldFlag(ctx, set, field, flagOpts, options)
 		if err != nil {
 			return nil, err
 		}
 
-		handler.flagFieldPairs = append(handler.flagFieldPairs, struct {
-			hasValue HasValue
-			field    protoreflect.FieldDescriptor
-		}{hasValue: binder, field: field})
+		handler.flagBindings = append(handler.flagBindings, fieldBinding{
+			hasValue: hasValue,
+			field:    field,
+		})
 	}
 	return handler, nil
 }

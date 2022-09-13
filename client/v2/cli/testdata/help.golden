@@ -1,5 +1,5 @@
 Usage:
-  test echo [flags]
+  test echo [pos1] [pos2] [pos3...] [flags]
 
 Flags:
       --a-bool                                                               

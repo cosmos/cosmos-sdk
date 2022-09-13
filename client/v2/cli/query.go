@@ -131,6 +131,8 @@ func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescrip
 		return nil, err
 	}
 
+	cmd.Args = binder.CobraArgs
+
 	jsonMarshalOptions := protojson.MarshalOptions{
 		Indent:          "  ",
 		UseProtoNames:   true,

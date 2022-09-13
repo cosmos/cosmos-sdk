@@ -37,7 +37,30 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 			return conn
 		},
 	}
-	cmd, err := b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{Service: testpb.Query_ServiceDesc.ServiceName})
+	cmd, err := b.BuildModuleQueryCommand(
+		"test",
+		&autocliv1.ServiceCommandDescriptor{
+			Service: testpb.Query_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{
+					RpcMethod: "Echo",
+					Use:       "echo [pos1] [pos2] [pos3...]",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{
+							ProtoField: "positional1",
+						},
+						{
+							ProtoField: "positional2",
+						},
+						{
+							ProtoField: "positional3_varargs",
+							Varargs:    true,
+						},
+					},
+				},
+			},
+		},
+	)
 	assert.NilError(t, err)
 	cmd.SetArgs(args)
 	cmd.SetOut(conn.out)
@@ -48,6 +71,10 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 func TestEcho(t *testing.T) {
 	conn := testExec(t,
 		"echo",
+		"1",
+		"abc",
+		`{"denom":"foo","amount":"1234"}`,
+		`{"denom":"bar","amount":"4321"}`,
 		"--a-bool",
 		"--an-enum", "one",
 		"--a-message", `{"bar":"abc", "baz":-3}`,

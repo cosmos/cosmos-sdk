@@ -1,7 +1,10 @@
 package flag
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -9,17 +12,12 @@ import (
 type MessageBinder struct {
 	CobraArgs cobra.PositionalArgs
 
-	//positionalArgs []struct {
-	//	binder  Value
-	//	field   protoreflect.FieldDescriptor
-	//	varargs bool
-	//}
+	positionalFlagSet *pflag.FlagSet
+	positionalArgs    []fieldBinding
+	hasVarargs        bool
 
-	flagFieldPairs []struct {
-		hasValue HasValue
-		field    protoreflect.FieldDescriptor
-	}
-	messageType protoreflect.MessageType
+	flagBindings []fieldBinding
+	messageType  protoreflect.MessageType
 }
 
 // BuildMessage builds and returns a new message for the bound flags.
@@ -31,33 +29,43 @@ func (m MessageBinder) BuildMessage(positionalArgs []string) (protoreflect.Messa
 
 // Bind binds the flag values to an existing protobuf message.
 func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) error {
-	//n := len(positionalArgs)
-	//for i, arg := range m.positionalArgs {
-	//	if i >= n {
-	//		panic("unexpected: validate args should have caught this")
-	//	}
-	//
-	//	if arg.varargs {
-	//		for _, v := range positionalArgs[i:] {
-	//			err := arg.binder.Set(v)
-	//			if err != nil {
-	//				return err
-	//			}
-	//		}
-	//	} else {
-	//		err := arg.binder.Set(positionalArgs[i])
-	//		if err != nil {
-	//			return err
-	//		}
-	//	}
-	//}
+	// first set positional args in the positional arg flag set
+	n := len(positionalArgs)
+	for i := range m.positionalArgs {
+		if i >= n {
+			panic("unexpected: validate args should have caught this")
+		}
 
-	for _, pair := range m.flagFieldPairs {
-		val, err := pair.hasValue.Get(msg.NewField(pair.field))
+		name := fmt.Sprintf("%d", i)
+		if i == n-1 && m.hasVarargs {
+			for _, v := range positionalArgs[i:] {
+				err := m.positionalFlagSet.Set(name, v)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			err := m.positionalFlagSet.Set(name, positionalArgs[i])
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// bind positional arg values to the message
+	for _, arg := range m.positionalArgs {
+		err := arg.bind(msg)
 		if err != nil {
 			return err
 		}
-		msg.Set(pair.field, val)
+	}
+
+	// bind flag values to the message
+	for _, binding := range m.flagBindings {
+		err := binding.bind(msg)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -67,4 +75,18 @@ func (m MessageBinder) Bind(msg protoreflect.Message, positionalArgs []string) e
 func (m MessageBinder) Get(protoreflect.Value) (protoreflect.Value, error) {
 	msg, err := m.BuildMessage(nil)
 	return protoreflect.ValueOfMessage(msg), err
+}
+
+type fieldBinding struct {
+	hasValue HasValue
+	field    protoreflect.FieldDescriptor
+}
+
+func (f fieldBinding) bind(msg protoreflect.Message) error {
+	val, err := f.hasValue.Get(msg.NewField(f.field))
+	if err != nil {
+		return err
+	}
+	msg.Set(f.field, val)
+	return nil
 }

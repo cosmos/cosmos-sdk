@@ -73,7 +73,12 @@ service Query {
 
 
   // AccountInfo queries account info which is common to all account types.
-  rpc AccountInfo(QueryAccountInfoRequest) returns (QueryAccountInfoResponse);
+  //
+  // Since: cosmos-sdk 0.47
+  rpc AccountInfo(QueryAccountInfoRequest) returns (QueryAccountInfoResponse) {
+    option (cosmos.query.v1.deterministic) = true;
+    option (google.api.http).get = "/cosmos/auth/v1beta1/account_info/{address}";
+  }
 }
 
 // QueryAccountsRequest is the request type for the Query/Accounts RPC method.
@@ -198,7 +203,7 @@ message QueryAccountInfoResponse {
 // AccountInfo describes account info common to all account types.
 message AccountInfo {
   // address is the account address string.
-  string              address_string = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string              address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // pubkey is the pubkey of the account.
   google.protobuf.Any pubkey = 2;

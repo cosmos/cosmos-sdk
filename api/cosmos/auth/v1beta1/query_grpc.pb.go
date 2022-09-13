@@ -48,6 +48,10 @@ type QueryClient interface {
 	//
 	// Since: cosmos-sdk 0.46
 	AddressStringToBytes(ctx context.Context, in *AddressStringToBytesRequest, opts ...grpc.CallOption) (*AddressStringToBytesResponse, error)
+	// AccountInfo queries account info which is common to all account types.
+	//
+	// Since: cosmos-sdk 0.47
+	AccountInfo(ctx context.Context, in *QueryAccountInfoRequest, opts ...grpc.CallOption) (*QueryAccountInfoResponse, error)
 }
 
 type queryClient struct {
@@ -130,6 +134,15 @@ func (c *queryClient) AddressStringToBytes(ctx context.Context, in *AddressStrin
 	return out, nil
 }
 
+func (c *queryClient) AccountInfo(ctx context.Context, in *QueryAccountInfoRequest, opts ...grpc.CallOption) (*QueryAccountInfoResponse, error) {
+	out := new(QueryAccountInfoResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.Query/AccountInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -160,6 +173,10 @@ type QueryServer interface {
 	//
 	// Since: cosmos-sdk 0.46
 	AddressStringToBytes(context.Context, *AddressStringToBytesRequest) (*AddressStringToBytesResponse, error)
+	// AccountInfo queries account info which is common to all account types.
+	//
+	// Since: cosmos-sdk 0.47
+	AccountInfo(context.Context, *QueryAccountInfoRequest) (*QueryAccountInfoResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -190,6 +207,9 @@ func (UnimplementedQueryServer) AddressBytesToString(context.Context, *AddressBy
 }
 func (UnimplementedQueryServer) AddressStringToBytes(context.Context, *AddressStringToBytesRequest) (*AddressStringToBytesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddressStringToBytes not implemented")
+}
+func (UnimplementedQueryServer) AccountInfo(context.Context, *QueryAccountInfoRequest) (*QueryAccountInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AccountInfo not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -348,6 +368,24 @@ func _Query_AddressStringToBytes_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AccountInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAccountInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AccountInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.auth.v1beta1.Query/AccountInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AccountInfo(ctx, req.(*QueryAccountInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -386,6 +424,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddressStringToBytes",
 			Handler:    _Query_AddressStringToBytes_Handler,
+		},
+		{
+			MethodName: "AccountInfo",
+			Handler:    _Query_AccountInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -42,8 +42,15 @@ type Mempool interface {
 	Remove(Context, MempoolTx) error
 }
 
-var _ Mempool = (*btreeMempool)(nil)
-var _ btree.Item = (*btreeItem)(nil)
+var (
+	_ Mempool    = (*btreeMempool)(nil)
+	_ btree.Item = (*btreeItem)(nil)
+)
+
+var (
+	ErrMempoolIsFull = fmt.Errorf("mempool is full")
+	ErrNoTxHash      = fmt.Errorf("tx is not hashable")
+)
 
 type btreeMempool struct {
 	btree      *btree.BTree
@@ -71,9 +78,6 @@ func NewBTreeMempool(maxBytes int) *btreeMempool {
 	}
 }
 
-var ErrMempoolIsFull = fmt.Errorf("mempool is full")
-var ErrNoTxHash = fmt.Errorf("tx is not hashable")
-
 func (btm *btreeMempool) Insert(ctx Context, tx MempoolTx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
@@ -87,7 +91,7 @@ func (btm *btreeMempool) Insert(ctx Context, tx MempoolTx) error {
 	}
 
 	key := &btreeItem{priority: priority}
-	var bi = btm.btree.Get(key).(*btreeItem)
+	bi := btm.btree.Get(key).(*btreeItem)
 	if bi != nil {
 		bi.txs = append(bi.txs, tx)
 	} else {

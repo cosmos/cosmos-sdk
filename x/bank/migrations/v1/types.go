@@ -46,7 +46,7 @@ func AddressFromBalancesStore(key []byte) sdk.AccAddress {
 	return sdk.AccAddress(addr)
 }
 
-// SupplyI defines an inflationary supply interface for modules that handle
+// ISupply defines an inflationary supply interface for modules that handle
 // token supply.
 // It is copy-pasted from:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.42.3/x/bank/exported/exported.go
@@ -56,15 +56,15 @@ func AddressFromBalancesStore(key []byte) sdk.AccAddress {
 // in the supply state.
 //
 // Deprecated.
-type SupplyI interface {
+type ISupply interface {
 	proto.Message
 }
 
 // RegisterInterfaces registers interfaces required for the v1 migrations.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"cosmos.bank.v1beta1.SupplyI",
-		(*SupplyI)(nil),
+		"cosmos.bank.v1beta1.ISupply",
+		(*ISupply)(nil),
 		&types.Supply{},
 	)
 }

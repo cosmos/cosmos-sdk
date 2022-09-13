@@ -805,7 +805,7 @@ Security Release. No breaking changes related to 0.44.x.
 - (x/staking) [#8505](https://github.com/cosmos/cosmos-sdk/pull/8505) `sdk.PowerReduction` has been renamed to `sdk.DefaultPowerReduction`, and most staking functions relying on power reduction take a new function argument, instead of relying on that global variable.
 - [#8629](https://github.com/cosmos/cosmos-sdk/pull/8629) Deprecated `SetFullFundraiserPath` from `Config` in favor of `SetPurpose` and `SetCoinType`.
 - (x/upgrade) [#8673](https://github.com/cosmos/cosmos-sdk/pull/8673) Remove IBC logic from x/upgrade. Deprecates IBC fields in an Upgrade Plan, an error will be thrown if they are set. IBC upgrade logic moved to 02-client and an IBC UpgradeProposal is added.
-- (x/bank) [#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) `SupplyI` interface and `Supply` are removed and uses `sdk.Coins` for supply tracking
+- (x/bank) [#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) `ISupply` interface and `Supply` are removed and uses `sdk.Coins` for supply tracking
 - (x/upgrade) [#8743](https://github.com/cosmos/cosmos-sdk/pull/8743) `UpgradeHandler` includes a new argument `VersionMap` which helps facilitate in-place migrations.
 - (x/auth) [#8129](https://github.com/cosmos/cosmos-sdk/pull/8828) Updated `SigVerifiableTx.GetPubKeys` method signature to return error.
 - (x/upgrade) [\7487](https://github.com/cosmos/cosmos-sdk/pull/8897) Upgrade `Keeper` takes new argument `ProtocolVersionSetter` which implements setting a protocol version on baseapp.
@@ -1377,7 +1377,7 @@ sure you are aware of any relevant breaking changes.
     serialization instead of Amino.
     _ The `internal` sub-package has been removed in order to expose the types proto file.
     _ The `x/supply` module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
-    requiring a concrete codec to know how to serialize `SupplyI` types. \* The `SupplyI` interface has been modified to no longer return `SupplyI` on methods. Instead the
+    requiring a concrete codec to know how to serialize `ISupply` types. \* The `ISupply` interface has been modified to no longer return `ISupply` on methods. Instead the
     concrete type's receiver should modify the type.
   - (x/upgrade) [#5659](https://github.com/cosmos/cosmos-sdk/pull/5659) Migrate the `x/upgrade` module to use Protocol
     Buffers for state serialization instead of Amino.

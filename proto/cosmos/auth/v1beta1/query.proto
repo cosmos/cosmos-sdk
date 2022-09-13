@@ -124,7 +124,7 @@ message QueryParamsRequest {}
 //
 // Since: cosmos-sdk 0.46
 message QueryModuleAccountsResponse {
-  repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "ModuleIAccount"];
+  repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "IModuleAccount"];
 }
 
 // Bech32PrefixRequest is the request type for Bech32Prefix rpc method.

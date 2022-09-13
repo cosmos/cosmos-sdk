@@ -18,12 +18,12 @@ type AccountKeeper interface {
 
 	IterateAccounts(ctx sdk.Context, process func(types.IAccount) bool)
 
-	ValidatePermissions(macc types.ModuleIAccount) error
+	ValidatePermissions(macc types.IModuleAccount) error
 
 	GetModuleAddress(moduleName string) sdk.AccAddress
 	GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string)
-	GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (types.ModuleIAccount, []string)
-	GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleIAccount
-	SetModuleAccount(ctx sdk.Context, macc types.ModuleIAccount)
+	GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (types.IModuleAccount, []string)
+	GetModuleAccount(ctx sdk.Context, moduleName string) types.IModuleAccount
+	SetModuleAccount(ctx sdk.Context, macc types.IModuleAccount)
 	GetModulePermissions() map[string]types.PermissionsForAddress
 }

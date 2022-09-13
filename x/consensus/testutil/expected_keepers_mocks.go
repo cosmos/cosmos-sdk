@@ -64,10 +64,10 @@ func (mr *MockAccountKeeperMockRecorder) GetAllAccounts(ctx interface{}) *gomock
 }
 
 // GetModuleAccount mocks base method.
-func (m *MockAccountKeeper) GetModuleAccount(ctx types.Context, moduleName string) types0.ModuleIAccount {
+func (m *MockAccountKeeper) GetModuleAccount(ctx types.Context, moduleName string) types0.IModuleAccount {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAccount", ctx, moduleName)
-	ret0, _ := ret[0].(types0.ModuleIAccount)
+	ret0, _ := ret[0].(types0.IModuleAccount)
 	return ret0
 }
 
@@ -78,10 +78,10 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAccount(ctx, moduleName interf
 }
 
 // GetModuleAccountAndPermissions mocks base method.
-func (m *MockAccountKeeper) GetModuleAccountAndPermissions(ctx types.Context, moduleName string) (types0.ModuleIAccount, []string) {
+func (m *MockAccountKeeper) GetModuleAccountAndPermissions(ctx types.Context, moduleName string) (types0.IModuleAccount, []string) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAccountAndPermissions", ctx, moduleName)
-	ret0, _ := ret[0].(types0.ModuleIAccount)
+	ret0, _ := ret[0].(types0.IModuleAccount)
 	ret1, _ := ret[1].([]string)
 	return ret0, ret1
 }
@@ -202,7 +202,7 @@ func (mr *MockAccountKeeperMockRecorder) SetAccount(ctx, acc interface{}) *gomoc
 }
 
 // SetModuleAccount mocks base method.
-func (m *MockAccountKeeper) SetModuleAccount(ctx types.Context, macc types0.ModuleIAccount) {
+func (m *MockAccountKeeper) SetModuleAccount(ctx types.Context, macc types0.IModuleAccount) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetModuleAccount", ctx, macc)
 }
@@ -214,7 +214,7 @@ func (mr *MockAccountKeeperMockRecorder) SetModuleAccount(ctx, macc interface{})
 }
 
 // ValidatePermissions mocks base method.
-func (m *MockAccountKeeper) ValidatePermissions(macc types0.ModuleIAccount) error {
+func (m *MockAccountKeeper) ValidatePermissions(macc types0.IModuleAccount) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatePermissions", macc)
 	ret0, _ := ret[0].(error)

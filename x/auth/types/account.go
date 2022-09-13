@@ -22,7 +22,7 @@ var (
 	_ GenesisAccount                     = (*BaseAccount)(nil)
 	_ codectypes.UnpackInterfacesMessage = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*ModuleAccount)(nil)
-	_ ModuleIAccount                     = (*ModuleAccount)(nil)
+	_ IModuleAccount                     = (*ModuleAccount)(nil)
 )
 
 // NewBaseAccount creates a new BaseAccount object
@@ -324,9 +324,9 @@ type IAccount interface {
 	String() string
 }
 
-// ModuleIAccount defines an account interface for modules that hold tokens in
+// IModuleAccount defines an account interface for modules that hold tokens in
 // an escrow.
-type ModuleIAccount interface {
+type IModuleAccount interface {
 	IAccount
 
 	GetName() string

@@ -50,10 +50,10 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomo
 }
 
 // GetModuleAccount mocks base method.
-func (m *MockAccountKeeper) GetModuleAccount(ctx types.Context, moduleName string) types0.ModuleIAccount {
+func (m *MockAccountKeeper) GetModuleAccount(ctx types.Context, moduleName string) types0.IModuleAccount {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAccount", ctx, moduleName)
-	ret0, _ := ret[0].(types0.ModuleIAccount)
+	ret0, _ := ret[0].(types0.IModuleAccount)
 	return ret0
 }
 

@@ -8,12 +8,12 @@ import (
 )
 
 // GetBondedPool returns the bonded tokens pool's module account
-func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool authtypes.ModuleIAccount) {
+func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool authtypes.IModuleAccount) {
 	return k.authKeeper.GetModuleAccount(ctx, types.BondedPoolName)
 }
 
 // GetNotBondedPool returns the not bonded tokens pool's module account
-func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool authtypes.ModuleIAccount) {
+func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool authtypes.IModuleAccount) {
 	return k.authKeeper.GetModuleAccount(ctx, types.NotBondedPoolName)
 }
 

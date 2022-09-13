@@ -8,7 +8,7 @@ import (
 // AccountKeeper defines the expected auth Account Keeper (noalias)
 type AccountKeeper interface {
 	GetModuleAddress(moduleName string) sdk.AccAddress
-	GetModuleAccount(ctx sdk.Context, moduleName string) auth.ModuleIAccount
+	GetModuleAccount(ctx sdk.Context, moduleName string) auth.IModuleAccount
 
 	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) auth.IAccount
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) auth.IAccount

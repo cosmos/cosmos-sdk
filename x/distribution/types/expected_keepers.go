@@ -11,10 +11,10 @@ type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.IAccount
 
 	GetModuleAddress(name string) sdk.AccAddress
-	GetModuleAccount(ctx sdk.Context, name string) types.ModuleIAccount
+	GetModuleAccount(ctx sdk.Context, name string) types.IModuleAccount
 
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
-	SetModuleAccount(sdk.Context, types.ModuleIAccount)
+	SetModuleAccount(sdk.Context, types.IModuleAccount)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

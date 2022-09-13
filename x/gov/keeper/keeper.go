@@ -127,7 +127,7 @@ func (keeper Keeper) LegacyRouter() v1beta1.Router {
 }
 
 // GetGovernanceAccount returns the governance ModuleAccount
-func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) authtypes.ModuleIAccount {
+func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) authtypes.IModuleAccount {
 	return keeper.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 

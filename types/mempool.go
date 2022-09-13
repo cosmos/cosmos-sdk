@@ -162,6 +162,8 @@ func (btm *btreeMempool) Remove(_ Context, tx MempoolTx) error {
 	}
 
 	delete(btm.hashes, hash)
+	btm.txBytes -= tx.Size()
+	btm.txCount--
 
 	return nil
 }

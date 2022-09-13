@@ -327,13 +327,13 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.
 	jsonObj := make(map[string]json.RawMessage)
 	jsonObj["module_genesis_state"] = []byte("true")
 	loadAppStateFromFolder, _ := json.Marshal(jsonObj)
-	var genesisState GenesisState
-	if bytes.Equal(loadAppStateFromFolder, req.AppStateBytes) {
-		app.ModuleManager.SetGenesisPath(filepath.Join(app.homepath, "config", "genesis"))
-	} else {
-		if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
-			panic(err)
-		}
+	buf := bytes.NewBuffer(nil)
+	if err := json.Compact(buf, req.AppStateBytes); err != nil {
+		panic(err)
+	}
+
+	if bytes.Equal(loadAppStateFromFolder, buf.Bytes()) {
+		app.App.ModuleManager.SetGenesisPath(filepath.Join(app.homepath, "config", "genesis"))
 	}
 
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())

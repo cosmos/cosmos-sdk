@@ -121,6 +121,10 @@ func (a *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Respons
 
 // InitChainer initializes the chain.
 func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	if len(a.ModuleManager.GenesisPath) > 0 {
+		return a.ModuleManager.InitGenesis(ctx, a.cdc, nil)
+	}
+
 	var genesisState map[string]json.RawMessage
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)

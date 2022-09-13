@@ -48,10 +48,11 @@ func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 
 		val := typ.NewValue(ctx, b)
 		flagSet.AddFlag(&pflag.Flag{
-			Name:                name,
-			Shorthand:           shorthand,
-			Usage:               usage,
-			DefValue:            defaultValue,
+			Name:      name,
+			Shorthand: shorthand,
+			Usage:     usage,
+			DefValue:  defaultValue,
+			// TODO: these need to be set on all flags - not just ones for custom types
 			Deprecated:          opts.Deprecated,
 			ShorthandDeprecated: opts.ShorthandDeprecated,
 			Hidden:              opts.Hidden,

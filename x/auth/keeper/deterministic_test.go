@@ -62,6 +62,30 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
+func (suite *DeterministicTestSuite) runIterations(addr sdk.AccAddress, prevRes types.AccountI, checkPrevRes bool) {
+	for i := 0; i < 1000; i++ {
+		acc, err := suite.queryClient.Account(suite.ctx, &types.QueryAccountRequest{Address: addr.String()})
+		suite.Require().NoError(err)
+		suite.Require().NotNil(acc)
+		var account types.AccountI
+
+		err = suite.encCfg.InterfaceRegistry.UnpackAny(acc.Account, &account)
+		suite.Require().NoError(err)
+		suite.Require().Equal(account.GetAddress(), addr)
+
+		// check with previous response too.
+		// suite.Require().Equal(account.GetAddress(), prevRes.GetAddress())
+		// suite.Require().Equal(account.GetPubKey(), prevRes.GetPubKey())
+		// suite.Require().Equal(account.GetSequence(), prevRes.GetSequence())
+		// suite.Require().Equal(account.GetAccountNumber(), prevRes.GetAccountNumber())
+		suite.Require().Equal(account, prevRes)
+
+		if checkPrevRes {
+			prevRes = account
+		}
+	}
+}
+
 func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		addr := testdata.AddrTestDeterministic(t)
@@ -76,47 +100,13 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 		err = suite.encCfg.InterfaceRegistry.UnpackAny(acc.Account, &prevRes)
 		suite.Require().NoError(err)
 
-		for i := 0; i < 1000; i++ {
-			acc, err := suite.queryClient.Account(suite.ctx, &types.QueryAccountRequest{Address: addr.String()})
-			suite.Require().NoError(err)
-			suite.Require().NotNil(acc)
-			var account types.AccountI
-
-			err = suite.encCfg.InterfaceRegistry.UnpackAny(acc.Account, &account)
-			suite.Require().NoError(err)
-			suite.Require().Equal(account.GetAddress(), addr)
-
-			// check with previous response too.
-			suite.Require().Equal(account.GetAddress(), prevRes.GetAddress())
-			suite.Require().Equal(account.GetPubKey(), prevRes.GetPubKey())
-			suite.Require().Equal(account.GetSequence(), prevRes.GetSequence())
-			suite.Require().Equal(account.GetAccountNumber(), prevRes.GetAccountNumber())
-			prevRes = account
-		}
+		suite.runIterations(addr, prevRes, true)
 	})
 
 	priv := secp256k1.GenPrivKey()
-	pub := priv.PubKey()
 	addr1 := sdk.AccAddress(priv.PubKey().Address())
-	// randAccNumber :=
-	accNum := uint64(rand.Intn(100) + 10000) // range 10000 to 10100
-	seq := uint64(0)
+	acc1 := types.NewBaseAccount(addr1, priv.PubKey(), uint64(rand.Intn(100)+10000), uint64(0))
 
-	acc1 := types.NewBaseAccount(addr1, pub, accNum, seq)
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
-
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		acc, err := suite.queryClient.Account(suite.ctx, &types.QueryAccountRequest{Address: addr1.String()})
-		suite.Require().NoError(err)
-		suite.Require().NotNil(acc)
-		var account types.AccountI
-
-		err = suite.encCfg.InterfaceRegistry.UnpackAny(acc.Account, &account)
-		suite.Require().NoError(err)
-
-		suite.Require().Equal(account.GetAddress(), addr1)
-		suite.Require().Equal(account.GetPubKey(), pub)
-		suite.Require().Equal(account.GetAccountNumber(), accNum)
-		suite.Require().Equal(account.GetSequence(), seq)
-	})
+	suite.runIterations(addr1, acc1, false)
 }

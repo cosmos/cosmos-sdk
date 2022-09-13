@@ -88,7 +88,7 @@ func (v Validators) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-// ToSDKValidators -  convenience function convert []Validator to []sdk.ValidatorI
+// ToSDKValidators -  convenience function convert []Validator to []sdk.IValidator
 func (v Validators) ToSDKValidators() (validators []IValidator) {
 	for _, val := range v {
 		validators = append(validators, val)

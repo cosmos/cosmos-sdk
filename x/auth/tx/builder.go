@@ -63,6 +63,10 @@ func newBuilder(cdc codec.Codec) *wrapper {
 	}
 }
 
+func (w *wrapper) Size() int {
+	panic("not yet implemented")
+}
+
 func (w *wrapper) GetMsgs() []sdk.Msg {
 	return w.tx.GetMsgs()
 }

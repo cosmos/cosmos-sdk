@@ -34,6 +34,12 @@ jobs:
       # set VERSION to new version when making changes, when merged to main the image will automatically be pushed
       - uses: actions/checkout@v3
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@69f6fc9d46f2f8bf0d5491e4aabe0bb8c6a4678a
@@ -56,6 +62,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./contrib/devtools
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

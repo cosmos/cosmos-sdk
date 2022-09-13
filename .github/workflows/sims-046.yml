@@ -118,8 +118,6 @@ jobs:
     if: ${{ success() }}
     steps:
       - uses: actions/checkout@v3
-        with:
-          ref: "release/v0.46.x"
       - name: Get previous workflow status
         uses: ./.github/actions/last-workflow-status
         id: last_status

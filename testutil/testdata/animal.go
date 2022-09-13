@@ -42,30 +42,30 @@ func (m HasAnimal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return unpacker.UnpackAny(m.Animal, &animal)
 }
 
-type IAnimal interface {
+type IHasAnimal interface {
 	TheAnimal() Animal
 }
 
-var _ IAnimal = &HasAnimal{}
+var _ IHasAnimal = &HasAnimal{}
 
 func (m HasAnimal) TheAnimal() Animal {
 	return m.Animal.GetCachedValue().(Animal)
 }
 
 type HasHasAnimalI interface {
-	TheHasAnimal() HasAnimalI
+	TheHasAnimal() IHasAnimal
 }
 
 var _ HasHasAnimalI = &HasHasAnimal{}
 
-func (m HasHasAnimal) TheHasAnimal() IAnimal {
-	return m.HasAnimal.GetCachedValue().(HasAnimalI)
+func (m HasHasAnimal) TheHasAnimal() IHasAnimal {
+	return m.HasAnimal.GetCachedValue().(IHasAnimal)
 }
 
 var _ types.UnpackInterfacesMessage = HasHasAnimal{}
 
 func (m HasHasAnimal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var animal HasAnimalI
+	var animal IHasAnimal
 	return unpacker.UnpackAny(m.HasAnimal, &animal)
 }
 

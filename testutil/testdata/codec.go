@@ -25,7 +25,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&Cat{},
 	)
 	registry.RegisterImplementations(
-		(*HasAnimalI)(nil),
+		(*IHasAnimal)(nil),
 		&HasAnimal{},
 	)
 	registry.RegisterImplementations(
@@ -46,7 +46,7 @@ func NewTestAmino() *amino.Codec {
 	cdc.RegisterConcrete(&Dog{}, "testdata/Dog", nil)
 	cdc.RegisterConcrete(&Cat{}, "testdata/Cat", nil)
 
-	cdc.RegisterInterface((*HasAnimalI)(nil), nil)
+	cdc.RegisterInterface((*IHasAnimal)(nil), nil)
 	cdc.RegisterConcrete(&HasAnimal{}, "testdata/HasAnimal", nil)
 
 	cdc.RegisterInterface((*HasHasAnimalI)(nil), nil)

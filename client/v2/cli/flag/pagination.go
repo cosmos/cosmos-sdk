@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
 
-func (b *Builder) bindPageRequest(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor) (FieldValueBinder, error) {
+func (b *Builder) bindPageRequest(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor) (HasValue, error) {
 	handler, err := b.AddMessageFlags(
 		ctx,
 		flagSet,
@@ -21,5 +21,6 @@ func (b *Builder) bindPageRequest(ctx context.Context, flagSet *pflag.FlagSet, f
 	if err != nil {
 		return nil, err
 	}
-	return simpleValueBinder{value: handler}, nil
+
+	return handler, nil
 }

@@ -40,11 +40,7 @@ type enumValue struct {
 	valMap map[string]protoreflect.EnumValueDescriptor
 }
 
-func (e enumValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
-	message.Set(field, protoreflect.ValueOfEnum(e.value))
-}
-
-func (e enumValue) Get() (protoreflect.Value, error) {
+func (e enumValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 	return protoreflect.ValueOfEnum(e.value), nil
 }
 

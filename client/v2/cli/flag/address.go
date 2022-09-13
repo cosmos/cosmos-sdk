@@ -20,11 +20,7 @@ type addressValue struct {
 	value string
 }
 
-func (a addressValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
-	message.Set(field, protoreflect.ValueOfString(a.value))
-}
-
-func (a addressValue) Get() (protoreflect.Value, error) {
+func (a addressValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 	return protoreflect.ValueOfString(a.value), nil
 }
 

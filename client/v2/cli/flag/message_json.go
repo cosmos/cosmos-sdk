@@ -34,18 +34,14 @@ type jsonMessageFlagValue struct {
 	message              proto.Message
 }
 
-func (j jsonMessageFlagValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
-	message.Set(field, protoreflect.ValueOfMessage(j.message.ProtoReflect()))
-}
-
-func (j jsonMessageFlagValue) Get() (protoreflect.Value, error) {
+func (j *jsonMessageFlagValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 	if j.message == nil {
 		return protoreflect.Value{}, nil
 	}
 	return protoreflect.ValueOfMessage(j.message.ProtoReflect()), nil
 }
 
-func (j jsonMessageFlagValue) String() string {
+func (j *jsonMessageFlagValue) String() string {
 	if j.message == nil {
 		return ""
 	}
@@ -62,6 +58,6 @@ func (j *jsonMessageFlagValue) Set(s string) error {
 	return j.jsonUnmarshalOptions.Unmarshal([]byte(s), j.message)
 }
 
-func (j jsonMessageFlagValue) Type() string {
+func (j *jsonMessageFlagValue) Type() string {
 	return fmt.Sprintf("%s (json)", j.messageType.Descriptor().FullName())
 }

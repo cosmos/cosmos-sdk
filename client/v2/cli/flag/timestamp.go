@@ -22,11 +22,7 @@ type timestampValue struct {
 	value *timestamppb.Timestamp
 }
 
-func (t timestampValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
-	message.Set(field, protoreflect.ValueOfMessage(t.value.ProtoReflect()))
-}
-
-func (t timestampValue) Get() (protoreflect.Value, error) {
+func (t timestampValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 	if t.value == nil {
 		return protoreflect.Value{}, nil
 	}

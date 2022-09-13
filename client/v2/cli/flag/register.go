@@ -22,6 +22,8 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 	hasVarargs := false
 	n := len(commandOptions.PositionalArgs)
 	for i, arg := range commandOptions.PositionalArgs {
+		isPositional[arg.ProtoField] = true
+
 		field := fields.ByName(protoreflect.Name(arg.ProtoField))
 		if field == nil {
 			return nil, fmt.Errorf("can't find field %s on %s", arg.ProtoField, messageType.Descriptor().FullName())
@@ -40,13 +42,13 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 			return nil, fmt.Errorf("can't resolve field %v", field)
 		}
 
-		value := typ.NewValue(ctx, b)
-
-		handler.positionalArgs = append(handler.positionalArgs, struct {
-			binder  Value
-			field   protoreflect.FieldDescriptor
-			varargs bool
-		}{binder: value, field: field, varargs: arg.Varargs})
+		//value := typ.NewValue(ctx, b)
+		//
+		//handler.positionalArgs = append(handler.positionalArgs, struct {
+		//	binder  Value
+		//	field   protoreflect.FieldDescriptor
+		//	varargs bool
+		//}{binder: value, field: field, varargs: arg.Varargs})
 	}
 
 	if hasVarargs {
@@ -68,9 +70,9 @@ func (b *Builder) AddMessageFlags(ctx context.Context, set *pflag.FlagSet, messa
 		}
 
 		handler.flagFieldPairs = append(handler.flagFieldPairs, struct {
-			binder FieldValueBinder
-			field  protoreflect.FieldDescriptor
-		}{binder: binder, field: field})
+			hasValue HasValue
+			field    protoreflect.FieldDescriptor
+		}{hasValue: binder, field: field})
 	}
 	return handler, nil
 }

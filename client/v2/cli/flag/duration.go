@@ -22,15 +22,11 @@ type durationValue struct {
 	value *durationpb.Duration
 }
 
-func (t durationValue) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
-	message.Set(field, protoreflect.ValueOfMessage(t.value.ProtoReflect()))
-}
-
-func (t durationValue) Get() (protoreflect.Value, error) {
-	if t.value == nil {
+func (a durationValue) Get(protoreflect.Value) (protoreflect.Value, error) {
+	if a.value == nil {
 		return protoreflect.Value{}, nil
 	}
-	return protoreflect.ValueOfMessage(t.value.ProtoReflect()), nil
+	return protoreflect.ValueOfMessage(a.value.ProtoReflect()), nil
 }
 
 func (v durationValue) String() string {

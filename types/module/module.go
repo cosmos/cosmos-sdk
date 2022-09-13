@@ -673,9 +673,9 @@ func fileWrite(modulePath, moduleName string, bz []byte) error {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
 
 		n, err := f.Write(byteChunk(bz, i))
+		f.Close()
 		if err != nil {
 			return fmt.Errorf("failed to write genesis file: %w", err)
 		}
@@ -699,22 +699,27 @@ func FileRead(modulePath string, moduleName string) ([]byte, error) {
 
 	var buf bytes.Buffer
 	for i := 0; i < len(files); i++ {
-		f, err := openModuleStateFile(modulePath, moduleName, i)
-		if err != nil {
-			panic(fmt.Sprintf("failed to open genesis file from module %s: %v", moduleName, err))
-		}
-		defer f.Close()
+		if err := func() error {
+			f, err := openModuleStateFile(modulePath, moduleName, i)
+			if err != nil {
+				panic(fmt.Sprintf("failed to open genesis file from module %s: %v", moduleName, err))
+			}
+			defer f.Close()
 
-		fi, err := f.Stat()
-		if err != nil {
-			return nil, fmt.Errorf("failed to stat file: %w", err)
-		}
+			fi, err := f.Stat()
+			if err != nil {
+				return fmt.Errorf("failed to stat file: %w", err)
+			}
 
-		n, err := buf.ReadFrom(f)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read file %s: %w", f.Name(), err)
-		} else if n != fi.Size() {
-			return nil, fmt.Errorf("couldn't read entire file: %s, read: %d, file size: %d", f.Name(), n, fi.Size())
+			n, err := buf.ReadFrom(f)
+			if err != nil {
+				return fmt.Errorf("failed to read file %s: %w", f.Name(), err)
+			} else if n != fi.Size() {
+				return fmt.Errorf("couldn't read entire file: %s, read: %d, file size: %d", f.Name(), n, fi.Size())
+			}
+			return nil
+		}(); err != nil {
+			return nil, err
 		}
 	}
 

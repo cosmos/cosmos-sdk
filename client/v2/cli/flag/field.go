@@ -69,7 +69,9 @@ func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 
 	// set the defaultValue in this way because this is much easier than trying
 	// to parse the string into the types that StringSliceP, Int32P, etc. expect
-	err = flagSet.Set(name, defaultValue)
+	if defaultValue != "" {
+		err = flagSet.Set(name, defaultValue)
+	}
 	return name, val, err
 }
 

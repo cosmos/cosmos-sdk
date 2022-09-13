@@ -48,7 +48,7 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 					Usage:             "some random uint64",
 					NoOptDefaultValue: "5",
 				},
-				"cli_deprecated_field": {
+				"deprecated_field": {
 					Deprecated: "don't use this",
 				},
 				"shorthand_deprecated_field": {
@@ -145,26 +145,6 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, uint32(27), lastReq.U32) // shorthand got set
 	assert.Equal(t, int32(3), lastReq.I32)   // default value got set
 	assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
-}
-
-func TestDeprecated(t *testing.T) {
-	// deprecated field in proto file
-	testExec(t,
-		"echo", "1", "abc", `{}`,
-		"--proto-deprecated-field", "abc",
-	)
-
-	// deprecated field in cli options
-	testExec(t,
-		"echo", "1", "abc", `{}`,
-		"--cli-deprecated-field", "abc",
-	)
-
-	// deprecated shorthand in cli options
-	testExec(t,
-		"echo", "1", "abc", `{}`,
-		"-s", "abc",
-	)
 }
 
 func TestHelp(t *testing.T) {

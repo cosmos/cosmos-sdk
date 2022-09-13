@@ -45,14 +45,14 @@ func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOp
 func (b *Builder) BuildModuleQueryCommand(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
 	cmd := topLevelCmd(moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
 
-	b.AddQueryServiceCommands(cmd, cmdDescriptor)
+	err := b.AddQueryServiceCommands(cmd, cmdDescriptor)
 
-	return cmd, nil
+	return cmd, err
 }
 
 // AddQueryServiceCommands adds a sub-command to the provided command for each
 // method in the specified service and returns the command.
-func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) {
+func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) error {
 	resolver := b.FileResolver
 	if resolver == nil {
 		resolver = protoregistry.GlobalFiles
@@ -73,7 +73,11 @@ func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor 
 				methodOpts = option
 			}
 		}
-		cmd, _ := b.CreateQueryMethodCommand(methodDescriptor, methodOpts)
+		cmd, err := b.CreateQueryMethodCommand(methodDescriptor, methodOpts)
+		if err != nil {
+			return err
+		}
+
 		if cmd != nil {
 			command.AddCommand(cmd)
 		}
@@ -81,8 +85,12 @@ func (b *Builder) AddQueryServiceCommands(command *cobra.Command, cmdDescriptor 
 
 	for cmdName, subCmd := range cmdDescriptor.SubCommands {
 		cmd := topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmd.Service))
-		b.AddQueryServiceCommands(cmd, subCmd)
+		err = b.AddQueryServiceCommands(cmd, subCmd)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // CreateQueryMethodCommand creates a gRPC query command for the given service method.

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -64,7 +65,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(suite.accountKeeper))
+	types.RegisterQueryServer(queryHelper, suite.accountKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 

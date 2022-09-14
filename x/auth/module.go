@@ -9,10 +9,10 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
+	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -184,12 +184,23 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Provide(
+			provideModuleBasic,
+			provideAutoCLIConfig,
+			provideModule,
+		),
 	)
 }
 
 func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+func provideAutoCLIConfig() runtime.AutoCLIConfig {
+	return runtime.AutoCLIConfig{
+		AutoCLIOptions:     types.AutoCLIOptions,
+		CustomQueryCommand: cli.GetQueryCmd(),
+	}
 }
 
 type authInputs struct {

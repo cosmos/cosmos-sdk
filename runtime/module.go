@@ -5,9 +5,11 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
+	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -79,6 +81,7 @@ func provideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 type appInputs struct {
 	depinject.In
 
+	AppConfig      *appv1alpha1.Config
 	Config         *runtimev1alpha1.Module
 	App            appWrapper
 	Modules        map[string]AppModuleWrapper
@@ -94,6 +97,7 @@ func provideAppBuilder(inputs appInputs) *AppBuilder {
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
 	app.ModuleManager = mm
+	app.appConfig = inputs.AppConfig
 	return &AppBuilder{app: app}
 }
 

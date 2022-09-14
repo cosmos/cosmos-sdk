@@ -8,6 +8,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -40,6 +41,7 @@ type App struct {
 	ModuleManager     *module.Manager
 	configurator      module.Configurator
 	config            *runtimev1alpha1.Module
+	appConfig         *appv1alpha1.Config
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
@@ -78,6 +80,13 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 func (a *App) Load(loadLatest bool) error {
 	a.configurator = module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
 	a.ModuleManager.RegisterServices(a.configurator)
+
+	// register runtime services
+	appConfigSvc, err := newAppConfigService(a.appConfig)
+	if err != nil {
+		return err
+	}
+	appv1alpha1.RegisterQueryServer(a.configurator.QueryServer(), appConfigSvc)
 
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)

@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	"math/rand"
+	"encoding/hex"
 	"testing"
 
+	"github.com/cosmos/btcutil/base58"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -14,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"pgregory.net/rapid"
 )
@@ -90,9 +92,14 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 		suite.runIterations(addr, acc1)
 	})
 
-	priv := secp256k1.GenPrivKey()
-	addr1 := sdk.AccAddress(priv.PubKey().Address())
-	acc1 := types.NewBaseAccount(addr1, priv.PubKey(), uint64(rand.Intn(100)+10000), uint64(0))
+	addrBbz, _, err := base58.CheckDecode("1CKZ9Nx4zgds8tU7nJHotKSDr4a9bYJCa3")
+	suite.Require().NoError(err)
+	addr1 := sdk.AccAddress(crypto.Address(addrBbz))
+
+	pub, err := hex.DecodeString("02950e1cdfcb133d6024109fd489f734eeb4502418e538c28481f22bce276f248c")
+	suite.Require().NoError(err)
+
+	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub}, uint64(10087), uint64(0))
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 	suite.runIterations(addr1, acc1)

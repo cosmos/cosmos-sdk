@@ -39,15 +39,20 @@ func TestInsertMemPool(t *testing.T) {
 }
 
 func TestSelectMempool(t *testing.T) {
+	maxBytes := 10
 	mPool := types.NewBTreeMempool(smallSize)
 	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	transactions := simulateManyTx(ctx, 1000000)
+	transactions := simulateManyTx(ctx, 100)
 	for _, t := range transactions {
 		mPool.Insert(ctx, TxWSize{t})
 	}
-	selectedTx, err := mPool.Select(ctx, nil, 10)
+	selectedTx, err := mPool.Select(ctx, nil, maxBytes)
 	require.NoError(t, err)
-	require.Equal(t, len(transactions), len(selectedTx))
+	actualBytes := 0
+	for _, selectedTx := range selectedTx {
+		actualBytes += selectedTx.Size()
+	}
+	require.LessOrEqual(t, maxBytes, actualBytes)
 
 }
 

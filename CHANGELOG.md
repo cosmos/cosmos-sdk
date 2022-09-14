@@ -47,11 +47,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (testutil) [#12973](https://github.com/cosmos/cosmos-sdk/pull/12973) Add generic `testutil.RandSliceElem` function which selects a random element from the list.
 * (client) [#12936](https://github.com/cosmos/cosmos-sdk/pull/12936) Add capability to preprocess transactions before broadcasting from a higher level chain.
 * (x/authz) [#13047](https://github.com/cosmos/cosmos-sdk/pull/13047) Add a GetAuthorization function to the keeper.
-
 * (cli) [#13064](https://github.com/cosmos/cosmos-sdk/pull/13064) Add `debug prefixes` to list supported HRP prefixes via .
-
 * (cli) [#12742](https://github.com/cosmos/cosmos-sdk/pull/12742) Add the `prune` CLI cmd to manually prune app store history versions based on the pruning options.
-
 * (ledger) [#12935](https://github.com/cosmos/cosmos-sdk/pull/12935) Generalize Ledger integration to allow for different apps or keytypes that use SECP256k1.
 * (x/bank) [#11981](https://github.com/cosmos/cosmos-sdk/pull/11981) Create the `SetSendEnabled` endpoint for managing the bank's SendEnabled settings.
 
@@ -1279,8 +1276,8 @@ sure you are aware of any relevant breaking changes.
         * The `SigVerifiableTx` interface now has a `GetSignaturesV2() ([]signing.SignatureV2, error)` method and no longer has the `GetSignBytes` method.
     * (x/auth/tx) [#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) change related to missing append functionality in
     client transaction signing
-    _ added `overwriteSig` argument to `x/auth/client.SignTx` and `client/tx.Sign` functions.
-    _ removed `x/auth/tx.go:wrapper.GetSignatures`. The `wrapper` provides `TxBuilder` functionality, and it's a private
+    * added `overwriteSig` argument to `x/auth/client.SignTx` and `client/tx.Sign` functions.
+      * removed `x/auth/tx.go:wrapper.GetSignatures`. The `wrapper` provides `TxBuilder` functionality, and it's a private
     structure. That function was not used at all and it's not exposed through the `TxBuilder` interface.
     * (x/bank) [#7327](https://github.com/cosmos/cosmos-sdk/pull/7327) AddCoins and SubtractCoins no longer return a resultingValue and will only return an error.
     * (x/capability) [#7918](https://github.com/cosmos/cosmos-sdk/pull/7918) Add x/capability safety checks:
@@ -3611,8 +3608,8 @@ BREAKING CHANGES
     * v0.23.0 -> See
     [Changelog](https://github.com/tendermint/tendermint/blob/v0.23.0/CHANGELOG.md#0230)
     and [SDK PR](https://github.com/cosmos/cosmos-sdk/pull/1927)
-    _ BeginBlock no longer includes crypto.Pubkey
-    _ use time.Time instead of int64 for time.
+        * BeginBlock no longer includes crypto.Pubkey
+        * use time.Time instead of int64 for time.
 
 FEATURES
 

@@ -1,5 +1,5 @@
-cosmossdk.io/api v0.1.0-alpha9 h1:8QQT+BhaMpcCgR4Wm8JVuhhtj4a7uZjsxvvWvmsQFB0=
-cosmossdk.io/api v0.1.0-alpha9/go.mod h1:PyJpp0BY4tHLI0kzkiUzpZxgOE+pJbhDPleYrA5yVio=
+cosmossdk.io/api v0.2.1 h1:4m6vIHKJygrixSIfOsD3Mhij9vZlQC/+BTeb+Un9os0=
+cosmossdk.io/api v0.2.1/go.mod h1:kNpfY0UY7Cz4ZuLJ4hm9auUGfmj23UFpOQ/Bo8IKCFw=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 github.com/alecthomas/participle/v2 v2.0.0-alpha7 h1:cK4vjj0VSgb3lN1nuKA5F7dw+1s1pWBe5bx7nNCnN+c=

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
@@ -36,7 +36,7 @@ type Context struct {
 	checkTx       bool
 	recheckTx     bool // if recheckTx == true, then checkTx must also be true
 	minGasPrice   DecCoins
-	consParams    *abci.ConsensusParams
+	consParams    *tmproto.ConsensusParams
 	eventManager  *EventManager
 	priority      int64 // The tx priority, only relevant in CheckTx
 }
@@ -74,8 +74,8 @@ func (c Context) HeaderHash() tmbytes.HexBytes {
 	return hash
 }
 
-func (c Context) ConsensusParams() *abci.ConsensusParams {
-	return proto.Clone(c.consParams).(*abci.ConsensusParams)
+func (c Context) ConsensusParams() *tmproto.ConsensusParams {
+	return proto.Clone(c.consParams).(*tmproto.ConsensusParams)
 }
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {
@@ -217,7 +217,7 @@ func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 }
 
 // WithConsensusParams returns a Context with an updated consensus params
-func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
+func (c Context) WithConsensusParams(params *tmproto.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }
@@ -228,7 +228,7 @@ func (c Context) WithEventManager(em *EventManager) Context {
 	return c
 }
 
-// WithEventManager returns a Context with an updated tx priority
+// WithPriority returns a Context with an updated tx priority
 func (c Context) WithPriority(p int64) Context {
 	c.priority = p
 	return c
@@ -268,11 +268,18 @@ func (c Context) TransientStore(key storetypes.StoreKey) KVStore {
 
 // CacheContext returns a new Context with the multi-store cached and a new
 // EventManager. The cached context is written to the context when writeCache
-// is called.
+// is called. Note, events are automatically emitted on the parent context's
+// EventManager when the caller executes the write.
 func (c Context) CacheContext() (cc Context, writeCache func()) {
 	cms := c.MultiStore().CacheMultiStore()
 	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
-	return cc, cms.Write
+
+	writeCache = func() {
+		c.EventManager().EmitEvents(cc.EventManager().Events())
+		cms.Write()
+	}
+
+	return cc, writeCache
 }
 
 var _ context.Context = Context{}

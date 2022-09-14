@@ -11,8 +11,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -42,6 +42,10 @@ func (s *contextTestSuite) TestCacheContext() {
 	s.Require().Equal(v1, cstore.Get(k1))
 	s.Require().Nil(cstore.Get(k2))
 
+	// emit some events
+	cctx.EventManager().EmitEvent(types.NewEvent("foo", types.NewAttribute("key", "value")))
+	cctx.EventManager().EmitEvent(types.NewEvent("bar", types.NewAttribute("key", "value")))
+
 	cstore.Set(k2, v2)
 	s.Require().Equal(v2, cstore.Get(k2))
 	s.Require().Nil(store.Get(k2))
@@ -49,6 +53,7 @@ func (s *contextTestSuite) TestCacheContext() {
 	write()
 
 	s.Require().Equal(v2, store.Get(k2))
+	s.Require().Len(ctx.EventManager().Events(), 2)
 }
 
 func (s *contextTestSuite) TestLogContext() {
@@ -57,7 +62,7 @@ func (s *contextTestSuite) TestLogContext() {
 	ctrl := gomock.NewController(s.T())
 	s.T().Cleanup(ctrl.Finish)
 
-	logger := mocks.NewMockLogger(ctrl)
+	logger := mock.NewMockLogger(ctrl)
 	logger.EXPECT().Debug("debug")
 	logger.EXPECT().Info("info")
 	logger.EXPECT().Error("error")
@@ -87,7 +92,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	chainid := "chainid"
 	ischeck := true
 	txbytes := []byte("txbytes")
-	logger := mocks.NewMockLogger(ctrl)
+	logger := mock.NewMockLogger(ctrl)
 	voteinfos := []abci.VoteInfo{{}}
 	meter := types.NewGasMeter(10000)
 	blockGasMeter := types.NewGasMeter(20000)
@@ -127,7 +132,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 
 	// test consensus param
 	s.Require().Nil(ctx.ConsensusParams())
-	cp := &abci.ConsensusParams{}
+	cp := &tmproto.ConsensusParams{}
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context

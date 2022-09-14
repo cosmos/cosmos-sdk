@@ -5,6 +5,8 @@
 - Dec 06, 2021: Initial Draft.
 - Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
 - May 16, 2022: Change status to Accepted.
+- Aug 11, 2022: Require signing over tx raw bytes.
+- Sep 07, 2022: Add custom `Msg`-renderers.
 
 ## Status
 
@@ -115,6 +117,7 @@ Tip: <string>
 *Public Key: <hex_string>
 *Sequence: <uint64>
 *End of other signers
+*Hash of raw bytes: <hex_string>                            // Hex encoding of bytes defined in #10, to prevent tx hash malleability.
 ```
 
 ### 8. Encoding of the Transaction Body
@@ -158,7 +161,64 @@ Grantee: cosmos1ghi...jkl
 End of transaction messages
 ```
 
-### 9. Signing Payload and Wire Format
+### 9. Custom `Msg` Renderers
+
+Application developers may choose to not follow default renderer value output for their own `Msg`s. In this case, they can implement their own custom `Msg` renderer. This is similar to [EIP4430](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4430.md), where the smart contract developer chooses the description string to be shown to the end user.
+
+This is done by setting the `cosmos.msg.v1.textual.expert_custom_renderer` Protobuf option to a non-empty string. This option CAN ONLY be set on a Protobuf message representing transaction message object (implementing `sdk.Msg` interface).
+
+```proto
+message MsgFooBar {
+  // Optional comments to describe in human-readable language the formatting
+  // rules of the custom renderer.
+  option (cosmos.msg.v1.textual.expert_custom_renderer) = "<unique algorithm identifier>";
+
+  // proto fields
+}
+```
+
+When this option is set on a `Msg`, a registered function will transform the `Msg` into an array of one or more strings, which MAY use the key/value format (described in point #3) with the expert field prefix (described in point #5) and arbitrary indentation (point #6). These strings MAY be rendered from a `Msg` field using a default value renderer, or they may be generated from several fields using custom logic.
+
+The `<unique algorithm identifier>` is a string convention chosen by the application developer and is used to identify the custom `Msg` renderer. For example, the documentation or specification of this custom algorithm can reference this identifier. This identifier CAN have a versioned suffix (e.g. `_v1`) to adapt for future changes (which would be consensus-breaking). We also recommend adding Protobuf comments to describe in human language the custom logic used.
+
+Moreover, the renderer must provide 2 functions: one for formatting from Protobuf to string, and one for parsing string to Protobuf. These 2 functions are provided by the application developer. To satisfy point #1, these 2 functions MUST be bijective with each other. Bijectivity of these 2 functions will not be checked by the SDK at runtime. However, we strongly recommend the application developer to include a comprehensive suite in their app repo to test bijectivity, as to not introduce security bugs. A simple bijectivity test looks like:
+
+```
+// for renderer, msg, and ctx of the right type
+keyvals, err := renderer.Format(ctx, msg)
+if err != nil {
+    fail_check()
+}
+msg2, err := renderer.Parse(ctx, keyvals)
+if err != nil {
+    fail_check()
+}
+if !proto.Equal(msg, msg2) {
+    fail_check()
+}
+pass_check()
+```
+
+### 10. Require signing over the `TxBody` and `AuthInfo` raw bytes
+
+Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L33), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:
+
+```
+*Hash of raw bytes: <HEX(sha256(len(body_bytes) ++ body_bytes ++ len(auth_info_bytes) ++ auth_info_bytes))>
+```
+
+where:
+- `++` denotes concatenation,
+- `HEX` is the hexadecimal representation of the bytes, all in capital letters, no `0x` prefix,
+- and `len()` is encoded as a Big-Endian uint64.
+
+This is to prevent transaction hash malleability. The point #1 about bijectivity assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could intercept a transaction, modify its transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL (by tweaking the byte ordering inside `body_bytes` or `auth_info_bytes`), and then submit it to Tendermint.
+
+By including this hash in the SIGN_MODE_TEXTUAL signing payload, we keep the same level of guarantees as [SIGN_MODE_DIRECT](./adr-020-protobuf-transaction-encoding.md).
+
+These bytes are only shown in expert mode, hence the leading `*`.
+
+### 11. Signing Payload and Wire Format
 
 This string array is encoded as a single `\n`-delimited string before transmitted to the hardware device, and this long string is the signing payload signed by the hardware wallet.
 
@@ -232,6 +292,7 @@ Amount: 10 atom            // Conversion from uatom to atom using value renderer
 End of transaction messages
 Fee: 0.002 atom
 *Gas: 100'000
+*Hash of raw bytes: <hex_string>
 ```
 
 #### Example 2: Multi-Msg Transaction with 3 signers
@@ -320,6 +381,7 @@ Tip: 200 ibc/CDC4587874B85BEA4FCEC3CEA5A1195139799A1FEE711A07D972537E18FDA39D
 *Sign mode: Direct Aux
 *Sequence: 42
 *End of other signers
+*Hash of raw bytes: <hex_string>
 ```
 
 #### Example 5: Complex Transaction with Nested Messages
@@ -466,6 +528,7 @@ Fee: 0.002 atom
 *Sign mode: Direct
 *Sequence: 42
 *End of other signers
+*Hash of raw bytes: <hex_string>
 ```
 
 ## Consequences

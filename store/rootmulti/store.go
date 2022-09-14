@@ -39,17 +39,18 @@ const (
 // cacheMultiStore which is used for branching other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
-	db             dbm.DB
-	logger         log.Logger
-	lastCommitInfo *types.CommitInfo
-	pruningManager *pruning.Manager
-	iavlCacheSize  int
-	storesParams   map[types.StoreKey]storeParams
-	stores         map[types.StoreKey]types.CommitKVStore
-	keysByName     map[string]types.StoreKey
-	lazyLoading    bool
-	initialVersion int64
-	removalMap     map[types.StoreKey]bool
+	db                     dbm.DB
+	logger                 log.Logger
+	lastCommitInfo         *types.CommitInfo
+	pruningManager         *pruning.Manager
+	iavlCacheSize          int
+	storesParams           map[types.StoreKey]storeParams
+	stores                 map[types.StoreKey]types.CommitKVStore
+	keysByName             map[string]types.StoreKey
+	lazyLoading            bool
+	initialVersion         int64
+	removalMap             map[types.StoreKey]bool
+	skipFastStorageUpgrade bool
 
 	traceWriter       io.Writer
 	traceContext      types.TraceContext
@@ -69,17 +70,18 @@ var (
 // store will be created with a PruneNothing pruning strategy by default. After
 // a store is created, KVStores must be mounted and finally LoadLatestVersion or
 // LoadVersion must be called.
-func NewStore(db dbm.DB, logger log.Logger) *Store {
+func NewStore(db dbm.DB, logger log.Logger, skipFastStorageUpgrade bool) *Store {
 	return &Store{
-		db:             db,
-		logger:         logger,
-		iavlCacheSize:  iavl.DefaultIAVLCacheSize,
-		storesParams:   make(map[types.StoreKey]storeParams),
-		stores:         make(map[types.StoreKey]types.CommitKVStore),
-		keysByName:     make(map[string]types.StoreKey),
-		listeners:      make(map[types.StoreKey][]types.WriteListener),
-		removalMap:     make(map[types.StoreKey]bool),
-		pruningManager: pruning.NewManager(db, logger),
+		db:                     db,
+		logger:                 logger,
+		iavlCacheSize:          iavl.DefaultIAVLCacheSize,
+		storesParams:           make(map[types.StoreKey]storeParams),
+		stores:                 make(map[types.StoreKey]types.CommitKVStore),
+		keysByName:             make(map[string]types.StoreKey),
+		listeners:              make(map[types.StoreKey][]types.WriteListener),
+		removalMap:             make(map[types.StoreKey]bool),
+		pruningManager:         pruning.NewManager(db, logger),
+		skipFastStorageUpgrade: skipFastStorageUpgrade,
 	}
 }
 
@@ -227,7 +229,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			storeParams.initialVersion = uint64(ver) + 1
 		}
 
-		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
+		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams, rs.skipFastStorageUpgrade)
 		if err != nil {
 			return errors.Wrap(err, "failed to load store")
 		}
@@ -248,7 +250,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			oldParams.key = oldKey
 
 			// load from the old name
-			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
+			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams, rs.skipFastStorageUpgrade)
 			if err != nil {
 				return errors.Wrapf(err, "failed to load old store %s", oldName)
 			}
@@ -857,7 +859,8 @@ loop:
 	return snapshotItem, rs.LoadLatestVersion()
 }
 
-func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (types.CommitKVStore, error) {
+func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams,
+	skipFastStorageUpgrade bool) (types.CommitKVStore, error) {
 	var db dbm.DB
 
 	if params.db != nil {
@@ -876,9 +879,10 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var err error
 
 		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize)
+			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize, skipFastStorageUpgrade)
 		} else {
-			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
+			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion,
+				rs.iavlCacheSize, skipFastStorageUpgrade)
 		}
 
 		if err != nil {

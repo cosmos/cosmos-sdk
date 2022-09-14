@@ -220,6 +220,51 @@ func TestBuildCustomQueryCommand(t *testing.T) {
 	assert.Assert(t, customCommandCalled)
 }
 
+func TestNotFoundErrors(t *testing.T) {
+	b := &Builder{}
+
+	// bad service
+	_, err := b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{Service: "foo"})
+	assert.ErrorContains(t, err, "can't find service foo")
+
+	// bad method
+	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+		Service:           testpb.Query_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{{RpcMethod: "bar"}},
+	})
+	assert.ErrorContains(t, err, "rpc method bar not found")
+
+	// bad positional field
+	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+		Service: testpb.Query_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod: "Echo",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					{
+						ProtoField: "foo",
+					},
+				},
+			},
+		},
+	})
+	assert.ErrorContains(t, err, "can't find field foo")
+
+	// bad flag field
+	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+		Service: testpb.Query_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod: "Echo",
+				FlagOptions: map[string]*autocliv1.FlagOptions{
+					"baz": {},
+				},
+			},
+		},
+	})
+	assert.ErrorContains(t, err, "can't find field baz")
+}
+
 type testClientConn struct {
 	*grpc.ClientConn
 	t            *testing.T

@@ -67,6 +67,13 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 		handler.CobraArgs = cobra.ExactArgs(n)
 	}
 
+	// validate flag options
+	for name := range commandOptions.FlagOptions {
+		if fields.ByName(protoreflect.Name(name)) == nil {
+			return nil, fmt.Errorf("can't find field %s on %s specified as a flag", name, messageType.Descriptor().FullName())
+		}
+	}
+
 	flagOptsByFlagName := map[string]*autocliv1.FlagOptions{}
 	for i := 0; i < numFields; i++ {
 		field := fields.Get(i)

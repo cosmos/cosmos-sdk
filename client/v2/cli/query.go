@@ -62,21 +62,27 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 	}
 	descriptor, err := resolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("can't find service %s: %v", cmdDescriptor.Service, err)
 	}
 
 	service := descriptor.(protoreflect.ServiceDescriptor)
 	methods := service.Methods()
+
+	rpcOptMap := map[protoreflect.Name]*autocliv1.RpcCommandOptions{}
+	for _, option := range cmdDescriptor.RpcCommandOptions {
+		name := protoreflect.Name(option.RpcMethod)
+		rpcOptMap[name] = option
+		// make sure method exists
+		if m := methods.ByName(name); m == nil {
+			return fmt.Errorf("rpc method %s not found for service %s", name, service.FullName())
+		}
+	}
+
 	n := methods.Len()
 	for i := 0; i < n; i++ {
 		methodDescriptor := methods.Get(i)
-		var methodOpts *autocliv1.RpcCommandOptions
-		for _, option := range cmdDescriptor.RpcCommandOptions {
-			if protoreflect.Name(option.RpcMethod) == methodDescriptor.Name() {
-				methodOpts = option
-			}
-		}
-		methodCmd, err := b.CreateQueryMethodCommand(methodDescriptor, methodOpts)
+		methodOpts := rpcOptMap[methodDescriptor.Name()]
+		methodCmd, err := b.BuildQueryMethodCommand(methodDescriptor, methodOpts)
 		if err != nil {
 			return err
 		}
@@ -95,12 +101,13 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 
 		cmd.AddCommand(subCmd)
 	}
+
 	return nil
 }
 
-// CreateQueryMethodCommand creates a gRPC query command for the given service method. This can be used to auto-generate
+// BuildQueryMethodCommand creates a gRPC query command for the given service method. This can be used to auto-generate
 // just a single command for a single service rpc method.
-func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
+func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
 	if options == nil {
 		// use the defaults
 		options = &autocliv1.RpcCommandOptions{}
@@ -191,6 +198,6 @@ func topLevelCmd(use, short string) *cobra.Command {
 		Short:                      short,
 		DisableFlagParsing:         false,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       ValidateCmd,
+		RunE:                       validateCmd,
 	}
 }

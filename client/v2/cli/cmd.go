@@ -10,8 +10,8 @@ import (
 
 // NOTE: this was copied from client/cmd.go
 
-// ValidateCmd returns unknown command error or Help display if help flag set
-func ValidateCmd(cmd *cobra.Command, args []string) error {
+// validateCmd returns unknown command error or Help display if help flag set
+func validateCmd(cmd *cobra.Command, args []string) error {
 	var unknownCmd string
 	var skipNext bool
 

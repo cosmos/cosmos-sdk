@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/armon/go-metrics"
+	gometrics "github.com/armon/go-metrics"
 	metricsprom "github.com/armon/go-metrics/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
@@ -14,7 +14,7 @@ import (
 
 // globalLabels defines the set of global labels that will be applied to all
 // metrics emitted using the telemetry package function wrappers.
-var globalLabels = []metrics.Label{}
+var globalLabels = []gometrics.Label{}
 
 // Metrics supported format types.
 const (
@@ -24,7 +24,7 @@ const (
 )
 
 // Config defines the configuration options for application telemetry.
-type Config struct {
+type config struct {
 	// Prefixed with keys to separate services
 	ServiceName string `mapstructure:"service-name"`
 
@@ -54,13 +54,13 @@ type Config struct {
 	GlobalLabels [][]string `mapstructure:"global-labels"`
 }
 
-// Metrics defines a wrapper around application telemetry functionality. It allows
+// metrics defines a wrapper around application telemetry functionality. It allows
 // metrics to be gathered at any point in time. When creating a Metrics object,
 // internally, a global metrics is registered with a set of sinks as configured
 // by the operator. In addition to the sinks, when a process gets a SIGUSR1, a
 // dump of formatted recent metrics will be sent to STDERR.
-type Metrics struct {
-	memSink           *metrics.InmemSink
+type metrics struct {
+	memSink           *gometrics.InmemSink
 	prometheusEnabled bool
 }
 
@@ -70,35 +70,43 @@ type GatherResponse struct {
 	ContentType string
 }
 
-// New creates a new instance of Metrics
-func New(cfg Config) (*Metrics, error) {
-	if !cfg.Enabled {
+// New creates a new instance of metrics
+func New(opts ...Option) (*metrics, error) {
+	c := new(config)
+	for _, fn := range opts {
+		err := fn(c)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if !c.Enabled {
 		return nil, nil
 	}
 
-	if numGlobalLables := len(cfg.GlobalLabels); numGlobalLables > 0 {
-		parsedGlobalLabels := make([]metrics.Label, numGlobalLables)
-		for i, gl := range cfg.GlobalLabels {
+	if numGlobalLables := len(c.GlobalLabels); numGlobalLables > 0 {
+		parsedGlobalLabels := make([]gometrics.Label, numGlobalLables)
+		for i, gl := range c.GlobalLabels {
 			parsedGlobalLabels[i] = NewLabel(gl[0], gl[1])
 		}
 
 		globalLabels = parsedGlobalLabels
 	}
 
-	metricsConf := metrics.DefaultConfig(cfg.ServiceName)
-	metricsConf.EnableHostname = cfg.EnableHostname
-	metricsConf.EnableHostnameLabel = cfg.EnableHostnameLabel
+	metricsConf := gometrics.DefaultConfig(c.ServiceName)
+	metricsConf.EnableHostname = c.EnableHostname
+	metricsConf.EnableHostnameLabel = c.EnableHostnameLabel
 
-	memSink := metrics.NewInmemSink(10*time.Second, time.Minute)
-	metrics.DefaultInmemSignal(memSink)
+	memSink := gometrics.NewInmemSink(10*time.Second, time.Minute)
+	gometrics.DefaultInmemSignal(memSink)
 
-	m := &Metrics{memSink: memSink}
-	fanout := metrics.FanoutSink{memSink}
+	m := &metrics{memSink: memSink}
+	fanout := gometrics.FanoutSink{memSink}
 
-	if cfg.PrometheusRetentionTime > 0 {
+	if c.PrometheusRetentionTime > 0 {
 		m.prometheusEnabled = true
 		prometheusOpts := metricsprom.PrometheusOpts{
-			Expiration: time.Duration(cfg.PrometheusRetentionTime) * time.Second,
+			Expiration: time.Duration(c.PrometheusRetentionTime) * time.Second,
 		}
 
 		promSink, err := metricsprom.NewPrometheusSinkFrom(prometheusOpts)
@@ -109,7 +117,7 @@ func New(cfg Config) (*Metrics, error) {
 		fanout = append(fanout, promSink)
 	}
 
-	if _, err := metrics.NewGlobal(metricsConf, fanout); err != nil {
+	if _, err := gometrics.NewGlobal(metricsConf, fanout); err != nil {
 		return nil, err
 	}
 
@@ -117,9 +125,9 @@ func New(cfg Config) (*Metrics, error) {
 }
 
 // Gather collects all registered metrics and returns a GatherResponse where the
-// metrics are encoded depending on the type. Metrics are either encoded via
+// metrics are encoded depending on the type. metrics are either encoded via
 // Prometheus or JSON if in-memory.
-func (m *Metrics) Gather(format string) (GatherResponse, error) {
+func (m *metrics) Gather(format string) (GatherResponse, error) {
 	switch format {
 	case FormatPrometheus:
 		return m.gatherPrometheus()
@@ -135,7 +143,7 @@ func (m *Metrics) Gather(format string) (GatherResponse, error) {
 	}
 }
 
-func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
+func (m *metrics) gatherPrometheus() (GatherResponse, error) {
 	if !m.prometheusEnabled {
 		return GatherResponse{}, fmt.Errorf("prometheus metrics are not enabled")
 	}
@@ -158,7 +166,7 @@ func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 	return GatherResponse{ContentType: string(expfmt.FmtText), Metrics: buf.Bytes()}, nil
 }
 
-func (m *Metrics) gatherGeneric() (GatherResponse, error) {
+func (m *metrics) gatherGeneric() (GatherResponse, error) {
 	summary, err := m.memSink.DisplayMetrics(nil, nil)
 	if err != nil {
 		return GatherResponse{}, fmt.Errorf("failed to gather in-memory metrics: %w", err)

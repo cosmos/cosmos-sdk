@@ -183,37 +183,37 @@ func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.Add
 	return &types.AddressStringToBytesResponse{AddressBytes: bz}, nil
 }
 
-//func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccountInfoRequest) (*types.QueryAccountInfoResponse, error) {
-//	if req == nil {
-//		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-//	}
-//
-//	if req.Address == "" {
-//		return nil, status.Error(codes.InvalidArgument, "Address cannot be empty")
-//	}
-//
-//	ctx := sdk.UnwrapSDKContext(goCtx)
-//	addr, err := sdk.AccAddressFromBech32(req.Address)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	account := q.GetAccount(ctx, addr)
-//	if account == nil {
-//		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
-//	}
-//
-//	pkAny, err := codectypes.NewAnyWithValue(account.GetPubKey())
-//	if err != nil {
-//		return nil, status.Errorf(codes.Internal, err.Error())
-//	}
-//
-//	return &authv1types.QueryAccountInfoResponse{
-//		Info: &authv1types.AccountInfo{
-//			AddressString: addr.String(),
-//			Credential:    pkAny,
-//			AccountNumber: account.GetAccountNumber(),
-//			Sequence:      account.GetSequence(),
-//		},
-//	}, nil
-//}
+func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccountInfoRequest) (*types.QueryAccountInfoResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Address == "" {
+		return nil, status.Error(codes.InvalidArgument, "Address cannot be empty")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	account := ak.GetAccount(ctx, addr)
+	if account == nil {
+		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
+	}
+
+	pkAny, err := codectypes.NewAnyWithValue(account.GetPubKey())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAccountInfoResponse{
+		Info: &types.AccountInfo{
+			Address:       addr.String(),
+			Pubkey:        pkAny,
+			AccountNumber: account.GetAccountNumber(),
+			Sequence:      account.GetSequence(),
+		},
+	}, nil
+}

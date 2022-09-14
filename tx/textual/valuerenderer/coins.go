@@ -121,21 +121,15 @@ func formatCoin(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata) (string,
 	}
 
 	exponentDiff := int64(coinExp) - int64(dispExp)
-	var (
-		dispAmount math.LegacyDec
-		err        error
-	)
+
+	dispAmount, err := math.LegacyNewDecFromStr(coin.Amount)
+	if err != nil {
+		return "", err
+	}
+
 	if exponentDiff > 0 {
-		dispAmount, err = math.LegacyNewDecFromStr(coin.Amount)
-		if err != nil {
-			return "", err
-		}
 		dispAmount = dispAmount.Mul(math.LegacyNewDec(10).Power(uint64(exponentDiff)))
 	} else {
-		dispAmount, err = math.LegacyNewDecFromStr(coin.Amount)
-		if err != nil {
-			return "", err
-		}
 		dispAmount = dispAmount.Quo(math.LegacyNewDec(10).Power(uint64(-exponentDiff)))
 	}
 

@@ -3,6 +3,8 @@ name: Build & Push
 # and pushes the image to https://hub.docker.com/r/interchainio/simapp/tags
 on:
   pull_request:
+    paths:
+      - "Dockerfile"
   push:
     branches:
       - main

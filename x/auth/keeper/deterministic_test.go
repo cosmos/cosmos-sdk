@@ -61,7 +61,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
-func (suite *DeterministicTestSuite) runAccountsIterations(addr sdk.AccAddress, prevRes types.AccountI) {
+func (suite *DeterministicTestSuite) runAccountIterations(addr sdk.AccAddress, prevRes types.AccountI) {
 	for i := 0; i < 1000; i++ {
 		acc, err := suite.queryClient.Account(suite.ctx, &types.QueryAccountRequest{Address: addr.String()})
 		suite.Require().NoError(err)
@@ -80,7 +80,7 @@ func (suite *DeterministicTestSuite) runAccountsIterations(addr sdk.AccAddress, 
 	}
 }
 
-func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
+func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		pub := pubkeyGenerator(t).Draw(t, "pubkey")
 		addr := sdk.AccAddress(pub.Address())
@@ -90,7 +90,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
 		suite.accountKeeper.SetAccount(suite.ctx, acc1)
 
-		suite.runAccountsIterations(addr, acc1)
+		suite.runAccountIterations(addr, acc1)
 	})
 
 	// Regression test
@@ -104,7 +104,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
-	suite.runAccountsIterations(addr1, acc1)
+	suite.runAccountIterations(addr1, acc1)
 }
 
 // pubkeyGenerator creates and returns a random pubkey generator using rapid.

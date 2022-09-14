@@ -75,6 +75,7 @@ func NewBTreeMempool(maxBytes int) *btreeMempool {
 		btree:      btree.New(2),
 		txBytes:    0,
 		maxTxBytes: maxBytes,
+		hashes:     make(map[[32]byte]int64),
 	}
 }
 

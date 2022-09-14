@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -134,11 +135,11 @@ func (k Keeper) Tombstone(ctx sdk.Context, consAddr sdk.ConsAddress) {
 func (k Keeper) RevertTombstone(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	signInfo, ok := k.GetValidatorSigningInfo(ctx, consAddr)
 	if !ok {
-		panic("cannot tombstone validator that does not have any signing information")
+		panic(fmt.Sprintf("cannot tombstone validator that does not have any signing information: %s", consAddr.String()))
 	}
 
 	if !signInfo.Tombstoned {
-		panic("cannot untombstone a validator that is not tombstoned")
+		panic(fmt.Sprintf("cannot untombstone a validator that is not tombstoned: %s", consAddr.String()))
 	}
 
 	signInfo.Tombstoned = false

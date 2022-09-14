@@ -1,8 +1,10 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
 
+	"github.com/MauriceGit/skiplist"
 	"github.com/google/btree"
 )
 
@@ -18,8 +20,8 @@ type MempoolTx interface {
 }
 
 // HashableTx defines an interface for a transaction that can be hashed.
-// TODO Consider merging with MemPoolTx or using signatures instead.
 type HashableTx interface {
+	MempoolTx
 	GetHash() [32]byte
 }
 
@@ -52,6 +54,10 @@ var (
 	ErrNoTxHash      = fmt.Errorf("tx is not hashable")
 )
 
+// ----------------------------------------------------------------------------
+// BTree Implementation
+// We use a BTree with order 2 to approximate a Red-Black Tree.
+
 type btreeMempool struct {
 	btree      *btree.BTree
 	txBytes    int
@@ -61,13 +67,20 @@ type btreeMempool struct {
 }
 
 type btreeItem struct {
-	// TODO use linked list instead of slice if we opt for a Btree
-	txs      []MempoolTx
+	tx       HashableTx
 	priority int64
 }
 
 func (bi *btreeItem) Less(than btree.Item) bool {
-	return bi.priority < than.(*btreeItem).priority
+	prA := bi.priority
+	prB := than.(*btreeItem).priority
+	if prA == prB {
+		// random, deterministic ordering
+		hashA := bi.tx.GetHash()
+		hashB := than.(*btreeItem).tx.GetHash()
+		return bytes.Compare(hashA[:], hashB[:]) < 0
+	}
+	return prA < prB
 }
 
 func NewBTreeMempool(maxBytes int) *btreeMempool {
@@ -90,17 +103,9 @@ func (btm *btreeMempool) Insert(ctx Context, tx MempoolTx) error {
 		return ErrMempoolIsFull
 	}
 
-	key := &btreeItem{priority: priority}
-	// TODO can avoid O(log n) lookup by maintaining a priority hash
-	bi := btm.btree.Get(key).(*btreeItem)
-	if bi != nil {
-		bi.txs = append(bi.txs, tx)
-	} else {
-		bi = &btreeItem{txs: []MempoolTx{tx}, priority: priority}
-	}
-
+	bi := &btreeItem{priority: priority, tx: hashTx}
 	btm.btree.ReplaceOrInsert(bi)
-	btm.hashes[hashTx.GetHash()] = priority
+
 	btm.txBytes += txSize
 	btm.txCount++
 
@@ -116,6 +121,7 @@ func (btm *btreeMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolT
 	txBytes := 0
 	var selectedTxs []MempoolTx
 	btm.btree.Descend(func(i btree.Item) bool {
+
 		txs := i.(*btreeItem).txs
 		for _, tx := range txs {
 			txSize := tx.Size()
@@ -176,6 +182,105 @@ func (btm *btreeMempool) Remove(_ Context, tx MempoolTx) error {
 	delete(btm.hashes, hash)
 	btm.txBytes -= tx.Size()
 	btm.txCount--
+
+	return nil
+}
+
+// ----------------------------------------------------------------------------
+// Skip list implementation
+
+type skipListMempool struct {
+	list       *skiplist.SkipList
+	txBytes    int
+	maxTxBytes int
+	scores     map[[32]byte]int64
+}
+
+func (item skipListItem) ExtractKey() float64 {
+	return float64(item.priority)
+}
+
+func (item skipListItem) String() string {
+	return fmt.Sprintf("txHash %X", item.tx.(HashableTx).GetHash())
+}
+
+type skipListItem struct {
+	tx       MempoolTx
+	priority int64
+}
+
+func (slm *skipListMempool) Insert(ctx Context, tx MempoolTx) error {
+	hashTx, ok := tx.(HashableTx)
+	if !ok {
+		return ErrNoTxHash
+	}
+	txSize := tx.Size()
+	priority := ctx.Priority()
+
+	if slm.txBytes+txSize > slm.maxTxBytes {
+		return ErrMempoolIsFull
+	}
+
+	item := skipListItem{tx: tx, priority: priority}
+	slm.list.Insert(item)
+	slm.scores[hashTx.GetHash()] = priority
+	slm.txBytes += txSize
+
+	return nil
+}
+
+func (slm *skipListMempool) validateSequenceNumber(tx Tx) bool {
+	// TODO
+	return true
+}
+
+func (slm *skipListMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+	txBytes := 0
+	var selectedTxs []MempoolTx
+
+	n := slm.list.GetLargestNode()
+	cnt := slm.list.GetNodeCount()
+	for i := 0; i < cnt; i++ {
+		tx := n.GetValue().(skipListItem).tx
+
+		if !slm.validateSequenceNumber(tx) {
+			continue
+		}
+
+		selectedTxs = append(selectedTxs, tx)
+		txSize := tx.Size()
+		txBytes += txSize
+		if txBytes+txSize >= maxBytes {
+			break
+		}
+
+		n = slm.list.Prev(n)
+	}
+
+	return selectedTxs, nil
+}
+
+func (slm *skipListMempool) CountTx() int {
+	return slm.list.GetNodeCount()
+}
+
+func (slm *skipListMempool) Remove(_ Context, tx MempoolTx) error {
+	hashTx, ok := tx.(HashableTx)
+	if !ok {
+		return ErrNoTxHash
+	}
+	hash := hashTx.GetHash()
+
+	priority, txFound := slm.scores[hash]
+	if !txFound {
+		return fmt.Errorf("tx %X not found", hash)
+	}
+
+	item := skipListItem{tx: tx, priority: priority}
+	slm.list.Delete(item)
+
+	delete(slm.scores, hash)
+	slm.txBytes -= tx.Size()
 
 	return nil
 }

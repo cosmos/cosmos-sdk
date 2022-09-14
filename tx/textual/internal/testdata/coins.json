@@ -1,5 +1,20 @@
 [
   {
+    "proto": [],
+    "metadata":{},
+    "text":  ""
+  },
+  {
+    "proto": [
+      { "amount": "1", "denom": "ucosm" }
+    ],
+    "metadata":{
+      "ucosm": {"display": "COSM", "denom_units": [{"denom": "COSM", "exponent": 6}, {"denom": "ucosm", "exponent": 0}]},
+      "ustake": {"display": "STAKE", "denom_units": [{"denom": "STAKE", "exponent": 6}, {"denom": "ustake", "exponent": 0}]}
+    },
+    "text":  "0.000001 COSM"
+  },
+  {
     "proto": [
       { "amount": "1", "denom": "ucosm" },
       { "amount": "3", "denom": "ustake" }

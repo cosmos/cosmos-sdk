@@ -3,12 +3,17 @@ syntax = "proto3";
 package cosmos.app.v1alpha1;
 
 import "cosmos/app/v1alpha1/config.proto";
+import "google/protobuf/descriptor.proto";
 
 // Query is the app module query service.
 service Query {
 
   // Config returns the current app config.
   rpc Config(QueryConfigRequest) returns (QueryConfigResponse) {}
+
+  // FileDescriptorSet returns the full FileDescriptorSet of the app in order
+  // to enable easier generation of dynamic clients.
+  rpc FileDescriptorSet(QueryFileDescriptorSetRequest) returns (QueryFileDescriptorSetResponse) {}
 }
 
 // QueryConfigRequest is the Query/Config request type.
@@ -19,4 +24,12 @@ message QueryConfigResponse {
 
   // config is the current app config.
   Config config = 1;
+}
+
+// QueryFileDescriptorSetRequest is the Query/FileDescriptorSet request type.
+message QueryFileDescriptorSetRequest {}
+
+// QueryFileDescriptorSetResponse is the Query/FileDescriptorSet response type.
+message QueryFileDescriptorSetResponse {
+  google.protobuf.FileDescriptorSet files = 1;
 }

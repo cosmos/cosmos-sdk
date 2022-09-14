@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -21,15 +22,16 @@ import (
 )
 
 const (
-	flagVestingStart = "vesting-start-time"
-	flagVestingEnd   = "vesting-end-time"
-	flagVestingAmt   = "vesting-amount"
+	flagVestingStart  = "vesting-start-time"
+	flagVestingEnd    = "vesting-end-time"
+	flagVestingAmt    = "vesting-amount"
+	flagAppendAccount = "append-account"
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
 func AddGenesisAccountCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-account [address_or_key_name] [coin][,[coin]]",
+		Use:   "add-genesis-account [address_or_key_name] [coin],[coin]]",
 		Short: "Add a genesis account to genesis.json",
 		Long: `Add a genesis account to genesis.json. The provided account must specify
 the account address or key name and a list of initial coins. If a key name is given,
@@ -79,6 +81,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			vestingStart, _ := cmd.Flags().GetInt64(flagVestingStart)
 			vestingEnd, _ := cmd.Flags().GetInt64(flagVestingEnd)
 			vestingAmtStr, _ := cmd.Flags().GetString(flagVestingAmt)
+			appendAcct, _ := cmd.Flags().GetBool(flagAppendAccount)
 
 			vestingAmt, err := sdk.ParseCoinsNormalized(vestingAmtStr)
 			if err != nil {
@@ -130,8 +133,30 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				return fmt.Errorf("failed to get accounts from any: %w", err)
 			}
 
+			bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
+			var found bool
 			if accs.Contains(addr) {
-				return fmt.Errorf("cannot add account at existing address %s", addr)
+				if appendAcct {
+					for i, bal := range bankGenState.Balances {
+						if bal.Address == addr.String() {
+							balacc, updated := Contains(bal, balances)
+							if !updated {
+								balances.Coins = append(balances.Coins, bal.Coins...)
+							} else {
+								balances.Coins = balacc.Coins
+							}
+
+							sort.Sort(balances.Coins)
+							bankGenState.Balances[i] = balances
+							sort.Sort(bankGenState.Balances[i].Coins)
+
+							bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
+							found = true
+						}
+					}
+				} else {
+					return fmt.Errorf(" Account %s already exists\nUse append-account flag to append account at existing address", addr)
+				}
 			}
 
 			// Add the new account to the set of genesis accounts and sanitize the
@@ -152,8 +177,10 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			appState[authtypes.ModuleName] = authGenStateBz
 
-			bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
-			bankGenState.Balances = append(bankGenState.Balances, balances)
+			bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
+			if !found {
+				bankGenState.Balances = append(bankGenState.Balances, balances)
+			}
 			bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
 			bankGenState.Supply = bankGenState.Supply.Add(balances.Coins...)
 
@@ -179,7 +206,52 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 	cmd.Flags().String(flagVestingAmt, "", "amount of coins for vesting accounts")
 	cmd.Flags().Int64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
 	cmd.Flags().Int64(flagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
+	cmd.Flags().Bool(flagAppendAccount, false, "appends genesis account to genesis.json")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func Contains(allBal banktypes.Balance, addrBal banktypes.Balance) (banktypes.Balance, bool) {
+	var found bool
+	var coins sdk.Coins
+
+	for i, bal := range allBal.Coins {
+		for _, addrbal := range addrBal.Coins {
+			if bal.Denom == addrbal.Denom {
+				a := bal.Amount.Add(addrbal.Amount)
+				bal.Amount = a
+				found = true
+				allBal.Coins[i].Amount = bal.Amount
+			} else {
+				var catch bool
+				if len(coins) > 1 {
+					for _, coin := range coins {
+						if addrbal.Denom == coin.Denom {
+							catch = true
+						}
+					}
+					if !catch {
+						coins = append(coins, addrbal)
+					}
+				} else {
+					coins = append(coins, addrbal)
+				}
+			}
+		}
+
+	}
+
+	if len(coins) > 1 {
+		for _, coin := range coins {
+			found, _ := allBal.Coins.Sort().Find(coin.Denom)
+			if !found {
+				allBal.Coins = append(allBal.Coins, coin)
+			}
+		}
+	} else {
+		allBal.Coins = append(allBal.Coins, coins...)
+	}
+
+	return allBal, found
 }

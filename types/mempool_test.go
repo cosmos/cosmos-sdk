@@ -42,7 +42,7 @@ func TestSelectMempool(t *testing.T) {
 	maxBytes := 10
 	mPool := types.NewBTreeMempool(smallSize)
 	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	transactions := simulateManyTx(ctx, 100)
+	transactions := simulateManyTx(ctx, 1000)
 	for _, t := range transactions {
 		mPool.Insert(ctx, TxWSize{t})
 	}
@@ -62,6 +62,24 @@ func BenchmarkBtreeMempool_Insert(b *testing.B) {
 	tx := simulateTx(ctx)
 	for i := 0; i < b.N; i++ {
 		mPool.Insert(ctx, TxWSize{tx})
+	}
+}
+
+func BenchmarkBtreeMempool_Insert_100(b *testing.B) {
+	mPool := types.NewBTreeMempool(smallSize)
+	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	transactions := simulateManyTx(ctx, 100)
+	for _, t := range transactions {
+		mPool.Insert(ctx, TxWSize{t})
+	}
+}
+
+func BenchmarkBtreeMempool_Insert_1000(b *testing.B) {
+	mPool := types.NewBTreeMempool(smallSize)
+	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	transactions := simulateManyTx(ctx, 1000)
+	for _, t := range transactions {
+		mPool.Insert(ctx, TxWSize{t})
 	}
 }
 

@@ -11,6 +11,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 
 // Msg defines the upgrade Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // SoftwareUpgrade is a governance operation for initiating a software upgrade.
   //
   // Since: cosmos-sdk 0.46

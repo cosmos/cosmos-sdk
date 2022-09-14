@@ -14,7 +14,7 @@ require (
 require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/cosmos/gogoproto v1.4.1 // indirect
+	github.com/cosmos/gogoproto v1.4.2 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect

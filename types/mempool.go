@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/MauriceGit/skiplist"
+	maurice "github.com/MauriceGit/skiplist"
 	"github.com/google/btree"
+	huandu "github.com/huandu/skiplist"
 )
 
 // MempoolTx we define an app-side mempool transaction interface that is as
@@ -164,10 +165,12 @@ func (btm *btreeMempool) Remove(_ Context, tx MempoolTx) error {
 }
 
 // ----------------------------------------------------------------------------
-// Skip list implementation
+// Skip list implementations
 
-type skipListMempool struct {
-	list       *skiplist.SkipList
+// mauriceGit
+
+type mauriceSkipListMempool struct {
+	list       *maurice.SkipList
 	txBytes    int
 	maxTxBytes int
 	scores     map[[32]byte]int64
@@ -186,7 +189,7 @@ type skipListItem struct {
 	priority int64
 }
 
-func (slm *skipListMempool) Insert(ctx Context, tx MempoolTx) error {
+func (slm *mauriceSkipListMempool) Insert(ctx Context, tx MempoolTx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -206,12 +209,12 @@ func (slm *skipListMempool) Insert(ctx Context, tx MempoolTx) error {
 	return nil
 }
 
-func (slm *skipListMempool) validateSequenceNumber(tx Tx) bool {
+func (slm *mauriceSkipListMempool) validateSequenceNumber(tx Tx) bool {
 	// TODO
 	return true
 }
 
-func (slm *skipListMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+func (slm *mauriceSkipListMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
 	txBytes := 0
 	var selectedTxs []MempoolTx
 
@@ -237,11 +240,11 @@ func (slm *skipListMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]Mempo
 	return selectedTxs, nil
 }
 
-func (slm *skipListMempool) CountTx() int {
+func (slm *mauriceSkipListMempool) CountTx() int {
 	return slm.list.GetNodeCount()
 }
 
-func (slm *skipListMempool) Remove(_ Context, tx MempoolTx) error {
+func (slm *mauriceSkipListMempool) Remove(_ Context, tx MempoolTx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -256,6 +259,119 @@ func (slm *skipListMempool) Remove(_ Context, tx MempoolTx) error {
 	item := skipListItem{tx: tx, priority: priority}
 	// TODO this is broken.  Key needs hash bytes incorporated to keep it unique
 	slm.list.Delete(item)
+
+	delete(slm.scores, hash)
+	slm.txBytes -= tx.Size()
+
+	return nil
+}
+
+// huandu
+
+type huanduSkipListMempool struct {
+	list       *huandu.SkipList
+	txBytes    int
+	maxTxBytes int
+	scores     map[[32]byte]int64
+}
+
+type skipListKey struct {
+	hash     [32]byte
+	priority int64
+}
+
+func huanduLess(a, b interface{}) int {
+	keyA := a.(skipListKey)
+	keyB := b.(skipListKey)
+	if keyA.priority == keyB.priority {
+		return bytes.Compare(keyA.hash[:], keyB.hash[:])
+	} else {
+		if keyA.priority < keyB.priority {
+			return -1
+		} else {
+			return 1
+		}
+	}
+}
+
+func NewHuanduSkipListMempool() huanduSkipListMempool {
+	list := huandu.New(huandu.LessThanFunc(huanduLess))
+
+	return huanduSkipListMempool{
+		list:   list,
+		scores: make(map[[32]byte]int64),
+	}
+}
+
+func (slm huanduSkipListMempool) Insert(ctx Context, tx MempoolTx) error {
+	hashTx, ok := tx.(HashableTx)
+	if !ok {
+		return ErrNoTxHash
+	}
+	txSize := tx.Size()
+	priority := ctx.Priority()
+
+	if slm.txBytes+txSize > slm.maxTxBytes {
+		return ErrMempoolIsFull
+	}
+
+	hash := hashTx.GetHash()
+	key := skipListKey{hash: hash, priority: priority}
+	slm.list.Set(key, tx)
+	slm.scores[hash] = priority
+	slm.txBytes += txSize
+
+	return nil
+}
+
+func (slm huanduSkipListMempool) validateSequenceNumber(tx Tx) bool {
+	// TODO
+	return true
+}
+
+func (slm huanduSkipListMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+	txBytes := 0
+	var selectedTxs []MempoolTx
+
+	n := slm.list.Back()
+	for n != nil {
+		tx := n.Value.(MempoolTx)
+
+		if !slm.validateSequenceNumber(tx) {
+			continue
+		}
+
+		selectedTxs = append(selectedTxs, tx)
+		txSize := tx.Size()
+		txBytes += txSize
+		if txBytes >= maxBytes {
+			break
+		}
+
+		n = n.Prev()
+	}
+
+	return selectedTxs, nil
+}
+
+func (slm huanduSkipListMempool) CountTx() int {
+	return slm.list.Len()
+}
+
+func (slm huanduSkipListMempool) Remove(_ Context, tx MempoolTx) error {
+	hashTx, ok := tx.(HashableTx)
+	if !ok {
+		return ErrNoTxHash
+	}
+	hash := hashTx.GetHash()
+
+	priority, txFound := slm.scores[hash]
+	if !txFound {
+		return fmt.Errorf("tx %X not found", hash)
+	}
+
+	key := skipListKey{hash: hash, priority: priority}
+	slm.list.Remove(key)
 
 	delete(slm.scores, hash)
 	slm.txBytes -= tx.Size()

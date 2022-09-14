@@ -27,6 +27,9 @@ func TestAnyPackUnpack(t *testing.T) {
 	require.Equal(t, spot, animal)
 }
 
+// TODO(#13279): Remove this alias in a future release
+type TestI ITest
+
 type ITest interface {
 	DoSomething()
 }

@@ -15,6 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+// TODO(#13279): Remove this alias in a future release
+type AccountKeeperI IAccountKeeper
+
 // IAccountKeeper is the interface contract that x/auth's keeper implements.
 type IAccountKeeper interface {
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.

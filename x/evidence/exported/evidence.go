@@ -37,6 +37,9 @@ type ValidatorEvidence interface {
 	GetTotalPower() int64
 }
 
+// TODO(#13279): Remove this alias in a future release
+type MsgSubmitEvidenceI IMsgSubmitEvidence
+
 // IMsgSubmitEvidence defines the specific interface a concrete message must
 // implement in order to process submitted evidence. The concrete MsgSubmitEvidence
 // must be defined at the application-level.

@@ -8,12 +8,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO(#13279): Remove this alias in a future release
+type DelegationI IDelegation
+
 // IDelegation delegation bond for a delegated proof of stake system
 type IDelegation interface {
 	GetDelegatorAddr() sdk.AccAddress // delegator sdk.AccAddress for the bond
 	GetValidatorAddr() sdk.ValAddress // validator operator address
 	GetShares() math.LegacyDec        // amount of validator's shares held in this delegation
 }
+
+// TODO(#13279): Remove this alias in a future release
+type ValidatorI IValidator
 
 // IValidator expected validator functions
 type IValidator interface {

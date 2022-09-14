@@ -42,6 +42,9 @@ func (m HasAnimal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return unpacker.UnpackAny(m.Animal, &animal)
 }
 
+// TODO(#13279): Remove this alias in a future release
+type HasAnimalI IHasAnimal
+
 type IHasAnimal interface {
 	TheAnimal() Animal
 }
@@ -51,6 +54,9 @@ var _ IHasAnimal = &HasAnimal{}
 func (m HasAnimal) TheAnimal() Animal {
 	return m.Animal.GetCachedValue().(Animal)
 }
+
+// TODO(#13279): Remove this alias in a future release
+type HasHasAnimalI IHasHasAnimal
 
 type IHasHasAnimal interface {
 	TheHasAnimal() IHasAnimal
@@ -68,6 +74,9 @@ func (m HasHasAnimal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var animal IHasAnimal
 	return unpacker.UnpackAny(m.HasAnimal, &animal)
 }
+
+// TODO(#13279): Remove this alias in a future release
+type HasHasHasAnimalI IHasHasHasAnimal
 
 type IHasHasHasAnimal interface {
 	TheHasHasAnimal() IHasHasAnimal

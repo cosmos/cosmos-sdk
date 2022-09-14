@@ -6,6 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO(#13279): Remove this alias in a future release
+type FeeAllowanceI IFeeAllowance
+
 // FeeAllowance implementations are tied to a given fee delegator and delegatee,
 // and are used to enforce fee grant limits.
 type IFeeAllowance interface {

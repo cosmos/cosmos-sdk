@@ -299,6 +299,9 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
+// TODO(#13279): Remove this alias in a future release
+type AccountI IAccount
+
 // IAccount is an interface used to store coins at a given address within state.
 // It presumes a notion of sequence numbers for replay protection,
 // a notion of account numbers for replay protection for previously pruned accounts,
@@ -323,6 +326,9 @@ type IAccount interface {
 	// Ensure that account implements stringer
 	String() string
 }
+
+// TODO(#13279): Remove this alias in a future release
+type ModuleAccountI IModuleAccount
 
 // IModuleAccount defines an account interface for modules that hold tokens in
 // an escrow.

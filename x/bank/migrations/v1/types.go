@@ -46,6 +46,9 @@ func AddressFromBalancesStore(key []byte) sdk.AccAddress {
 	return sdk.AccAddress(addr)
 }
 
+// TODO(#13279): Remove this alias in a future release
+type SupplyI ISupply
+
 // ISupply defines an inflationary supply interface for modules that handle
 // token supply.
 // It is copy-pasted from:

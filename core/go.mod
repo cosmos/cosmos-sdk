@@ -16,7 +16,7 @@ require (
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91 // indirect
+	golang.org/x/exp v0.0.0-20220909182711-5c715a9e8561 // indirect
 	golang.org/x/net v0.0.0-20220726230323-06994584191e // indirect
 	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
 	golang.org/x/text v0.3.7 // indirect

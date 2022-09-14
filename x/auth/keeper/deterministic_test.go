@@ -62,7 +62,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
-func (suite *DeterministicTestSuite) runIterations(addr sdk.AccAddress, prevRes types.AccountI, checkPrevRes bool) {
+func (suite *DeterministicTestSuite) runIterations(addr sdk.AccAddress, prevRes types.AccountI) {
 	for i := 0; i < 1000; i++ {
 		acc, err := suite.queryClient.Account(suite.ctx, &types.QueryAccountRequest{Address: addr.String()})
 		suite.Require().NoError(err)
@@ -73,34 +73,25 @@ func (suite *DeterministicTestSuite) runIterations(addr sdk.AccAddress, prevRes 
 		suite.Require().NoError(err)
 		suite.Require().Equal(account.GetAddress(), addr)
 
-		// check with previous response too.
-		// suite.Require().Equal(account.GetAddress(), prevRes.GetAddress())
-		// suite.Require().Equal(account.GetPubKey(), prevRes.GetPubKey())
-		// suite.Require().Equal(account.GetSequence(), prevRes.GetSequence())
-		// suite.Require().Equal(account.GetAccountNumber(), prevRes.GetAccountNumber())
-		suite.Require().Equal(account, prevRes)
-
-		if checkPrevRes {
-			prevRes = account
+		if prevRes != nil {
+			suite.Require().Equal(account, prevRes)
 		}
+
+		prevRes = account
 	}
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
-		addr := testdata.AddrTestDeterministic(t)
-		suite.accountKeeper.SetAccount(suite.ctx,
-			suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr))
+		addr := testdata.AddressGenerator(t).Draw(t, "address")
+		acc1 := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+		suite.accountKeeper.SetAccount(suite.ctx, acc1)
 
 		acc, err := suite.queryClient.Account(suite.ctx, &types.QueryAccountRequest{Address: addr.String()})
 		suite.Require().NoError(err)
 		suite.Require().NotNil(acc)
 
-		var prevRes types.AccountI
-		err = suite.encCfg.InterfaceRegistry.UnpackAny(acc.Account, &prevRes)
-		suite.Require().NoError(err)
-
-		suite.runIterations(addr, prevRes, true)
+		suite.runIterations(addr, acc1)
 	})
 
 	priv := secp256k1.GenPrivKey()
@@ -108,5 +99,5 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	acc1 := types.NewBaseAccount(addr1, priv.PubKey(), uint64(rand.Intn(100)+10000), uint64(0))
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
-	suite.runIterations(addr1, acc1, false)
+	suite.runIterations(addr1, acc1)
 }

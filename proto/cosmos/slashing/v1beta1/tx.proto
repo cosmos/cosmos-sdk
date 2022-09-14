@@ -11,6 +11,8 @@ import "cosmos/msg/v1/msg.proto";
 
 // Msg defines the slashing Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // Unjail defines a method for unjailing a jailed validator, thus returning
   // them into the bonded validator set, so they can begin receiving provisions
   // and rewards again.

@@ -86,6 +86,7 @@ type appInputs struct {
 	App            appWrapper
 	Modules        map[string]AppModuleWrapper
 	BaseAppOptions []BaseAppOption
+	CLIConfigs     map[string]CLIConfig
 }
 
 func provideAppBuilder(inputs appInputs) *AppBuilder {
@@ -98,6 +99,7 @@ func provideAppBuilder(inputs appInputs) *AppBuilder {
 	app.config = inputs.Config
 	app.ModuleManager = mm
 	app.appConfig = inputs.AppConfig
+	app.cliConfigs = inputs.CLIConfigs
 	return &AppBuilder{app: app}
 }
 

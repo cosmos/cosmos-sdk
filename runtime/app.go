@@ -9,6 +9,7 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -41,7 +42,6 @@ type App struct {
 	ModuleManager     *module.Manager
 	configurator      module.Configurator
 	config            *runtimev1alpha1.Module
-	appConfig         *appv1alpha1.Config
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
@@ -51,6 +51,8 @@ type App struct {
 	endBlockers       []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
+	appConfig         *appv1alpha1.Config
+	cliConfigs        map[string]CLIConfig
 }
 
 // RegisterModules registers the provided modules with the module manager and
@@ -87,6 +89,7 @@ func (a *App) Load(loadLatest bool) error {
 		return err
 	}
 	appv1alpha1.RegisterQueryServer(a.configurator.QueryServer(), appConfigSvc)
+	autocliv1.RegisterRemoteInfoServiceServer(a.configurator.QueryServer(), newAutocliService(a.cliConfigs))
 
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)

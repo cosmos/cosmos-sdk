@@ -1705,6 +1705,7 @@ type QueryFileDescriptorSetResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// files is the FileDescriptorSet.
 	Files *descriptorpb.FileDescriptorSet `protobuf:"bytes,1,opt,name=files,proto3" json:"files,omitempty"`
 }
 

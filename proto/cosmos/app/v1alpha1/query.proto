@@ -31,5 +31,7 @@ message QueryFileDescriptorSetRequest {}
 
 // QueryFileDescriptorSetResponse is the Query/FileDescriptorSet response type.
 message QueryFileDescriptorSetResponse {
+
+  // files is the FileDescriptorSet.
   google.protobuf.FileDescriptorSet files = 1;
 }

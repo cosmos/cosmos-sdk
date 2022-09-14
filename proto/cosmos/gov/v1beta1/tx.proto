@@ -13,6 +13,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1";
 
 // Msg defines the bank Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // SubmitProposal defines a method to create new proposal given a content.
   rpc SubmitProposal(MsgSubmitProposal) returns (MsgSubmitProposalResponse);
 

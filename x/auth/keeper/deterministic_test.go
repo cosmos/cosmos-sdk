@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -83,8 +82,8 @@ func (suite *DeterministicTestSuite) runAccountsIterations(addr sdk.AccAddress, 
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
-		addr := testdata.AddressGenerator(t).Draw(t, "address")
 		pub := pubkeyGenerator(t).Draw(t, "pubkey")
+		addr := sdk.AccAddress(pub.Address())
 		accNum := rapid.Uint64().Draw(t, "account-number")
 		seq := rapid.Uint64().Draw(t, "sequence")
 

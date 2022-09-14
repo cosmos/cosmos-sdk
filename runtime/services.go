@@ -62,7 +62,7 @@ type autocliService struct {
 	moduleOptions map[string]*autocliv1.ModuleOptions
 }
 
-func newAutocliService(cliConfigs map[string]CLIConfig) *autocliService {
+func newAutocliService(cliConfigs map[string]AutoCLIConfig) *autocliService {
 	moduleOptions := map[string]*autocliv1.ModuleOptions{}
 	for module, cfg := range cliConfigs {
 		moduleOptions[module] = cfg.AutoCLIOptions

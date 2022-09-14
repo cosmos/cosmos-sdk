@@ -52,7 +52,7 @@ type App struct {
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	appConfig         *appv1alpha1.Config
-	cliConfigs        map[string]CLIConfig
+	cliConfigs        map[string]AutoCLIConfig
 }
 
 // RegisterModules registers the provided modules with the module manager and

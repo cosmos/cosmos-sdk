@@ -86,7 +86,7 @@ type appInputs struct {
 	App            appWrapper
 	Modules        map[string]AppModuleWrapper
 	BaseAppOptions []BaseAppOption
-	CLIConfigs     map[string]CLIConfig
+	CLIConfigs     map[string]AutoCLIConfig
 }
 
 func provideAppBuilder(inputs appInputs) *AppBuilder {

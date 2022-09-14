@@ -7,14 +7,14 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 )
 
-// CLIConfig is
-type CLIConfig struct {
+// AutoCLIConfig is
+type AutoCLIConfig struct {
 	// AutoCLIOptions
 	AutoCLIOptions     *autocliv1.ModuleOptions
 	CustomQueryCommand *cobra.Command
 	CustomTxCommand    *cobra.Command
 }
 
-func (C CLIConfig) IsOnePerModuleType() {}
+func (C AutoCLIConfig) IsOnePerModuleType() {}
 
-var _ depinject.OnePerModuleType = CLIConfig{}
+var _ depinject.OnePerModuleType = AutoCLIConfig{}

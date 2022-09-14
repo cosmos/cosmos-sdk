@@ -91,8 +91,10 @@ func (btm *btreeMempool) Insert(ctx Context, tx MempoolTx) error {
 	}
 
 	key := &btreeItem{priority: priority}
-	bi := btm.btree.Get(key).(*btreeItem)
+
+	bi := btm.btree.Get(key)
 	if bi != nil {
+		bi := bi.(*btreeItem)
 		bi.txs = append(bi.txs, tx)
 	} else {
 		bi = &btreeItem{txs: []MempoolTx{tx}, priority: priority}

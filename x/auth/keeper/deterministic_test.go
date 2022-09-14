@@ -86,9 +86,9 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 		addr := testdata.AddressGenerator(t).Draw(t, "address")
 		pub := pubkeyGenerator(t).Draw(t, "pubkey")
 		accNum := rapid.Uint64().Draw(t, "account-number")
-		sequence := rapid.Uint64().Draw(t, "sequence")
+		seq := rapid.Uint64().Draw(t, "sequence")
 
-		acc1 := types.NewBaseAccount(addr, &pub, accNum, sequence)
+		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
 		suite.accountKeeper.SetAccount(suite.ctx, acc1)
 
 		suite.runAccountsIterations(addr, acc1)
@@ -99,7 +99,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	pub, err := hex.DecodeString("02950e1cdfcb133d6024109fd489f734eeb4502418e538c28481f22bce276f248c")
 	suite.Require().NoError(err)
 
-	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub}, uint64(10087), uint64(0))
+	accNum := uint64(10087)
+	seq := uint64(0)
+
+	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 	suite.runAccountsIterations(addr1, acc1)

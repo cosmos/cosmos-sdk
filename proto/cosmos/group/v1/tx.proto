@@ -14,6 +14,7 @@ import "cosmos/msg/v1/msg.proto";
 
 // Msg is the cosmos.group.v1 Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
 
   // CreateGroup creates a new group with an admin account address, a list of members and some optional metadata.
   rpc CreateGroup(MsgCreateGroup) returns (MsgCreateGroupResponse);

@@ -143,17 +143,6 @@ func ValidVoteOption(option VoteOption) bool {
 	return false
 }
 
-// Marshal needed for protobuf compatibility.
-func (vo VoteOption) Marshal() ([]byte, error) {
-	return []byte{byte(vo)}, nil
-}
-
-// Unmarshal needed for protobuf compatibility.
-func (vo *VoteOption) Unmarshal(data []byte) error {
-	*vo = VoteOption(data[0])
-	return nil
-}
-
 // Format implements the fmt.Formatter interface.
 func (vo VoteOption) Format(s fmt.State, verb rune) {
 	switch verb {

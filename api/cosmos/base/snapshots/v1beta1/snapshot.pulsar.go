@@ -4,7 +4,7 @@ package snapshotsv1beta1
 import (
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -5122,6 +5122,7 @@ type SnapshotItem struct {
 	// item is the specific type of snapshot item.
 	//
 	// Types that are assignable to Item:
+	//
 	//	*SnapshotItem_Store
 	//	*SnapshotItem_Iavl
 	//	*SnapshotItem_Extension

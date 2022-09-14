@@ -37,8 +37,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* (improvement) [#13254](https://github.com/cosmos/cosmos-sdk/pull/13268) Change `I` suffix to prefix in the relevant Golang interfaces
-
 ### Features
 
 * (cli) [#13207](https://github.com/cosmos/cosmos-sdk/pull/13207) Reduce user's password prompts when calling keyring `List()` function
@@ -137,7 +135,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/genutil)[#12956](https://github.com/cosmos/cosmos-sdk/pull/12956) `genutil.AppModuleBasic` has a new attribute: genesis transaction validation function. The existing validation logic is implemented in `genutiltypes.DefaultMessageValidator`. Use `genutil.NewAppModuleBasic` to create a new genutil Module Basic.
 * (codec) [#12964](https://github.com/cosmos/cosmos-sdk/pull/12964) `ProtoCodec.MarshalInterface` now returns an error when serializing unregistered types and a subsequent `ProtoCodec.UnmarshalInterface` would fail.
 * (x/staking) [#12973](https://github.com/cosmos/cosmos-sdk/pull/12973) Removed `stakingkeeper.RandomValidator`. Use `testutil.RandSliceElem(r, sk.GetAllValidators(ctx))` instead.
-* (x/gov) [13160](https://github.com/cosmos/cosmos-sdk/pull/13160) Remove custom marshaling of proposl and voteoption.
+* (x/gov) [13160](https://github.com/cosmos/cosmos-sdk/pull/13160) Remove custom marshaling of proposl and voteoption. 
 
 ### CLI Breaking Changes
 
@@ -1278,7 +1276,7 @@ sure you are aware of any relevant breaking changes.
     client transaction signing
         * added `overwriteSig` argument to `x/auth/client.SignTx` and `client/tx.Sign` functions.
         * removed `x/auth/tx.go:wrapper.GetSignatures`. The `wrapper` provides `TxBuilder` functionality, and it's a private
-    structure. That function was not used at all and it's not exposed through the `TxBuilder` interface.
+      structure. That function was not used at all and it's not exposed through the `TxBuilder` interface.
     * (x/bank) [#7327](https://github.com/cosmos/cosmos-sdk/pull/7327) AddCoins and SubtractCoins no longer return a resultingValue and will only return an error.
     * (x/capability) [#7918](https://github.com/cosmos/cosmos-sdk/pull/7918) Add x/capability safety checks:
         * All outward facing APIs will now check that capability is not nil and name is not empty before performing any state-machine changes
@@ -1653,11 +1651,11 @@ sure you are aware of any relevant breaking changes.
 * (baseapp/types) [#5421](https://github.com/cosmos/cosmos-sdk/pull/5421) The `Error` interface (`types/errors.go`)
   has been removed in favor of the concrete type defined in `types/errors/` which implements the standard `error` interface.
     * As a result, the `Handler` and `Querier` implementations now return a standard `error`.
-    Within `BaseApp`, `runTx` now returns a `(GasInfo, *Result, error)`tuple and`runMsgs`returns a `(_Result, error)`tuple. A reference to a`Result`is now used to indicate success whereas an error signals an invalid message or failed message execution. As a result, the fields`Code`, `Codespace`, `GasWanted`, and `GasUsed`have been removed the`Result`type. The latter two fields are now found in the`GasInfo` type which is always returned regardless of execution outcome.
-    \_ Note to developers: Since all handlers and queriers must now return a standard `error`, the `types/errors/`
-    package contains all the relevant and pre-registered errors that you typically work with. A typical
-    error returned will look like `sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "...")`. You can retrieve
-    relevant ABCI information from the error via `ABCIInfo`.
+  Within `BaseApp`, `runTx` now returns a `(GasInfo, *Result, error)`tuple and`runMsgs`returns a `(_Result, error)`tuple. A reference to a`Result`is now used to indicate success whereas an error signals an invalid message or failed message execution. As a result, the fields`Code`, `Codespace`, `GasWanted`, and `GasUsed`have been removed the`Result`type. The latter two fields are now found in the`GasInfo` type which is always returned regardless of execution outcome.
+  _ Note to developers: Since all handlers and queriers must now return a standard `error`, the `types/errors/`
+  package contains all the relevant and pre-registered errors that you typically work with. A typical
+  error returned will look like `sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "...")`. You can retrieve
+  relevant ABCI information from the error via `ABCIInfo`.
 * (client) [#5442](https://github.com/cosmos/cosmos-sdk/pull/5442) Remove client/alias.go as it's not necessary and
   components can be imported directly from the packages.
 * (store) [#4748](https://github.com/cosmos/cosmos-sdk/pull/4748) The `CommitMultiStore` interface

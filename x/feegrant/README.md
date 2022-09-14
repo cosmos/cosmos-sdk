@@ -15,19 +15,7 @@ This module allows accounts to grant fee allowances and to use fees from their a
 
 ## Contents
 
-* [`x/feegrant`](#xfeegrant)
-    * [Abstract](#abstract)
-    * [Contents](#contents)
 * [Concepts](#concepts)
-    * [Grant](#grant)
-    * [Fee Allowance types](#fee-allowance-types)
-    * [BasicAllowance](#basicallowance)
-    * [PeriodicAllowance](#periodicallowance)
-    * [AllowedMsgAllowance](#allowedmsgallowance)
-    * [FeeGranter flag](#feegranter-flag)
-    * [Granted Fee Deductions](#granted-fee-deductions)
-    * [Gas](#gas)
-    * [Pruning](#pruning)
 * [State](#state)
     * [FeeAllowance](#feeallowance)
     * [FeeAllowanceQueue](#feeallowancequeue)
@@ -41,15 +29,7 @@ This module allows accounts to grant fee allowances and to use fees from their a
     * [Exec fee allowance](#exec-fee-allowance)
 * [Client](#client)
     * [CLI](#cli)
-        * [Query](#query)
-            * [grant](#grant-1)
-            * [grants](#grants)
-        * [Transactions](#transactions)
-            * [grant](#grant-2)
-            * [revoke](#revoke)
     * [gRPC](#grpc)
-        * [Allowance](#allowance)
-        * [Allowances](#allowances)
 
 <!-- order: 1 -->
 
@@ -57,11 +37,11 @@ This module allows accounts to grant fee allowances and to use fees from their a
 
 ## Grant
 
-`Grant` is stored in the KVStore to record a grant with full context. Every grant will contain `granter`, `grantee` and what kind of `allowance` is granted. `granter` is an account address who is giving permission to `grantee` (the beneficiary account address) to pay for some or all of `grantee`'s transaction fees. `allowance` defines what kind of fee allowance (`BasicAllowance` or `PeriodicAllowance`, see below) is granted to `grantee`. `allowance` accepts an interface which implements `IFeeAllowance`, encoded as `Any` type. There can be only one existing fee grant allowed for a `grantee` and `granter`, self grants are not allowed.
+`Grant` is stored in the KVStore to record a grant with full context. Every grant will contain `granter`, `grantee` and what kind of `allowance` is granted. `granter` is an account address who is giving permission to `grantee` (the beneficiary account address) to pay for some or all of `grantee`'s transaction fees. `allowance` defines what kind of fee allowance (`BasicAllowance` or `PeriodicAllowance`, see below) is granted to `grantee`. `allowance` accepts an interface which implements `FeeAllowanceI`, encoded as `Any` type. There can be only one existing fee grant allowed for a `grantee` and `granter`, self grants are not allowed.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/feegrant/v1beta1/feegrant.proto#L76-L77
 
-`IFeeAllowance` looks like:
+`FeeAllowanceI` looks like:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/feegrant/fees.go#L9-L32
 
@@ -153,17 +133,17 @@ Fee Allowances are identified by combining `Grantee` (the account address of fee
 
 Fee allowance grants are stored in the state as follows:
 
-* Grant: `0x00 | grantee_addr_len (1 byte) | grantee_addr_bytes | granter_addr_len (1 byte) | granter_addr_bytes -> ProtocolBuffer(Grant)`
+* Grant: `0x00 | grantee_addr_len (1 byte) | grantee_addr_bytes |  granter_addr_len (1 byte) | granter_addr_bytes -> ProtocolBuffer(Grant)`
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/feegrant/feegrant.pb.go#L221-L229
 
 ## FeeAllowanceQueue
 
-Fee Allowances queue items are identified by combining the `FeeAllowancePrefixQueue` (i.e., 0x01), `expiration`, `grantee` (the account address of fee allowance grantee), `granter` (the account address of fee allowance granter). Endblocker checks `FeeAllowanceQueue` state for the expired grants and prunes them from `FeeAllowance` if there are any found.
+Fee Allowances queue items are identified by combining the `FeeAllowancePrefixQueue` (i.e., 0x01), `expiration`, `grantee` (the account address of fee allowance grantee), `granter` (the account address of fee allowance granter). Endblocker checks `FeeAllowanceQueue` state for the expired grants and prunes them from  `FeeAllowance` if there are any found.
 
 Fee allowance queue keys are stored in the state as follows:
 
-* Grant: `0x01 | expiration_bytes | grantee_addr_len (1 byte) | grantee_addr_bytes | granter_addr_len (1 byte) | granter_addr_bytes -> EmptyBytes`
+* Grant: `0x01 | expiration_bytes | grantee_addr_len (1 byte) | grantee_addr_bytes |  granter_addr_len (1 byte) | granter_addr_bytes -> EmptyBytes`
 
 <!-- order: 3 -->
 
@@ -247,11 +227,11 @@ Example Output:
 
 ```yml
 allowance:
-  "@type": /cosmos.feegrant.v1beta1.BasicAllowance
+  '@type': /cosmos.feegrant.v1beta1.BasicAllowance
   expiration: null
   spend_limit:
-    - amount: "100"
-      denom: stake
+  - amount: "100"
+    denom: stake
 grantee: cosmos1..
 granter: cosmos1..
 ```
@@ -274,14 +254,14 @@ Example Output:
 
 ```yml
 allowances:
-  - allowance:
-      "@type": /cosmos.feegrant.v1beta1.BasicAllowance
-      expiration: null
-      spend_limit:
-        - amount: "100"
-          denom: stake
-    grantee: cosmos1..
-    granter: cosmos1..
+- allowance:
+    '@type': /cosmos.feegrant.v1beta1.BasicAllowance
+    expiration: null
+    spend_limit:
+    - amount: "100"
+      denom: stake
+  grantee: cosmos1..
+  granter: cosmos1..
 pagination:
   next_key: null
   total: "0"
@@ -357,10 +337,7 @@ Example Output:
   "allowance": {
     "granter": "cosmos1..",
     "grantee": "cosmos1..",
-    "allowance": {
-      "@type": "/cosmos.feegrant.v1beta1.BasicAllowance",
-      "spendLimit": [{ "denom": "stake", "amount": "100" }]
-    }
+    "allowance": {"@type":"/cosmos.feegrant.v1beta1.BasicAllowance","spendLimit":[{"denom":"stake","amount":"100"}]}
   }
 }
 ```
@@ -390,10 +367,7 @@ Example Output:
     {
       "granter": "cosmos1..",
       "grantee": "cosmos1..",
-      "allowance": {
-        "@type": "/cosmos.feegrant.v1beta1.BasicAllowance",
-        "spendLimit": [{ "denom": "stake", "amount": "100" }]
-      }
+      "allowance": {"@type":"/cosmos.feegrant.v1beta1.BasicAllowance","spendLimit":[{"denom":"stake","amount":"100"}]}
     }
   ],
   "pagination": {

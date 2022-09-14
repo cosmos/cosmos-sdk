@@ -86,8 +86,8 @@ init() {
 }
 ```
 
-This will allow the `x/authz` module to properly serialize and de-serializes `MsgExec` instances using Amino,
-which is required when signing this kind of messages using a Ledger.
+This will allow the `x/authz` module to properly serialize and de-serializes `MsgExec` instances using Amino, 
+which is required when signing this kind of messages using a Ledger. 
 
 ### Gogoproto
 
@@ -146,7 +146,7 @@ In [ADR-019](../architecture/adr-019-protobuf-state-encoding.md), it has been de
 message Profile {
   // account is the account associated to a profile.
   google.protobuf.Any account = 1 [
-    (cosmos_proto.accepts_interface) = "IAccount"; // Asserts that this field only accepts Go types implementing `AccountI`. It is purely informational for now.
+    (cosmos_proto.accepts_interface) = "AccountI"; // Asserts that this field only accepts Go types implementing `AccountI`. It is purely informational for now.
   ];
   // bio is a short description of the account.
   string bio = 4;
@@ -156,7 +156,7 @@ message Profile {
 To add an account inside a profile, we need to "pack" it inside an `Any` first, using `codectypes.NewAnyWithValue`:
 
 ```go
-var myAccount IAccount
+var myAccount AccountI
 myAccount = ... // Can be a BaseAccount, a ContinuousVestingAccount or any struct implementing `AccountI`
 
 // Pack the account into an Any
@@ -191,7 +191,7 @@ fmt.Printf("%T\n", myProfile.Account)                  // Prints "Any"
 fmt.Printf("%T\n", myProfile.Account.GetCachedValue()) // Prints "BaseAccount", "ContinuousVestingAccount" or whatever was initially packed in the Any.
 
 // Get the address of the accountt.
-accAddr := myProfile.Account.GetCachedValue().(IAccount).GetAddress()
+accAddr := myProfile.Account.GetCachedValue().(AccountI).GetAddress()
 ```
 
 It is important to note that for `GetCachedValue()` to work, `Profile` (and any other structs embedding `Profile`) must implement the `UnpackInterfaces` method:
@@ -199,7 +199,7 @@ It is important to note that for `GetCachedValue()` to work, `Profile` (and any 
 ```go
 func (p *Profile) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
   if p.Account != nil {
-    var account IAccount
+    var account AccountI
     return unpacker.UnpackAny(p.Account, &account)
   }
 

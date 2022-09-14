@@ -167,4 +167,7 @@ replace (
 	github.com/gogo/gateway => github.com/notional-labs/gateway v1.1.1-0.20220417180718-8e60e17a098d
 )
 
+// temporary until API is tagged
+replace cosmossdk.io/api => ./api
+
 retract v0.43.0

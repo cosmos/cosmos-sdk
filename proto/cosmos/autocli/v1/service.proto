@@ -3,6 +3,7 @@ syntax = "proto3";
 package cosmos.autocli.v1;
 
 import "cosmos/autocli/v1/options.proto";
+import "cosmos/query/v1/query.proto";
 
 option go_package = "cosmossdk.io/api/cosmos/base/cli/v1;cliv1";
 
@@ -10,7 +11,9 @@ option go_package = "cosmossdk.io/api/cosmos/base/cli/v1;cliv1";
 // to build dynamically CLI clients for remote chains.
 service RemoteInfoService {
   // AppOptions returns the autocli options for all of the modules in an app.
-  rpc AppOptions(AppOptionsRequest) returns (AppOptionsResponse) {}
+  rpc AppOptions(AppOptionsRequest) returns (AppOptionsResponse) {
+    option (cosmos.query.v1.deterministic) = false;
+  }
 }
 
 // AppOptionsRequest is the RemoteInfoService/AppOptions request type.

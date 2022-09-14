@@ -4,6 +4,7 @@ package cosmos.app.v1alpha1;
 
 import "cosmos/app/v1alpha1/config.proto";
 import "google/protobuf/descriptor.proto";
+import "cosmos/query/v1/query.proto";
 
 // Query is the app module query service.
 service Query {
@@ -13,7 +14,9 @@ service Query {
 
   // FileDescriptorSet returns the full FileDescriptorSet of the app in order
   // to enable easier generation of dynamic clients.
-  rpc FileDescriptorSet(QueryFileDescriptorSetRequest) returns (QueryFileDescriptorSetResponse) {}
+  rpc FileDescriptorSet(QueryFileDescriptorSetRequest) returns (QueryFileDescriptorSetResponse) {
+    option (cosmos.query.v1.deterministic) = false;
+  }
 }
 
 // QueryConfigRequest is the Query/Config request type.

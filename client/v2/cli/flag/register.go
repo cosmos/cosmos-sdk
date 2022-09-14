@@ -10,8 +10,12 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+func (b *Builder) AddMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, messageType protoreflect.MessageType, commandOptions *autocliv1.RpcCommandOptions) (*MessageBinder, error) {
+	return b.addMessageFlags(ctx, flagSet, messageType, commandOptions, namingOptions{})
+}
+
 // AddMessageFlags adds flags for each field in the message to the flag set.
-func (b *Builder) AddMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, messageType protoreflect.MessageType, commandOptions *autocliv1.RpcCommandOptions, options Options) (*MessageBinder, error) {
+func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, messageType protoreflect.MessageType, commandOptions *autocliv1.RpcCommandOptions, options namingOptions) (*MessageBinder, error) {
 	fields := messageType.Descriptor().Fields()
 	numFields := fields.Len()
 	handler := &MessageBinder{
@@ -44,7 +48,7 @@ func (b *Builder) AddMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 			handler.positionalFlagSet,
 			field,
 			&autocliv1.FlagOptions{Name: fmt.Sprintf("%d", i)},
-			Options{},
+			namingOptions{},
 		)
 		if err != nil {
 			return nil, err

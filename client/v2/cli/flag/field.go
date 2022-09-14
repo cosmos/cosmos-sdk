@@ -12,14 +12,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
 
-// Options specifies options for specific flags.
-type Options struct {
+// namingOptions specifies internal naming options for flags.
+type namingOptions struct {
 	// Prefix is a prefix to prepend to all flags.
 	Prefix string
 }
 
 // addFieldFlag adds a flag for the provided field to the flag set.
-func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, opts *autocliv1.FlagOptions, options Options) (name string, hasValue HasValue, err error) {
+func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, opts *autocliv1.FlagOptions, options namingOptions) (name string, hasValue HasValue, err error) {
 	if opts == nil {
 		opts = &autocliv1.FlagOptions{}
 	}

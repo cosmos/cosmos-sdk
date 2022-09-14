@@ -10,8 +10,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"github.com/cosmos/cosmos-sdk/client/v2/cli/flag"
-
 	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
 
@@ -142,7 +140,7 @@ func (b *Builder) CreateQueryMethodCommand(descriptor protoreflect.MethodDescrip
 		Version:    options.Version,
 	}
 
-	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options, flag.Options{})
+	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
 	if err != nil {
 		return nil, err
 	}

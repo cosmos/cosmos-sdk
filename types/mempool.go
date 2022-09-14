@@ -56,14 +56,14 @@ var (
 
 // ----------------------------------------------------------------------------
 // BTree Implementation
-// We use a BTree with order 2 to approximate a Red-Black Tree.
+// We use a BTree with degree=2 to approximate a Red-Black Tree.
 
 type btreeMempool struct {
 	btree      *btree.BTree
 	txBytes    int
 	maxTxBytes int
 	txCount    int
-	hashes     map[[32]byte]int64
+	scores     map[[32]byte]int64
 }
 
 type btreeItem struct {
@@ -121,20 +121,15 @@ func (btm *btreeMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolT
 	txBytes := 0
 	var selectedTxs []MempoolTx
 	btm.btree.Descend(func(i btree.Item) bool {
+		tx := i.(*btreeItem).tx
+		if btm.validateSequenceNumber(tx) {
+			selectedTxs = append(selectedTxs, tx)
 
-		txs := i.(*btreeItem).txs
-		for _, tx := range txs {
-			txSize := tx.Size()
-			if txBytes+txSize < maxBytes {
+			txBytes += tx.Size()
+			if txBytes >= maxBytes {
 				return false
 			}
-			if !btm.validateSequenceNumber(tx) {
-				continue
-			}
-			selectedTxs = append(selectedTxs, tx)
-			txBytes += txSize
 		}
-
 		return true
 	})
 	return selectedTxs, nil
@@ -151,35 +146,17 @@ func (btm *btreeMempool) Remove(_ Context, tx MempoolTx) error {
 	}
 	hash := hashTx.GetHash()
 
-	priority, txFound := btm.hashes[hash]
+	priority, txFound := btm.scores[hash]
 	if !txFound {
 		return fmt.Errorf("tx %X not found", hash)
 	}
 
-	i := btm.btree.Get(&btreeItem{priority: priority})
-	if i == nil {
-		return fmt.Errorf("tx with priority %v not found", priority)
+	res := btm.btree.Delete(&btreeItem{priority: priority, tx: hashTx})
+	if res == nil {
+		return fmt.Errorf("tx %X not in mempool", hash)
 	}
 
-	item := i.(*btreeItem)
-	if len(item.txs) == 1 {
-		btm.btree.Delete(i)
-	} else {
-		found := false
-		for j, t := range item.txs {
-			if t.(HashableTx).GetHash() == hash {
-				item.txs = append(item.txs[:j], item.txs[j+1:]...)
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("tx %X not found at priority %v", hash, priority)
-		}
-		btm.btree.ReplaceOrInsert(item)
-	}
-
-	delete(btm.hashes, hash)
+	delete(btm.scores, hash)
 	btm.txBytes -= tx.Size()
 	btm.txCount--
 
@@ -250,7 +227,7 @@ func (slm *skipListMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]Mempo
 		selectedTxs = append(selectedTxs, tx)
 		txSize := tx.Size()
 		txBytes += txSize
-		if txBytes+txSize >= maxBytes {
+		if txBytes >= maxBytes {
 			break
 		}
 
@@ -277,6 +254,7 @@ func (slm *skipListMempool) Remove(_ Context, tx MempoolTx) error {
 	}
 
 	item := skipListItem{tx: tx, priority: priority}
+	// TODO this is broken.  Key needs hash bytes incorporated to keep it unique
 	slm.list.Delete(item)
 
 	delete(slm.scores, hash)

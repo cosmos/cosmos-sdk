@@ -15,21 +15,41 @@ This module allows accounts to grant fee allowances and to use fees from their a
 
 ## Contents
 
-- [Concepts](#concepts)
-- [State](#state)
-  - [FeeAllowance](#feeallowance)
-  - [FeeAllowanceQueue](#feeallowancequeue)
-- [Messages](#messages)
-  - [Msg/GrantAllowance](#msggrantallowance)
-  - [Msg/RevokeAllowance](#msgrevokeallowance)
-- [Events](#events)
-- [Msg Server](#msg-server)
-  - [MsgGrantAllowance](#msggrantallowance-1)
-  - [MsgRevokeAllowance](#msgrevokeallowance-1)
-  - [Exec fee allowance](#exec-fee-allowance)
-- [Client](#client)
-  - [CLI](#cli)
-  - [gRPC](#grpc)
+* [`x/feegrant`](#xfeegrant)
+    * [Abstract](#abstract)
+    * [Contents](#contents)
+* [Concepts](#concepts)
+    * [Grant](#grant)
+    * [Fee Allowance types](#fee-allowance-types)
+    * [BasicAllowance](#basicallowance)
+    * [PeriodicAllowance](#periodicallowance)
+    * [AllowedMsgAllowance](#allowedmsgallowance)
+    * [FeeGranter flag](#feegranter-flag)
+    * [Granted Fee Deductions](#granted-fee-deductions)
+    * [Gas](#gas)
+    * [Pruning](#pruning)
+* [State](#state)
+    * [FeeAllowance](#feeallowance)
+    * [FeeAllowanceQueue](#feeallowancequeue)
+* [Messages](#messages)
+    * [Msg/GrantAllowance](#msggrantallowance)
+    * [Msg/RevokeAllowance](#msgrevokeallowance)
+* [Events](#events)
+* [Msg Server](#msg-server)
+    * [MsgGrantAllowance](#msggrantallowance-1)
+    * [MsgRevokeAllowance](#msgrevokeallowance-1)
+    * [Exec fee allowance](#exec-fee-allowance)
+* [Client](#client)
+    * [CLI](#cli)
+        * [Query](#query)
+            * [grant](#grant-1)
+            * [grants](#grants)
+        * [Transactions](#transactions)
+            * [grant](#grant-2)
+            * [revoke](#revoke)
+    * [gRPC](#grpc)
+        * [Allowance](#allowance)
+        * [Allowances](#allowances)
 
 <!-- order: 1 -->
 
@@ -49,9 +69,9 @@ This module allows accounts to grant fee allowances and to use fees from their a
 
 There are two types of fee allowances present at the moment:
 
-- `BasicAllowance`
-- `PeriodicAllowance`
-- `AllowedMsgAllowance`
+* `BasicAllowance`
+* `PeriodicAllowance`
+* `AllowedMsgAllowance`
 
 ## BasicAllowance
 
@@ -59,11 +79,11 @@ There are two types of fee allowances present at the moment:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/feegrant/v1beta1/feegrant.proto#L13-L26
 
-- `spend_limit` is the limit of coins that are allowed to be used from the `granter` account. If it is empty, it assumes there's no spend limit, `grantee` can use any number of available coins from `granter` account address before the expiration.
+* `spend_limit` is the limit of coins that are allowed to be used from the `granter` account. If it is empty, it assumes there's no spend limit, `grantee` can use any number of available coins from `granter` account address before the expiration.
 
-- `expiration` specifies an optional time when this allowance expires. If the value is left empty, there is no expiry for the grant.
+* `expiration` specifies an optional time when this allowance expires. If the value is left empty, there is no expiry for the grant.
 
-- When a grant is created with empty values for `spend_limit` and `expiration`, it is still a valid grant. It won't restrict the `grantee` to use any number of coins from `granter` and it won't have any expiration. The only way to restrict the `grantee` is by revoking the grant.
+* When a grant is created with empty values for `spend_limit` and `expiration`, it is still a valid grant. It won't restrict the `grantee` to use any number of coins from `granter` and it won't have any expiration. The only way to restrict the `grantee` is by revoking the grant.
 
 ## PeriodicAllowance
 
@@ -71,15 +91,15 @@ There are two types of fee allowances present at the moment:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/feegrant/v1beta1/feegrant.proto#L29-L54
 
-- `basic` is the instance of `BasicAllowance` which is optional for periodic fee allowance. If empty, the grant will have no `expiration` and no `spend_limit`.
+* `basic` is the instance of `BasicAllowance` which is optional for periodic fee allowance. If empty, the grant will have no `expiration` and no `spend_limit`.
 
-- `period` is the specific period of time, after each period passes, `period_can_spend` will be reset.
+* `period` is the specific period of time, after each period passes, `period_can_spend` will be reset.
 
-- `period_spend_limit` specifies the maximum number of coins that can be spent in the period.
+* `period_spend_limit` specifies the maximum number of coins that can be spent in the period.
 
-- `period_can_spend` is the number of coins left to be spent before the period_reset time.
+* `period_can_spend` is the number of coins left to be spent before the period_reset time.
 
-- `period_reset` keeps track of when a next period reset should happen.
+* `period_reset` keeps track of when a next period reset should happen.
 
 ## AllowedMsgAllowance
 
@@ -87,9 +107,9 @@ There are two types of fee allowances present at the moment:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/feegrant/v1beta1/feegrant.proto#L56-L66
 
-- `allowance` is either `BasicAllowance` or `PeriodicAllowance`.
+* `allowance` is either `BasicAllowance` or `PeriodicAllowance`.
 
-- `allowed_messages` is array of messages allowed to execute the given allowance.
+* `allowed_messages` is array of messages allowed to execute the given allowance.
 
 ## FeeGranter flag
 
@@ -133,7 +153,7 @@ Fee Allowances are identified by combining `Grantee` (the account address of fee
 
 Fee allowance grants are stored in the state as follows:
 
-- Grant: `0x00 | grantee_addr_len (1 byte) | grantee_addr_bytes | granter_addr_len (1 byte) | granter_addr_bytes -> ProtocolBuffer(Grant)`
+* Grant: `0x00 | grantee_addr_len (1 byte) | grantee_addr_bytes | granter_addr_len (1 byte) | granter_addr_bytes -> ProtocolBuffer(Grant)`
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/feegrant/feegrant.pb.go#L221-L229
 
@@ -143,7 +163,7 @@ Fee Allowances queue items are identified by combining the `FeeAllowancePrefixQu
 
 Fee allowance queue keys are stored in the state as follows:
 
-- Grant: `0x01 | expiration_bytes | grantee_addr_len (1 byte) | grantee_addr_bytes | granter_addr_len (1 byte) | granter_addr_bytes -> EmptyBytes`
+* Grant: `0x01 | expiration_bytes | grantee_addr_len (1 byte) | grantee_addr_bytes | granter_addr_len (1 byte) | granter_addr_bytes -> EmptyBytes`
 
 <!-- order: 3 -->
 

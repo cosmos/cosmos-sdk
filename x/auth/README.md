@@ -20,18 +20,35 @@ This module is used in the Cosmos Hub.
 
 ## Contents
 
+- [`x/auth`](#xauth)
+  - [Abstract](#abstract)
+  - [Contents](#contents)
 - [Concepts](#concepts)
   - [Gas & Fees](#gas--fees)
 - [State](#state)
   - [Accounts](#accounts)
+    - [Account Interface](#account-interface)
+      - [Base Account](#base-account)
+    - [Vesting Account](#vesting-account)
 - [AnteHandlers](#antehandlers)
+  - [Decorators](#decorators)
 - [Keepers](#keepers)
   - [Account Keeper](#account-keeper)
 - [Parameters](#parameters)
 - [Client](#client)
   - [CLI](#cli)
+    - [Query](#query)
+      - [account](#account)
+      - [accounts](#accounts-1)
+      - [params](#params)
   - [gRPC](#grpc)
+    - [Account](#account-1)
+    - [Accounts](#accounts-2)
+    - [Params](#params-1)
   - [REST](#rest)
+    - [Account](#account-2)
+    - [Accounts](#accounts-3)
+    - [Params](#params-2)
 
 <!-- order: 1 -->
 

@@ -40,8 +40,7 @@ func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 
 // IterateValidatorSigningInfos iterates over the stored ValidatorSigningInfo
 func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
-	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool),
-) {
+	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.ValidatorSigningInfoKeyPrefix)
 	defer iter.Close()
@@ -130,8 +129,8 @@ func (k Keeper) Tombstone(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
-// Tombstone attempts to tombstone a validator. It will panic if signing info for
-// the given validator does not exist.
+// RevertTombstone attempts to revert a tombstone state of a validator.
+// Panics if signing info for the given validator does not exist.
 func (k Keeper) RevertTombstone(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	signInfo, ok := k.GetValidatorSigningInfo(ctx, consAddr)
 	if !ok {

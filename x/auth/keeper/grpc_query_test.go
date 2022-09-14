@@ -462,8 +462,8 @@ func (suite *KeeperTestSuite) TestQueryAccountInfo() {
 	suite.Require().Equal(addr.String(), res.Info.Address)
 	suite.Require().Equal(acc.GetAccountNumber(), res.Info.AccountNumber)
 	suite.Require().Equal(acc.GetSequence(), res.Info.Sequence)
-	suite.Require().Equal("/"+proto.MessageName(pk), res.Info.Pubkey.TypeUrl)
+	suite.Require().Equal("/"+proto.MessageName(pk), res.Info.PubKey.TypeUrl)
 	pkBz, err := proto.Marshal(pk)
 	suite.Require().NoError(err)
-	suite.Require().Equal(pkBz, res.Info.Pubkey.Value)
+	suite.Require().Equal(pkBz, res.Info.PubKey.Value)
 }

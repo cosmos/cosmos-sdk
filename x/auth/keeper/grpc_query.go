@@ -209,9 +209,9 @@ func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccou
 	}
 
 	return &types.QueryAccountInfoResponse{
-		Info: &types.AccountInfo{
+		Info: &types.BaseAccount{
 			Address:       addr.String(),
-			Pubkey:        pkAny,
+			PubKey:        pkAny,
 			AccountNumber: account.GetAccountNumber(),
 			Sequence:      account.GetSequence(),
 		},

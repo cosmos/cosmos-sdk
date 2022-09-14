@@ -13,7 +13,7 @@ require (
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.0
-	github.com/tendermint/tendermint v0.37.0-alpha.2
+	github.com/tendermint/tendermint v0.38.0-dev
 	github.com/tendermint/tm-db v0.6.7
 	google.golang.org/protobuf v1.28.1
 )

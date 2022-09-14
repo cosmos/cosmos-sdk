@@ -1276,8 +1276,8 @@ sure you are aware of any relevant breaking changes.
         * The `SigVerifiableTx` interface now has a `GetSignaturesV2() ([]signing.SignatureV2, error)` method and no longer has the `GetSignBytes` method.
     * (x/auth/tx) [#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) change related to missing append functionality in
     client transaction signing
-    * added `overwriteSig` argument to `x/auth/client.SignTx` and `client/tx.Sign` functions.
-      * removed `x/auth/tx.go:wrapper.GetSignatures`. The `wrapper` provides `TxBuilder` functionality, and it's a private
+        * added `overwriteSig` argument to `x/auth/client.SignTx` and `client/tx.Sign` functions.
+        * removed `x/auth/tx.go:wrapper.GetSignatures`. The `wrapper` provides `TxBuilder` functionality, and it's a private
     structure. That function was not used at all and it's not exposed through the `TxBuilder` interface.
     * (x/bank) [#7327](https://github.com/cosmos/cosmos-sdk/pull/7327) AddCoins and SubtractCoins no longer return a resultingValue and will only return an error.
     * (x/capability) [#7918](https://github.com/cosmos/cosmos-sdk/pull/7918) Add x/capability safety checks:

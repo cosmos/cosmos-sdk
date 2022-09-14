@@ -87,10 +87,6 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 		acc1 := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 		suite.accountKeeper.SetAccount(suite.ctx, acc1)
 
-		acc, err := suite.queryClient.Account(suite.ctx, &types.QueryAccountRequest{Address: addr.String()})
-		suite.Require().NoError(err)
-		suite.Require().NotNil(acc)
-
 		suite.runIterations(addr, acc1)
 	})
 

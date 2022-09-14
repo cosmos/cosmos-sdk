@@ -61,7 +61,7 @@ type btreeMempool struct {
 }
 
 type btreeItem struct {
-	// TODO use linked list instead of slice
+	// TODO use linked list instead of slice if we opt for a Btree
 	txs      []MempoolTx
 	priority int64
 }

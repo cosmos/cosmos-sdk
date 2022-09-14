@@ -5,7 +5,7 @@ go 1.18
 require (
 	cosmossdk.io/api v0.2.1
 	cosmossdk.io/core v0.2.0
-	cosmossdk.io/depinject v1.0.0-alpha.2
+	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
 	github.com/golang/mock v1.6.0

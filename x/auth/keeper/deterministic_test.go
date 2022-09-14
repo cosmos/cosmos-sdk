@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -73,6 +74,10 @@ func (suite *DeterministicTestSuite) runAccountIterations(addr sdk.AccAddress, p
 		suite.Require().Equal(account.GetAddress(), addr)
 
 		if prevRes != nil {
+			any, err := codectypes.NewAnyWithValue(prevRes)
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(acc.Account, any)
 			suite.Require().Equal(account, prevRes)
 		}
 
@@ -110,7 +115,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 // pubkeyGenerator creates and returns a random pubkey generator using rapid.
 func pubkeyGenerator(t *rapid.T) *rapid.Generator[secp256k1.PubKey] {
 	return rapid.Custom(func(t *rapid.T) secp256k1.PubKey {
-		pkBz := rapid.SliceOfN(rapid.Byte(), 32, 32).Draw(t, "hex")
+		pkBz := rapid.SliceOfN(rapid.Byte(), 33, 33).Draw(t, "hex")
 		return secp256k1.PubKey{Key: pkBz}
 	})
 }

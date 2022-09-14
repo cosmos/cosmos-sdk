@@ -61,7 +61,7 @@ type btreeMempool struct {
 }
 
 type btreeItem struct {
-	// TODO use linked list instead of slice if we opt for a Btree
+	// TODO use linked list instead of slice
 	txs      []MempoolTx
 	priority int64
 }
@@ -91,6 +91,7 @@ func (btm *btreeMempool) Insert(ctx Context, tx MempoolTx) error {
 	}
 
 	key := &btreeItem{priority: priority}
+	// TODO can avoid O(log n) lookup by maintaining a priority hash
 	bi := btm.btree.Get(key).(*btreeItem)
 	if bi != nil {
 		bi.txs = append(bi.txs, tx)

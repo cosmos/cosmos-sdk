@@ -13,10 +13,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// AddrTestDeterministic creates and returns a random address using rapid.
-func AddrTestDeterministic(t *rapid.T) sdk.AccAddress {
-	pkBz := rapid.SliceOfN(rapid.Byte(), 20, 20).Draw(t, "hex")
-	return sdk.AccAddress(pkBz)
+// AddressGenerator creates and returns a random address generator using rapid.
+func AddressGenerator(t *rapid.T) *rapid.Generator[sdk.AccAddress] {
+	return rapid.Custom(func(t *rapid.T) sdk.AccAddress {
+		pkBz := rapid.SliceOfN(rapid.Byte(), 20, 20).Draw(t, "hex")
+		return sdk.AccAddress(pkBz)
+	})
 }
 
 // KeyTestPubAddr generates a new secp256k1 keypair.

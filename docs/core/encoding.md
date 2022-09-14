@@ -86,8 +86,8 @@ init() {
 }
 ```
 
-This will allow the `x/authz` module to properly serialize and de-serializes `MsgExec` instances using Amino, 
-which is required when signing this kind of messages using a Ledger. 
+This will allow the `x/authz` module to properly serialize and de-serializes `MsgExec` instances using Amino,
+which is required when signing this kind of messages using a Ledger.
 
 ### Gogoproto
 
@@ -136,7 +136,7 @@ message Profile {
 }
 ```
 
-In this `Profile` example, we hardcoded `account` as a `BaseAccount`. However, there are several other types of [user accounts related to vesting](../../x/auth/spec/05_vesting.md), such as `BaseVestingAccount` or `ContinuousVestingAccount`. All of these accounts are different, but they all implement the `AccountI` interface. How would you create a `Profile` that allows all these types of accounts with an `account` field that accepts an `AccountI` interface?
+In this `Profile` example, we hardcoded `account` as a `BaseAccount`. However, there are several other types of [user accounts related to vesting](../../x/auth/spec/05_vesting.md), such as `BaseVestingAccount` or `ContinuousVestingAccount`. All of these accounts are different, but they all implement the `IAccount` interface. How would you create a `Profile` that allows all these types of accounts with an `account` field that accepts an `IAccount` interface?
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/types/account.go#L301-L324
 
@@ -146,7 +146,7 @@ In [ADR-019](../architecture/adr-019-protobuf-state-encoding.md), it has been de
 message Profile {
   // account is the account associated to a profile.
   google.protobuf.Any account = 1 [
-    (cosmos_proto.accepts_interface) = "AccountI"; // Asserts that this field only accepts Go types implementing `AccountI`. It is purely informational for now.
+    (cosmos_proto.accepts_interface) = "IAccount"; // Asserts that this field only accepts Go types implementing `IAccount`. It is purely informational for now.
   ];
   // bio is a short description of the account.
   string bio = 4;
@@ -156,8 +156,8 @@ message Profile {
 To add an account inside a profile, we need to "pack" it inside an `Any` first, using `codectypes.NewAnyWithValue`:
 
 ```go
-var myAccount AccountI
-myAccount = ... // Can be a BaseAccount, a ContinuousVestingAccount or any struct implementing `AccountI`
+var myAccount IAccount
+myAccount = ... // Can be a BaseAccount, a ContinuousVestingAccount or any struct implementing `IAccount`
 
 // Pack the account into an Any
 accAny, err := codectypes.NewAnyWithValue(myAccount)
@@ -191,7 +191,7 @@ fmt.Printf("%T\n", myProfile.Account)                  // Prints "Any"
 fmt.Printf("%T\n", myProfile.Account.GetCachedValue()) // Prints "BaseAccount", "ContinuousVestingAccount" or whatever was initially packed in the Any.
 
 // Get the address of the accountt.
-accAddr := myProfile.Account.GetCachedValue().(AccountI).GetAddress()
+accAddr := myProfile.Account.GetCachedValue().(IAccount).GetAddress()
 ```
 
 It is important to note that for `GetCachedValue()` to work, `Profile` (and any other structs embedding `Profile`) must implement the `UnpackInterfaces` method:
@@ -199,7 +199,7 @@ It is important to note that for `GetCachedValue()` to work, `Profile` (and any 
 ```go
 func (p *Profile) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
   if p.Account != nil {
-    var account AccountI
+    var account IAccount
     return unpacker.UnpackAny(p.Account, &account)
   }
 
@@ -217,7 +217,7 @@ The above `Profile` example is a fictive example used for educational purposes. 
 
 * the `cryptotypes.PubKey` interface for encoding different types of public keys,
 * the `sdk.Msg` interface for encoding different `Msg`s in a transaction,
-* the `AccountI` interface for encodinig different types of accounts (similar to the above example) in the x/auth query responses,
+* the `IAccount` interface for encodinig different types of accounts (similar to the above example) in the x/auth query responses,
 * the `Evidencei` interface for encoding different types of evidences in the x/evidence module,
 * the `AuthorizationI` interface for encoding different types of x/authz authorizations,
 * the [`Validator`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/types/staking.pb.go#L306-L339) struct that contains information about a validator.

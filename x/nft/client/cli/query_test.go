@@ -20,7 +20,7 @@ func (s *CLITestSuite) TestQueryClass() {
 		expectErr bool
 	}{
 		{
-			name: "class id exist",
+			name: "valid case",
 			args: struct {
 				ClassID string
 			}{
@@ -89,7 +89,7 @@ func (s *CLITestSuite) TestQueryNFT() {
 		expectErr bool
 	}{
 		{
-			name: "exist nft",
+			name: "valid case",
 			args: struct {
 				ClassID string
 				ID      string
@@ -134,7 +134,7 @@ func (s *CLITestSuite) TestQueryNFTs() {
 		expectErr bool
 	}{
 		{
-			name: "class id and owner both does not exist",
+			name: "empty class id and owner",
 			args: struct {
 				ClassID string
 				Owner   string
@@ -142,7 +142,7 @@ func (s *CLITestSuite) TestQueryNFTs() {
 			expectErr: true,
 		},
 		{
-			name: "nft exist",
+			name: "valid case",
 			args: struct {
 				ClassID string
 				Owner   string
@@ -185,7 +185,7 @@ func (s *CLITestSuite) TestQueryOwner() {
 		expectErr bool
 	}{
 		{
-			name: "nft exist",
+			name: "valid case",
 			args: struct {
 				ClassID string
 				ID      string
@@ -230,7 +230,7 @@ func (s *CLITestSuite) TestQueryBalance() {
 		expectErr bool
 	}{
 		{
-			name: "nft exist",
+			name: "valid case",
 			args: struct {
 				ClassID string
 				Owner   string
@@ -272,7 +272,7 @@ func (s *CLITestSuite) TestQuerySupply() {
 		expectErr bool
 	}{
 		{
-			name: "class id exist",
+			name: "valid case",
 			args: struct {
 				ClassID string
 			}{

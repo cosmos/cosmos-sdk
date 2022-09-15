@@ -2612,8 +2612,8 @@ Location: off-chain as json object stored on IPFS (mirrors [group proposal](../.
   "authors": "",
   "summary": "",
   "details": "",
-  "proposalForumURL": "",
-  "voteOptionContext": "",
+  "proposal_forum_url": "",
+  "vote_option_context": "",
 }
 ```
 

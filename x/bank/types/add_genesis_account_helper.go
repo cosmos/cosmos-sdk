@@ -29,11 +29,10 @@ func AddGenesisAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) 
 	balances := Balance{Address: accAddr.String(), Coins: coins.Sort()}
 	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
 
-	// if err := genAccount.Validate(); err != nil {
-	// 	return fmt.Errorf("failed to validate new genesis account: %w", err)
-	// }
+	if err := genAccount.Validate(); err != nil {
+		return fmt.Errorf("failed to validate new genesis account: %w", err)
+	}
 
-	// TODO: Make the SDK make it far cleaner to add an account to GenesisState
 	genFile := config.GenesisFile()
 	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 	if err != nil {

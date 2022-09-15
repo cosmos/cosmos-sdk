@@ -3,7 +3,7 @@ package helpers
 import (
 	"encoding/json"
 	"errors"
-	fmt "fmt"
+	"fmt"
 
 	tmcfg "github.com/tendermint/tendermint/config"
 

@@ -53,7 +53,12 @@ func (s signModeEIP191Handler) GetSignBytes(mode signingtypes.SignMode, data sig
 
 	aminoJSONBz := legacytx.StdSignBytes(
 		data.ChainID, data.AccountNumber, data.Sequence, protoTx.GetTimeoutHeight(),
-		legacytx.StdFee{Amount: protoTx.GetFee(), Gas: protoTx.GetGas()},
+		legacytx.StdFee{
+			Amount:  protoTx.GetFee(),
+			Gas:     protoTx.GetGas(),
+			Payer:   protoTx.tx.AuthInfo.Fee.Payer,
+			Granter: protoTx.tx.AuthInfo.Fee.Granter,
+		},
 		tx.GetMsgs(), protoTx.GetMemo(),
 	)
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -251,7 +250,7 @@ func (k BaseViewKeeper) getDenomAddressPrefixStore(ctx sdk.Context, denom string
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.CreateDenomAddressPrefix(denom))
 }
 
-// UnmarshalBalanceCompat unmarshal sdk.Coin from storage, it's backward-compatible with the legacy format.
+// UnmarshalBalanceCompat unmarshal balance amount from storage, it's backward-compatible with the legacy format.
 func UnmarshalBalanceCompat(cdc codec.BinaryCodec, bz []byte, denom string) (sdk.Coin, error) {
 	amount := math.ZeroInt()
 	if bz == nil {

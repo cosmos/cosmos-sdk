@@ -85,6 +85,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#13178](https://github.com/cosmos/cosmos-sdk/pull/13178) Add `cosmos.msg.v1.service` protobuf annotation to allow tooling to distinguish between Msg and Query services via reflection. 
 * [#13233](https://github.com/cosmos/cosmos-sdk/pull/13233) Add `--append` to `add-genesis-account` sub-command to append new tokens after an account is already created.
 * [#13236](https://github.com/cosmos/cosmos-sdk/pull/13236) Integrate Filter Logging
+* [#]() Keep the balance query endpoint compatible with legacy blocks
 
 ### State Machine Breaking
 

@@ -44,6 +44,9 @@ func (ak AccountKeeper) ChangePubKey(ctx sdk.Context, acc types.AccountI, pubKey
 		return fmt.Errorf("cannot marshal pubKeyMapping, Error: %w", err)
 	}
 
+	amount := ak.GetParams(ctx).PubkeyChangeCost
+	ctx.GasMeter().ConsumeGas(amount, "pubkey change fee")
+
 	store.Set(getAddressKey(acc.GetAddress().String()), bz)
 
 	return nil

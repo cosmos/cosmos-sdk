@@ -1457,9 +1457,9 @@ func TestAnteHandlerReCheck(t *testing.T) {
 		name   string
 		params authtypes.Params
 	}{
-		{"memo size check", authtypes.NewParams(1, authtypes.DefaultTxSigLimit, authtypes.DefaultTxSizeCostPerByte, authtypes.DefaultSigVerifyCostED25519, authtypes.DefaultSigVerifyCostSecp256k1)},
-		{"txsize check", authtypes.NewParams(authtypes.DefaultMaxMemoCharacters, authtypes.DefaultTxSigLimit, 10000000, authtypes.DefaultSigVerifyCostED25519, authtypes.DefaultSigVerifyCostSecp256k1)},
-		{"sig verify cost check", authtypes.NewParams(authtypes.DefaultMaxMemoCharacters, authtypes.DefaultTxSigLimit, authtypes.DefaultTxSizeCostPerByte, authtypes.DefaultSigVerifyCostED25519, 100000000)},
+		{"memo size check", authtypes.NewParams(1, authtypes.DefaultTxSigLimit, authtypes.DefaultTxSizeCostPerByte, authtypes.DefaultSigVerifyCostED25519, authtypes.DefaultSigVerifyCostSecp256k1, authtypes.DefaultPubkeyChangeCost)},
+		{"txsize check", authtypes.NewParams(authtypes.DefaultMaxMemoCharacters, authtypes.DefaultTxSigLimit, 10000000, authtypes.DefaultSigVerifyCostED25519, authtypes.DefaultSigVerifyCostSecp256k1, authtypes.DefaultPubkeyChangeCost)},
+		{"sig verify cost check", authtypes.NewParams(authtypes.DefaultMaxMemoCharacters, authtypes.DefaultTxSigLimit, authtypes.DefaultTxSizeCostPerByte, authtypes.DefaultSigVerifyCostED25519, 100000000, authtypes.DefaultPubkeyChangeCost)},
 	}
 
 	for _, tc := range testCases {

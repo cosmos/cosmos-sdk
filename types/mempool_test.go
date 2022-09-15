@@ -166,6 +166,7 @@ func simulateTx(ctx types.Context) types.Tx {
 
 type TxWSize struct {
 	types.Tx
+	hash [32]byte
 }
 
 func (t TxWSize) Size() int {

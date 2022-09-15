@@ -79,7 +79,7 @@ service Query {
   //
   // Since: cosmos-sdk 0.47
   rpc AccountInfo(QueryAccountInfoRequest) returns (QueryAccountInfoResponse) {
-    option (cosmos.query.v1.deterministic) = true;
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/account_info/{address}";
   }
 }

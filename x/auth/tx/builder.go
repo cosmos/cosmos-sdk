@@ -1,6 +1,8 @@
 package tx
 
 import (
+	"crypto/sha256"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -30,7 +32,7 @@ type wrapper struct {
 	// from the client using TxRaw if the tx was decoded from the wire
 	authInfoBz []byte
 
-	hash     [32]byte
+	hash     *[32]byte
 	numBytes int
 
 	txBodyHasUnknownNonCriticals bool
@@ -71,8 +73,21 @@ func (w *wrapper) Size() int {
 	return w.numBytes
 }
 
+func (w *wrapper) hashFromSig() [32]byte {
+	var sigBytes []byte
+	for _, bs := range w.tx.Signatures {
+		sigBytes = append(sigBytes, bs...)
+	}
+	return sha256.Sum256(sigBytes)
+}
+
 func (w *wrapper) GetHash() [32]byte {
-	return w.hash
+	if w.hash == nil {
+		hash := w.hashFromSig()
+		w.hash = &hash
+		return hash
+	}
+	return *w.hash
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {

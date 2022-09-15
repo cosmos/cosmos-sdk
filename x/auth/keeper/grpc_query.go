@@ -189,7 +189,7 @@ func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccou
 	}
 
 	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "Address cannot be empty")
+		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

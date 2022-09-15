@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/math v1.0.0-beta.3
 	cosmossdk.io/simapp v0.0.0-20220908203654-84d4bf5accad
 	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
-	github.com/cosmos/gogoproto v1.4.1
+	github.com/cosmos/gogoproto v1.4.2
 	github.com/google/uuid v1.3.0
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.0

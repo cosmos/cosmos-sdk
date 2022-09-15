@@ -37,8 +37,6 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-			config.SetRoot(clientCtx.HomeDir)
-
 			var kr keyring.Keyring
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {

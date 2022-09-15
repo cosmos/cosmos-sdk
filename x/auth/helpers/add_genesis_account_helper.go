@@ -16,6 +16,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
+// AddGenesisAccount adds a genesis account to genesis state.
 func AddGenesisAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, appendAcct bool, vestingStart, vestingEnd int64, vestingAmtStr string) error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config

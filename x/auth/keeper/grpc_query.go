@@ -183,6 +183,7 @@ func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.Add
 	return &types.AddressStringToBytesResponse{AddressBytes: bz}, nil
 }
 
+// AccountInfo implements the AccountInfo query.
 func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccountInfoRequest) (*types.QueryAccountInfoResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")

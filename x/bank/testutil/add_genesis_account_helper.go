@@ -1,4 +1,4 @@
-package types
+package testutil
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -26,7 +27,7 @@ func AddGenesisAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) 
 		return fmt.Errorf("failed to parse coins: %w", err)
 	}
 
-	balances := Balance{Address: accAddr.String(), Coins: coins.Sort()}
+	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
 	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
 
 	if err := genAccount.Validate(); err != nil {
@@ -46,16 +47,16 @@ func AddGenesisAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) 
 		return fmt.Errorf("failed to get accounts from any: %w", err)
 	}
 
-	bankGenState := GetGenesisStateFromAppState(cfg.Codec, appState)
+	bankGenState := banktypes.GetGenesisStateFromAppState(cfg.Codec, appState)
 	if accs.Contains(accAddr) {
-		genesisB := GetGenesisStateFromAppState(cfg.Codec, appState)
+		genesisB := banktypes.GetGenesisStateFromAppState(cfg.Codec, appState)
 		for idx, acc := range genesisB.Balances {
 			if acc.Address != accAddr.String() {
 				continue
 			}
 
 			updatedCoins := acc.Coins.Add(coins...)
-			bankGenState.Balances[idx] = Balance{Address: accAddr.String(), Coins: updatedCoins.Sort()}
+			bankGenState.Balances[idx] = banktypes.Balance{Address: accAddr.String(), Coins: updatedCoins.Sort()}
 			break
 		}
 	} else {
@@ -78,7 +79,7 @@ func AddGenesisAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) 
 		bankGenState.Balances = append(bankGenState.Balances, balances)
 	}
 
-	bankGenState.Balances = SanitizeGenesisBalances(bankGenState.Balances)
+	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
 
 	bankGenState.Supply = bankGenState.Supply.Add(balances.Coins...)
 
@@ -86,7 +87,7 @@ func AddGenesisAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) 
 	if err != nil {
 		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
 	}
-	appState[ModuleName] = bankGenStateBz
+	appState[banktypes.ModuleName] = bankGenStateBz
 
 	appStateJSON, err := json.Marshal(appState)
 	if err != nil {

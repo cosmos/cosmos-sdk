@@ -7,6 +7,7 @@ import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
@@ -65,6 +66,11 @@ service Query {
   // GetPubKeyFromStore gets the pubkey assigned to an address from the store
   rpc GetPubKeyFromStore(GetPubKeyFromStoreRequest) returns (GetPubKeyFromStoreResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/pub_key/{address_string}";
+  }
+
+  // GetPubKeyAtTime gets the pubkey assigned to an address at a given time
+  rpc GetPubKeyAtTime(GetPubKeyAtTimeRequest) returns (GetPubKeyAtTimeResponse) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/pub_key/{address_string}/at_time/{timestamp}";
   }
 }
 
@@ -173,10 +179,23 @@ message QueryAccountAddressByIDResponse {
   string account_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
+// GetPubKeyFromStoreRequest is the request type for GetPubKeyFromStore rpc method
 message GetPubKeyFromStoreRequest {
   string address_string = 1;
 }
 
+// GetPubKeyFromStoreResponse is the response type for GetPubKeyFromStore rpc method
 message GetPubKeyFromStoreResponse {
-  PubKeyMapping pubKeyMapping = 1;
+  string pubKey = 1;
+}
+
+// GetPubKeyAtTimeRequest is the request type for GetPubKeyAtTime rpc method
+message GetPubKeyAtTimeRequest {
+  string                    address_string = 1;
+  google.protobuf.Timestamp timestamp      = 2 [(gogoproto.stdtime) = true];
+}
+
+// GetPubKeyAtTimeResponse is the response type for GetPubKeyAtTime rpc method
+message GetPubKeyAtTimeResponse {
+  string pubKey = 1;
 }

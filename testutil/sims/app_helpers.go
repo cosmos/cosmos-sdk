@@ -286,8 +286,9 @@ func getGenesisPubKeyMappings(genesisAccs authtypes.GenesisAccounts) []*authtype
 	var genesisPubKeyMappings []*authtypes.PubKeyMapping
 	for _, acc := range genesisAccs {
 		pubKeyMapping := &authtypes.PubKeyMapping{
-			Address: acc.GetAddress().String(),
-			PubKey:  acc.GetPubKey().String(),
+			Address:       acc.GetAddress().String(),
+			PubKey:        acc.GetPubKey().String(),
+			PubKeyHistory: []*authtypes.PubKeyHistory{},
 		}
 		genesisPubKeyMappings = append(genesisPubKeyMappings, pubKeyMapping)
 	}

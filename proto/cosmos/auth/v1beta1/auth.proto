@@ -4,6 +4,7 @@ package cosmos.auth.v1beta1;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
@@ -46,10 +47,23 @@ message Params {
   uint64 sig_verify_cost_secp256k1 = 5 [(gogoproto.customname) = "SigVerifyCostSecp256k1"];
 }
 
+// PubKeyMapping defines the list of pervious and current pubkeys for a given account
 message PubKeyMapping {
   // address defines the account address
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // pub_key defines the pub_key in use for the given account
+  // pub_key defines the current pubkey of the account
   string pub_key = 2 [(gogoproto.jsontag) = "public_key"];
+
+  // pub_keys defines the list of pubkeys and their validity for the given account
+  repeated PubKeyHistory pub_key_history = 3;
+}
+
+//  PubKeyData defines the pubkey and its validity for a given account
+message PubKeyHistory {
+  // pub_key defines the pub_key in use for the given account
+  string pub_key = 1 [(gogoproto.jsontag) = "public_key"];
+
+  // valid_till defines the end time of validity of the public key of the given account
+  google.protobuf.Timestamp valid_till = 2 [(gogoproto.stdtime) = true];
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -391,7 +392,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 	return cmd
 }
 
-// GetPubKeyFromStore gets the pubkey mapping of the account from store
+// GetPubKeyFromStore gets the pubkey of the account from store
 func GetPubKeyFromStore() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pubkey [address]",
@@ -407,6 +408,40 @@ func GetPubKeyFromStore() *cobra.Command {
 			address := args[0]
 
 			res, err := queryClient.GetPubKeyFromStore(cmd.Context(), &types.GetPubKeyFromStoreRequest{AddressString: address})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetPubKeyAtTime gets the controlling pubkey of the account at a given time
+func GetPubKeyAtTime() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pubkey [address] time [time]",
+		Short: "Get pubkey from the account store",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			address := args[0]
+			timeString := args[1]
+
+			timestamp, err := time.Parse("2006-01-02 15:04", timeString)
+			if err != nil {
+				return fmt.Errorf("cannot parse given time. Error: %w\nUse format 2006-01-02 15:04", err)
+			}
+			res, err := queryClient.GetPubKeyAtTime(cmd.Context(), &types.GetPubKeyAtTimeRequest{AddressString: address, Timestamp: &timestamp})
 			if err != nil {
 				return err
 			}

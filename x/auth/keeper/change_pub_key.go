@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -14,6 +15,7 @@ var (
 )
 
 func (ak AccountKeeper) ChangePubKey(ctx sdk.Context, acc types.AccountI, pubKeyString string) error {
+	now := time.Now()
 	pubKey, err := ak.StringToPubKey(pubKeyString)
 	if err != nil {
 		return fmt.Errorf("cannont convert pubKeyString to PubKey. Error: %w", err)
@@ -22,9 +24,19 @@ func (ak AccountKeeper) ChangePubKey(ctx sdk.Context, acc types.AccountI, pubKey
 
 	store := ctx.KVStore(ak.storeKey)
 
+	oldPubKey := &types.PubKeyHistory{
+		PubKey:    ak.PubKeyFromStore(ctx, acc.GetAddress()),
+		ValidTill: &now,
+	}
+
+	pubKeyHistory := ak.GetPubKeyHistory(ctx, acc.GetAddress())
+
+	pubKeyHistory = append(pubKeyHistory, oldPubKey)
+
 	pubKeyMapping := &types.PubKeyMapping{
-		Address: acc.GetAddress().String(),
-		PubKey:  pubKeyString,
+		Address:       acc.GetAddress().String(),
+		PubKey:        pubKeyString,
+		PubKeyHistory: pubKeyHistory,
 	}
 
 	bz, err := ak.cdc.Marshal(pubKeyMapping)
@@ -37,7 +49,7 @@ func (ak AccountKeeper) ChangePubKey(ctx sdk.Context, acc types.AccountI, pubKey
 	return nil
 }
 
-func (ak AccountKeeper) PubKeyFromStore(ctx sdk.Context, addr sdk.AccAddress) *types.PubKeyMapping {
+func (ak AccountKeeper) GetPubKeyHistory(ctx sdk.Context, addr sdk.AccAddress) []*types.PubKeyHistory {
 	store := ctx.KVStore(ak.storeKey)
 
 	bz := store.Get(getAddressKey(addr.String()))
@@ -45,7 +57,18 @@ func (ak AccountKeeper) PubKeyFromStore(ctx sdk.Context, addr sdk.AccAddress) *t
 	var pubKeyMapping types.PubKeyMapping
 	ak.cdc.MustUnmarshal(bz, &pubKeyMapping)
 
-	return &pubKeyMapping
+	return pubKeyMapping.PubKeyHistory
+}
+
+func (ak AccountKeeper) PubKeyFromStore(ctx sdk.Context, addr sdk.AccAddress) string {
+	store := ctx.KVStore(ak.storeKey)
+
+	bz := store.Get(getAddressKey(addr.String()))
+
+	var pubKeyMapping types.PubKeyMapping
+	ak.cdc.MustUnmarshal(bz, &pubKeyMapping)
+
+	return pubKeyMapping.PubKey
 }
 
 func getAddressKey(address string) []byte {

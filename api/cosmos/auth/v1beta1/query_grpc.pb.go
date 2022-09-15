@@ -50,6 +50,8 @@ type QueryClient interface {
 	AddressStringToBytes(ctx context.Context, in *AddressStringToBytesRequest, opts ...grpc.CallOption) (*AddressStringToBytesResponse, error)
 	// GetPubKeyFromStore gets the pubkey assigned to an address from the store
 	GetPubKeyFromStore(ctx context.Context, in *GetPubKeyFromStoreRequest, opts ...grpc.CallOption) (*GetPubKeyFromStoreResponse, error)
+	// GetPubKeyAtTime gets the pubkey assigned to an address at a given time
+	GetPubKeyAtTime(ctx context.Context, in *GetPubKeyAtTimeRequest, opts ...grpc.CallOption) (*GetPubKeyAtTimeResponse, error)
 }
 
 type queryClient struct {
@@ -141,6 +143,15 @@ func (c *queryClient) GetPubKeyFromStore(ctx context.Context, in *GetPubKeyFromS
 	return out, nil
 }
 
+func (c *queryClient) GetPubKeyAtTime(ctx context.Context, in *GetPubKeyAtTimeRequest, opts ...grpc.CallOption) (*GetPubKeyAtTimeResponse, error) {
+	out := new(GetPubKeyAtTimeResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.Query/GetPubKeyAtTime", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -173,6 +184,8 @@ type QueryServer interface {
 	AddressStringToBytes(context.Context, *AddressStringToBytesRequest) (*AddressStringToBytesResponse, error)
 	// GetPubKeyFromStore gets the pubkey assigned to an address from the store
 	GetPubKeyFromStore(context.Context, *GetPubKeyFromStoreRequest) (*GetPubKeyFromStoreResponse, error)
+	// GetPubKeyAtTime gets the pubkey assigned to an address at a given time
+	GetPubKeyAtTime(context.Context, *GetPubKeyAtTimeRequest) (*GetPubKeyAtTimeResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -206,6 +219,9 @@ func (UnimplementedQueryServer) AddressStringToBytes(context.Context, *AddressSt
 }
 func (UnimplementedQueryServer) GetPubKeyFromStore(context.Context, *GetPubKeyFromStoreRequest) (*GetPubKeyFromStoreResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPubKeyFromStore not implemented")
+}
+func (UnimplementedQueryServer) GetPubKeyAtTime(context.Context, *GetPubKeyAtTimeRequest) (*GetPubKeyAtTimeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPubKeyAtTime not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -382,6 +398,24 @@ func _Query_GetPubKeyFromStore_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetPubKeyAtTime_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPubKeyAtTimeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetPubKeyAtTime(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.auth.v1beta1.Query/GetPubKeyAtTime",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetPubKeyAtTime(ctx, req.(*GetPubKeyAtTimeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -424,6 +458,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPubKeyFromStore",
 			Handler:    _Query_GetPubKeyFromStore_Handler,
+		},
+		{
+			MethodName: "GetPubKeyAtTime",
+			Handler:    _Query_GetPubKeyAtTime_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

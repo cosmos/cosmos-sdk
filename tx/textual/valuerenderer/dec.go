@@ -20,7 +20,7 @@ type decValueRenderer struct{}
 var _ ValueRenderer = decValueRenderer{}
 
 func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.Writer) error {
-	formatted, err := math.FormatDecimal(v.String())
+	formatted, err := math.FormatDec(v.String())
 	if err != nil {
 		return err
 	}

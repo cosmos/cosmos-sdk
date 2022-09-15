@@ -18,7 +18,7 @@ func formatCoin(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata) (string,
 
 	// Return early if no display denom or display denom is the current coin denom.
 	if metadata == nil || metadata.Display == "" || coinDenom == metadata.Display {
-		vr, err := math.FormatDecimal(coin.Amount)
+		vr, err := math.FormatDec(coin.Amount)
 		return vr + " " + coin.Denom, err
 	}
 
@@ -40,7 +40,7 @@ func formatCoin(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata) (string,
 
 	// If we didn't find either exponent, then we return early.
 	if !foundCoinExp || !foundDispExp {
-		vr, err := math.FormatInteger(coin.Amount)
+		vr, err := math.FormatInt(coin.Amount)
 		return vr + " " + coin.Denom, err
 	}
 
@@ -57,7 +57,7 @@ func formatCoin(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata) (string,
 		dispAmount = dispAmount.Quo(math.LegacyNewDec(10).Power(uint64(-exponentDiff)))
 	}
 
-	vr, err := math.FormatDecimal(dispAmount.String())
+	vr, err := math.FormatDec(dispAmount.String())
 	return vr + " " + dispDenom, err
 }
 

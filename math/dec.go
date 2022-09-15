@@ -895,16 +895,16 @@ func LegacyDecApproxEq(t *testing.T, d1 LegacyDec, d2 LegacyDec, tol LegacyDec) 
 	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
 }
 
-// FormatDecimal formats a decimal into a value-rendered string following
-// ADR-050. This function operates with string manipulation (instead of
-// manipulating the sdk.Dec object).
-func FormatDecimal(v string) (string, error) {
+// FormatDec formats a decimal (as encoded in protobuf) into a value-rendered
+// string following ADR-050. This function operates with string manipulation
+// (instead of manipulating the sdk.Dec object).
+func FormatDec(v string) (string, error) {
 	parts := strings.Split(v, ".")
 	if len(parts) > 2 {
 		return "", fmt.Errorf("invalid decimal: too many points in %s", v)
 	}
 
-	intPart, err := FormatInteger(parts[0])
+	intPart, err := FormatInt(parts[0])
 	if err != nil {
 		return "", err
 	}

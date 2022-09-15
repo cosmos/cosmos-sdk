@@ -19,7 +19,7 @@ type intValueRenderer struct{}
 var _ ValueRenderer = intValueRenderer{}
 
 func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.Writer) error {
-	formatted, err := math.FormatInteger(v.String())
+	formatted, err := math.FormatInt(v.String())
 	if err != nil {
 		return err
 	}

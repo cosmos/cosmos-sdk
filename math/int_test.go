@@ -426,7 +426,7 @@ func TestRoundTripMarshalToInt(t *testing.T) {
 	}
 }
 
-func TestFormatIntegerNonDigits(t *testing.T) {
+func TestFormatIntNonDigits(t *testing.T) {
 	badCases := []string{
 		"a10",
 		"1a10",
@@ -441,7 +441,7 @@ func TestFormatIntegerNonDigits(t *testing.T) {
 	for _, value := range badCases {
 		value := value
 		t.Run(value, func(t *testing.T) {
-			s, err := math.FormatInteger(value)
+			s, err := math.FormatInt(value)
 			if err == nil {
 				t.Fatal("Expected an error")
 			}

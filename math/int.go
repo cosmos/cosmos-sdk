@@ -448,10 +448,10 @@ func hasOnlyDigits(s string) bool {
 
 const thousandSeparator string = "'"
 
-// FormatInteger formats an integer into a value-rendered string following
-// ADR-050. This function operates with string manipulation (instead of
-// manipulating the int or sdk.Int object).
-func FormatInteger(v string) (string, error) {
+// FormatInt formats an integer (encoded as in protobuf) into a value-rendered
+// string following ADR-050. This function operates with string manipulation
+// (instead of manipulating the int or sdk.Int object).
+func FormatInt(v string) (string, error) {
 	sign := ""
 	if v[0] == '-' {
 		sign = "-"

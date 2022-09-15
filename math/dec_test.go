@@ -667,7 +667,7 @@ func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 	sink = (interface{})(nil)
 }
 
-func TestFormatDecimalNonDigits(t *testing.T) {
+func TestFormatDecNonDigits(t *testing.T) {
 	badCases := []string{
 		"10.a",
 		"1a.10",
@@ -682,7 +682,7 @@ func TestFormatDecimalNonDigits(t *testing.T) {
 	for _, value := range badCases {
 		value := value
 		t.Run(value, func(t *testing.T) {
-			s, err := math.FormatDecimal(value)
+			s, err := math.FormatDec(value)
 			if err == nil {
 				t.Fatal("Expected an error")
 			}

@@ -260,7 +260,7 @@ func NewCmdDraftProposal() *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("A draft proposal has been generated.\nNote that proposal should contains off-chain metadata.\nPlease upload the metadata object to IPFS.\nThen, replace the generated metadata field with the IPFS CID.\n")
+			fmt.Printf("Your draft proposal has successfully been generated.\nBecause proposals should contain off-chain metadata, please upload the metadata object to IPFS.\nThen, replace the generated metadata field with the IPFS CID.\n")
 
 			return nil
 		},

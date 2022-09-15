@@ -1,4 +1,4 @@
-package testutil
+package auth
 
 import (
 	"encoding/json"

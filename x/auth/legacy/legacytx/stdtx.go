@@ -25,8 +25,10 @@ var (
 // which must be above some miminum to be accepted into the mempool.
 // [Deprecated]
 type StdFee struct {
-	Amount sdk.Coins `json:"amount" yaml:"amount"`
-	Gas    uint64    `json:"gas" yaml:"gas"`
+	Amount  sdk.Coins `json:"amount" yaml:"amount"`
+	Gas     uint64    `json:"gas" yaml:"gas"`
+	Payer   string    `json:"payer,omitempty" yaml:"payer"`
+	Granter string    `json:"granter,omitempty" yaml:"granter"`
 }
 
 // Deprecated: NewStdFee returns a new instance of StdFee
@@ -221,7 +223,7 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 
 // FeeGranter always returns nil for StdTx
 func (tx StdTx) FeeGranter() sdk.AccAddress {
-	return nil
+	return sdk.AccAddress(tx.Fee.Granter)
 }
 
 func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {

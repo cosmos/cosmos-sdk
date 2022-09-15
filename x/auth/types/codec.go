@@ -7,6 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+<<<<<<< HEAD
+=======
+	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+	groupcodec "github.com/cosmos/cosmos-sdk/x/group/codec"
+>>>>>>> 340c01bf5 (fix!: Fix group amino codec (#13307))
 )
 
 // RegisterLegacyAminoCodec registers the account interfaces and concrete types on the
@@ -52,4 +57,9 @@ func init() {
 	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
 	// used to properly serialize MsgGrant and MsgExec instances
 	RegisterLegacyAminoCodec(authzcodec.Amino)
+<<<<<<< HEAD
+=======
+	RegisterLegacyAminoCodec(govcodec.Amino)
+	RegisterLegacyAminoCodec(groupcodec.Amino)
+>>>>>>> 340c01bf5 (fix!: Fix group amino codec (#13307))
 }

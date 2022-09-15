@@ -67,6 +67,7 @@ Note, there are length-prefixed variants of the above functionality and this is
 typically used for when the data needs to be streamed or grouped together
 (e.g. `ResponseDeliverTx.Data`)
 
+<<<<<<< HEAD
 #### Authz authorizations
 
 Since the `MsgExec` message type can contain different messages instances, it is important that developers
@@ -74,11 +75,29 @@ add the following code inside the `init` method of their module's `codec.go` fil
 
 ```go
 import authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+=======
+#### Authz authorizations and Gov/Group proposals
+
+Since authz's `MsgExec` and `MsgGrant` message types, as well as gov's and group's `MsgSubmitProposal`, can contain different messages instances, it is important that developers
+add the following code inside the `init` method of their module's `codec.go` file:
+
+```go
+import (
+  authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+  govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+  groupcodec "github.com/cosmos/cosmos-sdk/x/group/codec"
+)
+>>>>>>> 340c01bf5 (fix!: Fix group amino codec (#13307))
 
 init() {
     // Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
     // used to properly serialize MsgGrant and MsgExec instances
     RegisterLegacyAminoCodec(authzcodec.Amino)
+<<<<<<< HEAD
+=======
+    RegisterLegacyAminoCodec(govcodec.Amino)
+    RegisterLegacyAminoCodec(groupcodec.Amino)
+>>>>>>> 340c01bf5 (fix!: Fix group amino codec (#13307))
 }
 ```
 

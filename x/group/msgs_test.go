@@ -984,7 +984,6 @@ func TestMsgSubmitProposalGetSignBytes(t *testing.T) {
 			require.NotPanics(t, func() {
 				bz = msg.GetSignBytes()
 			})
-			fmt.Println(string(bz))
 			require.Equal(t, tc.expSignBz, string(bz))
 		})
 	}

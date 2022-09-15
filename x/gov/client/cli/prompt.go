@@ -34,8 +34,10 @@ type ProposalMetadata struct {
 	// VoteOptionContext string `json:"vote_option_context"`
 }
 
-// ProposalPrompt prompts the user for filling proposal data
-func ProposalPrompt[T any](data T) (T, error) {
+// Prompt prompts the user for filling struct data
+// data is the struct to be filled
+// namePrefix is the name to be display as "Enter <namePrefix> <field>"
+func Prompt[T any](data T, namePrefix string) (T, error) {
 	v := reflect.ValueOf(&data).Elem()
 	if v.Kind() == reflect.Interface {
 		v = reflect.ValueOf(data)
@@ -45,9 +47,19 @@ func ProposalPrompt[T any](data T) (T, error) {
 	}
 
 	for i := 0; i < v.NumField(); i++ {
+		if v.Field(i).Kind() == reflect.Struct {
+			// if the field is a struct, call recursively
+			result, err := Prompt(reflect.ValueOf(v.Field(i)).Interface(), strings.ToLower(v.Type().Field(i).Name))
+			if err != nil {
+				return data, err
+			}
+
+			v.Field(i).Set(reflect.ValueOf(result))
+		}
+
 		fieldName := strings.ToLower(client.CamelCaseToString(v.Type().Field(i).Name))
 		prompt := promptui.Prompt{
-			Label:    fmt.Sprintf("Enter proposal %s", fieldName),
+			Label:    fmt.Sprintf("Enter %s %s", namePrefix, fieldName),
 			Validate: client.ValidatePromptNotEmpty,
 		}
 
@@ -87,10 +99,10 @@ type proposalTypes struct {
 }
 
 func (p *proposalTypes) Prompt(cdc codec.Codec) (*proposal, error) {
-	var proposal = &proposal{}
+	proposal := &proposal{}
 
 	// set metadata
-	metadata, err := ProposalPrompt(ProposalMetadata{})
+	metadata, err := Prompt(ProposalMetadata{}, "proposal")
 	if err != nil {
 		return nil, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
@@ -117,7 +129,7 @@ func (p *proposalTypes) Prompt(cdc codec.Codec) (*proposal, error) {
 	}
 
 	// set messages field
-	result, err := ProposalPrompt(p.Msg)
+	result, err := Prompt(p.Msg, "msg")
 	if err != nil {
 		return nil, fmt.Errorf("failed to set proposal message: %w", err)
 	}

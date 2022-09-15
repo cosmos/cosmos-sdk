@@ -6,37 +6,9 @@ import (
 	"unicode"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/manifoldco/promptui"
 )
 
-// Prompts
-
-var (
-	AddressPrompt = promptui.Prompt{
-		Label: "Enter address",
-		Validate: func(input string) error {
-			if _, err := sdk.AccAddressFromBech32(input); err != nil {
-				return fmt.Errorf("invalid address: %w", err)
-			}
-
-			return nil
-		},
-	}
-
-	CoinsAmountPrompt = promptui.Prompt{
-		Label: "Enter coin(s) amount",
-		Validate: func(input string) error {
-			_, err := sdk.ParseCoinsNormalized(input)
-			if err != nil {
-				return fmt.Errorf("invalid coin amount: %w", err)
-			}
-
-			return nil
-		},
-	}
-)
-
-// Validation
+// Prompts Validation
 
 func ValidatePromptNotEmpty(input string) error {
 	if input == "" {
@@ -50,6 +22,22 @@ func ValidatePromptURL(input string) error {
 	_, err := url.ParseRequestURI(input)
 	if err != nil {
 		return fmt.Errorf("invalid URL: %w", err)
+	}
+
+	return nil
+}
+
+func ValidatePromptAddress(input string) error {
+	if _, err := sdk.AccAddressFromBech32(input); err != nil {
+		return fmt.Errorf("invalid address: %w", err)
+	}
+
+	return nil
+}
+
+func ValidatePromptCoins(input string) error {
+	if _, err := sdk.ParseCoinsNormalized(input); err != nil {
+		return fmt.Errorf("invalid coins: %w", err)
 	}
 
 	return nil

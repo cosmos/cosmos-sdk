@@ -5,11 +5,7 @@ import (
 	"strings"
 	"testing"
 
-<<<<<<< HEAD
-=======
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
->>>>>>> 83f88a682 (fix: types: correctly coalesce coins even with repeated denominations & simplify logic (#13265))
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/codec"

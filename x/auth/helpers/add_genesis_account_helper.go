@@ -5,10 +5,10 @@ import (
 	"errors"
 	fmt "fmt"
 
-	"github.com/cosmos/cosmos-sdk/server"
+	tmcfg "github.com/tendermint/tendermint/config"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -16,16 +16,8 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-// AddGenesisAccount adds a genesis account to genesis state.
-func AddGenesisAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, appendAcct bool, vestingStart, vestingEnd int64, vestingAmtStr string) error {
-	serverCtx := server.NewDefaultContext()
-	config := serverCtx.Config
-
-	config.SetRoot(path)
-	config.Moniker = moniker
-
-	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
-
+// AddGenesisAccount adds a genesis account to the genesis state.
+func AddGenesisAccount(config *tmcfg.Config, clientCtx client.Context, accAddr sdk.AccAddress, amountStr string, appendAcct bool, vestingStart, vestingEnd int64, vestingAmtStr string) error {
 	coins, err := sdk.ParseCoinsNormalized(amountStr)
 	if err != nil {
 		return fmt.Errorf("failed to parse coins: %w", err)
@@ -74,20 +66,20 @@ func AddGenesisAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, 
 		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 	}
 
-	authGenState := authtypes.GetGenesisStateFromAppState(encCfg.Codec, appState)
+	authGenState := authtypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 
 	accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
 	if err != nil {
 		return fmt.Errorf("failed to get accounts from any: %w", err)
 	}
 
-	bankGenState := banktypes.GetGenesisStateFromAppState(encCfg.Codec, appState)
+	bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 	if accs.Contains(accAddr) {
 		if !appendAcct {
 			return fmt.Errorf(" Account %s already exists\nUse `append` flag to append account at existing address", accAddr)
 		}
 
-		genesisB := banktypes.GetGenesisStateFromAppState(encCfg.Codec, appState)
+		genesisB := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 		for idx, acc := range genesisB.Balances {
 			if acc.Address != accAddr.String() {
 				continue
@@ -108,7 +100,7 @@ func AddGenesisAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, 
 		}
 		authGenState.Accounts = genAccs
 
-		authGenStateBz, err := encCfg.Codec.MarshalJSON(&authGenState)
+		authGenStateBz, err := clientCtx.Codec.MarshalJSON(&authGenState)
 		if err != nil {
 			return fmt.Errorf("failed to marshal auth genesis state: %w", err)
 		}
@@ -121,7 +113,7 @@ func AddGenesisAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, 
 
 	bankGenState.Supply = bankGenState.Supply.Add(balances.Coins...)
 
-	bankGenStateBz, err := encCfg.Codec.MarshalJSON(bankGenState)
+	bankGenStateBz, err := clientCtx.Codec.MarshalJSON(bankGenState)
 	if err != nil {
 		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
 	}

@@ -37,6 +37,8 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
+			config.SetRoot(clientCtx.HomeDir)
+
 			var kr keyring.Keyring
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -69,7 +71,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			vestingEnd, _ := cmd.Flags().GetInt64(flagVestingEnd)
 			vestingAmtStr, _ := cmd.Flags().GetString(flagVestingAmt)
 
-			err = auth.AddGenesisAccount(clientCtx.HomeDir, config.Moniker, args[1], addr, appendflag, vestingStart, vestingEnd, vestingAmtStr)
+			err = auth.AddGenesisAccount(config, clientCtx, addr, args[1], appendflag, vestingStart, vestingEnd, vestingAmtStr)
 			return err
 		},
 	}

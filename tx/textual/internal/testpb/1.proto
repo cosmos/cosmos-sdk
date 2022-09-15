@@ -27,7 +27,6 @@ message A {
   bytes                             BYTES = 9;
   google.protobuf.Timestamp    TIMESTAMP = 10;
   google.protobuf.Duration      DURATION = 11;
-}
 
   // Fields that are not handled by SIGN_MODE_TEXTUAL.
   sint32         SINT32   = 101;

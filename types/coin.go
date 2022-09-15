@@ -342,22 +342,21 @@ func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 		panic("Wrong argument: coins must be sorted")
 	}
 
-	uniqCoins := make(map[string]Coin, len(coins)+len(coinsB))
+	uniqCoins := make(map[string]Coins, len(coins)+len(coinsB))
 	// Traverse all the coins for each of the coins and coinsB.
 	for _, cL := range []Coins{coins, coinsB} {
 		for _, c := range cL {
-			if uc, ok := uniqCoins[c.Denom]; ok {
-				uniqCoins[c.Denom] = uc.Add(c)
-			} else {
-				uniqCoins[c.Denom] = c
-			}
+			uniqCoins[c.Denom] = append(uniqCoins[c.Denom], c)
 		}
 	}
 
-	coalesced = make(Coins, 0, len(uniqCoins))
-	for denom, c := range uniqCoins { //#nosec
-		if c.IsZero() {
-			continue
+	for denom, cL := range uniqCoins {
+		comboCoin := Coin{Denom: denom, Amount: NewInt(0)}
+		for _, c := range cL {
+			comboCoin = comboCoin.Add(c)
+		}
+		if !comboCoin.IsZero() {
+			coalesced = append(coalesced, comboCoin)
 		}
 		c.Denom = denom
 		coalesced = append(coalesced, c)

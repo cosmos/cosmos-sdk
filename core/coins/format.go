@@ -68,7 +68,7 @@ func formatCoin(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata) (string,
 // at the same index.
 func FormatCoins(coins []*basev1beta1.Coin, metadata []*bankv1beta1.Metadata) (string, error) {
 	if len(coins) != len(metadata) {
-		panic(fmt.Errorf("formatCoins expect one metadata for each coin; expected %d, got %d", len(coins), len(metadata)))
+		return "", fmt.Errorf("formatCoins expect one metadata for each coin; expected %d, got %d", len(coins), len(metadata))
 	}
 
 	formatted := make([]string, len(coins))

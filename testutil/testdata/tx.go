@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/stretchr/testify/require"
+	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
@@ -11,6 +12,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+// AddressGenerator creates and returns a random address generator using rapid.
+func AddressGenerator(t *rapid.T) *rapid.Generator[sdk.AccAddress] {
+	return rapid.Custom(func(t *rapid.T) sdk.AccAddress {
+		pkBz := rapid.SliceOfN(rapid.Byte(), 20, 20).Draw(t, "hex")
+		return sdk.AccAddress(pkBz)
+	})
+}
 
 // KeyTestPubAddr generates a new secp256k1 keypair.
 func KeyTestPubAddr() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {

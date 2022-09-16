@@ -4,9 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -45,8 +43,9 @@ func TestTimestampJsonTestcases(t *testing.T) {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			rend := valuerenderer.NewTimestampValueRenderer()
 
+			var items []valuerenderer.Item
 			if tc.Proto != nil {
-				items, err := rend.Format(context.Background(), protoreflect.ValueOf(tc.Proto.ProtoReflect()))
+				items, err = rend.Format(context.Background(), protoreflect.ValueOf(tc.Proto.ProtoReflect()))
 				if tc.Error {
 					require.Error(t, err)
 					return
@@ -56,8 +55,7 @@ func TestTimestampJsonTestcases(t *testing.T) {
 				require.Equal(t, tc.Text, items[0].Text)
 			}
 
-			rd := strings.NewReader(tc.Text)
-			val, err := rend.Parse(context.Background(), rd)
+			val, err := rend.Parse(context.Background(), items)
 			if tc.Error {
 				require.Error(t, err)
 				return
@@ -75,18 +73,4 @@ func TestTimestampBadFormat(t *testing.T) {
 	rend := valuerenderer.NewTimestampValueRenderer()
 	_, err := rend.Format(context.Background(), protoreflect.ValueOf(dur.New(time.Hour).ProtoReflect()))
 	require.Error(t, err)
-}
-
-type badReader struct{}
-
-var _ io.Reader = badReader{}
-
-func (br badReader) Read(p []byte) (int, error) {
-	return 0, fmt.Errorf("reader error")
-}
-
-func TestTimestampBadParse_reader(t *testing.T) {
-	rend := valuerenderer.NewTimestampValueRenderer()
-	_, err := rend.Parse(context.Background(), badReader{})
-	require.ErrorContains(t, err, "reader error")
 }

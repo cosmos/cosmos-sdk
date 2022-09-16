@@ -3,7 +3,6 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
-	"io"
 	"time"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -37,13 +36,12 @@ func (vr timestampValueRenderer) Format(_ context.Context, v protoreflect.Value)
 }
 
 // Parse implements the ValueRenderer interface.
-func (vr timestampValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
+func (vr timestampValueRenderer) Parse(_ context.Context, items []Item) (protoreflect.Value, error) {
 	// Parse the RFC 3339 input as a Go Time.
-	bz, err := io.ReadAll(r)
-	if err != nil {
-		return protoreflect.Value{}, err
+	if len(items) != 1 {
+		return protoreflect.Value{}, fmt.Errorf("expected single item: %v", items)
 	}
-	t, err := time.Parse(time.RFC3339Nano, string(bz))
+	t, err := time.Parse(time.RFC3339Nano, items[0].Text)
 	if err != nil {
 		return protoreflect.Value{}, err
 	}

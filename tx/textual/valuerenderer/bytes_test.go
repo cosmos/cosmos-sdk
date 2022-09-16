@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"os"
-	"strings"
 	"testing"
 
 	"cosmossdk.io/tx/textual/valuerenderer"
@@ -37,8 +36,7 @@ func TestBytesJsonTestCases(t *testing.T) {
 		require.Equal(t, tc.hex, items[0].Text)
 
 		// Round trip
-		r := strings.NewReader(tc.hex)
-		val, err := valrend.Parse(context.Background(), r)
+		val, err := valrend.Parse(context.Background(), items)
 		require.NoError(t, err)
 		require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
 	}

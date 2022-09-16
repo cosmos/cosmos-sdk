@@ -2,11 +2,11 @@ package valuerenderer
 
 import (
 	"context"
-	"io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// Item is the abstract unit of Textual rendering.
 type Item struct {
 	Text   string
 	Indent int
@@ -21,6 +21,9 @@ type Item struct {
 // here, so that optionally more value renderers could be built, for example, a
 // separate one for a different language.
 type ValueRenderer interface {
+	// Format should render the value to a text plus annotation.
 	Format(context.Context, protoreflect.Value) ([]Item, error)
-	Parse(context.Context, io.Reader) (protoreflect.Value, error)
+
+	// Parse should be the inverse of Format.
+	Parse(context.Context, []Item) (protoreflect.Value, error)
 }

@@ -3,7 +3,6 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
-	"io"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -29,7 +28,7 @@ func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]It
 	return []Item{{Text: formatted}}, nil
 }
 
-func (vr decValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
+func (vr decValueRenderer) Parse(_ context.Context, items []Item) (protoreflect.Value, error) {
 	panic("implement me")
 }
 

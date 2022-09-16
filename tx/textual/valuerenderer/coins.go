@@ -3,7 +3,6 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
-	"io"
 	"sort"
 	"strings"
 
@@ -78,7 +77,7 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 	}
 }
 
-func (vr coinsValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
+func (vr coinsValueRenderer) Parse(_ context.Context, items []Item) (protoreflect.Value, error) {
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/13153
 	panic("implement me, see #13153")
 }

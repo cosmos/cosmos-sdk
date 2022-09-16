@@ -3,7 +3,7 @@ package valuerenderer
 import (
 	"context"
 	"encoding/hex"
-	"io"
+	"fmt"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -24,11 +24,11 @@ func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 	return []Item{{Text: text}}, nil
 }
 
-func (vr bytesValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
-	formatted, err := io.ReadAll(r)
-	if err != nil {
-		return protoreflect.ValueOfBytes([]byte{}), err
+func (vr bytesValueRenderer) Parse(_ context.Context, items []Item) (protoreflect.Value, error) {
+	if len(items) != 1 {
+		return protoreflect.ValueOfBytes([]byte{}), fmt.Errorf("expected single item: %v", items)
 	}
+	formatted := items[0].Text
 
 	data, err := hex.DecodeString(string(formatted))
 	if err != nil {

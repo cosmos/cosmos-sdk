@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"math"
 
 	maurice "github.com/MauriceGit/skiplist"
 	"github.com/google/btree"
@@ -386,6 +387,7 @@ func (slm huanduSkipListMempool) Remove(_ Context, tx MempoolTx) error {
 type statefulMempool struct {
 	priorities *huandu.SkipList
 	senders    map[string]*huandu.SkipList
+	scores     map[[32]byte]int64
 }
 
 type statefulMempoolTxKey struct {
@@ -403,6 +405,10 @@ func NewStatefulMempool() Mempool {
 func (smp statefulMempool) Insert(ctx Context, tx MempoolTx) error {
 	senders := tx.(signing.SigVerifiableTx).GetSigners()
 	nonces, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	hashTx, ok := tx.(HashableTx)
+	if !ok {
+		return ErrNoTxHash
+	}
 
 	if err != nil {
 		return err
@@ -415,61 +421,106 @@ func (smp statefulMempool) Insert(ctx Context, tx MempoolTx) error {
 	nonce := nonces[0].Sequence
 
 	senderTxs, ok := smp.senders[sender]
+	// initialize sender mempool if not found
 	if !ok {
 		senderTxs = huandu.New(huandu.LessThanFunc(func(a, b interface{}) int {
 			uint64Compare := huandu.Uint64
 			return uint64Compare.Compare(a.(statefulMempoolTxKey).nonce, b.(statefulMempoolTxKey).nonce)
 		}))
 	}
-	senderTxs.Set(nonce, tx)
 
-	key := priorityKey{hash: tx.(HashableTx).GetHash(), priority: ctx.Priority()}
+	// if a tx with the same nonce exists, replace it and delete from the priority list
+	nonceTx := senderTxs.Get(nonce)
+	if nonceTx != nil {
+		h := nonceTx.Value.(HashableTx).GetHash()
+		smp.priorities.Remove(priorityKey{hash: h, priority: smp.scores[h]})
+		if err != nil {
+			return err
+		}
+	}
+
+	senderTxs.Set(nonce, tx)
+	key := priorityKey{hash: hashTx.GetHash(), priority: ctx.Priority()}
 	smp.priorities.Set(key, tx)
+	smp.scores[key.hash] = key.priority
 
 	return nil
 }
 
 func (smp statefulMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
 	var selectedTxs []MempoolTx
+	var txBytes int
 
 	// start with the highest priority sender
-	curPrio := smp.priorities.Back()
-	for curPrio != nil {
-		nextPrio := curPrio.Prev()
-		// TODO min priority on nil
-		// cp := curPrio.Key().(priorityKey).priority
-		np := nextPrio.Key().(priorityKey).priority
+	priorityNode := smp.priorities.Back()
+	for priorityNode != nil {
+		var nextPriority int64
+		nextPriorityNode := priorityNode.Prev()
+		if nextPriorityNode != nil {
+			nextPriority = nextPriorityNode.Key().(priorityKey).priority
+		} else {
+			nextPriority = math.MinInt64
+		}
+
 		// TODO multiple senders
-		sender := curPrio.Value.(signing.SigVerifiableTx).GetSigners()[0].String()
+		sender := priorityNode.Value.(signing.SigVerifiableTx).GetSigners()[0].String()
 
 		// iterate through the sender's transactions in nonce order
 		senderTx := smp.senders[sender].Front()
 		for senderTx != nil {
 			k := senderTx.Key().(statefulMempoolTxKey)
 			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
-			if k.priority < np {
+			if k.priority < nextPriority {
 				break
 			}
+
+			mempoolTx, _ := senderTx.Value.(MempoolTx)
 			// otherwise, select the transaction and continue iteration
-			selectedTxs = append(selectedTxs, senderTx.Value.(MempoolTx))
+			selectedTxs = append(selectedTxs, mempoolTx)
+			if txBytes += mempoolTx.Size(); txBytes >= maxBytes {
+				return selectedTxs, nil
+			}
 
 			senderTx = senderTx.Next()
-			// TODO size checking
 		}
 
-		curPrio = nextPrio
+		priorityNode = nextPriorityNode
 	}
 
 	return selectedTxs, nil
 }
 
 func (smp statefulMempool) CountTx() int {
-	//TODO implement me
-	panic("implement me")
+	return smp.priorities.Len()
 }
 
 func (smp statefulMempool) Remove(context Context, tx MempoolTx) error {
-	//TODO implement me
-	// need hash tables retrieving skiplist keys for txs/senders
-	panic("implement me")
+	senders := tx.(signing.SigVerifiableTx).GetSigners()
+	nonces, _ := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+
+	hashTx, ok := tx.(HashableTx)
+	if !ok {
+		return ErrNoTxHash
+	}
+	txHash := hashTx.GetHash()
+
+	priority, ok := smp.scores[txHash]
+	if !ok {
+		return fmt.Errorf("tx %X not found", txHash)
+	}
+
+	// TODO multiple senders
+	sender := senders[0].String()
+	nonce := nonces[0].Sequence
+
+	senderTxs, ok := smp.senders[sender]
+	if !ok {
+		return fmt.Errorf("sender %s not found", sender)
+	}
+
+	smp.priorities.Remove(priorityKey{hash: txHash, priority: priority})
+	senderTxs.Remove(nonce)
+	delete(smp.scores, txHash)
+
+	return nil
 }

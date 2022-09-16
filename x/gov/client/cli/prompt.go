@@ -47,29 +47,37 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 	}
 
 	for i := 0; i < v.NumField(); i++ {
-		if v.Field(i).Kind() == reflect.Struct {
-			// if the field is a struct, call recursively
-			result, err := Prompt(reflect.ValueOf(v.Field(i)).Interface(), strings.ToLower(v.Type().Field(i).Name))
-			if err != nil {
-				return data, err
-			}
-
-			v.Field(i).Set(reflect.ValueOf(result))
+		if v.Field(i).Kind() == reflect.Struct || v.Field(i).Kind() == reflect.Slice {
+			// if the field is a struct skip
+			// in a future we can add a recursive call to Prompt
+			continue
 		}
 
-		fieldName := strings.ToLower(client.CamelCaseToString(v.Type().Field(i).Name))
+		// create prompts
 		prompt := promptui.Prompt{
-			Label:    fmt.Sprintf("Enter %s %s", namePrefix, fieldName),
+			Label:    fmt.Sprintf("Enter %s %s", namePrefix, strings.ToLower(client.CamelCaseToString(v.Type().Field(i).Name))),
 			Validate: client.ValidatePromptNotEmpty,
 		}
 
+		fieldName := strings.ToLower(v.Type().Field(i).Name)
+		// validation per field name
 		if strings.Contains(fieldName, "url") {
 			prompt.Validate = client.ValidatePromptURL
 		}
 
-		if strings.EqualFold(v.Type().Field(i).Name, "authority") {
+		if strings.EqualFold(fieldName, "authority") {
 			// pre-fill with gov address
 			prompt.Default = authtypes.NewModuleAddress(types.ModuleName).String()
+			prompt.Validate = client.ValidatePromptAddress
+		}
+
+		if strings.Contains(fieldName, "addr") ||
+			strings.Contains(fieldName, "sender") ||
+			strings.Contains(fieldName, "voter") ||
+			strings.Contains(fieldName, "depositor") ||
+			strings.Contains(fieldName, "granter") ||
+			strings.Contains(fieldName, "grantee") ||
+			strings.Contains(fieldName, "recipient") {
 			prompt.Validate = client.ValidatePromptAddress
 		}
 
@@ -81,11 +89,13 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 		switch v.Field(i).Kind() {
 		case reflect.String:
 			v.Field(i).SetString(result)
-		case reflect.Int64:
+		case reflect.Int:
 			resultInt, _ := strconv.Atoi(result)
 			v.Field(i).SetInt(int64(resultInt))
-		case reflect.Struct:
-			// TODO - manage all different types nicely :thinking_face:
+		default:
+			// skip other types
+			// possibly in the future we can add more types (like slices)
+			continue
 		}
 	}
 

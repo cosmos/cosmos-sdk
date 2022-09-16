@@ -1,8 +1,6 @@
 package types_test
 
 import (
-	"crypto/sha256"
-	"fmt"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -12,7 +10,7 @@ import (
 
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -44,20 +42,20 @@ func TestNewBTreeMempool(t *testing.T) {
 }
 
 func TestInsertMemPool(t *testing.T) {
-	mPool := types.NewBTreeMempool(smallSize)
-	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	mPool := sdk.NewBTreeMempool(smallSize)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	tx := simulateTx(ctx)
-	err := mPool.Insert(ctx, TxWSize{tx})
+	err := mPool.Insert(ctx, tx.(sdk.MempoolTx))
 	require.NoError(t, err)
 }
 
 func TestSelectMempool(t *testing.T) {
 	maxBytes := 10
-	mPool := types.NewBTreeMempool(smallSize)
-	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	mPool := sdk.NewBTreeMempool(smallSize)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	transactions := simulateManyTx(ctx, 1000)
-	for _, t := range transactions {
-		mPool.Insert(ctx, TxWSize{t})
+	for _, tx := range transactions {
+		mPool.Insert(ctx, tx.(sdk.MempoolTx))
 	}
 	selectedTx, err := mPool.Select(ctx, nil, maxBytes)
 	require.NoError(t, err)
@@ -70,47 +68,47 @@ func TestSelectMempool(t *testing.T) {
 }
 
 func BenchmarkBtreeMempool_Insert(b *testing.B) {
-	mPool := types.NewBTreeMempool(smallSize)
-	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	mPool := sdk.NewBTreeMempool(smallSize)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	tx := simulateTx(ctx)
 	for i := 0; i < b.N; i++ {
-		mPool.Insert(ctx, TxWSize{tx})
+		mPool.Insert(ctx, tx.(sdk.MempoolTx))
 	}
 }
 
 func BenchmarkBtreeMempool_Insert_100(b *testing.B) {
-	mPool := types.NewBTreeMempool(smallSize)
-	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	mPool := sdk.NewBTreeMempool(smallSize)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	transactions := simulateManyTx(ctx, 100)
-	for _, t := range transactions {
-		mPool.Insert(ctx, TxWSize{t})
+	for _, tx := range transactions {
+		mPool.Insert(ctx, tx.(sdk.MempoolTx))
 	}
 }
 
 func BenchmarkBtreeMempool_Insert_1000(b *testing.B) {
-	mPool := types.NewBTreeMempool(smallSize)
-	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	mPool := sdk.NewBTreeMempool(smallSize)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	transactions := simulateManyTx(ctx, 1000)
-	for _, t := range transactions {
-		mPool.Insert(ctx, TxWSize{t})
+	for _, tx := range transactions {
+		mPool.Insert(ctx, tx.(sdk.MempoolTx))
 	}
 }
 
 func BenchmarkBtreeMempool_Insert_100000(b *testing.B) {
-	mPool := types.NewBTreeMempool(smallSize)
-	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	mPool := sdk.NewBTreeMempool(smallSize)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	transactions := simulateManyTx(ctx, 100000)
-	for _, t := range transactions {
-		mPool.Insert(ctx, TxWSize{t})
+	for _, tx := range transactions {
+		mPool.Insert(ctx, tx.(sdk.MempoolTx))
 	}
 }
 
 func BenchmarkBtreeMempool_Select_1000(b *testing.B) {
-	mPool := types.NewBTreeMempool(smallSize)
-	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	mPool := sdk.NewBTreeMempool(smallSize)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	transactions := simulateManyTx(ctx, 1000)
-	for _, t := range transactions {
-		mPool.Insert(ctx, TxWSize{t})
+	for _, tx := range transactions {
+		mPool.Insert(ctx, tx.(sdk.MempoolTx))
 	}
 	for i := 0; i < b.N; i++ {
 		mPool.Select(ctx, nil, 1000)
@@ -118,11 +116,11 @@ func BenchmarkBtreeMempool_Select_1000(b *testing.B) {
 }
 
 func BenchmarkBtreeMempool_Select_100000(b *testing.B) {
-	mPool := types.NewBTreeMempool(smallSize)
-	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	mPool := sdk.NewBTreeMempool(smallSize)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	transactions := simulateManyTx(ctx, 100000)
-	for _, t := range transactions {
-		mPool.Insert(ctx, TxWSize{t})
+	for _, tx := range transactions {
+		mPool.Insert(ctx, tx.(sdk.MempoolTx))
 	}
 	for i := 0; i < b.N; i++ {
 		mPool.Select(ctx, nil, 10000)
@@ -130,19 +128,19 @@ func BenchmarkBtreeMempool_Select_100000(b *testing.B) {
 }
 
 func BenchmarkBtreeMempool_Select(b *testing.B) {
-	mPool := types.NewBTreeMempool(smallSize)
-	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	mPool := sdk.NewBTreeMempool(smallSize)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	transactions := simulateManyTx(ctx, 1000000)
-	for _, t := range transactions {
-		mPool.Insert(ctx, TxWSize{t})
+	for _, tx := range transactions {
+		mPool.Insert(ctx, tx.(sdk.MempoolTx))
 	}
 	for i := 0; i < b.N; i++ {
 		mPool.Select(ctx, nil, 10000)
 	}
 }
 
-func simulateManyTx(ctx types.Context, n int) []types.Tx {
-	transactions := make([]types.Tx, n)
+func simulateManyTx(ctx sdk.Context, n int) []sdk.Tx {
+	transactions := make([]sdk.Tx, n)
 	for i := 0; i < n; i++ {
 		tx := simulateTx(ctx)
 		transactions[i] = tx
@@ -177,19 +175,4 @@ func simulateTx(ctx sdk.Context) sdk.Tx {
 		accounts[0].PrivKey,
 	)
 	return tx
-}
-
-type TxWSize struct {
-	types.Tx
-	hash [32]byte
-}
-
-func (t TxWSize) Size() int {
-	return 10
-
-}
-
-func (t TxWSize) GetHash() [32]byte {
-	sha1V := sha256.Sum256([]byte(fmt.Sprintf("%#v", t.Tx)))
-	return sha1V
 }

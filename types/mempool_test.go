@@ -30,6 +30,19 @@ type ConfigurableBenchmarker struct {
 	GetBench func(input []byte) func(b *testing.B)
 }
 
+func TestNewBTreeMempool(t *testing.T) {
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	transactions := simulateManyTx(ctx, 1000)
+	require.Equal(t, 1000, len(transactions))
+	mempool := sdk.NewBTreeMempool(1000)
+
+	for _, tx := range transactions {
+		ctx.WithPriority(rand.Int63())
+		err := mempool.Insert(ctx, tx.(sdk.MempoolTx))
+		require.NoError(t, err)
+	}
+}
+
 func TestInsertMemPool(t *testing.T) {
 	mPool := types.NewBTreeMempool(smallSize)
 	ctx := types.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
@@ -137,7 +150,9 @@ func simulateManyTx(ctx types.Context, n int) []types.Tx {
 	return transactions
 }
 
-func simulateTx(ctx types.Context) types.Tx {
+func simulateTx(ctx sdk.Context) sdk.Tx {
+	acc := authtypes.NewEmptyModuleAccount("anaccount")
+
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	msg := group.MsgUpdateGroupMembers{
@@ -145,7 +160,7 @@ func simulateTx(ctx types.Context) types.Tx {
 		Admin:         "test",
 		MemberUpdates: []group.MemberRequest{},
 	}
-	fees, _ := simtypes.RandomFees(r, ctx, types.NewCoins(types.NewCoin(coinDenom, types.NewInt(100000000))))
+	fees, _ := simtypes.RandomFees(r, ctx, sdk.NewCoins(sdk.NewCoin("coin", sdk.NewInt(100000000))))
 
 	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 	accounts := simtypes.RandomAccounts(r, 2)
@@ -153,7 +168,7 @@ func simulateTx(ctx types.Context) types.Tx {
 	tx, _ := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
-		[]types.Msg{&msg},
+		[]sdk.Msg{&msg},
 		fees,
 		simtestutil.DefaultGenTxGas,
 		ctx.ChainID(),

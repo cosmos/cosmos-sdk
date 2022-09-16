@@ -67,11 +67,13 @@ func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 			Signatures: raw.Signatures,
 		}
 
+		hash := sha256.Sum256(txBytes)
+
 		return &wrapper{
 			tx:                           theTx,
 			bodyBz:                       raw.BodyBytes,
 			authInfoBz:                   raw.AuthInfoBytes,
-			hash:                         sha256.Sum256(txBytes),
+			hash:                         &hash,
 			numBytes:                     len(txBytes),
 			txBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
 		}, nil

@@ -7,6 +7,8 @@ import (
 	maurice "github.com/MauriceGit/skiplist"
 	"github.com/google/btree"
 	huandu "github.com/huandu/skiplist"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // MempoolTx we define an app-side mempool transaction interface that is as
@@ -275,14 +277,14 @@ type huanduSkipListMempool struct {
 	scores     map[[32]byte]int64
 }
 
-type skipListKey struct {
+type priorityKey struct {
 	hash     [32]byte
 	priority int64
 }
 
 func huanduLess(a, b interface{}) int {
-	keyA := a.(skipListKey)
-	keyB := b.(skipListKey)
+	keyA := a.(priorityKey)
+	keyB := b.(priorityKey)
 	if keyA.priority == keyB.priority {
 		return bytes.Compare(keyA.hash[:], keyB.hash[:])
 	} else {
@@ -294,7 +296,7 @@ func huanduLess(a, b interface{}) int {
 	}
 }
 
-func NewHuanduSkipListMempool() huanduSkipListMempool {
+func NewHuanduSkipListMempool() Mempool {
 	list := huandu.New(huandu.LessThanFunc(huanduLess))
 
 	return huanduSkipListMempool{
@@ -316,7 +318,7 @@ func (slm huanduSkipListMempool) Insert(ctx Context, tx MempoolTx) error {
 	}
 
 	hash := hashTx.GetHash()
-	key := skipListKey{hash: hash, priority: priority}
+	key := priorityKey{hash: hash, priority: priority}
 	slm.list.Set(key, tx)
 	slm.scores[hash] = priority
 	slm.txBytes += txSize
@@ -370,11 +372,104 @@ func (slm huanduSkipListMempool) Remove(_ Context, tx MempoolTx) error {
 		return fmt.Errorf("tx %X not found", hash)
 	}
 
-	key := skipListKey{hash: hash, priority: priority}
+	key := priorityKey{hash: hash, priority: priority}
 	slm.list.Remove(key)
 
 	delete(slm.scores, hash)
 	slm.txBytes -= tx.Size()
 
 	return nil
+}
+
+// Statefully ordered mempool
+
+type statefulMempool struct {
+	priorities *huandu.SkipList
+	senders    map[string]*huandu.SkipList
+}
+
+type statefulMempoolTxKey struct {
+	nonce    uint64
+	priority int64
+}
+
+func NewStatefulMempool() Mempool {
+	return &statefulMempool{
+		priorities: huandu.New(huandu.LessThanFunc(huanduLess)),
+		senders:    make(map[string]*huandu.SkipList),
+	}
+}
+
+func (smp statefulMempool) Insert(ctx Context, tx MempoolTx) error {
+	senders := tx.(signing.SigVerifiableTx).GetSigners()
+	nonces, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+
+	if err != nil {
+		return err
+	} else if len(senders) != len(nonces) {
+		return fmt.Errorf("number of senders (%d) does not match number of nonces (%d)", len(senders), len(nonces))
+	}
+
+	// TODO multiple senders
+	sender := senders[0].String()
+	nonce := nonces[0].Sequence
+
+	senderTxs, ok := smp.senders[sender]
+	if !ok {
+		senderTxs = huandu.New(huandu.LessThanFunc(func(a, b interface{}) int {
+			uint64Compare := huandu.Uint64
+			return uint64Compare.Compare(a.(statefulMempoolTxKey).nonce, b.(statefulMempoolTxKey).nonce)
+		}))
+	}
+	senderTxs.Set(nonce, tx)
+
+	key := priorityKey{hash: tx.(HashableTx).GetHash(), priority: ctx.Priority()}
+	smp.priorities.Set(key, tx)
+
+	return nil
+}
+
+func (smp statefulMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+	var selectedTxs []MempoolTx
+
+	// start with the highest priority sender
+	curPrio := smp.priorities.Back()
+	for curPrio != nil {
+		nextPrio := curPrio.Prev()
+		// TODO min priority on nil
+		// cp := curPrio.Key().(priorityKey).priority
+		np := nextPrio.Key().(priorityKey).priority
+		// TODO multiple senders
+		sender := curPrio.Value.(signing.SigVerifiableTx).GetSigners()[0].String()
+
+		// iterate through the sender's transactions in nonce order
+		senderTx := smp.senders[sender].Front()
+		for senderTx != nil {
+			k := senderTx.Key().(statefulMempoolTxKey)
+			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
+			if k.priority < np {
+				break
+			}
+			// otherwise, select the transaction and continue iteration
+			selectedTxs = append(selectedTxs, senderTx.Value.(MempoolTx))
+
+			senderTx = senderTx.Next()
+			// TODO size checking
+		}
+
+		curPrio = nextPrio
+	}
+
+	return selectedTxs, nil
+}
+
+func (smp statefulMempool) CountTx() int {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (smp statefulMempool) Remove(context Context, tx MempoolTx) error {
+	//TODO implement me
+	// need hash tables retrieving skiplist keys for txs/senders
+	panic("implement me")
 }

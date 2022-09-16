@@ -100,17 +100,13 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 // by address.
 func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	accountStore := k.getAccountStore(ctx, addr)
-	amount := math.ZeroInt()
 	bz := accountStore.Get([]byte(denom))
-	if bz == nil {
-		return sdk.NewCoin(denom, amount)
-	}
-
-	if err := amount.Unmarshal(bz); err != nil {
+	balance, err := UnmarshalBalanceCompat(k.cdc, bz, denom)
+	if err != nil {
 		panic(err)
 	}
 
-	return sdk.NewCoin(denom, amount)
+	return balance
 }
 
 // IterateAccountBalances iterates over the balances of a single account and
@@ -123,12 +119,13 @@ func (k BaseViewKeeper) IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddr
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var amount math.Int
-		if err := amount.Unmarshal(iterator.Value()); err != nil {
+		denom := string(iterator.Key())
+		balance, err := UnmarshalBalanceCompat(k.cdc, iterator.Value(), denom)
+		if err != nil {
 			panic(err)
 		}
 
-		if cb(sdk.NewCoin(string(iterator.Key()), amount)) {
+		if cb(balance) {
 			break
 		}
 	}
@@ -153,12 +150,12 @@ func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddre
 			panic(err)
 		}
 
-		var amount math.Int
-		if err := amount.Unmarshal(iterator.Value()); err != nil {
+		balance, err := UnmarshalBalanceCompat(k.cdc, iterator.Value(), denom)
+		if err != nil {
 			panic(err)
 		}
 
-		if cb(address, sdk.NewCoin(denom, amount)) {
+		if cb(address, balance) {
 			break
 		}
 	}
@@ -251,4 +248,24 @@ func (k BaseViewKeeper) getAccountStore(ctx sdk.Context, addr sdk.AccAddress) pr
 // between a denomination and account balance for that denomination.
 func (k BaseViewKeeper) getDenomAddressPrefixStore(ctx sdk.Context, denom string) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.CreateDenomAddressPrefix(denom))
+}
+
+// UnmarshalBalanceCompat unmarshal balance amount from storage, it's backward-compatible with the legacy format.
+func UnmarshalBalanceCompat(cdc codec.BinaryCodec, bz []byte, denom string) (sdk.Coin, error) {
+	amount := math.ZeroInt()
+	if bz == nil {
+		return sdk.NewCoin(denom, amount), nil
+	}
+
+	if err := amount.Unmarshal(bz); err != nil {
+		// try to unmarshal with the legacy format.
+		var balance sdk.Coin
+		if cdc.Unmarshal(bz, &balance) != nil {
+			// return with the original error
+			return sdk.Coin{}, err
+		}
+		return balance, nil
+	}
+
+	return sdk.NewCoin(denom, amount), nil
 }

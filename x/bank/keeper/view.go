@@ -99,10 +99,6 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 // by address.
 func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	accountStore := k.getAccountStore(ctx, addr)
-<<<<<<< HEAD
-	amount := sdk.ZeroInt()
-=======
->>>>>>> 6c4f94b67 (fix: keep the balance query endpoint compatible with legacy blocks (#13301))
 	bz := accountStore.Get([]byte(denom))
 	balance, err := UnmarshalBalanceCompat(k.cdc, bz, denom)
 	if err != nil {

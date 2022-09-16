@@ -4,7 +4,7 @@ package cosmos.autocli.v1;
 
 import "google/protobuf/descriptor.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/api/cosmos/base/cli/v1;cliv1";
+option go_package = "cosmossdk.io/api/cosmos/base/cli/v1;cliv1";
 
 // ModuleOptions describes the CLI options for a Cosmos SDK module.
 message ModuleOptions {

@@ -26,6 +26,8 @@ const (
 	draftMetadataFileName = "draft_metadata.json"
 )
 
+// ProposalMetadata is the metadata of a proposal
+// This metadata is supposed to live off-chain when submitted in a proposal
 type ProposalMetadata struct {
 	Title             string `json:"title"`
 	Authors           string `json:"authors"`
@@ -35,7 +37,7 @@ type ProposalMetadata struct {
 	VoteOptionContext string `json:"vote_option_context"`
 }
 
-// Prompt prompts the user for filling struct data
+// Prompt prompts the user for all values of the given type.
 // data is the struct to be filled
 // namePrefix is the name to be display as "Enter <namePrefix> <field>"
 func Prompt[T any](data T, namePrefix string) (T, error) {
@@ -109,6 +111,7 @@ type proposalTypes struct {
 	Msg     sdk.Msg
 }
 
+// Prompt the proposal type values and return the proposal and its metadata
 func (p *proposalTypes) Prompt(cdc codec.Codec) (*proposal, ProposalMetadata, error) {
 	proposal := &proposal{}
 

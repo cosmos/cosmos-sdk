@@ -1197,7 +1197,7 @@ simd tx gov deposit 1 10000000stake --from cosmos1..
 
 The `draft-proposal` command allows users to draft any type of proposal.
 The command returns a `draft_proposal.json`, to be used by `submit-proposal` after being completed.
-The `draft_metadata.json` is mean to be uploaded to [IPFS](#metadata).
+The `draft_metadata.json` is meant to be uploaded to [IPFS](#metadata).
 
 ```bash
 simd tx gov draft-proposal

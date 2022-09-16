@@ -27,12 +27,12 @@ const (
 )
 
 type ProposalMetadata struct {
-	Title string `json:"title"`
-	// Authors           string `json:"authors"`
-	// Summary           string `json:"summary"`
-	// Details           string `json:"details"`
-	// ProposalForumUrl  string `json:"proposal_forum_url"` // named 'Url' instead of 'URL' for avoiding the camel case split
-	// VoteOptionContext string `json:"vote_option_context"`
+	Title             string `json:"title"`
+	Authors           string `json:"authors"`
+	Summary           string `json:"summary"`
+	Details           string `json:"details"`
+	ProposalForumUrl  string `json:"proposal_forum_url"` // named 'Url' instead of 'URL' for avoiding the camel case split
+	VoteOptionContext string `json:"vote_option_context"`
 }
 
 // Prompt prompts the user for filling struct data
@@ -118,7 +118,7 @@ func (p *proposalTypes) Prompt(cdc codec.Codec) (*proposal, ProposalMetadata, er
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
 
-	proposal.Metadata = fmt.Sprintf("%s CID", draftMetadataFileName)
+	proposal.Metadata = fmt.Sprintf("Insert here %s IPFS CID", draftMetadataFileName)
 
 	// set deposit
 	depositPrompt := promptui.Prompt{
@@ -220,10 +220,10 @@ func NewCmdDraftProposal() *cobra.Command {
 				return fmt.Errorf("failed to prompt proposal types: %w", err)
 			}
 
-			var proposal *proposalTypes
+			var proposal proposalTypes
 			for _, p := range supportedProposalTypes {
 				if strings.EqualFold(p.Type, proposalType) {
-					proposal = &p
+					proposal = p
 					break
 				}
 			}

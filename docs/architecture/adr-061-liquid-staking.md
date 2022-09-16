@@ -22,47 +22,54 @@ The most important deficency of the legacy staking design is that it composes po
 
 The Osmosis team has adopted the idea of Superfluid and Interfluid staking where assets that are participating in DeFi appliactions can also be used in proof of stake. This requires tight integration with an enshrined set of DeFi applications and thus is unsuitable for the Cosmos SDK.
 
-It's also important to note that Interchain Accounts are available in the default IBC implementation and can be used for staking and thus reyhypothneciation and liquid staking of staked assets is already possible. Thus liquid staking is already possible and these changes improve the UX of liquid staking. Centralized exahnges have also provided rehypthentication of staked assets and posed a challenge for decentralization. This ADR also take the position that liquid staking adoption is good and provides new levers to incentivize decentralization of stake. The
+It's also important to note that Interchain Accounts are available in the default IBC implementation and can be used for staking and thus (rehypothecation)[https://www.investopedia.com/terms/h/hypothecation.asp#toc-what-is-rehypothecation] of delegations as a form of liquid staking is already possible. Thus liquid staking is already possible and these changes improve the UX of liquid staking. Centralized exahnges have also provided rehypthentication of staked assets and posed a challenge for decentralization. This ADR also take the position that liquid staking adoption is good and provides new levers to incentivize decentralization of stake. 
 
 These changes to the staking module have been in development for more than a year and have seen substantial industry adoption who plan to build staking UX. The internal economics at Informal team has also done a review of the impacts of these changes and this review led to the developement of the exempt delegation system. This system provides governance with a tunenable parameter for modulating the risks of pricipal agent problem called the exemption factor. 
 
 ## Decision
 
-We implement the semi-fungible liquid staking system and exemption factor system within the cosmos sdk.
+We implement the semi-fungible liquid staking system and exemption factor system within the cosmos sdk. These tokenizedshares have extremely limited fungibility to only the specific delegation record that was created when shares were tokenized. These assets can be used for OTC trades but composibiltiy with DeFi is limited. The primary expected use case is improving the user experience of liquid staking providers.
 
 A new governance parameter is introduced that defines the ratio of exempt to issued tokenized shares. This is called the exemption factor.
 
-Min self delegation is removed from the staking system with the expectation that it will be replaced by the exempt delegations sytem.
+Min self delegation is removed from the staking system with the expectation that it will be replaced by the exempt delegations sytem. The exempt delegation system allows multiple accounts to demonstrate economic alignment with the validator operator as team members, partners etc without co-mingling funds. The exempt delegation will likely be required to grow the validators business under widespread adoption of liquid staking and where governence sets the exemption factor.
 
 When shares are tokenized, the underlying shares are transfered to a module account and rewards go to the module account for the TokenizedShareRecord. 
 
 There is no longer a mechanism to override the validators vote for TokenizedShares.
 
 
-### MsgTokenizeShares
+### `MsgTokenizeShares`
 
 The MsgTokenizeShares message is used to create tokenize delegated tokens. This message can be executed by any delegator who has positive amount of delegation and after execution the specific amount of delegation disappear from the account and share tokens are provided. Share tokens are demoninated in the validator and record id of the underlying delegation.
 
 A user may tokenize some or all of their Delegation.
 
-They will recieved shares like cosmosvaloper1xxxx5 where 5 is the record id for the validator operator.
+They will recieved shares with the denom of `cosmosvaloper1xxxx/5` where 5 is the record id for the validator operator.
 
-A validator may tokenize their self bond but tokenizing more than their min self bond will be equivalent to unbonding their min self bond and cause the validator to be removed from the active set.
+MsgTokenizeShares fails if the account is a VestingAccount. Users will have to move vested tokens to a new account and endure the unbonding period. We view this as acceptable tradeoff vs complex book keeping of vested tokens.
+
+The total amount of outstanding tokenized shares for the validator is checked against the sum of exempt delegation multiplied by the exemption factor. If the tokenized shares would exceed this limit, the execution fails.
 
 MsgTokenizeSharesResponse provides the number of tokens generated and their denom.
 
 
-### MsgRedeemTokensforShares
+### `MsgRedeemTokensforShares`
 
 The MsgRedeemTokensforShares message is used to redeem the delegation from share tokens. This message can be executed by any user who owns share tokens and after execution the delegation appear for the user.
 
-### MsgTransferTokenizeShareRecord
+### `MsgTransferTokenizeShareRecord`
 
-The MsgTransferTokenizeShareRecord message is used to transfer the ownership of rewards generated from the tokenized amount of delegation. The tokenize share record is created when a user tokenize his/her delegation and deleted and full amount of share tokens are redeemed.
+The MsgTransferTokenizeShareRecord message is used to transfer the ownership of rewards generated from the tokenized amount of delegation. The tokenize share record is created when a user tokenize his/her delegation and deleted when the full amount of share tokens are redeemed.
 
-### MsgExemptDelegation
+This is designed to work with liquid staking designs that do not redeem the tokenized shares and may instead want to keep the shares tokenized.
 
-The MsgExemptDelegation message is used to exempt a delegation to a validator. If the exemption factor is greater than 0, this will enable more delegation to the validator
+
+### `MsgExemptDelegation`
+
+The MsgExemptDelegation message is used to exempt a delegation to a validator. If the exemption factor is greater than 0, this will enable more delegation to the validator. 
+
+This design allows the chain to force an amount of self delegation to validators participating in liquid staking schemes.
 
 
 ## Consequences

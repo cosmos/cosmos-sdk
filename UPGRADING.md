@@ -142,6 +142,10 @@ In order to submit a proposal with `submit-proposal` you now need to pass a `pro
 You can still use the old way by using `submit-legacy-proposal`. This is not recommended.
 More information can be found in the gov module [client documentation](https://docs.cosmos.network/v0.46/modules/gov/07_client.html).
 
+#### `x/staking`
+
+The `staking module` added a new message type to cancel unbonding delegations
+
 ### Protobuf
 
 The `third_party/proto` folder that existed in [previous version](https://github.com/cosmos/cosmos-sdk/tree/v0.45.3/third_party/proto) now does not contains directly the [proto files](https://github.com/cosmos/cosmos-sdk/tree/release/v0.46.x/third_party/proto).

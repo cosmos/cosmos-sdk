@@ -463,6 +463,9 @@ func (smp statefulMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]Mempoo
 		}
 
 		// TODO multiple senders
+		// first clear out all txs from *all* senders which have a lower nonce *and* priority greater than or equal to the
+		// next priority
+		// when processing a tx with multi senders remove it from all other sender queues
 		sender := priorityNode.Value.(signing.SigVerifiableTx).GetSigners()[0].String()
 
 		// iterate through the sender's transactions in nonce order

@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/math v1.0.0-beta.3
 	cosmossdk.io/simapp v0.0.0-20220908203654-84d4bf5accad
 	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
-	github.com/cosmos/gogoproto v1.4.1
+	github.com/cosmos/gogoproto v1.4.2
 	github.com/google/uuid v1.3.0
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.0
@@ -150,6 +150,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
+	pgregory.net/rapid v0.5.2 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 

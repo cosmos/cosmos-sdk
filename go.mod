@@ -20,7 +20,7 @@ require (
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
 	github.com/cosmos/cosmos-sdk/store/tools/ics23 v0.0.0-20220820010601-dc361be9e3ff
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/gogoproto v1.4.1
+	github.com/cosmos/gogoproto v1.4.2
 	github.com/cosmos/iavl v0.19.1
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gogo/gateway v1.1.0

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+	groupcodec "github.com/cosmos/cosmos-sdk/x/group/codec"
 )
 
 var (
@@ -26,6 +27,7 @@ func init() {
 	// instances.
 	RegisterLegacyAminoCodec(authzcodec.Amino)
 	RegisterLegacyAminoCodec(govcodec.Amino)
+	RegisterLegacyAminoCodec(groupcodec.Amino)
 }
 
 // RegisterLegacyAminoCodec registers concrete types on the LegacyAmino codec

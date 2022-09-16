@@ -1,8 +1,9 @@
-package types
+package mempool
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types"
 	"math"
 
 	maurice "github.com/MauriceGit/skiplist"
@@ -17,7 +18,7 @@ import (
 // transaction to be used when reaping and getting the transaction itself.
 // Interface type casting can be used in the actual app-side mempool implementation.
 type MempoolTx interface {
-	Tx
+	types.Tx
 
 	// Size returns the size of the transaction in bytes.
 	Size() int
@@ -32,20 +33,20 @@ type HashableTx interface {
 type Mempool interface {
 	// Insert attempts to insert a MempoolTx into the app-side mempool returning
 	// an error upon failure.
-	Insert(Context, MempoolTx) error
+	Insert(types.Context, MempoolTx) error
 
 	// Select returns the next set of available transactions from the app-side
 	// mempool, up to maxBytes or until the mempool is empty. The application can
 	// decide to return transactions from its own mempool, from the incoming
 	// txs, or some combination of both.
-	Select(ctx Context, txs [][]byte, maxBytes int) ([]MempoolTx, error)
+	Select(ctx types.Context, txs [][]byte, maxBytes int) ([]MempoolTx, error)
 
 	// CountTx returns the number of transactions currently in the mempool.
 	CountTx() int
 
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
-	Remove(Context, MempoolTx) error
+	Remove(types.Context, MempoolTx) error
 }
 
 var (
@@ -95,7 +96,7 @@ func NewBTreeMempool(maxBytes int) *btreeMempool {
 	}
 }
 
-func (btm *btreeMempool) Insert(ctx Context, tx MempoolTx) error {
+func (btm *btreeMempool) Insert(ctx types.Context, tx MempoolTx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -116,12 +117,12 @@ func (btm *btreeMempool) Insert(ctx Context, tx MempoolTx) error {
 	return nil
 }
 
-func (btm *btreeMempool) validateSequenceNumber(tx Tx) bool {
+func (btm *btreeMempool) validateSequenceNumber(tx types.Tx) bool {
 	// TODO
 	return true
 }
 
-func (btm *btreeMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+func (btm *btreeMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
 	txBytes := 0
 	var selectedTxs []MempoolTx
 	btm.btree.Descend(func(i btree.Item) bool {
@@ -143,7 +144,7 @@ func (btm *btreeMempool) CountTx() int {
 	return btm.txCount
 }
 
-func (btm *btreeMempool) Remove(_ Context, tx MempoolTx) error {
+func (btm *btreeMempool) Remove(_ types.Context, tx MempoolTx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -192,7 +193,7 @@ type skipListItem struct {
 	priority int64
 }
 
-func (slm *mauriceSkipListMempool) Insert(ctx Context, tx MempoolTx) error {
+func (slm *mauriceSkipListMempool) Insert(ctx types.Context, tx MempoolTx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -212,12 +213,12 @@ func (slm *mauriceSkipListMempool) Insert(ctx Context, tx MempoolTx) error {
 	return nil
 }
 
-func (slm *mauriceSkipListMempool) validateSequenceNumber(tx Tx) bool {
+func (slm *mauriceSkipListMempool) validateSequenceNumber(tx types.Tx) bool {
 	// TODO
 	return true
 }
 
-func (slm *mauriceSkipListMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+func (slm *mauriceSkipListMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
 	txBytes := 0
 	var selectedTxs []MempoolTx
 
@@ -247,7 +248,7 @@ func (slm *mauriceSkipListMempool) CountTx() int {
 	return slm.list.GetNodeCount()
 }
 
-func (slm *mauriceSkipListMempool) Remove(_ Context, tx MempoolTx) error {
+func (slm *mauriceSkipListMempool) Remove(_ types.Context, tx MempoolTx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -306,7 +307,7 @@ func NewHuanduSkipListMempool() Mempool {
 	}
 }
 
-func (slm huanduSkipListMempool) Insert(ctx Context, tx MempoolTx) error {
+func (slm huanduSkipListMempool) Insert(ctx types.Context, tx MempoolTx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -327,12 +328,12 @@ func (slm huanduSkipListMempool) Insert(ctx Context, tx MempoolTx) error {
 	return nil
 }
 
-func (slm huanduSkipListMempool) validateSequenceNumber(tx Tx) bool {
+func (slm huanduSkipListMempool) validateSequenceNumber(tx types.Tx) bool {
 	// TODO
 	return true
 }
 
-func (slm huanduSkipListMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+func (slm huanduSkipListMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
 	txBytes := 0
 	var selectedTxs []MempoolTx
 
@@ -361,7 +362,7 @@ func (slm huanduSkipListMempool) CountTx() int {
 	return slm.list.Len()
 }
 
-func (slm huanduSkipListMempool) Remove(_ Context, tx MempoolTx) error {
+func (slm huanduSkipListMempool) Remove(_ types.Context, tx MempoolTx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -399,10 +400,11 @@ func NewStatefulMempool() Mempool {
 	return &statefulMempool{
 		priorities: huandu.New(huandu.LessThanFunc(huanduLess)),
 		senders:    make(map[string]*huandu.SkipList),
+		scores:     make(map[[32]byte]int64),
 	}
 }
 
-func (smp statefulMempool) Insert(ctx Context, tx MempoolTx) error {
+func (smp statefulMempool) Insert(ctx types.Context, tx MempoolTx) error {
 	senders := tx.(signing.SigVerifiableTx).GetSigners()
 	nonces, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	hashTx, ok := tx.(HashableTx)
@@ -447,7 +449,7 @@ func (smp statefulMempool) Insert(ctx Context, tx MempoolTx) error {
 	return nil
 }
 
-func (smp statefulMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+func (smp statefulMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
 	var selectedTxs []MempoolTx
 	var txBytes int
 
@@ -494,7 +496,7 @@ func (smp statefulMempool) CountTx() int {
 	return smp.priorities.Len()
 }
 
-func (smp statefulMempool) Remove(context Context, tx MempoolTx) error {
+func (smp statefulMempool) Remove(context types.Context, tx MempoolTx) error {
 	senders := tx.(signing.SigVerifiableTx).GetSigners()
 	nonces, _ := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 

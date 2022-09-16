@@ -82,7 +82,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 046: Module Params](./adr-046-module-params.md)
 * [ADR 057: App Wiring Part I](./adr-057-app-wiring-1.md)
 * [ADR 059: Test Scopes](./adr-059-test-scopes.md)
-* [ADR 060: ABCI++ (Phase I)](./adr-060-abci%2B%2B-phase-i.md)
+* [ADR 060: ABCI 1.0](adr-060-abci-1.0.md)
 
 ### Draft
 

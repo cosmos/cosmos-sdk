@@ -7,6 +7,12 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+type Item struct {
+	Text   string
+	Indent int
+	Expert bool
+}
+
 // ValueRenderer defines an interface to produce formatted output for all
 // protobuf types as well as parse a string into those protobuf types.
 //
@@ -15,6 +21,6 @@ import (
 // here, so that optionally more value renderers could be built, for example, a
 // separate one for a different language.
 type ValueRenderer interface {
-	Format(context.Context, protoreflect.Value, io.Writer) error
+	Format(context.Context, protoreflect.Value) ([]Item, error)
 	Parse(context.Context, io.Reader) (protoreflect.Value, error)
 }

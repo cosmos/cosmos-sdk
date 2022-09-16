@@ -52,11 +52,12 @@ This also prevents users signing over any hashed transaction data (fee, transact
 
 We propose to maintain functional tests using bijectivity in the SDK.
 
-### 2. Only ASCII 32-127 characters allowed
+### 2. Full range of Unicode characters allowed
 
-Ledger devices have limited character display capabilities, so all strings MUST only contain ASCII characters in the 32-127 range.
-
-In particular, the newline `"\n"` (ASCII: 10) character is forbidden.
+Despite the limited memory and display capabilities of devices like the Ledger, the full range of Unicode characters may be sent to it for display and signature,
+including control characters.
+The device is responsible for deciding how to display characters it cannot render natively.
+See [annex 2](./adr-050-sign-mode-textual-annex2.md) for guidance.
 
 ### 3. Strings SHOULD have the `<key>: <value>` format
 

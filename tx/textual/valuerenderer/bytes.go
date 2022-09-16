@@ -19,9 +19,9 @@ type bytesValueRenderer struct{}
 
 var _ ValueRenderer = bytesValueRenderer{}
 
-func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value, w io.Writer) error {
-	_, err := io.WriteString(w, strings.ToUpper(hex.EncodeToString(v.Bytes())))
-	return err
+func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Item, error) {
+	text := strings.ToUpper(hex.EncodeToString(v.Bytes()))
+	return []Item{{Text: text}}, nil
 }
 
 func (vr bytesValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {

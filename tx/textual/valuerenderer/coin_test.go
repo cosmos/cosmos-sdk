@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -33,13 +32,11 @@ func mockCoinMetadataQuerier(ctx context.Context, denom string) (*bankv1beta1.Me
 }
 
 func TestMetadataQuerier(t *testing.T) {
-	b := new(strings.Builder)
-
 	// Errors on nil metadata querier
 	textual := valuerenderer.NewTextual(nil)
 	vr, err := textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
-	err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()), b)
+	_, err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()))
 	require.Error(t, err)
 
 	// Errors if metadata querier returns an error
@@ -49,9 +46,9 @@ func TestMetadataQuerier(t *testing.T) {
 	})
 	vr, err = textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
-	err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()), b)
+	_, err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()))
 	require.ErrorIs(t, err, expErr)
-	err = vr.Format(context.Background(), protoreflect.ValueOf(NewGenericList([]*basev1beta1.Coin{{}})), b)
+	_, err = vr.Format(context.Background(), protoreflect.ValueOf(NewGenericList([]*basev1beta1.Coin{{}})))
 	require.ErrorIs(t, err, expErr)
 }
 
@@ -70,8 +67,7 @@ func TestCoinJsonTestcases(t *testing.T) {
 		t.Run(tc.Text, func(t *testing.T) {
 			if tc.Proto != nil {
 				ctx := context.WithValue(context.Background(), mockCoinMetadataKey(tc.Proto.Denom), tc.Metadata)
-				b := new(strings.Builder)
-				err = vr.Format(ctx, protoreflect.ValueOf(tc.Proto.ProtoReflect()), b)
+				items, err := vr.Format(ctx, protoreflect.ValueOf(tc.Proto.ProtoReflect()))
 
 				if tc.Error {
 					require.Error(t, err)
@@ -79,7 +75,8 @@ func TestCoinJsonTestcases(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				require.Equal(t, tc.Text, b.String())
+				require.Equal(t, 1, len(items))
+				require.Equal(t, tc.Text, items[0].Text)
 			}
 
 			// TODO Add parsing tests

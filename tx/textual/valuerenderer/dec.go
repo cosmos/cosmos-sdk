@@ -21,14 +21,12 @@ type decValueRenderer struct{}
 
 var _ ValueRenderer = decValueRenderer{}
 
-func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.Writer) error {
+func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Item, error) {
 	formatted, err := formatDecimal(v.String())
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	_, err = io.WriteString(w, formatted)
-	return err
+	return []Item{{Text: formatted}}, nil
 }
 
 func (vr decValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {

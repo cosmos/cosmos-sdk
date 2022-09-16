@@ -20,12 +20,12 @@ func NewTimestampValueRenderer() ValueRenderer {
 }
 
 // Format implements the ValueRenderer interface.
-func (vr timestampValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.Writer) error {
+func (vr timestampValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Item, error) {
 	// Reify the reflected message as a proto Timestamp
 	msg := v.Message().Interface()
 	timestamp, ok := msg.(*tspb.Timestamp)
 	if !ok {
-		return fmt.Errorf("expected Timestamp, got %T", msg)
+		return nil, fmt.Errorf("expected Timestamp, got %T", msg)
 	}
 
 	// Convert proto timestamp to a Go Time.
@@ -33,8 +33,7 @@ func (vr timestampValueRenderer) Format(_ context.Context, v protoreflect.Value,
 
 	// Format the Go Time as RFC 3339.
 	s := t.Format(time.RFC3339Nano)
-	w.Write([]byte(s))
-	return nil
+	return []Item{{Text: s}}, nil
 }
 
 // Parse implements the ValueRenderer interface.

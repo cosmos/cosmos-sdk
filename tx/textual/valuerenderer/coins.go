@@ -28,9 +28,9 @@ type coinsValueRenderer struct {
 
 var _ ValueRenderer = coinsValueRenderer{}
 
-func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value, w io.Writer) error {
+func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Item, error) {
 	if vr.coinMetadataQuerier == nil {
-		return fmt.Errorf("expected non-nil coin metadata querier")
+		return nil, fmt.Errorf("expected non-nil coin metadata querier")
 	}
 
 	// Check whether we have a Coin or some Coins.
@@ -45,17 +45,16 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value, w
 				coins[i] = coin
 				metadatas[i], err = vr.coinMetadataQuerier(ctx, coin.Denom)
 				if err != nil {
-					return err
+					return nil, err
 				}
 			}
 
 			formatted, err := formatCoins(coins, metadatas)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
-			_, err = w.Write([]byte(formatted))
-			return err
+			return []Item{{Text: formatted}}, nil
 		}
 	// If it's a single Coin:
 	case protoreflect.Message:
@@ -64,19 +63,18 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value, w
 
 			metadata, err := vr.coinMetadataQuerier(ctx, coin.Denom)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			formatted, err := formatCoin(coin, metadata)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
-			_, err = w.Write([]byte(formatted))
-			return err
+			return []Item{{Text: formatted}}, nil
 		}
 	default:
-		return fmt.Errorf("got invalid type %t for coins", v.Interface())
+		return nil, fmt.Errorf("got invalid type %t for coins", v.Interface())
 	}
 }
 

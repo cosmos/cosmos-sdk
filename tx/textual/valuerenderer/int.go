@@ -19,14 +19,12 @@ type intValueRenderer struct{}
 
 var _ ValueRenderer = intValueRenderer{}
 
-func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.Writer) error {
+func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Item, error) {
 	formatted, err := formatInteger(v.String())
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	_, err = io.WriteString(w, formatted)
-	return err
+	return []Item{{Text: formatted}}, nil
 }
 
 func (vr intValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {

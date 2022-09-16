@@ -46,14 +46,14 @@ func TestTimestampJsonTestcases(t *testing.T) {
 			rend := valuerenderer.NewTimestampValueRenderer()
 
 			if tc.Proto != nil {
-				wr := new(strings.Builder)
-				err = rend.Format(context.Background(), protoreflect.ValueOf(tc.Proto.ProtoReflect()), wr)
+				items, err := rend.Format(context.Background(), protoreflect.ValueOf(tc.Proto.ProtoReflect()))
 				if tc.Error {
 					require.Error(t, err)
 					return
 				}
 				require.NoError(t, err)
-				require.Equal(t, tc.Text, wr.String())
+				require.Equal(t, 1, len(items))
+				require.Equal(t, tc.Text, items[0].Text)
 			}
 
 			rd := strings.NewReader(tc.Text)
@@ -73,8 +73,7 @@ func TestTimestampJsonTestcases(t *testing.T) {
 
 func TestTimestampBadFormat(t *testing.T) {
 	rend := valuerenderer.NewTimestampValueRenderer()
-	wr := new(strings.Builder)
-	err := rend.Format(context.Background(), protoreflect.ValueOf(dur.New(time.Hour).ProtoReflect()), wr)
+	_, err := rend.Format(context.Background(), protoreflect.ValueOf(dur.New(time.Hour).ProtoReflect()))
 	require.Error(t, err)
 }
 

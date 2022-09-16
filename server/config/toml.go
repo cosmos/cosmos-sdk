@@ -76,7 +76,7 @@ iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 
 # IavlDisableFastnNode enables or disables the fast node feature of IAVL. 
 # Default is false.
-iavl-cache-size = {{ .BaseConfig.IAVLDisableFastnNode }}
+iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastnNode }}
 
 # AppDBBackend defines the database backend type to use for the application and snapshots DBs.
 # An empty string indicates that a fallback will be used.

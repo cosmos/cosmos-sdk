@@ -1,4 +1,4 @@
-# ADR 60: ABCI++ (Phase I)
+# ADR 60: ABCI 1.0 Integration
 
 ## Changelog
 
@@ -10,15 +10,15 @@ PROPOSED
 
 ## Abstract
 
-This ADR describes the initial adoption of [ABCI++](https://github.com/tendermint/tendermint/blob/master/spec/abci%2B%2B/README.md),
-the next evolution of ABCI, within the Cosmos SDK. ABCI++ aims to provide
+This ADR describes the initial adoption of [ABCI 1.0](https://github.com/tendermint/tendermint/blob/master/spec/abci%2B%2B/README.md),
+the next evolution of ABCI, within the Cosmos SDK. ABCI 1.0 aims to provide
 application developers with more flexibility and control over application and
 consensus semantics, e.g. in-application mempools, in-process oracles, and
 order-book style matching engines.
 
 ## Context
 
-Tendermint will release ABCI++ in phases. Notably, at the time of this writing,
+Tendermint will release ABCI 1.0. Notably, at the time of this writing,
 Tendermint is releasing v0.37.0 which will include `PrepareProposal` and `ProcessProposal`.
 
 The `PrepareProposal` ABCI method is concerned with a block proposer requesting
@@ -35,16 +35,16 @@ The second ABCI method, `ProcessProposal`, is used to process the block proposer
 proposal as defined by `PrepareProposal`. This ABCI method requests that the
 application evaluate the entire proposed block for validity.
 
-It is important to note that in this phase of ABCI++ integration, the application
+It is important to note that in ABCI 1.0 integration, the application
 is NOT responsible for locking semantics -- Tendermint will still be responsible
 for that. In the future, however, the application will be responsible for locking,
 which allows for parallel execution possibilities.
 
 ## Decision
 
-We will integrate the first phase of ABCI++, which will be introduced in Tendermint
-v0.37.0, in the next major release of the Cosmos SDK. We will integrate the two
-aforementioned ABCI++ methods on the `BaseApp` type. We describe the implementations
+We will integrate ABCI 1.0, which will be introduced in Tendermint
+v0.37.0, in the next major release of the Cosmos SDK. We will integrate ABCI 1.0
+methods on the `BaseApp` type. We describe the implementations
 of the two methods individually below.
 
 Prior to describing the implementation of the two new methods, it is important to
@@ -210,9 +210,9 @@ case `ProcessProposal` fails.
 
 ### Backwards Compatibility
 
-ABCI++ is naturally not backwards compatible with prior versions of the Cosmos SDK
+ABCI 1.0 is naturally not backwards compatible with prior versions of the Cosmos SDK
 and Tendermint. For example, an application that requests `RequestPrepareProposal`
-to the same application that does not speak ABCI++ will naturally fail.
+to the same application that does not speak ABCI 1.0 will naturally fail.
 
 However, in the first phase of the integration, the existing ABCI methods as we
 know them today will still exist and function as they currently do.
@@ -220,7 +220,7 @@ know them today will still exist and function as they currently do.
 ### Positive
 
 * Applications now have full control over transaction ordering and priority.
-* Lays the groundwork for the full integration of ABCI++, which will unlock more
+* Lays the groundwork for the full integration of ABCI 1.0, which will unlock more
   app-side use cases around block construction and integration with the Tendermint
   consensus engine.
 

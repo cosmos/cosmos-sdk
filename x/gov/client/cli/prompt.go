@@ -23,6 +23,7 @@ const (
 	proposalText          = "text"
 	proposalOther         = "other"
 	draftProposalFileName = "draft_proposal.json"
+	draftMetadataFileName = "draft_metadata.json"
 )
 
 type ProposalMetadata struct {
@@ -108,21 +109,16 @@ type proposalTypes struct {
 	Msg     sdk.Msg
 }
 
-func (p *proposalTypes) Prompt(cdc codec.Codec) (*proposal, error) {
+func (p *proposalTypes) Prompt(cdc codec.Codec) (*proposal, ProposalMetadata, error) {
 	proposal := &proposal{}
 
 	// set metadata
 	metadata, err := Prompt(ProposalMetadata{}, "proposal")
 	if err != nil {
-		return nil, fmt.Errorf("failed to set proposal metadata: %w", err)
+		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
 
-	rawMetadata, err := json.Marshal(metadata)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal proposal metadata: %w", err)
-	}
-
-	proposal.Metadata = string(rawMetadata)
+	proposal.Metadata = fmt.Sprintf("%s CID", draftMetadataFileName)
 
 	// set deposit
 	depositPrompt := promptui.Prompt{
@@ -131,22 +127,25 @@ func (p *proposalTypes) Prompt(cdc codec.Codec) (*proposal, error) {
 	}
 	proposal.Deposit, err = depositPrompt.Run()
 	if err != nil {
-		return nil, fmt.Errorf("failed to set proposal deposit: %w", err)
+		return nil, metadata, fmt.Errorf("failed to set proposal deposit: %w", err)
 	}
 
 	if p.Msg == nil {
-		return proposal, nil
+		return proposal, metadata, nil
 	}
 
 	// set messages field
 	result, err := Prompt(p.Msg, "msg")
 	if err != nil {
-		return nil, fmt.Errorf("failed to set proposal message: %w", err)
+		return nil, metadata, fmt.Errorf("failed to set proposal message: %w", err)
 	}
 
-	// TODO enrich message type
-	proposal.Messages = append(proposal.Messages, cdc.MustMarshalJSON(result))
-	return proposal, nil
+	message, err := cdc.MarshalInterfaceJSON(result)
+	if err != nil {
+		return nil, metadata, fmt.Errorf("failed to marshal proposal message: %w", err)
+	}
+	proposal.Messages = append(proposal.Messages, message)
+	return proposal, metadata, nil
 }
 
 var supportedProposalTypes = []proposalTypes{
@@ -245,32 +244,31 @@ func NewCmdDraftProposal() *cobra.Command {
 					return fmt.Errorf("failed to prompt proposal types: %w", err)
 				}
 
-				proposal.Msg, err = getProposalMsg(clientCtx.Codec, result)
-				if err != nil {
-					return err
-				}
-			} else if proposal.MsgType != "" {
+				proposal.MsgType = result
+			}
+
+			if proposal.MsgType != "" {
 				proposal.Msg, err = getProposalMsg(clientCtx.Codec, proposal.MsgType)
 				if err != nil {
-					return err
+					// should never happen
+					panic(err)
 				}
 			}
 
-			result, err := proposal.Prompt(clientCtx.Codec)
+			prop, metadata, err := proposal.Prompt(clientCtx.Codec)
 			if err != nil {
 				return err
 			}
 
-			rawProposal, err := json.MarshalIndent(result, "", " ")
-			if err != nil {
-				return fmt.Errorf("failed to marshal proposal: %w", err)
-			}
-
-			if err := os.WriteFile(draftProposalFileName, rawProposal, 0o600); err != nil {
+			if err := writeFile(draftMetadataFileName, metadata); err != nil {
 				return err
 			}
 
-			fmt.Printf("Your draft proposal has successfully been generated.\nBecause proposals should contain off-chain metadata, please upload the metadata object to IPFS.\nThen, replace the generated metadata field with the IPFS CID.\n")
+			if err := writeFile(draftProposalFileName, prop); err != nil {
+				return err
+			}
+
+			fmt.Printf("Your draft proposal has successfully been generated.\nProposals should contain off-chain metadata, please upload the metadata JSON to IPFS.\nThen, replace the generated metadata field with the IPFS CID.\n")
 
 			return nil
 		},
@@ -279,4 +277,17 @@ func NewCmdDraftProposal() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func writeFile(fileName string, input any) error {
+	raw, err := json.MarshalIndent(input, "", " ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal proposal: %w", err)
+	}
+
+	if err := os.WriteFile(fileName, raw, 0o600); err != nil {
+		return err
+	}
+
+	return nil
 }

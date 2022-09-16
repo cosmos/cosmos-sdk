@@ -73,6 +73,7 @@ func (w *wrapper) Size() int {
 	return w.numBytes
 }
 
+// hashFromSig hashes the signature.  Presently this is only used in test when w.hash is nil
 func (w *wrapper) hashFromSig() [32]byte {
 	var sigBytes []byte
 	for _, bs := range w.tx.Signatures {
@@ -81,6 +82,9 @@ func (w *wrapper) hashFromSig() [32]byte {
 	return sha256.Sum256(sigBytes)
 }
 
+// GetHash used for secondary, deterministic tx ordering in the mempool
+// when there are multiple txs with the same priority.
+// TODO: This should be altered use either sig bytes or txBytes for the hash
 func (w *wrapper) GetHash() [32]byte {
 	if w.hash == nil {
 		hash := w.hashFromSig()

@@ -144,7 +144,7 @@ More information can be found in the gov module [client documentation](https://d
 
 #### `x/staking`
 
-The `staking module` added a new message type to cancel unbonding delegations
+The `staking module` added a new message type to cancel unbonding delegations. Users that have unbonded by accident or wish to cancel a undelegation can now specify the amount and valdiator they would like to cancel the unbond from
 
 ### Protobuf
 

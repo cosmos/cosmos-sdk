@@ -22,7 +22,6 @@ type DeterministicTestSuite struct {
 	suite.Suite
 
 	ctx sdk.Context
-
 	queryClient   types.QueryClient
 	accountKeeper keeper.AccountKeeper
 	encCfg        moduletestutil.TestEncodingConfig

@@ -90,7 +90,7 @@ func TestStatefulMempool_Insert(t *testing.T) {
 }
 
 func TestStatefulMempool_Select(t *testing.T) {
-	maxBytes := 10
+	maxBytes := 100
 	mPool := mempool2.NewStatefulMempool()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	transactions := simulateManyTx(ctx, 10000)
@@ -103,7 +103,27 @@ func TestStatefulMempool_Select(t *testing.T) {
 	for _, selectedTx := range selectedTx {
 		actualBytes += selectedTx.Size()
 	}
-	require.LessOrEqual(t, maxBytes, actualBytes)
+	require.LessOrEqual(t, actualBytes, maxBytes)
+
+}
+
+func TestStatefulMempool_Select_Prioty_Nonce(t *testing.T) {
+	maxBytes := 100
+	mPool := mempool2.NewStatefulMempool()
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	transactions, priorities := GetNocePriotyTxPath(ctx)
+	for i, tx := range transactions {
+		newCtx := ctx.WithPriority(priorities[i])
+		mempoolTX := tx.(mempool2.MempoolTx)
+		mPool.Insert(newCtx, mempoolTX)
+	}
+	selectedTx, err := mPool.Select(ctx, nil, maxBytes)
+	require.NoError(t, err)
+	actualBytes := 0
+	for _, selectedTx := range selectedTx {
+		actualBytes += selectedTx.Size()
+	}
+	require.LessOrEqual(t, actualBytes, maxBytes)
 
 }
 
@@ -202,7 +222,6 @@ func simulateTx(ctx sdk.Context) sdk.Tx {
 
 	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 	accounts := simtypes.RandomAccounts(r, 2)
-
 	tx, _ := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
@@ -215,4 +234,56 @@ func simulateTx(ctx sdk.Context) sdk.Tx {
 		accounts[0].PrivKey,
 	)
 	return tx
+}
+
+//Tx1{sender: A, Priority: 21, Nonce: 4}
+//Tx2{sender: A, Priority: 8, Nonce: 3}
+//Tx3{sender: A, Priority: 6, Nonce: 2}
+//Tx4{sender: B, Priority: 15, Nonce: 1}
+//Tx5{sender: A, Priority: 20, Nonce: 1}
+func GetNocePriotyTxPath(ctx sdk.Context) ([]sdk.Tx, []int64) {
+	s := rand.NewSource(1)
+	r := rand.New(s)
+
+	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
+	randomAccounts := simtypes.RandomAccounts(r, 2)
+	accounts := []authtypes.BaseAccount{
+		*authtypes.NewBaseAccountWithAddress(randomAccounts[0].Address),
+		*authtypes.NewBaseAccountWithAddress(randomAccounts[0].Address),
+		*authtypes.NewBaseAccountWithAddress(randomAccounts[0].Address),
+		*authtypes.NewBaseAccountWithAddress(randomAccounts[1].Address),
+		*authtypes.NewBaseAccountWithAddress(randomAccounts[0].Address),
+	}
+	privKeysAccounts := []simtypes.Account{
+		randomAccounts[0],
+		randomAccounts[0],
+		randomAccounts[0],
+		randomAccounts[1],
+		randomAccounts[0],
+	}
+	transactions := make([]sdk.Tx, 0)
+	priorities := []int64{21, 8, 6, 15, 20}
+	nonce := []uint64{4, 3, 2, 1, 1}
+	for i, acc := range accounts {
+		msg := group.MsgUpdateGroupMembers{
+			GroupId:       1,
+			Admin:         acc.Address,
+			MemberUpdates: []group.MemberRequest{},
+		}
+		fees, _ := simtypes.RandomFees(r, ctx, sdk.NewCoins(sdk.NewCoin("coin", sdk.NewInt(100000000))))
+
+		tx, _ := simtestutil.GenSignedMockTx(
+			r,
+			txGen,
+			[]sdk.Msg{&msg},
+			fees,
+			simtestutil.DefaultGenTxGas,
+			ctx.ChainID(),
+			[]uint64{acc.GetAccountNumber()},
+			[]uint64{nonce[i]},
+			privKeysAccounts[i].PrivKey,
+		)
+		transactions = append(transactions, tx)
+	}
+	return transactions, priorities
 }

@@ -396,9 +396,29 @@ type statefulMempoolTxKey struct {
 	priority int64
 }
 
+type statefullPriorityKey struct {
+	hash     [32]byte
+	priority int64
+	nonce    uint64
+}
+
+func statefullHuanduLess(a, b interface{}) int {
+	keyA := a.(statefullPriorityKey)
+	keyB := b.(statefullPriorityKey)
+	if keyA.priority == keyB.priority {
+		return bytes.Compare(keyA.hash[:], keyB.hash[:])
+	} else {
+		if keyA.priority < keyB.priority {
+			return -1
+		} else {
+			return 1
+		}
+	}
+}
+
 func NewStatefulMempool() Mempool {
 	return &statefulMempool{
-		priorities: huandu.New(huandu.LessThanFunc(huanduLess)),
+		priorities: huandu.New(huandu.LessThanFunc(statefullHuanduLess)),
 		senders:    make(map[string]*huandu.SkipList),
 		scores:     make(map[[32]byte]int64),
 	}
@@ -441,10 +461,9 @@ func (smp statefulMempool) Insert(ctx types.Context, tx MempoolTx) error {
 		}
 	}
 
-	//senderTxs.Set(nonce, tx)
 	senderTxs.Set(senderKey, tx)
 	smp.senders[sender] = senderTxs
-	key := priorityKey{hash: hashTx.GetHash(), priority: ctx.Priority()}
+	key := statefullPriorityKey{hash: hashTx.GetHash(), priority: ctx.Priority(), nonce: nonce}
 
 	smp.priorities.Set(key, tx)
 	smp.scores[key.hash] = key.priority
@@ -457,12 +476,12 @@ func (smp statefulMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]
 	var txBytes int
 
 	// start with the highest priority sender
-	priorityNode := smp.priorities.Back()
+	priorityNode := smp.priorities.Front()
 	for priorityNode != nil {
 		var nextPriority int64
-		nextPriorityNode := priorityNode.Prev()
+		nextPriorityNode := priorityNode.Next()
 		if nextPriorityNode != nil {
-			nextPriority = nextPriorityNode.Key().(priorityKey).priority
+			nextPriority = nextPriorityNode.Key().(statefullPriorityKey).priority
 		} else {
 			nextPriority = math.MinInt64
 		}
@@ -470,14 +489,19 @@ func (smp statefulMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]
 		// TODO multiple senders
 		sender := priorityNode.Value.(signing.SigVerifiableTx).GetSigners()[0].String()
 
+		priorityNodeKey := priorityNode.Key().(statefullPriorityKey)
+
 		// iterate through the sender's transactions in nonce order
 		senderTxPool, ok := smp.senders[sender]
 		if !ok {
 			return []MempoolTx{}, fmt.Errorf("sender does not exist")
 		}
-		senderTx := senderTxPool.Front()
+		senderTx := senderTxPool.Back()
 		for senderTx != nil {
 			key := senderTx.Key().(statefulMempoolTxKey)
+			if key.nonce != priorityNodeKey.nonce {
+				break
+			}
 			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
 			if key.priority < nextPriority {
 				break
@@ -489,8 +513,8 @@ func (smp statefulMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]
 			if txBytes += mempoolTx.Size(); txBytes >= maxBytes {
 				return selectedTxs, nil
 			}
-
-			senderTx = senderTx.Next()
+			senderTx = senderTx.Prev()
+			senderTxPool.Remove(key)
 		}
 
 		priorityNode = nextPriorityNode

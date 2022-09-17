@@ -430,9 +430,9 @@ func (smp statefulMempool) Insert(ctx types.Context, tx MempoolTx) error {
 			return uint64Compare.Compare(a.(statefulMempoolTxKey).nonce, b.(statefulMempoolTxKey).nonce)
 		}))
 	}
-
+	senderKey := statefulMempoolTxKey{nonce: nonce, priority: ctx.Priority()}
 	// if a tx with the same nonce exists, replace it and delete from the priority list
-	nonceTx := senderTxs.Get(nonce)
+	nonceTx := senderTxs.Get(senderKey)
 	if nonceTx != nil {
 		h := nonceTx.Value.(HashableTx).GetHash()
 		smp.priorities.Remove(priorityKey{hash: h, priority: smp.scores[h]})
@@ -441,8 +441,11 @@ func (smp statefulMempool) Insert(ctx types.Context, tx MempoolTx) error {
 		}
 	}
 
-	senderTxs.Set(nonce, tx)
+	//senderTxs.Set(nonce, tx)
+	senderTxs.Set(senderKey, tx)
+	smp.senders[sender] = senderTxs
 	key := priorityKey{hash: hashTx.GetHash(), priority: ctx.Priority()}
+
 	smp.priorities.Set(key, tx)
 	smp.scores[key.hash] = key.priority
 
@@ -468,11 +471,15 @@ func (smp statefulMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]
 		sender := priorityNode.Value.(signing.SigVerifiableTx).GetSigners()[0].String()
 
 		// iterate through the sender's transactions in nonce order
-		senderTx := smp.senders[sender].Front()
+		senderTxPool, ok := smp.senders[sender]
+		if !ok {
+			return []MempoolTx{}, fmt.Errorf("sender does not exist")
+		}
+		senderTx := senderTxPool.Front()
 		for senderTx != nil {
-			k := senderTx.Key().(statefulMempoolTxKey)
+			key := senderTx.Key().(statefulMempoolTxKey)
 			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
-			if k.priority < nextPriority {
+			if key.priority < nextPriority {
 				break
 			}
 

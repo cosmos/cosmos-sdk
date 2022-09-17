@@ -81,6 +81,32 @@ func TestNewStatefulMempool(t *testing.T) {
 	}
 }
 
+func TestStatefulMempool_Insert(t *testing.T) {
+	mPool := mempool2.NewStatefulMempool()
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	tx := simulateTx(ctx)
+	err := mPool.Insert(ctx, tx.(mempool2.MempoolTx))
+	require.NoError(t, err)
+}
+
+func TestStatefulMempool_Select(t *testing.T) {
+	maxBytes := 10
+	mPool := mempool2.NewStatefulMempool()
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	transactions := simulateManyTx(ctx, 10000)
+	for _, tx := range transactions {
+		mPool.Insert(ctx, tx.(mempool2.MempoolTx))
+	}
+	selectedTx, err := mPool.Select(ctx, nil, maxBytes)
+	require.NoError(t, err)
+	actualBytes := 0
+	for _, selectedTx := range selectedTx {
+		actualBytes += selectedTx.Size()
+	}
+	require.LessOrEqual(t, maxBytes, actualBytes)
+
+}
+
 func BenchmarkBtreeMempool_Insert(b *testing.B) {
 	mPool := mempool2.NewBTreeMempool(smallSize)
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())

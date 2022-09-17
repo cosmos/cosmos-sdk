@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -234,15 +235,16 @@ func NewCmdDraftProposal() *cobra.Command {
 			// create any proposal type
 			if proposal.Type == proposalOther {
 				// prompt proposal type
-				msgPrompt := promptui.Prompt{
-					Label: "Which message type do you want to use for the proposal",
-					Validate: func(input string) error {
-						_, err := getProposalMsg(clientCtx.Codec, input)
-						return err
-					},
+				msgPrompt := promptui.Select{
+					Label: "Select proposal message type:",
+					Items: func() []string {
+						msgs := clientCtx.InterfaceRegistry.ListImplementations(sdk.MsgInterfaceProtoName)
+						sort.Strings(msgs)
+						return msgs
+					}(),
 				}
 
-				result, err := msgPrompt.Run()
+				_, result, err := msgPrompt.Run()
 				if err != nil {
 					return fmt.Errorf("failed to prompt proposal types: %w", err)
 				}

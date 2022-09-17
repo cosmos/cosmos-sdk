@@ -87,6 +87,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#13233](https://github.com/cosmos/cosmos-sdk/pull/13233) Add `--append` to `add-genesis-account` sub-command to append new tokens after an account is already created.
 * [#13236](https://github.com/cosmos/cosmos-sdk/pull/13236) Integrate Filter Logging
 * [#13301](https://github.com/cosmos/cosmos-sdk/pull/13301) Keep the balance query endpoint compatible with legacy blocks
+* [#13321](https://github.com/cosmos/cosmos-sdk/pull/13321) Add flag to disable fast node migration and usage. 
 
 ### State Machine Breaking
 

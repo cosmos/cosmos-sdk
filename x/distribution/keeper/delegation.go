@@ -192,6 +192,10 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 
 	if finalRewards.IsZero() {
 		baseDenom, _ := sdk.GetBaseDenom()
+		if baseDenom == "" {
+			baseDenom = sdk.DefaultBondDenom
+		}
+
 		// Note, we do not call the NewCoins constructor as we do not want the zero
 		// coin removed.
 		finalRewards = sdk.Coins{sdk.NewCoin(baseDenom, math.ZeroInt())}

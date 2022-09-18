@@ -121,8 +121,7 @@ func (p *proposalTypes) Prompt(cdc codec.Codec) (*proposal, ProposalMetadata, er
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
-
-	proposal.Metadata = fmt.Sprintf("Insert here %s IPFS CID", draftMetadataFileName)
+	proposal.Metadata = fmt.Sprintf("ipfs://<%s CID>", draftMetadataFileName)
 
 	// set deposit
 	depositPrompt := promptui.Prompt{

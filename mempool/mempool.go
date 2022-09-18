@@ -557,3 +557,118 @@ func (smp statefulMempool) Remove(context types.Context, tx MempoolTx) error {
 
 	return nil
 }
+
+////////////////////
+
+type MemPoolI struct {
+	accountsHeads *huandu.SkipList
+	senders       map[string]*AccountMemPool
+}
+
+type AccountMemPool struct {
+	transactions *huandu.SkipList
+	currentKey   accountsHeadsKey
+}
+
+func priorityHuanduLess(a, b interface{}) int {
+	keyA := a.(statefullPriorityKey)
+	keyB := b.(statefullPriorityKey)
+	if keyA.priority == keyB.priority {
+		return bytes.Compare(keyA.hash[:], keyB.hash[:])
+	} else {
+		if keyA.priority < keyB.priority {
+			return -1
+		} else {
+			return 1
+		}
+	}
+}
+
+func nonceHuanduLess(a, b interface{}) int {
+	keyA := a.(statefullPriorityKey)
+	keyB := b.(statefullPriorityKey)
+	uint64Compare := huandu.Uint64
+	return uint64Compare.Compare(keyA.nonce, keyB.nonce)
+}
+
+func priorityHuanduLess2(a, b interface{}) int {
+	keyA := a.(accountsHeadsKey)
+	keyB := b.(accountsHeadsKey)
+	if keyA.priority == keyB.priority {
+		return bytes.Compare(keyA.hash[:], keyB.hash[:])
+	} else {
+		if keyA.priority < keyB.priority {
+			return -1
+		} else {
+			return 1
+		}
+	}
+}
+
+type accountsHeadsKey struct {
+	sender   string
+	priority int64
+	hash     [32]byte
+}
+
+func NewMemPoolI() MemPoolI {
+	return MemPoolI{
+		accountsHeads: huandu.New(huandu.LessThanFunc(priorityHuanduLess2)),
+		senders:       make(map[string]*AccountMemPool),
+	}
+}
+
+func (amp *MemPoolI) Insert(ctx types.Context, tx MempoolTx) error {
+	senders := tx.(signing.SigVerifiableTx).GetSigners()
+	nonces, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	hashTx, ok := tx.(HashableTx)
+	if !ok {
+		return ErrNoTxHash
+	}
+
+	if err != nil {
+		return err
+	} else if len(senders) != len(nonces) {
+		return fmt.Errorf("number of senders (%d) does not match number of nonces (%d)", len(senders), len(nonces))
+	}
+	sender := senders[0].String()
+	nonce := nonces[0].Sequence
+
+	accountMeempool, ok := amp.senders[sender]
+	if !ok {
+		accountMeempool = &AccountMemPool{
+			transactions: huandu.New(huandu.LessThanFunc(nonceHuanduLess)),
+		}
+	}
+	key := statefullPriorityKey{hash: hashTx.GetHash(), nonce: nonce, priority: ctx.Priority()}
+
+	accountMeempool.transactions.Set(key, tx)
+	accKey := accountsHeadsKey{sender: sender, priority: ctx.Priority(), hash: hashTx.GetHash()}
+
+	//newAccuntMempool := accountMeempool
+	amp.accountsHeads.Remove(accountMeempool.currentKey)
+	accountMeempool.currentKey = accKey
+	amp.accountsHeads.Set(accKey, accountMeempool)
+	amp.senders[sender] = accountMeempool
+	return nil
+
+}
+
+func (amp *MemPoolI) Select(_ types.Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+	var selectedTxs []MempoolTx
+	var txBytes int
+
+	currentAccount := amp.accountsHeads.Front()
+	for currentAccount != nil {
+		accountMemPool := currentAccount.Value().(AccountMemPool)
+		currentTx := accountMemPool.transactions.Front()
+		tx := currentTx.Value().(MempoolTx)
+		selectedTxs = append(selectedTxs, tx)
+		newCurrentTx := currentTx.Next()
+		newKey := newCurrentTx.Key().(statefullPriorityKey)
+		accountMemPool.transactions.Remove(currentTx.Key())
+		newAccKey := accountsHeadsKey{sender: newKey.sender, priority: newKey.priority, hash: newKey.hash}
+		accountMemPool.currentKey = newCurrentTx.Key().(accountsHeadsKey)
+
+	}
+}

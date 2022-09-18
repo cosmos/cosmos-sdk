@@ -1,8 +1,9 @@
-package types
+package mempool
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types"
 	"math"
 
 	maurice "github.com/MauriceGit/skiplist"
@@ -12,12 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// MempoolTx we define an app-side mempool transaction interface that is as
+// Tx we define an app-side mempool transaction interface that is as
 // minimal as possible, only requiring applications to define the size of the
 // transaction to be used when reaping and getting the transaction itself.
 // Interface type casting can be used in the actual app-side mempool implementation.
-type MempoolTx interface {
-	Tx
+type Tx interface {
+	types.Tx
 
 	// Size returns the size of the transaction in bytes.
 	Size() int
@@ -25,27 +26,27 @@ type MempoolTx interface {
 
 // HashableTx defines an interface for a transaction that can be hashed.
 type HashableTx interface {
-	MempoolTx
+	Tx
 	GetHash() [32]byte
 }
 
 type Mempool interface {
-	// Insert attempts to insert a MempoolTx into the app-side mempool returning
+	// Insert attempts to insert a Tx into the app-side mempool returning
 	// an error upon failure.
-	Insert(Context, MempoolTx) error
+	Insert(types.Context, Tx) error
 
 	// Select returns the next set of available transactions from the app-side
 	// mempool, up to maxBytes or until the mempool is empty. The application can
 	// decide to return transactions from its own mempool, from the incoming
 	// txs, or some combination of both.
-	Select(ctx Context, txs [][]byte, maxBytes int) ([]MempoolTx, error)
+	Select(ctx types.Context, txs [][]byte, maxBytes int) ([]Tx, error)
 
 	// CountTx returns the number of transactions currently in the mempool.
 	CountTx() int
 
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
-	Remove(Context, MempoolTx) error
+	Remove(types.Context, Tx) error
 }
 
 var (
@@ -95,7 +96,7 @@ func NewBTreeMempool(maxBytes int) *btreeMempool {
 	}
 }
 
-func (btm *btreeMempool) Insert(ctx Context, tx MempoolTx) error {
+func (btm *btreeMempool) Insert(ctx types.Context, tx Tx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -116,14 +117,14 @@ func (btm *btreeMempool) Insert(ctx Context, tx MempoolTx) error {
 	return nil
 }
 
-func (btm *btreeMempool) validateSequenceNumber(tx Tx) bool {
+func (btm *btreeMempool) validateSequenceNumber(tx types.Tx) bool {
 	// TODO
 	return true
 }
 
-func (btm *btreeMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+func (btm *btreeMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Tx, error) {
 	txBytes := 0
-	var selectedTxs []MempoolTx
+	var selectedTxs []Tx
 	btm.btree.Descend(func(i btree.Item) bool {
 		tx := i.(*btreeItem).tx
 		if btm.validateSequenceNumber(tx) {
@@ -143,7 +144,7 @@ func (btm *btreeMempool) CountTx() int {
 	return btm.txCount
 }
 
-func (btm *btreeMempool) Remove(_ Context, tx MempoolTx) error {
+func (btm *btreeMempool) Remove(_ types.Context, tx Tx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -188,11 +189,11 @@ func (item skipListItem) String() string {
 }
 
 type skipListItem struct {
-	tx       MempoolTx
+	tx       Tx
 	priority int64
 }
 
-func (slm *mauriceSkipListMempool) Insert(ctx Context, tx MempoolTx) error {
+func (slm *mauriceSkipListMempool) Insert(ctx types.Context, tx Tx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -212,14 +213,14 @@ func (slm *mauriceSkipListMempool) Insert(ctx Context, tx MempoolTx) error {
 	return nil
 }
 
-func (slm *mauriceSkipListMempool) validateSequenceNumber(tx Tx) bool {
+func (slm *mauriceSkipListMempool) validateSequenceNumber(tx types.Tx) bool {
 	// TODO
 	return true
 }
 
-func (slm *mauriceSkipListMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+func (slm *mauriceSkipListMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Tx, error) {
 	txBytes := 0
-	var selectedTxs []MempoolTx
+	var selectedTxs []Tx
 
 	n := slm.list.GetLargestNode()
 	cnt := slm.list.GetNodeCount()
@@ -247,7 +248,7 @@ func (slm *mauriceSkipListMempool) CountTx() int {
 	return slm.list.GetNodeCount()
 }
 
-func (slm *mauriceSkipListMempool) Remove(_ Context, tx MempoolTx) error {
+func (slm *mauriceSkipListMempool) Remove(_ types.Context, tx Tx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -306,7 +307,7 @@ func NewHuanduSkipListMempool() Mempool {
 	}
 }
 
-func (slm huanduSkipListMempool) Insert(ctx Context, tx MempoolTx) error {
+func (slm huanduSkipListMempool) Insert(ctx types.Context, tx Tx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -327,18 +328,18 @@ func (slm huanduSkipListMempool) Insert(ctx Context, tx MempoolTx) error {
 	return nil
 }
 
-func (slm huanduSkipListMempool) validateSequenceNumber(tx Tx) bool {
+func (slm huanduSkipListMempool) validateSequenceNumber(tx types.Tx) bool {
 	// TODO
 	return true
 }
 
-func (slm huanduSkipListMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
+func (slm huanduSkipListMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Tx, error) {
 	txBytes := 0
-	var selectedTxs []MempoolTx
+	var selectedTxs []Tx
 
 	n := slm.list.Back()
 	for n != nil {
-		tx := n.Value.(MempoolTx)
+		tx := n.Value.(Tx)
 
 		if !slm.validateSequenceNumber(tx) {
 			continue
@@ -361,7 +362,7 @@ func (slm huanduSkipListMempool) CountTx() int {
 	return slm.list.Len()
 }
 
-func (slm huanduSkipListMempool) Remove(_ Context, tx MempoolTx) error {
+func (slm huanduSkipListMempool) Remove(_ types.Context, tx Tx) error {
 	hashTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
@@ -402,7 +403,7 @@ func NewStatefulMempool() Mempool {
 	}
 }
 
-func (smp statefulMempool) Insert(ctx Context, tx MempoolTx) error {
+func (smp statefulMempool) Insert(ctx types.Context, tx Tx) error {
 	senders := tx.(signing.SigVerifiableTx).GetSigners()
 	nonces, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	hashTx, ok := tx.(HashableTx)
@@ -447,8 +448,8 @@ func (smp statefulMempool) Insert(ctx Context, tx MempoolTx) error {
 	return nil
 }
 
-func (smp statefulMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]MempoolTx, error) {
-	var selectedTxs []MempoolTx
+func (smp statefulMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Tx, error) {
+	var selectedTxs []Tx
 	var txBytes int
 
 	// start with the highest priority sender
@@ -477,7 +478,7 @@ func (smp statefulMempool) Select(_ Context, _ [][]byte, maxBytes int) ([]Mempoo
 				break
 			}
 
-			mempoolTx, _ := senderTx.Value.(MempoolTx)
+			mempoolTx, _ := senderTx.Value.(Tx)
 			// otherwise, select the transaction and continue iteration
 			selectedTxs = append(selectedTxs, mempoolTx)
 			if txBytes += mempoolTx.Size(); txBytes >= maxBytes {
@@ -497,7 +498,7 @@ func (smp statefulMempool) CountTx() int {
 	return smp.priorities.Len()
 }
 
-func (smp statefulMempool) Remove(context Context, tx MempoolTx) error {
+func (smp statefulMempool) Remove(context types.Context, tx Tx) error {
 	senders := tx.(signing.SigVerifiableTx).GetSigners()
 	nonces, _ := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 

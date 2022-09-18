@@ -1,4 +1,4 @@
-package types_test
+package mempool_test
 
 import (
 	"math/rand"
@@ -10,6 +10,7 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -20,11 +21,11 @@ func TestNewBTreeMempool(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	transactions := simulateManyTx(ctx, 1000)
 	require.Equal(t, 1000, len(transactions))
-	mempool := sdk.NewBTreeMempool(1000)
+	mp := mempool.NewBTreeMempool(1000)
 
 	for _, tx := range transactions {
 		ctx.WithPriority(rand.Int63())
-		err := mempool.Insert(ctx, tx.(sdk.MempoolTx))
+		err := mp.Insert(ctx, tx.(mempool.Tx))
 		require.NoError(t, err)
 	}
 }

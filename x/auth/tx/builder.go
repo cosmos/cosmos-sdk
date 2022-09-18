@@ -2,6 +2,7 @@ package tx
 
 import (
 	"crypto/sha256"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 
 	"github.com/cosmos/gogoproto/proto"
 
@@ -45,8 +46,8 @@ var (
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
 	_ tx.TipTx                   = &wrapper{}
-	_ sdk.MempoolTx              = &wrapper{}
-	_ sdk.HashableTx             = &wrapper{}
+	_ mempool.Tx                 = &wrapper{}
+	_ mempool.HashableTx         = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.

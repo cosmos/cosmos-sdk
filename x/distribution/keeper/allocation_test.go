@@ -21,12 +21,14 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrs := simapp.AddTestAddrs(app, ctx, 3, sdk.NewInt(1234))
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(sdk.ValAddress(addrs[0]), valConsPk1, sdk.NewInt(100), true)
+	tstaking.CreateValidator(sdk.ValAddress(addrs[0]), valConsPk1, sdk.NewInt(100), sdk.AccAddress(valConsPk1.Address()), *randomEthAddress, true)
 	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
 
 	// allocate tokens
@@ -53,16 +55,20 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	app.DistrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1234))
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), sdk.AccAddress(valConsPk1.Address()), *randomEthAddress, true)
 
 	// create second validator with 0% commission
+	randomEthAddress2, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[1], valConsPk2, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[1], valConsPk2, sdk.NewInt(100), sdk.AccAddress(valConsPk2.Address()), *randomEthAddress2, true)
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),
@@ -131,16 +137,22 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create validator with 10% commission
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(110), true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(110), sdk.AccAddress(valConsPk1.Address()), *randomEthAddress, true)
 
 	// create second validator with 10% commission
+	randomEthAddress2, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[1], valConsPk2, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[1], valConsPk2, sdk.NewInt(100), sdk.AccAddress(valConsPk2.Address()), *randomEthAddress2, true)
 
 	// create third validator with 10% commission
+	randomEthAddress3, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[2], valConsPk3, sdk.NewInt(100), true)
+	tstaking.CreateValidator(valAddrs[2], valConsPk3, sdk.NewInt(100), sdk.AccAddress(valConsPk3.Address()), *randomEthAddress3, true)
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),

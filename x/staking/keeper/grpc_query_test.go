@@ -798,8 +798,13 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 		app.GetSubspace(types.ModuleName),
 	)
 
-	val1 := teststaking.NewValidator(t, valAddrs[0], pks[0])
-	val2 := teststaking.NewValidator(t, valAddrs[1], pks[1])
+	randomEthAddress1, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
+	val1 := teststaking.NewValidator(t, valAddrs[0], pks[0], sdk.AccAddress(PKs[0].Address()), *randomEthAddress1)
+
+	randomEthAddress2, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
+	val2 := teststaking.NewValidator(t, valAddrs[1], pks[1], sdk.AccAddress(PKs[1].Address()), *randomEthAddress2)
 	vals := []types.Validator{val1, val2}
 
 	app.StakingKeeper.SetValidator(ctx, val1)
@@ -809,7 +814,7 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val1)
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val2)
 
-	_, err := app.StakingKeeper.Delegate(ctx, addrs[0], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[0]), types.Unbonded, val1, true)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[0], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[0]), types.Unbonded, val1, true)
 	require.NoError(t, err)
 	_, err = app.StakingKeeper.Delegate(ctx, addrs[1], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[1]), types.Unbonded, val2, true)
 	require.NoError(t, err)

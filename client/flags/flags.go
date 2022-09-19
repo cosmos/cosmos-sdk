@@ -15,7 +15,7 @@ const (
 	// failures due to state changes that might occur between the tx simulation
 	// and the actual run.
 	DefaultGasAdjustment = 1.0
-	DefaultGasLimit      = 200000
+	DefaultGasLimit      = 210000
 	GasFlagAuto          = "auto"
 
 	// DefaultKeyringBackend
@@ -83,6 +83,10 @@ const (
 	// Tendermint logging flags
 	FlagLogLevel  = "log_level"
 	FlagLogFormat = "log_format"
+
+	// QGB related flags
+	FlagOrchestratorAddress = "orchestrator-address"
+	FlagEthereumAddress     = "ethereum-address"
 )
 
 // LineBreak can be included in a command list to provide a blank line

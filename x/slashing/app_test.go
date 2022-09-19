@@ -2,6 +2,7 @@ package slashing_test
 
 import (
 	"errors"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -63,8 +64,11 @@ func TestSlashingMsgs(t *testing.T) {
 	description := stakingtypes.NewDescription("foo_moniker", "", "", "", "")
 	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	createValidatorMsg, err := stakingtypes.NewMsgCreateValidator(
 		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commission, sdk.OneInt(),
+		sdk.AccAddress(valKey.PubKey().Address()), *randomEthAddress,
 	)
 	require.NoError(t, err)
 

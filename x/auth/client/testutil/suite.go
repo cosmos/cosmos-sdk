@@ -644,6 +644,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 		name        string
 		args        []string
 		expectEmpty bool
+		expectError string
 	}{
 		{
 			"fee event happy case",
@@ -653,6 +654,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
+			"",
 		},
 		{
 			"no matching fee event",
@@ -662,6 +664,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true,
+			"",
 		},
 	}
 

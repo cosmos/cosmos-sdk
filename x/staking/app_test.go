@@ -1,6 +1,9 @@
 package staking_test
 
 import (
+	"crypto/ecdsa"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,7 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func checkValidator(t *testing.T, app *simapp.SimApp, addr sdk.ValAddress, expFound bool) types.Validator {
@@ -62,10 +64,15 @@ func TestStakingMsgs(t *testing.T) {
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin})
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin})
 
+	ethPrivateKey, err := crypto.GenerateKey()
+	require.NoError(t, err)
+	orchEthPublicKey := ethPrivateKey.Public().(*ecdsa.PublicKey)
+	evmAddr := crypto.PubkeyToAddress(*orchEthPublicKey)
+
 	// create validator
 	description := types.NewDescription("foo_moniker", "", "", "", "")
 	createValidatorMsg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(),
+		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(), sdk.AccAddress(valKey.PubKey().Address()), evmAddr,
 	)
 	require.NoError(t, err)
 
@@ -88,7 +95,7 @@ func TestStakingMsgs(t *testing.T) {
 
 	// edit the validator
 	description = types.NewDescription("bar_moniker", "", "", "", "")
-	editValidatorMsg := types.NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil)
+	editValidatorMsg := types.NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil, nil, nil)
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{editValidatorMsg}, "", []uint64{0}, []uint64{1}, true, true, priv1)

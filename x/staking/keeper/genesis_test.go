@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -169,14 +170,16 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	delegations := []types.Delegation{}
 	validators := make([]types.Validator, size)
 
-	var err error
-
 	bondedPoolAmt := sdk.ZeroInt()
 	for i := range validators {
+		randomEthAddress, err := teststaking.RandomEthAddress()
+		require.NoError(t, err)
 		validators[i], err = types.NewValidator(
 			sdk.ValAddress(addrs[i]),
 			PKs[i],
 			types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""),
+			sdk.AccAddress(PKs[i].Address()),
+			*randomEthAddress,
 		)
 		require.NoError(t, err)
 		validators[i].Status = types.Bonded

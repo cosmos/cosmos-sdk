@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"math/rand"
 	"sort"
 	"testing"
@@ -21,10 +22,16 @@ var header = tmproto.Header{
 }
 
 func createValidators(t *testing.T) []types.Validator {
+	randomEthAddress1, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
+	randomEthAddress2, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
+	randomEthAddress3, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
 	return []types.Validator{
-		newValidator(t, valAddr1, pk1),
-		newValidator(t, valAddr2, pk2),
-		newValidator(t, valAddr3, pk3),
+		newValidator(t, valAddr1, pk1, sdk.AccAddress(pk1.Address()), *randomEthAddress1),
+		newValidator(t, valAddr2, pk2, sdk.AccAddress(pk2.Address()), *randomEthAddress2),
+		newValidator(t, valAddr3, pk3, sdk.AccAddress(pk3.Address()), *randomEthAddress3),
 	}
 }
 

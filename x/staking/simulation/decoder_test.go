@@ -2,6 +2,7 @@ package simulation_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"testing"
 	"time"
 
@@ -36,7 +37,9 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 	bondTime := time.Now().UTC()
 
-	val, err := types.NewValidator(valAddr1, delPk1, types.NewDescription("test", "test", "test", "test", "test"))
+	randomEthAddress, err := teststaking.RandomEthAddress()
+	require.NoError(t, err)
+	val, err := types.NewValidator(valAddr1, delPk1, types.NewDescription("test", "test", "test", "test", "test"), sdk.AccAddress(delPk1.Address()), *randomEthAddress)
 	require.NoError(t, err)
 	del := types.NewDelegation(delAddr1, valAddr1, sdk.OneDec())
 	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, sdk.OneInt())

@@ -66,6 +66,34 @@ developers interact with that are defined in the Cosmos SDK.
 
 ### `IAVL`
 
+The IAVL store provides the core implementation for state storage and commitment
+by implementing the following interfaces:
+
+* `KVStore`
+* `CommitStore`
+* `CommitKVStore`
+* `Queryable`
+* `StoreWithInitialVersion`
+
+It allows for all CRUD operations to be performed along with allowing current
+and historical state queries, prefix iteration, and state commitment along with
+Merkle proof operations.
+
+An overview of the IAVL implementation can be found [here](https://github.com/cosmos/iavl/blob/master/docs/overview.md). It is important to note that the IAVL store
+provides both state commitment and logical storage operations, which comes with
+drawbacks as there are various performance impacts, some of which are very drastic,
+when it comes to the operations mentioned above.
+
+When dealing with state management in modules and clients, the Cosmos SDK provides
+various layers of abstractions or "store wrapping", where the IAVL store is the
+bottom most layer. When requesting a store to perform reads or writes in a module,
+the typical abstraction layer in order is defined as follows:
+
+* `IAVL`
+* `CacheKVStore`
+* `GasKVStore`
+* `RootMultiStore`
+
 ### `GasKVStore`
 
 ### `CacheKVStore`

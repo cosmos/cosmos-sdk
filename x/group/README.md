@@ -2073,8 +2073,8 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../../
   "authors": "",
   "summary": "",
   "details": "",
-  "proposalForumURL": "",
-  "voteOptionContext": "",
+  "proposal_forum_url": "",
+  "vote_option_context": "",
 }
 ```
 
@@ -2096,8 +2096,8 @@ Location: off-chain as json object stored on IPFS
 {
   "name": "",
   "description": "",
-  "groupWebsiteURL": "",
-  "groupForumURL": "",
+  "group_website_url": "",
+  "group_forum_url": "",
 }
 ```
 

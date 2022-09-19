@@ -22,10 +22,10 @@ message MsgSend {
   string id = 2;
 
   // sender is the address of the owner of nft
-  string sender = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string sender = 3;
 
   // receiver is the receiver address of nft
-  string receiver = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string receiver = 4;
 }
 // MsgSendResponse defines the Msg/Send response type.
 message MsgSendResponse {}

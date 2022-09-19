@@ -43,6 +43,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+## [v0.46.1-pio-1-rc1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-1-rc1) - 2022-09-19
+
+This is the same code as v0.46.0-pio-1-rc5, which was erroneously named.
+
+---
+
 ## [v0.46.0-pio-1-rc5](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc5) - 2022-08-25
 
 ### Improvements

@@ -1,4 +1,4 @@
-package testutil
+package nft
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/nft"

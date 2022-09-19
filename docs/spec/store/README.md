@@ -89,10 +89,11 @@ various layers of abstractions or "store wrapping", where the `iavl.Store` is th
 bottom most layer. When requesting a store to perform reads or writes in a module,
 the typical abstraction layer in order is defined as follows:
 
-* `IAVL`
-* `CacheKVStore`
-* `GasKVStore`
-* `RootMultiStore`
+* `iavl.Store`
+* `cachekv.Store`
+* `gaskv.Store`
+* `cachemulti.Store`
+* `rootmulti.Store`
 
 ### `GasKVStore`
 

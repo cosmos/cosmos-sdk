@@ -128,7 +128,7 @@ func TestStatefulMempool_Select_Prioty_Nonce(t *testing.T) {
 }
 
 func TestStatefulMempool_Select_Prioty_Nonce2(t *testing.T) {
-	//maxBytes := 100
+	maxBytes := 100
 	mPool := mempool2.NewMemPoolI()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	transactions, priorities := GetNocePriotyTxPath(ctx)
@@ -137,13 +137,13 @@ func TestStatefulMempool_Select_Prioty_Nonce2(t *testing.T) {
 		mempoolTX := tx.(mempool2.MempoolTx)
 		mPool.Insert(newCtx, mempoolTX)
 	}
-	//selectedTx, err := mPool.Select(ctx, nil, maxBytes)
-	//require.NoError(t, err)
-	//actualBytes := 0
-	//for _, selectedTx := range selectedTx {
-	//	actualBytes += selectedTx.Size()
-	//}
-	//require.LessOrEqual(t, actualBytes, maxBytes)
+	selectedTx, err := mPool.Select(ctx, nil, maxBytes)
+	require.NoError(t, err)
+	actualBytes := 0
+	for _, selectedTx := range selectedTx {
+		actualBytes += selectedTx.Size()
+	}
+	require.LessOrEqual(t, actualBytes, maxBytes)
 
 }
 

@@ -567,7 +567,8 @@ type MemPoolI struct {
 
 type AccountMemPool struct {
 	transactions *huandu.SkipList
-	currentKey   accountsHeadsKey
+	currentKey   statefullPriorityKey
+	currentItem  *huandu.Element
 }
 
 func priorityHuanduLess(a, b interface{}) int {
@@ -645,10 +646,11 @@ func (amp *MemPoolI) Insert(ctx types.Context, tx MempoolTx) error {
 	accountMeempool.transactions.Set(key, tx)
 	accKey := accountsHeadsKey{sender: sender, priority: ctx.Priority(), hash: hashTx.GetHash()}
 
-	//newAccuntMempool := accountMeempool
+	newTopTx := accountMeempool.transactions.Front()
+	accountMeempool.currentItem = newTopTx
 	amp.accountsHeads.Remove(accountMeempool.currentKey)
-	accountMeempool.currentKey = accKey
-	amp.accountsHeads.Set(accKey, accountMeempool)
+	accountMeempool.currentKey =
+		amp.accountsHeads.Set(accKey, accountMeempool)
 	amp.senders[sender] = accountMeempool
 	return nil
 
@@ -660,15 +662,21 @@ func (amp *MemPoolI) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Mempoo
 
 	currentAccount := amp.accountsHeads.Front()
 	for currentAccount != nil {
-		accountMemPool := currentAccount.Value().(AccountMemPool)
-		currentTx := accountMemPool.transactions.Front()
-		tx := currentTx.Value().(MempoolTx)
+		accountMemPool := currentAccount.Value.(*AccountMemPool)
+		//currentTx := accountMemPool.transactions.Front()
+		currentTx := accountMemPool.currentItem
+		tx := currentTx.Value.(MempoolTx)
 		selectedTxs = append(selectedTxs, tx)
+		if txBytes += tx.Size(); txBytes >= maxBytes {
+			return selectedTxs, nil
+		}
 		newCurrentTx := currentTx.Next()
-		newKey := newCurrentTx.Key().(statefullPriorityKey)
-		accountMemPool.transactions.Remove(currentTx.Key())
-		newAccKey := accountsHeadsKey{sender: newKey.sender, priority: newKey.priority, hash: newKey.hash}
-		accountMemPool.currentKey = newCurrentTx.Key().(accountsHeadsKey)
-
+		accountMemPool.currentItem = newCurrentTx
+		accountMemPool.currentKey = newCurrentTx.Key().(statefullPriorityKey)
+		//accountMemPool.transactions.Remove(currentTx.Key())
+		amp.accountsHeads.Remove(currentAccount.Key())
+		amp.accountsHeads.Set(accountMemPool.currentKey, accountMemPool)
+		currentAccount = amp.accountsHeads.Front()
 	}
+	return selectedTxs, nil
 }

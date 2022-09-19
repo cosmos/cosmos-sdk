@@ -66,7 +66,7 @@ developers interact with that are defined in the Cosmos SDK.
 
 ### `IAVL`
 
-The IAVL store provides the core implementation for state storage and commitment
+The `iavl.Store` provides the core implementation for state storage and commitment
 by implementing the following interfaces:
 
 * `KVStore`
@@ -77,7 +77,7 @@ by implementing the following interfaces:
 
 It allows for all CRUD operations to be performed along with allowing current
 and historical state queries, prefix iteration, and state commitment along with
-Merkle proof operations.
+Merkle proof operations. The `iavl.Store` also provides the ability to remove historical state from the state commitment layer.
 
 An overview of the IAVL implementation can be found [here](https://github.com/cosmos/iavl/blob/master/docs/overview.md). It is important to note that the IAVL store
 provides both state commitment and logical storage operations, which comes with
@@ -85,7 +85,7 @@ drawbacks as there are various performance impacts, some of which are very drast
 when it comes to the operations mentioned above.
 
 When dealing with state management in modules and clients, the Cosmos SDK provides
-various layers of abstractions or "store wrapping", where the IAVL store is the
+various layers of abstractions or "store wrapping", where the `iavl.Store` is the
 bottom most layer. When requesting a store to perform reads or writes in a module,
 the typical abstraction layer in order is defined as follows:
 
@@ -95,6 +95,12 @@ the typical abstraction layer in order is defined as follows:
 * `RootMultiStore`
 
 ### `GasKVStore`
+
+The `gaskv.Store` store provides a simple implementation of a `KVStore`.
+Specifically, it just wraps an existing `KVStore`, such as a cache-wrapped
+`iavl.Store`, and incurs configurable gas costs for CRUD operations via
+`ConsumeGas()` calls defined on the `GasMeter` which exists in a `sdk.Context`.
+Note, the `GasMeter` is reset on each block.
 
 ### `CacheKVStore`
 

@@ -42,10 +42,9 @@ until `Commit()` is called on the `CommitMultiStore`.
 
 ### `CommitMultiStore`
 
-The `CommitMultiStore` interface abstracts the concept of multiple `KVStores` which
-are used by multiple modules and exposes the the top-level interface that is used
-to manage state commitment and storage by an SDK application. Specifically, it
-supports the following:
+The `CommitMultiStore` interface exposes the the top-level interface that is used
+to manage state commitment and storage by an SDK application and abstracts the concept of multiple `KVStore`s which are used by multiple modules. Specifically,
+it supports the following high-level primitives:
 
 * Allows for a caller to retrieve a `KVStore` by providing a `KVStoreKey`.
 * Exposes pruning mechanisms to remove state pinned against a specific height/version
@@ -56,3 +55,7 @@ supports the following:
 * Provides the ability to to load state storage at a particular height/version
   while also performing store upgrades, which are used during live hard-fork
   application state migrations.
+* Provides the ability to commit all current accumulated state to disk and performs
+  merkle commitment.
+
+## Implementation Details

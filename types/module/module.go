@@ -32,7 +32,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -696,7 +695,7 @@ func fileWrite(modulePath, moduleName string, bz []byte) error {
 // FileRead reads the module's genesus state given the file path and the module name, returns json encoded
 // data
 func FileRead(modulePath string, moduleName string) ([]byte, error) {
-	files, err := ioutil.ReadDir(modulePath)
+	files, err := os.ReadDir(modulePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read folder from %s: %w", modulePath, err)
 	}

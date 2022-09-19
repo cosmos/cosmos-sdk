@@ -59,3 +59,15 @@ it supports the following high-level primitives:
   merkle commitment.
 
 ## Implementation Details
+
+While there are many interfaces that the `store` package provides, there is
+typically a core implementation for each main interface that modules and
+developers interact with that are defined in the Cosmos SDK.
+
+### `IAVL`
+
+### `GasKVStore`
+
+### `CacheKVStore`
+
+### `RootMultiStore`

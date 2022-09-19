@@ -32,6 +32,8 @@ func (n node) String() string {
 }
 
 func (g *graph) AddEdge(from node, to node) {
+	// TODO transition in* to a count? only used in finding the start node
+	// or some other method for finding the top most node
 	if from.sender == to.sender {
 		from.outNonce[to.key()] = true
 		to.inNonce[from.key()] = true

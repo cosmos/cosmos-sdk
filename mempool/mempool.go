@@ -559,32 +559,6 @@ func (smp statefulMempool) Remove(context types.Context, tx MempoolTx) error {
 }
 
 ////////////////////
-
-type MemPoolI struct {
-	accountsHeads *huandu.SkipList
-	senders       map[string]*AccountMemPool
-}
-
-type AccountMemPool struct {
-	transactions *huandu.SkipList
-	currentKey   statefullPriorityKey
-	currentItem  *huandu.Element
-}
-
-func priorityHuanduLess(a, b interface{}) int {
-	keyA := a.(statefullPriorityKey)
-	keyB := b.(statefullPriorityKey)
-	if keyA.priority == keyB.priority {
-		return bytes.Compare(keyA.hash[:], keyB.hash[:])
-	} else {
-		if keyA.priority < keyB.priority {
-			return -1
-		} else {
-			return 1
-		}
-	}
-}
-
 func nonceHuanduLess(a, b interface{}) int {
 	keyA := a.(statefullPriorityKey)
 	keyB := b.(statefullPriorityKey)
@@ -610,6 +584,56 @@ type accountsHeadsKey struct {
 	sender   string
 	priority int64
 	hash     [32]byte
+}
+
+type MemPoolI struct {
+	accountsHeads *huandu.SkipList
+	senders       map[string]*AccountMemPool
+}
+
+type AccountMemPool struct {
+	transactions *huandu.SkipList
+	currentKey   accountsHeadsKey
+	currentItem  *huandu.Element
+	sender       string
+}
+
+// Push cannot be executed in the middle of a select
+func (amp *AccountMemPool) Push(ctx types.Context, key statefullPriorityKey, tx MempoolTx) {
+	amp.transactions.Set(key, tx)
+	amp.currentItem = amp.transactions.Back()
+	newKey := amp.currentItem.Key().(statefullPriorityKey)
+	amp.currentKey = accountsHeadsKey{hash: newKey.hash, sender: amp.sender, priority: newKey.priority}
+}
+
+func (amp *AccountMemPool) Pop() *MempoolTx {
+	if amp.currentItem == nil {
+		return nil
+	}
+	itemToPop := amp.currentItem
+	amp.currentItem = itemToPop.Prev()
+	if amp.currentItem != nil {
+		newKey := amp.currentItem.Key().(statefullPriorityKey)
+		amp.currentKey = accountsHeadsKey{hash: newKey.hash, sender: amp.sender, priority: newKey.priority}
+	} else {
+		amp.currentKey = accountsHeadsKey{}
+	}
+	tx := itemToPop.Value.(MempoolTx)
+	return &tx
+}
+
+func priorityHuanduLess(a, b interface{}) int {
+	keyA := a.(statefullPriorityKey)
+	keyB := b.(statefullPriorityKey)
+	if keyA.priority == keyB.priority {
+		return bytes.Compare(keyA.hash[:], keyB.hash[:])
+	} else {
+		if keyA.priority < keyB.priority {
+			return -1
+		} else {
+			return 1
+		}
+	}
 }
 
 func NewMemPoolI() MemPoolI {
@@ -639,18 +663,16 @@ func (amp *MemPoolI) Insert(ctx types.Context, tx MempoolTx) error {
 	if !ok {
 		accountMeempool = &AccountMemPool{
 			transactions: huandu.New(huandu.LessThanFunc(nonceHuanduLess)),
+			sender:       sender,
 		}
 	}
 	key := statefullPriorityKey{hash: hashTx.GetHash(), nonce: nonce, priority: ctx.Priority()}
 
-	accountMeempool.transactions.Set(key, tx)
-	accKey := accountsHeadsKey{sender: sender, priority: ctx.Priority(), hash: hashTx.GetHash()}
+	prevKey := accountMeempool.currentKey
+	accountMeempool.Push(ctx, key, tx)
 
-	newTopTx := accountMeempool.transactions.Front()
-	accountMeempool.currentItem = newTopTx
-	amp.accountsHeads.Remove(accountMeempool.currentKey)
-	accountMeempool.currentKey =
-		amp.accountsHeads.Set(accKey, accountMeempool)
+	amp.accountsHeads.Remove(prevKey)
+	amp.accountsHeads.Set(accountMeempool.currentKey, accountMeempool)
 	amp.senders[sender] = accountMeempool
 	return nil
 
@@ -664,17 +686,18 @@ func (amp *MemPoolI) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Mempoo
 	for currentAccount != nil {
 		accountMemPool := currentAccount.Value.(*AccountMemPool)
 		//currentTx := accountMemPool.transactions.Front()
-		currentTx := accountMemPool.currentItem
-		tx := currentTx.Value.(MempoolTx)
-		selectedTxs = append(selectedTxs, tx)
-		if txBytes += tx.Size(); txBytes >= maxBytes {
+		prevKey := accountMemPool.currentKey
+		tx := accountMemPool.Pop()
+		if tx == nil {
 			return selectedTxs, nil
 		}
-		newCurrentTx := currentTx.Next()
-		accountMemPool.currentItem = newCurrentTx
-		accountMemPool.currentKey = newCurrentTx.Key().(statefullPriorityKey)
-		//accountMemPool.transactions.Remove(currentTx.Key())
-		amp.accountsHeads.Remove(currentAccount.Key())
+		mempoolTx := *tx
+		selectedTxs = append(selectedTxs, mempoolTx)
+		if txBytes += mempoolTx.Size(); txBytes >= maxBytes {
+			return selectedTxs, nil
+		}
+
+		amp.accountsHeads.Remove(prevKey)
 		amp.accountsHeads.Set(accountMemPool.currentKey, accountMemPool)
 		currentAccount = amp.accountsHeads.Front()
 	}

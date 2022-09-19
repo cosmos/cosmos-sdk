@@ -157,10 +157,6 @@ var supportedProposalTypes = []proposalTypes{
 		MsgType: "", // no message for text proposal
 	},
 	{
-		Type:    "community-pool-spend",
-		MsgType: "/cosmos.distribution.v1beta1.MsgCommunityPoolSpend",
-	},
-	{
 		Type:    "software-upgrade",
 		MsgType: "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
 	},

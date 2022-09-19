@@ -3,7 +3,6 @@ package cosmos.nft.v1beta1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
 
-import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 
 // Msg defines the nft Msg service.

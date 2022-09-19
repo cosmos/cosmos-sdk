@@ -163,10 +163,6 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 		return nil, fmt.Errorf("failed to marshal default genesis state: %w", err)
 	}
 
-	if err := sdk.RegisterDenom(sdk.DefaultBondDenom, sdk.NewDecWithPrec(1, 6)); err != nil {
-		return nil, err
-	}
-
 	// init chain will set the validator set and initialize the genesis accounts
 	app.InitChain(
 		abci.RequestInitChain{

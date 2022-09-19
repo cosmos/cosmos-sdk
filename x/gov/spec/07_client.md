@@ -316,6 +316,16 @@ Example:
 simd tx gov deposit 1 10000000stake --from cosmos1..
 ```
 
+#### draft-proposal
+
+The `draft-proposal` command allows users to draft any type of proposal.
+The command returns a `draft_proposal.json`, to be used by `submit-proposal` after being completed.
+The `draft_metadata.json` is meant to be uploaded to [IPFS](./08_metadata.md).
+
+```bash
+simd tx gov draft-proposal
+```
+
 #### submit-proposal
 
 The `submit-proposal` command allows users to submit a governance proposal and to optionally include an initial deposit.

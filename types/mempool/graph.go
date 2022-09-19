@@ -55,6 +55,8 @@ func (g *graph) AddNode(n node) {
 		g.nodes[n.key()] = n
 	}
 	pnode := g.priorities.Set(n.priority, n.key())
+	// find sender subgraph nonce order
+	// find priority order
 	if pnode.Prev() != nil {
 
 	}

@@ -8,15 +8,7 @@ func initGraph() *graph {
 	return NewGraph()
 }
 
-func TestPoolCase(t *testing.T) {
-	ns := []*node{
-		{priority: 21, nonce: 4, sender: "a"}, // tx0
-		{priority: 8, nonce: 3, sender: "a"},  // tx1
-		{priority: 6, nonce: 2, sender: "a"},  // tx2
-		{priority: 15, nonce: 1, sender: "b"}, // tx3
-		{priority: 20, nonce: 1, sender: "a"}, // tx4
-		//{priority: 7, nonce: 2, sender: "b"},  // tx5
-	}
+func initNodes(ns []*node) []node {
 	var nodes []node
 	// TODO what this API look like?
 	for _, n := range ns {
@@ -27,24 +19,41 @@ func TestPoolCase(t *testing.T) {
 		nodes = append(nodes, *n)
 	}
 
+	return nodes
+}
+
+func TestPoolCase(t *testing.T) {
+	ns := []*node{
+		{priority: 21, nonce: 4, sender: "a"}, // tx0
+		{priority: 6, nonce: 3, sender: "a"},  // tx1
+		{priority: 8, nonce: 2, sender: "a"},  // tx2
+		{priority: 15, nonce: 1, sender: "b"}, // tx3
+		{priority: 20, nonce: 1, sender: "a"}, // tx4
+		{priority: 7, nonce: 2, sender: "b"},  // tx5
+	}
+
+	nodes := initNodes(ns)
 	tests := []struct {
 		name     string
-		start    string
+		limit    int
 		edges    [][]int
 		expected []int
 	}{
-		{"case 1",
-			"5",
+		{"case 1", 5,
 			[][]int{{4, 2}, {4, 3}, {3, 2}, {2, 1}, {1, 0}},
 			[]int{4, 3, 2, 1, 0},
+		}, {
+			"case 2", 6,
+			[][]int{{4, 2}, {4, 3}, {3, 2}, {2, 1}, {1, 0}, {4, 5}, {2, 5}, {5, 1}},
+			[]int{4, 3, 2, 5, 1, 0},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			graph := initGraph()
-			for _, n := range nodes {
-				graph.AddNode(n)
+			for i := 0; i < tt.limit; i++ {
+				graph.AddNode(nodes[i])
 			}
 			for _, e := range tt.edges {
 				graph.AddEdge(nodes[e[0]], nodes[e[1]])

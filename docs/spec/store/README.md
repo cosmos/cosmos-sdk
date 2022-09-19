@@ -35,8 +35,24 @@ get access to via the `sdk.Context` and the use of a pointer-based named key --
 maps to a `KVStore` will be illustrated below through the `CommitMultiStore`.
 
 Note, a `KVStore` cannot directly commit state. Instead, a `KVStore` can be wrapped
-by a `CacheKVStore` which extends a `KVStore` and provides the ability for the caller
-to execute `Write()` which commits state to the underlying state storage. Note,
-this doesn't actually flush writes to disk.
+by a `CacheKVStore` which extends a `KVStore` and provides the ability for the
+caller to execute `Write()` which commits state to the underlying state storage.
+Note, this doesn't actually flush writes to disk as writes are held in memory
+until `Commit()` is called on the `CommitMultiStore`.
 
 ### `CommitMultiStore`
+
+The `CommitMultiStore` interface abstracts the concept of multiple `KVStores` which
+are used by multiple modules and exposes the the top-level interface that is used
+to manage state commitment and storage by an SDK application. Specifically, it
+supports the following:
+
+* Allows for a caller to retrieve a `KVStore` by providing a `KVStoreKey`.
+* Exposes pruning mechanisms to remove state pinned against a specific height/version
+  in the past.
+* Allows for loading state storage at a particular height/version in the past to
+  provide current head and historical queries.
+* Provides the ability to rollback state to a previous height/version.
+* Provides the ability to to load state storage at a particular height/version
+  while also performing store upgrades, which are used during live hard-fork
+  application state migrations.

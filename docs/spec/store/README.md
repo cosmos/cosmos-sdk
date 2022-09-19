@@ -20,12 +20,9 @@ the implementing store and the ability to cache wrap via the `CacheWrapper` inte
 One of the most important features a store has the ability to perform is the
 ability to cache wrap. Cache wrapping is essentially the underlying store wrapping
 itself within another store type that performs caching for both reads and writes
-with the ability to flush writes via `Write`.
+with the ability to flush writes via `Write()`.
 
-TODO: Write about the CacheKV store
-
-
-### `KVStore`
+### `KVStore` & `CacheKVStore`
 
 One of the most important interfaces that both developers and modules interface
 with, which also provides the basis of most state storage and commitment operations,
@@ -33,6 +30,13 @@ is the `KVStore`. The `KVStore` interface provides basic CRUD abilities and
 prefix-based iteration, including reverse iteration.
 
 Typically, each module has it's own dedicated `KVStore` instance, which it can
-get access to via the `sdk.Context` and the use of a pointer-based named key,
-`KVStoreKey`. The `KVStoreKey` provides pseudo-OCAP. How a `KVStoreKey` maps
-exactly to a `KVStore` will be illustrated below through the `CommitMultiStore`.
+get access to via the `sdk.Context` and the use of a pointer-based named key --
+`KVStoreKey`. The `KVStoreKey` provides pseudo-OCAP. How a exactly a `KVStoreKey`
+maps to a `KVStore` will be illustrated below through the `CommitMultiStore`.
+
+Note, a `KVStore` cannot directly commit state. Instead, a `KVStore` can be wrapped
+by a `CacheKVStore` which extends a `KVStore` and provides the ability for the caller
+to execute `Write()` which commits state to the underlying state storage. Note,
+this doesn't actually flush writes to disk.
+
+### `CommitMultiStore`

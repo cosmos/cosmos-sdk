@@ -1,26 +1,33 @@
+//go:build !race
+// +build !race
+
+// Disabled -race because the package github.com/manifoldco/promptui@v0.9.0
+// has a data race and this code exposes it, but fixing it would require
+// holding up the associated change to this.
+
 package cli_test
 
 import (
-	"sync"
+	"fmt"
+	"math"
+	"os"
 	"testing"
 
 	"github.com/chzyer/readline"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
 type st struct {
-	ToOverflow int
+	I int
 }
-
-// On the tests running in Github actions, somehow there are races.
-var globalMu sync.Mutex
 
 // Tests that we successfully report overflows in parsing ints
 // See https://github.com/cosmos/cosmos-sdk/issues/13346
 func TestPromptIntegerOverflow(t *testing.T) {
-	// Intentionally sending a value out of the range of
+	// Intentionally sending values out of the range of int.
 	intOverflowers := []string{
 		"-9223372036854775809",
 		"9223372036854775808",
@@ -33,11 +40,49 @@ func TestPromptIntegerOverflow(t *testing.T) {
 	for _, intOverflower := range intOverflowers {
 		overflowStr := intOverflower
 		t.Run(overflowStr, func(t *testing.T) {
-			readline.Stdout.Write([]byte(overflowStr + "\n"))
+			origStdin := readline.Stdin
+			defer func() {
+				readline.Stdin = origStdin
+			}()
+
+			fin, fw := readline.NewFillableStdin(os.Stdin)
+			readline.Stdin = fin
+			fw.Write([]byte(overflowStr + "\n"))
 
 			v, err := cli.Prompt(st{}, "")
-			assert.NotNil(t, err, "expected a report of an overflow")
 			assert.Equal(t, st{}, v, "expected a value of zero")
+			require.NotNil(t, err, "expected a report of an overflow")
+			require.Contains(t, err.Error(), "range")
+		})
+	}
+}
+
+func TestPromptParseInteger(t *testing.T) {
+	// Intentionally sending a value out of the range of
+	values := []struct {
+		in   string
+		want int
+	}{
+		{fmt.Sprintf("%d", math.MinInt), math.MinInt},
+		{"19991", 19991},
+		{"991000000199", 991000000199},
+	}
+
+	for _, tc := range values {
+		tc := tc
+		t.Run(tc.in, func(t *testing.T) {
+			origStdin := readline.Stdin
+			defer func() {
+				readline.Stdin = origStdin
+			}()
+
+			fin, fw := readline.NewFillableStdin(os.Stdin)
+			readline.Stdin = fin
+			fw.Write([]byte(tc.in + "\n"))
+
+			v, err := cli.Prompt(st{}, "")
+			assert.Nil(t, err, "expected a nil error")
+			assert.Equal(t, tc.want, v.I, "expected a value of zero")
 		})
 	}
 }

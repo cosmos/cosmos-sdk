@@ -28,7 +28,7 @@ These changes to the staking module have been in development for more than a yea
 
 ## Decision
 
-We implement the semi-fungible liquid staking system and exemption factor system within the cosmos sdk. These tokenizedshares have extremely limited fungibility to only the specific delegation record that was created when shares were tokenized. These assets can be used for OTC trades but composibiltiy with DeFi is limited. The primary expected use case is improving the user experience of liquid staking providers.
+We implement the semi-fungible liquid staking system and exemption factor system within the cosmos sdk. Though registered as fungible assets, these tokenized shares have extremely limited fungibility, only among the specific delegation record that was created when shares were tokenized. These assets can be used for OTC trades but composability with DeFi is limited. The primary expected use case is improving the user experience of liquid staking providers.
 
 A new governance parameter is introduced that defines the ratio of exempt to issued tokenized shares. This is called the exemption factor.
 

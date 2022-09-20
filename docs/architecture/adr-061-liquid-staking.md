@@ -56,7 +56,7 @@ MsgTokenizeSharesResponse provides the number of tokens generated and their deno
 
 ### `MsgRedeemTokensforShares`
 
-The MsgRedeemTokensforShares message is used to redeem the delegation from share tokens. This message can be executed by any user who owns share tokens and after execution the delegation appear for the user.
+The MsgRedeemTokensforShares message is used to redeem the delegation from share tokens. This message can be executed by any user who owns share tokens. After execution delegations will appear to the user.
 
 ### `MsgTransferTokenizeShareRecord`
 

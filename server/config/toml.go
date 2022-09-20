@@ -76,6 +76,10 @@ index-events = {{ .BaseConfig.IndexEvents }}
 # Default cache size is 50mb.
 iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 
+# IavlDisableFastnNode enables or disables the fast node feature of IAVL. 
+# Default is false.
+iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastnNode }}
+
 ###############################################################################
 ###                         Telemetry Configuration                         ###
 ###############################################################################

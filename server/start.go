@@ -62,6 +62,7 @@ const (
 	FlagIndexEvents       = "index-events"
 	FlagMinRetainBlocks   = "min-retain-blocks"
 	FlagIAVLCacheSize     = "iavl-cache-size"
+	FlagIAVLFastNode      = "iavl-disable-fastnode"
 
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"

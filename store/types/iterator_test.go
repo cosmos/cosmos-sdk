@@ -16,7 +16,7 @@ import (
 
 func newMemTestKVStore(t *testing.T) types.KVStore {
 	db := dbm.NewMemDB()
-	store, err := iavl.LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, false, iavl.DefaultIAVLCacheSize)
+	store, err := iavl.LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, false, iavl.DefaultIAVLCacheSize, false)
 	require.NoError(t, err)
 	return store
 }

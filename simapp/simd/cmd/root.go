@@ -107,7 +107,58 @@ func NewRootCmd() *cobra.Command {
 			customAppTemplate, customAppConfig := initAppConfig()
 			customCMTConfig := initCometBFTConfig()
 
-			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
+			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig)
+		},
+	}
+
+	initRootCmd(rootCmd, encodingConfig)
+
+	return rootCmd, encodingConfig
+}
+
+// initAppConfig helps to override default appConfig template and configs.
+// return "", nil if no custom configuration is required for the application.
+func initAppConfig() (string, interface{}) {
+	// The following code snippet is just for reference.
+
+	// WASMConfig defines configuration for the wasm module.
+	type WASMConfig struct {
+		// This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries
+		QueryGasLimit uint64 `mapstructure:"query_gas_limit"`
+
+		// Address defines the gRPC-web server to listen on
+		LruSize uint64 `mapstructure:"lru_size"`
+	}
+
+	type CustomAppConfig struct {
+		serverconfig.Config
+
+		WASM WASMConfig `mapstructure:"wasm"`
+	}
+
+	// Optionally allow the chain developer to overwrite the SDK's default
+	// server config.
+	srvCfg := serverconfig.DefaultConfig()
+	// The SDK's default minimum gas price is set to "" (empty value) inside
+	// app.toml. If left empty by validators, the node will halt on startup.
+	// However, the chain developer can set a default app.toml value for their
+	// validators here.
+	//
+	// In summary:
+	// - if you leave srvCfg.MinGasPrices = "", all validators MUST tweak their
+	//   own app.toml config,
+	// - if you set srvCfg.MinGasPrices non-empty, validators CAN tweak their
+	//   own app.toml to override, or use this default value.
+	//
+	// In simapp, we set the min gas prices to 0.
+	srvCfg.MinGasPrices = "0stake"
+	// srvCfg.BaseConfig.IAVLDisableFastnNode = true // disable fastnode by default
+
+	customAppConfig := CustomAppConfig{
+		Config: *srvCfg,
+		WASM: WASMConfig{
+			LruSize:       1,
+			QueryGasLimit: 300000,
 		},
 	}
 
@@ -252,6 +303,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		baseapp.SetSnapshotInterval(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval))),
 		baseapp.SetSnapshotKeepRecent(cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent))),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
+		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagIAVLFastNode))),
 	)
 }
 

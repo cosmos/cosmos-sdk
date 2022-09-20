@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#12693](https://github.com/cosmos/cosmos-sdk/pull/12693) Make sure the order of each node is consistent when emitting proto events.
 * (simapp) [#13107](https://github.com/cosmos/cosmos-sdk/pull/13107) Call `SetIAVLCacheSize` with the configured value in simapp.
 * (cli) [#12742](https://github.com/cosmos/cosmos-sdk/pull/12742) Add the `prune` CLI cmd to manually prune app store history versions based on the pruning options.
+* [#13321](https://github.com/cosmos/cosmos-sdk/pull/13321) Add flag to disable fast node migration and usage. 
 
 ### Bug Fixes
 

@@ -81,8 +81,12 @@ type BaseConfig struct {
 	// IndexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs CometBFT what to index. If empty, all events will be indexed.
 	IndexEvents []string `mapstructure:"index-events"`
+
 	// IavlCacheSize set the size of the iavl tree cache.
 	IAVLCacheSize uint64 `mapstructure:"iavl-cache-size"`
+
+	// IAVLDisableFastnNode enables or disables the fast sync node.
+	IAVLDisableFastnNode bool `mapstructure:"iavl-disable-fastnode"`
 }
 
 // APIConfig defines the API listener configuration.
@@ -204,15 +208,16 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
-			MinGasPrices:      defaultMinGasPrices,
-			InterBlockCache:   true,
-			Pruning:           storetypes.PruningOptionDefault,
-			PruningKeepRecent: "0",
-			PruningKeepEvery:  "0",
-			PruningInterval:   "0",
-			MinRetainBlocks:   0,
-			IndexEvents:       make([]string, 0),
-			IAVLCacheSize:     781250, // 50 MB
+			MinGasPrices:         defaultMinGasPrices,
+			InterBlockCache:      true,
+			Pruning:              storetypes.PruningOptionDefault,
+			PruningKeepRecent:    "0",
+			PruningKeepEvery:     "0",
+			PruningInterval:      "0",
+			MinRetainBlocks:      0,
+			IndexEvents:          make([]string, 0),
+			IAVLCacheSize:        781250, // 50 MB
+			IAVLDisableFastnNode: false,
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -268,17 +273,17 @@ func GetConfig(v *viper.Viper) (Config, error) {
 
 	return Config{
 		BaseConfig: BaseConfig{
-			MinGasPrices:      v.GetString("minimum-gas-prices"),
-			InterBlockCache:   v.GetBool("inter-block-cache"),
-			Pruning:           v.GetString("pruning"),
-			PruningKeepRecent: v.GetString("pruning-keep-recent"),
-			PruningKeepEvery:  v.GetString("pruning-keep-every"),
-			PruningInterval:   v.GetString("pruning-interval"),
-			HaltHeight:        v.GetUint64("halt-height"),
-			HaltTime:          v.GetUint64("halt-time"),
-			IndexEvents:       v.GetStringSlice("index-events"),
-			MinRetainBlocks:   v.GetUint64("min-retain-blocks"),
-			IAVLCacheSize:     v.GetUint64("iavl-cache-size"),
+			MinGasPrices:         v.GetString("minimum-gas-prices"),
+			InterBlockCache:      v.GetBool("inter-block-cache"),
+			Pruning:              v.GetString("pruning"),
+			PruningKeepRecent:    v.GetString("pruning-keep-recent"),
+			PruningInterval:      v.GetString("pruning-interval"),
+			HaltHeight:           v.GetUint64("halt-height"),
+			HaltTime:             v.GetUint64("halt-time"),
+			IndexEvents:          v.GetStringSlice("index-events"),
+			MinRetainBlocks:      v.GetUint64("min-retain-blocks"),
+			IAVLCacheSize:        v.GetUint64("iavl-cache-size"),
+			IAVLDisableFastnNode: v.GetBool("iavl-disable-fastnode"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             v.GetString("telemetry.service-name"),

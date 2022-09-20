@@ -145,6 +145,10 @@ func (ms multiStore) SetIAVLCacheSize(size int) {
 	panic("not implemented")
 }
 
+func (ms multiStore) SetIAVLDisableFastNode(disable bool) {
+	panic("not implemented")
+}
+
 func (ms multiStore) SetInitialVersion(version int64) error {
 	panic("not implemented")
 }

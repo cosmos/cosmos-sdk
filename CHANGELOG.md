@@ -50,16 +50,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * [#13233](https://github.com/cosmos/cosmos-sdk/pull/13233) Add `--append` to `add-genesis-account` sub-command to append new tokens after an account is already created.
-<<<<<<< HEAD
 * (x/group) [#13214](https://github.com/cosmos/cosmos-sdk/pull/13214) Add `withdraw-proposal` command to group module's CLI transaction commands.
 * (x/auth) [#13048](https://github.com/cosmos/cosmos-sdk/pull/13048) Add handling of AccountNumberStoreKeyPrefix to the simulation decoder.
 * (simapp) [#13108](https://github.com/cosmos/cosmos-sdk/pull/13108) Call `SetIAVLCacheSize` with the configured value in simapp.
 * [#13318](https://github.com/cosmos/cosmos-sdk/pull/13318) Keep the balance query endpoint compatible with legacy blocks
-=======
-* [#13236](https://github.com/cosmos/cosmos-sdk/pull/13236) Integrate Filter Logging
-* [#13301](https://github.com/cosmos/cosmos-sdk/pull/13301) Keep the balance query endpoint compatible with legacy blocks
 * [#13321](https://github.com/cosmos/cosmos-sdk/pull/13321) Add flag to disable fast node migration and usage. 
->>>>>>> 412e2fc86 (feat: configurable fastnode (#13321))
 
 ### Bug Fixes
 

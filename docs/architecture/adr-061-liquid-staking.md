@@ -81,7 +81,7 @@ By setting the exemption factor to zero, this module works like legacy staking. 
 
 ### Positive
 
-This approach should enable integration with liquid staking providers and improved user experience. It provides a pathway to security non-expoential issuance policites in the baseline staking module.
+This approach should enable integration with liquid staking providers and improved user experience. It provides a pathway to security under non-exponential issuance policies in the baseline staking module.
 
 
 ## References

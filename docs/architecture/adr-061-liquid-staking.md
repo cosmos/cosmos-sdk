@@ -49,7 +49,7 @@ They will recieved shares with the denom of `cosmosvaloper1xxxx/5` where 5 is th
 
 MsgTokenizeShares fails if the account is a VestingAccount. Users will have to move vested tokens to a new account and endure the unbonding period. We view this as an acceptable tradeoff vs. the complex book keeping required to track vested tokens.
 
-The total amount of outstanding tokenized shares for the validator is checked against the sum of exempt delegation multiplied by the exemption factor. If the tokenized shares would exceed this limit, the execution fails.
+The total amount of outstanding tokenized shares for the validator is checked against the sum of exempt delegations multiplied by the exemption factor. If the tokenized shares exceeds this limit, execution fails.
 
 MsgTokenizeSharesResponse provides the number of tokens generated and their denom.
 

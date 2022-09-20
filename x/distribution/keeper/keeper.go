@@ -96,6 +96,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 		return nil, err
 	}
 
+<<<<<<< HEAD
 	if rewards.IsZero() {
 		baseDenom, _ := sdk.GetBaseDenom()
 		rewards = sdk.Coins{sdk.Coin{
@@ -112,6 +113,8 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 		),
 	)
 
+=======
+>>>>>>> c1c23a75d (fix: ensure withdraw_rewards events are always emitted on reward withdrawal (#13323))
 	// reinitialize the delegation
 	k.initializeDelegation(ctx, valAddr, delAddr)
 	return rewards, nil

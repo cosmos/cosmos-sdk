@@ -45,7 +45,7 @@ The MsgTokenizeShares message is used to create tokenize delegated tokens. This 
 
 A user may tokenize some or all of their delegation.
 
-They will recieved shares with the denom of `cosmosvaloper1xxxx/5` where 5 is the record id for the validator operator.
+They will receive shares with the denom of `cosmosvaloper1xxxx/5` where 5 is the record id for the validator operator.
 
 MsgTokenizeShares fails if the account is a VestingAccount. Users will have to move vested tokens to a new account and endure the unbonding period. We view this as an acceptable tradeoff vs. the complex book keeping required to track vested tokens.
 

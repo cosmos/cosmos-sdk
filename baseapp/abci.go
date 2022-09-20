@@ -317,19 +317,16 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
-	defer telemetry.MeasureSince(time.Now(), "abci", "deliver_tx")
+	gInfo := sdk.GasInfo{}
+	resultStr := "successful"
 
 	defer func() {
 		for _, streamingListener := range app.abciListeners {
-			goCtx := sdk.WrapSDKContext(app.deliverState.ctx)
-			if err := streamingListener.ListenDeliverTx(goCtx, req, res); err != nil {
-				panic(fmt.Errorf("DeliverTx listening hook failed: %w", err))
+			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
+				app.logger.Error("DeliverTx listening hook failed", "err", err)
 			}
 		}
 	}()
-
-	gInfo := sdk.GasInfo{}
-	resultStr := "successful"
 
 	defer func() {
 		telemetry.IncrCounter(1, "tx", "count")

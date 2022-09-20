@@ -35,10 +35,13 @@ const (
 	commitInfoKeyFmt = "s/%d" // s/<version>
 )
 
+const iavlDisablefastNodeDefault = false
+
 // Store is composed of many CommitStores. Name contrasts with
 // cacheMultiStore which is used for branching other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
+<<<<<<< HEAD
 	db             dbm.DB
 	logger         log.Logger
 	lastCommitInfo *types.CommitInfo
@@ -50,6 +53,20 @@ type Store struct {
 	lazyLoading    bool
 	pruneHeights   []int64
 	initialVersion int64
+=======
+	db                  dbm.DB
+	logger              log.Logger
+	lastCommitInfo      *types.CommitInfo
+	pruningManager      *pruning.Manager
+	iavlCacheSize       int
+	iavlDisableFastNode bool
+	storesParams        map[types.StoreKey]storeParams
+	stores              map[types.StoreKey]types.CommitKVStore
+	keysByName          map[string]types.StoreKey
+	lazyLoading         bool
+	initialVersion      int64
+	removalMap          map[types.StoreKey]bool
+>>>>>>> 412e2fc86 (feat: configurable fastnode (#13321))
 
 	traceWriter       io.Writer
 	traceContext      types.TraceContext
@@ -71,6 +88,7 @@ var (
 // LoadVersion must be called.
 func NewStore(db dbm.DB, logger log.Logger) *Store {
 	return &Store{
+<<<<<<< HEAD
 		db:            db,
 		logger:        logger,
 		pruningOpts:   types.PruneNothing,
@@ -80,6 +98,18 @@ func NewStore(db dbm.DB, logger log.Logger) *Store {
 		keysByName:    make(map[string]types.StoreKey),
 		pruneHeights:  make([]int64, 0),
 		listeners:     make(map[types.StoreKey][]types.WriteListener),
+=======
+		db:                  db,
+		logger:              logger,
+		iavlCacheSize:       iavl.DefaultIAVLCacheSize,
+		iavlDisableFastNode: iavlDisablefastNodeDefault,
+		storesParams:        make(map[types.StoreKey]storeParams),
+		stores:              make(map[types.StoreKey]types.CommitKVStore),
+		keysByName:          make(map[string]types.StoreKey),
+		listeners:           make(map[types.StoreKey][]types.WriteListener),
+		removalMap:          make(map[types.StoreKey]bool),
+		pruningManager:      pruning.NewManager(db, logger),
+>>>>>>> 412e2fc86 (feat: configurable fastnode (#13321))
 	}
 }
 
@@ -97,6 +127,10 @@ func (rs *Store) SetPruning(pruningOpts types.PruningOptions) {
 
 func (rs *Store) SetIAVLCacheSize(cacheSize int) {
 	rs.iavlCacheSize = cacheSize
+}
+
+func (rs *Store) SetIAVLDisableFastNode(disableFastNode bool) {
+	rs.iavlDisableFastNode = disableFastNode
 }
 
 // SetLazyLoading sets if the iavl store should be loaded lazily or not
@@ -844,9 +878,9 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var err error
 
 		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize)
+			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize, rs.iavlDisableFastNode)
 		} else {
-			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
+			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode)
 		}
 
 		if err != nil {

@@ -11,7 +11,12 @@ require (
 	github.com/confio/ics23/go v0.7.0
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/go-bip39 v1.0.0
+<<<<<<< HEAD
 	github.com/cosmos/iavl v0.19.1
+=======
+	github.com/cosmos/gogoproto v1.4.2
+	github.com/cosmos/iavl v0.19.2-0.20220916140702-9b6be3095313
+>>>>>>> 412e2fc86 (feat: configurable fastnode (#13321))
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gogo/gateway v1.1.0
 	github.com/gogo/protobuf v1.3.3

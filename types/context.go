@@ -228,7 +228,7 @@ func (c Context) WithEventManager(em *EventManager) Context {
 	return c
 }
 
-// WithEventManager returns a Context with an updated tx priority
+// WithPriority returns a Context with an updated tx priority
 func (c Context) WithPriority(p int64) Context {
 	c.priority = p
 	return c

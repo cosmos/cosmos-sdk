@@ -15,7 +15,7 @@ import (
 )
 
 // AddGenesisAccount adds a genesis account to the genesis state.
-func AddGenesisAccount(genesisFileUrl string, cdc codec.Codec, accAddr sdk.AccAddress, amountStr string, appendAcct bool, vestingStart, vestingEnd int64, vestingAmtStr string) error {
+func AddGenesisAccount(cdc codec.Codec, genesisFileUrl string, accAddr sdk.AccAddress, amountStr string, appendAcct bool, vestingStart, vestingEnd int64, vestingAmtStr string) error {
 	coins, err := sdk.ParseCoinsNormalized(amountStr)
 	if err != nil {
 		return fmt.Errorf("failed to parse coins: %w", err)

@@ -79,7 +79,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				genesisFileUrl = filepath.Join(config.RootDir, config.Genesis)
 			}
 
-			return auth.AddGenesisAccount(genesisFileUrl, clientCtx.Codec, addr, args[1], appendflag, vestingStart, vestingEnd, vestingAmtStr)
+			return auth.AddGenesisAccount(clientCtx.Codec, genesisFileUrl, addr, args[1], appendflag, vestingStart, vestingEnd, vestingAmtStr)
 		},
 	}
 

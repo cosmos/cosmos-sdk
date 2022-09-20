@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -33,6 +34,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 `,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var genesisFileUrl string
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -71,8 +73,13 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			vestingEnd, _ := cmd.Flags().GetInt64(flagVestingEnd)
 			vestingAmtStr, _ := cmd.Flags().GetString(flagVestingAmt)
 
-			err = auth.AddGenesisAccount(config, clientCtx, addr, args[1], appendflag, vestingStart, vestingEnd, vestingAmtStr)
-			return err
+			if filepath.IsAbs(config.Genesis) {
+				genesisFileUrl = config.Genesis
+			} else {
+				genesisFileUrl = filepath.Join(config.RootDir, config.Genesis)
+			}
+
+			return auth.AddGenesisAccount(genesisFileUrl, clientCtx.Codec, addr, args[1], appendflag, vestingStart, vestingEnd, vestingAmtStr)
 		},
 	}
 

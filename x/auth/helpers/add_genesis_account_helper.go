@@ -5,9 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	tmcfg "github.com/tendermint/tendermint/config"
-
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -17,7 +15,7 @@ import (
 )
 
 // AddGenesisAccount adds a genesis account to the genesis state.
-func AddGenesisAccount(config *tmcfg.Config, clientCtx client.Context, accAddr sdk.AccAddress, amountStr string, appendAcct bool, vestingStart, vestingEnd int64, vestingAmtStr string) error {
+func AddGenesisAccount(genesisFileUrl string, cdc codec.Codec, accAddr sdk.AccAddress, amountStr string, appendAcct bool, vestingStart, vestingEnd int64, vestingAmtStr string) error {
 	coins, err := sdk.ParseCoinsNormalized(amountStr)
 	if err != nil {
 		return fmt.Errorf("failed to parse coins: %w", err)
@@ -60,26 +58,25 @@ func AddGenesisAccount(config *tmcfg.Config, clientCtx client.Context, accAddr s
 		return fmt.Errorf("failed to validate new genesis account: %w", err)
 	}
 
-	genFile := config.GenesisFile()
-	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
+	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genesisFileUrl)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 	}
 
-	authGenState := authtypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
+	authGenState := authtypes.GetGenesisStateFromAppState(cdc, appState)
 
 	accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
 	if err != nil {
 		return fmt.Errorf("failed to get accounts from any: %w", err)
 	}
 
-	bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
+	bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
 	if accs.Contains(accAddr) {
 		if !appendAcct {
 			return fmt.Errorf(" Account %s already exists\nUse `append` flag to append account at existing address", accAddr)
 		}
 
-		genesisB := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
+		genesisB := banktypes.GetGenesisStateFromAppState(cdc, appState)
 		for idx, acc := range genesisB.Balances {
 			if acc.Address != accAddr.String() {
 				continue
@@ -100,7 +97,7 @@ func AddGenesisAccount(config *tmcfg.Config, clientCtx client.Context, accAddr s
 		}
 		authGenState.Accounts = genAccs
 
-		authGenStateBz, err := clientCtx.Codec.MarshalJSON(&authGenState)
+		authGenStateBz, err := cdc.MarshalJSON(&authGenState)
 		if err != nil {
 			return fmt.Errorf("failed to marshal auth genesis state: %w", err)
 		}
@@ -113,7 +110,7 @@ func AddGenesisAccount(config *tmcfg.Config, clientCtx client.Context, accAddr s
 
 	bankGenState.Supply = bankGenState.Supply.Add(balances.Coins...)
 
-	bankGenStateBz, err := clientCtx.Codec.MarshalJSON(bankGenState)
+	bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
 	if err != nil {
 		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
 	}
@@ -125,5 +122,5 @@ func AddGenesisAccount(config *tmcfg.Config, clientCtx client.Context, accAddr s
 	}
 
 	genDoc.AppState = appStateJSON
-	return genutil.ExportGenesisFile(genDoc, genFile)
+	return genutil.ExportGenesisFile(genDoc, genesisFileUrl)
 }

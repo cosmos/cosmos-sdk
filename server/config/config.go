@@ -72,16 +72,9 @@ type BaseConfig struct {
 
 	// IavlCacheSize set the size of the iavl tree cache.
 	IAVLCacheSize uint64 `mapstructure:"iavl-cache-size"`
-<<<<<<< HEAD
-=======
 
 	// IAVLDisableFastnNode enables or disables the fast sync node.
 	IAVLDisableFastnNode bool `mapstructure:"iavl-disable-fastnode"`
-
-	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
-	// An empty string indicates that the Tendermint config's DBBackend value should be used.
-	AppDBBackend string `mapstructure:"app-db-backend"`
->>>>>>> 412e2fc86 (feat: configurable fastnode (#13321))
 }
 
 // APIConfig defines the API listener configuration.
@@ -214,28 +207,16 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
-<<<<<<< HEAD
-			MinGasPrices:      defaultMinGasPrices,
-			InterBlockCache:   true,
-			Pruning:           storetypes.PruningOptionDefault,
-			PruningKeepRecent: "0",
-			PruningKeepEvery:  "0",
-			PruningInterval:   "0",
-			MinRetainBlocks:   0,
-			IndexEvents:       make([]string, 0),
-			IAVLCacheSize:     781250, // 50 MB
-=======
 			MinGasPrices:         defaultMinGasPrices,
 			InterBlockCache:      true,
-			Pruning:              pruningtypes.PruningOptionDefault,
+			Pruning:              storetypes.PruningOptionDefault,
 			PruningKeepRecent:    "0",
+			PruningKeepEvery:     "0",
 			PruningInterval:      "0",
 			MinRetainBlocks:      0,
 			IndexEvents:          make([]string, 0),
 			IAVLCacheSize:        781250, // 50 MB
 			IAVLDisableFastnNode: false,
-			AppDBBackend:         "",
->>>>>>> 412e2fc86 (feat: configurable fastnode (#13321))
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -292,19 +273,6 @@ func GetConfig(v *viper.Viper) (Config, error) {
 
 	return Config{
 		BaseConfig: BaseConfig{
-<<<<<<< HEAD
-			MinGasPrices:      v.GetString("minimum-gas-prices"),
-			InterBlockCache:   v.GetBool("inter-block-cache"),
-			Pruning:           v.GetString("pruning"),
-			PruningKeepRecent: v.GetString("pruning-keep-recent"),
-			PruningKeepEvery:  v.GetString("pruning-keep-every"),
-			PruningInterval:   v.GetString("pruning-interval"),
-			HaltHeight:        v.GetUint64("halt-height"),
-			HaltTime:          v.GetUint64("halt-time"),
-			IndexEvents:       v.GetStringSlice("index-events"),
-			MinRetainBlocks:   v.GetUint64("min-retain-blocks"),
-			IAVLCacheSize:     v.GetUint64("iavl-cache-size"),
-=======
 			MinGasPrices:         v.GetString("minimum-gas-prices"),
 			InterBlockCache:      v.GetBool("inter-block-cache"),
 			Pruning:              v.GetString("pruning"),
@@ -316,8 +284,6 @@ func GetConfig(v *viper.Viper) (Config, error) {
 			MinRetainBlocks:      v.GetUint64("min-retain-blocks"),
 			IAVLCacheSize:        v.GetUint64("iavl-cache-size"),
 			IAVLDisableFastnNode: v.GetBool("iavl-disable-fastnode"),
-			AppDBBackend:         v.GetString("app-db-backend"),
->>>>>>> 412e2fc86 (feat: configurable fastnode (#13321))
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             v.GetString("telemetry.service-name"),

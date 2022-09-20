@@ -41,32 +41,18 @@ const iavlDisablefastNodeDefault = false
 // cacheMultiStore which is used for branching other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
-<<<<<<< HEAD
-	db             dbm.DB
-	logger         log.Logger
-	lastCommitInfo *types.CommitInfo
-	pruningOpts    types.PruningOptions
-	iavlCacheSize  int
-	storesParams   map[types.StoreKey]storeParams
-	stores         map[types.StoreKey]types.CommitKVStore
-	keysByName     map[string]types.StoreKey
-	lazyLoading    bool
-	pruneHeights   []int64
-	initialVersion int64
-=======
 	db                  dbm.DB
 	logger              log.Logger
 	lastCommitInfo      *types.CommitInfo
-	pruningManager      *pruning.Manager
+	pruningOpts         types.PruningOptions
 	iavlCacheSize       int
 	iavlDisableFastNode bool
 	storesParams        map[types.StoreKey]storeParams
 	stores              map[types.StoreKey]types.CommitKVStore
 	keysByName          map[string]types.StoreKey
 	lazyLoading         bool
+	pruneHeights        []int64
 	initialVersion      int64
-	removalMap          map[types.StoreKey]bool
->>>>>>> 412e2fc86 (feat: configurable fastnode (#13321))
 
 	traceWriter       io.Writer
 	traceContext      types.TraceContext
@@ -88,28 +74,16 @@ var (
 // LoadVersion must be called.
 func NewStore(db dbm.DB, logger log.Logger) *Store {
 	return &Store{
-<<<<<<< HEAD
-		db:            db,
-		logger:        logger,
-		pruningOpts:   types.PruneNothing,
-		iavlCacheSize: iavl.DefaultIAVLCacheSize,
-		storesParams:  make(map[types.StoreKey]storeParams),
-		stores:        make(map[types.StoreKey]types.CommitKVStore),
-		keysByName:    make(map[string]types.StoreKey),
-		pruneHeights:  make([]int64, 0),
-		listeners:     make(map[types.StoreKey][]types.WriteListener),
-=======
 		db:                  db,
 		logger:              logger,
+		pruningOpts:         types.PruneNothing,
 		iavlCacheSize:       iavl.DefaultIAVLCacheSize,
 		iavlDisableFastNode: iavlDisablefastNodeDefault,
 		storesParams:        make(map[types.StoreKey]storeParams),
 		stores:              make(map[types.StoreKey]types.CommitKVStore),
 		keysByName:          make(map[string]types.StoreKey),
+		pruneHeights:        make([]int64, 0),
 		listeners:           make(map[types.StoreKey][]types.WriteListener),
-		removalMap:          make(map[types.StoreKey]bool),
-		pruningManager:      pruning.NewManager(db, logger),
->>>>>>> 412e2fc86 (feat: configurable fastnode (#13321))
 	}
 }
 

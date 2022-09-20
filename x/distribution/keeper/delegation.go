@@ -5,12 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/core/event"
-	"cosmossdk.io/math"
-	"cosmossdk.io/x/distribution/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // initialize starting info for a new delegation
@@ -250,14 +247,13 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 		)
 	}
 
-	// truncate reward dec coins, return remainder to decimal pool
+	// truncate reward dec coins, return remainder to community pool
 	finalRewards, remainder := rewards.TruncateDecimal()
 
 	// add coins to user account
-	if !coins.IsZero() {
-		addr := del.GetDelegatorAddr()
-		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, addr)
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins)
+	if !finalRewards.IsZero() {
+		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, finalRewards)
 		if err != nil {
 			return nil, err
 		}
@@ -320,6 +316,25 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 	if err != nil {
 		return nil, err
 	}
+
+	if finalRewards.IsZero() {
+		baseDenom, _ := sdk.GetBaseDenom()
+		if baseDenom == "" {
+			baseDenom = sdk.DefaultBondDenom
+		}
+
+		// Note, we do not call the NewCoins constructor as we do not want the zero
+		// coin removed.
+		finalRewards = sdk.Coins{sdk.NewCoin(baseDenom, sdk.ZeroInt())}
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeWithdrawRewards,
+			sdk.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+		),
+	)
 
 	return finalRewards, nil
 }

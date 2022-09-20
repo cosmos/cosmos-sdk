@@ -87,6 +87,10 @@ type BaseConfig struct {
 
 	// IAVLDisableFastNode enables or disables the fast sync node.
 	IAVLDisableFastNode bool `mapstructure:"iavl-disable-fastnode"`
+
+	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
+	// An empty string indicates that the Tendermint config's DBBackend value should be used.
+	AppDBBackend string `mapstructure:"app-db-backend"`
 }
 
 // APIConfig defines the API listener configuration.
@@ -217,14 +221,14 @@ func DefaultConfig() *Config {
 		BaseConfig: BaseConfig{
 			MinGasPrices:        defaultMinGasPrices,
 			InterBlockCache:     true,
-			Pruning:             storetypes.PruningOptionDefault,
+			Pruning:             pruningtypes.PruningOptionDefault,
 			PruningKeepRecent:   "0",
-			PruningKeepEvery:    "0",
 			PruningInterval:     "0",
 			MinRetainBlocks:     0,
 			IndexEvents:         make([]string, 0),
 			IAVLCacheSize:       781250, // 50 MB
-			IAVLDisableFastNode: true,
+			IAVLDisableFastNode: false,
+			AppDBBackend:        "",
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -285,17 +289,18 @@ func GetConfig(v *viper.Viper) (Config, error) {
 
 	return Config{
 		BaseConfig: BaseConfig{
-			MinGasPrices:      v.GetString("minimum-gas-prices"),
-			InterBlockCache:   v.GetBool("inter-block-cache"),
-			Pruning:           v.GetString("pruning"),
-			PruningKeepRecent: v.GetString("pruning-keep-recent"),
-			PruningInterval:   v.GetString("pruning-interval"),
-			HaltHeight:        v.GetUint64("halt-height"),
-			HaltTime:          v.GetUint64("halt-time"),
-			IndexEvents:       v.GetStringSlice("index-events"),
-			MinRetainBlocks:   v.GetUint64("min-retain-blocks"),
-			IAVLCacheSize:     v.GetUint64("iavl-cache-size"),
-			AppDBBackend:      v.GetString("app-db-backend"),
+			MinGasPrices:        v.GetString("minimum-gas-prices"),
+			InterBlockCache:     v.GetBool("inter-block-cache"),
+			Pruning:             v.GetString("pruning"),
+			PruningKeepRecent:   v.GetString("pruning-keep-recent"),
+			PruningInterval:     v.GetString("pruning-interval"),
+			HaltHeight:          v.GetUint64("halt-height"),
+			HaltTime:            v.GetUint64("halt-time"),
+			IndexEvents:         v.GetStringSlice("index-events"),
+			MinRetainBlocks:     v.GetUint64("min-retain-blocks"),
+			IAVLCacheSize:       v.GetUint64("iavl-cache-size"),
+			IAVLDisableFastNode: v.GetBool("iavl-disable-fastnode"),
+			AppDBBackend:        v.GetString("app-db-backend"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             v.GetString("telemetry.service-name"),

@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/db/prefix"
 	"github.com/cosmos/cosmos-sdk/store/types"
 
+	"github.com/celestiaorg/smt"
 	ics23 "github.com/confio/ics23/go"
-	"github.com/lazyledger/smt"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 

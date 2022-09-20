@@ -76,9 +76,15 @@ index-events = {{ .BaseConfig.IndexEvents }}
 # Default cache size is 50mb.
 iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 
-# IAVLDisableFastNode enables or disables the fast node feature of IAVL. 
-# Default is true.
+# IavlDisableFastNode enables or disables the fast node feature of IAVL. 
+# Default is false.
 iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
+
+# AppDBBackend defines the database backend type to use for the application and snapshots DBs.
+# An empty string indicates that a fallback will be used.
+# First fallback is the deprecated compile-time types.DBBackend value.
+# Second fallback (if the types.DBBackend also isn't set), is the db-backend value set in Tendermint's config.toml.
+app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 
 ###############################################################################
 ###                         Telemetry Configuration                         ###

@@ -32,7 +32,7 @@ We implement the semi-fungible liquid staking system and exemption factor system
 
 A new governance parameter is introduced that defines the ratio of exempt to issued tokenized shares. This is called the exemption factor.
 
-Min self delegation is removed from the staking system with the expectation that it will be replaced by the exempt delegations sytem. The exempt delegation system allows multiple accounts to demonstrate economic alignment with the validator operator as team members, partners etc without co-mingling funds. The exempt delegation will likely be required to grow the validators business under widespread adoption of liquid staking and where governence sets the exemption factor.
+Min self delegation is removed from the staking system with the expectation that it will be replaced by the exempt delegations system. The exempt delegation system allows multiple accounts to demonstrate economic alignment with the validator operator as team members, partners etc. without co-mingling funds. Delegation exemption will likely be required to grow the validators' business under widespread adoption of liquid staking once governance has adjusted the exemption factor.
 
 When shares are tokenized, the underlying shares are transfered to a module account and rewards go to the module account for the TokenizedShareRecord. 
 

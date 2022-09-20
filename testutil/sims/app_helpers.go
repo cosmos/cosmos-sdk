@@ -14,6 +14,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -186,8 +187,11 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 }
 
 // GenesisStateWithValSet returns a new genesis state with the validator set
-func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawMessage,
-	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
+func GenesisStateWithValSet(
+	codec codec.Codec,
+	genesisState map[string]json.RawMessage,
+	valSet *tmtypes.ValidatorSet,
+	genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
 ) (map[string]json.RawMessage, error) {
 	// set genesis accounts
@@ -227,6 +231,7 @@ func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawM
 		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), math.LegacyOneDec()))
 
 	}
+
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
 	genesisState[stakingtypes.ModuleName] = codec.MustMarshalJSON(stakingGenesis)

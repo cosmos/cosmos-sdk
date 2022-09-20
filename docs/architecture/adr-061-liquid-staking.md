@@ -47,7 +47,7 @@ A user may tokenize some or all of their Delegation.
 
 They will recieved shares with the denom of `cosmosvaloper1xxxx/5` where 5 is the record id for the validator operator.
 
-MsgTokenizeShares fails if the account is a VestingAccount. Users will have to move vested tokens to a new account and endure the unbonding period. We view this as acceptable tradeoff vs complex book keeping of vested tokens.
+MsgTokenizeShares fails if the account is a VestingAccount. Users will have to move vested tokens to a new account and endure the unbonding period. We view this as an acceptable tradeoff vs. the complex book keeping required to track vested tokens.
 
 The total amount of outstanding tokenized shares for the validator is checked against the sum of exempt delegation multiplied by the exemption factor. If the tokenized shares would exceed this limit, the execution fails.
 

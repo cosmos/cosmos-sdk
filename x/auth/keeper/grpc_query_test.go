@@ -7,6 +7,8 @@ import (
 	"math"
 	"sort"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -442,4 +444,26 @@ func (suite *KeeperTestSuite) TestAddressStringToBytes() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestQueryAccountInfo() {
+	_, pk, addr := testdata.KeyTestPubAddr()
+	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+	suite.Require().NoError(acc.SetPubKey(pk))
+	suite.Require().NoError(acc.SetSequence(10))
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+
+	res, err := suite.queryClient.AccountInfo(context.Background(), &types.QueryAccountInfoRequest{
+		Address: addr.String(),
+	})
+
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res.Info)
+	suite.Require().Equal(addr.String(), res.Info.Address)
+	suite.Require().Equal(acc.GetAccountNumber(), res.Info.AccountNumber)
+	suite.Require().Equal(acc.GetSequence(), res.Info.Sequence)
+	suite.Require().Equal("/"+proto.MessageName(pk), res.Info.PubKey.TypeUrl)
+	pkBz, err := proto.Marshal(pk)
+	suite.Require().NoError(err)
+	suite.Require().Equal(pkBz, res.Info.PubKey.Value)
 }

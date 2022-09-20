@@ -142,6 +142,10 @@ In order to submit a proposal with `submit-proposal` you now need to pass a `pro
 You can still use the old way by using `submit-legacy-proposal`. This is not recommended.
 More information can be found in the gov module [client documentation](https://docs.cosmos.network/v0.46/modules/gov/07_client.html).
 
+#### `x/staking`
+
+The `staking module` added a new message type to cancel unbonding delegations. Users that have unbonded by accident or wish to cancel a undelegation can now specify the amount and valdiator they would like to cancel the unbond from
+
 ### Protobuf
 
 The `third_party/proto` folder that existed in [previous version](https://github.com/cosmos/cosmos-sdk/tree/v0.45.3/third_party/proto) now does not contains directly the [proto files](https://github.com/cosmos/cosmos-sdk/tree/release/v0.46.x/third_party/proto).
@@ -149,3 +153,22 @@ The `third_party/proto` folder that existed in [previous version](https://github
 Instead, the SDK uses [`buf`](https://buf.build). Clients should have their own [`buf.yaml`](https://docs.buf.build/configuration/v1/buf-yaml) with `buf.build/cosmos/cosmos-sdk` as dependency, in order to avoid having to copy paste these files.
 
 The protos can as well be downloaded using `buf export buf.build/cosmos/cosmos-sdk:$(curl -sS https://api.github.com/repos/cosmos/cosmos-sdk/commits/v0.46.0 | jq -r .sha) --output <some_folder>`.
+
+Cosmos message protobufs should be extended with `cosmos.msg.v1.signer`: 
+
+```proto
+message MsgSetWithdrawAddress {
+  option (cosmos.msg.v1.signer) = "delegator_address"; ++
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string withdraw_address  = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+```
+
+<!-- todo: cosmos.scalar types -->
+
+
+When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).

@@ -3,12 +3,6 @@ package keeper
 import (
 	"fmt"
 
-<<<<<<< HEAD
-	sdk "github.com/cosmos/cosmos-sdk/types"
-=======
-	"cosmossdk.io/math"
->>>>>>> c1c23a75d (fix: ensure withdraw_rewards events are always emitted on reward withdrawal (#13323))
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -202,7 +196,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 
 		// Note, we do not call the NewCoins constructor as we do not want the zero
 		// coin removed.
-		finalRewards = sdk.Coins{sdk.NewCoin(baseDenom, math.ZeroInt())}
+		finalRewards = sdk.Coins{sdk.NewCoin(baseDenom, sdk.ZeroInt())}
 	}
 
 	ctx.EventManager().EmitEvent(

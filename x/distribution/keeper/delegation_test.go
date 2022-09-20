@@ -6,13 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/simapp"
-=======
-	"cosmossdk.io/math"
-
-	"github.com/cosmos/cosmos-sdk/testutil"
->>>>>>> c1c23a75d (fix: ensure withdraw_rewards events are always emitted on reward withdrawal (#13323))
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -690,17 +684,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	rewards, err := app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 	require.NoError(t, err)
 
-<<<<<<< HEAD
-	denom, _ := sdk.GetBaseDenom()
-	zeroRewards := sdk.Coins{
-		sdk.Coin{
-			Denom:  denom,
-			Amount: sdk.ZeroInt(),
-		},
-	}
-=======
-	zeroRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt())}
->>>>>>> c1c23a75d (fix: ensure withdraw_rewards events are always emitted on reward withdrawal (#13323))
+	zeroRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt())}
 	require.True(t, rewards.IsEqual(zeroRewards))
 
 	events := ctx.EventManager().Events()
@@ -708,7 +692,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 
 	var hasValue bool
 	for _, attr := range lastEvent.Attributes {
-		if attr.Key == "amount" && attr.Value == "0stake" {
+		if string(attr.Key) == "amount" && string(attr.Value) == "0stake" {
 			hasValue = true
 		}
 	}

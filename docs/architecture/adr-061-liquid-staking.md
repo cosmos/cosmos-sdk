@@ -67,7 +67,7 @@ This is designed to work with liquid staking designs that do not redeem the toke
 
 ### `MsgExemptDelegation`
 
-The MsgExemptDelegation message is used to exempt a delegation to a validator. If the exemption factor is greater than 0, this will enable more delegation to the validator. 
+The MsgExemptDelegation message is used to exempt a delegation to a validator. If the exemption factor is greater than 0, this will allow more delegation shares to be issued from the validator.
 
 This design allows the chain to force an amount of self-delegation by validators participating in liquid staking schemes.
 

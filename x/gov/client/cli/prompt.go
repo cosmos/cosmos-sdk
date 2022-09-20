@@ -94,7 +94,16 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 		case reflect.String:
 			v.Field(i).SetString(result)
 		case reflect.Int:
-			resultInt, _ := strconv.Atoi(result)
+			resultInt, err := strconv.Atoi(result)
+			if err != nil {
+				return data, fmt.Errorf("invalid value for int: %w", err)
+			}
+			// If a value was successfully parsed the ranges of:
+			//      [minInt,     maxInt]
+			// are within the ranges of:
+			//      [minInt64, maxInt64]
+			// of which on 64-bit machines, which are most common,
+			// int==int64
 			v.Field(i).SetInt(int64(resultInt))
 		default:
 			// skip other types

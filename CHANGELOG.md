@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#13323](https://github.com/cosmos/cosmos-sdk/pull/13323) Ensure `withdraw_rewards` rewards are emitted from all actions that result in rewards being withdrawn.
 * [#13233](https://github.com/cosmos/cosmos-sdk/pull/13233) Add `--append` to `add-genesis-account` sub-command to append new tokens after an account is already created.
 * (x/group) [#13214](https://github.com/cosmos/cosmos-sdk/pull/13214) Add `withdraw-proposal` command to group module's CLI transaction commands.
 * (x/auth) [#13048](https://github.com/cosmos/cosmos-sdk/pull/13048) Add handling of AccountNumberStoreKeyPrefix to the simulation decoder.

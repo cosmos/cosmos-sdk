@@ -1193,15 +1193,15 @@ func Test100PercentCommissionReward(t *testing.T) {
 	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, addr, valAddr)
 	require.NoError(t, err)
 
-	zeroRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt())}
-	require.True(t, rewards.Equal(zeroRewards))
+	zeroRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt())}
+	require.True(t, rewards.IsEqual(zeroRewards))
 
 	events := ctx.EventManager().Events()
 	lastEvent := events[len(events)-1]
 
 	var hasValue bool
 	for _, attr := range lastEvent.Attributes {
-		if attr.Key == "amount" && attr.Value == "0stake" {
+		if string(attr.Key) == "amount" && string(attr.Value) == "0stake" {
 			hasValue = true
 		}
 	}

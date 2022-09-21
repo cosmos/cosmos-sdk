@@ -21,7 +21,8 @@ import (
 // `vestingStart, vestingEnd and vestingAmtStr` respectively are the schedule start time, end time (unix epoch)
 // and coins to be appended to the account already in the genesis.json file.
 func AddGenesisAccount(cdc codec.Codec, accAddr sdk.AccAddress, appendAcct bool,
-	genesisFileUrl, amountStr, vestingAmtStr string, vestingStart, vestingEnd int64) error {
+	genesisFileUrl, amountStr, vestingAmtStr string, vestingStart, vestingEnd int64,
+) error {
 	coins, err := sdk.ParseCoinsNormalized(amountStr)
 	if err != nil {
 		return fmt.Errorf("failed to parse coins: %w", err)

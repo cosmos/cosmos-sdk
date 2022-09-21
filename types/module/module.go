@@ -36,6 +36,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -118,7 +119,8 @@ func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *
 // TODO: Remove clientCtx argument.
 // REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
-	for _, b := range bm {
+	values := maps.Values(bm)
+	for _, b := range values {
 		if cmd := b.GetTxCmd(); cmd != nil {
 			rootTxCmd.AddCommand(cmd)
 		}
@@ -130,7 +132,8 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
 // TODO: Remove clientCtx argument.
 // REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
-	for _, b := range bm {
+	values := maps.Values(bm)
+	for _, b := range values {
 		if cmd := b.GetQueryCmd(); cmd != nil {
 			rootQueryCmd.AddCommand(cmd)
 		}
@@ -271,14 +274,16 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 
 // RegisterInvariants registers all module invariants
 func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
-	for _, module := range m.Modules {
+	modules := maps.Values(m.Modules)
+	for _, module := range modules {
 		module.RegisterInvariants(ir)
 	}
 }
 
 // RegisterServices registers all module services
 func (m *Manager) RegisterServices(cfg Configurator) {
-	for _, module := range m.Modules {
+	modules := maps.Values(m.Modules)
+	for _, module := range modules {
 		module.RegisterServices(cfg)
 	}
 }
@@ -511,13 +516,7 @@ func (m *Manager) GetVersionMap() VersionMap {
 
 // ModuleNames returns list of all module names, without any particular order.
 func (m *Manager) ModuleNames() []string {
-	ms := make([]string, len(m.Modules))
-	i := 0
-	for m := range m.Modules {
-		ms[i] = m
-		i++
-	}
-	return ms
+	return maps.Keys(m.Modules)
 }
 
 // DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,

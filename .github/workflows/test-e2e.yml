@@ -20,7 +20,6 @@ permissions:
 jobs:
   test-e2e:
     runs-on: ubuntu-latest
-    needs: build
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -28,4 +27,4 @@ jobs:
           go-version: 1.18
       - name: e2e tests
         run: |
-          cd tests && make test-e2e
+          make test-e2e

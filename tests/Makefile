@@ -1,5 +1,3 @@
-test: test-integration test-e2e 
-
 test-integration:
 	go test ./integration/... -timeout 30m
 

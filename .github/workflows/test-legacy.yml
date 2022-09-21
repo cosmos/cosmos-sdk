@@ -1,4 +1,4 @@
-name: Test Legacy SimApp
+name: Legacy App Testing
 on:
   schedule:
     - cron: "0 0,12 * * *"

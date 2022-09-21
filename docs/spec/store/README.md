@@ -1,7 +1,7 @@
 # Store
 
 The store package defines the interfaces, types and abstractions for Cosmos SDK
-modules to read and write to merkleized state within a Cosmos SDK application.
+modules to read and write to Merkleized state within a Cosmos SDK application.
 The store package provides many primitives for developers to use in order to
 work with both state storage and state commitment. Below we describe the various
 abstractions.
@@ -56,7 +56,7 @@ it supports the following high-level primitives:
   while also performing store upgrades, which are used during live hard-fork
   application state migrations.
 * Provides the ability to commit all current accumulated state to disk and performs
-  merkle commitment.
+  Merkle commitment.
 
 ## Implementation Details
 
@@ -122,6 +122,49 @@ Specifically, it just wraps an existing `KVStore`, such as a cache-wrapped
 and then proxies the underlying CRUD call to the underlying store. Note, the
 `GasMeter` is reset on each block.
 
-### `cachemulti.Store`
+### `cachemulti.Store` & `rootmulti.Store`
 
-### `rootmulti.Store`
+The `rootmulti.Store` acts as an abstraction around a series of stores. Namely,
+it implements the `CommitMultiStore` an `Queryable` interfaces. Through the
+`rootmulti.Store`, an SDK module can request access to a `KVStore` to perform
+state CRUD operations and queries by holding access to a unique `KVStoreKey`.
+
+The `rootmulti.Store` ensures these queries and state operations are performed
+through cached-wrapped instances of `cachekv.Store` which is described above. The
+`rootmulti.Store` implementation is also responsible for committing all accumulated state from each `KVStore` to disk and returning an application state Merkle root.
+
+Queries can be performed to return state data along with associated state
+commitment proofs for both previous heights/versions and the current state root.
+Queries are routed based on store name, i.e. a module, along with other parameters
+which are defined in `abci.RequestQuery`.
+
+The `rootmulti.Store` also provides primitives for pruning data at a given
+height/version from state storage. When a height is committed, the `rootmulti.Store`
+will determine if other previous heights should be considered for removal based
+on the operator's pruning settings defined by `PruningOptions`, which defines
+how many recent versions to keep on disk and the interval at which to remove
+"staged" pruned heights from disk. During each interval, the staged heights are
+removed from each `KVStore`. Note, it is up to the underlying `KVStore`
+implementation to determine how pruning is actually performed.
+
+It is important to note that the `rootmulti.Store` considers each `KVStore` as a
+separate logical store. In other words, they do not share a Merkle tree or
+comparable data structure. This means that when state is committed via
+`rootmulti.Store`, each store is committed in sequence and thus is not atomic.
+
+In terms of store construction and wiring, each Cosmos SDK application contains
+a `BaseApp` instance which internally has a reference to a `CommitMultiStore`
+that is implemented by a `rootmulti.Store`. The application then registers one or
+more `KVStoreKey` that pertain to a unique module and thus a `KVStore`. Through
+the use of an `sdk.Context` and a `KVStoreKey`, each module can get direct access
+to it's respective `KVStore` instance.
+
+The `rootmulti.Store` itself can be cache-wrapped which returns an instance of a
+`cachemulti.Store`. For each block, `BaseApp` ensures that the proper abstractions
+are created on the `CommitMultiStore`, i.e. ensuring that the `rootmulti.Store`
+is cached-wrapped and uses the resulting `cachemulti.Store` to be set on the
+`sdk.Context` which is then used for block and transaction execution. As a result,
+all state mutations due to block and transaction execution are actually held
+ephemerally until `Commit()` is called by the ABCI client. This concept is further
+expanded upon when the AnteHandler is executed per transaction to ensure state
+is not committed for transactions that failed CheckTx.

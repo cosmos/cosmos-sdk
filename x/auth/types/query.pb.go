@@ -947,7 +947,10 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Accounts returns all the existing accounts
+	// Accounts returns all the existing accounts.
+	//
+	// When called from another module, this query might consume a high amount of
+	// gas if the pagination field is incorrectly set.
 	//
 	// Since: cosmos-sdk 0.43
 	Accounts(ctx context.Context, in *QueryAccountsRequest, opts ...grpc.CallOption) (*QueryAccountsResponse, error)
@@ -1070,7 +1073,10 @@ func (c *queryClient) AccountInfo(ctx context.Context, in *QueryAccountInfoReque
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Accounts returns all the existing accounts
+	// Accounts returns all the existing accounts.
+	//
+	// When called from another module, this query might consume a high amount of
+	// gas if the pagination field is incorrectly set.
 	//
 	// Since: cosmos-sdk 0.43
 	Accounts(context.Context, *QueryAccountsRequest) (*QueryAccountsResponse, error)

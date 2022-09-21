@@ -23,7 +23,7 @@ WORKDIR /go/src/github.com/cosmos/cosmos-sdk
 COPY . .
 
 # install simapp, remove packages
-RUN make build-linux
+RUN make build
 
 
 # Final image

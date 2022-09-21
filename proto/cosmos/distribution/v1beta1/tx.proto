@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.distribution.v1beta1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
@@ -12,25 +12,23 @@ import "cosmos/distribution/v1beta1/distribution.proto";
 
 // Msg defines the distribution Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // SetWithdrawAddress defines a method to change the withdraw address
   // for a delegator (or validator self-delegation).
-  rpc SetWithdrawAddress(MsgSetWithdrawAddress)
-      returns (MsgSetWithdrawAddressResponse);
+  rpc SetWithdrawAddress(MsgSetWithdrawAddress) returns (MsgSetWithdrawAddressResponse);
 
   // WithdrawDelegatorReward defines a method to withdraw rewards of delegator
   // from a single validator.
-  rpc WithdrawDelegatorReward(MsgWithdrawDelegatorReward)
-      returns (MsgWithdrawDelegatorRewardResponse);
+  rpc WithdrawDelegatorReward(MsgWithdrawDelegatorReward) returns (MsgWithdrawDelegatorRewardResponse);
 
   // WithdrawValidatorCommission defines a method to withdraw the
   // full commission to the validator address.
-  rpc WithdrawValidatorCommission(MsgWithdrawValidatorCommission)
-      returns (MsgWithdrawValidatorCommissionResponse);
+  rpc WithdrawValidatorCommission(MsgWithdrawValidatorCommission) returns (MsgWithdrawValidatorCommissionResponse);
 
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
-  rpc FundCommunityPool(MsgFundCommunityPool)
-      returns (MsgFundCommunityPoolResponse);
+  rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
 
   // UpdateParams defines a governance operation for updating the x/distribution
   // module parameters. The authority is defined in the keeper.
@@ -44,8 +42,7 @@ service Msg {
   // keeper.
   //
   // Since: cosmos-sdk 0.47
-  rpc CommunityPoolSpend(MsgCommunityPoolSpend)
-      returns (MsgCommunityPoolSpendResponse);
+  rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 }
 
 // MsgSetWithdrawAddress sets the withdraw address for
@@ -80,10 +77,8 @@ message MsgWithdrawDelegatorReward {
 // response type.
 message MsgWithdrawDelegatorRewardResponse {
   // Since: cosmos-sdk 0.46
-  repeated cosmos.base.v1beta1.Coin amount = 1 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // MsgWithdrawValidatorCommission withdraws the full commission to the validator
@@ -101,10 +96,8 @@ message MsgWithdrawValidatorCommission {
 // Msg/WithdrawValidatorCommission response type.
 message MsgWithdrawValidatorCommissionResponse {
   // Since: cosmos-sdk 0.46
-  repeated cosmos.base.v1beta1.Coin amount = 1 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // MsgFundCommunityPool allows an account to directly
@@ -115,10 +108,8 @@ message MsgFundCommunityPool {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  repeated cosmos.base.v1beta1.Coin amount = 1 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   string depositor = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
@@ -155,12 +146,10 @@ message MsgCommunityPoolSpend {
   option (cosmos.msg.v1.signer) = "authority";
 
   // authority is the address of the governance account.
-  string   authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string   recipient = 2;
-  repeated cosmos.base.v1beta1.Coin amount = 3 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  string   authority                       = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   recipient                       = 2;
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // MsgCommunityPoolSpendResponse defines the response to executing a

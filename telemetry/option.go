@@ -91,3 +91,12 @@ func OptionWithGlobalLabels(ss [][]string) Option {
 		return nil
 	}
 }
+
+// OptionUseGlobalMetricRegistration use the global registration for external libraries like go-metrics.
+// default: true
+func OptionUseGlobalMetricRegistration(b bool) Option {
+	return func(c *Config) error {
+		c.useGlobalMetricRegistration = b
+		return nil
+	}
+}

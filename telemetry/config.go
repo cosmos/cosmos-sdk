@@ -40,6 +40,8 @@ type Config struct {
 
 	//Suggestion : use the gometrics.Lable and update the config contract. also provide proper Options for best accessibility.
 	globalLabels []gometrics.Label
+
+	useGlobalMetricRegistration bool
 }
 
 // loadDefaults loads the default configuration for the metric config.
@@ -48,6 +50,7 @@ func (c *Config) loadDefaults() {
 	c.EnableHostname = defaultEnableHostname
 	c.EnableHostnameLabel = defaultEnableHostnameLabel
 	c.EnableServiceLabel = defaultEnableServiceLabel
+	c.useGlobalMetricRegistration = defaultUseGlobalMetricRegistration
 
 	c.PrometheusRetentionTime = defaultPrometheusRetentionTime
 }

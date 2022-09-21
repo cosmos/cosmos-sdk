@@ -15,6 +15,9 @@ const (
 
 	//defaultEnableServiceLabel is the default value for the enable hostname label config.
 	defaultEnableServiceLabel = false
+
+	//defaultUseGlobalMetricRegistration is the default value for the global registration for go-metrics.
+	defaultUseGlobalMetricRegistration = true
 )
 
 var (

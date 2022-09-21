@@ -63,3 +63,9 @@ func TestOptionWithGlobalLabels(t *testing.T) {
 	err := OptionWithGlobalLabels([][]string{})(c)
 	require.NoError(t, err)
 }
+
+func TestOptionUseGlobalMetricRegistration(t *testing.T) {
+	c := &Config{}
+	err := OptionUseGlobalMetricRegistration(true)(c)
+	require.NoError(t, err)
+}

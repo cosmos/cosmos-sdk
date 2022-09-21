@@ -20,9 +20,10 @@ import (
 // by the operator. In addition to the sinks, when a process gets a SIGUSR1, a
 // dump of formatted recent metrics will be sent to STDERR.
 type metrics struct {
-	memSink           *gometrics.InmemSink
-	prometheusEnabled bool
+	memSink *gometrics.InmemSink
+	gMetric *gometrics.Metrics
 
+	prometheusEnabled bool
 	//cnf can be use in runtime process
 	cnf *Config
 }
@@ -37,10 +38,12 @@ type GatherResponse struct {
 
 // New creates a new instance of metrics
 func New(opts ...Option) (Metrics, error) {
+	var err error
+
 	c := new(Config)
 	c.loadDefaults()
 	for _, fn := range opts {
-		err := fn(c)
+		err = fn(c)
 		if err != nil {
 			return nil, err
 		}
@@ -66,27 +69,37 @@ func New(opts ...Option) (Metrics, error) {
 	memSink := gometrics.NewInmemSink(10*time.Second, time.Minute)
 	gometrics.DefaultInmemSignal(memSink)
 
-	m := &metrics{memSink: memSink}
+	m := &metrics{memSink: memSink, cnf: c}
 	fanout := gometrics.FanoutSink{memSink}
+	var promSink *metricsprom.PrometheusSink
 
-	if c.PrometheusRetentionTime > 0 {
-		m.prometheusEnabled = true
-		prometheusOpts := metricsprom.PrometheusOpts{
-			Expiration: c.PrometheusRetentionTime,
+	//Initialize the external library only once.
+	initOnce.Do(func() {
+		if c.PrometheusRetentionTime > 0 {
+			m.prometheusEnabled = true
+			prometheusOpts := metricsprom.PrometheusOpts{
+				Expiration: c.PrometheusRetentionTime,
+			}
+
+			promSink, err = metricsprom.NewPrometheusSinkFrom(prometheusOpts)
+
 		}
-
-		promSink, err := metricsprom.NewPrometheusSinkFrom(prometheusOpts)
-		if err != nil {
-			return nil, err
-		}
-
-		fanout = append(fanout, promSink)
-	}
-
-	if _, err := gometrics.NewGlobal(metricsConf, fanout); err != nil {
+	})
+	if err != nil {
 		return nil, err
 	}
 
+	fanout = append(fanout, promSink)
+
+	if m.cnf.useGlobalMetricRegistration {
+		m.gMetric, err = gometrics.NewGlobal(metricsConf, fanout)
+	} else {
+		m.gMetric, err = gometrics.New(metricsConf, fanout)
+	}
+
+	if err != nil {
+		return nil, err
+	}
 	return m, nil
 }
 

@@ -64,7 +64,7 @@ While there are many interfaces that the `store` package provides, there is
 typically a core implementation for each main interface that modules and
 developers interact with that are defined in the Cosmos SDK.
 
-### `IAVL`
+### `iavl.Store`
 
 The `iavl.Store` provides the core implementation for state storage and commitment
 by implementing the following interfaces:
@@ -89,20 +89,39 @@ various layers of abstractions or "store wrapping", where the `iavl.Store` is th
 bottom most layer. When requesting a store to perform reads or writes in a module,
 the typical abstraction layer in order is defined as follows:
 
-* `iavl.Store`
-* `cachekv.Store`
-* `gaskv.Store`
-* `cachemulti.Store`
-* `rootmulti.Store`
+```text
+iavl.Store <- cachekv.Store <- gaskv.Store <- cachemulti.Store <- rootmulti.Store
+```
 
-### `GasKVStore`
+### `cachekv.Store`
+
+The `cachekv.Store` store wraps an underlying `KVStore`, typically a `iavl.Store`
+and contains an in-memory cache for storing pending writes to underlying `KVStore`.
+`Set` and `Delete` calls are executed on the in-memory cache, whereas `Has` calls
+are proxied to the underlying `KVStore`. 
+
+One of the most important calls to a `cachekv.Store` is `Write()`, which ensures
+that key-value pairs are written to the underlying `KVStore` in a deterministic
+and ordered manner by sorting the keys first. The store keeps track of "dirty"
+keys and uses these to determine what keys to sort. In addition, it also keeps
+track of deleted keys and ensures these are also removed from the underlying
+`KVStore`.
+
+The `cachekv.Store` also provides the ability to perform iteration and reverse
+iteration. Iteration is performed through the `cacheMergeIterator` type and uses
+both the dirty cache and underlying `KVStore` to iterate over key-value pairs.
+
+Note, all calls to CRUD and iteration operations on a `cachekv.Store` are thread-safe.
+
+### `gaskv.Store`
 
 The `gaskv.Store` store provides a simple implementation of a `KVStore`.
 Specifically, it just wraps an existing `KVStore`, such as a cache-wrapped
 `iavl.Store`, and incurs configurable gas costs for CRUD operations via
-`ConsumeGas()` calls defined on the `GasMeter` which exists in a `sdk.Context`.
-Note, the `GasMeter` is reset on each block.
+`ConsumeGas()` calls defined on the `GasMeter` which exists in a `sdk.Context`
+and then proxies the underlying CRUD call to the underlying store. Note, the
+`GasMeter` is reset on each block.
 
-### `CacheKVStore`
+### `cachemulti.Store`
 
-### `RootMultiStore`
+### `rootmulti.Store`

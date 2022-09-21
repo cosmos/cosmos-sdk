@@ -11,6 +11,8 @@ import "cosmos/msg/v1/msg.proto";
 
 // Msg defines the evidence Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // SubmitEvidence submits an arbitrary Evidence of misbehavior such as equivocation or
   // counterfactual signing.
   rpc SubmitEvidence(MsgSubmitEvidence) returns (MsgSubmitEvidenceResponse);

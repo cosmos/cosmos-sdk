@@ -13,6 +13,8 @@ option (gogoproto.goproto_getters_all) = false;
 
 // Msg defines the authz Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // Grant grants the provided authorization to the grantee on the granter's
   // account with the provided expiration time. If there is already a grant
   // for the given (granter, grantee, Authorization) triple, then the grant

@@ -88,7 +88,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 
 	// require no failure when given an invalid or pruned version
 	_, err = ms.CacheMultiStoreWithVersion(cID.Version + 1)
-	require.NoError(t, err)
+	require.Error(t, err)
 
 	// require a valid version can be cache-loaded
 	cms, err := ms.CacheMultiStoreWithVersion(cID.Version)
@@ -476,9 +476,9 @@ func TestMultiStore_Pruning(t *testing.T) {
 		saved       []int64
 	}{
 		{"prune nothing", 10, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
-		{"prune everything", 10, pruningtypes.NewPruningOptions(pruningtypes.PruningEverything), []int64{1, 2, 3, 4, 5, 6, 7, 8, 9}, []int64{10}},
-		{"prune some; no batch", 10, pruningtypes.NewCustomPruningOptions(2, 1), []int64{1, 2, 4, 5, 7}, []int64{3, 6, 8, 9, 10}},
-		{"prune some; small batch", 10, pruningtypes.NewCustomPruningOptions(2, 3), []int64{1, 2, 4, 5}, []int64{3, 6, 7, 8, 9, 10}},
+		{"prune everything", 12, pruningtypes.NewPruningOptions(pruningtypes.PruningEverything), []int64{1, 2, 3, 4, 5, 6, 7}, []int64{8, 9, 10, 11, 12}},
+		{"prune some; no batch", 10, pruningtypes.NewCustomPruningOptions(2, 1), []int64{1, 2, 3, 4, 6, 5, 7}, []int64{8, 9, 10}},
+		{"prune some; small batch", 10, pruningtypes.NewCustomPruningOptions(2, 3), []int64{1, 2, 3, 4, 5, 6}, []int64{7, 8, 9, 10}},
 		{"prune some; large batch", 10, pruningtypes.NewCustomPruningOptions(2, 11), nil, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}},
 	}
 
@@ -496,12 +496,12 @@ func TestMultiStore_Pruning(t *testing.T) {
 
 			for _, v := range tc.saved {
 				_, err := ms.CacheMultiStoreWithVersion(v)
-				require.NoError(t, err, "expected error when loading height: %d", v)
+				require.NoError(t, err, "expected no error when loading height: %d", v)
 			}
 
 			for _, v := range tc.deleted {
 				_, err := ms.CacheMultiStoreWithVersion(v)
-				require.NoError(t, err, "expected error when loading height: %d", v)
+				require.Error(t, err, "expected error when loading height: %d", v)
 			}
 		})
 	}

@@ -15,6 +15,10 @@ import (
 )
 
 // AddGenesisAccount adds a genesis account to the genesis state.
+// Where `cdc` is client codec, `genesisFileUrl` is the path/url of current genesis file, `accAddr` is the address to be added to the genesis state, `amountStr` is the list of initial coins
+// to be added for the account, `appendAcct` updates the account if already exists. `vestingStart, vestingEnd and vestingAmtStr` respectively are the schedule start time, end time (unix epoch)
+// and coins to be appended to the account already in the genesis.json file.
+
 func AddGenesisAccount(cdc codec.Codec, genesisFileUrl string, accAddr sdk.AccAddress, amountStr string, appendAcct bool, vestingStart, vestingEnd int64, vestingAmtStr string) error {
 	coins, err := sdk.ParseCoinsNormalized(amountStr)
 	if err != nil {

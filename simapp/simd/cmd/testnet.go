@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"time"
 
 	"cosmossdk.io/math"
 	"github.com/spf13/cobra"
@@ -208,7 +209,7 @@ func initTestnetFiles(
 	simappConfig.MinGasPrices = args.minGasPrices
 	simappConfig.API.Enable = true
 	simappConfig.Telemetry.Enabled = true
-	simappConfig.Telemetry.PrometheusRetentionTime = 60
+	simappConfig.Telemetry.PrometheusRetentionTime = 60 * time.Second
 	simappConfig.Telemetry.EnableHostnameLabel = false
 	simappConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", args.chainID}}
 

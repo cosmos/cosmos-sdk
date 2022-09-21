@@ -82,7 +82,7 @@ func TestPromptParseInteger(t *testing.T) {
 
 			v, err := cli.Prompt(st{}, "")
 			assert.Nil(t, err, "expected a nil error")
-			assert.Equal(t, tc.want, v.I, "expected a value of zero")
+			assert.Equal(t, tc.want, v.I, "expected %d = %d", tc.want, v.I)
 		})
 	}
 }

@@ -51,6 +51,7 @@ func (c *Config) loadDefaults() {
 
 	c.PrometheusRetentionTime = defaultPrometheusRetentionTime
 }
+
 func (c *Config) fromViper(v *viper.Viper) error {
 	c.ServiceName = v.GetString("telemetry.service-name")
 	c.Enabled = v.GetBool("telemetry.enabled")

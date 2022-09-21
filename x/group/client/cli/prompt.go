@@ -113,7 +113,7 @@ func NewCmdDraftProposal() *cobra.Command {
 					return fmt.Errorf("failed to prompt proposal types: %w", err)
 				}
 
-				proposal.Msg, err = govcli.GetProposalMsg(clientCtx.Codec, result)
+				proposal.Msg, err = sdk.GetMsgFromTypeURL(clientCtx.Codec, result)
 				if err != nil {
 					// should never happen
 					panic(err)

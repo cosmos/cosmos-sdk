@@ -181,25 +181,6 @@ func getProposalSuggestions() []string {
 	return types
 }
 
-// GetProposalMsg returns the proposal message type from a string
-func GetProposalMsg(cdc codec.Codec, input string) (sdk.Msg, error) {
-	var msg sdk.Msg
-	bz, err := json.Marshal(struct {
-		Type string `json:"@type"`
-	}{
-		Type: input,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if err := cdc.UnmarshalInterfaceJSON(bz, &msg); err != nil {
-		return nil, fmt.Errorf("failed to determined sdk.Msg from %s proposal type : %w", input, err)
-	}
-
-	return msg, nil
-}
-
 // NewCmdDraftProposal let a user generate a draft proposal.
 func NewCmdDraftProposal() *cobra.Command {
 	cmd := &cobra.Command{
@@ -252,7 +233,7 @@ func NewCmdDraftProposal() *cobra.Command {
 			}
 
 			if proposal.MsgType != "" {
-				proposal.Msg, err = GetProposalMsg(clientCtx.Codec, proposal.MsgType)
+				proposal.Msg, err = sdk.GetMsgFromTypeURL(clientCtx.Codec, proposal.MsgType)
 				if err != nil {
 					// should never happen
 					panic(err)

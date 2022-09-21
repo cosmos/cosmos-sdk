@@ -35,7 +35,7 @@ func (s *testMsgSuite) TestMsgTypeURL() {
 	s.Require().Equal("/testdata.TestMsg", sdk.MsgTypeURL(new(testdata.TestMsg)))
 }
 
-func (s *testMsgSuite) TestMsgTypeURLPanic() {
+func (s *testMsgSuite) TestGetMsgFromTypeURL() {
 	msg := new(testdata.TestMsg)
 	cdc := codec.NewProtoCodec(testdata.NewTestInterfaceRegistry())
 

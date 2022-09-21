@@ -2,6 +2,8 @@ go 1.18
 
 module github.com/cosmos/cosmos-sdk
 
+// trigger tests
+
 require (
 	cosmossdk.io/api v0.2.1
 	cosmossdk.io/core v0.2.0

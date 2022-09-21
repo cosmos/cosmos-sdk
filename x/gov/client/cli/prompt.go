@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"reflect"
+	"reflect" // #nosec
 	"sort"
 	"strconv"
 	"strings"
@@ -94,8 +94,17 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 		case reflect.String:
 			v.Field(i).SetString(result)
 		case reflect.Int:
-			resultInt, _ := strconv.Atoi(result)
-			v.Field(i).SetInt(int64(resultInt))
+			resultInt, err := strconv.ParseInt(result, 10, 0)
+			if err != nil {
+				return data, fmt.Errorf("invalid value for int: %w", err)
+			}
+			// If a value was successfully parsed the ranges of:
+			//      [minInt,     maxInt]
+			// are within the ranges of:
+			//      [minInt64, maxInt64]
+			// of which on 64-bit machines, which are most common,
+			// int==int64
+			v.Field(i).SetInt(resultInt)
 		default:
 			// skip other types
 			// possibly in the future we can add more types (like slices)

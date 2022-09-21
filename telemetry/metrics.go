@@ -12,47 +12,7 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
-// globalLabels defines the set of global labels that will be applied to all
-// metrics emitted using the telemetry package function wrappers.
-var globalLabels = []gometrics.Label{}
-
-// Metrics supported format types.
-const (
-	FormatDefault    = ""
-	FormatPrometheus = "prometheus"
-	FormatText       = "text"
-)
-
-// Config defines the configuration options for application telemetry.
-type config struct {
-	// Prefixed with keys to separate services
-	ServiceName string `mapstructure:"service-name"`
-
-	// Enabled enables the application telemetry functionality. When enabled,
-	// an in-memory sink is also enabled by default. Operators may also enabled
-	// other sinks such as Prometheus.
-	Enabled bool `mapstructure:"enabled"`
-
-	// Enable prefixing gauge values with hostname
-	EnableHostname bool `mapstructure:"enable-hostname"`
-
-	// Enable adding hostname to labels
-	EnableHostnameLabel bool `mapstructure:"enable-hostname-label"`
-
-	// Enable adding service to labels
-	EnableServiceLabel bool `mapstructure:"enable-service-label"`
-
-	// PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
-	// It defines the retention duration in seconds.
-	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time"`
-
-	// GlobalLabels defines a global set of name/value label tuples applied to all
-	// metrics emitted using the wrapper functions defined in telemetry package.
-	//
-	// Example:
-	// [["chain_id", "cosmoshub-1"]]
-	GlobalLabels [][]string `mapstructure:"global-labels"`
-}
+// ─── Types ──────────────────────────────────────────────────────────────────────
 
 // metrics defines a wrapper around application telemetry functionality. It allows
 // metrics to be gathered at any point in time. When creating a Metrics object,
@@ -62,6 +22,9 @@ type config struct {
 type metrics struct {
 	memSink           *gometrics.InmemSink
 	prometheusEnabled bool
+
+	//cnf can be use in runtime process
+	cnf *Config
 }
 
 // GatherResponse is the response type of registered metrics
@@ -70,9 +33,12 @@ type GatherResponse struct {
 	ContentType string
 }
 
+// ─── Factory ────────────────────────────────────────────────────────────────────
+
 // New creates a new instance of metrics
-func New(opts ...Option) (*metrics, error) {
-	c := new(config)
+func New(opts ...Option) (Metrics, error) {
+	c := new(Config)
+	c.loadDefaults()
 	for _, fn := range opts {
 		err := fn(c)
 		if err != nil {
@@ -90,7 +56,7 @@ func New(opts ...Option) (*metrics, error) {
 			parsedGlobalLabels[i] = NewLabel(gl[0], gl[1])
 		}
 
-		globalLabels = parsedGlobalLabels
+		c.globalLabels = parsedGlobalLabels
 	}
 
 	metricsConf := gometrics.DefaultConfig(c.ServiceName)
@@ -106,7 +72,7 @@ func New(opts ...Option) (*metrics, error) {
 	if c.PrometheusRetentionTime > 0 {
 		m.prometheusEnabled = true
 		prometheusOpts := metricsprom.PrometheusOpts{
-			Expiration: time.Duration(c.PrometheusRetentionTime) * time.Second,
+			Expiration: c.PrometheusRetentionTime,
 		}
 
 		promSink, err := metricsprom.NewPrometheusSinkFrom(prometheusOpts)
@@ -123,6 +89,18 @@ func New(opts ...Option) (*metrics, error) {
 
 	return m, nil
 }
+
+// Init create a new instance and set it as the default Metric
+func Init(opts ...Option) error {
+	m, err := New(opts...)
+	if err != nil {
+		return err
+	}
+	Default = m
+	return nil
+}
+
+// ─── Functions ──────────────────────────────────────────────────────────────────
 
 // Gather collects all registered metrics and returns a GatherResponse where the
 // metrics are encoded depending on the type. metrics are either encoded via
@@ -142,6 +120,60 @@ func (m *metrics) Gather(format string) (GatherResponse, error) {
 		return GatherResponse{}, fmt.Errorf("unsupported metrics format: %s", format)
 	}
 }
+
+// ModuleMeasureSince provides a short hand method for emitting a time measure
+// metric for a module with a given set of keys. If any global labels are defined,
+// they will be added to the module label.
+func (m *metrics) ModuleMeasureSince(module string, start time.Time, keys ...string) {
+	gometrics.MeasureSinceWithLabels(
+		keys,
+		start.UTC(),
+		append([]gometrics.Label{NewLabel(MetricLabelNameModule, module)}, m.cnf.globalLabels...),
+	)
+}
+
+// ModuleSetGauge provides a short hand method for emitting a gauge metric for a
+// module with a given set of keys. If any global labels are defined, they will
+// be added to the module label.
+func (m *metrics) ModuleSetGauge(module string, val float32, keys ...string) {
+	gometrics.SetGaugeWithLabels(
+		keys,
+		val,
+		append([]gometrics.Label{NewLabel(MetricLabelNameModule, module)}, m.cnf.globalLabels...),
+	)
+}
+
+// IncrCounter provides a wrapper functionality for emitting a counter metric with
+// global labels (if any).
+func (m *metrics) IncrCounter(val float32, keys ...string) {
+	gometrics.IncrCounterWithLabels(keys, val, m.cnf.globalLabels)
+}
+
+// IncrCounterWithLabels provides a wrapper functionality for emitting a counter
+// metric with global labels (if any) along with the provided labels.
+func (m *metrics) IncrCounterWithLabels(keys []string, val float32, labels []gometrics.Label) {
+	gometrics.IncrCounterWithLabels(keys, val, append(labels, m.cnf.globalLabels...))
+}
+
+// SetGauge provides a wrapper functionality for emitting a gauge metric with
+// global labels (if any).
+func (m *metrics) SetGauge(val float32, keys ...string) {
+	gometrics.SetGaugeWithLabels(keys, val, m.cnf.globalLabels)
+}
+
+// SetGaugeWithLabels provides a wrapper functionality for emitting a gauge
+// metric with global labels (if any) along with the provided labels.
+func (m *metrics) SetGaugeWithLabels(keys []string, val float32, labels []gometrics.Label) {
+	gometrics.SetGaugeWithLabels(keys, val, append(labels, m.cnf.globalLabels...))
+}
+
+// MeasureSince provides a wrapper functionality for emitting a a time measure
+// metric with global labels (if any).
+func (m *metrics) MeasureSince(start time.Time, keys ...string) {
+	gometrics.MeasureSinceWithLabels(keys, start.UTC(), m.cnf.globalLabels)
+}
+
+// ─── Utils ──────────────────────────────────────────────────────────────────────
 
 func (m *metrics) gatherPrometheus() (GatherResponse, error) {
 	if !m.prometheusEnabled {

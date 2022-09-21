@@ -29,7 +29,7 @@ type Server struct {
 	ClientCtx         client.Context
 
 	logger  log.Logger
-	metrics *telemetry.Metrics
+	metrics telemetry.Metrics
 	// Start() is blocking and generally called from a separate goroutine.
 	// Close() can be called asynchronously and access shared memory
 	// via the listener. Therefore, we sync access to Start and Close with
@@ -126,7 +126,7 @@ func (s *Server) registerGRPCGatewayRoutes() {
 	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
 }
 
-func (s *Server) SetTelemetry(m *telemetry.Metrics) {
+func (s *Server) SetTelemetry(m telemetry.Metrics) {
 	s.mtx.Lock()
 	s.metrics = m
 	s.registerMetrics()

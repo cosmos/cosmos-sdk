@@ -288,21 +288,6 @@ func DefaultConfig() *Config {
 
 // GetConfig returns a fully parsed Config object.
 func GetConfig(v *viper.Viper) (Config, error) {
-	globalLabelsRaw, ok := v.Get("telemetry.global-labels").([]interface{})
-	if !ok {
-		return Config{}, fmt.Errorf("failed to parse global-labels config")
-	}
-
-	globalLabels := make([][]string, 0, len(globalLabelsRaw))
-	for idx, glr := range globalLabelsRaw {
-		labelsRaw, ok := glr.([]interface{})
-		if !ok {
-			return Config{}, fmt.Errorf("failed to parse global label number %d from config", idx)
-		}
-		if len(labelsRaw) == 2 {
-			globalLabels = append(globalLabels, []string{labelsRaw[0].(string), labelsRaw[1].(string)})
-		}
-	}
 
 	return Config{
 		BaseConfig: BaseConfig{
@@ -317,15 +302,6 @@ func GetConfig(v *viper.Viper) (Config, error) {
 			MinRetainBlocks:   v.GetUint64("min-retain-blocks"),
 			IAVLCacheSize:     v.GetUint64("iavl-cache-size"),
 			AppDBBackend:      v.GetString("app-db-backend"),
-		},
-		Telemetry: telemetry.Config{
-			ServiceName:             v.GetString("telemetry.service-name"),
-			Enabled:                 v.GetBool("telemetry.enabled"),
-			EnableHostname:          v.GetBool("telemetry.enable-hostname"),
-			EnableHostnameLabel:     v.GetBool("telemetry.enable-hostname-label"),
-			EnableServiceLabel:      v.GetBool("telemetry.enable-service-label"),
-			PrometheusRetentionTime: v.GetInt64("telemetry.prometheus-retention-time"),
-			GlobalLabels:            globalLabels,
 		},
 		API: APIConfig{
 			Enable:             v.GetBool("api.enable"),

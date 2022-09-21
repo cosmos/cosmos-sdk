@@ -1,6 +1,6 @@
 # This CI is disabled on main and meant to be enabled on forks as an easy way to cherry pick fork commits into main.
-# In order to submit a PR to main, you must add the PR_BOT_PAT secret (personal access token) for the GitHub Action.
-# The PR will be submitted from that user. Note, the PR_BOT_PAT user must have write access to the repo.
+# In order to submit a PR from your repo to the Cosmos SDK, a PRBOT_PAT secret (personal access token) must be available for the GitHub Action (Settings > Secrets > Actions).
+# The PR will be submitted from the user of the PAT. Note, the PRBOT_PAT user must have write access to the repo.
 name: Cherry pick PR to Cosmos SDK
 on:
   # Set to trigger on every merge to main, not just a closed PR.
@@ -34,6 +34,6 @@ jobs:
       - name: Autocreate PR
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.PR_BOT_PAT }}
+          GH_TOKEN: ${{ secrets.PRBOT_PAT }}
         run: |
           gh pr create --repo cosmos/cosmos-sdk --base main --head "${{ github.event.repository.owner.login }}:pr-patch-${{ github.sha }}" --title "${{ github.event.pull_request.title }}" --body "Automated PR for commit: ${{ github.sha }} from ${{ github.repository }}"

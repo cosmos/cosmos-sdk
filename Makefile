@@ -126,8 +126,12 @@ include contrib/devtools/Makefile
 BUILD_TARGETS := build install
 
 build: BUILD_ARGS=-o $(BUILDDIR)/
-build-linux:
-	GOOS=linux GOARCH=$(if $(findstring aarch64,$(shell uname -m)) || $(findstring arm64,$(shell uname -m)),arm64,amd64) LEDGER_ENABLED=false $(MAKE) build
+
+build-linux-amd64:
+	GOOS=linux GOARCH=amd64 LEDGER_ENABLED=false $(MAKE) build
+	
+build-linux-arm64:
+	GOOS=linux GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 	cd ${CURRENT_DIR}/simapp && go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
@@ -138,7 +142,7 @@ $(BUILDDIR)/:
 cosmovisor:
 	$(MAKE) -C cosmovisor cosmovisor
 
-.PHONY: build build-linux cosmovisor
+.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor
 
 
 mocks: $(MOCKS_DIR)
@@ -342,23 +346,26 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_lint_cmd=github.com/golangci/golangci-lint/cmd/golangci-lint
+golangci_lint_cmd=golangci-lint
+golangci_version=v1.49.0
 
 lint:
 	@echo "--> Running linter"
-	@go run $(golangci_lint_cmd) run --timeout=10m
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+	@$(golangci_lint_cmd) run --timeout=10m
 
 lint-fix:
 	@echo "--> Running linter"
-	@go run $(golangci_lint_cmd) run --fix --out-format=tab --issues-exit-code=0
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+	@$(golangci_lint_cmd) run --fix --out-format=tab --issues-exit-code=0
 
 .PHONY: lint lint-fix
 
 format:
 	@go install mvdan.cc/gofumpt@latest
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name "*.pb.go" -not -name "*.pb.gw.go" -not -name "*.pulsar.go" -not -path "./crypto/keys/secp256k1/*" | xargs gofumpt -w -l
-	golangci-lint run --fix
+	$(golangci_lint_cmd) run --fix
 .PHONY: format
 
 ###############################################################################

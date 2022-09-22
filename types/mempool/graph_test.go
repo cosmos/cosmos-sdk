@@ -53,7 +53,7 @@ func TestPoolCase(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			graph := initGraph()
 			for i := 0; i < tt.limit; i++ {
-				graph.AddNode(nodes[i])
+				//graph.AddNode(nodes[i])
 			}
 			for _, e := range tt.edges {
 				graph.AddEdge(nodes[e[0]], nodes[e[1]])

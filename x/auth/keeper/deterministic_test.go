@@ -5,6 +5,10 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"pgregory.net/rapid"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -16,9 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"pgregory.net/rapid"
 )
 
 type DeterministicTestSuite struct {
@@ -90,17 +91,37 @@ func (suite *DeterministicTestSuite) runAccountIterations(addr sdk.AccAddress, p
 	}
 }
 
-func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
+// createAndSetAccount creates a random account and sets to the keeper store.
+func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int) []types.AccountI {
+	accs := make([]types.AccountI, 0, count)
+	accNum := make(map[uint64]bool)
+
+	for i := 0; i < count; i++ {
 		pub := pubkeyGenerator(t).Draw(t, "pubkey")
 		addr := sdk.AccAddress(pub.Address())
-		accNum := rapid.Uint64().Draw(t, "account-number")
+		accNum := rapid.Uint64().Filter(func(u uint64) bool {
+			if accNum[u] {
+				return false
+			} else {
+				accNum[u] = true
+				return true
+			}
+		}).Draw(t, "account-number") // to avoid collisions
 		seq := rapid.Uint64().Draw(t, "sequence")
 
 		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
 		suite.accountKeeper.SetAccount(suite.ctx, acc1)
+		accs = append(accs, acc1)
+	}
 
-		suite.runAccountIterations(addr, acc1)
+	return accs
+}
+
+func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		accs := suite.createAndSetAccounts(t, 1)
+		suite.Require().Len(accs, 1)
+		suite.runAccountIterations(accs[0].GetAddress(), accs[0])
 	})
 
 	// Regression test
@@ -125,6 +146,21 @@ func pubkeyGenerator(t *rapid.T) *rapid.Generator[secp256k1.PubKey] {
 	})
 }
 
+func (suite *DeterministicTestSuite) matchAccounts(acc1, acc2 types.AccountI) {
+	suite.Require().Equal(acc1.GetAddress(), acc2.GetAddress())
+	suite.Require().Equal(acc1.GetPubKey(), acc2.GetPubKey())
+	suite.Require().Equal(acc1.GetAccountNumber(), acc2.GetAccountNumber())
+	suite.Require().Equal(acc1.GetSequence(), acc2.GetSequence())
+}
+
+func (suite *DeterministicTestSuite) matchMultipleAccounts(accs1, accs2 []types.AccountI) {
+	suite.Require().Equal(len(accs1), len(accs2))
+
+	for i := 0; i < len(accs1); i++ {
+		suite.matchAccounts(accs1[i], accs2[i])
+	}
+}
+
 func (suite *DeterministicTestSuite) runAccountsIterations(prevRes []types.AccountI) {
 	for i := 0; i < 1000; i++ {
 		res, err := suite.queryClient.Accounts(suite.ctx, &types.QueryAccountsRequest{})
@@ -133,32 +169,29 @@ func (suite *DeterministicTestSuite) runAccountsIterations(prevRes []types.Accou
 		suite.Require().NotNil(res.Accounts)
 		suite.Require().Len(res.Accounts, len(prevRes))
 
-		unpackedAccs := make([]types.AccountI, len(res.Accounts))
+		unpackedAccs := make([]types.AccountI, 0, len(res.Accounts))
 		for i := 0; i < len(res.Accounts); i++ {
 			var account types.AccountI
 			err = suite.encCfg.InterfaceRegistry.UnpackAny(res.Accounts[i], &account)
 			suite.Require().NoError(err)
 
-			unpackedAccs[i] = account
+			unpackedAccs = append(unpackedAccs, account)
 		}
 
-		sort.Slice(unpackedAccs, func(i2, j int) bool {
-			return unpackedAccs[i2].GetAccountNumber() < unpackedAccs[j].GetAccountNumber()
-		})
+		if i == 0 {
+			unpackedAccs1 := make([]types.AccountI, len(unpackedAccs))
+			copy(unpackedAccs1, unpackedAccs)
 
-		sort.Slice(prevRes, func(i2, j int) bool {
-			return prevRes[i2].GetAccountNumber() < prevRes[j].GetAccountNumber()
-		})
+			sort.Slice(unpackedAccs1, func(i2, j int) bool {
+				return unpackedAccs1[i2].GetAccountNumber() < unpackedAccs1[j].GetAccountNumber()
+			})
 
-		if prevRes != nil {
-			suite.Require().Equal(unpackedAccs, prevRes)
+			suite.matchMultipleAccounts(unpackedAccs1, prevRes)
+		} else {
+			suite.matchMultipleAccounts(unpackedAccs, prevRes)
 		}
 
-		prevRes = unpackedAccs
-	}
-
-	for i := 0; i < len(prevRes); i++ {
-		suite.accountKeeper.RemoveAccount(suite.ctx, prevRes[i])
+		prevRes = unpackedAccs[0:]
 	}
 }
 
@@ -166,20 +199,17 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		numAccs := rapid.IntRange(1, 10).Draw(t, "accounts")
-		accs := make([]types.AccountI, numAccs)
+		accs := suite.createAndSetAccounts(t, numAccs)
 
-		for i := 0; i < numAccs; i++ {
-			pub := pubkeyGenerator(t).Draw(t, "pubkey")
-			addr := sdk.AccAddress(pub.Address())
-			accNum := rapid.Uint64Range(uint64(i*10+1), uint64(i*10+10)).Draw(t, "account-number") // to avoid collisions
-			seq := rapid.Uint64().Draw(t, "sequence")
-
-			acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
-			suite.accountKeeper.SetAccount(suite.ctx, acc1)
-			accs[i] = acc1
-		}
+		sort.Slice(accs, func(i, j int) bool {
+			return accs[i].GetAccountNumber() < accs[j].GetAccountNumber()
+		})
 
 		suite.runAccountsIterations(accs)
+
+		for i := 0; i < len(accs); i++ {
+			suite.accountKeeper.RemoveAccount(suite.ctx, accs[i])
+		}
 	})
 
 	// Regression test
@@ -187,7 +217,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	pub1, err := hex.DecodeString("D1002E1B019000010BB7034500E71F011F1CA90D5B000E134BFB0F3603030D0303")
 	suite.Require().NoError(err)
 	accNum1 := uint64(107)
-	seq1 := uint64(0)
+	seq1 := uint64(10001)
 
 	addr2 := sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
 	pub2, err := hex.DecodeString("01090C02812F010C25200ED40E004105160196E801F70005070EA21603FF06001E")
@@ -202,7 +232,12 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 	suite.accountKeeper.SetAccount(suite.ctx, acc2)
 
-	suite.runAccountsIterations([]types.AccountI{acc1, acc2})
+	accs := []types.AccountI{acc1, acc2}
+	sort.Slice(accs, func(i, j int) bool {
+		return accs[i].GetAccountNumber() < accs[j].GetAccountNumber()
+	})
+
+	suite.runAccountsIterations(accs)
 }
 
 func (suite *DeterministicTestSuite) runAccountAddressByIDIterations(id int64, prevRes string) {
@@ -255,9 +290,7 @@ func (suite *DeterministicTestSuite) runParamsIterations(prevRes types.Params) {
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
 
-		if !prevRes.Equal(types.Params{}) {
-			suite.Require().Equal(res.Params, prevRes)
-		}
+		suite.Require().Equal(res.Params, prevRes)
 
 		prevRes = res.Params
 	}
@@ -298,7 +331,7 @@ func (suite *DeterministicTestSuite) runAccountInfoIterations(addr sdk.AccAddres
 		if prevRes != nil {
 			suite.Require().Equal(res.GetInfo().Address, prevRes.Address)
 			suite.Require().True(res.GetInfo().PubKey.Equal(prevRes.PubKey))
-			suite.Require().Equal(res.GetInfo().AccountNumber, prevRes.GetAccountNumber())
+			suite.Require().Equal(res.GetInfo().AccountNumber, prevRes.AccountNumber)
 			suite.Require().Equal(res.GetInfo().Sequence, prevRes.Sequence)
 		}
 
@@ -308,15 +341,13 @@ func (suite *DeterministicTestSuite) runAccountInfoIterations(addr sdk.AccAddres
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
-		pub := pubkeyGenerator(t).Draw(t, "pubkey")
-		addr := sdk.AccAddress(pub.Address())
-		accNum := rapid.Uint64().Draw(t, "account-number")
-		seq := rapid.Uint64().Draw(t, "sequence")
+		accs := suite.createAndSetAccounts(t, 1)
+		suite.Require().Len(accs, 1)
 
-		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
-		suite.accountKeeper.SetAccount(suite.ctx, acc1)
+		acc, ok := accs[0].(*types.BaseAccount)
+		suite.Require().True(ok)
 
-		suite.runAccountInfoIterations(addr, acc1)
+		suite.runAccountInfoIterations(acc.GetAddress(), acc)
 	})
 
 	// Regression test
@@ -325,7 +356,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 	suite.Require().NoError(err)
 
 	accNum := uint64(10087)
-	seq := uint64(0)
+	seq := uint64(10)
 
 	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
@@ -544,5 +575,4 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 	sort.Strings(maccs)
 	storedMaccs := suite.setModuleAccounts(suite.ctx, ak, maccs)
 	suite.runModuleAccountsIterations(ak, storedMaccs)
-
 }

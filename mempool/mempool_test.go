@@ -143,6 +143,7 @@ func TestStatefulMempool_Select_Prioty_Nonce2(t *testing.T) {
 	for _, selectedTx := range selectedTx {
 		actualBytes += selectedTx.Size()
 	}
+
 	require.LessOrEqual(t, actualBytes, maxBytes)
 
 }

@@ -43,8 +43,8 @@ func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterface
 func (pc *ProtoCodec) Marshal(o ProtoMarshaler) ([]byte, error) {
-	// check nil messages early on to avoid panic.
-	if o.Size() == 0 {
+	// Size() check can catch the typed nil value.
+	if o == nil || o.Size() == 0 {
 		return nil, nil
 	}
 	return o.Marshal()

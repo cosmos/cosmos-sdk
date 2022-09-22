@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -45,14 +46,22 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", authz.ModuleName))
 }
 
+func (k Keeper) decodeGrant(bz []byte) (authz.Grant, error) {
+	var grant authz.Grant
+	if bz == nil {
+		return grant, nil
+	}
+	k.cdc.MustUnmarshal(bz, &grant)
+	return grant, nil
+}
+
 // getGrant returns grant stored at skey.
 func (k Keeper) getGrant(ctx sdk.Context, skey []byte) (grant authz.Grant, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(skey)
-	if bz == nil {
-		return grant, false
+	grant, err := store2.GetAndDecode(store, k.decodeGrant, skey)
+	if err != nil {
+		panic(err)
 	}
-	k.cdc.MustUnmarshal(bz, &grant)
 	return grant, true
 }
 

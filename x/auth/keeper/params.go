@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -21,10 +22,9 @@ func (ak AccountKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 // GetParams gets the auth module's parameters.
 func (ak AccountKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 	store := ctx.KVStore(ak.storeKey)
-	bz := store.Get(types.ParamsKey)
-	if bz == nil {
-		return params
+	params, err := store2.GetAndDecode(store, ak.decodeParams, types.ParamsKey)
+	if err != nil {
+		panic(err)
 	}
-	ak.cdc.MustUnmarshal(bz, &params)
 	return params
 }

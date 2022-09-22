@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -40,22 +41,29 @@ func (ak AccountKeeper) HasAccountAddressByID(ctx sdk.Context, id uint64) bool {
 // GetAccount implements AccountKeeperI.
 func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
 	store := ctx.KVStore(ak.storeKey)
-	bz := store.Get(types.AddressStoreKey(addr))
-	if bz == nil {
-		return nil
+	acc, err := store2.GetAndDecode(store, ak.decodeAccount, types.AddressStoreKey(addr))
+	if err != nil {
+		panic(err)
 	}
+	return acc
+}
 
-	return ak.decodeAccount(bz)
+func decodeAccAddr(bz []byte) (string, error) {
+	if bz == nil {
+		return "", nil
+	}
+	res := sdk.AccAddress(bz)
+	return res.String(), nil
 }
 
 // GetAccountAddressById returns account address by id.
 func (ak AccountKeeper) GetAccountAddressByID(ctx sdk.Context, id uint64) string {
 	store := ctx.KVStore(ak.storeKey)
-	bz := store.Get(types.AccountNumberStoreKey(id))
-	if bz == nil {
-		return ""
+	addr, err := store2.GetAndDecode(store, decodeAccAddr, types.AccountNumberStoreKey(id))
+	if err != nil {
+		panic(err)
 	}
-	return sdk.AccAddress(bz).String()
+	return addr
 }
 
 // GetAllAccounts returns all accounts in the accountKeeper.
@@ -99,8 +107,10 @@ func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, cb func(account types.A
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		account := ak.decodeAccount(iterator.Value())
-
+		account, err := ak.decodeAccount(iterator.Value())
+		if err != nil {
+			panic(err)
+		}
 		if cb(account) {
 			break
 		}

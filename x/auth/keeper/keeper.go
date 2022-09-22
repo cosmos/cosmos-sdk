@@ -228,13 +228,15 @@ func (ak AccountKeeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccou
 	ak.SetAccount(ctx, macc)
 }
 
-func (ak AccountKeeper) decodeAccount(bz []byte) types.AccountI {
+func (ak AccountKeeper) decodeAccount(bz []byte) (types.AccountI, error) {
 	acc, err := ak.UnmarshalAccount(bz)
-	if err != nil {
-		panic(err)
-	}
+	return acc, err
+}
 
-	return acc
+func (ak AccountKeeper) decodeParams(bz []byte) (types.Params, error) {
+	var params types.Params
+	ak.cdc.MustUnmarshal(bz, &params)
+	return params, nil
 }
 
 // MarshalAccount protobuf serializes an Account interface

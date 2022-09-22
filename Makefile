@@ -210,7 +210,11 @@ build-docs:
 ###############################################################################
 
 test: test-unit
-test-all: test-unit test-ledger-mock test-race test-cover
+test-e2e:
+	make -C tests test-e2e
+test-integration:
+	make -C tests test-integration
+test-all: test-unit test-e2e test-integration test-ledger-mock test-race test-cover
 
 TEST_PACKAGES=./...
 TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race

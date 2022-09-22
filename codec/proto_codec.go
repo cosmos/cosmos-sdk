@@ -45,7 +45,8 @@ func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
 func (pc *ProtoCodec) Marshal(o ProtoMarshaler) ([]byte, error) {
 	// Size() check can catch the typed nil value.
 	if o == nil || o.Size() == 0 {
-		return nil, nil
+		// return empty bytes instead of nil, because nil has special meaning in places like store.Set
+		return []byte{}, nil
 	}
 	return o.Marshal()
 }

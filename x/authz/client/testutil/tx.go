@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -81,7 +80,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 	var response sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-	s.checkTxCode(val.ClientCtx, response.TxHash, 0)
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, response.TxHash, 0))
 
 	// Create new account in the keyring.
 	s.grantee[2] = s.createAccount("grantee3")
@@ -126,7 +125,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-	s.checkTxCode(val.ClientCtx, response.TxHash, 0)
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, response.TxHash, 0))
 }
 
 func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
@@ -525,7 +524,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 				var txResp sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-				s.checkTxCode(val.ClientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -681,7 +680,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(val.ClientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -726,7 +725,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	s.Require().NoError(err)
 	var response sdk.TxResponse
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-	s.checkTxCode(clientCtx, response.TxHash, authz.ErrNoAuthorizationFound.ABCICode())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, response.TxHash, authz.ErrNoAuthorizationFound.ABCICode()))
 }
 
 func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
@@ -825,7 +824,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(val.ClientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -935,7 +934,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			default:
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.checkTxCode(val.ClientCtx, response.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, response.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1122,7 +1121,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.checkTxCode(val.ClientCtx, response.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, response.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1201,7 +1200,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.checkTxCode(val.ClientCtx, response.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, response.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1356,7 +1355,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.checkTxCode(val.ClientCtx, response.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, response.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1437,20 +1436,8 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.checkTxCode(val.ClientCtx, response.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, response.TxHash, tc.expectedCode))
 			}
 		})
 	}
-}
-
-func (s *IntegrationTestSuite) checkTxCode(clientCtx client.Context, txHash string, expectedCode uint32) {
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	cmd := authcli.QueryTxCmd()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	s.Require().NoError(err)
-
-	var response sdk.TxResponse
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-	s.Require().Equal(expectedCode, response.Code, out.String())
 }

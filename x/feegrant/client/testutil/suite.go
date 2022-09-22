@@ -18,7 +18,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
@@ -598,7 +597,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -705,7 +704,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -794,7 +793,7 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 
 			var resp sdk.TxResponse
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-			s.checkTxCode(clientCtx, resp.TxHash, tc.expErrCode)
+			s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, tc.expErrCode))
 		})
 	}
 }
@@ -885,7 +884,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -976,23 +975,11 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 			s.Require().NoError(err)
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			txResp := tc.respType.(*sdk.TxResponse)
-			s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+			s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 		})
 	}
 }
 
 func getFormattedExpiration(duration int64) string {
 	return time.Now().Add(time.Duration(duration) * time.Second).Format(time.RFC3339)
-}
-
-func (s *IntegrationTestSuite) checkTxCode(clientCtx client.Context, txHash string, expectedCode uint32) {
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	cmd := authcli.QueryTxCmd()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	s.Require().NoError(err)
-
-	var response sdk.TxResponse
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-	s.Require().Equal(expectedCode, response.Code, out.String())
 }

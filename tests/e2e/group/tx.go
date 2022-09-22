@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -20,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	client "github.com/cosmos/cosmos-sdk/x/group/client/cli"
@@ -111,7 +109,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err, out.String())
 	txResp := sdk.TxResponse{}
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.checkTxCode(val.ClientCtx, txResp.TxHash, 0)
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
 	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}
 
@@ -142,7 +140,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.checkTxCode(val.ClientCtx, txResp.TxHash, 0)
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
 	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err, out.String())
@@ -166,7 +164,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.checkTxCode(val.ClientCtx, txResp.TxHash, 0)
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
 	// vote
 	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
@@ -182,7 +180,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.checkTxCode(val.ClientCtx, txResp.TxHash, 0)
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
 	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryProposalCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err, out.String())
@@ -355,7 +353,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -387,7 +385,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 		require.NoError(err, out.String())
 		var txResp sdk.TxResponse
 		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-		s.checkTxCode(val.ClientCtx, txResp.TxHash, 0)
+		s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 		groupIDs[i] = s.getGroupIDFromTxResponse(txResp)
 	}
 
@@ -556,7 +554,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -678,7 +676,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -884,7 +882,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1052,7 +1050,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1152,7 +1150,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1297,7 +1295,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1412,7 +1410,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1600,7 +1598,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1634,7 +1632,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 
 		var txResp sdk.TxResponse
 		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-		s.checkTxCode(clientCtx, txResp.TxHash, 0)
+		s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, 0))
 		ids[i] = s.getProposalIDFromTxResponse(txResp)
 	}
 
@@ -1793,7 +1791,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1821,7 +1819,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 
 		var txResp sdk.TxResponse
 		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-		s.checkTxCode(clientCtx, txResp.TxHash, 0)
+		s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, 0))
 		ids[i] = s.getProposalIDFromTxResponse(txResp)
 	}
 
@@ -1919,7 +1917,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1964,7 +1962,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 
 		var txResp sdk.TxResponse
 		require.NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-		s.checkTxCode(clientCtx, txResp.TxHash, 0)
+		s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, 0))
 		proposalID := s.getProposalIDFromTxResponse(txResp)
 		proposalIDs = append(proposalIDs, proposalID)
 
@@ -2252,7 +2250,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				s.Require().NoError(err, out.String())
 				var resp sdk.TxResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				s.checkTxCode(clientCtx, resp.TxHash, 0)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 				return err
 			},
@@ -2279,7 +2277,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				s.Require().NoError(err, out.String())
 				var resp sdk.TxResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				s.checkTxCode(clientCtx, resp.TxHash, 0)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 				return err
 			},
@@ -2306,7 +2304,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				s.Require().NoError(err, out.String())
 				var resp sdk.TxResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				s.checkTxCode(clientCtx, resp.TxHash, 0)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 				return err
 			},
@@ -2338,7 +2336,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				s.Require().NoError(err, out.String())
 				var resp sdk.TxResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				s.checkTxCode(clientCtx, resp.TxHash, 0)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 				return err
 			},
@@ -2392,7 +2390,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				var txResp sdk.TxResponse
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-				s.checkTxCode(clientCtx, txResp.TxHash, 0)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, 0))
 
 			}
 
@@ -2544,7 +2542,7 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddres
 	txResp := sdk.TxResponse{}
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.checkTxCode(val.ClientCtx, txResp.TxHash, 0)
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
 	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err, out.String())
@@ -2574,16 +2572,4 @@ func (s *IntegrationTestSuite) newValidMembers(weights, membersAddress []string)
 		})
 	}
 	return membersValid
-}
-
-func (s *IntegrationTestSuite) checkTxCode(clientCtx sdkclient.Context, txHash string, expectedCode uint32) {
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	cmd := authcli.QueryTxCmd()
-	out, err := cli.ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	s.Require().NoError(err)
-
-	var response sdk.TxResponse
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-	s.Require().Equal(expectedCode, response.Code, out.String())
 }

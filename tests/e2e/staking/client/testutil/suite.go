@@ -13,7 +13,6 @@ import (
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 	"github.com/tendermint/tendermint/rpc/client/http"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -1074,7 +1073,7 @@ func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1160,7 +1159,7 @@ func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1246,7 +1245,7 @@ func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1313,7 +1312,7 @@ func (s *IntegrationTestSuite) TestNewUnbondCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1432,7 +1431,7 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.checkTxCode(clientCtx, txResp.TxHash, tc.expectedCode)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1559,16 +1558,4 @@ func (s *IntegrationTestSuite) TestEditValidatorMoniker() {
 	require.NoError(err)
 	require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &result))
 	require.Equal(result.GetMoniker(), moniker)
-}
-
-func (s *IntegrationTestSuite) checkTxCode(clientCtx client.Context, txHash string, expectedCode uint32) {
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	cmd := authcli.QueryTxCmd()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	s.Require().NoError(err)
-
-	var response sdk.TxResponse
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-	s.Require().Equal(expectedCode, response.Code, out.String())
 }

@@ -35,6 +35,10 @@ The SDK has migrated from `gogo/protobuf` (which is currently unmaintained), to 
 This means you should replace all imports of `github.com/gogo/protobuf` to `github.com/cosmos/gogoproto`.
 This allows you to remove the replace directive `replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1` from your `go.mod` file.
 
+### Transactions
+
+Broadcast mode `block` was deprecated and has been removed. Please use `sync` mode instead.
+
 ### `x/gov`
 
 #### Minimum Proposal Deposit At Time of Submission

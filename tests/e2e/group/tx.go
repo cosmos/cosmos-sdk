@@ -118,10 +118,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			threshold = 3
 		}
 
+		s.Require().NoError(s.network.WaitForNextBlock())
 		s.createGroupThresholdPolicyWithBalance(val.Address.String(), "1", threshold, 1000)
-
 		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 		s.Require().NoError(err, out.String())
+		s.Require().NoError(s.network.WaitForNextBlock())
 	}
 	percentage := 0.5
 	// create group policy with percentage decision policy
@@ -2523,8 +2524,6 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 }
 
 func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddress, groupID string, threshold int, tokens int64) string {
-	s.Require().NoError(s.network.WaitForNextBlock())
-
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 

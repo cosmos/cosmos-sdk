@@ -118,7 +118,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			threshold = 3
 		}
 
-		s.Require().NoError(s.network.WaitForNextBlock())
 		s.createGroupThresholdPolicyWithBalance(val.Address.String(), "1", threshold, 1000)
 		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 		s.Require().NoError(err, out.String())
@@ -473,7 +472,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 				require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				require.Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -2060,7 +2059,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 				require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				require.Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}

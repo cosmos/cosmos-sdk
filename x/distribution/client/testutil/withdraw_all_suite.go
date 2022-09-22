@@ -35,8 +35,7 @@ func (s *WithdrawAllTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.network = network
 
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 // TearDownSuite cleans up the curret test network after _each_ test.

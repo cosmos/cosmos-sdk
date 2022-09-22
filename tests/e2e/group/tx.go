@@ -58,9 +58,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	val := s.network.Validators[0]
 
@@ -2525,6 +2523,8 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 }
 
 func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddress, groupID string, threshold int, tokens int64) string {
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 

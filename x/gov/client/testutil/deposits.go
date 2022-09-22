@@ -35,8 +35,7 @@ func (s *DepositTestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	val := s.network.Validators[0]
 
@@ -63,9 +62,7 @@ func (s *DepositTestSuite) SetupNewSuite() {
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *DepositTestSuite) submitProposal(val *network.Validator, initialDeposit sdk.Coin, id int) {
@@ -83,10 +80,8 @@ func (s *DepositTestSuite) submitProposal(val *network.Validator, initialDeposit
 		v1beta1.ProposalTypeText,
 		exactArgs...,
 	)
-
 	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *DepositTestSuite) TearDownSuite() {
@@ -103,6 +98,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String()
 	_, err := MsgDeposit(clientCtx, val.Address.String(), proposalID, depositAmount)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// query deposit
 	deposit := s.queryDeposit(val, proposalID, false, "")
@@ -189,5 +185,6 @@ func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID strin
 	}
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &depositRes))
+
 	return depositRes
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
@@ -228,7 +228,7 @@ func (c Context) WithEventManager(em *EventManager) Context {
 	return c
 }
 
-// WithEventManager returns a Context with an updated tx priority
+// WithPriority returns a Context with an updated tx priority
 func (c Context) WithPriority(p int64) Context {
 	c.priority = p
 	return c

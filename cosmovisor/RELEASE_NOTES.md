@@ -1,6 +1,4 @@
-# Cosmovisor v1.2.1 Release Notes
-
-### Bug Fixes
+# Cosmovisor v1.3.0 Release Notes
 
 * Fix failure when installing cosmovisor via `go install`.
 

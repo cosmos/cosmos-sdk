@@ -55,12 +55,12 @@ func (e MultiError) Len() int {
 // Error implements the error interface for a MultiError.
 func (e *MultiError) Error() string {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("%d errors: ", len(e.errs)))
+	fmt.Fprintf(&sb, "%d errors: ", len(e.errs))
 	for i, err := range e.errs {
 		if i != 0 {
 			sb.WriteString(", ")
 		}
-		sb.WriteString(fmt.Sprintf("%d: %v", i+1, err))
+		fmt.Fprintf(&sb, "%d: %v", i+1, err)
 	}
 	return sb.String()
 }

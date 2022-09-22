@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"

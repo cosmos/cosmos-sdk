@@ -217,15 +217,20 @@ func (mr *MockBankKeeperMockRecorder) DelegateCoinsFromAccountToModule(ctx, send
 }
 
 // DeleteSendEnabled mocks base method.
-func (m *MockBankKeeper) DeleteSendEnabled(ctx types.Context, denom string) {
+func (m *MockBankKeeper) DeleteSendEnabled(ctx types.Context, denoms ...string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "DeleteSendEnabled", ctx, denom)
+	varargs := []interface{}{ctx}
+	for _, a := range denoms {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "DeleteSendEnabled", varargs...)
 }
 
 // DeleteSendEnabled indicates an expected call of DeleteSendEnabled.
-func (mr *MockBankKeeperMockRecorder) DeleteSendEnabled(ctx, denom interface{}) *gomock.Call {
+func (mr *MockBankKeeperMockRecorder) DeleteSendEnabled(ctx interface{}, denoms ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSendEnabled", reflect.TypeOf((*MockBankKeeper)(nil).DeleteSendEnabled), ctx, denom)
+	varargs := append([]interface{}{ctx}, denoms...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSendEnabled", reflect.TypeOf((*MockBankKeeper)(nil).DeleteSendEnabled), varargs...)
 }
 
 // DenomMetadata mocks base method.

@@ -43,7 +43,8 @@ until `Commit()` is called on the `CommitMultiStore`.
 ### `CommitMultiStore`
 
 The `CommitMultiStore` interface exposes the the top-level interface that is used
-to manage state commitment and storage by an SDK application and abstracts the concept of multiple `KVStore`s which are used by multiple modules. Specifically,
+to manage state commitment and storage by an SDK application and abstracts the
+concept of multiple `KVStore`s which are used by multiple modules. Specifically,
 it supports the following high-level primitives:
 
 * Allows for a caller to retrieve a `KVStore` by providing a `KVStoreKey`.
@@ -77,12 +78,14 @@ by implementing the following interfaces:
 
 It allows for all CRUD operations to be performed along with allowing current
 and historical state queries, prefix iteration, and state commitment along with
-Merkle proof operations. The `iavl.Store` also provides the ability to remove historical state from the state commitment layer.
+Merkle proof operations. The `iavl.Store` also provides the ability to remove
+historical state from the state commitment layer.
 
-An overview of the IAVL implementation can be found [here](https://github.com/cosmos/iavl/blob/master/docs/overview.md). It is important to note that the IAVL store
-provides both state commitment and logical storage operations, which comes with
-drawbacks as there are various performance impacts, some of which are very drastic,
-when it comes to the operations mentioned above.
+An overview of the IAVL implementation can be found [here](https://github.com/cosmos/iavl/blob/master/docs/overview.md).
+It is important to note that the IAVL store provides both state commitment and
+logical storage operations, which comes with drawbacks as there are various
+performance impacts, some of which are very drastic, when it comes to the
+operations mentioned above.
 
 When dealing with state management in modules and clients, the Cosmos SDK provides
 various layers of abstractions or "store wrapping", where the `iavl.Store` is the
@@ -131,7 +134,8 @@ state CRUD operations and queries by holding access to a unique `KVStoreKey`.
 
 The `rootmulti.Store` ensures these queries and state operations are performed
 through cached-wrapped instances of `cachekv.Store` which is described above. The
-`rootmulti.Store` implementation is also responsible for committing all accumulated state from each `KVStore` to disk and returning an application state Merkle root.
+`rootmulti.Store` implementation is also responsible for committing all accumulated
+state from each `KVStore` to disk and returning an application state Merkle root.
 
 Queries can be performed to return state data along with associated state
 commitment proofs for both previous heights/versions and the current state root.

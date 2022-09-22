@@ -1,14 +1,10 @@
 package types
 
 import (
-<<<<<<< HEAD
-	"github.com/gogo/protobuf/proto"
-=======
 	"encoding/json"
 	fmt "fmt"
 
-	"github.com/cosmos/gogoproto/proto"
->>>>>>> 7eb259fd8 (feat: add `draft-proposal` for x/group (#13353))
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

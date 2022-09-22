@@ -147,15 +147,7 @@ var suggestedProposalTypes = []proposalType{
 		MsgType: "", // no message for text proposal
 	},
 	{
-<<<<<<< HEAD
-		Type:    "software-upgrade",
-=======
-		Name:    "community-pool-spend",
-		MsgType: "/cosmos.distribution.v1beta1.MsgCommunityPoolSpend",
-	},
-	{
 		Name:    "software-upgrade",
->>>>>>> 7eb259fd8 (feat: add `draft-proposal` for x/group (#13353))
 		MsgType: "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
 	},
 	{

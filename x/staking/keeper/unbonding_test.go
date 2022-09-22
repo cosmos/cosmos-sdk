@@ -1,188 +1,239 @@
 package keeper_test
 
-// type MockStakingHooks struct {
-// 	types.StakingHooksTemplate
-// 	afterUnbondingInitiated func(uint64)
-// }
+import (
+	"testing"
+	"time"
 
-// func (h MockStakingHooks) AfterUnbondingInitiated(_ sdk.Context, id uint64) {
-// 	h.afterUnbondingInitiated(id)
-// }
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
+)
 
-// func setup(t *testing.T, hookCalled *bool, ubdeID *uint64) (
-// 	app *simapp.SimApp, ctx sdk.Context, bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress,
-// ) {
-// 	_, app, ctx = createTestInput()
+type StakingHooksTemplate struct{}
 
-// 	stakingKeeper := keeper.NewKeeper(
-// 		app.AppCodec(),
-// 		app.GetKey(types.StoreKey),
-// 		app.AccountKeeper,
-// 		app.BankKeeper,
-// 		app.GetSubspace(types.ModuleName),
-// 	)
+var _ types.StakingHooks = StakingHooksTemplate{}
 
-// 	myHooks := MockStakingHooks{
-// 		afterUnbondingInitiated: func(id uint64) {
-// 			*hookCalled = true
-// 			// save id
-// 			*ubdeID = id
-// 			// call back to stop unbonding
-// 			err := app.StakingKeeper.PutUnbondingOnHold(ctx, id)
-// 			require.NoError(t, err)
-// 		},
-// 	}
+func (h StakingHooksTemplate) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
+	return nil
+}
+func (h StakingHooksTemplate) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) error {
+	return nil
+}
+func (h StakingHooksTemplate) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+	return nil
+}
+func (h StakingHooksTemplate) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+	return nil
+}
+func (h StakingHooksTemplate) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+	return nil
+}
+func (h StakingHooksTemplate) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+	return nil
+}
+func (h StakingHooksTemplate) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+	return nil
+}
+func (h StakingHooksTemplate) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+	return nil
+}
+func (h StakingHooksTemplate) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+	return nil
+}
+func (h StakingHooksTemplate) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+	return nil
+}
+func (h StakingHooksTemplate) AfterUnbondingInitiated(ctx sdk.Context, id uint64) error {
+	return nil
+}
 
-// 	stakingKeeper.SetHooks(
-// 		types.NewMultiStakingHooks(myHooks),
-// 	)
+type MockStakingHooks struct {
+	StakingHooksTemplate
+	afterUnbondingInitiated func(uint64)
+}
 
-// 	app.StakingKeeper = stakingKeeper
+func (h MockStakingHooks) AfterUnbondingInitiated(ctx sdk.Context, id uint64) error {
+	h.afterUnbondingInitiated(id)
+	return nil
+}
 
-// 	addrDels = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000))
-// 	addrVals = simapp.ConvertAddrsToValAddrs(addrDels)
+func (s *KeeperTestSuite) SetupUnbondingTests(t *testing.T, hookCalled *bool, ubdeID *uint64) (
+	ctx sdk.Context, bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress,
+) {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	// _, app, ctx = createTestInput()
 
-// 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-// 	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
+	// stakingKeeper := keeper.NewKeeper(
+	// 	app.AppCodec(),
+	// 	app.GetKey(types.StoreKey),
+	// 	app.AccountKeeper,
+	// 	app.BankKeeper,
+	// 	app.GetSubspace(types.ModuleName),
+	// )
 
-// 	bondDenom = app.StakingKeeper.BondDenom(ctx)
-// 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+	myHooks := MockStakingHooks{
+		afterUnbondingInitiated: func(id uint64) {
+			*hookCalled = true
+			// save id
+			*ubdeID = id
+			// call back to stop unbonding
+			err := keeper.PutUnbondingOnHold(ctx, id)
+			require.NoError(t, err)
+		},
+	}
 
-// 	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
-// 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
+	keeper.SetHooks(
+		types.NewMultiStakingHooks(myHooks),
+	)
 
-// 	// Create a validator
-// 	validator1 := teststaking.NewValidator(t, addrVals[0], PKs[0])
-// 	validator1, issuedShares1 := validator1.AddTokensFromDel(valTokens)
-// 	require.Equal(t, valTokens, issuedShares1.RoundInt())
+	addrDels = simtestutil.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000))
+	addrVals = simtestutil.ConvertAddrsToValAddrs(addrDels)
 
-// 	validator1 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator1, true)
-// 	require.True(sdk.IntEq(t, valTokens, validator1.BondedTokens()))
-// 	require.True(t, validator1.IsBonded())
+	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
+	startTokens := keeper.TokensFromConsensusPower(ctx, 20)
 
-// 	// Create a delegator
-// 	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares1)
-// 	app.StakingKeeper.SetDelegation(ctx, delegation)
+	bondDenom = keeper.BondDenom(ctx)
+	notBondedPool := keeper.GetNotBondedPool(ctx)
 
-// 	// Create a validator to redelegate to
-// 	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1])
-// 	validator2, issuedShares2 := validator2.AddTokensFromDel(valTokens)
-// 	require.Equal(t, valTokens, issuedShares2.RoundInt())
+	// require.NoError(t, banktestutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	s.bankKeeper.SendCoinsFromModuleToModule(ctx, types.NotBondedPoolName, types.BondedPoolName, startTokens)
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
-// 	validator2 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
-// 	require.Equal(t, types.Bonded, validator2.Status)
-// 	require.True(t, validator2.IsBonded())
+	// Create a validator
+	validator1 := teststaking.NewValidator(t, addrVals[0], PKs[0])
+	validator1, issuedShares1 := validator1.AddTokensFromDel(valTokens)
+	require.Equal(t, valTokens, issuedShares1.RoundInt())
 
-// 	return
-// }
+	validator1 = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator1, true)
+	require.True(sdk.IntEq(t, valTokens, validator1.BondedTokens()))
+	require.True(t, validator1.IsBonded())
 
-// func doUnbondingDelegation(
-// 	t *testing.T, app *simapp.SimApp, ctx sdk.Context, bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress, hookCalled *bool,
-// ) (completionTime time.Time, bondedAmt sdk.Int, notBondedAmt sdk.Int) {
-// 	// UNDELEGATE
-// 	// Save original bonded and unbonded amounts
-// 	bondedAmt1 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-// 	notBondedAmt1 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	// Create a delegator
+	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares1)
+	keeper.SetDelegation(ctx, delegation)
 
-// 	var err error
-// 	completionTime, err = app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
-// 	require.NoError(t, err)
+	// Create a validator to redelegate to
+	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1])
+	validator2, issuedShares2 := validator2.AddTokensFromDel(valTokens)
+	require.Equal(t, valTokens, issuedShares2.RoundInt())
 
-// 	// check that the unbonding actually happened
-// 	bondedAmt2 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-// 	notBondedAmt2 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-// 	// Bonded amount is less
-// 	require.True(sdk.IntEq(t, bondedAmt1.SubRaw(1), bondedAmt2))
-// 	// Unbonded amount is more
-// 	require.True(sdk.IntEq(t, notBondedAmt1.AddRaw(1), notBondedAmt2))
+	validator2 = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator2, true)
+	require.Equal(t, types.Bonded, validator2.Status)
+	require.True(t, validator2.IsBonded())
 
-// 	// Check that the unbonding happened- we look up the entry and see that it has the correct number of shares
-// 	unbondingDelegations := app.StakingKeeper.GetUnbondingDelegationsFromValidator(ctx, addrVals[0])
-// 	require.Equal(t, sdk.NewInt(1), unbondingDelegations[0].Entries[0].Balance)
+	return
+}
 
-// 	// check that our hook was called
-// 	require.True(t, *hookCalled)
+func doUnbondingDelegation(
+	t *testing.T, app *simtestutil.SimApp, ctx sdk.Context, bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress, hookCalled *bool,
+) (completionTime time.Time, bondedAmt sdk.Int, notBondedAmt sdk.Int) {
+	// UNDELEGATE
+	// Save original bonded and unbonded amounts
+	bondedAmt1 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt1 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
-// 	return completionTime, bondedAmt2, notBondedAmt2
-// }
+	var err error
+	completionTime, err = app.StakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
+	require.NoError(t, err)
 
-// func doRedelegation(
-// 	t *testing.T, app *simapp.SimApp, ctx sdk.Context, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress, hookCalled *bool,
-// ) (completionTime time.Time) {
-// 	var err error
-// 	completionTime, err = app.StakingKeeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], sdk.NewDec(1))
-// 	require.NoError(t, err)
+	// check that the unbonding actually happened
+	bondedAmt2 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt2 := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	// Bonded amount is less
+	require.True(sdk.IntEq(t, bondedAmt1.SubRaw(1), bondedAmt2))
+	// Unbonded amount is more
+	require.True(sdk.IntEq(t, notBondedAmt1.AddRaw(1), notBondedAmt2))
 
-// 	// Check that the redelegation happened- we look up the entry and see that it has the correct number of shares
-// 	redelegations := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
-// 	require.Equal(t, 1, len(redelegations))
-// 	require.Equal(t, sdk.NewDec(1), redelegations[0].Entries[0].SharesDst)
+	// Check that the unbonding happened- we look up the entry and see that it has the correct number of shares
+	unbondingDelegations := app.StakingKeeper.GetUnbondingDelegationsFromValidator(ctx, addrVals[0])
+	require.Equal(t, sdk.NewInt(1), unbondingDelegations[0].Entries[0].Balance)
 
-// 	// check that our hook was called
-// 	require.True(t, *hookCalled)
+	// check that our hook was called
+	require.True(t, *hookCalled)
 
-// 	return completionTime
-// }
+	return completionTime, bondedAmt2, notBondedAmt2
+}
 
-// func doValidatorUnbonding(
-// 	t *testing.T, app *simapp.SimApp, ctx sdk.Context, addrVal sdk.ValAddress, hookCalled *bool,
-// ) (validator types.Validator) {
-// 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVal)
-// 	require.True(t, found)
-// 	// Check that status is bonded
-// 	require.Equal(t, types.BondStatus(3), validator.Status)
+func doRedelegation(
+	t *testing.T, app *simtestutil.SimApp, ctx sdk.Context, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress, hookCalled *bool,
+) (completionTime time.Time) {
+	var err error
+	completionTime, err = app.StakingKeeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], sdk.NewDec(1))
+	require.NoError(t, err)
 
-// 	validator, err := app.StakingKeeper.BeginUnbondingValidator(ctx, validator)
-// 	require.NoError(t, err)
+	// Check that the redelegation happened- we look up the entry and see that it has the correct number of shares
+	redelegations := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
+	require.Equal(t, 1, len(redelegations))
+	require.Equal(t, sdk.NewDec(1), redelegations[0].Entries[0].SharesDst)
 
-// 	// Check that status is unbonding
-// 	require.Equal(t, types.BondStatus(2), validator.Status)
+	// check that our hook was called
+	require.True(t, *hookCalled)
 
-// 	// check that our hook was called
-// 	require.True(t, *hookCalled)
+	return completionTime
+}
 
-// 	return validator
-// }
+func doValidatorUnbonding(
+	t *testing.T, app *simtestutil.SimApp, ctx sdk.Context, addrVal sdk.ValAddress, hookCalled *bool,
+) (validator types.Validator) {
+	validator, found := app.StakingKeeper.GetValidator(ctx, addrVal)
+	require.True(t, found)
+	// Check that status is bonded
+	require.Equal(t, types.BondStatus(3), validator.Status)
 
-// func TestValidatorUnbondingOnHold1(t *testing.T) {
-// 	var hookCalled bool
-// 	var ubdeID uint64
+	validator, err := app.StakingKeeper.BeginUnbondingValidator(ctx, validator)
+	require.NoError(t, err)
 
-// 	app, ctx, _, _, addrVals := setup(t, &hookCalled, &ubdeID)
+	// Check that status is unbonding
+	require.Equal(t, types.BondStatus(2), validator.Status)
 
-// 	// Start unbonding first validator
-// 	validator := doValidatorUnbonding(t, app, ctx, addrVals[0], &hookCalled)
+	// check that our hook was called
+	require.True(t, *hookCalled)
 
-// 	completionTime := validator.UnbondingTime
-// 	completionHeight := validator.UnbondingHeight
+	return validator
+}
 
-// 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
-// 	err := app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
-// 	require.NoError(t, err)
+func (s *KeeperTestSuite) TestValidatorUnbondingOnHold1(t *testing.T) {
+	var hookCalled bool
+	var ubdeID uint64
 
-// 	// Try to unbond validator
-// 	app.StakingKeeper.UnbondAllMatureValidators(ctx)
+	app, ctx, _, _, addrVals := s.SetupUnbondingTests(t, &hookCalled, &ubdeID)
 
-// 	// Check that validator unbonding is not complete (is not mature yet)
-// 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
-// 	require.True(t, found)
-// 	require.Equal(t, types.Unbonding, validator.Status)
-// 	unbondingVals := app.StakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
-// 	require.Equal(t, 1, len(unbondingVals))
-// 	require.Equal(t, validator.OperatorAddress, unbondingVals[0])
+	// Start unbonding first validator
+	validator := doValidatorUnbonding(t, app, ctx, addrVals[0], &hookCalled)
 
-// 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-// 	ctx = ctx.WithBlockTime(completionTime.Add(time.Duration(1)))
-// 	ctx = ctx.WithBlockHeight(completionHeight + 1)
-// 	app.StakingKeeper.UnbondAllMatureValidators(ctx)
+	completionTime := validator.UnbondingTime
+	completionHeight := validator.UnbondingHeight
 
-// 	// Check that validator unbonding is complete
-// 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
-// 	require.True(t, found)
-// 	require.Equal(t, types.Unbonded, validator.Status)
-// 	unbondingVals = app.StakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
-// 	require.Equal(t, 0, len(unbondingVals))
-// }
+	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
+	err := app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
+	require.NoError(t, err)
+
+	// Try to unbond validator
+	app.StakingKeeper.UnbondAllMatureValidators(ctx)
+
+	// Check that validator unbonding is not complete (is not mature yet)
+	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	require.Equal(t, types.Unbonding, validator.Status)
+	unbondingVals := app.StakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
+	require.Equal(t, 1, len(unbondingVals))
+	require.Equal(t, validator.OperatorAddress, unbondingVals[0])
+
+	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
+	ctx = ctx.WithBlockTime(completionTime.Add(time.Duration(1)))
+	ctx = ctx.WithBlockHeight(completionHeight + 1)
+	app.StakingKeeper.UnbondAllMatureValidators(ctx)
+
+	// Check that validator unbonding is complete
+	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	require.Equal(t, types.Unbonded, validator.Status)
+	unbondingVals = app.StakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
+	require.Equal(t, 0, len(unbondingVals))
+}
 
 // func TestValidatorUnbondingOnHold2(t *testing.T) {
 // 	var hookCalled bool

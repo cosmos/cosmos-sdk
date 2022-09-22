@@ -1,11 +1,13 @@
 package mempool_test
 
 import (
+	"fmt"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -156,6 +158,13 @@ func TestTxOrder(t *testing.T) {
 	}
 }
 
+func TestTxOrderN(t *testing.T) {
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+
+	ordered, shuffled := GenTxOrder(ctx, 5, 2)
+	fmt.Println(ordered, shuffled)
+}
+
 func simulateManyTx(ctx sdk.Context, n int) []sdk.Tx {
 	transactions := make([]sdk.Tx, n)
 	for i := 0; i < n; i++ {
@@ -190,6 +199,79 @@ func simulateTx(ctx sdk.Context) sdk.Tx {
 		[]uint64{acc.GetAccountNumber()},
 		[]uint64{acc.GetSequence()},
 		accounts[0].PrivKey,
+	)
+	return tx
+}
+
+type txWithPriority struct {
+	priority int64
+	tx       sdk.Tx
+	address  string
+}
+
+func GenTxOrder(ctx sdk.Context, nTx int, nSenders int) (ordered []txWithPriority, shuffled []txWithPriority) {
+	s := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(s)
+	randomAccounts := simtypes.RandomAccounts(r, nSenders)
+	senderNonces := make(map[string]uint64)
+	senderLastPriority := make(map[string]int)
+	for _, acc := range randomAccounts {
+		address := acc.Address.String()
+		senderNonces[address] = 1
+		senderLastPriority[address] = 999999
+	}
+
+	for i := 0; i < nTx; i++ {
+		acc := randomAccounts[r.Intn(nSenders)]
+		accAddress := acc.Address.String()
+		accNonce := senderNonces[accAddress]
+		senderNonces[accAddress] += 1
+		lastPriority := senderLastPriority[accAddress]
+		txPriority := r.Intn(lastPriority)
+		if txPriority == 0 {
+			txPriority += 1
+		}
+		senderLastPriority[accAddress] = txPriority
+		tx := txWithPriority{
+			priority: int64(txPriority),
+			tx:       simulateTx2(ctx, acc, accNonce),
+			address:  accAddress,
+		}
+		ordered = append(ordered, tx)
+	}
+	for _, item := range ordered {
+		tx := txWithPriority{
+			priority: item.priority,
+			tx:       item.tx,
+			address:  item.address,
+		}
+		shuffled = append(shuffled, tx)
+	}
+	rand.Shuffle(len(shuffled), func(i, j int) { shuffled[i], shuffled[j] = shuffled[j], shuffled[i] })
+	return ordered, shuffled
+}
+
+func simulateTx2(ctx sdk.Context, acc simtypes.Account, nonce uint64) sdk.Tx {
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
+	msg := group.MsgUpdateGroupMembers{
+		GroupId:       1,
+		Admin:         acc.Address.String(),
+		MemberUpdates: []group.MemberRequest{},
+	}
+	fees, _ := simtypes.RandomFees(r, ctx, sdk.NewCoins(sdk.NewCoin("coin", sdk.NewInt(100000000))))
+
+	tx, _ := simtestutil.GenSignedMockTx(
+		r,
+		txGen,
+		[]sdk.Msg{&msg},
+		fees,
+		simtestutil.DefaultGenTxGas,
+		ctx.ChainID(),
+		[]uint64{authtypes.NewBaseAccountWithAddress(acc.Address).GetAccountNumber()},
+		[]uint64{nonce},
+		acc.PrivKey,
 	)
 	return tx
 }

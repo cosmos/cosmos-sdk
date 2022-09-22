@@ -80,27 +80,13 @@ func (tx testTx) ValidateBasic() error {
 	return nil
 }
 
-func TestNewBTreeMempool(t *testing.T) {
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	transactions := simulateManyTx(ctx, 1000)
-	require.Equal(t, 1000, len(transactions))
-	mp := mempool.NewBTreeMempool(1000)
-
-	for _, tx := range transactions {
-		ctx.WithPriority(rand.Int63())
-		err := mp.Insert(ctx, tx.(mempool.Tx))
-		require.NoError(t, err)
-	}
-	require.Equal(t, 1000, mp.CountTx())
-}
-
 func TestNewStatefulMempool(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 
 	// general test
 	transactions := simulateManyTx(ctx, 1000)
 	require.Equal(t, 1000, len(transactions))
-	mp := mempool.NewBTreeMempool(1000)
+	mp := mempool.NewDefaultMempool()
 
 	for _, tx := range transactions {
 		ctx.WithPriority(rand.Int63())
@@ -126,14 +112,13 @@ func TestTxOrder(t *testing.T) {
 		pool  mempool.Mempool
 		order []byte
 	}{
-		{name: "BTreeMempool", txs: txs, order: order, pool: mempool.NewBTreeMempool(1000)},
-		{name: "StatefulMempool", txs: txs, order: order, pool: mempool.NewStatefulMempool()},
+		{name: "StatefulMempool", txs: txs, order: order, pool: mempool.NewDefaultMempool()},
 		{name: "Stateful_3nodes", txs: []testTx{
 			{hash: [32]byte{1}, priority: 21, nonce: 4, sender: "a"},
 			{hash: [32]byte{4}, priority: 15, nonce: 1, sender: "b"},
 			{hash: [32]byte{5}, priority: 20, nonce: 1, sender: "a"},
 		},
-			order: []byte{5, 1, 4}, pool: mempool.NewStatefulMempool()},
+			order: []byte{5, 1, 4}, pool: mempool.NewDefaultMempool()},
 		{name: "GraphMempool", txs: txs, order: order, pool: mempool.NewGraph()},
 	}
 	for _, tt := range tests {

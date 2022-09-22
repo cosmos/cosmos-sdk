@@ -30,7 +30,7 @@ These changes to the staking module have been in development for more than a yea
 
 We implement the semi-fungible liquid staking system and exemption factor system within the cosmos sdk. Though registered as fungible assets, these tokenized shares have extremely limited fungibility, only among the specific delegation record that was created when shares were tokenized. These assets can be used for OTC trades but composability with DeFi is limited. The primary expected use case is improving the user experience of liquid staking providers.
 
-A new governance parameter is introduced that defines the ratio of exempt to issued tokenized shares. This is called the exemption factor.
+A new governance parameter is introduced that defines the ratio of exempt to issued tokenized shares. This is called the exemption factor. A larger exemption factor allows more tokenized shares to be issued for a smaller amount of exempt delegations. If governance is comfortable with how the liquid staking market is evolving, it makese sense to increase this value.
 
 Min self delegation is removed from the staking system with the expectation that it will be replaced by the exempt delegations system. The exempt delegation system allows multiple accounts to demonstrate economic alignment with the validator operator as team members, partners etc. without co-mingling funds. Delegation exemption will likely be required to grow the validators' business under widespread adoption of liquid staking once governance has adjusted the exemption factor.
 

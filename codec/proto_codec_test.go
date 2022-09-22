@@ -138,7 +138,7 @@ func grpcServerEncode(c encoding.Codec, msg interface{}) ([]byte, error) {
 	return b, nil
 }
 
-func testTypedNil(t *testing.T, cdc codec.GRPCCodecProvider, v interface{}) {
+func testTypedNil(_ *testing.T, _ codec.GRPCCodecProvider, _ interface{}) {
 }
 
 func TestProtoCodecUnmarshalLengthPrefixedChecks(t *testing.T) {

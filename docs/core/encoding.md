@@ -274,6 +274,12 @@ Module should register interfaces using `InterfaceRegistry` which provides a mec
 
 In addition, an `UnpackInterfaces` phase should be introduced to deserialization to unpack interfaces before they're needed. Protobuf types that contain a protobuf `Any` either directly or via one of their members should implement the `UnpackInterfacesMessage` interface:
 
+### Can I customize a proto Message's String() method
+
+We should never customize a proto Message's `String()` method, i.e. we should never use `option (gogoproto.goproto_stringer) = false;`, doing otherwise leads to unexpected behaviour like returning wrong output or missing fields in the output.
+If we want to use a yaml output, then we should go through ProtoJSON, using the `JSONToYAML` function.
+For example: https://github.com/cosmos/cosmos-sdk/blob/main/x/auth/types/account.go#L140-L152
+
 ```go
 type UnpackInterfacesMessage interface {
   UnpackInterfaces(InterfaceUnpacker) error

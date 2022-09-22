@@ -145,7 +145,24 @@ on the operator's pruning settings defined by `PruningOptions`, which defines
 how many recent versions to keep on disk and the interval at which to remove
 "staged" pruned heights from disk. During each interval, the staged heights are
 removed from each `KVStore`. Note, it is up to the underlying `KVStore`
-implementation to determine how pruning is actually performed.
+implementation to determine how pruning is actually performed. The `PruningOptions`
+are defined as follows:
+
+```golang
+type PruningOptions struct {
+	// KeepRecent defines how many recent heights to keep on disk.
+	KeepRecent uint64
+
+	// Interval defines when the pruned heights are removed from disk.
+	Interval uint64
+
+	// Strategy defines the kind of pruning strategy. See below for more information on each.
+	Strategy PruningStrategy
+}
+```
+
+The Cosmos SDK defines a preset number of pruning "strategies": `default`, `everything`
+`nothing`, and `custom`.
 
 It is important to note that the `rootmulti.Store` considers each `KVStore` as a
 separate logical store. In other words, they do not share a Merkle tree or
@@ -158,6 +175,34 @@ that is implemented by a `rootmulti.Store`. The application then registers one o
 more `KVStoreKey` that pertain to a unique module and thus a `KVStore`. Through
 the use of an `sdk.Context` and a `KVStoreKey`, each module can get direct access
 to it's respective `KVStore` instance.
+
+Example:
+
+```golang
+func NewApp(...) Application {
+  // ...
+  
+  bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
+  bApp.SetCommitMultiStoreTracer(traceStore)
+  bApp.SetVersion(version.Version)
+  bApp.SetInterfaceRegistry(interfaceRegistry)
+
+	// ...
+
+  keys := sdk.NewKVStoreKeys(...)
+	transientKeys := sdk.NewTransientStoreKeys(...)
+	memKeys := sdk.NewMemoryStoreKeys(...)
+
+	// ...
+
+	// initialize stores
+	app.MountKVStores(keys)
+	app.MountTransientStores(transientKeys)
+	app.MountMemoryStores(memKeys)
+
+	// ...
+}
+```
 
 The `rootmulti.Store` itself can be cache-wrapped which returns an instance of a
 `cachemulti.Store`. For each block, `BaseApp` ensures that the proper abstractions

@@ -318,7 +318,7 @@ func (msg MsgCancelProposal) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (msg MsgCancelProposal) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
+	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 

@@ -2,7 +2,7 @@ package baseapp
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/mempool"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"strings"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -670,7 +670,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 	// TODO remove nil check when implemented
 	if mode == runTxModeCheck && app.mempool != nil {
-		err = app.mempool.Insert(ctx, tx.(mempool.MempoolTx))
+		err = app.mempool.Insert(ctx, tx.(mempool.Tx))
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err
 		}

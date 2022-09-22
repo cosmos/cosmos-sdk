@@ -61,9 +61,9 @@ func execFromString(execStr string) group.Exec {
 type Proposal struct {
 	GroupPolicyAddress string `json:"group_policy_address"`
 	// Messages defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Messages  []json.RawMessage `json:"messages"`
+	Messages  []json.RawMessage `json:"messages,omitempty"`
 	Metadata  string            `json:"metadata"`
-	Proposers []string          `json:"proposers"`
+	Proposers []string          `json:"proposers,omitempty"`
 }
 
 func getCLIProposal(path string) (Proposal, error) {

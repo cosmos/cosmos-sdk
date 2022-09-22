@@ -11,6 +11,12 @@ import (
 
 const thousandSeparator string = "'"
 
+// NewDecValueRenderer returns a ValueRenderer for encoding sdk.Dec cosmos
+// scalars.
+func NewDecValueRenderer() ValueRenderer {
+	return decValueRenderer{}
+}
+
 type decValueRenderer struct{}
 
 var _ ValueRenderer = decValueRenderer{}

@@ -67,9 +67,6 @@ var v040Valid = `{
 }`
 
 func (s *CLITestSuite) TestValidateGenesis() {
-	// accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	// val0 := accounts[0]
-
 	testCases := []struct {
 		name    string
 		genesis string

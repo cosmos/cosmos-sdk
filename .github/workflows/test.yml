@@ -10,7 +10,9 @@ on:
 permissions:
   contents: read
 
-concurrency: ci-${{ github.ref }}
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test-submodules:

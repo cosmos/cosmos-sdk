@@ -278,6 +278,7 @@ In addition, an `UnpackInterfaces` phase should be introduced to deserialization
 
 Using `option (gogoproto.goproto_stringer) = false;` in a proto message definition leads to unexpected behaviour, like returning wrong output or having missing fields in the output.
 For that reason a proto Message's `String()` must not be customized, and the `goproto_stringer` option must be avoided.
+
 A correct YAML output can be obtained through ProtoJSON, using the `JSONToYAML` function:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/codec/yaml.go#L8-L20

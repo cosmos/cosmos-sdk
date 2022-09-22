@@ -88,7 +88,6 @@ func (s *EndToEndTestSuite) SetupSuite() {
 
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
-
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
@@ -520,7 +519,7 @@ func (s *EndToEndTestSuite) TestNewSendTxCmd() {
 
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
 		})
 	}
@@ -655,7 +654,7 @@ func (s *EndToEndTestSuite) TestNewMultiSendTxCmd() {
 
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
 		})
 	}

@@ -32,6 +32,7 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	tmrpc "github.com/tendermint/tendermint/rpc/client"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 // interface assertion
@@ -202,6 +203,9 @@ func (c *Client) BlockByHash(ctx context.Context, hash string) (crgtypes.BlockRe
 
 func (c *Client) BlockByHeight(ctx context.Context, height *int64) (crgtypes.BlockResponse, error) {
 	height, err := c.getHeight(ctx, height)
+
+	fmt.Println(height)
+
 	if err != nil {
 		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
 	}
@@ -237,11 +241,36 @@ func (c *Client) BlockTransactionsByHeight(ctx context.Context, height *int64) (
 
 // Coins fetches the existing coins in the application
 func (c *Client) coins(ctx context.Context) (sdk.Coins, error) {
+	var result sdk.Coins
+
 	supply, err := c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{})
 	if err != nil {
 		return nil, crgerrs.FromGRPCToRosettaError(err)
 	}
-	return supply.Supply, nil
+
+	for supply.GetPagination().GetNextKey() != nil {
+		//supply, err = c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{Pagination: v1beta11.PageRequest{ Key: supply.GetPagination().NextKey()}})
+		// get next key
+		fmt.Println("Get next page")
+
+		page := supply.GetPagination()
+		if page == nil {
+			return nil, crgerrs.WrapError(crgerrs.ErrCodec, fmt.Sprintf("error pagination"))
+		}
+		nextKey := page.GetNextKey()
+		
+		supply, err = c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{Pagination: &query.PageRequest{ Key: nextKey}})
+		if err != nil {
+			return nil, crgerrs.FromGRPCToRosettaError(err)
+		}
+
+		fmt.Println(supply)
+
+		result = append(result[:0], supply.Supply[:]...)
+	}
+
+
+	return result, nil
 }
 
 func (c *Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes []byte) (ops []*rosettatypes.Operation, signers []*rosettatypes.AccountIdentifier, err error) {

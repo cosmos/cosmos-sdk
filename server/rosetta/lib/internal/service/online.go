@@ -16,20 +16,25 @@ const genesisBlockFetchTimeout = 15 * time.Second
 // NewOnlineNetwork builds a single network adapter.
 // It will get the Genesis block on the beginning to avoid calling it everytime.
 func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client) (crgtypes.API, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), genesisBlockFetchTimeout)
-	defer cancel()
+	//ctx, cancel := context.WithTimeout(context.Background(), genesisBlockFetchTimeout)
+	//defer cancel()
 
-	var genesisHeight int64 = -1 // to use initial_height in genesis.json
+	/*var genesisHeight int64 = -1 // to use initial_height in genesis.json
 	block, err := client.BlockByHeight(ctx, &genesisHeight)
 	if err != nil {
 		return OnlineNetwork{}, err
+	}*/
+
+	block := types.BlockIdentifier {
+		Index: 9283650, // Theta upgrade height
+		Hash: "0x09E5CC1760C63AB706C79D936024E35AE226D983724F3BB026C4BD1407CDB7FD",
 	}
 
 	return OnlineNetwork{
 		client:                 client,
 		network:                network,
-		networkOptions:         networkOptionsFromClient(client, block.Block),
-		genesisBlockIdentifier: block.Block,
+		networkOptions:         networkOptionsFromClient(client, &block),
+		genesisBlockIdentifier: &block,
 	}, nil
 }
 

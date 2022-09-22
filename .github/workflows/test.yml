@@ -10,56 +10,9 @@ on:
 permissions:
   contents: read
 
+concurrency: ci-${{ github.ref }}
+
 jobs:
-  cleanup-runs:
-    runs-on: buildjet-4vcpu-ubuntu-2004
-    steps:
-      - uses: rokroskar/workflow-run-cleanup-action@master
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
-  build:
-    runs-on: buildjet-4vcpu-ubuntu-2004
-    strategy:
-      matrix:
-        go-arch: ["amd64", "arm", "arm64"]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.18
-      - uses: technote-space/get-diff-action@v6.1.0
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/**.go
-            **/go.mod
-            **/go.sum
-      - name: Get data from Go build cache
-        # if: env.GIT_DIFF
-        if: ${{ false }}
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/golangci-lint
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
-      - name: Build
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
-      - name: Build Legacy
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false COSMOS_BUILD_OPTIONS=legacy make build
-
-      - name: Build cosmovisor
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
-
-      - name: Install runsim
-        run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-
   test-submodules:
     runs-on: buildjet-4vcpu-ubuntu-2004
     container: tendermintdev/docker-tm-db-testing
@@ -279,7 +232,6 @@ jobs:
 
   test-sim-nondeterminism:
     runs-on: buildjet-4vcpu-ubuntu-2004
-    needs: [build]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3

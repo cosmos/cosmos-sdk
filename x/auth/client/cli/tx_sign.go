@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
@@ -21,6 +22,7 @@ const (
 	flagSigOnly         = "signature-only"
 	flagAmino           = "amino"
 	flagNoAutoIncrement = "no-auto-increment"
+	flagAppend          = "append"
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
@@ -54,7 +56,9 @@ account key. It implies --signature-only.
 
 	cmd.Flags().String(flagMultisig, "", "Address or key name of the multisig account on behalf of which the transaction shall be signed")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
-	cmd.Flags().Bool(flagSigOnly, true, "Print only the generated signature, then exit")
+	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
+	cmd.Flags().Bool(flagAppend, false, "Combine all message and generate single signed transaction for broadcast.")
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	cmd.MarkFlagRequired(flags.FlagFrom)
@@ -118,13 +122,36 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
-			unsignedStdTx := scanner.Tx()
-			txFactory = txFactory.WithSequence(sequence)
-			txBuilder, err := txCfg.WrapTxBuilder(unsignedStdTx)
-			if err != nil {
-				return err
+		appendMessagesToSingleMsg, _ := cmd.Flags().GetBool(flagAppend)
+		if appendMessagesToSingleMsg {
+			// It will combine all tx msgs and create single signed transaction
+			txBuilder := clientCtx.TxConfig.NewTxBuilder()
+			msgs := make([]sdk.Msg, 0)
+			newGasLimit := uint64(0)
+
+			for scanner.Scan() {
+				unsignedStdTx := scanner.Tx()
+				fe, err := clientCtx.TxConfig.WrapTxBuilder(unsignedStdTx)
+				if err != nil {
+					return err
+				}
+				// increment the gas
+				newGasLimit += fe.GetTx().GetGas()
+				// append messages
+				msgs = append(msgs, unsignedStdTx.GetMsgs()...)
 			}
+			// set the new appened msgs into builder
+			txBuilder.SetMsgs(msgs...)
+
+			// set the memo,fees,feeGranter,feePayer from cmd flags
+			txBuilder.SetMemo(txFactory.Memo())
+			txBuilder.SetFeeAmount(txFactory.Fees())
+			txBuilder.SetFeeGranter(clientCtx.FeeGranter)
+			txBuilder.SetFeePayer(clientCtx.FeePayer)
+
+			// set the gasLimit
+			txBuilder.SetGasLimit(newGasLimit)
+
 			if ms == "" {
 				from, _ := cmd.Flags().GetString(flags.FlagFrom)
 				_, fromName, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), from)
@@ -157,6 +184,49 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			}
 
 			cmd.Printf("%s\n", json)
+
+		} else {
+			// It will generate signed tx for each tx
+			for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
+				unsignedStdTx := scanner.Tx()
+				txFactory = txFactory.WithSequence(sequence)
+				txBuilder, err := txCfg.WrapTxBuilder(unsignedStdTx)
+				if err != nil {
+					return err
+				}
+				if ms == "" {
+					from, _ := cmd.Flags().GetString(flags.FlagFrom)
+					_, fromName, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), from)
+					if err != nil {
+						return fmt.Errorf("error getting account from keybase: %w", err)
+					}
+					err = authclient.SignTx(txFactory, clientCtx, fromName, txBuilder, true, true)
+					if err != nil {
+						return err
+					}
+				} else {
+					multisigAddr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), ms)
+					if err != nil {
+						return fmt.Errorf("error getting account from keybase: %w", err)
+					}
+					err = authclient.SignTxWithSignerAddress(
+						txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, true)
+					if err != nil {
+						return err
+					}
+				}
+
+				if err != nil {
+					return err
+				}
+
+				json, err := marshalSignatureJSON(txCfg, txBuilder, printSignatureOnly)
+				if err != nil {
+					return err
+				}
+
+				cmd.Printf("%s\n", json)
+			}
 		}
 
 		if err := scanner.UnmarshalErr(); err != nil {

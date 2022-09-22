@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -28,17 +30,19 @@ type DeterministicTestSuite struct {
 	authKeeper *banktestutil.MockAccountKeeper
 
 	queryClient banktypes.QueryClient
-	// msgServer   banktypes.MsgServer
+	encCfg      moduletestutil.TestEncodingConfig
+	mintAcc     *authtypes.ModuleAccount
+}
 
-	encCfg  moduletestutil.TestEncodingConfig
-	mintAcc *authtypes.ModuleAccount
+func TestDeterministicTestSuite(t *testing.T) {
+	suite.Run(t, new(DeterministicTestSuite))
 }
 
 func (suite *DeterministicTestSuite) SetupTest() {
 	key := sdk.NewKVStoreKey(banktypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
-	encCfg := moduletestutil.MakeTestEncodingConfig(bank.AppModuleBasic{}, bank.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(bank.AppModuleBasic{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
@@ -61,7 +65,6 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	queryClient := banktypes.NewQueryClient(queryHelper)
 
 	suite.queryClient = queryClient
-	// suite.msgServer = keeper.NewMsgServerImpl(suite.bankKeeper)
 	suite.encCfg = encCfg
 
 	suite.mintAcc = authtypes.NewEmptyModuleAccount(minttypes.ModuleName, authtypes.Minter)
@@ -82,13 +85,13 @@ func (suite *DeterministicTestSuite) mockFundAccount(receiver sdk.AccAddress) {
 	suite.mockSendCoinsFromModuleToAccount(mintAcc, receiver)
 }
 
-func (suite *DeterministicTestSuite) runIterationsQueryBalance(addr sdk.AccAddress, prevRes *sdk.Coin) {
+func (suite *DeterministicTestSuite) runQueryBalanceIterations(addr sdk.AccAddress, prevRes *sdk.Coin) {
 	for i := 0; i < 1000; i++ {
 		res, err := suite.queryClient.Balance(suite.ctx, banktypes.NewQueryBalanceRequest(addr, prevRes.GetDenom()))
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
 
-		suite.Require().Equal(res.Balance, prevRes)
+		suite.Require().Equal(res.GetBalance(), prevRes)
 		prevRes = res.Balance
 	}
 }
@@ -97,15 +100,15 @@ func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		addr := testdata.AddressGenerator(t).Draw(t, "address")
 		coin := sdk.NewCoin(
-			rapid.StringMatching(`[A-Za-z]+[A-Za-z0-9]*`).Draw(t, "denom"),
-			sdk.NewInt(rapid.Int64().Draw(t, "amount")),
+			rapid.StringMatching(`[A-Za-z]+[A-Za-z0-9]{5,}`).Draw(t, "denom"),
+			sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 		)
 
 		suite.mockFundAccount(addr)
 		suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin))
 		suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, sdk.NewCoins(coin))
 
-		suite.runIterationsQueryBalance(addr, &coin)
+		suite.runQueryBalanceIterations(addr, &coin)
 	})
 
 	addr := sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
@@ -118,5 +121,5 @@ func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
 	suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin))
 	suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, sdk.NewCoins(coin))
 
-	suite.runIterationsQueryBalance(addr, &coin)
+	suite.runQueryBalanceIterations(addr, &coin)
 }

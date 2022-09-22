@@ -5,20 +5,16 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-
-	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
-
+	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 )
 
 func (m moduleDB) DefaultJSON(target ormjson.WriteTarget) error {
-	tableNames := make([]protoreflect.FullName, 0, len(m.tablesByName))
-	for name := range m.tablesByName {
-		tableNames = append(tableNames, name)
-	}
+	tableNames := maps.Keys(m.tablesByName)
 	sort.Slice(tableNames, func(i, j int) bool {
 		ti, tj := tableNames[i], tableNames[j]
 		return ti.Name() < tj.Name()
@@ -113,12 +109,20 @@ func (m moduleDB) ImportJSON(ctx context.Context, source ormjson.ReadSource) err
 }
 
 func (m moduleDB) ExportJSON(ctx context.Context, sink ormjson.WriteTarget) error {
-	for name, table := range m.tablesByName {
+	// Ensure that we export the tables in a deterministic order.
+	tableNames := maps.Keys(m.tablesByName)
+	sort.Slice(tableNames, func(i, j int) bool {
+		ti, tj := tableNames[i], tableNames[j]
+		return ti.Name() < tj.Name()
+	})
+
+	for _, name := range tableNames {
 		w, err := sink.OpenWriter(name)
 		if err != nil {
 			return err
 		}
 
+		table := m.tablesByName[name]
 		err = table.ExportJSON(ctx, w)
 		if err != nil {
 			return err

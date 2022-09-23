@@ -154,6 +154,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 				rapid.StringMatching(denomRegex).Draw(t, "denom"),
 				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 			)
+
+			// NewCoins sorts the denoms
 			coins = sdk.NewCoins(append(coins, coin)...)
 		}
 
@@ -163,4 +165,17 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 
 		suite.runAllBalancesIterations(addr, coins)
 	})
+
+	addr := sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
+
+	coins := sdk.NewCoins(
+		sdk.NewCoin("stake", sdk.NewInt(10)),
+		sdk.NewCoin("denom", sdk.NewInt(100)),
+	)
+
+	suite.mockFundAccount(addr)
+	err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, coins)
+	suite.Require().NoError(err)
+
+	suite.runAllBalancesIterations(addr, coins)
 }

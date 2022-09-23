@@ -467,29 +467,35 @@ func wrapKeyNotFound(err error, msg string) error {
 }
 
 func (ks keystore) List() ([]Info, error) {
-	var res []Info
+	res := []Info{}
 
 	keys, err := ks.db.Keys()
 	if err != nil {
 		return nil, err
 	}
 
-	sort.Strings(keys)
+	if len(keys) == 0 {
+		return res, nil
+	}
 
+	sort.Strings(keys)
 	for _, key := range keys {
 		if strings.HasSuffix(key, infoSuffix) {
 			rawInfo, err := ks.db.Get(key)
 			if err != nil {
-				return nil, err
+				fmt.Printf("err for key %s: %q\n", key, err)
+				continue
 			}
 
 			if len(rawInfo.Data) == 0 {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
+				fmt.Println(sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key))
+				continue
 			}
 
 			info, err := unmarshalInfo(rawInfo.Data)
 			if err != nil {
-				return nil, err
+				fmt.Printf("err for key %s: %q\n", key, err)
+				continue
 			}
 
 			res = append(res, info)

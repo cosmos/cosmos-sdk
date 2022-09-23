@@ -66,9 +66,7 @@ type Proposal struct {
 	// Messages defines an array of sdk.Msgs proto-JSON-encoded as Anys.
 	Messages  []json.RawMessage `json:"messages,omitempty"`
 	Metadata  string            `json:"metadata"`
-	Proposers []string          `json:"proposers"`
-	Title     string            `json:"title"`
-	Summary   string            `json:"summary"`
+	Proposers []string          `json:"proposers,omitempty"`
 }
 
 func getCLIProposal(path string) (Proposal, error) {

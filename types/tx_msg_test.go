@@ -6,8 +6,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,6 +40,15 @@ func (s *testMsgSuite) TestGetMsgFromTypeURL() {
 	cdc := codec.NewProtoCodec(testdata.NewTestInterfaceRegistry())
 
 	result, err := sdk.GetMsgFromTypeURL(cdc, "/testpb.TestMsg")
+	s.Require().NoError(err)
+	s.Require().Equal(msg, result)
+}
+
+func (s *testMsgSuite) TestGetMsgFromTypeURL() {
+	msg := new(testdata.TestMsg)
+	cdc := codec.NewProtoCodec(testdata.NewTestInterfaceRegistry())
+
+	result, err := sdk.GetMsgFromTypeURL(cdc, "/testdata.TestMsg")
 	s.Require().NoError(err)
 	s.Require().Equal(msg, result)
 }

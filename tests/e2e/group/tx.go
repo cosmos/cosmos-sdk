@@ -458,10 +458,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"not found",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 	}
 
@@ -478,8 +478,12 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -1554,7 +1558,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 			false,
 			"msg does not have group policy authorization",
 			&sdk.TxResponse{},
-			errors.ErrUnauthorized.ABCICode(),
+			sdkerrors.ErrUnauthorized.ABCICode(),
 		},
 		{
 			"invalid proposers",

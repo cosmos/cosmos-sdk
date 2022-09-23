@@ -82,8 +82,8 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		appConfig := depinject.Configs(makeTestConfig())
 
 		err = depinject.Inject(appConfig,
-			&accountKeeper,
 			&bankKeeper,
+			&accountKeeper,
 			&interfaceRegistry,
 			&txConfig,
 			&cdc,

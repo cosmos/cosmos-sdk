@@ -845,6 +845,7 @@ func (ks keystore) MigrateAll() ([]*Record, error) {
 	}
 
 	sort.Strings(keys)
+
 	var recs []*Record
 	for _, key := range keys {
 		// The keyring items only with `.info` consists the key info.

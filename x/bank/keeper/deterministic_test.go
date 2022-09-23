@@ -34,6 +34,10 @@ type DeterministicTestSuite struct {
 	mintAcc     *authtypes.ModuleAccount
 }
 
+const (
+	denomRegex = `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
+)
+
 func TestDeterministicTestSuite(t *testing.T) {
 	suite.Run(t, new(DeterministicTestSuite))
 }
@@ -100,13 +104,13 @@ func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		addr := testdata.AddressGenerator(t).Draw(t, "address")
 		coin := sdk.NewCoin(
-			rapid.StringMatching(`[A-Za-z]+[A-Za-z0-9]{5,}`).Draw(t, "denom"),
+			rapid.StringMatching(denomRegex).Draw(t, "denom"),
 			sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 		)
 
 		suite.mockFundAccount(addr)
-		suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin))
-		suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, sdk.NewCoins(coin))
+		err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin))
+		suite.Require().NoError(err)
 
 		suite.runQueryBalanceIterations(addr, &coin)
 	})
@@ -118,8 +122,45 @@ func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
 	)
 
 	suite.mockFundAccount(addr)
-	suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin))
-	suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, sdk.NewCoins(coin))
+	err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin))
+	suite.Require().NoError(err)
 
 	suite.runQueryBalanceIterations(addr, &coin)
+}
+
+func (suite *DeterministicTestSuite) runAllBalancesIterations(addr sdk.AccAddress, prevRes sdk.Coins) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.AllBalances(suite.ctx, &banktypes.QueryAllBalancesRequest{
+			Address: addr.String(),
+		})
+
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+		suite.Require().NotNil(res.Balances)
+
+		suite.Require().Equal(res.GetBalances(), prevRes)
+		prevRes = res.GetBalances()
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		addr := testdata.AddressGenerator(t).Draw(t, "address")
+		numCoins := rapid.IntRange(1, 10).Draw(t, "num-count")
+		coins := make(sdk.Coins, 0, numCoins)
+
+		for i := 0; i < numCoins; i++ {
+			coin := sdk.NewCoin(
+				rapid.StringMatching(denomRegex).Draw(t, "denom"),
+				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
+			)
+			coins = sdk.NewCoins(append(coins, coin)...)
+		}
+
+		suite.mockFundAccount(addr)
+		err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, coins)
+		suite.Require().NoError(err)
+
+		suite.runAllBalancesIterations(addr, coins)
+	})
 }

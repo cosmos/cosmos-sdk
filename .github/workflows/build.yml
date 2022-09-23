@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - main
+      - release/**
     paths:
       - "**/*.go"
       - "go.mod"
@@ -16,7 +17,9 @@ on:
 permissions:
   contents: read
 
-concurrency: ci-${{ github.ref }}
+concurrency:
+  group: ci-${{ github.ref }}-build
+  cancel-in-progress: true
 
 jobs:
   build:

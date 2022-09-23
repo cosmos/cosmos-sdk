@@ -12,6 +12,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -165,13 +166,13 @@ func provideModule(in consensusParamInputs) consensusParamOutputs {
 
 	k := keeper.NewKeeper(in.Cdc, in.Key, authority.String())
 	m := NewAppModule(in.Cdc, k, in.LegacySubspace)
-	// baseappOpt := func(app *baseapp.BaseApp) {
-	// 	app.SetParamStore(&k)
-	// }
+	baseappOpt := func(app *baseapp.BaseApp) {
+		app.SetParamStore(&k)
+	}
 
 	return consensusParamOutputs{
-		Keeper: k,
-		Module: runtime.WrapAppModule(m),
-		// BaseAppOption: baseappOpt,
+		Keeper:        k,
+		Module:        runtime.WrapAppModule(m),
+		BaseAppOption: baseappOpt,
 	}
 }

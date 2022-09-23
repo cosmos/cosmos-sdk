@@ -32,7 +32,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
@@ -73,7 +72,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		var (
 			bankKeeper        bankkeeper.Keeper
 			accountKeeper     authkeeper.AccountKeeper
-			paramsKeeper      paramskeeper.Keeper
 			stakingKeeper     *stakingkeeper.Keeper
 			appBuilder        *runtime.AppBuilder
 			txConfig          client.TxConfig
@@ -88,7 +86,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		err = depinject.Inject(appConfig,
 			&accountKeeper,
 			&bankKeeper,
-			&paramsKeeper,
 			&stakingKeeper,
 			&interfaceRegistry,
 			&txConfig,

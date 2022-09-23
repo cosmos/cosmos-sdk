@@ -130,8 +130,7 @@ func TestTxOrder(t *testing.T) {
 				err := tt.pool.Insert(c, tx)
 				require.NoError(t, err)
 			}
-			// TODO uncomment
-			//require.Equal(t, len(tt.txs), tt.pool.CountTx())
+			require.Equal(t, len(tt.txs), tt.pool.CountTx())
 
 			orderedTxs, err := tt.pool.Select(ctx, nil, 1000)
 			require.NoError(t, err)
@@ -143,11 +142,82 @@ func TestTxOrder(t *testing.T) {
 	}
 }
 
-func TestTxOrderN(t *testing.T) {
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+type txKey struct {
+	sender   string
+	nonce    uint64
+	priority int64
+}
 
-	ordered, shuffled := GenTxOrder(ctx, 5, 2)
-	fmt.Println(ordered, shuffled)
+func genOrderedTxs(maxTx int, numAcc int) (ordered []txKey, shuffled []txKey) {
+	s := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(s)
+	accountNonces := make(map[string]uint64)
+	prange := 10
+	randomAccounts := simtypes.RandomAccounts(r, numAcc)
+	for _, account := range randomAccounts {
+		accountNonces[account.Address.String()] = 0
+	}
+
+	getRandAccount := func(lastAcc string) simtypes.Account {
+		for {
+			res := randomAccounts[r.Intn(len(randomAccounts))]
+			if res.Address.String() != lastAcc {
+				return res
+			}
+		}
+	}
+
+	txCursor := int64(10000)
+	ptx := txKey{sender: getRandAccount("").Address.String(), nonce: 0, priority: txCursor}
+	for i := 0; i < maxTx; i++ {
+		var tx txKey
+		txType := r.Intn(5)
+		switch txType {
+		case 0:
+			nonce := ptx.nonce + 1
+			tx = txKey{nonce: nonce, sender: ptx.sender, priority: ptx.priority - int64(r.Intn(prange)+1)}
+			txCursor = tx.priority
+		case 1:
+			nonce := ptx.nonce + 1
+			tx = txKey{nonce: nonce, sender: ptx.sender, priority: ptx.priority}
+		case 2:
+			nonce := ptx.nonce + 1
+			tx = txKey{nonce: nonce, sender: ptx.sender, priority: ptx.priority + int64(r.Intn(prange)+1)}
+		case 3:
+			sender := getRandAccount(ptx.sender).Address.String()
+			nonce := accountNonces[sender] + 1
+			tx = txKey{nonce: nonce, sender: sender, priority: txCursor - int64(r.Intn(prange)+1)}
+			txCursor = tx.priority
+		case 4:
+			sender := getRandAccount(ptx.sender).Address.String()
+			nonce := accountNonces[sender] + 1
+			tx = txKey{nonce: nonce, sender: sender, priority: ptx.priority}
+		}
+		accountNonces[tx.sender] = tx.nonce
+		ordered = append(ordered, tx)
+		ptx = tx
+	}
+
+	return ordered, nil
+}
+
+func TestTxOrderN(t *testing.T) {
+	numTx := 10
+
+	//ordered, shuffled := GenTxOrder(ctx, numTx, 2)
+	ordered, shuffled := genOrderedTxs(numTx, 3)
+	require.Equal(t, numTx, len(ordered))
+	//require.Equal(t, numTx, len(shuffled))
+
+	fmt.Println("ordered")
+	for _, tx := range ordered {
+		fmt.Printf("%s, %d, %d\n", tx.sender, tx.priority, tx.nonce)
+	}
+
+	fmt.Println("shuffled")
+	for _, tx := range shuffled {
+		fmt.Printf("%s, %d, %d\n", tx.sender, tx.priority, tx.nonce)
+	}
 }
 
 func simulateManyTx(ctx sdk.Context, n int) []sdk.Tx {
@@ -192,6 +262,7 @@ type txWithPriority struct {
 	priority int64
 	tx       sdk.Tx
 	address  string
+	nonce    uint64 // duplicate from tx.address.sequence
 }
 
 func GenTxOrder(ctx sdk.Context, nTx int, nSenders int) (ordered []txWithPriority, shuffled []txWithPriority) {
@@ -220,6 +291,7 @@ func GenTxOrder(ctx sdk.Context, nTx int, nSenders int) (ordered []txWithPriorit
 		tx := txWithPriority{
 			priority: int64(txPriority),
 			tx:       simulateTx2(ctx, acc, accNonce),
+			nonce:    accNonce,
 			address:  accAddress,
 		}
 		ordered = append(ordered, tx)
@@ -228,6 +300,7 @@ func GenTxOrder(ctx sdk.Context, nTx int, nSenders int) (ordered []txWithPriorit
 		tx := txWithPriority{
 			priority: item.priority,
 			tx:       item.tx,
+			nonce:    item.nonce,
 			address:  item.address,
 		}
 		shuffled = append(shuffled, tx)

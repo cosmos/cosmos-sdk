@@ -1,6 +1,7 @@
 package mempool
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types"
 	"math"

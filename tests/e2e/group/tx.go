@@ -19,9 +19,11 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	client "github.com/cosmos/cosmos-sdk/x/group/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 type IntegrationTestSuite struct {
@@ -285,10 +287,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"invalid members address",
@@ -330,10 +332,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"member metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 	}
 
@@ -350,8 +352,12 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -532,10 +538,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 	}
 
@@ -552,8 +558,12 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -639,10 +649,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group member metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"group doesn't exist",
@@ -654,10 +664,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"not found",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 	}
 
@@ -674,8 +684,12 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -789,10 +803,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"group policy metadata too long",
@@ -807,10 +821,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group policy metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"invalid members address",
@@ -861,10 +875,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"member metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 	}
 	for _, tc := range testCases {
@@ -880,8 +894,12 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -980,10 +998,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group policy metadata: limit exceeded",
 			&sdk.TxResponse{},
-			0,
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"wrong group id",
@@ -996,10 +1014,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"not found",
 			&sdk.TxResponse{},
-			0,
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 		{
 			"invalid percentage decision policy with negative value",
@@ -1048,8 +1066,12 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -1128,10 +1150,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 				},
 				commonFlags...,
 			),
-			true,
+			false,
 			"load group policy: not found",
 			&sdk.TxResponse{},
-			0,
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 	}
 
@@ -1243,10 +1265,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				},
 				commonFlags...,
 			),
-			true,
+			false,
 			"load group policy: not found",
 			&sdk.TxResponse{},
-			0,
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 		{
 			"invalid percentage decision policy with negative value",
@@ -1358,10 +1380,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 				},
 				commonFlags...,
 			),
-			true,
+			false,
 			"group policy metadata: limit exceeded",
 			&sdk.TxResponse{},
-			0,
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"wrong admin",
@@ -1388,10 +1410,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 				},
 				commonFlags...,
 			),
-			true,
+			false,
 			"load group policy: not found",
 			&sdk.TxResponse{},
-			0,
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 	}
 
@@ -1408,8 +1430,12 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -1509,10 +1535,10 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"unauthorized msg",
@@ -1525,10 +1551,10 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"msg does not have group policy authorization",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrUnauthorized.ABCICode(),
 		},
 		{
 			"invalid proposers",
@@ -1576,10 +1602,10 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group policy: not found",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 	}
 
@@ -1596,8 +1622,12 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -1739,10 +1769,10 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"proposal: not found",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 		{
 			"metadata too long",
@@ -1755,10 +1785,10 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"invalid vote option",
@@ -1791,8 +1821,12 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -1857,10 +1891,10 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"cannot withdraw a proposal with the status of PROPOSAL_STATUS_WITHDRAWN",
 			&sdk.TxResponse{},
-			0,
+			errors.ErrInvalid.ABCICode(),
 		},
 		{
 			"proposal not found",
@@ -1919,8 +1953,12 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -2045,10 +2083,10 @@ func (s *IntegrationTestSuite) TestTxExec() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"proposal: not found",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 	}
 
@@ -2065,8 +2103,12 @@ func (s *IntegrationTestSuite) TestTxExec() {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -2134,10 +2176,11 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	s.Require().Len(resp.GroupPolicies, 1)
 
 	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-		errMsg    string
+		name         string
+		args         []string
+		expectErr    bool
+		errMsg       string
+		expectedCode uint32
 	}{
 		{
 			"invalid member address",
@@ -2151,6 +2194,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			),
 			true,
 			"key not found",
+			0,
 		},
 		{
 			"group not found",
@@ -2162,8 +2206,9 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group: not found",
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 		{
 			"valid case",
@@ -2177,6 +2222,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			),
 			false,
 			"",
+			0,
 		},
 		{
 			"not part of group",
@@ -2188,8 +2234,9 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"is not part of group",
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 		{
 			"can leave group policy threshold is more than group weight",
@@ -2203,6 +2250,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			),
 			false,
 			"",
+			0,
 		},
 	}
 
@@ -2218,6 +2266,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				s.Require().NoError(err, out.String())
 				var resp sdk.TxResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, tc.expectedCode))
 			}
 		})
 	}

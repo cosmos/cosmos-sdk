@@ -38,6 +38,7 @@ This allows you to remove the replace directive `replace github.com/gogo/protobu
 ### Transactions
 
 Broadcast mode `block` was deprecated and has been removed. Please use `sync` mode instead.
+When upgrading your tests from `block` to `sync` and checking for a transaction code, you might need to query the transaction first (with its hash) to get the correct code.
 
 ### `x/gov`
 

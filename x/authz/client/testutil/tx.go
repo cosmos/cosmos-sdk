@@ -1023,8 +1023,7 @@ func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// query tx and check result
-	cmd = authcli.QueryTxCmd()
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, []string{response.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{response.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err)
 	s.Contains(out.String(), fmt.Sprintf("cannot send to %s address", notAllowedAddr))
 }
@@ -1239,8 +1238,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 
 	// query tx and check result
-	cmd = authcli.QueryTxCmd()
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, []string{response.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{response.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err)
 	s.Contains(out.String(), fmt.Sprintf("cannot delegate/undelegate to %s validator", val.ValAddress.String()))
 }

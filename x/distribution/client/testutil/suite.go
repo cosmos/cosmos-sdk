@@ -15,7 +15,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -566,13 +565,9 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bz, tc.respType), string(bz))
 				s.Require().NoError(s.network.WaitForNextBlock())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				cmd := authcli.QueryTxCmd()
-				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txResp.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
 				s.Require().NoError(err)
-
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), txResp), out.String())
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				s.Require().Equal(tc.expectedCode, txResp.Code)
 
 				data, err := hex.DecodeString(txResp.Data)
 				s.Require().NoError(err)
@@ -658,13 +653,9 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				s.Require().NoError(s.network.WaitForNextBlock())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				cmd := authcli.QueryTxCmd()
-				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txResp.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
 				s.Require().NoError(err)
-
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), txResp), out.String())
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
+				s.Require().Equal(tc.expectedCode, txResp.Code)
 
 				data, err := hex.DecodeString(txResp.Data)
 				s.Require().NoError(err)

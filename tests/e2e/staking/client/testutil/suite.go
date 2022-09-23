@@ -23,7 +23,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -225,11 +224,9 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				require.NoError(err, out.String(), "test: %s, output\n:", tc.name, out.String())
 				s.Require().NoError(s.network.WaitForNextBlock())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				cmd := authcli.QueryTxCmd()
-				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{txResp.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+				txRespHash := tc.respType.(*sdk.TxResponse)
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, txRespHash.TxHash)
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), txResp), out.String())
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 
 				var hadEvent bool

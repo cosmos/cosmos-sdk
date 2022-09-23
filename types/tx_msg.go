@@ -1,8 +1,12 @@
 package types
 
 import (
+	"encoding/json"
+	fmt "fmt"
+
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -78,4 +82,23 @@ type TxEncoder func(tx Tx) ([]byte, error)
 // MsgTypeURL returns the TypeURL of a `sdk.Msg`.
 func MsgTypeURL(msg Msg) string {
 	return "/" + proto.MessageName(msg)
+}
+
+// GetMsgFromTypeURL returns a `sdk.Msg` message type from a type URL
+func GetMsgFromTypeURL(cdc codec.Codec, input string) (Msg, error) {
+	var msg Msg
+	bz, err := json.Marshal(struct {
+		Type string `json:"@type"`
+	}{
+		Type: input,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cdc.UnmarshalInterfaceJSON(bz, &msg); err != nil {
+		return nil, fmt.Errorf("failed to determine sdk.Msg for %s URL : %w", input, err)
+	}
+
+	return msg, nil
 }

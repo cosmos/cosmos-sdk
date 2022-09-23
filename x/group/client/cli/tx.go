@@ -45,6 +45,7 @@ func TxCmd(name string) *cobra.Command {
 		MsgVoteCmd(),
 		MsgExecCmd(),
 		MsgLeaveGroupCmd(),
+		NewCmdDraftProposal(),
 	)
 
 	return txCmd

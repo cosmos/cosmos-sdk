@@ -1,0 +1,29 @@
+name: Build Docs
+# This workflow runs when a PR is labeled with `docs`
+# This will check if the docs build successfully by running `make build-docs`
+on:
+  pull_request:
+    types: [labeled]
+    paths:
+      - "docs/**"
+      - "x/**/*.md"
+
+permissions:
+  contents: read
+
+jobs:
+  check-docs-build:
+    if: ${{ github.event.label.name == 'docs' }}
+
+    name: Check docs build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Build docs
+        run: |
+          make build-docs LEDGER_ENABLED=false

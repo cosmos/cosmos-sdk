@@ -36,6 +36,7 @@ type DeterministicTestSuite struct {
 
 const (
 	denomRegex = `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
+	name       = `[a-zA-Z][a-zA-Z0-9]{2,127}`
 )
 
 func TestDeterministicTestSuite(t *testing.T) {
@@ -369,4 +370,184 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParams() {
 	suite.bankKeeper.SetParams(suite.ctx, params)
 	params.SendEnabled = nil
 	suite.runParamsIterations(params)
+}
+
+func (suite *DeterministicTestSuite) createAndReturnMetadatas(t *rapid.T, count int) []banktypes.Metadata {
+	denomsMetadata := make([]banktypes.Metadata, 0, count)
+	for i := 0; i < count; i++ {
+
+		denom := rapid.StringMatching(denomRegex).Draw(t, "denom")
+
+		metadata := banktypes.Metadata{
+			Description: rapid.StringN(1, 100, 100).Draw(t, "desc"),
+			DenomUnits: []*banktypes.DenomUnit{
+				{
+					Denom:    denom,
+					Exponent: rapid.Uint32().Draw(t, "exponent"),
+					Aliases:  []string{denom},
+				},
+			},
+			Base:    denom,
+			Display: denom,
+		}
+
+		denomsMetadata = append(denomsMetadata, metadata)
+	}
+
+	return denomsMetadata
+}
+
+func (suite *DeterministicTestSuite) runDenomsMetadataIterations(prevRes []banktypes.Metadata) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.DenomsMetadata(suite.ctx, &banktypes.QueryDenomsMetadataRequest{})
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+
+		for i := 0; i < len(res.GetMetadatas()); i++ {
+			suite.Require().Equal(res.GetMetadatas()[i], prevRes[i])
+		}
+
+		prevRes = res.GetMetadatas()
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCDenomsMetadata() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		suite.SetupTest() // reset
+		count := rapid.IntRange(1, 5).Draw(t, "count")
+		denomsMetadata := suite.createAndReturnMetadatas(t, count)
+		suite.Require().Len(denomsMetadata, count)
+
+		for i := 0; i < count; i++ {
+			suite.bankKeeper.SetDenomMetaData(suite.ctx, denomsMetadata[i])
+		}
+
+		res, err := suite.queryClient.DenomsMetadata(suite.ctx, &banktypes.QueryDenomsMetadataRequest{})
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+
+		suite.runDenomsMetadataIterations(res.Metadatas)
+	})
+
+	suite.SetupTest() // reset
+
+	metadataAtom := banktypes.Metadata{
+		Description: "The native staking token of the Cosmos Hub.",
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    "utest",
+				Exponent: 0,
+				Aliases:  []string{"microtest"},
+			},
+			{
+				Denom:    "test",
+				Exponent: 6,
+				Aliases:  []string{"TEST"},
+			},
+		},
+		Base:    "utest",
+		Display: "test",
+	}
+
+	suite.bankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
+	suite.runDenomsMetadataIterations([]banktypes.Metadata{metadataAtom})
+}
+
+func (suite *DeterministicTestSuite) runDenomMetadataIterations(denom string, prevRes banktypes.Metadata) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.DenomMetadata(suite.ctx, &banktypes.QueryDenomMetadataRequest{
+			Denom: denom,
+		})
+
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+
+		suite.Require().Equal(res.GetMetadata(), prevRes)
+		prevRes = res.GetMetadata()
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCDenomMetadata() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		denomMetadata := suite.createAndReturnMetadatas(t, 1)
+		suite.Require().Len(denomMetadata, 1)
+		suite.bankKeeper.SetDenomMetaData(suite.ctx, denomMetadata[0])
+		suite.runDenomMetadataIterations(denomMetadata[0].Base, denomMetadata[0])
+	})
+
+	metadataAtom := banktypes.Metadata{
+		Description: "The native staking token of the Cosmos Hub.",
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    "utest",
+				Exponent: 0,
+				Aliases:  []string{"microtest"},
+			},
+			{
+				Denom:    "test",
+				Exponent: 6,
+				Aliases:  []string{"TEST"},
+			},
+		},
+		Base:    "utest",
+		Display: "test",
+	}
+
+	suite.bankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
+	suite.runDenomMetadataIterations(metadataAtom.Base, metadataAtom)
+}
+
+func (suite *DeterministicTestSuite) runSendEnabledIterations(denoms []string, prevRes []*banktypes.SendEnabled) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.SendEnabled(suite.ctx, &banktypes.QuerySendEnabledRequest{
+			Denoms: denoms,
+		})
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+
+		suite.Require().Equal(res.SendEnabled, prevRes)
+		prevRes = res.SendEnabled
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		count := rapid.IntRange(1, 10).Draw(t, "count")
+		sendEnabled := make([]*banktypes.SendEnabled, 0, count)
+		denoms := make([]string, 0, count)
+
+		for i := 0; i < count; i++ {
+			denom := rapid.StringMatching(denomRegex).Draw(t, "denom")
+			coin := banktypes.SendEnabled{
+				Denom:   denom,
+				Enabled: rapid.Bool().Draw(t, "enabled-status"),
+			}
+
+			suite.bankKeeper.SetSendEnabled(suite.ctx, coin.Denom, coin.Enabled)
+			sendEnabled = append(sendEnabled, &coin)
+			denoms = append(denoms, denom)
+		}
+
+		suite.runSendEnabledIterations(denoms, sendEnabled)
+	})
+
+	coin1 := banktypes.SendEnabled{
+		Denom:   "falsecoin",
+		Enabled: false,
+	}
+	coin2 := banktypes.SendEnabled{
+		Denom:   "truecoin",
+		Enabled: true,
+	}
+
+	suite.bankKeeper.SetSendEnabled(suite.ctx, coin1.Denom, false)
+	suite.bankKeeper.SetSendEnabled(suite.ctx, coin2.Denom, true)
+
+	suite.runSendEnabledIterations(
+		[]string{coin1.Denom, coin2.Denom},
+		[]*banktypes.SendEnabled{
+			&coin1,
+			&coin2,
+		},
+	)
 }

@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/testutil/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	client "github.com/cosmos/cosmos-sdk/x/group/client/cli"
@@ -54,7 +54,7 @@ func (s *IntegrationTestSuite) TestQueryGroupInfo() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryGroupInfoCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -78,7 +78,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 	require := s.Require()
 
 	cmd := client.QueryGroupsByAdminCmd()
-	out, err := cli.ExecTestCLICmd(clientCtx, cmd, []string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	require.NoError(err)
 
 	var groups group.QueryGroupsByAdminResponse
@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 	require.Len(groups.Groups, 1)
 
 	cmd = client.QueryGroupMembersCmd()
-	out, err = cli.ExecTestCLICmd(clientCtx, cmd, []string{fmt.Sprintf("%d", groups.Groups[0].Id), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{fmt.Sprintf("%d", groups.Groups[0].Id), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	require.NoError(err)
 
 	var members group.QueryGroupMembersResponse
@@ -133,7 +133,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 		tc := tc
 		s.Run(tc.name, func() {
 			cmd := client.QueryGroupsByMemberCmd()
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				require.Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -194,7 +194,7 @@ func (s *IntegrationTestSuite) TestQueryGroupMembers() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryGroupMembersCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -260,7 +260,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByAdmin() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryGroupsByAdminCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -314,7 +314,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPolicyInfo() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryGroupPolicyInfoCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -388,7 +388,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByGroup() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryGroupPoliciesByGroupCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -464,7 +464,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByAdmin() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryGroupPoliciesByAdminCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -522,7 +522,7 @@ func (s *IntegrationTestSuite) TestQueryProposal() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryProposalCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -578,7 +578,7 @@ func (s *IntegrationTestSuite) TestQueryProposalsByGroupPolicy() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryProposalsByGroupPolicyCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -628,7 +628,7 @@ func (s *IntegrationTestSuite) TestQueryVoteByProposalVoter() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryVoteByProposalVoterCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -684,7 +684,7 @@ func (s *IntegrationTestSuite) TestQueryVotesByProposal() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryVotesByProposalCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -747,7 +747,7 @@ func (s *IntegrationTestSuite) TestQueryVotesByVoter() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryVotesByVoterCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -772,12 +772,12 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 
 	commonFlags := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
 	// create a proposal
-	out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 		append(
 			[]string{
 				s.createCLIProposal(
@@ -792,7 +792,10 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 
 	var txResp sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().Equal(uint32(0), txResp.Code, out.String())
+	txResp, err = clitestutil.GetTxResponse(s.network, clientCtx, txResp.TxHash)
+	s.Require().NoError(err)
+	s.Require().Equal(txResp.Code, uint32(0), out.String())
+
 	proposalID := s.getProposalIDFromTxResponse(txResp)
 
 	testCases := []struct {
@@ -860,7 +863,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryTallyResultCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/url"
@@ -2179,7 +2180,7 @@ func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
 	}
 
 	if len(bz) == 0 {
-		return nil, nil
+		return nil, errors.New("params not found")
 	}
 
 	var params tmproto.ConsensusParams

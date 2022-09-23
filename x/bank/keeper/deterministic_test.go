@@ -324,3 +324,49 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
 
 	suite.runTotalSupplyOfIterations(coin.Denom, coin)
 }
+
+func (suite *DeterministicTestSuite) runParamsIterations(prevRes banktypes.Params) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.Params(suite.ctx, &banktypes.QueryParamsRequest{})
+
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+
+		suite.Require().Equal(res.GetParams(), prevRes)
+		prevRes = res.GetParams()
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCQueryParams() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		enabledStatus := banktypes.SendEnabled{
+			Denom:   rapid.StringMatching(denomRegex).Draw(t, "denom"),
+			Enabled: rapid.Bool().Draw(t, "status"),
+		}
+
+		params := banktypes.Params{
+			SendEnabled:        []*banktypes.SendEnabled{&enabledStatus},
+			DefaultSendEnabled: rapid.Bool().Draw(t, "send"),
+		}
+
+		// SetParams overwrites `SendEnabled` to nil
+		suite.bankKeeper.SetParams(suite.ctx, params)
+		params.SendEnabled = nil
+		suite.runParamsIterations(params)
+	})
+
+	enabledStatus := banktypes.SendEnabled{
+		Denom:   "denom",
+		Enabled: true,
+	}
+
+	params := banktypes.Params{
+		SendEnabled:        []*banktypes.SendEnabled{&enabledStatus},
+		DefaultSendEnabled: false,
+	}
+
+	// SetParams overwrites `SendEnabled` to nil
+	suite.bankKeeper.SetParams(suite.ctx, params)
+	params.SendEnabled = nil
+	suite.runParamsIterations(params)
+}

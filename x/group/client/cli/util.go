@@ -57,34 +57,34 @@ func execFromString(execStr string) group.Exec {
 	return exec
 }
 
-// CLIProposal defines a Msg-based group proposal for CLI purposes.
-type CLIProposal struct {
+// Proposal defines a Msg-based group proposal for CLI purposes.
+type Proposal struct {
 	GroupPolicyAddress string `json:"group_policy_address"`
 	// Messages defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Messages  []json.RawMessage `json:"messages"`
+	Messages  []json.RawMessage `json:"messages,omitempty"`
 	Metadata  string            `json:"metadata"`
-	Proposers []string          `json:"proposers"`
+	Proposers []string          `json:"proposers,omitempty"`
 }
 
-func getCLIProposal(path string) (CLIProposal, error) {
+func getCLIProposal(path string) (Proposal, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
-		return CLIProposal{}, err
+		return Proposal{}, err
 	}
 
 	return parseCLIProposal(contents)
 }
 
-func parseCLIProposal(contents []byte) (CLIProposal, error) {
-	var p CLIProposal
+func parseCLIProposal(contents []byte) (Proposal, error) {
+	var p Proposal
 	if err := json.Unmarshal(contents, &p); err != nil {
-		return CLIProposal{}, err
+		return Proposal{}, err
 	}
 
 	return p, nil
 }
 
-func parseMsgs(cdc codec.Codec, p CLIProposal) ([]sdk.Msg, error) {
+func parseMsgs(cdc codec.Codec, p Proposal) ([]sdk.Msg, error) {
 	msgs := make([]sdk.Msg, len(p.Messages))
 	for i, anyJSON := range p.Messages {
 		var msg sdk.Msg

@@ -27,17 +27,6 @@ const (
 	draftMetadataFileName = "draft_metadata.json"
 )
 
-// ProposalMetadata is the metadata of a proposal
-// This metadata is supposed to live off-chain when submitted in a proposal
-type ProposalMetadata struct {
-	Title             string `json:"title"`
-	Authors           string `json:"authors"`
-	Summary           string `json:"summary"`
-	Details           string `json:"details"`
-	ProposalForumUrl  string `json:"proposal_forum_url"` // named 'Url' instead of 'URL' for avoiding the camel case split
-	VoteOptionContext string `json:"vote_option_context"`
-}
-
 // Prompt prompts the user for all values of the given type.
 // data is the struct to be filled
 // namePrefix is the name to be display as "Enter <namePrefix> <field>"
@@ -94,8 +83,17 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 		case reflect.String:
 			v.Field(i).SetString(result)
 		case reflect.Int:
-			resultInt, _ := strconv.Atoi(result)
-			v.Field(i).SetInt(int64(resultInt))
+			resultInt, err := strconv.ParseInt(result, 10, 0)
+			if err != nil {
+				return data, fmt.Errorf("invalid value for int: %w", err)
+			}
+			// If a value was successfully parsed the ranges of:
+			//      [minInt,     maxInt]
+			// are within the ranges of:
+			//      [minInt64, maxInt64]
+			// of which on 64-bit machines, which are most common,
+			// int==int64
+			v.Field(i).SetInt(resultInt)
 		default:
 			// skip other types
 			// possibly in the future we can add more types (like slices)
@@ -106,21 +104,22 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 	return data, nil
 }
 
-type proposalTypes struct {
-	Type    string
+type proposalType struct {
+	Name    string
 	MsgType string
 	Msg     sdk.Msg
 }
 
 // Prompt the proposal type values and return the proposal and its metadata
-func (p *proposalTypes) Prompt(cdc codec.Codec) (*proposal, ProposalMetadata, error) {
+func (p *proposalType) Prompt(cdc codec.Codec) (*proposal, types.ProposalMetadata, error) {
 	proposal := &proposal{}
 
 	// set metadata
-	metadata, err := Prompt(ProposalMetadata{}, "proposal")
+	metadata, err := Prompt(types.ProposalMetadata{}, "proposal")
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
+	// the metadata must be saved on IPFS, set placeholder
 	proposal.Metadata = "ipfs://CID"
 
 	// set deposit
@@ -151,56 +150,38 @@ func (p *proposalTypes) Prompt(cdc codec.Codec) (*proposal, ProposalMetadata, er
 	return proposal, metadata, nil
 }
 
-var supportedProposalTypes = []proposalTypes{
+var suggestedProposalTypes = []proposalType{
 	{
-		Type:    proposalText,
+		Name:    proposalText,
 		MsgType: "", // no message for text proposal
 	},
 	{
-		Type:    "software-upgrade",
+		Name:    "software-upgrade",
 		MsgType: "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
 	},
 	{
-		Type:    "cancel-software-upgrade",
+		Name:    "cancel-software-upgrade",
 		MsgType: "/cosmos.upgrade.v1beta1.MsgCancelUpgrade",
 	},
 	{
-		Type:    proposalOther,
+		Name:    proposalOther,
 		MsgType: "", // user will input the message type
 	},
 }
 
-func getProposalTypes() []string {
-	types := make([]string, len(supportedProposalTypes))
-	for i, p := range supportedProposalTypes {
-		types[i] = p.Type
+func getProposalSuggestions() []string {
+	types := make([]string, len(suggestedProposalTypes))
+	for i, p := range suggestedProposalTypes {
+		types[i] = p.Name
 	}
 	return types
-}
-
-func getProposalMsg(cdc codec.Codec, input string) (sdk.Msg, error) {
-	var msg sdk.Msg
-	bz, err := json.Marshal(struct {
-		Type string `json:"@type"`
-	}{
-		Type: input,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if err := cdc.UnmarshalInterfaceJSON(bz, &msg); err != nil {
-		return nil, fmt.Errorf("failed to determined sdk.Msg from %s proposal type : %w", input, err)
-	}
-
-	return msg, nil
 }
 
 // NewCmdDraftProposal let a user generate a draft proposal.
 func NewCmdDraftProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "draft-proposal",
-		Short:        "Generate a draft proposal json file. The generated proposal json contains only one message.",
+		Short:        "Generate a draft proposal json file. The generated proposal json contains only one message (skeleton).",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -211,24 +192,24 @@ func NewCmdDraftProposal() *cobra.Command {
 			// prompt proposal type
 			proposalTypesPrompt := promptui.Select{
 				Label: "Select proposal type",
-				Items: getProposalTypes(),
+				Items: getProposalSuggestions(),
 			}
 
-			_, proposalType, err := proposalTypesPrompt.Run()
+			_, selectedProposalType, err := proposalTypesPrompt.Run()
 			if err != nil {
 				return fmt.Errorf("failed to prompt proposal types: %w", err)
 			}
 
-			var proposal proposalTypes
-			for _, p := range supportedProposalTypes {
-				if strings.EqualFold(p.Type, proposalType) {
+			var proposal proposalType
+			for _, p := range suggestedProposalTypes {
+				if strings.EqualFold(p.Name, selectedProposalType) {
 					proposal = p
 					break
 				}
 			}
 
 			// create any proposal type
-			if proposal.Type == proposalOther {
+			if proposal.Name == proposalOther {
 				// prompt proposal type
 				msgPrompt := promptui.Select{
 					Label: "Select proposal message type:",
@@ -248,23 +229,23 @@ func NewCmdDraftProposal() *cobra.Command {
 			}
 
 			if proposal.MsgType != "" {
-				proposal.Msg, err = getProposalMsg(clientCtx.Codec, proposal.MsgType)
+				proposal.Msg, err = sdk.GetMsgFromTypeURL(clientCtx.Codec, proposal.MsgType)
 				if err != nil {
 					// should never happen
 					panic(err)
 				}
 			}
 
-			prop, metadata, err := proposal.Prompt(clientCtx.Codec)
+			result, metadata, err := proposal.Prompt(clientCtx.Codec)
 			if err != nil {
 				return err
 			}
 
-			if err := writeFile(draftMetadataFileName, metadata); err != nil {
+			if err := writeFile(draftProposalFileName, result); err != nil {
 				return err
 			}
 
-			if err := writeFile(draftProposalFileName, prop); err != nil {
+			if err := writeFile(draftMetadataFileName, metadata); err != nil {
 				return err
 			}
 

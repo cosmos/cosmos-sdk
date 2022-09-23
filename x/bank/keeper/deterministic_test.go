@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -248,6 +247,7 @@ func (suite *DeterministicTestSuite) runTotalSupplyIterations(prevRes sdk.Coins)
 
 func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 	denoms := []string{"stake", "foo", "bar"}
+
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		res, err := suite.queryClient.TotalSupply(suite.ctx, &banktypes.QueryTotalSupplyRequest{})
 		suite.Require().NoError(err)
@@ -265,7 +265,6 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 
 			coins = coins.Add(coin)
 		}
-		fmt.Println("coins", coins)
 
 		suite.mockMintCoins(suite.mintAcc)
 		suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins))
@@ -289,4 +288,39 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 
 	coins = genesisSupply.Add(coins...)
 	suite.runTotalSupplyIterations(coins)
+}
+
+func (suite *DeterministicTestSuite) runTotalSupplyOfIterations(denom string, prevRes sdk.Coin) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.SupplyOf(suite.ctx, &banktypes.QuerySupplyOfRequest{
+			Denom: denom,
+		})
+
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+
+		suite.Require().Equal(res.GetAmount(), prevRes)
+		prevRes = res.GetAmount()
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		coin := sdk.NewCoin(
+			rapid.StringMatching(denomRegex).Draw(t, "denom"),
+			sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
+		)
+
+		suite.mockMintCoins(suite.mintAcc)
+		suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
+
+		suite.runTotalSupplyOfIterations(coin.Denom, coin)
+	})
+
+	coin := sdk.NewCoin("bar", sdk.NewInt(100))
+
+	suite.mockMintCoins(suite.mintAcc)
+	suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
+
+	suite.runTotalSupplyOfIterations(coin.Denom, coin)
 }

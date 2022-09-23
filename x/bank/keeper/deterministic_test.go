@@ -179,3 +179,56 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 
 	suite.runAllBalancesIterations(addr, coins)
 }
+
+func (suite *DeterministicTestSuite) runSpendableBalancesIterations(addr sdk.AccAddress, prevRes sdk.Coins) {
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, addr).Return(authtypes.NewBaseAccount(addr, nil, 10087, 0)).Times(1000)
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.SpendableBalances(suite.ctx, &banktypes.QuerySpendableBalancesRequest{
+			Address: addr.String(),
+		})
+
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+		suite.Require().NotNil(res.Balances)
+
+		suite.Require().Equal(res.GetBalances(), prevRes)
+		prevRes = res.GetBalances()
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		addr := testdata.AddressGenerator(t).Draw(t, "address")
+		numCoins := rapid.IntRange(1, 10).Draw(t, "num-count")
+		coins := make(sdk.Coins, 0, numCoins)
+
+		for i := 0; i < numCoins; i++ {
+			coin := sdk.NewCoin(
+				rapid.StringMatching(denomRegex).Draw(t, "denom"),
+				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
+			)
+
+			// NewCoins sorts the denoms
+			coins = sdk.NewCoins(append(coins, coin)...)
+		}
+
+		suite.mockFundAccount(addr)
+		err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, coins)
+		suite.Require().NoError(err)
+
+		suite.runSpendableBalancesIterations(addr, coins)
+	})
+
+	addr := sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
+
+	coins := sdk.NewCoins(
+		sdk.NewCoin("stake", sdk.NewInt(10)),
+		sdk.NewCoin("denom", sdk.NewInt(100)),
+	)
+
+	suite.mockFundAccount(addr)
+	err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, coins)
+	suite.Require().NoError(err)
+
+	suite.runSpendableBalancesIterations(addr, coins)
+}

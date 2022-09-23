@@ -24,7 +24,7 @@ The Osmosis team has adopted the idea of Superfluid and Interfluid staking where
 
 It's also important to note that Interchain Accounts are available in the default IBC implementation and can be used to (rehypothecate)[https://www.investopedia.com/terms/h/hypothecation.asp#toc-what-is-rehypothecation] delegations. Thus liquid staking is already possible and these changes merely improve the UX of liquid staking. Centralized exchanges also rehypothecate staked assets, posing challenges for decentralization. This ADR takes the position that adoption of in-protocol liquid staking is the preferable outcome and provides new levers to incentivize decentralization of stake. 
 
-These changes to the staking module have been in development for more than a year and have seen substantial industry adoption who plan to build staking UX. The internal economics at Informal team has also done a review of the impacts of these changes and this review led to the developement of the exempt delegation system. This system provides governance with a tunenable parameter for modulating the risks of pricipal agent problem called the exemption factor. 
+These changes to the staking module have been in development for more than a year and have seen substantial industry adoption who plan to build staking UX. The internal economics at Informal team has also done a review of the impacts of these changes and this review led to the development of the exempt delegation system. This system provides governance with a tuneable parameter for modulating the risks of principal agent problem called the exemption factor. 
 
 ## Decision
 

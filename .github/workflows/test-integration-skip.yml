@@ -11,4 +11,4 @@ jobs:
   test-integration:
     runs-on: ubuntu-latest
     steps:
-      - run: 'echo "No build required"'
+      - run: 'echo "No integration tests required"'

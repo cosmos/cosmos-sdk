@@ -112,7 +112,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* (!db) [#13371](https://github.com/cosmos/cosmos-sdk/pull/13371) Remove storev2alpha1 from cosmos-sdk
+* (!storev2alpha1) [#13371](https://github.com/cosmos/cosmos-sdk/pull/13371) Remove storev2alpha1 from cosmos-sdk
+* !(db) [#13370](https://github.com/cosmos/cosmos-sdk/pull/13370) remove db
 * (context) [#13063](https://github.com/cosmos/cosmos-sdk/pull/13063) Update `Context#CacheContext` to automatically emit all events on the parent context's `EventManager`.
 * (x/bank) [#12706](https://github.com/cosmos/cosmos-sdk/pull/12706) Removed the `testutil` package from the `x/bank/client` package.
 * (simapp) [#12747](https://github.com/cosmos/cosmos-sdk/pull/12747) Remove `simapp.MakeTestEncodingConfig`. Please use `moduletestutil.MakeTestEncodingConfig` (`types/module/testutil`) in tests instead.

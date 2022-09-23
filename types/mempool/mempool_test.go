@@ -198,16 +198,24 @@ func genOrderedTxs(maxTx int, numAcc int) (ordered []txKey, shuffled []txKey) {
 		ptx = tx
 	}
 
-	return ordered, nil
+	for _, item := range ordered {
+		tx := txKey{
+			priority: item.priority,
+			nonce:    item.nonce,
+			sender:   item.sender,
+		}
+		shuffled = append(shuffled, tx)
+	}
+	rand.Shuffle(len(shuffled), func(i, j int) { shuffled[i], shuffled[j] = shuffled[j], shuffled[i] })
+	return ordered, shuffled
 }
 
 func TestTxOrderN(t *testing.T) {
 	numTx := 10
 
-	//ordered, shuffled := GenTxOrder(ctx, numTx, 2)
 	ordered, shuffled := genOrderedTxs(numTx, 3)
 	require.Equal(t, numTx, len(ordered))
-	//require.Equal(t, numTx, len(shuffled))
+	require.Equal(t, numTx, len(shuffled))
 
 	fmt.Println("ordered")
 	for _, tx := range ordered {

@@ -22,8 +22,6 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - name: Display go version
-        run: go version
       - run: make build
 
   install-runsim:
@@ -35,8 +33,6 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - name: Display go version
-        run: go version
       - name: Install runsim
         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
       - uses: actions/cache@v3
@@ -54,8 +50,6 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - name: Display go version
-        run: go version
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -74,8 +68,6 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - name: Display go version
-        run: go version
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -95,8 +87,6 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - name: Display go version
-        run: go version
       - uses: actions/cache@v3
         with:
           path: ~/go/bin

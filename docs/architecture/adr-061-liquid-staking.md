@@ -41,7 +41,7 @@ There is no longer a mechanism to override the validators vote for TokenizedShar
 
 ### `MsgTokenizeShares`
 
-The MsgTokenizeShares message is used to create tokenize delegated tokens. This message can be executed by any delegator who has positive amount of delegation and after execution the specific amount of delegation disappear from the account and share tokens are provided. Share tokens are demoninated in the validator and record id of the underlying delegation.
+The MsgTokenizeShares message is used to create tokenize delegated tokens. This message can be executed by any delegator who has positive amount of delegation and after execution the specific amount of delegation disappear from the account and share tokens are provided. Share tokens are denominated in the validator and record id of the underlying delegation.
 
 A user may tokenize some or all of their delegation.
 

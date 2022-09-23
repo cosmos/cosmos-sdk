@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'\n)network.cosmos.sdk.streaming.plugins.abciP\001Z9github.com/cosmos/cosmos-sdk/streaming/plugins/abci/proto',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\rlistener.proto\x12\x18\x63osmos.base.abci.v1beta1\"S\n\nPutRequest\x12\x14\n\x0c\x62lock_height\x18\x01 \x01(\x03\x12\x0b\n\x03req\x18\x02 \x01(\x0c\x12\x0b\n\x03res\x18\x03 \x01(\x0c\x12\x15\n\rstore_kv_pair\x18\x04 \x01(\x0c\"\x07\n\x05\x45mpty2\xff\x02\n\x13\x41\x42\x43IListenerService\x12Y\n\x10ListenBeginBlock\x12$.cosmos.base.abci.v1beta1.PutRequest\x1a\x1f.cosmos.base.abci.v1beta1.Empty\x12W\n\x0eListenEndBlock\x12$.cosmos.base.abci.v1beta1.PutRequest\x1a\x1f.cosmos.base.abci.v1beta1.Empty\x12X\n\x0fListenDeliverTx\x12$.cosmos.base.abci.v1beta1.PutRequest\x1a\x1f.cosmos.base.abci.v1beta1.Empty\x12Z\n\x11ListenStoreKVPair\x12$.cosmos.base.abci.v1beta1.PutRequest\x1a\x1f.cosmos.base.abci.v1beta1.EmptyBh\n)network.cosmos.sdk.streaming.plugins.abciP\x01Z9github.com/cosmos/cosmos-sdk/streaming/plugins/abci/protob\x06proto3'
+  serialized_pb=b'\n\x0elistener.proto\x12\x18\x63osmos.base.abci.v1beta1\"S\n\nPutRequest\x12\x14\n\x0c\x62lock_height\x18\x01 \x01(\x03\x12\x0b\n\x03req\x18\x02 \x01(\x0c\x12\x0b\n\x03res\x18\x03 \x01(\x0c\x12\x15\n\rstore_kv_pair\x18\x04 \x01(\x0c\"\x07\n\x05\x45mpty2\xff\x02\n\x13\x41\x42\x43IListenerService\x12Y\n\x10ListenBeginBlock\x12$.cosmos.base.abci.v1beta1.PutRequest\x1a\x1f.cosmos.base.abci.v1beta1.Empty\x12W\n\x0eListenEndBlock\x12$.cosmos.base.abci.v1beta1.PutRequest\x1a\x1f.cosmos.base.abci.v1beta1.Empty\x12X\n\x0fListenDeliverTx\x12$.cosmos.base.abci.v1beta1.PutRequest\x1a\x1f.cosmos.base.abci.v1beta1.Empty\x12Z\n\x11ListenStoreKVPair\x12$.cosmos.base.abci.v1beta1.PutRequest\x1a\x1f.cosmos.base.abci.v1beta1.EmptyBh\n)network.cosmos.sdk.streaming.plugins.abciP\x01Z9github.com/cosmos/cosmos-sdk/streaming/plugins/abci/protob\x06proto3'
 )
 
 
@@ -73,8 +73,8 @@ _PUTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=43,
-  serialized_end=126,
+  serialized_start=44,
+  serialized_end=127,
 )
 
 
@@ -98,8 +98,8 @@ _EMPTY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=128,
-  serialized_end=135,
+  serialized_start=129,
+  serialized_end=136,
 )
 
 DESCRIPTOR.message_types_by_name['PutRequest'] = _PUTREQUEST
@@ -108,14 +108,14 @@ _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 PutRequest = _reflection.GeneratedProtocolMessageType('PutRequest', (_message.Message,), {
   'DESCRIPTOR' : _PUTREQUEST,
-  '__module__' : 'service_pb2'
+  '__module__' : 'listener_pb2'
   # @@protoc_insertion_point(class_scope:cosmos.base.abci.v1beta1.PutRequest)
   })
 _sym_db.RegisterMessage(PutRequest)
 
 Empty = _reflection.GeneratedProtocolMessageType('Empty', (_message.Message,), {
   'DESCRIPTOR' : _EMPTY,
-  '__module__' : 'service_pb2'
+  '__module__' : 'listener_pb2'
   # @@protoc_insertion_point(class_scope:cosmos.base.abci.v1beta1.Empty)
   })
 _sym_db.RegisterMessage(Empty)
@@ -130,8 +130,8 @@ _ABCILISTENERSERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=138,
-  serialized_end=521,
+  serialized_start=139,
+  serialized_end=522,
   methods=[
   _descriptor.MethodDescriptor(
     name='ListenBeginBlock',

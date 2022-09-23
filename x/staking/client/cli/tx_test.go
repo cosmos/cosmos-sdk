@@ -100,7 +100,6 @@ func (s *CLITestSuite) SetupSuite() {
 		newAddr := sdk.AccAddress(pub.Address())
 		s.addrs = append(s.addrs, newAddr)
 	}
-
 }
 
 func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
@@ -403,7 +402,6 @@ func (s *CLITestSuite) TestNewEditValidatorCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)

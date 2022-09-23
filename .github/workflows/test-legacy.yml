@@ -1,11 +1,13 @@
-name: Legacy App Testing
+name: Tests (Legacy App)
 on:
   schedule:
     - cron: "0 0,12 * * *"
   release:
     types: [published]
 
-concurrency: ci-${{ github.ref }}
+concurrency:
+  group: ci-${{ github.ref }}-tests-legacy
+  cancel-in-progress: true
 
 jobs:
   test-submodules:

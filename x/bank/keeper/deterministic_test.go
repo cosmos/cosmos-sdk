@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -231,4 +232,61 @@ func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 	suite.Require().NoError(err)
 
 	suite.runSpendableBalancesIterations(addr, coins)
+}
+
+func (suite *DeterministicTestSuite) runTotalSupplyIterations(prevRes sdk.Coins) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.TotalSupply(suite.ctx, &banktypes.QueryTotalSupplyRequest{})
+
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+
+		suite.Require().Equal(res.GetSupply(), prevRes)
+		prevRes = res.GetSupply()
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
+	denoms := []string{"stake", "foo", "bar"}
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		res, err := suite.queryClient.TotalSupply(suite.ctx, &banktypes.QueryTotalSupplyRequest{})
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+		genesisSupply := res.GetSupply()
+
+		numCoins := rapid.IntRange(1, 2).Draw(t, "num-count")
+		coins := make(sdk.Coins, 0, numCoins)
+
+		for i := 0; i < numCoins; i++ {
+			coin := sdk.NewCoin(
+				denoms[rapid.IntRange(0, 2).Draw(t, "denom")],
+				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
+			)
+
+			coins = coins.Add(coin)
+		}
+		fmt.Println("coins", coins)
+
+		suite.mockMintCoins(suite.mintAcc)
+		suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins))
+
+		coins = genesisSupply.Add(coins...)
+		suite.runTotalSupplyIterations(coins)
+	})
+
+	res, err := suite.queryClient.TotalSupply(suite.ctx, &banktypes.QueryTotalSupplyRequest{})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	genesisSupply := res.GetSupply()
+
+	coins := sdk.NewCoins(
+		sdk.NewCoin("foo", sdk.NewInt(10)),
+		sdk.NewCoin("bar", sdk.NewInt(100)),
+	)
+
+	suite.mockMintCoins(suite.mintAcc)
+	suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins))
+
+	coins = genesisSupply.Add(coins...)
+	suite.runTotalSupplyIterations(coins)
 }

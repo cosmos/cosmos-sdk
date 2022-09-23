@@ -120,7 +120,7 @@ type Importer interface {
 
 // Migrator is implemented by key stores and enables migration of keys from amino to proto
 type Migrator interface {
-	MigrateAll() error
+	MigrateAll() ([]*Record, error)
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -492,43 +492,7 @@ func wrapKeyNotFound(err error, msg string) error {
 }
 
 func (ks keystore) List() ([]*Record, error) {
-	if err := ks.MigrateAll(); err != nil {
-		return nil, err
-	}
-
-	keys, err := ks.db.Keys()
-	if err != nil {
-		return nil, err
-	}
-
-	var res []*Record //nolint:prealloc
-	sort.Strings(keys)
-	for _, key := range keys {
-		// Recall that each key is twice in the keyring:
-		// - once with the `.info` suffix, which holds the key info
-		// - another time with the `.address` suffix, which only holds a reference to its associated `.info` key
-		if !strings.HasSuffix(key, infoSuffix) {
-			continue
-		}
-
-		item, err := ks.db.Get(key)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(item.Data) == 0 {
-			return nil, sdkerrors.ErrKeyNotFound.Wrap(key)
-		}
-
-		k, err := ks.protoUnmarshalRecord(item.Data)
-		if err != nil {
-			return nil, err
-		}
-
-		res = append(res, k)
-	}
-
-	return res, nil
+	return ks.MigrateAll()
 }
 
 func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (*Record, string, error) {
@@ -870,30 +834,35 @@ func (ks keystore) writeMultisigKey(name string, pk types.PubKey) (*Record, erro
 	return k, ks.writeRecord(k)
 }
 
-func (ks keystore) MigrateAll() error {
+func (ks keystore) MigrateAll() ([]*Record, error) {
 	keys, err := ks.db.Keys()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(keys) == 0 {
-		return nil
+		return nil, nil
 	}
 
+	sort.Strings(keys)
+
+	var recs []*Record
 	for _, key := range keys {
 		// The keyring items only with `.info` consists the key info.
 		if !strings.HasSuffix(key, infoSuffix) {
 			continue
 		}
 
-		_, err := ks.migrate(key)
+		rec, err := ks.migrate(key)
 		if err != nil {
 			fmt.Printf("migrate err for key %s: %q\n", key, err)
 			continue
 		}
+
+		recs = append(recs, rec)
 	}
 
-	return nil
+	return recs, nil
 }
 
 // migrate converts keyring.Item from amino to proto serialization format.

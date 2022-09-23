@@ -60,6 +60,5 @@
   - container/**/*
 "C:Store":
   - store/**/*
-  - db/**/*
 "C:orm":
   - orm/**/*

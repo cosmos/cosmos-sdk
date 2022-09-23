@@ -138,7 +138,6 @@ func grpcServerEncode(c encoding.Codec, msg interface{}) ([]byte, error) {
 	return b, nil
 }
 
-
 func TestProtoCodecUnmarshalLengthPrefixedChecks(t *testing.T) {
 	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
 

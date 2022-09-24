@@ -1,4 +1,4 @@
-package simapp
+package runtime
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -11,7 +11,7 @@ import (
 
 // App implements the common methods for a Cosmos SDK-based application
 // specific blockchain.
-type App interface {
+type AppI interface {
 	// The assigned name of the app.
 	Name() string
 

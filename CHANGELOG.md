@@ -113,7 +113,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* [#13378](https://github.com/cosmos/cosmos-sdk/pull/13378) Move `simapp.App` to `runtime.AppI`. `simapp.App` is now an alias of `runtim.AppI`.
+* [#13378](https://github.com/cosmos/cosmos-sdk/pull/13378) Move `simapp.App` to `runtime.AppI`. `simapp.App` is now an alias of `runtime.AppI`.
 * (tx) [#12659](https://github.com/cosmos/cosmos-sdk/pull/12659) Remove broadcast mode `block`.
 * (db) [#13370](https://github.com/cosmos/cosmos-sdk/pull/13370) remove storev2alpha1, see also https://github.com/cosmos/cosmos-sdk/pull/13371
 * (context) [#13063](https://github.com/cosmos/cosmos-sdk/pull/13063) Update `Context#CacheContext` to automatically emit all events on the parent context's `EventManager`.

@@ -14,14 +14,16 @@ Remove `Querier`, `Route` and `LegacyQuerier` from the app module interface. Thi
 
 ### SimApp
 
-SimApp's `app.go` is using App Wiring, the dependency injection framework of the Cosmos SDK.
+SimApp's `app.go` is now using [App Wiring](https://docs.cosmos.network/main/building-chain/depinject.html), the dependency injection framework of the Cosmos SDK.
 This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_config.go).
-The old behavior is preserved and still can be used, without the dependency injection framework, as shows [`app_legacy.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_legacy.go).
+The old behavior is preserved and can still be used, without the dependency injection framework, as shows [`app_legacy.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_legacy.go).
 
 The constructor, `NewSimApp` has been simplified:
 
 * `NewSimApp` does not take encoding parameters (`encodingConfig`) as input, instead the encoding parameters are injected (when using app wiring), or directly created in the constructor. Instead, we can instantiate `SimApp` for getting the encoding configuration.
 * `NewSimApp` now uses `AppOptions` for getting the home path (`homePath`) and the invariant checks period (`invCheckPeriod`). These were unnecessary given as arguments as they were already present in the `AppOptions`.
+
+SimApp should not be imported in your own app. Instead, you should import the `runtime.AppI` interface, that defines an `App`, and use the [`simtestutil` package](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/testutil/sims) for application testing.
 
 ### Encoding
 

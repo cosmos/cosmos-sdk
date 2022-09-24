@@ -67,6 +67,7 @@ type txKey struct {
 	nonce    uint64
 	priority int64
 	sender   string
+	hash     [32]byte
 }
 
 func txKeyLess(a, b interface{}) int {
@@ -77,12 +78,18 @@ func txKeyLess(a, b interface{}) int {
 		return res
 	}
 
-	res = huandu.Uint64.Compare(keyA.nonce, keyB.nonce)
+	res = bytes.Compare(keyB.hash[:], keyA.hash[:])
+	//res = huandu.Bytes.Compare(keyA.hash[:], keyB.hash[:])
 	if res != 0 {
 		return res
 	}
 
-	return huandu.String.Compare(keyA.sender, keyB.sender)
+	res = huandu.String.Compare(keyA.sender, keyB.sender)
+	if res != 0 {
+		return res
+	}
+
+	return huandu.Uint64.Compare(keyA.nonce, keyB.nonce)
 }
 
 func NewDefaultMempool() Mempool {
@@ -97,6 +104,11 @@ func (mp defaultMempool) Insert(ctx types.Context, tx Tx) error {
 	senders := tx.(signing.SigVerifiableTx).GetSigners()
 	nonces, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 
+	hashableTx, ok := tx.(HashableTx)
+	if !ok {
+		return ErrNoTxHash
+	}
+
 	if err != nil {
 		return err
 	} else if len(senders) != len(nonces) {
@@ -106,7 +118,7 @@ func (mp defaultMempool) Insert(ctx types.Context, tx Tx) error {
 	// TODO multiple senders
 	sender := senders[0].String()
 	nonce := nonces[0].Sequence
-	tk := txKey{nonce: nonce, priority: ctx.Priority(), sender: sender}
+	tk := txKey{nonce: nonce, priority: ctx.Priority(), sender: sender, hash: hashableTx.GetHash()}
 
 	senderTxs, ok := mp.senders[sender]
 	// initialize sender mempool if not found
@@ -207,6 +219,16 @@ func (mp defaultMempool) Remove(context types.Context, tx Tx) error {
 	delete(mp.scores, tk)
 
 	return nil
+}
+
+func DebugPrintKeys(mempool Mempool) {
+	mp := mempool.(*defaultMempool)
+	n := mp.priorities.Front()
+	for n != nil {
+		k := n.Key().(txKey)
+		fmt.Printf("%s, %d, %d; %d\n", k.sender, k.priority, k.nonce, k.hash[0])
+		n = n.Next()
+	}
 }
 
 // The complexity is O(log(N)). Implementation

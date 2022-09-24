@@ -5,6 +5,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"math"
 	"math/rand"
 	"testing"
 	"time"
@@ -26,12 +27,12 @@ type testTx struct {
 	hash     [32]byte
 	priority int64
 	nonce    uint64
-	sender   string
+	address  sdk.AccAddress
 }
 
 func (tx testTx) GetSigners() []sdk.AccAddress {
 	// TODO multi sender
-	return []sdk.AccAddress{sdk.AccAddress(tx.sender)}
+	return []sdk.AccAddress{tx.address}
 }
 
 func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) {
@@ -47,17 +48,6 @@ func (tx testTx) GetSignaturesV2() ([]signing2.SignatureV2, error) {
 			Sequence: tx.nonce,
 		},
 	}, nil
-}
-
-func newTestTx(priority int64, nonce uint64, sender string) testTx {
-	hash := make([]byte, 32)
-	rand.Read(hash)
-	return testTx{
-		hash:     *(*[32]byte)(hash),
-		priority: priority,
-		nonce:    nonce,
-		sender:   sender,
-	}
 }
 
 var (
@@ -82,6 +72,10 @@ func (tx testTx) ValidateBasic() error {
 	return nil
 }
 
+func (tx testTx) String() string {
+	return fmt.Sprintf("tx %s, %d, %d", tx.address, tx.priority, tx.nonce)
+}
+
 func TestNewStatefulMempool(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 
@@ -100,13 +94,17 @@ func TestNewStatefulMempool(t *testing.T) {
 
 func TestTxOrder(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	senderA := accounts[0].Address
+	senderB := accounts[1].Address
 	txs := []testTx{
-		{hash: [32]byte{1}, priority: 21, nonce: 4, sender: "a"},
-		{hash: [32]byte{2}, priority: 8, nonce: 3, sender: "a"},
-		{hash: [32]byte{3}, priority: 6, nonce: 2, sender: "a"},
-		{hash: [32]byte{4}, priority: 15, nonce: 1, sender: "b"},
-		{hash: [32]byte{5}, priority: 20, nonce: 1, sender: "a"},
+		{hash: [32]byte{1}, priority: 21, nonce: 4, address: senderA},
+		{hash: [32]byte{2}, priority: 8, nonce: 3, address: senderA},
+		{hash: [32]byte{3}, priority: 6, nonce: 2, address: senderA},
+		{hash: [32]byte{4}, priority: 15, nonce: 1, address: senderB},
+		{hash: [32]byte{5}, priority: 20, nonce: 1, address: senderA},
 	}
+
 	order := []byte{5, 4, 3, 2, 1}
 	tests := []struct {
 		name  string
@@ -116,9 +114,9 @@ func TestTxOrder(t *testing.T) {
 	}{
 		{name: "StatefulMempool", txs: txs, order: order, pool: mempool.NewDefaultMempool()},
 		{name: "Stateful_3nodes", txs: []testTx{
-			{hash: [32]byte{1}, priority: 21, nonce: 4, sender: "a"},
-			{hash: [32]byte{4}, priority: 15, nonce: 1, sender: "b"},
-			{hash: [32]byte{5}, priority: 20, nonce: 1, sender: "a"},
+			{hash: [32]byte{1}, priority: 21, nonce: 4, address: senderA},
+			{hash: [32]byte{4}, priority: 15, nonce: 1, address: senderB},
+			{hash: [32]byte{5}, priority: 20, nonce: 1, address: senderA},
 		},
 			order: []byte{5, 1, 4}, pool: mempool.NewDefaultMempool()},
 		{name: "GraphMempool", txs: txs, order: order, pool: mempool.NewGraph()},
@@ -142,15 +140,71 @@ func TestTxOrder(t *testing.T) {
 	}
 }
 
+func TestRandomTxOrderManyTimes(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		t.Log("iteration", i)
+		TestRandomTxOrder(t)
+	}
+}
+
+func TestRandomTxOrder(t *testing.T) {
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	numTx := 10
+
+	//seed := time.Now().UnixNano()
+	// interesting failing seeds:
+	// seed := int64(1663971399133628000)
+	seed := int64(1663989445512438000)
+	//
+
+	ordered, shuffled := genOrderedTxs(seed, numTx, 3)
+	mp := mempool.NewDefaultMempool()
+
+	for _, otx := range shuffled {
+		tx := testTx{otx.hash, otx.priority, otx.nonce, otx.address}
+		c := ctx.WithPriority(tx.priority)
+		err := mp.Insert(c, tx)
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, numTx, mp.CountTx())
+
+	selected, err := mp.Select(ctx, nil, math.MaxInt)
+	var orderedStr, selectedStr string
+
+	for i := 0; i < numTx; i++ {
+		otx := ordered[i]
+		stx := selected[i].(testTx)
+		orderedStr = fmt.Sprintf("%s\n%s, %d, %d; %d", orderedStr, otx.address, otx.priority, otx.nonce, otx.hash[0])
+		selectedStr = fmt.Sprintf("%s\n%s, %d, %d; %d", selectedStr, stx.address, stx.priority, stx.nonce, stx.hash[0])
+	}
+
+	require.NoError(t, err)
+	require.Equal(t, numTx, len(selected))
+
+	errMsg := fmt.Sprintf("Expected order: %v\nGot order: %v\nSeed: %v", orderedStr, selectedStr, seed)
+
+	mempool.DebugPrintKeys(mp)
+
+	for i, tx := range selected {
+		msg := fmt.Sprintf("Failed tx at index %d\n%s", i, errMsg)
+		require.Equal(t, ordered[i], tx.(testTx), msg)
+		require.Equal(t, tx.(testTx).priority, ordered[i].priority, msg)
+		require.Equal(t, tx.(testTx).nonce, ordered[i].nonce, msg)
+		require.Equal(t, tx.(testTx).address, ordered[i].address, msg)
+	}
+
+}
+
 type txKey struct {
 	sender   string
 	nonce    uint64
 	priority int64
+	hash     [32]byte
 }
 
-func genOrderedTxs(maxTx int, numAcc int) (ordered []txKey, shuffled []txKey) {
-	s := rand.NewSource(time.Now().UnixNano())
-	r := rand.New(s)
+func genOrderedTxs(seed int64, maxTx int, numAcc int) (ordered []testTx, shuffled []testTx) {
+	r := rand.New(rand.NewSource(seed))
 	accountNonces := make(map[string]uint64)
 	prange := 10
 	randomAccounts := simtypes.RandomAccounts(r, numAcc)
@@ -158,51 +212,69 @@ func genOrderedTxs(maxTx int, numAcc int) (ordered []txKey, shuffled []txKey) {
 		accountNonces[account.Address.String()] = 0
 	}
 
-	getRandAccount := func(lastAcc string) simtypes.Account {
+	getRandAccount := func(notAddress string) simtypes.Account {
 		for {
 			res := randomAccounts[r.Intn(len(randomAccounts))]
-			if res.Address.String() != lastAcc {
+			if res.Address.String() != notAddress {
 				return res
 			}
 		}
 	}
 
 	txCursor := int64(10000)
-	ptx := txKey{sender: getRandAccount("").Address.String(), nonce: 0, priority: txCursor}
-	for i := 0; i < maxTx; i++ {
-		var tx txKey
-		txType := r.Intn(5)
-		switch txType {
+	ptx := testTx{address: getRandAccount("").Address, nonce: 0, priority: txCursor}
+	samepChain := make(map[string]bool)
+	for i := 0; i < maxTx; {
+		var tx testTx
+		move := r.Intn(5)
+		switch move {
 		case 0:
+			// same sender, less p
 			nonce := ptx.nonce + 1
-			tx = txKey{nonce: nonce, sender: ptx.sender, priority: ptx.priority - int64(r.Intn(prange)+1)}
+			tx = testTx{nonce: nonce, address: ptx.address, priority: txCursor - int64(r.Intn(prange)+1)}
 			txCursor = tx.priority
 		case 1:
+			// same sender, same p
 			nonce := ptx.nonce + 1
-			tx = txKey{nonce: nonce, sender: ptx.sender, priority: ptx.priority}
+			tx = testTx{nonce: nonce, address: ptx.address, priority: ptx.priority}
 		case 2:
+			// same sender, greater p
 			nonce := ptx.nonce + 1
-			tx = txKey{nonce: nonce, sender: ptx.sender, priority: ptx.priority + int64(r.Intn(prange)+1)}
+			tx = testTx{nonce: nonce, address: ptx.address, priority: ptx.priority + int64(r.Intn(prange)+1)}
 		case 3:
-			sender := getRandAccount(ptx.sender).Address.String()
-			nonce := accountNonces[sender] + 1
-			tx = txKey{nonce: nonce, sender: sender, priority: txCursor - int64(r.Intn(prange)+1)}
+			// different sender, less p
+			sender := getRandAccount(ptx.address.String()).Address
+			nonce := accountNonces[sender.String()] + 1
+			tx = testTx{nonce: nonce, address: sender, priority: txCursor - int64(r.Intn(prange)+1)}
 			txCursor = tx.priority
 		case 4:
-			sender := getRandAccount(ptx.sender).Address.String()
-			nonce := accountNonces[sender] + 1
-			tx = txKey{nonce: nonce, sender: sender, priority: ptx.priority}
+			// different sender, same p
+			sender := getRandAccount(ptx.address.String()).Address
+			// disallow generating cycles of same p txs. this is an invalid processing order according to our
+			// algorithm decision.
+			if _, ok := samepChain[sender.String()]; ok {
+				continue
+			}
+			nonce := accountNonces[sender.String()] + 1
+			tx = testTx{nonce: nonce, address: sender, priority: txCursor}
+			samepChain[sender.String()] = true
 		}
-		accountNonces[tx.sender] = tx.nonce
+		tx.hash = [32]byte{byte(i)}
+		accountNonces[tx.address.String()] = tx.nonce
 		ordered = append(ordered, tx)
 		ptx = tx
+		i++
+		if move != 4 {
+			samepChain = make(map[string]bool)
+		}
 	}
 
 	for _, item := range ordered {
-		tx := txKey{
+		tx := testTx{
 			priority: item.priority,
 			nonce:    item.nonce,
-			sender:   item.sender,
+			address:  item.address,
+			hash:     item.hash,
 		}
 		shuffled = append(shuffled, tx)
 	}
@@ -213,18 +285,19 @@ func genOrderedTxs(maxTx int, numAcc int) (ordered []txKey, shuffled []txKey) {
 func TestTxOrderN(t *testing.T) {
 	numTx := 10
 
-	ordered, shuffled := genOrderedTxs(numTx, 3)
+	seed := time.Now().UnixNano()
+	ordered, shuffled := genOrderedTxs(seed, numTx, 3)
 	require.Equal(t, numTx, len(ordered))
 	require.Equal(t, numTx, len(shuffled))
 
 	fmt.Println("ordered")
 	for _, tx := range ordered {
-		fmt.Printf("%s, %d, %d\n", tx.sender, tx.priority, tx.nonce)
+		fmt.Printf("%s, %d, %d\n", tx.address, tx.priority, tx.nonce)
 	}
 
 	fmt.Println("shuffled")
 	for _, tx := range shuffled {
-		fmt.Printf("%s, %d, %d\n", tx.sender, tx.priority, tx.nonce)
+		fmt.Printf("%s, %d, %d\n", tx.address, tx.priority, tx.nonce)
 	}
 }
 

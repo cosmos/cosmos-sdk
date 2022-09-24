@@ -339,13 +339,15 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 	for _, m := range moduleNames {
 		ms[m] = true
 	}
+	allKeys := maps.Keys(m.Modules)
 	var missing []string
-	for m := range m.Modules {
+	for _, m := range allKeys {
 		if !ms[m] {
 			missing = append(missing, m)
 		}
 	}
 	if len(missing) != 0 {
+		sort.Strings(missing)
 		panic(fmt.Sprintf(
 			"%s: all modules must be defined when setting %s, missing: %v", setOrderFnName, setOrderFnName, missing))
 	}

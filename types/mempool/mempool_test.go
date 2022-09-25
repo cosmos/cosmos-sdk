@@ -132,6 +132,15 @@ func TestOutOfOrder(t *testing.T) {
 		}
 		require.Error(t, validateOrder(mtxs))
 	}
+
+	seed := time.Now().UnixNano()
+	randomTxs := genRandomTxs(seed, 1000, 10)
+	var rmtxs []mempool.Tx
+	for _, rtx := range randomTxs {
+		rmtxs = append(rmtxs, rtx)
+	}
+
+	require.Error(t, validateOrder(rmtxs))
 }
 
 func TestTxOrder(t *testing.T) {
@@ -212,6 +221,7 @@ func TestTxOrder(t *testing.T) {
 func TestRandomTxOrderManyTimes(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		TestRandomTxOrder(t)
+		TestRandomGeneratedTx(t)
 	}
 }
 
@@ -267,6 +277,30 @@ func validateOrder(mtxs []mempool.Tx) error {
 	return nil
 }
 
+func TestRandomGeneratedTx(t *testing.T) {
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	numTx := 1000
+	numAccounts := 10
+	seed := time.Now().UnixNano()
+
+	generated := genRandomTxs(seed, numTx, numAccounts)
+	mp := mempool.NewDefaultMempool()
+
+	for _, otx := range generated {
+		tx := testTx{otx.hash, otx.priority, otx.nonce, otx.address}
+		c := ctx.WithPriority(tx.priority)
+		err := mp.Insert(c, tx)
+		require.NoError(t, err)
+	}
+
+	selected, err := mp.Select(ctx, nil, 100000)
+	require.Equal(t, len(generated), len(selected))
+	require.NoError(t, err)
+	require.NoError(t, validateOrder(selected))
+
+	fmt.Printf("seed: %d completed in %d iterations\n", seed, mempool.Iterations(mp))
+}
+
 func TestRandomTxOrder(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	numTx := 1000
@@ -277,7 +311,7 @@ func TestRandomTxOrder(t *testing.T) {
 	// seed := int64(1663989445512438000)
 	//
 
-	ordered, shuffled := genOrderedTxs(seed, numTx, 3)
+	ordered, shuffled := genOrderedTxs(seed, numTx, 12)
 	mp := mempool.NewDefaultMempool()
 
 	for _, otx := range shuffled {
@@ -295,8 +329,10 @@ func TestRandomTxOrder(t *testing.T) {
 	for i := 0; i < numTx; i++ {
 		otx := ordered[i]
 		stx := selected[i].(testTx)
-		orderedStr = fmt.Sprintf("%s\n%s, %d, %d; %d", orderedStr, otx.address, otx.priority, otx.nonce, otx.hash[0])
-		selectedStr = fmt.Sprintf("%s\n%s, %d, %d; %d", selectedStr, stx.address, stx.priority, stx.nonce, stx.hash[0])
+		orderedStr = fmt.Sprintf("%s\n%s, %d, %d; %d",
+			orderedStr, otx.address, otx.priority, otx.nonce, otx.hash[0])
+		selectedStr = fmt.Sprintf("%s\n%s, %d, %d; %d",
+			selectedStr, stx.address, stx.priority, stx.nonce, stx.hash[0])
 	}
 
 	require.NoError(t, err)
@@ -324,6 +360,30 @@ type txKey struct {
 	nonce    uint64
 	priority int64
 	hash     [32]byte
+}
+
+func genRandomTxs(seed int64, countTx int, countAccount int) (res []testTx) {
+	maxPriority := 100
+	r := rand.New(rand.NewSource(seed))
+	accounts := simtypes.RandomAccounts(r, countAccount)
+	accountNonces := make(map[string]uint64)
+	for _, account := range accounts {
+		accountNonces[account.Address.String()] = 0
+	}
+
+	for i := 0; i < countTx; i++ {
+		addr := accounts[r.Intn(countAccount)].Address
+		priority := int64(r.Intn(maxPriority + 1))
+		nonce := accountNonces[addr.String()]
+		accountNonces[addr.String()] = nonce + 1
+		res = append(res, testTx{
+			priority: priority,
+			nonce:    nonce,
+			address:  addr,
+			hash:     [32]byte{byte(i)}})
+	}
+
+	return res
 }
 
 // since there are multiple valid ordered graph traversals for a given set of txs strict

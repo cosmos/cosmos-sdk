@@ -326,6 +326,8 @@ type txKey struct {
 	hash     [32]byte
 }
 
+// since there are multiple valid ordered graph traversals for a given set of txs strict
+// validation against the ordered txs generated from this function is not possible as written
 func genOrderedTxs(seed int64, maxTx int, numAcc int) (ordered []testTx, shuffled []testTx) {
 	r := rand.New(rand.NewSource(seed))
 	accountNonces := make(map[string]uint64)

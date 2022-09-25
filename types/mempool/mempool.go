@@ -112,7 +112,8 @@ func (mp *defaultMempool) Insert(ctx types.Context, tx Tx) error {
 	if err != nil {
 		return err
 	} else if len(senders) != len(nonces) {
-		return fmt.Errorf("number of senders (%d) does not match number of nonces (%d)", len(senders), len(nonces))
+		return fmt.Errorf("number of senders (%d) does not match number of nonces (%d)",
+			len(senders), len(nonces))
 	}
 
 	// TODO multiple senders
@@ -155,9 +156,10 @@ func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]T
 		}
 
 		// TODO multiple senders
-		// first clear out all txs from *all* senders which have a lower nonce *and* priority greater than or equal to the
-		// next priority
-		// when processing a tx with multi senders remove it from all other sender queues
+		// A multi sender tx may only be selected once all antecedent (nonce-wise) txs for each sender account
+		// have been selected.
+		// When selecting a tx with multi senders signal it as selected so it doesn't show up multiple times
+		// in the output list.  Skip when already selected.
 		sender := priorityNode.Value.(signing.SigVerifiableTx).GetSigners()[0].String()
 
 		// iterate through the sender's transactions in nonce order

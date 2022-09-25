@@ -100,7 +100,7 @@ func NewDefaultMempool() Mempool {
 	}
 }
 
-func (mp defaultMempool) Insert(ctx types.Context, tx Tx) error {
+func (mp *defaultMempool) Insert(ctx types.Context, tx Tx) error {
 	senders := tx.(signing.SigVerifiableTx).GetSigners()
 	nonces, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 
@@ -138,7 +138,7 @@ func (mp defaultMempool) Insert(ctx types.Context, tx Tx) error {
 	return nil
 }
 
-func (mp defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Tx, error) {
+func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Tx, error) {
 	var selectedTxs []Tx
 	var txBytes int
 	senderCursors := make(map[string]*huandu.Element)
@@ -167,7 +167,7 @@ func (mp defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Tx
 		}
 
 		for senderTx != nil {
-			mp.iterations++
+			mp.iterations = mp.iterations + 1
 			k := senderTx.Key().(txKey)
 			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
 			if k.priority < nextPriority {
@@ -191,11 +191,11 @@ func (mp defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Tx
 	return selectedTxs, nil
 }
 
-func (mp defaultMempool) CountTx() int {
+func (mp *defaultMempool) CountTx() int {
 	return mp.priorities.Len()
 }
 
-func (mp defaultMempool) Remove(context types.Context, tx Tx) error {
+func (mp *defaultMempool) Remove(context types.Context, tx Tx) error {
 	senders := tx.(signing.SigVerifiableTx).GetSigners()
 	nonces, _ := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	// TODO multiple senders
@@ -230,6 +230,10 @@ func DebugPrintKeys(mempool Mempool) {
 		fmt.Printf("%s, %d, %d; %d\n", k.sender, k.priority, k.nonce, k.hash[0])
 		n = n.Next()
 	}
+}
+
+func Iterations(mempool Mempool) int {
+	return mempool.(*defaultMempool).iterations
 }
 
 // The complexity is O(log(N)). Implementation

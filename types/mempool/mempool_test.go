@@ -211,7 +211,6 @@ func TestTxOrder(t *testing.T) {
 
 func TestRandomTxOrderManyTimes(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		t.Log("iteration", i)
 		TestRandomTxOrder(t)
 	}
 }
@@ -270,7 +269,7 @@ func validateOrder(mtxs []mempool.Tx) error {
 
 func TestRandomTxOrder(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	numTx := 100
+	numTx := 1000
 
 	seed := time.Now().UnixNano()
 	// interesting failing seeds:
@@ -317,6 +316,7 @@ func TestRandomTxOrder(t *testing.T) {
 		require.Equal(t, tx.(testTx).address, ordered[i].address, msg)
 	}*/
 
+	fmt.Printf("seed: %d completed in %d iterations\n", seed, mempool.Iterations(mp))
 }
 
 type txKey struct {

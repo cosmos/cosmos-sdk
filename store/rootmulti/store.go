@@ -37,6 +37,18 @@ const (
 
 const iavlDisablefastNodeDefault = false
 
+func keysForStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
+	keys := make([]types.StoreKey, 0, len(m))
+	for key := range m {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		ki, kj := keys[i], keys[j]
+		return ki.Name() < kj.Name()
+	})
+	return keys
+}
+
 // Store is composed of many CommitStores. Name contrasts with
 // cacheMultiStore which is used for branching other MultiStores. It implements
 // the CommitMultiStore interface.
@@ -718,7 +730,8 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 		name string
 	}
 	stores := []namedStore{}
-	for key := range rs.stores {
+	keys := keysForStoreKeyMap(rs.stores)
+	for _, key := range keys {
 		switch store := rs.GetCommitKVStore(key).(type) {
 		case *iavl.Store:
 			stores = append(stores, namedStore{name: key.Name(), Store: store})

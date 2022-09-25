@@ -78,7 +78,6 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value, w
 	default:
 		return fmt.Errorf("got invalid type %t for coins", v.Interface())
 	}
-
 }
 
 func (vr coinsValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {

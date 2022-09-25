@@ -12,6 +12,7 @@ require (
 	github.com/regen-network/gocuke v0.6.2
 	github.com/stretchr/testify v1.8.0
 	github.com/tendermint/tm-db v0.6.7
+	golang.org/x/exp v0.0.0-20220916125017-b168a2c6b86b
 	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1
 	gotest.tools/v3 v3.3.0

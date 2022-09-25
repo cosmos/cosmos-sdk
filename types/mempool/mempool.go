@@ -167,6 +167,7 @@ func (mp defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Tx
 		}
 
 		for senderTx != nil {
+			mp.iterations++
 			k := senderTx.Key().(txKey)
 			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
 			if k.priority < nextPriority {

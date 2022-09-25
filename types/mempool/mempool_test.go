@@ -73,7 +73,7 @@ func (tx testTx) ValidateBasic() error {
 }
 
 func (tx testTx) String() string {
-	return fmt.Sprintf("tx %s, %d, %d", tx.address, tx.priority, tx.nonce)
+	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
 }
 
 func TestNewStatefulMempool(t *testing.T) {
@@ -93,10 +93,45 @@ func TestNewStatefulMempool(t *testing.T) {
 }
 
 type txSpec struct {
+	i int
 	h int
 	p int
 	n int
 	a sdk.AccAddress
+}
+
+func (tx txSpec) String() string {
+	return fmt.Sprintf("[tx i: %d, a: %s, p: %d, n: %d]", tx.i, tx.a, tx.p, tx.n)
+}
+
+func TestOutOfOrder(t *testing.T) {
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	sa := accounts[0].Address
+	sb := accounts[1].Address
+
+	outOfOrders := [][]testTx{
+		{
+			{priority: 20, nonce: 1, address: sa},
+			{priority: 21, nonce: 4, address: sa},
+			{priority: 15, nonce: 1, address: sb},
+			{priority: 8, nonce: 3, address: sa},
+			{priority: 6, nonce: 2, address: sa},
+		},
+		{
+			{priority: 15, nonce: 1, address: sb},
+			{priority: 20, nonce: 1, address: sa},
+			{priority: 21, nonce: 4, address: sa},
+			{priority: 8, nonce: 3, address: sa},
+			{priority: 6, nonce: 2, address: sa},
+		}}
+
+	for _, outOfOrder := range outOfOrders {
+		var mtxs []mempool.Tx
+		for _, mtx := range outOfOrder {
+			mtxs = append(mtxs, mtx)
+		}
+		require.Error(t, validateOrder(mtxs))
+	}
 }
 
 func TestTxOrder(t *testing.T) {
@@ -111,6 +146,7 @@ func TestTxOrder(t *testing.T) {
 	tests := []struct {
 		txs   []txSpec
 		order []int
+		fail  bool
 	}{
 		{
 			txs: []txSpec{
@@ -147,7 +183,7 @@ func TestTxOrder(t *testing.T) {
 				{h: 4, p: 15, n: 1, a: sb},
 				{h: 5, p: 8, n: 2, a: sb},
 			},
-			order: []int{4, 3, 5, 2, 1},
+			order: []int{3, 4, 2, 1, 5},
 		},
 	}
 	for i, tt := range tests {
@@ -168,6 +204,7 @@ func TestTxOrder(t *testing.T) {
 				txOrder = append(txOrder, int(tx.(testTx).hash[0]))
 			}
 			require.Equal(t, tt.order, txOrder)
+			require.NoError(t, validateOrder(orderedTxs))
 		})
 	}
 }
@@ -179,14 +216,66 @@ func TestRandomTxOrderManyTimes(t *testing.T) {
 	}
 }
 
+// validateOrder checks that the txs are ordered by priority and nonce
+// in O(n^n) time by checking each tx against all the other txs
+func validateOrder(mtxs []mempool.Tx) error {
+	var itxs []txSpec
+	for i, mtx := range mtxs {
+		tx := mtx.(testTx)
+		itxs = append(itxs, txSpec{p: int(tx.priority), n: int(tx.nonce), a: tx.address, i: i})
+	}
+
+	// Given 2 transactions t1 and t2, where t2.p > t1.p but t2.i < t1.i
+	// Then if t2.sender have the same sender then t2.nonce > t1.nonce
+	// or
+	// If t1 and t2 have different senders then there must be some t3 with
+	// t3.sender == t2.sender and t3.n < t2.n and t3.p <= t1.p
+
+	for _, a := range itxs {
+		for _, b := range itxs {
+			// when b is before a
+
+			// when a is before b
+			if a.i < b.i {
+				// same sender
+				if a.a.Equals(b.a) {
+					// same sender
+					if a.n == b.n {
+						return fmt.Errorf("same sender tx have the same nonce\n%v\n%v", a, b)
+					}
+					if a.n > b.n {
+						return fmt.Errorf("same sender tx have wrong nonce order\n%v\n%v", a, b)
+					}
+				} else {
+					// different sender
+					if a.p < b.p {
+						// find a tx with same sender as b and lower nonce
+						found := false
+						for _, c := range itxs {
+							if c.a.Equals(b.a) && c.n < b.n && c.p <= a.p {
+								found = true
+								break
+							}
+						}
+						if !found {
+							return fmt.Errorf("different sender tx have wrong order\n%v\n%v", b, a)
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func TestRandomTxOrder(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	numTx := 10
+	numTx := 100
 
-	//seed := time.Now().UnixNano()
+	seed := time.Now().UnixNano()
 	// interesting failing seeds:
 	// seed := int64(1663971399133628000)
-	seed := int64(1663989445512438000)
+	// seed := int64(1663989445512438000)
 	//
 
 	ordered, shuffled := genOrderedTxs(seed, numTx, 3)
@@ -216,15 +305,17 @@ func TestRandomTxOrder(t *testing.T) {
 
 	errMsg := fmt.Sprintf("Expected order: %v\nGot order: %v\nSeed: %v", orderedStr, selectedStr, seed)
 
-	mempool.DebugPrintKeys(mp)
+	//mempool.DebugPrintKeys(mp)
 
-	for i, tx := range selected {
+	require.NoError(t, validateOrder(selected), errMsg)
+
+	/*for i, tx := range selected {
 		msg := fmt.Sprintf("Failed tx at index %d\n%s", i, errMsg)
 		require.Equal(t, ordered[i], tx.(testTx), msg)
 		require.Equal(t, tx.(testTx).priority, ordered[i].priority, msg)
 		require.Equal(t, tx.(testTx).nonce, ordered[i].nonce, msg)
 		require.Equal(t, tx.(testTx).address, ordered[i].address, msg)
-	}
+	}*/
 
 }
 

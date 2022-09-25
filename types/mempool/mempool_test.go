@@ -92,50 +92,82 @@ func TestNewStatefulMempool(t *testing.T) {
 	require.Equal(t, 1000, mp.CountTx())
 }
 
+type txSpec struct {
+	h int
+	p int
+	n int
+	a sdk.AccAddress
+}
+
 func TestTxOrder(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
-	senderA := accounts[0].Address
-	senderB := accounts[1].Address
-	txs := []testTx{
-		{hash: [32]byte{1}, priority: 21, nonce: 4, address: senderA},
-		{hash: [32]byte{2}, priority: 8, nonce: 3, address: senderA},
-		{hash: [32]byte{3}, priority: 6, nonce: 2, address: senderA},
-		{hash: [32]byte{4}, priority: 15, nonce: 1, address: senderB},
-		{hash: [32]byte{5}, priority: 20, nonce: 1, address: senderA},
-	}
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 5)
+	sa := accounts[0].Address
+	sb := accounts[1].Address
+	//sc := accounts[2].Address
+	//sd := accounts[3].Address
+	//se := accounts[4].Address
 
-	order := []byte{5, 4, 3, 2, 1}
 	tests := []struct {
-		name  string
-		txs   []testTx
-		pool  mempool.Mempool
-		order []byte
+		txs   []txSpec
+		order []int
 	}{
-		{name: "StatefulMempool", txs: txs, order: order, pool: mempool.NewDefaultMempool()},
-		{name: "Stateful_3nodes", txs: []testTx{
-			{hash: [32]byte{1}, priority: 21, nonce: 4, address: senderA},
-			{hash: [32]byte{4}, priority: 15, nonce: 1, address: senderB},
-			{hash: [32]byte{5}, priority: 20, nonce: 1, address: senderA},
+		{
+			txs: []txSpec{
+				{h: 1, p: 21, n: 4, a: sa},
+				{h: 2, p: 8, n: 3, a: sa},
+				{h: 3, p: 6, n: 2, a: sa},
+				{h: 4, p: 15, n: 1, a: sb},
+				{h: 5, p: 20, n: 1, a: sa},
+			},
+			order: []int{5, 4, 3, 2, 1},
 		},
-			order: []byte{5, 1, 4}, pool: mempool.NewDefaultMempool()},
-		{name: "GraphMempool", txs: txs, order: order, pool: mempool.NewGraph()},
+		{
+			txs: []txSpec{
+				{h: 1, p: 21, n: 4, a: sa},
+				{h: 4, p: 15, n: 1, a: sb},
+				{h: 5, p: 20, n: 1, a: sa},
+			},
+			order: []int{5, 1, 4}},
+		{
+			txs: []txSpec{
+				{h: 1, p: 50, n: 3, a: sa},
+				{h: 2, p: 30, n: 2, a: sa},
+				{h: 3, p: 10, n: 1, a: sa},
+				{h: 4, p: 15, n: 1, a: sb},
+				{h: 5, p: 21, n: 2, a: sb},
+			},
+			order: []int{4, 5, 3, 2, 1},
+		},
+		{
+			txs: []txSpec{
+				{h: 1, p: 50, n: 3, a: sa},
+				{h: 2, p: 10, n: 2, a: sa},
+				{h: 3, p: 99, n: 1, a: sa},
+				{h: 4, p: 15, n: 1, a: sb},
+				{h: 5, p: 8, n: 2, a: sb},
+			},
+			order: []int{4, 3, 5, 2, 1},
+		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			for _, tx := range tt.txs {
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+			pool := mempool.NewDefaultMempool()
+			for _, ts := range tt.txs {
+				tx := testTx{hash: [32]byte{byte(ts.h)}, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
 				c := ctx.WithPriority(tx.priority)
-				err := tt.pool.Insert(c, tx)
+				err := pool.Insert(c, tx)
 				require.NoError(t, err)
 			}
-			require.Equal(t, len(tt.txs), tt.pool.CountTx())
+			require.Equal(t, len(tt.txs), pool.CountTx())
 
-			orderedTxs, err := tt.pool.Select(ctx, nil, 1000)
+			orderedTxs, err := pool.Select(ctx, nil, 1000)
 			require.NoError(t, err)
-			require.Equal(t, len(tt.txs), len(orderedTxs))
-			for i, h := range tt.order {
-				require.Equal(t, h, orderedTxs[i].(testTx).hash[0])
+			var txOrder []int
+			for _, tx := range orderedTxs {
+				txOrder = append(txOrder, int(tx.(testTx).hash[0]))
 			}
+			require.Equal(t, tt.order, txOrder)
 		})
 	}
 }

@@ -40,6 +40,11 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
+// StakingHooks returns the staking hooks for slashing module.
+func (k Keeper) StakingHooks() types.StakingHooks {
+	return k.sk.Hooks()
+}
+
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)

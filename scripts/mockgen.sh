@@ -3,7 +3,6 @@
 mockgen_cmd="go run github.com/golang/mock/mockgen"
 $mockgen_cmd -source=client/account_retriever.go -package mock -destination testutil/mock/account_retriever.go
 $mockgen_cmd -package mock -destination testutil/mock/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
-$mockgen_cmd -source db/types.go -package mock -destination testutil/mock/db/types.go
 $mockgen_cmd -source=types/module/module.go -package mock -destination testutil/mock/types_module_module.go
 $mockgen_cmd -source=types/invariant.go -package mock -destination testutil/mock/types_invariant.go
 $mockgen_cmd -source=types/router.go -package mock -destination testutil/mock/types_router.go

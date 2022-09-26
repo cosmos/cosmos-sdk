@@ -246,6 +246,6 @@ func provideModule(in slashingInputs) slashingOutputs {
 	return slashingOutputs{
 		Keeper: k,
 		Module: runtime.WrapAppModule(m),
-		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
+		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.StakingHooks()},
 	}
 }

@@ -298,7 +298,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types
 	if err != nil {
 		return validator, err
 	}
-	k.AfterValidatorBonded(ctx, consAddr, validator.GetOperator())
+	k.Hooks().AfterValidatorBonded(ctx, consAddr, validator.GetOperator())
 
 	return validator, err
 }
@@ -333,7 +333,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	if err != nil {
 		return validator, err
 	}
-	k.AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator())
+	k.Hooks().AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator())
 
 	return validator, nil
 }

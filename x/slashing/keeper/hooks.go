@@ -46,3 +46,58 @@ func (k Keeper) AfterValidatorRemoved(ctx sdk.Context, address sdk.ConsAddress) 
 	k.deleteAddrPubkeyRelation(ctx, crypto.Address(address))
 	return nil
 }
+
+// Hooks wrapper struct for slashing keeper
+type Hooks struct {
+	k Keeper
+}
+
+var _ types.StakingHooks = Hooks{}
+
+// Return the wrapper struct
+func (k Keeper) Hooks() Hooks {
+	return Hooks{k}
+}
+
+// Implements sdk.ValidatorHooks
+func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+	return h.k.AfterValidatorBonded(ctx, consAddr, valAddr)
+}
+
+// Implements sdk.ValidatorHooks
+func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) error {
+	return h.k.AfterValidatorRemoved(ctx, consAddr)
+}
+
+// Implements sdk.ValidatorHooks
+func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
+	return h.k.AfterValidatorCreated(ctx, valAddr)
+}
+
+func (h Hooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+	return nil
+}
+
+func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error {
+	return nil
+}
+
+func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
+}
+
+func (h Hooks) BeforeDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
+}
+
+func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
+}
+
+func (h Hooks) AfterDelegationModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
+}
+
+func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ sdk.Dec) error {
+	return nil
+}

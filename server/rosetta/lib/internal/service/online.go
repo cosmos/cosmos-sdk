@@ -6,8 +6,8 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
-	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
+	crgerrs "github.com/cosmos/cosmos-sdk/rosetta/lib/errors"
+	crgtypes "github.com/cosmos/cosmos-sdk/rosetta/lib/types"
 )
 
 // genesisBlockFetchTimeout defines a timeout to fetch the genesis block
@@ -25,9 +25,9 @@ func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client) 
 		return OnlineNetwork{}, err
 	}*/
 
-	block := types.BlockIdentifier {
+	block := types.BlockIdentifier{
 		Index: 9283650, // Theta upgrade height
-		Hash: "0x09E5CC1760C63AB706C79D936024E35AE226D983724F3BB026C4BD1407CDB7FD",
+		Hash:  "0x09E5CC1760C63AB706C79D936024E35AE226D983724F3BB026C4BD1407CDB7FD",
 	}
 
 	return OnlineNetwork{

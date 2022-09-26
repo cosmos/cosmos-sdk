@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"encoding/json"
+	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
-	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
+	"github.com/cosmos/cosmos-sdk/rosetta/lib/errors"
+	crgtypes "github.com/cosmos/cosmos-sdk/rosetta/lib/types"
 )
 
 // AccountBalance retrieves the account balance of an address

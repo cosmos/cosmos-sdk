@@ -22,8 +22,8 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/http"
 	"google.golang.org/grpc"
 
-	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
-	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
+	crgerrs "github.com/cosmos/cosmos-sdk/rosetta/lib/errors"
+	crgtypes "github.com/cosmos/cosmos-sdk/rosetta/lib/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
@@ -31,8 +31,8 @@ import (
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	tmrpc "github.com/tendermint/tendermint/rpc/client"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	tmrpc "github.com/tendermint/tendermint/rpc/client"
 )
 
 // interface assertion
@@ -258,8 +258,8 @@ func (c *Client) coins(ctx context.Context) (sdk.Coins, error) {
 			return nil, crgerrs.WrapError(crgerrs.ErrCodec, fmt.Sprintf("error pagination"))
 		}
 		nextKey := page.GetNextKey()
-		
-		supply, err = c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{Pagination: &query.PageRequest{ Key: nextKey}})
+
+		supply, err = c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{Pagination: &query.PageRequest{Key: nextKey}})
 		if err != nil {
 			return nil, crgerrs.FromGRPCToRosettaError(err)
 		}
@@ -268,7 +268,6 @@ func (c *Client) coins(ctx context.Context) (sdk.Coins, error) {
 
 		result = append(result[:0], supply.Supply[:]...)
 	}
-
 
 	return result, nil
 }

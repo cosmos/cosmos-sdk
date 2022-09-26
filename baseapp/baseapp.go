@@ -270,6 +270,7 @@ func (app *BaseApp) MountStore(key storetypes.StoreKey, typ storetypes.StoreType
 // LoadLatestVersion loads the latest application version. It will panic if
 // called more than once on a running BaseApp.
 func (app *BaseApp) LoadLatestVersion() error {
+
 	err := app.storeLoader(app.cms)
 	if err != nil {
 		return fmt.Errorf("failed to load latest version: %w", err)
@@ -299,6 +300,7 @@ func (app *BaseApp) SnapshotManager() *snapshots.Manager {
 // LoadVersion loads the BaseApp application version. It will panic if called
 // more than once on a running baseapp.
 func (app *BaseApp) LoadVersion(version int64) error {
+	app.logger.Info("NOTICE: this could take a long time to migrate IAVL store to fastnode if you enable Fast Node.\n")
 	err := app.cms.LoadVersion(version)
 	if err != nil {
 		return fmt.Errorf("failed to load version %d: %w", version, err)

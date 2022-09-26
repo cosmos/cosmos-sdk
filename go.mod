@@ -98,7 +98,7 @@ require (
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/btree v1.0.1 // indirect
+	github.com/google/btree v1.1.2 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
@@ -166,6 +166,9 @@ replace (
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 	github.com/gogo/gateway => github.com/notional-labs/gateway v1.1.1-0.20220417180718-8e60e17a098d
+
+	// TODO: remove this when https://github.com/tendermint/tm-db/pull/294 got merged
+	github.com/tendermint/tm-db => github.com/jayt106/tm-db v0.6.8-0.20220926211929-b080db478edd
 )
 
 retract v0.43.0

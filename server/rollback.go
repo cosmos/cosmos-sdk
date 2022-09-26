@@ -26,7 +26,9 @@ application.
 			ctx := GetServerContextFromCmd(cmd)
 			cfg := ctx.Config
 			home := cfg.RootDir
-			db, err := openDB(home, GetAppDBBackend(ctx.Viper))
+
+			opts := createDbOptionsFromFlag(ctx)
+			db, err := openDBwithOptions(home, GetAppDBBackend(ctx.Viper), opts)
 			if err != nil {
 				return err
 			}
@@ -48,5 +50,6 @@ application.
 	}
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	cmd.Flags().Uint64(flags.FlagDbMaxfileOpen, 0, "max open files allowed in the backend DB(0 means default settings in the backend DB)")
 	return cmd
 }

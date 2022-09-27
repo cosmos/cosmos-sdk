@@ -6,9 +6,10 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/streaming/plugins/abci"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+
+	"github.com/cosmos/cosmos-sdk/streaming/plugins/abci"
 )
 
 const pluginEnvKeyPrefix = "COSMOS_SDK_STREAMING"
@@ -27,14 +28,21 @@ func GetPluginEnvKey(name string) string {
 	return fmt.Sprintf("%s_%s", pluginEnvKeyPrefix, strings.ToUpper(name))
 }
 
-func NewStreamingPlugin(ctx sdk.Context, name string) (interface{}, error) {
-	logger := ctx.Logger().With("streaming", name)
+func NewStreamingPlugin(name string) (interface{}, error) {
+	// todo need to figure out a way to hook into the sdk logger
+	logger := hclog.New(&hclog.LoggerOptions{
+		Output: hclog.DefaultOutput,
+		Level:  hclog.Trace,
+		Name:   fmt.Sprintf("plugin.%s", name),
+	})
 
 	// We're a host. Start by launching the streaming process.
+	env := os.Getenv(GetPluginEnvKey(name))
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig: HandshakeMap[name],
 		Plugins:         PluginMap,
-		Cmd:             exec.Command("sh", "-c", os.Getenv(GetPluginEnvKey(name))),
+		Cmd:             exec.Command("sh", "-c", env),
+		Logger:          logger,
 		AllowedProtocols: []plugin.Protocol{
 			plugin.ProtocolNetRPC, plugin.ProtocolGRPC},
 	})
@@ -42,16 +50,9 @@ func NewStreamingPlugin(ctx sdk.Context, name string) (interface{}, error) {
 	// Connect via RPC
 	rpcClient, err := client.Client()
 	if err != nil {
-		logger.Error(err.Error())
 		return nil, err
 	}
 
-	// Request the streaming
-	raw, err := rpcClient.Dispense(name)
-	if err != nil {
-		logger.Error(err.Error())
-		return nil, err
-	}
-
-	return raw, nil
+	// Request streaming plugin
+	return rpcClient.Dispense(name)
 }

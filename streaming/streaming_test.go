@@ -44,7 +44,7 @@ func TestPluginTestSuite(t *testing.T) {
 	suite.Run(t, new(PluginTestSuite))
 }
 
-func (s *PluginTestSuite) TestPlugin() {
+func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 	s.T().Run("Should successfully load streaming", func(t *testing.T) {
 		plugin := "abci"
 		pluginPath := fmt.Sprintf("%s/plugins/%s/examples/plugin-go/stdout", s.workDir, "abci")
@@ -52,7 +52,7 @@ func (s *PluginTestSuite) TestPlugin() {
 			t.Fail()
 		}
 
-		raw, err := NewStreamingPlugin(s.loggerCtx, plugin)
+		raw, err := NewStreamingPlugin(plugin)
 		require.NoError(t, err, "load", "streaming", "unexpected error")
 
 		listener, ok := raw.(abci.Listener)

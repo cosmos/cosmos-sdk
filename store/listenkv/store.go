@@ -150,6 +150,7 @@ func (s *Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener
 // onWrite writes a KVStore operation to all of the WriteListeners
 func (s *Store) onWrite(delete bool, key, value []byte) {
 	for _, l := range s.listeners {
+		// todo: unhandled error ???
 		l.OnWrite(s.parentStoreKey, key, value, delete)
 	}
 }

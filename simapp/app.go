@@ -2,6 +2,8 @@ package simapp
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/streaming"
 	"io"
 	"net/http"
 	"os"
@@ -27,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/store/streaming"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -231,10 +232,18 @@ func NewSimApp(
 	// not include this key.
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
 
-	// configure state listening capabilities using AppOptions
-	// we are doing nothing with the returned streamingServices and waitGroup in this case
-	if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, keys); err != nil {
-		tmos.Exit(err.Error())
+	// enable streaming?
+	enableKey := fmt.Sprintf("%s.%s", baseapp.StreamingTomlKey, baseapp.StreamingEnableTomlKey)
+	if enable := cast.ToBool(appOpts.Get(enableKey)); enable {
+		pluginKey := fmt.Sprintf("%s.%s", baseapp.StreamingTomlKey, baseapp.StreamingPluginTomlKey)
+		pluginName := cast.ToString(appOpts.Get(pluginKey))
+		plugin, err := streaming.NewStreamingPlugin(pluginName)
+		if err != nil {
+			tmos.Exit(err.Error())
+		}
+		if err := baseapp.RegisterStreamingService(bApp, appOpts, appCodec, keys, plugin); err != nil {
+			tmos.Exit(err.Error())
+		}
 	}
 
 	app := &SimApp{

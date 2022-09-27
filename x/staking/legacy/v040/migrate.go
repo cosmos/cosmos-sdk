@@ -69,7 +69,6 @@ func Migrate(stakingState v038staking.GenesisState) *GenesisState {
 				},
 				UpdateTime: oldValidator.Commission.UpdateTime,
 			},
-			MinSelfDelegation: oldValidator.MinSelfDelegation,
 		}
 	}
 

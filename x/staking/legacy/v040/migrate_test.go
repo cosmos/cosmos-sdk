@@ -81,7 +81,6 @@ func TestMigrate(t *testing.T) {
         "website": ""
       },
       "jailed": false,
-      "min_self_delegation": "0",
       "operator_address": "",
       "status": "BOND_STATUS_UNBONDED",
       "tokens": "0",

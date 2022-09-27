@@ -313,7 +313,6 @@ type Validator struct {
 	UnbondingHeight   int64                                  `protobuf:"varint,8,opt,name=unbonding_height,json=unbondingHeight,proto3" json:"unbonding_height,omitempty" yaml:"unbonding_height"`
 	UnbondingTime     time.Time                              `protobuf:"bytes,9,opt,name=unbonding_time,json=unbondingTime,proto3,stdtime" json:"unbonding_time" yaml:"unbonding_time"`
 	Commission        Commission                             `protobuf:"bytes,10,opt,name=commission,proto3" json:"commission"`
-	MinSelfDelegation github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_self_delegation" yaml:"min_self_delegation"`
 }
 
 func (m *Validator) Reset()      { *m = Validator{} }
@@ -2045,16 +2044,6 @@ func (m *Validator) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
-		size := m.MinSelfDelegation.Size()
-		i -= size
-		if _, err := m.MinSelfDelegation.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x5a
-	{
 		size, err := m.Commission.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
@@ -2741,8 +2730,6 @@ func (m *Validator) Size() (n int) {
 	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.UnbondingTime)
 	n += 1 + l + sovStaking(uint64(l))
 	l = m.Commission.Size()
-	n += 1 + l + sovStaking(uint64(l))
-	l = m.MinSelfDelegation.Size()
 	n += 1 + l + sovStaking(uint64(l))
 	return n
 }
@@ -3878,40 +3865,6 @@ func (m *Validator) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Commission.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 11:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MinSelfDelegation", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowStaking
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthStaking
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthStaking
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.MinSelfDelegation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

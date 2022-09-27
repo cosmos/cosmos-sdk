@@ -111,12 +111,6 @@ message Validator {
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false];
-  // min_self_delegation is the validator's self declared minimum self delegation.
-  string min_self_delegation = 11 [
-    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable)   = false
-  ];
 }
 
 // BondStatus is the status of a validator.

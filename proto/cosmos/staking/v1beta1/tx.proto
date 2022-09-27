@@ -35,15 +35,10 @@ message MsgCreateValidator {
 
   Description     description         = 1 [(gogoproto.nullable) = false];
   CommissionRates commission          = 2 [(gogoproto.nullable) = false];
-  string          min_self_delegation = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
-    (gogoproto.nullable)   = false
-  ];
-  string                   delegator_address = 4 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string                   validator_address = 5 [(gogoproto.moretags) = "yaml:\"validator_address\""];
-  google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
-  cosmos.base.v1beta1.Coin value             = 7 [(gogoproto.nullable) = false];
+  string                   delegator_address = 3 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_address = 4 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  google.protobuf.Any      pubkey            = 5 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+  cosmos.base.v1beta1.Coin value             = 6 [(gogoproto.nullable) = false];
 }
 
 // MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
@@ -64,10 +59,6 @@ message MsgEditValidator {
   string commission_rate = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags)   = "yaml:\"commission_rate\""
-  ];
-  string min_self_delegation = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags)   = "yaml:\"min_self_delegation\""
   ];
 }
 

@@ -39,7 +39,6 @@ type (
 		UnbondingHeight         int64                  `json:"unbonding_height" yaml:"unbonding_height"`
 		UnbondingCompletionTime time.Time              `json:"unbonding_time" yaml:"unbonding_time"`
 		Commission              v036staking.Commission `json:"commission" yaml:"commission"`
-		MinSelfDelegation       sdk.Int                `json:"min_self_delegation" yaml:"min_self_delegation"`
 	}
 
 	bechValidator struct {
@@ -53,7 +52,6 @@ type (
 		UnbondingHeight         int64                  `json:"unbonding_height" yaml:"unbonding_height"`
 		UnbondingCompletionTime time.Time              `json:"unbonding_time" yaml:"unbonding_time"`
 		Commission              v036staking.Commission `json:"commission" yaml:"commission"`
-		MinSelfDelegation       sdk.Int                `json:"min_self_delegation" yaml:"min_self_delegation"`
 	}
 
 	Validators []Validator
@@ -129,7 +127,6 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 		Description:             v.Description,
 		UnbondingHeight:         v.UnbondingHeight,
 		UnbondingCompletionTime: v.UnbondingCompletionTime,
-		MinSelfDelegation:       v.MinSelfDelegation,
 		Commission:              v.Commission,
 	})
 }
@@ -155,7 +152,6 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 		UnbondingHeight:         bv.UnbondingHeight,
 		UnbondingCompletionTime: bv.UnbondingCompletionTime,
 		Commission:              bv.Commission,
-		MinSelfDelegation:       bv.MinSelfDelegation,
 	}
 	return nil
 }

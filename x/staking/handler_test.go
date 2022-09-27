@@ -351,68 +351,6 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	}
 }
 
-func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
-	initPower := int64(100)
-	initBond := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
-	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 1, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
-
-	validatorAddr := valAddrs[0]
-	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
-
-	// create validator
-	msgCreateValidator := tstaking.CreateValidatorMsg(validatorAddr, PKs[0], initBond)
-	msgCreateValidator.MinSelfDelegation = sdk.NewInt(2)
-	tstaking.Handle(msgCreateValidator, true)
-
-	// must end-block
-	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(updates))
-
-	// verify the self-delegation exists
-	bond, found := app.StakingKeeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
-	require.True(t, found)
-	gotBond := bond.Shares.RoundInt()
-	require.Equal(t, initBond, gotBond,
-		"initBond: %v\ngotBond: %v\nbond: %v\n",
-		initBond, gotBond, bond)
-
-	newMinSelfDelegation := sdk.OneInt()
-	msgEditValidator := types.NewMsgEditValidator(validatorAddr, types.Description{}, nil, &newMinSelfDelegation)
-	tstaking.Handle(msgEditValidator, false)
-}
-
-func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
-	initPower := int64(100)
-	initBond := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
-
-	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 2, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
-	validatorAddr := valAddrs[0]
-	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
-
-	// create validator
-	msgCreateValidator := tstaking.CreateValidatorMsg(validatorAddr, PKs[0], initBond)
-	msgCreateValidator.MinSelfDelegation = sdk.NewInt(2)
-	tstaking.Handle(msgCreateValidator, true)
-
-	// must end-block
-	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(updates))
-
-	// verify the self-delegation exists
-	bond, found := app.StakingKeeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
-	require.True(t, found)
-	gotBond := bond.Shares.RoundInt()
-	require.Equal(t, initBond, gotBond,
-		"initBond: %v\ngotBond: %v\nbond: %v\n",
-		initBond, gotBond, bond)
-
-	newMinSelfDelegation := initBond.Add(sdk.OneInt())
-	msgEditValidator := types.NewMsgEditValidator(validatorAddr, types.Description{}, nil, &newMinSelfDelegation)
-	tstaking.Handle(msgEditValidator, false)
-}
-
 func TestIncrementsMsgUnbond(t *testing.T) {
 	initPower := int64(1000)
 
@@ -914,15 +852,15 @@ func TestInvalidCoinDenom(t *testing.T) {
 	oneCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
 
 	commission := types.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.ZeroDec())
-	msgCreate, err := types.NewMsgCreateValidator(valA, PKs[0], invalidCoin, types.Description{}, commission, sdk.OneInt())
+	msgCreate, err := types.NewMsgCreateValidator(valA, PKs[0], invalidCoin, types.Description{}, commission)
 	require.NoError(t, err)
 	tstaking.Handle(msgCreate, false)
 
-	msgCreate, err = types.NewMsgCreateValidator(valA, PKs[0], validCoin, types.Description{}, commission, sdk.OneInt())
+	msgCreate, err = types.NewMsgCreateValidator(valA, PKs[0], validCoin, types.Description{}, commission)
 	require.NoError(t, err)
 	tstaking.Handle(msgCreate, true)
 
-	msgCreate, err = types.NewMsgCreateValidator(valB, PKs[1], validCoin, types.Description{}, commission, sdk.OneInt())
+	msgCreate, err = types.NewMsgCreateValidator(valB, PKs[1], validCoin, types.Description{}, commission)
 	require.NoError(t, err)
 	tstaking.Handle(msgCreate, true)
 

@@ -74,7 +74,6 @@ type (
 		UnbondingHeight         int64          `json:"unbonding_height"`    // if unbonding, height at which this validator has begun unbonding
 		UnbondingCompletionTime time.Time      `json:"unbonding_time"`      // if unbonding, min time for the validator to complete unbonding
 		Commission              Commission     `json:"commission"`          // commission parameters
-		MinSelfDelegation       sdk.Int        `json:"min_self_delegation"` // minimum self delegation
 	}
 
 	Validator struct {
@@ -88,7 +87,6 @@ type (
 		UnbondingHeight         int64              `json:"unbonding_height"`
 		UnbondingCompletionTime time.Time          `json:"unbonding_time"`
 		Commission              Commission         `json:"commission"`
-		MinSelfDelegation       sdk.Int            `json:"min_self_delegation"`
 	}
 
 	Validators []Validator
@@ -142,7 +140,6 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 		Description:             v.Description,
 		UnbondingHeight:         v.UnbondingHeight,
 		UnbondingCompletionTime: v.UnbondingCompletionTime,
-		MinSelfDelegation:       v.MinSelfDelegation,
 		Commission:              v.Commission,
 	})
 }
@@ -169,7 +166,6 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 		UnbondingHeight:         bv.UnbondingHeight,
 		UnbondingCompletionTime: bv.UnbondingCompletionTime,
 		Commission:              bv.Commission,
-		MinSelfDelegation:       bv.MinSelfDelegation,
 	}
 	return nil
 }

@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"math/big"
+
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -13,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -25,8 +26,11 @@ var (
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
-	defaultMinSelfDelegation       = "1"
 )
+
+type Int struct {
+	i *big.Int
+}
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
 func NewTxCmd() *cobra.Command {
@@ -73,7 +77,6 @@ func NewCreateValidatorCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetAmount())
 	cmd.Flags().AddFlagSet(flagSetDescriptionCreate())
 	cmd.Flags().AddFlagSet(FlagSetCommissionCreate())
-	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
 
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
@@ -116,19 +119,7 @@ func NewEditValidatorCmd() *cobra.Command {
 				newRate = &rate
 			}
 
-			var newMinSelfDelegation *sdk.Int
-
-			minSelfDelegationString, _ := cmd.Flags().GetString(FlagMinSelfDelegation)
-			if minSelfDelegationString != "" {
-				msb, ok := sdk.NewIntFromString(minSelfDelegationString)
-				if !ok {
-					return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
-				}
-
-				newMinSelfDelegation = &msb
-			}
-
-			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, newMinSelfDelegation)
+			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -136,7 +127,6 @@ func NewEditValidatorCmd() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(flagSetDescriptionEdit())
 	cmd.Flags().AddFlagSet(flagSetCommissionUpdate())
-	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -269,16 +259,8 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		return txf, nil, err
 	}
 
-	// get the initial validator min self delegation
-	msbStr, _ := fs.GetString(FlagMinSelfDelegation)
-
-	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
-	if !ok {
-		return txf, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
-	}
-
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr), pk, amount, description, commissionRates,
 	)
 	if err != nil {
 		return txf, nil, err
@@ -312,7 +294,6 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	fsCreateValidator.String(FlagDetails, "", "The validator's (optional) details")
 	fsCreateValidator.String(FlagIdentity, "", "The (optional) identity signature (ex. UPort or Keybase)")
 	fsCreateValidator.AddFlagSet(FlagSetCommissionCreate())
-	fsCreateValidator.AddFlagSet(FlagSetMinSelfDelegation())
 	fsCreateValidator.AddFlagSet(FlagSetAmount())
 	fsCreateValidator.AddFlagSet(FlagSetPublicKey())
 
@@ -321,10 +302,8 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	commission rate:             %s
 	commission max rate:         %s
 	commission max change rate:  %s
-	minimum self delegation:     %s
 `, defaultAmount, defaultCommissionRate,
-		defaultCommissionMaxRate, defaultCommissionMaxChangeRate,
-		defaultMinSelfDelegation)
+		defaultCommissionMaxRate, defaultCommissionMaxChangeRate)
 
 	return fsCreateValidator, defaultsDesc
 }
@@ -339,7 +318,6 @@ type TxCreateValidatorConfig struct {
 	CommissionRate          string
 	CommissionMaxRate       string
 	CommissionMaxChangeRate string
-	MinSelfDelegation       string
 
 	PubKey cryptotypes.PubKey
 
@@ -407,11 +385,6 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 		return c, err
 	}
 
-	c.MinSelfDelegation, err = flagSet.GetString(FlagMinSelfDelegation)
-	if err != nil {
-		return c, err
-	}
-
 	c.NodeID = nodeID
 	c.PubKey = valPubKey
 	c.Website = website
@@ -435,10 +408,6 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 
 	if c.CommissionMaxChangeRate == "" {
 		c.CommissionMaxChangeRate = defaultCommissionMaxChangeRate
-	}
-
-	if c.MinSelfDelegation == "" {
-		c.MinSelfDelegation = defaultMinSelfDelegation
 	}
 
 	return c, nil
@@ -472,16 +441,8 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		return txBldr, nil, err
 	}
 
-	// get the initial validator min self delegation
-	msbStr := config.MinSelfDelegation
-	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
-
-	if !ok {
-		return txBldr, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
-	}
-
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), config.PubKey, amount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr), config.PubKey, amount, description, commissionRates,
 	)
 	if err != nil {
 		return txBldr, msg, err

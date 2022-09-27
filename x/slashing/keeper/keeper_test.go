@@ -41,7 +41,6 @@ func TestUnJailNotBonded(t *testing.T) {
 	addr, val := valAddrs[5], pks[5]
 	amt := app.StakingKeeper.TokensFromConsensusPower(ctx, 50)
 	msg := tstaking.CreateValidatorMsg(addr, val, amt)
-	msg.MinSelfDelegation = amt
 	tstaking.Handle(msg, true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -58,17 +57,6 @@ func TestUnJailNotBonded(t *testing.T) {
 
 	// verify that validator is jailed
 	tstaking.CheckValidator(addr, -1, true)
-
-	// verify we cannot unjail (yet)
-	require.Error(t, app.SlashingKeeper.Unjail(ctx, addr))
-
-	staking.EndBlocker(ctx, app.StakingKeeper)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	// bond to meet minimum self-delegation
-	tstaking.DelegateWithPower(sdk.AccAddress(addr), addr, 1)
-
-	staking.EndBlocker(ctx, app.StakingKeeper)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// verify we can immediately unjail
 	require.NoError(t, app.SlashingKeeper.Unjail(ctx, addr))

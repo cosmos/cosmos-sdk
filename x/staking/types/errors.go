@@ -26,7 +26,6 @@ var (
 	ErrCommissionChangeRateGTMaxRate   = sdkerrors.Register(ModuleName, 14, "commission change rate cannot be more than the max rate")
 	ErrCommissionGTMaxChangeRate       = sdkerrors.Register(ModuleName, 15, "commission cannot be changed more than max change rate")
 	ErrSelfDelegationBelowMinimum      = sdkerrors.Register(ModuleName, 16, "validator's self delegation must be greater than their minimum self delegation")
-	ErrMinSelfDelegationDecreased      = sdkerrors.Register(ModuleName, 17, "minimum self delegation cannot be decrease")
 	ErrEmptyDelegatorAddr              = sdkerrors.Register(ModuleName, 18, "empty delegator address")
 	ErrNoDelegation                    = sdkerrors.Register(ModuleName, 19, "no delegation for (address, validator) tuple")
 	ErrBadDelegatorAddr                = sdkerrors.Register(ModuleName, 20, "delegator does not exist with address")

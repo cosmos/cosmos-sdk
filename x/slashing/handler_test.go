@@ -47,37 +47,6 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))
 }
 
-func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
-	// initial setup
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	pks := simapp.CreateTestPubKeys(1)
-	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))
-
-	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
-	slh := slashing.NewHandler(app.SlashingKeeper)
-	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
-	amt := app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
-	msg := tstaking.CreateValidatorMsg(addr, val, amt)
-	msg.MinSelfDelegation = amt
-	tstaking.Handle(msg, true)
-
-	staking.EndBlocker(ctx, app.StakingKeeper)
-	require.Equal(
-		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))},
-	)
-
-	tstaking.Undelegate(sdk.AccAddress(addr), addr, sdk.OneInt(), true)
-	require.True(t, app.StakingKeeper.Validator(ctx, addr).IsJailed())
-
-	// assert non-jailed validator can't be unjailed
-	res, err := slh(ctx, types.NewMsgUnjail(addr))
-	require.Error(t, err)
-	require.Nil(t, res)
-	require.True(t, errors.Is(types.ErrSelfDelegationTooLowToUnjail, err))
-}
-
 func TestJailedValidatorDelegations(t *testing.T) {
 	// initial setup
 	app := simapp.Setup(false)

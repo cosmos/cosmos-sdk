@@ -4,21 +4,16 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/depinject"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestGetSimulationLog(t *testing.T) {
-	var legacyAmino *codec.LegacyAmino
-	err := depinject.Inject(configurator.NewAppConfig(), legacyAmino)
-	require.NoError(t, err)
-
+	legacyAmino := codec.NewLegacyAmino()
 	decoders := make(sdk.StoreDecoderRegistry)
 	decoders[authtypes.StoreKey] = func(kvAs, kvBs kv.Pair) string { return "10" }
 

@@ -260,7 +260,6 @@ func (app *BaseApp) MountStore(key storetypes.StoreKey, typ storetypes.StoreType
 // LoadLatestVersion loads the latest application version. It will panic if
 // called more than once on a running BaseApp.
 func (app *BaseApp) LoadLatestVersion() error {
-
 	err := app.storeLoader(app.cms)
 	if err != nil {
 		return fmt.Errorf("failed to load latest version: %w", err)

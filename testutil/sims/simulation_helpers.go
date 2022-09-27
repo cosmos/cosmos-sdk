@@ -1,34 +1,30 @@
-package simapp
+package sims
 
 import (
 	"encoding/json"
 	"fmt"
 	"os"
 
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 )
 
-// SetupSimulation creates the config, db (levelDB), temporary directory and logger for
-// the simulation tests. If `FlagEnabledValue` is false it skips the current test.
+// SetupSimulation creates the config, db (levelDB), temporary directory and logger for the simulation tests.
+// If `skip` is false it skips the current test. `skip` should be set using the `FlagEnabledValue` flag.
 // Returns error on an invalid db intantiation or temp dir creation.
-func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) {
-	if !FlagEnabledValue {
-		return simtypes.Config{}, nil, "", nil, true, nil
+func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, skip bool) (dbm.DB, string, log.Logger, bool, error) {
+	if !skip {
+		return nil, "", nil, true, nil
 	}
 
-	config := NewConfigFromFlags()
-	config.ChainID = simtestutil.SimAppChainID
-
 	var logger log.Logger
-	if FlagVerboseValue {
+	if verbose {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -36,20 +32,20 @@ func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string,
 
 	dir, err := os.MkdirTemp("", dirPrefix)
 	if err != nil {
-		return simtypes.Config{}, nil, "", nil, false, err
+		return nil, "", nil, false, err
 	}
 
 	db, err := dbm.NewDB(dbName, dbm.BackendType(config.DBBackend), dir)
 	if err != nil {
-		return simtypes.Config{}, nil, "", nil, false, err
+		return nil, "", nil, false, err
 	}
 
-	return config, db, dir, logger, false, nil
+	return db, dir, logger, false, nil
 }
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func SimulationOperations(app App, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
+func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
@@ -73,9 +69,7 @@ func SimulationOperations(app App, cdc codec.JSONCodec, config simtypes.Config) 
 
 // CheckExportSimulation exports the app state and simulation parameters to JSON
 // if the export paths are defined.
-func CheckExportSimulation(
-	app App, config simtypes.Config, params simtypes.Params,
-) error {
+func CheckExportSimulation(app runtime.AppI, config simtypes.Config, params simtypes.Params) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")
 		exported, err := app.ExportAppStateAndValidators(false, nil)

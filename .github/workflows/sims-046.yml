@@ -7,7 +7,9 @@ on:
   release:
     types: [published]
 
-concurrency: ci-${{ github.ref }}
+concurrency:
+  group: ci-${{ github.ref }}-sims-046
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -19,9 +21,7 @@ jobs:
           ref: "release/v0.46.x"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
+          go-version: 1.19
       - run: make build
 
   install-runsim:
@@ -32,9 +32,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
+          go-version: 1.19
       - name: Install runsim
         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
       - uses: actions/cache@v3
@@ -52,9 +50,7 @@ jobs:
           ref: "release/v0.46.x"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
+          go-version: 1.19
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -72,9 +68,7 @@ jobs:
           ref: "release/v0.46.x"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
+          go-version: 1.19
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -92,9 +86,7 @@ jobs:
           ref: "release/v0.46.x"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
+          go-version: 1.19
       - uses: actions/cache@v3
         with:
           path: ~/go/bin

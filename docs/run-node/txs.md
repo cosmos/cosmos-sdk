@@ -79,7 +79,6 @@ simd tx broadcast tx_signed.json
 
 You may optionally pass the `--broadcast-mode` flag to specify which response to receive from the node:
 
-* `block`: the CLI waits for the tx to be committed in a block.
 * `sync`: the CLI waits for a CheckTx execution response only.
 * `async`: the CLI returns immediately (transaction might fail).
 

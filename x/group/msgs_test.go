@@ -971,7 +971,8 @@ func TestMsgSubmitProposalGetSignBytes(t *testing.T) {
 		expSignBz string
 	}{
 		{
-			"MsgSend", []sdk.Msg{banktypes.NewMsgSend(member1, member1, sdk.NewCoins())},
+			"MsgSend",
+			[]sdk.Msg{banktypes.NewMsgSend(member1, member1, sdk.NewCoins())},
 			fmt.Sprintf(`{"type":"cosmos-sdk/group/MsgSubmitProposal","value":{"messages":[{"type":"cosmos-sdk/MsgSend","value":{"amount":[],"from_address":"%s","to_address":"%s"}}],"proposers":[""]}}`, member1, member1),
 		},
 	}

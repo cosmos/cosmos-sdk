@@ -146,6 +146,7 @@ func (suite *DeterministicTestSuite) runAllBalancesIterations(addr sdk.AccAddres
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
+		suite.SetupTest() // reset
 		addr := testdata.AddressGenerator(t).Draw(t, "address")
 		numCoins := rapid.IntRange(1, 10).Draw(t, "num-count")
 		coins := make(sdk.Coins, 0, numCoins)
@@ -167,6 +168,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 		suite.runAllBalancesIterations(addr, coins)
 	})
 
+	suite.SetupTest() // reset
 	addr := sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
 
 	coins := sdk.NewCoins(
@@ -199,6 +201,7 @@ func (suite *DeterministicTestSuite) runSpendableBalancesIterations(addr sdk.Acc
 
 func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
+		suite.SetupTest() // reset
 		addr := testdata.AddressGenerator(t).Draw(t, "address")
 		numCoins := rapid.IntRange(1, 10).Draw(t, "num-count")
 		coins := make(sdk.Coins, 0, numCoins)
@@ -220,6 +223,7 @@ func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 		suite.runSpendableBalancesIterations(addr, coins)
 	})
 
+	suite.SetupTest() // reset
 	addr := sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
 
 	coins := sdk.NewCoins(
@@ -247,9 +251,9 @@ func (suite *DeterministicTestSuite) runTotalSupplyIterations(prevRes sdk.Coins)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
-	denoms := []string{"stake", "foo", "bar"}
-
 	rapid.Check(suite.T(), func(t *rapid.T) {
+		suite.SetupTest() // reset
+
 		res, err := suite.queryClient.TotalSupply(suite.ctx, &banktypes.QueryTotalSupplyRequest{})
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
@@ -260,7 +264,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 
 		for i := 0; i < numCoins; i++ {
 			coin := sdk.NewCoin(
-				denoms[rapid.IntRange(0, 2).Draw(t, "denom")],
+				rapid.StringMatching(denomRegex).Draw(t, "denom"),
 				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 			)
 
@@ -274,6 +278,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 		suite.runTotalSupplyIterations(coins)
 	})
 
+	suite.SetupTest() // reset
 	res, err := suite.queryClient.TotalSupply(suite.ctx, &banktypes.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -517,15 +522,14 @@ func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 		denoms := make([]string, 0, count)
 
 		for i := 0; i < count; i++ {
-			denom := rapid.StringMatching(denomRegex).Draw(t, "denom")
 			coin := banktypes.SendEnabled{
-				Denom:   denom,
+				Denom:   rapid.StringMatching(denomRegex).Draw(t, "denom"),
 				Enabled: rapid.Bool().Draw(t, "enabled-status"),
 			}
 
 			suite.bankKeeper.SetSendEnabled(suite.ctx, coin.Denom, coin.Enabled)
 			sendEnabled = append(sendEnabled, &coin)
-			denoms = append(denoms, denom)
+			denoms = append(denoms, coin.Denom)
 		}
 
 		suite.runSendEnabledIterations(denoms, sendEnabled)
@@ -550,4 +554,69 @@ func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 			&coin2,
 		},
 	)
+}
+
+func (suite *DeterministicTestSuite) runDenomOwnerIterations(denom string, prevRes []*banktypes.DenomOwner) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.DenomOwners(suite.ctx, &banktypes.QueryDenomOwnersRequest{
+			Denom: denom,
+		})
+
+		suite.Require().NoError(err)
+		suite.Require().Equal(res.DenomOwners, prevRes)
+		prevRes = res.DenomOwners
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCDenomOwners() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		denom := rapid.StringMatching(denomRegex).Draw(t, "denom")
+		numAddr := rapid.IntRange(1, 10).Draw(t, "number-address")
+		for i := 0; i < numAddr; i++ {
+			addr := testdata.AddressGenerator(t).Draw(t, "address")
+
+			coin := sdk.NewCoin(
+				denom,
+				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
+			)
+
+			suite.mockFundAccount(addr)
+
+			err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin))
+			suite.Require().NoError(err)
+		}
+
+		res, err := suite.queryClient.DenomOwners(suite.ctx, &banktypes.QueryDenomOwnersRequest{
+			Denom: denom,
+		})
+
+		suite.Require().NoError(err)
+		suite.runDenomOwnerIterations(denom, res.DenomOwners)
+	})
+
+	coin := sdk.NewCoin(
+		"denom",
+		sdk.NewInt(10),
+	)
+
+	denomOwners := []*banktypes.DenomOwner{
+		{
+			Address: "cosmos1qg65a9q6k2sqq7l3ycp428sqqpmqcucgzze299",
+			Balance: coin,
+		},
+		{
+			Address: "cosmos1qglnsqgpq48l7qqzgs8qdshr6fh3gqq9ej3qut",
+			Balance: coin,
+		},
+	}
+
+	for i := 0; i < len(denomOwners); i++ {
+		addr := sdk.MustAccAddressFromBech32(denomOwners[i].Address)
+
+		suite.mockFundAccount(addr)
+		err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin))
+		suite.Require().NoError(err)
+	}
+
+	suite.runDenomOwnerIterations(coin.Denom, denomOwners)
 }

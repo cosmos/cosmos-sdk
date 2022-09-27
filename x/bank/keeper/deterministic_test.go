@@ -63,8 +63,6 @@ func (suite *DeterministicTestSuite) SetupTest() {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	// banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
-
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	banktypes.RegisterQueryServer(queryHelper, suite.bankKeeper)
 	queryClient := banktypes.NewQueryClient(queryHelper)
@@ -90,6 +88,19 @@ func (suite *DeterministicTestSuite) mockFundAccount(receiver sdk.AccAddress) {
 	suite.mockSendCoinsFromModuleToAccount(mintAcc, receiver)
 }
 
+func (suite *DeterministicTestSuite) fundAccount(addr sdk.AccAddress, coin ...sdk.Coin) {
+	suite.mockFundAccount(addr)
+	err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin...))
+	suite.Require().NoError(err)
+}
+
+func (suite *DeterministicTestSuite) getCoin(t *rapid.T) sdk.Coin {
+	return sdk.NewCoin(
+		rapid.StringMatching(denomRegex).Draw(t, "denom"),
+		sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
+	)
+}
+
 func (suite *DeterministicTestSuite) runQueryBalanceIterations(addr sdk.AccAddress, prevRes *sdk.Coin) {
 	for i := 0; i < 1000; i++ {
 		res, err := suite.queryClient.Balance(suite.ctx, banktypes.NewQueryBalanceRequest(addr, prevRes.GetDenom()))
@@ -104,14 +115,8 @@ func (suite *DeterministicTestSuite) runQueryBalanceIterations(addr sdk.AccAddre
 func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		addr := testdata.AddressGenerator(t).Draw(t, "address")
-		coin := sdk.NewCoin(
-			rapid.StringMatching(denomRegex).Draw(t, "denom"),
-			sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
-		)
-
-		suite.mockFundAccount(addr)
-		err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin))
-		suite.Require().NoError(err)
+		coin := suite.getCoin(t)
+		suite.fundAccount(addr, coin)
 
 		suite.runQueryBalanceIterations(addr, &coin)
 	})
@@ -122,10 +127,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
 		sdk.NewInt(10),
 	)
 
-	suite.mockFundAccount(addr)
-	err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin))
-	suite.Require().NoError(err)
-
+	suite.fundAccount(addr, coin)
 	suite.runQueryBalanceIterations(addr, &coin)
 }
 
@@ -152,19 +154,13 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 		coins := make(sdk.Coins, 0, numCoins)
 
 		for i := 0; i < numCoins; i++ {
-			coin := sdk.NewCoin(
-				rapid.StringMatching(denomRegex).Draw(t, "denom"),
-				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
-			)
+			coin := suite.getCoin(t)
 
 			// NewCoins sorts the denoms
 			coins = sdk.NewCoins(append(coins, coin)...)
 		}
 
-		suite.mockFundAccount(addr)
-		err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, coins)
-		suite.Require().NoError(err)
-
+		suite.fundAccount(addr, coins...)
 		suite.runAllBalancesIterations(addr, coins)
 	})
 
@@ -176,10 +172,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 		sdk.NewCoin("denom", sdk.NewInt(100)),
 	)
 
-	suite.mockFundAccount(addr)
-	err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, coins)
-	suite.Require().NoError(err)
-
+	suite.fundAccount(addr, coins...)
 	suite.runAllBalancesIterations(addr, coins)
 }
 

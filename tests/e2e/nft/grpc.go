@@ -3,7 +3,7 @@ package nft
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
@@ -61,7 +61,7 @@ func (s *IntegrationTestSuite) TestQueryBalanceGRPC() {
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(balanceURL, tc.args.Owner, tc.args.ClassID)
 		s.Run(tc.name, func() {
-			resp, _ := rest.GetRequest(uri)
+			resp, _ := testutil.GetRequest(uri)
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errMsg)
 			} else {
@@ -153,7 +153,7 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(ownerURL, tc.args.ClassID, tc.args.ID)
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(uri)
+			resp, err := testutil.GetRequest(uri)
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errMsg)
 			} else {
@@ -215,7 +215,7 @@ func (s *IntegrationTestSuite) TestQuerySupplyGRPC() {
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(supplyURL, tc.args.ClassID)
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(uri)
+			resp, err := testutil.GetRequest(uri)
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errMsg)
 			} else {
@@ -312,7 +312,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(nftsOfClassURL, tc.args.ClassID, tc.args.Owner)
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(uri)
+			resp, err := testutil.GetRequest(uri)
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errorMsg)
 			} else {
@@ -401,7 +401,7 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(nftURL, tc.args.ClassID, tc.args.ID)
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(uri)
+			resp, err := testutil.GetRequest(uri)
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errorMsg)
 			} else {
@@ -449,7 +449,7 @@ func (s *IntegrationTestSuite) TestQueryClassGRPC() {
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(classURL, tc.args.ClassID)
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(uri)
+			resp, err := testutil.GetRequest(uri)
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errorMsg)
 			} else {
@@ -466,7 +466,7 @@ func (s *IntegrationTestSuite) TestQueryClassGRPC() {
 func (s *IntegrationTestSuite) TestQueryClassesGRPC() {
 	val := s.network.Validators[0]
 	classURL := val.APIAddress + "/cosmos/nft/v1beta1/classes"
-	resp, err := rest.GetRequest(classURL)
+	resp, err := testutil.GetRequest(classURL)
 	s.Require().NoError(err)
 	var result nft.QueryClassesResponse
 	err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)

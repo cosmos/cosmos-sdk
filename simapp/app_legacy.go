@@ -100,9 +100,6 @@ import (
 const appName = "SimApp"
 
 var (
-	// App is deprecated, use runtime.AppI instead
-	App runtime.AppI
-
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
 

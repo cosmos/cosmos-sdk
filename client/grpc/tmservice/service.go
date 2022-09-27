@@ -3,7 +3,7 @@ package tmservice
 import (
 	"context"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc/codes"
@@ -203,7 +203,7 @@ func (s queryServer) GetNodeInfo(ctx context.Context, req *GetNodeInfoRequest) (
 	}
 
 	resp := GetNodeInfoResponse{
-		NodeInfo: protoNodeInfo,
+		DefaultNodeInfo: protoNodeInfo,
 		ApplicationVersion: &VersionInfo{
 			AppName:          nodeInfo.AppName,
 			Name:             nodeInfo.Name,

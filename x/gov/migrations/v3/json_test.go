@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -74,22 +74,17 @@ func TestMigrateJSON(t *testing.T) {
 	// Make sure about:
 	// - Proposals use MsgExecLegacyContent
 	expected := `{
-	"deposit_params": null,
-	"deposits": [],
-	"params": {
+	"deposit_params": {
 		"max_deposit_period": "172800s",
 		"min_deposit": [
 			{
 				"amount": "10000000",
 				"denom": "stake"
 			}
-		],
-		"min_initial_deposit_ratio": "",
-		"quorum": "0.334000000000000000",
-		"threshold": "0.500000000000000000",
-		"veto_threshold": "0.334000000000000000",
-		"voting_period": "172800s"
+		]
 	},
+	"deposits": [],
+	"params": null,
 	"proposals": [
 		{
 			"deposit_end_time": "2001-09-09T01:46:40Z",
@@ -125,7 +120,11 @@ func TestMigrateJSON(t *testing.T) {
 		}
 	],
 	"starting_proposal_id": "1",
-	"tally_params": null,
+	"tally_params": {
+		"quorum": "0.334000000000000000",
+		"threshold": "0.500000000000000000",
+		"veto_threshold": "0.334000000000000000"
+	},
 	"votes": [
 		{
 			"metadata": "",
@@ -150,7 +149,9 @@ func TestMigrateJSON(t *testing.T) {
 			"voter": "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"
 		}
 	],
-	"voting_params": null
+	"voting_params": {
+		"voting_period": "172800s"
+	}
 }`
 
 	require.Equal(t, expected, string(indentedBz))

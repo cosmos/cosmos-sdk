@@ -3,12 +3,11 @@ package testutil
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -34,8 +33,7 @@ func (s *GRPCQueryTestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 // TearDownSuite cleans up the curret test network after _each_ test.
@@ -66,11 +64,49 @@ func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := rest.GetRequest(tc.url)
+		resp, err := sdktestutil.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
 			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected, tc.respType)
+		})
+	}
+}
+
+func (s *GRPCQueryTestSuite) TestQueryValidatorDistributionInfoGRPC() {
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
+
+	testCases := []struct {
+		name     string
+		url      string
+		expErr   bool
+		respType proto.Message
+	}{
+		{
+			"gRPC request with wrong validator address",
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s", baseURL, "wrongAddress"),
+			true,
+			&types.QueryValidatorDistributionInfoResponse{},
+		},
+		{
+			"gRPC request with valid validator address ",
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s", baseURL, val.ValAddress.String()),
+			false,
+			&types.QueryValidatorDistributionInfoResponse{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		resp, err := sdktestutil.GetRequest(tc.url)
+		s.Run(tc.name, func() {
+			if tc.expErr {
+				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+			}
 		})
 	}
 }
@@ -228,7 +264,7 @@ func (s *GRPCQueryTestSuite) TestQuerySlashesGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := rest.GetRequest(tc.url)
+		resp, err := sdktestutil.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
@@ -356,7 +392,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorsGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := rest.GetRequest(tc.url)
+		resp, err := sdktestutil.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
@@ -408,7 +444,7 @@ func (s *GRPCQueryTestSuite) TestQueryWithdrawAddressGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := rest.GetRequest(tc.url)
+		resp, err := sdktestutil.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {
 			if tc.expErr {

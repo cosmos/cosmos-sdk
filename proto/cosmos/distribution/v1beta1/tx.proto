@@ -12,6 +12,8 @@ import "cosmos/distribution/v1beta1/distribution.proto";
 
 // Msg defines the distribution Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // SetWithdrawAddress defines a method to change the withdraw address
   // for a delegator (or validator self-delegation).
   rpc SetWithdrawAddress(MsgSetWithdrawAddress) returns (MsgSetWithdrawAddressResponse);
@@ -28,11 +30,19 @@ service Msg {
   // fund the community pool.
   rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
 
-  // UpdateParams defines a governance operation for updating the x/distribution module
-  // parameters. The authority is defined in the keeper.
+  // UpdateParams defines a governance operation for updating the x/distribution
+  // module parameters. The authority is defined in the keeper.
   //
   // Since: cosmos-sdk 0.47
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // CommunityPoolSpend defines a governance operation for sending tokens from
+  // the community pool in the x/distribution module to another account, which
+  // could be the governance module itself. The authority is defined in the
+  // keeper.
+  //
+  // Since: cosmos-sdk 0.47
+  rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 }
 
 // MsgSetWithdrawAddress sets the withdraw address for
@@ -47,7 +57,8 @@ message MsgSetWithdrawAddress {
   string withdraw_address  = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgSetWithdrawAddressResponse defines the Msg/SetWithdrawAddress response type.
+// MsgSetWithdrawAddressResponse defines the Msg/SetWithdrawAddress response
+// type.
 message MsgSetWithdrawAddressResponse {}
 
 // MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
@@ -62,7 +73,8 @@ message MsgWithdrawDelegatorReward {
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward response type.
+// MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward
+// response type.
 message MsgWithdrawDelegatorRewardResponse {
   // Since: cosmos-sdk 0.46
   repeated cosmos.base.v1beta1.Coin amount = 1
@@ -80,7 +92,8 @@ message MsgWithdrawValidatorCommission {
   string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgWithdrawValidatorCommissionResponse defines the Msg/WithdrawValidatorCommission response type.
+// MsgWithdrawValidatorCommissionResponse defines the
+// Msg/WithdrawValidatorCommission response type.
 message MsgWithdrawValidatorCommissionResponse {
   // Since: cosmos-sdk 0.46
   repeated cosmos.base.v1beta1.Coin amount = 1
@@ -123,3 +136,24 @@ message MsgUpdateParams {
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParamsResponse {}
+
+// MsgCommunityPoolSpend defines a message for sending tokens from the community
+// pool to another account. This message is typically executed via a governance
+// proposal with the governance module being the executing authority.
+//
+// Since: cosmos-sdk 0.47
+message MsgCommunityPoolSpend {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the governance account.
+  string   authority                       = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   recipient                       = 2;
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// MsgCommunityPoolSpendResponse defines the response to executing a
+// MsgCommunityPoolSpend message.
+//
+// Since: cosmos-sdk 0.47
+message MsgCommunityPoolSpendResponse {}

@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -193,6 +193,32 @@ func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc authtypes
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
 	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
 	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
+}
+
+func (suite *KeeperTestSuite) TestGetAuthority() {
+	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
+		return keeper.NewBaseKeeper(
+			moduletestutil.MakeTestEncodingConfig().Codec,
+			sdk.NewKVStoreKey(banktypes.StoreKey),
+			nil,
+			nil,
+			authority,
+		)
+	}
+
+	tests := map[string]string{
+		"some random account":    "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+		"gov module account":     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		"another module account": authtypes.NewModuleAddress(minttypes.ModuleName).String(),
+	}
+
+	for name, expected := range tests {
+		suite.T().Run(name, func(t *testing.T) {
+			kpr := NewKeeperWithAuthority(expected)
+			actual := kpr.GetAuthority()
+			assert.Equal(t, expected, actual)
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestSupply() {
@@ -705,7 +731,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	require.Equal(12, len(events)) // 9 events because account funding causes extra minting + coin_spent + coin_recv events
+	require.Equal(12, len(events)) // 12 events because account funding causes extra minting + coin_spent + coin_recv events
 
 	event1 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -1570,9 +1596,7 @@ func (suite *KeeperTestSuite) TestIterateSendEnabledEntries() {
 		})
 	}
 
-	for _, denom := range denoms {
-		bankKeeper.DeleteSendEnabled(ctx, denom)
-	}
+	bankKeeper.DeleteSendEnabled(ctx, denoms...)
 
 	suite.T().Run("no entries to iterate again after deleting all of them", func(t *testing.T) {
 		count := 0

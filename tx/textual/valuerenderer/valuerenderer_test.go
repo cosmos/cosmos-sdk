@@ -25,11 +25,13 @@ func TestFormatInteger(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
+	textual := valuerenderer.NewTextual(nil)
+
 	for _, tc := range testcases {
 		// Parse test case strings as protobuf uint64
 		i, err := strconv.ParseUint(tc[0], 10, 64)
 		if err == nil {
-			r, err := valueRendererOf(i)
+			r, err := textual.GetValueRenderer(fieldDescriptorFromName("UINT64"))
 			require.NoError(t, err)
 			b := new(strings.Builder)
 			err = r.Format(context.Background(), protoreflect.ValueOf(i), b)
@@ -41,7 +43,7 @@ func TestFormatInteger(t *testing.T) {
 		// Parse test case strings as protobuf uint32
 		i, err = strconv.ParseUint(tc[0], 10, 32)
 		if err == nil {
-			r, err := valueRendererOf(i)
+			r, err := textual.GetValueRenderer(fieldDescriptorFromName("UINT32"))
 			require.NoError(t, err)
 			b := new(strings.Builder)
 			err = r.Format(context.Background(), protoreflect.ValueOf(i), b)
@@ -51,9 +53,9 @@ func TestFormatInteger(t *testing.T) {
 		}
 
 		// Parse test case strings as sdk.Ints
-		sdkInt, ok := math.NewIntFromString(tc[0])
+		_, ok := math.NewIntFromString(tc[0])
 		if ok {
-			r, err := valueRendererOf(sdkInt)
+			r, err := textual.GetValueRenderer(fieldDescriptorFromName("SDKINT"))
 			require.NoError(t, err)
 			b := new(strings.Builder)
 			err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
@@ -72,12 +74,12 @@ func TestFormatDecimal(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
+	textual := valuerenderer.NewTextual(nil)
+
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc[0], func(t *testing.T) {
-			d, err := math.LegacyNewDecFromStr(tc[0])
-			require.NoError(t, err)
-			r, err := valueRendererOf(d)
+			r, err := textual.GetValueRenderer(fieldDescriptorFromName("SDKDEC"))
 			require.NoError(t, err)
 			b := new(strings.Builder)
 			err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
@@ -88,64 +90,47 @@ func TestFormatDecimal(t *testing.T) {
 	}
 }
 
-func TestGetADR050ValueRenderer(t *testing.T) {
+func TestDispatcher(t *testing.T) {
 	testcases := []struct {
-		name   string
-		v      interface{}
-		expErr bool
+		name             string
+		expErr           bool
+		expValueRenderer valuerenderer.ValueRenderer
 	}{
-		{"uint32", uint32(1), false},
-		{"uint64", uint64(1), false},
-		{"sdk.Int", math.NewInt(1), false},
-		{"sdk.Dec", math.LegacyNewDec(1), false},
-		{"[]byte", []byte{1}, false},
-		{"float32", float32(1), true},
-		{"float64", float64(1), true},
+		{"UINT32", false, valuerenderer.NewIntValueRenderer()},
+		{"UINT64", false, valuerenderer.NewIntValueRenderer()},
+		{"SDKINT", false, valuerenderer.NewIntValueRenderer()},
+		{"SDKDEC", false, valuerenderer.NewDecValueRenderer()},
+		{"BYTES", false, valuerenderer.NewBytesValueRenderer()},
+		{"TIMESTAMP", false, valuerenderer.NewTimestampValueRenderer()},
+		{"COIN", false, valuerenderer.NewCoinsValueRenderer(nil)},
+		{"COINS", false, valuerenderer.NewCoinsValueRenderer(nil)},
+		{"FLOAT", true, nil},
 	}
 
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := valueRendererOf(tc.v)
+			textual := valuerenderer.NewTextual(nil)
+			rend, err := textual.GetValueRenderer(fieldDescriptorFromName(tc.name))
+
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+				require.IsType(t, tc.expValueRenderer, rend)
 			}
 		})
 	}
 }
 
-// valueRendererOf is like GetADR050ValueRenderer, but taking a Go type
+// fieldDescriptorFromName is like GetADR050ValueRenderer, but taking a Go type
 // as input instead of a protoreflect.FieldDescriptor.
-func valueRendererOf(v interface{}) (valuerenderer.ValueRenderer, error) {
-	a, b := (&testpb.A{}).ProtoReflect().Descriptor().Fields(), (&testpb.B{}).ProtoReflect().Descriptor().Fields()
-
-	textual := valuerenderer.NewTextual()
-	switch v := v.(type) {
-	// Valid types for SIGN_MODE_TEXTUAL
-	case uint32:
-		return textual.GetValueRenderer(a.ByName(protoreflect.Name("UINT32")))
-	case uint64:
-		return textual.GetValueRenderer(a.ByName(protoreflect.Name("UINT64")))
-	case int32:
-		return textual.GetValueRenderer(a.ByName(protoreflect.Name("INT32")))
-	case int64:
-		return textual.GetValueRenderer(a.ByName(protoreflect.Name("INT64")))
-	case []byte:
-		return textual.GetValueRenderer(a.ByName(protoreflect.Name("BYTES")))
-	case math.Int:
-		return textual.GetValueRenderer(a.ByName(protoreflect.Name("SDKINT")))
-	case math.LegacyDec:
-		return textual.GetValueRenderer(a.ByName(protoreflect.Name("SDKDEC")))
-
-	// Invalid types for SIGN_MODE_TEXTUAL
-	case float32:
-		return textual.GetValueRenderer(b.ByName(protoreflect.Name("FLOAT")))
-	case float64:
-		return textual.GetValueRenderer(b.ByName(protoreflect.Name("FLOAT")))
-
-	default:
-		return nil, fmt.Errorf("value %s of type %T not recognized", v, v)
+func fieldDescriptorFromName(name string) protoreflect.FieldDescriptor {
+	a := (&testpb.A{}).ProtoReflect().Descriptor().Fields()
+	fd := a.ByName(protoreflect.Name(name))
+	if fd == nil {
+		panic(fmt.Errorf("no field descriptor for %s", name))
 	}
+
+	return fd
 }

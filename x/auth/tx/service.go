@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"

@@ -319,7 +319,7 @@ func (coins Coins) Add(coinsB ...Coin) Coins {
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
 // The function panics if `coins` or  `coinsB` are not sorted (ascending).
-func (coins Coins) safeAdd(coinsB Coins) Coins {
+func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 	// probably the best way will be to make Coins and interface and hide the structure
 	// definition (type alias)
 	if !coins.isSorted() {
@@ -329,51 +329,24 @@ func (coins Coins) safeAdd(coinsB Coins) Coins {
 		panic("Wrong argument: coins must be sorted")
 	}
 
-	sum := ([]Coin)(nil)
-	indexA, indexB := 0, 0
-	lenA, lenB := len(coins), len(coinsB)
-
-	for {
-		if indexA == lenA {
-			if indexB == lenB {
-				// return nil coins if both sets are empty
-				return sum
-			}
-
-			// return set B (excluding zero coins) if set A is empty
-			return append(sum, removeZeroCoins(coinsB[indexB:])...)
-		} else if indexB == lenB {
-			// return set A (excluding zero coins) if set B is empty
-			return append(sum, removeZeroCoins(coins[indexA:])...)
-		}
-
-		coinA, coinB := coins[indexA], coinsB[indexB]
-
-		switch strings.Compare(coinA.Denom, coinB.Denom) {
-		case -1: // coin A denom < coin B denom
-			if !coinA.IsZero() {
-				sum = append(sum, coinA)
-			}
-
-			indexA++
-
-		case 0: // coin A denom == coin B denom
-			res := coinA.Add(coinB)
-			if !res.IsZero() {
-				sum = append(sum, res)
-			}
-
-			indexA++
-			indexB++
-
-		case 1: // coin A denom > coin B denom
-			if !coinB.IsZero() {
-				sum = append(sum, coinB)
-			}
-
-			indexB++
+	uniqCoins := make(map[string]Coins, len(coins)+len(coinsB))
+	// Traverse all the coins for each of the coins and coinsB.
+	for _, cL := range []Coins{coins, coinsB} {
+		for _, c := range cL {
+			uniqCoins[c.Denom] = append(uniqCoins[c.Denom], c)
 		}
 	}
+
+	for denom, cL := range uniqCoins { //#nosec
+		comboCoin := Coin{Denom: denom, Amount: NewInt(0)}
+		for _, c := range cL {
+			comboCoin = comboCoin.Add(c)
+		}
+		if !comboCoin.IsZero() {
+			coalesced = append(coalesced, comboCoin)
+		}
+	}
+	return coalesced.Sort()
 }
 
 // DenomsSubsetOf returns true if receiver's denom set

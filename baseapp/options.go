@@ -64,6 +64,11 @@ func SetIAVLCacheSize(size int) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
 }
 
+// SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
+func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
+}
+
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
 func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
@@ -198,14 +203,6 @@ func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 	}
 
 	app.storeLoader = loader
-}
-
-// SetRouter allows us to customize the router.
-func (app *BaseApp) SetRouter(router sdk.Router) {
-	if app.sealed {
-		panic("SetRouter() on sealed BaseApp")
-	}
-	app.router = router
 }
 
 // SetSnapshot sets the snapshot store and options.

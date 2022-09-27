@@ -6,17 +6,17 @@
 * [Design](#design)
 * [Contributing](#contributing)
 * [Setup](#setup)
-  * [Installation](#installation)
-  * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
-  * [Folder Layout](#folder-layout)
+    * [Installation](#installation)
+    * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
+    * [Folder Layout](#folder-layout)
 * [Usage](#usage)
-  * [Initialization](#initialization)
-  * [Detecting Upgrades](#detecting-upgrades)
-  * [Auto-Download](#auto-download)
+    * [Initialization](#initialization)
+    * [Detecting Upgrades](#detecting-upgrades)
+    * [Auto-Download](#auto-download)
 * [Example: SimApp Upgrade](#example-simapp-upgrade)
-  * [Chain Setup](#chain-setup)
-    * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
-    * [Update App](#update-app)
+    * [Chain Setup](#chain-setup)
+        * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+        * [Update App](#update-app)
 
 ## Design
 
@@ -35,13 +35,13 @@ Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
 
 Cosmovisor is part of the Cosmos SDK monorepo, but it's a separate module with it's own release schedule.
 
-Release branches have the following format `release/cosmovisor/vA.B.x`, where A and B are a number (e.g. `release/cosmovisor/v1.2.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
+Release branches have the following format `release/cosmovisor/vA.B.x`, where A and B are a number (e.g. `release/cosmovisor/v1.3.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
 
 ## Setup
 
 ### Installation
 
-You can download Cosmovisor from the [Github releases](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv1.2.1).
+You can download Cosmovisor from the [GitHub releases](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv1.3.0).
 
 To install the latest version of `cosmovisor`, run the following command:
 
@@ -115,7 +115,7 @@ All arguments passed to `cosmovisor run` will be passed to the application binar
         └── upgrade-info.json
 ```
 
-The `cosmovisor/` directory incudes a subdirectory for each version of the application (i.e. `genesis` or `upgrades/<name>`). Within each subdirectory is the application binary (i.e. `bin/$DAEMON_NAME`) and any additional auxiliary files associated with each binary. `current` is a symbolic link to the currently active directory (i.e. `genesis` or `upgrades/<name>`). The `name` variable in `upgrades/<name>` is the URI-encoded name of the upgrade as specified in the upgrade module plan.
+The `cosmovisor/` directory incudes a subdirectory for each version of the application (i.e. `genesis` or `upgrades/<name>`). Within each subdirectory is the application binary (i.e. `bin/$DAEMON_NAME`) and any additional auxiliary files associated with each binary. `current` is a symbolic link to the currently active directory (i.e. `genesis` or `upgrades/<name>`). The `name` variable in `upgrades/<name>` is the lowercased URI-encoded name of the upgrade as specified in the upgrade module plan. Note that the upgrade name path are normalized to be lowercased: for instance, `MyUpgrade` is normalized to `myupgrade`, and its path is `upgrades/myupgrade`.
 
 Please note that `$DAEMON_HOME/cosmovisor` only stores the *application binaries*. The `cosmovisor` binary itself can be stored in any typical location (e.g. `/usr/local/bin`). The application will continue to store its data in the default data directory (e.g. `$HOME/.gaiad`) or the data directory specified with the `--home` flag. `$DAEMON_HOME` is independent of the data directory and can be set to any location. If you set `$DAEMON_HOME` to the same directory as the data directory, you will end up with a configuation like the following:
 
@@ -265,7 +265,7 @@ Set up app config:
 ```sh
 ./build/simd config chain-id test
 ./build/simd config keyring-backend test
-./build/simd config broadcast-mode block
+./build/simd config broadcast-mode sync
 ```
 
 Initialize the node and overwrite any previous genesis file (never do this in a production environment):

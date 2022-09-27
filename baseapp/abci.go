@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/grpc/codes"
@@ -232,11 +232,23 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	return res
 }
 
+// PrepareProposal implements the ability for the application to verify and/or modify transactions in a block proposal.
+func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	// treated as a noop until app side mempool is implemented
+	return abci.ResponsePrepareProposal{Txs: req.Txs}
+}
+
+// ProcessProposal implements the ability for the application to verify transactions in a block proposal, and decide if they should accept the block or not.
+func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	// accept all proposed blocks until app side mempool is implemented
+	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+}
+
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
 // CheckTx mode, messages are not executed. This means messages are only validated
 // and only the AnteHandler is executed. State is persisted to the BaseApp's
 // internal CheckTx state if the AnteHandler passes. Otherwise, the ResponseCheckTx
-// will contain releveant error information. Regardless of tx execution outcome,
+// will contain relevant error information. Regardless of tx execution outcome,
 // the ResponseCheckTx will contain relevant gas execution context.
 func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	var mode runTxMode
@@ -269,12 +281,20 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 
 // DeliverTx implements the ABCI interface and executes a tx in DeliverTx mode.
 // State only gets persisted if all messages are valid and get executed successfully.
-// Otherwise, the ResponseDeliverTx will contain releveant error information.
+// Otherwise, the ResponseDeliverTx will contain relevant error information.
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
-func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
+func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
+
+	defer func() {
+		for _, streamingListener := range app.abciListeners {
+			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
+				app.logger.Error("DeliverTx listening hook failed", "err", err)
+			}
+		}
+	}()
 
 	defer func() {
 		telemetry.IncrCounter(1, "tx", "count")
@@ -401,7 +421,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	path := SplitABCIQueryPath(req.Path)
 	if len(path) == 0 {
-		sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
+		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
 	}
 
 	switch path[0] {
@@ -414,9 +434,6 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	case QueryPathP2P:
 		return handleQueryP2P(app, path)
-
-	case QueryPathCustom:
-		return handleQueryCustom(app, path, req)
 	}
 
 	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"), app.trace)
@@ -808,43 +825,6 @@ func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 	}
 
 	return resp
-}
-
-func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
-	// path[0] should be "custom" because "/custom" prefix is required for keeper
-	// queries.
-	//
-	// The QueryRouter routes using path[1]. For example, in the path
-	// "custom/gov/proposal", QueryRouter routes using "gov".
-	if len(path) < 2 || path[1] == "" {
-		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no route for custom query specified"), app.trace)
-	}
-
-	querier := app.queryRouter.Route(path[1])
-	if querier == nil {
-		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no custom querier found for route %s", path[1]), app.trace)
-	}
-
-	ctx, err := app.createQueryContext(req.Height, req.Prove)
-	if err != nil {
-		return sdkerrors.QueryResult(err, app.trace)
-	}
-
-	// Passes the rest of the path as an argument to the querier.
-	//
-	// For example, in the path "custom/gov/proposal/test", the gov querier gets
-	// []string{"proposal", "test"} as the path.
-	resBytes, err := querier(ctx, path[2:], req)
-	if err != nil {
-		res := sdkerrors.QueryResult(err, app.trace)
-		res.Height = req.Height
-		return res
-	}
-
-	return abci.ResponseQuery{
-		Height: req.Height,
-		Value:  resBytes,
-	}
 }
 
 // SplitABCIQueryPath splits a string path using the delimiter '/'.

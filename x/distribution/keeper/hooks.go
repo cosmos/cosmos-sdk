@@ -14,7 +14,9 @@ type Hooks struct {
 var _ stakingtypes.StakingHooks = Hooks{}
 
 // Create new distribution hooks
-func (k Keeper) Hooks() Hooks { return Hooks{k} }
+func (k Keeper) Hooks() Hooks {
+	return Hooks{k}
+}
 
 // initialize validator distribution record
 func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
@@ -109,7 +111,10 @@ func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, f
 	return nil
 }
 
-func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error { return nil }
+func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error {
+	return nil
+}
+
 func (h Hooks) AfterValidatorBonded(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }

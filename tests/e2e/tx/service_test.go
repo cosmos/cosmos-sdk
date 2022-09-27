@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -17,11 +18,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -59,9 +58,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	s.queryClient = tx.NewServiceClient(val.ClientCtx)
 
@@ -118,8 +115,12 @@ func (s *IntegrationTestSuite) TestQueryBySig() {
 	txb := s.mkTxBuilder()
 	txbz, err := s.cfg.TxConfig.TxEncoder()(txb.GetTx())
 	s.Require().NoError(err)
-	_, err = s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txbz, Mode: tx.BroadcastMode_BROADCAST_MODE_BLOCK})
+	resp, err := s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txbz, Mode: tx.BroadcastMode_BROADCAST_MODE_SYNC})
 	s.Require().NoError(err)
+	s.Require().NotEmpty(resp.TxResponse.TxHash)
+
+	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// get the signature out of the builder
 	sigs, err := txb.GetTx().GetSignaturesV2()
@@ -257,7 +258,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 		s.Run(tc.name, func() {
 			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
 			s.Require().NoError(err)
-			res, err := rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", val.APIAddress), "application/json", req)
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", val.APIAddress), "application/json", req)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
@@ -411,7 +412,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			res, err := rest.GetRequest(tc.url)
+			res, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
@@ -481,7 +482,7 @@ func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			res, err := rest.GetRequest(tc.url)
+			res, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
@@ -516,9 +517,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
 		{"empty request", &tx.BroadcastTxRequest{}, true, "invalid empty tx"},
-		{"no mode", &tx.BroadcastTxRequest{
-			TxBytes: txBytes,
-		}, true, "supported types: sync, async, block"},
+		{"no mode", &tx.BroadcastTxRequest{TxBytes: txBytes}, true, "supported types: sync, async"},
 		{"valid request", &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
 			TxBytes: txBytes,
@@ -555,7 +554,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 		expErrMsg string
 	}{
 		{"empty request", &tx.BroadcastTxRequest{}, true, "invalid empty tx"},
-		{"no mode", &tx.BroadcastTxRequest{TxBytes: txBytes}, true, "supported types: sync, async, block"},
+		{"no mode", &tx.BroadcastTxRequest{TxBytes: txBytes}, true, "supported types: sync, async"},
 		{"valid request", &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
 			TxBytes: txBytes,
@@ -566,7 +565,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 		s.Run(tc.name, func() {
 			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
 			s.Require().NoError(err)
-			res, err := rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress), "application/json", req)
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress), "application/json", req)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
@@ -601,13 +600,13 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	_, err = kr.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
 	height, err := s.network.LatestHeight()
+	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(height + 1)
 	s.Require().NoError(err)
 
@@ -626,8 +625,10 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
+	s.Require().NoError(err)
 
 	height, err = s.network.LatestHeight()
+	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(height + 1)
 	s.Require().NoError(err)
 
@@ -672,7 +673,9 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 
 	// convert from protoJSON to protoBinary for sim
 	sdkTx, err := val1.ClientCtx.TxConfig.TxJSONDecoder()(multiSigWith2Signatures.Bytes())
+	s.Require().NoError(err)
 	txBytes, err := val1.ClientCtx.TxConfig.TxEncoder()(sdkTx)
+	s.Require().NoError(err)
 
 	// simulate tx
 	sim := &tx.SimulateRequest{TxBytes: txBytes}
@@ -747,7 +750,7 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPCGateway() {
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			res, err := rest.GetRequest(tc.url)
+			res, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)

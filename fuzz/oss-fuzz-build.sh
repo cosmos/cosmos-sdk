@@ -13,7 +13,6 @@ build_go_fuzzer() {
 }
 
 go get github.com/AdamKorcz/go-118-fuzz-build/utils
-go get github.com/prometheus/common/expfmt@v0.32.1
 
 build_go_fuzzer FuzzCryptoHDDerivePrivateKeyForPath fuzz_crypto_hd_deriveprivatekeyforpath
 build_go_fuzzer FuzzCryptoHDNewParamsFromPath fuzz_crypto_hd_newparamsfrompath

@@ -3,7 +3,6 @@ package simulation
 import (
 	"math/rand"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -18,7 +17,7 @@ func ProposalContents() []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{
 		simulation.NewWeightedProposalContent(
 			OpWeightMsgDeposit,
-			simtestutil.DefaultWeightTextProposal,
+			DefaultWeightTextProposal,
 			SimulateTextProposalContent,
 		),
 	}

@@ -2,6 +2,8 @@ package simapp
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -12,7 +14,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/tests/mocks"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -38,38 +40,33 @@ import (
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	db := dbm.NewMemDB()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:  logger,
 		DB:      db,
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome),
 	})
 
-	for acc := range maccPerms {
+	for acc := range BlockedAddresses() {
 		require.True(
 			t,
 			app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)),
-			"ensure that blocked addresses are properly set in bank keeper",
+			fmt.Sprintf("ensure that blocked addresses are properly set in bank keeper: %s should be blocked", acc),
 		)
 	}
 
 	app.Commit()
 
-	logger2, _ := log.NewDefaultLogger("plain", "info", false)
+	logger2 := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := NewSimApp(logger2, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 	_, err := app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
 
-func TestGetMaccPerms(t *testing.T) {
-	dup := GetMaccPerms()
-	require.Equal(t, maccPerms, dup, "duplicated module account permissions differed from actual module account permissions")
-}
-
 func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 
 	// Create a new baseapp and configurator for the purpose of this test.
@@ -201,7 +198,7 @@ func TestRunMigrations(t *testing.T) {
 
 func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
@@ -209,7 +206,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	// adding during a migration.
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
-	mockModule := mocks.NewMockAppModule(mockCtrl)
+	mockModule := mock.NewMockAppModule(mockCtrl)
 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
 	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
 	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1).Return(nil)
@@ -244,7 +241,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
 	db := dbm.NewMemDB()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:  logger,
 		DB:      db,

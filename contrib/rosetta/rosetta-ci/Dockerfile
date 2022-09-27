@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine as build
+FROM golang:1.19-alpine as build
 
 RUN apk add --no-cache tar git
 
@@ -10,14 +10,14 @@ RUN tar -zxvf data.tar.gz -C .
 # build simd
 WORKDIR /simd
 COPY . ./
-RUN go build -o simd ./simapp/simd/
+RUN cd simapp && go build -o simd ./simd/
 
 FROM alpine
 RUN apk add gcc git libc-dev python3 --no-cache
 
 ENV PATH=$PATH:/bin
 
-COPY --from=build /simd/simd /bin/simd
+COPY --from=build /simd/simapp/simd/simd /bin/simd
 
 WORKDIR /rosetta
 COPY ./contrib/rosetta/configuration ./

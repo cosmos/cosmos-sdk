@@ -81,8 +81,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -285,6 +284,40 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	// Sign batch malformed tx file signature only.
 	_, err = TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
 	s.Require().Error(err)
+
+	// make a txn to increase the sequence of sender
+	_, seq, err := val.ClientCtx.AccountRetriever.GetAccountNumberSequence(val.ClientCtx, val.Address)
+	s.Require().NoError(err)
+
+	account1, err := val.ClientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+
+	addr, err := account1.GetAddress()
+	s.Require().NoError(err)
+
+	// Send coins from validator to multisig.
+	_, err = s.createBankMsg(
+		val,
+		addr,
+		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1000)),
+	)
+	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// fetch the sequence after a tx, should be incremented.
+	_, seq1, err := val.ClientCtx.AccountRetriever.GetAccountNumberSequence(val.ClientCtx, val.Address)
+	s.Require().NoError(err)
+	s.Require().Equal(seq+1, seq1)
+
+	// signing sign-batch should start from the last sequence.
+	signed, err := TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
+	s.Require().NoError(err)
+	signedTxs := strings.Split(strings.Trim(signed.String(), "\n"), "\n")
+	s.Require().GreaterOrEqual(len(signedTxs), 1)
+
+	sigs, err := s.cfg.TxConfig.UnmarshalSignatureJSON([]byte(signedTxs[0]))
+	s.Require().NoError(err)
+	s.Require().Equal(sigs[0].Sequence, seq1)
 }
 
 func (s *IntegrationTestSuite) TestCliGetAccountAddressByID() {
@@ -449,9 +482,10 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByHash() {
 		sdk.NewCoins(sendTokens),
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
-	s.Require().NoError(s.network.WaitForNextBlock())
 
 	testCases := []struct {
 		name           string
@@ -1209,7 +1243,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
 	// sign-batch file
-	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String())
+	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
@@ -1218,7 +1252,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
 	// sign-batch file with account2
-	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String())
+	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file2
@@ -1276,7 +1310,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	// sign-batch file
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
-	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
@@ -1285,7 +1319,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	// sign-batch file with account2
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
@@ -1549,10 +1583,12 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	res, err := TxBroadcastExec(
 		val0.ClientCtx,
 		signedTxFile.Name(),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 	)
-
 	require.NoError(err)
+	require.NoError(s.network.WaitForNextBlock())
+	require.NoError(s.network.WaitForNextBlock())
+
 	var txRes sdk.TxResponse
 	require.NoError(val0.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 	require.Equal(uint32(0), txRes.Code, txRes.RawLog)
@@ -1566,10 +1602,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
-// TODO to re-enable in #12274
 func (s *IntegrationTestSuite) TestAuxSigner() {
-	s.T().Skip()
-
 	require := s.Require()
 	val := s.network.Validators[0]
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10))
@@ -1694,7 +1727,7 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
 			},
@@ -1712,7 +1745,7 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
 			},
@@ -1729,7 +1762,7 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
 			},
@@ -1746,7 +1779,7 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 			},
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
 			},
@@ -1763,7 +1796,7 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 			},
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
 			},
@@ -1781,7 +1814,7 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 			expectErrAux: false,
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagChainID, "foobar"),
@@ -1801,7 +1834,7 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 			feePayerArgs: []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirect),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, feePayer),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, fee.String()),
 			},

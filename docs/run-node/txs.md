@@ -79,7 +79,6 @@ simd tx broadcast tx_signed.json
 
 You may optionally pass the `--broadcast-mode` flag to specify which response to receive from the node:
 
-* `block`: the CLI waits for the tx to be committed in a block.
 * `sync`: the CLI waits for a CheckTx execution response only.
 * `async`: the CLI returns immediately (transaction might fail).
 
@@ -143,7 +142,7 @@ priv2, _, addr2 := testdata.KeyTestPubAddr()
 priv3, _, addr3 := testdata.KeyTestPubAddr()
 ```
 
-Populating the `TxBuilder` can be done via its [methods](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/client/tx_config.go#L33-L50):
+Populating the `TxBuilder` can be done via its [methods](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/client/tx_config.go#L33-L50):
 
 ```go
 import (

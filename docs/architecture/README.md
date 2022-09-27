@@ -57,6 +57,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 030: Message Authorization Module](./adr-030-authz-module.md)
 * [ADR 031: Protobuf Msg Services](./adr-031-msg-service.md)
 * [ADR 055: ORM](./adr-055-orm.md)
+* [ADR 058: Auto-Generated CLI](./adr-058-auto-generated-cli.md)
 
 ### Proposed
 
@@ -81,9 +82,10 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 046: Module Params](./adr-046-module-params.md)
 * [ADR 057: App Wiring Part I](./adr-057-app-wiring-1.md)
 * [ADR 059: Test Scopes](./adr-059-test-scopes.md)
+* [ADR 060: ABCI 1.0](adr-060-abci-1.0.md)
 
 ### Draft
 
-- [ADR 044: Guidelines for Updating Protobuf Definitions](./adr-044-protobuf-updates-guidelines.md)
-- [ADR 047: Extend Upgrade Plan](./adr-047-extend-upgrade-plan.md)
-- [ADR 053: Go Module Refactoring](./adr-053-go-module-refactoring.md)
+* [ADR 044: Guidelines for Updating Protobuf Definitions](./adr-044-protobuf-updates-guidelines.md)
+* [ADR 047: Extend Upgrade Plan](./adr-047-extend-upgrade-plan.md)
+* [ADR 053: Go Module Refactoring](./adr-053-go-module-refactoring.md)

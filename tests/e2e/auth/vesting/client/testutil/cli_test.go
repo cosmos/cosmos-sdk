@@ -8,13 +8,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	testutil2 "github.com/cosmos/cosmos-sdk/x/auth/vesting/client/testutil"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
-	suite.Run(t, testutil2.NewIntegrationTestSuite(cfg))
+	suite.Run(t, NewIntegrationTestSuite(cfg))
 }

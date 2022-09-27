@@ -267,6 +267,20 @@ func (mr *MockStakingKeeperMockRecorder) Delegation(arg0, arg1, arg2 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delegation", reflect.TypeOf((*MockStakingKeeper)(nil).Delegation), arg0, arg1, arg2)
 }
 
+// GetAllValidators mocks base method.
+func (m *MockStakingKeeper) GetAllValidators(ctx types.Context) []types2.Validator {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllValidators", ctx)
+	ret0, _ := ret[0].([]types2.Validator)
+	return ret0
+}
+
+// GetAllValidators indicates an expected call of GetAllValidators.
+func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllValidators", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllValidators), ctx)
+}
+
 // IterateValidators mocks base method.
 func (m *MockStakingKeeper) IterateValidators(arg0 types.Context, arg1 func(int64, types2.ValidatorI) bool) {
 	m.ctrl.T.Helper()
@@ -382,6 +396,34 @@ func (m *MockStakingHooks) EXPECT() *MockStakingHooksMockRecorder {
 	return m.recorder
 }
 
+// AfterDelegationModified mocks base method.
+func (m *MockStakingHooks) AfterDelegationModified(ctx types.Context, delAddr types.AccAddress, valAddr types.ValAddress) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterDelegationModified", ctx, delAddr, valAddr)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterDelegationModified indicates an expected call of AfterDelegationModified.
+func (mr *MockStakingHooksMockRecorder) AfterDelegationModified(ctx, delAddr, valAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterDelegationModified", reflect.TypeOf((*MockStakingHooks)(nil).AfterDelegationModified), ctx, delAddr, valAddr)
+}
+
+// AfterValidatorBeginUnbonding mocks base method.
+func (m *MockStakingHooks) AfterValidatorBeginUnbonding(ctx types.Context, consAddr types.ConsAddress, valAddr types.ValAddress) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterValidatorBeginUnbonding", ctx, consAddr, valAddr)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterValidatorBeginUnbonding indicates an expected call of AfterValidatorBeginUnbonding.
+func (mr *MockStakingHooksMockRecorder) AfterValidatorBeginUnbonding(ctx, consAddr, valAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterValidatorBeginUnbonding", reflect.TypeOf((*MockStakingHooks)(nil).AfterValidatorBeginUnbonding), ctx, consAddr, valAddr)
+}
+
 // AfterValidatorBonded mocks base method.
 func (m *MockStakingHooks) AfterValidatorBonded(ctx types.Context, consAddr types.ConsAddress, valAddr types.ValAddress) error {
 	m.ctrl.T.Helper()
@@ -422,4 +464,74 @@ func (m *MockStakingHooks) AfterValidatorRemoved(ctx types.Context, consAddr typ
 func (mr *MockStakingHooksMockRecorder) AfterValidatorRemoved(ctx, consAddr, valAddr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterValidatorRemoved", reflect.TypeOf((*MockStakingHooks)(nil).AfterValidatorRemoved), ctx, consAddr, valAddr)
+}
+
+// BeforeDelegationCreated mocks base method.
+func (m *MockStakingHooks) BeforeDelegationCreated(ctx types.Context, delAddr types.AccAddress, valAddr types.ValAddress) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeforeDelegationCreated", ctx, delAddr, valAddr)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BeforeDelegationCreated indicates an expected call of BeforeDelegationCreated.
+func (mr *MockStakingHooksMockRecorder) BeforeDelegationCreated(ctx, delAddr, valAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeforeDelegationCreated", reflect.TypeOf((*MockStakingHooks)(nil).BeforeDelegationCreated), ctx, delAddr, valAddr)
+}
+
+// BeforeDelegationRemoved mocks base method.
+func (m *MockStakingHooks) BeforeDelegationRemoved(ctx types.Context, delAddr types.AccAddress, valAddr types.ValAddress) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeforeDelegationRemoved", ctx, delAddr, valAddr)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BeforeDelegationRemoved indicates an expected call of BeforeDelegationRemoved.
+func (mr *MockStakingHooksMockRecorder) BeforeDelegationRemoved(ctx, delAddr, valAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeforeDelegationRemoved", reflect.TypeOf((*MockStakingHooks)(nil).BeforeDelegationRemoved), ctx, delAddr, valAddr)
+}
+
+// BeforeDelegationSharesModified mocks base method.
+func (m *MockStakingHooks) BeforeDelegationSharesModified(ctx types.Context, delAddr types.AccAddress, valAddr types.ValAddress) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeforeDelegationSharesModified", ctx, delAddr, valAddr)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BeforeDelegationSharesModified indicates an expected call of BeforeDelegationSharesModified.
+func (mr *MockStakingHooksMockRecorder) BeforeDelegationSharesModified(ctx, delAddr, valAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeforeDelegationSharesModified", reflect.TypeOf((*MockStakingHooks)(nil).BeforeDelegationSharesModified), ctx, delAddr, valAddr)
+}
+
+// BeforeValidatorModified mocks base method.
+func (m *MockStakingHooks) BeforeValidatorModified(ctx types.Context, valAddr types.ValAddress) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeforeValidatorModified", ctx, valAddr)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BeforeValidatorModified indicates an expected call of BeforeValidatorModified.
+func (mr *MockStakingHooksMockRecorder) BeforeValidatorModified(ctx, valAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeforeValidatorModified", reflect.TypeOf((*MockStakingHooks)(nil).BeforeValidatorModified), ctx, valAddr)
+}
+
+// BeforeValidatorSlashed mocks base method.
+func (m *MockStakingHooks) BeforeValidatorSlashed(ctx types.Context, valAddr types.ValAddress, fraction types.Dec) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeforeValidatorSlashed", ctx, valAddr, fraction)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BeforeValidatorSlashed indicates an expected call of BeforeValidatorSlashed.
+func (mr *MockStakingHooksMockRecorder) BeforeValidatorSlashed(ctx, valAddr, fraction interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeforeValidatorSlashed", reflect.TypeOf((*MockStakingHooks)(nil).BeforeValidatorSlashed), ctx, valAddr, fraction)
 }

@@ -24,7 +24,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
 
 		// called when proposal become inactive
-		keeper.AfterProposalFailedMinDeposit(ctx, proposal.Id)
+		keeper.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -85,12 +85,6 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 				tagValue = types.AttributeValueProposalPassed
 				logMsg = "passed"
 
-				// The cached context is created with a new EventManager. However, since
-				// the proposal handler execution was successful, we want to track/keep
-				// any events emitted, so we re-emit to "merge" the events into the
-				// original Context's EventManager.
-				ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
-
 				// write state to the underlying multi-store
 				writeCache()
 			} else {
@@ -110,7 +104,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		keeper.RemoveFromActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 
 		// when proposal become active
-		keeper.AfterProposalVotingPeriodEnded(ctx, proposal.Id)
+		keeper.Hooks().AfterProposalVotingPeriodEnded(ctx, proposal.Id)
 
 		logger.Info(
 			"proposal tallied",

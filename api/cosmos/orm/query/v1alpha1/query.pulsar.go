@@ -4697,6 +4697,7 @@ type ListRequest struct {
 	// in the index.
 	//
 	// Types that are assignable to Query:
+	//
 	//	*ListRequest_Prefix_
 	//	*ListRequest_Range_
 	Query isListRequest_Query `protobuf_oneof:"query"`
@@ -4839,6 +4840,7 @@ type IndexValue struct {
 	// value specifies the index value
 	//
 	// Types that are assignable to Value:
+	//
 	//	*IndexValue_Uint
 	//	*IndexValue_Int
 	//	*IndexValue_Str

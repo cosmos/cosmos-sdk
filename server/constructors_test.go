@@ -11,7 +11,7 @@ import (
 
 func Test_openDB(t *testing.T) {
 	t.Parallel()
-	_, err := openDB(t.TempDir(), dbm.GoLevelDBBackend)
+	_, err := openDBwithOptions(t.TempDir(), dbm.GoLevelDBBackend, nil)
 	require.NoError(t, err)
 }
 

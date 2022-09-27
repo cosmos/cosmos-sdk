@@ -81,6 +81,9 @@ const (
 	// Tendermint logging flags
 	FlagLogLevel  = "log_level"
 	FlagLogFormat = "log_format"
+
+	// backendDbOptions
+	FlagDbMaxfileOpen = "maxopenfiles"
 )
 
 // LineBreak can be included in a command list to provide a blank line

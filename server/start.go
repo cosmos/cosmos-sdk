@@ -78,6 +78,9 @@ const (
 	flagGRPCAddress    = "grpc.address"
 	flagGRPCWebEnable  = "grpc-web.enable"
 	flagGRPCWebAddress = "grpc-web.address"
+
+	// DBBackend options
+	FlagDbMaxfileOpen = "maxopenfiles"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -187,6 +190,8 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 
+	cmd.Flags().Uint64(FlagDbMaxfileOpen, 0, "max open files allowed in the backend DB(0 means default settings in the backend DB)")
+
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
 	return cmd
@@ -197,7 +202,8 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	transport := ctx.Viper.GetString(flagTransport)
 	home := ctx.Viper.GetString(flags.FlagHome)
 
-	db, err := openDB(home, GetAppDBBackend(ctx.Viper))
+	opts := createDbOptionsFromFlag(ctx)
+	db, err := openDBwithOptions(home, GetAppDBBackend(ctx.Viper), opts)
 	if err != nil {
 		return err
 	}
@@ -269,7 +275,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 	}
 
-	db, err := openDB(home, GetAppDBBackend(ctx.Viper))
+	opts := createDbOptionsFromFlag(ctx)
+	db, err := openDBwithOptions(home, GetAppDBBackend(ctx.Viper), opts)
 	if err != nil {
 		return err
 	}

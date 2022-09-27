@@ -393,9 +393,9 @@ func addrToIP(addr net.Addr) net.IP {
 	return ip
 }
 
-func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
+func openDBwithOptions(rootDir string, backendType dbm.BackendType, opts dbm.Options) (dbm.DB, error) {
 	dataDir := filepath.Join(rootDir, "data")
-	return dbm.NewDB("application", backendType, dataDir)
+	return dbm.NewDBwithOptions("application", backendType, dataDir, opts)
 }
 
 func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {
@@ -407,4 +407,19 @@ func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {
 		os.O_WRONLY|os.O_APPEND|os.O_CREATE,
 		0o666,
 	)
+}
+
+func createDbOptionsFromFlag(ctx *Context) dbm.Options {
+	opts := make(dbm.OptionsMap, 0)
+	if ctx == nil {
+		return opts
+	}
+
+	maxFileOpen := ctx.Viper.GetUint(flags.FlagDbMaxfileOpen)
+	if maxFileOpen > 0 {
+		opts[flags.FlagDbMaxfileOpen] = maxFileOpen
+	}
+
+	ctx.Logger.Info("starting with DB option", "option", opts)
+	return opts
 }

@@ -277,8 +277,14 @@ func newApp(
 		panic(err)
 	}
 
+	opts := make(dbm.OptionsMap, 0)
+	maxFileOpen := cast.ToUint64(appOpts.Get(server.FlagDbMaxfileOpen))
+	if maxFileOpen > 0 {
+		opts[flags.FlagDbMaxfileOpen] = maxFileOpen
+	}
+
 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
-	snapshotDB, err := dbm.NewDB("metadata", server.GetAppDBBackend(appOpts), snapshotDir)
+	snapshotDB, err := dbm.NewDBwithOptions("metadata", server.GetAppDBBackend(appOpts), snapshotDir, opts)
 	if err != nil {
 		panic(err)
 	}

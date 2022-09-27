@@ -159,4 +159,7 @@ replace (
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 	github.com/gogo/gateway => github.com/notional-labs/gateway v1.1.1-0.20220417180718-8e60e17a098d
+
+	// TODO: remove this when https://github.com/tendermint/tm-db/pull/296 got merged
+	github.com/tendermint/tm-db => github.com/jayt106/tm-db v0.6.8-0.20220927191458-92388a1391a9
 )

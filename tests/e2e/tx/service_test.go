@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -17,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -59,9 +59,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	s.queryClient = tx.NewServiceClient(val.ClientCtx)
 
@@ -122,6 +120,7 @@ func (s *IntegrationTestSuite) TestQueryBySig() {
 	s.Require().NoError(err)
 	s.Require().NotEmpty(resp.TxResponse.TxHash)
 
+	s.Require().NoError(s.network.WaitForNextBlock())
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// get the signature out of the builder
@@ -519,9 +518,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
 		{"empty request", &tx.BroadcastTxRequest{}, true, "invalid empty tx"},
-		{"no mode", &tx.BroadcastTxRequest{
-			TxBytes: txBytes,
-		}, true, "supported types: sync, async, block"},
+		{"no mode", &tx.BroadcastTxRequest{TxBytes: txBytes}, true, "supported types: sync, async"},
 		{"valid request", &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
 			TxBytes: txBytes,
@@ -558,7 +555,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 		expErrMsg string
 	}{
 		{"empty request", &tx.BroadcastTxRequest{}, true, "invalid empty tx"},
-		{"no mode", &tx.BroadcastTxRequest{TxBytes: txBytes}, true, "supported types: sync, async, block"},
+		{"no mode", &tx.BroadcastTxRequest{TxBytes: txBytes}, true, "supported types: sync, async"},
 		{"valid request", &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
 			TxBytes: txBytes,
@@ -604,8 +601,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	_, err = kr.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)

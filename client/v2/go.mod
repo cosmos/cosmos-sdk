@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk/client/v2
+module cosmossdk.io/client/v2
 
 go 1.18
 

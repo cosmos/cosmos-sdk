@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
+	"cosmossdk.io/client/v2/internal/util"
 )
 
 // BuildQueryCommand builds the query commands for all the provided modules. If a custom command is provided for a

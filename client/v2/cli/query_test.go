@@ -14,7 +14,7 @@ import (
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
-	"github.com/cosmos/cosmos-sdk/client/v2/internal/testpb"
+	"cosmossdk.io/client/v2/internal/testpb"
 )
 
 var testCmdDesc = &autocliv1.ServiceCommandDescriptor{

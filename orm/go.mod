@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/orm
 
-go 1.18
+go 1.19
 
 require (
 	cosmossdk.io/api v0.2.1

@@ -178,11 +178,13 @@ func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
 		expSignBz string
 	}{
 		{
-			"MsgVote", []sdk.Msg{v1.NewMsgVote(addrs[0], 1, v1.OptionYes, "")},
+			"MsgVote",
+			[]sdk.Msg{v1.NewMsgVote(addrs[0], 1, v1.OptionYes, "")},
 			`{"type":"cosmos-sdk/v1/MsgSubmitProposal","value":{"initial_deposit":[],"messages":[{"type":"cosmos-sdk/v1/MsgVote","value":{"option":1,"proposal_id":"1","voter":"cosmos1w3jhxap3gempvr"}}]}}`,
 		},
 		{
-			"MsgSend", []sdk.Msg{banktypes.NewMsgSend(addrs[0], addrs[0], sdk.NewCoins())},
+			"MsgSend",
+			[]sdk.Msg{banktypes.NewMsgSend(addrs[0], addrs[0], sdk.NewCoins())},
 			fmt.Sprintf(`{"type":"cosmos-sdk/v1/MsgSubmitProposal","value":{"initial_deposit":[],"messages":[{"type":"cosmos-sdk/MsgSend","value":{"amount":[],"from_address":"%s","to_address":"%s"}}]}}`, addrs[0], addrs[0]),
 		},
 	}

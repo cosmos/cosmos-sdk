@@ -1,10 +1,9 @@
 name: Lint
 on:
   push:
-    tags:
-      - v*
     branches:
       - main
+      - release/**
   pull_request:
 permissions:
   contents: read

@@ -28,34 +28,49 @@ type StreamingService struct {
 	Listeners map[types.StoreKey][]types.WriteListener
 	// ABCIListener interface for hooking into the ABCI messages from inside the BaseApp
 	ABCIListener ABCIListener
+	// StopNodeOnErr stops the node when true
+	StopNodeOnErr bool
 }
 
 // KVStoreListener is used so that we do not need to update the underlying
 // io.Writer inside the StoreKVPairWriteListener everytime we begin writing
 type KVStoreListener struct {
-	BlockHeight func() int64
-	listener    ABCIListener
+	BlockHeight   func() int64
+	listener      ABCIListener
+	stopNodeOnErr bool
 }
 
 // NewKVStoreListener create an instance of an NewKVStoreListener that sends StoreKVPair data to listening service
-func NewKVStoreListener(listener ABCIListener, blockHeight func() int64) *KVStoreListener {
-	return &KVStoreListener{listener: listener, BlockHeight: blockHeight}
+func NewKVStoreListener(
+	listener ABCIListener,
+	stopNodeOnErr bool,
+	blockHeight func() int64,
+) *KVStoreListener {
+	return &KVStoreListener{
+		listener:      listener,
+		stopNodeOnErr: stopNodeOnErr,
+		BlockHeight:   blockHeight,
+	}
 }
 
 // Write satisfies io.Writer
 func (iw *KVStoreListener) Write(b []byte) (int, error) {
 	blockHeight := iw.BlockHeight()
 	if err := iw.listener.ListenStoreKVPair(blockHeight, b); err != nil {
+		if iw.stopNodeOnErr {
+			panic(err)
+		}
 		return 0, err
 	}
 	return len(b), nil
 }
 
 const (
-	StreamingTomlKey       = "streaming"
-	StreamingEnableTomlKey = "enable"
-	StreamingPluginTomlKey = "plugin"
-	StreamingKeysTomlKey   = "keys"
+	StreamingTomlKey              = "streaming"
+	StreamingEnableTomlKey        = "enable"
+	StreamingPluginTomlKey        = "plugin"
+	StreamingKeysTomlKey          = "keys"
+	StreamingStopNodeOnErrTomlKey = "stop-node-on-err"
 )
 
 // RegisterStreamingService registers the ABCI streaming service provided by the streaming plugin.
@@ -76,17 +91,20 @@ func RegisterStreamingService(
 	keysKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingKeysTomlKey)
 	exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
 	exposeStoreKeys := exposeStoreKeys(exposeKeysStr, keys)
-	writer := NewKVStoreListener(abciListener, func() int64 { return bApp.deliverState.ctx.BlockHeight() })
+	stopNodeOnErrKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingStopNodeOnErrTomlKey)
+	stopNodeOnErr := cast.ToBool(appOpts.Get(stopNodeOnErrKey))
+	blockHeightFn := func() int64 { return bApp.deliverState.ctx.BlockHeight() }
+	writer := NewKVStoreListener(abciListener, stopNodeOnErr, blockHeightFn)
 	listener := types.NewStoreKVPairWriteListener(writer, kodec)
 	listeners := make(map[types.StoreKey][]types.WriteListener, len(exposeStoreKeys))
-	// in this case, we are using the same listener for each Store
 	for _, key := range exposeStoreKeys {
 		listeners[key] = append(listeners[key], listener)
 	}
 
 	bApp.SetStreamingService(StreamingService{
-		Listeners:    listeners,
-		ABCIListener: abciListener,
+		Listeners:     listeners,
+		ABCIListener:  abciListener,
+		StopNodeOnErr: stopNodeOnErr,
 	})
 
 	return nil

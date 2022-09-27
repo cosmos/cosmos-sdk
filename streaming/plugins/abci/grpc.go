@@ -2,6 +2,7 @@ package abci
 
 import (
 	"context"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/streaming/plugins/abci/proto"
 )
 
@@ -9,6 +10,8 @@ import (
 type GRPCClient struct {
 	client proto.ABCIListenerServiceClient
 }
+
+var _ baseapp.ABCIListener = (*GRPCClient)(nil)
 
 func (m *GRPCClient) ListenBeginBlock(blockHeight int64, req []byte, res []byte) error {
 	_, err := m.client.ListenBeginBlock(context.Background(), &proto.PutRequest{
@@ -48,7 +51,7 @@ func (m *GRPCClient) ListenStoreKVPair(blockHeight int64, data []byte) error {
 // GRPCServer is the gRPC server that GRPCClient talks to.
 type GRPCServer struct {
 	// This is the real implementation
-	Impl Listener
+	Impl baseapp.ABCIListener
 }
 
 func (m *GRPCServer) ListenBeginBlock(_ context.Context, req *proto.PutRequest) (*proto.Empty, error) {

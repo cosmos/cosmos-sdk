@@ -128,6 +128,9 @@ type BaseApp struct { // nolint: maligned
 	// abciListener for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses through gRPC
 	abciListener ABCIListener
+
+	// stopNodeOnStreamingErr halts the node when ABCI streaming service listening results in an error
+	stopNodeOnStreamingErr bool
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

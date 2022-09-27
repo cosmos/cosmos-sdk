@@ -14,34 +14,30 @@ class ABCIListenerServiceServicer(listener_pb2_grpc.ABCIListenerServiceServicer)
     """Implementation of ABCListener service."""
 
     def ListenBeginBlock(self, request, context):
-        filename = "abci__begin_block"
-        value = "{0}\n\nWritten from plugin-python".format(request.block_height)
-        with open(filename, 'w') as f:
-            f.write(value)
+        line = "{}:::{}:::{}\n".format(request.block_height, request.req, request.res)
+        with open('abci_begin_block.txt', 'a') as f:
+            f.write(line)
 
         return listener_pb2.Empty()
 
     def ListenEndBlock(self, request, context):
-        filename = "abci__end_block"
-        value = "{0}\n\nWritten from plugin-python".format(request.block_height)
-        with open(filename, 'w') as f:
-            f.write(value)
+        line = "{}:::{}:::{}\n".format(request.block_height, request.req, request.res)
+        with open('abci_end_block.txt', 'a') as f:
+            f.write(line)
 
         return listener_pb2.Empty()
 
     def ListenDeliverTx(self, request, context):
-        filename = "abci_deliver_tx"
-        value = "{0}\n\nWritten from plugin-python".format(request.block_height)
-        with open(filename, 'w') as f:
-            f.write(value)
+        line = "{}:::{}:::{}\n".format(request.block_height, request.req, request.res)
+        with open('abci_deliver_tx.txt', 'a') as f:
+            f.write(line)
 
         return listener_pb2.Empty()
 
     def ListenStoreKVPair(self, request, context):
-        filename = "abci_store_kv_pair"
-        value = "{0}\n\nWritten from plugin-python".format(request.block_height)
-        with open(filename, 'w') as f:
-            f.write(value)
+        line = "{}:::{}\n".format(request.block_height, request.store_kv_pair)
+        with open('abci_store_kv_pair.txt', 'a') as f:
+            f.write(line)
 
         return listener_pb2.Empty()
 

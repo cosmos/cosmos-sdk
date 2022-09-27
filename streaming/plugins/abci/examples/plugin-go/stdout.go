@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 )
 
-// ABCIListener is the implementation of the abci.ABCIListener interface
+// ABCIListener is the implementation of the baseapp.ABCIListener interface
 type ABCIListener struct{}
 
 func (A ABCIListener) ListenBeginBlock(blockHeight int64, req []byte, res []byte) error {

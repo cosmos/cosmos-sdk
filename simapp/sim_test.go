@@ -302,6 +302,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		m["streaming.enable"] = true
 		m["streaming.keys"] = []string{"*"}
 		m["streaming.plugin"] = "abci"
+		m["streaming.stop-node-on-err"] = true
 		for key, value := range m {
 			vpr.SetDefault(key, value)
 		}

@@ -2,6 +2,7 @@ package streaming
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"os"
 	"testing"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/streaming/plugins/abci"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/assert"
@@ -30,8 +30,7 @@ func (s *PluginTestSuite) SetupTest() {
 	s.emptyCtx = sdk.Context{}
 	s.loggerCtx = s.emptyCtx.
 		WithLogger(log.TestingLogger()).
-		WithBlockHeight(1).
-		WithBlockHeader(tmproto.Header{Time: time.Now()})
+		WithBlockHeader(tmproto.Header{Height: 1, Time: time.Now()})
 
 	path, err := os.Getwd()
 	if err != nil {
@@ -47,7 +46,8 @@ func TestPluginTestSuite(t *testing.T) {
 func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 	s.T().Run("Should successfully load streaming", func(t *testing.T) {
 		plugin := "abci"
-		pluginPath := fmt.Sprintf("%s/plugins/%s/examples/plugin-go/stdout", s.workDir, "abci")
+		//pluginPath := fmt.Sprintf("%s/plugins/%s/examples/plugin-go/stdout", s.workDir, "abci")
+		pluginPath := fmt.Sprintf("python3 %s/plugins/%s/examples/plugin-python/stdout.py", s.workDir, "abci")
 		if err := os.Setenv(GetPluginEnvKey(plugin), pluginPath); err != nil {
 			t.Fail()
 		}
@@ -55,7 +55,7 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 		raw, err := NewStreamingPlugin(plugin)
 		require.NoError(t, err, "load", "streaming", "unexpected error")
 
-		listener, ok := raw.(abci.Listener)
+		listener, ok := raw.(baseapp.ABCIListener)
 		require.True(t, ok, "should pass type check")
 
 		err = listener.ListenBeginBlock(s.loggerCtx.BlockHeight(), []byte{1, 2, 3}, []byte{1, 2, 3})

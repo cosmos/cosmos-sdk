@@ -1,30 +1,23 @@
-package simapp
+package sims
 
 import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/depinject"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func makeCodec(bm module.BasicManager) *codec.LegacyAmino {
-	cdc := codec.NewLegacyAmino()
-
-	bm.RegisterLegacyAminoCodec(cdc)
-	std.RegisterLegacyAminoCodec(cdc)
-
-	return cdc
-}
-
 func TestGetSimulationLog(t *testing.T) {
-	cdc := makeCodec(ModuleBasics)
+	var legacyAmino *codec.LegacyAmino
+	err := depinject.Inject(configurator.NewAppConfig(), legacyAmino)
+	require.NoError(t, err)
 
 	decoders := make(sdk.StoreDecoderRegistry)
 	decoders[authtypes.StoreKey] = func(kvAs, kvBs kv.Pair) string { return "10" }
@@ -41,7 +34,7 @@ func TestGetSimulationLog(t *testing.T) {
 		},
 		{
 			authtypes.StoreKey,
-			[]kv.Pair{{Key: authtypes.GlobalAccountNumberKey, Value: cdc.MustMarshal(uint64(10))}},
+			[]kv.Pair{{Key: authtypes.GlobalAccountNumberKey, Value: legacyAmino.MustMarshal(uint64(10))}},
 			"10",
 		},
 		{

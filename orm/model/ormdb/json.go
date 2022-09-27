@@ -42,7 +42,12 @@ func (m moduleDB) DefaultJSON(target ormjson.WriteTarget) error {
 
 func (m moduleDB) ValidateJSON(source ormjson.ReadSource) error {
 	errMap := map[protoreflect.FullName]error{}
-	for name, table := range m.tablesByName {
+	names := maps.Keys(m.tablesByName)
+	sort.Slice(names, func(i, j int) bool {
+		ti, tj := names[i], names[j]
+		return ti.Name() < tj.Name()
+	})
+	for _, name := range names {
 		r, err := source.OpenReader(name)
 		if err != nil {
 			return err
@@ -52,6 +57,7 @@ func (m moduleDB) ValidateJSON(source ormjson.ReadSource) error {
 			continue
 		}
 
+		table := m.tablesByName[name]
 		err = table.ValidateJSON(r)
 		if err != nil {
 			errMap[name] = err

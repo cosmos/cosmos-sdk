@@ -700,7 +700,7 @@ func BenchmarkDetailString(b *testing.B) {
 		PollInterval:          450 * time.Second,
 		PreupgradeMaxRetries:  1e7,
 	}
-	
+
 	b.ReportAllocs()
 	b.ResetTimer()
 

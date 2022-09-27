@@ -104,7 +104,6 @@ func (s *CLITestSuite) SetupSuite() {
 }
 
 func (s *CLITestSuite) TestGetCmdQuerySigningInfo() {
-
 	pubKeyBz, err := s.encCfg.Codec.MarshalInterfaceJSON(s.pub)
 	s.Require().NoError(err)
 	pubKeyStr := string(pubKeyBz)
@@ -153,7 +152,6 @@ func (s *CLITestSuite) TestGetCmdQuerySigningInfo() {
 }
 
 func (s *CLITestSuite) TestGetCmdQueryParams() {
-
 	testCases := []struct {
 		name string
 		args []string

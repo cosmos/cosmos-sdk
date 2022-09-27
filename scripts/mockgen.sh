@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-mockgen_cmd="go run github.com/golang/mock/mockgen"
+mockgen_cmd="mockgen"
 $mockgen_cmd -source=client/account_retriever.go -package mock -destination testutil/mock/account_retriever.go
 $mockgen_cmd -package mock -destination testutil/mock/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
 $mockgen_cmd -source=types/module/module.go -package mock -destination testutil/mock/types_module_module.go

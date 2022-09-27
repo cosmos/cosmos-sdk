@@ -183,7 +183,9 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 
 	// call hooks
-	k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
+	if err := k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator()); err != nil {
+		k.Logger(ctx).Error("error in after validator removed hook", "error", err)
+	}
 }
 
 // get groups of validators

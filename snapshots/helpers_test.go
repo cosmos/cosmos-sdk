@@ -90,7 +90,6 @@ func snapshotItems(items [][]byte, ext snapshottypes.ExtensionSnapshotter) [][]b
 			return snapshottypes.WriteExtensionPayload(protoWriter, payload)
 		})
 		protoWriter.Close()
-		zWriter.Close()
 		bufWriter.Flush()
 		chunkWriter.Close()
 	}()
@@ -150,11 +149,11 @@ func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 }
 
 func (m *mockSnapshotter) SnapshotFormat() uint32 {
-	return 1
+	return 2
 }
 
 func (m *mockSnapshotter) SupportedFormats() []uint32 {
-	return []uint32{1}
+	return []uint32{2}
 }
 
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.

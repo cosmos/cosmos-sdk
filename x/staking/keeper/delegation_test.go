@@ -610,7 +610,7 @@ func (s *KeeperTestSuite) TestRedelegationMaxEntries() {
 	require.Equal(valTokens, issuedShares.RoundInt())
 
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
-	validator = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
+	_ = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
 	selfDelegation := stakingtypes.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
 	keeper.SetDelegation(ctx, selfDelegation)
@@ -732,7 +732,7 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondingValidator() {
 	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
 	require.Equal(valTokens, issuedShares.RoundInt())
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
-	validator2 = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator2, true)
+	_ = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator2, true)
 
 	header := ctx.BlockHeader()
 	blockHeight := int64(10)

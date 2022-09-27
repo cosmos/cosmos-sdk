@@ -77,7 +77,6 @@ func snapshotItems(items [][]byte) [][]byte {
 			_ = snapshottypes.WriteExtensionItem(protoWriter, item)
 		}
 		_ = protoWriter.Close()
-		_ = zWriter.Close()
 		_ = bufWriter.Flush()
 		_ = chunkWriter.Close()
 	}()

@@ -198,6 +198,7 @@ func (suite *DeterministicTestSuite) runAccountsIterations(prevRes []types.Accou
 func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 
 	rapid.Check(suite.T(), func(t *rapid.T) {
+		suite.SetupTest() // reset
 		numAccs := rapid.IntRange(1, 10).Draw(t, "accounts")
 		accs := suite.createAndSetAccounts(t, numAccs)
 
@@ -206,11 +207,9 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 		})
 
 		suite.runAccountsIterations(accs)
-
-		for i := 0; i < len(accs); i++ {
-			suite.accountKeeper.RemoveAccount(suite.ctx, accs[i])
-		}
 	})
+
+	suite.SetupTest() // reset
 
 	// Regression test
 	addr1 := sdk.MustAccAddressFromBech32("cosmos1892yr6fzlj7ud0kfkah2ctrav3a4p4n060ze8f")

@@ -298,16 +298,18 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 	}
 }
 
+func (k Keeper) decodeQueueItems(bz []byte) (authz.GrantQueueItem, error) {
+	var queueItems authz.GrantQueueItem
+	err := k.cdc.Unmarshal(bz, &queueItems)
+	return queueItems, err
+}
+
 func (k Keeper) getGrantQueueItem(ctx sdk.Context, expiration time.Time, granter, grantee sdk.AccAddress) (*authz.GrantQueueItem, error) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(GrantQueueKey(expiration, granter, grantee))
-	if bz == nil {
-		return &authz.GrantQueueItem{}, nil
-	}
 
-	var queueItems authz.GrantQueueItem
-	if err := k.cdc.Unmarshal(bz, &queueItems); err != nil {
-		return nil, err
+	queueItems, err := store2.GetAndDecode(store, k.decodeQueueItems, GrantQueueKey(expiration, granter, grantee))
+	if err != nil {
+		panic(err)
 	}
 	return &queueItems, nil
 }
@@ -348,14 +350,9 @@ func (k Keeper) insertIntoGrantQueue(ctx sdk.Context, granter, grantee sdk.AccAd
 func (k Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, granter, grantee sdk.AccAddress, expiration time.Time) error {
 	store := ctx.KVStore(k.storeKey)
 	key := GrantQueueKey(expiration, granter, grantee)
-	bz := store.Get(key)
-	if bz == nil {
+	queueItem, err := store2.GetAndDecode(store, k.decodeQueueItems, key)
+	if err != nil {
 		return sdkerrors.Wrap(authz.ErrNoGrantKeyFound, "can't remove grant from the expire queue, grant key not found")
-	}
-
-	var queueItem authz.GrantQueueItem
-	if err := k.cdc.Unmarshal(bz, &queueItem); err != nil {
-		return err
 	}
 
 	_, _, msgType := parseGrantStoreKey(grantKey)

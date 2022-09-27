@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"cosmossdk.io/depinject"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -15,7 +17,6 @@ import (
 	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMigration(t *testing.T) {

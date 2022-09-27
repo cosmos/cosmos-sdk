@@ -48,7 +48,10 @@ func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequ
 
 	var accounts []*codectypes.Any
 	pageRes, err := query.Paginate(accountsStore, req.Pagination, func(key, value []byte) error {
-		account := ak.decodeAccount(value)
+		account, err := ak.decodeAccount(value)
+		if err != nil {
+			panic(err)
+		}
 		any, err := codectypes.NewAnyWithValue(account)
 		if err != nil {
 			return err

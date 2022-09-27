@@ -51,8 +51,9 @@ var ownModuleKeyType = reflect.TypeOf((*OwnModuleKey)(nil)).Elem()
 // not equal.
 //
 // Usage:
-//   moduleKeyCtx := &ModuleKeyContext{}
-//   fooKey := moduleKeyCtx.For("foo")
+//
+//	moduleKeyCtx := &ModuleKeyContext{}
+//	fooKey := moduleKeyCtx.For("foo")
 type ModuleKeyContext struct {
 	moduleKeys map[string]*moduleKey
 }

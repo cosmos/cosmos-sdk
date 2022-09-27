@@ -89,6 +89,9 @@ import (
 )
 
 var (
+	// App is deprecated, use runtime.AppI instead
+	App runtime.AppI
+
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
 
@@ -124,7 +127,7 @@ var (
 )
 
 var (
-	_ App                     = (*SimApp)(nil)
+	_ runtime.AppI            = (*SimApp)(nil)
 	_ servertypes.Application = (*SimApp)(nil)
 )
 

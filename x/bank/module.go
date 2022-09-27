@@ -9,6 +9,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/appmodule"
@@ -237,7 +238,8 @@ func ProvideModule(in BankInputs) BankOutputs {
 			blockedAddresses[authtypes.NewModuleAddress(moduleName).String()] = true
 		}
 	} else {
-		for _, permission := range in.AccountKeeper.GetModulePermissions() {
+		permissions := maps.Values(in.AccountKeeper.GetModulePermissions())
+		for _, permission := range permissions {
 			blockedAddresses[permission.GetAddress().String()] = true
 		}
 	}

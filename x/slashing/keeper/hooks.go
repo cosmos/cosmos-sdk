@@ -9,14 +9,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) error {
-	// Update the signing info start height or create a new signing info
-	signingInfo, found := k.GetValidatorSigningInfo(ctx, address)
+var _ types.StakingHooks = Hooks{}
+
+// Hooks wrapper struct for slashing keeper
+type Hooks struct {
+	k Keeper
+}
+
+// Return the slashing hooks
+func (k Keeper) Hooks() Hooks {
+	return Hooks{k}
+}
+
+// AfterValidatorBonded updates the signing info start height or create a new signing info
+func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+	signingInfo, found := h.k.GetValidatorSigningInfo(ctx, consAddr)
 	if found {
 		signingInfo.StartHeight = ctx.BlockHeight()
 	} else {
 		signingInfo = types.NewValidatorSigningInfo(
-			address,
+			consAddr,
 			ctx.BlockHeight(),
 			0,
 			time.Unix(0, 0),
@@ -25,53 +37,26 @@ func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _
 		)
 	}
 
-	k.SetValidatorSigningInfo(ctx, address, signingInfo)
+	h.k.SetValidatorSigningInfo(ctx, consAddr, signingInfo)
 
 	return nil
 }
 
+// AfterValidatorRemoved deletes the address-pubkey relation when a validator is removed,
+func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) error {
+	h.k.deleteAddrPubkeyRelation(ctx, crypto.Address(consAddr))
+	return nil
+}
+
 // AfterValidatorCreated adds the address-pubkey relation when a validator is created.
-func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
-	validator := k.sk.Validator(ctx, valAddr)
+func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
+	validator := h.k.sk.Validator(ctx, valAddr)
 	consPk, err := validator.ConsPubKey()
 	if err != nil {
 		return err
 	}
 
-	return k.AddPubkey(ctx, consPk)
-}
-
-// AfterValidatorRemoved deletes the address-pubkey relation when a validator is removed,
-func (k Keeper) AfterValidatorRemoved(ctx sdk.Context, address sdk.ConsAddress) error {
-	k.deleteAddrPubkeyRelation(ctx, crypto.Address(address))
-	return nil
-}
-
-// Hooks wrapper struct for slashing keeper
-type Hooks struct {
-	k Keeper
-}
-
-var _ types.StakingHooks = Hooks{}
-
-// Return the wrapper struct
-func (k Keeper) Hooks() Hooks {
-	return Hooks{k}
-}
-
-// Implements sdk.ValidatorHooks
-func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
-	return h.k.AfterValidatorBonded(ctx, consAddr, valAddr)
-}
-
-// Implements sdk.ValidatorHooks
-func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) error {
-	return h.k.AfterValidatorRemoved(ctx, consAddr)
-}
-
-// Implements sdk.ValidatorHooks
-func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
-	return h.k.AfterValidatorCreated(ctx, valAddr)
+	return h.k.AddPubkey(ctx, consPk)
 }
 
 func (h Hooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {

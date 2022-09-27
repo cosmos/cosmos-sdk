@@ -176,7 +176,7 @@ func TestListSnapshots(t *testing.T) {
 	app, _ := setupBaseAppWithSnapshots(t, 2, 5)
 
 	expected := abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
-		{Height: 2, Format: 1, Chunks: 2},
+		{Height: 2, Format: 2, Chunks: 2},
 	}}
 
 	resp := app.ListSnapshots(abci.RequestListSnapshots{})

@@ -39,13 +39,13 @@ func TestLoadSnapshotChunk(t *testing.T) {
 		chunk       uint32
 		expectEmpty bool
 	}{
-		"Existing snapshot": {2, 1, 1, false},
-		"Missing height":    {100, 1, 1, true},
-		"Missing format":    {2, 2, 1, true},
-		"Missing chunk":     {2, 1, 9, true},
-		"Zero height":       {0, 1, 1, true},
+		"Existing snapshot": {2, 2, 1, false},
+		"Missing height":    {100, 2, 1, true},
+		"Missing format":    {2, 3, 1, true},
+		"Missing chunk":     {2, 2, 9, true},
+		"Zero height":       {0, 2, 1, true},
 		"Zero format":       {2, 0, 1, true},
-		"Zero chunk":        {2, 1, 0, false},
+		"Zero chunk":        {2, 2, 0, false},
 	}
 	for name, tc := range testcases {
 		tc := tc

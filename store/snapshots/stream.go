@@ -57,10 +57,6 @@ func (sw *StreamWriter) Close() error {
 		sw.chunkWriter.CloseWithError(err)
 		return err
 	}
-	if err := sw.zWriter.Close(); err != nil {
-		sw.chunkWriter.CloseWithError(err)
-		return err
-	}
 	if err := sw.bufWriter.Flush(); err != nil {
 		sw.chunkWriter.CloseWithError(err)
 		return err

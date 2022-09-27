@@ -183,8 +183,12 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	// call the BeforeSend hooks
-	err := k.BeforeSend(ctx, delegatorAddr, moduleAccAddr, amt)
+	// call the TrackBeforeSend hooks and the BlockBeforeSend hooks
+	err := k.TrackBeforeSend(ctx, delegatorAddr, moduleAccAddr, amt)
+	if err != nil {
+		return err
+	}
+	err = k.BlockBeforeSend(ctx, delegatorAddr, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -237,8 +241,12 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	// call the BeforeSend hooks
-	err := k.BeforeSend(ctx, moduleAccAddr, delegatorAddr, amt)
+	// call the TrackBeforeSend hooks and the BlockBeforeSend hooks
+	err := k.TrackBeforeSend(ctx, moduleAccAddr, delegatorAddr, amt)
+	if err != nil {
+		return err
+	}
+	err = k.BlockBeforeSend(ctx, moduleAccAddr, delegatorAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -455,7 +463,8 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
 	}
 
-	return k.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
+	// we do not want to block sends from module to module in any case via hooks.
+	return k.SendCoinsWithoutBlockHook(ctx, senderAddr, recipientAcc.GetAddress(), amt)
 }
 
 // SendCoinsFromAccountToModule transfers coins from an AccAddress to a ModuleAccount.

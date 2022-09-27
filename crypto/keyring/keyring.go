@@ -535,8 +535,56 @@ func wrapKeyNotFound(err error, msg string) error {
 	return err
 }
 
-func (ks keystore) List() ([]*Record, error) {
-	return ks.MigrateAll()
+func (ks keystore) List() ([]Info, error) {
+	res := []Info{}
+
+	keys, err := ks.db.Keys()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(keys) == 0 {
+		return res, nil
+	}
+
+	sort.Strings(keys)
+	for _, key := range keys {
+		if strings.HasSuffix(key, infoSuffix) {
+			rawInfo, err := ks.db.Get(key)
+			if err != nil {
+				fmt.Printf("err for key %s: %q\n", key, err)
+
+				// add the name of the key in case the user wants to retrieve it
+				// afterwards
+				info := newOfflineInfo(key, nil, hd.PubKeyType(""))
+				res = append(res, info)
+				continue
+			}
+
+			if len(rawInfo.Data) == 0 {
+				fmt.Println(sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key))
+
+				// add the name of the key in case the user wants to retrieve it
+				// afterwards
+				info := newOfflineInfo(key, nil, hd.PubKeyType(""))
+				res = append(res, info)
+				continue
+			}
+
+			info, err := unmarshalInfo(rawInfo.Data)
+			if err != nil {
+				fmt.Printf("err for key %s: %q\n", key, err)
+
+				// add the name of the key in case the user wants to retrieve it
+				// afterwards
+				info = newOfflineInfo(key, nil, hd.PubKeyType(""))
+			}
+
+			res = append(res, info)
+		}
+	}
+
+	return res, nil
 }
 
 func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (*Record, string, error) {

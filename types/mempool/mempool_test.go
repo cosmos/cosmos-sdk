@@ -159,47 +159,59 @@ func TestTxOrder(t *testing.T) {
 	}{
 		{
 			txs: []txSpec{
-				{h: 1, p: 21, n: 4, a: sa},
-				{h: 2, p: 8, n: 3, a: sa},
-				{h: 3, p: 6, n: 2, a: sa},
-				{h: 4, p: 15, n: 1, a: sb},
-				{h: 5, p: 20, n: 1, a: sa},
+				{p: 21, n: 4, a: sa},
+				{p: 8, n: 3, a: sa},
+				{p: 6, n: 2, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 20, n: 1, a: sa},
 			},
-			order: []int{5, 4, 3, 2, 1},
+			order: []int{4, 3, 2, 1, 0},
 		},
 		{
 			txs: []txSpec{
-				{h: 1, p: 21, n: 4, a: sa},
-				{h: 4, p: 15, n: 1, a: sb},
-				{h: 5, p: 20, n: 1, a: sa},
+				{p: 21, n: 4, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 20, n: 1, a: sa},
 			},
-			order: []int{5, 1, 4}},
+			order: []int{2, 0, 1}},
 		{
 			txs: []txSpec{
-				{h: 1, p: 50, n: 3, a: sa},
-				{h: 2, p: 30, n: 2, a: sa},
-				{h: 3, p: 10, n: 1, a: sa},
-				{h: 4, p: 15, n: 1, a: sb},
-				{h: 5, p: 21, n: 2, a: sb},
+				{p: 50, n: 3, a: sa},
+				{p: 30, n: 2, a: sa},
+				{p: 10, n: 1, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 21, n: 2, a: sb},
 			},
-			order: []int{4, 5, 3, 2, 1},
+			order: []int{3, 4, 2, 1, 0},
 		},
 		{
 			txs: []txSpec{
-				{h: 1, p: 50, n: 3, a: sa},
-				{h: 2, p: 10, n: 2, a: sa},
-				{h: 3, p: 99, n: 1, a: sa},
-				{h: 4, p: 15, n: 1, a: sb},
-				{h: 5, p: 8, n: 2, a: sb},
+				{p: 50, n: 3, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 99, n: 1, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 8, n: 2, a: sb},
 			},
-			order: []int{3, 4, 2, 1, 5},
+			order: []int{2, 3, 1, 0, 4},
+		},
+		{
+			txs: []txSpec{
+				{p: 30, a: sa, n: 2},
+				{p: 20, a: sb, n: 1},
+				{p: 15, a: sa, n: 1},
+				{p: 10, a: sa, n: 0},
+				{p: 8, a: sb, n: 0},
+				{p: 6, a: sa, n: 3},
+				{p: 4, a: sb, n: 3},
+			},
+			order: []int{3, 2, 0, 4, 1, 5, 6},
 		},
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
 			pool := mempool.NewDefaultMempool()
-			for _, ts := range tt.txs {
-				tx := testTx{hash: [32]byte{byte(ts.h)}, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+			for i, ts := range tt.txs {
+				tx := testTx{hash: [32]byte{byte(i)}, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
 				c := ctx.WithPriority(tx.priority)
 				err := pool.Insert(c, tx)
 				require.NoError(t, err)
@@ -226,7 +238,7 @@ func TestRandomTxOrderManyTimes(t *testing.T) {
 }
 
 // validateOrder checks that the txs are ordered by priority and nonce
-// in O(n^n) time by checking each tx against all the other txs
+// in O(n^2) time by checking each tx against all the other txs
 func validateOrder(mtxs []mempool.Tx) error {
 	var itxs []txSpec
 	for i, mtx := range mtxs {
@@ -304,6 +316,7 @@ func TestRandomGeneratedTx(t *testing.T) {
 func TestRandomTxOrder(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	numTx := 1000
+	numAccounts := 10
 
 	seed := time.Now().UnixNano()
 	// interesting failing seeds:
@@ -311,7 +324,7 @@ func TestRandomTxOrder(t *testing.T) {
 	// seed := int64(1663989445512438000)
 	//
 
-	ordered, shuffled := genOrderedTxs(seed, numTx, 12)
+	ordered, shuffled := genOrderedTxs(seed, numTx, numAccounts)
 	mp := mempool.NewDefaultMempool()
 
 	for _, otx := range shuffled {

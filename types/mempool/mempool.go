@@ -146,39 +146,46 @@ func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]T
 	// start with the highest priority sender
 	priorityNode := mp.priorities.Front()
 	for priorityNode != nil {
-		var nextPriority int64
-		nextPriorityNode := priorityNode.Next()
-		if nextPriorityNode != nil {
-			nextPriority = nextPriorityNode.Key().(txKey).priority
-		} else {
-			nextPriority = math.MinInt64
-		}
-
-		senders := priorityNode.Value.(signing.SigVerifiableTx).GetSigners()
-		sender := priorityNode.Key().(txKey).sender
+		priorityKey := priorityNode.Key().(txKey)
+		nextHighestPriority, nextPriorityNode := nextPriority(priorityNode)
+		sender := priorityKey.sender
+		senderTx := mp.fetchSenderCursor(senderCursors, sender)
 
 		// iterate through the sender's transactions in nonce order
-		senderTx, ok := senderCursors[sender]
-		if !ok {
-			senderTx = mp.senders[sender].Front()
-		}
-
-		// if this is a multi sender tx
-		if len(senders) > 1 {
-			for _, s := range senders {
-				sc, ok := senderCursors[s.String()]
-				if !ok || sc.Key().(txKey).nonce < priorityNode.Key().(txKey).nonce {
-					// dependent txs for this multi sender tx have not yet been satisfied
-					continue
-				}
-			}
-		}
-
 		for senderTx != nil {
+			// time complexity tracking
 			mp.iterations++
 			k := senderTx.Key().(txKey)
+			senders := senderTx.Value.(signing.SigVerifiableTx).GetSigners()
+
+			// conditional skipping of multi sender txs
+			if len(senders) > 1 {
+				skip := false
+				for _, s := range senders {
+					sc, ok := senderCursors[s.String()]
+					if !ok {
+						skip = true
+						break
+					}
+
+					// nil acts a null terminator for the sender cursor; iteration has completed, so we are
+					// surely beyond the nonce
+					if sc != nil {
+						otherSenderKey := sc.Key().(txKey)
+						if otherSenderKey.sender != sender && otherSenderKey.nonce < k.nonce {
+							skip = true
+							break
+						}
+					}
+				}
+
+				if skip {
+					break
+				}
+			}
+
 			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
-			if k.priority < nextPriority {
+			if k.priority < nextHighestPriority {
 				break
 			}
 
@@ -197,6 +204,25 @@ func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]T
 	}
 
 	return selectedTxs, nil
+}
+
+func (mp *defaultMempool) fetchSenderCursor(senderCursors map[string]*huandu.Element, sender string) *huandu.Element {
+	senderTx, ok := senderCursors[sender]
+	if !ok {
+		senderTx = mp.senders[sender].Front()
+	}
+	return senderTx
+}
+
+func nextPriority(priorityNode *huandu.Element) (int64, *huandu.Element) {
+	var np int64
+	nextPriorityNode := priorityNode.Next()
+	if nextPriorityNode != nil {
+		np = nextPriorityNode.Key().(txKey).priority
+	} else {
+		np = math.MinInt64
+	}
+	return np, nextPriorityNode
 }
 
 func (mp *defaultMempool) CountTx() int {

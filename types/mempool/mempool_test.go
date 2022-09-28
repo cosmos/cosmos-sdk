@@ -161,7 +161,7 @@ func TestTxOrder(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 5)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
-	//sc := accounts[2].Address
+	sc := accounts[2].Address
 	//sd := accounts[3].Address
 	//se := accounts[4].Address
 
@@ -219,6 +219,19 @@ func TestTxOrder(t *testing.T) {
 			},
 			order: []int{3, 2, 0, 4, 1, 5, 6},
 		},
+		{
+			txs: []txSpec{
+				{p: 30, multi: []txSpec{{n: 2, a: sa}, {n: 1, a: sc}}},
+				{p: 20, a: sb, n: 1},
+				{p: 15, a: sa, n: 1},
+				{p: 10, a: sa, n: 0},
+				{p: 8, a: sb, n: 0},
+				{p: 6, a: sa, n: 3},
+				{p: 4, a: sb, n: 3},
+				{p: 2, a: sc, n: 0},
+			},
+			order: []int{3, 2, 4, 1, 6, 7, 0, 5},
+		},
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
@@ -249,7 +262,6 @@ func TestTxOrder(t *testing.T) {
 				err := pool.Insert(c, tx)
 				require.NoError(t, err)
 			}
-			require.Equal(t, len(tt.txs), pool.CountTx())
 
 			orderedTxs, err := pool.Select(ctx, nil, 1000)
 			require.NoError(t, err)

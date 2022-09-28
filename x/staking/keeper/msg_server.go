@@ -74,9 +74,19 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	if err != nil {
 		return nil, err
 	}
+
+	rate, _ := sdk.NewDecFromStr("1.000000000000000000")
+	maxRate, _ := sdk.NewDecFromStr("1.000000000000000000")
+	maxChangeRate, _ := sdk.NewDecFromStr("1.000000000000000000")
+
+	// commission := types.NewCommissionWithTime(
+	// 	msg.Commission.Rate, msg.Commission.MaxRate,
+	// 	msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,
+	// )
+
 	commission := types.NewCommissionWithTime(
-		msg.Commission.Rate, msg.Commission.MaxRate,
-		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,
+		rate, maxRate,
+		maxChangeRate, ctx.BlockHeader().Time,
 	)
 
 	validator, err = validator.SetInitialCommission(commission)
@@ -144,7 +154,14 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 	validator.Description = description
 
 	if msg.CommissionRate != nil {
-		commission, err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate)
+		rate, _ := sdk.NewDecFromStr("1.000000000000000000")
+		maxRate, _ := sdk.NewDecFromStr("1.000000000000000000")
+		maxChangeRate, _ := sdk.NewDecFromStr("1.000000000000000000")
+
+		commission := types.NewCommissionWithTime(
+			rate, maxRate,
+			maxChangeRate, ctx.BlockHeader().Time,
+		)
 		if err != nil {
 			return nil, err
 		}

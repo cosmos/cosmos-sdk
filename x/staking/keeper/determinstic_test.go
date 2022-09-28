@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -8,6 +11,7 @@ import (
 	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -60,21 +64,66 @@ func (s *DeterministicTestSuite) SetupTest() {
 	s.queryClient = stakingtypes.NewQueryClient(queryHelper)
 }
 
-func drawDuration() {
+// pubkeyGenerator creates and returns a random pubkey generator using rapid.
+func pubkeyGenerator(t *rapid.T) *rapid.Generator[secp256k1.PubKey] {
+	return rapid.Custom(func(t *rapid.T) secp256k1.PubKey {
+		pkBz := rapid.SliceOfN(rapid.Byte(), 33, 33).Draw(t, "hex")
+		return secp256k1.PubKey{Key: pkBz}
+	})
+}
 
+func drawDuration() *rapid.Generator[time.Duration] {
+	return rapid.Custom(func(t *rapid.T) time.Duration {
+		now := time.Now()
+		// range from current time to 365days.
+		duration := rapid.Int64Range(now.Unix(), 365*24*60*60*now.Unix()).Draw(t, "time")
+		return time.Duration(duration)
+	})
+}
+
+func (suite *DeterministicTestSuite) runParamsIterations(prevParams stakingtypes.Params) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.Params(suite.ctx, &stakingtypes.QueryParamsRequest{})
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+
+		suite.Require().Equal(res.Params, prevParams)
+		prevParams = res.Params
+	}
+}
+
+func TestDeterministicTestSuite(t *testing.T) {
+	suite.Run(t, new(DeterministicTestSuite))
 }
 
 func (suite *DeterministicTestSuite) TestGRPCParams() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		params := stakingtypes.Params{
-			BondDenom: rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "bond-denom"),
-			// UnbondingTime: ,
-			MaxValidators:     rapid.Uint32().Draw(t, "max-validators"),
-			MaxEntries:        rapid.Uint32().Draw(t, "max-entries"),
-			HistoricalEntries: rapid.Uint32().Draw(t, "historical-entries"),
-			// MinCommissionRate: ,
+			BondDenom:         rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "bond-denom"),
+			UnbondingTime:     drawDuration().Draw(t, "duration"),
+			MaxValidators:     rapid.Uint32Min(1).Draw(t, "max-validators"),
+			MaxEntries:        rapid.Uint32Min(1).Draw(t, "max-entries"),
+			HistoricalEntries: rapid.Uint32Min(1).Draw(t, "historical-entries"),
+			MinCommissionRate: sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "commission"), 2),
 		}
 
-		_ = params
+		err := suite.stakingKeeper.SetParams(suite.ctx, params)
+		suite.Require().NoError(err)
+
+		suite.runParamsIterations(params)
 	})
+
+	params := stakingtypes.Params{
+		BondDenom:         "denom",
+		UnbondingTime:     time.Hour,
+		MaxValidators:     85,
+		MaxEntries:        5,
+		HistoricalEntries: 5,
+		MinCommissionRate: sdk.NewDecWithPrec(5, 2),
+	}
+
+	err := suite.stakingKeeper.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	suite.runParamsIterations(params)
 }

@@ -326,7 +326,10 @@ func (app *SimApp) Name() string { return app.BaseApp.Name() }
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	jsonObj := make(map[string]json.RawMessage)
 	jsonObj["module_genesis_state"] = []byte("true")
-	loadAppStateFromFolder, _ := json.Marshal(jsonObj)
+	loadAppStateFromFolder, err := json.Marshal(jsonObj)
+	if err != nil {
+		panic(err)
+	}
 	buf := bytes.NewBuffer(nil)
 	if err := json.Compact(buf, req.AppStateBytes); err != nil {
 		panic(err)

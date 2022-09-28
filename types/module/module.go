@@ -617,7 +617,7 @@ func createExportFile(exportPath string, moduleName string, index int) (*os.File
 		return nil, fmt.Errorf("failed to create directory: %w", err)
 	}
 
-	fp := filepath.Join(exportPath, fmt.Sprintf("genesis_%s_%d.bin", moduleName, index))
+	fp := filepath.Join(filepath.Clean(exportPath), fmt.Sprintf("genesis_%s_%d.bin", moduleName, index))
 	f, err := os.Create(fp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file: %w", err)
@@ -628,7 +628,7 @@ func createExportFile(exportPath string, moduleName string, index int) (*os.File
 
 func openModuleStateFile(importPath string, moduleName string, index int) (*os.File, error) {
 	fp := filepath.Join(importPath, fmt.Sprintf("genesis_%s_%d.bin", moduleName, index))
-	f, err := os.OpenFile(fp, os.O_RDONLY, 0o600)
+	f, err := os.OpenFile(filepath.Clean(fp), os.O_RDONLY, 0o600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
@@ -677,8 +677,15 @@ func fileWrite(modulePath, moduleName string, bz []byte) error {
 			return err
 		}
 
+		defer func() error {
+			err := f.Close()
+			if err != nil {
+				return fmt.Errorf("failed to close file: %w", err)
+			}
+			return nil
+		}()
+
 		n, err := f.Write(byteChunk(bz, i))
-		f.Close()
 		if err != nil {
 			return fmt.Errorf("failed to write genesis file: %w", err)
 		}
@@ -707,7 +714,13 @@ func FileRead(modulePath string, moduleName string) ([]byte, error) {
 			if err != nil {
 				panic(fmt.Sprintf("failed to open genesis file from module %s: %v", moduleName, err))
 			}
-			defer f.Close()
+			defer func() error {
+				err := f.Close()
+				if err != nil {
+					return fmt.Errorf("failed to close file: %w", err)
+				}
+				return nil
+			}()
 
 			fi, err := f.Stat()
 			if err != nil {

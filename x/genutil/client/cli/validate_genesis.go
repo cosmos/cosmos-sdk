@@ -50,20 +50,23 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 
 				jsonObj := make(map[string]json.RawMessage)
 				jsonObj["module_genesis_state"] = []byte("true")
-				loadAppStateFromFolder, _ := json.Marshal(jsonObj)
+				loadAppStateFromFolder, err := json.Marshal(jsonObj)
+				if err != nil {
+					return fmt.Errorf("cannot marshal the module_genesis_state object, err :%v", err)
+				}
 
 				if bytes.Equal(genDoc.AppState, loadAppStateFromFolder) {
 					return fmt.Errorf("genesisAppState is not equal to expectedAppState, expect: %v, actual: %v", loadAppStateFromFolder, genDoc.AppState)
 				}
 
-				for _, b := range mbm {
-					bz, err := module.FileRead(filepath.Join(genesisFilePath, b.Name()), b.Name())
+				for _, appModule := range mbm {
+					bz, err := module.FileRead(filepath.Join(genesisFilePath, appModule.Name()), appModule.Name())
 					if err != nil {
 						return err
 					}
 
-					if err = b.ValidateGenesis(cdc, clientCtx.TxConfig, bz); err != nil {
-						return fmt.Errorf("error validating genesis state in module %s: %v", b.Name(), err.Error())
+					if err = appModule.ValidateGenesis(cdc, clientCtx.TxConfig, bz); err != nil {
+						return fmt.Errorf("error validating genesis state in module %s: %v", appModule.Name(), err.Error())
 					}
 				}
 

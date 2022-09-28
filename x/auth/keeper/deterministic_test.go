@@ -99,14 +99,19 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 	for i := 0; i < count; i++ {
 		pub := pubkeyGenerator(t).Draw(t, "pubkey")
 		addr := sdk.AccAddress(pub.Address())
+
+		// we need all generated account-numbers unique, but in some cases a account-number
+		// is being drawn with the same account-number which is previously drawn. To avoid that
+		// case storing all the account-numbers drawn in a map & checking for the collisions
+		// between the accounts information.
 		accNum := rapid.Uint64().Filter(func(u uint64) bool {
 			if accNum[u] {
 				return false
-			} else {
-				accNum[u] = true
-				return true
 			}
-		}).Draw(t, "account-number") // to avoid collisions
+
+			accNum[u] = true
+			return true
+		}).Draw(t, "account-number")
 		seq := rapid.Uint64().Draw(t, "sequence")
 
 		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
@@ -125,7 +130,9 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 	})
 
 	// Regression test
-	addr1 := sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	addr1, err := sdk.AccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	suite.Require().NoError(err)
+
 	pub, err := hex.DecodeString("01090C02812F010C25200ED40E004105160196E801F70005070EA21603FF06001E")
 	suite.Require().NoError(err)
 
@@ -196,7 +203,6 @@ func (suite *DeterministicTestSuite) runAccountsIterations(prevRes []types.Accou
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
-
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		suite.SetupTest() // reset
 		numAccs := rapid.IntRange(1, 10).Draw(t, "accounts")
@@ -212,13 +218,15 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	suite.SetupTest() // reset
 
 	// Regression test
-	addr1 := sdk.MustAccAddressFromBech32("cosmos1892yr6fzlj7ud0kfkah2ctrav3a4p4n060ze8f")
+	addr1, err := sdk.AccAddressFromBech32("cosmos1892yr6fzlj7ud0kfkah2ctrav3a4p4n060ze8f")
+	suite.Require().NoError(err)
 	pub1, err := hex.DecodeString("D1002E1B019000010BB7034500E71F011F1CA90D5B000E134BFB0F3603030D0303")
 	suite.Require().NoError(err)
 	accNum1 := uint64(107)
 	seq1 := uint64(10001)
 
-	addr2 := sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	addr2, err := sdk.AccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	suite.Require().NoError(err)
 	pub2, err := hex.DecodeString("01090C02812F010C25200ED40E004105160196E801F70005070EA21603FF06001E")
 	suite.Require().NoError(err)
 
@@ -258,7 +266,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 		pub := pubkeyGenerator(t).Draw(t, "pubkey")
 		addr := sdk.AccAddress(pub.Address())
 
-		// TODO change this to draw uint64
+		// TODO change this to draw uint64 (https://github.com/cosmos/cosmos-sdk/issues/13410)
 		accNum := rapid.Uint32().Draw(t, "account-number")
 		seq := rapid.Uint64().Draw(t, "sequence")
 
@@ -269,7 +277,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 	})
 
 	// Regression test
-	addr1 := sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	addr1, err := sdk.AccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	suite.Require().NoError(err)
 	pub, err := hex.DecodeString("01090C02812F010C25200ED40E004105160196E801F70005070EA21603FF06001E")
 	suite.Require().NoError(err)
 
@@ -350,7 +359,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 	})
 
 	// Regression test
-	addr1 := sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	addr1, err := sdk.AccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	suite.Require().NoError(err)
 	pub, err := hex.DecodeString("01090C02812F010C25200ED40E004105160196E801F70005070EA21603FF06001E")
 	suite.Require().NoError(err)
 
@@ -430,7 +440,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAddressBytesToString() {
 		suite.runAddressBytesToStringIterations(address.Bytes(), address.String())
 	})
 
-	address := sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	address, err := sdk.AccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	suite.Require().NoError(err)
 	suite.runAddressBytesToStringIterations(address.Bytes(), address.String())
 }
 
@@ -454,7 +465,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAddressStringToBytes() {
 		suite.runStringToAddressBytesIterations(address.String(), address.Bytes())
 	})
 
-	address := sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	address, err := sdk.AccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	suite.Require().NoError(err)
 	suite.runStringToAddressBytesIterations(address.String(), address.Bytes())
 }
 

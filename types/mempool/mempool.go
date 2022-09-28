@@ -143,6 +143,7 @@ func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]T
 	var selectedTxs []Tx
 	var txBytes int
 	senderCursors := make(map[string]*huandu.Element)
+	//mutltiSenders := make(map[string][]*huandu.Element)
 
 	// start with the highest priority sender
 	priorityNode := mp.priorities.Front()
@@ -155,17 +156,24 @@ func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]T
 			nextPriority = math.MinInt64
 		}
 
-		// TODO multiple senders
-		// A multi sender tx may only be selected once all antecedent (nonce-wise) txs for each sender account
-		// have been selected.
-		// When selecting a tx with multi senders signal it as selected so it doesn't show up multiple times
-		// in the output list.  Skip when already selected.
-		sender := priorityNode.Value.(signing.SigVerifiableTx).GetSigners()[0].String()
+		senders := priorityNode.Value.(signing.SigVerifiableTx).GetSigners()
+		sender := priorityNode.Key().(txKey).sender
 
 		// iterate through the sender's transactions in nonce order
 		senderTx, ok := senderCursors[sender]
 		if !ok {
 			senderTx = mp.senders[sender].Front()
+		}
+
+		// this is a multi sender tx
+		if len(senders) > 1 {
+			for _, s := range senders {
+				sc, ok := senderCursors[s.String()]
+				if !ok || sc.Key().(txKey).nonce < priorityNode.Key().(txKey).nonce {
+					// dependent txs for this multi sender tx have not yet been satisfied
+					continue
+				}
+			}
 		}
 
 		for senderTx != nil {

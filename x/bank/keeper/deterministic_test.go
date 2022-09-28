@@ -121,7 +121,9 @@ func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
 		suite.runQueryBalanceIterations(addr, &coin)
 	})
 
-	addr := sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
+	addr, err := sdk.AccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
+	suite.Require().NoError(err)
+
 	coin := sdk.NewCoin(
 		"denom",
 		sdk.NewInt(10),
@@ -165,7 +167,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 	})
 
 	suite.SetupTest() // reset
-	addr := sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
+	addr, err := sdk.AccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
+	suite.Require().NoError(err)
 
 	coins := sdk.NewCoins(
 		sdk.NewCoin("stake", sdk.NewInt(10)),
@@ -217,7 +220,8 @@ func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 	})
 
 	suite.SetupTest() // reset
-	addr := sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
+	addr, err := sdk.AccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
+	suite.Require().NoError(err)
 
 	coins := sdk.NewCoins(
 		sdk.NewCoin("stake", sdk.NewInt(10)),
@@ -225,7 +229,7 @@ func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 	)
 
 	suite.mockFundAccount(addr)
-	err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, coins)
+	err = banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, coins)
 	suite.Require().NoError(err)
 
 	suite.runSpendableBalancesIterations(addr, coins)
@@ -604,10 +608,11 @@ func (suite *DeterministicTestSuite) TestGRPCDenomOwners() {
 	}
 
 	for i := 0; i < len(denomOwners); i++ {
-		addr := sdk.MustAccAddressFromBech32(denomOwners[i].Address)
+		addr, err := sdk.AccAddressFromBech32(denomOwners[i].Address)
+		suite.Require().NoError(err)
 
 		suite.mockFundAccount(addr)
-		err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin))
+		err = banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin))
 		suite.Require().NoError(err)
 	}
 

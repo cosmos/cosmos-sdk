@@ -3,6 +3,7 @@
 package simapp
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -195,6 +196,12 @@ type SimApp struct {
 
 	// module configurator
 	configurator module.Configurator
+
+	// the root folder of the app config and data
+	homepath string
+
+	// the path for the genesis state exporting
+	exportpath string
 }
 
 func init() {
@@ -256,6 +263,12 @@ func NewSimApp(
 		keys:              keys,
 		tkeys:             tkeys,
 		memKeys:           memKeys,
+	}
+
+	app.homepath = cast.ToString(appOpts.Get(flags.FlagHome))
+	ep := cast.ToString(appOpts.Get(flags.FlagGenesisFilePath))
+	if len(ep) > 0 {
+		app.exportpath = filepath.Join(ep, "genesis")
 	}
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
@@ -544,10 +557,27 @@ func (a *SimApp) Configurator() module.Configurator {
 
 // InitChainer application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	var genesisState GenesisState
-	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
+	jsonObj := make(map[string]json.RawMessage)
+	jsonObj["module_genesis_state"] = []byte("true")
+	loadAppStateFromFolder, err := json.Marshal(jsonObj)
+	if err != nil {
 		panic(err)
 	}
+
+	buf := bytes.NewBuffer(nil)
+	if err := json.Compact(buf, req.AppStateBytes); err != nil {
+		panic(err)
+	}
+
+	var genesisState GenesisState
+	if bytes.Equal(loadAppStateFromFolder, buf.Bytes()) {
+		app.ModuleManager.SetGenesisPath(filepath.Join(app.homepath, "config", "genesis"))
+	} else {
+		if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
+			panic(err)
+		}
+	}
+
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	return app.ModuleManager.InitGenesis(ctx, app.appCodec, genesisState)
 }

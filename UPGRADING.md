@@ -41,16 +41,20 @@ The SDK has migrated from `gogo/protobuf` (which is currently unmaintained), to 
 This means you should replace all imports of `github.com/gogo/protobuf` to `github.com/cosmos/gogoproto`.
 This allows you to remove the replace directive `replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1` from your `go.mod` file.
 
+Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.0`) for generating protobuf files.
+
 ### Transactions
 
 #### Broadcast Mode
 
 Broadcast mode `block` was deprecated and has been removed. Please use `sync` mode instead.
-When upgrading your tests from `block` to `sync` and checking for a transaction code, you might need to query the transaction first (with its hash) to get the correct code.
+When upgrading your tests from `block` to `sync` and checking for a transaction code, you need to query the transaction first (with its hash) to get the correct code.
 
-### `x/gov`
+### Modules
 
-#### Minimum Proposal Deposit At Time of Submission
+#### `x/gov`
+
+##### Minimum Proposal Deposit At Time of Submission
 
 The `gov` module has been updated to support a minimum proposal deposit at submission time. It is determined by a new
 parameter called `MinInitialDepositRatio`. When multiplied by the existing `MinDeposit` parameter, it produces
@@ -182,6 +186,5 @@ message MsgSetWithdrawAddress {
 ```
 
 <!-- todo: cosmos.scalar types -->
-
 
 When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).

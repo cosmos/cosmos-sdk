@@ -24,30 +24,42 @@ import (
 )
 
 type testTx struct {
-	hash     [32]byte
-	priority int64
-	nonce    uint64
-	address  sdk.AccAddress
+	hash         [32]byte
+	priority     int64
+	nonce        uint64
+	address      sdk.AccAddress
+	multiAddress []sdk.AccAddress
+	multiNonces  []uint64
 }
 
 func (tx testTx) GetSigners() []sdk.AccAddress {
-	// TODO multi sender
-	return []sdk.AccAddress{tx.address}
+	if len(tx.multiAddress) == 0 {
+		return []sdk.AccAddress{tx.address}
+	}
+	return tx.multiAddress
 }
 
 func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) {
 	panic("GetPubkeys not implemented")
 }
 
-func (tx testTx) GetSignaturesV2() ([]signing2.SignatureV2, error) {
-	// TODO multi sender
-	return []signing2.SignatureV2{
-		{
+func (tx testTx) GetSignaturesV2() (res []signing2.SignatureV2, err error) {
+	if len(tx.multiNonces) == 0 {
+		res = append(res, signing2.SignatureV2{
 			PubKey:   nil,
 			Data:     nil,
 			Sequence: tx.nonce,
-		},
-	}, nil
+		})
+	} else {
+		for _, nonce := range tx.multiNonces {
+			res = append(res, signing2.SignatureV2{
+				PubKey:   nil,
+				Data:     nil,
+				Sequence: nonce,
+			})
+		}
+	}
+	return res, nil
 }
 
 var (
@@ -93,11 +105,12 @@ func TestNewStatefulMempool(t *testing.T) {
 }
 
 type txSpec struct {
-	i int
-	h int
-	p int
-	n int
-	a sdk.AccAddress
+	i     int
+	h     int
+	p     int
+	n     int
+	a     sdk.AccAddress
+	multi []txSpec
 }
 
 func (tx txSpec) String() string {
@@ -209,9 +222,29 @@ func TestTxOrder(t *testing.T) {
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+			// create fresh mempool
 			pool := mempool.NewDefaultMempool()
+
+			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
-				tx := testTx{hash: [32]byte{byte(i)}, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+				var tx testTx
+				if len(ts.multi) == 0 {
+					tx = testTx{hash: [32]byte{byte(i)}, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+				} else {
+					var nonces []uint64
+					var addresses []sdk.AccAddress
+					for _, ms := range ts.multi {
+						nonces = append(nonces, uint64(ms.n))
+						addresses = append(addresses, ms.a)
+					}
+					tx = testTx{
+						hash:         [32]byte{byte(i)},
+						priority:     int64(ts.p),
+						multiNonces:  nonces,
+						multiAddress: addresses,
+					}
+				}
+
 				c := ctx.WithPriority(tx.priority)
 				err := pool.Insert(c, tx)
 				require.NoError(t, err)
@@ -231,7 +264,7 @@ func TestTxOrder(t *testing.T) {
 }
 
 func TestRandomTxOrderManyTimes(t *testing.T) {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		TestRandomTxOrder(t)
 		TestRandomGeneratedTx(t)
 	}
@@ -299,7 +332,7 @@ func TestRandomGeneratedTx(t *testing.T) {
 	mp := mempool.NewDefaultMempool()
 
 	for _, otx := range generated {
-		tx := testTx{otx.hash, otx.priority, otx.nonce, otx.address}
+		tx := testTx{hash: otx.hash, priority: otx.priority, nonce: otx.nonce, address: otx.address}
 		c := ctx.WithPriority(tx.priority)
 		err := mp.Insert(c, tx)
 		require.NoError(t, err)
@@ -328,7 +361,7 @@ func TestRandomTxOrder(t *testing.T) {
 	mp := mempool.NewDefaultMempool()
 
 	for _, otx := range shuffled {
-		tx := testTx{otx.hash, otx.priority, otx.nonce, otx.address}
+		tx := testTx{hash: otx.hash, priority: otx.priority, nonce: otx.nonce, address: otx.address}
 		c := ctx.WithPriority(tx.priority)
 		err := mp.Insert(c, tx)
 		require.NoError(t, err)
@@ -533,82 +566,6 @@ func simulateTx(ctx sdk.Context) sdk.Tx {
 		[]uint64{acc.GetAccountNumber()},
 		[]uint64{acc.GetSequence()},
 		accounts[0].PrivKey,
-	)
-	return tx
-}
-
-type txWithPriority struct {
-	priority int64
-	tx       sdk.Tx
-	address  string
-	nonce    uint64 // duplicate from tx.address.sequence
-}
-
-func GenTxOrder(ctx sdk.Context, nTx int, nSenders int) (ordered []txWithPriority, shuffled []txWithPriority) {
-	s := rand.NewSource(time.Now().UnixNano())
-	r := rand.New(s)
-	randomAccounts := simtypes.RandomAccounts(r, nSenders)
-	senderNonces := make(map[string]uint64)
-	senderLastPriority := make(map[string]int)
-	for _, acc := range randomAccounts {
-		address := acc.Address.String()
-		senderNonces[address] = 1
-		senderLastPriority[address] = 999999
-	}
-
-	for i := 0; i < nTx; i++ {
-		acc := randomAccounts[r.Intn(nSenders)]
-		accAddress := acc.Address.String()
-		accNonce := senderNonces[accAddress]
-		senderNonces[accAddress] += 1
-		lastPriority := senderLastPriority[accAddress]
-		txPriority := r.Intn(lastPriority)
-		if txPriority == 0 {
-			txPriority += 1
-		}
-		senderLastPriority[accAddress] = txPriority
-		tx := txWithPriority{
-			priority: int64(txPriority),
-			tx:       simulateTx2(ctx, acc, accNonce),
-			nonce:    accNonce,
-			address:  accAddress,
-		}
-		ordered = append(ordered, tx)
-	}
-	for _, item := range ordered {
-		tx := txWithPriority{
-			priority: item.priority,
-			tx:       item.tx,
-			nonce:    item.nonce,
-			address:  item.address,
-		}
-		shuffled = append(shuffled, tx)
-	}
-	rand.Shuffle(len(shuffled), func(i, j int) { shuffled[i], shuffled[j] = shuffled[j], shuffled[i] })
-	return ordered, shuffled
-}
-
-func simulateTx2(ctx sdk.Context, acc simtypes.Account, nonce uint64) sdk.Tx {
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
-	msg := group.MsgUpdateGroupMembers{
-		GroupId:       1,
-		Admin:         acc.Address.String(),
-		MemberUpdates: []group.MemberRequest{},
-	}
-	fees, _ := simtypes.RandomFees(r, ctx, sdk.NewCoins(sdk.NewCoin("coin", sdk.NewInt(100000000))))
-
-	tx, _ := simtestutil.GenSignedMockTx(
-		r,
-		txGen,
-		[]sdk.Msg{&msg},
-		fees,
-		simtestutil.DefaultGenTxGas,
-		ctx.ChainID(),
-		[]uint64{authtypes.NewBaseAccountWithAddress(acc.Address).GetAccountNumber()},
-		[]uint64{nonce},
-		acc.PrivKey,
 	)
 	return tx
 }

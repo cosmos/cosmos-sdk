@@ -116,26 +116,25 @@ func (mp *defaultMempool) Insert(ctx types.Context, tx Tx) error {
 			len(senders), len(nonces))
 	}
 
-	// TODO multiple senders
-	sender := senders[0].String()
-	nonce := nonces[0].Sequence
-	tk := txKey{nonce: nonce, priority: ctx.Priority(), sender: sender, hash: hashableTx.GetHash()}
+	for i, senderAddr := range senders {
+		sender := senderAddr.String()
+		nonce := nonces[i].Sequence
+		tk := txKey{nonce: nonce, priority: ctx.Priority(), sender: sender, hash: hashableTx.GetHash()}
 
-	senderTxs, ok := mp.senders[sender]
-	// initialize sender mempool if not found
-	if !ok {
-		senderTxs = huandu.New(huandu.LessThanFunc(func(a, b interface{}) int {
-			return huandu.Uint64.Compare(b.(txKey).nonce, a.(txKey).nonce)
-		}))
-		mp.senders[sender] = senderTxs
+		senderTxs, ok := mp.senders[sender]
+		// initialize sender mempool if not found
+		if !ok {
+			senderTxs = huandu.New(huandu.LessThanFunc(func(a, b interface{}) int {
+				return huandu.Uint64.Compare(b.(txKey).nonce, a.(txKey).nonce)
+			}))
+			mp.senders[sender] = senderTxs
+		}
+
+		// if a tx with the same nonce exists, replace it and delete from the priority list
+		senderTxs.Set(tk, tx)
+		mp.scores[txKey{nonce: nonce, sender: sender}] = ctx.Priority()
+		mp.priorities.Set(tk, tx)
 	}
-
-	// if a tx with the same nonce exists, replace it and delete from the priority list
-	senderTxs.Set(tk, tx)
-	// TODO for each sender/nonce
-	mp.scores[txKey{nonce: nonce, sender: sender}] = ctx.Priority()
-	mp.priorities.Set(tk, tx)
-
 	return nil
 }
 
@@ -143,7 +142,6 @@ func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]T
 	var selectedTxs []Tx
 	var txBytes int
 	senderCursors := make(map[string]*huandu.Element)
-	//mutltiSenders := make(map[string][]*huandu.Element)
 
 	// start with the highest priority sender
 	priorityNode := mp.priorities.Front()
@@ -165,7 +163,7 @@ func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]T
 			senderTx = mp.senders[sender].Front()
 		}
 
-		// this is a multi sender tx
+		// if this is a multi sender tx
 		if len(senders) > 1 {
 			for _, s := range senders {
 				sc, ok := senderCursors[s.String()]
@@ -208,27 +206,27 @@ func (mp *defaultMempool) CountTx() int {
 func (mp *defaultMempool) Remove(context types.Context, tx Tx) error {
 	senders := tx.(signing.SigVerifiableTx).GetSigners()
 	nonces, _ := tx.(signing.SigVerifiableTx).GetSignaturesV2()
-	// TODO multiple senders
-	sender := senders[0].String()
-	nonce := nonces[0].Sequence
 
-	// TODO multiple senders
-	tk := txKey{sender: sender, nonce: nonce}
+	for i, senderAddr := range senders {
+		sender := senderAddr.String()
+		nonce := nonces[i].Sequence
 
-	priority, ok := mp.scores[tk]
-	if !ok {
-		return fmt.Errorf("tx %v not found", tk)
+		tk := txKey{sender: sender, nonce: nonce}
+
+		priority, ok := mp.scores[tk]
+		if !ok {
+			return fmt.Errorf("tx %v not found", tk)
+		}
+
+		senderTxs, ok := mp.senders[sender]
+		if !ok {
+			return fmt.Errorf("sender %s not found", sender)
+		}
+
+		mp.priorities.Remove(txKey{priority: priority, sender: sender, nonce: nonce})
+		senderTxs.Remove(nonce)
+		delete(mp.scores, tk)
 	}
-
-	senderTxs, ok := mp.senders[sender]
-	if !ok {
-		return fmt.Errorf("sender %s not found", sender)
-	}
-
-	mp.priorities.Remove(txKey{priority: priority, sender: sender, nonce: nonce})
-	senderTxs.Remove(nonce)
-	delete(mp.scores, tk)
-
 	return nil
 }
 

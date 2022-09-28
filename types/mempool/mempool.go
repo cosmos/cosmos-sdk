@@ -142,7 +142,7 @@ func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]T
 	var selectedTxs []Tx
 	var txBytes int
 	senderCursors := make(map[string]*huandu.Element)
-
+	
 	// start with the highest priority sender
 	priorityNode := mp.priorities.Front()
 	for priorityNode != nil {

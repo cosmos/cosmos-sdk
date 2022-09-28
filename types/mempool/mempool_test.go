@@ -229,6 +229,7 @@ func TestTxOrder(t *testing.T) {
 				{p: 6, a: sa, n: 3},
 				{p: 4, a: sb, n: 3},
 				{p: 2, a: sc, n: 0},
+				{p: 7, a: sc, n: 3},
 			},
 			order: []int{3, 2, 4, 1, 6, 7, 0, 5},
 		},

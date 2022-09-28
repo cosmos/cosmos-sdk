@@ -10,33 +10,40 @@ import listener_pb2_grpc
 from grpc_health.v1.health import HealthServicer
 from grpc_health.v1 import health_pb2, health_pb2_grpc
 
+from pathlib import Path
+
 class ABCIListenerServiceServicer(listener_pb2_grpc.ABCIListenerServiceServicer):
     """Implementation of ABCListener service."""
+    home = str(Path.home())
 
     def ListenBeginBlock(self, request, context):
+        filename = "{}/{}".format(home, 'abci_begin_block.txt')
         line = "{}:::{}:::{}\n".format(request.block_height, request.req, request.res)
-        with open('abci_begin_block.txt', 'a') as f:
+        with open(filename, 'a') as f:
             f.write(line)
 
         return listener_pb2.Empty()
 
     def ListenEndBlock(self, request, context):
+        filename = "{}/{}".format(home, 'abci_end_block.txt')
         line = "{}:::{}:::{}\n".format(request.block_height, request.req, request.res)
-        with open('abci_end_block.txt', 'a') as f:
+        with open(filename, 'a') as f:
             f.write(line)
 
         return listener_pb2.Empty()
 
     def ListenDeliverTx(self, request, context):
+        filename = "{}/{}".format(home, 'abci_deliver_tx.txt')
         line = "{}:::{}:::{}\n".format(request.block_height, request.req, request.res)
-        with open('abci_deliver_tx.txt', 'a') as f:
+        with open(filename, 'a') as f:
             f.write(line)
 
         return listener_pb2.Empty()
 
     def ListenStoreKVPair(self, request, context):
+        filename = "{}/{}".format(home, 'abci_store_kv_pair.txt')
         line = "{}:::{}\n".format(request.block_height, request.store_kv_pair)
-        with open('abci_store_kv_pair.txt', 'a') as f:
+        with open(filename, 'a') as f:
             f.write(line)
 
         return listener_pb2.Empty()

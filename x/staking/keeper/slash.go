@@ -32,6 +32,7 @@ import (
 //	not at a height in the future
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) math.Int {
 	logger := k.Logger(ctx)
+	slashValidatorFirst := true
 
 	if slashFactor.IsNegative() {
 		panic(fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor))
@@ -88,6 +89,16 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			"slashing at current height; not scanning unbonding delegations & redelegations",
 			"height", infractionHeight,
 		)
+
+	case slashValidatorFirst:
+	// Slash validator first, then slash unbonding delegations and redelegations
+	val, found := k.GetValidatorByConsAddr(ctx, consAddr)
+	if !found {
+		string := fmt.Sprintf("expected validator with address %s but not found", consAddr)
+		fmt.Println(string, "for validator", val)
+	}
+
+
 
 	case infractionHeight < ctx.BlockHeight():
 		// Iterate through unbonding delegations from slashed validator

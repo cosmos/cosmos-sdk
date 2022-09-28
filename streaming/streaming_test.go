@@ -48,6 +48,7 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 		plugin := "abci"
 		pluginPath := fmt.Sprintf("%s/plugins/%s/examples/plugin-go/stdout", s.workDir, "abci")
 		//pluginPath := fmt.Sprintf("python3 %s/plugins/%s/examples/plugin-python/stdout.py", s.workDir, "abci")
+		//pluginPath := fmt.Sprintf("python3 %s/plugins/%s/examples/plugin-python/kafka.py", s.workDir, "abci")
 		if err := os.Setenv(GetPluginEnvKey(plugin), pluginPath); err != nil {
 			t.Fail()
 		}

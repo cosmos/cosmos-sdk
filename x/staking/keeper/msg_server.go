@@ -114,7 +114,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
-	if err := k.AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
+	if err := k.Hooks().AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
 		return nil, err
 	}
 
@@ -170,7 +170,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		}
 
 		// call the before-modification hook since we're about to update the commission
-		if err := k.BeforeValidatorModified(ctx, valAddr); err != nil {
+		if err := k.Hooks().BeforeValidatorModified(ctx, valAddr); err != nil {
 			return nil, err
 		}
 

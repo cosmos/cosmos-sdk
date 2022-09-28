@@ -29,11 +29,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// SimAppChainID hardcoded chainID for simulation
-const (
-	DefaultGenTxGas = 10000000
-	SimAppChainID   = "simulation-app"
-)
+const DefaultGenTxGas = 10000000
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // SimApp testing.

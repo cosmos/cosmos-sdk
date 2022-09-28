@@ -92,6 +92,16 @@ func NewKeeper(
 	}
 }
 
+// Hooks gets the hooks for governance *Keeper {
+func (keeper *Keeper) Hooks() types.GovHooks {
+	if keeper.hooks == nil {
+		// return a no-op implementation if no hooks are set
+		return types.MultiGovHooks{}
+	}
+
+	return keeper.hooks
+}
+
 // SetHooks sets the hooks for governance
 func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 	if keeper.hooks != nil {

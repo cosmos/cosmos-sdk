@@ -1587,6 +1587,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	)
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
+	require.NoError(s.network.WaitForNextBlock())
 
 	var txRes sdk.TxResponse
 	require.NoError(val0.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))

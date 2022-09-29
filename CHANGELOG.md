@@ -67,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (export) [#13029](https://github.com/cosmos/cosmos-sdk/pull/13029) Fix exporting the blockParams regression.
 * [#13046](https://github.com/cosmos/cosmos-sdk/pull/13046) Fix missing return statement in BaseApp.Query.
 * (store) [#13336](https://github.com/cosmos/cosmos-sdk/pull/13336) Call streaming listeners for deliver tx event, it was removed accidentally, backport #13334.
+* (grpc) [#13417](https://github.com/cosmos/cosmos-sdk/pull/13417) fix grpc query panic that could crash the node (backport #13352).
 
 ## [v0.46.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.1) - 2022-08-24
 

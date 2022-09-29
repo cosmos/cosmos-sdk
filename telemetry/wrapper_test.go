@@ -1,3 +1,4 @@
+// Package telemetry provides instrumentation tools for other modules and packages.
 package telemetry_test
 
 import (

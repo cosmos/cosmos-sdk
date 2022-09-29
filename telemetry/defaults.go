@@ -23,5 +23,5 @@ const (
 
 var (
 	//defaultPrometheusRetentionTime is the default value for the enable prometheus retention time  config.
-	defaultPrometheusRetentionTime = 1 * time.Second
+	defaultPrometheusRetentionTime = 60 * time.Second
 )

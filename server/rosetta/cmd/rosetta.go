@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -30,6 +29,7 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Codec) *cobra.Com
 
 			rosettaSrv, err := rosetta.ServerFromConfig(conf)
 			if err != nil {
+				fmt.Printf("[Rosetta]- Error while creating server: %s", err.Error())
 				return err
 			}
 			return rosettaSrv.Start()

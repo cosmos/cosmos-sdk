@@ -50,8 +50,6 @@ func (on OnlineNetwork) AccountBalance(ctx context.Context, request *types.Accou
 		}
 	}
 
-	fmt.Println(request.AccountIdentifier.Address)
-
 	accountCoins, err := on.client.Balances(ctx, request.AccountIdentifier.Address, &height)
 	if err != nil {
 		return nil, errors.ToRosetta(err)

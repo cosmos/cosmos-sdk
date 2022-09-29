@@ -70,7 +70,7 @@ func ToRosetta(err error) *types.Error {
 	// if it's null or not known
 	rosErr, ok := err.(*Error)
 	if rosErr == nil || !ok {
-		return ToRosetta(WrapError(ErrUnknown, ErrUnknown.Error()))
+		return ToRosetta(WrapError(ErrUnknown, err.Error()))
 	}
 	return rosErr.rosErr
 }

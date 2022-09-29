@@ -41,6 +41,7 @@ type Server struct {
 }
 
 func (h Server) Start() error {
+	fmt.Printf("Rosetta server listening on add %s", h.addr)
 	return http.ListenAndServe(h.addr, h.h) //nolint:gosec
 }
 
@@ -108,6 +109,7 @@ func newOnlineAdapter(settings Settings) (crgtypes.API, error) {
 	for i := 0; i < settings.Retries; i++ {
 		err = settings.Client.Ready()
 		if err != nil {
+			fmt.Printf("[Rosetta]- Client is not ready: %s. Retrying ...", err.Error())
 			time.Sleep(settings.RetryWait)
 			continue
 		}

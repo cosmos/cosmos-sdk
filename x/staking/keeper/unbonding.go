@@ -19,7 +19,7 @@ func (k Keeper) IncrementUnbondingId(ctx sdk.Context) (unbondingId uint64) {
 		unbondingId = binary.BigEndian.Uint64(bz)
 	}
 
-	unbondingId = unbondingId + 1
+	unbondingId++
 
 	// Convert back into bytes for storage
 	bz = make([]byte, 8)

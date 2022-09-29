@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) SetupUnbondingTests(t *testing.T, hookCalled *bool, ub
 		types.NewMultiStakingHooks(testHooks),
 	)
 
-	addrDels = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 2, sdk.NewInt(10000))
+	// addrDels = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 2, sdk.NewInt(10000))
 	addrVals = simtestutil.ConvertAddrsToValAddrs(addrDels)
 
 	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
@@ -51,7 +51,7 @@ func (s *KeeperTestSuite) SetupUnbondingTests(t *testing.T, hookCalled *bool, ub
 	bondDenom = keeper.BondDenom(ctx)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
 
-	require.NoError(t, banktestutil.FundModuleAccount(s.bankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	// require.NoError(t, banktestutil.FundModuleAccount(s.bankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
 	s.bankKeeper.SendCoinsFromModuleToModule(ctx, types.NotBondedPoolName, types.BondedPoolName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, startTokens)))
 	s.accountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -61,7 +61,7 @@ func (s *KeeperTestSuite) SetupUnbondingTests(t *testing.T, hookCalled *bool, ub
 	require.Equal(t, valTokens, issuedShares1.RoundInt())
 
 	validator1 = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator1, true)
-	require.True(sdk.IntEq(t, valTokens, validator1.BondedTokens()))
+	require.True(math.IntEq(t, valTokens, validator1.BondedTokens()))
 	require.True(t, validator1.IsBonded())
 
 	// Create a delegator
@@ -89,7 +89,7 @@ func doUnbondingDelegation(
 	addrDels []sdk.AccAddress,
 	addrVals []sdk.ValAddress,
 	hookCalled *bool,
-) (completionTime time.Time, bondedAmt sdk.Int, notBondedAmt sdk.Int) {
+) (completionTime time.Time, bondedAmt math.Int, notBondedAmt math.Int) {
 	// UNDELEGATE
 	// Save original bonded and unbonded amounts
 	bondedAmt1 := bankKeeper.GetBalance(ctx, stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -103,9 +103,9 @@ func doUnbondingDelegation(
 	bondedAmt2 := bankKeeper.GetBalance(ctx, stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	notBondedAmt2 := bankKeeper.GetBalance(ctx, stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 	// Bonded amount is less
-	require.True(sdk.IntEq(t, bondedAmt1.SubRaw(1), bondedAmt2))
+	require.True(math.IntEq(t, bondedAmt1.SubRaw(1), bondedAmt2))
 	// Unbonded amount is more
-	require.True(sdk.IntEq(t, notBondedAmt1.AddRaw(1), notBondedAmt2))
+	require.True(math.IntEq(t, notBondedAmt1.AddRaw(1), notBondedAmt2))
 
 	// Check that the unbonding happened- we look up the entry and see that it has the correct number of shares
 	unbondingDelegations := stakingKeeper.GetUnbondingDelegationsFromValidator(ctx, addrVals[0])
@@ -351,8 +351,8 @@ func (s *KeeperTestSuite) TestUnbondingDelegationOnHold1(t *testing.T) {
 
 	// Bonded and unbonded amounts are the same as before because the completionTime has not yet passed and so the
 	// unbondingDelegation has not completed
-	require.True(sdk.IntEq(t, bondedAmt1, bondedAmt3))
-	require.True(sdk.IntEq(t, notBondedAmt1, notBondedAmt3))
+	require.True(math.IntEq(t, bondedAmt1, bondedAmt3))
+	require.True(math.IntEq(t, notBondedAmt1, notBondedAmt3))
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
 	ctx = ctx.WithBlockTime(completionTime)
@@ -363,9 +363,9 @@ func (s *KeeperTestSuite) TestUnbondingDelegationOnHold1(t *testing.T) {
 	bondedAmt5 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	notBondedAmt5 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
-	require.True(sdk.IntEq(t, bondedAmt1, bondedAmt5))
+	require.True(math.IntEq(t, bondedAmt1, bondedAmt5))
 	// Not bonded amount back to what it was originaly
-	require.True(sdk.IntEq(t, notBondedAmt1.SubRaw(1), notBondedAmt5))
+	require.True(math.IntEq(t, notBondedAmt1.SubRaw(1), notBondedAmt5))
 }
 
 func (s *KeeperTestSuite) TestUnbondingDelegationOnHold2(t *testing.T) {
@@ -386,8 +386,8 @@ func (s *KeeperTestSuite) TestUnbondingDelegationOnHold2(t *testing.T) {
 
 	// Bonded and unbonded amounts are the same as before because the completionTime has not yet passed and so the
 	// unbondingDelegation has not completed
-	require.True(sdk.IntEq(t, bondedAmt1, bondedAmt3))
-	require.True(sdk.IntEq(t, notBondedAmt1, notBondedAmt3))
+	require.True(math.IntEq(t, bondedAmt1, bondedAmt3))
+	require.True(math.IntEq(t, notBondedAmt1, notBondedAmt3))
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
 	err = s.stakingKeeper.UnbondingCanComplete(ctx, ubdeID)
@@ -397,7 +397,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationOnHold2(t *testing.T) {
 	bondedAmt5 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	notBondedAmt5 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
-	require.True(sdk.IntEq(t, bondedAmt1, bondedAmt5))
+	require.True(math.IntEq(t, bondedAmt1, bondedAmt5))
 	// Not bonded amount back to what it was originaly
-	require.True(sdk.IntEq(t, notBondedAmt1.SubRaw(1), notBondedAmt5))
+	require.True(math.IntEq(t, notBondedAmt1.SubRaw(1), notBondedAmt5))
 }

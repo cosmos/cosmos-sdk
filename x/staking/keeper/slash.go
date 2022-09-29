@@ -30,7 +30,7 @@ import (
 //
 //	Infraction was committed at the current height or at a past height,
 //	not at a height in the future
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) math.Int {
+func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec, _ types.Infraction) math.Int {
 	logger := k.Logger(ctx)
 
 	if slashFactor.IsNegative() {
@@ -191,7 +191,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 			continue
 		}
 
-		if entry.IsMature(now) {
+		if entry.IsMature(now) && !entry.OnHold() {
 			// Unbonding delegation no longer eligible for slashing, skip it
 			continue
 		}
@@ -245,7 +245,7 @@ func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 			continue
 		}
 
-		if entry.IsMature(now) {
+		if entry.IsMature(now) && !entry.OnHold() {
 			// Redelegation no longer eligible for slashing, skip it
 			continue
 		}

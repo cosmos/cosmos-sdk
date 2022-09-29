@@ -25,25 +25,25 @@ This module will be used by the Cosmos Hub, the first hub in the Cosmos ecosyste
 ## Contents
 
 * [Concepts](#concepts)
-    * [States](#states)
-    * [Tombstone Caps](#tombstone-caps)
-    * [Infraction Timelines](#infraction-timelines)
+  * [States](#states)
+  * [Tombstone Caps](#tombstone-caps)
+  * [Infraction Timelines](#infraction-timelines)
 * [State](#state)
-    * [Signing Info (Liveness)](#signing-info-liveness)
-    * [Params](#params)
+  * [Signing Info (Liveness)](#signing-info-liveness)
+  * [Params](#params)
 * [Messages](#messages)
-    * [Unjail](#unjail)
+  * [Unjail](#unjail)
 * [BeginBlock](#beginblock)
-    * [Liveness Tracking](#liveness-tracking)
+  * [Liveness Tracking](#liveness-tracking)
 * [Hooks](#hooks)
 * [Events](#events)
 * [Staking Tombstone](#staking-tombstone)
 * [Parameters](#parameters)
 * [CLI](#cli)
-    * [Query](#query)
-    * [Transactions](#transactions)
-    * [gRPC](#grpc)
-    * [REST](#rest)
+  * [Query](#query)
+  * [Transactions](#transactions)
+  * [gRPC](#grpc)
+  * [REST](#rest)
 
 <!-- order: 1 -->
 
@@ -291,7 +291,7 @@ for vote in block.LastCommitInfo.Votes {
     // That's fine since this is just used to filter unbonding delegations & redelegations.
     distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
-    Slash(vote.Validator.Address, distributionHeight, vote.Validator.Power, SlashFractionDowntime())
+    Slash(vote.Validator.Address, distributionHeight, vote.Validator.Power, SlashFractionDowntime(), stakingtypes.Downtime)
     Jail(vote.Validator.Address)
 
     signInfo.JailedUntil = block.Time.Add(DowntimeJailDuration())

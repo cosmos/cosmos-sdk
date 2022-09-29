@@ -808,7 +808,7 @@ following hooks can registered with staking:
 * `BeforeDelegationRemoved(Context, AccAddress, ValAddress) error`
     * called when a delegation is removed
 * `AfterUnbondingInitiated(Context, UnbondingID)`
-   * called when an unbonding operation (validator unbonding, unbonding delegation, redelegation) was initiated
+    * called when an unbonding operation (validator unbonding, unbonding delegation, redelegation) was initiated
 
 
 <!-- order: 7 -->

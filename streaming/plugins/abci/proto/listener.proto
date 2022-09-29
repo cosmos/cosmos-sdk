@@ -1,8 +1,7 @@
 syntax = "proto3";
-package cosmos.base.abci.v1beta1;
 
 option go_package          = "github.com/cosmos/cosmos-sdk/streaming/plugins/abci/proto";
-option java_package        = "network.cosmos.sdk.streaming.plugins.abci";
+option java_package        = "network.cosmos.sdk.streaming.grpc";
 option java_multiple_files = true;
 
 // PutRequest is used for storing ABCI request and response

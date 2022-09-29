@@ -57,7 +57,7 @@ func (g *graph) AddNode(n *node) {
 	n.nonceNode = sgs.Set(n.nonce, n)
 }
 
-func (g *graph) drawPriorityEdges(n *node) (edges []*node) {
+func (g *graph) DrawPriorityEdges(n *node) (edges []*node) {
 	pnode := n.nonceNode.Prev().Value.(*node).priorityNode
 	for pnode != nil {
 		node := pnode.Value.(*node)
@@ -178,7 +178,7 @@ func (g *graph) kahns(edgeless []*node) ([]*node, error) {
 	//n := edgeless[0]
 	for i := 0; i < len(edgeless) && edgeless[i] != nil; i++ {
 		// enumerate the priority list drawing priority edges along the way
-		pnodes := g.drawPriorityEdges(n.priorityNode.Value.(*node))
+		pnodes := g.DrawPriorityEdges(n.priorityNode.Value.(*node))
 		for _, m := range pnodes {
 			edge := nodeEdge(n, m)
 			if !visited[edge] {

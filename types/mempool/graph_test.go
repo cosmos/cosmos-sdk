@@ -1,9 +1,8 @@
-package mempool_test
+package mempool
 
 import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -42,6 +41,7 @@ func TestDrawEdges(t *testing.T) {
 				tx := testTx{hash: [32]byte{byte(i)}, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
 				c := ctx.WithPriority(int64(ts.p))
 				require.NoError(t, graph.Insert(c, tx))
+
 			}
 		})
 	}

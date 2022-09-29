@@ -232,16 +232,40 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	return res
 }
 
-// PrepareProposal implements the ability for the application to verify and/or modify transactions in a block proposal.
+// PrepareProposal implements the PrepareProposal ABCI method and returns a
+// ResponsePrepareProposal object to the client. The PrepareProposal method is
+// responsible for allowing the block proposer to perform application-dependent
+// work in a block before proposing it.
+//
+// Transactions can be modified, removed, or added by the application. Since the
+// application maintains it's own local mempool, it will ignore the transactions
+// provided to it in RequestPrepareProposal. Instead, it will determine which
+// transactions to return based on the mempool's semantics and the MaxTxBytes
+// provided by the client's request.
+//
+// Note, there is no need to execute the transactions for validity as they have
+// already passed CheckTx.
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
+// Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-	// treated as a noop until app side mempool is implemented
-	return abci.ResponsePrepareProposal{Txs: req.Txs}
+	panic("PrepareProposal currently not supported")
 }
 
-// ProcessProposal implements the ability for the application to verify transactions in a block proposal, and decide if they should accept the block or not.
+// ProcessProposal implements the ProcessProposal ABCI method and returns a
+// ResponseProcessProposal object to the client. The ProcessProposal method is
+// responsible for allowing execution of application-dependent work in a proposed
+// block. Note, the application defines the exact implementation details of
+// ProcessProposal. In general, the application must at the very least ensure
+// that all transactions are valid. If all transactions are valid, then we inform
+// Tendermint that the Status is ACCEPT. However, the application is also able
+// to implement optimizations such as executing the entire proposed block
+// immediately. It may even execute the block in parallel.
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
+// Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
-	// accept all proposed blocks until app side mempool is implemented
-	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+	panic("ProcessProposal currently not supported")
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In

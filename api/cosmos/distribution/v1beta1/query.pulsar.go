@@ -9546,7 +9546,7 @@ type QueryValidatorDistributionInfoResponse struct {
 	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
 	// self_bond_rewards defines the self delegations rewards.
 	SelfBondRewards []*v1beta1.DecCoin `protobuf:"bytes,2,rep,name=self_bond_rewards,json=selfBondRewards,proto3" json:"self_bond_rewards,omitempty"`
-	// commission defines the commision the validator received.
+	// commission defines the commission the validator received.
 	Commission []*v1beta1.DecCoin `protobuf:"bytes,3,rep,name=commission,proto3" json:"commission,omitempty"`
 }
 
@@ -9711,7 +9711,7 @@ type QueryValidatorCommissionResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// commission defines the commision the validator received.
+	// commission defines the commission the validator received.
 	Commission *ValidatorAccumulatedCommission `protobuf:"bytes,1,opt,name=commission,proto3" json:"commission,omitempty"`
 }
 

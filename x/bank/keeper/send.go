@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -86,15 +87,23 @@ func (k BaseSendKeeper) GetAuthority() string {
 	return k.authority
 }
 
+func (k BaseSendKeeper) decodeParams(bz []byte) (types.Params, error) {
+	if bz == nil {
+		return types.Params{}, nil
+	}
+
+	var params types.Params
+	k.cdc.MustUnmarshal(bz, &params)
+	return params, nil
+}
+
 // GetParams returns the total set of bank parameters.
 func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ParamsKey)
-	if bz == nil {
-		return params
+	params, err := store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
+	if err != nil {
+		panic(err)
 	}
-
-	k.cdc.MustUnmarshal(bz, &params)
 	return params
 }
 

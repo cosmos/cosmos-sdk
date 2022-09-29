@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -100,17 +101,12 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 // by address.
 func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	accountStore := k.getAccountStore(ctx, addr)
-	amount := math.ZeroInt()
-	bz := accountStore.Get([]byte(denom))
-	if bz == nil {
-		return sdk.NewCoin(denom, amount)
-	}
-
-	if err := amount.Unmarshal(bz); err != nil {
+	coin, err := store2.GetAndDecode(accountStore, decodeCoin, []byte(denom))
+	if err != nil {
 		panic(err)
 	}
 
-	return sdk.NewCoin(denom, amount)
+	return sdk.NewCoin(denom, coin.Amount)
 }
 
 // IterateAccountBalances iterates over the balances of a single account and

@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -213,28 +215,36 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 	return nil
 }
 
-// GetSupply retrieves the Supply from store
-func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
-	store := ctx.KVStore(k.storeKey)
-	supplyStore := prefix.NewStore(store, types.SupplyKey)
-
-	bz := supplyStore.Get(conv.UnsafeStrToBytes(denom))
+func decodeCoin(bz []byte) (sdk.Coin, error) {
 	if bz == nil {
 		return sdk.Coin{
-			Denom:  denom,
 			Amount: sdk.NewInt(0),
-		}
+		}, nil
 	}
 
 	var amount math.Int
 	err := amount.Unmarshal(bz)
 	if err != nil {
-		panic(fmt.Errorf("unable to unmarshal supply value %v", err))
+		panic(err)
+	}
+	return sdk.Coin{
+		Amount: amount,
+	}, nil
+}
+
+// GetSupply retrieves the Supply from store
+func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	coin, err := store2.GetAndDecode(supplyStore, decodeCoin, conv.UnsafeStrToBytes(denom))
+	if err != nil {
+		panic(err)
 	}
 
 	return sdk.Coin{
 		Denom:  denom,
-		Amount: amount,
+		Amount: coin.Amount,
 	}
 }
 
@@ -245,19 +255,27 @@ func (k BaseKeeper) HasSupply(ctx sdk.Context, denom string) bool {
 	return supplyStore.Has(conv.UnsafeStrToBytes(denom))
 }
 
+func (k BaseKeeper) decodeMetadata(bz []byte) (types.Metadata, error) {
+	if bz == nil {
+		return types.Metadata{}, nil
+	}
+
+	var metadata types.Metadata
+	k.cdc.MustUnmarshal(bz, &metadata)
+
+	return metadata, nil
+}
+
 // GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,
 // false otherwise.
 func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool) {
 	store := ctx.KVStore(k.storeKey)
 	store = prefix.NewStore(store, types.DenomMetadataPrefix)
 
-	bz := store.Get(conv.UnsafeStrToBytes(denom))
-	if bz == nil {
-		return types.Metadata{}, false
+	metadata, err := store2.GetAndDecode(store, k.decodeMetadata, conv.UnsafeStrToBytes(denom))
+	if err != nil {
+		panic(err)
 	}
-
-	var metadata types.Metadata
-	k.cdc.MustUnmarshal(bz, &metadata)
 
 	return metadata, true
 }

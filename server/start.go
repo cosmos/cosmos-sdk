@@ -491,7 +491,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}
 
 	defer func() {
-		if tmNode.IsRunning() {
+		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
 		}
 

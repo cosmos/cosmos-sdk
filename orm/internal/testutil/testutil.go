@@ -169,7 +169,6 @@ func (k TestKeyCodec) Draw(t *rapid.T, id string) []protoreflect.Value {
 	n := len(k.KeySpecs)
 	keyValues := make([]protoreflect.Value, n)
 	for i, k := range k.KeySpecs {
-
 		keyValues[i] = protoreflect.ValueOf(k.Gen.Draw(t, fmt.Sprintf("%s[%d]", id, i)))
 	}
 	return keyValues

@@ -80,8 +80,8 @@ func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
 	return mockTendermintRPC{responseQuery: respQuery}
 }
 
-func (_ mockTendermintRPC) BroadcastTxCommit(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
-	return &coretypes.ResultBroadcastTxCommit{}, nil
+func (mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+	return &coretypes.ResultBroadcastTx{Code: 0}, nil
 }
 
 func (m mockTendermintRPC) ABCIQueryWithOptions(
@@ -156,7 +156,7 @@ func (s *CLITestSuite) TestCLITxSend() {
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, OwnerName),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
 	}
 
@@ -181,7 +181,6 @@ func (s *CLITestSuite) TestCLITxSend() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-
 			args = append(args, tc.args...)
 			cmd := cli.NewCmdSend()
 			cmd.SetContext(s.ctx)
@@ -213,7 +212,7 @@ func (s *CLITestSuite) initAccount() {
 
 	args := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
 	}
 

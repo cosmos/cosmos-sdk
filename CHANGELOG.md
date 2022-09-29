@@ -49,7 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (ledger) [#12935](https://github.com/cosmos/cosmos-sdk/pull/12935) Generalize Ledger integration to allow for different apps or keytypes that use SECP256k1.
 
 ### Improvements
-
+* [#13354](https://github.com/cosmos/cosmos-sdk/pull/13354) Refactor the telemetry and expose `Metric` as an interface.
 * [#12981](https://github.com/cosmos/cosmos-sdk/pull/12981) Return proper error when parsing telemetry configuration.
 * [#12995](https://github.com/cosmos/cosmos-sdk/pull/12995) Add `FormatTime` and `ParseTimeString` methods.
 * [#12952](https://github.com/cosmos/cosmos-sdk/pull/12952) Replace keyring module to Cosmos fork.

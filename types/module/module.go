@@ -359,7 +359,7 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 			fmt.Printf("exporting module: %s,path: %s\n", moduleName, modulePath)
 
 			bz := m.Modules[moduleName].ExportGenesis(ctx, cdc)
-			if err := fileWrite(modulePath, moduleName, bz); err != nil {
+			if err := FileWrite(modulePath, moduleName, bz); err != nil {
 				return nil, fmt.Errorf("ExportGenesis to file failed, module=%s err=%v", moduleName, err)
 			}
 		}
@@ -612,7 +612,7 @@ func DefaultMigrationsOrder(modules []string) []string {
 	return out
 }
 
-func createExportFile(exportPath string, moduleName string, index int) (*os.File, error) {
+func CreateExportFile(exportPath string, moduleName string, index int) (*os.File, error) {
 	if err := os.MkdirAll(exportPath, 0o700); err != nil {
 		return nil, fmt.Errorf("failed to create directory: %w", err)
 	}
@@ -626,7 +626,7 @@ func createExportFile(exportPath string, moduleName string, index int) (*os.File
 	return f, nil
 }
 
-func openModuleStateFile(importPath string, moduleName string, index int) (*os.File, error) {
+func OpenModuleStateFile(importPath string, moduleName string, index int) (*os.File, error) {
 	fp := filepath.Join(importPath, fmt.Sprintf("genesis_%s_%d.bin", moduleName, index))
 	f, err := os.OpenFile(filepath.Clean(fp), os.O_RDONLY, 0o600)
 	if err != nil {
@@ -636,12 +636,12 @@ func openModuleStateFile(importPath string, moduleName string, index int) (*os.F
 	return f, nil
 }
 
-const stateChunkSize = 100000000 // 100 MB
+const StateChunkSize = 100000000 // 100 MB
 
 // byteChunk returns the chunk at a given index from the full byte slice.
 func byteChunk(bz []byte, index int) []byte {
-	start := index * stateChunkSize
-	end := (index + 1) * stateChunkSize
+	start := index * StateChunkSize
+	end := (index + 1) * StateChunkSize
 	switch {
 	case start >= len(bz):
 		return nil
@@ -655,16 +655,16 @@ func byteChunk(bz []byte, index int) []byte {
 // byteChunks calculates the number of chunks in the byte slice.
 func byteChunks(bz []byte) int {
 	bzs := len(bz)
-	if bzs%stateChunkSize == 0 {
-		return bzs / stateChunkSize
+	if bzs%StateChunkSize == 0 {
+		return bzs / StateChunkSize
 	}
 
-	return bzs/stateChunkSize + 1
+	return bzs/StateChunkSize + 1
 }
 
-// fileWrite writes the module's genesis state into files, each file containing
+// FileWrite writes the module's genesis state into files, each file containing
 // maximum 100 MB of data
-func fileWrite(modulePath, moduleName string, bz []byte) error {
+func FileWrite(modulePath, moduleName string, bz []byte) error {
 	chunks := byteChunks(bz)
 	// if the genesis state is empty, still create a new file to write nothing
 	if chunks == 0 {
@@ -672,7 +672,7 @@ func fileWrite(modulePath, moduleName string, bz []byte) error {
 	}
 	totalWritten := 0
 	for i := 0; i < chunks; i++ {
-		f, err := createExportFile(modulePath, moduleName, i)
+		f, err := CreateExportFile(modulePath, moduleName, i)
 		if err != nil {
 			return err
 		}
@@ -710,7 +710,7 @@ func FileRead(modulePath string, moduleName string) ([]byte, error) {
 	var buf bytes.Buffer
 	for i := 0; i < len(files); i++ {
 		if err := func() error {
-			f, err := openModuleStateFile(modulePath, moduleName, i)
+			f, err := OpenModuleStateFile(modulePath, moduleName, i)
 			if err != nil {
 				panic(fmt.Sprintf("failed to open genesis file from module %s: %v", moduleName, err))
 			}

@@ -1,8 +1,11 @@
 package module_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -254,4 +257,224 @@ func TestManager_EndBlock(t *testing.T) {
 	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.EndBlock(sdk.Context{}, req) })
+}
+
+func TestModule_CreateExportFile(t *testing.T) {
+	tmp := t.TempDir()
+	mod := "test"
+	index := 0
+
+	f1, err := module.CreateExportFile(tmp, mod, index)
+	require.NoError(t, err)
+	defer f1.Close()
+
+	fname := filepath.Join(filepath.Clean(tmp), fmt.Sprintf("genesis_%s_%d.bin", mod, index))
+	require.Equal(t, fname, f1.Name())
+
+	n, err := f1.WriteString("123")
+	require.NoError(t, err)
+	require.Equal(t, len("123"), n)
+
+	// if we create the same export file again, the original will be truncated.
+	f2, err := module.CreateExportFile(tmp, mod, index)
+	require.NoError(t, err)
+	require.Equal(t, f1.Name(), f2.Name())
+	defer f2.Close()
+
+	fs, err := f2.Stat()
+	require.NoError(t, err)
+	require.Equal(t, int64(0), fs.Size())
+}
+
+func TestModule_OpenModuleStateFile(t *testing.T) {
+	tmp := t.TempDir()
+	mod := "test"
+	index := 0
+
+	fp1, err := module.CreateExportFile(tmp, mod, index)
+	require.NoError(t, err)
+	defer fp1.Close()
+
+	fp2, err := module.OpenModuleStateFile(tmp, mod, index)
+	require.NoError(t, err)
+	defer fp2.Close()
+
+	fp1Stat, err := fp1.Stat()
+	require.NoError(t, err)
+
+	fp2Stat, err := fp2.Stat()
+	require.NoError(t, err)
+
+	require.Equal(t, fp1Stat, fp2Stat)
+
+	// should failed to file request file
+	_, err = module.OpenModuleStateFile(tmp, mod, index+1)
+	require.ErrorContains(t, err, "failed to open file")
+}
+
+func TestManager_FileWrite(t *testing.T) {
+	tmp := t.TempDir()
+	mod := "test"
+
+	// write empty state to file, will still create a file
+	err := module.FileWrite(tmp, mod, []byte{})
+	require.NoError(t, err)
+
+	fp, err := module.OpenModuleStateFile(tmp, mod, 0)
+	require.NoError(t, err)
+	defer fp.Close()
+
+	fs, err := fp.Stat()
+	require.NoError(t, err)
+	require.Equal(t, int64(0), fs.Size())
+
+	// write bytes with maximum state chunk size, should only write 1 file
+	bz := make([]byte, module.StateChunkSize)
+	err = module.FileWrite(tmp, mod, bz)
+	require.NoError(t, err)
+
+	fp0, err := module.OpenModuleStateFile(tmp, mod, 0)
+	require.NoError(t, err)
+	defer fp0.Close()
+
+	var buf bytes.Buffer
+	n, err := buf.ReadFrom(fp0)
+	require.NoError(t, err)
+	require.Equal(t, int64(module.StateChunkSize), n)
+	require.True(t, bytes.Equal(bz, buf.Bytes()))
+
+	// write bytes larger than maximum state chunk size, should create multiple files
+	bz = append(bz, []byte{1}...)
+	err = module.FileWrite(tmp, mod, bz)
+	require.NoError(t, err)
+
+	// open the first file, read the content, and verify
+	fp0, err = module.OpenModuleStateFile(tmp, mod, 0)
+	require.NoError(t, err)
+	defer fp0.Close()
+
+	buf.Reset()
+	n, err = buf.ReadFrom(fp0)
+	require.NoError(t, err)
+	require.Equal(t, int64(module.StateChunkSize), n)
+	require.True(t, bytes.Equal(bz[:module.StateChunkSize], buf.Bytes()))
+
+	// open the second file, read the content, and verify
+	fp1, err := module.OpenModuleStateFile(tmp, mod, 1)
+	require.NoError(t, err)
+	defer fp1.Close()
+
+	buf.Reset()
+	n, err = buf.ReadFrom(fp1)
+	require.NoError(t, err)
+	require.Equal(t, int64(1), n)
+	require.True(t, bytes.Equal(bz[module.StateChunkSize:], buf.Bytes()))
+}
+
+func TestManager_FileRead(t *testing.T) {
+	tmp := t.TempDir()
+	mod := "test"
+	bz := make([]byte, module.StateChunkSize+1)
+	bz[module.StateChunkSize] = byte(1)
+
+	err := module.FileWrite(tmp, mod, bz)
+	require.NoError(t, err)
+
+	bzRead, err := module.FileRead(tmp, mod)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(bz, bzRead))
+}
+
+func TestManager_InitGenesisWithPath(t *testing.T) {
+	tmp := t.TempDir()
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mod1 := "module1"
+	mod2 := "module2"
+	mockAppModule1 := mock.NewMockAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockAppModule(mockCtrl)
+	mockAppModule1.EXPECT().Name().Times(2).Return(mod1)
+	mockAppModule2.EXPECT().Name().Times(2).Return(mod2)
+	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+
+	appGenesisState := map[string]json.RawMessage{
+		mod1: json.RawMessage(`{"key": "value1"}`),
+		mod2: json.RawMessage(`{"key": "value2"}`),
+	}
+	vs := []abci.ValidatorUpdate{{}}
+
+	mockAppModule1.EXPECT().InitGenesis(
+		gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(appGenesisState[mod1])).Times(1).Return(vs)
+	mockAppModule2.EXPECT().InitGenesis(
+		gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(appGenesisState[mod2])).Times(1).Return([]abci.ValidatorUpdate{})
+
+	// we assume the genesis state has been exported to the module folders
+	err := module.FileWrite(filepath.Join(tmp, mod1), mod1, appGenesisState[mod1])
+	require.NoError(t, err)
+
+	err = module.FileWrite(filepath.Join(tmp, mod2), mod2, appGenesisState[mod2])
+	require.NoError(t, err)
+
+	// set the file import path
+	mm.SetGenesisPath(tmp)
+	var res abci.ResponseInitChain
+	require.NotPanics(t, func() {
+		res = mm.InitGenesis(ctx, cdc, nil)
+	})
+
+	// check the final import status
+	require.Equal(t, res, abci.ResponseInitChain{Validators: vs})
+}
+
+func TestManager_ExportGenesisWithPath(t *testing.T) {
+	tmp := t.TempDir()
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mod1 := "module1"
+	mod2 := "module2"
+	mockAppModule1 := mock.NewMockAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockAppModule(mockCtrl)
+	mockAppModule1.EXPECT().Name().Times(2).Return(mod1)
+	mockAppModule2.EXPECT().Name().Times(2).Return(mod2)
+	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	ctx := sdk.Context{}
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+
+	appGenesisState := map[string]json.RawMessage{
+		mod1: json.RawMessage(`{"key": "value1"}`),
+		mod2: json.RawMessage(`{"key": "value2"}`),
+	}
+
+	// set the export state in each mock modules
+	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(appGenesisState[mod1])
+	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(appGenesisState[mod2])
+
+	// assign the export path
+	mm.SetGenesisPath(tmp)
+
+	// run actual genesis state export
+	actual, err := mm.ExportGenesis(ctx, cdc)
+	require.NoError(t, err)
+	require.Equal(t, make(map[string]json.RawMessage), actual)
+
+	// check the state has been exported to the correct file path and verify the data
+	bz, err := module.FileRead(filepath.Join(tmp, mod1), mod1)
+	require.NoError(t, err)
+	require.Equal(t, appGenesisState[mod1], json.RawMessage(bz))
+
+	bz, err = module.FileRead(filepath.Join(tmp, mod2), mod2)
+	require.NoError(t, err)
+	require.Equal(t, appGenesisState[mod2], json.RawMessage(bz))
 }

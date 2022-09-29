@@ -2,13 +2,14 @@ package mempool_test
 
 import (
 	"fmt"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"math"
 	"math/rand"
 	"testing"
 	"time"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -181,6 +182,18 @@ func TestTxOrder(t *testing.T) {
 			order: []int{4, 3, 2, 1, 0},
 		},
 		{
+			// a very interesting breaking case
+			txs: []txSpec{
+				{p: 3, n: 0, a: sa},
+				{p: 5, n: 1, a: sa},
+				{p: 9, n: 2, a: sa},
+				{p: 6, n: 0, a: sb},
+				{p: 5, n: 1, a: sb},
+				{p: 8, n: 2, a: sb},
+			},
+			order: []int{3, 4, 0, 1, 2, 5},
+		},
+		{
 			txs: []txSpec{
 				{p: 21, n: 4, a: sa},
 				{p: 15, n: 1, a: sb},
@@ -221,7 +234,9 @@ func TestTxOrder(t *testing.T) {
 		},
 		{
 			txs: []txSpec{
-				{p: 30, multi: []txSpec{{n: 2, a: sa}, {n: 1, a: sc}}},
+				{p: 30, multi: []txSpec{
+					{n: 2, a: sa},
+					{n: 1, a: sc}}},
 				{p: 20, a: sb, n: 1},
 				{p: 15, a: sa, n: 1},
 				{p: 10, a: sa, n: 0},
@@ -231,7 +246,7 @@ func TestTxOrder(t *testing.T) {
 				{p: 2, a: sc, n: 0},
 				{p: 7, a: sc, n: 3},
 			},
-			order: []int{3, 2, 4, 1, 6, 7, 0, 5},
+			order: []int{3, 2, 4, 1, 6, 7, 0, 5, 8},
 		},
 	}
 	for i, tt := range tests {
@@ -277,7 +292,7 @@ func TestTxOrder(t *testing.T) {
 }
 
 func TestRandomTxOrderManyTimes(t *testing.T) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 30; i++ {
 		TestRandomTxOrder(t)
 		TestRandomGeneratedTx(t)
 	}
@@ -354,9 +369,13 @@ func TestRandomGeneratedTx(t *testing.T) {
 	selected, err := mp.Select(ctx, nil, 100000)
 	require.Equal(t, len(generated), len(selected))
 	require.NoError(t, err)
-	require.NoError(t, validateOrder(selected))
 
-	fmt.Printf("seed: %d completed in %d iterations\n", seed, mempool.Iterations(mp))
+	start := time.Now()
+	require.NoError(t, validateOrder(selected))
+	duration := time.Since(start)
+
+	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
+		seed, mempool.Iterations(mp), duration.Milliseconds())
 }
 
 func TestRandomTxOrder(t *testing.T) {

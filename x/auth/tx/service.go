@@ -128,7 +128,15 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 	}
 
 	gasInfo, result, err := s.simulate(txBytes)
+
 	if err != nil {
+		if req.Mode == txtypes.SimulateMode_GAS_USED {
+			return &txtypes.SimulateResponse{
+				GasInfo: &gasInfo,
+				Message: err.Error(),
+			}, nil
+		}
+
 		return nil, err
 	}
 

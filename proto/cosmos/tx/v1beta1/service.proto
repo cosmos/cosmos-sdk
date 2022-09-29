@@ -123,6 +123,20 @@ message SimulateRequest {
   //
   // Since: cosmos-sdk 0.43
   bytes tx_bytes = 2;
+
+  // Since cosmos-sdk: 0.46
+  SimulateMode mode = 3;
+}
+
+// SimulateMode specifies the mode for the TxService.Simulate RPC method.
+enum SimulateMode {
+  // Default mode of simulate, which returns
+  // the result of the simulation or error
+  WITH_RESULT = 0;
+  
+  // Returns the gas used for the transaction
+  // even when an error is produced
+  GAS_USED = 1;
 }
 
 // SimulateResponse is the response type for the
@@ -132,6 +146,8 @@ message SimulateResponse {
   cosmos.base.abci.v1beta1.GasInfo gas_info = 1;
   // result is the result of the simulation.
   cosmos.base.abci.v1beta1.Result result = 2;
+  
+  string message = 3;
 }
 
 // GetTxRequest is the request type for the Service.GetTx

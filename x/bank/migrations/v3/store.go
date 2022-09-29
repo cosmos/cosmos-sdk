@@ -2,6 +2,7 @@ package v3
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,7 +57,7 @@ func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
 		}
 
 		newStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
-		newStore.Set([]byte(coin.Denom), bz)
+		store2.Set(newStore, []byte(coin.Denom), bz)
 
 		denomPrefixStore, ok := denomPrefixStores[balance.Denom]
 		if !ok {
@@ -66,7 +67,7 @@ func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
 
 		// Store a reverse index from denomination to account address with a
 		// sentinel value.
-		denomPrefixStore.Set(address.MustLengthPrefix(addr), []byte{0})
+		store2.Set(denomPrefixStore, address.MustLengthPrefix(addr), []byte{0})
 	}
 
 	return nil
@@ -86,8 +87,8 @@ func migrateDenomMetadata(store sdk.KVStore) error {
 		// old key: prefix_bytes | denom_bytes | denom_bytes
 		copy(newKey, types.DenomMetadataPrefix)
 		copy(newKey[len(types.DenomMetadataPrefix):], oldKey[:l])
-		store.Set(newKey, oldDenomMetaDataIter.Value())
-		oldDenomMetaDataStore.Delete(oldKey)
+		store2.Set(store, newKey, oldDenomMetaDataIter.Value())
+		store2.Delete(oldDenomMetaDataStore, oldKey)
 	}
 
 	return nil

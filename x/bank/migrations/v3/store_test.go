@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,7 +36,7 @@ func TestMigrateStore(t *testing.T) {
 		bz, err := encCfg.Codec.Marshal(&b)
 		require.NoError(t, err)
 
-		prefixAccStore.Set([]byte(b.Denom), bz)
+		store2.Set(prefixAccStore, []byte(b.Denom), bz)
 	}
 
 	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
@@ -94,7 +95,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		key = append(key, []byte(metaData[i].Base)...)
 		bz, err := encCfg.Codec.Marshal(&metaData[i])
 		require.NoError(t, err)
-		denomMetadataStore.Set(key, bz)
+		store2.Set(denomMetadataStore, key, bz)
 	}
 
 	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))

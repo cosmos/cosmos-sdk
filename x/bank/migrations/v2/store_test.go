@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -33,7 +34,7 @@ func TestSupplyMigration(t *testing.T) {
 	oldSupply = &types.Supply{Total: sdk.Coins{oldFooCoin, oldBarCoin, oldFooBarCoin}}
 	oldSupplyBz, err := encCfg.Codec.MarshalInterface(oldSupply)
 	require.NoError(t, err)
-	store.Set(v1bank.SupplyKey, oldSupplyBz)
+	store2.Set(store, v1bank.SupplyKey, oldSupplyBz)
 
 	// Run migration.
 	err = v2bank.MigrateStore(ctx, bankKey, encCfg.Codec)
@@ -80,14 +81,14 @@ func TestBalanceKeysMigration(t *testing.T) {
 	oldFooKey := append(append(v1bank.BalancesPrefix, addr...), []byte(fooCoin.Denom)...)
 	fooBz, err := encCfg.Codec.Marshal(&fooCoin)
 	require.NoError(t, err)
-	store.Set(oldFooKey, fooBz)
+	store2.Set(store, oldFooKey, fooBz)
 
 	// set 0 foobar coin
 	fooBarCoin := sdk.NewCoin("foobar", sdk.NewInt(0))
 	oldKeyFooBar := append(append(v1bank.BalancesPrefix, addr...), []byte(fooBarCoin.Denom)...)
 	fooBarBz, err := encCfg.Codec.Marshal(&fooBarCoin)
 	require.NoError(t, err)
-	store.Set(oldKeyFooBar, fooBarBz)
+	store2.Set(store, oldKeyFooBar, fooBarBz)
 	require.NotNil(t, store.Get(oldKeyFooBar)) // before store migation zero values can also exist in store.
 
 	err = v2bank.MigrateStore(ctx, bankKey, encCfg.Codec)

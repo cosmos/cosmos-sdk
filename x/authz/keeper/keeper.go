@@ -84,7 +84,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 
 	grant.Authorization = any
 	store := ctx.KVStore(k.storeKey)
-	store.Set(skey, k.cdc.MustMarshal(&grant))
+	store2.Set(store, skey, k.cdc.MustMarshal(&grant))
 
 	return nil
 }
@@ -199,7 +199,7 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 	}
 
 	bz := k.cdc.MustMarshal(&grant)
-	store.Set(skey, bz)
+	store2.Set(store, skey, bz)
 
 	return ctx.EventManager().EmitTypedEvent(&authz.EventGrant{
 		MsgTypeUrl: authorization.MsgTypeURL(),
@@ -225,7 +225,7 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 		}
 	}
 
-	store.Delete(skey)
+	store2.Delete(store, skey)
 
 	return ctx.EventManager().EmitTypedEvent(&authz.EventRevoke{
 		MsgTypeUrl: msgType,
@@ -322,7 +322,7 @@ func (k Keeper) setGrantQueueItem(ctx sdk.Context, expiration time.Time,
 	if err != nil {
 		return err
 	}
-	store.Set(GrantQueueKey(expiration, granter, grantee), bz)
+	store2.Set(store, GrantQueueKey(expiration, granter, grantee), bz)
 
 	return nil
 }
@@ -396,10 +396,10 @@ func (k Keeper) DequeueAndDeleteExpiredGrants(ctx sdk.Context) error {
 			return err
 		}
 
-		store.Delete(iterator.Key())
+		store2.Delete(store, iterator.Key())
 
 		for _, typeURL := range queueItem.MsgTypeUrls {
-			store.Delete(grantStoreKey(grantee, granter, typeURL))
+			store2.Delete(store, grantStoreKey(grantee, granter, typeURL))
 		}
 	}
 

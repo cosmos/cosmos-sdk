@@ -3,6 +3,7 @@ package v046
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,7 +43,7 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 		// delete expired authorization
 		// before 0.46 Expiration was required so it's safe to dereference
 		if grant.Expiration.Before(now) {
-			grantsStore.Delete(grantsIter.Key())
+			store2.Delete(grantsStore, grantsIter.Key())
 		} else {
 			granter, grantee, msgType := ParseGrantKey(grantsIter.Key())
 			// before 0.46 expiration was not a pointer, so now it's safe to dereference
@@ -65,7 +66,7 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 		if err != nil {
 			return err
 		}
-		store.Set(conv.UnsafeStrToBytes(key), bz)
+		store2.Set(store, conv.UnsafeStrToBytes(key), bz)
 	}
 
 	return nil

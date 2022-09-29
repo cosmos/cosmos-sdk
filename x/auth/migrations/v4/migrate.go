@@ -2,6 +2,7 @@ package v4
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -26,7 +27,7 @@ func Migrate(ctx sdk.Context, store sdk.KVStore, legacySubspace exported.Subspac
 	}
 
 	bz := cdc.MustMarshal(&currParams)
-	store.Set(ParamsKey, bz)
+	store2.Set(store, ParamsKey, bz)
 
 	return nil
 }

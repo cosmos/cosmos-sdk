@@ -2,7 +2,9 @@ package v2
 
 import (
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +25,7 @@ func migrateSupply(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	}
 
 	// We delete the single key holding the whole blob.
-	store.Delete(v1.SupplyKey)
+	store2.Delete(store, v1.SupplyKey)
 
 	if oldSupplyI == nil {
 		return nil
@@ -42,7 +44,7 @@ func migrateSupply(store sdk.KVStore, cdc codec.BinaryCodec) error {
 			return err
 		}
 
-		supplyStore.Set([]byte(coin.Denom), coinBz)
+		store2.Set(supplyStore, []byte(coin.Denom), coinBz)
 	}
 
 	return nil
@@ -66,8 +68,8 @@ func migrateBalanceKeys(store sdk.KVStore) {
 		newStoreKey := types.CreatePrefixedAccountStoreKey(addr, denom)
 
 		// Set new key on store. Values don't change.
-		store.Set(newStoreKey, oldStoreIter.Value())
-		oldStore.Delete(oldStoreIter.Key())
+		store2.Set(store, newStoreKey, oldStoreIter.Value())
+		store2.Delete(oldStore, oldStoreIter.Key())
 	}
 }
 
@@ -106,7 +108,7 @@ func pruneZeroBalances(store sdk.KVStore, cdc codec.BinaryCodec) error {
 		}
 
 		if balance.IsZero() {
-			balancesStore.Delete(iterator.Key())
+			store2.Delete(balancesStore, iterator.Key())
 		}
 	}
 	return nil
@@ -125,7 +127,7 @@ func pruneZeroSupply(store sdk.KVStore) error {
 		}
 
 		if amount.IsZero() {
-			supplyStore.Delete(iterator.Key())
+			store2.Delete(supplyStore, iterator.Key())
 		}
 	}
 

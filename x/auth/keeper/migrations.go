@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/gogoproto/grpc"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	v043 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v043"
@@ -72,6 +73,6 @@ func (m Migrator) V45_SetAccount(ctx sdk.Context, acc types.AccountI) error {
 		return err
 	}
 
-	store.Set(types.AddressStoreKey(addr), bz)
+	store2.Set(store, types.AddressStoreKey(addr), bz)
 	return nil
 }

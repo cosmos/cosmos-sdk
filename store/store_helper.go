@@ -16,3 +16,11 @@ func GetAndDecode[T any](store types.KVStore, dec func([]byte) (T, error), key [
 	}
 	return resp, err
 }
+
+func Set(store types.KVStore, key []byte, value []byte) {
+	store.Set(key, value)
+}
+
+func Delete(store types.KVStore, key []byte) {
+	store.Delete(key)
+}

@@ -124,7 +124,7 @@ func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 	if err != nil {
 		return err
 	}
-	store.Set(types.ParamsKey, bz)
+	store2.Set(store, types.ParamsKey, bz)
 	return nil
 }
 
@@ -307,7 +307,7 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 			if err != nil {
 				return err
 			}
-			accountStore.Set([]byte(balance.Denom), amount)
+			store2.Set(accountStore, []byte(balance.Denom), amount)
 
 			denomPrefixStore, ok := denomPrefixStores[balance.Denom]
 			if !ok {
@@ -319,7 +319,7 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 			// sentinel value.
 			denomAddrKey := address.MustLengthPrefix(addr)
 			if !denomPrefixStore.Has(denomAddrKey) {
-				denomPrefixStore.Set(denomAddrKey, []byte{0})
+				store2.Set(denomPrefixStore, denomAddrKey, []byte{0})
 			}
 		}
 	}
@@ -338,20 +338,20 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 
 	// x/bank invariants prohibit persistence of zero balances
 	if balance.IsZero() {
-		accountStore.Delete([]byte(balance.Denom))
-		denomPrefixStore.Delete(address.MustLengthPrefix(addr))
+		store2.Delete(accountStore, []byte(balance.Denom))
+		store2.Delete(denomPrefixStore, address.MustLengthPrefix(addr))
 	} else {
 		amount, err := balance.Amount.Marshal()
 		if err != nil {
 			return err
 		}
-		accountStore.Set([]byte(balance.Denom), amount)
+		store2.Set(accountStore, []byte(balance.Denom), amount)
 
 		// Store a reverse index from denomination to account address with a
 		// sentinel value.
 		denomAddrKey := address.MustLengthPrefix(addr)
 		if !denomPrefixStore.Has(denomAddrKey) {
-			denomPrefixStore.Set(denomAddrKey, []byte{0})
+			store2.Set(denomPrefixStore, denomAddrKey, []byte{0})
 		}
 	}
 
@@ -432,7 +432,7 @@ func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types
 func (k BaseSendKeeper) setSendEnabledEntry(store sdk.KVStore, denom string, value bool) {
 	key := types.CreateSendEnabledKey(denom)
 	val := types.ToBoolB(value)
-	store.Set(key, []byte{val})
+	store2.Set(store, key, []byte{val})
 }
 
 // DeleteSendEnabled deletes the SendEnabled flags for one or more denoms.
@@ -440,7 +440,7 @@ func (k BaseSendKeeper) setSendEnabledEntry(store sdk.KVStore, denom string, val
 func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denoms ...string) {
 	store := ctx.KVStore(k.storeKey)
 	for _, denom := range denoms {
-		store.Delete(types.CreateSendEnabledKey(denom))
+		store2.Delete(store, types.CreateSendEnabledKey(denom))
 	}
 }
 

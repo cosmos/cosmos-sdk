@@ -86,8 +86,8 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.AccountI) {
 		panic(err)
 	}
 
-	store.Set(types.AddressStoreKey(addr), bz)
-	store.Set(types.AccountNumberStoreKey(acc.GetAccountNumber()), addr.Bytes())
+	store2.Set(store, types.AddressStoreKey(addr), bz)
+	store2.Set(store, types.AccountNumberStoreKey(acc.GetAccountNumber()), addr.Bytes())
 }
 
 // RemoveAccount removes an account for the account mapper store.
@@ -95,8 +95,8 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.AccountI) {
 func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountI) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.storeKey)
-	store.Delete(types.AddressStoreKey(addr))
-	store.Delete(types.AccountNumberStoreKey(acc.GetAccountNumber()))
+	store2.Delete(store, types.AddressStoreKey(addr))
+	store2.Delete(store, types.AccountNumberStoreKey(acc.GetAccountNumber()))
 }
 
 // IterateAccounts iterates over all the stored accounts and performs a callback function.

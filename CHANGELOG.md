@@ -64,25 +64,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#13265](https://github.com/cosmos/cosmos-sdk/pull/13265) Correctly coalesce coins even with repeated denominations & simplify logic
 * (x/auth) [#13200](https://github.com/cosmos/cosmos-sdk/pull/13200) Fix wrong sequences in `sign-batch`.
 * (export) [#13029](https://github.com/cosmos/cosmos-sdk/pull/13029) Fix exporting the blockParams regression.
-<<<<<<< HEAD
 * [#13046](https://github.com/cosmos/cosmos-sdk/pull/13046) Fix missing return statement in BaseApp.Query.
 * (store) [#13336](https://github.com/cosmos/cosmos-sdk/pull/13336) Call streaming listeners for deliver tx event, it was removed accidentally, backport #13334.
 * (grpc) [#13417](https://github.com/cosmos/cosmos-sdk/pull/13417) fix grpc query panic that could crash the node (backport #13352).
-=======
-* (x/gov) [#13051](https://github.com/cosmos/cosmos-sdk/pull/13051) In SubmitPropsal, when a legacy msg fails it's handler call, wrap the error as ErrInvalidProposalContent (instead of ErrNoProposalHandlerExists).
-* (x/gov) [#13045](https://github.com/cosmos/cosmos-sdk/pull/13045) Fix gov migrations for v3(0.46).
-* (Store) [#13334](https://github.com/cosmos/cosmos-sdk/pull/13334) Call streaming listeners for deliver tx event, it was removed accidentally.
-* (grpc) [#13352](https://github.com/cosmos/cosmos-sdk/pull/13352) fix grpc query panic that could crash the node.
-* (snapshot) [#13400](https://github.com/cosmos/cosmos-sdk/pull/13400) Fix snapshot checksum issue in golang 1.19.
 * (grpc) [#13418](https://github.com/cosmos/cosmos-sdk/pull/13418) Add close for grpc only mode.
-
-### Deprecated
-
-* (x/bank) [#11859](https://github.com/cosmos/cosmos-sdk/pull/11859) The Params.SendEnabled field is deprecated and unusable.
-  The information can now be accessed using the BankKeeper.
-  Setting can be done using MsgSetSendEnabled as a governance proposal.
-  A SendEnabled query has been added to both GRPC and CLI.
->>>>>>> bed4ba3ac (fix: add close for grpcOnly mode (#13418))
 
 ## [v0.46.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.1) - 2022-08-24
 

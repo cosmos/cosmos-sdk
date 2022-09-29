@@ -1,81 +1,49 @@
-package mempool
+package mempool_test
 
 import (
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"math/rand"
 	"testing"
 )
 
-func initGraph() *graph {
-	return NewGraph()
-}
+func TestDrawEdges(t *testing.T) {
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	sa := accounts[0].Address
+	sb := accounts[1].Address
 
-func initNodes(ns []*node) []node {
-	var nodes []node
-	// TODO what this API look like?
-	for _, n := range ns {
-		n.inNonce = make(map[string]bool)
-		n.inPriority = make(map[string]bool)
-		n.outNonce = make(map[string]bool)
-		n.outPriority = make(map[string]bool)
-		nodes = append(nodes, *n)
-	}
-
-	return nodes
-}
-
-func TestPoolCase(t *testing.T) {
-	ns := []*node{
-		{priority: 21, nonce: 4, sender: "a"}, // tx0
-		{priority: 6, nonce: 3, sender: "a"},  // tx1
-		{priority: 8, nonce: 2, sender: "a"},  // tx2
-		{priority: 15, nonce: 1, sender: "b"}, // tx3
-		{priority: 20, nonce: 1, sender: "a"}, // tx4
-		{priority: 7, nonce: 2, sender: "b"},  // tx5
-	}
-
-	nodes := initNodes(ns)
 	tests := []struct {
-		name     string
-		limit    int
-		edges    [][]int
-		expected []int
+		txs   []txSpec
+		order []int
+		fail  bool
 	}{
-		{"case 1", 5,
-			[][]int{{4, 2}, {4, 3}, {3, 2}, {2, 1}, {1, 0}},
-			[]int{4, 3, 2, 1, 0},
-		}, {
-			"case 2", 6,
-			[][]int{{4, 2}, {4, 3}, {3, 2}, {2, 1}, {1, 0}, {4, 5}, {2, 5}, {5, 1}},
-			[]int{4, 3, 2, 5, 1, 0},
+		{
+			txs: []txSpec{
+				{p: 21, n: 4, a: sa},
+				{p: 8, n: 3, a: sa},
+				{p: 6, n: 2, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 20, n: 1, a: sa},
+			},
+			order: []int{4, 3, 2, 1, 0},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			graph := initGraph()
-			for i := 0; i < tt.limit; i++ {
-				//graph.AddNode(nodes[i])
-			}
-			for _, e := range tt.edges {
-				graph.AddEdge(nodes[e[0]], nodes[e[1]])
-			}
-
-			results, err := graph.TopologicalSort()
-
-			if err != nil {
-				t.Error(err)
-				return
-			}
-			if len(results) != len(tt.expected) {
-				t.Errorf("Wrong number of results: %v", results)
-				return
-			}
-
-			for i := 0; i < len(tt.expected); i++ {
-				if results[i].key() != nodes[tt.expected[i]].key() {
-					t.Errorf("Wrong sort order: %v", results)
-					break
-				}
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+			graph := mempool.NewGraph()
+			for _, ts := range tt.txs {
+				tx := testTx{hash: [32]byte{byte(i)}, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+				c := ctx.WithPriority(int64(ts.p))
+				require.NoError(t, graph.Insert(c, tx))
 			}
 		})
 	}
+
 }

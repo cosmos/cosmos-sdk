@@ -13,21 +13,17 @@ type node struct {
 	priority int64
 	nonce    uint64
 	sender   string
+	tx       Tx
 
-	tx          Tx
-	outPriority map[string]bool
-	outNonce    map[string]bool
-	inPriority  map[string]bool
-	inNonce     map[string]bool
-
-	pElement *huandu.Element
-	nElement *huandu.Element
+	nonceNode    *huandu.Element
+	priorityNode *huandu.Element
+	in           map[string]bool
 }
 
 type graph struct {
-	priorities  *huandu.SkipList
-	nodes       map[string]*node
-	senderNodes map[string]*huandu.SkipList
+	priorities   *huandu.SkipList
+	nodes        map[string]*node
+	senderGraphs map[string]*huandu.SkipList
 }
 
 func (g *graph) Insert(context sdk.Context, tx Tx) error {
@@ -46,6 +42,32 @@ func (g *graph) Insert(context sdk.Context, tx Tx) error {
 	node := &node{priority: context.Priority(), nonce: nonce, sender: sender, tx: tx}
 	g.AddNode(node)
 	return nil
+}
+
+func (g *graph) AddNode(n *node) {
+	g.nodes[n.key()] = n
+
+	n.priorityNode = g.priorities.Set(txKey{priority: n.priority, sender: n.sender, nonce: n.nonce}, n)
+	sgs, ok := g.senderGraphs[n.sender]
+	if !ok {
+		sgs = huandu.New(huandu.Uint64)
+		g.senderGraphs[n.sender] = sgs
+	}
+
+	n.nonceNode = sgs.Set(n.nonce, n)
+}
+
+func (g *graph) drawPriorityEdges(n *node) (edges []*node) {
+	pnode := n.nonceNode.Prev().Value.(*node).priorityNode
+	for pnode != nil {
+		node := pnode.Value.(*node)
+		if node.sender != n.sender {
+			edges = append(edges, node)
+		}
+
+		pnode = pnode.Prev()
+	}
+	return edges
 }
 
 func (g *graph) Select(ctx sdk.Context, txs [][]byte, maxBytes int) ([]Tx, error) {
@@ -79,61 +101,12 @@ func (n node) String() string {
 	return n.key()
 }
 
-func (g *graph) AddEdge(from node, to node) {
-	// TODO transition in* to a count? only used in finding the start node
-	// or some other method for finding the top most node
-	if from.sender == to.sender {
-		from.outNonce[to.key()] = true
-		to.inNonce[from.key()] = true
-	} else {
-		from.outPriority[to.key()] = true
-		to.inPriority[from.key()] = true
-	}
-}
-
-type nodePriorityKey struct {
-	priority int64
-	sender   string
-	nonce    uint64
-}
-
-func nodePriorityKeyLess(a, b interface{}) int {
-	keyA := a.(nodePriorityKey)
-	keyB := b.(nodePriorityKey)
-	res := huandu.Int64.Compare(keyA.priority, keyB.priority)
-	if res != 0 {
-		return res
-	}
-
-	res = huandu.Uint64.Compare(keyA.nonce, keyB.nonce)
-	if res != 0 {
-		return res
-	}
-
-	return huandu.String.Compare(keyA.sender, keyB.sender)
-}
-
 func NewGraph() *graph {
 	return &graph{
-		nodes:       make(map[string]*node),
-		priorities:  huandu.New(huandu.GreaterThanFunc(nodePriorityKeyLess)),
-		senderNodes: make(map[string]*huandu.SkipList),
+		nodes:        make(map[string]*node),
+		priorities:   huandu.New(huandu.GreaterThanFunc(txKeyLess)),
+		senderGraphs: make(map[string]*huandu.SkipList),
 	}
-}
-
-func (g *graph) AddNode(n *node) {
-	g.nodes[n.key()] = n
-
-	pnode := g.priorities.Set(nodePriorityKey{priority: n.priority, sender: n.sender, nonce: n.nonce}, n)
-	sgs, ok := g.senderNodes[n.sender]
-	if !ok {
-		sgs = huandu.New(huandu.Uint64)
-		g.senderNodes[n.sender] = sgs
-	}
-
-	nnode := sgs.Set(n.nonce, n)
-	n.pElement = pnode
-	n.nElement = nnode
 }
 
 func (g *graph) ContainsNode(n node) bool {
@@ -143,7 +116,7 @@ func (g *graph) ContainsNode(n node) bool {
 
 func (g *graph) TopologicalSort() ([]*node, error) {
 	maxPriority := g.priorities.Back().Value.(*node)
-	start := g.senderNodes[maxPriority.sender].Front().Value.(*node)
+	start := g.senderGraphs[maxPriority.sender].Front().Value.(*node)
 	edgeless := []*node{start}
 	sorted, err := g.kahns(edgeless)
 	if err != nil {
@@ -201,73 +174,18 @@ func (g *graph) kahns(edgeless []*node) ([]*node, error) {
 		else
 		    return L   (a topologically sorted order)
 	*/
-
-	// priority edge rules:
-	// - a node has an incoming priority edge if the next priority node in ascending order has p > this.p AND a different sender (in another tree)
-	//    OR
-	// - a node has an incoming priority edge if n.priority < latest L_n.priority.
-	// - a node has an outgoing priority edge if the next priority node in descending order has p < this.p AND a different sender (in another tree)
-
-	priorityCursor := edgeless[0].pElement
+	var n *node
+	//n := edgeless[0]
 	for i := 0; i < len(edgeless) && edgeless[i] != nil; i++ {
-		n := edgeless[i]
-		//nextPriority = n.pElement.Next().Value.(*node).priority
-		sorted = append(sorted, n)
-		if n.priority == priorityCursor.Value.(*node).priority {
-			priorityCursor = n.pElement
-		}
-
-		// nonce edge
-		nextNonceNode := n.nElement.Next()
-		if nextNonceNode != nil {
-			m := nextNonceNode.Value.(*node)
-			nonceEdge := nodeEdge(n, m)
-			visited[nonceEdge] = true
-			if !hasIncomingEdges(m, priorityCursor, visited) {
-				edgeless = append(edgeless, m)
-			}
-		}
-
-		// priority edge
-		nextPriorityNode := n.pElement.Prev()
-		if nextPriorityNode != nil {
-			m := nextPriorityNode.Value.(*node)
-			if m.sender != n.sender &&
-				// no edge where priority is equal
-				m.priority < n.priority {
-				fmt.Println(nodeEdge(n, m))
-				visited[nodeEdge(n, m)] = true
-				if !hasIncomingEdges(m, priorityCursor, visited) {
-					edgeless = append(edgeless, m)
-				}
+		// enumerate the priority list drawing priority edges along the way
+		pnodes := g.drawPriorityEdges(n.priorityNode.Value.(*node))
+		for _, m := range pnodes {
+			edge := nodeEdge(n, m)
+			if !visited[edge] {
+				visited[edge] = true
 			}
 		}
 	}
 
 	return sorted, nil
-}
-
-func hasIncomingEdges(n *node, pcursor *huandu.Element, visited map[string]bool) bool {
-	prevNonceNode := n.nElement.Prev()
-	if prevNonceNode != nil {
-		m := prevNonceNode.Value.(*node)
-		// if edge has not been visited return true
-		incoming := !visited[nodeEdge(m, n)]
-		if incoming {
-			return true
-		}
-	}
-
-	// priority edge
-	if pcursor != nil {
-		m := pcursor.Prev().Value.(*node)
-		if m.sender != n.sender &&
-			// no edge where priority is equal
-			m.priority > n.priority {
-			incoming := !visited[nodeEdge(m, n)]
-			return incoming
-		}
-	}
-
-	return false
 }

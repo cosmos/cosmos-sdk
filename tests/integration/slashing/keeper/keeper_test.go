@@ -20,8 +20,6 @@ import (
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -55,11 +53,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Require().NoError(err)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	s.accountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	s.bankKeeper.SetParams(ctx, banktypes.DefaultParams())
-	s.slashingKeeper.SetParams(ctx, testutil.TestParams())
-
 	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 5, s.stakingKeeper.TokensFromConsensusPower(ctx, 200))
 
 	info1 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4), int64(3),

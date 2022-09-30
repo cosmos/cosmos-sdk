@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+* (baseapp) Add a optional function to baseapp to manipulate events [\#1092](https://github.com/provenance-io/provenance/issues/1092)
 
 ---
 

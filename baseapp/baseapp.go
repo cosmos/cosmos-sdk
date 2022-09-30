@@ -136,6 +136,8 @@ type BaseApp struct { // nolint: maligned
 	abciListeners []ABCIListener
 
 	feeHandler sdk.FeeHandler
+
+	aggregateEventsFunc func(anteEvents []abci.Event, resultEvents []abci.Event) ([]abci.Event, []abci.Event)
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -734,15 +736,29 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 				// append the events in the order of occurrence
 				result.Events = append(anteEvents, result.Events...)
 			}
-			// additional fee events
-			if len(feeEvents) > 0 {
-				// append the fee events at the end of the other events, since they get charged at the end of the Tx
-				result.Events = append(result.Events, feeEvents.ToABCIEvents()...)
-			}
+		}
+		// additional fee events
+		if len(feeEvents) > 0 {
+			// append the fee events at the end of the other events, since they get charged at the end of the Tx
+			result.Events = append(result.Events, feeEvents.ToABCIEvents()...)
 		}
 	}
 
+	if result != nil { // tx was successful run aggregator for ante and result events
+		anteEvents, result.Events = AggregateEvents(app, anteEvents, result.Events)
+	} else { // tx failed run aggregator for ante events only since result object is nil
+		anteEvents, _ = AggregateEvents(app, anteEvents, nil)
+	}
+
 	return gInfo, result, anteEvents, priority, ctx, err
+}
+
+// AggregateEvents aggregation logic of result events (ante and postHander events) with feeEvents
+func AggregateEvents(app *BaseApp, anteEvents []abci.Event, resultEvents []abci.Event) ([]abci.Event, []abci.Event) {
+	if app.aggregateEventsFunc != nil {
+		return app.aggregateEventsFunc(anteEvents, resultEvents)
+	}
+	return anteEvents, resultEvents
 }
 
 // FeeInvoke apply fee logic and append events

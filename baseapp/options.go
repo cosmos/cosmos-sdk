@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -246,4 +247,13 @@ func (app *BaseApp) SetFeeHandler(feeHandler sdk.FeeHandler) {
 	}
 
 	app.feeHandler = feeHandler
+}
+
+// SetAggregateEventsFunc sets the function that aggregates events from baseapp result events and feehandler events
+func (app *BaseApp) SetAggregateEventsFunc(aggregateEventsFunc func(resultEvents []abci.Event, feeEvents []abci.Event) ([]abci.Event, []abci.Event)) {
+	if app.sealed {
+		panic("SetAggregateEventsFunc() on sealed BaseApp")
+	}
+
+	app.aggregateEventsFunc = aggregateEventsFunc
 }

@@ -3,12 +3,12 @@ package abci
 
 import (
 	"context"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
-	"github.com/cosmos/cosmos-sdk/streaming/plugins/abci/proto"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/streaming/plugins/abci/proto/v1"
 )
 
 // Handshake is a common handshake that is shared by streaming and host.
@@ -31,7 +31,7 @@ type ListenerGRPCPlugin struct {
 }
 
 func (p *ListenerGRPCPlugin) GRPCServer(_ *plugin.GRPCBroker, s *grpc.Server) error {
-	proto.RegisterABCIListenerServiceServer(s, &GRPCServer{Impl: p.Impl})
+	v1.RegisterABCIListenerServiceServer(s, &GRPCServer{Impl: p.Impl})
 	return nil
 }
 
@@ -40,5 +40,5 @@ func (p *ListenerGRPCPlugin) GRPCClient(
 	_ *plugin.GRPCBroker,
 	c *grpc.ClientConn,
 ) (interface{}, error) {
-	return &GRPCClient{client: proto.NewABCIListenerServiceClient(c)}, nil
+	return &GRPCClient{client: v1.NewABCIListenerServiceClient(c)}, nil
 }

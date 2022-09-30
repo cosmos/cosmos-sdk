@@ -3,7 +3,6 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/streaming"
 	"io"
 	"net/http"
 	"os"
@@ -21,6 +20,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -30,6 +30,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/streaming"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -237,7 +238,8 @@ func NewSimApp(
 	if enable := cast.ToBool(appOpts.Get(enableKey)); enable {
 		pluginKey := fmt.Sprintf("%s.%s", baseapp.StreamingTomlKey, baseapp.StreamingPluginTomlKey)
 		pluginName := cast.ToString(appOpts.Get(pluginKey))
-		plugin, err := streaming.NewStreamingPlugin(pluginName)
+		logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
+		plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
 		if err != nil {
 			tmos.Exit(err.Error())
 		}

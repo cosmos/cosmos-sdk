@@ -11,8 +11,6 @@ import listener_pb2_grpc
 from grpc_health.v1.health import HealthServicer
 from grpc_health.v1 import health_pb2, health_pb2_grpc
 
-from pathlib import Path
-
 from confluent_kafka import Producer
 
 class ABCIListenerServiceServicer(listener_pb2_grpc.ABCIListenerServiceServicer):
@@ -41,9 +39,9 @@ class ABCIListenerServiceServicer(listener_pb2_grpc.ABCIListenerServiceServicer)
         return listener_pb2.Empty()
 
 def serve():
-    # We need to build a health service to work with streaming-go-streaming
+    # We need to build a health service to work with go-plugin
     health = HealthServicer()
-    health.set("streaming", health_pb2.HealthCheckResponse.ServingStatus.Value('SERVING'))
+    health.set("plugin", health_pb2.HealthCheckResponse.ServingStatus.Value('SERVING'))
 
     # Start the server.
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -52,7 +50,8 @@ def serve():
     server.add_insecure_port('127.0.0.1:1234')
     server.start()
 
-    # Output information
+    # Output handshake information
+    # https://github.com/hashicorp/go-plugin/blob/master/docs/guide-plugin-write-non-go.md#4-output-handshake-information
     print("1|1|tcp|127.0.0.1:1234|grpc")
     sys.stdout.flush()
 

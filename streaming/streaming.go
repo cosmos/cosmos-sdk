@@ -28,11 +28,10 @@ func GetPluginEnvKey(name string) string {
 	return fmt.Sprintf("%s_%s", pluginEnvKeyPrefix, strings.ToUpper(name))
 }
 
-func NewStreamingPlugin(name string) (interface{}, error) {
-	// todo need to figure out a way to hook into the sdk logger
+func NewStreamingPlugin(name string, logLevel string) (interface{}, error) {
 	logger := hclog.New(&hclog.LoggerOptions{
 		Output: hclog.DefaultOutput,
-		Level:  hclog.Trace,
+		Level:  toHclogLevel(logLevel),
 		Name:   fmt.Sprintf("plugin.%s", name),
 	})
 
@@ -55,4 +54,21 @@ func NewStreamingPlugin(name string) (interface{}, error) {
 
 	// Request streaming plugin
 	return rpcClient.Dispense(name)
+}
+
+func toHclogLevel(s string) hclog.Level {
+	switch s {
+	case "trace":
+		return hclog.Trace
+	case "debug":
+		return hclog.Debug
+	case "info":
+		return hclog.Info
+	case "warn":
+		return hclog.Warn
+	case "error":
+		return hclog.Error
+	default:
+		return hclog.DefaultLevel
+	}
 }

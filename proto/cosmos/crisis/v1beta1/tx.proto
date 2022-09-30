@@ -10,6 +10,8 @@ import "cosmos/base/v1beta1/coin.proto";
 
 // Msg defines the bank Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // VerifyInvariant defines a method to verify a particular invariance.
   rpc VerifyInvariant(MsgVerifyInvariant) returns (MsgVerifyInvariantResponse);
 

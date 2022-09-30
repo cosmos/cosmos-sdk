@@ -3,15 +3,20 @@ package codec_test
 import (
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/encoding"
+	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func createTestInterfaceRegistry() types.InterfaceRegistry {
@@ -109,6 +114,28 @@ func TestProtoCodecMarshal(t *testing.T) {
 
 	err = cartoonCdc.UnmarshalInterface(bz, &cartoon)
 	require.NoError(t, err)
+
+	// test typed nil input shouldn't panic
+	var v *banktypes.QueryBalanceResponse
+	bz, err = grpcServerEncode(cartoonCdc.GRPCCodec(), v)
+	require.NoError(t, err)
+	require.Empty(t, bz)
+}
+
+// Emulate grpc server implementation
+// https://github.com/grpc/grpc-go/blob/b1d7f56b81b7902d871111b82dec6ba45f854ede/rpc_util.go#L590
+func grpcServerEncode(c encoding.Codec, msg interface{}) ([]byte, error) {
+	if msg == nil { // NOTE: typed nils will not be caught by this check
+		return nil, nil
+	}
+	b, err := c.Marshal(msg)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "grpc: error while marshaling: %v", err.Error())
+	}
+	if uint(len(b)) > math.MaxUint32 {
+		return nil, status.Errorf(codes.ResourceExhausted, "grpc: message too large (%d bytes)", len(b))
+	}
+	return b, nil
 }
 
 func TestProtoCodecUnmarshalLengthPrefixedChecks(t *testing.T) {

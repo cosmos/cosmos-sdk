@@ -10,7 +10,6 @@ import (
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -88,11 +87,11 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	require := s.Require()
 
 	// construct the validators
-	var validators [3]types.Validator
+	var validators [3]stakingtypes.Validator
 	powers := []int64{9, 8, 7}
 	for i, power := range powers {
 		validators[i] = teststaking.NewValidator(s.T(), sdk.ValAddress(PKs[i].Address().Bytes()), PKs[i])
-		validators[i].Status = types.Unbonded
+		validators[i].Status = stakingtypes.Unbonded
 		validators[i].Tokens = math.ZeroInt()
 		tokens := keeper.TokensFromConsensusPower(ctx, power)
 
@@ -131,11 +130,11 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	resVals = keeper.GetLastValidators(ctx)
 	require.Equal(1, len(resVals))
 	require.True(validators[0].MinEqual(&resVals[0]))
-	require.Equal(types.Bonded, validators[0].Status)
+	require.Equal(stakingtypes.Bonded, validators[0].Status)
 	require.True(keeper.TokensFromConsensusPower(ctx, 9).Equal(validators[0].BondedTokens()))
 
 	// modify a records, save, and retrieve
-	validators[0].Status = types.Bonded
+	validators[0].Status = stakingtypes.Bonded
 	validators[0].Tokens = keeper.TokensFromConsensusPower(ctx, 10)
 	validators[0].DelegatorShares = sdk.NewDecFromInt(validators[0].Tokens)
 	validators[0] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[0], true)
@@ -169,7 +168,7 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 		func() { keeper.RemoveValidator(ctx, validators[1].GetOperator()) })
 
 	// shouldn't be able to remove if there are still tokens left
-	validators[1].Status = types.Unbonded
+	validators[1].Status = stakingtypes.Unbonded
 	keeper.SetValidator(ctx, validators[1])
 	require.PanicsWithValue("attempting to remove a validator which still contains tokens",
 		func() { keeper.RemoveValidator(ctx, validators[1].GetOperator()) })
@@ -229,7 +228,7 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesPowerDecrease() {
 	require := s.Require()
 
 	powers := []int64{100, 100}
-	var validators [2]types.Validator
+	var validators [2]stakingtypes.Validator
 
 	for i, power := range powers {
 		validators[i] = teststaking.NewValidator(s.T(), sdk.ValAddress(PKs[i].Address().Bytes()), PKs[i])

@@ -1,4 +1,4 @@
-go 1.18
+go 1.19
 
 use (
 	.
@@ -6,11 +6,12 @@ use (
 	./client/v2
 	./core
 	./cosmovisor
-	./db
 	./depinject
 	./errors
 	./math
 	./orm
 	./store/tools/ics23
 	./tx
+	./simapp
+	./tests
 )

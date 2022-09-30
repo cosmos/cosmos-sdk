@@ -1,7 +1,7 @@
 package tx
 
 import (
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -40,6 +40,7 @@ var (
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
 	_ tx.TipTx                   = &wrapper{}
+	_ sdk.MempoolTx              = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -60,6 +61,10 @@ func newBuilder(cdc codec.Codec) *wrapper {
 			},
 		},
 	}
+}
+
+func (w *wrapper) Size() int {
+	panic("not yet implemented")
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {

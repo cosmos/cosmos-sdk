@@ -4,12 +4,11 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -46,7 +45,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryValidatorsHandler() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var valRes types.QueryValidatorsResponse
@@ -94,7 +93,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryValidator() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var validator types.QueryValidatorResponse
@@ -203,7 +202,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var ubds types.QueryValidatorUnbondingDelegationsResponse
@@ -282,7 +281,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegation() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 			s.T().Logf("%s", resp)
 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
@@ -336,7 +335,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryUnbondingDelegation() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var ubd types.QueryUnbondingDelegationResponse
@@ -470,7 +469,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var ubds types.QueryDelegatorUnbondingDelegationsResponse
@@ -532,7 +531,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryRedelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 			var redelegations types.QueryRedelegationsResponse
 
@@ -581,7 +580,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegatorValidators() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var validators types.QueryDelegatorValidatorsResponse
@@ -638,7 +637,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegatorValidator() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var validator types.QueryDelegatorValidatorResponse
@@ -684,7 +683,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryHistoricalInfo() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var historicalInfo types.QueryHistoricalInfoResponse
@@ -723,7 +722,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryParams() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := rest.GetRequest(tc.url)
+		resp, err := testutil.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
 			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))

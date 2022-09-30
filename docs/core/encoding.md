@@ -18,7 +18,7 @@ for more information on Proto3, which Amino is largely compatible with (but not 
 
 Due to Amino having significant performance drawbacks, being reflection-based, and
 not having any meaningful cross-language/client support, Protocol Buffers, specifically
-[gogoprotobuf](https://github.com/gogo/protobuf/), is being used in place of Amino.
+[gogoprotobuf](https://github.com/cosmos/gogoproto/), is being used in place of Amino.
 Note, this process of using Protocol Buffers over Amino is still an ongoing process.
 
 Binary wire encoding of types in the Cosmos SDK can be broken down into two main
@@ -67,18 +67,24 @@ Note, there are length-prefixed variants of the above functionality and this is
 typically used for when the data needs to be streamed or grouped together
 (e.g. `ResponseDeliverTx.Data`)
 
-#### Authz authorizations
+#### Authz authorizations and Gov/Group proposals
 
-Since the `MsgExec` message type can contain different messages instances, it is important that developers
+Since authz's `MsgExec` and `MsgGrant` message types, as well as gov's and group's `MsgSubmitProposal`, can contain different messages instances, it is important that developers
 add the following code inside the `init` method of their module's `codec.go` file:
 
 ```go
-import authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+import (
+  authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+  govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+  groupcodec "github.com/cosmos/cosmos-sdk/x/group/codec"
+)
 
 init() {
-    // Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
-    // used to properly serialize MsgGrant and MsgExec instances
+    // Register all Amino interfaces and concrete types on the authz and gov Amino codec so that this can later be
+    // used to properly serialize MsgGrant, MsgExec and MsgSubmitProposal instances
     RegisterLegacyAminoCodec(authzcodec.Amino)
+    RegisterLegacyAminoCodec(govcodec.Amino)
+    RegisterLegacyAminoCodec(groupcodec.Amino)
 }
 ```
 
@@ -87,7 +93,7 @@ which is required when signing this kind of messages using a Ledger.
 
 ### Gogoproto
 
-Modules are encouraged to utilize Protobuf encoding for their respective types. In the Cosmos SDK, we use the [Gogoproto](https://github.com/gogo/protobuf) specific implementation of the Protobuf spec that offers speed and DX improvements compared to the official [Google protobuf implementation](https://github.com/protocolbuffers/protobuf).
+Modules are encouraged to utilize Protobuf encoding for their respective types. In the Cosmos SDK, we use the [Gogoproto](https://github.com/cosmos/gogoproto) specific implementation of the Protobuf spec that offers speed and DX improvements compared to the official [Google protobuf implementation](https://github.com/protocolbuffers/protobuf).
 
 ### Guidelines for protobuf message definitions
 
@@ -273,6 +279,19 @@ type UnpackInterfacesMessage interface {
   UnpackInterfaces(InterfaceUnpacker) error
 }
 ```
+
+### Custom Stringer
+
+Using `option (gogoproto.goproto_stringer) = false;` in a proto message definition leads to unexpected behaviour, like returning wrong output or having missing fields in the output.
+For that reason a proto Message's `String()` must not be customized, and the `goproto_stringer` option must be avoided.
+
+A correct YAML output can be obtained through ProtoJSON, using the `JSONToYAML` function:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/codec/yaml.go#L8-L20
+
+For example:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/types/account.go#L139-L151
 
 ## Next {hide}
 

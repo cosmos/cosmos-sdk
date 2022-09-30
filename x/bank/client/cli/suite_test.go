@@ -31,7 +31,7 @@ func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
 	return mockTendermintRPC{responseQuery: respQuery}
 }
 
-func (_ mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+func (mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return &coretypes.ResultBroadcastTx{Code: 0}, nil
 }
 

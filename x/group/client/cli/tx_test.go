@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
@@ -49,8 +49,8 @@ func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
 	return mockTendermintRPC{responseQuery: respQuery}
 }
 
-func (_ mockTendermintRPC) BroadcastTxCommit(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
-	return &coretypes.ResultBroadcastTxCommit{}, nil
+func (mockTendermintRPC) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+	return &coretypes.ResultBroadcastTx{}, nil
 }
 
 func (m mockTendermintRPC) ABCIQueryWithOptions(
@@ -90,7 +90,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	s.commonFlags = []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
 	}
 
@@ -120,7 +120,7 @@ func (s *CLITestSuite) SetupSuite() {
 		val.Address,
 		account,
 		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
 	)
 	s.Require().NoError(err)
@@ -286,7 +286,6 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -541,7 +540,6 @@ func (s *CLITestSuite) TestTxUpdateGroupMetadata() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -674,7 +672,6 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -859,7 +856,6 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1055,7 +1051,6 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1183,7 +1178,6 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyAdmin() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1364,7 +1358,6 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1380,7 +1373,6 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			}
 		})
 	}
-
 }
 
 func (s *CLITestSuite) TestTxUpdateGroupPolicyMetadata() {
@@ -1502,7 +1494,6 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyMetadata() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1620,7 +1611,6 @@ func (s *CLITestSuite) TestTxSubmitProposal() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1743,7 +1733,6 @@ func (s *CLITestSuite) TestTxVote() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
@@ -1819,7 +1808,6 @@ func (s *CLITestSuite) TestTxWithdrawProposal() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-
 			var outBuf bytes.Buffer
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)

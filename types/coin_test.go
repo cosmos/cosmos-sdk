@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -536,21 +537,50 @@ func (s *coinTestSuite) TestEqualCoins() {
 
 func (s *coinTestSuite) TestAddCoins() {
 	cases := []struct {
+		name     string
 		inputOne sdk.Coins
 		inputTwo sdk.Coins
 		expected sdk.Coins
 	}{
-		{sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca2, s.cm2}},
-		{sdk.Coins{s.ca0, s.cm1}, sdk.Coins{s.ca0, s.cm0}, sdk.Coins{s.cm1}},
-		{sdk.Coins{s.ca2}, sdk.Coins{s.cm0}, sdk.Coins{s.ca2}},
-		{sdk.Coins{s.ca1}, sdk.Coins{s.ca1, s.cm2}, sdk.Coins{s.ca2, s.cm2}},
-		{sdk.Coins{s.ca0, s.cm0}, sdk.Coins{s.ca0, s.cm0}, sdk.Coins(nil)},
+		{"{1atom,1muon}+{1atom,1muon}", sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca2, s.cm2}},
+		{"{0atom,1muon}+{0atom,0muon}", sdk.Coins{s.ca0, s.cm1}, sdk.Coins{s.ca0, s.cm0}, sdk.Coins{s.cm1}},
+		{"{2atom}+{0muon}", sdk.Coins{s.ca2}, sdk.Coins{s.cm0}, sdk.Coins{s.ca2}},
+		{"{1atom}+{1atom,2muon}", sdk.Coins{s.ca1}, sdk.Coins{s.ca1, s.cm2}, sdk.Coins{s.ca2, s.cm2}},
+		{"{0atom,0muon}+{0atom,0muon}", sdk.Coins{s.ca0, s.cm0}, sdk.Coins{s.ca0, s.cm0}, sdk.Coins(nil)},
 	}
 
-	for tcIndex, tc := range cases {
-		res := tc.inputOne.Add(tc.inputTwo...)
-		s.Require().True(res.IsValid())
-		s.Require().Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			res := tc.inputOne.Add(tc.inputTwo...)
+			require.True(t, res.IsValid(), fmt.Sprintf("%s + %s = %s", tc.inputOne, tc.inputTwo, res))
+			require.Equal(t, tc.expected, res, "sum of coins is incorrect")
+		})
+	}
+}
+
+// Tests that even if coins with repeated denominations are passed into .Add that they
+// are correctly coalesced. Please see issue https://github.com/cosmos/cosmos-sdk/issues/13234
+func TestCoinsAddCoalescesDuplicateDenominations(t *testing.T) {
+	A := sdk.Coins{
+		{"den", sdk.NewInt(2)},
+		{"den", sdk.NewInt(3)},
+	}
+	B := sdk.Coins{
+		{"den", sdk.NewInt(3)},
+		{"den", sdk.NewInt(2)},
+		{"den", sdk.NewInt(1)},
+	}
+
+	A = A.Sort()
+	B = B.Sort()
+	got := A.Add(B...)
+
+	want := sdk.Coins{
+		{"den", sdk.NewInt(11)},
+	}
+
+	if !got.IsEqual(want) {
+		t.Fatalf("Wrong result\n\tGot:   %s\n\tWant: %s", got, want)
 	}
 }
 

@@ -19,3 +19,7 @@ func (k MockBankKeeper) MultiSend(goCtx context.Context, msg *bank.MsgMultiSend)
 func (k MockBankKeeper) UpdateParams(goCtx context.Context, req *bank.MsgUpdateParams) (*bank.MsgUpdateParamsResponse, error) {
 	return nil, nil
 }
+
+func (k MockBankKeeper) SetSendEnabled(goCtx context.Context, req *bank.MsgSetSendEnabled) (*bank.MsgSetSendEnabledResponse, error) {
+	return nil, nil
+}

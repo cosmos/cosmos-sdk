@@ -11,8 +11,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -62,7 +62,7 @@ func (s *contextTestSuite) TestLogContext() {
 	ctrl := gomock.NewController(s.T())
 	s.T().Cleanup(ctrl.Finish)
 
-	logger := mocks.NewMockLogger(ctrl)
+	logger := mock.NewMockLogger(ctrl)
 	logger.EXPECT().Debug("debug")
 	logger.EXPECT().Info("info")
 	logger.EXPECT().Error("error")
@@ -92,7 +92,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	chainid := "chainid"
 	ischeck := true
 	txbytes := []byte("txbytes")
-	logger := mocks.NewMockLogger(ctrl)
+	logger := mock.NewMockLogger(ctrl)
 	voteinfos := []abci.VoteInfo{{}}
 	meter := types.NewGasMeter(10000)
 	blockGasMeter := types.NewGasMeter(20000)

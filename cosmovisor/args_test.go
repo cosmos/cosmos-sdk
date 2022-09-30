@@ -689,3 +689,29 @@ func (s *argsTestSuite) TestLogConfigOrError() {
 		})
 	}
 }
+
+var sink interface{}
+
+func BenchmarkDetailString(b *testing.B) {
+	cfg := &Config{
+		Home: "/foo", Name: "myd",
+		AllowDownloadBinaries: true,
+		UnsafeSkipBackup:      true,
+		PollInterval:          450 * time.Second,
+		PreupgradeMaxRetries:  1e7,
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		sink = cfg.DetailString()
+	}
+
+	if sink == nil {
+		b.Fatal("Benchmark did not run")
+	}
+
+	// Otherwise reset the sink.
+	sink = (interface{})(nil)
+}

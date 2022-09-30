@@ -25,7 +25,7 @@ func FuzzStoreInternalProofsCreateNonmembershipProof(f *testing.F) {
 		if len(sz.Data) == 0 || len(sz.Key) == 0 {
 			return
 		}
-		tree, err := iavl.NewMutableTree(db.NewMemDB(), 0)
+		tree, err := iavl.NewMutableTree(db.NewMemDB(), 0, false)
 		if err != nil {
 			t.Fatal(err)
 		}

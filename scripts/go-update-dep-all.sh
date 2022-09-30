@@ -21,6 +21,11 @@ for modfile in $(find . -name go.mod); do
   if grep $dependency_mod $modfile &> /dev/null; then
     echo "Updating $modfile"
     DIR=$(dirname $modfile)
-    (cd $DIR; go get -u $dependency)
+    # we want to skip the go.mod of the package we're updating
+    if [[ "$dependency_mod" == *"$(basename $DIR)"  ]]; then
+        echo "Skipping $DIR"
+        continue
+    fi
+     (cd $DIR; go get -u $dependency)
   fi
 done

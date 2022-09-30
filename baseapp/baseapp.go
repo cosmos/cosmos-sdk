@@ -2,14 +2,17 @@ package baseapp
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+	"golang.org/x/exp/maps"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -53,6 +56,7 @@ type BaseApp struct { //nolint: maligned
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
+	mempool        sdk.Mempool      // application side mempool
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
 	postHandler    sdk.AnteHandler  // post handler, optional, e.g. for tips
 	initChainer    sdk.InitChainer  // initialize state with validators and state blob
@@ -249,7 +253,10 @@ func (app *BaseApp) MountTransientStores(keys map[string]*storetypes.TransientSt
 // MountMemoryStores mounts all in-memory KVStores with the BaseApp's internal
 // commit multi-store.
 func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey) {
-	for _, memKey := range keys {
+	skeys := maps.Keys(keys)
+	sort.Strings(skeys)
+	for _, key := range skeys {
+		memKey := keys[key]
 		app.MountStore(memKey, storetypes.StoreTypeMemory)
 	}
 }
@@ -292,6 +299,7 @@ func (app *BaseApp) SnapshotManager() *snapshots.Manager {
 // LoadVersion loads the BaseApp application version. It will panic if called
 // more than once on a running baseapp.
 func (app *BaseApp) LoadVersion(version int64) error {
+	app.logger.Info("NOTICE: this could take a long time to migrate IAVL store to fastnode if you enable Fast Node.\n")
 	err := app.cms.LoadVersion(version)
 	if err != nil {
 		return fmt.Errorf("failed to load version %d: %w", version, err)
@@ -484,7 +492,7 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 		// previous commit). The height we're expecting is the initial height.
 		expectedHeight = app.initialHeight
 	} else {
-		// This case can means two things:
+		// This case can mean two things:
 		// - either there was already a previous commit in the store, in which
 		// case we increment the version from there,
 		// - or there was no previous commit, and initial version was not set,
@@ -515,7 +523,7 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	return nil
 }
 
-// Returns the applications's deliverState if app is in runTxModeDeliver,
+// Returns the application's deliverState if app is in runTxModeDeliver,
 // otherwise it returns the application's checkstate.
 func (app *BaseApp) getState(mode runTxMode) *state {
 	if mode == runTxModeDeliver {
@@ -573,7 +581,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, priority int64, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
-	// meter so we initialize upfront.
+	// meter, so we initialize upfront.
 	var gasWanted uint64
 
 	ctx := app.getContextForTx(mode, txBytes)
@@ -595,7 +603,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 	blockGasConsumed := false
 	// consumeBlockGas makes sure block gas is consumed at most once. It must happen after
-	// tx processing, and must be execute even if tx processing fails. Hence we use trick with `defer`
+	// tx processing, and must be executed even if tx processing fails. Hence, we use trick with `defer`
 	consumeBlockGas := func() {
 		if !blockGasConsumed {
 			blockGasConsumed = true
@@ -665,6 +673,14 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		anteEvents = events.ToABCIEvents()
 	}
 
+	// TODO remove nil check when implemented
+	if mode == runTxModeCheck && app.mempool != nil {
+		err = app.mempool.Insert(ctx, tx.(sdk.MempoolTx))
+		if err != nil {
+			return gInfo, nil, anteEvents, priority, err
+		}
+	}
+
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
@@ -674,7 +690,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
+
 	if err == nil {
+
 		// Run optional postHandlers.
 		//
 		// Note: If the postHandler fails, we also revert the runMsgs state.

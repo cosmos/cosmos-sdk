@@ -7,11 +7,11 @@ import (
 	"cosmossdk.io/math"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,8 +25,8 @@ func (h MockStakingHooks) AfterUnbondingInitiated(ctx sdk.Context, id uint64) er
 	return nil
 }
 
-func (s *KeeperTestSuite) SetupUnbondingTests(t *testing.T, hookCalled *bool, ubdeID *uint64) (ctx sdk.Context, bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress) {
-	ctx = s.ctx
+func (suite *IntegrationTestSuite) SetupUnbondingTests(t *testing.T, hookCalled *bool, ubdeID *uint64) (ctx sdk.Context, bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress) {
+	ctx = suite.ctx
 
 	testHooks := &MockStakingHooks{
 		afterUnbondingInitiated: func(id uint64) {
@@ -34,44 +34,45 @@ func (s *KeeperTestSuite) SetupUnbondingTests(t *testing.T, hookCalled *bool, ub
 			// save id
 			*ubdeID = id
 			// call back to stop unbonding
-			err := s.stakingKeeper.PutUnbondingOnHold(ctx, id)
+			err := suite.app.StakingKeeper.PutUnbondingOnHold(ctx, id)
 			require.NoError(t, err)
 		},
 	}
 
-	s.stakingKeeper.SetHooks(types.NewMultiStakingHooks(testHooks))
+	suite.app.StakingKeeper.SetHooks(types.NewMultiStakingHooks(testHooks))
 
-	addrDels = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 2, math.NewInt(10000))
+	addrDels = simtestutil.AddTestAddrsIncremental(suite.app.BankKeeper, suite.app.StakingKeeper, ctx, 2, math.NewInt(10000))
 	addrVals = simtestutil.ConvertAddrsToValAddrs(addrDels)
 
-	valTokens := s.stakingKeeper.TokensFromConsensusPower(ctx, 10)
-	startTokens := s.stakingKeeper.TokensFromConsensusPower(ctx, 20)
+	valTokens := suite.app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+	startTokens := suite.app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
 
-	bondDenom = s.stakingKeeper.BondDenom(ctx)
-	notBondedPool := s.stakingKeeper.GetNotBondedPool(ctx)
+	bondDenom = suite.app.StakingKeeper.BondDenom(ctx)
+	notBondedPool := suite.app.StakingKeeper.GetNotBondedPool(ctx)
 
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.BondedPoolName, types.NotBondedPoolName, startTokens)
-	s.accountKeeper.SetModuleAccount(ctx, notBondedPool)
+	require.NoError(t, banktestutil.FundModuleAccount(suite.app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	suite.app.BankKeeper.SendCoinsFromModuleToModule(ctx, types.BondedPoolName, types.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, startTokens)))
+	suite.app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// Create a validator
 	validator1 := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	validator1, issuedShares1 := validator1.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares1.RoundInt())
 
-	validator1 = stakingkeeper.TestingUpdateValidator(s.stakingKeeper, ctx, validator1, true)
+	validator1 = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, ctx, validator1, true)
 	require.True(math.IntEq(t, valTokens, validator1.BondedTokens()))
 	require.True(t, validator1.IsBonded())
 
 	// Create a delegator
 	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares1)
-	s.stakingKeeper.SetDelegation(ctx, delegation)
+	suite.app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	// Create a validator to redelegate to
 	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1])
 	validator2, issuedShares2 := validator2.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares2.RoundInt())
 
-	validator2 = stakingkeeper.TestingUpdateValidator(s.stakingKeeper, ctx, validator2, true)
+	validator2 = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, ctx, validator2, true)
 	require.Equal(t, types.Bonded, validator2.Status)
 	require.True(t, validator2.IsBonded())
 
@@ -162,62 +163,62 @@ func doValidatorUnbonding(
 	return validator
 }
 
-func (s *KeeperTestSuite) TestValidatorUnbondingOnHold1(t *testing.T) {
+func (suite *IntegrationTestSuite) TestValidatorUnbondingOnHold1(t *testing.T) {
 	var hookCalled bool
 	var ubdeID uint64
 
-	ctx, _, _, addrVals := s.SetupUnbondingTests(t, &hookCalled, &ubdeID)
+	ctx, _, _, addrVals := suite.SetupUnbondingTests(t, &hookCalled, &ubdeID)
 
 	// Start unbonding first validator
-	validator := doValidatorUnbonding(t, s.stakingKeeper, ctx, addrVals[0], &hookCalled)
+	validator := doValidatorUnbonding(t, suite.app.StakingKeeper, ctx, addrVals[0], &hookCalled)
 
 	completionTime := validator.UnbondingTime
 	completionHeight := validator.UnbondingHeight
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
-	err := s.stakingKeeper.UnbondingCanComplete(ctx, ubdeID)
+	err := suite.app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
 	// Try to unbond validator
-	s.stakingKeeper.UnbondAllMatureValidators(ctx)
+	suite.app.StakingKeeper.UnbondAllMatureValidators(ctx)
 
 	// Check that validator unbonding is not complete (is not mature yet)
-	validator, found := s.stakingKeeper.GetValidator(ctx, addrVals[0])
+	validator, found := suite.app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, types.Unbonding, validator.Status)
-	unbondingVals := s.stakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
+	unbondingVals := suite.app.StakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
 	require.Equal(t, 1, len(unbondingVals))
 	require.Equal(t, validator.OperatorAddress, unbondingVals[0])
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	ctx = ctx.WithBlockTime(completionTime.Add(time.Duration(1)))
 	ctx = ctx.WithBlockHeight(completionHeight + 1)
-	s.stakingKeeper.UnbondAllMatureValidators(ctx)
+	suite.app.StakingKeeper.UnbondAllMatureValidators(ctx)
 
 	// Check that validator unbonding is complete
-	validator, found = s.stakingKeeper.GetValidator(ctx, addrVals[0])
+	validator, found = suite.app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, types.Unbonded, validator.Status)
-	unbondingVals = s.stakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
+	unbondingVals = suite.app.StakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
 	require.Equal(t, 0, len(unbondingVals))
 }
 
-func (s *KeeperTestSuite) TestValidatorUnbondingOnHold2(t *testing.T) {
+func (suite *IntegrationTestSuite) TestValidatorUnbondingOnHold2(t *testing.T) {
 	var hookCalled bool
 	var ubdeID uint64
 	var ubdeIDs []uint64
 
-	ctx, _, _, addrVals := s.SetupUnbondingTests(t, &hookCalled, &ubdeID)
+	ctx, _, _, addrVals := suite.SetupUnbondingTests(t, &hookCalled, &ubdeID)
 
 	// Start unbonding first validator
-	validator1 := doValidatorUnbonding(t, s.stakingKeeper, ctx, addrVals[0], &hookCalled)
+	validator1 := doValidatorUnbonding(t, suite.app.StakingKeeper, ctx, addrVals[0], &hookCalled)
 	ubdeIDs = append(ubdeIDs, ubdeID)
 
 	// Reset hookCalled flag
 	hookCalled = false
 
 	// Start unbonding second validator
-	validator2 := doValidatorUnbonding(t, s.stakingKeeper, s.ctx, addrVals[1], &hookCalled)
+	validator2 := doValidatorUnbonding(t, suite.app.StakingKeeper, suite.ctx, addrVals[1], &hookCalled)
 	ubdeIDs = append(ubdeIDs, ubdeID)
 
 	// Check that there are two unbonding operations
@@ -232,116 +233,116 @@ func (s *KeeperTestSuite) TestValidatorUnbondingOnHold2(t *testing.T) {
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	ctx = ctx.WithBlockTime(completionTime.Add(time.Duration(1)))
 	ctx = ctx.WithBlockHeight(completionHeight + 1)
-	s.stakingKeeper.UnbondAllMatureValidators(ctx)
+	suite.app.StakingKeeper.UnbondAllMatureValidators(ctx)
 
 	// Check that unbonding is not complete for both validators
-	validator1, found := s.stakingKeeper.GetValidator(ctx, addrVals[0])
+	validator1, found := suite.app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, types.Unbonding, validator1.Status)
-	validator2, found = s.stakingKeeper.GetValidator(ctx, addrVals[1])
+	validator2, found = suite.app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	require.Equal(t, types.Unbonding, validator2.Status)
-	unbondingVals := s.stakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
+	unbondingVals := suite.app.StakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
 	require.Equal(t, 2, len(unbondingVals))
 	require.Equal(t, validator1.OperatorAddress, unbondingVals[0])
 	require.Equal(t, validator2.OperatorAddress, unbondingVals[1])
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
-	err := s.stakingKeeper.UnbondingCanComplete(ctx, ubdeIDs[0])
+	err := suite.app.StakingKeeper.UnbondingCanComplete(ctx, ubdeIDs[0])
 	require.NoError(t, err)
 
 	// Try again to unbond validators
-	s.stakingKeeper.UnbondAllMatureValidators(ctx)
+	suite.app.StakingKeeper.UnbondAllMatureValidators(ctx)
 
 	// Check that unbonding is complete for validator1, but not for validator2
-	validator1, found = s.stakingKeeper.GetValidator(ctx, addrVals[0])
+	validator1, found = suite.app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, types.Unbonded, validator1.Status)
-	validator2, found = s.stakingKeeper.GetValidator(ctx, addrVals[1])
+	validator2, found = suite.app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	require.Equal(t, types.Unbonding, validator2.Status)
-	unbondingVals = s.stakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
+	unbondingVals = suite.app.StakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
 	require.Equal(t, 1, len(unbondingVals))
 	require.Equal(t, validator2.OperatorAddress, unbondingVals[0])
 
 	// Unbonding for validator2 can complete
-	err = s.stakingKeeper.UnbondingCanComplete(ctx, ubdeIDs[1])
+	err = suite.app.StakingKeeper.UnbondingCanComplete(ctx, ubdeIDs[1])
 	require.NoError(t, err)
 
 	// Try again to unbond validators
-	s.stakingKeeper.UnbondAllMatureValidators(ctx)
+	suite.app.StakingKeeper.UnbondAllMatureValidators(ctx)
 
 	// Check that unbonding is complete for validator2
-	validator2, found = s.stakingKeeper.GetValidator(ctx, addrVals[1])
+	validator2, found = suite.app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	require.Equal(t, types.Unbonded, validator2.Status)
-	unbondingVals = s.stakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
+	unbondingVals = suite.app.StakingKeeper.GetUnbondingValidators(ctx, completionTime, completionHeight)
 	require.Equal(t, 0, len(unbondingVals))
 }
 
-func (s *KeeperTestSuite) TestRedelegationOnHold1(t *testing.T) {
+func (suite *IntegrationTestSuite) TestRedelegationOnHold1(t *testing.T) {
 	var hookCalled bool
 	var ubdeID uint64
 
-	ctx, _, addrDels, addrVals := s.SetupUnbondingTests(t, &hookCalled, &ubdeID)
-	completionTime := doRedelegation(t, s.stakingKeeper, ctx, addrDels, addrVals, &hookCalled)
+	ctx, _, addrDels, addrVals := suite.SetupUnbondingTests(t, &hookCalled, &ubdeID)
+	completionTime := doRedelegation(t, suite.app.StakingKeeper, ctx, addrDels, addrVals, &hookCalled)
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-	err := s.stakingKeeper.UnbondingCanComplete(ctx, ubdeID)
+	err := suite.app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
 	// Redelegation is not complete - still exists
-	redelegations := s.stakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
+	redelegations := suite.app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
 	ctx = ctx.WithBlockTime(completionTime)
-	_, err = s.stakingKeeper.CompleteRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	_, err = suite.app.StakingKeeper.CompleteRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.NoError(t, err)
 
 	// Redelegation is complete and record is gone
-	redelegations = s.stakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
+	redelegations = suite.app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 0, len(redelegations))
 }
 
-func (s *KeeperTestSuite) TestRedelegationOnHold2(t *testing.T) {
+func (suite *IntegrationTestSuite) TestRedelegationOnHold2(t *testing.T) {
 	var hookCalled bool
 	var ubdeID uint64
 
-	ctx, _, addrDels, addrVals := s.SetupUnbondingTests(t, &hookCalled, &ubdeID)
-	completionTime := doRedelegation(t, s.stakingKeeper, ctx, addrDels, addrVals, &hookCalled)
+	ctx, _, addrDels, addrVals := suite.SetupUnbondingTests(t, &hookCalled, &ubdeID)
+	completionTime := doRedelegation(t, suite.app.StakingKeeper, ctx, addrDels, addrVals, &hookCalled)
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	ctx = ctx.WithBlockTime(completionTime)
-	_, err := s.stakingKeeper.CompleteRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	_, err := suite.app.StakingKeeper.CompleteRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.NoError(t, err)
 
 	// Redelegation is not complete - still exists
-	redelegations := s.stakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
+	redelegations := suite.app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
-	err = s.stakingKeeper.UnbondingCanComplete(ctx, ubdeID)
+	err = suite.app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
 	// Redelegation is complete and record is gone
-	redelegations = s.stakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
+	redelegations = suite.app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 0, len(redelegations))
 }
 
-func (s *KeeperTestSuite) TestUnbondingDelegationOnHold1(t *testing.T) {
+func (suite *IntegrationTestSuite) TestUnbondingDelegationOnHold1(t *testing.T) {
 	var hookCalled bool
 	var ubdeID uint64
 
-	ctx, bondDenom, addrDels, addrVals := s.SetupUnbondingTests(t, &hookCalled, &ubdeID)
-	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, s.stakingKeeper, s.bankKeeper, ctx, bondDenom, addrDels, addrVals, &hookCalled)
+	ctx, bondDenom, addrDels, addrVals := suite.SetupUnbondingTests(t, &hookCalled, &ubdeID)
+	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, suite.app.StakingKeeper, suite.app.BankKeeper, ctx, bondDenom, addrDels, addrVals, &hookCalled)
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
-	err := s.stakingKeeper.UnbondingCanComplete(ctx, ubdeID)
+	err := suite.app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
-	bondedAmt3 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	notBondedAmt3 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	bondedAmt3 := suite.app.BankKeeper.GetBalance(ctx, suite.app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt3 := suite.app.BankKeeper.GetBalance(ctx, suite.app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	// Bonded and unbonded amounts are the same as before because the completionTime has not yet passed and so the
 	// unbondingDelegation has not completed
@@ -350,32 +351,32 @@ func (s *KeeperTestSuite) TestUnbondingDelegationOnHold1(t *testing.T) {
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
 	ctx = ctx.WithBlockTime(completionTime)
-	_, err = s.stakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
+	_, err = suite.app.StakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
 	require.NoError(t, err)
 
 	// Check that the unbonding was finally completed
-	bondedAmt5 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	notBondedAmt5 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	bondedAmt5 := suite.app.BankKeeper.GetBalance(ctx, suite.app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt5 := suite.app.BankKeeper.GetBalance(ctx, suite.app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	require.True(math.IntEq(t, bondedAmt1, bondedAmt5))
 	// Not bonded amount back to what it was originaly
 	require.True(math.IntEq(t, notBondedAmt1.SubRaw(1), notBondedAmt5))
 }
 
-func (s *KeeperTestSuite) TestUnbondingDelegationOnHold2(t *testing.T) {
+func (suite *IntegrationTestSuite) TestUnbondingDelegationOnHold2(t *testing.T) {
 	var hookCalled bool
 	var ubdeID uint64
 
-	ctx, bondDenom, addrDels, addrVals := s.SetupUnbondingTests(t, &hookCalled, &ubdeID)
-	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, s.stakingKeeper, s.bankKeeper, ctx, bondDenom, addrDels, addrVals, &hookCalled)
+	ctx, bondDenom, addrDels, addrVals := suite.SetupUnbondingTests(t, &hookCalled, &ubdeID)
+	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, suite.app.StakingKeeper, suite.app.BankKeeper, ctx, bondDenom, addrDels, addrVals, &hookCalled)
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	ctx = ctx.WithBlockTime(completionTime)
-	_, err := s.stakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
+	_, err := suite.app.StakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
 	require.NoError(t, err)
 
-	bondedAmt3 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	notBondedAmt3 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	bondedAmt3 := suite.app.BankKeeper.GetBalance(ctx, suite.app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt3 := suite.app.BankKeeper.GetBalance(ctx, suite.app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	// Bonded and unbonded amounts are the same as before because the completionTime has not yet passed and so the
 	// unbondingDelegation has not completed
@@ -383,12 +384,12 @@ func (s *KeeperTestSuite) TestUnbondingDelegationOnHold2(t *testing.T) {
 	require.True(math.IntEq(t, notBondedAmt1, notBondedAmt3))
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - STOPPED UNBONDING CAN NOW COMPLETE
-	err = s.stakingKeeper.UnbondingCanComplete(ctx, ubdeID)
+	err = suite.app.StakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
 	// Check that the unbonding was finally completed
-	bondedAmt5 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	notBondedAmt5 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	bondedAmt5 := suite.app.BankKeeper.GetBalance(ctx, suite.app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
+	notBondedAmt5 := suite.app.BankKeeper.GetBalance(ctx, suite.app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	require.True(math.IntEq(t, bondedAmt1, bondedAmt5))
 	// Not bonded amount back to what it was originaly

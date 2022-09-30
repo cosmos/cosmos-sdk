@@ -56,7 +56,7 @@ var (
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 )
 
-// TODO: Cosmos-SDK team- Is this the way I should do an enum? Is this the right place to do it?
+// UnbondingType defines the type of unbonding operation
 type UnbondingType int
 
 const (

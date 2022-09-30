@@ -41,7 +41,8 @@ func (s *KeeperTestSuite) SetupUnbondingTests(t *testing.T, hookCalled *bool, ub
 
 	s.stakingKeeper.SetHooks(types.NewMultiStakingHooks(testHooks))
 
-	addrDels = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 2, math.NewInt(10000))
+	// TODO mocks
+	// addrDels = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 2, math.NewInt(10000))
 	addrVals = simtestutil.ConvertAddrsToValAddrs(addrDels)
 
 	valTokens := s.stakingKeeper.TokensFromConsensusPower(ctx, 10)
@@ -90,6 +91,7 @@ func doUnbondingDelegation(
 ) (completionTime time.Time, bondedAmt math.Int, notBondedAmt math.Int) {
 	// UNDELEGATE
 	// Save original bonded and unbonded amounts
+	// TODO mock
 	bondedAmt1 := bankKeeper.GetBalance(ctx, stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	notBondedAmt1 := bankKeeper.GetBalance(ctx, stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
@@ -340,6 +342,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationOnHold1(t *testing.T) {
 	err := s.stakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
+	// TODO mock
 	bondedAmt3 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	notBondedAmt3 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
@@ -353,6 +356,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationOnHold1(t *testing.T) {
 	_, err = s.stakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
 	require.NoError(t, err)
 
+	// TODO mock
 	// Check that the unbonding was finally completed
 	bondedAmt5 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	notBondedAmt5 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -374,6 +378,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationOnHold2(t *testing.T) {
 	_, err := s.stakingKeeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
 	require.NoError(t, err)
 
+	// TODO mock
 	bondedAmt3 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	notBondedAmt3 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
@@ -386,6 +391,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegationOnHold2(t *testing.T) {
 	err = s.stakingKeeper.UnbondingCanComplete(ctx, ubdeID)
 	require.NoError(t, err)
 
+	// TODO mock
 	// Check that the unbonding was finally completed
 	bondedAmt5 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	notBondedAmt5 := s.bankKeeper.GetBalance(ctx, s.stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount

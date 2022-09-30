@@ -90,10 +90,10 @@ UnbondingId stores the ID of the latest unbonding operation. It enables to creat
 
 ## Params
 
-The staking module stores its params in state with the prefix of `0x51`,
+The staking module stores its params in state with the prefix of `0x69`,
 it can be updated with governance or the address with authority.
 
-* Params: `0x51 | ProtocolBuffer(Params)`
+* Params: `0x69 | ProtocolBuffer(Params)`
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L285-L306
 

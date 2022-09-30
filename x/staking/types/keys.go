@@ -53,7 +53,7 @@ var (
 	HistoricalInfoKey   = []byte{0x50} // prefix for the historical info
 	ValidatorUpdatesKey = []byte{0x51} // prefix for the end block validator updates key
 
-	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
+	ParamsKey = []byte{0x69} // prefix for parameters for module x/staking
 )
 
 // UnbondingType defines the type of unbonding operation

@@ -11,8 +11,11 @@ import (
 	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -126,4 +129,110 @@ func (suite *DeterministicTestSuite) TestGRPCParams() {
 	suite.Require().NoError(err)
 
 	suite.runParamsIterations(params)
+}
+
+func drawPubKey() *rapid.Generator[ed25519.PubKey] {
+	return rapid.Custom(func(t *rapid.T) ed25519.PubKey {
+		pkBz := rapid.SliceOfN(rapid.Byte(), 32, 32).Draw(t, "hex")
+		return ed25519.PubKey{Key: pkBz}
+	})
+}
+
+func (suite *DeterministicTestSuite) matchValidators(val1, val2 stakingtypes.Validator) {
+	suite.Require().Equal(val1.GetOperator(), val2.GetOperator())
+	suite.Require().Equal(val1.ConsensusPubkey.Value, val2.ConsensusPubkey.Value)
+	suite.Require().Equal(val1.Jailed, val2.Jailed)
+	suite.Require().Equal(val1.GetStatus(), val2.GetStatus())
+	suite.Require().Equal(val1.GetTokens(), val2.GetTokens())
+	suite.Require().Equal(val1.GetDelegatorShares(), val2.GetDelegatorShares())
+	suite.Require().Equal(val1.Description, val2.Description)
+	suite.Require().Equal(val1.UnbondingHeight, val2.UnbondingHeight)
+	suite.Require().True(val1.UnbondingTime.Equal(val2.UnbondingTime))
+	suite.Require().Equal(val1.Commission, val2.Commission)
+	suite.Require().Equal(val1.MinSelfDelegation, val2.MinSelfDelegation)
+}
+
+func (suite *DeterministicTestSuite) getValidator(t *rapid.T) stakingtypes.Validator {
+	bond_types := []stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded, stakingtypes.Unbonding}
+
+	pubkey := drawPubKey().Draw(t, "pubkey")
+	pubkeyAny, err := codectypes.NewAnyWithValue(&pubkey)
+	suite.Require().NoError(err)
+	return stakingtypes.Validator{
+		OperatorAddress: sdk.ValAddress(testdata.AddressGenerator(t).Draw(t, "address")).String(),
+		ConsensusPubkey: pubkeyAny,
+		Jailed:          rapid.Bool().Draw(t, "jailed"),
+		Status:          bond_types[rapid.IntRange(0, 2).Draw(t, "bond-status")],
+		Tokens:          sdk.NewInt(rapid.Int64Min(1).Draw(t, "tokens")),
+		DelegatorShares: sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "commission"), 2),
+		Description: stakingtypes.NewDescription(
+			rapid.StringN(5, 250, 255).Draw(t, "moniker"),
+			rapid.StringN(5, 250, 255).Draw(t, "identity"),
+			rapid.StringN(5, 250, 255).Draw(t, "website"),
+			rapid.StringN(5, 250, 255).Draw(t, "securityContact"),
+			rapid.StringN(5, 250, 255).Draw(t, "details"),
+		),
+		UnbondingHeight: rapid.Int64Min(1).Draw(t, "unbonding-height"),
+		UnbondingTime:   time.Now().Add(drawDuration().Draw(t, "duration")),
+		Commission: stakingtypes.NewCommission(
+			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "rate"), 2),
+			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "max-rate"), 2),
+			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "max-change-rate"), 2),
+		),
+		MinSelfDelegation: sdk.NewInt(rapid.Int64Min(1).Draw(t, "tokens")),
+	}
+}
+
+func (suite *DeterministicTestSuite) runValidatorIterations(valAddr string, prevValRes stakingtypes.Validator) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.Validator(suite.ctx, &stakingtypes.QueryValidatorRequest{
+			ValidatorAddr: valAddr,
+		})
+
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+
+		suite.matchValidators(res.GetValidator(), prevValRes)
+		prevValRes = res.GetValidator()
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCValidator() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		val := suite.getValidator(t)
+		suite.stakingKeeper.SetValidator(suite.ctx, val)
+
+		suite.runValidatorIterations(val.OperatorAddress, val)
+	})
+
+	pubkey := ed25519.PubKey{Key: []byte{24, 179, 242, 2, 151, 3, 34, 6, 1, 11, 0, 194, 202, 201, 77, 1, 167, 40, 249, 115, 32, 97, 18, 1, 1, 127, 255, 103, 13, 1, 34, 1}}
+	pubkeyAny, err := codectypes.NewAnyWithValue(&pubkey)
+	suite.Require().NoError(err)
+
+	val := stakingtypes.Validator{
+		OperatorAddress: "cosmosvaloper1qqqryrs09ggeuqszqygqyqd2tgqmsqzewacjj7",
+		ConsensusPubkey: pubkeyAny,
+		Jailed:          false,
+		Status:          stakingtypes.Bonded,
+		Tokens:          sdk.NewInt(100),
+		DelegatorShares: sdk.NewDecWithPrec(5, 2),
+		Description: stakingtypes.NewDescription(
+			"moniker",
+			"identity",
+			"website",
+			"securityContact",
+			"details",
+		),
+		UnbondingHeight: 10,
+		UnbondingTime:   time.Date(2022, 10, 1, 0, 0, 0, 0, time.UTC),
+		Commission: stakingtypes.NewCommission(
+			sdk.NewDecWithPrec(5, 2),
+			sdk.NewDecWithPrec(5, 2),
+			sdk.NewDecWithPrec(5, 2),
+		),
+		MinSelfDelegation: sdk.NewInt(10),
+	}
+
+	suite.stakingKeeper.SetValidator(suite.ctx, val)
+	suite.runValidatorIterations(val.OperatorAddress, val)
 }

@@ -53,6 +53,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Require().NoError(err)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
+	s.slashingKeeper.SetParams(ctx, testutil.TestParams())
 	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 5, s.stakingKeeper.TokensFromConsensusPower(ctx, 200))
 
 	info1 := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4), int64(3),
@@ -184,7 +187,6 @@ func (s *KeeperTestSuite) TestHandleNewValidator() {
 // Ensure that they're only slashed once
 func (s *KeeperTestSuite) TestHandleAlreadyJailed() {
 	// initial setup
-
 	ctx := s.ctx
 
 	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 1, s.stakingKeeper.TokensFromConsensusPower(ctx, 200))
@@ -236,11 +238,7 @@ func (s *KeeperTestSuite) TestHandleAlreadyJailed() {
 // the start height of the signing info is reset correctly
 func (s *KeeperTestSuite) TestValidatorDippingInAndOut() {
 	// initial setup
-	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
-
 	ctx := s.ctx
-	s.slashingKeeper.SetParams(ctx, testutil.TestParams())
-
 	params := s.stakingKeeper.GetParams(ctx)
 	params.MaxValidators = 1
 	s.stakingKeeper.SetParams(ctx, params)

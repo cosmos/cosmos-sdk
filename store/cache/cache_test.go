@@ -67,3 +67,24 @@ func TestStoreCache(t *testing.T) {
 		require.Nil(t, store.Get(key))
 	}
 }
+
+func TestReset(t *testing.T) {
+	db := dbm.NewMemDB()
+	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
+
+	sKey := types.NewKVStoreKey("test")
+	tree, err := iavl.NewMutableTree(db, 100, false)
+	require.NoError(t, err)
+	store := iavlstore.UnsafeNewStore(tree)
+	store2 := mngr.GetStoreCache(sKey, store)
+
+	require.NotNil(t, store2)
+	require.Equal(t, store2, mngr.GetStoreCache(sKey, store))
+
+	// reset and check if the cache is gone
+	mngr.Reset()
+	require.Nil(t, mngr.Unwrap(sKey))
+
+	// check if the cache is recreated
+	require.Equal(t, store2, mngr.GetStoreCache(sKey, store))
+}

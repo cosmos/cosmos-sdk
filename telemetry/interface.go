@@ -55,4 +55,4 @@ type Metrics interface {
 var _ Metrics = &metrics{}
 
 // Default is the default singleton object for the metrics.
-var Default Metrics = &metrics{cnf: &Config{}}
+var Default Metrics = &metrics{cnf: &Config{globalLabels: []gometrics.Label{}, GlobalLabels: [][]string{}}}

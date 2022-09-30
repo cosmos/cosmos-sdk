@@ -12,13 +12,6 @@ func NewLabel(name, value string) gometrics.Label {
 	return gometrics.Label{Name: name, Value: value}
 }
 
-// Gather collects all registered metrics and returns a GatherResponse where the
-// metrics are encoded depending on the type. metrics are either encoded via
-// Prometheus or JSON if in-memory.
-func Gather(format string) (GatherResponse, error) {
-	return Default.Gather(format)
-}
-
 // ModuleMeasureSince provides a short hand method for emitting a time measure
 // metric for a module with a given set of keys. If any global labels are defined,
 // they will be added to the module label.

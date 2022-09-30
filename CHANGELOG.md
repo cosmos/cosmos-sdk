@@ -176,6 +176,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (Store) [#13334](https://github.com/cosmos/cosmos-sdk/pull/13334) Call streaming listeners for deliver tx event, it was removed accidentally.
 * (grpc) [#13352](https://github.com/cosmos/cosmos-sdk/pull/13352) fix grpc query panic that could crash the node.
 * (snapshot) [#13400](https://github.com/cosmos/cosmos-sdk/pull/13400) Fix snapshot checksum issue in golang 1.19.
+* (grpc) [#13418](https://github.com/cosmos/cosmos-sdk/pull/13418) Add close for grpc only mode.
 
 ### Deprecated
 

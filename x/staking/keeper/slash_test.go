@@ -2,7 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 )
 
 // tests Jail, Unjail
@@ -12,7 +12,7 @@ func (s *KeeperTestSuite) TestRevocation() {
 
 	valAddr := sdk.ValAddress(PKs[0].Address().Bytes())
 	consAddr := sdk.ConsAddress(PKs[0].Address())
-	validator := teststaking.NewValidator(s.T(), valAddr, PKs[0])
+	validator := testutil.NewValidator(s.T(), valAddr, PKs[0])
 
 	// initial state
 	keeper.SetValidator(ctx, validator)
@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestSlashAtFutureHeight() {
 	require := s.Require()
 
 	consAddr := sdk.ConsAddress(PKs[0].Address())
-	validator := teststaking.NewValidator(s.T(), sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0])
+	validator := testutil.NewValidator(s.T(), sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0])
 	keeper.SetValidator(ctx, validator)
 	err := keeper.SetValidatorByConsAddr(ctx, validator)
 	require.NoError(err)

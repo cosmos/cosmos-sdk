@@ -10,15 +10,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -59,7 +58,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.accountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	s.bankKeeper.SetParams(ctx, banktypes.DefaultParams())
-	s.slashingKeeper.SetParams(ctx, testslashing.TestParams())
+	s.slashingKeeper.SetParams(ctx, testutil.TestParams())
 
 	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 5, s.stakingKeeper.TokensFromConsensusPower(ctx, 200))
 
@@ -91,7 +90,7 @@ func (s *KeeperTestSuite) TestUnJailNotBonded() {
 	addrDels := simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 6, s.stakingKeeper.TokensFromConsensusPower(ctx, 200))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
 	pks := simtestutil.CreateTestPubKeys(6)
-	tstaking := teststaking.NewHelper(s.T(), ctx, s.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(s.T(), ctx, s.stakingKeeper)
 
 	// create max (5) validators all with the same power
 	for i := uint32(0); i < p.MaxValidators; i++ {
@@ -153,7 +152,7 @@ func (s *KeeperTestSuite) TestHandleNewValidator() {
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
 	pks := simtestutil.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]
-	tstaking := teststaking.NewHelper(s.T(), ctx, s.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(s.T(), ctx, s.stakingKeeper)
 	ctx = ctx.WithBlockHeight(s.slashingKeeper.SignedBlocksWindow(ctx) + 1)
 
 	// Validator created
@@ -200,7 +199,7 @@ func (s *KeeperTestSuite) TestHandleAlreadyJailed() {
 	pks := simtestutil.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]
 	power := int64(100)
-	tstaking := teststaking.NewHelper(s.T(), ctx, s.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(s.T(), ctx, s.stakingKeeper)
 
 	amt := tstaking.CreateValidatorWithValPower(addr, val, power, true)
 
@@ -247,7 +246,7 @@ func (s *KeeperTestSuite) TestValidatorDippingInAndOut() {
 	// TestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
 
 	ctx := s.ctx
-	s.slashingKeeper.SetParams(ctx, testslashing.TestParams())
+	s.slashingKeeper.SetParams(ctx, testutil.TestParams())
 
 	params := s.stakingKeeper.GetParams(ctx)
 	params.MaxValidators = 1
@@ -259,7 +258,7 @@ func (s *KeeperTestSuite) TestValidatorDippingInAndOut() {
 
 	addr, val := pks[0].Address(), pks[0]
 	consAddr := sdk.ConsAddress(addr)
-	tstaking := teststaking.NewHelper(s.T(), ctx, s.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(s.T(), ctx, s.stakingKeeper)
 	valAddr := sdk.ValAddress(addr)
 
 	tstaking.CreateValidatorWithValPower(valAddr, val, power, true)

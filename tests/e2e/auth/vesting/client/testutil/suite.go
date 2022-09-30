@@ -3,7 +3,7 @@ package testutil
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -30,9 +30,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -134,7 +132,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bw.Bytes(), tc.respType), bw.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 
@@ -212,7 +210,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bw.Bytes(), tc.respType), bw.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 		next, err := s.network.WaitForHeight(height + 1)

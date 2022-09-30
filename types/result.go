@@ -6,7 +6,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -80,74 +80,6 @@ func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timesta
 		Tx:        anyTx,
 		Timestamp: timestamp,
 		Events:    res.TxResult.Events,
-	}
-}
-
-// NewResponseFormatBroadcastTxCommit returns a TxResponse given a
-// ResultBroadcastTxCommit from tendermint.
-func NewResponseFormatBroadcastTxCommit(res *coretypes.ResultBroadcastTxCommit) *TxResponse {
-	if res == nil {
-		return nil
-	}
-
-	if !res.CheckTx.IsOK() {
-		return newTxResponseCheckTx(res)
-	}
-
-	return newTxResponseDeliverTx(res)
-}
-
-func newTxResponseCheckTx(res *coretypes.ResultBroadcastTxCommit) *TxResponse {
-	if res == nil {
-		return nil
-	}
-
-	var txHash string
-	if res.Hash != nil {
-		txHash = res.Hash.String()
-	}
-
-	parsedLogs, _ := ParseABCILogs(res.CheckTx.Log)
-
-	return &TxResponse{
-		Height:    res.Height,
-		TxHash:    txHash,
-		Codespace: res.CheckTx.Codespace,
-		Code:      res.CheckTx.Code,
-		Data:      strings.ToUpper(hex.EncodeToString(res.CheckTx.Data)),
-		RawLog:    res.CheckTx.Log,
-		Logs:      parsedLogs,
-		Info:      res.CheckTx.Info,
-		GasWanted: res.CheckTx.GasWanted,
-		GasUsed:   res.CheckTx.GasUsed,
-		Events:    res.CheckTx.Events,
-	}
-}
-
-func newTxResponseDeliverTx(res *coretypes.ResultBroadcastTxCommit) *TxResponse {
-	if res == nil {
-		return nil
-	}
-
-	var txHash string
-	if res.Hash != nil {
-		txHash = res.Hash.String()
-	}
-
-	parsedLogs, _ := ParseABCILogs(res.DeliverTx.Log)
-
-	return &TxResponse{
-		Height:    res.Height,
-		TxHash:    txHash,
-		Codespace: res.DeliverTx.Codespace,
-		Code:      res.DeliverTx.Code,
-		Data:      strings.ToUpper(hex.EncodeToString(res.DeliverTx.Data)),
-		RawLog:    res.DeliverTx.Log,
-		Logs:      parsedLogs,
-		Info:      res.DeliverTx.Info,
-		GasWanted: res.DeliverTx.GasWanted,
-		GasUsed:   res.DeliverTx.GasUsed,
-		Events:    res.DeliverTx.Events,
 	}
 }
 

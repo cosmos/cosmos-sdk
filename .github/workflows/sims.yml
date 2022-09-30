@@ -7,31 +7,22 @@ on:
   release:
     types: [published]
 
-jobs:
-  cleanup-runs:
-    permissions:
-      actions: write  # for rokroskar/workflow-run-cleanup-action to obtain workflow name & cancel it
-      contents: read  # for rokroskar/workflow-run-cleanup-action to obtain branch
-    runs-on: buildjet-4vcpu-ubuntu-2004
-    steps:
-      - uses: rokroskar/workflow-run-cleanup-action@master
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
+concurrency:
+  group: ci-${{ github.ref }}-sims
+  cancel-in-progress: true
 
+jobs:
   build:
     permissions:
-      contents: read  # for actions/checkout to fetch code
-      pull-requests: read  # for technote-space/get-diff-action to get git reference
+      contents: read # for actions/checkout to fetch code
+      pull-requests: read # for technote-space/get-diff-action to get git reference
     runs-on: buildjet-4vcpu-ubuntu-2004
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
+          go-version: 1.19
       - uses: technote-space/get-diff-action@v6.1.0
         with:
           PATTERNS: |
@@ -39,7 +30,6 @@ jobs:
             go.mod
             go.sum
       - name: Get data from Go build cache
-        # if: env.GIT_DIFF
         if: ${{ false }}
         uses: actions/cache@v3
         with:
@@ -64,9 +54,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
+          go-version: 1.19
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -82,7 +70,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -99,7 +87,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -116,7 +104,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-
       - name: Get previous workflow status
         uses: ./.github/actions/last-workflow-status
         id: last_status

@@ -6,7 +6,7 @@ import (
 	"sort"
 
 	"cosmossdk.io/math"
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -298,7 +298,10 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types
 	if err != nil {
 		return validator, err
 	}
-	k.AfterValidatorBonded(ctx, consAddr, validator.GetOperator())
+
+	if err := k.Hooks().AfterValidatorBonded(ctx, consAddr, validator.GetOperator()); err != nil {
+		return validator, err
+	}
 
 	return validator, err
 }
@@ -333,7 +336,10 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	if err != nil {
 		return validator, err
 	}
-	k.AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator())
+
+	if err := k.Hooks().AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator()); err != nil {
+		return validator, err
+	}
 
 	return validator, nil
 }

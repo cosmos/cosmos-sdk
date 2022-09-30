@@ -3,7 +3,7 @@ package mock
 import (
 	"io"
 
-	protoio "github.com/gogo/protobuf/io"
+	protoio "github.com/cosmos/gogoproto/io"
 	dbm "github.com/tendermint/tm-db"
 
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
@@ -127,6 +127,10 @@ func (ms multiStore) SetInterBlockCache(_ sdk.MultiStorePersistentCache) {
 }
 
 func (ms multiStore) SetIAVLCacheSize(size int) {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetIAVLDisableFastNode(disable bool) {
 	panic("not implemented")
 }
 

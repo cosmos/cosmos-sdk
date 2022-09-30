@@ -4,8 +4,6 @@
 package ledger
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/types"
 	ledger "github.com/cosmos/ledger-cosmos-go"
 )
 

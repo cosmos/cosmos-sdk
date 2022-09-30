@@ -77,7 +77,7 @@ Store entries prefixed with "Last" must remain unchanged until EndBlock.
 
 ## Params
 
-The staking module stores it's params in state with the prefix of `0x51`,
+The staking module stores its params in state with the prefix of `0x51`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x51 | ProtocolBuffer(Params)`
@@ -90,7 +90,7 @@ Validators can have one of three statuses
 
 * `Unbonded`: The validator is not in the active set. They cannot sign blocks and do not earn
   rewards. They can receive delegations.
-* `Bonded`: Once the validator receives sufficient bonded tokens they automtically join the
+* `Bonded`: Once the validator receives sufficient bonded tokens they automatically join the
   active set during [`EndBlock`](./05_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
   They are signing blocks and receiving rewards. They can receive further delegations.
   They can be slashed for misbehavior. Delegators to this validator who unbond their delegation
@@ -272,7 +272,7 @@ the `n` most recent historical info defined by staking module parameter: `Histor
 
 At each BeginBlock, the staking keeper will persist the current Header and the Validators that committed
 the current block in a `HistoricalInfo` object. The Validators are sorted on their address to ensure that
-they are in a determisnistic order.
+they are in a deterministic order.
 The oldest HistoricalEntries will be pruned to ensure that there only exist the parameter-defined number of
 historical entries.
 
@@ -373,7 +373,7 @@ When a `cancel unbond delegation` occurs both the `validator`, the `delegation` 
 
 * if cancel unbonding delegation amount equals to the `UnbondingDelegation` entry `balance`, then the `UnbondingDelegation` entry deleted from `UnbondingDelegationQueue`.
 * if the `cancel unbonding delegation amount is less than the `UnbondingDelegation` entry balance, then the `UnbondingDelegation` entry will be updated with new balance in the `UnbondingDelegationQueue`. 
-* cancel `amount` is [Delegated](02_state_transitions.md#delegations) back to  the original `validator`.
+* cancel `amount` is [Delegated](#delegations) back to  the original `validator`.
 
 ### Complete Unbonding
 
@@ -396,7 +396,7 @@ Redelegations affect the delegation, source and destination validators.
 * record the token amount in an new entry in the relevant `Redelegation`
 
 From when a redelegation begins until it completes, the delegator is in a state of "pseudo-unbonding", and can still be
-slashed for infractions that occured before the redelegation began.
+slashed for infractions that occurred before the redelegation began.
 
 ### Complete Redelegation
 
@@ -575,7 +575,7 @@ When this message is processed the following actions occur:
 
 ## MsgCancelUnbondingDelegation
 
-The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and deleagate back to a previous validator.
+The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and delegate back to a previous validator.
 
 +++ hhttps://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L36-L40
 
@@ -585,7 +585,7 @@ This message is expected to fail if:
 
 * the `unbondingDelegation` entry is already processed.
 * the `cancel unbonding delegation` amount is greater than the `unbondingDelegation` entry balance.
-* the `cancel unbonding delegation` height doesn't exists in the `unbondingDelegationQueue` of the delegator.
+* the `cancel unbonding delegation` height doesn't exist in the `unbondingDelegationQueue` of the delegator.
 
 When this message is processed the following actions occur:
 
@@ -687,7 +687,7 @@ message reporting their new consensus power which is passed back to Tendermint.
 
 The `LastTotalPower` and `LastValidatorsPower` hold the state of the total power
 and validator power from the end of the last block, and are used to check for
-changes that have occured in `ValidatorsByPower` and the total new power, which
+changes that have occurred in `ValidatorsByPower` and the total new power, which
 is calculated during `EndBlock`.
 
 ## Queues

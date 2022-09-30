@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -16,12 +16,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	client "github.com/cosmos/cosmos-sdk/x/group/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 type IntegrationTestSuite struct {
@@ -51,16 +53,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.commonFlags = []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	val := s.network.Validators[0]
 
@@ -72,15 +72,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	account := sdk.AccAddress(pk.Address())
-	_, err = cli.MsgSendExec(
+	_, err = clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		account,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	memberWeight := "3"
 	// create a group
@@ -95,7 +96,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		]
 	}`, val.Address.String(), memberWeight, validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
-	out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupCmd(),
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupCmd(),
 		append(
 			[]string{
 				val.Address.String(),
@@ -105,11 +106,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			s.commonFlags...,
 		),
 	)
-
 	s.Require().NoError(err, out.String())
 	txResp := sdk.TxResponse{}
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().Equal(uint32(0), txResp.Code, out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
 	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}
 
@@ -121,13 +121,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 
 		s.createGroupThresholdPolicyWithBalance(val.Address.String(), "1", threshold, 1000)
-
-		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 		s.Require().NoError(err, out.String())
+		s.Require().NoError(s.network.WaitForNextBlock())
 	}
 	percentage := 0.5
 	// create group policy with percentage decision policy
-	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupPolicyCmd(),
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupPolicyCmd(),
 		append(
 			[]string{
 				val.Address.String(),
@@ -140,9 +140,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().Equal(uint32(0), txResp.Code, out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
-	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err, out.String())
 
 	var res group.QueryGroupPoliciesByGroupResponse
@@ -151,7 +151,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.groupPolicies = res.GroupPolicies
 
 	// create a proposal
-	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 		append(
 			[]string{
 				s.createCLIProposal(
@@ -164,10 +164,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().Equal(uint32(0), txResp.Code, out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
 	// vote
-	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
 		append(
 			[]string{
 				"1",
@@ -180,16 +180,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().Equal(uint32(0), txResp.Code, out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
-	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryProposalCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryProposalCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err, out.String())
 
 	var proposalRes group.QueryProposalResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &proposalRes))
 	s.proposal = proposalRes.Proposal
 
-	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryVoteByProposalVoterCmd(), []string{"1", val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryVoteByProposalVoterCmd(), []string{"1", val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err, out.String())
 
 	var voteRes group.QueryVoteByProposalVoterResponse
@@ -287,10 +287,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"invalid members address",
@@ -332,10 +332,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"member metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 	}
 
@@ -345,15 +345,19 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgCreateGroupCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -362,7 +366,6 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	require := s.Require()
 
 	groupIDs := make([]string, 2)
 	for i := 0; i < 2; i++ {
@@ -372,7 +375,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 		"metadata": "%s"
 	}]}`, val.Address.String(), validMetadata)
 		validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
-		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupCmd(),
+		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgCreateGroupCmd(),
 			append(
 				[]string{
 					val.Address.String(),
@@ -382,10 +385,12 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 				s.commonFlags...,
 			),
 		)
-		require.NoError(err, out.String())
+		s.Require().NoError(err, out.String())
 		var txResp sdk.TxResponse
 		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-		s.Require().Equal(uint32(0), txResp.Code, out.String())
+		txResp, err = clitestutil.GetTxResponse(s.network, val.ClientCtx, txResp.TxHash)
+		s.Require().NoError(err)
+		s.Require().Equal(txResp.Code, uint32(0), out.String())
 		groupIDs[i] = s.getGroupIDFromTxResponse(txResp)
 	}
 
@@ -453,10 +458,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"not found",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 	}
 
@@ -466,15 +471,19 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgUpdateGroupAdminCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				require.Contains(out.String(), tc.expectErrMsg)
+				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
-				require.NoError(err, out.String())
-				require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				require.Equal(tc.expectedCode, txResp.Code, out.String())
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -533,10 +542,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 	}
 
@@ -546,15 +555,19 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgUpdateGroupMetadataCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -640,10 +653,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group member metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"group doesn't exist",
@@ -655,10 +668,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"not found",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 	}
 
@@ -668,15 +681,19 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgUpdateGroupMembersCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -790,10 +807,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"group policy metadata too long",
@@ -808,10 +825,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group policy metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"invalid members address",
@@ -862,10 +879,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"member metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 	}
 	for _, tc := range testCases {
@@ -874,15 +891,19 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgCreateGroupWithPolicyCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -981,10 +1002,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group policy metadata: limit exceeded",
 			&sdk.TxResponse{},
-			0,
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"wrong group id",
@@ -997,10 +1018,10 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"not found",
 			&sdk.TxResponse{},
-			0,
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 		{
 			"invalid percentage decision policy with negative value",
@@ -1042,15 +1063,19 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgCreateGroupPolicyCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -1129,10 +1154,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 				},
 				commonFlags...,
 			),
-			true,
+			false,
 			"load group policy: not found",
 			&sdk.TxResponse{},
-			0,
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 	}
 
@@ -1142,7 +1167,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgUpdateGroupPolicyAdminCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -1150,7 +1175,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1244,10 +1269,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				},
 				commonFlags...,
 			),
-			true,
+			false,
 			"load group policy: not found",
 			&sdk.TxResponse{},
-			0,
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 		{
 			"invalid percentage decision policy with negative value",
@@ -1287,7 +1312,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgUpdateGroupPolicyDecisionPolicyCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
@@ -1295,7 +1320,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -1359,10 +1384,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 				},
 				commonFlags...,
 			),
-			true,
+			false,
 			"group policy metadata: limit exceeded",
 			&sdk.TxResponse{},
-			0,
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"wrong admin",
@@ -1389,10 +1414,10 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 				},
 				commonFlags...,
 			),
-			true,
+			false,
 			"load group policy: not found",
 			&sdk.TxResponse{},
-			0,
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 	}
 
@@ -1402,15 +1427,19 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgUpdateGroupPolicyMetadataCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -1510,10 +1539,10 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"unauthorized msg",
@@ -1526,10 +1555,10 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"msg does not have group policy authorization",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			sdkerrors.ErrUnauthorized.ABCICode(),
 		},
 		{
 			"invalid proposers",
@@ -1577,10 +1606,10 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group policy: not found",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 	}
 
@@ -1590,15 +1619,19 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgSubmitProposalCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -1616,7 +1649,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 	groupPolicyAddress := s.createGroupThresholdPolicyWithBalance(accounts[0], groupID, 3, 100)
 
 	for i := 0; i < 4; i++ {
-		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
+		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 			append(
 				[]string{
 					s.createCLIProposal(
@@ -1632,7 +1665,9 @@ func (s *IntegrationTestSuite) TestTxVote() {
 
 		var txResp sdk.TxResponse
 		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-		s.Require().Equal(uint32(0), txResp.Code, out.String())
+		txResp, err = clitestutil.GetTxResponse(s.network, val.ClientCtx, txResp.TxHash)
+		s.Require().NoError(err)
+		s.Require().Equal(txResp.Code, uint32(0), out.String())
 		ids[i] = s.getProposalIDFromTxResponse(txResp)
 	}
 
@@ -1738,10 +1773,10 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"proposal: not found",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 		{
 			"metadata too long",
@@ -1754,10 +1789,10 @@ func (s *IntegrationTestSuite) TestTxVote() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"metadata: limit exceeded",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			errors.ErrMaxLimit.ABCICode(),
 		},
 		{
 			"invalid vote option",
@@ -1783,15 +1818,19 @@ func (s *IntegrationTestSuite) TestTxVote() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgVoteCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -1804,7 +1843,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 	ids := make([]string, 2)
 
 	for i := 0; i < 2; i++ {
-		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
+		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 			append(
 				[]string{
 					s.createCLIProposal(
@@ -1819,7 +1858,9 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 
 		var txResp sdk.TxResponse
 		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-		s.Require().Equal(uint32(0), txResp.Code, out.String())
+		txResp, err = clitestutil.GetTxResponse(s.network, val.ClientCtx, txResp.TxHash)
+		s.Require().NoError(err)
+		s.Require().Equal(txResp.Code, uint32(0), out.String())
 		ids[i] = s.getProposalIDFromTxResponse(txResp)
 	}
 
@@ -1854,10 +1895,10 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"cannot withdraw a proposal with the status of PROPOSAL_STATUS_WITHDRAWN",
 			&sdk.TxResponse{},
-			0,
+			errors.ErrInvalid.ABCICode(),
 		},
 		{
 			"proposal not found",
@@ -1909,15 +1950,19 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgWithdrawProposalCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -1941,12 +1986,11 @@ func (s *IntegrationTestSuite) getProposalIDFromTxResponse(txResp sdk.TxResponse
 func (s *IntegrationTestSuite) TestTxExec() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	require := s.Require()
 
 	var proposalIDs []string
 	// create proposals and vote
 	for i := 0; i < 2; i++ {
-		out, err := cli.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
+		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgSubmitProposalCmd(),
 			append(
 				[]string{
 					s.createCLIProposal(
@@ -1958,15 +2002,17 @@ func (s *IntegrationTestSuite) TestTxExec() {
 				s.commonFlags...,
 			),
 		)
-		require.NoError(err, out.String())
+		s.Require().NoError(err, out.String())
 
 		var txResp sdk.TxResponse
-		require.NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-		require.Equal(uint32(0), txResp.Code, out.String())
+		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+		txResp, err = clitestutil.GetTxResponse(s.network, clientCtx, txResp.TxHash)
+		s.Require().NoError(err)
+		s.Require().Equal(txResp.Code, uint32(0), out.String())
 		proposalID := s.getProposalIDFromTxResponse(txResp)
 		proposalIDs = append(proposalIDs, proposalID)
 
-		out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
+		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
 			append(
 				[]string{
 					proposalID,
@@ -1977,7 +2023,8 @@ func (s *IntegrationTestSuite) TestTxExec() {
 				s.commonFlags...,
 			),
 		)
-		require.NoError(err, out.String())
+		s.Require().NoError(err, out.String())
+		s.Require().NoError(s.network.WaitForNextBlock())
 	}
 
 	testCases := []struct {
@@ -2040,10 +2087,10 @@ func (s *IntegrationTestSuite) TestTxExec() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"proposal: not found",
-			nil,
-			0,
+			&sdk.TxResponse{},
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 	}
 
@@ -2053,15 +2100,19 @@ func (s *IntegrationTestSuite) TestTxExec() {
 		s.Run(tc.name, func() {
 			cmd := client.MsgExecCmd()
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				require.Contains(out.String(), tc.expectErrMsg)
+				s.Require().Contains(out.String(), tc.expectErrMsg)
 			} else {
-				require.NoError(err, out.String())
-				require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				require.Equal(tc.expectedCode, txResp.Code, out.String())
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
+				s.Require().Equal(txResp.Code, tc.expectedCode)
+				if tc.expectErrMsg != "" {
+					s.Require().Contains(txResp.RawLog, tc.expectErrMsg)
+				}
 			}
 		})
 	}
@@ -2070,7 +2121,6 @@ func (s *IntegrationTestSuite) TestTxExec() {
 func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	require := s.Require()
 
 	// create 3 accounts with some tokens
 	members := s.createAccounts(3)
@@ -2090,7 +2140,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 		  "metadata": "AQ=="
 	  }]}`, members[0], members[1], members[2])
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
-	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
 		append(
 			[]string{
 				val.Address.String(),
@@ -2100,13 +2150,17 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			s.commonFlags...,
 		),
 	)
-	require.NoError(err, out.String())
+	s.Require().NoError(err, out.String())
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	var txResp sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	txResp, err = clitestutil.GetTxResponse(s.network, val.ClientCtx, txResp.TxHash)
+	s.Require().NoError(err)
 	groupID := s.getGroupIDFromTxResponse(txResp)
 
 	// create group policy
-	out, err = cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
 		append(
 			[]string{
 				val.Address.String(),
@@ -2117,20 +2171,22 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			s.commonFlags...,
 		),
 	)
-	require.NoError(err, out.String())
+	s.Require().NoError(err, out.String())
+	s.Require().NoError(s.network.WaitForNextBlock())
 
-	out, err = cli.ExecTestCLICmd(clientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	require.NoError(err, out.String())
-	require.NotNil(out)
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err, out.String())
+	s.Require().NotNil(out)
 	var resp group.QueryGroupPoliciesByGroupResponse
-	require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp))
-	require.Len(resp.GroupPolicies, 1)
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp))
+	s.Require().Len(resp.GroupPolicies, 1)
 
 	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-		errMsg    string
+		name         string
+		args         []string
+		expectErr    bool
+		errMsg       string
+		expectedCode uint32
 	}{
 		{
 			"invalid member address",
@@ -2144,6 +2200,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			),
 			true,
 			"key not found",
+			0,
 		},
 		{
 			"group not found",
@@ -2155,8 +2212,9 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"group: not found",
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 		{
 			"valid case",
@@ -2170,6 +2228,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			),
 			false,
 			"",
+			0,
 		},
 		{
 			"not part of group",
@@ -2181,8 +2240,9 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 				},
 				s.commonFlags...,
 			),
-			true,
+			false,
 			"is not part of group",
+			sdkerrors.ErrNotFound.ABCICode(),
 		},
 		{
 			"can leave group policy threshold is more than group weight",
@@ -2196,6 +2256,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 			),
 			false,
 			"",
+			0,
 		},
 	}
 
@@ -2204,13 +2265,14 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 
 		s.Run(tc.name, func() {
 			cmd := client.MsgLeaveGroupCmd()
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				require.Contains(out.String(), tc.errMsg)
+				s.Require().Contains(out.String(), tc.errMsg)
 			} else {
-				require.NoError(err, out.String())
+				s.Require().NoError(err, out.String())
 				var resp sdk.TxResponse
-				require.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -2246,11 +2308,11 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 					},
 					s.commonFlags...,
 				)
-				out, err := cli.ExecTestCLICmd(clientCtx, client.MsgLeaveGroupCmd(), args)
+				out, err := clitestutil.ExecTestCLICmd(clientCtx, client.MsgLeaveGroupCmd(), args)
 				s.Require().NoError(err, out.String())
 				var resp sdk.TxResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				s.Require().Equal(uint32(0), resp.Code, out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 				return err
 			},
@@ -2273,11 +2335,11 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 					},
 					s.commonFlags...,
 				)
-				out, err := cli.ExecTestCLICmd(clientCtx, client.MsgLeaveGroupCmd(), args)
+				out, err := clitestutil.ExecTestCLICmd(clientCtx, client.MsgLeaveGroupCmd(), args)
 				s.Require().NoError(err, out.String())
 				var resp sdk.TxResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				s.Require().Equal(uint32(0), resp.Code, out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 				return err
 			},
@@ -2300,11 +2362,11 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 					},
 					s.commonFlags...,
 				)
-				out, err := cli.ExecTestCLICmd(clientCtx, client.MsgLeaveGroupCmd(), args)
+				out, err := clitestutil.ExecTestCLICmd(clientCtx, client.MsgLeaveGroupCmd(), args)
 				s.Require().NoError(err, out.String())
 				var resp sdk.TxResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				s.Require().Equal(uint32(0), resp.Code, out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 				return err
 			},
@@ -2332,11 +2394,11 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 					},
 					s.commonFlags...,
 				)
-				out, err := cli.ExecTestCLICmd(clientCtx, client.MsgUpdateGroupMembersCmd(), args)
+				out, err := clitestutil.ExecTestCLICmd(clientCtx, client.MsgUpdateGroupMembersCmd(), args)
 				s.Require().NoError(err, out.String())
 				var resp sdk.TxResponse
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				s.Require().Equal(uint32(0), resp.Code, out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 				return err
 			},
@@ -2368,14 +2430,16 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				s.commonFlags...,
 			)
 			var submitProposalResp sdk.TxResponse
-			out, err := cli.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmdSubmitProposal, submitProposalArgs)
 			s.Require().NoError(err, out.String())
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &submitProposalResp), out.String())
+			submitProposalResp, err = clitestutil.GetTxResponse(s.network, val.ClientCtx, submitProposalResp.TxHash)
+			s.Require().NoError(err)
 			proposalID := s.getProposalIDFromTxResponse(submitProposalResp)
 
 			for i, vote := range tc.votes {
 				memberAddress := tc.members[i]
-				out, err = cli.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
+				out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.MsgVoteCmd(),
 					append(
 						[]string{
 							proposalID,
@@ -2390,15 +2454,13 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				var txResp sdk.TxResponse
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-				s.Require().Equal(uint32(0), txResp.Code, out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, 0))
 
 			}
 
 			err = tc.malleate(groupID)
 			s.Require().NoError(err)
-
-			err = s.network.WaitForNextBlock()
-			s.Require().NoError(err)
+			s.Require().NoError(s.network.WaitForNextBlock())
 
 			args := append(
 				[]string{
@@ -2407,11 +2469,13 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				},
 				s.commonFlags...,
 			)
-			out, err = cli.ExecTestCLICmd(clientCtx, cmdMsgExec, args)
+			out, err = clitestutil.ExecTestCLICmd(clientCtx, cmdMsgExec, args)
 			s.Require().NoError(err)
 
 			var execResp sdk.TxResponse
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &execResp), out.String())
+			execResp, err = clitestutil.GetTxResponse(s.network, val.ClientCtx, execResp.TxHash)
+			s.Require().NoError(err)
 
 			if tc.expectLogErr {
 				s.Require().Contains(execResp.RawLog, tc.errMsg)
@@ -2480,17 +2544,18 @@ func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
 		account := sdk.AccAddress(pk.Address())
 		accounts[i-1] = account.String()
 
-		_, err = cli.MsgSendExec(
+		_, err = clitestutil.MsgSendExec(
 			val.ClientCtx,
 			val.Address,
 			account,
 			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		)
 		s.Require().NoError(err)
-		s.Require().NoError(err)
+		s.Require().NoError(s.network.WaitForNextBlock())
 	}
+
 	return accounts
 }
 
@@ -2506,7 +2571,7 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 	s.Require().NoError(err)
 
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), string(membersByte))
-	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, client.MsgCreateGroupCmd(),
 		append(
 			[]string{
 				membersAddress[0],
@@ -2519,14 +2584,18 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 	s.Require().NoError(err, out.String())
 	var txResp sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	txResp, err = clitestutil.GetTxResponse(s.network, val.ClientCtx, txResp.TxHash)
+	s.Require().NoError(err)
 	return s.getGroupIDFromTxResponse(txResp)
 }
 
 func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddress, groupID string, threshold int, tokens int64) string {
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
-	out, err := cli.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, client.MsgCreateGroupPolicyCmd(),
 		append(
 			[]string{
 				adminAddress,
@@ -2540,9 +2609,9 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddres
 	txResp := sdk.TxResponse{}
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().Equal(uint32(0), txResp.Code, out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
-	out, err = cli.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err, out.String())
 
 	var res group.QueryGroupPoliciesByGroupResponse
@@ -2551,7 +2620,7 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddres
 
 	addr, err := sdk.AccAddressFromBech32(groupPolicyAddress)
 	s.Require().NoError(err)
-	_, err = cli.MsgSendExec(clientCtx, val.Address, addr,
+	_, err = clitestutil.MsgSendExec(clientCtx, val.Address, addr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(tokens))),
 		s.commonFlags...,
 	)

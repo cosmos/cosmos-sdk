@@ -3,12 +3,11 @@ package client
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -277,7 +276,7 @@ func (s *EndToEndTestSuite) TestBalancesGRPCHandler() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))

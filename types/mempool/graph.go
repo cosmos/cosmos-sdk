@@ -2,9 +2,11 @@ package mempool
 
 import (
 	"fmt"
+
+	huandu "github.com/huandu/skiplist"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	huandu "github.com/huandu/skiplist"
 )
 
 var _ Mempool = (*graph)(nil)
@@ -18,6 +20,27 @@ type node struct {
 	nonceNode    *huandu.Element
 	priorityNode *huandu.Element
 	in           map[string]bool
+}
+
+type senderGraph struct {
+	byNonce    *huandu.SkipList
+	byPriority *huandu.SkipList
+}
+
+func (g *senderGraph) canDrawEdge(priority int64, nonce uint64) bool {
+	// optimization: if n is _sufficiently_ small we can just iterate the nonce list
+	// otherwise we use the skip list by priority
+	//
+	min := g.byPriority.Front()
+	for min != nil {
+		n := min.Value.(*node)
+		if n.priority > priority {
+			return true
+		}
+		if n.priority < priority && n.nonce < nonce {
+			break
+		}
+	}
 }
 
 type graph struct {
@@ -57,19 +80,6 @@ func (g *graph) AddNode(n *node) {
 	n.nonceNode = sgs.Set(n.nonce, n)
 }
 
-func (g *graph) DrawPriorityEdges(n *node) (edges []*node) {
-	pnode := n.nonceNode.Prev().Value.(*node).priorityNode
-	for pnode != nil {
-		node := pnode.Value.(*node)
-		if node.sender != n.sender {
-			edges = append(edges, node)
-		}
-
-		pnode = pnode.Prev()
-	}
-	return edges
-}
-
 func (g *graph) Select(ctx sdk.Context, txs [][]byte, maxBytes int) ([]Tx, error) {
 	// todo collapse multiple iterations into kahns
 	sorted, err := g.TopologicalSort()
@@ -104,7 +114,7 @@ func (n node) String() string {
 func NewGraph() *graph {
 	return &graph{
 		nodes:        make(map[string]*node),
-		priorities:   huandu.New(huandu.GreaterThanFunc(txKeyLess)),
+		priorities:   huandu.New(huandu.LessThanFunc(txKeyLess)),
 		senderGraphs: make(map[string]*huandu.SkipList),
 	}
 }
@@ -115,7 +125,7 @@ func (g *graph) ContainsNode(n node) bool {
 }
 
 func (g *graph) TopologicalSort() ([]*node, error) {
-	maxPriority := g.priorities.Back().Value.(*node)
+	maxPriority := g.priorities.Front().Value.(*node)
 	start := g.senderGraphs[maxPriority.sender].Front().Value.(*node)
 	edgeless := []*node{start}
 	sorted, err := g.kahns(edgeless)
@@ -153,9 +163,56 @@ function visit(node n)
     add n to head of L
 
 */
+
+// DrawPriorityEdges is O(n^2) hopefully n is not too large
+// Given n_a, need an answer the question:
+// "Is there node n_b in my sender tree with n_b.nonce < n_a.nonce AND n_b.priority < n_a.priority?"
+// If yes, don't draw any priority edges to nodes (or possibly just to nodes with a priority < n_b.priority)
+//
+func (g *graph) DrawPriorityEdges() (in map[string]map[string]bool, out map[string]map[string]bool) {
+	pn := g.priorities.Front()
+	in = make(map[string]map[string]bool)
+	out = make(map[string]map[string]bool)
+
+	for pn != nil {
+		n := pn.Value.(*node)
+		nk := n.key()
+		out[nk] = make(map[string]bool)
+		if n.nonceNode.Next() != nil {
+			m := n.nonceNode.Next().Value.(*node)
+			mk := m.key()
+			if _, ok := in[mk]; !ok {
+				in[mk] = make(map[string]bool)
+			}
+
+			out[nk][mk] = true
+			in[mk][nk] = true
+		}
+
+		pm := pn.Next()
+		for pm != nil {
+			m := pm.Value.(*node)
+			mk := m.key()
+			if _, ok := in[mk]; !ok {
+				in[mk] = make(map[string]bool)
+			}
+
+			if n.sender != m.sender {
+				out[nk][mk] = true
+				in[mk][nk] = true
+			}
+
+			pm = pm.Next()
+		}
+		pn = pn.Next()
+	}
+
+	return in, out
+}
+
 func (g *graph) kahns(edgeless []*node) ([]*node, error) {
 	var sorted []*node
-	visited := make(map[string]bool)
+	inEdges, outEdges := g.DrawPriorityEdges()
 
 	/*
 		L ← Empty list that will contain the sorted elements
@@ -174,17 +231,21 @@ func (g *graph) kahns(edgeless []*node) ([]*node, error) {
 		else
 		    return L   (a topologically sorted order)
 	*/
-	var n *node
-	//n := edgeless[0]
+
 	for i := 0; i < len(edgeless) && edgeless[i] != nil; i++ {
-		// enumerate the priority list drawing priority edges along the way
-		pnodes := g.DrawPriorityEdges(n.priorityNode.Value.(*node))
-		for _, m := range pnodes {
-			edge := nodeEdge(n, m)
-			if !visited[edge] {
-				visited[edge] = true
+		n := edgeless[i]
+		nk := n.key()
+		sorted = append(sorted, n)
+
+		for mk, _ := range outEdges[nk] {
+			delete(outEdges[nk], mk)
+			delete(inEdges[mk], nk)
+
+			if len(inEdges[mk]) == 0 {
+				edgeless = append(edgeless, g.nodes[mk])
 			}
 		}
+
 	}
 
 	return sorted, nil

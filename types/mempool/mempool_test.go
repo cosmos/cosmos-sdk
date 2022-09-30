@@ -252,7 +252,8 @@ func TestTxOrder(t *testing.T) {
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
 			// create fresh mempool
-			pool := mempool.NewDefaultMempool()
+			//pool := mempool.NewDefaultMempool()
+			pool := mempool.NewGraph()
 
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {

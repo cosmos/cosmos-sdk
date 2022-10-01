@@ -13,6 +13,7 @@ func MigrateJSON(oldState *v1.GenesisState) (*v1.GenesisState, error) {
 		oldState.TallyParams.Threshold,
 		oldState.TallyParams.VetoThreshold,
 		v1.DefaultParams().MinInitialDepositRatio,
+		v1.DefaultParams().ProposalCancelBurnRate,
 	)
 
 	return &v1.GenesisState{

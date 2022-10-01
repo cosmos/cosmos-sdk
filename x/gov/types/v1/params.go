@@ -20,6 +20,7 @@ var (
 	DefaultThreshold              = sdk.NewDecWithPrec(5, 1)
 	DefaultVetoThreshold          = sdk.NewDecWithPrec(334, 3)
 	DefaultMinInitialDepositRatio = sdk.ZeroDec()
+	DefaultProposalCancelBurnRate = sdk.ZeroDec()
 )
 
 // Deprecated: NewDepositParams creates a new DepositParams object
@@ -48,7 +49,7 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 
 func NewParams(
 	minDeposit sdk.Coins, maxDepositPeriod time.Duration, votingPeriod time.Duration,
-	quorum string, threshold string, vetoThreshold string, minInitialDepositRatio string,
+	quorum, threshold, vetoThreshold, minInitialDepositRatio, proposalCancelBurnRate string,
 ) Params {
 	return Params{
 		MinDeposit:             minDeposit,
@@ -58,6 +59,7 @@ func NewParams(
 		Threshold:              threshold,
 		VetoThreshold:          vetoThreshold,
 		MinInitialDepositRatio: minInitialDepositRatio,
+		ProposalCancelBurnRate: proposalCancelBurnRate,
 	}
 }
 
@@ -71,6 +73,7 @@ func DefaultParams() Params {
 		DefaultThreshold.String(),
 		DefaultVetoThreshold.String(),
 		DefaultMinInitialDepositRatio.String(),
+		DefaultProposalCancelBurnRate.String(),
 	)
 }
 
@@ -126,6 +129,28 @@ func (p Params) ValidateBasic() error {
 
 	if p.VotingPeriod.Seconds() <= 0 {
 		return fmt.Errorf("voting period must be positive: %s", p.VotingPeriod)
+	}
+
+	minInitialDepositRatio, err := sdk.NewDecFromStr(p.MinInitialDepositRatio)
+	if err != nil {
+		return fmt.Errorf("invalid mininum initial deposit ratio of proposal: %w", err)
+	}
+	if minInitialDepositRatio.IsNegative() {
+		return fmt.Errorf("mininum initial deposit ratio of proposal must be positive: %s", minInitialDepositRatio)
+	}
+	if minInitialDepositRatio.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("mininum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
+	}
+
+	proposalCancelBurnRate, err := sdk.NewDecFromStr(p.ProposalCancelBurnRate)
+	if err != nil {
+		return fmt.Errorf("invalid burn rate of cancel proposal: %w", err)
+	}
+	if proposalCancelBurnRate.IsNegative() {
+		return fmt.Errorf("burn rate of cancel proposal must be positive: %s", proposalCancelBurnRate)
+	}
+	if proposalCancelBurnRate.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("burn rate of cancel proposal is too large: %s", proposalCancelBurnRate)
 	}
 
 	return nil

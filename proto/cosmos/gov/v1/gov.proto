@@ -164,4 +164,7 @@ message Params {
 
   //  The ratio representing the proportion of the deposit value that must be paid at proposal submission.
   string min_initial_deposit_ratio = 7 [(cosmos_proto.scalar) = "cosmos.Dec"];
+  
+  // The burn rate of deposits when cancel the proposal
+  string proposal_cancel_burn_rate = 8 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }

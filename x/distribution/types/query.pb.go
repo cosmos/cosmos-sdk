@@ -168,7 +168,7 @@ type QueryValidatorDistributionInfoResponse struct {
 	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
 	// self_bond_rewards defines the self delegations rewards.
 	SelfBondRewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=self_bond_rewards,json=selfBondRewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"self_bond_rewards"`
-	// commission defines the commision the validator received.
+	// commission defines the commission the validator received.
 	Commission github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,3,rep,name=commission,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"commission"`
 }
 
@@ -375,7 +375,7 @@ func (m *QueryValidatorCommissionRequest) GetValidatorAddress() string {
 // QueryValidatorCommissionResponse is the response type for the
 // Query/ValidatorCommission RPC method
 type QueryValidatorCommissionResponse struct {
-	// commission defines the commision the validator received.
+	// commission defines the commission the validator received.
 	Commission ValidatorAccumulatedCommission `protobuf:"bytes,1,opt,name=commission,proto3" json:"commission"`
 }
 
@@ -1073,7 +1073,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params queries params of the distribution module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// ValidatorDistributionInfo queries validator commision and self-delegation rewards for validator
+	// ValidatorDistributionInfo queries validator commission and self-delegation rewards for validator
 	ValidatorDistributionInfo(ctx context.Context, in *QueryValidatorDistributionInfoRequest, opts ...grpc.CallOption) (*QueryValidatorDistributionInfoResponse, error)
 	// ValidatorOutstandingRewards queries rewards of a validator address.
 	ValidatorOutstandingRewards(ctx context.Context, in *QueryValidatorOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorOutstandingRewardsResponse, error)
@@ -1196,7 +1196,7 @@ func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolR
 type QueryServer interface {
 	// Params queries params of the distribution module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// ValidatorDistributionInfo queries validator commision and self-delegation rewards for validator
+	// ValidatorDistributionInfo queries validator commission and self-delegation rewards for validator
 	ValidatorDistributionInfo(context.Context, *QueryValidatorDistributionInfoRequest) (*QueryValidatorDistributionInfoResponse, error)
 	// ValidatorOutstandingRewards queries rewards of a validator address.
 	ValidatorOutstandingRewards(context.Context, *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error)

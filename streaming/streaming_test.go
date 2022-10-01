@@ -45,15 +45,15 @@ func TestPluginTestSuite(t *testing.T) {
 
 func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 	s.T().Run("Should successfully load streaming", func(t *testing.T) {
-		plugin := "abci"
-		//pluginPath := fmt.Sprintf("%s/plugins/%s/examples/plugin-go/stdout", s.workDir, "abci")
-		//pluginPath := fmt.Sprintf("python3 %s/plugins/%s/examples/plugin-python/file.py", s.workDir, "abci")
-		pluginPath := fmt.Sprintf("python3 %s/plugins/%s/examples/plugin-python/kafka.py", s.workDir, "abci")
-		if err := os.Setenv(GetPluginEnvKey(plugin), pluginPath); err != nil {
+		pluginVersion := "grpc_abci_v1"
+		pluginPath := fmt.Sprintf("%s/plugins/abci/%s/examples/plugin-go/stdout", s.workDir, pluginVersion)
+		//pluginPath := fmt.Sprintf("python3 %s/plugins/abci/%s/examples/plugin-python/file.py", s.workDir, pluginVersion)
+		//pluginPath := fmt.Sprintf("python3 %s/plugins/abci/%s/examples/plugin-python/kafka.py", s.workDir, pluginVersion)
+		if err := os.Setenv(GetPluginEnvKey(pluginVersion), pluginPath); err != nil {
 			t.Fail()
 		}
 
-		raw, err := NewStreamingPlugin(plugin, "trace")
+		raw, err := NewStreamingPlugin(pluginVersion, "trace")
 		require.NoError(t, err, "load", "streaming", "unexpected error")
 
 		listener, ok := raw.(baseapp.ABCIListener)
@@ -67,7 +67,11 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 
 		err = listener.ListenDeliverTx(s.loggerCtx.BlockHeight(), []byte{1, 2, 3}, []byte{1, 2, 3})
 		assert.NoError(t, err, "ListenBeginBlock")
+		err = listener.ListenDeliverTx(s.loggerCtx.BlockHeight(), []byte{1, 2, 3}, []byte{1, 2, 3})
+		assert.NoError(t, err, "ListenBeginBlock")
 
+		err = listener.ListenStoreKVPair(s.loggerCtx.BlockHeight(), []byte{1, 2, 3})
+		assert.NoError(t, err, "ListenBeginBlock")
 		err = listener.ListenStoreKVPair(s.loggerCtx.BlockHeight(), []byte{1, 2, 3})
 		assert.NoError(t, err, "ListenBeginBlock")
 	})

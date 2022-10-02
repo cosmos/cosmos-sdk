@@ -181,7 +181,6 @@ func (s *CLITestSuite) TestCLITxSend() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-
 			args = append(args, tc.args...)
 			cmd := cli.NewCmdSend()
 			cmd.SetContext(s.ctx)

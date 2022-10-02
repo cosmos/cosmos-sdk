@@ -96,6 +96,22 @@ the typical abstraction layer in order is defined as follows:
 iavl.Store <- cachekv.Store <- gaskv.Store <- cachemulti.Store <- rootmulti.Store
 ```
 
+### Concurrent use of IAVL store
+
+The tree under `iavl.Store` is not safe for concurrent use. It is the
+responsibility of the caller to ensure that concurrent access to the store is
+not performed. 
+
+The main issue with concurrent use is when data is written at the same time as
+it's being iterated over. Doing so will cause a irrecoverable fatal error because
+of concurrent reads and writes to an internal map.
+
+Although it's not recommended, you can iterate through values while writing to
+it by disabling "FastNode" **without guarantees that the values being written will
+be returned during the iteration** (if you need this, you might want to reconsider
+the design of your application). This is done by setting `iavl-disable-fastnode`
+to `true` in the config TOML file.
+
 ### `cachekv.Store`
 
 The `cachekv.Store` store wraps an underlying `KVStore`, typically a `iavl.Store`

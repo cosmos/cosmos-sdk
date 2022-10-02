@@ -87,7 +87,6 @@ func (s *CLITestSuite) SetupSuite() {
 		return s.baseCtx.WithClient(c)
 	}
 	s.clientCtx = ctxGen().WithOutput(&outBuf)
-
 }
 
 func (s *CLITestSuite) TestGenTxCmd() {
@@ -147,7 +146,6 @@ func (s *CLITestSuite) TestGenTxCmd() {
 		tc.args = append(tc.args, fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile))
 
 		s.Run(tc.name, func() {
-
 			clientCtx := s.clientCtx
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 

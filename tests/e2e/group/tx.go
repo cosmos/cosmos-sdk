@@ -2151,6 +2151,8 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 		),
 	)
 	s.Require().NoError(err, out.String())
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	var txResp sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	txResp, err = clitestutil.GetTxResponse(s.network, val.ClientCtx, txResp.TxHash)

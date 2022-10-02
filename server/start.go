@@ -417,13 +417,18 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		if err != nil {
 			return err
 		}
-
+		defer grpcSrv.Stop()
 		if config.GRPCWeb.Enable {
 			grpcWebSrv, err = servergrpc.StartGRPCWeb(grpcSrv, config)
 			if err != nil {
 				ctx.Logger.Error("failed to start grpc-web http server: ", err)
 				return err
 			}
+			defer func() {
+				if err := grpcWebSrv.Close(); err != nil {
+					ctx.Logger.Error("failed to close grpc-web http server: ", err)
+				}
+			}()
 		}
 	}
 
@@ -486,7 +491,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}
 
 	defer func() {
-		if tmNode.IsRunning() {
+		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
 		}
 
@@ -496,15 +501,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		if apiSrv != nil {
 			_ = apiSrv.Close()
-		}
-
-		if grpcSrv != nil {
-			grpcSrv.Stop()
-			if grpcWebSrv != nil {
-				if err := grpcWebSrv.Close(); err != nil {
-					ctx.Logger.Error("failed to close grpc-web http server: ", err)
-				}
-			}
 		}
 
 		ctx.Logger.Info("exiting...")

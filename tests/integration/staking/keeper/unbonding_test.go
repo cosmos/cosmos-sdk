@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
@@ -55,7 +54,7 @@ func (suite *IntegrationTestSuite) SetupUnbondingTests(t *testing.T, hookCalled 
 	suite.app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// Create a validator
-	validator1 := teststaking.NewValidator(t, addrVals[0], PKs[0])
+	validator1 := testutil.NewValidator(t, addrVals[0], PKs[0])
 	validator1, issuedShares1 := validator1.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares1.RoundInt())
 
@@ -68,7 +67,7 @@ func (suite *IntegrationTestSuite) SetupUnbondingTests(t *testing.T, hookCalled 
 	suite.app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	// Create a validator to redelegate to
-	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1])
+	validator2 := testutil.NewValidator(t, addrVals[1], PKs[1])
 	validator2, issuedShares2 := validator2.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares2.RoundInt())
 

@@ -8,7 +8,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/golang/mock/gomock"
@@ -55,7 +54,7 @@ func (s *KeeperTestSuite) SetupUnbondingTests(t *testing.T, hookCalled *bool, ub
 	s.accountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// Create a validator
-	validator1 := teststaking.NewValidator(t, addrVals[0], PKs[0])
+	validator1 := testutil.NewValidator(t, addrVals[0], PKs[0])
 	validator1, issuedShares1 := validator1.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares1.RoundInt())
 
@@ -68,7 +67,7 @@ func (s *KeeperTestSuite) SetupUnbondingTests(t *testing.T, hookCalled *bool, ub
 	s.stakingKeeper.SetDelegation(ctx, delegation)
 
 	// Create a validator to redelegate to
-	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1])
+	validator2 := testutil.NewValidator(t, addrVals[1], PKs[1])
 	validator2, issuedShares2 := validator2.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares2.RoundInt())
 

@@ -25,9 +25,3 @@ var (
 	// characters only.
 	IsNumeric = regexp.MustCompile(`^[0-9]+$`).MatchString
 )
-
-// QueryRouter provides queryables for each query path.
-type QueryRouter interface {
-	AddRoute(r string, h Querier) QueryRouter
-	Route(path string) Querier
-}

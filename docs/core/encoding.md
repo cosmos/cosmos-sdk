@@ -67,15 +67,16 @@ Note, there are length-prefixed variants of the above functionality and this is
 typically used for when the data needs to be streamed or grouped together
 (e.g. `ResponseDeliverTx.Data`)
 
-#### Authz authorizations and Gov proposals
+#### Authz authorizations and Gov/Group proposals
 
-Since authz's `MsgExec` and `MsgGrant` message types, as well as gov's `MsgSubmitProposal`, can contain different messages instances, it is important that developers
+Since authz's `MsgExec` and `MsgGrant` message types, as well as gov's and group's `MsgSubmitProposal`, can contain different messages instances, it is important that developers
 add the following code inside the `init` method of their module's `codec.go` file:
 
 ```go
 import (
   authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
   govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+  groupcodec "github.com/cosmos/cosmos-sdk/x/group/codec"
 )
 
 init() {
@@ -83,6 +84,7 @@ init() {
     // used to properly serialize MsgGrant, MsgExec and MsgSubmitProposal instances
     RegisterLegacyAminoCodec(authzcodec.Amino)
     RegisterLegacyAminoCodec(govcodec.Amino)
+    RegisterLegacyAminoCodec(groupcodec.Amino)
 }
 ```
 
@@ -277,6 +279,19 @@ type UnpackInterfacesMessage interface {
   UnpackInterfaces(InterfaceUnpacker) error
 }
 ```
+
+### Custom Stringer
+
+Using `option (gogoproto.goproto_stringer) = false;` in a proto message definition leads to unexpected behaviour, like returning wrong output or having missing fields in the output.
+For that reason a proto Message's `String()` must not be customized, and the `goproto_stringer` option must be avoided.
+
+A correct YAML output can be obtained through ProtoJSON, using the `JSONToYAML` function:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/codec/yaml.go#L8-L20
+
+For example:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/types/account.go#L139-L151
 
 ## Next {hide}
 

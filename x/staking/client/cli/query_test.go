@@ -49,7 +49,6 @@ func (s *CLITestSuite) TestGetCmdQueryValidator() {
 }
 
 func (s *CLITestSuite) TestGetCmdQueryValidators() {
-
 	testCases := []struct {
 		name              string
 		args              []string
@@ -140,7 +139,6 @@ func (s *CLITestSuite) TestGetCmdQueryDelegation() {
 }
 
 func (s *CLITestSuite) TestGetCmdQueryDelegations() {
-
 	testCases := []struct {
 		name     string
 		args     []string
@@ -187,7 +185,6 @@ func (s *CLITestSuite) TestGetCmdQueryDelegations() {
 }
 
 func (s *CLITestSuite) TestGetCmdQueryValidatorDelegations() {
-
 	testCases := []struct {
 		name     string
 		args     []string
@@ -234,7 +231,6 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorDelegations() {
 }
 
 func (s *CLITestSuite) TestGetCmdQueryUnbondingDelegations() {
-
 	testCases := []struct {
 		name   string
 		args   []string
@@ -279,7 +275,6 @@ func (s *CLITestSuite) TestGetCmdQueryUnbondingDelegations() {
 }
 
 func (s *CLITestSuite) TestGetCmdQueryUnbondingDelegation() {
-
 	testCases := []struct {
 		name   string
 		args   []string
@@ -335,7 +330,6 @@ func (s *CLITestSuite) TestGetCmdQueryUnbondingDelegation() {
 }
 
 func (s *CLITestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
-
 	testCases := []struct {
 		name   string
 		args   []string
@@ -533,7 +527,6 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorRedelegations() {
 }
 
 func (s *CLITestSuite) TestGetCmdQueryPool() {
-
 	testCases := []struct {
 		name           string
 		args           []string

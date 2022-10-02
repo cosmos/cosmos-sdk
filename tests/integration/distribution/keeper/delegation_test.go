@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -38,7 +38,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 
 	distrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
@@ -107,7 +107,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(100000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
@@ -180,7 +180,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(100000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 
@@ -267,7 +267,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(100000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 
@@ -350,7 +350,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	balanceTokens := stakingKeeper.TokensFromConsensusPower(ctx, balancePower)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 
 	// set module account coins
 	distrAcc := distrKeeper.GetDistributionAccount(ctx)
@@ -431,7 +431,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 
 	// create validator with 50% commission
 	valPower := int64(100)
@@ -509,7 +509,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 
@@ -599,7 +599,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	distrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 	initial := int64(20)
@@ -758,7 +758,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 	initial := int64(20)
@@ -804,19 +804,15 @@ func Test100PercentCommissionReward(t *testing.T) {
 	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 	require.NoError(t, err)
 
-	denom, _ := sdk.GetBaseDenom()
-	zeroRewards := sdk.Coins{
-		sdk.Coin{
-			Denom:  denom,
-			Amount: math.ZeroInt(),
-		},
-	}
+	zeroRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt())}
 	require.True(t, rewards.IsEqual(zeroRewards))
+
 	events := ctx.EventManager().Events()
 	lastEvent := events[len(events)-1]
-	hasValue := false
+
+	var hasValue bool
 	for _, attr := range lastEvent.Attributes {
-		if string(attr.Key) == "amount" && string(attr.Value) == "0" {
+		if attr.Key == "amount" && attr.Value == "0stake" {
 			hasValue = true
 		}
 	}

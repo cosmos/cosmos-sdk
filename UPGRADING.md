@@ -14,16 +14,22 @@ Remove `Querier`, `Route` and `LegacyQuerier` from the app module interface. Thi
 
 ### SimApp
 
-SimApp's `app.go` is using App Wiring, the dependency injection framework of the Cosmos SDK.
+The `simapp` package **should not be imported in your own app**. Instead, you should import the `runtime.AppI` interface, that defines an `App`, and use the [`simtestutil` package](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/testutil/sims) for application testing.
+
+#### App Wiring
+
+SimApp's `app.go` is now using [App Wiring](https://docs.cosmos.network/main/building-chain/depinject.html), the dependency injection framework of the Cosmos SDK.
 This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_config.go).
-The old behavior is preserved and still can be used, without the dependency injection framework, as shows [`app_legacy.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_legacy.go).
+The old behavior is preserved and can still be used, without the dependency injection framework, as shows [`app_legacy.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_legacy.go).
+
+#### Constructor
 
 The constructor, `NewSimApp` has been simplified:
 
 * `NewSimApp` does not take encoding parameters (`encodingConfig`) as input, instead the encoding parameters are injected (when using app wiring), or directly created in the constructor. Instead, we can instantiate `SimApp` for getting the encoding configuration.
 * `NewSimApp` now uses `AppOptions` for getting the home path (`homePath`) and the invariant checks period (`invCheckPeriod`). These were unnecessary given as arguments as they were already present in the `AppOptions`.
 
-### Encoding
+#### Encoding
 
 `simapp.MakeTestEncodingConfig()` was deprecated and has been removed. Instead you can use the `TestEncodingConfig` from the `types/module/testutil` package.
 This means you can replace your usage of `simapp.MakeTestEncodingConfig` in tests to `moduletestutil.MakeTestEncodingConfig`, which takes a series of relevant `AppModuleBasic` as input (the module being tested and any potential dependencies).
@@ -35,9 +41,20 @@ The SDK has migrated from `gogo/protobuf` (which is currently unmaintained), to 
 This means you should replace all imports of `github.com/gogo/protobuf` to `github.com/cosmos/gogoproto`.
 This allows you to remove the replace directive `replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1` from your `go.mod` file.
 
-### `x/gov`
+Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.0`) for generating protobuf files.
 
-#### Minimum Proposal Deposit At Time of Submission
+### Transactions
+
+#### Broadcast Mode
+
+Broadcast mode `block` was deprecated and has been removed. Please use `sync` mode instead.
+When upgrading your tests from `block` to `sync` and checking for a transaction code, you need to query the transaction first (with its hash) to get the correct code.
+
+### Modules
+
+#### `x/gov`
+
+##### Minimum Proposal Deposit At Time of Submission
 
 The `gov` module has been updated to support a minimum proposal deposit at submission time. It is determined by a new
 parameter called `MinInitialDepositRatio`. When multiplied by the existing `MinDeposit` parameter, it produces
@@ -84,6 +101,8 @@ Additionally, new packages have been introduced in order to further split the co
 
 * `errors` should replace `types/errors` when registering errors or wrapping SDK errors.
 * `math` contains the `Int` or `Uint` types that are used in the SDK.
+* `x/nft` an NFT base module.
+* `x/group` a group module allowing to create DAOs, multisig and policies. Greatly composes with `x/authz`.
 
 #### `x/authz`
 
@@ -142,10 +161,32 @@ In order to submit a proposal with `submit-proposal` you now need to pass a `pro
 You can still use the old way by using `submit-legacy-proposal`. This is not recommended.
 More information can be found in the gov module [client documentation](https://docs.cosmos.network/v0.46/modules/gov/07_client.html).
 
+#### `x/staking`
+
+The `staking module` added a new message type to cancel unbonding delegations. Users that have unbonded by accident or wish to cancel a undelegation can now specify the amount and valdiator they would like to cancel the unbond from
+
 ### Protobuf
 
 The `third_party/proto` folder that existed in [previous version](https://github.com/cosmos/cosmos-sdk/tree/v0.45.3/third_party/proto) now does not contains directly the [proto files](https://github.com/cosmos/cosmos-sdk/tree/release/v0.46.x/third_party/proto).
 
 Instead, the SDK uses [`buf`](https://buf.build). Clients should have their own [`buf.yaml`](https://docs.buf.build/configuration/v1/buf-yaml) with `buf.build/cosmos/cosmos-sdk` as dependency, in order to avoid having to copy paste these files.
 
-The protos can as well be downloaded using `buf export buf.build/cosmos/cosmos-sdk:$(curl -sS https://api.github.com/repos/cosmos/cosmos-sdk/commits/v0.46.0 | jq -r .sha) --output <some_folder>`.
+The protos can as well be downloaded using `buf export buf.build/cosmos/cosmos-sdk:8cb30a2c4de74dc9bd8d260b1e75e176 --output <some_folder>`.
+
+Cosmos message protobufs should be extended with `cosmos.msg.v1.signer`: 
+
+```proto
+message MsgSetWithdrawAddress {
+  option (cosmos.msg.v1.signer) = "delegator_address"; ++
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string withdraw_address  = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+```
+
+<!-- todo: cosmos.scalar types -->
+
+When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).

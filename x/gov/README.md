@@ -35,11 +35,15 @@ The following specification uses *ATOM* as the native staking token. The module
 can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the native
 staking token of the chain.
 
+* [`x/gov`](#xgov)
+    * [Abstract](#abstract)
+    * [Contents](#contents)
 * [Concepts](#concepts)
     * [Proposal submission](#proposal-submission)
         * [Right to submit a proposal](#right-to-submit-a-proposal)
         * [Proposal Messages](#proposal-messages)
     * [Deposit](#deposit)
+        * [Deposit refund and burn](#deposit-refund-and-burn)
     * [Vote](#vote)
         * [Participants](#participants)
         * [Voting period](#voting-period)
@@ -51,8 +55,11 @@ staking token of the chain.
         * [Validator’s punishment for non-voting](#validators-punishment-for-non-voting)
         * [Governance address](#governance-address)
     * [Software Upgrade](#software-upgrade)
+        * [Signal](#signal)
+        * [Switch](#switch)
 * [State](#state)
     * [Proposals](#proposals)
+        * [Writing a module that uses governance](#writing-a-module-that-uses-governance)
     * [Parameters and base types](#parameters-and-base-types)
         * [DepositParams](#depositparams)
         * [VotingParams](#votingparams)
@@ -75,11 +82,48 @@ staking token of the chain.
         * [MsgDeposit](#msgdeposit)
 * [Future Improvements](#future-improvements)
 * [Parameters](#parameters)
+    * [SubKeys](#subkeys)
 * [Client](#client)
     * [CLI](#cli)
+        * [Query](#query)
+            * [deposit](#deposit-3)
+            * [deposits](#deposits)
+            * [param](#param)
+            * [params](#params)
+            * [proposal](#proposal)
+            * [proposals](#proposals-1)
+            * [proposer](#proposer)
+            * [tally](#tally)
+            * [vote](#vote-2)
+            * [votes](#votes)
+        * [Transactions](#transactions)
+            * [deposit](#deposit-4)
+            * [draft-proposal](#draft-proposal)
+            * [submit-proposal](#submit-proposal)
+            * [submit-legacy-proposal](#submit-legacy-proposal)
+            * [vote](#vote-3)
+            * [weighted-vote](#weighted-vote)
     * [gRPC](#grpc)
+        * [Proposal](#proposal-1)
+        * [Proposals](#proposals-2)
+        * [Vote](#vote-4)
+        * [Votes](#votes-1)
+        * [Params](#params-1)
+        * [Deposit](#deposit-5)
+        * [deposits](#deposits-1)
+        * [TallyResult](#tallyresult)
     * [REST](#rest)
+        * [proposal](#proposal-2)
+        * [proposals](#proposals-3)
+        * [voter vote](#voter-vote)
+        * [votes](#votes-2)
+        * [params](#params-2)
+        * [deposits](#deposits-2)
+        * [proposal deposits](#proposal-deposits)
+        * [tally](#tally-1)
 * [Metadata](#metadata)
+    * [Proposal](#proposal-3)
+    * [Vote](#vote-5)
 
 <!-- order: 1 -->
 
@@ -1147,6 +1191,16 @@ Example:
 
 ```bash
 simd tx gov deposit 1 10000000stake --from cosmos1..
+```
+
+#### draft-proposal
+
+The `draft-proposal` command allows users to draft any type of proposal.
+The command returns a `draft_proposal.json`, to be used by `submit-proposal` after being completed.
+The `draft_metadata.json` is meant to be uploaded to [IPFS](#metadata).
+
+```bash
+simd tx gov draft-proposal
 ```
 
 #### submit-proposal
@@ -2612,8 +2666,8 @@ Location: off-chain as json object stored on IPFS (mirrors [group proposal](../.
   "authors": "",
   "summary": "",
   "details": "",
-  "proposalForumURL": "",
-  "voteOptionContext": "",
+  "proposal_forum_url": "",
+  "vote_option_context": "",
 }
 ```
 

@@ -1,4 +1,4 @@
-package teststaking
+package testutil
 
 import (
 	"context"

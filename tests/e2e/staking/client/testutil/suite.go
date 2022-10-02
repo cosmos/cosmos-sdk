@@ -17,9 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -1406,7 +1406,7 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 			if !tc.expectErr && tc.expectedCode != sdkerrors.ErrNotFound.ABCICode() {
 				getCreationHeight := func() int64 {
 					// fethichg the unbonding delegations
-					resp, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/unbonding_delegations", val.APIAddress, val.Address.String()))
+					resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/unbonding_delegations", val.APIAddress, val.Address.String()))
 					s.Require().NoError(err)
 
 					var ubds types.QueryDelegatorUnbondingDelegationsResponse

@@ -10,7 +10,7 @@
 # > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simd keys add foo
 # > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simd keys list
 # TODO: demo connecting rest-server (or is this in server now?)
-FROM golang:1.18-alpine AS build-env
+FROM golang:1.19-alpine AS build-env
 
 # Install minimum necessary dependencies
 ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3

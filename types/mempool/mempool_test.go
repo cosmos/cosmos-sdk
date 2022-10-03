@@ -182,7 +182,6 @@ func TestTxOrder(t *testing.T) {
 			order: []int{4, 3, 2, 1, 0},
 		},
 		{
-			// a very interesting breaking case
 			txs: []txSpec{
 				{p: 3, n: 0, a: sa},
 				{p: 5, n: 1, a: sa},
@@ -191,7 +190,7 @@ func TestTxOrder(t *testing.T) {
 				{p: 5, n: 1, a: sb},
 				{p: 8, n: 2, a: sb},
 			},
-			order: []int{3, 4, 0, 1, 2, 5},
+			order: []int{3, 4, 5, 0, 1, 2},
 		},
 		{
 			txs: []txSpec{
@@ -252,6 +251,8 @@ func TestTxOrder(t *testing.T) {
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
 			// create fresh mempool
+			// TODO test both?
+
 			//pool := mempool.NewDefaultMempool()
 			pool := mempool.NewGraph()
 

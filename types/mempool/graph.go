@@ -140,7 +140,8 @@ func (g *graph) TopologicalSort() ([]*node, error) {
 	in, out := g.DrawPriorityEdges()
 	var edgeless []*node
 	for _, n := range g.nodes {
-		if _, ok := in[n.key()]; !ok {
+		nk := n.key()
+		if _, ok := in[nk]; !ok || len(in[nk]) == 0 {
 			edgeless = append(edgeless, n)
 		}
 	}
@@ -186,7 +187,6 @@ type nodeEdges map[string]map[string]bool
 // Given n_a, need an answer the question:
 // "Is there node n_b in my sender tree with n_b.nonce < n_a.nonce AND n_b.priority < n_a.priority?"
 // If yes, don't draw any priority edges to nodes (or possibly just to nodes with a priority < n_b.priority)
-//
 func (g *graph) DrawPriorityEdges() (in nodeEdges, out nodeEdges) {
 	pn := g.priorities.Front()
 	in = make(nodeEdges)

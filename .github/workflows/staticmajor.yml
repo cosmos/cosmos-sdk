@@ -1,4 +1,5 @@
-name: Staticmajor static analyzer to catch leaking resources & other bad code patterns
+# Staticmajor: Static analyzer to catch leaking resources & other bad code patterns
+name: Detect leaking resources and bad code patterns
 on:
   push:
     branches:
@@ -16,7 +17,7 @@ jobs:
         id: staticmajor
         uses: orijtech/staticmajor-action@main
         with:
-            packages: ./...
-            resleak: true
-            structslop: false
-            tests: false
+          packages: ./...
+          resleak: true
+          structslop: false
+          tests: false

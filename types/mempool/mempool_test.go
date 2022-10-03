@@ -12,6 +12,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -26,6 +27,51 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
+// testPubKey is a dummy implementation of PubKey used for testing.
+type testPubKey struct {
+	address sdk.AccAddress
+}
+
+func (t testPubKey) Reset() {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t testPubKey) String() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t testPubKey) ProtoMessage() {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t testPubKey) Address() cryptotypes.Address {
+	return t.address.Bytes()
+}
+
+func (t testPubKey) Bytes() []byte {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t testPubKey) Equals(key cryptotypes.PubKey) bool {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t testPubKey) Type() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+// testTx is a dummy implementation of Tx used for testing.
 type testTx struct {
 	hash         [32]byte
 	priority     int64
@@ -49,14 +95,14 @@ func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) {
 func (tx testTx) GetSignaturesV2() (res []signing2.SignatureV2, err error) {
 	if len(tx.multiNonces) == 0 {
 		res = append(res, signing2.SignatureV2{
-			PubKey:   nil,
+			PubKey:   testPubKey{address: tx.address},
 			Data:     nil,
 			Sequence: tx.nonce,
 		})
 	} else {
 		for _, nonce := range tx.multiNonces {
 			res = append(res, signing2.SignatureV2{
-				PubKey:   nil,
+				PubKey:   testPubKey{address: tx.address},
 				Data:     nil,
 				Sequence: nonce,
 			})
@@ -69,6 +115,7 @@ var (
 	_ sdk.Tx                  = (*testTx)(nil)
 	_ mempool.Tx              = (*testTx)(nil)
 	_ signing.SigVerifiableTx = (*testTx)(nil)
+	_ cryptotypes.PubKey      = (*testPubKey)(nil)
 )
 
 func (tx testTx) GetHash() [32]byte {
@@ -247,6 +294,7 @@ func TestTxOrder(t *testing.T) {
 				{p: 2, a: sc, n: 0},
 				{p: 7, a: sc, n: 3},
 			},
+			// TODO check this order with single sender logic (sc in i=0 should be ignored)
 			order: []int{3, 2, 4, 1, 6, 7, 0, 5, 8},
 		},
 	}
@@ -466,6 +514,18 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 		seed, mempool.Iterations(mp), duration.Milliseconds())
 }
 
+func (s *MempoolTestSuite) TestSampleTxs() {
+	ctxt := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	t := s.T()
+	s.resetMempool()
+	mp := s.mempool
+	delegatorTx, err := unmarshalTx(msgWithdrawDelegatorReward)
+
+	require.NoError(t, err)
+	require.NoError(t, mp.Insert(ctxt, delegatorTx.(mempool.Tx)))
+	require.Equal(t, 1, mp.CountTx())
+}
+
 func genRandomTxs(seed int64, countTx int, countAccount int) (res []testTx) {
 	maxPriority := 100
 	r := rand.New(rand.NewSource(seed))
@@ -627,3 +687,10 @@ func simulateTx(ctx sdk.Context) sdk.Tx {
 	)
 	return tx
 }
+
+func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
+	txConfig := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{}).TxConfig
+	return txConfig.TxJSONDecoder()(txBytes)
+}
+
+var msgWithdrawDelegatorReward = []byte("{\"body\":{\"messages\":[{\"@type\":\"\\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward\",\"delegator_address\":\"cosmos16w6g0whmw703t8h2m9qmq2fd9dwaw6fjszzjsw\",\"validator_address\":\"cosmosvaloper1lzhlnpahvznwfv4jmay2tgaha5kmz5qxerarrl\"},{\"@type\":\"\\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward\",\"delegator_address\":\"cosmos16w6g0whmw703t8h2m9qmq2fd9dwaw6fjszzjsw\",\"validator_address\":\"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0\"},{\"@type\":\"\\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward\",\"delegator_address\":\"cosmos16w6g0whmw703t8h2m9qmq2fd9dwaw6fjszzjsw\",\"validator_address\":\"cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcvrj90c\"},{\"@type\":\"\\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward\",\"delegator_address\":\"cosmos16w6g0whmw703t8h2m9qmq2fd9dwaw6fjszzjsw\",\"validator_address\":\"cosmosvaloper1k2d9ed9vgfuk2m58a2d80q9u6qljkh4vfaqjfq\"},{\"@type\":\"\\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward\",\"delegator_address\":\"cosmos16w6g0whmw703t8h2m9qmq2fd9dwaw6fjszzjsw\",\"validator_address\":\"cosmosvaloper1vygmh344ldv9qefss9ek7ggsnxparljlmj56q5\"},{\"@type\":\"\\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward\",\"delegator_address\":\"cosmos16w6g0whmw703t8h2m9qmq2fd9dwaw6fjszzjsw\",\"validator_address\":\"cosmosvaloper1ej2es5fjztqjcd4pwa0zyvaevtjd2y5wxxp9gd\"}],\"memo\":\"\",\"timeout_height\":\"0\",\"extension_options\":[],\"non_critical_extension_options\":[]},\"auth_info\":{\"signer_infos\":[{\"public_key\":{\"@type\":\"\\/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AmbXAy10a0SerEefTYQzqyGQdX5kiTEWJZ1PZKX1oswX\"},\"mode_info\":{\"single\":{\"mode\":\"SIGN_MODE_LEGACY_AMINO_JSON\"}},\"sequence\":\"119\"}],\"fee\":{\"amount\":[{\"denom\":\"uatom\",\"amount\":\"15968\"}],\"gas_limit\":\"638717\",\"payer\":\"\",\"granter\":\"\"}},\"signatures\":[\"ji+inUo4xGlN9piRQLdLCeJWa7irwnqzrMVPcmzJyG5y6NPc+ZuNaIc3uvk5NLDJytRB8AHX0GqNETR\\/Q8fz4Q==\"]}")

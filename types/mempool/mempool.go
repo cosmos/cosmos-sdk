@@ -102,40 +102,37 @@ func NewDefaultMempool() Mempool {
 }
 
 func (mp *defaultMempool) Insert(ctx types.Context, tx Tx) error {
-	senders := tx.(signing.SigVerifiableTx).GetSigners()
-	nonces, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	if err != nil {
+		return err
+	}
+
+	// TODO better selection criteria here
+	sig := sigs[0]
+	sender := sig.PubKey.Address().String()
+	nonce := sig.Sequence
 
 	hashableTx, ok := tx.(HashableTx)
 	if !ok {
 		return ErrNoTxHash
 	}
 
-	if err != nil {
-		return err
-	} else if len(senders) != len(nonces) {
-		return fmt.Errorf("number of senders (%d) does not match number of nonces (%d)",
-			len(senders), len(nonces))
+	tk := txKey{nonce: nonce, priority: ctx.Priority(), sender: sender, hash: hashableTx.GetHash()}
+
+	senderTxs, ok := mp.senders[sender]
+	// initialize sender mempool if not found
+	if !ok {
+		senderTxs = huandu.New(huandu.LessThanFunc(func(a, b interface{}) int {
+			return huandu.Uint64.Compare(b.(txKey).nonce, a.(txKey).nonce)
+		}))
+		mp.senders[sender] = senderTxs
 	}
 
-	for i, senderAddr := range senders {
-		sender := senderAddr.String()
-		nonce := nonces[i].Sequence
-		tk := txKey{nonce: nonce, priority: ctx.Priority(), sender: sender, hash: hashableTx.GetHash()}
+	// if a tx with the same nonce exists, replace it and delete from the priority list
+	senderTxs.Set(tk, tx)
+	mp.scores[txKey{nonce: nonce, sender: sender}] = ctx.Priority()
+	mp.priorities.Set(tk, tx)
 
-		senderTxs, ok := mp.senders[sender]
-		// initialize sender mempool if not found
-		if !ok {
-			senderTxs = huandu.New(huandu.LessThanFunc(func(a, b interface{}) int {
-				return huandu.Uint64.Compare(b.(txKey).nonce, a.(txKey).nonce)
-			}))
-			mp.senders[sender] = senderTxs
-		}
-
-		// if a tx with the same nonce exists, replace it and delete from the priority list
-		senderTxs.Set(tk, tx)
-		mp.scores[txKey{nonce: nonce, sender: sender}] = ctx.Priority()
-		mp.priorities.Set(tk, tx)
-	}
 	return nil
 }
 
@@ -157,33 +154,6 @@ func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]T
 			// time complexity tracking
 			mp.iterations++
 			k := senderTx.Key().(txKey)
-			senders := senderTx.Value.(signing.SigVerifiableTx).GetSigners()
-
-			// conditional skipping of multi sender txs
-			if len(senders) > 1 {
-				skip := false
-				for _, s := range senders {
-					sc, ok := senderCursors[s.String()]
-					if !ok {
-						skip = true
-						break
-					}
-
-					// nil acts a null terminator for the sender cursor; iteration has completed, so we are
-					// surely beyond the nonce
-					if sc != nil {
-						otherSenderKey := sc.Key().(txKey)
-						if otherSenderKey.sender != sender && otherSenderKey.nonce < k.nonce {
-							skip = true
-							break
-						}
-					}
-				}
-
-				if skip {
-					break
-				}
-			}
 
 			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
 			if k.priority < nextHighestPriority {

@@ -68,9 +68,6 @@ The `AppModule` interface defines the inter-dependent methods that modules need 
 Let us go through the methods of `AppModule`:
 
 * `RegisterInvariants(sdk.InvariantRegistry)`: Registers the [`invariants`](./invariants.md) of the module. If an invariant deviates from its predicted value, the [`InvariantRegistry`](./invariants.md#registry) triggers appropriate logic (most often the chain will be halted).
-* `Route()` (deprecated): Returns the route for [`message`s](./messages-and-queries.md#messages) to be routed to the module by [`BaseApp`](../core/baseapp.md#message-routing).
-* `QuerierRoute()` (deprecated): Returns the name of the module's query route, for [`queries`](./messages-and-queries.md#queries) to be routes to the module by [`BaseApp`](../core/baseapp.md#query-routing).
-* `LegacyQuerierHandler(*codec.LegacyAmino)` (deprecated): Returns a [`querier`](./query-services.md#legacy-queriers) given the query `path`, in order to process the `query`.
 * `RegisterServices(Configurator)`: Allows a module to register services.
 * `BeginBlock(sdk.Context, abci.RequestBeginBlock)`: This method gives module developers the option to implement logic that is automatically triggered at the beginning of each block. Implement empty if no logic needs to be triggered at the beginning of each block for this module.
 * `EndBlock(sdk.Context, abci.RequestEndBlock)`: This method gives module developers the option to implement logic that is automatically triggered at the end of each block. This is also where the module can inform the underlying consensus engine of validator set changes (e.g. the `staking` module). Implement empty if no logic needs to be triggered at the end of each block for this module.

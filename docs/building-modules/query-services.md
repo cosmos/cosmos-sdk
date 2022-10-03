@@ -45,33 +45,6 @@ Here's an example implementation for the bank module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/grpc_query.go
 
-### Legacy Queriers
-
-Module legacy `querier`s are typically implemented in a `./keeper/querier.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `querier`s to the [application's `queryRouter`](../core/baseapp.md#query-routing) via the `NewQuerier()` method. Typically, the manager's `NewQuerier()` method simply calls a `NewQuerier()` method defined in `keeper/querier.go`, which looks like the following:
-
-```go
-func NewQuerier(keeper Keeper) sdk.Querier {
-	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
-		switch path[0] {
-		case QueryType1:
-			return queryType1(ctx, path[1:], req, keeper)
-
-		case QueryType2:
-			return queryType2(ctx, path[1:], req, keeper)
-
-		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
-		}
-	}
-}
-```
-
-This simple switch returns a `querier` function specific to the type of the received `query`. At this point of the [query lifecycle](../basics/query-lifecycle.md), the first element of the `path` (`path[0]`) contains the type of the query. The following elements are either empty or contain arguments needed to process the query.
-
-The `querier` functions themselves are pretty straightforward. They generally fetch a value or values from the state using the [`keeper`](./keeper.md). Then, they marshall the value(s) using the [`codec`](../core/encoding.md) and return the `[]byte` obtained as result.
-
-For a deeper look at `querier`s, see this [example implementation of a `querier` function](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/gov/keeper/querier.go) from the bank module.
-
 ## Next {hide}
 
 Learn about [`BeginBlocker` and `EndBlocker`](./beginblock-endblock.md) {hide}

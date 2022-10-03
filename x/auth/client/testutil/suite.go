@@ -80,7 +80,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub1, pub2})
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
-
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
@@ -830,6 +829,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	res, err = TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 	s.Require().True(strings.Contains(res.String(), "[OK]"))
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Ensure foo has right amount of funds
 	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, val1.Address)
@@ -844,14 +844,12 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	// Does not work in offline mode
 	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name(), "--offline")
 	s.Require().EqualError(err, "cannot broadcast tx during offline mode")
-
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Broadcast correct transaction.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
 	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
-
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Ensure destiny account state
@@ -891,7 +889,6 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 		),
 	)
 	s.Require().NoError(err)
-
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Generate multisig transaction.
@@ -998,7 +995,6 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 		sdk.NewCoins(sendTokens),
 	)
 	s.Require().NoError(err)
-
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	resp, err = clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
@@ -1131,7 +1127,6 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 		val1, addr,
 		sdk.NewCoins(sendTokens),
 	)
-	s.Require().NoError(s.network.WaitForNextBlock())
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
@@ -1884,6 +1879,8 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 					genTxFile.Name(),
 					tc.feePayerArgs...,
 				)
+				s.Require().NoError(s.network.WaitForNextBlock())
+
 				switch {
 				case tc.expectErrBroadCast:
 					require.Error(err)

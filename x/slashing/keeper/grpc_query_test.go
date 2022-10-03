@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -17,7 +17,7 @@ func (s *KeeperTestSuite) TestGRPCQueryParams() {
 	paramsResp, err := queryClient.Params(gocontext.Background(), &slashingtypes.QueryParamsRequest{})
 
 	require.NoError(err)
-	require.Equal(testslashing.TestParams(), paramsResp.Params)
+	require.Equal(testutil.TestParams(), paramsResp.Params)
 }
 
 func (s *KeeperTestSuite) TestGRPCSigningInfo() {

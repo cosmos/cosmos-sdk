@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/pluginpb"
 
 	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
 	"github.com/cosmos/cosmos-proto/generator"
@@ -19,6 +20,7 @@ const (
 )
 
 func ORMPluginRunner(p *protogen.Plugin) error {
+	p.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
 	for _, f := range p.Files {
 		if !f.Generate {
 			continue
@@ -44,6 +46,7 @@ func ORMPluginRunner(p *protogen.Plugin) error {
 }
 
 func QueryProtoPluginRunner(p *protogen.Plugin) error {
+	p.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
 	for _, f := range p.Files {
 		if !f.Generate {
 			continue

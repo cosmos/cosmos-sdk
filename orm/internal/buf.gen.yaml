@@ -9,7 +9,7 @@ plugins:
   - name: go-cosmos-orm-proto
     out: .
     opt: paths=source_relative
-  - name: go-pulsar
+  - name: go
     out: .
     opt: paths=source_relative
   - name: go-cosmos-orm

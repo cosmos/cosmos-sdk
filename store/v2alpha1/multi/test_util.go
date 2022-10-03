@@ -1,3 +1,4 @@
+//nolint:unused
 package multi
 
 import (
@@ -41,7 +42,7 @@ func (dbSaveVersionFails) SaveVersion(uint64) error { return errors.New("dbSaveV
 func (db dbRevertFails) Revert() error {
 	fail := false
 	if len(db.failOn) > 0 {
-		fail, db.failOn = db.failOn[0], db.failOn[1:]
+		fail, db.failOn = db.failOn[0], db.failOn[1:] //nolint:staticcheck
 	}
 	if fail {
 		return errors.New("dbRevertFails")

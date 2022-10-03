@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
@@ -321,6 +320,52 @@ func (s *TestSuite) TestDispatchedEvents() {
 	}
 }
 
+func (s *TestSuite) TestDequeueAllGrantsQueue() {
+	require := s.Require()
+	app, addrs := s.app, s.addrs
+	granter := addrs[0]
+	grantee := addrs[1]
+	grantee1 := addrs[2]
+	exp := s.ctx.BlockTime().AddDate(0, 0, 1)
+	a := banktypes.SendAuthorization{SpendLimit: coins100}
+
+	// create few authorizations
+	err := app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, &a, &exp)
+	require.NoError(err)
+
+	err = app.AuthzKeeper.SaveGrant(s.ctx, grantee1, granter, &a, &exp)
+	require.NoError(err)
+
+	exp2 := exp.AddDate(0, 1, 0)
+	err = app.AuthzKeeper.SaveGrant(s.ctx, granter, grantee1, &a, &exp2)
+	require.NoError(err)
+
+	exp2 = exp.AddDate(2, 0, 0)
+	err = app.AuthzKeeper.SaveGrant(s.ctx, granter, grantee, &a, &exp2)
+	require.NoError(err)
+
+	newCtx := s.ctx.WithBlockTime(exp.AddDate(1, 0, 0))
+	err = app.AuthzKeeper.DequeueAndDeleteExpiredGrants(newCtx)
+	require.NoError(err)
+
+	s.T().Log("verify expired grants are pruned from the state")
+	authzs, err := app.AuthzKeeper.GetAuthorizations(newCtx, grantee, granter)
+	require.NoError(err)
+	require.Len(authzs, 0)
+
+	authzs, err = app.AuthzKeeper.GetAuthorizations(newCtx, granter, grantee1)
+	require.NoError(err)
+	require.Len(authzs, 0)
+
+	authzs, err = app.AuthzKeeper.GetAuthorizations(newCtx, grantee1, granter)
+	require.NoError(err)
+	require.Len(authzs, 0)
+
+	authzs, err = app.AuthzKeeper.GetAuthorizations(newCtx, granter, grantee)
+	require.NoError(err)
+	require.Len(authzs, 1)
+}
+
 func (s *TestSuite) TestGetAuthorization() {
 	addr1 := s.addrs[3]
 	addr2 := s.addrs[4]
@@ -392,58 +437,12 @@ func (s *TestSuite) TestGetAuthorization() {
 	}
 
 	for _, tc := range tests {
-		s.T().Run(tc.name, func(t *testing.T) {
+		s.Run(tc.name, func() {
 			actAuth, actExp := s.app.AuthzKeeper.GetAuthorization(newCtx, tc.grantee, tc.granter, tc.msgType)
-			assert.Equal(t, tc.expAuth, actAuth, "authorization")
-			assert.Equal(t, tc.expExp, actExp, "expiration")
+			s.Assert().Equal(tc.expAuth, actAuth, "authorization")
+			s.Assert().Equal(tc.expExp, actExp, "expiration")
 		})
 	}
-}
-
-func (s *TestSuite) TestDequeueAllGrantsQueue() {
-	require := s.Require()
-	app, addrs := s.app, s.addrs
-	granter := addrs[0]
-	grantee := addrs[1]
-	grantee1 := addrs[2]
-	exp := s.ctx.BlockTime().AddDate(0, 0, 1)
-	a := banktypes.SendAuthorization{SpendLimit: coins100}
-
-	// create few authorizations
-	err := app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, &a, &exp)
-	require.NoError(err)
-
-	err = app.AuthzKeeper.SaveGrant(s.ctx, grantee1, granter, &a, &exp)
-	require.NoError(err)
-
-	exp2 := exp.AddDate(0, 1, 0)
-	err = app.AuthzKeeper.SaveGrant(s.ctx, granter, grantee1, &a, &exp2)
-	require.NoError(err)
-
-	exp2 = exp.AddDate(2, 0, 0)
-	err = app.AuthzKeeper.SaveGrant(s.ctx, granter, grantee, &a, &exp2)
-	require.NoError(err)
-
-	newCtx := s.ctx.WithBlockTime(exp.AddDate(1, 0, 0))
-	err = app.AuthzKeeper.DequeueAndDeleteExpiredGrants(newCtx)
-	require.NoError(err)
-
-	s.T().Log("verify expired grants are pruned from the state")
-	authzs, err := app.AuthzKeeper.GetAuthorizations(newCtx, grantee, granter)
-	require.NoError(err)
-	require.Len(authzs, 0)
-
-	authzs, err = app.AuthzKeeper.GetAuthorizations(newCtx, granter, grantee1)
-	require.NoError(err)
-	require.Len(authzs, 0)
-
-	authzs, err = app.AuthzKeeper.GetAuthorizations(newCtx, grantee1, granter)
-	require.NoError(err)
-	require.Len(authzs, 0)
-
-	authzs, err = app.AuthzKeeper.GetAuthorizations(newCtx, granter, grantee)
-	require.NoError(err)
-	require.Len(authzs, 1)
 }
 
 func TestTestSuite(t *testing.T) {

@@ -296,11 +296,11 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 		}
 		reg.reserved = make([]string, len(opts.reserved))
 		copy(reg.reserved, opts.reserved)
-	} else {
-		if !reg.equal(opts.StoreSchema) {
-			err = errors.New("loaded schema does not match configured schema")
-			return
-		}
+	} else if !reg.equal(opts.StoreSchema) {
+
+		err = errors.New("loaded schema does not match configured schema")
+		return
+
 	}
 	// Apply migrations, then clear old schema and write the new one
 	for _, upgrades := range opts.Upgrades {
@@ -336,7 +336,7 @@ func NewStore(db dbm.DBConnection, opts StoreConfig) (ret *Store, err error) {
 		}
 	}
 	ret.schema = reg.StoreSchema
-	return
+	return ret, nil
 }
 
 func (s *Store) Close() error {
@@ -672,7 +672,7 @@ func (s *Store) LastCommitID() types.CommitID {
 
 // SetInitialVersion implements CommitMultiStore.
 func (rs *Store) SetInitialVersion(version uint64) error {
-	rs.InitialVersion = uint64(version)
+	rs.InitialVersion = version
 	return nil
 }
 

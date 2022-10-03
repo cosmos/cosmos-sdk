@@ -6,7 +6,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -142,7 +142,7 @@ func convertToNewVotes(oldVotes v1beta1.Votes) (v1.Votes, error) {
 		// - if only Options is set, or both Option & Options are set, we read from Options,
 		// - if Options is not set, and Option is set, we read from Option,
 		// - if none are set, we throw error.
-		if oldVote.Options != nil {
+		if oldVote.Options != nil { //nolint:gocritic // should be rewritten to a switch statement
 			newWVOs = make([]*v1.WeightedVoteOption, len(oldVote.Options))
 			for j, oldWVO := range oldVote.Options {
 				newWVOs[j] = v1.NewWeightedVoteOption(v1.VoteOption(oldWVO.Option), oldWVO.Weight)

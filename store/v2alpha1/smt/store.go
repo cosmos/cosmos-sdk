@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/db/prefix"
 	"github.com/cosmos/cosmos-sdk/store/types"
 
+	"github.com/celestiaorg/smt"
 	ics23 "github.com/confio/ics23/go"
-	"github.com/lazyledger/smt"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
@@ -137,7 +137,7 @@ func (ms dbMapStore) Get(key []byte) ([]byte, error) {
 		return nil, err
 	}
 	if val == nil {
-		return nil, &smt.InvalidKeyError{key}
+		return nil, &smt.InvalidKeyError{Key: key}
 	}
 	return val, nil
 }

@@ -96,7 +96,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 		}
 	})
 
-	return
+	return nil
 }
 
 // InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
@@ -290,7 +290,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		tendermintCmd,
 		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
-		NewRollbackCmd(defaultNodeHome),
+		NewRollbackCmd(appCreator, defaultNodeHome),
 	)
 }
 

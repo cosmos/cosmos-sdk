@@ -7,7 +7,7 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -42,8 +42,8 @@ func NewDecodeStore(ak AuthUnmarshaler) func(kvA, kvB kv.Pair) string {
 
 			return fmt.Sprintf("GlobalAccNumberA: %d\nGlobalAccNumberB: %d", globalAccNumberA, globalAccNumberB)
 
-		case bytes.Equal(kvA.Key[:len(types.AccountNumberStoreKeyPrefix)], types.AccountNumberStoreKeyPrefix):
-			var accNumA, accNumB sdktypes.AccAddress
+		case bytes.HasPrefix(kvA.Key, types.AccountNumberStoreKeyPrefix):
+			var accNumA, accNumB sdk.AccAddress
 			err := accNumA.Unmarshal(kvA.Value)
 			if err != nil {
 				panic(err)

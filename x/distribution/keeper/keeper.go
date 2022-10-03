@@ -96,22 +96,6 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 		return nil, err
 	}
 
-	if rewards.IsZero() {
-		baseDenom, _ := sdk.GetBaseDenom()
-		rewards = sdk.Coins{sdk.Coin{
-			Denom:  baseDenom,
-			Amount: sdk.ZeroInt(),
-		}}
-	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeWithdrawRewards,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, rewards.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, valAddr.String()),
-		),
-	)
-
 	// reinitialize the delegation
 	k.initializeDelegation(ctx, valAddr, delAddr)
 	return rewards, nil

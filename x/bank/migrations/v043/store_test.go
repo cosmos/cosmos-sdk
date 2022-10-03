@@ -3,6 +3,7 @@ package v043_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -39,7 +40,7 @@ func TestSupplyMigration(t *testing.T) {
 	// New supply is indexed by denom.
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 	bz := supplyStore.Get([]byte("foo"))
-	var amount sdk.Int
+	var amount math.Int
 	err = amount.Unmarshal(bz)
 	require.NoError(t, err)
 

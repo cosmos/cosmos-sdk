@@ -60,11 +60,12 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	accountStore := k.getAccountStore(sdkCtx, addr)
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
-		var amount sdk.Int
-		if err := amount.Unmarshal(value); err != nil {
+		denom := string(key)
+		balance, err := UnmarshalBalanceCompat(k.cdc, value, denom)
+		if err != nil {
 			return err
 		}
-		balances = append(balances, sdk.NewCoin(string(key), amount))
+		balances = append(balances, balance)
 		return nil
 	})
 	if err != nil {

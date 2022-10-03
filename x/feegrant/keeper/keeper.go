@@ -72,7 +72,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	newExp, err := feeAllowance.ExpiresAt()
-	if err != nil {
+	if err != nil { //nolint:gocritic // should be rewritten to a switch statement
 		return err
 	} else if newExp != nil && newExp.Before(ctx.BlockTime()) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")

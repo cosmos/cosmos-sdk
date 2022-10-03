@@ -326,15 +326,17 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec, modulesToE
 		for _, moduleName := range m.OrderExportGenesis {
 			genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
 		}
-	} else {
-		// verify modules exists in app, so that we don't panic in the middle of an export
-		if err := m.checkModulesExists(modulesToExport); err != nil {
-			panic(err)
-		}
 
-		for _, moduleName := range modulesToExport {
-			genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
-		}
+		return genesisData
+	}
+
+	// verify modules exists in app, so that we don't panic in the middle of an export
+	if err := m.checkModulesExists(modulesToExport); err != nil {
+		panic(err)
+	}
+
+	for _, moduleName := range modulesToExport {
+		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
 	}
 
 	return genesisData

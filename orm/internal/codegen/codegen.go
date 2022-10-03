@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"fmt"
+	"os"
 
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
@@ -17,7 +18,7 @@ const (
 	ormTablePkg = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormtable")
 )
 
-func PluginRunner(p *protogen.Plugin) error {
+func ORMPluginRunner(p *protogen.Plugin) error {
 	for _, f := range p.Files {
 		if !f.Generate {
 			continue
@@ -32,12 +33,41 @@ func PluginRunner(p *protogen.Plugin) error {
 			GeneratedFile: gen,
 			LocalPackages: map[string]bool{},
 		}
-		f := fileGen{GeneratedFile: cgen, file: f}
-		err := f.gen()
+		fgen := fileGen{GeneratedFile: cgen, file: f}
+		err := fgen.gen()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func QueryProtoPluginRunner(p *protogen.Plugin) error {
+	for _, f := range p.Files {
+		if !f.Generate {
+			continue
+		}
+
+		if !hasTables(f) {
+			continue
+		}
+
+		out, err := os.OpenFile(fmt.Sprintf("%s_query.proto", f.GeneratedFilenamePrefix), os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644)
 		if err != nil {
 			return err
 		}
 
+		err = queryProtoGen{
+			File:    f,
+			svc:     newWriter(),
+			msgs:    newWriter(),
+			outFile: out,
+			imports: map[string]bool{},
+		}.gen()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

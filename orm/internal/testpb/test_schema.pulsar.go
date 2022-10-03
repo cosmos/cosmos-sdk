@@ -4944,6 +4944,7 @@ type ExampleTable struct {
 	Map      map[string]uint32            `protobuf:"bytes,18,rep,name=map,proto3" json:"map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 	Msg      *ExampleTable_ExampleMessage `protobuf:"bytes,19,opt,name=msg,proto3" json:"msg,omitempty"`
 	// Types that are assignable to Sum:
+	//
 	//	*ExampleTable_Oneof
 	Sum isExampleTable_Sum `protobuf_oneof:"sum"`
 }

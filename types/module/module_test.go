@@ -199,6 +199,10 @@ func TestManager_ExportGenesis(t *testing.T) {
 		"module2": json.RawMessage(`{"key2": "value2"}`),
 	}
 	require.Equal(t, want, mm.ExportGenesis(ctx, cdc, []string{}))
+
+	require.Panics(t, func() {
+		mm.ExportGenesis(ctx, cdc, []string{"module1", "modulefoo"})
+	})
 }
 
 func TestManager_BeginBlock(t *testing.T) {

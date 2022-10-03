@@ -68,11 +68,6 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(FlagJailAllowedAddrs)
 			modulesToExport, _ := cmd.Flags().GetStringSlice(FlagModulesToExport)
 
-			// verify modules exists in app, so that we don't panic in the middle of an export
-			if err := checkModuleExists(modulesToExport); err != nil {
-				return err
-			}
-
 			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs, serverCtx.Viper, modulesToExport)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %v", err)
@@ -123,15 +118,4 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 	cmd.Flags().StringSlice(FlagModulesToExport, []string{}, "Comma-separated list of modules to export. If empty, will export all modules")
 
 	return cmd
-}
-
-func checkModuleExists(modulesToExport []string) error {
-	for _, module := range modulesToExport {
-		if module == "" {
-			return fmt.Errorf("empty module name is not allowed")
-		}
-
-		// TODO check modules in app
-	}
-	return nil
 }

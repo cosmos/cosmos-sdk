@@ -327,12 +327,28 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec, modulesToE
 			genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
 		}
 	} else {
+		// verify modules exists in app, so that we don't panic in the middle of an export
+		if err := m.checkModulesExists(modulesToExport); err != nil {
+			panic(err)
+		}
+
 		for _, moduleName := range modulesToExport {
 			genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
 		}
 	}
 
 	return genesisData
+}
+
+// checkModulesExists verifies that all modules in the list exist in the app
+func (m *Manager) checkModulesExists(moduleName []string) error {
+	for _, name := range moduleName {
+		if _, ok := m.Modules[name]; !ok {
+			return fmt.Errorf("module %s does not exist", name)
+		}
+	}
+
+	return nil
 }
 
 // assertNoForgottenModules checks that we didn't forget any modules in the

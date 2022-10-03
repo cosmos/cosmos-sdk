@@ -3,8 +3,9 @@ package mempool
 import (
 	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types"
 	"math"
+
+	"github.com/cosmos/cosmos-sdk/types"
 
 	huandu "github.com/huandu/skiplist"
 
@@ -267,7 +268,13 @@ func DebugPrintKeys(mempool Mempool) {
 }
 
 func Iterations(mempool Mempool) int {
-	return mempool.(*defaultMempool).iterations
+	switch v := mempool.(type) {
+	case *defaultMempool:
+		return v.iterations
+	case *graph:
+		return v.iterations
+	}
+	panic("unknown mempool type")
 }
 
 // The complexity is O(log(N)). Implementation

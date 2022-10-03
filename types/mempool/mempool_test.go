@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -293,10 +295,37 @@ func TestTxOrder(t *testing.T) {
 	}
 }
 
-func TestRandomTxOrderManyTimes(t *testing.T) {
+type MempoolTestSuite struct {
+	suite.Suite
+	numTxs      int
+	numAccounts int
+	mempool     mempool.Mempool
+}
+
+func (s *MempoolTestSuite) resetMempool() {
+	s.mempool = mempool.NewDefaultMempool()
+}
+
+func (s *MempoolTestSuite) SetupTest() {
+	s.numTxs = 1000
+	s.numAccounts = 100
+	s.resetMempool()
+}
+
+func TestMempoolTestSuite(t *testing.T) {
+	suite.Run(t, new(MempoolTestSuite))
+}
+
+func (s *MempoolTestSuite) TestRandomTxOrderManyTimes() {
 	for i := 0; i < 30; i++ {
-		TestRandomTxOrder(t)
-		TestRandomGeneratedTx(t)
+		s.Run("TestRandomGeneratedTxs", func() {
+			s.TestRandomGeneratedTxs()
+		})
+		s.resetMempool()
+		s.Run("TestRandomWalkTxs", func() {
+			s.TestRandomWalkTxs()
+		})
+		s.resetMempool()
 	}
 }
 
@@ -352,14 +381,13 @@ func validateOrder(mtxs []mempool.Tx) error {
 	return nil
 }
 
-func TestRandomGeneratedTx(t *testing.T) {
+func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
+	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	numTx := 1000
-	numAccounts := 10
 	seed := time.Now().UnixNano()
 
-	generated := genRandomTxs(seed, numTx, numAccounts)
-	mp := mempool.NewDefaultMempool()
+	generated := genRandomTxs(seed, s.numTxs, s.numAccounts)
+	mp := s.mempool
 
 	for _, otx := range generated {
 		tx := testTx{hash: otx.hash, priority: otx.priority, nonce: otx.nonce, address: otx.address}
@@ -380,10 +408,9 @@ func TestRandomGeneratedTx(t *testing.T) {
 		seed, mempool.Iterations(mp), duration.Milliseconds())
 }
 
-func TestRandomTxOrder(t *testing.T) {
+func (s *MempoolTestSuite) TestRandomWalkTxs() {
+	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	numTx := 1000
-	numAccounts := 10
 
 	seed := time.Now().UnixNano()
 	// interesting failing seeds:
@@ -391,8 +418,8 @@ func TestRandomTxOrder(t *testing.T) {
 	// seed := int64(1663989445512438000)
 	//
 
-	ordered, shuffled := genOrderedTxs(seed, numTx, numAccounts)
-	mp := mempool.NewDefaultMempool()
+	ordered, shuffled := genOrderedTxs(seed, s.numTxs, s.numAccounts)
+	mp := s.mempool
 
 	for _, otx := range shuffled {
 		tx := testTx{hash: otx.hash, priority: otx.priority, nonce: otx.nonce, address: otx.address}
@@ -401,12 +428,13 @@ func TestRandomTxOrder(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	require.Equal(t, numTx, mp.CountTx())
+	require.Equal(t, s.numTxs, mp.CountTx())
 
 	selected, err := mp.Select(ctx, nil, math.MaxInt)
+	require.Equal(t, len(ordered), len(selected))
 	var orderedStr, selectedStr string
 
-	for i := 0; i < numTx; i++ {
+	for i := 0; i < s.numTxs; i++ {
 		otx := ordered[i]
 		stx := selected[i].(testTx)
 		orderedStr = fmt.Sprintf("%s\n%s, %d, %d; %d",
@@ -416,13 +444,15 @@ func TestRandomTxOrder(t *testing.T) {
 	}
 
 	require.NoError(t, err)
-	require.Equal(t, numTx, len(selected))
+	require.Equal(t, s.numTxs, len(selected))
 
 	errMsg := fmt.Sprintf("Expected order: %v\nGot order: %v\nSeed: %v", orderedStr, selectedStr, seed)
 
 	//mempool.DebugPrintKeys(mp)
 
+	start := time.Now()
 	require.NoError(t, validateOrder(selected), errMsg)
+	duration := time.Since(start)
 
 	/*for i, tx := range selected {
 		msg := fmt.Sprintf("Failed tx at index %d\n%s", i, errMsg)
@@ -432,14 +462,8 @@ func TestRandomTxOrder(t *testing.T) {
 		require.Equal(t, tx.(testTx).address, ordered[i].address, msg)
 	}*/
 
-	fmt.Printf("seed: %d completed in %d iterations\n", seed, mempool.Iterations(mp))
-}
-
-type txKey struct {
-	sender   string
-	nonce    uint64
-	priority int64
-	hash     [32]byte
+	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
+		seed, mempool.Iterations(mp), duration.Milliseconds())
 }
 
 func genRandomTxs(seed int64, countTx int, countAccount int) (res []testTx) {

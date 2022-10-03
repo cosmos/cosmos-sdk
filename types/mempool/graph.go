@@ -58,6 +58,7 @@ type graph struct {
 	priorities   *huandu.SkipList
 	nodes        map[string]*node
 	senderGraphs map[string]senderGraph
+	iterations   int
 }
 
 func (g *graph) Insert(context sdk.Context, tx Tx) error {
@@ -106,8 +107,7 @@ func (g *graph) Select(ctx sdk.Context, txs [][]byte, maxBytes int) ([]Tx, error
 }
 
 func (g *graph) CountTx() int {
-	//TODO implement me
-	panic("implement me")
+	return len(g.nodes)
 }
 
 func (g *graph) Remove(context sdk.Context, tx Tx) error {
@@ -140,6 +140,7 @@ func (g *graph) TopologicalSort() ([]*node, error) {
 	in, out := g.DrawPriorityEdges()
 	var edgeless []*node
 	for _, n := range g.nodes {
+		g.iterations++
 		nk := n.key()
 		if _, ok := in[nk]; !ok || len(in[nk]) == 0 {
 			edgeless = append(edgeless, n)
@@ -193,6 +194,7 @@ func (g *graph) DrawPriorityEdges() (in nodeEdges, out nodeEdges) {
 	out = make(nodeEdges)
 
 	for pn != nil {
+		g.iterations++
 		n := pn.Value.(*node)
 		nk := n.key()
 		out[nk] = make(map[string]bool)
@@ -213,6 +215,7 @@ func (g *graph) DrawPriorityEdges() (in nodeEdges, out nodeEdges) {
 		maxp := g.senderGraphs[n.sender].MaxPriorityEdge(n.priority, n.nonce)
 		pm := pn.Next()
 		for pm != nil {
+			g.iterations++
 			m := pm.Value.(*node)
 			// skip these nodes
 			if m.priority > maxp {
@@ -264,6 +267,8 @@ func (g *graph) kahns(edgeless []*node, inEdges nodeEdges, outEdges nodeEdges) (
 		sorted = append(sorted, n)
 
 		for mk, _ := range outEdges[nk] {
+			g.iterations++
+
 			delete(outEdges[nk], mk)
 			delete(inEdges[mk], nk)
 

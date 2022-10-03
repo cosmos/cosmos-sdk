@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io"
 
-	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
+	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // storeNameCtxKey is the TraceContext metadata key that identifies
@@ -50,11 +52,10 @@ func NewFromKVStore(
 
 	for key, store := range stores {
 		if cms.TracingEnabled() {
-			tctx := cms.traceContext.Clone().Merge(types.TraceContext{
-				storeNameCtxKey: key.Name(),
-			})
-
-			store = tracekv.NewStore(store.(types.KVStore), cms.traceWriter, tctx)
+			store = tracekv.NewStore(store.(types.KVStore), cms.traceWriter, cms.traceContext)
+		}
+		if cms.ListeningEnabled(key) {
+			store = listenkv.NewStore(store.(types.KVStore), key, listeners[key])
 		}
 		cms.stores[key] = cachekv.NewStore(store.(types.KVStore))
 	}

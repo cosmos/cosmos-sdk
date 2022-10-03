@@ -35,9 +35,12 @@ In a new file, `store/types/listening.go`, we will create a `MemoryListener` str
 The `MemoryListener` will be used internally by the concrete `rootmulti` implementation to collect state changes from KVStores.
 
 ```go
-// MemoryListener listens to the state writes and accumulate the records in memory.
-type MemoryListener struct {
-	stateCache []StoreKVPair
+// WriteListener interface for streaming data out from a listenkv.Store
+type WriteListener interface {
+	// if value is nil then it was deleted
+	// storeKey indicates the source KVStore, to facilitate using the the same WriteListener across separate KVStores
+	// delete bool indicates if it was a delete; true: delete, false: set
+    OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
 }
 
 // NewMemoryListener creates a listener that accumulate the state writes in memory.
@@ -213,20 +216,31 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 
 ### Exposing the data
 
-#### Streaming Service
-
-We will introduce a new `ABCIListener` interface that plugs into the BaseApp and relays ABCI requests and responses
-so that the service can group the state changes with the ABCI requests.
+We will introduce a new `StreamingService` interface for exposing `WriteListener` data streams to external consumers.
+In addition to streaming state changes as `StoreKVPair`s, the interface satisfies an `ABCIListener` interface that plugs into the BaseApp
+and relays ABCI requests and responses so that the service can group the state changes with the ABCI requests that affected them and the ABCI responses they affected.
 
 ```go
-// baseapp/streaming.go
-
-// ABCIListener is the interface that we're exposing as a streaming service.
+// ABCIListener interface used to hook into the ABCI message processing of the BaseApp
 type ABCIListener interface {
-	// ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
-	ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error
-	// ListenCommit updates the steaming service with the latest Commit messages and state changes
-	ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*StoreKVPair) error
+	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages 
+	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error 
+	// ListenEndBlock updates the steaming service with the latest EndBlock messages 
+	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error 
+	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages 
+	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
+}
+
+// StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
+type StreamingService interface {
+	// Stream is the streaming service loop, awaits kv pairs and writes them to some destination stream or file 
+	Stream(wg *sync.WaitGroup) error
+	// Listeners returns the streaming service's listeners for the BaseApp to register 
+	Listeners() map[types.StoreKey][]store.WriteListener 
+	// ABCIListener interface for hooking into the ABCI messages from inside the BaseApp 
+	ABCIListener 
+	// Closer interface 
+	io.Closer
 }
 ```
 
@@ -234,16 +248,45 @@ type ABCIListener interface {
 
 We will add a new method to the `BaseApp` to enable the registration of `StreamingService`s:
 
- ```go
- // SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
-func (app *BaseApp) SetStreamingService(s ABCIListener) {
-    // register the StreamingService within the BaseApp
-    // BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
-    app.abciListeners = append(app.abciListeners, s)
-}
-```
+Writing to a file is the simplest approach for streaming the data out to consumers.
+This approach also provides the advantages of being persistent and durable, and the files can be read directly,
+or an auxiliary streaming services can read from the files and serve the data over a remote interface.
 
-We will add two new fields to the `BaseApp` struct:
+##### Encoding
+
+For each pair of `BeginBlock` requests and responses, a file is created and named `block-{N}-begin`, where N is the block number.
+At the head of this file the length-prefixed protobuf encoded `BeginBlock` request is written.
+At the tail of this file the length-prefixed protobuf encoded `BeginBlock` response is written.
+In between these two encoded messages, the state changes that occurred due to the `BeginBlock` request are written chronologically as
+a series of length-prefixed protobuf encoded `StoreKVPair`s representing `Set` and `Delete` operations within the KVStores the service
+is configured to listen to.
+
+For each pair of `DeliverTx` requests and responses, a file is created and named `block-{N}-tx-{M}` where N is the block number and M
+is the tx number in the block (i.e. 0, 1, 2...).
+At the head of this file the length-prefixed protobuf encoded `DeliverTx` request is written.
+At the tail of this file the length-prefixed protobuf encoded `DeliverTx` response is written.
+In between these two encoded messages, the state changes that occurred due to the `DeliverTx` request are written chronologically as
+a series of length-prefixed protobuf encoded `StoreKVPair`s representing `Set` and `Delete` operations within the KVStores the service
+is configured to listen to.
+
+For each pair of `EndBlock` requests and responses, a file is created and named `block-{N}-end`, where N is the block number.
+At the head of this file the length-prefixed protobuf encoded `EndBlock` request is written.
+At the tail of this file the length-prefixed protobuf encoded `EndBlock` response is written.
+In between these two encoded messages, the state changes that occurred due to the `EndBlock` request are written chronologically as
+a series of length-prefixed protobuf encoded `StoreKVPair`s representing `Set` and `Delete` operations within the KVStores the service
+is configured to listen to.
+
+##### Decoding
+
+To decode the files written in the above format we read all the bytes from a given file into memory and segment them into proto
+messages based on the length-prefixing of each message. Once segmented, it is known that the first message is the ABCI request,
+the last message is the ABCI response, and that every message in between is a `StoreKVPair`. This enables us to decode each segment into
+the appropriate message type.
+
+The type of ABCI req/res, the block height, and the transaction index (where relevant) is known
+from the file name, and the KVStore each `StoreKVPair` originates from is known since the `StoreKey` is included as a field in the proto message.
+
+##### Implementation example
 
 ```go
 type BaseApp struct {
@@ -364,19 +407,7 @@ type ABCIListenerPlugin struct {
     Impl baseapp.ABCIListener
 }
 
-func (p *ListenerGRPCPlugin) GRPCServer(_ *plugin.GRPCBroker, s *grpc.Server) error {
-    RegisterABCIListenerServiceServer(s, &GRPCServer{Impl: p.Impl})
-    return nil
-}
-
-func (p *ListenerGRPCPlugin) GRPCClient(
-    _ context.Context,
-    _ *plugin.GRPCBroker,
-    c *grpc.ClientConn,
-) (interface{}, error) {
-    return &GRPCClient{client: NewABCIListenerServiceClient(c)}, nil
-}
-```
+#### Auxiliary streaming service
 
 The `plugin.Plugin` interface has two methods `Client` and `Server`. For our GRPC service these are `GRPCClient` and `GRPCServer`
 The `Impl` field holds the concrete implementation of our `baseapp.ABCIListener` interface written in Go.
@@ -410,12 +441,16 @@ service ABCIListenerService {
 }
 ```
 
-```protobuf
-...
-// plugin that doesn't listen to state changes
-service ABCIListenerService {
-  rpc ListenFinalizeBlock(ListenFinalizeBlockRequest) returns (Empty);
-  rpc ListenCommit(ListenCommitRequest) returns (Empty);
+```go
+// SetStreamingService is used to register a streaming service with the BaseApp
+func (app *BaseApp) SetStreamingService(s StreamingService) {
+	// set the listeners for each StoreKey
+	for key, lis := range s.Listeners() {
+		app.cms.AddListeners(key, lis)
+	}
+	// register the streaming service hooks within the BaseApp
+	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context using these hooks
+	app.hooks = append(app.hooks, s)
 }
 ```
 
@@ -486,128 +521,80 @@ func main() {
            "grpc_plugin_v1": &grpc_abci_v1.ABCIListenerGRPCPlugin{Impl: &ABCIListenerPlugin{}},
         },
 
-        // A non-nil value here enables gRPC serving for this streaming...
-        GRPCServer: plugin.DefaultGRPCServer,
-    })
-}
+```toml
+[store]
+    streamers = [ # if len(streamers) > 0 we are streaming
+        "file",
+    ]
+
+[streamers]
+    [streamers.file]
+        keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
+        write_dir = "path to the write directory"
+        prefix = "optional prefix to prepend to the generated file names"
 ```
 
 We will introduce a plugin loading system that will return `(interface{}, error)`.
 This provides the advantage of using versioned plugins where the plugin interface and gRPC protocol change over time.
 In addition, it allows for building independent plugin that can expose different parts of the system over gRPC.
 
-```go
-func NewStreamingPlugin(name string, logLevel string) (interface{}, error) {
-    logger := hclog.New(&hclog.LoggerOptions{
-       Output: hclog.DefaultOutput,
-       Level:  toHclogLevel(logLevel),
-       Name:   fmt.Sprintf("plugin.%s", name),
-    })
-
-    // We're a host. Start by launching the streaming process.
-    env := os.Getenv(GetPluginEnvKey(name))
-    client := plugin.NewClient(&plugin.ClientConfig{
-       HandshakeConfig: HandshakeMap[name],
-       Plugins:         PluginMap,
-       Cmd:             exec.Command("sh", "-c", env),
-       Logger:          logger,
-       AllowedProtocols: []plugin.Protocol{
-           plugin.ProtocolNetRPC, plugin.ProtocolGRPC},
-    })
-
-    // Connect via RPC
-    rpcClient, err := client.Client()
-    if err != nil {
-       return nil, err
-    }
-
-    // Request streaming plugin
-    return rpcClient.Dispense(name)
-}
-
-```
-
-We propose a `RegisterStreamingPlugin` function for the App to register `NewStreamingPlugin`s with the App's BaseApp.
-Streaming plugins can be of `Any` type; therefore, the function takes in an interface vs a concrete type.
-For example, we could have plugins of `ABCIListener`, `WasmListener` or `IBCListener`. Note that `RegisterStreamingPluing` function
-is helper function and not a requirement. Plugin registration can easily be moved from the App to the BaseApp directly.
+Each configured streamer will receive the
 
 ```go
-// baseapp/streaming.go
+// ServiceConstructor is used to construct a streaming service
+type ServiceConstructor func(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (sdk.StreamingService, error)
 
-// RegisterStreamingPlugin registers streaming plugins with the App.
-// This method returns an error if a plugin is not supported.
-func RegisterStreamingPlugin(
-    bApp *BaseApp,
-    appOpts servertypes.AppOptions,
-    keys map[string]*types.KVStoreKey,
-    streamingPlugin interface{},
-) error {
-    switch t := streamingPlugin.(type) {
-    case ABCIListener:
-        registerABCIListenerPlugin(bApp, appOpts, keys, t)
-    default:
-        return fmt.Errorf("unexpected plugin type %T", t)
-    }
-    return nil
-}
-```
+// ServiceType enum for specifying the type of StreamingService
+type ServiceType int
 
-```go
-func registerABCIListenerPlugin(
-    bApp *BaseApp,
-    appOpts servertypes.AppOptions,
-    keys map[string]*store.KVStoreKey,
-    abciListener ABCIListener,
-) {
-    asyncKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIAsync)
-    async := cast.ToBool(appOpts.Get(asyncKey))
-    stopNodeOnErrKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIStopNodeOnErrTomlKey)
-    stopNodeOnErr := cast.ToBool(appOpts.Get(stopNodeOnErrKey))
-    keysKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIKeysTomlKey)
-    exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
-    exposedKeys := exposeStoreKeysSorted(exposeKeysStr, keys)
-    bApp.cms.AddListeners(exposedKeys)
-    app.SetStreamingManager(
-		storetypes.StreamingManager{
-			ABCIListeners: []storetypes.ABCIListener{abciListener},
-			StopNodeOnErr: stopNodeOnErr,
-		},
-	)
-}
-```
+const (
+  Unknown ServiceType = iota
+  File
+  // add more in the future
+)
 
-```go
-func exposeAll(list []string) bool {
-    for _, ele := range list {
-        if ele == "*" {
-            return true
-        }
-    }
-    return false
+// NewStreamingServiceType returns the streaming.ServiceType corresponding to the provided name
+func NewStreamingServiceType(name string) ServiceType {
+  switch strings.ToLower(name) {
+  case "file", "f":
+    return File
+  default:
+    return Unknown
+  }
 }
 
-func exposeStoreKeys(keysStr []string, keys map[string]*types.KVStoreKey) []types.StoreKey {
-    var exposeStoreKeys []types.StoreKey
-    if exposeAll(keysStr) {
-        exposeStoreKeys = make([]types.StoreKey, 0, len(keys))
-        for _, storeKey := range keys {
-            exposeStoreKeys = append(exposeStoreKeys, storeKey)
-        }
-    } else {
-        exposeStoreKeys = make([]types.StoreKey, 0, len(keysStr))
-        for _, keyStr := range keysStr {
-            if storeKey, ok := keys[keyStr]; ok {
-                exposeStoreKeys = append(exposeStoreKeys, storeKey)
-            }
-        }
-    }
-    // sort storeKeys for deterministic output
-    sort.SliceStable(exposeStoreKeys, func(i, j int) bool {
-        return exposeStoreKeys[i].Name() < exposeStoreKeys[j].Name()
-    })
+// String returns the string name of a streaming.ServiceType
+func (sst ServiceType) String() string {
+  switch sst {
+  case File:
+    return "file"
+  default:
+    return ""
+  }
+}
 
-    return exposeStoreKeys
+// ServiceConstructorLookupTable is a mapping of streaming.ServiceTypes to streaming.ServiceConstructors
+var ServiceConstructorLookupTable = map[ServiceType]ServiceConstructor{
+  File: NewFileStreamingService,
+}
+
+// ServiceTypeFromString returns the streaming.ServiceConstructor corresponding to the provided name
+func ServiceTypeFromString(name string) (ServiceConstructor, error) {
+  ssType := NewStreamingServiceType(name)
+  if ssType == Unknown {
+    return nil, fmt.Errorf("unrecognized streaming service name %s", name)
+  }
+  if constructor, ok := ServiceConstructorLookupTable[ssType]; ok {
+    return constructor, nil
+  }
+  return nil, fmt.Errorf("streaming service constructor of type %s not found", ssType.String())
+}
+
+// NewFileStreamingService is the streaming.ServiceConstructor function for creating a FileStreamingService
+func NewFileStreamingService(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (sdk.StreamingService, error) {
+  filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
+  fileDir := cast.ToString(opts.Get("streamers.file.write_dir"))
+  return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)
 }
 ```
 
@@ -656,7 +643,46 @@ func NewSimApp(
     return app
 ```
 
-#### Configuration
+	// configure state listening capabilities using AppOptions
+	listeners := cast.ToStringSlice(appOpts.Get("store.streamers"))
+	for _, listenerName := range listeners {
+		// get the store keys allowed to be exposed for this streaming service 
+		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", streamerName)))
+		var exposeStoreKeys []sdk.StoreKey
+		if exposeAll(exposeKeyStrs) { // if list contains `*`, expose all StoreKeys 
+			exposeStoreKeys = make([]sdk.StoreKey, 0, len(keys))
+			for _, storeKey := range keys {
+				exposeStoreKeys = append(exposeStoreKeys, storeKey)
+			}
+		} else {
+			exposeStoreKeys = make([]sdk.StoreKey, 0, len(exposeKeyStrs))
+			for _, keyStr := range exposeKeyStrs {
+				if storeKey, ok := keys[keyStr]; ok {
+					exposeStoreKeys = append(exposeStoreKeys, storeKey)
+				}
+			}
+		}
+		if len(exposeStoreKeys) == 0 { // short circuit if we are not exposing anything 
+			continue
+		}
+		// get the constructor for this listener name
+		constructor, err := baseapp.NewStreamingServiceConstructor(listenerName)
+		if err != nil {
+			tmos.Exit(err.Error()) // or continue?
+		}
+		// generate the streaming service using the constructor, appOptions, and the StoreKeys we want to expose
+		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec)
+		if err != nil {
+			tmos.Exit(err.Error())
+		}
+		// register the streaming service with the BaseApp
+		bApp.RegisterStreamingService(streamingService)
+		// waitgroup and quit channel for optional shutdown coordination of the streaming service
+		wg := new(sync.WaitGroup)
+		quitChan := make(chan struct{}))
+		// kick off the background streaming service loop
+		streamingService.Stream(wg, quitChan) // maybe this should be done from inside BaseApp instead?
+	}
 
 The plugin system will be configured within an App's TOML configuration files.
 

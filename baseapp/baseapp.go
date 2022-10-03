@@ -167,20 +167,9 @@ type BaseApp struct { //nolint: maligned
 	// which informs CometBFT what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
-	// streamingManager for managing instances and configuration of ABCIListener services
-	streamingManager storetypes.StreamingManager
-
-	chainID string
-
-	cdc codec.Codec
-
-	// optimisticExec contains the context required for Optimistic Execution,
-	// including the goroutine handling.This is experimental and must be enabled
-	// by developers.
-	optimisticExec *oe.OptimisticExecution
-
-	// includeNestedMsgsGas holds a set of message types for which gas costs for its nested messages are calculated.
-	includeNestedMsgsGas map[string]struct{}
+	// abciListeners for hooking into the ABCI message processing of the BaseApp
+	// and exposing the requests and responses to external consumers
+	abciListeners []ABCIListener
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

@@ -48,6 +48,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 - (cli) [#13089](https://github.com/cosmos/cosmos-sdk/pull/13089) Fix rollback command don't actually delete multistore versions, added method `RollbackToVersion` to interface `CommitMultiStore` and added method `CommitMultiStore` to `Application` interface.
 
+### Improvements
+
+* (store) [\#13326](https://github.com/cosmos/cosmos-sdk/pull/13326) Implementation of ADR-038 file StreamingService, backport #8664
+
 ## v0.45.8 - 2022-08-25
 
 ### Improvements

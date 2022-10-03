@@ -1,19 +1,28 @@
 package keeper
 
 import (
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
+func (k *Keeper) decodeConstantFee(bz []byte) (sdk.Coin, error) {
+	var constantFee sdk.Coin
+	if bz == nil {
+		return constantFee, nil
+	}
+	k.cdc.MustUnmarshal(bz, &constantFee)
+	return constantFee, nil
+}
+
 // GetConstantFee get's the constant fee from the store
 func (k *Keeper) GetConstantFee(ctx sdk.Context) (constantFee sdk.Coin) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ConstantFeeKey)
-	if bz == nil {
-		return constantFee
+	constantFee, err := store2.GetAndDecode(store, k.decodeConstantFee, types.ConstantFeeKey)
+	if err != nil {
+		panic(err)
 	}
-	k.cdc.MustUnmarshal(bz, &constantFee)
 	return constantFee
 }
 
@@ -29,6 +38,6 @@ func (k *Keeper) SetConstantFee(ctx sdk.Context, constantFee sdk.Coin) error {
 		return err
 	}
 
-	store.Set(types.ConstantFeeKey, bz)
+	store2.Set(store, types.ConstantFeeKey, bz)
 	return nil
 }

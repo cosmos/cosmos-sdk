@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -140,7 +141,7 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 
 		// set the initialized flag so we don't rerun initialization logic
 		memStore := noGasCtx.KVStore(k.memKey)
-		memStore.Set(types.KeyMemInitialized, []byte{1})
+		store2.Set(memStore, types.KeyMemInitialized, []byte{1})
 	}
 }
 
@@ -164,14 +165,22 @@ func (k Keeper) InitializeIndex(ctx sdk.Context, index uint64) error {
 
 	// set the global index to the passed index
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.KeyIndex, types.IndexToKey(index))
+	store2.Set(store, types.KeyIndex, types.IndexToKey(index))
 	return nil
+}
+
+func decodeKeyIndex(bz []byte) ([]byte, error) {
+	return bz, nil
 }
 
 // GetLatestIndex returns the latest index of the CapabilityKeeper
 func (k Keeper) GetLatestIndex(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	return types.IndexFromKey(store.Get(types.KeyIndex))
+	keyIndex, err := store2.GetAndDecode(store, decodeKeyIndex, types.KeyIndex)
+	if err != nil {
+		panic(err)
+	}
+	return types.IndexFromKey(keyIndex)
 }
 
 // SetOwners set the capability owners to the store
@@ -180,7 +189,16 @@ func (k Keeper) SetOwners(ctx sdk.Context, index uint64, owners types.Capability
 	indexKey := types.IndexToKey(index)
 
 	// set owners in persistent store
-	prefixStore.Set(indexKey, k.cdc.MustMarshal(&owners))
+	store2.Set(prefixStore, indexKey, k.cdc.MustMarshal(&owners))
+}
+
+func (k Keeper) decodeOwner(bz []byte) (types.CapabilityOwners, error) {
+	if bz == nil {
+		return types.CapabilityOwners{}, nil
+	}
+	var owners types.CapabilityOwners
+	k.cdc.MustUnmarshal(bz, &owners)
+	return owners, nil
 }
 
 // GetOwners returns the capability owners with a given index.
@@ -189,12 +207,10 @@ func (k Keeper) GetOwners(ctx sdk.Context, index uint64) (types.CapabilityOwners
 	indexKey := types.IndexToKey(index)
 
 	// get owners for index from persistent store
-	ownerBytes := prefixStore.Get(indexKey)
-	if ownerBytes == nil {
-		return types.CapabilityOwners{}, false
+	owners, err := store2.GetAndDecode(prefixStore, k.decodeOwner, indexKey)
+	if err != nil {
+		panic(err)
 	}
-	var owners types.CapabilityOwners
-	k.cdc.MustUnmarshal(ownerBytes, &owners)
 	return owners, true
 }
 
@@ -208,13 +224,13 @@ func (k Keeper) InitializeCapability(ctx sdk.Context, index uint64, owners types
 	for _, owner := range owners.Owners {
 		// Set the forward mapping between the module and capability tuple and the
 		// capability name in the memKVStore
-		memStore.Set(types.FwdCapabilityKey(owner.Module, cap), []byte(owner.Name))
+		store2.Set(memStore, types.FwdCapabilityKey(owner.Module, cap), []byte(owner.Name))
 
 		// Set the reverse mapping between the module and capability name and the
 		// index in the in-memory store. Since marshalling and unmarshalling into a store
 		// will change memory address of capability, we simply store index as value here
 		// and retrieve the in-memory pointer to the capability from our map
-		memStore.Set(types.RevCapabilityKey(owner.Module, owner.Name), sdk.Uint64ToBigEndian(index))
+		store2.Set(memStore, types.RevCapabilityKey(owner.Module, owner.Name), sdk.Uint64ToBigEndian(index))
 
 		// Set the mapping from index from index to in-memory capability in the go map
 		k.capMap[index] = cap
@@ -241,7 +257,11 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capab
 	}
 
 	// create new capability with the current global index
-	index := types.IndexFromKey(store.Get(types.KeyIndex))
+	keyIndex, err := store2.GetAndDecode(store, decodeKeyIndex, types.KeyIndex)
+	if err != nil {
+		panic(err)
+	}
+	index := types.IndexFromKey(keyIndex)
 	cap := types.NewCapability(index)
 
 	// update capability owner set
@@ -250,19 +270,19 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capab
 	}
 
 	// increment global index
-	store.Set(types.KeyIndex, types.IndexToKey(index+1))
+	store2.Set(store, types.KeyIndex, types.IndexToKey(index+1))
 
 	memStore := ctx.KVStore(sk.memKey)
 
 	// Set the forward mapping between the module and capability tuple and the
 	// capability name in the memKVStore
-	memStore.Set(types.FwdCapabilityKey(sk.module, cap), []byte(name))
+	store2.Set(memStore, types.FwdCapabilityKey(sk.module, cap), []byte(name))
 
 	// Set the reverse mapping between the module and capability name and the
 	// index in the in-memory store. Since marshalling and unmarshalling into a store
 	// will change memory address of capability, we simply store index as value here
 	// and retrieve the in-memory pointer to the capability from our map
-	memStore.Set(types.RevCapabilityKey(sk.module, name), sdk.Uint64ToBigEndian(index))
+	store2.Set(memStore, types.RevCapabilityKey(sk.module, name), sdk.Uint64ToBigEndian(index))
 
 	// Set the mapping from index from index to in-memory capability in the go map
 	sk.capMap[index] = cap
@@ -308,13 +328,13 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap *types.Capability, n
 
 	// Set the forward mapping between the module and capability tuple and the
 	// capability name in the memKVStore
-	memStore.Set(types.FwdCapabilityKey(sk.module, cap), []byte(name))
+	store2.Set(memStore, types.FwdCapabilityKey(sk.module, cap), []byte(name))
 
 	// Set the reverse mapping between the module and capability name and the
 	// index in the in-memory store. Since marshalling and unmarshalling into a store
 	// will change memory address of capability, we simply store index as value here
 	// and retrieve the in-memory pointer to the capability from our map
-	memStore.Set(types.RevCapabilityKey(sk.module, name), sdk.Uint64ToBigEndian(cap.GetIndex()))
+	store2.Set(memStore, types.RevCapabilityKey(sk.module, name), sdk.Uint64ToBigEndian(cap.GetIndex()))
 
 	logger(ctx).Info("claimed capability", "module", sk.module, "name", name, "capability", cap.GetIndex())
 
@@ -357,7 +377,7 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability)
 		delete(sk.capMap, cap.GetIndex())
 	} else {
 		// update capability owner set
-		prefixStore.Set(indexKey, sk.cdc.MustMarshal(capOwners))
+		store2.Set(prefixStore, indexKey, sk.cdc.MustMarshal(capOwners))
 	}
 
 	return nil
@@ -373,7 +393,10 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 	memStore := ctx.KVStore(sk.memKey)
 
 	key := types.RevCapabilityKey(sk.module, name)
-	indexBytes := memStore.Get(key)
+	indexBytes, err := store2.GetAndDecode(memStore, decodeKeyIndex, key)
+	if err != nil {
+		panic(err)
+	}
 	index := sdk.BigEndianToUint64(indexBytes)
 
 	if len(indexBytes) == 0 {
@@ -403,7 +426,20 @@ func (sk ScopedKeeper) GetCapabilityName(ctx sdk.Context, cap *types.Capability)
 	}
 	memStore := ctx.KVStore(sk.memKey)
 
-	return string(memStore.Get(types.FwdCapabilityKey(sk.module, cap)))
+	capName, err := store2.GetAndDecode(memStore, decodeKeyIndex, types.FwdCapabilityKey(sk.module, cap))
+	if err != nil {
+		panic(err)
+	}
+	return string(capName)
+}
+
+func (sk ScopedKeeper) decodeOwner(bz []byte) (*types.CapabilityOwners, error) {
+	if len(bz) == 0 {
+		return types.NewCapabilityOwners(), nil
+	}
+	var owners types.CapabilityOwners
+	sk.cdc.MustUnmarshal(bz, &owners)
+	return &owners, nil
 }
 
 // GetOwners all the Owners that own the capability associated with the name this ScopedKeeper uses
@@ -420,16 +456,12 @@ func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.Capabilit
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())
 
-	var capOwners types.CapabilityOwners
-
-	bz := prefixStore.Get(indexKey)
-	if len(bz) == 0 {
-		return nil, false
+	capOwners, err := store2.GetAndDecode(prefixStore, sk.decodeOwner, indexKey)
+	if err != nil {
+		panic(err)
 	}
 
-	sk.cdc.MustUnmarshal(bz, &capOwners)
-
-	return &capOwners, true
+	return capOwners, true
 }
 
 // LookupModules returns all the module owners for a given capability
@@ -469,7 +501,7 @@ func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap *types.Capability, name str
 	}
 
 	// update capability owner set
-	prefixStore.Set(indexKey, sk.cdc.MustMarshal(capOwners))
+	store2.Set(prefixStore, indexKey, sk.cdc.MustMarshal(capOwners))
 
 	return nil
 }
@@ -478,15 +510,12 @@ func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap *types.Capability) *types.
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())
 
-	bz := prefixStore.Get(indexKey)
-
-	if len(bz) == 0 {
-		return types.NewCapabilityOwners()
+	capOwners, err := store2.GetAndDecode(prefixStore, sk.decodeOwner, indexKey)
+	if err != nil {
+		panic(err)
 	}
 
-	var capOwners types.CapabilityOwners
-	sk.cdc.MustUnmarshal(bz, &capOwners)
-	return &capOwners
+	return capOwners
 }
 
 func logger(ctx sdk.Context) log.Logger {

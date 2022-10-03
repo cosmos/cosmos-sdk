@@ -230,7 +230,9 @@ type ListBalanceResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Values     []*Balance            `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// values are the results of the query.
+	Values []*Balance `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -478,7 +480,9 @@ type ListSupplyResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Values     []*Supply             `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// values are the results of the query.
+	Values []*Supply `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -600,12 +604,12 @@ type isListBalanceRequest_IndexKey_Key interface {
 }
 
 type ListBalanceRequest_IndexKey_AddressDenom_ struct {
-	// address_denom specifies the value of the AddressDenom index to use in the query.
+	// address_denom specifies the value of the AddressDenom index key to use in the query.
 	AddressDenom *ListBalanceRequest_IndexKey_AddressDenom `protobuf:"bytes,1,opt,name=address_denom,json=addressDenom,proto3,oneof"`
 }
 
 type ListBalanceRequest_IndexKey_Denom_ struct {
-	// denom specifies the value of the Denom index to use in the query.
+	// denom specifies the value of the Denom index key to use in the query.
 	Denom *ListBalanceRequest_IndexKey_Denom `protobuf:"bytes,2,opt,name=denom,proto3,oneof"`
 }
 
@@ -846,7 +850,7 @@ type isListSupplyRequest_IndexKey_Key interface {
 }
 
 type ListSupplyRequest_IndexKey_Denom_ struct {
-	// denom specifies the value of the Denom index to use in the query.
+	// denom specifies the value of the Denom index key to use in the query.
 	Denom *ListSupplyRequest_IndexKey_Denom `protobuf:"bytes,1,opt,name=denom,proto3,oneof"`
 }
 

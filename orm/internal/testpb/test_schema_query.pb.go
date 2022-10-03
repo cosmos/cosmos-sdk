@@ -344,7 +344,9 @@ type ListExampleTableResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Values     []*ExampleTable       `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// values are the results of the query.
+	Values []*ExampleTable `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -690,8 +692,10 @@ type ListExampleAutoIncrementTableResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Values     []*ExampleAutoIncrementTable `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
-	Pagination *v1beta1.PageResponse        `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// values are the results of the query.
+	Values []*ExampleAutoIncrementTable `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (x *ListExampleAutoIncrementTableResponse) Reset() {
@@ -740,7 +744,6 @@ func (x *ListExampleAutoIncrementTableResponse) GetPagination() *v1beta1.PageRes
 	return nil
 }
 
-// GetExampleSingletonRequest queries the ExampleSingleton singleton.
 // GetExampleSingletonRequest is the TestSchemaQuery/GetExampleSingletonRequest request type.
 type GetExampleSingletonRequest struct {
 	state         protoimpl.MessageState
@@ -1026,7 +1029,9 @@ type ListExampleTimestampResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Values     []*ExampleTimestamp   `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// values are the results of the query.
+	Values []*ExampleTimestamp `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -1370,7 +1375,9 @@ type ListSimpleExampleResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Values     []*SimpleExample      `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// values are the results of the query.
+	Values []*SimpleExample `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -1618,8 +1625,10 @@ type ListExampleAutoIncFieldNameResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Values     []*ExampleAutoIncFieldName `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
-	Pagination *v1beta1.PageResponse      `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// values are the results of the query.
+	Values []*ExampleAutoIncFieldName `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (x *ListExampleAutoIncFieldNameResponse) Reset() {
@@ -1756,22 +1765,22 @@ type isListExampleTableRequest_IndexKey_Key interface {
 }
 
 type ListExampleTableRequest_IndexKey_U_32I_64Str struct {
-	// u_32_i_64_str specifies the value of the U32I64Str index to use in the query.
+	// u_32_i_64_str specifies the value of the U32I64Str index key to use in the query.
 	U_32I_64Str *ListExampleTableRequest_IndexKey_U32I64Str `protobuf:"bytes,1,opt,name=u_32_i_64_str,json=u32I64Str,proto3,oneof"`
 }
 
 type ListExampleTableRequest_IndexKey_U_64Str struct {
-	// u_64_str specifies the value of the U64Str index to use in the query.
+	// u_64_str specifies the value of the U64Str index key to use in the query.
 	U_64Str *ListExampleTableRequest_IndexKey_U64Str `protobuf:"bytes,2,opt,name=u_64_str,json=u64Str,proto3,oneof"`
 }
 
 type ListExampleTableRequest_IndexKey_StrU_32 struct {
-	// str_u_32 specifies the value of the StrU32 index to use in the query.
+	// str_u_32 specifies the value of the StrU32 index key to use in the query.
 	StrU_32 *ListExampleTableRequest_IndexKey_StrU32 `protobuf:"bytes,3,opt,name=str_u_32,json=strU32,proto3,oneof"`
 }
 
 type ListExampleTableRequest_IndexKey_BzStr_ struct {
-	// bz_str specifies the value of the BzStr index to use in the query.
+	// bz_str specifies the value of the BzStr index key to use in the query.
 	BzStr *ListExampleTableRequest_IndexKey_BzStr `protobuf:"bytes,4,opt,name=bz_str,json=bzStr,proto3,oneof"`
 }
 
@@ -2162,12 +2171,12 @@ type isListExampleAutoIncrementTableRequest_IndexKey_Key interface {
 }
 
 type ListExampleAutoIncrementTableRequest_IndexKey_Id_ struct {
-	// id specifies the value of the Id index to use in the query.
+	// id specifies the value of the Id index key to use in the query.
 	Id *ListExampleAutoIncrementTableRequest_IndexKey_Id `protobuf:"bytes,1,opt,name=id,proto3,oneof"`
 }
 
 type ListExampleAutoIncrementTableRequest_IndexKey_X_ struct {
-	// x specifies the value of the X index to use in the query.
+	// x specifies the value of the X index key to use in the query.
 	X *ListExampleAutoIncrementTableRequest_IndexKey_X `protobuf:"bytes,2,opt,name=x,proto3,oneof"`
 }
 
@@ -2408,12 +2417,12 @@ type isListExampleTimestampRequest_IndexKey_Key interface {
 }
 
 type ListExampleTimestampRequest_IndexKey_Id_ struct {
-	// id specifies the value of the Id index to use in the query.
+	// id specifies the value of the Id index key to use in the query.
 	Id *ListExampleTimestampRequest_IndexKey_Id `protobuf:"bytes,1,opt,name=id,proto3,oneof"`
 }
 
 type ListExampleTimestampRequest_IndexKey_Ts_ struct {
-	// ts specifies the value of the Ts index to use in the query.
+	// ts specifies the value of the Ts index key to use in the query.
 	Ts *ListExampleTimestampRequest_IndexKey_Ts `protobuf:"bytes,2,opt,name=ts,proto3,oneof"`
 }
 
@@ -2652,12 +2661,12 @@ type isListSimpleExampleRequest_IndexKey_Key interface {
 }
 
 type ListSimpleExampleRequest_IndexKey_Name_ struct {
-	// name specifies the value of the Name index to use in the query.
+	// name specifies the value of the Name index key to use in the query.
 	Name *ListSimpleExampleRequest_IndexKey_Name `protobuf:"bytes,1,opt,name=name,proto3,oneof"`
 }
 
 type ListSimpleExampleRequest_IndexKey_Unique_ struct {
-	// unique specifies the value of the Unique index to use in the query.
+	// unique specifies the value of the Unique index key to use in the query.
 	Unique *ListSimpleExampleRequest_IndexKey_Unique `protobuf:"bytes,2,opt,name=unique,proto3,oneof"`
 }
 
@@ -2888,7 +2897,7 @@ type isListExampleAutoIncFieldNameRequest_IndexKey_Key interface {
 }
 
 type ListExampleAutoIncFieldNameRequest_IndexKey_Foo_ struct {
-	// foo specifies the value of the Foo index to use in the query.
+	// foo specifies the value of the Foo index key to use in the query.
 	Foo *ListExampleAutoIncFieldNameRequest_IndexKey_Foo `protobuf:"bytes,1,opt,name=foo,proto3,oneof"`
 }
 

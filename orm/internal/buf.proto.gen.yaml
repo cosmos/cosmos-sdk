@@ -6,9 +6,6 @@ managed:
     override:
       buf.build/cosmos/cosmos-sdk: cosmossdk.io/api
 plugins:
-  - name: go
-    out: .
-    opt: paths=source_relative
-  - name: go-cosmos-orm
+  - name: go-cosmos-orm-proto
     out: .
     opt: paths=source_relative

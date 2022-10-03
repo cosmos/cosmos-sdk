@@ -105,19 +105,29 @@ func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value, 
 	// Bypass use of time.Duration, as the range is more limited than that of dpb.Duration.
 	// (Too bad the companies that produced both technologies didn't coordinate better!)
 
-	d := *duration
-	duration = &d
-	negative := normalizeDuration(duration)
+	if err := duration.CheckValid(); err != nil {
+		return err
+	}
+
+	negative := false
+	if duration.Seconds < 0 || duration.Nanos < 0 {
+		negative = true
+		// copy to avoid side-effecting our input
+		d := *duration
+		duration = &d
+		duration.Seconds *= -1
+		duration.Nanos *= -1
+	}
 	factors := factorSeconds(duration.Seconds)
 	components := []string{}
 
 	if factors.days > 0 {
 		components = append(components, fmt.Sprintf("%d %s", factors.days, maybePlural("day", factors.days != 1)))
 	}
-	if factors.hours > 0 || len(components) > 0 && (factors.minutes > 0 || factors.seconds > 0 || duration.Nanos > 0) {
+	if factors.hours > 0 || (len(components) > 0 && (factors.minutes > 0 || factors.seconds > 0 || duration.Nanos > 0)) {
 		components = append(components, fmt.Sprintf("%d %s", factors.hours, maybePlural("hour", factors.hours != 1)))
 	}
-	if factors.minutes > 0 || len(components) > 0 && (factors.seconds > 0 || duration.Nanos > 0) {
+	if factors.minutes > 0 || (len(components) > 0 && (factors.seconds > 0 || duration.Nanos > 0)) {
 		components = append(components, fmt.Sprintf("%d %s", factors.minutes, maybePlural("minute", factors.minutes != 1)))
 	}
 	if factors.seconds > 0 || duration.Nanos > 0 {

@@ -40,43 +40,51 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+	var resp sdk.TxResponse
 
 	// create a proposal with deposit
-	_, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+	out, err := MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 1", "Where is the title!?", v1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// vote for proposal
-	_, err = MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
+	out, err = MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
 	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// create a proposal without deposit
-	_, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+	out, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 2", "Where is the title!?", v1beta1.ProposalTypeText)
 	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// create a proposal3 with deposit
-	_, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+	out, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 3", "Where is the title!?", v1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// create a proposal4 with deposit for check the cancel proposal cli tx
-	_, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+	out, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 4", "Where is the title!?", v1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// vote for proposal3 as val
-	_, err = MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
+	out, err = MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
 	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -327,7 +335,7 @@ func (s *IntegrationTestSuite) TestNewCmdCancelProposal() {
 				s.Require().NoError(err)
 
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-				s.Require().Equal(tc.expectedCode, resp.Code, out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, tc.expectedCode))
 			}
 		})
 	}

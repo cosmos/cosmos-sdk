@@ -188,7 +188,7 @@ func init() {
 	appmodule.Register(
 		&modulev1.Module{},
 		appmodule.Provide(ProvideModuleBasic, ProvideModule),
-		appmodule.Invoke(invokeSetStakingHooks),
+		appmodule.Invoke(InvokeSetStakingHooks),
 	)
 }
 
@@ -236,7 +236,7 @@ func ProvideModule(in StakingInputs) StakingOutputs {
 	return StakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 
-func invokeSetStakingHooks(
+func InvokeSetStakingHooks(
 	config *modulev1.Module,
 	keeper *keeper.Keeper,
 	stakingHooks map[string]types.StakingHooksWrapper,

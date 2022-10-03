@@ -134,8 +134,8 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 	return storeKey
 }
 
-func ProvideDeliverTx(app *App) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
+func ProvideDeliverTx(appBuilder *AppBuilder) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
-		return app.BaseApp.DeliverTx(tx)
+		return appBuilder.app.BaseApp.DeliverTx(tx)
 	}
 }

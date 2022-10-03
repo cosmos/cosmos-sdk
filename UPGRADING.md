@@ -101,6 +101,8 @@ Additionally, new packages have been introduced in order to further split the co
 
 * `errors` should replace `types/errors` when registering errors or wrapping SDK errors.
 * `math` contains the `Int` or `Uint` types that are used in the SDK.
+* `x/nft` an NFT base module.
+* `x/group` a group module allowing to create DAOs, multisig and policies. Greatly composes with `x/authz`.
 
 #### `x/authz`
 

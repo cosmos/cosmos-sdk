@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -60,8 +60,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.addrs = simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
 	suite.valAddrs = simtestutil.ConvertAddrsToValAddrs(suite.addrs)
-
-	suite.NoError(suite.distrKeeper.SetParams(suite.ctx, types.DefaultParams()))
 	suite.msgServer = keeper.NewMsgServerImpl(suite.distrKeeper)
 }
 
@@ -362,7 +360,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 	ctx, addrs, valAddrs := suite.ctx, suite.addrs, suite.valAddrs
 
-	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(suite.T(), ctx, suite.stakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(valAddrs[0], valConsPk0, sdk.NewInt(100), true)
 

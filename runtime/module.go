@@ -8,6 +8,7 @@ import (
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -22,11 +23,6 @@ type BaseAppOption func(*baseapp.BaseApp)
 
 // IsManyPerContainerType indicates that this is a depinject.ManyPerContainerType.
 func (b BaseAppOption) IsManyPerContainerType() {}
-
-// appWrapper is used to pass around an instance of *App internally between
-// runtime dependency inject providers that is partially constructed (no
-// baseapp yet).
-type appWrapper *App
 
 func init() {
 	appmodule.Register(&runtimev1alpha1.Module{},
@@ -98,8 +94,8 @@ func SetupAppBuilder(inputs appInputs) {
 	app.ModuleManager = mm
 }
 
-func registerStoreKey(wrapper appWrapper, key storetypes.StoreKey) {
-	wrapper.storeKeys = append(wrapper.storeKeys, key)
+func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {
+	wrapper.app.storeKeys = append(wrapper.app.storeKeys, key)
 }
 
 func storeKeyOverride(config *runtimev1alpha1.Module, moduleName string) *runtimev1alpha1.StoreKeyConfig {
@@ -111,7 +107,7 @@ func storeKeyOverride(config *runtimev1alpha1.Module, moduleName string) *runtim
 	return nil
 }
 
-func ProvideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app appWrapper) *storetypes.KVStoreKey {
+func ProvideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) *storetypes.KVStoreKey {
 	override := storeKeyOverride(config, key.Name())
 
 	var storeKeyName string
@@ -126,19 +122,19 @@ func ProvideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, 
 	return storeKey
 }
 
-func ProvideTransientStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.TransientStoreKey {
+func ProvideTransientStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.TransientStoreKey {
 	storeKey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func ProvideMemoryStoreKey(key depinject.ModuleKey, app appWrapper) *storetypes.MemoryStoreKey {
+func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.MemoryStoreKey {
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
 }
 
-func ProvideDeliverTx(app appWrapper) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
+func ProvideDeliverTx(app *App) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
 		return app.BaseApp.DeliverTx(tx)
 	}

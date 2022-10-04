@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -38,8 +39,8 @@ func TestMigrateStore(t *testing.T) {
 	prop2Bz, err := cdc.Marshal(&prop2)
 	require.NoError(t, err)
 
-	store.Set(v1gov.ProposalKey(prop1.ProposalId), prop1Bz)
-	store.Set(v1gov.ProposalKey(prop2.ProposalId), prop2Bz)
+	store2.Set(store, v1gov.ProposalKey(prop1.ProposalId), prop1Bz)
+	store2.Set(store, v1gov.ProposalKey(prop2.ProposalId), prop2Bz)
 
 	// Run migrations.
 	err = v3gov.MigrateStore(ctx, govKey, cdc)

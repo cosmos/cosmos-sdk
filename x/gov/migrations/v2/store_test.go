@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -73,7 +74,7 @@ func TestMigrateStore(t *testing.T) {
 
 	// Set all the old keys to the store
 	for _, tc := range testCases {
-		store.Set(tc.oldKey, tc.oldValue)
+		store2.Set(store, tc.oldKey, tc.oldValue)
 	}
 
 	// Run migratio

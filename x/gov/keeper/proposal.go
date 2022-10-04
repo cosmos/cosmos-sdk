@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -95,19 +96,25 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	return proposal, nil
 }
 
+func (keeper Keeper) decodeProposal(bz []byte) (v1.Proposal, error) {
+	var proposal v1.Proposal
+	if bz == nil {
+		return v1.Proposal{}, nil
+	}
+	if err := keeper.UnmarshalProposal(bz, &proposal); err != nil {
+		panic(err)
+	}
+	return proposal, nil
+}
+
 // GetProposal gets a proposal from store by ProposalID.
 // Panics if can't unmarshal the proposal.
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	bz := store.Get(types.ProposalKey(proposalID))
-	if bz == nil {
+	proposal, err := store2.GetAndDecode(store, keeper.decodeProposal, types.ProposalKey(proposalID))
+	if err != nil {
 		return v1.Proposal{}, false
-	}
-
-	var proposal v1.Proposal
-	if err := keeper.UnmarshalProposal(bz, &proposal); err != nil {
-		panic(err)
 	}
 
 	return proposal, true
@@ -122,7 +129,7 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 	}
 
 	store := ctx.KVStore(keeper.storeKey)
-	store.Set(types.ProposalKey(proposal.Id), bz)
+	store2.Set(store, types.ProposalKey(proposal.Id), bz)
 }
 
 // DeleteProposal deletes a proposal from store.
@@ -220,22 +227,29 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params v1.QueryPropos
 	return filteredProposals
 }
 
-// GetProposalID gets the highest proposal ID
-func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err error) {
-	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(types.ProposalIDKey)
+func (keeper Keeper) decodeProposalID(bz []byte) (proposalID uint64, err error) {
 	if bz == nil {
 		return 0, sdkerrors.Wrap(types.ErrInvalidGenesis, "initial proposal ID hasn't been set")
 	}
-
 	proposalID = types.GetProposalIDFromBytes(bz)
+	return proposalID, nil
+}
+
+// GetProposalID gets the highest proposal ID
+func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err error) {
+	store := ctx.KVStore(keeper.storeKey)
+	proposalID, err = store2.GetAndDecode(store, keeper.decodeProposalID, types.ProposalIDKey)
+	if err != nil {
+		panic(err)
+	}
+
 	return proposalID, nil
 }
 
 // SetProposalID sets the new proposal ID to the store
 func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Set(types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
+	store2.Set(store, types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
 }
 
 func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal v1.Proposal) {

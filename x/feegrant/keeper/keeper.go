@@ -6,9 +6,9 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -111,7 +111,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 		return err
 	}
 
-	store.Set(key, bz)
+	store2.Set(store, key, bz)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			feegrant.EventTypeSetFeeGrant,
@@ -143,7 +143,7 @@ func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 		return err
 	}
 
-	store.Set(key, bz)
+	store2.Set(store, key, bz)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -189,21 +189,27 @@ func (k Keeper) GetAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (
 	return grant.GetGrant()
 }
 
-// getGrant returns entire grant between both accounts
-func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*feegrant.Grant, error) {
-	store := ctx.KVStore(k.storeKey)
-	key := feegrant.FeeAllowanceKey(granter, grantee)
-	bz := store.Get(key)
+func (k Keeper) decodeFeegrant(bz []byte) (*feegrant.Grant, error) {
 	if len(bz) == 0 {
 		return nil, sdkerrors.ErrNotFound.Wrap("fee-grant not found")
 	}
-
 	var feegrant feegrant.Grant
 	if err := k.cdc.Unmarshal(bz, &feegrant); err != nil {
 		return nil, err
 	}
-
 	return &feegrant, nil
+}
+
+// getGrant returns entire grant between both accounts
+func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*feegrant.Grant, error) {
+	store := ctx.KVStore(k.storeKey)
+	key := feegrant.FeeAllowanceKey(granter, grantee)
+	feegrant, err := store2.GetAndDecode(store, k.decodeFeegrant, key)
+	if err != nil {
+		panic(err)
+	}
+
+	return feegrant, nil
 }
 
 // IterateAllFeeAllowances iterates over all the grants in the store.
@@ -320,7 +326,7 @@ func (k Keeper) removeFromGrantQueue(ctx sdk.Context, exp *time.Time, allowanceK
 
 func (k Keeper) addToFeeAllowanceQueue(ctx sdk.Context, grantKey []byte, exp *time.Time) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(feegrant.FeeAllowancePrefixQueue(exp, grantKey), []byte{})
+	store2.Set(store, feegrant.FeeAllowancePrefixQueue(exp, grantKey), []byte{})
 }
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.

@@ -3,21 +3,29 @@ package keeper
 import (
 	"fmt"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
+func (keeper Keeper) decodeDeposit(bz []byte) (v1.Deposit, error) {
+	var deposit v1.Deposit
+	if bz == nil {
+		return deposit, nil
+	}
+	keeper.cdc.MustUnmarshal(bz, &deposit)
+	return deposit, nil
+}
+
 // GetDeposit gets the deposit of a specific depositor on a specific proposal
 func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) (deposit v1.Deposit, found bool) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(types.DepositKey(proposalID, depositorAddr))
-	if bz == nil {
+	deposit, err := store2.GetAndDecode(store, keeper.decodeDeposit, types.DepositKey(proposalID, depositorAddr))
+	if err != nil {
 		return deposit, false
 	}
-
-	keeper.cdc.MustUnmarshal(bz, &deposit)
 
 	return deposit, true
 }
@@ -28,7 +36,7 @@ func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit v1.Deposit) {
 	bz := keeper.cdc.MustMarshal(&deposit)
 	depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
 
-	store.Set(types.DepositKey(deposit.ProposalId, depositor), bz)
+	store2.Set(store, types.DepositKey(deposit.ProposalId, depositor), bz)
 }
 
 // GetAllDeposits returns all the deposits from the store

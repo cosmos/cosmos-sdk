@@ -2,6 +2,7 @@ package v046
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +38,7 @@ func addAllowancesByExpTimeQueue(ctx types.Context, store storetypes.KVStore, cd
 				prefixStore.Delete(key)
 			} else {
 				grantByExpTimeQueueKey := FeeAllowancePrefixQueue(exp, key)
-				store.Set(grantByExpTimeQueueKey, []byte{})
+				store2.Set(store, grantByExpTimeQueueKey, []byte{})
 			}
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,7 +31,7 @@ func migratePrefixProposalAddress(store sdk.KVStore, prefixBz []byte) {
 		newStoreKey := append(append(prefixBz, proposalID...), address.MustLengthPrefix(addr)...)
 
 		// Set new key on store. Values don't change.
-		store.Set(newStoreKey, oldStoreIter.Value())
+		store2.Set(store, newStoreKey, oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 }
@@ -65,7 +66,7 @@ func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
 			return err
 		}
 
-		store.Set(iterator.Key(), bz)
+		store2.Set(store, iterator.Key(), bz)
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package v3
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,7 +35,7 @@ func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 		}
 
 		// Set new value on store.
-		propStore.Set(iter.Key(), bz)
+		store2.Set(propStore, iter.Key(), bz)
 	}
 
 	return nil

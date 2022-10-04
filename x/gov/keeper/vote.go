@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -64,15 +65,21 @@ func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID uint64) (votes v1.Vote
 	return
 }
 
+func (keeper Keeper) decodeVote(bz []byte) (vote v1.Vote, err error) {
+	if bz == nil {
+		return vote, nil
+	}
+	keeper.cdc.MustUnmarshal(bz, &vote)
+	return vote, nil
+}
+
 // GetVote gets the vote from an address on a specific proposal
 func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote v1.Vote, found bool) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(types.VoteKey(proposalID, voterAddr))
-	if bz == nil {
+	vote, err := store2.GetAndDecode(store, keeper.decodeVote, types.VoteKey(proposalID, voterAddr))
+	if err != nil {
 		return vote, false
 	}
-
-	keeper.cdc.MustUnmarshal(bz, &vote)
 
 	return vote, true
 }
@@ -83,7 +90,7 @@ func (keeper Keeper) SetVote(ctx sdk.Context, vote v1.Vote) {
 	bz := keeper.cdc.MustMarshal(&vote)
 	addr := sdk.MustAccAddressFromBech32(vote.Voter)
 
-	store.Set(types.VoteKey(vote.ProposalId, addr), bz)
+	store2.Set(store, types.VoteKey(vote.ProposalId, addr), bz)
 }
 
 // IterateAllVotes iterates over all the stored votes and performs a callback function

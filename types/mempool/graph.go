@@ -62,18 +62,14 @@ type graph struct {
 }
 
 func (g *graph) Insert(context sdk.Context, tx Tx) error {
-	senders := tx.(signing.SigVerifiableTx).GetSigners()
-	nonces, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
-
+	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
-	} else if len(senders) != len(nonces) {
-		return fmt.Errorf("number of senders (%d) does not match number of nonces (%d)", len(senders), len(nonces))
 	}
 
-	// TODO multiple senders
-	sender := senders[0].String()
-	nonce := nonces[0].Sequence
+	sig := sigs[0]
+	sender := sig.PubKey.Address().String()
+	nonce := sig.Sequence
 	node := &node{priority: context.Priority(), nonce: nonce, sender: sender, tx: tx}
 	g.AddNode(node)
 	return nil

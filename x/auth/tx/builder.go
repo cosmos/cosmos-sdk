@@ -1,7 +1,6 @@
 package tx
 
 import (
-	"crypto/sha256"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -33,7 +32,6 @@ type wrapper struct {
 	// from the client using TxRaw if the tx was decoded from the wire
 	authInfoBz []byte
 
-	hash     *[32]byte
 	numBytes int
 
 	txBodyHasUnknownNonCriticals bool
@@ -47,7 +45,6 @@ var (
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
 	_ tx.TipTx                   = &wrapper{}
 	_ mempool.Tx                 = &wrapper{}
-	_ mempool.HashableTx         = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -72,27 +69,6 @@ func newBuilder(cdc codec.Codec) *wrapper {
 
 func (w *wrapper) Size() int {
 	return w.numBytes
-}
-
-// hashFromSig hashes the signature.  Presently this is only used in test when w.hash is nil
-func (w *wrapper) hashFromSig() [32]byte {
-	var sigBytes []byte
-	for _, bs := range w.tx.Signatures {
-		sigBytes = append(sigBytes, bs...)
-	}
-	return sha256.Sum256(sigBytes)
-}
-
-// GetHash used for secondary, deterministic tx ordering in the mempool
-// when there are multiple txs with the same priority.
-// TODO: This should be altered use either sig bytes or txBytes for the hash
-func (w *wrapper) GetHash() [32]byte {
-	if w.hash == nil {
-		hash := w.hashFromSig()
-		w.hash = &hash
-		return hash
-	}
-	return *w.hash
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {

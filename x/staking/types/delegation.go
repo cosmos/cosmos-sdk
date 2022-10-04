@@ -92,13 +92,13 @@ func (d Delegations) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time, balance math.Int, id uint64) UnbondingDelegationEntry {
+func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time, balance math.Int, unbondingID uint64) UnbondingDelegationEntry {
 	return UnbondingDelegationEntry{
 		CreationHeight:          creationHeight,
 		CompletionTime:          completionTime,
 		InitialBalance:          balance,
 		Balance:                 balance,
-		UnbondingId:             id,
+		UnbondingId:             unbondingID,
 		UnbondingOnHoldRefCount: 0,
 	}
 }
@@ -157,7 +157,7 @@ func NewUnbondingDelegation(
 }
 
 // AddEntry - append entry to the unbonding delegation
-func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance math.Int, id uint64) {
+func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance math.Int, unbondingID uint64) {
 	// Check the entries exists with creation_height and complete_time
 	entryIndex := -1
 	for index, ubdEntry := range ubd.Entries {
@@ -176,7 +176,7 @@ func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time
 		ubd.Entries[entryIndex] = ubdEntry
 	} else {
 		// append the new unbond delegation entry
-		entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance, id)
+		entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance, unbondingID)
 		ubd.Entries = append(ubd.Entries, entry)
 	}
 }
@@ -406,10 +406,10 @@ func NewRedelegationResponse(
 
 // NewRedelegationEntryResponse creates a new RedelegationEntryResponse instance.
 func NewRedelegationEntryResponse(
-	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance math.Int, id uint64,
+	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance math.Int, unbondingID uint64,
 ) RedelegationEntryResponse {
 	return RedelegationEntryResponse{
-		RedelegationEntry: NewRedelegationEntry(creationHeight, completionTime, initialBalance, sharesDst, id),
+		RedelegationEntry: NewRedelegationEntry(creationHeight, completionTime, initialBalance, sharesDst, unbondingID),
 		Balance:           balance,
 	}
 }

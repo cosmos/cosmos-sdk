@@ -417,7 +417,6 @@ func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time, endHe
 // UnbondAllMatureValidators unbonds all the mature unbonding validators that
 // have finished their unbonding period.
 func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
-
 	blockTime := ctx.BlockTime()
 	blockHeight := ctx.BlockHeight()
 

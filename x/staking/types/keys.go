@@ -42,7 +42,7 @@ var (
 	RedelegationByValSrcIndexKey     = []byte{0x35} // prefix for each key for an redelegation, by source validator operator
 	RedelegationByValDstIndexKey     = []byte{0x36} // prefix for each key for an redelegation, by destination validator operator
 
-	UnbondingIdKey    = []byte{0x37} // key for the counter for the incrementing id for UnbondingOperations
+	UnbondingIDKey    = []byte{0x37} // key for the counter for the incrementing id for UnbondingOperations
 	UnbondingIndexKey = []byte{0x38} // prefix for an index for looking up unbonding operations by their IDs
 	UnbondingTypeKey  = []byte{0x39} // prefix for an index containing the type of unbonding operations
 
@@ -50,13 +50,13 @@ var (
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
-	HistoricalInfoKey   = []byte{0x50} // prefix for the historical info
-	ValidatorUpdatesKey = []byte{0x51} // prefix for the end block validator updates key
+	HistoricalInfoKey   = []byte{0x60} // prefix for the historical info
+	ValidatorUpdatesKey = []byte{0x61} // prefix for the end block validator updates key
 
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 )
 
-// TODO: Cosmos-SDK team- Is this the way I should do an enum? Is this the right place to do it?
+// UnbondingType defines the type of unbonding operation
 type UnbondingType int
 
 const (

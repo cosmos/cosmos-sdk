@@ -3,6 +3,7 @@ package keeper // noalias
 import (
 	"bytes"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -33,7 +34,7 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 				deleted = true
 			}
 
-			store.Delete(iterator.Key())
+			store2.Delete(store, iterator.Key())
 		}
 	}
 

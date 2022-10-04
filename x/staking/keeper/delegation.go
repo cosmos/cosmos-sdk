@@ -110,7 +110,7 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) e
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()))
+	store2.Delete(store, types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()))
 	return nil
 }
 
@@ -296,8 +296,8 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 		panic(err)
 	}
 	key := types.GetUBDKey(delegatorAddress, addr)
-	store.Delete(key)
-	store.Delete(types.GetUBDByValIndexKey(delegatorAddress, addr))
+	store2.Delete(store, key)
+	store2.Delete(store, types.GetUBDByValIndexKey(delegatorAddress, addr))
 }
 
 // SetUnbondingDelegationEntry adds an entry to the unbonding delegation at
@@ -381,7 +381,7 @@ func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context, currTime time.Time) (m
 
 		matureUnbonds = append(matureUnbonds, timeslice.Pairs...)
 
-		store.Delete(unbondingTimesliceIterator.Key())
+		store2.Delete(store, unbondingTimesliceIterator.Key())
 	}
 
 	return matureUnbonds
@@ -532,9 +532,9 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 		panic(err)
 	}
 	redKey := types.GetREDKey(delegatorAddress, valSrcAddr, valDestAddr)
-	store.Delete(redKey)
-	store.Delete(types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr))
-	store.Delete(types.GetREDByValDstIndexKey(delegatorAddress, valSrcAddr, valDestAddr))
+	store2.Delete(store, redKey)
+	store2.Delete(store, types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr))
+	store2.Delete(store, types.GetREDByValDstIndexKey(delegatorAddress, valSrcAddr, valDestAddr))
 }
 
 // redelegation queue timeslice operations
@@ -605,7 +605,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 
 		matureRedelegations = append(matureRedelegations, timeslice.Triplets...)
 
-		store.Delete(redelegationTimesliceIterator.Key())
+		store2.Delete(store, redelegationTimesliceIterator.Key())
 	}
 
 	return matureRedelegations

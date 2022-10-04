@@ -58,7 +58,7 @@ func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 func (k Keeper) burnWithNoCheck(ctx sdk.Context, classID string, nftID string) error {
 	owner := k.GetOwner(ctx, classID, nftID)
 	nftStore := k.getNFTStore(ctx, classID)
-	nftStore.Delete([]byte(nftID))
+	store2.Delete(nftStore, []byte(nftID))
 
 	k.deleteOwner(ctx, classID, nftID, owner)
 	k.decrTotalSupply(ctx, classID)
@@ -213,10 +213,10 @@ func (k Keeper) setOwner(ctx sdk.Context, classID, nftID string, owner sdk.AccAd
 
 func (k Keeper) deleteOwner(ctx sdk.Context, classID, nftID string, owner sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(ownerStoreKey(classID, nftID))
+	store2.Delete(store, ownerStoreKey(classID, nftID))
 
 	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
-	ownerStore.Delete([]byte(nftID))
+	store2.Delete(ownerStore, []byte(nftID))
 }
 
 func (k Keeper) getNFTStore(ctx sdk.Context, classID string) prefix.Store {

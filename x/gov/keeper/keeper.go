@@ -144,7 +144,7 @@ func (keeper Keeper) InsertActiveProposalQueue(ctx sdk.Context, proposalID uint6
 // RemoveFromActiveProposalQueue removes a proposalID from the Active Proposal Queue
 func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Delete(types.ActiveProposalQueueKey(proposalID, endTime))
+	store2.Delete(store, types.ActiveProposalQueueKey(proposalID, endTime))
 }
 
 // InsertInactiveProposalQueue Inserts a ProposalID into the inactive proposal queue at endTime
@@ -157,7 +157,7 @@ func (keeper Keeper) InsertInactiveProposalQueue(ctx sdk.Context, proposalID uin
 // RemoveFromInactiveProposalQueue removes a proposalID from the Inactive Proposal Queue
 func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Delete(types.InactiveProposalQueueKey(proposalID, endTime))
+	store2.Delete(store, types.InactiveProposalQueueKey(proposalID, endTime))
 }
 
 // Iterators

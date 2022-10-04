@@ -154,7 +154,7 @@ func (a table) Delete(store sdk.KVStore, rowID RowID) error {
 	if err := a.GetOne(store, rowID, oldValue); err != nil {
 		return sdkerrors.Wrap(err, "load old value")
 	}
-	pStore.Delete(rowID)
+	store2.Delete(pStore, rowID)
 
 	for i, itc := range a.afterDelete {
 		if err := itc(store, rowID, oldValue); err != nil {

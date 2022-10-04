@@ -95,7 +95,7 @@ func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Valida
 // validator index
 func (k Keeper) DeleteValidatorByPowerIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
+	store2.Delete(store, types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 }
 
 // validator index
@@ -187,9 +187,9 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 
 	// delete the old validator record
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetValidatorKey(address))
-	store.Delete(types.GetValidatorByConsAddrKey(valConsAddr))
-	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
+	store2.Delete(store, types.GetValidatorKey(address))
+	store2.Delete(store, types.GetValidatorByConsAddrKey(valConsAddr))
+	store2.Delete(store, types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 
 	// call hooks
 	k.AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
@@ -286,7 +286,7 @@ func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, 
 // Delete the last validator power.
 func (k Keeper) DeleteLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetLastValidatorPowerKey(operator))
+	store2.Delete(store, types.GetLastValidatorPowerKey(operator))
 }
 
 // returns an iterator for the consensus validators in the last block
@@ -380,7 +380,7 @@ func (k Keeper) InsertUnbondingValidatorQueue(ctx sdk.Context, val types.Validat
 // given height and time.
 func (k Keeper) DeleteValidatorQueueTimeSlice(ctx sdk.Context, endTime time.Time, endHeight int64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetValidatorQueueKey(endTime, endHeight))
+	store2.Delete(store, types.GetValidatorQueueKey(endTime, endHeight))
 }
 
 // DeleteValidatorQueue removes a validator by address from the unbonding queue
@@ -471,7 +471,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 				}
 			}
 
-			store.Delete(key)
+			store2.Delete(store, key)
 		}
 	}
 }

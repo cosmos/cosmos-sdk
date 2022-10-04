@@ -32,7 +32,7 @@ func (k Keeper) DeleteHistoricalInfo(ctx sdk.Context, height int64) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetHistoricalInfoKey(height)
 
-	store.Delete(key)
+	store2.Delete(store, key)
 }
 
 // IterateHistoricalInfo provides an interator over all stored HistoricalInfo

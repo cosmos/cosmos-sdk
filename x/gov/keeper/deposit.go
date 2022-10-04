@@ -71,7 +71,7 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx sdk.Context, proposalID uint64) {
 
 		depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
 
-		store.Delete(types.DepositKey(proposalID, depositor))
+		store2.Delete(store, types.DepositKey(proposalID, depositor))
 		return false
 	})
 }
@@ -182,7 +182,7 @@ func (keeper Keeper) RefundAndDeleteDeposits(ctx sdk.Context, proposalID uint64)
 			panic(err)
 		}
 
-		store.Delete(types.DepositKey(proposalID, depositor))
+		store2.Delete(store, types.DepositKey(proposalID, depositor))
 		return false
 	})
 }

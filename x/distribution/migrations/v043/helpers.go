@@ -25,7 +25,7 @@ func MigratePrefixAddress(store sdk.KVStore, prefixBz []byte) {
 
 		// Set new key on store. Values don't change.
 		store2.Set(store, newStoreKey, oldStoreIter.Value())
-		oldStore.Delete(oldStoreIter.Key())
+		store2.Delete(oldStore, oldStoreIter.Key())
 	}
 }
 
@@ -46,7 +46,7 @@ func MigratePrefixAddressBytes(store sdk.KVStore, prefixBz []byte) {
 
 		// Set new key on store. Values don't change.
 		store2.Set(store, newStoreKey, oldStoreIter.Value())
-		oldStore.Delete(oldStoreIter.Key())
+		store2.Delete(oldStore, oldStoreIter.Key())
 	}
 }
 
@@ -67,6 +67,6 @@ func MigratePrefixAddressAddress(store sdk.KVStore, prefixBz []byte) {
 
 		// Set new key on store. Values don't change.
 		store2.Set(store, newStoreKey, oldStoreIter.Value())
-		oldStore.Delete(oldStoreIter.Key())
+		store2.Delete(oldStore, oldStoreIter.Key())
 	}
 }

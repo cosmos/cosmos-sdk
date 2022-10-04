@@ -148,14 +148,14 @@ func (k Keeper) DequeueEpochActions(ctx sdk.Context) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
-		store.Delete(key)
+		store2.Delete(store, key)
 	}
 }
 
 // DeleteByKey delete item by key
 func (k Keeper) DeleteByKey(ctx sdk.Context, key []byte) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(key)
+	store2.Delete(store, key)
 }
 
 // GetEpochActionByIterator get action by iterator

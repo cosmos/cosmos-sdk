@@ -38,7 +38,7 @@ func migrateDoneUpgradeKeys(ctx sdk.Context, storeKey storetypes.StoreKey) error
 		newKey := encodeDoneKey(upgradeName, upgradeHeight)
 
 		store2.Set(store, newKey, []byte{1})
-		oldDoneStore.Delete(oldKey)
+		store2.Delete(oldDoneStore, oldKey)
 	}
 	return nil
 }

@@ -82,7 +82,7 @@ func (i Indexer) OnDelete(store sdk.KVStore, rowID RowID, value interface{}) err
 		if err != nil {
 			return err
 		}
-		store.Delete(indexKey)
+		store2.Delete(store, indexKey)
 	}
 	return nil
 }
@@ -106,7 +106,7 @@ func (i Indexer) OnUpdate(store sdk.KVStore, rowID RowID, newValue, oldValue int
 		if err != nil {
 			return err
 		}
-		store.Delete(indexKey)
+		store2.Delete(store, indexKey)
 	}
 	newKeys, err := difference(newSecIdxKeys, oldSecIdxKeys)
 	if err != nil {

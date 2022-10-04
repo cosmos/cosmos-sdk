@@ -168,6 +168,6 @@ func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.C
 	iter := sdk.KVStorePrefixIterator(store, types.ValidatorMissedBlockBitArrayPrefixKey(address))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
+		store2.Delete(store, iter.Key())
 	}
 }

@@ -148,7 +148,7 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 		keeper.RemoveFromActiveProposalQueue(ctx, proposalID, *proposal.VotingEndTime)
 	}
 
-	store.Delete(types.ProposalKey(proposalID))
+	store2.Delete(store, types.ProposalKey(proposalID))
 }
 
 // IterateProposals iterates over the all the proposals and performs a callback function.

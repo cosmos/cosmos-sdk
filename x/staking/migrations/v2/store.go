@@ -33,7 +33,7 @@ func migratePrefixAddressAddressAddress(store sdk.KVStore, prefixBz []byte) {
 
 		// Set new key on store. Values don't change.
 		store2.Set(store, newStoreKey, oldStoreIter.Value())
-		oldStore.Delete(oldStoreIter.Key())
+		store2.Delete(oldStore, oldStoreIter.Key())
 	}
 }
 
@@ -52,7 +52,7 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 
 		// Set new key on store. Values don't change.
 		store2.Set(store, newStoreKey, oldStoreIter.Value())
-		oldStore.Delete(oldStoreIter.Key())
+		store2.Delete(oldStore, oldStoreIter.Key())
 	}
 }
 

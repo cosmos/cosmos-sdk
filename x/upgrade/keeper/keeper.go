@@ -290,8 +290,8 @@ func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
 func (k Keeper) ClearIBCState(ctx sdk.Context, lastHeight int64) {
 	// delete IBC client and consensus state from store if this is IBC plan
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.UpgradedClientKey(lastHeight))
-	store.Delete(types.UpgradedConsStateKey(lastHeight))
+	store2.Delete(store, types.UpgradedClientKey(lastHeight))
+	store2.Delete(store, types.UpgradedConsStateKey(lastHeight))
 }
 
 // ClearUpgradePlan clears any schedule upgrade and associated IBC states.
@@ -303,7 +303,7 @@ func (k Keeper) ClearUpgradePlan(ctx sdk.Context) {
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.PlanKey())
+	store2.Delete(store, types.PlanKey())
 }
 
 // Logger returns a module-specific logger.

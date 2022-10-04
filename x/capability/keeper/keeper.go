@@ -345,11 +345,11 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability)
 
 	// Delete the forward mapping between the module and capability tuple and the
 	// capability name in the memKVStore
-	memStore.Delete(types.FwdCapabilityKey(sk.module, cap))
+	store2.Delete(memStore, types.FwdCapabilityKey(sk.module, cap))
 
 	// Delete the reverse mapping between the module and capability name and the
 	// index in the in-memory store.
-	memStore.Delete(types.RevCapabilityKey(sk.module, name))
+	store2.Delete(memStore, types.RevCapabilityKey(sk.module, name))
 
 	// remove owner
 	capOwners := sk.getOwners(ctx, cap)
@@ -360,7 +360,7 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability)
 
 	if len(capOwners.Owners) == 0 {
 		// remove capability owner set
-		prefixStore.Delete(indexKey)
+		store2.Delete(prefixStore, indexKey)
 		// since no one owns capability, we can delete capability from map
 		delete(sk.capMap, cap.GetIndex())
 	} else {

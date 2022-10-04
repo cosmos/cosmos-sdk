@@ -35,7 +35,7 @@ func addAllowancesByExpTimeQueue(ctx types.Context, store storetypes.KVStore, cd
 			// store key is not changed in 0.46
 			key := iterator.Key()
 			if exp.Before(ctx.BlockTime()) {
-				prefixStore.Delete(key)
+				store2.Delete(prefixStore, key)
 			} else {
 				grantByExpTimeQueueKey := FeeAllowancePrefixQueue(exp, key)
 				store2.Set(store, grantByExpTimeQueueKey, []byte{})

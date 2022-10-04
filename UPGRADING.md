@@ -37,7 +37,7 @@ This means you can replace your usage of `simapp.MakeTestEncodingConfig` in test
 #### Export
 
 `ExportAppStateAndValidators` takes an extra argument, `modulesToExport`, which is a list of module names to export.
-That argument should be passed to the module maanager `ExportGenesis` method.
+That argument should be passed to the module maanager `ExportGenesisFromModules` method.
 
 ### Protobuf
 

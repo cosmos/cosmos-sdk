@@ -1,11 +1,13 @@
 package simapp
 
 import (
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/nft"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -16,11 +18,17 @@ import (
 const UpgradeName = "v045-to-v046"
 
 func (app SimApp) RegisterUpgradeHandlers() {
+	baseAppLegacySS := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
+
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			// TODO: Decide how to handle baseapp consensus parameter migration.
-			// app.ConsensusParamsKeeper.Set(ctx, ...)
+			if cp := baseapp.GetConsensusParams(ctx, baseAppLegacySS); cp != nil {
+				app.ConsensusParamsKeeper.Set(ctx, cp)
+			} else {
+				ctx.Logger().Info("warning: consensus parameters are undefined; skipping migration", "upgrade", UpgradeName)
+			}
+
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		},
 	)

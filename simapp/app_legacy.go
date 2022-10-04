@@ -344,7 +344,7 @@ func NewSimApp(
 		),
 	)
 
-	// RegisterUpgradeHandlers is used for registering any on-chain upgrades
+	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	app.RegisterUpgradeHandlers()
 
 	app.NFTKeeper = nftkeeper.NewKeeper(keys[nftkeeper.StoreKey], appCodec, app.AccountKeeper, app.BankKeeper)

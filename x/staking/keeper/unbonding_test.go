@@ -255,6 +255,78 @@ func (s *KeeperTestSuite) TestValidatorByUnbondingIDAccessors() {
 	}
 }
 
-func (s *KeeperTestSuite) TestUnbondingCanComplete() {}
+func (s *KeeperTestSuite) TestUnbondingCanComplete() {
+	delAddrs, valAddrs := createValAddrs(3)
+	unbondingID := uint64(1)
 
-func (s *KeeperTestSuite) TestPutUnbondingOnHold() {}
+	// no unbondingID set
+	err := s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
+	s.Require().ErrorIs(err, types.ErrUnbondingNotFound)
+
+	// unbonding delegation
+	s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_UnbondingDelegation)
+	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
+	s.Require().ErrorIs(err, types.ErrUnbondingNotFound)
+
+	ubd := types.NewUnbondingDelegation(
+		delAddrs[0],
+		valAddrs[0],
+		0,
+		time.Unix(0, 0).UTC(),
+		sdk.NewInt(5),
+		unbondingID,
+	)
+	s.stakingKeeper.SetUnbondingDelegation(s.ctx, ubd)
+	s.stakingKeeper.SetUnbondingDelegationByUnbondingID(s.ctx, ubd, unbondingID)
+	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
+	s.Require().ErrorIs(err, types.ErrUnbondingOnHoldRefCountNegative)
+
+	err = s.stakingKeeper.PutUnbondingOnHold(s.ctx, unbondingID)
+	s.Require().NoError(err)
+	s.bankKeeper.EXPECT().UndelegateCoinsFromModuleToAccount(s.ctx, types.NotBondedPoolName, delAddrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5)))).Return(nil)
+	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
+	s.Require().NoError(err)
+
+	// redelegation
+	unbondingID++
+	s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_Redelegation)
+	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
+	s.Require().ErrorIs(err, types.ErrUnbondingNotFound)
+
+	red := types.NewRedelegation(
+		delAddrs[0],
+		valAddrs[0],
+		valAddrs[1],
+		0,
+		time.Unix(5, 0).UTC(),
+		sdk.NewInt(10),
+		math.LegacyNewDec(10),
+		unbondingID,
+	)
+	s.stakingKeeper.SetRedelegation(s.ctx, red)
+	s.stakingKeeper.SetRedelegationByUnbondingID(s.ctx, red, unbondingID)
+	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
+	s.Require().ErrorIs(err, types.ErrUnbondingOnHoldRefCountNegative)
+
+	err = s.stakingKeeper.PutUnbondingOnHold(s.ctx, unbondingID)
+	s.Require().NoError(err)
+	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
+	s.Require().NoError(err)
+
+	// validator unbonding
+	unbondingID++
+	s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_ValidatorUnbonding)
+	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
+	s.Require().ErrorIs(err, types.ErrUnbondingNotFound)
+
+	val := testutil.NewValidator(s.T(), valAddrs[0], PKs[0])
+	s.stakingKeeper.SetValidator(s.ctx, val)
+	s.stakingKeeper.SetValidatorByUnbondingID(s.ctx, val, unbondingID)
+	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
+	s.Require().ErrorIs(err, types.ErrUnbondingOnHoldRefCountNegative)
+
+	err = s.stakingKeeper.PutUnbondingOnHold(s.ctx, unbondingID)
+	s.Require().NoError(err)
+	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
+	s.Require().NoError(err)
+}

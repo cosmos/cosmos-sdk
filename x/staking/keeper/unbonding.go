@@ -245,7 +245,6 @@ func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) 
 	}
 
 	i, found := unbondingDelegationEntryArrayIndex(ubd, id)
-
 	if !found {
 		return types.ErrUnbondingNotFound
 	}

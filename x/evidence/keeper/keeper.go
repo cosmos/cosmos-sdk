@@ -3,12 +3,13 @@ package keeper
 import (
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -102,7 +103,15 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) erro
 // SetEvidence sets Evidence by hash in the module's KVStore.
 func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
-	store.Set(evidence.Hash(), k.MustMarshalEvidence(evidence))
+	store2.Set(store, evidence.Hash(), k.MustMarshalEvidence(evidence))
+}
+
+func (k Keeper) decodeEvidence(bz []byte) (exported.Evidence, error) {
+	if len(bz) == 0 {
+		return nil, nil
+	}
+	evidence := k.MustUnmarshalEvidence(bz)
+	return evidence, nil
 }
 
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
@@ -110,12 +119,12 @@ func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
 func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Evidence, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 
-	bz := store.Get(hash)
-	if len(bz) == 0 {
-		return nil, false
+	evidence, err := store2.GetAndDecode(store, k.decodeEvidence, hash)
+	if err != nil {
+		panic(err)
 	}
 
-	return k.MustUnmarshalEvidence(bz), true
+	return evidence, true
 }
 
 // IterateEvidence provides an interator over all stored Evidence objects. For

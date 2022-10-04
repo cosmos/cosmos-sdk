@@ -2,6 +2,7 @@ package v3
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/exported"
@@ -32,7 +33,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace 
 		return err
 	}
 
-	store.Set(ParamsKey, bz)
+	store2.Set(store, ParamsKey, bz)
 
 	return nil
 }

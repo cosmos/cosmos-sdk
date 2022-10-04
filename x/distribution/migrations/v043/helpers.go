@@ -1,6 +1,7 @@
 package v043
 
 import (
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -23,7 +24,7 @@ func MigratePrefixAddress(store sdk.KVStore, prefixBz []byte) {
 		newStoreKey = append(newStoreKey, address.MustLengthPrefix(addr)...)
 
 		// Set new key on store. Values don't change.
-		store.Set(newStoreKey, oldStoreIter.Value())
+		store2.Set(store, newStoreKey, oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 }
@@ -44,7 +45,7 @@ func MigratePrefixAddressBytes(store sdk.KVStore, prefixBz []byte) {
 		newStoreKey := append(append(prefixBz, address.MustLengthPrefix(addr)...), endBz...)
 
 		// Set new key on store. Values don't change.
-		store.Set(newStoreKey, oldStoreIter.Value())
+		store2.Set(store, newStoreKey, oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 }
@@ -65,7 +66,7 @@ func MigratePrefixAddressAddress(store sdk.KVStore, prefixBz []byte) {
 		newStoreKey := append(append(prefixBz, address.MustLengthPrefix(addr1)...), address.MustLengthPrefix(addr2)...)
 
 		// Set new key on store. Values don't change.
-		store.Set(newStoreKey, oldStoreIter.Value())
+		store2.Set(store, newStoreKey, oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 }

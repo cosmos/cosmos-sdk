@@ -3,19 +3,24 @@ package keeper
 import (
 	"cosmossdk.io/math"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+func (k Keeper) decodeParams(bz []byte) (types.Params, error) {
+	var params types.Params
+	k.cdc.MustUnmarshal(bz, &params)
+	return params, nil
+}
+
 // GetParams returns the total set of distribution parameters.
 func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
 	store := clientCtx.KVStore(k.storeKey)
-	bz := store.Get(types.ParamsKey)
-	if bz == nil {
-		return params
+	params, err := store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
+	if err != nil {
+		panic(err)
 	}
-
-	k.cdc.MustUnmarshal(bz, &params)
 	return params
 }
 
@@ -30,7 +35,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	if err != nil {
 		return err
 	}
-	store.Set(types.ParamsKey, bz)
+	store2.Set(store, types.ParamsKey, bz)
 
 	return nil
 }

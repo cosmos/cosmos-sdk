@@ -3,24 +3,34 @@ package keeper
 import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+func decodeAddr(bz []byte) (sdk.AccAddress, error) {
+	if bz == nil {
+		return sdk.AccAddress{}, nil
+	}
+
+	return sdk.AccAddress(bz), nil
+}
+
 // get the delegator withdraw address, defaulting to the delegator address
 func (k Keeper) GetDelegatorWithdrawAddr(ctx sdk.Context, delAddr sdk.AccAddress) sdk.AccAddress {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.GetDelegatorWithdrawAddrKey(delAddr))
-	if b == nil {
-		return delAddr
+	addr, err := store2.GetAndDecode(store, decodeAddr, types.GetDelegatorWithdrawAddrKey(delAddr))
+	if err != nil {
+		panic(err)
 	}
-	return sdk.AccAddress(b)
+
+	return addr
 }
 
 // set the delegator withdraw address
 func (k Keeper) SetDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAddr sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetDelegatorWithdrawAddrKey(delAddr), withdrawAddr.Bytes())
+	store2.Set(store, types.GetDelegatorWithdrawAddrKey(delAddr), withdrawAddr.Bytes())
 }
 
 // delete a delegator withdraw addr
@@ -43,14 +53,22 @@ func (k Keeper) IterateDelegatorWithdrawAddrs(ctx sdk.Context, handler func(del 
 	}
 }
 
+func (k Keeper) decodeFeePool(bz []byte) (types.FeePool, error) {
+	var feePool types.FeePool
+	if bz == nil {
+		panic("Stored fee pool should not have been nil")
+	}
+	k.cdc.MustUnmarshal(bz, &feePool)
+	return feePool, nil
+}
+
 // get the global fee pool distribution info
 func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.FeePool) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.FeePoolKey)
-	if b == nil {
-		panic("Stored fee pool should not have been nil")
+	feePool, err := store2.GetAndDecode(store, k.decodeFeePool, types.FeePoolKey)
+	if err != nil {
+		panic(err)
 	}
-	k.cdc.MustUnmarshal(b, &feePool)
 	return
 }
 
@@ -58,35 +76,52 @@ func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.FeePool) {
 func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&feePool)
-	store.Set(types.FeePoolKey, b)
+	store2.Set(store, types.FeePoolKey, b)
+}
+
+func (k Keeper) decodeKey(bz []byte) (sdk.ConsAddress, error) {
+	if bz == nil {
+		panic("previous proposer not set")
+	}
+	addrValue := gogotypes.BytesValue{}
+	k.cdc.MustUnmarshal(bz, &addrValue)
+	return addrValue.GetValue(), nil
 }
 
 // GetPreviousProposerConsAddr returns the proposer consensus address for the
 // current block.
 func (k Keeper) GetPreviousProposerConsAddr(ctx sdk.Context) sdk.ConsAddress {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ProposerKey)
-	if bz == nil {
-		panic("previous proposer not set")
+	addrValue, err := store2.GetAndDecode(store, k.decodeKey, types.ProposerKey)
+	if err != nil {
+		panic(err)
 	}
-
-	addrValue := gogotypes.BytesValue{}
-	k.cdc.MustUnmarshal(bz, &addrValue)
-	return addrValue.GetValue()
+	return addrValue
 }
 
 // set the proposer public key for this block
 func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.BytesValue{Value: consAddr})
-	store.Set(types.ProposerKey, bz)
+	store2.Set(store, types.ProposerKey, bz)
+}
+
+func (k Keeper) decodePeriod(bz []byte) (types.DelegatorStartingInfo, error) {
+	var period types.DelegatorStartingInfo
+	if bz == nil {
+		return types.DelegatorStartingInfo{}, nil
+	}
+	k.cdc.MustUnmarshal(bz, &period)
+	return period, nil
 }
 
 // get the starting info associated with a delegator
 func (k Keeper) GetDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) (period types.DelegatorStartingInfo) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.GetDelegatorStartingInfoKey(val, del))
-	k.cdc.MustUnmarshal(b, &period)
+	period, err := store2.GetAndDecode(store, k.decodePeriod, types.GetDelegatorStartingInfoKey(val, del))
+	if err != nil {
+		panic(err)
+	}
 	return
 }
 
@@ -94,7 +129,7 @@ func (k Keeper) GetDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, de
 func (k Keeper) SetDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress, period types.DelegatorStartingInfo) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&period)
-	store.Set(types.GetDelegatorStartingInfoKey(val, del), b)
+	store2.Set(store, types.GetDelegatorStartingInfoKey(val, del), b)
 }
 
 // check existence of the starting info associated with a delegator
@@ -124,11 +159,23 @@ func (k Keeper) IterateDelegatorStartingInfos(ctx sdk.Context, handler func(val 
 	}
 }
 
+func (k Keeper) decodeValHistoricalRewards(bz []byte) (types.ValidatorHistoricalRewards, error) {
+	var rewards types.ValidatorHistoricalRewards
+	if bz == nil {
+		return types.ValidatorHistoricalRewards{}, nil
+	}
+	k.cdc.MustUnmarshal(bz, &rewards)
+	return rewards, nil
+}
+
 // get historical rewards for a particular period
 func (k Keeper) GetValidatorHistoricalRewards(ctx sdk.Context, val sdk.ValAddress, period uint64) (rewards types.ValidatorHistoricalRewards) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.GetValidatorHistoricalRewardsKey(val, period))
-	k.cdc.MustUnmarshal(b, &rewards)
+	r, err := store2.GetAndDecode(store, k.decodeValHistoricalRewards, types.GetValidatorHistoricalRewardsKey(val, period))
+	if err != nil {
+		panic(err)
+	}
+	rewards = types.ValidatorHistoricalRewards(r)
 	return
 }
 
@@ -136,7 +183,7 @@ func (k Keeper) GetValidatorHistoricalRewards(ctx sdk.Context, val sdk.ValAddres
 func (k Keeper) SetValidatorHistoricalRewards(ctx sdk.Context, val sdk.ValAddress, period uint64, rewards types.ValidatorHistoricalRewards) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&rewards)
-	store.Set(types.GetValidatorHistoricalRewardsKey(val, period), b)
+	store2.Set(store, types.GetValidatorHistoricalRewardsKey(val, period), b)
 }
 
 // iterate over historical rewards
@@ -193,11 +240,22 @@ func (k Keeper) GetValidatorHistoricalReferenceCount(ctx sdk.Context) (count uin
 	return
 }
 
+func (k Keeper) decodeValCurrentRewards(bz []byte) (types.ValidatorCurrentRewards, error) {
+	var rewards types.ValidatorCurrentRewards
+	if bz == nil {
+		return types.ValidatorCurrentRewards{}, nil
+	}
+	k.cdc.MustUnmarshal(bz, &rewards)
+	return rewards, nil
+}
+
 // get current rewards for a validator
 func (k Keeper) GetValidatorCurrentRewards(ctx sdk.Context, val sdk.ValAddress) (rewards types.ValidatorCurrentRewards) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.GetValidatorCurrentRewardsKey(val))
-	k.cdc.MustUnmarshal(b, &rewards)
+	rewards, err := store2.GetAndDecode(store, k.decodeValCurrentRewards, types.GetValidatorCurrentRewardsKey(val))
+	if err != nil {
+		panic(err)
+	}
 	return
 }
 
@@ -205,7 +263,7 @@ func (k Keeper) GetValidatorCurrentRewards(ctx sdk.Context, val sdk.ValAddress) 
 func (k Keeper) SetValidatorCurrentRewards(ctx sdk.Context, val sdk.ValAddress, rewards types.ValidatorCurrentRewards) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&rewards)
-	store.Set(types.GetValidatorCurrentRewardsKey(val), b)
+	store2.Set(store, types.GetValidatorCurrentRewardsKey(val), b)
 }
 
 // delete current rewards for a validator
@@ -229,14 +287,22 @@ func (k Keeper) IterateValidatorCurrentRewards(ctx sdk.Context, handler func(val
 	}
 }
 
+func (k Keeper) decodeCommission(bz []byte) (types.ValidatorAccumulatedCommission, error) {
+	var commission types.ValidatorAccumulatedCommission
+	if bz == nil {
+		return types.ValidatorAccumulatedCommission{}, nil
+	}
+	k.cdc.MustUnmarshal(bz, &commission)
+	return commission, nil
+}
+
 // get accumulated commission for a validator
 func (k Keeper) GetValidatorAccumulatedCommission(ctx sdk.Context, val sdk.ValAddress) (commission types.ValidatorAccumulatedCommission) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.GetValidatorAccumulatedCommissionKey(val))
-	if b == nil {
-		return types.ValidatorAccumulatedCommission{}
+	commission, err := store2.GetAndDecode(store, k.decodeCommission, types.GetValidatorAccumulatedCommissionKey(val))
+	if err != nil {
+		panic(err)
 	}
-	k.cdc.MustUnmarshal(b, &commission)
 	return
 }
 
@@ -251,7 +317,7 @@ func (k Keeper) SetValidatorAccumulatedCommission(ctx sdk.Context, val sdk.ValAd
 		bz = k.cdc.MustMarshal(&commission)
 	}
 
-	store.Set(types.GetValidatorAccumulatedCommissionKey(val), bz)
+	store2.Set(store, types.GetValidatorAccumulatedCommissionKey(val), bz)
 }
 
 // delete accumulated commission for a validator
@@ -275,11 +341,22 @@ func (k Keeper) IterateValidatorAccumulatedCommissions(ctx sdk.Context, handler 
 	}
 }
 
+func (k Keeper) decodeValOutstandingRewards(bz []byte) (types.ValidatorOutstandingRewards, error) {
+	var rewards types.ValidatorOutstandingRewards
+	if bz == nil {
+		return types.ValidatorOutstandingRewards{}, nil
+	}
+	k.cdc.MustUnmarshal(bz, &rewards)
+	return rewards, nil
+}
+
 // get validator outstanding rewards
 func (k Keeper) GetValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddress) (rewards types.ValidatorOutstandingRewards) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetValidatorOutstandingRewardsKey(val))
-	k.cdc.MustUnmarshal(bz, &rewards)
+	rewards, err := store2.GetAndDecode(store, k.decodeValOutstandingRewards, types.GetValidatorOutstandingRewardsKey(val))
+	if err != nil {
+		panic(err)
+	}
 	return
 }
 
@@ -287,7 +364,7 @@ func (k Keeper) GetValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddre
 func (k Keeper) SetValidatorOutstandingRewards(ctx sdk.Context, val sdk.ValAddress, rewards types.ValidatorOutstandingRewards) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&rewards)
-	store.Set(types.GetValidatorOutstandingRewardsKey(val), b)
+	store2.Set(store, types.GetValidatorOutstandingRewardsKey(val), b)
 }
 
 // delete validator outstanding rewards
@@ -311,14 +388,22 @@ func (k Keeper) IterateValidatorOutstandingRewards(ctx sdk.Context, handler func
 	}
 }
 
+func (k Keeper) decodeSlashEvent(bz []byte) (types.ValidatorSlashEvent, error) {
+	var event types.ValidatorSlashEvent
+	if bz == nil {
+		return types.ValidatorSlashEvent{}, nil
+	}
+	k.cdc.MustUnmarshal(bz, &event)
+	return event, nil
+}
+
 // get slash event for height
 func (k Keeper) GetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, height, period uint64) (event types.ValidatorSlashEvent, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.GetValidatorSlashEventKey(val, height, period))
-	if b == nil {
-		return types.ValidatorSlashEvent{}, false
+	event, err := store2.GetAndDecode(store, k.decodeSlashEvent, types.GetValidatorSlashEventKey(val, height, period))
+	if err != nil {
+		panic(err)
 	}
-	k.cdc.MustUnmarshal(b, &event)
 	return event, true
 }
 
@@ -326,7 +411,7 @@ func (k Keeper) GetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, heig
 func (k Keeper) SetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, height, period uint64, event types.ValidatorSlashEvent) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&event)
-	store.Set(types.GetValidatorSlashEventKey(val, height, period), b)
+	store2.Set(store, types.GetValidatorSlashEventKey(val, height, period), b)
 }
 
 // iterate over slash events between heights, inclusive

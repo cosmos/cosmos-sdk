@@ -3,11 +3,13 @@ package keeper
 import (
 	"time"
 
+	db "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	db "github.com/tendermint/tm-db"
 )
 
 const (
@@ -40,19 +42,26 @@ func NewKeeper(cdc codec.BinaryCodec, key storetypes.StoreKey, commitTimeout tim
 	}
 }
 
+func (k Keeper) decodeID(bz []byte) (uint64, error) {
+	if bz == nil {
+		// return default action ID to 1
+		return DefaultEpochActionID, nil
+	}
+	id := sdk.BigEndianToUint64(bz)
+	return id, nil
+}
+
 // GetNewActionID returns ID to be used for next epoch
 func (k Keeper) GetNewActionID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(NextEpochActionID)
-	if bz == nil {
-		// return default action ID to 1
-		return DefaultEpochActionID
+	id, err := store2.GetAndDecode(store, k.decodeID, NextEpochActionID)
+	if err != nil {
+		panic(err)
 	}
-	id := sdk.BigEndianToUint64(bz)
 
 	// increment next action ID
-	store.Set(NextEpochActionID, sdk.Uint64ToBigEndian(id+1))
+	store2.Set(store, NextEpochActionID, sdk.Uint64ToBigEndian(id+1))
 
 	return id
 }
@@ -72,7 +81,7 @@ func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, msg sdk.Msg
 	}
 
 	actionID := k.GetNewActionID(ctx)
-	store.Set(ActionStoreKey(epochNumber, actionID), bz)
+	store2.Set(store, ActionStoreKey(epochNumber, actionID), bz)
 }
 
 // RestoreEpochAction restore the actions that need to be executed on next epoch
@@ -86,20 +95,26 @@ func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *c
 	}
 
 	actionID := k.GetNewActionID(ctx)
-	store.Set(ActionStoreKey(epochNumber, actionID), bz)
+	store2.Set(store, ActionStoreKey(epochNumber, actionID), bz)
+}
+
+func (k Keeper) decodeMsg(bz []byte) (sdk.Msg, error) {
+	if bz == nil {
+		return nil, nil
+	}
+	var action sdk.Msg
+	k.cdc.UnmarshalInterface(bz, &action)
+	return action, nil
 }
 
 // GetEpochMsg gets a msg by ID
 func (k Keeper) GetEpochMsg(ctx sdk.Context, epochNumber int64, actionID uint64) sdk.Msg {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(ActionStoreKey(epochNumber, actionID))
-	if bz == nil {
-		return nil
+	action, err := store2.GetAndDecode(store, k.decodeMsg, ActionStoreKey(epochNumber, actionID))
+	if err != nil {
+		panic(err)
 	}
-
-	var action sdk.Msg
-	k.cdc.UnmarshalInterface(bz, &action)
 
 	return action
 }
@@ -156,19 +171,25 @@ func (k Keeper) GetEpochActionByIterator(iterator db.Iterator) sdk.Msg {
 // SetEpochNumber set epoch number
 func (k Keeper) SetEpochNumber(ctx sdk.Context, epochNumber int64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(EpochNumberID, sdk.Uint64ToBigEndian(uint64(epochNumber)))
+	store2.Set(store, EpochNumberID, sdk.Uint64ToBigEndian(uint64(epochNumber)))
+}
+
+func (k Keeper) decodeNumberID(bz []byte) (int64, error) {
+	if bz == nil {
+		return DefaultEpochNumber, nil
+	}
+	return int64(sdk.BigEndianToUint64(bz)), nil
 }
 
 // GetEpochNumber fetches epoch number
 func (k Keeper) GetEpochNumber(ctx sdk.Context) int64 {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(EpochNumberID)
-	if bz == nil {
-		return DefaultEpochNumber
+	epochNumberID, err := store2.GetAndDecode(store, k.decodeNumberID, EpochNumberID)
+	if err != nil {
+		panic(err)
 	}
-
-	return int64(sdk.BigEndianToUint64(bz))
+	return epochNumberID
 }
 
 // IncreaseEpochNumber increases epoch number

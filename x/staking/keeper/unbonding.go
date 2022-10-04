@@ -12,10 +12,7 @@ import (
 func (k Keeper) IncrementUnbondingID(ctx sdk.Context) (unbondingID uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UnbondingIDKey)
-
-	if bz == nil {
-		unbondingID = 0
-	} else {
+	if bz != nil {
 		unbondingID = binary.BigEndian.Uint64(bz)
 	}
 

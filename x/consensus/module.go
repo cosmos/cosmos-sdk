@@ -20,7 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
 	"github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -84,9 +83,6 @@ type AppModule struct {
 	AppModuleBasic
 
 	keeper keeper.Keeper
-
-	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace exported.ParamStore
 }
 
 // RegisterServices registers module services.

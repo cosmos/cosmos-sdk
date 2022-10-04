@@ -72,7 +72,7 @@ func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes
 func CheckExportSimulation(app runtime.AppI, config simtypes.Config, params simtypes.Params) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")
-		exported, err := app.ExportAppStateAndValidators(false, nil)
+		exported, err := app.ExportAppStateAndValidators(false, nil, nil)
 		if err != nil {
 			return err
 		}

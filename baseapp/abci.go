@@ -278,7 +278,18 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
-	// TODO
+	ctx := app.deliverState.ctx
+	//TODO Explore parallel execution contraints
+	for _, txByte := range req.Txs {
+		tx, err := app.txDecoder(txByte)
+		if err != nil {
+			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+		}
+		ctx, err = app.anteHandler(ctx, tx, false)
+		if err != nil {
+			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+		}
+	}
 	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 }
 

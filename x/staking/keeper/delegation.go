@@ -271,17 +271,17 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx sdk.Context, delegatorAddr 
 
 // SetUnbondingDelegation sets the unbonding delegation and associated index.
 func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
-	delegatorAddress := sdk.MustAccAddressFromBech32(ubd.DelegatorAddress)
+	delAddr := sdk.MustAccAddressFromBech32(ubd.DelegatorAddress)
 
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalUBD(k.cdc, ubd)
-	addr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
+	valAddr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
 	if err != nil {
 		panic(err)
 	}
-	key := types.GetUBDKey(delegatorAddress, addr)
+	key := types.GetUBDKey(delAddr, valAddr)
 	store.Set(key, bz)
-	store.Set(types.GetUBDByValIndexKey(delegatorAddress, addr), []byte{}) // index, store empty bytes
+	store.Set(types.GetUBDByValIndexKey(delAddr, valAddr), []byte{}) // index, store empty bytes
 }
 
 // RemoveUnbondingDelegation removes the unbonding delegation object and associated index.

@@ -1895,7 +1895,9 @@ func TestQuery(t *testing.T) {
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
 
 	// NOTE: "/store/key1" tells us KVStore
 	// and the final "/key" says to use the data as the

@@ -350,7 +350,9 @@ func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validat
 
 	k.SetValidatorByUnbondingID(ctx, validator, id)
 
-	k.Hooks().AfterUnbondingInitiated(ctx, id)
+	if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
+		return validator, err
+	}
 
 	return validator, nil
 }

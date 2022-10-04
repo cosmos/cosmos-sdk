@@ -10,6 +10,24 @@ correctly such that app.ConsensusParamsKeeper.Set() is called with the values
 returned by GetConsensusParams().
 
 Example:
+
+	baseAppLegacySS := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		UpgradeName,
+		func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			if cp := baseapp.GetConsensusParams(ctx, baseAppLegacySS); cp != nil {
+				app.ConsensusParamsKeeper.Set(ctx, cp)
+			} else {
+				ctx.Logger().Info("warning: consensus parameters are undefined; skipping migration", "upgrade", UpgradeName)
+			}
+
+			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+		},
+	)
+
+Developers can also bypass the use of the legacy Params subspace and set the
+values to app.ConsensusParamsKeeper.Set() explicitly.
 */
 package baseapp
 

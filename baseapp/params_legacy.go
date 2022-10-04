@@ -28,6 +28,9 @@ Example:
 
 Developers can also bypass the use of the legacy Params subspace and set the
 values to app.ConsensusParamsKeeper.Set() explicitly.
+
+Note, for new chains this is not necessary as Tendermint's consensus parameters
+will automatically be set for you in InitChain.
 */
 package baseapp
 

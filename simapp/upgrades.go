@@ -23,11 +23,9 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			if cp := baseapp.GetConsensusParams(ctx, baseAppLegacySS); cp != nil {
-				app.ConsensusParamsKeeper.Set(ctx, cp)
-			} else {
-				ctx.Logger().Info("warning: consensus parameters are undefined; skipping migration", "upgrade", UpgradeName)
-			}
+			// Migrate Tendermint consensus parameters from x/params module to a
+			// dedicated x/consensus module.
+			baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper)
 
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		},

@@ -137,3 +137,11 @@ func GetConsensusParams(ctx sdk.Context, paramStore LegacyParamStore) *tmproto.C
 
 	return cp
 }
+
+func MigrateParams(ctx sdk.Context, lps LegacyParamStore, ps ParamStore) {
+	if cp := GetConsensusParams(ctx, lps); cp != nil {
+		ps.Set(ctx, cp)
+	} else {
+		ctx.Logger().Info("warning: consensus parameters are undefined; skipping migration")
+	}
+}

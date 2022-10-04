@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -60,7 +61,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	if err != nil {
 		return err
 	}
-	store.Set(types.ParamsKey, bz)
+	store2.Set(store, types.ParamsKey, bz)
 
 	return nil
 }
@@ -68,7 +69,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 // GetParams sets the x/staking module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ParamsKey)
+	bz := store2.Get(store, types.ParamsKey)
 	if bz == nil {
 		return params
 	}

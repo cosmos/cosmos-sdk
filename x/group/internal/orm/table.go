@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -122,7 +123,7 @@ func (a table) Set(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler
 		return sdkerrors.Wrapf(err, "failed to serialize %T", newValue)
 	}
 
-	pStore.Set(rowID, newValueEncoded)
+	store2.Set(pStore, rowID, newValueEncoded)
 	for i, itc := range a.afterSet {
 		if err := itc(store, rowID, newValue, oldValue); err != nil {
 			return sdkerrors.Wrapf(err, "interceptor %d failed", i)

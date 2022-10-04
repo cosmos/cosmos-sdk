@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -60,15 +61,22 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// get the minter
-func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.MinterKey)
+func (k Keeper) decodeMinter(bz []byte) (types.Minter, error) {
+	var minter types.Minter
 	if bz == nil {
 		panic("stored minter should not have been nil")
 	}
-
 	k.cdc.MustUnmarshal(bz, &minter)
+	return minter, nil
+}
+
+// get the minter
+func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
+	store := ctx.KVStore(k.storeKey)
+	minter, err := store2.GetAndDecode(store, k.decodeMinter, types.MinterKey)
+	if err != nil {
+		panic(err)
+	}
 	return
 }
 
@@ -76,7 +84,7 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&minter)
-	store.Set(types.MinterKey, bz)
+	store2.Set(store, types.MinterKey, bz)
 }
 
 // SetParams sets the x/mint module parameters.
@@ -87,21 +95,28 @@ func (k Keeper) SetParams(ctx sdk.Context, p types.Params) error {
 
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&p)
-	store.Set(types.ParamsKey, bz)
+	store2.Set(store, types.ParamsKey, bz)
 
 	return nil
+}
+
+func (k Keeper) decodeParams(bz []byte) (types.Params, error) {
+	var params types.Params
+	if bz == nil {
+		return params, nil
+	}
+	k.cdc.MustUnmarshal(bz, &params)
+	return params, nil
 }
 
 // GetParams returns the current x/mint module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (p types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ParamsKey)
-	if bz == nil {
-		return p
+	params, err := store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
+	if err != nil {
+		panic(err)
 	}
-
-	k.cdc.MustUnmarshal(bz, &p)
-	return p
+	return params
 }
 
 // StakingTokenSupply implements an alias call to the underlying staking keeper's

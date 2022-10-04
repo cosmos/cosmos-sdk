@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -39,7 +40,7 @@ func TestMigrate(t *testing.T) {
 	require.NoError(t, v3.Migrate(ctx, store, legacySubspace, cdc))
 
 	var res types.Params
-	bz := store.Get(v3.ParamsKey)
+	bz := store2.Get(store, v3.ParamsKey)
 	require.NoError(t, cdc.Unmarshal(bz, &res))
 	require.Equal(t, legacySubspace.ps, res)
 }

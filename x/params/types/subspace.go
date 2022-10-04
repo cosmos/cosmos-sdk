@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -104,7 +105,7 @@ func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	s.checkType(key, ptr)
 
 	store := s.kvStore(ctx)
-	bz := store.Get(key)
+	bz := store2.Get(store, key)
 
 	if err := s.legacyAmino.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
@@ -116,7 +117,7 @@ func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 // perform a no-op.
 func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 	store := s.kvStore(ctx)
-	bz := store.Get(key)
+	bz := store2.Get(store, key)
 	if bz == nil {
 		return
 	}
@@ -147,7 +148,7 @@ func (s Subspace) IterateKeys(ctx sdk.Context, cb func(key []byte) bool) {
 // GetRaw queries for the raw values bytes for a parameter by key.
 func (s Subspace) GetRaw(ctx sdk.Context, key []byte) []byte {
 	store := s.kvStore(ctx)
-	return store.Get(key)
+	return store2.Get(store, key)
 }
 
 // Has returns if a parameter key exists or not in the Subspace's KVStore.
@@ -194,10 +195,10 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 		panic(err)
 	}
 
-	store.Set(key, bz)
+	store2.Set(store, key, bz)
 
 	tstore := s.transientStore(ctx)
-	tstore.Set(key, []byte{})
+	store2.Set(tstore, key, []byte{})
 }
 
 // Update stores an updated raw value for a given parameter key assuming the

@@ -4,15 +4,17 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestTypeSafeRowGetter(t *testing.T) {
@@ -26,7 +28,8 @@ func TestTypeSafeRowGetter(t *testing.T) {
 	}
 	bz, err := md.Marshal()
 	require.NoError(t, err)
-	store.Set(EncodeSequence(1), bz)
+	store2.Set(store,
+		EncodeSequence(1), bz)
 
 	specs := map[string]struct {
 		srcRowID     RowID

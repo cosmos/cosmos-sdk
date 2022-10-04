@@ -169,18 +169,10 @@ func (k Keeper) InitializeIndex(ctx sdk.Context, index uint64) error {
 	return nil
 }
 
-func decodeKeyIndex(bz []byte) ([]byte, error) {
-	return bz, nil
-}
-
 // GetLatestIndex returns the latest index of the CapabilityKeeper
 func (k Keeper) GetLatestIndex(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	keyIndex, err := store2.GetAndDecode(store, decodeKeyIndex, types.KeyIndex)
-	if err != nil {
-		panic(err)
-	}
-	return types.IndexFromKey(keyIndex)
+	return types.IndexFromKey(store2.Get(store, types.KeyIndex))
 }
 
 // SetOwners set the capability owners to the store
@@ -256,12 +248,8 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capab
 		return nil, sdkerrors.Wrapf(types.ErrCapabilityTaken, fmt.Sprintf("module: %s, name: %s", sk.module, name))
 	}
 
-	// create new capability with the current global index
-	keyIndex, err := store2.GetAndDecode(store, decodeKeyIndex, types.KeyIndex)
-	if err != nil {
-		panic(err)
-	}
-	index := types.IndexFromKey(keyIndex)
+	// create new capability with the current global index4
+	index := types.IndexFromKey(store2.Get(store, types.KeyIndex))
 	cap := types.NewCapability(index)
 
 	// update capability owner set
@@ -393,10 +381,7 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 	memStore := ctx.KVStore(sk.memKey)
 
 	key := types.RevCapabilityKey(sk.module, name)
-	indexBytes, err := store2.GetAndDecode(memStore, decodeKeyIndex, key)
-	if err != nil {
-		panic(err)
-	}
+	indexBytes := store2.Get(memStore, key)
 	index := sdk.BigEndianToUint64(indexBytes)
 
 	if len(indexBytes) == 0 {
@@ -426,11 +411,7 @@ func (sk ScopedKeeper) GetCapabilityName(ctx sdk.Context, cap *types.Capability)
 	}
 	memStore := ctx.KVStore(sk.memKey)
 
-	capName, err := store2.GetAndDecode(memStore, decodeKeyIndex, types.FwdCapabilityKey(sk.module, cap))
-	if err != nil {
-		panic(err)
-	}
-	return string(capName)
+	return string(store2.Get(memStore, types.FwdCapabilityKey(sk.module, cap)))
 }
 
 func (sk ScopedKeeper) decodeOwner(bz []byte) (*types.CapabilityOwners, error) {

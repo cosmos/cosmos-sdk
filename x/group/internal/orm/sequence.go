@@ -3,6 +3,7 @@ package orm
 import (
 	"encoding/binary"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -29,7 +30,7 @@ func (s Sequence) NextVal(store sdk.KVStore) uint64 {
 	v := pStore.Get(sequenceStorageKey)
 	seq := DecodeSequence(v)
 	seq++
-	pStore.Set(sequenceStorageKey, EncodeSequence(seq))
+	store2.Set(pStore, sequenceStorageKey, EncodeSequence(seq))
 	return seq
 }
 
@@ -58,7 +59,7 @@ func (s Sequence) InitVal(store sdk.KVStore, seq uint64) error {
 	if pStore.Has(sequenceStorageKey) {
 		return sdkerrors.Wrap(errors.ErrORMUniqueConstraint, "already initialized")
 	}
-	pStore.Set(sequenceStorageKey, EncodeSequence(seq))
+	store2.Set(pStore, sequenceStorageKey, EncodeSequence(seq))
 	return nil
 }
 

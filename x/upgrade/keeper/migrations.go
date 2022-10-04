@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/binary"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,7 +37,7 @@ func migrateDoneUpgradeKeys(ctx sdk.Context, storeKey storetypes.StoreKey) error
 		upgradeHeight := int64(binary.BigEndian.Uint64(oldDoneStoreIter.Value()))
 		newKey := encodeDoneKey(upgradeName, upgradeHeight)
 
-		store.Set(newKey, []byte{1})
+		store2.Set(store, newKey, []byte{1})
 		oldDoneStore.Delete(oldKey)
 	}
 	return nil

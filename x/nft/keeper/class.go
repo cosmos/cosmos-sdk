@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/nft"
@@ -16,7 +17,7 @@ func (k Keeper) SaveClass(ctx sdk.Context, class nft.Class) error {
 		return sdkerrors.Wrap(err, "Marshal nft.Class failed")
 	}
 	store := ctx.KVStore(k.storeKey)
-	store.Set(classStoreKey(class.Id), bz)
+	store2.Set(store, classStoreKey(class.Id), bz)
 	return nil
 }
 
@@ -30,20 +31,26 @@ func (k Keeper) UpdateClass(ctx sdk.Context, class nft.Class) error {
 		return sdkerrors.Wrap(err, "Marshal nft.Class failed")
 	}
 	store := ctx.KVStore(k.storeKey)
-	store.Set(classStoreKey(class.Id), bz)
+	store2.Set(store, classStoreKey(class.Id), bz)
 	return nil
+}
+
+func (k Keeper) decodeClass(bz []byte) (nft.Class, error) {
+	var class nft.Class
+	if len(bz) == 0 {
+		return class, nil
+	}
+	k.cdc.MustUnmarshal(bz, &class)
+	return class, nil
 }
 
 // GetClass defines a method for returning the class information of the specified id
 func (k Keeper) GetClass(ctx sdk.Context, classID string) (nft.Class, bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(classStoreKey(classID))
-
-	var class nft.Class
-	if len(bz) == 0 {
+	class, err := store2.GetAndDecode(store, k.decodeClass, classStoreKey(classID))
+	if err != nil {
 		return class, false
 	}
-	k.cdc.MustUnmarshal(bz, &class)
 	return class, true
 }
 

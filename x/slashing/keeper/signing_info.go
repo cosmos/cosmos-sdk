@@ -5,20 +5,29 @@ import (
 
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
+
+func (k Keeper) decodeInfo(bz []byte) (types.ValidatorSigningInfo, error) {
+	if bz == nil {
+		return types.ValidatorSigningInfo{}, nil
+	}
+	var info types.ValidatorSigningInfo
+	k.cdc.MustUnmarshal(bz, &info)
+	return info, nil
+}
 
 // GetValidatorSigningInfo retruns the ValidatorSigningInfo for a specific validator
 // ConsAddress
 func (k Keeper) GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (info types.ValidatorSigningInfo, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ValidatorSigningInfoKey(address))
-	if bz == nil {
+	info, err := store2.GetAndDecode(store, k.decodeInfo, types.ValidatorSigningInfoKey(address))
+	if err != nil {
 		found = false
-		return
+		panic(err)
 	}
-	k.cdc.MustUnmarshal(bz, &info)
 	found = true
 	return
 }
@@ -34,7 +43,7 @@ func (k Keeper) HasValidatorSigningInfo(ctx sdk.Context, consAddr sdk.ConsAddres
 func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info types.ValidatorSigningInfo) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&info)
-	store.Set(types.ValidatorSigningInfoKey(address), bz)
+	store2.Set(store, types.ValidatorSigningInfoKey(address), bz)
 }
 
 // IterateValidatorSigningInfos iterates over the stored ValidatorSigningInfo
@@ -54,18 +63,24 @@ func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
 	}
 }
 
+func (k Keeper) decodeMissed(bz []byte) (bool, error) {
+	if bz == nil {
+		// lazy: treat empty key as not missed
+		return false, nil
+	}
+	var missed gogotypes.BoolValue
+	k.cdc.MustUnmarshal(bz, &missed)
+	return missed.Value, nil
+}
+
 // GetValidatorMissedBlockBitArray gets the bit for the missed blocks array
 func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) bool {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ValidatorMissedBlockBitArrayKey(address, index))
-	var missed gogotypes.BoolValue
-	if bz == nil {
-		// lazy: treat empty key as not missed
+	missed, err := store2.GetAndDecode(store, k.decodeMissed, types.ValidatorMissedBlockBitArrayKey(address, index))
+	if err != nil {
 		return false
 	}
-	k.cdc.MustUnmarshal(bz, &missed)
-
-	return missed.Value
+	return missed
 }
 
 // IterateValidatorMissedBlockBitArray iterates over the signed blocks window
@@ -144,7 +159,7 @@ func (k Keeper) IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
 func (k Keeper) SetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.BoolValue{Value: missed})
-	store.Set(types.ValidatorMissedBlockBitArrayKey(address, index), bz)
+	store2.Set(store, types.ValidatorMissedBlockBitArrayKey(address, index), bz)
 }
 
 // clearValidatorMissedBlockBitArray deletes every instance of ValidatorMissedBlockBitArray in the store

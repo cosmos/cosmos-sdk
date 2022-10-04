@@ -1,6 +1,7 @@
 package orm
 
 import (
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
@@ -138,7 +139,7 @@ func uniqueKeysAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID R
 		return err
 	}
 
-	store.Set(indexKey, []byte{})
+	store2.Set(store, indexKey, []byte{})
 	return nil
 }
 
@@ -170,7 +171,7 @@ func multiKeyAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID Row
 		return sdkerrors.Wrap(errors.ErrORMInvalidArgument, "empty index key")
 	}
 
-	store.Set(encodedKey, []byte{})
+	store2.Set(store, encodedKey, []byte{})
 	return nil
 }
 

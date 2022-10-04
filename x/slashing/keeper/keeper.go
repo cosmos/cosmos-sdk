@@ -3,11 +3,12 @@ package keeper
 import (
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	store2 "github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -53,19 +54,30 @@ func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
 	}
 	store := ctx.KVStore(k.storeKey)
 	key := types.AddrPubkeyRelationKey(pubkey.Address())
-	store.Set(key, bz)
+	store2.Set(store, key, bz)
 	return nil
+}
+
+func (k Keeper) decodePubKey(bz []byte) (cryptotypes.PubKey, error) {
+	if bz == nil {
+		return nil, nil
+	}
+	var pk cryptotypes.PubKey
+	err := k.cdc.UnmarshalInterface(bz, &pk)
+	if err != nil {
+		return nil, err
+	}
+	return pk, nil
 }
 
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.AddrPubkeyRelationKey(a))
-	if bz == nil {
-		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(a))
+	pubkey, err := store2.GetAndDecode(store, k.decodePubKey, types.AddrPubkeyRelationKey(a))
+	if err != nil {
+		panic(fmt.Errorf("address %s not found", sdk.ConsAddress(a)))
 	}
-	var pk cryptotypes.PubKey
-	return pk, k.cdc.UnmarshalInterface(bz, &pk)
+	return pubkey, nil
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking

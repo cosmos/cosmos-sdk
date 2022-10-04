@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -150,7 +151,7 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 	ubdStore := prefix.NewStore(store, srcValPrefix)
 	pageRes, err := query.Paginate(ubdStore, req.Pagination, func(key []byte, value []byte) error {
 		storeKey := types.GetUBDKeyFromValIndexKey(append(srcValPrefix, key...))
-		storeValue := store.Get(storeKey)
+		storeValue := store2.Get(store, storeKey)
 
 		ubd, err := types.UnmarshalUBD(k.cdc, storeValue)
 		if err != nil {
@@ -502,7 +503,7 @@ func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Querier, req *types
 	redStore := prefix.NewStore(store, srcValPrefix)
 	res, err = query.Paginate(redStore, req.Pagination, func(key []byte, value []byte) error {
 		storeKey := types.GetREDKeyFromValSrcIndexKey(append(srcValPrefix, key...))
-		storeValue := store.Get(storeKey)
+		storeValue := store2.Get(store, storeKey)
 		red, err := types.UnmarshalRED(k.cdc, storeValue)
 		if err != nil {
 			return err

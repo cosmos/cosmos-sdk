@@ -2,6 +2,7 @@ package v2
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/exported"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -31,7 +32,7 @@ func Migrate(
 	}
 
 	bz := cdc.MustMarshal(&currParams)
-	store.Set(ParamsKey, bz)
+	store2.Set(store, ParamsKey, bz)
 
 	return nil
 }

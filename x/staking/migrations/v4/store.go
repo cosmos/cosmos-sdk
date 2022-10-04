@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
@@ -37,7 +38,7 @@ func migrateParams(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCo
 	}
 
 	bz := cdc.MustMarshal(&legacyParams)
-	store.Set(types.ParamsKey, bz)
+	store2.Set(store, types.ParamsKey, bz)
 	return nil
 }
 
@@ -96,5 +97,5 @@ func setUBDToStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCo
 
 	key := types.GetUBDKey(delegatorAddress, addr)
 
-	store.Set(key, bz)
+	store2.Set(store, key, bz)
 }

@@ -7,11 +7,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
-	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
+	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
+	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -118,7 +119,7 @@ func TestStoreMigration(t *testing.T) {
 
 	// Set all the old keys to the store
 	for _, tc := range testCases {
-		store.Set(tc.oldKey, value)
+		store2.Set(store, tc.oldKey, value)
 	}
 
 	// Run migrations.
@@ -130,9 +131,9 @@ func TestStoreMigration(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			if !bytes.Equal(tc.oldKey, tc.newKey) {
-				require.Nil(t, store.Get(tc.oldKey))
+				require.Nil(t, store2.Get(store, tc.oldKey))
 			}
-			require.Equal(t, value, store.Get(tc.newKey))
+			require.Equal(t, value, store2.Get(store, tc.newKey))
 		})
 	}
 }

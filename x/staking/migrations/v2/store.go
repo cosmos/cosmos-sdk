@@ -1,6 +1,7 @@
 package v2
 
 import (
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +32,7 @@ func migratePrefixAddressAddressAddress(store sdk.KVStore, prefixBz []byte) {
 		)
 
 		// Set new key on store. Values don't change.
-		store.Set(newStoreKey, oldStoreIter.Value())
+		store2.Set(store, newStoreKey, oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 }
@@ -50,7 +51,7 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 		newStoreKey := append(append(types.ValidatorsByPowerIndexKey, powerBytes...), address.MustLengthPrefix(valAddr)...)
 
 		// Set new key on store. Values don't change.
-		store.Set(newStoreKey, oldStoreIter.Value())
+		store2.Set(store, newStoreKey, oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 }

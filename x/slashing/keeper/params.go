@@ -3,6 +3,7 @@ package keeper
 import (
 	"time"
 
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -37,14 +38,22 @@ func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
 	return k.GetParams(ctx).SlashFractionDowntime
 }
 
+func (k Keeper) decodeParams(bz []byte) (types.Params, error) {
+	var params types.Params
+	if bz == nil {
+		return params, nil
+	}
+	k.cdc.MustUnmarshal(bz, &params)
+	return params, nil
+}
+
 // GetParams returns the current x/slashing module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ParamsKey)
-	if bz == nil {
-		return params
+	params, err := store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
+	if err != nil {
+		panic(err)
 	}
-	k.cdc.MustUnmarshal(bz, &params)
 	return params
 }
 
@@ -56,7 +65,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&params)
-	store.Set(types.ParamsKey, bz)
+	store2.Set(store, types.ParamsKey, bz)
 
 	return nil
 }

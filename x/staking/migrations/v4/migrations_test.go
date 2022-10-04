@@ -4,7 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -14,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	v4 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 )
 
 type mockSubspace struct {
@@ -74,7 +76,7 @@ func TestMigrate(t *testing.T) {
 			ubd := getUBD(t, accAddr, valAddr, store, cdc)
 			if tc.doMigration {
 				var res types.Params
-				bz := store.Get(v4.ParamsKey)
+				bz := store2.Get(store, v4.ParamsKey)
 				require.NoError(t, cdc.Unmarshal(bz, &res))
 				require.Equal(t, legacySubspace.ps, res)
 
@@ -124,14 +126,14 @@ func createOldStateUnbonding(t *testing.T, creationHeight int64, valAddr sdk.Val
 	// set the unbond delegation with validator and delegator
 	bz := types.MustMarshalUBD(cdc, ubd)
 	key := getUBDKey(accAddr, valAddr)
-	store.Set(key, bz)
+	store2.Set(store, key, bz)
 	return nil
 }
 
 func getUBD(t *testing.T, accAddr sdk.AccAddress, valAddr sdk.ValAddress, store storetypes.KVStore, cdc codec.BinaryCodec) types.UnbondingDelegation {
 	// get the unbonding delegations
 	var ubdRes types.UnbondingDelegation
-	ubdbz := store.Get(getUBDKey(accAddr, valAddr))
+	ubdbz := store2.Get(store, getUBDKey(accAddr, valAddr))
 	require.NoError(t, cdc.Unmarshal(ubdbz, &ubdRes))
 	return ubdRes
 }

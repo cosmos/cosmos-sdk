@@ -11,10 +11,10 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -77,7 +77,7 @@ func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
 	store := ctx.KVStore(k.storeKey)
 	versionBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(versionBytes, v)
-	store.Set([]byte{types.ProtocolVersionByte}, versionBytes)
+	store2.Set(store, []byte{types.ProtocolVersionByte}, versionBytes)
 }
 
 // getProtocolVersion gets the protocol version from state
@@ -85,7 +85,7 @@ func (k Keeper) getProtocolVersion(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	ok := store.Has([]byte{types.ProtocolVersionByte})
 	if ok {
-		pvBytes := store.Get([]byte{types.ProtocolVersionByte})
+		pvBytes := store2.Get(store, []byte{types.ProtocolVersionByte})
 		protocolVersion := binary.BigEndian.Uint64(pvBytes)
 
 		return protocolVersion
@@ -114,7 +114,7 @@ func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 			nameBytes := []byte(modName)
 			verBytes := make([]byte, 8)
 			binary.BigEndian.PutUint64(verBytes, ver)
-			versionStore.Set(nameBytes, verBytes)
+			store2.Set(versionStore, nameBytes, verBytes)
 		}
 	}
 }
@@ -201,7 +201,7 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	}
 
 	bz := k.cdc.MustMarshal(&plan)
-	store.Set(types.PlanKey(), bz)
+	store2.Set(store, types.PlanKey(), bz)
 
 	return nil
 }
@@ -209,14 +209,14 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 // SetUpgradedClient sets the expected upgraded client for the next version of this chain at the last height the current chain will commit.
 func (k Keeper) SetUpgradedClient(ctx sdk.Context, planHeight int64, bz []byte) error {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.UpgradedClientKey(planHeight), bz)
+	store2.Set(store, types.UpgradedClientKey(planHeight), bz)
 	return nil
 }
 
 // GetUpgradedClient gets the expected upgraded client for the next version of this chain
 func (k Keeper) GetUpgradedClient(ctx sdk.Context, height int64) ([]byte, bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.UpgradedClientKey(height))
+	bz := store2.Get(store, types.UpgradedClientKey(height))
 	if len(bz) == 0 {
 		return nil, false
 	}
@@ -228,14 +228,14 @@ func (k Keeper) GetUpgradedClient(ctx sdk.Context, height int64) ([]byte, bool) 
 // using the last height committed on this chain.
 func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, planHeight int64, bz []byte) error {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.UpgradedConsStateKey(planHeight), bz)
+	store2.Set(store, types.UpgradedConsStateKey(planHeight), bz)
 	return nil
 }
 
 // GetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
 func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]byte, bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.UpgradedConsStateKey(lastHeight))
+	bz := store2.Get(store, types.UpgradedConsStateKey(lastHeight))
 	if len(bz) == 0 {
 		return nil, false
 	}
@@ -315,7 +315,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // upgrade or false if there is none
 func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.PlanKey())
+	bz := store2.Get(store, types.PlanKey())
 	if bz == nil {
 		return plan, false
 	}
@@ -327,7 +327,7 @@ func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool)
 // setDone marks this upgrade name as being done so the name can't be reused accidentally
 func (k Keeper) setDone(ctx sdk.Context, name string) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(encodeDoneKey(name, ctx.BlockHeight()), []byte{1})
+	store2.Set(store, encodeDoneKey(name, ctx.BlockHeight()), []byte{1})
 }
 
 // HasHandler returns true iff there is a handler registered for this name

@@ -5,10 +5,11 @@ import (
 
 	"cosmossdk.io/math"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	store2 "github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -78,7 +79,7 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) {
 // GetLastTotalPower Load the last total validator power.
 func (k Keeper) GetLastTotalPower(ctx sdk.Context) math.Int {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.LastTotalPowerKey)
+	bz := store2.Get(store, types.LastTotalPowerKey)
 
 	if bz == nil {
 		return math.ZeroInt()
@@ -94,7 +95,7 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) math.Int {
 func (k Keeper) SetLastTotalPower(ctx sdk.Context, power math.Int) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: power})
-	store.Set(types.LastTotalPowerKey, bz)
+	store2.Set(store, types.LastTotalPowerKey, bz)
 }
 
 // GetAuthority returns the x/staking module's authority.

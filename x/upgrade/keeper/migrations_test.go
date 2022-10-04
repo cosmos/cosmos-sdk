@@ -4,10 +4,12 @@ import (
 	"encoding/binary"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/stretchr/testify/require"
 )
 
 type storedUpgrade struct {
@@ -43,7 +45,7 @@ func TestMigrateDoneUpgradeKeys(t *testing.T) {
 			bz := make([]byte, 8)
 			binary.BigEndian.PutUint64(bz, uint64(upgrade.height))
 			oldKey := encodeOldDoneKey(upgrade)
-			store.Set(oldKey, bz)
+			store2.Set(store, oldKey, bz)
 		}
 
 		err := migrateDoneUpgradeKeys(ctx, upgradeKey)
@@ -52,8 +54,8 @@ func TestMigrateDoneUpgradeKeys(t *testing.T) {
 		for _, upgrade := range tc.upgrades {
 			newKey := encodeDoneKey(upgrade.name, upgrade.height)
 			oldKey := encodeOldDoneKey(upgrade)
-			require.Nil(t, store.Get(oldKey))
-			require.Equal(t, []byte{1}, store.Get(newKey))
+			require.Nil(t, store2.Get(store, oldKey))
+			require.Equal(t, []byte{1}, store2.Get(store, newKey))
 		}
 	}
 }

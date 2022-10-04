@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewIndexer(t *testing.T) {
@@ -399,7 +401,7 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 		t.Run(msg, func(t *testing.T) {
 			storeKey := sdk.NewKVStoreKey("test")
 			store := NewMockContext().KVStore(storeKey)
-			store.Set(presetKey, []byte{})
+			store2.Set(store, presetKey, []byte{})
 
 			err := uniqueKeysAddFunc(store, spec.srcKey, myRowID)
 			require.True(t, spec.expErr.Is(err))
@@ -442,7 +444,7 @@ func TestMultiKeyAddFunc(t *testing.T) {
 		t.Run(msg, func(t *testing.T) {
 			storeKey := sdk.NewKVStoreKey("test")
 			store := NewMockContext().KVStore(storeKey)
-			store.Set(presetKey, []byte{})
+			store2.Set(store, presetKey, []byte{})
 
 			err := multiKeyAddFunc(store, spec.srcKey, myRowID)
 			require.True(t, spec.expErr.Is(err))

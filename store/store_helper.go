@@ -24,3 +24,8 @@ func Set(store types.KVStore, key []byte, value []byte) {
 func Delete(store types.KVStore, key []byte) {
 	store.Delete(key)
 }
+
+func Get(store types.KVStore, key []byte) []byte {
+	bz := store.Get(key)
+	return bz
+}

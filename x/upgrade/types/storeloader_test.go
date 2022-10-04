@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	store2 "github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,7 +43,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	// write some data in substore
 	kv, _ := rs.GetStore(key).(storetypes.KVStore)
 	require.NotNil(t, kv)
-	kv.Set(k, v)
+	store2.Set(kv, k, v)
 	commitID := rs.Commit()
 	require.Equal(t, int64(1), commitID.Version)
 }
@@ -60,7 +61,7 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 	kv, _ := rs.GetStore(key).(storetypes.KVStore)
 
 	require.NotNil(t, kv)
-	require.Equal(t, v, kv.Get(k))
+	require.Equal(t, v, store2.Get(kv, k))
 }
 
 // Test that we can make commits and then reload old versions.

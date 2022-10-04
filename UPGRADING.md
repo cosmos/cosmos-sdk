@@ -34,6 +34,11 @@ The constructor, `NewSimApp` has been simplified:
 `simapp.MakeTestEncodingConfig()` was deprecated and has been removed. Instead you can use the `TestEncodingConfig` from the `types/module/testutil` package.
 This means you can replace your usage of `simapp.MakeTestEncodingConfig` in tests to `moduletestutil.MakeTestEncodingConfig`, which takes a series of relevant `AppModuleBasic` as input (the module being tested and any potential dependencies).
 
+#### Export
+
+`ExportAppStateAndValidators` takes an extra argument, `modulesToExport`, which is a list of module names to export.
+That argument should be passed to the module maanager `ExportGenesis` method.
+
 ### Protobuf
 
 The SDK has migrated from `gogo/protobuf` (which is currently unmaintained), to our own maintained fork, [`cosmos/gogoproto`](https://github.com/cosmos/gogoproto).

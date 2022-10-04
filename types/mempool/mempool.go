@@ -1,10 +1,10 @@
 package mempool
 
 import (
-	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types"
 	"math"
+
+	"github.com/cosmos/cosmos-sdk/types"
 
 	huandu "github.com/huandu/skiplist"
 
@@ -19,13 +19,7 @@ type Tx interface {
 	types.Tx
 
 	// Size returns the size of the transaction in bytes.
-	Size() int
-}
-
-// HashableTx defines an interface for a transaction that can be hashed.
-type HashableTx interface {
-	Tx
-	GetHash() [32]byte
+	Size() int64
 }
 
 type Mempool interface {
@@ -37,23 +31,21 @@ type Mempool interface {
 	// mempool, up to maxBytes or until the mempool is empty. The application can
 	// decide to return transactions from its own mempool, from the incoming
 	// txs, or some combination of both.
-	Select(ctx types.Context, txs [][]byte, maxBytes int) ([]Tx, error)
+	Select(txs [][]byte, maxBytes int64) ([]Tx, error)
 
 	// CountTx returns the number of transactions currently in the mempool.
 	CountTx() int
 
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
-	Remove(types.Context, Tx) error
+	Remove(Tx) error
 }
+
+type Factory func() Mempool
 
 var (
 	_ Mempool = (*defaultMempool)(nil)
-)
-
-var (
-	ErrMempoolIsFull = fmt.Errorf("mempool is full")
-	ErrNoTxHash      = fmt.Errorf("tx is not hashable")
+	//ErrMempoolIsFull         = fmt.Errorf("mempool is full")
 )
 
 type defaultMempool struct {
@@ -67,19 +59,12 @@ type txKey struct {
 	nonce    uint64
 	priority int64
 	sender   string
-	hash     [32]byte
 }
 
 func txKeyLess(a, b interface{}) int {
 	keyA := a.(txKey)
 	keyB := b.(txKey)
 	res := huandu.Int64.Compare(keyA.priority, keyB.priority)
-	if res != 0 {
-		return res
-	}
-
-	res = bytes.Compare(keyB.hash[:], keyA.hash[:])
-	//res = huandu.Bytes.Compare(keyA.hash[:], keyB.hash[:])
 	if res != 0 {
 		return res
 	}
@@ -101,46 +86,35 @@ func NewDefaultMempool() Mempool {
 }
 
 func (mp *defaultMempool) Insert(ctx types.Context, tx Tx) error {
-	senders := tx.(signing.SigVerifiableTx).GetSigners()
-	nonces, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
-
-	hashableTx, ok := tx.(HashableTx)
-	if !ok {
-		return ErrNoTxHash
-	}
-
+	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
-	} else if len(senders) != len(nonces) {
-		return fmt.Errorf("number of senders (%d) does not match number of nonces (%d)",
-			len(senders), len(nonces))
 	}
 
-	for i, senderAddr := range senders {
-		sender := senderAddr.String()
-		nonce := nonces[i].Sequence
-		tk := txKey{nonce: nonce, priority: ctx.Priority(), sender: sender, hash: hashableTx.GetHash()}
+	sig := sigs[0]
+	sender := sig.PubKey.Address().String()
+	nonce := sig.Sequence
+	tk := txKey{nonce: nonce, priority: ctx.Priority(), sender: sender}
 
-		senderTxs, ok := mp.senders[sender]
-		// initialize sender mempool if not found
-		if !ok {
-			senderTxs = huandu.New(huandu.LessThanFunc(func(a, b interface{}) int {
-				return huandu.Uint64.Compare(b.(txKey).nonce, a.(txKey).nonce)
-			}))
-			mp.senders[sender] = senderTxs
-		}
-
-		// if a tx with the same nonce exists, replace it and delete from the priority list
-		senderTxs.Set(tk, tx)
-		mp.scores[txKey{nonce: nonce, sender: sender}] = ctx.Priority()
-		mp.priorities.Set(tk, tx)
+	senderTxs, ok := mp.senders[sender]
+	// initialize sender mempool if not found
+	if !ok {
+		senderTxs = huandu.New(huandu.LessThanFunc(func(a, b interface{}) int {
+			return huandu.Uint64.Compare(b.(txKey).nonce, a.(txKey).nonce)
+		}))
+		mp.senders[sender] = senderTxs
 	}
+
+	senderTxs.Set(tk, tx)
+	mp.scores[txKey{nonce: nonce, sender: sender}] = ctx.Priority()
+	mp.priorities.Set(tk, tx)
+
 	return nil
 }
 
-func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Tx, error) {
+func (mp *defaultMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 	var selectedTxs []Tx
-	var txBytes int
+	var txBytes int64
 	senderCursors := make(map[string]*huandu.Element)
 
 	// start with the highest priority sender
@@ -156,33 +130,6 @@ func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]T
 			// time complexity tracking
 			mp.iterations++
 			k := senderTx.Key().(txKey)
-			senders := senderTx.Value.(signing.SigVerifiableTx).GetSigners()
-
-			// conditional skipping of multi sender txs
-			if len(senders) > 1 {
-				skip := false
-				for _, s := range senders {
-					sc, ok := senderCursors[s.String()]
-					if !ok {
-						skip = true
-						break
-					}
-
-					// nil acts a null terminator for the sender cursor; iteration has completed, so we are
-					// surely beyond the nonce
-					if sc != nil {
-						otherSenderKey := sc.Key().(txKey)
-						if otherSenderKey.sender != sender && otherSenderKey.nonce < k.nonce {
-							skip = true
-							break
-						}
-					}
-				}
-
-				if skip {
-					break
-				}
-			}
 
 			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
 			if k.priority < nextHighestPriority {
@@ -229,30 +176,31 @@ func (mp *defaultMempool) CountTx() int {
 	return mp.priorities.Len()
 }
 
-func (mp *defaultMempool) Remove(context types.Context, tx Tx) error {
-	senders := tx.(signing.SigVerifiableTx).GetSigners()
-	nonces, _ := tx.(signing.SigVerifiableTx).GetSignaturesV2()
-
-	for i, senderAddr := range senders {
-		sender := senderAddr.String()
-		nonce := nonces[i].Sequence
-
-		tk := txKey{sender: sender, nonce: nonce}
-
-		priority, ok := mp.scores[tk]
-		if !ok {
-			return fmt.Errorf("tx %v not found", tk)
-		}
-
-		senderTxs, ok := mp.senders[sender]
-		if !ok {
-			return fmt.Errorf("sender %s not found", sender)
-		}
-
-		mp.priorities.Remove(txKey{priority: priority, sender: sender, nonce: nonce})
-		senderTxs.Remove(nonce)
-		delete(mp.scores, tk)
+func (mp *defaultMempool) Remove(tx Tx) error {
+	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	if err != nil {
+		return err
 	}
+	sig := sigs[0]
+	sender := sig.PubKey.Address().String()
+	nonce := sig.Sequence
+
+	sk := txKey{nonce: nonce, sender: sender}
+	priority, ok := mp.scores[sk]
+	if !ok {
+		return fmt.Errorf("tx %v not found", sk)
+	}
+	tk := txKey{nonce: nonce, priority: priority, sender: sender}
+
+	senderTxs, ok := mp.senders[sender]
+	if !ok {
+		return fmt.Errorf("sender %s not found", sender)
+	}
+
+	mp.priorities.Remove(tk)
+	senderTxs.Remove(tk)
+	delete(mp.scores, sk)
+
 	return nil
 }
 
@@ -261,149 +209,17 @@ func DebugPrintKeys(mempool Mempool) {
 	n := mp.priorities.Front()
 	for n != nil {
 		k := n.Key().(txKey)
-		fmt.Printf("%s, %d, %d; %d\n", k.sender, k.priority, k.nonce, k.hash[0])
+		fmt.Printf("%s, %d, %d\n", k.sender, k.priority, k.nonce)
 		n = n.Next()
 	}
 }
 
 func Iterations(mempool Mempool) int {
-	return mempool.(*defaultMempool).iterations
-}
-
-// The complexity is O(log(N)). Implementation
-type statefullPriorityKey struct {
-	hash     [32]byte
-	priority int64
-	nonce    uint64
-}
-
-type accountsHeadsKey struct {
-	sender   string
-	priority int64
-	hash     [32]byte
-}
-
-type AccountMemPool struct {
-	transactions *huandu.SkipList
-	currentKey   accountsHeadsKey
-	currentItem  *huandu.Element
-	sender       string
-}
-
-// Push cannot be executed in the middle of a select
-func (amp *AccountMemPool) Push(ctx types.Context, key statefullPriorityKey, tx Tx) {
-	amp.transactions.Set(key, tx)
-	amp.currentItem = amp.transactions.Back()
-	newKey := amp.currentItem.Key().(statefullPriorityKey)
-	amp.currentKey = accountsHeadsKey{hash: newKey.hash, sender: amp.sender, priority: newKey.priority}
-}
-
-func (amp *AccountMemPool) Pop() *Tx {
-	if amp.currentItem == nil {
-		return nil
+	switch v := mempool.(type) {
+	case *defaultMempool:
+		return v.iterations
+	case *graph:
+		return v.iterations
 	}
-	itemToPop := amp.currentItem
-	amp.currentItem = itemToPop.Prev()
-	if amp.currentItem != nil {
-		newKey := amp.currentItem.Key().(statefullPriorityKey)
-		amp.currentKey = accountsHeadsKey{hash: newKey.hash, sender: amp.sender, priority: newKey.priority}
-	} else {
-		amp.currentKey = accountsHeadsKey{}
-	}
-	tx := itemToPop.Value.(Tx)
-	return &tx
-}
-
-type MemPoolI struct {
-	accountsHeads *huandu.SkipList
-	senders       map[string]*AccountMemPool
-}
-
-func NewMemPoolI() MemPoolI {
-	return MemPoolI{
-		accountsHeads: huandu.New(huandu.LessThanFunc(priorityHuanduLess)),
-		senders:       make(map[string]*AccountMemPool),
-	}
-}
-
-func (amp *MemPoolI) Insert(ctx types.Context, tx Tx) error {
-	senders := tx.(signing.SigVerifiableTx).GetSigners()
-	nonces, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
-	hashTx, ok := tx.(HashableTx)
-	if !ok {
-		return ErrNoTxHash
-	}
-
-	if err != nil {
-		return err
-	} else if len(senders) != len(nonces) {
-		return fmt.Errorf("number of senders (%d) does not match number of nonces (%d)", len(senders), len(nonces))
-	}
-	sender := senders[0].String()
-	nonce := nonces[0].Sequence
-
-	accountMeempool, ok := amp.senders[sender]
-	if !ok {
-		accountMeempool = &AccountMemPool{
-			transactions: huandu.New(huandu.LessThanFunc(nonceHuanduLess)),
-			sender:       sender,
-		}
-	}
-	key := statefullPriorityKey{hash: hashTx.GetHash(), nonce: nonce, priority: ctx.Priority()}
-
-	prevKey := accountMeempool.currentKey
-	accountMeempool.Push(ctx, key, tx)
-
-	amp.accountsHeads.Remove(prevKey)
-	amp.accountsHeads.Set(accountMeempool.currentKey, accountMeempool)
-	amp.senders[sender] = accountMeempool
-	return nil
-
-}
-
-func (amp *MemPoolI) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Tx, error) {
-	var selectedTxs []Tx
-	var txBytes int
-
-	currentAccount := amp.accountsHeads.Front()
-	for currentAccount != nil {
-		accountMemPool := currentAccount.Value.(*AccountMemPool)
-		//currentTx := accountMemPool.transactions.Front()
-		prevKey := accountMemPool.currentKey
-		tx := accountMemPool.Pop()
-		if tx == nil {
-			return selectedTxs, nil
-		}
-		mempoolTx := *tx
-		selectedTxs = append(selectedTxs, mempoolTx)
-		if txBytes += mempoolTx.Size(); txBytes >= maxBytes {
-			return selectedTxs, nil
-		}
-
-		amp.accountsHeads.Remove(prevKey)
-		amp.accountsHeads.Set(accountMemPool.currentKey, accountMemPool)
-		currentAccount = amp.accountsHeads.Front()
-	}
-	return selectedTxs, nil
-}
-
-func priorityHuanduLess(a, b interface{}) int {
-	keyA := a.(accountsHeadsKey)
-	keyB := b.(accountsHeadsKey)
-	if keyA.priority == keyB.priority {
-		return bytes.Compare(keyA.hash[:], keyB.hash[:])
-	} else {
-		if keyA.priority < keyB.priority {
-			return -1
-		} else {
-			return 1
-		}
-	}
-}
-
-func nonceHuanduLess(a, b interface{}) int {
-	keyA := a.(statefullPriorityKey)
-	keyB := b.(statefullPriorityKey)
-	uint64Compare := huandu.Uint64
-	return uint64Compare.Compare(keyA.nonce, keyB.nonce)
+	panic("unknown mempool type")
 }

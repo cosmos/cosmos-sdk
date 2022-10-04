@@ -26,8 +26,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"cosmossdk.io/simapp"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -137,9 +137,6 @@ func (suite *IntegrationTestSuite) SetupTest() {
 
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	suite.fetchStoreKey = app.UnsafeFindStoreKey
-
-	// suite.Require().NoError(suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams()))
-	suite.Require().NoError(suite.bankKeeper.SetParams(suite.ctx, types.DefaultParams()))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, suite.bankKeeper)

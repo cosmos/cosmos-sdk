@@ -14,6 +14,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -124,7 +125,7 @@ var (
 )
 
 var (
-	_ App                     = (*SimApp)(nil)
+	_ runtime.AppI            = (*SimApp)(nil)
 	_ servertypes.Application = (*SimApp)(nil)
 )
 
@@ -191,8 +192,9 @@ func NewSimApp(
 			depinject.Supply(
 				// supply the application options
 				appOpts,
-
-				// for providing a custom inflaction function for x/mint
+				// use a different mempool implementation by changing this factory fn
+				mempool.NewDefaultMempool,
+				// for providing a custom inflation function for x/mint
 				// add here your custom function that implements the minttypes.InflationCalculationFn interface.
 
 				// for providing a custom authority to a module simply add it below. By default the governance module is the default authority.

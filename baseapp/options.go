@@ -12,6 +12,7 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -62,6 +63,11 @@ func SetIndexEvents(ie []string) func(*BaseApp) {
 // SetIAVLCacheSize provides a BaseApp option function that sets the size of IAVL cache.
 func SetIAVLCacheSize(size int) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
+}
+
+// SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
+func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the
@@ -234,4 +240,16 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 // SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
+}
+
+func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
+	app.txEncoder = txEncoder
+}
+
+func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
+	if app.sealed {
+		panic("SetMempool() on sealed BaseApp")
+	}
+
+	app.mempool = mempool
 }

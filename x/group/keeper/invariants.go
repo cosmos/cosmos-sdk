@@ -3,6 +3,9 @@ package keeper
 import (
 	"fmt"
 	"math"
+	"sort"
+
+	"golang.org/x/exp/maps"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,7 +56,12 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 		groups[groupInfo.Id] = groupInfo
 	}
 
-	for _, groupInfo := range groups {
+	groupByIDs := maps.Keys(groups)
+	sort.Slice(groupByIDs, func(i, j int) bool {
+		return groupByIDs[i] < groupByIDs[j]
+	})
+	for _, groupID := range groupByIDs {
+		groupInfo := groups[groupID]
 		membersWeight, err := groupmath.NewNonNegativeDecFromString("0")
 		if err != nil {
 			msg += fmt.Sprintf("error while parsing positive dec zero for group member\n%v\n", err)

@@ -81,6 +81,7 @@ func provideModule(in txInputs) txOutputs {
 
 		// TxDecoder
 		app.SetTxDecoder(txConfig.TxDecoder())
+		app.SetTxEncoder(txConfig.TxEncoder())
 	}
 
 	return txOutputs{TxConfig: txConfig, BaseAppOption: baseAppOption}

@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	groupcodec "github.com/cosmos/cosmos-sdk/x/group/codec"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/distribution interfaces
@@ -36,6 +38,10 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgCommunityPoolSpend{},
 	)
 
+	registry.RegisterImplementations(
+		(*govtypes.Content)(nil),
+		&CommunityPoolSpendProposal{})
+
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
@@ -54,4 +60,5 @@ func init() {
 	// instances.
 	RegisterLegacyAminoCodec(authzcodec.Amino)
 	RegisterLegacyAminoCodec(govcodec.Amino)
+	RegisterLegacyAminoCodec(groupcodec.Amino)
 }

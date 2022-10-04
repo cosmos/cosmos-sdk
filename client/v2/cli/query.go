@@ -9,8 +9,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"github.com/cosmos/cosmos-sdk/client/v2/cli/flag"
-	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
+	"cosmossdk.io/client/v2/cli/flag"
+	"cosmossdk.io/client/v2/internal/util"
 )
 
 // AddQueryServiceCommands adds a sub-command to the provided command for each

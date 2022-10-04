@@ -305,7 +305,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	creationHeight int64, minTime time.Time, balance math.Int,
 ) types.UnbondingDelegation {
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
-	id := k.IncrementUnbondingId(ctx)
+	id := k.IncrementUnbondingID(ctx)
 	if found {
 		ubd.AddEntry(creationHeight, minTime, balance, id)
 	} else {
@@ -315,7 +315,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	k.SetUnbondingDelegation(ctx, ubd)
 
 	// Add to the UBDByUnbondingOp index to look up the UBD by the UBDE ID
-	k.SetUnbondingDelegationByUnbondingId(ctx, ubd, id)
+	k.SetUnbondingDelegationByUnbondingID(ctx, ubd, id)
 
 	// Call hook
 	k.Hooks().AfterUnbondingInitiated(ctx, id)
@@ -495,7 +495,7 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	sharesSrc, sharesDst sdk.Dec,
 ) types.Redelegation {
 	red, found := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
-	id := k.IncrementUnbondingId(ctx)
+	id := k.IncrementUnbondingID(ctx)
 	if found {
 		red.AddEntry(creationHeight, minTime, balance, sharesDst, id)
 	} else {
@@ -506,7 +506,7 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	k.SetRedelegation(ctx, red)
 
 	// Add to the UBDByEntry index to look up the UBD by the UBDE ID
-	k.SetRedelegationByUnbondingId(ctx, red, id)
+	k.SetRedelegationByUnbondingID(ctx, red, id)
 
 	// Call hook
 	k.Hooks().AfterUnbondingInitiated(ctx, id)

@@ -82,11 +82,11 @@ The values are overwritten in every block.
 
 * ValidatorUpdates `0x61 -> []abci.ValidatorUpdate`
 
-## UnbondingId
+## UnbondingID
 
-UnbondingId stores the ID of the latest unbonding operation. It enables to create unique IDs for unbonding operation, i.e., UnbondingId is incremented every time a new unbonding operation (validator unbonding, unbonding delegation, redelegation) is initiated.
+UnbondingID stores the ID of the latest unbonding operation. It enables to create unique IDs for unbonding operation, i.e., UnbondingID is incremented every time a new unbonding operation (validator unbonding, unbonding delegation, redelegation) is initiated.
 
-* UnbondingId: `0x37 -> uint64`
+* UnbondingID: `0x37 -> uint64`
 
 ## Params
 
@@ -126,14 +126,14 @@ records within a block.
 * ValidatorsByConsAddr: `0x22 | ConsAddrLen (1 byte) | ConsAddr -> OperatorAddr`
 * ValidatorsByPower: `0x23 | BigEndian(ConsensusPower) | OperatorAddrLen (1 byte) | OperatorAddr -> OperatorAddr`
 * LastValidatorsPower: `0x11 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(ConsensusPower)`
-* ValidatorsByUnbondingId: `0x38 | UnbondingId ->  0x21 | OperatorAddrLen (1 byte) | OperatorAddr`
+* ValidatorsByUnbondingID: `0x38 | UnbondingID ->  0x21 | OperatorAddrLen (1 byte) | OperatorAddr`
 
 `Validators` is the primary index - it ensures that each operator can have only one
 associated validator, where the public key of that validator can change in the
 future. Delegators can refer to the immutable operator of the validator, without
 concern for the changing public key.
 
-`ValidatorsByUnbondingId` is an additional index that enables lookups for 
+`ValidatorsByUnbondingID` is an additional index that enables lookups for 
  validators by the unbonding IDs corresponding to their current unbonding.
 
 `ValidatorByConsAddr` is an additional index that enables lookups for slashing.

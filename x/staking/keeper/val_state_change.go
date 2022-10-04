@@ -321,7 +321,7 @@ func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validat
 		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
 	}
 
-	id := k.IncrementUnbondingId(ctx)
+	id := k.IncrementUnbondingID(ctx)
 
 	validator = validator.UpdateStatus(types.Unbonding)
 
@@ -348,7 +348,7 @@ func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validat
 		return validator, err
 	}
 
-	k.SetValidatorByUnbondingId(ctx, validator, id)
+	k.SetValidatorByUnbondingID(ctx, validator, id)
 
 	k.Hooks().AfterUnbondingInitiated(ctx, id)
 

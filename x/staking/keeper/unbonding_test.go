@@ -2,9 +2,9 @@ package keeper_test
 
 import "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-func (s *KeeperTestSuite) TestIncrementUnbondingId() {
+func (s *KeeperTestSuite) TestIncrementUnbondingID() {
 	for i := 1; i < 10; i++ {
-		s.Require().Equal(uint64(i), s.stakingKeeper.IncrementUnbondingId(s.ctx))
+		s.Require().Equal(uint64(i), s.stakingKeeper.IncrementUnbondingID(s.ctx))
 	}
 }
 
@@ -47,15 +47,15 @@ func (s *KeeperTestSuite) TestUnbondingTypeSetters() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetUnbondingDelegationByUnbondingId() {}
+func (s *KeeperTestSuite) TestGetUnbondingDelegationByUnbondingID() {}
 
-func (s *KeeperTestSuite) TestGetRedelegationByUnbondingId() {}
+func (s *KeeperTestSuite) TestGetRedelegationByUnbondingID() {}
 
-func (s *KeeperTestSuite) TestGetValidatorByUnbondingId() {}
+func (s *KeeperTestSuite) TestGetValidatorByUnbondingID() {}
 
-func (s *KeeperTestSuite) TestSetUnbondingDelegationByUnbondingId() {}
+func (s *KeeperTestSuite) TestSetUnbondingDelegationByUnbondingID() {}
 
-func (s *KeeperTestSuite) TestSetRedelegationByUnbondingId() {}
+func (s *KeeperTestSuite) TestSetRedelegationByUnbondingID() {}
 
 func (s *KeeperTestSuite) TestUnbondingCanComplete() {}
 

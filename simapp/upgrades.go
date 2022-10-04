@@ -16,10 +16,14 @@ import (
 const UpgradeName = "v045-to-v046"
 
 func (app SimApp) RegisterUpgradeHandlers() {
-	app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
-		func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	app.UpgradeKeeper.SetUpgradeHandler(
+		UpgradeName,
+		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			// TODO: Decide how to handle baseapp consensus parameter migration.
+			// app.ConsensusParamsKeeper.Set(ctx, ...)
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
-		})
+		},
+	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {

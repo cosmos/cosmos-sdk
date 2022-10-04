@@ -107,7 +107,9 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*baseapp.Base
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
 
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
 
 	r := rand.New(rand.NewSource(3920758213583))
 	keyCounter := 0

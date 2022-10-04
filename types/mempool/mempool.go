@@ -19,7 +19,7 @@ type Tx interface {
 	types.Tx
 
 	// Size returns the size of the transaction in bytes.
-	Size() int
+	Size() int64
 }
 
 type Mempool interface {
@@ -31,22 +31,21 @@ type Mempool interface {
 	// mempool, up to maxBytes or until the mempool is empty. The application can
 	// decide to return transactions from its own mempool, from the incoming
 	// txs, or some combination of both.
-	Select(ctx types.Context, txs [][]byte, maxBytes int) ([]Tx, error)
+	Select(txs [][]byte, maxBytes int64) ([]Tx, error)
 
 	// CountTx returns the number of transactions currently in the mempool.
 	CountTx() int
 
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
-	Remove(types.Context, Tx) error
+	Remove(Tx) error
 }
+
+type Factory func() Mempool
 
 var (
 	_ Mempool = (*defaultMempool)(nil)
-)
-
-var (
-	ErrMempoolIsFull = fmt.Errorf("mempool is full")
+	//ErrMempoolIsFull         = fmt.Errorf("mempool is full")
 )
 
 type defaultMempool struct {
@@ -113,9 +112,9 @@ func (mp *defaultMempool) Insert(ctx types.Context, tx Tx) error {
 	return nil
 }
 
-func (mp *defaultMempool) Select(_ types.Context, _ [][]byte, maxBytes int) ([]Tx, error) {
+func (mp *defaultMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 	var selectedTxs []Tx
-	var txBytes int
+	var txBytes int64
 	senderCursors := make(map[string]*huandu.Element)
 
 	// start with the highest priority sender
@@ -177,7 +176,7 @@ func (mp *defaultMempool) CountTx() int {
 	return mp.priorities.Len()
 }
 
-func (mp *defaultMempool) Remove(_ types.Context, tx Tx) error {
+func (mp *defaultMempool) Remove(tx Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err

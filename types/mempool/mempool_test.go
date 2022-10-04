@@ -108,8 +108,8 @@ func (tx testTx) GetHash() [32]byte {
 	return tx.hash
 }
 
-func (tx testTx) Size() int {
-	return 10
+func (tx testTx) Size() int64 {
+	return 1
 }
 
 func (tx testTx) GetMsgs() []sdk.Msg {
@@ -293,7 +293,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				require.NoError(t, err)
 			}
 
-			orderedTxs, err := pool.Select(ctx, nil, 1000)
+			orderedTxs, err := pool.Select(nil, 1000)
 			require.NoError(t, err)
 			var txOrder []int
 			for _, tx := range orderedTxs {
@@ -303,7 +303,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 			require.NoError(t, validateOrder(orderedTxs))
 
 			for _, tx := range orderedTxs {
-				require.NoError(t, pool.Remove(ctx, tx))
+				require.NoError(t, pool.Remove(tx))
 			}
 
 			require.Equal(t, 0, pool.CountTx())
@@ -412,7 +412,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 		require.NoError(t, err)
 	}
 
-	selected, err := mp.Select(ctx, nil, 100000)
+	selected, err := mp.Select(nil, 100000)
 	require.Equal(t, len(generated), len(selected))
 	require.NoError(t, err)
 
@@ -446,7 +446,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 
 	require.Equal(t, s.numTxs, mp.CountTx())
 
-	selected, err := mp.Select(ctx, nil, math.MaxInt)
+	selected, err := mp.Select(nil, math.MaxInt)
 	require.Equal(t, len(ordered), len(selected))
 	var orderedStr, selectedStr string
 

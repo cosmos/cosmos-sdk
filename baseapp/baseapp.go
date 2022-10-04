@@ -2,7 +2,7 @@ package baseapp
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
+
 	"sort"
 	"strings"
 
@@ -22,6 +22,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 const (
@@ -56,6 +57,7 @@ type BaseApp struct { //nolint: maligned
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
+	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
 	mempool        mempool.Mempool  // application side mempool
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
@@ -674,8 +676,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		anteEvents = events.ToABCIEvents()
 	}
 
-	// TODO remove nil check when implemented
-	if mode == runTxModeCheck && app.mempool != nil {
+	if mode == runTxModeCheck {
 		err = app.mempool.Insert(ctx, tx.(mempool.Tx))
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err

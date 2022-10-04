@@ -13,6 +13,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -80,6 +81,7 @@ type appInputs struct {
 	depinject.In
 
 	Config         *runtimev1alpha1.Module
+	MempoolFn      mempool.Factory
 	App            appWrapper
 	Modules        map[string]AppModuleWrapper
 	BaseAppOptions []BaseAppOption
@@ -92,6 +94,9 @@ func provideAppBuilder(inputs appInputs) *AppBuilder {
 	}
 	app := inputs.App
 	app.baseAppOptions = inputs.BaseAppOptions
+	app.baseAppOptions = append(app.baseAppOptions, func(app *baseapp.BaseApp) {
+		app.SetMempool(inputs.MempoolFn())
+	})
 	app.config = inputs.Config
 	app.ModuleManager = mm
 	return &AppBuilder{app: app}

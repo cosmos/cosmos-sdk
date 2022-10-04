@@ -32,7 +32,7 @@ type wrapper struct {
 	// from the client using TxRaw if the tx was decoded from the wire
 	authInfoBz []byte
 
-	numBytes int
+	numBytes int64
 
 	txBodyHasUnknownNonCriticals bool
 }
@@ -67,7 +67,7 @@ func newBuilder(cdc codec.Codec) *wrapper {
 	}
 }
 
-func (w *wrapper) Size() int {
+func (w *wrapper) Size() int64 {
 	return w.numBytes
 }
 

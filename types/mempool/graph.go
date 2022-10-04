@@ -89,7 +89,7 @@ func (g *graph) AddNode(n *node) {
 	sg.byPriority.Set(n.priority, n)
 }
 
-func (g *graph) Select(ctx sdk.Context, txs [][]byte, maxBytes int) ([]Tx, error) {
+func (g *graph) Select(txs [][]byte, maxBytes int64) ([]Tx, error) {
 	// todo collapse multiple iterations into kahns
 	sorted, err := g.TopologicalSort()
 	if err != nil {
@@ -106,7 +106,7 @@ func (g *graph) CountTx() int {
 	return len(g.nodes)
 }
 
-func (g *graph) Remove(context sdk.Context, tx Tx) error {
+func (g *graph) Remove(tx Tx) error {
 	//TODO implement me
 	panic("implement me")
 }
@@ -119,7 +119,7 @@ func (n node) String() string {
 	return n.key()
 }
 
-func NewGraph() *graph {
+func NewGraph() Mempool {
 	return &graph{
 		nodes:        make(map[string]*node),
 		priorities:   huandu.New(huandu.LessThanFunc(txKeyLess)),

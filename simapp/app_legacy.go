@@ -168,23 +168,23 @@ type SimApp struct {
 	memKeys map[string]*storetypes.MemoryStoreKey
 
 	// keepers
-	AccountKeeper    authkeeper.AccountKeeper
-	BankKeeper       bankkeeper.Keeper
-	CapabilityKeeper *capabilitykeeper.Keeper
-	StakingKeeper    *stakingkeeper.Keeper
-	SlashingKeeper   slashingkeeper.Keeper
-	MintKeeper       mintkeeper.Keeper
-	DistrKeeper      distrkeeper.Keeper
-	GovKeeper        govkeeper.Keeper
-	CrisisKeeper     *crisiskeeper.Keeper
-	UpgradeKeeper    upgradekeeper.Keeper
-	ParamsKeeper     paramskeeper.Keeper
-	AuthzKeeper      authzkeeper.Keeper
-	EvidenceKeeper   evidencekeeper.Keeper
-	FeeGrantKeeper   feegrantkeeper.Keeper
-	GroupKeeper      groupkeeper.Keeper
-	NFTKeeper        nftkeeper.Keeper
-	ConsensusParams  consensusparamkeeper.Keeper
+	AccountKeeper         authkeeper.AccountKeeper
+	BankKeeper            bankkeeper.Keeper
+	CapabilityKeeper      *capabilitykeeper.Keeper
+	StakingKeeper         *stakingkeeper.Keeper
+	SlashingKeeper        slashingkeeper.Keeper
+	MintKeeper            mintkeeper.Keeper
+	DistrKeeper           distrkeeper.Keeper
+	GovKeeper             govkeeper.Keeper
+	CrisisKeeper          *crisiskeeper.Keeper
+	UpgradeKeeper         upgradekeeper.Keeper
+	ParamsKeeper          paramskeeper.Keeper
+	AuthzKeeper           authzkeeper.Keeper
+	EvidenceKeeper        evidencekeeper.Keeper
+	FeeGrantKeeper        feegrantkeeper.Keeper
+	GroupKeeper           groupkeeper.Keeper
+	NFTKeeper             nftkeeper.Keeper
+	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
 	// the module manager
 	ModuleManager *module.Manager
@@ -259,10 +259,9 @@ func NewSimApp(
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
-	app.ConsensusParams = consensusparamkeeper.NewKeeper(appCodec, keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
-
 	// set the BaseApp's parameter store
-	bApp.SetParamStore(&app.ConsensusParams)
+	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	bApp.SetParamStore(&app.ConsensusParamsKeeper)
 
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating

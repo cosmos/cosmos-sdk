@@ -80,7 +80,7 @@ Store entries prefixed with "Last" must remain unchanged until EndBlock.
 ValidatorUpdates contains the validator updates returned to ABCI at the end of every block. 
 The values are overwritten in every block. 
 
-* ValidatorUpdates `0x51 -> []abci.ValidatorUpdate`
+* ValidatorUpdates `0x61 -> []abci.ValidatorUpdate`
 
 ## UnbondingId
 
@@ -90,10 +90,10 @@ UnbondingId stores the ID of the latest unbonding operation. It enables to creat
 
 ## Params
 
-The staking module stores its params in state with the prefix of `0x69`,
+The staking module stores its params in state with the prefix of `0x51`,
 it can be updated with governance or the address with authority.
 
-* Params: `0x69 | ProtocolBuffer(Params)`
+* Params: `0x51 | ProtocolBuffer(Params)`
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L285-L306
 

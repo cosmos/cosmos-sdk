@@ -50,10 +50,10 @@ var (
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
-	HistoricalInfoKey   = []byte{0x50} // prefix for the historical info
-	ValidatorUpdatesKey = []byte{0x51} // prefix for the end block validator updates key
+	HistoricalInfoKey   = []byte{0x60} // prefix for the historical info
+	ValidatorUpdatesKey = []byte{0x61} // prefix for the end block validator updates key
 
-	ParamsKey = []byte{0x69} // prefix for parameters for module x/staking
+	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 )
 
 // UnbondingType defines the type of unbonding operation

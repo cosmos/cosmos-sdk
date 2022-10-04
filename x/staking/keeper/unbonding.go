@@ -58,9 +58,7 @@ func (k Keeper) SetUnbondingType(ctx sdk.Context, id uint64, unbondingType types
 }
 
 // return a unbonding delegation that has an unbonding delegation entry with a certain ID
-func (k Keeper) GetUnbondingDelegationByUnbondingId(
-	ctx sdk.Context, id uint64,
-) (ubd types.UnbondingDelegation, found bool) {
+func (k Keeper) GetUnbondingDelegationByUnbondingId(ctx sdk.Context, id uint64) (ubd types.UnbondingDelegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	ubdeKey := store.Get(types.GetUnbondingIndexKey(id))
@@ -83,9 +81,7 @@ func (k Keeper) GetUnbondingDelegationByUnbondingId(
 }
 
 // return a unbonding delegation that has an unbonding delegation entry with a certain ID
-func (k Keeper) GetRedelegationByUnbondingId(
-	ctx sdk.Context, id uint64,
-) (red types.Redelegation, found bool) {
+func (k Keeper) GetRedelegationByUnbondingId(ctx sdk.Context, id uint64) (red types.Redelegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	redKey := store.Get(types.GetUnbondingIndexKey(id))
@@ -108,9 +104,7 @@ func (k Keeper) GetRedelegationByUnbondingId(
 }
 
 // return the validator that is unbonding with a certain unbonding op ID
-func (k Keeper) GetValidatorByUnbondingId(
-	ctx sdk.Context, id uint64,
-) (val types.Validator, found bool) {
+func (k Keeper) GetValidatorByUnbondingId(ctx sdk.Context, id uint64) (val types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	valKey := store.Get(types.GetUnbondingIndexKey(id))
@@ -133,9 +127,7 @@ func (k Keeper) GetValidatorByUnbondingId(
 }
 
 // Set an index to look up an UnbondingDelegation by the unbondingId of an UnbondingDelegationEntry that it contains
-func (k Keeper) SetUnbondingDelegationByUnbondingId(
-	ctx sdk.Context, ubd types.UnbondingDelegation, id uint64,
-) {
+func (k Keeper) SetUnbondingDelegationByUnbondingId(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 
 	delAddr, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
@@ -199,8 +191,6 @@ func (k Keeper) SetValidatorByUnbondingId(ctx sdk.Context, val types.Validator, 
 
 // unbondingDelegationEntryArrayIndex and redelegationEntryArrayIndex are utilities to find
 // at which position in the Entries array the entry with a given id is
-// ----------------------------------------------------------------------------------------
-
 func unbondingDelegationEntryArrayIndex(ubd types.UnbondingDelegation, id uint64) (index int, found bool) {
 	for i, entry := range ubd.Entries {
 		// we find the entry with the right ID
@@ -227,8 +217,6 @@ func redelegationEntryArrayIndex(red types.Redelegation, id uint64) (index int, 
 // unbonding delegation, a redelegation, or a validator unbonding to complete.
 // In order for the unbonding operation with `id` to eventually complete, every call
 // to PutUnbondingOnHold(id) must be matched by a call to UnbondingCanComplete(id).
-// ----------------------------------------------------------------------------------------
-
 func (k Keeper) UnbondingCanComplete(ctx sdk.Context, id uint64) error {
 	unbondingType, found := k.GetUnbondingType(ctx, id)
 	if !found {
@@ -237,24 +225,22 @@ func (k Keeper) UnbondingCanComplete(ctx sdk.Context, id uint64) error {
 
 	switch unbondingType {
 	case types.UnbondingType_UnbondingDelegation:
-		err := k.unbondingDelegationEntryCanComplete(ctx, id)
-		if err != nil {
+		if err := k.unbondingDelegationEntryCanComplete(ctx, id); err != nil {
 			return err
 		}
 	case types.UnbondingType_Redelegation:
-		err := k.redelegationEntryCanComplete(ctx, id)
-		if err != nil {
+		if err := k.redelegationEntryCanComplete(ctx, id); err != nil {
 			return err
 		}
 	case types.UnbondingType_ValidatorUnbonding:
-		err := k.validatorUnbondingCanComplete(ctx, id)
-		if err != nil {
+		if err := k.validatorUnbondingCanComplete(ctx, id); err != nil {
 			return err
 		}
+	default:
+		return types.ErrUnbondingNotFound
 	}
 
-	// If an entry was not found
-	return types.ErrUnbondingNotFound
+	return nil
 }
 
 func (k Keeper) unbondingDelegationEntryCanComplete(ctx sdk.Context, id uint64) error {
@@ -379,7 +365,6 @@ func (k Keeper) validatorUnbondingCanComplete(ctx sdk.Context, id uint64) error 
 // such as an unbonding delegation, a redelegation, or a validator unbonding.
 // In order for the unbonding operation with `id` to eventually complete, every call
 // to PutUnbondingOnHold(id) must be matched by a call to UnbondingCanComplete(id).
-// ----------------------------------------------------------------------------------------
 func (k Keeper) PutUnbondingOnHold(ctx sdk.Context, id uint64) error {
 	unbondingType, found := k.GetUnbondingType(ctx, id)
 	if !found {
@@ -387,24 +372,22 @@ func (k Keeper) PutUnbondingOnHold(ctx sdk.Context, id uint64) error {
 	}
 	switch unbondingType {
 	case types.UnbondingType_UnbondingDelegation:
-		err := k.putUnbondingDelegationEntryOnHold(ctx, id)
-		if err != nil {
+		if err := k.putUnbondingDelegationEntryOnHold(ctx, id); err != nil {
 			return err
 		}
 	case types.UnbondingType_Redelegation:
-		err := k.putRedelegationEntryOnHold(ctx, id)
-		if err != nil {
+		if err := k.putRedelegationEntryOnHold(ctx, id); err != nil {
 			return err
 		}
 	case types.UnbondingType_ValidatorUnbonding:
-		err := k.putValidatorOnHold(ctx, id)
-		if err != nil {
+		if err := k.putValidatorOnHold(ctx, id); err != nil {
 			return err
 		}
+	default:
+		return types.ErrUnbondingNotFound
 	}
 
-	// If an entry was not found
-	return types.ErrUnbondingNotFound
+	return nil
 }
 
 func (k Keeper) putUnbondingDelegationEntryOnHold(ctx sdk.Context, id uint64) error {

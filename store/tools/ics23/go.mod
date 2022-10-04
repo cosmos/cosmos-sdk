@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/store/tools/ics23
 
-go 1.18
+go 1.19
 
 require (
 	github.com/confio/ics23/go v0.7.0

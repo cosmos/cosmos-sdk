@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -9,6 +10,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/gogoproto/proto"
 
@@ -251,7 +253,10 @@ func (app *BaseApp) MountTransientStores(keys map[string]*storetypes.TransientSt
 // MountMemoryStores mounts all in-memory KVStores with the BaseApp's internal
 // commit multi-store.
 func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey) {
-	for _, memKey := range keys {
+	skeys := maps.Keys(keys)
+	sort.Strings(skeys)
+	for _, key := range skeys {
+		memKey := keys[key]
 		app.MountStore(memKey, storetypes.StoreTypeMemory)
 	}
 }
@@ -294,6 +299,7 @@ func (app *BaseApp) SnapshotManager() *snapshots.Manager {
 // LoadVersion loads the BaseApp application version. It will panic if called
 // more than once on a running baseapp.
 func (app *BaseApp) LoadVersion(version int64) error {
+	app.logger.Info("NOTICE: this could take a long time to migrate IAVL store to fastnode if you enable Fast Node.\n")
 	err := app.cms.LoadVersion(version)
 	if err != nil {
 		return fmt.Errorf("failed to load version %d: %w", version, err)

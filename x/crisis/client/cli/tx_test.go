@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -27,12 +26,10 @@ var _ client.TendermintRPC = (*mockTendermintRPC)(nil)
 
 type mockTendermintRPC struct {
 	rpcclientmock.Client
-
-	responseQuery abci.ResponseQuery
 }
 
-func (_ mockTendermintRPC) BroadcastTxCommit(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
-	return &coretypes.ResultBroadcastTxCommit{}, nil
+func (mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+	return &coretypes.ResultBroadcastTx{}, nil
 }
 
 func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
@@ -61,7 +58,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				"", "total-supply",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
 			true, "invalid module name", 0,
@@ -72,7 +69,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				"bank", "",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
 			true, "invalid invariant route", 0,
@@ -83,7 +80,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 				"bank", "total-supply",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, accounts[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
 			false, "", 0,

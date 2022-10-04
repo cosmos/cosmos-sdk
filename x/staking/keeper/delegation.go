@@ -105,7 +105,7 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) e
 	delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
 
 	// TODO: Consider calling hooks outside of the store wrapper functions, it's unobvious.
-	if err := k.BeforeDelegationRemoved(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+	if err := k.Hooks().BeforeDelegationRemoved(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
 		return err
 	}
 
@@ -632,9 +632,9 @@ func (k Keeper) Delegate(
 
 	// call the appropriate hook if present
 	if found {
-		err = k.BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
+		err = k.Hooks().BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
 	} else {
-		err = k.BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
+		err = k.Hooks().BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
 	}
 
 	if err != nil {
@@ -691,7 +691,7 @@ func (k Keeper) Delegate(
 	k.SetDelegation(ctx, delegation)
 
 	// Call the after-modification hook
-	if err := k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+	if err := k.Hooks().AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
 		return newShares, err
 	}
 
@@ -709,7 +709,7 @@ func (k Keeper) Unbond(
 	}
 
 	// call the before-delegation-modified hook
-	if err := k.BeforeDelegationSharesModified(ctx, delAddr, valAddr); err != nil {
+	if err := k.Hooks().BeforeDelegationSharesModified(ctx, delAddr, valAddr); err != nil {
 		return amount, err
 	}
 
@@ -747,7 +747,7 @@ func (k Keeper) Unbond(
 	} else {
 		k.SetDelegation(ctx, delegation)
 		// call the after delegation modification hook
-		err = k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
+		err = k.Hooks().AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
 	}
 
 	if err != nil {

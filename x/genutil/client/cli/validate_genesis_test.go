@@ -67,9 +67,6 @@ var v040Valid = `{
 }`
 
 func (s *CLITestSuite) TestValidateGenesis() {
-	// accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-	// val0 := accounts[0]
-
 	testCases := []struct {
 		name    string
 		genesis string
@@ -90,7 +87,6 @@ func (s *CLITestSuite) TestValidateGenesis() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-
 			genesisFile := testutil.WriteToNewTempFile(s.T(), tc.genesis)
 			_, err := clitestutil.ExecTestCLICmd(s.clientCtx, cli.ValidateGenesisCmd(nil), []string{genesisFile.Name()})
 			if tc.expErr {

@@ -41,8 +41,8 @@ func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
 	return mockTendermintRPC{responseQuery: respQuery}
 }
 
-func (_ mockTendermintRPC) BroadcastTxCommit(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
-	return &coretypes.ResultBroadcastTxCommit{}, nil
+func (mockTendermintRPC) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+	return &coretypes.ResultBroadcastTx{}, nil
 }
 
 func (m mockTendermintRPC) ABCIQueryWithOptions(
@@ -87,7 +87,6 @@ func (s *CLITestSuite) SetupSuite() {
 		return s.baseCtx.WithClient(c)
 	}
 	s.clientCtx = ctxGen().WithOutput(&outBuf)
-
 }
 
 func (s *CLITestSuite) TestGenTxCmd() {
@@ -147,7 +146,6 @@ func (s *CLITestSuite) TestGenTxCmd() {
 		tc.args = append(tc.args, fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile))
 
 		s.Run(tc.name, func() {
-
 			clientCtx := s.clientCtx
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 

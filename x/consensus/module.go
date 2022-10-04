@@ -96,11 +96,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ss exported.ParamStore) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
-		legacySubspace: ss,
 	}
 }
 
@@ -143,9 +142,6 @@ type consensusParamInputs struct {
 	Key       *store.KVStoreKey
 	ModuleKey depinject.OwnModuleKey
 	Authority map[string]sdk.AccAddress `optional:"true"`
-
-	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.ParamStore
 }
 
 type consensusParamOutputs struct {
@@ -164,7 +160,7 @@ func provideModule(in consensusParamInputs) consensusParamOutputs {
 	}
 
 	k := keeper.NewKeeper(in.Cdc, in.Key, authority.String())
-	m := NewAppModule(in.Cdc, k, in.LegacySubspace)
+	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		app.SetParamStore(&k)
 	}

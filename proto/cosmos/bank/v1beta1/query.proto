@@ -285,7 +285,8 @@ message QueryDenomOwnersResponse {
 message QuerySendEnabledRequest {
   // denoms is the specific denoms you want look up. Leave empty to get all entries.
   repeated string denoms = 1;
-  // pagination defines an optional pagination for the request.
+  // pagination defines an optional pagination for the request. This field is
+  // only read if the denoms field is empty.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
@@ -294,6 +295,7 @@ message QuerySendEnabledRequest {
 // Since: cosmos-sdk 0.47
 message QuerySendEnabledResponse {
   repeated SendEnabled send_enabled = 1;
-  // pagination defines the pagination in the response.
+  // pagination defines the pagination in the response. This field is only
+  // populated if the denoms field in the request is empty.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }

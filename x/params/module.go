@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/runtime"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -158,21 +157,18 @@ type paramsInputs struct {
 type paramsOutputs struct {
 	depinject.Out
 
-	ParamsKeeper  keeper.Keeper
-	BaseAppOption runtime.BaseAppOption
-	Module        runtime.AppModuleWrapper
-	GovHandler    govv1beta1.HandlerRoute
+	ParamsKeeper keeper.Keeper
+	Module       runtime.AppModuleWrapper
+	GovHandler   govv1beta1.HandlerRoute
 }
 
 func provideModule(in paramsInputs) paramsOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.KvStoreKey, in.TransientStoreKey)
-	baseappOpt := func(app *baseapp.BaseApp) {
-		app.SetParamStore(k.Subspace(baseapp.Paramspace).WithKeyTable(types.ConsensusParamsKeyTable()))
-	}
+
 	m := runtime.WrapAppModule(NewAppModule(k))
 	govHandler := govv1beta1.HandlerRoute{RouteKey: proposal.RouterKey, Handler: NewParamChangeProposalHandler(k)}
 
-	return paramsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m, GovHandler: govHandler}
+	return paramsOutputs{ParamsKeeper: k, Module: m, GovHandler: govHandler}
 }
 
 type subspaceInputs struct {

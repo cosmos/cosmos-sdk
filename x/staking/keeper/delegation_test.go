@@ -597,6 +597,54 @@ func (s *KeeperTestSuite) TestRedelegateToSameValidator() {
 	require.Error(err)
 }
 
+func (s *KeeperTestSuite) TestMultipleRedelegationSameValidator() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	_, addrVals := createValAddrs(2)
+	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
+
+	// create a validator with a self-delegation
+	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
+	validator, issuedShares := validator.AddTokensFromDel(valTokens)
+	require.Equal(valTokens, issuedShares.RoundInt())
+
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
+	validator = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
+	require.True(validator.IsBonded())
+	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
+	selfDelegation := stakingtypes.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
+	keeper.SetDelegation(ctx, selfDelegation)
+
+	// create a second validator
+	validator2 := testutil.NewValidator(s.T(), addrVals[1], PKs[1])
+	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
+	require.Equal(valTokens, issuedShares.RoundInt())
+
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
+	validator2 = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator2, true)
+	require.Equal(stakingtypes.Bonded, validator2.Status)
+
+	// begin a redelegation to a new validator
+	_, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], math.LegacyNewDec(5))
+	require.NoError(err)
+
+	redelegations := keeper.GetRedelegations(ctx, val0AccAddr, 5)
+	require.Equal(1, len(redelegations))
+	require.Equal(1, len(redelegations[0].Entries))
+	// start a second redelegation to the same validator
+	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], math.LegacyNewDec(8))
+	require.NoError(err)
+
+	redelegations = keeper.GetRedelegations(ctx, val0AccAddr, 5)
+	require.Equal(1, len(redelegations))
+	require.Equal(2, len(redelegations[0].Entries))
+
+	resRed, found := keeper.GetRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
+	require.True(found)
+	require.Equal(redelegations[0], resRed)
+}
+
 func (s *KeeperTestSuite) TestRedelegationMaxEntries() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()

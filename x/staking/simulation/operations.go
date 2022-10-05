@@ -494,10 +494,6 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k *
 		delegation := delegations[r.Intn(len(delegations))]
 		delAddr := delegation.GetDelegatorAddr()
 
-		if k.HasReceivingRedelegation(ctx, delAddr, srcAddr) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgBeginRedelegate, "receveing redelegation is not allowed"), nil, nil // skip
-		}
-
 		// get random destination validator
 		destVal, ok := testutil.RandSliceElem(r, allVals)
 		if !ok {

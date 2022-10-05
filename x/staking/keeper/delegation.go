@@ -893,11 +893,6 @@ func (k Keeper) BeginRedelegation(
 		return time.Time{}, types.ErrBadRedelegationDst
 	}
 
-	// check if this is a transitive redelegation
-	if k.HasReceivingRedelegation(ctx, delAddr, valSrcAddr) {
-		return time.Time{}, types.ErrTransitiveRedelegation
-	}
-
 	if k.HasMaxRedelegationEntries(ctx, delAddr, valSrcAddr, valDstAddr) {
 		return time.Time{}, types.ErrMaxRedelegationEntries
 	}

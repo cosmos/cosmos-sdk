@@ -119,17 +119,12 @@ func ReadTxsFromInput(txCfg client.TxConfig, filenames ...string) (scanner *Batc
 	if filenames[0] != "-" {
 		buf := new(bytes.Buffer)
 		for _, f := range filenames {
-			file, err := os.Open(filepath.Clean(f))
-			if err != nil {
-				return nil, fmt.Errorf("couldn't open %s: %w", f, err)
-			}
-
-			content, err := io.ReadAll(file)
+			bytes, err := os.ReadFile(filepath.Clean(f))
 			if err != nil {
 				return nil, fmt.Errorf("couldn't read %s: %w", f, err)
 			}
 
-			if _, err := buf.WriteString(string(content)); err != nil {
+			if _, err := buf.WriteString(string(bytes)); err != nil {
 				return nil, fmt.Errorf("couldn't write to merged file: %w", err)
 			}
 		}

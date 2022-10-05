@@ -5,13 +5,14 @@ import (
 	"io"
 	"time"
 
-	"github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/gogoproto/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -54,7 +55,7 @@ type (
 		// RegisterTendermintService registers the gRPC Query service for tendermint queries.
 		RegisterTendermintService(clientCtx client.Context)
 
-		// Return the multistore instance
+		// CommitMultiStore return the multistore instance
 		CommitMultiStore() sdk.CommitMultiStore
 	}
 

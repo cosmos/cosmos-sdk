@@ -279,13 +279,14 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 	ctx := app.deliverState.ctx
-	//TODO Explore parallel execution contraints
-	for _, txByte := range req.Txs {
-		tx, err := app.txDecoder(txByte)
+
+	for _, txBytes := range req.Txs {
+		anteCtx, _ := app.cacheTxContext(ctx, txBytes)
+		tx, err := app.txDecoder(txBytes)
 		if err != nil {
 			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 		}
-		ctx, err = app.anteHandler(ctx, tx, false)
+		ctx, err = app.anteHandler(anteCtx, tx, false)
 		if err != nil {
 			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 		}

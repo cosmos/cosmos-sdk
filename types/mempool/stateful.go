@@ -99,9 +99,9 @@ func (amp *MemPoolI) Insert(ctx sdk.Context, tx Tx) error {
 
 }
 
-func (amp *MemPoolI) Select(_ sdk.Context, _ [][]byte, maxBytes int) ([]Tx, error) {
+func (amp *MemPoolI) Select(_ sdk.Context, _ [][]byte, maxBytes int64) ([]Tx, error) {
 	var selectedTxs []Tx
-	var txBytes int
+	var txBytes int64
 
 	currentAccount := amp.accountsHeads.Front()
 	for currentAccount != nil {

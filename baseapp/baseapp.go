@@ -681,6 +681,17 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err
 		}
+	} else if mode == runTxModeDeliver {
+		// TODO
+		// Most conservative behavior; if removal of the tx from the mempool fails then DeliverTx
+		// will fail as well.
+		//
+		// Should we be less conservative and still return a successful DeliverTx?
+		err = app.mempool.Remove(tx.(mempool.Tx))
+		if err != nil {
+			return gInfo, nil, anteEvents, priority,
+				fmt.Errorf("failed to remove tx from mempool: %w", err)
+		}
 	}
 
 	// Create a new Context based off of the existing Context with a MultiStore branch

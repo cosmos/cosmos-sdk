@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/cosmos/cosmos-sdk/types"
-
 	huandu "github.com/huandu/skiplist"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/cosmos/gogoproto/jsonpb"
@@ -118,7 +119,7 @@ func ReadTxsFromInput(txCfg client.TxConfig, filenames ...string) (scanner *Batc
 	if filenames[0] != "-" {
 		buf := new(bytes.Buffer)
 		for _, f := range filenames {
-			file, err := os.Open(f)
+			file, err := os.Open(filepath.Clean(f))
 			if err != nil {
 				return nil, fmt.Errorf("couldn't open %s: %w", f, err)
 			}

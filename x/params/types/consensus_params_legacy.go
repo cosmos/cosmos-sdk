@@ -6,11 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-// ConsensusParamsKeyTable returns an x/params module keyTable to be used in
-// the BaseApp's ParamStore. The KeyTable registers the types along with the
-// standard validation functions. Applications can choose to adopt this KeyTable
-// or provider their own when the existing validation functions do not suite their
-// needs.
+// Deprecated.
 func ConsensusParamsKeyTable() KeyTable {
 	return NewKeyTable(
 		NewParamSetPair(

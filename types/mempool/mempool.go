@@ -47,9 +47,7 @@ type ErrTxNotFound struct {
 
 type Factory func() Mempool
 
-var (
-	_ Mempool = (*defaultMempool)(nil)
-)
+var _ Mempool = (*defaultMempool)(nil)
 
 type defaultMempool struct {
 	priorities *huandu.SkipList
@@ -94,6 +92,9 @@ func (mp *defaultMempool) Insert(ctx types.Context, tx Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
+	}
+	if len(sigs) == 0 {
+		return fmt.Errorf("tx must have at least one signer")
 	}
 
 	sig := sigs[0]
@@ -222,10 +223,7 @@ func DebugPrintKeys(mempool Mempool) {
 	}
 }
 
-func Iterations(mempool Mempool) int {
-	mp, ok := mempool.(*defaultMempool)
-	if !ok {
-		panic("unknown mempool type")
-	}
+func DebugIterations(mempool Mempool) int {
+	mp := mempool.(*defaultMempool)
 	return mp.iterations
 }

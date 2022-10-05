@@ -114,6 +114,22 @@ func (tx testTx) String() string {
 	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
 }
 
+type sigErrTx struct {
+	getSigs func() ([]txsigning.SignatureV2, error)
+}
+
+func (_ sigErrTx) Size() int64 { return 0 }
+
+func (_ sigErrTx) GetMsgs() []sdk.Msg { return nil }
+
+func (_ sigErrTx) ValidateBasic() error { return nil }
+
+func (_ sigErrTx) GetSigners() []sdk.AccAddress { return nil }
+
+func (_ sigErrTx) GetPubKeys() ([]cryptotypes.PubKey, error) { return nil, nil }
+
+func (t sigErrTx) GetSignaturesV2() ([]txsigning.SignatureV2, error) { return t.getSigs() }
+
 func TestDefaultMempool(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
@@ -150,6 +166,23 @@ func TestDefaultMempool(t *testing.T) {
 	sel, err := mp.Select(nil, 13)
 	require.NoError(t, err)
 	require.Equal(t, 13, len(sel))
+
+	// a tx which does not implement SigVerifiableTx should not be inserted
+	tx := &sigErrTx{getSigs: func() ([]txsigning.SignatureV2, error) {
+		return nil, fmt.Errorf("error")
+	}}
+	require.Error(t, mp.Insert(ctx, tx))
+	require.Error(t, mp.Remove(tx))
+	tx.getSigs = func() ([]txsigning.SignatureV2, error) {
+		return nil, nil
+	}
+	require.Error(t, mp.Insert(ctx, tx))
+	require.Error(t, mp.Remove(tx))
+
+	mp = mempool.NewDefaultMempool()
+	require.NoError(t, mp.Insert(ctx, txs[0]))
+	require.ErrorAs(t, mp.Remove(txs[1]), &mempool.ErrTxNotFound{})
+	mempool.DebugPrintKeys(mp)
 }
 
 type txSpec struct {
@@ -201,6 +234,7 @@ func TestOutOfOrder(t *testing.T) {
 	}
 
 	require.Error(t, validateOrder(rmtxs))
+
 }
 
 func (s *MempoolTestSuite) TestTxOrder() {
@@ -431,7 +465,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	duration := time.Since(start)
 
 	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
-		seed, mempool.Iterations(mp), duration.Milliseconds())
+		seed, mempool.DebugIterations(mp), duration.Milliseconds())
 }
 
 func (s *MempoolTestSuite) TestRandomWalkTxs() {
@@ -479,7 +513,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	duration := time.Since(start)
 
 	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
-		seed, mempool.Iterations(mp), duration.Milliseconds())
+		seed, mempool.DebugIterations(mp), duration.Milliseconds())
 }
 
 func (s *MempoolTestSuite) TestSampleTxs() {

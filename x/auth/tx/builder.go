@@ -67,10 +67,6 @@ func newBuilder(cdc codec.Codec) *wrapper {
 }
 
 func (w *wrapper) Size() int64 {
-	if w.txSize == 0 {
-		psz := proto.Size(w.tx)
-		w.txSize = int64(psz)
-	}
 	return w.txSize
 }
 

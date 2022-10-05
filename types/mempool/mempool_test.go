@@ -179,10 +179,20 @@ func TestDefaultMempool(t *testing.T) {
 	require.Error(t, mp.Insert(ctx, tx))
 	require.Error(t, mp.Remove(tx))
 
+	// removing a tx not in the mempool should error
 	mp = mempool.NewDefaultMempool()
 	require.NoError(t, mp.Insert(ctx, txs[0]))
 	require.ErrorAs(t, mp.Remove(txs[1]), &mempool.ErrTxNotFound{})
 	mempool.DebugPrintKeys(mp)
+
+	// inserting a tx with a different priority should overwrite the old tx
+	newPriorityTx := testTx{
+		address:  txs[0].address,
+		priority: txs[0].priority + 1,
+		nonce:    txs[0].nonce,
+	}
+	require.NoError(t, mp.Insert(ctx, newPriorityTx))
+	require.Equal(t, 1, mp.CountTx())
 }
 
 type txSpec struct {

@@ -48,6 +48,10 @@ type Factory func() Mempool
 
 var _ Mempool = (*defaultMempool)(nil)
 
+// defaultMempool is the SDK's default mempool implementation which returns txs in a partial order
+// by 2 dimensions; priority, and sender-nonce.  Internally it uses one priority ordered skip list and one skip list
+// per sender ordered by nonce (sender-nonce).  When there are multiple txs from the same sender, they are not
+// always comparable by priority other sender txs and must be partially ordered by both sender-nonce and priority.
 type defaultMempool struct {
 	priorities *huandu.SkipList
 	senders    map[string]*huandu.SkipList
@@ -61,6 +65,8 @@ type txKey struct {
 	sender   string
 }
 
+// txKeyLess is a comparator for txKeys that first compares priority, then nonce, then sender, uniquely identifying
+// a transaction.
 func txKeyLess(a, b interface{}) int {
 	keyA := a.(txKey)
 	keyB := b.(txKey)
@@ -87,6 +93,10 @@ func NewDefaultMempool() Mempool {
 	}
 }
 
+// Insert attempts to insert a Tx into the app-side mempool in O(log n) time, returning an error if unsuccessful.
+// Sender and nonce are derived from the transaction's first signature.
+// Inserting a duplicate tx is an O(log n) no-op.
+// Inserting a duplicate tx with a different priority overwrites the existing tx.
 func (mp *defaultMempool) Insert(ctx types.Context, tx Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
@@ -110,13 +120,25 @@ func (mp *defaultMempool) Insert(ctx types.Context, tx Tx) error {
 		mp.senders[sender] = senderTxs
 	}
 
+	// Since senderTxs is scored by nonce, a changed priority will overwrite the existing txKey.
 	senderTxs.Set(tk, tx)
-	mp.scores[txKey{nonce: nonce, sender: sender}] = ctx.Priority()
+
+	// Since mp.priorities is scored by priority, then sender, then nonce, a changed priority will create a new key,
+	// so we must remove the old key and re-insert it to avoid having the same tx with different priorities indexed
+	// twice in the mempool.  This O(log n) remove operation is rare and only happens when a tx's priority changes.
+	sk := txKey{nonce: nonce, sender: sender}
+	if oldScore, txExists := mp.scores[sk]; txExists {
+		mp.priorities.Remove(txKey{nonce: nonce, priority: oldScore, sender: sender})
+	}
+	mp.scores[sk] = ctx.Priority()
 	mp.priorities.Set(tk, tx)
 
 	return nil
 }
 
+// Select returns a set of transactions from the mempool, prioritized by priority and sender-nonce in O(n) time.
+// The passed in list of transactions are ignored.  This is a readonly operation, the mempool is not modified.
+// maxBytes is the maximum number of bytes of transactions to return.
 func (mp *defaultMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 	var selectedTxs []Tx
 	var txBytes int64
@@ -177,10 +199,12 @@ func nextPriority(priorityNode *huandu.Element) (int64, *huandu.Element) {
 	return np, nextPriorityNode
 }
 
+// CountTx returns the number of transactions in the mempool.
 func (mp *defaultMempool) CountTx() int {
 	return mp.priorities.Len()
 }
 
+// Remove removes a transaction from the mempool in O(log n) time, returning an error if unsuccessful.
 func (mp *defaultMempool) Remove(tx Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {

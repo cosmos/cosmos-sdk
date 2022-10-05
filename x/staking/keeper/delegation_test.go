@@ -601,7 +601,7 @@ func (s *KeeperTestSuite) TestMultipleRedelegationSameValidator() {
 	ctx, keeper := s.ctx, s.stakingKeeper
 	require := s.Require()
 
-	_, addrVals := createValAddrs(2)
+	addrDels, addrVals := createValAddrs(2)
 	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
 
 	// create a validator with a self-delegation
@@ -612,8 +612,7 @@ func (s *KeeperTestSuite) TestMultipleRedelegationSameValidator() {
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	validator = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
 	require.True(validator.IsBonded())
-	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	selfDelegation := stakingtypes.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
+	selfDelegation := stakingtypes.NewDelegation(addrDels[0], addrVals[0], issuedShares)
 	keeper.SetDelegation(ctx, selfDelegation)
 
 	// create a second validator
@@ -623,57 +622,152 @@ func (s *KeeperTestSuite) TestMultipleRedelegationSameValidator() {
 
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
 	validator2 = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator2, true)
-	require.Equal(stakingtypes.Bonded, validator2.Status)
+	require.True(validator2.IsBonded())
 
-	delegation, found := keeper.GetDelegation(ctx, val0AccAddr, addrVals[0])
+	delegation, found := keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(found)
 	halfBondedShares := delegation.GetShares().QuoInt64(2)
 
 	// begin a redelegation to a new validator
-	completionTime, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], halfBondedShares)
+	completionTime, err := keeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], halfBondedShares)
 	require.NoError(err)
-	require.True(keeper.HasReceivingRedelegation(ctx, val0AccAddr, addrVals[1]))
+	require.True(keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1]))
 
-	redelegations := keeper.GetRedelegations(ctx, val0AccAddr, 5)
+	redelegations := keeper.GetRedelegations(ctx, addrDels[0], 5)
 	require.Equal(1, len(redelegations))
 	require.Equal(1, len(redelegations[0].Entries))
 
 	// start a second redelegation to the same validator
 	ctx = ctx.WithBlockTime(completionTime.Add(-time.Hour))
-	completionTime2, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], halfBondedShares)
+	completionTime2, err := keeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], halfBondedShares)
 	require.NoError(err)
 	require.NotEqual(completionTime, completionTime2)
-	require.True(keeper.HasReceivingRedelegation(ctx, val0AccAddr, addrVals[1]))
+	require.True(keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1]))
 
-	redelegations = keeper.GetRedelegations(ctx, val0AccAddr, 5)
+	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
 	require.Equal(1, len(redelegations))
 	require.Equal(2, len(redelegations[0].Entries))
 
-	resRed, found := keeper.GetRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
+	resRed, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(found)
 	require.Equal(redelegations[0], resRed)
 	secondRedelegation := redelegations[0].Entries[1]
 
 	// start a third redelegation to the same validator
 	// should be out of tokens to redelegate
-	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], math.LegacyNewDec(5))
+	_, err = keeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], math.LegacyNewDec(5))
 	require.Error(err)
 
 	ctx = ctx.WithBlockTime(completionTime)
-	_, err = keeper.CompleteRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
+	_, err = keeper.CompleteRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.NoError(err)
-	require.True(keeper.HasReceivingRedelegation(ctx, val0AccAddr, addrVals[1]))
+	require.True(keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1]))
 
-	redelegations = keeper.GetRedelegations(ctx, val0AccAddr, 5)
+	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
 	require.Equal(1, len(redelegations))
 	require.Equal(1, len(redelegations[0].Entries))
 	require.Equal(secondRedelegation, redelegations[0].Entries[0])
 
 	// verify there is no more redelegation
 	ctx = ctx.WithBlockTime(completionTime2)
-	_, err = keeper.CompleteRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
+	_, err = keeper.CompleteRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.NoError(err)
-	require.False(keeper.HasReceivingRedelegation(ctx, val0AccAddr, addrVals[1]))
+	require.False(keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1]))
+}
+
+func (s *KeeperTestSuite) TestAllowTransitiveRedelegations() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	addrDels, addrVals := createValAddrs(2)
+	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
+
+	// create a validator with a self-delegation
+	validator := testutil.NewValidator(s.T(), addrVals[0], PKs[0])
+	validator, issuedShares := validator.AddTokensFromDel(valTokens)
+	require.Equal(valTokens, issuedShares.RoundInt())
+
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
+	validator = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator, true)
+	require.True(validator.IsBonded())
+	keeper.SetDelegation(ctx, stakingtypes.NewDelegation(addrDels[0], addrVals[0], issuedShares))
+
+	// create a second validator and deletates to it
+	validator2 := testutil.NewValidator(s.T(), addrVals[1], PKs[1])
+	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
+	require.Equal(valTokens, issuedShares.RoundInt())
+
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, gomock.Any())
+	validator2 = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator2, true)
+	require.True(validator2.IsBonded())
+	keeper.SetDelegation(ctx, stakingtypes.NewDelegation(addrDels[0], addrVals[1], issuedShares))
+
+	// verify we have two delegations
+	delegations := keeper.GetAllDelegatorDelegations(ctx, addrDels[0])
+	require.Equal(2, len(delegations))
+
+	// begin a redelegation from validator to validator2
+	_, err := keeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], issuedShares)
+	require.NoError(err)
+	require.True(keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1]))
+
+	redelegations := keeper.GetRedelegations(ctx, addrDels[0], 5)
+	require.Equal(1, len(redelegations))
+	require.Equal(1, len(redelegations[0].Entries))
+
+	// start a second redelegation from validator2 to validator
+	_, err = keeper.BeginRedelegation(ctx, addrDels[0], addrVals[1], addrVals[0], issuedShares)
+	require.NoError(err)
+	require.True(keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1]))
+
+	// verify redelegations
+	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
+	require.Equal(2, len(redelegations))
+	for _, e := range redelegations {
+		require.Len(e.Entries, 1)
+	}
+
+	resRed, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	require.True(found)
+	require.Equal(redelegations[0], resRed)
+
+	resRed, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[1], addrVals[0])
+	require.True(found)
+	require.Equal(redelegations[1], resRed)
+
+	// verify we count towards the max redelegations
+	maxEntries := keeper.MaxEntries(ctx) - 1 // -1 because we already have 1 redelegation per validator
+	var lastCompletionTime time.Time
+	for i := uint32(0); i < maxEntries; i++ {
+		var err error
+		_, err = keeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], math.LegacyNewDec(1))
+		require.NoError(err)
+		lastCompletionTime, err = keeper.BeginRedelegation(ctx, addrDels[0], addrVals[1], addrVals[0], math.LegacyNewDec(1))
+		require.NoError(err)
+	}
+
+	// verify we can't add anymore redelegations
+	_, err = keeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], math.LegacyNewDec(1))
+	require.ErrorIs(err, stakingtypes.ErrMaxRedelegationEntries)
+	_, err = keeper.BeginRedelegation(ctx, addrDels[0], addrVals[1], addrVals[0], math.LegacyNewDec(1))
+	require.ErrorIs(err, stakingtypes.ErrMaxRedelegationEntries)
+
+	// complete all redelegations
+	ctx = ctx.WithBlockTime(lastCompletionTime)
+	_, err = keeper.CompleteRedelegation(ctx, addrDels[0], addrVals[1], addrVals[0])
+	require.NoError(err)
+	require.False(keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[0]))
+	require.True(keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1]))
+	_, err = keeper.CompleteRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	require.NoError(err)
+	require.False(keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1]))
+
+	// verify we've been just swapping the redelegations and there is no more redelegation
+	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
+	require.Len(redelegations, 0)
+
+	newDelegations := keeper.GetAllDelegatorDelegations(ctx, addrDels[0])
+	require.Equal(delegations, newDelegations)
 }
 
 func (s *KeeperTestSuite) TestRedelegationMaxEntries() {

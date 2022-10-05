@@ -41,7 +41,7 @@ var (
 	ErrSelfRedelegation                = sdkerrors.Register(ModuleName, 29, "cannot redelegate to the same validator")
 	ErrTinyRedelegationAmount          = sdkerrors.Register(ModuleName, 30, "too few tokens to redelegate (truncates to zero tokens)")
 	ErrBadRedelegationDst              = sdkerrors.Register(ModuleName, 31, "redelegation destination validator not found")
-	ErrTransitiveRedelegation          = sdkerrors.Register(ModuleName, 32, "redelegation to this validator already in progress; first redelegation to this validator must complete before next redelegation")
+	ErrTransitiveRedelegation          = sdkerrors.Register(ModuleName, 32, "redelegation to this validator already in progress; first redelegation to this validator must complete before next redelegation") // unused
 	ErrMaxRedelegationEntries          = sdkerrors.Register(ModuleName, 33, "too many redelegation entries for (delegator, src-validator, dst-validator) tuple")
 	ErrDelegatorShareExRateInvalid     = sdkerrors.Register(ModuleName, 34, "cannot delegate to validators with invalid (zero) ex-rate")
 	ErrBothShareMsgsGiven              = sdkerrors.Register(ModuleName, 35, "both shares amount and shares percent provided")

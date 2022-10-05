@@ -52,8 +52,10 @@ Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.0`) for ge
 
 #### Broadcast Mode
 
-Broadcast mode `block` was deprecated and has been removed. Please use `sync` mode instead.
-When upgrading your tests from `block` to `sync` and checking for a transaction code, you need to query the transaction first (with its hash) to get the correct code.
+Broadcast mode `block` was deprecated and has been removed. Please use `sync` mode
+instead. When upgrading your tests from `block` to `sync` and checking for a
+transaction code, you need to query the transaction first (with its hash) to get
+the correct code.
 
 ### Modules
 
@@ -71,7 +73,12 @@ modified to set the new parameter to the desired value.
 
 #### `x/consensus`
 
-Introducing a new module to handle consensus parameters from tendermint. For migration it is required to add specific migrations for the module. 
+Introducing a new `x/consensus` module to handle managing Tendermint consensus
+parameters. For migration it is required to call a specific migration to migrate
+existing parameters from the deprecated `x/params` to `x/consensus` module. App
+developers should ensure to call `baseapp.MigrateParams` in their upgrade handler.
+
+Example:
 
 ```go
 func (app SimApp) RegisterUpgradeHandlers() {
@@ -84,19 +91,13 @@ func (app SimApp) RegisterUpgradeHandlers() {
  			// dedicated x/consensus module.
  			----> baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper) <----
 
+			// ...
+
  			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
  		},
  	)
 
- 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
- 	if err != nil {
- 		panic(err)
- 	}
-
- 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
- 		storeUpgrades := storetypes.StoreUpgrades{}
-                app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
-	}
+  // ...
 }
 ```
 
@@ -105,11 +106,13 @@ The old params module is required to still be imported in your app.go in order t
 ##### App.go Changes
 
 Previous:
+
 ```go
 bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
 ```
 
 After:
+
 ```go
 app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
 bApp.SetParamStore(&app.ConsensusParamsKeeper)

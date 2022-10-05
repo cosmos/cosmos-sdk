@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -31,6 +32,8 @@ type wrapper struct {
 	authInfoBz []byte
 
 	txBodyHasUnknownNonCriticals bool
+
+	txSize int64
 }
 
 var (
@@ -40,7 +43,7 @@ var (
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
 	_ tx.TipTx                   = &wrapper{}
-	_ sdk.MempoolTx              = &wrapper{}
+	_ mempool.Tx                 = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -63,8 +66,11 @@ func newBuilder(cdc codec.Codec) *wrapper {
 	}
 }
 
-func (w *wrapper) Size() int {
-	panic("not yet implemented")
+func (w *wrapper) Size() int64 {
+	if w.txSize == 0 {
+		w.txSize = int64(proto.Size(w.tx))
+	}
+	return w.txSize
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {

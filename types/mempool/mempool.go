@@ -225,8 +225,6 @@ func Iterations(mempool Mempool) int {
 	switch v := mempool.(type) {
 	case *defaultMempool:
 		return v.iterations
-	case *graph:
-		return v.iterations
 	}
 	panic("unknown mempool type")
 }

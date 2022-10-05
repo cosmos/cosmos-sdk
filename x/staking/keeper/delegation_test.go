@@ -625,16 +625,23 @@ func (s *KeeperTestSuite) TestMultipleRedelegationSameValidator() {
 	validator2 = stakingkeeper.TestingUpdateValidator(keeper, ctx, validator2, true)
 	require.Equal(stakingtypes.Bonded, validator2.Status)
 
+	delegation, found := keeper.GetDelegation(ctx, val0AccAddr, addrVals[0])
+	require.True(found)
+	halfBondedShares := delegation.GetShares().QuoInt64(2)
+
 	// begin a redelegation to a new validator
-	_, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], math.LegacyNewDec(5))
+	completionTime, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], halfBondedShares)
 	require.NoError(err)
 
 	redelegations := keeper.GetRedelegations(ctx, val0AccAddr, 5)
 	require.Equal(1, len(redelegations))
 	require.Equal(1, len(redelegations[0].Entries))
+
 	// start a second redelegation to the same validator
-	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], math.LegacyNewDec(8))
+	ctx = ctx.WithBlockTime(completionTime.Add(-time.Hour))
+	completionTime2, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], halfBondedShares)
 	require.NoError(err)
+	require.NotEqual(completionTime, completionTime2)
 
 	redelegations = keeper.GetRedelegations(ctx, val0AccAddr, 5)
 	require.Equal(1, len(redelegations))
@@ -643,6 +650,21 @@ func (s *KeeperTestSuite) TestMultipleRedelegationSameValidator() {
 	resRed, found := keeper.GetRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
 	require.True(found)
 	require.Equal(redelegations[0], resRed)
+	secondRedelegation := redelegations[0].Entries[1]
+
+	// start a third redelegation to the same validator
+	// should be out of tokens to redelegate
+	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], math.LegacyNewDec(5))
+	require.Error(err)
+
+	ctx = ctx.WithBlockTime(completionTime)
+	_, err = keeper.CompleteRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
+	require.NoError(err)
+
+	redelegations = keeper.GetRedelegations(ctx, val0AccAddr, 5)
+	require.Equal(1, len(redelegations))
+	require.Equal(1, len(redelegations[0].Entries))
+	require.Equal(secondRedelegation, redelegations[0].Entries[0])
 }
 
 func (s *KeeperTestSuite) TestRedelegationMaxEntries() {

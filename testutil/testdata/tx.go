@@ -22,7 +22,7 @@ func AddressGenerator(t *rapid.T) *rapid.Generator[sdk.AccAddress] {
 	})
 }
 
-// AddressGenerator creates and returns a pagination PageRequest generator
+// PaginationGenerator creates and returns a pagination PageRequest generator
 // using rapid.
 func PaginationGenerator(t *rapid.T, maxLimit uint64) *rapid.Generator[*query.PageRequest] {
 	return rapid.Custom(func(t *rapid.T) *query.PageRequest {

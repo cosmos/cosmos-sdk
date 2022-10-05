@@ -90,7 +90,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 	return tx.Sign(txFactory, name, txBuilder, overwrite)
 }
 
-// Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
+// Read and decode a StdTx from the given filename. Can pass "-" to read from stdin.
 func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) {
 	var bytes []byte
 
@@ -105,6 +105,38 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	}
 
 	return ctx.TxConfig.TxJSONDecoder()(bytes)
+}
+
+// ReadTxsFromInput reads multiples txs from the given filename(s). Can pass "-" to read from stdin.
+// Unlike ReadTxFromFile, this function does not decode the txs.
+func ReadTxsFromInput(txCfg client.TxConfig, filenames ...string) (scanner *BatchScanner, err error) {
+	if len(filenames) == 0 {
+		return nil, fmt.Errorf("no file name provided")
+	}
+
+	var infile io.Reader = os.Stdin
+	if filenames[0] != "-" {
+		buf := new(bytes.Buffer)
+		for _, f := range filenames {
+			file, err := os.Open(f)
+			if err != nil {
+				return nil, fmt.Errorf("couldn't open %s: %w", f, err)
+			}
+
+			content, err := io.ReadAll(file)
+			if err != nil {
+				return nil, fmt.Errorf("couldn't read %s: %w", f, err)
+			}
+
+			if _, err := buf.WriteString(string(content)); err != nil {
+				return nil, fmt.Errorf("couldn't write to merged file: %w", err)
+			}
+		}
+
+		infile = buf
+	}
+
+	return NewBatchScanner(txCfg, infile), nil
 }
 
 // NewBatchScanner returns a new BatchScanner to read newline-delimited StdTx transactions from r.

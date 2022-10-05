@@ -49,7 +49,6 @@ type Factory func() Mempool
 
 var (
 	_ Mempool = (*defaultMempool)(nil)
-	//ErrMempoolIsFull         = fmt.Errorf("mempool is full")
 )
 
 type defaultMempool struct {
@@ -224,9 +223,9 @@ func DebugPrintKeys(mempool Mempool) {
 }
 
 func Iterations(mempool Mempool) int {
-	switch v := mempool.(type) {
-	case *defaultMempool:
-		return v.iterations
+	mp, ok := mempool.(*defaultMempool)
+	if !ok {
+		panic("unknown mempool type")
 	}
-	panic("unknown mempool type")
+	return mp.iterations
 }

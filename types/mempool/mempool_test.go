@@ -31,17 +31,14 @@ type testPubKey struct {
 }
 
 func (t testPubKey) Reset() {
-	//TODO implement me
 	panic("implement me")
 }
 
 func (t testPubKey) String() string {
-	//TODO implement me
 	panic("implement me")
 }
 
 func (t testPubKey) ProtoMessage() {
-	//TODO implement me
 	panic("implement me")
 }
 
@@ -50,22 +47,18 @@ func (t testPubKey) Address() cryptotypes.Address {
 }
 
 func (t testPubKey) Bytes() []byte {
-	//TODO implement me
 	panic("implement me")
 }
 
 func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool {
-	//TODO implement me
 	panic("implement me")
 }
 
 func (t testPubKey) Equals(key cryptotypes.PubKey) bool {
-	//TODO implement me
 	panic("implement me")
 }
 
 func (t testPubKey) Type() string {
-	//TODO implement me
 	panic("implement me")
 }
 
@@ -153,6 +146,10 @@ func TestDefaultMempool(t *testing.T) {
 		require.NoError(t, err)
 	}
 	require.Equal(t, txCount, mp.CountTx())
+
+	sel, err := mp.Select(nil, 13)
+	require.NoError(t, err)
+	require.Equal(t, 13, len(sel))
 }
 
 type txSpec struct {
@@ -213,8 +210,6 @@ func (s *MempoolTestSuite) TestTxOrder() {
 	sa := accounts[0].Address
 	sb := accounts[1].Address
 	sc := accounts[2].Address
-	//sd := accounts[3].Address
-	//se := accounts[4].Address
 
 	tests := []struct {
 		txs   []txSpec
@@ -479,19 +474,9 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 
 	errMsg := fmt.Sprintf("Expected order: %v\nGot order: %v\nSeed: %v", orderedStr, selectedStr, seed)
 
-	//mempool.DebugPrintKeys(mp)
-
 	start := time.Now()
 	require.NoError(t, validateOrder(selected), errMsg)
 	duration := time.Since(start)
-
-	/*for i, tx := range selected {
-		msg := fmt.Sprintf("Failed tx at index %d\n%s", i, errMsg)
-		require.Equal(t, ordered[i], tx.(testTx), msg)
-		require.Equal(t, tx.(testTx).priority, ordered[i].priority, msg)
-		require.Equal(t, tx.(testTx).nonce, ordered[i].nonce, msg)
-		require.Equal(t, tx.(testTx).address, ordered[i].address, msg)
-	}*/
 
 	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
 		seed, mempool.Iterations(mp), duration.Milliseconds())

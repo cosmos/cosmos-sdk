@@ -122,17 +122,14 @@ func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
 	suite.runQueryBalanceIterations(addr1, &coin1)
 }
 
-func (suite *DeterministicTestSuite) runAllBalancesIterations(addr sdk.AccAddress, prevRes sdk.Coins) {
+func (suite *DeterministicTestSuite) runAllBalancesIterations(req *banktypes.QueryAllBalancesRequest, prevRes *banktypes.QueryAllBalancesResponse) {
 	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.AllBalances(suite.ctx, &banktypes.QueryAllBalancesRequest{
-			Address: addr.String(),
-		})
+		res, err := suite.queryClient.AllBalances(suite.ctx, req)
 
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
-		suite.Require().NotNil(res.Balances)
 
-		suite.Require().Equal(res.GetBalances(), prevRes)
+		suite.Require().Equal(res, prevRes)
 	}
 }
 
@@ -152,7 +149,12 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 		}
 
 		suite.fundAccount(addr, coins...)
-		suite.runAllBalancesIterations(addr, coins)
+
+		req := banktypes.NewQueryAllBalancesRequest(addr, testdata.PaginationGenerator(t, uint64(numCoins)).Draw(t, "pagination"))
+		res, err := suite.queryClient.AllBalances(suite.ctx, req)
+		suite.Require().NoError(err)
+
+		suite.runAllBalancesIterations(req, res)
 	})
 
 	coins := sdk.NewCoins(
@@ -161,7 +163,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 	)
 
 	suite.fundAccount(addr1, coins...)
-	suite.runAllBalancesIterations(addr1, coins)
+	suite.runAllBalancesIterations(
+		banktypes.NewQueryAllBalancesRequest(addr1, nil),
+		&banktypes.QueryAllBalancesResponse{Balances: coins, Pagination: &query.PageResponse{Total: 2}},
+	)
 }
 
 func (suite *DeterministicTestSuite) runSpendableBalancesIterations(req *banktypes.QuerySpendableBalancesRequest, prevRes *banktypes.QuerySpendableBalancesResponse) {
@@ -234,7 +239,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 	initialSupply := res.GetSupply()
 
 	rapid.Check(suite.T(), func(t *rapid.T) {
-		numCoins := rapid.IntRange(1, 10).Draw(t, "num-count")
+		numCoins := rapid.IntRange(1, 3).Draw(t, "num-count")
 		coins := make(sdk.Coins, 0, numCoins)
 
 		for i := 0; i < numCoins; i++ {
@@ -272,7 +277,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 
 	coins = initialSupply.Add(coins...)
 	suite.runTotalSupplyIterations(
-		&banktypes.QueryTotalSupplyRequest{},
+		&banktypes.QueryTotalSupplyRequest{Pagination: &query.PageRequest{Limit: uint64(len(coins)), CountTotal: true}},
 		&banktypes.QueryTotalSupplyResponse{Supply: coins, Pagination: &query.PageResponse{Total: uint64(len(coins))}},
 	)
 }
@@ -407,7 +412,7 @@ func (suite *DeterministicTestSuite) TestGRPCDenomsMetadata() {
 	suite.SetupTest() // reset
 
 	rapid.Check(suite.T(), func(t *rapid.T) {
-		count := rapid.IntRange(1, 5).Draw(t, "count")
+		count := rapid.IntRange(1, 3).Draw(t, "count")
 		denomsMetadata := suite.createAndReturnMetadatas(t, count)
 		suite.Require().Len(denomsMetadata, count)
 

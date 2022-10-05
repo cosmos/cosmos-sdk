@@ -44,6 +44,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		configurator.GenutilModule(),
 		configurator.StakingModule(),
 		configurator.GovModule(),
+		configurator.ConsensusModule(),
 		configurator.TxModule())
 
 	cfg, err := network.DefaultConfigWithAppConfig(appConfig)

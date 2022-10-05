@@ -1,4 +1,4 @@
-package mempool
+package mempool_test
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	huandu "github.com/huandu/skiplist"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -32,14 +33,14 @@ type AccountMemPool struct {
 }
 
 // Push cannot be executed in the middle of a select
-func (amp *AccountMemPool) Push(ctx sdk.Context, key statefullPriorityKey, tx Tx) {
+func (amp *AccountMemPool) Push(ctx sdk.Context, key statefullPriorityKey, tx mempool.Tx) {
 	amp.transactions.Set(key, tx)
 	amp.currentItem = amp.transactions.Back()
 	newKey := amp.currentItem.Key().(statefullPriorityKey)
 	amp.currentKey = accountsHeadsKey{hash: newKey.hash, sender: amp.sender, priority: newKey.priority}
 }
 
-func (amp *AccountMemPool) Pop() *Tx {
+func (amp *AccountMemPool) Pop() *mempool.Tx {
 	if amp.currentItem == nil {
 		return nil
 	}
@@ -51,7 +52,7 @@ func (amp *AccountMemPool) Pop() *Tx {
 	} else {
 		amp.currentKey = accountsHeadsKey{}
 	}
-	tx := itemToPop.Value.(Tx)
+	tx := itemToPop.Value.(mempool.Tx)
 	return &tx
 }
 
@@ -67,7 +68,7 @@ func NewMemPoolI() MemPoolI {
 	}
 }
 
-func (amp *MemPoolI) Insert(ctx sdk.Context, tx Tx) error {
+func (amp *MemPoolI) Insert(ctx sdk.Context, tx mempool.Tx) error {
 	senders := tx.(signing.SigVerifiableTx).GetSigners()
 	nonces, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 
@@ -99,8 +100,8 @@ func (amp *MemPoolI) Insert(ctx sdk.Context, tx Tx) error {
 
 }
 
-func (amp *MemPoolI) Select(_ sdk.Context, _ [][]byte, maxBytes int64) ([]Tx, error) {
-	var selectedTxs []Tx
+func (amp *MemPoolI) Select(_ sdk.Context, _ [][]byte, maxBytes int64) ([]mempool.Tx, error) {
+	var selectedTxs []mempool.Tx
 	var txBytes int64
 
 	currentAccount := amp.accountsHeads.Front()

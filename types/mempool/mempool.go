@@ -41,11 +41,14 @@ type Mempool interface {
 	Remove(Tx) error
 }
 
+type ErrTxNotFound struct {
+	error
+}
+
 type Factory func() Mempool
 
 var (
-	_                     Mempool = (*defaultMempool)(nil)
-	DefaultMempoolFactory Factory = NewDefaultMempool
+	_ Mempool = (*defaultMempool)(nil)
 	//ErrMempoolIsFull         = fmt.Errorf("mempool is full")
 )
 
@@ -78,6 +81,8 @@ func txKeyLess(a, b interface{}) int {
 	return huandu.Uint64.Compare(keyA.nonce, keyB.nonce)
 }
 
+// NewDefaultMempool returns the SDK's default mempool implementation which returns txs in a partial order
+// by 2 dimensions; priority, and sender-nonce.
 func NewDefaultMempool() Mempool {
 	return &defaultMempool{
 		priorities: huandu.New(huandu.LessThanFunc(txKeyLess)),
@@ -192,10 +197,7 @@ func (mp *defaultMempool) Remove(tx Tx) error {
 	sk := txKey{nonce: nonce, sender: sender}
 	priority, ok := mp.scores[sk]
 	if !ok {
-		//return fmt.Errorf("tx %v not found", sk)
-		// TODO
-		// permit this for now
-		return nil
+		return ErrTxNotFound{fmt.Errorf("tx %v not found in mempool", tx)}
 	}
 	tk := txKey{nonce: nonce, priority: priority, sender: sender}
 

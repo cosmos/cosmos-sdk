@@ -14,18 +14,17 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 // testPubKey is a dummy implementation of PubKey used for testing.
@@ -88,8 +87,8 @@ func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) {
 	panic("GetPubkeys not implemented")
 }
 
-func (tx testTx) GetSignaturesV2() (res []signing2.SignatureV2, err error) {
-	res = append(res, signing2.SignatureV2{
+func (tx testTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
+	res = append(res, txsigning.SignatureV2{
 		PubKey:   testPubKey{address: tx.address},
 		Data:     nil,
 		Sequence: tx.nonce})
@@ -124,20 +123,38 @@ func (tx testTx) String() string {
 	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
 }
 
-func TestNewStatefulMempool(t *testing.T) {
+func TestDefaultMempool(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
+	txCount := 1000
+	var txs []testTx
 
-	// general test
-	transactions := simulateManyTx(ctx, 1000)
-	require.Equal(t, 1000, len(transactions))
+	for i := 0; i < txCount; i++ {
+		acc := accounts[i%len(accounts)]
+		tx := testTx{
+			address:  acc.Address,
+			priority: rand.Int63(),
+		}
+		txs = append(txs, tx)
+	}
+
+	// same sender-nonce just overwrites a tx
 	mp := mempool.NewDefaultMempool()
-
-	for _, tx := range transactions {
-		ctx.WithPriority(rand.Int63())
-		err := mp.Insert(ctx, tx.(mempool.Tx))
+	for _, tx := range txs {
+		ctx.WithPriority(tx.priority)
+		err := mp.Insert(ctx, tx)
 		require.NoError(t, err)
 	}
-	require.Equal(t, 1000, mp.CountTx())
+	require.Equal(t, len(accounts), mp.CountTx())
+
+	// distinct sender-nonce should not overwrite a tx
+	mp = mempool.NewDefaultMempool()
+	for i, tx := range txs {
+		tx.nonce = uint64(i)
+		err := mp.Insert(ctx, tx)
+		require.NoError(t, err)
+	}
+	require.Equal(t, txCount, mp.CountTx())
 }
 
 type txSpec struct {
@@ -333,7 +350,7 @@ func TestMempoolTestSuite(t *testing.T) {
 }
 
 func (s *MempoolTestSuite) TestRandomTxOrderManyTimes() {
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 3; i++ {
 		s.Run("TestRandomGeneratedTxs", func() {
 			s.TestRandomGeneratedTxs()
 		})
@@ -623,44 +640,6 @@ func TestTxOrderN(t *testing.T) {
 	}
 }
 
-func simulateManyTx(ctx sdk.Context, n int) []sdk.Tx {
-	transactions := make([]sdk.Tx, n)
-	for i := 0; i < n; i++ {
-		tx := simulateTx(ctx)
-		transactions[i] = tx
-	}
-	return transactions
-}
-
-func simulateTx(ctx sdk.Context) sdk.Tx {
-	acc := authtypes.NewEmptyModuleAccount("anaccount")
-
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	msg := group.MsgUpdateGroupMembers{
-		GroupId:       1,
-		Admin:         "test",
-		MemberUpdates: []group.MemberRequest{},
-	}
-	fees, _ := simtypes.RandomFees(r, ctx, sdk.NewCoins(sdk.NewCoin("coin", sdk.NewInt(100000000))))
-
-	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
-	accounts := simtypes.RandomAccounts(r, 2)
-
-	tx, _ := simtestutil.GenSignedMockTx(
-		r,
-		txGen,
-		[]sdk.Msg{&msg},
-		fees,
-		simtestutil.DefaultGenTxGas,
-		ctx.ChainID(),
-		[]uint64{acc.GetAccountNumber()},
-		[]uint64{acc.GetSequence()},
-		accounts[0].PrivKey,
-	)
-	return tx
-}
-
 func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
 	cfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{}, gov.AppModuleBasic{})
 	return cfg.TxConfig.TxJSONDecoder()(txBytes)
@@ -668,3 +647,30 @@ func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
 
 var msgWithdrawDelegatorReward = []byte("{\"body\":{\"messages\":[{\"@type\":\"\\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward\",\"delegator_address\":\"cosmos16w6g0whmw703t8h2m9qmq2fd9dwaw6fjszzjsw\",\"validator_address\":\"cosmosvaloper1lzhlnpahvznwfv4jmay2tgaha5kmz5qxerarrl\"},{\"@type\":\"\\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward\",\"delegator_address\":\"cosmos16w6g0whmw703t8h2m9qmq2fd9dwaw6fjszzjsw\",\"validator_address\":\"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0\"},{\"@type\":\"\\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward\",\"delegator_address\":\"cosmos16w6g0whmw703t8h2m9qmq2fd9dwaw6fjszzjsw\",\"validator_address\":\"cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcvrj90c\"},{\"@type\":\"\\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward\",\"delegator_address\":\"cosmos16w6g0whmw703t8h2m9qmq2fd9dwaw6fjszzjsw\",\"validator_address\":\"cosmosvaloper1k2d9ed9vgfuk2m58a2d80q9u6qljkh4vfaqjfq\"},{\"@type\":\"\\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward\",\"delegator_address\":\"cosmos16w6g0whmw703t8h2m9qmq2fd9dwaw6fjszzjsw\",\"validator_address\":\"cosmosvaloper1vygmh344ldv9qefss9ek7ggsnxparljlmj56q5\"},{\"@type\":\"\\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward\",\"delegator_address\":\"cosmos16w6g0whmw703t8h2m9qmq2fd9dwaw6fjszzjsw\",\"validator_address\":\"cosmosvaloper1ej2es5fjztqjcd4pwa0zyvaevtjd2y5wxxp9gd\"}],\"memo\":\"\",\"timeout_height\":\"0\",\"extension_options\":[],\"non_critical_extension_options\":[]},\"auth_info\":{\"signer_infos\":[{\"public_key\":{\"@type\":\"\\/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AmbXAy10a0SerEefTYQzqyGQdX5kiTEWJZ1PZKX1oswX\"},\"mode_info\":{\"single\":{\"mode\":\"SIGN_MODE_LEGACY_AMINO_JSON\"}},\"sequence\":\"119\"}],\"fee\":{\"amount\":[{\"denom\":\"uatom\",\"amount\":\"15968\"}],\"gas_limit\":\"638717\",\"payer\":\"\",\"granter\":\"\"}},\"signatures\":[\"ji+inUo4xGlN9piRQLdLCeJWa7irwnqzrMVPcmzJyG5y6NPc+ZuNaIc3uvk5NLDJytRB8AHX0GqNETR\\/Q8fz4Q==\"]}")
 var msgMultiSigMsgSubmitProposal = []byte("{\"body\":{\"messages\":[{\"@type\":\"\\/cosmos.gov.v1beta1.MsgSubmitProposal\",\"content\":{\"@type\":\"\\/cosmos.distribution.v1beta1.CommunityPoolSpendProposal\",\"title\":\"ATOM \\ud83e\\udd1d Osmosis:  Allocate Community Pool to ATOM Liquidity Incentives\",\"description\":\"ATOMs should be the base money of Cosmos, just like ETH is the base money of the entire Ethereum DeFi ecosystem. ATOM is currently well positioned to play this role among Cosmos assets because it has the highest market cap, most liquidity, largest brand, and many integrations with fiat onramps. ATOM is the gateway to Cosmos.\\n\\nIn the Cosmos Hub Port City vision, ATOMs are pitched as equity in the Cosmos Hub.  However, this alone is insufficient to establish ATOM as the base currency of the Cosmos ecosystem as a whole. Instead, the ATOM community must work to actively promote the use of ATOMs throughout the Cosmos ecosystem, rather than passively relying on the Hub's reputation to create ATOM's value.\\n\\nIn order to cement the role of ATOMs in Cosmos DeFi, the Cosmos Hub should leverage its community pool to help align incentives with other protocols within the Cosmos ecosystem. We propose beginning this initiative by using the community pool ATOMs to incentivize deep ATOM base pair liquidity pools on the Osmosis Network.\\n\\nOsmosis is the first IBC-enabled DeFi application. Within its 3 weeks of existence, it has already 100x\\u2019d the number of IBC transactions ever created, demonstrating the power of IBC and the ability of the Cosmos SDK to bootstrap DeFi protocols with $100M+ TVL in a short period of time. Since its announcement Osmosis has helped bring renewed attention and interest to Cosmos from the crypto community at large and kickstarted the era of Cosmos DeFi.\\n\\nOsmosis has already helped in establishing ATOM as the Schelling Point of the Cosmos ecosystem.  The genesis distribution of OSMO was primarily based on an airdrop to ATOM holders specifically, acknowledging the importance of ATOM to all future projects within the Cosmos. Furthermore, the Osmosis LP rewards currently incentivize ATOMs to be one of the main base pairs of the platform.\\n\\nOsmosis has the ability to incentivize AMM liquidity, a feature not available on any other IBC-enabled DEX. Osmosis already uses its own native OSMO liquidity rewards to incentivize ATOMs to be one of the main base pairs, leading to ~2.2 million ATOMs already providing liquidity on the platform.\\n\\nIn addition to these native OSMO LP Rewards, the platform also includes a feature called \\u201cexternal incentives\\u201d that allows anyone to permissionlessly add additional incentives in any token to the LPs of any AMM pools they wish. You can read more about this mechanism here: https:\\/\\/medium.com\\/osmosis\\/osmosis-liquidity-mining-101-2fa58d0e9d4d#f413 . Pools containing Cosmos assets such as AKT and XPRT are already planned to receive incentives from their respective community pools and\\/or foundations.\\n\\nWe propose the Cosmos Hub dedicate 100,000 ATOMs from its Community Pool to be allocated towards liquidity incentives on Osmosis over the next 3 months. This community fund proposal will transfer 100,000 ATOMs to a multisig group who will then allocate the ATOMs to bonded liquidity gauges on Osmosis on a biweekly basis, according to direction given by Cosmos Hub governance.  For simplicity, we propose setting the liquidity incentives to initially point to Osmosis Pool #1, the ATOM\\/OSMO pool, which is the pool with by far the highest TVL and Volume. Cosmos Hub governance can then use Text Proposals to further direct the multisig members to reallocate incentives to new pools.\\n\\nThe multisig will consist of a 2\\/3 key holder set consisting of the following individuals whom have all agreed to participate in this process shall this proposal pass:\\n\\n- Zaki Manian\\n- Federico Kunze\\n- Marko Baricevic\\n\\nThis is one small step for the Hub, but one giant leap for ATOM-aligned.\\n\",\"recipient\":\"cosmos157n0d38vwn5dvh64rc39q3lyqez0a689g45rkc\",\"amount\":[{\"denom\":\"uatom\",\"amount\":\"100000000000\"}]},\"initial_deposit\":[{\"denom\":\"uatom\",\"amount\":\"64000000\"}],\"proposer\":\"cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45\"}],\"memo\":\"\",\"timeout_height\":\"0\",\"extension_options\":[],\"non_critical_extension_options\":[]},\"auth_info\":{\"signer_infos\":[{\"public_key\":{\"@type\":\"\\/cosmos.crypto.multisig.LegacyAminoPubKey\",\"threshold\":2,\"public_keys\":[{\"@type\":\"\\/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AldOvgv8dU9ZZzuhGydQD5FYreLhfhoBgrDKi8ZSTbCQ\"},{\"@type\":\"\\/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AxUMR\\/GKoycWplR+2otzaQZ9zhHRQWJFt3h1bPg1ltha\"},{\"@type\":\"\\/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AlI9yVj2Aejow6bYl2nTRylfU+9LjQLEl3keq0sERx9+\"},{\"@type\":\"\\/cosmos.crypto.secp256k1.PubKey\",\"key\":\"A0UvHPcvCCaIoFY9Ygh0Pxq9SZTAWtduOyinit\\/8uo+Q\"},{\"@type\":\"\\/cosmos.crypto.secp256k1.PubKey\",\"key\":\"As7R9fDUnwsUVLDr1cxspp+cY9UfXfUf7i9\\/w+N0EzKA\"}]},\"mode_info\":{\"multi\":{\"bitarray\":{\"extra_bits_stored\":5,\"elems\":\"SA==\"},\"mode_infos\":[{\"single\":{\"mode\":\"SIGN_MODE_LEGACY_AMINO_JSON\"}},{\"single\":{\"mode\":\"SIGN_MODE_LEGACY_AMINO_JSON\"}}]}},\"sequence\":\"102\"}],\"fee\":{\"amount\":[],\"gas_limit\":\"10000000\",\"payer\":\"\",\"granter\":\"\"}},\"signatures\":[\"CkB\\/KKWTFntEWbg1A0vu7DCHffJ4x4db\\/EI8dIVzRFFW7iuZBzvq+jYBtrcTlVpEVfmCY3ggIMnWfbMbb1egIlYbCkAmDf6Eaj1NbyXY8JZZtYAX3Qj81ZuKZUBeLW1ZvH1XqAg9sl\\/sqpLMnsJzKfmqEXvhoMwu1YxcSzrY6CJfuYL6\"]}")
+
+func (csp *disttypes.CommunityPoolSpendProposal) GetTitle() string { return csp.Title }
+
+// GetDescription returns the description of a community pool spend proposal.
+func (csp *disttypes.CommunityPoolSpendProposal) GetDescription() string { return csp.Description }
+
+// GetDescription returns the routing key of a community pool spend proposal.
+func (csp *CommunityPoolSpendProposal) ProposalRoute() string { return RouterKey }
+
+// ProposalType returns the type of a community pool spend proposal.
+func (csp *CommunityPoolSpendProposal) ProposalType() string { return ProposalTypeCommunityPoolSpend }
+
+// ValidateBasic runs basic stateless validity checks
+func (csp *CommunityPoolSpendProposal) ValidateBasic() error {
+	err := govtypes.ValidateAbstract(csp)
+	if err != nil {
+		return err
+	}
+	if !csp.Amount.IsValid() {
+		return ErrInvalidProposalAmount
+	}
+	if csp.Recipient == "" {
+		return ErrEmptyProposalRecipient
+	}
+
+	return nil
+}

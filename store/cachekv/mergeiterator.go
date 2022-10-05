@@ -33,6 +33,7 @@ func newCacheMergeIterator(parent, cache types.Iterator, ascending bool) *cacheM
 }
 
 // Domain implements Iterator.
+// Returns parent domain because cache and parent domains are the same.
 func (iter *cacheMergeIterator) Domain() (start, end []byte) {
 	return iter.parent.Domain()
 }

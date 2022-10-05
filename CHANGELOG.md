@@ -51,6 +51,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [#11981](https://github.com/cosmos/cosmos-sdk/pull/11981) Create the `SetSendEnabled` endpoint for managing the bank's SendEnabled settings.
 * (x/auth) [#13210](https://github.com/cosmos/cosmos-sdk/pull/13210) Add `Query/AccountInfo` endpoint for simplified access to basic account info.
 * (cli) [#13147](https://github.com/cosmos/cosmos-sdk/pull/13147) Add the `--append` flag to the `sign-batch` CLI cmd to combine the messages and sign those txs which are created with `--generate-only`.
+* (x/consensus) [#12905](https://github.com/cosmos/cosmos-sdk/pull/12905) Create consensus module to handle modification of consensus parameters. 
+  * Params module is still required for the next upgrade, later it can be removed
 
 ### Improvements
 

@@ -69,6 +69,52 @@ By default, the new `MinInitialDepositRatio` parameter is set to zero during mig
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
 
+#### `x/consensus`
+
+Introducing a new module to handle consensus parameters from tendermint. For migration it is required to add specific migrations for the module. 
+
+```go
+func (app SimApp) RegisterUpgradeHandlers() {
+ 	----> baseAppLegacySS := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()) <----
+
+ 	app.UpgradeKeeper.SetUpgradeHandler(
+ 		UpgradeName,
+ 		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+ 			// Migrate Tendermint consensus parameters from x/params module to a
+ 			// dedicated x/consensus module.
+ 			----> baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper) <----
+
+ 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+ 		},
+ 	)
+
+ 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+ 	if err != nil {
+ 		panic(err)
+ 	}
+
+ 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+ 		storeUpgrades := storetypes.StoreUpgrades{}
+                app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+}
+```
+
+The old params module is required to still be imported in your app.go in order to handle this migration. 
+
+##### App.go Changes
+
+Previous:
+```go
+bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
+```
+
+After:
+```go
+app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
+bApp.SetParamStore(&app.ConsensusParamsKeeper)
+```
+
 ### Ledger
 
 Ledger support has been generalized to enable use of different apps and keytypes that use `secp256k1`. The Ledger interface remains the same, but it can now be provided through the Keyring `Options`, allowing higher-level chains to connect to different Ledger apps or use custom implementations. In addition, higher-level chains can provide custom key implementations around the Ledger public key, to enable greater flexibility with address generation and signing.

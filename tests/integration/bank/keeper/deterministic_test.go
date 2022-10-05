@@ -32,9 +32,9 @@ type DeterministicTestSuite struct {
 var (
 	denomRegex = sdk.DefaultCoinDenomRegex()
 
-	// ITER_COUNT defines the number of iterations to run on each query to test
+	// iterCount defines the number of iterations to run on each query to test
 	// determinism.
-	ITER_COUNT = 1000
+	iterCount = 1000
 
 	addr1        = sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
 	coin1        = sdk.NewCoin("denom", sdk.NewInt(10))
@@ -98,7 +98,7 @@ func (suite *DeterministicTestSuite) getCoin(t *rapid.T) sdk.Coin {
 }
 
 func (suite *DeterministicTestSuite) runQueryBalanceIterations(addr sdk.AccAddress, prevRes *sdk.Coin) {
-	for i := 0; i < ITER_COUNT; i++ {
+	for i := 0; i < iterCount; i++ {
 		res, err := suite.queryClient.Balance(suite.ctx, banktypes.NewQueryBalanceRequest(addr, prevRes.GetDenom()))
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
@@ -123,7 +123,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
 }
 
 func (suite *DeterministicTestSuite) runAllBalancesIterations(addr sdk.AccAddress, prevRes sdk.Coins) {
-	for i := 0; i < ITER_COUNT; i++ {
+	for i := 0; i < iterCount; i++ {
 		res, err := suite.queryClient.AllBalances(suite.ctx, &banktypes.QueryAllBalancesRequest{
 			Address: addr.String(),
 		})
@@ -165,7 +165,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 }
 
 func (suite *DeterministicTestSuite) runSpendableBalancesIterations(req *banktypes.QuerySpendableBalancesRequest, prevRes *banktypes.QuerySpendableBalancesResponse) {
-	for i := 0; i < ITER_COUNT; i++ {
+	for i := 0; i < iterCount; i++ {
 		res, err := suite.queryClient.SpendableBalances(suite.ctx, req)
 
 		suite.Require().NoError(err)
@@ -218,7 +218,7 @@ func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 }
 
 func (suite *DeterministicTestSuite) runTotalSupplyIterations(req *banktypes.QueryTotalSupplyRequest, prevRes *banktypes.QueryTotalSupplyResponse) {
-	for i := 0; i < ITER_COUNT; i++ {
+	for i := 0; i < iterCount; i++ {
 		res, err := suite.queryClient.TotalSupply(suite.ctx, req)
 
 		suite.Require().NoError(err)
@@ -280,7 +280,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 }
 
 func (suite *DeterministicTestSuite) runTotalSupplyOfIterations(denom string, prevRes sdk.Coin) {
-	for i := 0; i < ITER_COUNT; i++ {
+	for i := 0; i < iterCount; i++ {
 		res, err := suite.queryClient.SupplyOf(suite.ctx, &banktypes.QuerySupplyOfRequest{
 			Denom: denom,
 		})
@@ -314,7 +314,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
 }
 
 func (suite *DeterministicTestSuite) runParamsIterations(prevRes banktypes.Params) {
-	for i := 0; i < ITER_COUNT; i++ {
+	for i := 0; i < iterCount; i++ {
 		res, err := suite.queryClient.Params(suite.ctx, &banktypes.QueryParamsRequest{})
 
 		suite.Require().NoError(err)
@@ -396,7 +396,7 @@ func (suite *DeterministicTestSuite) createAndReturnMetadatas(t *rapid.T, count 
 }
 
 func (suite *DeterministicTestSuite) runDenomsMetadataIterations(req *banktypes.QueryDenomsMetadataRequest, prevRes *banktypes.QueryDenomsMetadataResponse) {
-	for i := 0; i < ITER_COUNT; i++ {
+	for i := 0; i < iterCount; i++ {
 		res, err := suite.queryClient.DenomsMetadata(suite.ctx, req)
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
@@ -437,7 +437,7 @@ func (suite *DeterministicTestSuite) TestGRPCDenomsMetadata() {
 }
 
 func (suite *DeterministicTestSuite) runDenomMetadataIterations(denom string, prevRes banktypes.Metadata) {
-	for i := 0; i < ITER_COUNT; i++ {
+	for i := 0; i < iterCount; i++ {
 		res, err := suite.queryClient.DenomMetadata(suite.ctx, &banktypes.QueryDenomMetadataRequest{
 			Denom: denom,
 		})
@@ -464,7 +464,7 @@ func (suite *DeterministicTestSuite) TestGRPCDenomMetadata() {
 }
 
 func (suite *DeterministicTestSuite) runSendEnabledIterations(req *banktypes.QuerySendEnabledRequest, prevRes *banktypes.QuerySendEnabledResponse) {
-	for i := 0; i < ITER_COUNT; i++ {
+	for i := 0; i < iterCount; i++ {
 		res, err := suite.queryClient.SendEnabled(suite.ctx, req)
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
@@ -519,7 +519,7 @@ func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 }
 
 func (suite *DeterministicTestSuite) runDenomOwnerIterations(req *banktypes.QueryDenomOwnersRequest, prevRes *banktypes.QueryDenomOwnersResponse) {
-	for i := 0; i < ITER_COUNT; i++ {
+	for i := 0; i < iterCount; i++ {
 		res, err := suite.queryClient.DenomOwners(suite.ctx, req)
 
 		suite.Require().NoError(err)

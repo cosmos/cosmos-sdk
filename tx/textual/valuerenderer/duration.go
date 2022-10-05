@@ -17,7 +17,7 @@ type durationValueRenderer struct{}
 // NewDurationValueRenderer returns a ValueRenderer for protocol buffer Duration messages.
 // It renders durations by grouping seconds into units of days (86400s), hours (3600s),
 // and minutes(60s), plus the total seconds elapsed. E.g. a duration of 1483530s is
-// formatted as "17 days, 4 hours, 5 minutes, 30 seconds (1483530 seconds total)".
+// formatted as "17 days, 4 hours, 5 minutes, 30 seconds".
 // Note that the days are always 24 hours regardless of daylight savings changes.
 func NewDurationValueRenderer() ValueRenderer {
 	return durationValueRenderer{}
@@ -30,18 +30,18 @@ const (
 )
 
 type factors struct {
-	days, hours, minutes, seconds int
+	days, hours, minutes, seconds int64
 }
 
 func factorSeconds(x int64) factors {
 	var f factors
-	f.days = int(x / int64(day_sec))
-	x -= int64(f.days * day_sec)
-	f.hours = int(x / int64(hour_sec))
-	x -= int64(f.hours * hour_sec)
-	f.minutes = int(x / int64(min_sec))
-	x -= int64(f.minutes * min_sec)
-	f.seconds = int(x)
+	f.days = x / day_sec
+	x -= f.days * day_sec
+	f.hours = x / hour_sec
+	x -= f.hours * hour_sec
+	f.minutes = x / min_sec
+	x -= f.minutes * min_sec
+	f.seconds = x
 	return f
 }
 
@@ -52,7 +52,7 @@ func maybePlural(s string, plural bool) string {
 	return s
 }
 
-func formatSeconds(seconds int, nanos int32) string {
+func formatSeconds(seconds int64, nanos int32) string {
 	var s string
 	if nanos == 0 {
 		s = fmt.Sprintf("%d", seconds)
@@ -62,35 +62,6 @@ func formatSeconds(seconds int, nanos int32) string {
 		s = fmt.Sprintf("%d.%s", seconds, frac)
 	}
 	return s
-}
-
-// normalizeDuration normalizes the Duration to be positive quantities
-// with Nanos less than 10^9. Returns whether the duration is negative.
-// See the algorithm in duration.proto.
-func normalizeDuration(d *dpb.Duration) bool {
-	// make both signs the same
-	if d.Seconds < 0 && d.Nanos > 0 {
-		d.Seconds += 1
-		d.Nanos -= 1_000_000_000
-	} else if d.Seconds > 0 && d.Nanos < 0 {
-		d.Seconds -= 1
-		d.Nanos += 1_000_000_000
-	}
-
-	// convert both signs to positive
-	negative := false
-	if d.Seconds < 0 || d.Nanos < 0 {
-		negative = true
-		d.Seconds *= -1
-		d.Nanos *= -1
-	}
-
-	// convert excess nanos to seconds
-	for d.Nanos >= 1_000_000_000 {
-		d.Seconds += 1
-		d.Nanos -= 1_000_000_000
-	}
-	return negative
 }
 
 // Format implements the ValueRenderer interface.
@@ -144,8 +115,8 @@ func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value, 
 		s = "-" + s
 	}
 
-	w.Write([]byte(s))
-	return nil
+	_, err := w.Write([]byte(s))
+	return err
 }
 
 var (
@@ -165,28 +136,28 @@ func (dr durationValueRenderer) Parse(_ context.Context, r io.Reader) (protorefl
 	}
 
 	negative := parts[1] != ""
-	var days, hours, minutes, seconds, nanos int
+	var days, hours, minutes, seconds, nanos int64
 
 	if parts[2] != "" {
-		days, err = strconv.Atoi(parts[2])
+		days, err = strconv.ParseInt(parts[2], 10, 64)
 		if err != nil {
 			return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, parts[2], err)
 		}
 	}
 	if parts[3] != "" {
-		hours, err = strconv.Atoi(parts[3])
+		hours, err = strconv.ParseInt(parts[3], 10, 64)
 		if err != nil {
 			return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, parts[3], err)
 		}
 	}
 	if parts[4] != "" {
-		minutes, err = strconv.Atoi(parts[4])
+		minutes, err = strconv.ParseInt(parts[4], 10, 64)
 		if err != nil {
 			return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, parts[4], err)
 		}
 	}
 	if parts[5] != "" {
-		seconds, err = strconv.Atoi(parts[5])
+		seconds, err = strconv.ParseInt(parts[5], 10, 64)
 		if err != nil {
 			return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, parts[5], err)
 		}
@@ -196,7 +167,7 @@ func (dr durationValueRenderer) Parse(_ context.Context, r io.Reader) (protorefl
 			}
 			addZeros := 9 - len(parts[6])
 			text := parts[6] + strings.Repeat("0", addZeros)
-			nanos, err = strconv.Atoi(text)
+			nanos, err = strconv.ParseInt(text, 10, 32)
 			if err != nil {
 				return protoreflect.Value{}, fmt.Errorf(`bad number "%s": %w`, text, err)
 			}
@@ -204,8 +175,8 @@ func (dr durationValueRenderer) Parse(_ context.Context, r io.Reader) (protorefl
 	}
 
 	dur := &dpb.Duration{}
-	dur.Seconds = int64(days)*int64(day_sec) + int64(hours*hour_sec+minutes*min_sec+seconds)
-	dur.Nanos = int32(nanos)
+	dur.Seconds = days*day_sec + hours*hour_sec + minutes*min_sec + seconds
+	dur.Nanos = int32(nanos & (2<<32 - 1))
 
 	if negative {
 		dur.Seconds *= -1

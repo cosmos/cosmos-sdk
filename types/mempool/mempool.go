@@ -51,7 +51,7 @@ var _ Mempool = (*defaultMempool)(nil)
 // defaultMempool is the SDK's default mempool implementation which returns txs in a partial order
 // by 2 dimensions; priority, and sender-nonce.  Internally it uses one priority ordered skip list and one skip list
 // per sender ordered by nonce (sender-nonce).  When there are multiple txs from the same sender, they are not
-// always comparable by priority other sender txs and must be partially ordered by both sender-nonce and priority.
+// always comparable by priority to other sender txs and must be partially ordered by both sender-nonce and priority.
 type defaultMempool struct {
 	priorities *huandu.SkipList
 	senders    map[string]*huandu.SkipList

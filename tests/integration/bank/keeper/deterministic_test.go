@@ -30,6 +30,8 @@ type DeterministicTestSuite struct {
 }
 
 var (
+	denomRegex = sdk.DefaultCoinDenomRegex()
+
 	// ITER_COUNT defines the number of iterations to run on each query to test
 	// determinism.
 	ITER_COUNT = 1000
@@ -90,18 +92,18 @@ func (suite *DeterministicTestSuite) fundAccount(addr sdk.AccAddress, coin ...sd
 
 func (suite *DeterministicTestSuite) getCoin(t *rapid.T) sdk.Coin {
 	return sdk.NewCoin(
-		rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "denom"),
+		rapid.StringMatching(denomRegex).Draw(t, "denom"),
 		sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 	)
 }
 
-func (suite *DeterministicTestSuite) runQueryBalanceIterations(addr sdk.AccAddress, expected *sdk.Coin) {
+func (suite *DeterministicTestSuite) runQueryBalanceIterations(addr sdk.AccAddress, prevRes *sdk.Coin) {
 	for i := 0; i < ITER_COUNT; i++ {
-		res, err := suite.queryClient.Balance(suite.ctx, banktypes.NewQueryBalanceRequest(addr, expected.GetDenom()))
+		res, err := suite.queryClient.Balance(suite.ctx, banktypes.NewQueryBalanceRequest(addr, prevRes.GetDenom()))
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
 
-		suite.Require().Equal(res.GetBalance(), expected)
+		suite.Require().Equal(res.GetBalance(), prevRes)
 	}
 }
 
@@ -120,7 +122,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
 	suite.runQueryBalanceIterations(addr1, &coin1)
 }
 
-func (suite *DeterministicTestSuite) runAllBalancesIterations(addr sdk.AccAddress, expected sdk.Coins) {
+func (suite *DeterministicTestSuite) runAllBalancesIterations(addr sdk.AccAddress, prevRes sdk.Coins) {
 	for i := 0; i < ITER_COUNT; i++ {
 		res, err := suite.queryClient.AllBalances(suite.ctx, &banktypes.QueryAllBalancesRequest{
 			Address: addr.String(),
@@ -130,7 +132,7 @@ func (suite *DeterministicTestSuite) runAllBalancesIterations(addr sdk.AccAddres
 		suite.Require().NotNil(res)
 		suite.Require().NotNil(res.Balances)
 
-		suite.Require().Equal(res.GetBalances(), expected)
+		suite.Require().Equal(res.GetBalances(), prevRes)
 	}
 }
 
@@ -162,7 +164,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 	suite.runAllBalancesIterations(addr1, coins)
 }
 
-func (suite *DeterministicTestSuite) runSpendableBalancesIterations(req *banktypes.QuerySpendableBalancesRequest, expected *banktypes.QuerySpendableBalancesResponse) {
+func (suite *DeterministicTestSuite) runSpendableBalancesIterations(req *banktypes.QuerySpendableBalancesRequest, prevRes *banktypes.QuerySpendableBalancesResponse) {
 	for i := 0; i < ITER_COUNT; i++ {
 		res, err := suite.queryClient.SpendableBalances(suite.ctx, req)
 
@@ -170,7 +172,7 @@ func (suite *DeterministicTestSuite) runSpendableBalancesIterations(req *banktyp
 		suite.Require().NotNil(res)
 		suite.Require().NotNil(res.Balances)
 
-		suite.Require().Equal(res, expected)
+		suite.Require().Equal(res, prevRes)
 	}
 }
 
@@ -184,7 +186,7 @@ func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 
 		for i := 0; i < numCoins; i++ {
 			coin := sdk.NewCoin(
-				rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "denom"),
+				rapid.StringMatching(denomRegex).Draw(t, "denom"),
 				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 			)
 
@@ -215,14 +217,14 @@ func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 	)
 }
 
-func (suite *DeterministicTestSuite) runTotalSupplyIterations(req *banktypes.QueryTotalSupplyRequest, expected *banktypes.QueryTotalSupplyResponse) {
+func (suite *DeterministicTestSuite) runTotalSupplyIterations(req *banktypes.QueryTotalSupplyRequest, prevRes *banktypes.QueryTotalSupplyResponse) {
 	for i := 0; i < ITER_COUNT; i++ {
 		res, err := suite.queryClient.TotalSupply(suite.ctx, req)
 
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
 
-		suite.Require().Equal(res, expected)
+		suite.Require().Equal(res, prevRes)
 	}
 }
 
@@ -239,7 +241,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 
 		for i := 0; i < numCoins; i++ {
 			coin := sdk.NewCoin(
-				rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "denom"),
+				rapid.StringMatching(denomRegex).Draw(t, "denom"),
 				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 			)
 
@@ -277,7 +279,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 	)
 }
 
-func (suite *DeterministicTestSuite) runTotalSupplyOfIterations(denom string, expected sdk.Coin) {
+func (suite *DeterministicTestSuite) runTotalSupplyOfIterations(denom string, prevRes sdk.Coin) {
 	for i := 0; i < ITER_COUNT; i++ {
 		res, err := suite.queryClient.SupplyOf(suite.ctx, &banktypes.QuerySupplyOfRequest{
 			Denom: denom,
@@ -286,7 +288,7 @@ func (suite *DeterministicTestSuite) runTotalSupplyOfIterations(denom string, ex
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
 
-		suite.Require().Equal(res.GetAmount(), expected)
+		suite.Require().Equal(res.GetAmount(), prevRes)
 	}
 }
 
@@ -295,7 +297,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
 
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		coin := sdk.NewCoin(
-			rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "denom"),
+			rapid.StringMatching(denomRegex).Draw(t, "denom"),
 			sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 		)
 
@@ -311,14 +313,14 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
 	suite.runTotalSupplyOfIterations(coin.Denom, coin)
 }
 
-func (suite *DeterministicTestSuite) runParamsIterations(expected banktypes.Params) {
+func (suite *DeterministicTestSuite) runParamsIterations(prevRes banktypes.Params) {
 	for i := 0; i < ITER_COUNT; i++ {
 		res, err := suite.queryClient.Params(suite.ctx, &banktypes.QueryParamsRequest{})
 
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
 
-		suite.Require().Equal(res.GetParams(), expected)
+		suite.Require().Equal(res.GetParams(), prevRes)
 	}
 }
 
@@ -327,7 +329,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParams() {
 
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		enabledStatus := banktypes.SendEnabled{
-			Denom:   rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "denom"),
+			Denom:   rapid.StringMatching(denomRegex).Draw(t, "denom"),
 			Enabled: rapid.Bool().Draw(t, "status"),
 		}
 
@@ -362,7 +364,7 @@ func (suite *DeterministicTestSuite) createAndReturnMetadatas(t *rapid.T, count 
 	denomsMetadata := make([]banktypes.Metadata, 0, count)
 	for i := 0; i < count; i++ {
 
-		denom := rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "denom")
+		denom := rapid.StringMatching(denomRegex).Draw(t, "denom")
 
 		aliases := rapid.SliceOf(rapid.String()).Draw(t, "aliases")
 		// In the GRPC server code, empty arrays are returned as nil
@@ -393,13 +395,13 @@ func (suite *DeterministicTestSuite) createAndReturnMetadatas(t *rapid.T, count 
 	return denomsMetadata
 }
 
-func (suite *DeterministicTestSuite) runDenomsMetadataIterations(req *banktypes.QueryDenomsMetadataRequest, expected *banktypes.QueryDenomsMetadataResponse) {
+func (suite *DeterministicTestSuite) runDenomsMetadataIterations(req *banktypes.QueryDenomsMetadataRequest, prevRes *banktypes.QueryDenomsMetadataResponse) {
 	for i := 0; i < ITER_COUNT; i++ {
 		res, err := suite.queryClient.DenomsMetadata(suite.ctx, req)
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
 
-		suite.Require().Equal(res, expected)
+		suite.Require().Equal(res, prevRes)
 	}
 }
 
@@ -434,7 +436,7 @@ func (suite *DeterministicTestSuite) TestGRPCDenomsMetadata() {
 	)
 }
 
-func (suite *DeterministicTestSuite) runDenomMetadataIterations(denom string, expected banktypes.Metadata) {
+func (suite *DeterministicTestSuite) runDenomMetadataIterations(denom string, prevRes banktypes.Metadata) {
 	for i := 0; i < ITER_COUNT; i++ {
 		res, err := suite.queryClient.DenomMetadata(suite.ctx, &banktypes.QueryDenomMetadataRequest{
 			Denom: denom,
@@ -443,7 +445,7 @@ func (suite *DeterministicTestSuite) runDenomMetadataIterations(denom string, ex
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
 
-		suite.Require().Equal(res.GetMetadata(), expected)
+		suite.Require().Equal(res.GetMetadata(), prevRes)
 	}
 }
 
@@ -461,13 +463,13 @@ func (suite *DeterministicTestSuite) TestGRPCDenomMetadata() {
 	suite.runDenomMetadataIterations(metadataAtom.Base, metadataAtom)
 }
 
-func (suite *DeterministicTestSuite) runSendEnabledIterations(req *banktypes.QuerySendEnabledRequest, expected *banktypes.QuerySendEnabledResponse) {
+func (suite *DeterministicTestSuite) runSendEnabledIterations(req *banktypes.QuerySendEnabledRequest, prevRes *banktypes.QuerySendEnabledResponse) {
 	for i := 0; i < ITER_COUNT; i++ {
 		res, err := suite.queryClient.SendEnabled(suite.ctx, req)
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
 
-		suite.Require().Equal(expected, res)
+		suite.Require().Equal(prevRes, res)
 	}
 }
 
@@ -480,7 +482,7 @@ func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 
 		for i := 0; i < count; i++ {
 			coin := banktypes.SendEnabled{
-				Denom:   rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "denom"),
+				Denom:   rapid.StringMatching(denomRegex).Draw(t, "denom"),
 				Enabled: rapid.Bool().Draw(t, "enabled-status"),
 			}
 
@@ -516,12 +518,12 @@ func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 	)
 }
 
-func (suite *DeterministicTestSuite) runDenomOwnerIterations(req *banktypes.QueryDenomOwnersRequest, expected *banktypes.QueryDenomOwnersResponse) {
+func (suite *DeterministicTestSuite) runDenomOwnerIterations(req *banktypes.QueryDenomOwnersRequest, prevRes *banktypes.QueryDenomOwnersResponse) {
 	for i := 0; i < ITER_COUNT; i++ {
 		res, err := suite.queryClient.DenomOwners(suite.ctx, req)
 
 		suite.Require().NoError(err)
-		suite.Require().Equal(expected, res)
+		suite.Require().Equal(prevRes, res)
 	}
 }
 
@@ -529,7 +531,7 @@ func (suite *DeterministicTestSuite) TestGRPCDenomOwners() {
 	suite.SetupTest() // reset
 
 	rapid.Check(suite.T(), func(t *rapid.T) {
-		denom := rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "denom")
+		denom := rapid.StringMatching(denomRegex).Draw(t, "denom")
 		numAddr := rapid.IntRange(1, 10).Draw(t, "number-address")
 		for i := 0; i < numAddr; i++ {
 			addr := testdata.AddressGenerator(t).Draw(t, "address")

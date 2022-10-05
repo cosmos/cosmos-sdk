@@ -44,7 +44,8 @@ type Mempool interface {
 type Factory func() Mempool
 
 var (
-	_ Mempool = (*defaultMempool)(nil)
+	_                     Mempool = (*defaultMempool)(nil)
+	DefaultMempoolFactory Factory = NewDefaultMempool
 	//ErrMempoolIsFull         = fmt.Errorf("mempool is full")
 )
 
@@ -181,6 +182,9 @@ func (mp *defaultMempool) Remove(tx Tx) error {
 	if err != nil {
 		return err
 	}
+	if len(sigs) == 0 {
+		return fmt.Errorf("attempted to remove a tx with no signatures")
+	}
 	sig := sigs[0]
 	sender := sig.PubKey.Address().String()
 	nonce := sig.Sequence
@@ -188,7 +192,10 @@ func (mp *defaultMempool) Remove(tx Tx) error {
 	sk := txKey{nonce: nonce, sender: sender}
 	priority, ok := mp.scores[sk]
 	if !ok {
-		return fmt.Errorf("tx %v not found", sk)
+		//return fmt.Errorf("tx %v not found", sk)
+		// TODO
+		// permit this for now
+		return nil
 	}
 	tk := txKey{nonce: nonce, priority: priority, sender: sender}
 

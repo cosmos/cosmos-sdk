@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -139,14 +140,16 @@ func makeTestConfig() depinject.Config {
 }
 
 func makeMinimalConfig() depinject.Config {
-	return appconfig.Compose(&appv1alpha1.Config{
-		Modules: []*appv1alpha1.ModuleConfig{
-			{
-				Name: "runtime",
-				Config: appconfig.WrapAny(&runtimev1alpha1.Module{
-					AppName: "BaseAppApp",
-				}),
+	return depinject.Configs(
+		depinject.Supply(mempool.DefaultMempoolFactory),
+		appconfig.Compose(&appv1alpha1.Config{
+			Modules: []*appv1alpha1.ModuleConfig{
+				{
+					Name: "runtime",
+					Config: appconfig.WrapAny(&runtimev1alpha1.Module{
+						AppName: "BaseAppApp",
+					}),
+				},
 			},
-		},
-	})
+		}))
 }

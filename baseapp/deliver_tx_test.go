@@ -16,6 +16,13 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
+
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -32,15 +39,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/gogoproto/jsonpb"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var (
@@ -77,6 +80,7 @@ func setupBaseApp(t *testing.T, options ...func(*baseapp.BaseApp)) *baseapp.Base
 
 	app.MountStores(capKey1, capKey2)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetMempool(mempool.NewDefaultMempool())
 
 	// stores are mounted
 	err := app.LoadLatestVersion()
@@ -124,6 +128,7 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*baseapp.Base
 
 			builder := txConfig.NewTxBuilder()
 			builder.SetMsgs(msgs...)
+			builder.SetSignatures(signingtypes.SignatureV2{})
 
 			txBytes, err := txConfig.TxEncoder()(builder.GetTx())
 			require.NoError(t, err)

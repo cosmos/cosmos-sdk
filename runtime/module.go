@@ -81,7 +81,7 @@ type appInputs struct {
 	depinject.In
 
 	Config         *runtimev1alpha1.Module
-	MempoolFn      mempool.Factory
+	MempoolFn      mempool.Factory `optional:"true"`
 	App            appWrapper
 	Modules        map[string]AppModuleWrapper
 	BaseAppOptions []BaseAppOption
@@ -95,7 +95,12 @@ func provideAppBuilder(inputs appInputs) *AppBuilder {
 	app := inputs.App
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.baseAppOptions = append(app.baseAppOptions, func(app *baseapp.BaseApp) {
-		app.SetMempool(inputs.MempoolFn())
+		factory := inputs.MempoolFn
+		if factory == nil {
+			app.SetMempool(mempool.DefaultMempoolFactory())
+		} else {
+			app.SetMempool(factory())
+		}
 	})
 	app.config = inputs.Config
 	app.ModuleManager = mm

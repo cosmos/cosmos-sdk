@@ -632,6 +632,7 @@ func (s *KeeperTestSuite) TestMultipleRedelegationSameValidator() {
 	// begin a redelegation to a new validator
 	completionTime, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], halfBondedShares)
 	require.NoError(err)
+	require.True(keeper.HasReceivingRedelegation(ctx, val0AccAddr, addrVals[1]))
 
 	redelegations := keeper.GetRedelegations(ctx, val0AccAddr, 5)
 	require.Equal(1, len(redelegations))
@@ -642,6 +643,7 @@ func (s *KeeperTestSuite) TestMultipleRedelegationSameValidator() {
 	completionTime2, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], halfBondedShares)
 	require.NoError(err)
 	require.NotEqual(completionTime, completionTime2)
+	require.True(keeper.HasReceivingRedelegation(ctx, val0AccAddr, addrVals[1]))
 
 	redelegations = keeper.GetRedelegations(ctx, val0AccAddr, 5)
 	require.Equal(1, len(redelegations))
@@ -660,11 +662,18 @@ func (s *KeeperTestSuite) TestMultipleRedelegationSameValidator() {
 	ctx = ctx.WithBlockTime(completionTime)
 	_, err = keeper.CompleteRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
 	require.NoError(err)
+	require.True(keeper.HasReceivingRedelegation(ctx, val0AccAddr, addrVals[1]))
 
 	redelegations = keeper.GetRedelegations(ctx, val0AccAddr, 5)
 	require.Equal(1, len(redelegations))
 	require.Equal(1, len(redelegations[0].Entries))
 	require.Equal(secondRedelegation, redelegations[0].Entries[0])
+
+	// verify there is no more redelegation
+	ctx = ctx.WithBlockTime(completionTime2)
+	_, err = keeper.CompleteRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
+	require.NoError(err)
+	require.False(keeper.HasReceivingRedelegation(ctx, val0AccAddr, addrVals[1]))
 }
 
 func (s *KeeperTestSuite) TestRedelegationMaxEntries() {

@@ -95,8 +95,10 @@ func NewDefaultMempool() Mempool {
 
 // Insert attempts to insert a Tx into the app-side mempool in O(log n) time, returning an error if unsuccessful.
 // Sender and nonce are derived from the transaction's first signature.
-// Inserting a duplicate tx is an O(log n) no-op.
-// Inserting a duplicate tx with a different priority overwrites the existing tx.
+// - Transactions are unique by sender and nonce.
+// - Inserting a duplicate tx is an O(log n) no-op.
+// - Inserting a duplicate tx with a different priority overwrites the existing tx, changing the total order of
+//   the mempool.
 func (mp *defaultMempool) Insert(ctx types.Context, tx Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {

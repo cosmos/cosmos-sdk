@@ -167,10 +167,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 func (suite *DeterministicTestSuite) runSpendableBalancesIterations(req *banktypes.QuerySpendableBalancesRequest, prevRes *banktypes.QuerySpendableBalancesResponse) {
 	for i := 0; i < iterCount; i++ {
 		res, err := suite.queryClient.SpendableBalances(suite.ctx, req)
-
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
-		suite.Require().NotNil(res.Balances)
 
 		suite.Require().Equal(res, prevRes)
 	}
@@ -197,10 +195,10 @@ func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 		err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, coins)
 		suite.Require().NoError(err)
 
-		suite.runSpendableBalancesIterations(
-			banktypes.NewQuerySpendableBalancesRequest(addr, testdata.PaginationGenerator(t, uint64(numCoins)).Draw(t, "pagination")),
-			&banktypes.QuerySpendableBalancesResponse{Balances: coins},
-		)
+		req := banktypes.NewQuerySpendableBalancesRequest(addr, testdata.PaginationGenerator(t, uint64(numCoins)).Draw(t, "pagination"))
+		res, err := suite.queryClient.SpendableBalances(suite.ctx, req)
+		suite.Require().NoError(err)
+		suite.runSpendableBalancesIterations(req, res)
 	})
 
 	coins := sdk.NewCoins(

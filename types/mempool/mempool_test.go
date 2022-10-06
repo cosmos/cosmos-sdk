@@ -124,21 +124,27 @@ func (tx testTx) String() string {
 	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
 }
 
-func TestNewStatefulMempool(t *testing.T) {
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-
-	// general test
-	transactions := simulateManyTx(ctx, 1000)
-	require.Equal(t, 1000, len(transactions))
-	mp := mempool.NewDefaultMempool()
-
-	for _, tx := range transactions {
-		ctx.WithPriority(rand.Int63())
-		err := mp.Insert(ctx, tx.(mempool.Tx))
-		require.NoError(t, err)
-	}
-	require.Equal(t, 1000, mp.CountTx())
+type txWithPriority struct {
+	priority int64
+	tx       sdk.Tx
+	address  string
 }
+
+//func TestNewStatefulMempool(t *testing.T) {
+//	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+//
+//	// general test
+//	transactions := simulateManyTx(ctx, 1000)
+//	require.Equal(t, 1000, len(transactions))
+//	mp := mempool.NewDefaultMempool()
+//
+//	for _, tx := range transactions {
+//		ctx.WithPriority(rand.Int63())
+//		err := mp.Insert(ctx, tx.(mempool.Tx))
+//		require.NoError(t, err)
+//	}
+//	require.Equal(t, 1000, mp.CountTx())
+//}
 
 type txSpec struct {
 	i int
@@ -623,29 +629,103 @@ func TestTxOrderN(t *testing.T) {
 	}
 }
 
-func simulateManyTx(ctx sdk.Context, n int) []sdk.Tx {
-	transactions := make([]sdk.Tx, n)
-	for i := 0; i < n; i++ {
-		tx := simulateTx(ctx)
-		transactions[i] = tx
+func BenchmarkDefaultMempool_Insert(b *testing.B) {
+	var inputs = []struct {
+		txN      int
+		addressN int
+	}{
+		{txN: 100, addressN: 4},
+		{txN: 1000, addressN: 10},
+		{txN: 100000, addressN: 1000},
 	}
-	return transactions
+
+	for _, v := range inputs {
+		ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+		genedTx := genManyTestTx(ctx, v.txN, v.addressN)
+		pool := mempool.NewDefaultMempool()
+		b.Run(fmt.Sprintf("txs: %d, addreses: %d", v.txN, v.addressN), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				for _, txP := range genedTx {
+					newCtx := ctx.WithPriority(txP.priority)
+					pool.Insert(newCtx, txP.tx.(mempool.Tx))
+				}
+
+			}
+		})
+	}
 }
 
-func simulateTx(ctx sdk.Context) sdk.Tx {
-	acc := authtypes.NewEmptyModuleAccount("anaccount")
+func BenchmarkDefaultMempool_Select(b *testing.B) {
+	var inputs = []struct {
+		txN      int
+		addressN int
+	}{
+		{txN: 100, addressN: 4},
+		{txN: 1000, addressN: 10},
+		{txN: 100000, addressN: 1000},
+	}
 
-	s := rand.NewSource(1)
+	for _, v := range inputs {
+		ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+		genedTx := genManyTestTx(ctx, v.txN, v.addressN)
+		pool := mempool.NewDefaultMempool()
+		for _, txP := range genedTx {
+			newCtx := ctx.WithPriority(txP.priority)
+			pool.Insert(newCtx, txP.tx.(mempool.Tx))
+		}
+		b.Run(fmt.Sprintf("txs: %d, addreses: %d", v.txN, v.addressN), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				pool.Select(nil, int64(v.txN))
+
+			}
+		})
+	}
+}
+
+func genManyTestTx(ctx sdk.Context, txN int, addressN int) []txWithPriority {
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), addressN)
+	accountsNonce := make(map[string]int)
+	var genTx []txWithPriority
+	for _, acc := range accounts {
+		accountsNonce[acc.Address.String()] = 0
+	}
+	for i := 0; i < txN; i++ {
+		acc := accounts[r1.Intn(addressN)]
+		p := r1.Intn(1000)
+		n := accountsNonce[acc.Address.String()]
+		accountsNonce[acc.Address.String()] = n + 1
+		tx := txWithPriority{
+			priority: int64(p),
+			tx:       simulateTx(ctx, acc, uint64(n)),
+			address:  acc.Address.String(),
+		}
+		genTx = append(genTx, tx)
+	}
+	return genTx
+}
+
+//
+//func simulateManyTx(ctx sdk.Context, n int) []sdk.Tx {
+//	transactions := make([]sdk.Tx, n)
+//	for i := 0; i < n; i++ {
+//		tx := simulateTx(ctx)
+//		transactions[i] = tx
+//	}
+//	return transactions
+//}
+
+func simulateTx(ctx sdk.Context, acc simtypes.Account, nonce uint64) sdk.Tx {
+	s := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(s)
+	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 	msg := group.MsgUpdateGroupMembers{
 		GroupId:       1,
-		Admin:         "test",
+		Admin:         acc.Address.String(),
 		MemberUpdates: []group.MemberRequest{},
 	}
 	fees, _ := simtypes.RandomFees(r, ctx, sdk.NewCoins(sdk.NewCoin("coin", sdk.NewInt(100000000))))
-
-	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
-	accounts := simtypes.RandomAccounts(r, 2)
 
 	tx, _ := simtestutil.GenSignedMockTx(
 		r,
@@ -654,12 +734,42 @@ func simulateTx(ctx sdk.Context) sdk.Tx {
 		fees,
 		simtestutil.DefaultGenTxGas,
 		ctx.ChainID(),
-		[]uint64{acc.GetAccountNumber()},
-		[]uint64{acc.GetSequence()},
-		accounts[0].PrivKey,
+		[]uint64{authtypes.NewBaseAccountWithAddress(acc.Address).GetAccountNumber()},
+		[]uint64{nonce},
+		acc.PrivKey,
 	)
 	return tx
 }
+
+//
+//func simulateTx(ctx sdk.Context) sdk.Tx {
+//	acc := authtypes.NewEmptyModuleAccount("anaccount")
+//
+//	s := rand.NewSource(1)
+//	r := rand.New(s)
+//	msg := group.MsgUpdateGroupMembers{
+//		GroupId:       1,
+//		Admin:         "test",
+//		MemberUpdates: []group.MemberRequest{},
+//	}
+//	fees, _ := simtypes.RandomFees(r, ctx, sdk.NewCoins(sdk.NewCoin("coin", sdk.NewInt(100000000))))
+//
+//	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
+//	accounts := simtypes.RandomAccounts(r, 2)
+//
+//	tx, _ := simtestutil.GenSignedMockTx(
+//		r,
+//		txGen,
+//		[]sdk.Msg{&msg},
+//		fees,
+//		simtestutil.DefaultGenTxGas,
+//		ctx.ChainID(),
+//		[]uint64{acc.GetAccountNumber()},
+//		[]uint64{acc.GetSequence()},
+//		accounts[0].PrivKey,
+//	)
+//	return tx
+//}
 
 func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
 	cfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{}, gov.AppModuleBasic{})

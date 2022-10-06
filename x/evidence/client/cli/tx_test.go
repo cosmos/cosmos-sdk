@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
@@ -16,6 +15,9 @@ import (
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -97,6 +99,21 @@ func TestGetQueryCmd(t *testing.T) {
 			},
 			"",
 			"evidence: []\npagination: null",
+			false,
+		},
+		"all evidence(json output)": {
+			[]string{
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+			},
+			func() client.Context {
+				bz, _ := encCfg.Codec.Marshal(&sdk.TxResponse{})
+				c := newMockTendermintRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return baseCtx.WithClient(c)
+			},
+			"",
+			`{"evidence":[],"pagination":null}`,
 			false,
 		},
 	}

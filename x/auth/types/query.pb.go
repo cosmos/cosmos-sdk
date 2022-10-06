@@ -666,7 +666,12 @@ func (m *AddressStringToBytesResponse) GetAddressBytes() []byte {
 }
 
 // QueryAccountAddressByIDRequest is the request type for AccountAddressByID rpc method
+//
+// Since: cosmos-sdk 0.46.2
 type QueryAccountAddressByIDRequest struct {
+	// id is the account number of the address to be queried. This field
+	// should have been an uint64 (like all account numbers), and will be
+	// updated to uint64 in a future version of the auth query.
 	Id int64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
@@ -711,6 +716,8 @@ func (m *QueryAccountAddressByIDRequest) GetId() int64 {
 }
 
 // QueryAccountAddressByIDResponse is the response type for AccountAddressByID rpc method
+//
+// Since: cosmos-sdk 0.46.2
 type QueryAccountAddressByIDResponse struct {
 	AccountAddress string `protobuf:"bytes,1,opt,name=account_address,json=accountAddress,proto3" json:"account_address,omitempty"`
 }
@@ -854,7 +861,9 @@ type QueryClient interface {
 	Accounts(ctx context.Context, in *QueryAccountsRequest, opts ...grpc.CallOption) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
 	Account(ctx context.Context, in *QueryAccountRequest, opts ...grpc.CallOption) (*QueryAccountResponse, error)
-	// AccountAddressByID returns account address based on account id
+	// AccountAddressByID returns account address based on account number.
+	//
+	// Since: cosmos-sdk 0.46.2
 	AccountAddressByID(ctx context.Context, in *QueryAccountAddressByIDRequest, opts ...grpc.CallOption) (*QueryAccountAddressByIDResponse, error)
 	// Params queries all parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
@@ -964,7 +973,9 @@ type QueryServer interface {
 	Accounts(context.Context, *QueryAccountsRequest) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
 	Account(context.Context, *QueryAccountRequest) (*QueryAccountResponse, error)
-	// AccountAddressByID returns account address based on account id
+	// AccountAddressByID returns account address based on account number.
+	//
+	// Since: cosmos-sdk 0.46.2
 	AccountAddressByID(context.Context, *QueryAccountAddressByIDRequest) (*QueryAccountAddressByIDResponse, error)
 	// Params queries all parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)

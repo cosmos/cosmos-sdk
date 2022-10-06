@@ -60,8 +60,6 @@ network.
     * [gRPC](#grpc)
     * [REST](#rest)
 
-<!-- order: 1 -->
-
 # State
 
 ## Pool
@@ -276,8 +274,6 @@ they are in a deterministic order.
 The oldest HistoricalEntries will be pruned to ensure that there only exist the parameter-defined number of
 historical entries.
 
-<!-- order: 2 -->
-
 # State Transitions
 
 This document describes the state transition operations pertaining to:
@@ -456,8 +452,6 @@ The total number of tokens is now `T + T_j`, and the total number of shares is `
 A special case is the initial delegation, when `T = 0` and `S = 0`, so `T_j / T` is undefined.
 For the initial delegation, delegator `j` who delegates `T_j` tokens receive `S_j = T_j` shares.
 So a validator that hasn't received any rewards and has not been slashed will have `T = S`.
-
-<!-- order: 3 -->
 
 # Messages
 
@@ -643,8 +637,6 @@ The message handling can fail if:
 
 * signer is not the authority defined in the staking keeper (usually the gov module account).
 
-<!-- order: 4 -->
-
 # Begin-Block
 
 Each abci begin block call, the historical info will get stored and pruned
@@ -657,8 +649,6 @@ If the `HistoricalEntries` parameter is 0, then the `BeginBlock` performs a no-o
 Otherwise, the latest historical info is stored under the key `historicalInfoKey|height`, while any entries older than `height - HistoricalEntries` is deleted.
 In most cases, this results in a single entry being pruned per block.
 However, if the parameter `HistoricalEntries` has changed to a lower value there will be multiple entries in the store that must be pruned.
-
-<!-- order: 5 -->
 
 # End-Block
 
@@ -734,8 +724,6 @@ Complete the unbonding of all mature `Redelegation.Entries` within the
 * remove the `Redelegation` object from the store if there are no
   remaining entries.
 
-<!-- order: 6 -->
-
 # Hooks
 
 Other modules may register operations to execute when a certain event has
@@ -761,8 +749,6 @@ following hooks can registered with staking:
     * called when a delegation is created or modified
 * `BeforeDelegationRemoved(Context, AccAddress, ValAddress) error`
     * called when a delegation is removed
-
-<!-- order: 7 -->
 
 # Events
 
@@ -851,8 +837,6 @@ The staking module emits the following events:
 
 * [0] Time is formatted in the RFC3339 standard
 
-<!-- order: 8 -->
-
 # Parameters
 
 The staking module contains the following parameters:
@@ -865,8 +849,6 @@ The staking module contains the following parameters:
 | HistoricalEntries | uint16           | 3                      |
 | BondDenom         | string           | "stake"                |
 | MinCommissionRate | string           | "0.000000000000000000" |
-
-<!-- order: 9 -->
 
 # Client
 

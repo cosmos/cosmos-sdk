@@ -4,7 +4,7 @@ parent:
   order: 5
 -->
 
-# Building a Chain
+# Building Apps
 
 This repository contains documentation on concepts developers need to know in order to build a Cosmos SDK applications.
 

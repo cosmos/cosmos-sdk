@@ -55,11 +55,6 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       image: "img/banner.jpg",
-      announcementBar: {
-        content:
-          '<a target="_blank" rel="noopener noreferrer" href="https://github.com/cosmos/cosmos-sdk">← Back to GitHub</a>',
-        isCloseable: false,
-      },
       docs: {
         sidebar: {
           autoCollapseCategories: true,

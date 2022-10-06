@@ -16,7 +16,8 @@ done
 mkdir -p docs/modules/vesting
 cp -r ../x/auth/vesting/README.md ./docs/modules/vesting/index.md
 
-cat ../x/README.md | sed 's/\.\/x/\/modules/g' | sed 's/\.\.\/docs\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./docs/modules/index.md
+## Add modules page list
+cat ../x/README.md | sed 's/README.md/index.md/g' | sed 's/\.\.\/docs\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./docs/modules/index.md
 
 ## Add Cosmovisor documentation
 cp ../cosmovisor/README.md ./docs/run-node/06-cosmovisor.md

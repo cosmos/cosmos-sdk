@@ -614,6 +614,7 @@ func DefaultMigrationsOrder(modules []string) []string {
 	return out
 }
 
+// CreateExportFile creates new file for exporting the module genesus state
 func CreateExportFile(exportPath string, moduleName string, index int) (*os.File, error) {
 	if err := os.MkdirAll(exportPath, 0o700); err != nil {
 		return nil, fmt.Errorf("failed to create directory: %w", err)
@@ -628,6 +629,7 @@ func CreateExportFile(exportPath string, moduleName string, index int) (*os.File
 	return f, nil
 }
 
+// OpenModuleStateFile opens the genesis state file given the path, module name, and file index
 func OpenModuleStateFile(importPath string, moduleName string, index int) (*os.File, error) {
 	fp := filepath.Join(importPath, fmt.Sprintf("genesis_%s_%d.bin", moduleName, index))
 	f, err := os.OpenFile(filepath.Clean(fp), os.O_RDONLY, 0o600)

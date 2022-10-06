@@ -462,8 +462,10 @@ func (suite *DeterministicTestSuite) runSendEnabledIterations(req *banktypes.Que
 }
 
 func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
+	allDenoms := []string{}
+
 	rapid.Check(suite.T(), func(t *rapid.T) {
-		count := rapid.IntRange(1, 10).Draw(t, "count")
+		count := rapid.IntRange(0, 10).Draw(t, "count")
 		denoms := make([]string, 0, count)
 
 		for i := 0; i < count; i++ {
@@ -476,9 +478,12 @@ func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 			denoms = append(denoms, coin.Denom)
 		}
 
+		allDenoms = append(allDenoms, denoms...)
+
 		req := &banktypes.QuerySendEnabledRequest{
-			Denoms:     denoms,
-			Pagination: testdata.PaginationGenerator(t, uint64(count)).Draw(t, "pagination"),
+			Denoms: denoms,
+			// Pagination is only taken into account when `denoms` is an empty array
+			Pagination: testdata.PaginationGenerator(t, uint64(len(allDenoms))).Draw(t, "pagination"),
 		}
 		res, err := suite.queryClient.SendEnabled(suite.ctx, req)
 		suite.Require().NoError(err)

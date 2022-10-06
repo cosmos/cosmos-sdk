@@ -4,7 +4,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// x/consensus_param module sentinel errors
+// Sentinel errors for the x/consensus module.
 var (
 	ErrUnauthorized = sdkerrors.Register(ModuleName, 2, "unauthorized action")
 )

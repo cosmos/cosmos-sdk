@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Slashing Overview
-parent:
-  title: "slashing"
--->
+---
+sidebar_position: 1
+---
 
 # `x/slashing`
 

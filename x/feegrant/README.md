@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Fee grant Overview
-parent:
-  title: "feegrant"
--->
+---
+sidebar_position: 1
+---
 
 # `x/feegrant`
 

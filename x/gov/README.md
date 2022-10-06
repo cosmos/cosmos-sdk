@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Gov Overview
-parent:
-  title: "gov"
--->
+---
+sidebar_position: 1
+---
 
 # `x/gov`
 

@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Distribution Overview
-parent:
-  title: "distribution"
--->
+---
+sidebar_position: 1
+---
 
 # `x/distribution`
 

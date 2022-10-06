@@ -1,6 +1,5 @@
 ---
-parent:
-  order: false
+sidebar_position: 1
 ---
 
 # Specifications

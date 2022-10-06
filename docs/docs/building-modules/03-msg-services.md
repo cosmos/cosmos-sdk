@@ -85,7 +85,7 @@ This method takes care of marshaling the `res` parameter to protobuf and attachi
 
 This diagram shows a typical structure of a Protobuf `Msg` service, and how the message propagates through the module.
 
-![Transaction flow](/uml/svg/transaction_flow.svg)
+![Transaction flow](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/transaction_flow.svg)
 
 ## Telemetry
 

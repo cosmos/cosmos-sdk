@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Crisis Overview
-parent:
-  title: "crisis"
--->
+---
+sidebar_position: 1
+---
 
 # `x/crisis`
 

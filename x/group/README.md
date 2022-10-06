@@ -1,11 +1,8 @@
-<!--
-order: 0
-title: Group Overview
-parent:
-  title: "group"
--->
+---
+sidebar_position: 1
+---
 
-# Group Module
+# `x/group`
 
 ## Abstract
 

@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Staking Overview
-parent:
-  title: "staking"
--->
+---
+sidebar_position: 1
+---
 
 # `x/staking`
 
@@ -571,7 +568,7 @@ tracked in validator object in the `Validators` index.
 It is possible to delegate to a jailed validator, the only difference being it
 will not be added to the power index until it is unjailed.
 
-![Delegation sequence](../../../docs/uml/svg/delegation_sequence.svg)
+![Delegation sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/delegation_sequence.svg)
 
 ## MsgUndelegate
 
@@ -605,7 +602,7 @@ When this message is processed the following actions occur:
 * if there are no more `Shares` in the delegation, then the delegation object is removed from the store
     * under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
-![Unbond sequence](../../../docs/uml/svg/unbond_sequence.svg)
+![Unbond sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/unbond_sequence.svg)
 
 ## MsgCancelUnbondingDelegation
 
@@ -663,7 +660,7 @@ When this message is processed the following actions occur:
 * if there are no more `Shares` in the source delegation, then the source delegation object is removed from the store
     * under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
-![Begin redelegation sequence](../../../docs/uml/svg/begin_redelegation_sequence.svg)
+![Begin redelegation sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/begin_redelegation_sequence.svg)
 
 
 ## MsgUpdateParams

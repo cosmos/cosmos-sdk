@@ -18,8 +18,3 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Copied by pre.sh
-# docs/modules
-docs/run-node/06-cosmovisor.md
-docs/building-apps/01-depinject.md

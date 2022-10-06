@@ -22,7 +22,7 @@ type ABCIListener interface {
 	ListenStoreKVPair(blockHeight int64, data []byte) error
 }
 
-// StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
+// StreamingService for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
 type StreamingService struct {
 	// Listeners returns the streaming service's listeners for the BaseApp to register
 	Listeners map[types.StoreKey][]types.WriteListener

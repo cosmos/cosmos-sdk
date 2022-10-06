@@ -45,6 +45,27 @@ service Msg {
   // parameters.
   // Since: cosmos-sdk 0.47
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // TokenizeShares defines a method for tokenizing shares from a validator.
+  // Since: cosmos-sdk 0.47
+  rpc TokenizeShares(MsgTokenizeShares) returns (MsgTokenizeSharesResponse);
+
+  // RedeemTokens defines a method for redeeming tokens from a validator for
+  // shares.
+  // Since: cosmos-sdk 0.47
+  rpc RedeemTokens(MsgRedeemTokensforShares)
+      returns (MsgRedeemTokensforSharesResponse);
+
+  // TransferTokenizeShareRecord defines a method to transfer ownership of
+  // TokenizeShareRecord
+  // Since: cosmos-sdk 0.47
+  rpc TransferTokenizeShareRecord(MsgTransferTokenizeShareRecord)
+      returns (MsgTransferTokenizeShareRecordResponse);
+
+  // ExemptDelegation defines a method for performing exemption of
+  // delegated coins from a delegator to a validator.
+  // Since: cosmos-sdk 0.47
+  rpc ExemptDelegation(MsgExemptDelegation) returns (MsgExemptDelegationResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -190,3 +211,60 @@ message MsgUpdateParams {
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParamsResponse {};
+
+// Since: cosmos-sdk 0.47
+message MsgTokenizeShares {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string                   delegator_address     = 1;
+  string                   validator_address     = 2;
+  cosmos.base.v1beta1.Coin amount                = 3 [(gogoproto.nullable) = false];
+  string                   tokenized_share_owner = 4;
+}
+
+// Since: cosmos-sdk 0.47
+message MsgTokenizeSharesResponse {
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+}
+
+// Since: cosmos-sdk 0.47
+message MsgRedeemTokensforShares {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string                   delegator_address = 1;
+  cosmos.base.v1beta1.Coin amount            = 2 [(gogoproto.nullable) = false];
+}
+
+// Since: cosmos-sdk 0.47
+message MsgRedeemTokensforSharesResponse {
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+}
+
+// Since: cosmos-sdk 0.47
+message MsgTransferTokenizeShareRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 tokenize_share_record_id = 1;
+  string sender                   = 2;
+  string new_owner                = 3;
+}
+
+// Since: cosmos-sdk 0.47
+message MsgTransferTokenizeShareRecordResponse {}
+
+// MsgExemptDelegation defines a SDK message for performing exemption of delegated coins
+// from a delegator to a validator.
+// Since: cosmos-sdk 0.47
+message MsgExemptDelegation {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1;
+  string validator_address = 2;
+}
+
+// Since: cosmos-sdk 0.47
+message MsgExemptDelegationResponse {}

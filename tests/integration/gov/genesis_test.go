@@ -19,6 +19,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -51,6 +52,7 @@ var appConfig = configurator.NewAppConfig(
 	configurator.GovModule(),
 	configurator.DistributionModule(),
 	configurator.MintModule(),
+	configurator.ConsensusModule(),
 )
 
 func TestImportExportQueues(t *testing.T) {

@@ -126,8 +126,6 @@ A `MsgCancelUpgrade` proposal can also be made while the original
 `MsgSoftwareUpgrade` proposal is still being voted upon, as long as the `VotingPeriod`
 ends after the `MsgSoftwareUpgrade` proposal.
 
-<!-- order: 1 -->
-
 # State
 
 The internal state of the `x/upgrade` module is relatively minimal and simple. The
@@ -145,14 +143,10 @@ by the corresponding module name of type `string`. The state maintains a
 
 The `x/upgrade` module contains no genesis state.
 
-<!-- order: 2 -->
-
 # Events
 
 The `x/upgrade` does not emit any events by itself. Any and all proposal related
 events are emitted through the `x/gov` module.
-
-<!-- order: 3 -->
 
 # Client
 
@@ -609,8 +603,6 @@ Example Output:
   ]
 }
 ```
-
-<!-- order: 4 -->
 
 # Resources
 

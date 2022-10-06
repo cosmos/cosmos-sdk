@@ -18,6 +18,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	dk "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -119,6 +120,7 @@ func createTestSuite(t *testing.T) suite {
 			configurator.StakingModule(),
 			configurator.BankModule(),
 			configurator.GovModule(),
+			configurator.ConsensusModule(),
 			configurator.DistributionModule(),
 		),
 		simtestutil.DefaultStartUpConfig(),

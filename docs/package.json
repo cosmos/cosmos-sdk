@@ -15,5 +15,8 @@
   "license": "ISC",
   "dependencies": {
     "vuepress-theme-cosmos": "^1.0.183"
+  },
+  "devDependencies": {
+    "@vuepress/plugin-html-redirect": "^0.1.4"
   }
 }

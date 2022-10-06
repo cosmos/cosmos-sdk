@@ -8,12 +8,12 @@ option (cosmos_proto.declare_scalar) = {
     description: "A type representing a decimal number",
     field_type: [SCALAR_TYPE_BYTES],
     // Optionally we can add these 2 fields:
-    //
+
     // Proposal 1:
-    // gogo_customtype: "RawContractMessage",
-    // This makes sure all fields that have `cosmos.scalar = "RawContractMessage"` also have `gogoproto.customtype = "RawContractMessage"`.
+    gogo_customtype: "RawContractMessage", // This makes sure all fields that have `cosmos.scalar = "RawContractMessage"` also have `gogoproto.customtype = "RawContractMessage"`.
     // TODO is this useful?
-    //
+    
     // Proposal 2: (similar to Dan's `hint` idea)
-    // amino_encoding: "Use base64 to encode this field" // Some human-readable string on how to encode this field.
+    amino_encoding: "Use base64 to encode this field" // Some human-readable string on how to encode this field.
+    // TODO Or do we prefer machine-readable? e.g. `base64`
 };

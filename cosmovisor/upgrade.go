@@ -33,8 +33,15 @@ func UpgradeBinary(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) 
 	}
 
 	// if the dir is there already, don't download either
-	if _, err := os.Stat(cfg.UpgradeDir(info.Name)); !os.IsNotExist(err) {
+	switch fi, err := os.Stat(cfg.UpgradeDir(info.Name)); {
+	case fi != nil: // The directory exists, do not overwrite.
 		return errors.New("upgrade dir already exists, won't overwrite")
+
+	case os.IsNotExist(err): // In this case the directory doesn't exist, continue below.
+		// Do nothing and we shall download the binary down below.
+
+	default: // Otherwise an unexpected error
+		return fmt.Errorf("unhandled error: %w", err)
 	}
 
 	// If not there, then we try to download it... maybe

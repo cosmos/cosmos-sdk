@@ -872,7 +872,7 @@ func (tl *MockListener) OnWrite(storeKey types.StoreKey, key []byte, value []byt
 
 func TestStateListeners(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	ms := newMultiStoreWithMounts(db, types.NewPruningOptionsFromString(types.PruningOptionNothing))
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
 	listener := &MockListener{}
 	ms.AddListeners(testStoreKey1, []types.WriteListener{listener})

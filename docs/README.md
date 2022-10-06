@@ -1,81 +1,96 @@
-<!--
-layout: homepage
-title: Cosmos SDK Documentation
-description: Cosmos SDK is the world’s most popular framework for building application-specific blockchains.
-sections:
-  - title: Introduction
-    desc: High-level overview of the Cosmos SDK.
-    url: /intro/overview.html
-    icon: introduction
-  - title: Basics
-    desc: Anatomy of a blockchain, transaction lifecycle, accounts and more.
-    icon: basics
-    url: /basics/app-anatomy.html
-  - title: Core Concepts
-    desc: Read about the core concepts like baseapp, the store, or the server.
-    icon: core
-    url: /core/baseapp.html
-  - title: Building Modules
-    desc: Discover how to build modules for the Cosmos SDK.
-    icon: modules
-    url: /building-modules/intro.html
-  - title: Running a Node
-    desc: Running and interacting with nodes using the CLI and API.
-    icon: interfaces
-    url: /run-node/
-  - title: Modules
-    desc: Explore existing modules to build your application with.
-    icon: specifications
-    url: /modules/
-stack:
-  - title: Cosmos Hub
-    desc: The first of thousands of interconnected blockchains on the Cosmos Network.
-    color: "#BA3FD9"
-    label: hub
-    url: http://hub.cosmos.network
-  - title: Tendermint Core
-    desc: The leading BFT engine for building blockchains, powering Cosmos SDK.
-    color: "#00BB00"
-    label: core
-    url: http://docs.tendermint.com
-footer:
-  newsletter: false
-aside: false
--->
+# Updating the docs
 
-# Cosmos SDK Documentation
+If you want to open a PR in Cosmos SDK to update the documentation, please follow the guidelines in [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/main/CONTRIBUTING.md#updating-documentation).
 
-## Get Started
+## Docs Build Workflow
 
-* **[Cosmos SDK Intro](./intro/overview.md)**: High-level overview of the Cosmos SDK.
-* **[Ignite CLI](https://docs.ignite.com)**: A developer-friendly interface to the Cosmos SDK to scaffold, launch, and maintain any crypto application on a sovereign and secured blockchain.
-* **[SDK Tutorials](https://tutorials.cosmos.network/)**: Tutorials that showcase how to build Cosmos SDK-based blockchains from scratch and explain the basic Cosmos SDK principles in the process.
+The documentation for Cosmos SDK is hosted at https://docs.cosmos.network and built from the files in the `/docs` directory.
+It is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
 
-## Reference Docs
+### How It Works
 
-* **[Basics](./basics/)**: Basic concepts of the Cosmos SDK, including the standard anatomy of an application, the transaction lifecycle, and accounts management.
-* **[Core](./core/)**: Core concepts of the Cosmos SDK, including `baseapp`, the `store`, or the `server`.
-* **[Building Modules](./building-modules/)**: Important concepts for module developers like `message`, `keeper`, and `querier`.
-* **[IBC](https://ibc.cosmos.network/)**: IBC protocol integration and concepts.
-* **[Running a Node, API, CLI](./run-node/)**: How to run a node and interact with the node using the CLI and the API.
-* **[Migrations](./migrations/)**: Migration guides for updating to newer versions of Cosmos SDK.
+There is a GitHub Action listening for changes in the `/docs` directory for the `main` branch and each supported version branch (e.g. `release/v0.46.x`). Any updates to files in the `/docs` directory will automatically trigger a website deployment. Under the hood, the private website repository has a `make build-docs` target consumed by a Github Action within that repository.
 
-## Other Resources
+## README
 
-* **[Module Directory](../x/)**: Cosmos SDK module implementations and their respective documentation.
-* **[Specifications](./spec/)**: Specifications of modules and other parts of the Cosmos SDK.
-* **[Cosmos SDK API Reference](https://pkg.go.dev/github.com/cosmos/cosmos-sdk)**: Godocs of the Cosmos SDK.
-* **[REST and RPC Endpoints](https://cosmos.network/rpc/)**: List of endpoints to interact with a `gaia` full-node.
-* **[Rosetta API](./run-node/rosetta.md)**: Rosetta API integration.
+The [README.md](./README.md) is both the README for the repository and the configuration for the layout of the landing page.
 
-## Cosmos Hub
+## Links
 
-The Cosmos Hub (`gaia`) docs have moved to [github.com/cosmos/gaia](https://github.com/cosmos/gaia/tree/main/docs).
+**NOTE:** Strongly consider the existing links - both within this directory
+and to the website docs - when moving or deleting files.
 
-## Languages
+Absolute links should be used nearly everywhere, having discovered and weighed the following:
 
-The Cosmos SDK is written in [Golang](https://golang.org/), though the framework could be implemented similarly in other languages. Contact us for information about funding an implementation in another language.
+### Relative
 
-## Contribute
+Where is the other file, relative to the current one?
 
-See the [DOCS_README.md](https://github.com/cosmos/cosmos-sdk/blob/main/docs/DOCS_README.md) for details of the build process and considerations when making changes.
+* works both on GitHub and for the Docusaurus build
+* confusing / annoying to have things like: `../../../../myfile.md`
+* requires more updates when files are re-shuffled
+
+### Absolute
+
+Where is the other file, given the root of the repo?
+
+* works on GitHub, doesn't work for the Docusaurus build
+* this is much nicer: `/docs/hereitis/myfile.md`
+* if you move that file around, the links inside of it are preserved
+
+### Full
+
+The full GitHub URL to a file or directory. Used occasionally when it makes sense
+to send users to the GitHub.
+
+## Building Locally
+
+Make sure you are in the `docs` directory and run the following commands:
+
+```sh
+rm -rf node_modules
+```
+
+This command will remove old version of the visual theme and required packages. This step is optional.
+
+```sh
+npm install
+```
+
+Install the theme and all dependencies.
+
+```sh
+npm start
+```
+
+Run `pre` and `post` hooks and start a hot-reloading web-server. See output of this command for the URL (it is often https://localhost:3000).
+
+To build documentation as a static website run `npm run build`.
+
+## Build RPC Docs
+
+First, run `make tools` from the root of repo, to install the swagger-ui tool.
+
+Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/main/client/lcd/swagger-ui/swagger.yaml)
+
+## Search
+
+We are using [Algolia](https://www.algolia.com) to power full-text search. This uses a public API search-only key in the `config.js` as well as a [cosmos_network.json](https://github.com/algolia/docsearch-configs/blob/master/configs/cosmos_network.json) configuration file that we can update with PRs.
+
+### Update and Build the RPC docs
+
+1. Execute the following command at the root directory to install the swagger-ui generate tool.
+
+   ```bash
+   make tools
+   ```
+
+2. Edit API docs
+   1. Directly Edit API docs manually: `client/lcd/swagger-ui/swagger.yaml`.
+   2. Edit API docs within the [Swagger Editor](https://editor.swagger.io/). Please refer to this [document](https://swagger.io/docs/specification/2-0/basic-structure/) for the correct structure in `.yaml`.
+3. Download `swagger.yaml` and replace the old `swagger.yaml` under fold `client/lcd/swagger-ui`.
+4. Compile simd
+
+   ```bash
+   make install
+   ```

@@ -30,13 +30,13 @@ func TestBytesJsonTestCases(t *testing.T) {
 		valrend, err := textual.GetValueRenderer(fieldDescriptorFromName("BYTES"))
 		require.NoError(t, err)
 
-		items, err := valrend.Format(context.Background(), protoreflect.ValueOfBytes(data))
+		screens, err := valrend.Format(context.Background(), protoreflect.ValueOfBytes(data))
 		require.NoError(t, err)
-		require.Equal(t, 1, len(items))
-		require.Equal(t, tc.hex, items[0].Text)
+		require.Equal(t, 1, len(screens))
+		require.Equal(t, tc.hex, screens[0].Text)
 
 		// Round trip
-		val, err := valrend.Parse(context.Background(), items)
+		val, err := valrend.Parse(context.Background(), screens)
 		require.NoError(t, err)
 		require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
 	}

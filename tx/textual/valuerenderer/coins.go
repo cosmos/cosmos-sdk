@@ -27,7 +27,7 @@ type coinsValueRenderer struct {
 
 var _ ValueRenderer = coinsValueRenderer{}
 
-func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Item, error) {
+func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	if vr.coinMetadataQuerier == nil {
 		return nil, fmt.Errorf("expected non-nil coin metadata querier")
 	}
@@ -53,7 +53,7 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 				return nil, err
 			}
 
-			return []Item{{Text: formatted}}, nil
+			return []Screen{{Text: formatted}}, nil
 		}
 	// If it's a single Coin:
 	case protoreflect.Message:
@@ -70,14 +70,14 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 				return nil, err
 			}
 
-			return []Item{{Text: formatted}}, nil
+			return []Screen{{Text: formatted}}, nil
 		}
 	default:
 		return nil, fmt.Errorf("got invalid type %t for coins", v.Interface())
 	}
 }
 
-func (vr coinsValueRenderer) Parse(_ context.Context, items []Item) (protoreflect.Value, error) {
+func (vr coinsValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/13153
 	panic("implement me, see #13153")
 }

@@ -43,19 +43,19 @@ func TestTimestampJsonTestcases(t *testing.T) {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			rend := valuerenderer.NewTimestampValueRenderer()
 
-			var items []valuerenderer.Item
+			var screens []valuerenderer.Screen
 			if tc.Proto != nil {
-				items, err = rend.Format(context.Background(), protoreflect.ValueOf(tc.Proto.ProtoReflect()))
+				screens, err = rend.Format(context.Background(), protoreflect.ValueOf(tc.Proto.ProtoReflect()))
 				if tc.Error {
 					require.Error(t, err)
 					return
 				}
 				require.NoError(t, err)
-				require.Equal(t, 1, len(items))
-				require.Equal(t, tc.Text, items[0].Text)
+				require.Equal(t, 1, len(screens))
+				require.Equal(t, tc.Text, screens[0].Text)
 			}
 
-			val, err := rend.Parse(context.Background(), items)
+			val, err := rend.Parse(context.Background(), screens)
 			if tc.Error {
 				require.Error(t, err)
 				return

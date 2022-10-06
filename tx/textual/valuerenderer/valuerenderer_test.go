@@ -32,10 +32,10 @@ func TestFormatInteger(t *testing.T) {
 		if err == nil {
 			r, err := textual.GetValueRenderer(fieldDescriptorFromName("UINT64"))
 			require.NoError(t, err)
-			items, err := r.Format(context.Background(), protoreflect.ValueOf(i))
+			screens, err := r.Format(context.Background(), protoreflect.ValueOf(i))
 			require.NoError(t, err)
-			require.Equal(t, 1, len(items))
-			require.Equal(t, tc[1], items[0].Text)
+			require.Equal(t, 1, len(screens))
+			require.Equal(t, tc[1], screens[0].Text)
 		}
 
 		// Parse test case strings as protobuf uint32
@@ -43,10 +43,10 @@ func TestFormatInteger(t *testing.T) {
 		if err == nil {
 			r, err := textual.GetValueRenderer(fieldDescriptorFromName("UINT32"))
 			require.NoError(t, err)
-			items, err := r.Format(context.Background(), protoreflect.ValueOf(i))
+			screens, err := r.Format(context.Background(), protoreflect.ValueOf(i))
 			require.NoError(t, err)
-			require.Equal(t, 1, len(items))
-			require.Equal(t, tc[1], items[0].Text)
+			require.Equal(t, 1, len(screens))
+			require.Equal(t, tc[1], screens[0].Text)
 		}
 
 		// Parse test case strings as sdk.Ints
@@ -54,10 +54,10 @@ func TestFormatInteger(t *testing.T) {
 		if ok {
 			r, err := textual.GetValueRenderer(fieldDescriptorFromName("SDKINT"))
 			require.NoError(t, err)
-			items, err := r.Format(context.Background(), protoreflect.ValueOf(tc[0]))
+			screens, err := r.Format(context.Background(), protoreflect.ValueOf(tc[0]))
 			require.NoError(t, err)
-			require.Equal(t, 1, len(items))
-			require.Equal(t, tc[1], items[0].Text)
+			require.Equal(t, 1, len(screens))
+			require.Equal(t, tc[1], screens[0].Text)
 		}
 	}
 }
@@ -77,10 +77,10 @@ func TestFormatDecimal(t *testing.T) {
 		t.Run(tc[0], func(t *testing.T) {
 			r, err := textual.GetValueRenderer(fieldDescriptorFromName("SDKDEC"))
 			require.NoError(t, err)
-			items, err := r.Format(context.Background(), protoreflect.ValueOf(tc[0]))
+			screens, err := r.Format(context.Background(), protoreflect.ValueOf(tc[0]))
 			require.NoError(t, err)
-			require.Equal(t, 1, len(items))
-			require.Equal(t, tc[1], items[0].Text)
+			require.Equal(t, 1, len(screens))
+			require.Equal(t, tc[1], screens[0].Text)
 		})
 	}
 }

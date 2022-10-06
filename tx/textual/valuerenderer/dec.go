@@ -20,15 +20,15 @@ type decValueRenderer struct{}
 
 var _ ValueRenderer = decValueRenderer{}
 
-func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Item, error) {
+func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
 	formatted, err := formatDecimal(v.String())
 	if err != nil {
 		return nil, err
 	}
-	return []Item{{Text: formatted}}, nil
+	return []Screen{{Text: formatted}}, nil
 }
 
-func (vr decValueRenderer) Parse(_ context.Context, items []Item) (protoreflect.Value, error) {
+func (vr decValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
 	panic("implement me")
 }
 

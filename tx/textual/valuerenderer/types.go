@@ -6,10 +6,17 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// Item is the abstract unit of Textual rendering.
-type Item struct {
-	Text   string
+// Screen is the abstract unit of Textual rendering.
+type Screen struct {
+	// Text is the text to display - a sequence of Unicode code points.
+	Text string
+
+	// Indent is the indentation level of the screen.
+	// Zero indicates top-level. Should be less than 16.
 	Indent int
+
+	// Expert indicates that the screen should only be displayed
+	// via an opt-in from the user.
 	Expert bool
 }
 
@@ -22,8 +29,8 @@ type Item struct {
 // separate one for a different language.
 type ValueRenderer interface {
 	// Format should render the value to a text plus annotation.
-	Format(context.Context, protoreflect.Value) ([]Item, error)
+	Format(context.Context, protoreflect.Value) ([]Screen, error)
 
 	// Parse should be the inverse of Format.
-	Parse(context.Context, []Item) (protoreflect.Value, error)
+	Parse(context.Context, []Screen) (protoreflect.Value, error)
 }

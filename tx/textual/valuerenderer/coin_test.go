@@ -67,7 +67,7 @@ func TestCoinJsonTestcases(t *testing.T) {
 		t.Run(tc.Text, func(t *testing.T) {
 			if tc.Proto != nil {
 				ctx := context.WithValue(context.Background(), mockCoinMetadataKey(tc.Proto.Denom), tc.Metadata)
-				items, err := vr.Format(ctx, protoreflect.ValueOf(tc.Proto.ProtoReflect()))
+				screens, err := vr.Format(ctx, protoreflect.ValueOf(tc.Proto.ProtoReflect()))
 
 				if tc.Error {
 					require.Error(t, err)
@@ -75,8 +75,8 @@ func TestCoinJsonTestcases(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				require.Equal(t, 1, len(items))
-				require.Equal(t, tc.Text, items[0].Text)
+				require.Equal(t, 1, len(screens))
+				require.Equal(t, tc.Text, screens[0].Text)
 			}
 
 			// TODO Add parsing tests

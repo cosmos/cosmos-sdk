@@ -19,16 +19,16 @@ type bytesValueRenderer struct{}
 
 var _ ValueRenderer = bytesValueRenderer{}
 
-func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Item, error) {
+func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	text := strings.ToUpper(hex.EncodeToString(v.Bytes()))
-	return []Item{{Text: text}}, nil
+	return []Screen{{Text: text}}, nil
 }
 
-func (vr bytesValueRenderer) Parse(_ context.Context, items []Item) (protoreflect.Value, error) {
-	if len(items) != 1 {
-		return protoreflect.ValueOfBytes([]byte{}), fmt.Errorf("expected single item: %v", items)
+func (vr bytesValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
+	if len(screens) != 1 {
+		return protoreflect.ValueOfBytes([]byte{}), fmt.Errorf("expected single screen: %v", screens)
 	}
-	formatted := items[0].Text
+	formatted := screens[0].Text
 
 	data, err := hex.DecodeString(string(formatted))
 	if err != nil {

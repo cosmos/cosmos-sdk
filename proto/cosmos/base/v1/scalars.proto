@@ -1,0 +1,25 @@
+syntax = "proto3";
+package cosmos.base.v1;
+
+import "cosmos_proto/cosmos.proto";
+
+option (cosmos_proto.declare_scalar) = {
+    name: "AddressString",
+    description: "An SDK address encoded as a Bech32 string",
+    field_type: [SCALAR_TYPE_STRING],
+};
+
+option (cosmos_proto.declare_scalar) = {
+    name: "Dec",
+    description: "A type representing a decimal number",
+    field_type: [SCALAR_TYPE_STRING],
+    // Optionally we can add these 2 fields:
+    //
+    // Proposal 1:
+    // gogo_customtype: "github.com/cosmos/cosmos-sdk/types.Dec",
+    //
+    // This makes sure all fields that have `cosmos.scalar = "Dec"` also have `gogoproto.customtype = "Dec"`.
+    //
+    // Proposal 2:
+    // amino_encoding: "<some human-readable details about the string encoding of Dec>"
+};

@@ -30,37 +30,21 @@ type testPubKey struct {
 	address sdk.AccAddress
 }
 
-func (t testPubKey) Reset() {
-	panic("implement me")
-}
+func (t testPubKey) Reset() { panic("implement me") }
 
-func (t testPubKey) String() string {
-	panic("implement me")
-}
+func (t testPubKey) String() string { panic("implement me") }
 
-func (t testPubKey) ProtoMessage() {
-	panic("implement me")
-}
+func (t testPubKey) ProtoMessage() { panic("implement me") }
 
-func (t testPubKey) Address() cryptotypes.Address {
-	return t.address.Bytes()
-}
+func (t testPubKey) Address() cryptotypes.Address { return t.address.Bytes() }
 
-func (t testPubKey) Bytes() []byte {
-	panic("implement me")
-}
+func (t testPubKey) Bytes() []byte { panic("implement me") }
 
-func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool {
-	panic("implement me")
-}
+func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool { panic("implement me") }
 
-func (t testPubKey) Equals(key cryptotypes.PubKey) bool {
-	panic("implement me")
-}
+func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("implement me") }
 
-func (t testPubKey) Type() string {
-	panic("implement me")
-}
+func (t testPubKey) Type() string { panic("implement me") }
 
 // testTx is a dummy implementation of Tx used for testing.
 type testTx struct {
@@ -70,13 +54,9 @@ type testTx struct {
 	address  sdk.AccAddress
 }
 
-func (tx testTx) GetSigners() []sdk.AccAddress {
-	panic("implement me")
-}
+func (tx testTx) GetSigners() []sdk.AccAddress { panic("implement me") }
 
-func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) {
-	panic("GetPubkeys not implemented")
-}
+func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }
 
 func (tx testTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
 	res = append(res, txsigning.SignatureV2{
@@ -94,21 +74,13 @@ var (
 	_ cryptotypes.PubKey      = (*testPubKey)(nil)
 )
 
-func (tx testTx) GetHash() [32]byte {
-	return tx.hash
-}
+func (tx testTx) GetHash() [32]byte { return tx.hash }
 
-func (tx testTx) Size() int64 {
-	return 1
-}
+func (tx testTx) Size() int64 { return 1 }
 
-func (tx testTx) GetMsgs() []sdk.Msg {
-	return nil
-}
+func (tx testTx) GetMsgs() []sdk.Msg { return nil }
 
-func (tx testTx) ValidateBasic() error {
-	return nil
-}
+func (tx testTx) ValidateBasic() error { return nil }
 
 func (tx testTx) String() string {
 	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
@@ -233,7 +205,8 @@ func TestOutOfOrder(t *testing.T) {
 		for _, mtx := range outOfOrder {
 			mtxs = append(mtxs, mtx)
 		}
-		require.Error(t, validateOrder(mtxs))
+		err := validateOrder(mtxs)
+		require.Error(t, err)
 	}
 
 	seed := time.Now().UnixNano()
@@ -402,8 +375,10 @@ func (s *MempoolTestSuite) TestRandomTxOrderManyTimes() {
 // validateOrder checks that the txs are ordered by priority and nonce
 // in O(n^2) time by checking each tx against all the other txs
 func validateOrder(mtxs []mempool.Tx) error {
+	iterations := 0
 	var itxs []txSpec
 	for i, mtx := range mtxs {
+		iterations++
 		tx := mtx.(testTx)
 		itxs = append(itxs, txSpec{p: int(tx.priority), n: int(tx.nonce), a: tx.address, i: i})
 	}
@@ -416,6 +391,7 @@ func validateOrder(mtxs []mempool.Tx) error {
 
 	for _, a := range itxs {
 		for _, b := range itxs {
+			iterations++
 			// when b is before a
 
 			// when a is before b
@@ -435,6 +411,7 @@ func validateOrder(mtxs []mempool.Tx) error {
 						// find a tx with same sender as b and lower nonce
 						found := false
 						for _, c := range itxs {
+							iterations++
 							if c.a.Equals(b.a) && c.n < b.n && c.p <= a.p {
 								found = true
 								break
@@ -448,6 +425,7 @@ func validateOrder(mtxs []mempool.Tx) error {
 			}
 		}
 	}
+	// fmt.Printf("validation in iterations: %d\n", iterations)
 	return nil
 }
 

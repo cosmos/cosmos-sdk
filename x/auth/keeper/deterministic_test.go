@@ -101,7 +101,7 @@ func (suite *DeterministicTestSuite) runAccountIterations(addr sdk.AccAddress, p
 func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int) []types.AccountI {
 	accs := make([]types.AccountI, 0, count)
 
-	// we need all generated account-numbers unique
+	// We need all generated account-numbers unique
 	accNums := rapid.SliceOfNDistinct(rapid.Uint64(), count, count, func(i uint64) uint64 { return i % 2 }).Draw(t, "acc-numss")
 
 	for i := 0; i < count; i++ {
@@ -244,7 +244,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	suite.runAccountsIterations(accs)
 }
 
-func (suite *DeterministicTestSuite) runAccountAddressByIDIterations(id uint64, prevRes string) {
+func (suite *DeterministicTestSuite) runAccountAddressByIDIterations(id int64, prevRes string) {
 	for i := 0; i < iterCount; i++ {
 		res, err := suite.queryClient.AccountAddressByID(suite.ctx, &types.QueryAccountAddressByIDRequest{Id: id})
 		suite.Require().NoError(err)
@@ -258,14 +258,14 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 		pub := pubkeyGenerator(t).Draw(t, "pubkey")
 		addr := sdk.AccAddress(pub.Address())
 
-		// TODO change this to draw uint64 (https://github.com/cosmos/cosmos-sdk/issues/13410)
+		// TODO change this to draw uint64 https://github.com/cosmos/cosmos-sdk/issues/13410
 		accNum := rapid.Uint32().Draw(t, "account-number")
 		seq := rapid.Uint64().Draw(t, "sequence")
 
 		acc1 := types.NewBaseAccount(addr, &pub, uint64(accNum), seq)
 		suite.accountKeeper.SetAccount(suite.ctx, acc1)
 
-		suite.runAccountAddressByIDIterations(uint64(accNum), addr.String())
+		suite.runAccountAddressByIDIterations(int64(accNum), addr.String())
 	})
 
 	// Regression test
@@ -280,7 +280,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
-	suite.runAccountAddressByIDIterations(uint64(accNum), addr1.String())
+	suite.runAccountAddressByIDIterations(int64(accNum), addr1.String())
 }
 
 func (suite *DeterministicTestSuite) runParamsIterations(prevRes types.Params) {

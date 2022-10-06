@@ -4,8 +4,10 @@ import (
 	"errors"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -18,23 +20,28 @@ import (
 
 type ProposalIntegrationTestSuite struct {
 	suite.Suite
+
 	app *simapp.SimApp
-
 	ctx sdk.Context
-	k   bankkeeper.Keeper
-
 	accountAddr sdk.AccAddress
 }
 
-func (s *ProposalIntegrationTestSuite) SetupSuite() {
-	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+func (suite *ProposalIntegrationTestSuite) SetupSuite() {
+	app := simapp.Setup(suite.T(), false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+
+	suite.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	app.BankKeeper.SetParams(ctx, types.DefaultParams())
+
+	suite.app = app
+	suite.ctx = ctx
 }
 
-func (s *ProposalIntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (suite *ProposalIntegrationTestSuite) TearDownSuite() {
+	suite.T().Log("tearing down integration test suite")
 }
 
-func (s *ProposalIntegrationTestSuite) TestMsgFeeProposals() {
+func (suite *ProposalIntegrationTestSuite) TestMsgFeeProposals() {
 	testCases := []struct {
 		name string
 		prop govtypesv1beta1.Content
@@ -42,14 +49,14 @@ func (s *ProposalIntegrationTestSuite) TestMsgFeeProposals() {
 	}{
 		{
 			"set denom metadata - bad denom",
-			banktypes.NewUpdateDenomMetadataProposal("title", "description",
-				banktypes.Metadata{
+			types.NewUpdateDenomMetadataProposal("title", "description",
+					types.Metadata{
 					Description: "some denom description",
 					Base:        "bad$char",
 					Display:     "badchar",
 					Name:        "Bad Char",
 					Symbol:      "BC",
-					DenomUnits: []*banktypes.DenomUnit{
+					DenomUnits: []*types.DenomUnit{
 						{
 							Denom:    "bad$char",
 							Exponent: 0,
@@ -62,14 +69,14 @@ func (s *ProposalIntegrationTestSuite) TestMsgFeeProposals() {
 		},
 		{
 			"set denom metadata - valid",
-			banktypes.NewUpdateDenomMetadataProposal("title", "description",
-				banktypes.Metadata{
+			types.NewUpdateDenomMetadataProposal("title", "description",
+					types.Metadata{
 					Description: "the best denom description",
 					Base:        "test1",
 					Display:     "test1",
 					Name:        "Test One",
 					Symbol:      "TONE",
-					DenomUnits: []*banktypes.DenomUnit{
+					DenomUnits: []*types.DenomUnit{
 						{
 							Denom:    "test1",
 							Exponent: 0,
@@ -85,11 +92,11 @@ func (s *ProposalIntegrationTestSuite) TestMsgFeeProposals() {
 	for _, tc := range testCases {
 		tc := tc
 
-		s.T().Run(tc.name, func(t *testing.T) {
+		suite.T().Run(tc.name, func(t *testing.T) {
 			var err error
 			switch c := tc.prop.(type) {
-			case *banktypes.UpdateDenomMetadataProposal:
-				err = bankkeeper.HandleUpdateDenomMetadataProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
+			case *types.UpdateDenomMetadataProposal:
+				err = bankkeeper.HandleUpdateDenomMetadataProposal(suite.ctx, suite.app.BankKeeper, c, suite.app.InterfaceRegistry())
 			default:
 				panic("invalid proposal type")
 			}

@@ -23,11 +23,14 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSend{},
 		&MsgMultiSend{},
-		&UpdateDenomMetadataProposal{},
 	)
 	registry.RegisterImplementations(
 		(*authz.Authorization)(nil),
 		&SendAuthorization{},
+	)
+
+	registry.RegisterImplementations(
+		&UpdateDenomMetadataProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

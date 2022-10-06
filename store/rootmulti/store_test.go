@@ -913,11 +913,11 @@ func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 	return sdkmaps.HashFromMap(m)
 }
 
-type TestListener struct {
+type MockListener struct {
 	stateCache []types.StoreKVPair
 }
 
-func (tl *TestListener) OnWrite(storeKey types.StoreKey, key []byte, value []byte, delete bool) error {
+func (tl *MockListener) OnWrite(storeKey types.StoreKey, key []byte, value []byte, delete bool) error {
 	tl.stateCache = append(tl.stateCache, types.StoreKVPair{
 		StoreKey: storeKey.Name(),
 		Key:      key,
@@ -931,7 +931,7 @@ func TestStateListeners(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
-	listener := &TestListener{}
+	listener := &MockListener{}
 	ms.AddListeners(testStoreKey1, []types.WriteListener{listener})
 
 	require.NoError(t, ms.LoadLatestVersion())

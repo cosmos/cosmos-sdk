@@ -3,6 +3,9 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,9 +14,6 @@ import (
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	"github.com/stretchr/testify/suite"
 )
 
 type KeeperTestSuite struct {

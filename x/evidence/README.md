@@ -39,8 +39,6 @@ Each corresponding handler must also fulfill the `Handler` interface contract. T
 `Handler` for a given `Evidence` type can perform any arbitrary state transitions
 such as slashing, jailing, and tombstoning.
 
-<!-- order: 1 -->
-
 # Concepts
 
 ## Evidence
@@ -116,7 +114,6 @@ by the `Handler` should be persisted.
 type Handler func(sdk.Context, Evidence) error
 ```
 
-<!-- order: 2 -->
 
 # State
 
@@ -134,7 +131,6 @@ message GenesisState {
 
 All `Evidence` is retrieved and stored via a prefix `KVStore` using prefix `0x00` (`KeyPrefixEvidence`).
 
-<!-- order: 3 -->
 
 # Messages
 
@@ -188,7 +184,6 @@ First, there must not already exist valid submitted `Evidence` of the exact same
 type. Secondly, the `Evidence` is routed to the `Handler` and executed. Finally,
 if there is no error in handling the `Evidence`, an event is emitted and it is persisted to state.
 
-<!-- order: 4 -->
 
 # Events
 
@@ -205,13 +200,11 @@ The `x/evidence` module emits the following events:
 | message         | sender        | {senderAddress} |
 | message         | action        | submit_evidence |
 
-<!-- order: 5 -->
 
 # Parameters
 
 The evidence module does not contain any parameters.
 
-<!-- order: 6 -->
 
 # BeginBlock
 

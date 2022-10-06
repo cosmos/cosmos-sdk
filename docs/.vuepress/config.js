@@ -3,19 +3,48 @@ module.exports = {
   title: "Cosmos SDK",
   locales: {
     "/": {
-      lang: "en-US"
+      lang: "en-US",
     },
   },
   base: process.env.VUEPRESS_BASE || "/",
   head: [
-    ['link', { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" }],
-    ['link', { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png" }],
-    ['link', { rel: "icon", type: "image/png", sizes: "16x16", href: "/favicon-16x16.png" }],
-    ['link', { rel: "manifest", href: "/site.webmanifest" }],
-    ['meta', { name: "msapplication-TileColor", content: "#2e3148" }],
-    ['meta', { name: "theme-color", content: "#ffffff" }],
-    ['link', { rel: "icon", type: "image/svg+xml", href: "/favicon-svg.svg" }],
-    ['link', { rel: "apple-touch-icon-precomposed", href: "/apple-touch-icon-precomposed.png" }],
+    [
+      "link",
+      {
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+        href: "/apple-touch-icon.png",
+      },
+    ],
+    [
+      "link",
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+        href: "/favicon-32x32.png",
+      },
+    ],
+    [
+      "link",
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+        href: "/favicon-16x16.png",
+      },
+    ],
+    ["link", { rel: "manifest", href: "/site.webmanifest" }],
+    ["meta", { name: "msapplication-TileColor", content: "#2e3148" }],
+    ["meta", { name: "theme-color", content: "#ffffff" }],
+    ["link", { rel: "icon", type: "image/svg+xml", href: "/favicon-svg.svg" }],
+    [
+      "link",
+      {
+        rel: "apple-touch-icon-precomposed",
+        href: "/apple-touch-icon-precomposed.png",
+      },
+    ],
   ],
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
@@ -27,28 +56,28 @@ module.exports = {
     algolia: {
       id: "BH4D9OD16A",
       key: "ac317234e6a42074175369b2f42e9754",
-      index: "cosmos-sdk"
+      index: "cosmos-sdk",
     },
     versions: [
       {
-        "label": "v0.44",
-        "key": "v0.44"
+        label: "v0.45",
+        key: "v0.45",
       },
       {
-        "label": "v0.45",
-        "key": "v0.45"
+        label: "v0.46",
+        key: "v0.46",
       },
       {
-        "label": "v0.46",
-        "key": "v0.46"
+        label: "v0.47 - Twilight",
+        key: "v0.47",
       },
       {
-        "label": "main",
-        "key": "main"
-      }
+        label: "main",
+        key: "main",
+      },
     ],
     topbar: {
-      banner: false
+      banner: false,
     },
     sidebar: {
       auto: true,
@@ -59,28 +88,28 @@ module.exports = {
             {
               title: "Modules",
               directory: true,
-              path: "/modules"
-            }
-          ]
+              path: "/modules",
+            },
+          ],
         },
         {
           title: "Resources",
           children: [
             {
               title: "Tutorials",
-              path: "https://tutorials.cosmos.network"
+              path: "https://tutorials.cosmos.network",
             },
             {
               title: "SDK API Reference",
-              path: "https://pkg.go.dev/github.com/cosmos/cosmos-sdk"
+              path: "https://pkg.go.dev/github.com/cosmos/cosmos-sdk",
             },
             {
               title: "REST API Spec",
-              path: "https://cosmos.network/rpc/"
-            }
-          ]
-        }
-      ]
+              path: "https://cosmos.network/rpc/",
+            },
+          ],
+        },
+      ],
     },
     gutter: {
       title: "Help & Support",
@@ -89,90 +118,92 @@ module.exports = {
         title: "Discord",
         text: "Chat with Cosmos developers on Discord.",
         url: "https://discordapp.com/channels/669268347736686612",
-        bg: "linear-gradient(225.11deg, #2E3148 0%, #161931 95.68%)"
+        bg: "linear-gradient(225.11deg, #2E3148 0%, #161931 95.68%)",
       },
       forum: {
         title: "Cosmos SDK Forum",
         text: "Join the SDK Developer Forum to learn more.",
         url: "https://forum.cosmos.network/",
         bg: "linear-gradient(225deg, #46509F -1.08%, #2F3564 95.88%)",
-        logo: "cosmos"
+        logo: "cosmos",
       },
       github: {
         title: "Found an Issue?",
-        text: "Help us improve this page by suggesting edits on GitHub."
-      }
+        text: "Help us improve this page by suggesting edits on GitHub.",
+      },
     },
     footer: {
       question: {
-        text: "Chat with Cosmos developers in <a href='https://discord.gg/cosmosnetwork' target='_blank'>Discord</a> or reach out on the <a href='https://forum.cosmos.network/c/tendermint' target='_blank'>SDK Developer Forum</a> to learn more."
+        text:
+          "Chat with Cosmos developers in <a href='https://discord.gg/cosmosnetwork' target='_blank'>Discord</a> or reach out on the <a href='https://forum.cosmos.network/c/tendermint' target='_blank'>SDK Developer Forum</a> to learn more.",
       },
       logo: "/logo-bw.svg",
       textLink: {
         text: "cosmos.network",
-        url: "https://cosmos.network"
+        url: "https://cosmos.network",
       },
       services: [
         {
           service: "medium",
-          url: "https://blog.cosmos.network/"
+          url: "https://blog.cosmos.network/",
         },
         {
           service: "twitter",
-          url: "https://twitter.com/cosmos"
+          url: "https://twitter.com/cosmos",
         },
         {
           service: "linkedin",
-          url: "https://www.linkedin.com/company/tendermint/"
+          url: "https://www.linkedin.com/company/interchain-gmbh/",
         },
         {
           service: "reddit",
-          url: "https://reddit.com/r/cosmosnetwork"
+          url: "https://reddit.com/r/cosmosnetwork",
         },
         {
           service: "telegram",
-          url: "https://t.me/cosmosproject"
+          url: "https://t.me/cosmosproject",
         },
         {
           service: "youtube",
-          url: "https://www.youtube.com/c/CosmosProject"
-        }
+          url: "https://www.youtube.com/c/CosmosProject",
+        },
       ],
-      smallprint: "The development of the Cosmos SDK is led primarily by [Interchain Core Teams](https://interchain.io/ecosystem). Funding for this development comes primarily from the Interchain Foundation, a Swiss non-profit.",
+      smallprint:
+        "The development of the Cosmos SDK is led primarily by [Interchain Core Teams](https://interchain.io/ecosystem). Funding for this development comes primarily from the Interchain Foundation, a Swiss non-profit.",
       links: [
         {
           title: "Documentation",
           children: [
             {
               title: "Cosmos Hub",
-              url: "https://hub.cosmos.network"
+              url: "https://hub.cosmos.network",
             },
             {
               title: "Tendermint Core",
-              url: "https://docs.tendermint.com"
+              url: "https://docs.tendermint.com",
             },
             {
-              title: "IBC-Go",
-              url: "https://ibc.cosmos.network"
+              title: "IBC Go",
+              url: "https://ibc.cosmos.network",
             },
-          ]
+          ],
         },
         {
           title: "Community",
           children: [
             {
               title: "Cosmos blog",
-              url: "https://blog.cosmos.network"
+              url: "https://blog.cosmos.network",
             },
             {
               title: "Forum",
-              url: "https://forum.cosmos.network"
+              url: "https://forum.cosmos.network",
             },
             {
               title: "Chat",
-              url: "https://discord.gg/cosmosnetwork"
-            }
-          ]
+              url: "https://discord.gg/cosmosnetwork",
+            },
+          ],
         },
         {
           title: "Contributing",
@@ -180,29 +211,35 @@ module.exports = {
             {
               title: "Contributing to the docs",
               url:
-                "https://github.com/cosmos/cosmos-sdk/blob/main/docs/DOCS_README.md"
+                "https://github.com/cosmos/cosmos-sdk/blob/main/docs/DOCS_README.md",
             },
             {
               title: "Source code on GitHub",
-              url: "https://github.com/cosmos/cosmos-sdk/"
-            }
-          ]
-        }
-      ]
-    }
+              url: "https://github.com/cosmos/cosmos-sdk/",
+            },
+          ],
+        },
+      ],
+    },
   },
   plugins: [
     [
       "@vuepress/google-analytics",
       {
-        ga: "UA-51029217-2"
-      }
+        ga: "UA-51029217-2",
+      },
+    ],
+    [
+      "@vuepress/html-redirect",
+      {
+        countdown: 0,
+      },
     ],
     [
       "sitemap",
       {
-        hostname: "https://docs.cosmos.network"
-      }
-    ]
-  ]
+        hostname: "https://docs.cosmos.network",
+      },
+    ],
+  ],
 };

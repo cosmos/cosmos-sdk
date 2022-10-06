@@ -27,7 +27,7 @@ Migration registration takes place in the `Configurator` using the `RegisterMigr
 
 You can register one or more migrations. If you register more than one migration script, list the migrations in increasing order and ensure there are enough migrations that lead to the desired consensus version. For example, to migrate to version 3 of a module, register separate migrations for version 1 and version 2 as shown in the following example:
 
-```golang
+```go
 func (am AppModule) RegisterServices(cfg module.Configurator) {
     // --snip--
     cfg.RegisterMigration(types.ModuleName, 1, func(ctx sdk.Context) error {
@@ -47,7 +47,7 @@ Since these migrations are functions that need access to a Keeper's store, use a
 
 To define the functionality that takes place during an upgrade, write a migration script and place the functions in a `migrations/` directory. For example, to write migration scripts for the bank module, place the functions in `x/bank/migrations/`. Use the recommended naming convention for these functions. For example, `v2bank` is the script that migrates the package `x/bank/migrations/v2`:
 
-```golang
+```go
 // Migrating bank module from version 1 to 2
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	return v2bank.MigrateStore(ctx, m.keeper.storeKey) // v2bank is package `x/bank/migrations/v2`.

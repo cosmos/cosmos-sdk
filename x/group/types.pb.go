@@ -715,7 +715,7 @@ type Proposal struct {
 	// whichever happens first.
 	FinalTallyResult TallyResult `protobuf:"bytes,9,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result"`
 	// voting_period_end is the timestamp before which voting must be done.
-	// Unless a successfull MsgExec is called before (to execute a proposal whose
+	// Unless a successful MsgExec is called before (to execute a proposal whose
 	// tally is successful before the voting period ends), tallying will be done
 	// at this point, and the `final_tally_result`and `status` fields will be
 	// accordingly updated.

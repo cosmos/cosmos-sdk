@@ -103,7 +103,10 @@ func (k Keeper) decodeMsg(bz []byte) (sdk.Msg, error) {
 		return nil, nil
 	}
 	var action sdk.Msg
-	k.cdc.UnmarshalInterface(bz, &action)
+	err := k.cdc.UnmarshalInterface(bz, &action)
+	if err != nil {
+		panic(err)
+	}
 	return action, nil
 }
 
@@ -113,7 +116,7 @@ func (k Keeper) GetEpochMsg(ctx sdk.Context, epochNumber int64, actionID uint64)
 
 	action, err := store2.GetAndDecode(store, k.decodeMsg, ActionStoreKey(epochNumber, actionID))
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	return action

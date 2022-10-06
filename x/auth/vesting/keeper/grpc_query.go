@@ -16,7 +16,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
-func (vk VestingKeeper) VestingAccounts(c context.Context, req *types.QueryVestingAccountsRequest) (*types.QueryVestingAccountsResponse, error) {
+// Querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over keeper
+type Querier struct {
+	*VestingKeeper
+}
+
+var _ types.QueryServer = Querier{}
+
+// VestingAccounts returns all the vesting accounts according to the request pagination.
+func (vk Querier) VestingAccounts(c context.Context, req *types.QueryVestingAccountsRequest) (*types.QueryVestingAccountsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -27,7 +35,7 @@ func (vk VestingKeeper) VestingAccounts(c context.Context, req *types.QueryVesti
 
 	var accounts []*codectypes.Any
 	pageRes, err := query.Paginate(accountsStore, req.Pagination, func(key, value []byte) error {
-		addr := types.AddressFromVestingAccountKey(key)
+		addr := sdk.AccAddress(key)
 		acct := vk.accountKeeper.GetAccount(ctx, addr)
 		vestingAcct, ok := acct.(exported.VestingAccount)
 		if !ok {
@@ -41,11 +49,9 @@ func (vk VestingKeeper) VestingAccounts(c context.Context, req *types.QueryVesti
 		accounts = append(accounts, any)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
 	}
 
 	return &types.QueryVestingAccountsResponse{Accounts: accounts, Pagination: pageRes}, err
-
 }

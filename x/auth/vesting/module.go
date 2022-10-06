@@ -17,11 +17,15 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appmodule"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
+
+// ConsensusVersion defines the current vesting module consensus version.
+const ConsensusVersion = 2
 
 var (
 	_ module.AppModule      = AppModule{}
@@ -79,16 +83,14 @@ type AppModule struct {
 	AppModuleBasic
 
 	accountKeeper authkeeper.AccountKeeper
-	bankKeeper    types.BankKeeper
-	vestingKeeper keeper.VestingKeeper
+	keeper        keeper.VestingKeeper
 }
 
-func NewAppModule(ak authkeeper.AccountKeeper, bk types.BankKeeper, vk keeper.VestingKeeper) AppModule {
+func NewAppModule(ak authkeeper.AccountKeeper, vk keeper.VestingKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  ak,
-		bankKeeper:     bk,
-		vestingKeeper:  vk,
+		keeper:         vk,
 	}
 }
 
@@ -103,24 +105,21 @@ func (am AppModule) IsAppModule() {}
 // RegisterInvariants performs a no-op; there are no invariants to enforce.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the module's message router and handler.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the staking module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(am.accountKeeper, am.bankKeeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.vestingKeeper)
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(&am.keeper))
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.Querier{VestingKeeper: &am.keeper})
+
+	m := keeper.NewMigrator(am.keeper, am.accountKeeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(err)
+	}
 }
 
-// InitGenesis performs a no-op.
-func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+// InitGenesis inits by iterating accountKeeper accounts to find the vesting
+// accounts and add them to the store.
+func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+	am.keeper.InitGenesis(ctx)
 	return []abci.ValidatorUpdate{}
 }
 
@@ -130,7 +129,7 @@ func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMe
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 //
 // App Wiring Setup
@@ -138,7 +137,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(provideModule),
+		appmodule.Provide(ProvideModule),
 	)
 }
 
@@ -147,17 +146,22 @@ type VestingInputs struct {
 
 	AccountKeeper authkeeper.AccountKeeper
 	BankKeeper    types.BankKeeper
-	VestingKeeper keeper.VestingKeeper
+	Key           *store.KVStoreKey
 }
 
 type VestingOutputs struct {
 	depinject.Out
 
-	Module appmodule.AppModule
+	VestingKeeper keeper.VestingKeeper
+	Module        appmodule.AppModule
 }
 
-func provideModule(in VestingInputs) VestingOutputs {
-	m := NewAppModule(in.AccountKeeper, in.BankKeeper, in.VestingKeeper)
+func ProvideModule(in VestingInputs) VestingOutputs {
+	k := keeper.NewVestingKeeper(in.AccountKeeper, in.BankKeeper, in.Key)
+	m := NewAppModule(in.AccountKeeper, k)
 
-	return VestingOutputs{Module: m}
+	return VestingOutputs{
+		VestingKeeper: k,
+		Module:        m,
+	}
 }

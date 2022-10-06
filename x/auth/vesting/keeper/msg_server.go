@@ -1,4 +1,4 @@
-package vesting
+package keeper
 
 import (
 	"context"
@@ -9,30 +9,26 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 type msgServer struct {
-	authkeeper.AccountKeeper
-	types.BankKeeper
-	keeper.VestingKeeper
+	*VestingKeeper
 }
 
 // NewMsgServerImpl returns an implementation of the vesting MsgServer interface,
 // wrapping the corresponding AccountKeeper and BankKeeper.
-func NewMsgServerImpl(k authkeeper.AccountKeeper, bk types.BankKeeper) types.MsgServer {
-	return &msgServer{AccountKeeper: k, BankKeeper: bk}
+func NewMsgServerImpl(vk *VestingKeeper) types.MsgServer {
+	return &msgServer{VestingKeeper: vk}
 }
 
 var _ types.MsgServer = msgServer{}
 
 func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCreateVestingAccount) (*types.MsgCreateVestingAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	ak := s.AccountKeeper
-	bk := s.BankKeeper
+	ak := s.accountKeeper
+	bk := s.bankKeeper
 	vk := s.VestingKeeper
 
 	if err := bk.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
@@ -94,8 +90,8 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 
 func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *types.MsgCreatePermanentLockedAccount) (*types.MsgCreatePermanentLockedAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	ak := s.AccountKeeper
-	bk := s.BankKeeper
+	ak := s.accountKeeper
+	bk := s.bankKeeper
 	vk := s.VestingKeeper
 
 	if err := bk.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
@@ -151,8 +147,8 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *types.MsgCreatePeriodicVestingAccount) (*types.MsgCreatePeriodicVestingAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	ak := s.AccountKeeper
-	bk := s.BankKeeper
+	ak := s.accountKeeper
+	bk := s.bankKeeper
 	vk := s.VestingKeeper
 
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)

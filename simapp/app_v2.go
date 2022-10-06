@@ -35,6 +35,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingkeeper "github.com/cosmos/cosmos-sdk/x/auth/vesting/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -144,6 +145,7 @@ type SimApp struct {
 	GroupKeeper           groupkeeper.Keeper
 	NFTKeeper             nftkeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
+	VestingKeeper         vestingkeeper.VestingKeeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -242,6 +244,7 @@ func NewSimApp(
 		&app.GroupKeeper,
 		&app.NFTKeeper,
 		&app.ConsensusParamsKeeper,
+		&app.VestingKeeper,
 	); err != nil {
 		panic(err)
 	}

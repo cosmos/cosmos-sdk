@@ -276,6 +276,16 @@ More information can be found in the gov module [client documentation](https://d
 
 The `staking module` added a new message type to cancel unbonding delegations. Users that have unbonded by accident or wish to cancel a undelegation can now specify the amount and valdiator they would like to cancel the unbond from
 
+#### `x/auth/vesting`
+
+The `vesting` module now has its standalone state store. The vesting accounts addresses are stored in the vesting module store in the form 
+of kv pairs `(StoreKeyPrefix + AccAddress(vestingAccount)) -> []byte{}`.
+
+Grpc clients could fetch all of the `vesting accounts` by calling `Querier.VestingAccounts()` of the vesting module.
+
+The `VestingKeeper` has methods `SetVestingAccount()` and `IterateVestingAccounts()` that could be used to add vesting account and iterate
+over the vesting accouns.
+
 ### Protobuf
 
 The `third_party/proto` folder that existed in [previous version](https://github.com/cosmos/cosmos-sdk/tree/v0.45.3/third_party/proto) now does not contains directly the [proto files](https://github.com/cosmos/cosmos-sdk/tree/release/v0.46.x/third_party/proto).

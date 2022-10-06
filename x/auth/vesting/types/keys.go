@@ -10,9 +10,7 @@ const (
 	StoreKey = ModuleName
 )
 
-var (
-	VestingAccountStoreKeyPrefix = []byte{0x01}
-)
+var VestingAccountStoreKeyPrefix = []byte{0x01}
 
 // VestingAccountStoreKey turn an address to key used to record it in the vesting store
 func VestingAccountStoreKey(addr sdk.AccAddress) []byte {
@@ -21,6 +19,6 @@ func VestingAccountStoreKey(addr sdk.AccAddress) []byte {
 
 // AddressFromVestingAccountKey creates the address from VestingAccountKey
 func AddressFromVestingAccountKey(key []byte) sdk.AccAddress {
-	kv.AssertKeyAtLeastLength(key, 2)
+	kv.AssertKeyAtLeastLength(key, 1)
 	return key[1:] // remove prefix byte
 }

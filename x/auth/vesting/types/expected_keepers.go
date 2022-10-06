@@ -14,5 +14,8 @@ type BankKeeper interface {
 }
 
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
+	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
+	SetAccount(sdk.Context, authtypes.AccountI)
+	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
+	IterateAccounts(ctx sdk.Context, cb func(account authtypes.AccountI) bool)
 }

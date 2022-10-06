@@ -33,6 +33,7 @@ import (
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
+	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
@@ -118,6 +119,10 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 				MaxExecutionPeriod: durationpb.New(time.Second * 1209600),
 				MaxMetadataLen:     255,
 			}),
+		},
+		{
+			Name:   minttypes.ModuleName,
+			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
 		},
 	},
 })

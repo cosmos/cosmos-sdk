@@ -230,7 +230,7 @@ module.exports = {
       },
     ],
     [
-      "@vuepress/plugin-html-redirect",
+      "@vuepress/html-redirect",
       {
         countdown: 0,
       },

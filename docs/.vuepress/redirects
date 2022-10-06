@@ -1,7 +1,7 @@
-/redirects/master/ /main/
+/redirects/master/ https://docs.cosmos.network/main/
 /redirects/main/spec/governance/ https://docs.cosmos.network/main/modules/gov/
-/redirects/v0.43 /main/
-/redirects/v0.44 /main/
+/redirects/v0.43 https://docs.cosmos.network/main/
+/redirects/v0.44 https://docs.cosmos.network/main/
 /redirects/main/modules/auth/01_concepts.html https://docs.cosmos.network/main/modules/auth/
 /redirects/main/modules/auth/02_state.html https://docs.cosmos.network/main/modules/auth/
 /redirects/main/modules/auth/03_antehandlers.html https://docs.cosmos.network/main/modules/auth/

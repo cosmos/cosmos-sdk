@@ -148,6 +148,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### CLI Breaking Changes
 
 * (tx) [#12659](https://github.com/cosmos/cosmos-sdk/pull/12659) Remove broadcast mode `block`.
+* (auth) [#TODO](https://github.com/cosmos/cosmos-sdk/pull/TODO) The `q auth address-by-id` CLI command has been renamed to `q auth address-by-acc-num` to be more explicit.
 
 ### Bug Fixes
 

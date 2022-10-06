@@ -185,6 +185,9 @@ message AddressStringToBytesResponse {
 //
 // Since: cosmos-sdk 0.46.2
 message QueryAccountAddressByIDRequest {
+  // id is the account number of the address to be queried. This field
+  // should have been an uint64 (like all account numbers), and will be
+  // updated to uint64 in a future version of the auth query.
   int64 id = 1;
 }
 

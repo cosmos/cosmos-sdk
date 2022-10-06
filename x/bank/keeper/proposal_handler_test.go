@@ -11,13 +11,12 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-type IntegrationTestSuite1 struct {
+type ProposalIntegrationTestSuite struct {
 	suite.Suite
 	app *simapp.SimApp
 
@@ -27,16 +26,15 @@ type IntegrationTestSuite1 struct {
 	accountAddr sdk.AccAddress
 }
 
-func (s *IntegrationTestSuite1) SetupSuite() {
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+func (s *ProposalIntegrationTestSuite) SetupSuite() {
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 }
 
-func (s *IntegrationTestSuite1) TearDownSuite() {
+func (s *ProposalIntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 }
 
-func (s *IntegrationTestSuite1) TestMsgFeeProposals() {
+func (s *ProposalIntegrationTestSuite) TestMsgFeeProposals() {
 	testCases := []struct {
 		name string
 		prop govtypesv1beta1.Content
@@ -108,5 +106,5 @@ func (s *IntegrationTestSuite1) TestMsgFeeProposals() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite1))
+	suite.Run(t, new(ProposalIntegrationTestSuite))
 }

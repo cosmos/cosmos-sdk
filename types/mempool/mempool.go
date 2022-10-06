@@ -48,7 +48,7 @@ type Factory func() Mempool
 
 var _ Mempool = (*defaultMempool)(nil)
 
-// defaultMempool is the SDK's default mempool implementation which stores txs in a partial ordered set
+// defaultMempool is the SDK's default mempool implementation which stores txs in a partially ordered set
 // by 2 dimensions; priority, and sender-nonce.  Internally it uses one priority ordered skip list and one skip list
 // per sender ordered by nonce (sender-nonce).  When there are multiple txs from the same sender, they are not
 // always comparable by priority to other sender txs and must be partially ordered by both sender-nonce and priority.
@@ -65,7 +65,7 @@ type txKey struct {
 	sender   string
 }
 
-// txKeyLess is a comparator for txKeys that first compares priority, then nonce, then sender, uniquely identifying
+// txKeyLess is a comparator for txKeys that first compares priority, then sender, then nonce, uniquely identifying
 // a transaction.
 func txKeyLess(a, b interface{}) int {
 	keyA := a.(txKey)

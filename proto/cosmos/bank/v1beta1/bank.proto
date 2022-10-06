@@ -111,3 +111,13 @@ message Metadata {
   // Since: cosmos-sdk 0.46
   string uri_hash = 8 [(gogoproto.customname) = "URIHash"];
 }
+
+// UpdateDenomMetadataProposal defines a governance proposal to update the fee denom metadata
+message UpdateDenomMetadataProposal {
+  option (gogoproto.goproto_stringer) = true;
+
+  string                       title       = 1; // proposal title
+  string                       description = 2; // proposal description
+  Metadata                     metadata    = 3
+  [(gogoproto.nullable) = false];
+}

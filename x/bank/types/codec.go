@@ -23,6 +23,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSend{},
 		&MsgMultiSend{},
+		&UpdateDenomMetadataProposal{},
 	)
 	registry.RegisterImplementations(
 		(*authz.Authorization)(nil),

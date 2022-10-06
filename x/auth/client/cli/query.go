@@ -42,7 +42,7 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		GetAccountCmd(),
-		GetAddressByIdCmd(),
+		GetAccountAddressByIDCmd(),
 		GetAccountsCmd(),
 		QueryParamsCmd(),
 		QueryModuleAccountsCmd(),
@@ -126,8 +126,8 @@ func GetAccountCmd() *cobra.Command {
 	return cmd
 }
 
-// GetAddressByIdCmd returns a query account that will display the account address of a given account id.
-func GetAddressByIdCmd() *cobra.Command {
+// GetAccountAddressByIDCmd returns a query account that will display the account address of a given account id.
+func GetAccountAddressByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "address-by-acc-num [acc-num]",
 		Aliases: []string{"address-by-id"},

@@ -25,11 +25,7 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 	}
 
 	if req.Id < 0 {
-<<<<<<< HEAD
-		return nil, status.Error(codes.InvalidArgument, "Invalid account id")
-=======
 		return nil, status.Error(codes.InvalidArgument, "invalid account number")
->>>>>>> 90bd3161a (refactor: Improve and clarify API around `AccountAddressById`  (#13460))
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

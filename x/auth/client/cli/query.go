@@ -140,11 +140,7 @@ func GetAccountAddressByIDCmd() *cobra.Command {
 				return err
 			}
 
-<<<<<<< HEAD
-			id, err := strconv.ParseInt(args[0], 10, 64)
-=======
 			accNum, err := strconv.ParseInt(args[0], 10, 64)
->>>>>>> 90bd3161a (refactor: Improve and clarify API around `AccountAddressById`  (#13460))
 			if err != nil {
 				return err
 			}

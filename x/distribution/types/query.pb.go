@@ -116,121 +116,6 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-<<<<<<< HEAD
-=======
-// QueryValidatorDistributionInfoRequest is the request type for the Query/ValidatorDistributionInfo RPC method.
-type QueryValidatorDistributionInfoRequest struct {
-	// validator_address defines the validator address to query for.
-	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
-}
-
-func (m *QueryValidatorDistributionInfoRequest) Reset()         { *m = QueryValidatorDistributionInfoRequest{} }
-func (m *QueryValidatorDistributionInfoRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryValidatorDistributionInfoRequest) ProtoMessage()    {}
-func (*QueryValidatorDistributionInfoRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5efd02cbc06efdc9, []int{2}
-}
-func (m *QueryValidatorDistributionInfoRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryValidatorDistributionInfoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryValidatorDistributionInfoRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryValidatorDistributionInfoRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryValidatorDistributionInfoRequest.Merge(m, src)
-}
-func (m *QueryValidatorDistributionInfoRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryValidatorDistributionInfoRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryValidatorDistributionInfoRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryValidatorDistributionInfoRequest proto.InternalMessageInfo
-
-func (m *QueryValidatorDistributionInfoRequest) GetValidatorAddress() string {
-	if m != nil {
-		return m.ValidatorAddress
-	}
-	return ""
-}
-
-// QueryValidatorDistributionInfoResponse is the response type for the Query/ValidatorDistributionInfo RPC method.
-type QueryValidatorDistributionInfoResponse struct {
-	// operator_address defines the validator operator address.
-	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
-	// self_bond_rewards defines the self delegations rewards.
-	SelfBondRewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=self_bond_rewards,json=selfBondRewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"self_bond_rewards"`
-	// commission defines the commission the validator received.
-	Commission github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,3,rep,name=commission,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"commission"`
-}
-
-func (m *QueryValidatorDistributionInfoResponse) Reset() {
-	*m = QueryValidatorDistributionInfoResponse{}
-}
-func (m *QueryValidatorDistributionInfoResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryValidatorDistributionInfoResponse) ProtoMessage()    {}
-func (*QueryValidatorDistributionInfoResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5efd02cbc06efdc9, []int{3}
-}
-func (m *QueryValidatorDistributionInfoResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryValidatorDistributionInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryValidatorDistributionInfoResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryValidatorDistributionInfoResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryValidatorDistributionInfoResponse.Merge(m, src)
-}
-func (m *QueryValidatorDistributionInfoResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryValidatorDistributionInfoResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryValidatorDistributionInfoResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryValidatorDistributionInfoResponse proto.InternalMessageInfo
-
-func (m *QueryValidatorDistributionInfoResponse) GetOperatorAddress() string {
-	if m != nil {
-		return m.OperatorAddress
-	}
-	return ""
-}
-
-func (m *QueryValidatorDistributionInfoResponse) GetSelfBondRewards() github_com_cosmos_cosmos_sdk_types.DecCoins {
-	if m != nil {
-		return m.SelfBondRewards
-	}
-	return nil
-}
-
-func (m *QueryValidatorDistributionInfoResponse) GetCommission() github_com_cosmos_cosmos_sdk_types.DecCoins {
-	if m != nil {
-		return m.Commission
-	}
-	return nil
-}
-
->>>>>>> 90bd3161a (refactor: Improve and clarify API around `AccountAddressById`  (#13460))
 // QueryValidatorOutstandingRewardsRequest is the request type for the
 // Query/ValidatorOutstandingRewards RPC method.
 type QueryValidatorOutstandingRewardsRequest struct {
@@ -378,7 +263,7 @@ func (m *QueryValidatorCommissionRequest) GetValidatorAddress() string {
 // QueryValidatorCommissionResponse is the response type for the
 // Query/ValidatorCommission RPC method
 type QueryValidatorCommissionResponse struct {
-	// commission defines the commission the validator received.
+	// commission defines the commision the validator received.
 	Commission ValidatorAccumulatedCommission `protobuf:"bytes,1,opt,name=commission,proto3" json:"commission"`
 }
 
@@ -1068,11 +953,6 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params queries params of the distribution module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-<<<<<<< HEAD
-=======
-	// ValidatorDistributionInfo queries validator commission and self-delegation rewards for validator
-	ValidatorDistributionInfo(ctx context.Context, in *QueryValidatorDistributionInfoRequest, opts ...grpc.CallOption) (*QueryValidatorDistributionInfoResponse, error)
->>>>>>> 90bd3161a (refactor: Improve and clarify API around `AccountAddressById`  (#13460))
 	// ValidatorOutstandingRewards queries rewards of a validator address.
 	ValidatorOutstandingRewards(ctx context.Context, in *QueryValidatorOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorOutstandingRewardsResponse, error)
 	// ValidatorCommission queries accumulated commission for a validator.
@@ -1185,11 +1065,6 @@ func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolR
 type QueryServer interface {
 	// Params queries params of the distribution module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-<<<<<<< HEAD
-=======
-	// ValidatorDistributionInfo queries validator commission and self-delegation rewards for validator
-	ValidatorDistributionInfo(context.Context, *QueryValidatorDistributionInfoRequest) (*QueryValidatorDistributionInfoResponse, error)
->>>>>>> 90bd3161a (refactor: Improve and clarify API around `AccountAddressById`  (#13460))
 	// ValidatorOutstandingRewards queries rewards of a validator address.
 	ValidatorOutstandingRewards(context.Context, *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error)
 	// ValidatorCommission queries accumulated commission for a validator.

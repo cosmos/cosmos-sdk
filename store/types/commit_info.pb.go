@@ -131,7 +131,7 @@ func (m *StoreInfo) GetCommitId() CommitID {
 	return CommitID{}
 }
 
-// CommitID defines the commitment information when a specific store is
+// CommitID defines the committment information when a specific store is
 // committed.
 type CommitID struct {
 	Version int64  `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`

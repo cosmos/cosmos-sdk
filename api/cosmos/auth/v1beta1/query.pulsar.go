@@ -6058,8 +6058,8 @@ func (x *fastReflection_QueryAccountAddressByIDRequest) Interface() protoreflect
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryAccountAddressByIDRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Id != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.Id)
+	if x.Id != int64(0) {
+		value := protoreflect.ValueOfInt64(x.Id)
 		if !f(fd_QueryAccountAddressByIDRequest_id, value) {
 			return
 		}
@@ -6080,7 +6080,7 @@ func (x *fastReflection_QueryAccountAddressByIDRequest) Range(f func(protoreflec
 func (x *fastReflection_QueryAccountAddressByIDRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "cosmos.auth.v1beta1.QueryAccountAddressByIDRequest.id":
-		return x.Id != uint64(0)
+		return x.Id != int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDRequest"))
@@ -6098,7 +6098,7 @@ func (x *fastReflection_QueryAccountAddressByIDRequest) Has(fd protoreflect.Fiel
 func (x *fastReflection_QueryAccountAddressByIDRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "cosmos.auth.v1beta1.QueryAccountAddressByIDRequest.id":
-		x.Id = uint64(0)
+		x.Id = int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDRequest"))
@@ -6117,7 +6117,7 @@ func (x *fastReflection_QueryAccountAddressByIDRequest) Get(descriptor protorefl
 	switch descriptor.FullName() {
 	case "cosmos.auth.v1beta1.QueryAccountAddressByIDRequest.id":
 		value := x.Id
-		return protoreflect.ValueOfUint64(value)
+		return protoreflect.ValueOfInt64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDRequest"))
@@ -6139,7 +6139,7 @@ func (x *fastReflection_QueryAccountAddressByIDRequest) Get(descriptor protorefl
 func (x *fastReflection_QueryAccountAddressByIDRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.auth.v1beta1.QueryAccountAddressByIDRequest.id":
-		x.Id = value.Uint()
+		x.Id = value.Int()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDRequest"))
@@ -6176,7 +6176,7 @@ func (x *fastReflection_QueryAccountAddressByIDRequest) Mutable(fd protoreflect.
 func (x *fastReflection_QueryAccountAddressByIDRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.auth.v1beta1.QueryAccountAddressByIDRequest.id":
-		return protoreflect.ValueOfUint64(uint64(0))
+		return protoreflect.ValueOfInt64(int64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryAccountAddressByIDRequest"))
@@ -6346,7 +6346,7 @@ func (x *fastReflection_QueryAccountAddressByIDRequest) ProtoMethods() *protoifa
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Id |= uint64(b&0x7F) << shift
+					x.Id |= int64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8186,12 +8186,17 @@ func (x *AddressStringToBytesResponse) GetAddressBytes() []byte {
 }
 
 // QueryAccountAddressByIDRequest is the request type for AccountAddressByID rpc method
+//
+// Since: cosmos-sdk 0.46.2
 type QueryAccountAddressByIDRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// id is the account number of the address to be queried. This field
+	// should have been an uint64 (like all account numbers), and will be
+	// updated to uint64 in a future version of the auth query.
+	Id int64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *QueryAccountAddressByIDRequest) Reset() {
@@ -8214,7 +8219,7 @@ func (*QueryAccountAddressByIDRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_auth_v1beta1_query_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *QueryAccountAddressByIDRequest) GetId() uint64 {
+func (x *QueryAccountAddressByIDRequest) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
@@ -8222,6 +8227,8 @@ func (x *QueryAccountAddressByIDRequest) GetId() uint64 {
 }
 
 // QueryAccountAddressByIDResponse is the response type for AccountAddressByID rpc method
+//
+// Since: cosmos-sdk 0.46.2
 type QueryAccountAddressByIDResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -8258,6 +8265,8 @@ func (x *QueryAccountAddressByIDResponse) GetAccountAddress() string {
 }
 
 // QueryAccountInfoRequest is the Query/AccountInfo request type.
+//
+// Since: cosmos-sdk 0.47
 type QueryAccountInfoRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -8295,6 +8304,8 @@ func (x *QueryAccountInfoRequest) GetAddress() string {
 }
 
 // QueryAccountInfoResponse is the Query/AccountInfo response type.
+//
+// Since: cosmos-sdk 0.47
 type QueryAccountInfoResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -8417,7 +8428,7 @@ var file_cosmos_auth_v1beta1_query_proto_rawDesc = []byte{
 	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x74, 0x65, 0x73, 0x22, 0x30, 0x0a, 0x1e,
 	0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72,
 	0x65, 0x73, 0x73, 0x42, 0x79, 0x49, 0x44, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e,
-	0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x22, 0x64,
+	0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x02, 0x69, 0x64, 0x22, 0x64,
 	0x0a, 0x1f, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64,
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x49, 0x44, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
 	0x65, 0x12, 0x41, 0x0a, 0x0f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x61, 0x64, 0x64,

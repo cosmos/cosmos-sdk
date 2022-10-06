@@ -363,6 +363,8 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 				return nil, fmt.Errorf("ExportGenesis to file failed, module=%s err=%v", moduleName, err)
 			}
 		}
+
+		return genesisData, nil
 	}
 
 	// b.

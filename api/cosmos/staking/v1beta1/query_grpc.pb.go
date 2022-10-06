@@ -75,6 +75,18 @@ type QueryClient interface {
 	Pool(ctx context.Context, in *QueryPoolRequest, opts ...grpc.CallOption) (*QueryPoolResponse, error)
 	// Parameters queries the staking parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// Query for individual tokenize share record information by share by id
+	TokenizeShareRecordById(ctx context.Context, in *QueryTokenizeShareRecordByIdRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordByIdResponse, error)
+	// Query for individual tokenize share record information by share denom
+	TokenizeShareRecordByDenom(ctx context.Context, in *QueryTokenizeShareRecordByDenomRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordByDenomResponse, error)
+	// Query tokenize share records by address
+	TokenizeShareRecordsOwned(ctx context.Context, in *QueryTokenizeShareRecordsOwnedRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordsOwnedResponse, error)
+	// Query for all tokenize share records
+	AllTokenizeShareRecords(ctx context.Context, in *QueryAllTokenizeShareRecordsRequest, opts ...grpc.CallOption) (*QueryAllTokenizeShareRecordsResponse, error)
+	// Query for last tokenize share record id
+	LastTokenizeShareRecordId(ctx context.Context, in *QueryLastTokenizeShareRecordIdRequest, opts ...grpc.CallOption) (*QueryLastTokenizeShareRecordIdResponse, error)
+	// Query for total tokenized staked assets
+	TotalTokenizeSharedAssets(ctx context.Context, in *QueryTotalTokenizeSharedAssetsRequest, opts ...grpc.CallOption) (*QueryTotalTokenizeSharedAssetsResponse, error)
 }
 
 type queryClient struct {
@@ -211,6 +223,60 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) TokenizeShareRecordById(ctx context.Context, in *QueryTokenizeShareRecordByIdRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordByIdResponse, error) {
+	out := new(QueryTokenizeShareRecordByIdResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/TokenizeShareRecordById", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TokenizeShareRecordByDenom(ctx context.Context, in *QueryTokenizeShareRecordByDenomRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordByDenomResponse, error) {
+	out := new(QueryTokenizeShareRecordByDenomResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/TokenizeShareRecordByDenom", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TokenizeShareRecordsOwned(ctx context.Context, in *QueryTokenizeShareRecordsOwnedRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRecordsOwnedResponse, error) {
+	out := new(QueryTokenizeShareRecordsOwnedResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/TokenizeShareRecordsOwned", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllTokenizeShareRecords(ctx context.Context, in *QueryAllTokenizeShareRecordsRequest, opts ...grpc.CallOption) (*QueryAllTokenizeShareRecordsResponse, error) {
+	out := new(QueryAllTokenizeShareRecordsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/AllTokenizeShareRecords", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) LastTokenizeShareRecordId(ctx context.Context, in *QueryLastTokenizeShareRecordIdRequest, opts ...grpc.CallOption) (*QueryLastTokenizeShareRecordIdResponse, error) {
+	out := new(QueryLastTokenizeShareRecordIdResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/LastTokenizeShareRecordId", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TotalTokenizeSharedAssets(ctx context.Context, in *QueryTotalTokenizeSharedAssetsRequest, opts ...grpc.CallOption) (*QueryTotalTokenizeSharedAssetsResponse, error) {
+	out := new(QueryTotalTokenizeSharedAssetsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/TotalTokenizeSharedAssets", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -268,6 +334,18 @@ type QueryServer interface {
 	Pool(context.Context, *QueryPoolRequest) (*QueryPoolResponse, error)
 	// Parameters queries the staking parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// Query for individual tokenize share record information by share by id
+	TokenizeShareRecordById(context.Context, *QueryTokenizeShareRecordByIdRequest) (*QueryTokenizeShareRecordByIdResponse, error)
+	// Query for individual tokenize share record information by share denom
+	TokenizeShareRecordByDenom(context.Context, *QueryTokenizeShareRecordByDenomRequest) (*QueryTokenizeShareRecordByDenomResponse, error)
+	// Query tokenize share records by address
+	TokenizeShareRecordsOwned(context.Context, *QueryTokenizeShareRecordsOwnedRequest) (*QueryTokenizeShareRecordsOwnedResponse, error)
+	// Query for all tokenize share records
+	AllTokenizeShareRecords(context.Context, *QueryAllTokenizeShareRecordsRequest) (*QueryAllTokenizeShareRecordsResponse, error)
+	// Query for last tokenize share record id
+	LastTokenizeShareRecordId(context.Context, *QueryLastTokenizeShareRecordIdRequest) (*QueryLastTokenizeShareRecordIdResponse, error)
+	// Query for total tokenized staked assets
+	TotalTokenizeSharedAssets(context.Context, *QueryTotalTokenizeSharedAssetsRequest) (*QueryTotalTokenizeSharedAssetsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -316,6 +394,24 @@ func (UnimplementedQueryServer) Pool(context.Context, *QueryPoolRequest) (*Query
 }
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (UnimplementedQueryServer) TokenizeShareRecordById(context.Context, *QueryTokenizeShareRecordByIdRequest) (*QueryTokenizeShareRecordByIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TokenizeShareRecordById not implemented")
+}
+func (UnimplementedQueryServer) TokenizeShareRecordByDenom(context.Context, *QueryTokenizeShareRecordByDenomRequest) (*QueryTokenizeShareRecordByDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TokenizeShareRecordByDenom not implemented")
+}
+func (UnimplementedQueryServer) TokenizeShareRecordsOwned(context.Context, *QueryTokenizeShareRecordsOwnedRequest) (*QueryTokenizeShareRecordsOwnedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TokenizeShareRecordsOwned not implemented")
+}
+func (UnimplementedQueryServer) AllTokenizeShareRecords(context.Context, *QueryAllTokenizeShareRecordsRequest) (*QueryAllTokenizeShareRecordsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllTokenizeShareRecords not implemented")
+}
+func (UnimplementedQueryServer) LastTokenizeShareRecordId(context.Context, *QueryLastTokenizeShareRecordIdRequest) (*QueryLastTokenizeShareRecordIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LastTokenizeShareRecordId not implemented")
+}
+func (UnimplementedQueryServer) TotalTokenizeSharedAssets(context.Context, *QueryTotalTokenizeSharedAssetsRequest) (*QueryTotalTokenizeSharedAssetsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TotalTokenizeSharedAssets not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -582,6 +678,114 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_TokenizeShareRecordById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTokenizeShareRecordByIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TokenizeShareRecordById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/TokenizeShareRecordById",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TokenizeShareRecordById(ctx, req.(*QueryTokenizeShareRecordByIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TokenizeShareRecordByDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTokenizeShareRecordByDenomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TokenizeShareRecordByDenom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/TokenizeShareRecordByDenom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TokenizeShareRecordByDenom(ctx, req.(*QueryTokenizeShareRecordByDenomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TokenizeShareRecordsOwned_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTokenizeShareRecordsOwnedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TokenizeShareRecordsOwned(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/TokenizeShareRecordsOwned",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TokenizeShareRecordsOwned(ctx, req.(*QueryTokenizeShareRecordsOwnedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllTokenizeShareRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllTokenizeShareRecordsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllTokenizeShareRecords(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/AllTokenizeShareRecords",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllTokenizeShareRecords(ctx, req.(*QueryAllTokenizeShareRecordsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_LastTokenizeShareRecordId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryLastTokenizeShareRecordIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).LastTokenizeShareRecordId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/LastTokenizeShareRecordId",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).LastTokenizeShareRecordId(ctx, req.(*QueryLastTokenizeShareRecordIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TotalTokenizeSharedAssets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTotalTokenizeSharedAssetsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TotalTokenizeSharedAssets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/TotalTokenizeSharedAssets",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TotalTokenizeSharedAssets(ctx, req.(*QueryTotalTokenizeSharedAssetsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -644,6 +848,30 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "TokenizeShareRecordById",
+			Handler:    _Query_TokenizeShareRecordById_Handler,
+		},
+		{
+			MethodName: "TokenizeShareRecordByDenom",
+			Handler:    _Query_TokenizeShareRecordByDenom_Handler,
+		},
+		{
+			MethodName: "TokenizeShareRecordsOwned",
+			Handler:    _Query_TokenizeShareRecordsOwned_Handler,
+		},
+		{
+			MethodName: "AllTokenizeShareRecords",
+			Handler:    _Query_AllTokenizeShareRecords_Handler,
+		},
+		{
+			MethodName: "LastTokenizeShareRecordId",
+			Handler:    _Query_LastTokenizeShareRecordId_Handler,
+		},
+		{
+			MethodName: "TotalTokenizeSharedAssets",
+			Handler:    _Query_TotalTokenizeSharedAssets_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

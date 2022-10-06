@@ -36,7 +36,7 @@ message Input {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.base.v1.AddressString"];
+  string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin coins = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
@@ -46,7 +46,7 @@ message Output {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.base.v1.AddressString"];
+  string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin coins = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

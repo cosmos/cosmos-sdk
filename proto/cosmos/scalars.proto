@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.base.v1;
+package cosmos;
 
 import "cosmos_proto/cosmos.proto";
 

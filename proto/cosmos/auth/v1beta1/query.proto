@@ -35,7 +35,9 @@ service Query {
     option (google.api.http).get               = "/cosmos/auth/v1beta1/address_by_id/{account_id}";
   }
 
-  // AccountAddressByID returns account address based on account id 
+  // AccountAddressByID returns account address based on account number.
+  //
+  // Since: cosmos-sdk 0.46.2
   rpc AccountAddressByID(QueryAccountAddressByIDRequest) returns (QueryAccountAddressByIDResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/address_by_id/{id}";
   }
@@ -148,11 +150,18 @@ message AddressStringToBytesResponse {
 }
 
 // QueryAccountAddressByIDRequest is the request type for AccountAddressByID rpc method
-message QueryAccountAddressByIDRequest{
+//
+// Since: cosmos-sdk 0.46.2
+message QueryAccountAddressByIDRequest {
+  // id is the account number of the address to be queried. This field
+  // should have been an uint64 (like all account numbers), and will be
+  // updated to uint64 in a future version of the auth query.
   int64 id = 1;
 }
 
 // QueryAccountAddressByIDResponse is the response type for AccountAddressByID rpc method
+//
+// Since: cosmos-sdk 0.46.2
 message QueryAccountAddressByIDResponse {
   string account_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

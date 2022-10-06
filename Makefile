@@ -202,7 +202,7 @@ build-docs:
 		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
 		cp ~/output/$${path_prefix}/index.html ~/output ; \
 		cp ~/output/$${path_prefix}/404.html ~/output ; \
-		cp -r $(DOCS_OUTPUT)/$${path_prefix}/redirects/* $(DOCS_OUTPUT) || true ; \
+		cp -r ~/output/$${path_prefix}/redirects/* ~/output || true ; \
 	done < versions ;
 	@echo $(DOCS_DOMAIN) > ~/output/CNAME
 

@@ -1,4 +1,4 @@
-package testslashing
+package testutil
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"

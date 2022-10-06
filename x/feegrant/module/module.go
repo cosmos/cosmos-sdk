@@ -69,11 +69,6 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	feegrant.RegisterInterfaces(registry)
 }
 
-// LegacyQuerierHandler returns the feegrant module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
-
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {

@@ -256,7 +256,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 		initialSupply = initialSupply.Add(coins...)
 
 		req := &banktypes.QueryTotalSupplyRequest{
-			Pagination: testdata.PaginationGenerator(t, uint64(numCoins)).Draw(t, "pagination"),
+			Pagination: testdata.PaginationGenerator(t, uint64(len(initialSupply))).Draw(t, "pagination"),
 		}
 		res, err = suite.queryClient.TotalSupply(suite.ctx, req)
 		suite.Require().NoError(err)

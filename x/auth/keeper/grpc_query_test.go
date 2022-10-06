@@ -183,8 +183,13 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 		{
 			"valid request",
 			func() {
+<<<<<<< HEAD
 				account := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
 				suite.app.AccountKeeper.SetAccount(suite.ctx, account)
+=======
+				account := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+				suite.accountKeeper.SetAccount(suite.ctx, account)
+>>>>>>> 90bd3161a (refactor: Improve and clarify API around `AccountAddressById`  (#13460))
 				req = &types.QueryAccountAddressByIDRequest{Id: int64(account.GetAccountNumber())}
 			},
 			true,

@@ -25,13 +25,17 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 	}
 
 	if req.Id < 0 {
+<<<<<<< HEAD
 		return nil, status.Error(codes.InvalidArgument, "Invalid account id")
+=======
+		return nil, status.Error(codes.InvalidArgument, "invalid account number")
+>>>>>>> 90bd3161a (refactor: Improve and clarify API around `AccountAddressById`  (#13460))
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 	address := ak.GetAccountAddressByID(ctx, uint64(req.GetId()))
 	if len(address) == 0 {
-		return nil, status.Errorf(codes.NotFound, "account address not found with id %d", req.Id)
+		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
 	}
 
 	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil

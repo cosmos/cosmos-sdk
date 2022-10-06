@@ -30,7 +30,7 @@ service Query {
     option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
   }
 
-  // AccountAddressByID returns account address based on account id
+  // AccountAddressByID returns account address based on account number.
   //
   // Since: cosmos-sdk 0.46.2
   rpc AccountAddressByID(QueryAccountAddressByIDRequest) returns (QueryAccountAddressByIDResponse) {

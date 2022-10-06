@@ -1,0 +1,16 @@
+syntax = "proto3";
+package wasm.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
+message MsgStoreCode {
+   bytes wasm_byte_code = 1 [
+        (gogoproto.casttype) = "RawContractMessage",
+        (cosmos_proto.scalar) = "wasm.v1.RawContractMessage"
+    ];
+
+    // Note: the scalar string's format means that there's a `wasm.v1/scalars.proto` file, and that it
+    // has a `declare_scalar` option with name "RawContractMessage".
+    // See https://github.com/CosmWasm/wasmd/blob/a76999a1d7c3ed3570a5f319940667a5e5b61eaf/proto/cosmwasm/wasm/v1/tx.proto#L38
+}

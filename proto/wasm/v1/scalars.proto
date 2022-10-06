@@ -1,0 +1,19 @@
+syntax = "proto3";
+package wasm.v1;
+
+import "cosmos_proto/cosmos.proto";
+
+option (cosmos_proto.declare_scalar) = {
+    name: "RawContractMessage",
+    description: "A type representing a decimal number",
+    field_type: [SCALAR_TYPE_BYTES],
+    // Optionally we can add these 2 fields:
+    //
+    // Proposal 1:
+    // gogo_customtype: "RawContractMessage",
+    // This makes sure all fields that have `cosmos.scalar = "RawContractMessage"` also have `gogoproto.customtype = "RawContractMessage"`.
+    // TODO is this useful?
+    //
+    // Proposal 2: (similar to Dan's `hint` idea)
+    // amino_encoding: "Use base64 to encode this field" // Some human-readable string on how to encode this field.
+};

@@ -21,4 +21,4 @@ cat ../x/README.md | sed 's/\.\/x/\/modules/g' | sed 's/\.\.\/docs\/building-mod
 cp ../cosmovisor/README.md ./run-node/cosmovisor.md
 
 ## Add depinject documentation
-cp ../depinject/README.md ./building-chain/depinject.md
+cp ../depinject/README.md ./building-apps/depinject.md

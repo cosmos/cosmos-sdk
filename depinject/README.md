@@ -174,7 +174,7 @@ be printed to stderr and a rendering of the dependency graph in Graphviz DOT for
 `debug_container.dot`.
 
 Here is an example Graphviz rendering of a successful build of a dependency graph:
-![Graphviz Example](./testdata/example.svg)
+![Graphviz Example](https://raw.githubusercontent.com/cosmos/cosmos-sdk/main/depinject/testdata/example.svg)
 
 Rectangles represent functions, ovals represent types, rounded rectangles represent modules and the single hexagon
 represents the function which called `Build`. Black-colored shapes mark functions and types that were called/resolved
@@ -182,7 +182,7 @@ without an error. Gray-colored nodes mark functions and types that could have be
 were left unused.
 
 Here is an example Graphviz rendering of a dependency graph build which failed:
-![Graphviz Error Example](./testdata/example_error.svg)
+![Graphviz Error Example](https://raw.githubusercontent.com/cosmos/cosmos-sdk/main/depinject/testdata/example_error.svg)
 
 Graphviz DOT files can be converted into SVG's for viewing in a web browser using the `dot` command-line tool, ex:
 

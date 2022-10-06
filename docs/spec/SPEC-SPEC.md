@@ -17,6 +17,26 @@ specification. In these cases use of pseudo-code is permissible, but should be
 presented in a concise manner, ideally restricted to only the complex
 element as a part of a larger description.
 
+## Common Layout
+
+The following generalized `README` structure should be used to breakdown
+specifications for modules. The following list is nonbinding and all sections are optional.
+
+* `# {Module Name}` - overview of the module
+* `## Concepts` - describe specialized concepts and definitions used throughout the spec
+* `## State` - specify and describe structures expected to marshalled into the store, and their keys
+* `## State Transitions` - standard state transition operations triggered by hooks, messages, etc.
+* `## Messages` - specify message structure(s) and expected state machine behaviour(s)
+* `## Begin Block` - specify any begin-block operations
+* `## End Block` - specify any end-block operations
+* `## Hooks` - describe available hooks to be called by/from this module
+* `## Events` - list and describe event tags used
+* `## Client` - list and describe CLI commands and gRPC and REST endpoints
+* `## Params` - list all module parameters, their types (in JSON) and examples
+* `## Future Improvements` - describe future improvements of this module
+* `## Tests` - acceptance tests
+* `## Appendix` - supplementary details referenced elsewhere within the spec
+
 ### Notation for key-value mapping
 
 Within `state.md` the following notation `->` should be used to describe key to

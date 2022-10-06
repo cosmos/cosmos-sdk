@@ -230,6 +230,12 @@ module.exports = {
       },
     ],
     [
+      "@vuepress/plugin-html-redirect",
+      {
+        countdown: 0,
+      },
+    ],
+    [
       "sitemap",
       {
         hostname: "https://docs.cosmos.network",

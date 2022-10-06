@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// HandleUpdateDenomMetadataProposal handles update of msg fee denom metadata
+// HandleUpdateDenomMetadataProposal handles update of fee denom metadata
 func HandleUpdateDenomMetadataProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateDenomMetadataProposal, registry codectypes.InterfaceRegistry) error {
 	if err := sdk.ValidateDenom(proposal.Metadata.Base); err != nil {
 		return err

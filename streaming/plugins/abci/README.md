@@ -81,3 +81,7 @@ plugin = "abci"
 # stop the node in case of a delivery error. (true|false)
 stop-node-on-err = true
 ```
+
+## Processing Requests
+
+See the [grpc_abci_v1/examples/](./grpc_abci_v1/examples) for Go and non Go language implementation examples.

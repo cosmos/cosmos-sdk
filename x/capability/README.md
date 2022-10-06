@@ -80,8 +80,6 @@ func NewApp(...) *App {
     * [In persisted KV store](#in-persisted-kv-store)
     * [In-memory KV store](#in-memory-kv-store)
 
-<!-- order: 1 -->
-
 # Concepts
 
 ## Capabilities
@@ -113,8 +111,6 @@ not own.
 
 * MemStore
 * KeyStore
-
-<!-- order: 2 -->
 
 # State
 

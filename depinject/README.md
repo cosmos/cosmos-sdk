@@ -52,7 +52,7 @@ Concretely `SimApp` uses the implementation in `x/auth`, but this design allows 
 
 Given the following types
 
-```golang
+```go
 package duck
 
 type Duck interface {
@@ -76,7 +76,7 @@ type Pond struct {
 
 This usage
 
-```golang
+```go
 var pond Pond
 
 depinject.Inject(
@@ -91,7 +91,7 @@ depinject.Inject(
 results in an *implicit* binding of `Duck` to `Mallard`.  This works because there is only one implementation of `Duck`
 in the container.  However, adding a second provider of `Duck` will result in an error:
 
-```golang
+```go
 var pond Pond
 
 depinject.Inject(
@@ -110,7 +110,7 @@ A specific binding preference for `Duck` is required.
 
 In the above situation registering a binding for a given interface binding may look like
 
-```golang
+```go
 depinject.Inject(
   depinject.Configs(
     depinject.BindInterface(

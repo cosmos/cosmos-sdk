@@ -17,4 +17,8 @@ cp -r ../x/auth/vesting/README.md modules/vesting
 
 cat ../x/README.md | sed 's/\.\/x/\/modules/g' | sed 's/\.\.\/docs\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./modules/README.md
 
+## Add Cosmovisor documentation
 cp ../cosmovisor/README.md ./run-node/cosmovisor.md
+
+## Add depinject documentation
+cp ../depinject/README.md ./building-chain/depinject.md

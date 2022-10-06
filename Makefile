@@ -188,22 +188,12 @@ godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	godoc -http=:6060
 
-# This builds a docs site for each branch/tag in `./docs/versions`
-# and copies each site to a version prefixed path. The last entry inside
-# the `versions` file will be the default root index.html (and it should be main).
-# Only redirects that are built into the "redirects" folder of each of
-# the branches will be copied out to the root of the build at the end.
+# This builds the docs.cosmos.network docs.
 build-docs:
-	@cd docs && \
-	while read -r branch path_prefix; do \
-		echo "building branch $${branch}" ; \
-		(git clean -fdx && git reset --hard && git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
-		mkdir -p ~/output/$${path_prefix} ; \
-		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
-		cp ~/output/$${path_prefix}/index.html ~/output ; \
-		cp ~/output/$${path_prefix}/404.html ~/output ; \
-		cp -r ~/output/$${path_prefix}/redirects/* ~/output || true ; \
-	done < versions ;
+	@cd docs
+	@echo "building docs"
+	@npm run build
+	@mv build ~/output
 	@echo $(DOCS_DOMAIN) > ~/output/CNAME
 
 .PHONY: build-docs

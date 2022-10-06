@@ -26,4 +26,4 @@ jobs:
 
       - name: Build docs
         run: |
-          make build-docs LEDGER_ENABLED=false
+          make build-docs

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"sort"
 	"testing"
 	"time"
@@ -142,6 +143,12 @@ func (suite *DeterministicTestSuite) matchValidators(val1, val2 stakingtypes.Val
 	suite.Require().True(val1.UnbondingTime.Equal(val2.UnbondingTime))
 	suite.Require().Equal(val1.Commission, val2.Commission)
 	suite.Require().Equal(val1.MinSelfDelegation, val2.MinSelfDelegation)
+}
+
+func (suite *DeterministicTestSuite) getValidatorWithStatus(t *rapid.T, status stakingtypes.BondStatus) stakingtypes.Validator {
+	val := suite.getValidator(t)
+	val.Status = status
+	return val
 }
 
 func (suite *DeterministicTestSuite) getValidator(t *rapid.T) stakingtypes.Validator {
@@ -457,4 +464,106 @@ func (suite *DeterministicTestSuite) TestGRPCValidatorDelegations() {
 	suite.Require().NoError(err)
 
 	suite.runValidatorDelegationsIterations(validator.GetOperator(), delegationResps)
+}
+
+func (suite *DeterministicTestSuite) runValidatorUnbondingDelegationsIterations(val string, prevRes stakingtypes.UnbondingDelegations) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.ValidatorUnbondingDelegations(suite.ctx, &stakingtypes.QueryValidatorUnbondingDelegationsRequest{
+			ValidatorAddr: val,
+		})
+
+		suite.Require().NoError(err)
+		suite.Require().NotNil(res)
+		fmt.Println("res", res.UnbondingResponses, prevRes)
+		suite.Require().NotNil(res.UnbondingResponses)
+
+		suite.Require().Equal(res.UnbondingResponses, prevRes)
+		prevRes = res.UnbondingResponses
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCValidatorUnbondingDelegations() {
+
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		suite.SetupTest() // reset
+		validator := suite.getValidatorWithStatus(t, stakingtypes.Bonded)
+		numDels := rapid.IntRange(1, 5).Draw(t, "num-dels")
+
+		suite.stakingKeeper.SetValidator(suite.ctx, validator)
+		suite.stakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
+
+		for i := 0; i < numDels; i++ {
+			delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
+			amt := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, rapid.Int64Range(100, 1000).Draw(t, "amount"))
+
+			suite.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(
+				suite.ctx, delegator, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))).Return(nil)
+			newShares, err := suite.stakingKeeper.Delegate(suite.ctx, delegator, amt, stakingtypes.Unbonded, validator, true)
+			suite.Require().NoError(err)
+
+			suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(
+				gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any()).Return(nil)
+
+			_, err = suite.stakingKeeper.Undelegate(suite.ctx, delegator, validator.GetOperator(), newShares)
+			suite.Require().NoError(err)
+
+			res, err := suite.queryClient.ValidatorUnbondingDelegations(suite.ctx, &stakingtypes.QueryValidatorUnbondingDelegationsRequest{
+				ValidatorAddr: validator.OperatorAddress,
+			})
+			fmt.Println("err", res, err)
+			suite.Require().NoError(err)
+
+			suite.runValidatorUnbondingDelegationsIterations(validator.OperatorAddress, res.UnbondingResponses)
+		}
+	})
+
+	suite.SetupTest() // reset
+
+	validator := suite.getStaticValidator()
+	valAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+	suite.Require().NoError(err)
+
+	moduleName := stakingtypes.NotBondedPoolName
+
+	if validator.GetStatus() == stakingtypes.Bonded {
+		moduleName = stakingtypes.BondedPoolName
+	}
+
+	suite.stakingKeeper.SetValidator(suite.ctx, validator)
+	suite.stakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
+
+	delegator1 := sdk.MustAccAddressFromBech32("cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl")
+	amt1 := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 101)
+
+	suite.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(
+		suite.ctx, delegator1, moduleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt1))).Return(nil)
+
+	newShares1, err := suite.stakingKeeper.Delegate(suite.ctx, delegator1, amt1, stakingtypes.Unbonded, validator, true)
+	suite.Require().NoError(err)
+
+	delegator2 := sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
+	amt2 := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 102)
+
+	suite.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(
+		suite.ctx, delegator2, moduleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt2))).Return(nil)
+	newShares2, err := suite.stakingKeeper.Delegate(suite.ctx, delegator2, amt2, stakingtypes.Unbonded, validator, true)
+	suite.Require().NoError(err)
+
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(
+		gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any()).Return(nil)
+	_, err = suite.stakingKeeper.Undelegate(suite.ctx, delegator1, valAddr, newShares1)
+	suite.Require().NoError(err)
+
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(
+		gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any()).Return(nil)
+	_, err = suite.stakingKeeper.Undelegate(suite.ctx, delegator2, valAddr, newShares2)
+	suite.Require().NoError(err)
+
+	res, err := suite.queryClient.ValidatorUnbondingDelegations(suite.ctx, &stakingtypes.QueryValidatorUnbondingDelegationsRequest{
+		ValidatorAddr: validator.OperatorAddress,
+	})
+	suite.Require().NoError(err)
+
+	suite.runValidatorUnbondingDelegationsIterations(validator.OperatorAddress, res.UnbondingResponses)
+
 }

@@ -79,7 +79,11 @@ not a hash or subset.
 
 The rendering function (and parsing function) may depend on the current chain state.
 This is useful for reading parameters, such as coin display metadata,
-or for reading user-specific preferenes such as language or address aliases.
+or for reading user-specific preferences such as language or address aliases.
+Note that if the observed state changes between signature generation
+and the transaction's inclusion in a block, the delivery-time rendering
+might differ. If so, the signature will be invalid and the transaction
+will be rejected.
 
 ### Signature and Security
 
@@ -95,7 +99,7 @@ to verify that the signers must have known their respective secret keys.
 The correctness and security of `SIGN_MODE_TEXTUAL` is guaranteed by demonstrating an inverse function from the rendering to transaction protos.
 This means that it is impossible for a different protocol buffer message to render to the same text.
 
-### Transaction Malleability
+### Transaction Hash Malleability
 
 When client software forms a transaction, the "raw" transaction (`TxRaw`) is serialized as a proto
 and a hash of the resulting byte sequence is computed.
@@ -110,19 +114,17 @@ in the rendering.
 
 The SignDoc for `SIGN_MODE_TEXTUAL` is formed from a data structure like:
 
-```proto
-message Screen {
-  string text = 1;  // possibly size limited to, e.g. 255 characters
-  uint32 indent = 2;  // size limited to something small like 16 or 32
-  bool expert = 3;
+```
+type Screen struct {
+  Text string text  // possibly size limited to, e.g. 255 characters
+  Indent uint8  // size limited to something small like 16 or 32
+  Expert bool
 }
 
-message SignDocTextual {
-  repeated Screen screens = 1;
-}
+type SignDocTextual = []Screen
 ```
 
-However, we do not plan to use protobuf serialization to form the sequence of bytes
+We do not plan to use protobuf serialization to form the sequence of bytes
 that will be tranmitted and signed, in order to keep the decoder simple.
 We will use [CBOR](https://cbor.io) ([RFC 8949](https://www.rfc-editor.org/rfc/rfc8949.html)) instead.
 

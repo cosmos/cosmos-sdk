@@ -62,26 +62,43 @@ service ABCIListenerService {
 }
 ```
 
-`ABCIListener` plugins registered with `baseapp.StreamingService` during App startup. The plugin is configured from with an App using the `AppOptions` loaded from the TOML configuration files. Every `StreamingService` will be configured within the `[streaming]` TOML mapping. The plugin TOML configuration is as follows.
+## Testing
 
-```toml
-# gRPC streaming service to external systems
-[streaming]
+### Build example plugins
 
-# Turn on/off gRPC streaming
-enable = true
+#### Go
 
-# List of kv store keys to stream out via gRPC. (Optional)
-# Set to ["*"] to expose all keys.
-keys = ["*"]
-
-# The name of the plugin used for streaming data over gRPC
-plugin = "abci"
-
-# stop the node in case of a delivery error. (true|false)
-stop-node-on-err = true
+```shell
+git clone https://github.com/cosmos/cosmos-sdk && cd cosmos-sdk
+```
+```shell
+go build -o streaming/plugins/abci/grpc_abci_v1/examples/plugin-go/stdout \
+streaming/plugins/abci/grpc_abci_v1/examples/plugin-go/stdout.go
 ```
 
-## Processing Requests
+```shell
+export COSMOS_SDK_ABCI_GRPC_V1=".../cosmos-sdk/streaming/plugins/abci/grpc_abci_v1/examples/plugin-go/stdout"
+```
 
-See the [grpc_abci_v1/examples/](./grpc_abci_v1/examples) for Go and non Go language implementation examples.
+#### Python
+
+```shell
+python3 -m pip install grpcio-health-checking confluent_kafka
+```
+
+```shell
+# file example
+# output => ~/{abci_begin_block, abci_end_block, abci_deliver_tx, abci_store_kv_pair}.txt
+export COSMOS_SDK_GRPC_ABCI_V1="python3 .../cosmos-sdk/streaming/plugins/abci/grpc_abci_v1/examples/plugin-python/file.py"
+```
+
+```shell
+# kafka example 
+# requires kafka running on localhost:9092
+export COSMOS_SDK_GRPC_ABCI_V1="python3 .../cosmos-sdk/streaming/plugins/abci/grpc_abci_v1/examples/plugin-python/kafka.py"
+```
+
+### Run test
+```shell
+make test-sim-nondeterminism-streaming
+```

@@ -11,8 +11,43 @@ For an overview of supported features by the `go-plugin` system, please see http
 - [Plugin Internals](https://github.com/hashicorp/go-plugin/blob/master/docs/internals.md)
 - [Plugin Architecture](https://www.youtube.com/watch?v=SRvm3zQQc1Q) (start here)
 
-## Plugins
+## Exposing plugins
 
-Plugins are configured from within an App using the `AppOptions` loaded from the `toml` configuration files. Read each plugin's `README.md` below for further documentation.
+To expose plugins to the plugin system, you will need to:
+1. Implement the gRPC message protocol service of the plugin
+2. Build the plugin binary
+3. Export it
 
-- [State Streaming Plugin (ABCI)](./plugins/abci/README.md)
+The plugin system will look for the binary in the `env` variable `COSMOS_SDK_{PLUGIN_NAME}` above and if it does not find it, it will error out.
+Note, the plugin in is the UPPERCASE name of the `streaming.plugin` TOML configuration setting.
+
+Example:
+```shell
+export COSMOS_SDK_GRPC_ABCI_V1=.../cosmos-sdk/streaming/plugins/abci/grpc_abci_v1/examples/plugin-go/stdout
+```
+
+```toml
+# gRPC streaming
+[streaming]
+
+# Turn on/off gRPC streaming
+enable = true
+
+# List of kv store keys to stream out via gRPC
+# Set to ["*"] to expose all keys.
+keys = ["*"]
+
+# The plugin name used for streaming via gRPC
+plugin = "grpc_abci_v1"
+
+# Stop node on deliver error.
+# When false, the node will operate in a fire-and-forget mode
+# When true, the node will panic with an error.
+stop-node-on-err = true
+```
+
+## Streaming plugins
+
+List of support streaming plugins
+
+- [ABCI State Streaming Plugin](./plugins/abci/README.md)

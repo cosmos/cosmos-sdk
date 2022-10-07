@@ -47,13 +47,13 @@ We can test then create unit tests using the newly created `Keeper` instance.
 Integration tests are at the second level of the [test pyramid](https://martinfowler.com/articles/practical-test-pyramid.html).
 In the SDK, we locate our integration tests under [`/tests/integrations`](https://github.com/cosmos/cosmos-sdk/tree/main/tests/integration).
 
-The goal of these integration tests is to test a component with a minimal application (i.e. not `simapp`). The minimal application is defined with the help of [`depinject`](../building-chain/depinject.md) – the SDK dependency injection framework, and includes all necessary modules to test the component. With the helps of the SDK testing package, we can easily create a minimal application and start the application with a set of genesis transactions: <https://github.com/cosmos/cosmos-sdk/blob/main/testutil/sims/app_helpers.go>.
+The goal of these integration tests is to test a component with a minimal application (i.e. not `simapp`). The minimal application is defined with the help of [`depinject`](../building-apps/01-depinject.md) – the SDK dependency injection framework, and includes all necessary modules to test the component. With the helps of the SDK testing package, we can easily create a minimal application and start the application with a set of genesis transactions: <https://github.com/cosmos/cosmos-sdk/blob/main/testutil/sims/app_helpers.go>.
 
 ### Example
 
 Here, we will walkthrough the integration tests of the `x/distribution` module. The `x/distribution` module has, in addition to keeper unit tests, integration tests that test the `x/distribution` module with a minimal application. This is expected as you may want to test the `x/distribution` module with actual application logic, instead of only mocked dependencies.
 
-For creating a minimal application, we use [`simtestutil.Setup`](https://github.com/cosmos/cosmos-sdk/blob/main/testutil/sims/app_helpers.go#L98-L102) and an [`AppConfig`](../building-chain/depinject.md) of the `x/distribution` minimal dependencies.
+For creating a minimal application, we use [`simtestutil.Setup`](https://github.com/cosmos/cosmos-sdk/blob/main/testutil/sims/app_helpers.go#L98-L102) and an [`AppConfig`](../building-apps/01-depinject.md) of the `x/distribution` minimal dependencies.
 
 For instance, the `AppConfig` of `x/distribution` is defined as:
 
@@ -73,7 +73,7 @@ Now the types are injected and we can use them for our tests:
 
 ## Simulations
 
-Simulations uses as well a minimal application, built with [`depinject`](../building-chain/depinject.md):
+Simulations uses as well a minimal application, built with [`depinject`](../building-apps/01-depinject.md):
 
 Following is an example for `x/gov/` simulations:
 

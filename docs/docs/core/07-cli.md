@@ -22,7 +22,7 @@ The first four strings specify the command:
 
 * The root command for the entire application `simd`.
 * The subcommand `tx`, which contains all commands that let users create transactions.
-* The subcommand `bank` to indicate which module to route the command to ([`x/bank`](../../x/bank/spec/README.md) module in this case).
+* The subcommand `bank` to indicate which module to route the command to ([`x/bank`](./modules/bank/README.md) module in this case).
 * The type of transaction `send`.
 
 The next two strings are arguments: the `from_address` the user wishes to send from, the `to_address` of the recipient, and the `amount` they want to send. Finally, the last few strings of the command are optional flags to indicate how much the user is willing to pay in fees (calculated using the amount of gas used to execute the transaction and the gas prices provided by the user).
@@ -82,7 +82,7 @@ The root-level `status` and `keys` subcommands are common across most applicatio
 
 This `txCommand` function adds all the transaction available to end-users for the application. This typically includes:
 
-* **Sign command** from the [`auth`](../../x/auth/spec/README.md) module that signs messages in a transaction. To enable multisig, add the `auth` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, the signing command is necessary for every application.
+* **Sign command** from the [`auth`](../modules/auth/README.md) module that signs messages in a transaction. To enable multisig, add the `auth` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, the signing command is necessary for every application.
 * **Broadcast command** from the Cosmos SDK client tools, to broadcast transactions.
 * **All [module transaction commands](../building-modules/09-module-interfaces.md#transaction-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/01-module-manager.md#basic-manager) `AddTxCommands()` function.
 
@@ -110,7 +110,7 @@ Here is an example of a `queryCommand` aggregating subcommands from the `simapp`
 
 ## Flags
 
-Flags are used to modify commands; developers can include them in a `flags.go` file with their CLI. Users can explicitly include them in commands or pre-configure them by inside their [`app.toml`](../run-node/01-run-03-node.md#configuring-the-node-using-apptoml). Commonly pre-configured flags include the `--node` to connect to and `--chain-id` of the blockchain the user wishes to interact with.
+Flags are used to modify commands; developers can include them in a `flags.go` file with their CLI. Users can explicitly include them in commands or pre-configure them by inside their [`app.toml`](../run-node/02-interact-node.md#configuring-the-node-using-apptoml). Commonly pre-configured flags include the `--node` to connect to and `--chain-id` of the blockchain the user wishes to interact with.
 
 A _persistent_ flag (as opposed to a _local_ flag) added to a command transcends all of its children: subcommands will inherit the configured values for these flags. Additionally, all flags have default values when they are added to commands; some toggle an option off but others are empty values that the user needs to override to create valid commands. A flag can be explicitly marked as _required_ so that an error is automatically thrown if the user does not provide a value, but it is also acceptable to handle unexpected missing flags differently.
 

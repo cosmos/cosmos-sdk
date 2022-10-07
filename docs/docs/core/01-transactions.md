@@ -71,7 +71,7 @@ need to sign over the fees:
 The use case is a multi-signer transaction, where one of the signers is appointed to gather all signatures, broadcast the signature and pay for fees, and the others only care about the transaction body. This generally allows for a better multi-signing UX. If Alice, Bob and Charlie are part of a 3-signer transaction, then Alice and Bob can both use `SIGN_MODE_DIRECT_AUX` to sign over the `TxBody` and their own signer info (no need an additional step to gather other signers' ones, like in `SIGN_MODE_DIRECT`), without specifying a fee in their SignDoc. Charlie can then gather both signatures from Alice and Bob, and
 create the final transaction by appending a fee. Note that the fee payer of the transaction (in our case Charlie) must sign over the fees, so must use `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`.
 
-A concrete use case is implemented in [transaction tips](./14-14-tips.md): the tipper may use `SIGN_MODE_DIRECT_AUX` to specify a tip in the transaction, without signing over the actual transaction fees. Then, the fee payer appends fees inside the tipper's desired `TxBody`, and as an exchange for paying the fees and broadcasting the transaction, receives the tipper's transaction tips as payment.
+A concrete use case is implemented in [transaction tips](./14-tips.md): the tipper may use `SIGN_MODE_DIRECT_AUX` to specify a tip in the transaction, without signing over the actual transaction fees. Then, the fee payer appends fees inside the tipper's desired `TxBody`, and as an exchange for paying the fees and broadcasting the transaction, receives the tipper's transaction tips as payment.
 
 #### `SIGN_MODE_TEXTUAL`
 
@@ -148,7 +148,7 @@ Once the transaction bytes are generated, there are currently three ways of broa
 
 Application developers create entry points to the application by creating a [command-line interface](../core/07-cli.md), [gRPC and/or REST interface](../core/06-grpc_rest.md), typically found in the application's `./cmd` folder. These interfaces allow users to interact with the application through command-line.
 
-For the [command-line interface](../building-modules/09-module-interfaces.md#cli), module developers create subcommands to add as children to the application top-level transaction command `TxCmd`. CLI commands actually bundle all the steps of transaction processing into one simple command: creating messages, generating transactions and broadcasting. For concrete examples, see the [Interacting with a Node](../run-node/interact-03-node.md) section. An example transaction made using CLI looks like:
+For the [command-line interface](../building-modules/09-module-interfaces.md#cli), module developers create subcommands to add as children to the application top-level transaction command `TxCmd`. CLI commands actually bundle all the steps of transaction processing into one simple command: creating messages, generating transactions and broadcasting. For concrete examples, see the [Interacting with a Node](../run-node/02-interact-node.md) section. An example transaction made using CLI looks like:
 
 ```bash
 simd tx send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake

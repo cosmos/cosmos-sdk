@@ -215,32 +215,6 @@ requests that affected them and the ABCI responses they affected. The `ABCIListe
 ```go
 // ABCIListener interface used to hook into the ABCI message processing of the BaseApp
 type ABCIListener interface {
-    // ListenBeginBlock updates the streaming service with the latest BeginBlock messages
-    ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
-    // ListenEndBlock updates the steaming service with the latest EndBlock messages
-    ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
-    // ListenDeliverTx updates the steaming service with the latest DeliverTx messages
-    ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
-    // HaltAppOnDeliveryError whether or not to halt the application when delivery of massages fails
-    // in ListenBeginBlock, ListenEndBlock, ListenDeliverTx. When `false, the app will operate in fire-and-forget mode.
-    // When `true`, the app will gracefully halt and stop the running node. Uncommitted blocks will
-    // be replayed to all listeners when the node restarts and all successful listeners that received data
-    // prior to the halt will receive duplicate data. Whether or not a listener operates in a fire-and-forget mode
-    // is determined by the listener's configuration property `halt_app_on_delivery_error = true|false`.
-    HaltAppOnDeliveryError() bool
-}
-
-// StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
-type StreamingService interface {
-    // Stream is the streaming service loop, awaits kv pairs and writes them to a destination stream or file
-    Stream(wg *sync.WaitGroup) error
-    // Listeners returns the streaming service's listeners for the BaseApp to register
-    Listeners() map[types.StoreKey][]store.WriteListener
-    // ABCIListener interface for hooking into the ABCI messages from inside the BaseApp
-    ABCIListener
-    // Closer interface
-    io.Closer
-=======
 	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages
 	ListenBeginBlock(blockHeight int64, req []byte, res []byte) error
 	// ListenEndBlock updates the steaming service with the latest EndBlock messages
@@ -364,11 +338,10 @@ func exposeStoreKeys(keysStr []string, keys map[string]*types.KVStoreKey) []type
 	}
 
 	return exposeStoreKeys
->>>>>>> Stashed changes
 }
 ```
 
-#### BaseApp registration
+#### BaseApp Registration
 
 We will add a new method to the `BaseApp` to enable the registration of `StreamingService`s:
 
@@ -381,12 +354,8 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 	}
 	// register the StreamingService within the BaseApp
 	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
-<<<<<<< Updated upstream
-	app.abciListeners = append(app.abciListeners, s)
-=======
 	app.abciListener = s.ABCIListener
 	app.stopNodeOnStreamingErr = s.StopNodeOnErr
->>>>>>> Stashed changes
 }
 ```
 
@@ -398,30 +367,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	...
 
-<<<<<<< Updated upstream
-	// call the hooks with the BeginBlock messages
-	wg := new(sync.WaitGroup)
-	for _, streamingListener := range app.abciListeners {
-		streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
-		if streamingListener.HaltAppOnDeliveryError() {
-			// increment the wait group counter
-			wg.Add(1)
-			go func() {
-				// decrement the counter when the go routine completes
-				defer wg.Done()
-				if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-					app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
-					app.halt()
-				}
-			}()
-		} else {
-			// fire and forget semantics
-			go func() {
-				if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-					app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
-				}
-			}()
-=======
 	// call the streaming service hook with the BeginBlock messages
 	if app.abciListener != nil {
 		reqBz, err := req.Marshal()
@@ -438,11 +383,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 			if app.stopNodeOnStreamingErr {
 				panic(err)
 			}
->>>>>>> Stashed changes
 		}
 	}
-	// wait for all the listener calls to finish
-	wg.Wait()
 
 	return res
 ```
@@ -452,34 +394,6 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	...
 
-<<<<<<< Updated upstream
-	// Call the streaming service hooks with the EndBlock messages
-	wg := new(sync.WaitGroup)
-	for _, streamingListener := range app.abciListeners {
-		streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
-		if streamingListener.HaltAppOnDeliveryError() {
-			// increment the wait group counter
-			wg.Add(1)
-			go func() {
-				// decrement the counter when the go routine completes
-				defer wg.Done()
-				if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-					app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
-					app.halt()
-				}
-			}()
-		} else {
-			// fire and forget semantics
-			go func() {
-				if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-					app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
-				}
-			}()
-		}
-	}
-	// wait for all the listener calls to finish
-	wg.Wait()
-=======
 	// call the streaming service hook with the EndBlock messages
 	if app.abciListener != nil {
 		reqBz, err := req.Marshal()
@@ -528,50 +442,11 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 	}()
 
 	...
->>>>>>> Stashed changes
 
 	return res
 ```
 
-<<<<<<< Updated upstream
-```go
-func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	
-	var abciRes abci.ResponseDeliverTx
-	defer func() {
-		// call the hooks with the BeginBlock messages
-		wg := new(sync.WaitGroup)
-		for _, streamingListener := range app.abciListeners {
-			streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
-			if streamingListener.HaltAppOnDeliveryError() {
-				// increment the wait group counter
-				wg.Add(1)
-				go func() {
-					// decrement the counter when the go routine completes
-					defer wg.Done()
-					if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
-						app.logger.Error("DeliverTx listening hook failed", "err", err)
-						app.halt()
-					}
-				}()
-			} else {
-				// fire and forget semantics
-				go func() {
-					if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
-						app.logger.Error("DeliverTx listening hook failed", "err", err)
-					}
-				}()
-			}
-		}
-		// wait for all the listener calls to finish
-		wg.Wait()
-	}()
-	
-	...
-
-	return res
-=======
-#### Go plugin system
+#### Go Plugin System
 
 We propose a plugin architecture to load and run `StreamingService` and other types of implementations. We will introduce a plugin
 system over gRPC that is used to load and run Cosmos-SDK plugins. The plugin system uses [hashicorp/go-plugin](https://github.com/hashicorp/go-plugin).
@@ -600,7 +475,6 @@ func (p *ListenerGRPCPlugin) GRPCClient(
 	c *grpc.ClientConn,
 ) (interface{}, error) {
 	return &GRPCClient{client: NewABCIListenerServiceClient(c)}, nil
->>>>>>> Stashed changes
 }
 ```
 
@@ -645,15 +519,6 @@ For the purposes of this ADR we introduce a single state streaming plugin loadin
 This provides the advantage of using versioned plugins where the plugin interface and gRPC protocol change over time.
 
 ```go
-<<<<<<< Updated upstream
-// StateStreamingPlugin interface for plugins that load a baseapp.StreamingService onto a baseapp.BaseApp
-type StateStreamingPlugin interface {
-	// Register configures and registers the plugin streaming service with the BaseApp
-	Register(bApp *baseapp.BaseApp, marshaller codec.BinaryCodec, keys map[string]*types.KVStoreKey) error
-
-	// Start starts the background streaming process of the plugin streaming service
-	Start(wg *sync.WaitGroup) error
-=======
 func NewStreamingPlugin(name string, logLevel string) (interface{}, error) {
 	logger := hclog.New(&hclog.LoggerOptions{
 		Output: hclog.DefaultOutput,
@@ -677,7 +542,6 @@ func NewStreamingPlugin(name string, logLevel string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
->>>>>>> Stashed changes
 
 	// Request streaming plugin
 	return rpcClient.Dispense(name)
@@ -708,34 +572,6 @@ func NewSimApp(
 	evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 	)
 
-<<<<<<< Updated upstream
-	pluginsOnKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ON_TOML_KEY)
-	if cast.ToBool(appOpts.Get(pluginsOnKey)) {
-		// this loads the preloaded and any plugins found in `plugins.dir`
-		pluginLoader, err := loader.NewPluginLoader(appOpts, logger)
-		if err != nil {
-			// handle error
-		}
-
-		// initialize the loaded plugins
-		if err := pluginLoader.Initialize(); err != nil {
-			// handle error
-		}
-
-		// register the plugin(s) with the BaseApp
-		if err := pluginLoader.Inject(bApp, appCodec, keys); err != nil {
-			// handle error
-		}
-
-		// start the plugin services, optionally use wg to synchronize shutdown using io.Closer
-		wg := new(sync.WaitGroup)
-		if err := pluginLoader.Start(wg); err != nil {
-			// handler error
-		}
-	}
-
-=======
->>>>>>> Stashed changes
 	...
 
 	// enable streaming
@@ -761,57 +597,16 @@ func NewSimApp(
 The plugin system will be configured within an App's TOML configuration files.
 
 ```toml
-<<<<<<< Updated upstream
-[plugins]
-    on = false # turn the plugin system, as a whole, on or off
-    enabled = ["list", "of", "plugin", "names", "to", "enable"]
-    dir = "the directory to load non-preloaded plugins from; defaults to cosmos-sdk/plugin/plugins"
-```
-
-There will be three parameters for configuring the plugin system: `plugins.on`, `plugins.enabled` and `plugins.dir`.
-`plugins.on` is a bool that turns on or off the plugin system at large, `plugins.dir` directs the system to a directory
-to load plugins from, and `plugins.enabled` provides `opt-in` semantics to plugin names to enable (including preloaded plugins).
-=======
 # gRPC streaming
 [streaming]
 
 # Turn on/off gRPC streaming
 enable = true
->>>>>>> Stashed changes
 
 # List of kv store keys to stream out via gRPC
 # Set to ["*"] to expose all keys.
 keys = ["*"]
 
-<<<<<<< Updated upstream
-Plugin TOML configuration should be split into separate sub-tables for each kind of plugin (e.g. `plugins.streaming`).
-
-Within these sub-tables, the parameters for a specific plugin of that kind are included in another sub-table (e.g. `plugins.streaming.file`).
-It is generally expected, but not required, that a streaming service plugin can be configured with a set of store keys
-(e.g. `plugins.streaming.file.keys`) for the stores it listens to and a flag (e.g. `plugins.streaming.file.halt_app_on_delivery_error`)
-that signifies whether the service operates in a fire-and-forget capacity, or stop the BaseApp when an error occurs in
-any of `ListenBeginBlock`, `ListenEndBlock` and `ListenDeliverTx`.
-
-e.g.
-
-```toml
-[plugins]
-    on = false # turn the plugin system, as a whole, on or off
-    enabled = ["list", "of", "plugin", "names", "to", "enable"]
-    dir = "the directory to load non-preloaded plugins from; defaults to "
-    [plugins.streaming] # a mapping of plugin-specific streaming service parameters, mapped to their plugin name
-        [plugins.streaming.file] # the specific parameters for the file streaming service plugin
-            keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
-            write_dir = "path to the write directory"
-            prefix = "optional prefix to prepend to the generated file names"
-            halt_app_on_delivery_error = "false" # false == fire-and-forget; true == stop the application
-        [plugins.streaming.kafka]
-            keys = []
-            topic_prefix = "block" # Optional prefix for topic names where data will be stored.
-            flush_timeout_ms = 5000 # Flush and wait for outstanding messages and requests to complete delivery when calling `StreamingService.Close(). (milliseconds)
-            halt_app_on_delivery_error = true # Whether or not to halt the application when plugin fails to deliver message(s).
-        ...
-=======
 # The plugin name used for streaming via gRPC
 plugin = "my_streaming_plugin"
 
@@ -819,7 +614,6 @@ plugin = "my_streaming_plugin"
 # When false, the node will operate in a fire-and-forget mode
 # When true, the node will panic with an error.
 stop-node-on-err = true
->>>>>>> Stashed changes
 ```
 
 There will be four parameters for configuring the streaming plugin system: `streaming.enable`, `streaming.keys`, `streaming.plugin` and `streaming.stop-node-on-err`.

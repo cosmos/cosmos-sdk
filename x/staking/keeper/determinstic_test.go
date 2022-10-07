@@ -647,3 +647,291 @@ func (suite *DeterministicTestSuite) TestGRPCUnbondingDelegation() {
 
 	suite.runUnbondingDelegationIterations(req, res)
 }
+
+func (suite *DeterministicTestSuite) runDelegatorDelegationsIterations(req *stakingtypes.QueryDelegatorDelegationsRequest, prevDels *stakingtypes.QueryDelegatorDelegationsResponse) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.DelegatorDelegations(suite.ctx, req)
+		suite.Require().NoError(err)
+
+		suite.Require().Equal(res, prevDels)
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCDelegatorDelegations() {
+
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		suite.SetupTest() // reset
+		numVals := rapid.IntRange(1, 3).Draw(t, "num-dels")
+
+		delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
+
+		for i := 0; i < numVals; i++ {
+			amt := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, rapid.Int64Range(100, 1000).Draw(t, "amount"))
+			validator := suite.getValidatorWithStatus(t, stakingtypes.Bonded)
+			suite.stakingKeeper.SetValidator(suite.ctx, validator)
+			suite.stakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
+
+			// TODO remove mocks
+			suite.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(
+				suite.ctx, delegator, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))).Return(nil)
+
+			_, err := suite.stakingKeeper.Delegate(suite.ctx, delegator, amt, stakingtypes.Unbonded, validator, true)
+			suite.Require().NoError(err)
+		}
+
+		req := &stakingtypes.QueryDelegatorDelegationsRequest{
+			DelegatorAddr: delegator.String(),
+			Pagination:    testdata.PaginationGenerator(t, uint64(numVals)).Draw(t, "pagination"),
+		}
+
+		res, err := suite.queryClient.DelegatorDelegations(suite.ctx, req)
+		suite.Require().NoError(err)
+		suite.runDelegatorDelegationsIterations(req, res)
+	})
+
+	suite.SetupTest() // reset
+
+	validator := suite.getStaticValidator()
+	moduleName := stakingtypes.NotBondedPoolName
+
+	if validator.GetStatus() == stakingtypes.Bonded {
+		moduleName = stakingtypes.BondedPoolName
+	}
+
+	suite.stakingKeeper.SetValidator(suite.ctx, validator)
+	suite.stakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
+
+	delegator1 := sdk.MustAccAddressFromBech32("cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl")
+	amt1 := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 101)
+
+	suite.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(
+		suite.ctx, delegator1, moduleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt1))).Return(nil)
+
+	_, err := suite.stakingKeeper.Delegate(suite.ctx, delegator1, amt1, stakingtypes.Unbonded, validator, true)
+	suite.Require().NoError(err)
+
+	req := &stakingtypes.QueryDelegatorDelegationsRequest{
+		DelegatorAddr: delegator1.String(),
+	}
+
+	res, err := suite.queryClient.DelegatorDelegations(suite.ctx, req)
+	suite.Require().NoError(err)
+	suite.runDelegatorDelegationsIterations(req, res)
+}
+
+func (suite *DeterministicTestSuite) runDelegatorValidatorIterations(req *stakingtypes.QueryDelegatorValidatorRequest, prevDels *stakingtypes.QueryDelegatorValidatorResponse) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.DelegatorValidator(suite.ctx, req)
+		suite.Require().NoError(err)
+
+		suite.Require().Equal(res, prevDels)
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCDelegatorValidator() {
+
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		suite.SetupTest() // reset
+		validator := suite.getValidatorWithStatus(t, stakingtypes.Bonded)
+
+		suite.stakingKeeper.SetValidator(suite.ctx, validator)
+		suite.stakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
+
+		delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
+		amt := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, rapid.Int64Range(100, 1000).Draw(t, "amount"))
+
+		// TODO remove mocks
+		suite.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(
+			suite.ctx, delegator, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))).Return(nil)
+
+		_, err := suite.stakingKeeper.Delegate(suite.ctx, delegator, amt, stakingtypes.Unbonded, validator, true)
+		suite.Require().NoError(err)
+
+		req := &stakingtypes.QueryDelegatorValidatorRequest{
+			DelegatorAddr: delegator.String(),
+			ValidatorAddr: validator.OperatorAddress,
+		}
+
+		res, err := suite.queryClient.DelegatorValidator(suite.ctx, req)
+		suite.Require().NoError(err)
+		suite.runDelegatorValidatorIterations(req, res)
+	})
+
+	suite.SetupTest() // reset
+
+	validator := suite.getStaticValidator()
+	moduleName := stakingtypes.NotBondedPoolName
+
+	if validator.GetStatus() == stakingtypes.Bonded {
+		moduleName = stakingtypes.BondedPoolName
+	}
+
+	suite.stakingKeeper.SetValidator(suite.ctx, validator)
+	suite.stakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
+
+	delegator1 := sdk.MustAccAddressFromBech32("cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl")
+	amt1 := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 101)
+
+	suite.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(
+		suite.ctx, delegator1, moduleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt1))).Return(nil)
+
+	_, err := suite.stakingKeeper.Delegate(suite.ctx, delegator1, amt1, stakingtypes.Unbonded, validator, true)
+	suite.Require().NoError(err)
+
+	req := &stakingtypes.QueryDelegatorValidatorRequest{
+		DelegatorAddr: delegator1.String(),
+		ValidatorAddr: validator.OperatorAddress,
+	}
+
+	res, err := suite.queryClient.DelegatorValidator(suite.ctx, req)
+	suite.Require().NoError(err)
+	suite.runDelegatorValidatorIterations(req, res)
+}
+
+func (suite *DeterministicTestSuite) runDelegatorUnbondingDelegationsIterations(req *stakingtypes.QueryDelegatorUnbondingDelegationsRequest, prevRes *stakingtypes.QueryDelegatorUnbondingDelegationsResponse) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.DelegatorUnbondingDelegations(suite.ctx, req)
+		suite.Require().NoError(err)
+		suite.Require().Equal(res, prevRes)
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCDelegatorUnbondingDelegations() {
+
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		suite.SetupTest() // reset
+		numVals := rapid.IntRange(1, 5).Draw(t, "num-vals")
+		delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
+
+		for i := 0; i < numVals; i++ {
+			validator := suite.getValidatorWithStatus(t, stakingtypes.Bonded)
+
+			suite.stakingKeeper.SetValidator(suite.ctx, validator)
+			suite.stakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
+			amt := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, rapid.Int64Range(100, 1000).Draw(t, "amount"))
+
+			suite.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(
+				suite.ctx, delegator, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))).Return(nil)
+			newShares, err := suite.stakingKeeper.Delegate(suite.ctx, delegator, amt, stakingtypes.Unbonded, validator, true)
+			suite.Require().NoError(err)
+
+			suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(
+				gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any()).Return(nil)
+
+			_, err = suite.stakingKeeper.Undelegate(suite.ctx, delegator, validator.GetOperator(), newShares)
+			suite.Require().NoError(err)
+		}
+
+		req := &stakingtypes.QueryDelegatorUnbondingDelegationsRequest{
+			DelegatorAddr: delegator.String(),
+			Pagination:    testdata.PaginationGenerator(t, uint64(numVals)).Draw(t, "pagination"),
+		}
+		res, err := suite.queryClient.DelegatorUnbondingDelegations(suite.ctx, req)
+		suite.Require().NoError(err)
+
+		suite.runDelegatorUnbondingDelegationsIterations(req, res)
+	})
+
+	suite.SetupTest() // reset
+
+	validator := suite.getStaticValidator()
+	valAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+	suite.Require().NoError(err)
+
+	suite.stakingKeeper.SetValidator(suite.ctx, validator)
+	suite.stakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
+
+	delegator1 := sdk.MustAccAddressFromBech32("cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl")
+	amt1 := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 101)
+
+	suite.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(
+		suite.ctx, delegator1, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt1))).Return(nil)
+
+	newShares1, err := suite.stakingKeeper.Delegate(suite.ctx, delegator1, amt1, stakingtypes.Unbonded, validator, true)
+	suite.Require().NoError(err)
+
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(
+		gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any()).Return(nil)
+	_, err = suite.stakingKeeper.Undelegate(suite.ctx, delegator1, valAddr, newShares1)
+	suite.Require().NoError(err)
+
+	req := &stakingtypes.QueryDelegatorUnbondingDelegationsRequest{
+		DelegatorAddr: delegator1.String(),
+	}
+	res, err := suite.queryClient.DelegatorUnbondingDelegations(suite.ctx, req)
+	suite.Require().NoError(err)
+
+	suite.runDelegatorUnbondingDelegationsIterations(req, res)
+}
+
+func (suite *DeterministicTestSuite) runHistoricalInfoIterations(req *stakingtypes.QueryHistoricalInfoRequest, prevRes *stakingtypes.QueryHistoricalInfoResponse) {
+	for i := 0; i < 1000; i++ {
+		res, err := suite.queryClient.HistoricalInfo(suite.ctx, req)
+		suite.Require().NoError(err)
+		suite.Require().Equal(res, prevRes)
+	}
+}
+
+func (suite *DeterministicTestSuite) TestGRPCHistoricalInfo() {
+
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		numVals := rapid.IntRange(1, 5).Draw(t, "num-vals")
+		vals := make(stakingtypes.Validators, 0, numVals)
+		for i := 0; i < numVals; i++ {
+			validator := suite.getValidatorWithStatus(t, stakingtypes.Bonded)
+
+			suite.stakingKeeper.SetValidator(suite.ctx, validator)
+			suite.stakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
+			vals = append(vals, validator)
+		}
+
+		historicalInfo := stakingtypes.HistoricalInfo{
+			Header: tmproto.Header{},
+			Valset: vals,
+		}
+
+		height := rapid.Int64Min(0).Draw(t, "height")
+
+		suite.stakingKeeper.SetHistoricalInfo(
+			suite.ctx,
+			height,
+			&historicalInfo,
+		)
+
+		req := &stakingtypes.QueryHistoricalInfoRequest{
+			Height: height,
+		}
+		res, err := suite.queryClient.HistoricalInfo(suite.ctx, req)
+		suite.Require().NoError(err)
+
+		suite.runHistoricalInfoIterations(req, res)
+	})
+
+	suite.SetupTest() // reset
+
+	validator := suite.getStaticValidator()
+
+	suite.stakingKeeper.SetValidator(suite.ctx, validator)
+	suite.stakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
+
+	historicalInfo := stakingtypes.HistoricalInfo{
+		Header: tmproto.Header{},
+		Valset: []stakingtypes.Validator{validator},
+	}
+
+	height := int64(127)
+
+	suite.stakingKeeper.SetHistoricalInfo(
+		suite.ctx,
+		height,
+		&historicalInfo,
+	)
+
+	req := &stakingtypes.QueryHistoricalInfoRequest{
+		Height: height,
+	}
+	res, err := suite.queryClient.HistoricalInfo(suite.ctx, req)
+	suite.Require().NoError(err)
+
+	suite.runHistoricalInfoIterations(req, res)
+}

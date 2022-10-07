@@ -207,7 +207,7 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 #### Streaming service
 
 We will introduce a new `StreamingService` struct for exposing `WriteListener` data streams to external consumers.
-In addition to streaming state changes as `StoreKVPair`s, the strut satisfies an `ABCIListener` interface that plugs
+In addition to streaming state changes as `StoreKVPair`s, the struct satisfies an `ABCIListener` interface that plugs
 into the BaseApp and relays ABCI requests and responses so that the service can group the state changes with the ABCI
 requests that affected them and the ABCI responses they affected. The `ABCIListener` interface also exposes a
 `ListenKVStorePair` method which is used by the `StoreKVPairWriteListener` to stream state change events.

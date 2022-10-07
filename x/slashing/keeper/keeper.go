@@ -63,9 +63,6 @@ func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
 }
 
 func (k Keeper) decodePubKey(bz []byte) (cryptotypes.PubKey, error) {
-	if bz == nil {
-		return nil, nil
-	}
 	var pk cryptotypes.PubKey
 	err := k.cdc.UnmarshalInterface(bz, &pk)
 	if err != nil {
@@ -78,8 +75,11 @@ func (k Keeper) decodePubKey(bz []byte) (cryptotypes.PubKey, error) {
 func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
 	store := ctx.KVStore(k.storeKey)
 	pubkey, err := store2.GetAndDecode(store, k.decodePubKey, types.AddrPubkeyRelationKey(a))
+	if pubkey == nil {
+		return pubkey, fmt.Errorf("address %s not found", sdk.ConsAddress(a))
+	}
 	if err != nil {
-		panic(fmt.Errorf("address %s not found", sdk.ConsAddress(a)))
+		return pubkey, err
 	}
 	return pubkey, nil
 }

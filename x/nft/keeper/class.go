@@ -35,23 +35,32 @@ func (k Keeper) UpdateClass(ctx sdk.Context, class nft.Class) error {
 	return nil
 }
 
-func (k Keeper) decodeClass(bz []byte) (nft.Class, error) {
+// func (k Keeper) decodeClass(bz []byte) (nft.Class, error) {
+// 	var class nft.Class
+// 	if len(bz) == 0 {
+// 		return class, nil
+// 	}
+// 	k.cdc.MustUnmarshal(bz, &class)
+// 	return class, nil
+// }
+
+func (k Keeper) decodeClass(bz []byte) (nft.Class, bool) {
 	var class nft.Class
 	if len(bz) == 0 {
-		return class, nil
+		return class, false
 	}
 	k.cdc.MustUnmarshal(bz, &class)
-	return class, nil
+	return class, true
 }
 
 // GetClass defines a method for returning the class information of the specified id
 func (k Keeper) GetClass(ctx sdk.Context, classID string) (nft.Class, bool) {
 	store := ctx.KVStore(k.storeKey)
-	class, err := store2.GetAndDecode(store, k.decodeClass, classStoreKey(classID))
-	if err != nil {
-		return class, false
+	class, boolval := store2.GetAndDecodeWithBool(store, k.decodeClass, classStoreKey(classID))
+	if !boolval {
+		return class, boolval
 	}
-	return class, true
+	return class, boolval
 }
 
 // GetClasses defines a method for returning all classes information

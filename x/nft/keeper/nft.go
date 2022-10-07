@@ -129,23 +129,23 @@ func (k Keeper) transferWithNoCheck(ctx sdk.Context,
 	return nil
 }
 
-func (k Keeper) decodeNft(bz []byte) (nft.NFT, error) {
+func (k Keeper) decodeNFT(bz []byte) (nft.NFT, bool) {
 	if len(bz) == 0 {
-		return nft.NFT{}, nil
+		return nft.NFT{}, false
 	}
 	var nft nft.NFT
 	k.cdc.MustUnmarshal(bz, &nft)
-	return nft, nil
+	return nft, true
 }
 
 // GetNFT returns the nft information of the specified classID and nftID
 func (k Keeper) GetNFT(ctx sdk.Context, classID, nftID string) (nft.NFT, bool) {
 	store := k.getNFTStore(ctx, classID)
-	nft, err := store2.GetAndDecode(store, k.decodeNft, []byte(nftID))
-	if err != nil {
-		panic(err)
+	nft, boolval := store2.GetAndDecodeWithBool(store, k.decodeNFT, []byte(nftID))
+	if !boolval {
+		return nft, boolval
 	}
-	return nft, true
+	return nft, boolval
 }
 
 // GetNFTsOfClassByOwner returns all nft information of the specified classID under the specified owner

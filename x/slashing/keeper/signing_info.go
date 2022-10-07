@@ -10,23 +10,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-func (k Keeper) decodeInfo(bz []byte) (types.ValidatorSigningInfo, error) {
-	if bz == nil {
-		return types.ValidatorSigningInfo{}, nil
-	}
+func (k Keeper) decodeInfo(bz []byte) (types.ValidatorSigningInfo, bool) {
 	var info types.ValidatorSigningInfo
+	if bz == nil {
+		return info, false
+	}
 	k.cdc.MustUnmarshal(bz, &info)
-	return info, nil
+	return info, true
 }
 
 // GetValidatorSigningInfo retruns the ValidatorSigningInfo for a specific validator
 // ConsAddress
 func (k Keeper) GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (info types.ValidatorSigningInfo, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	info, err := store2.GetAndDecode(store, k.decodeInfo, types.ValidatorSigningInfoKey(address))
-	if err != nil {
+	info, boolval := store2.GetAndDecodeWithBool(store, k.decodeInfo, types.ValidatorSigningInfoKey(address))
+	if !boolval {
 		found = false
-		panic(err)
+		return
 	}
 	found = true
 	return

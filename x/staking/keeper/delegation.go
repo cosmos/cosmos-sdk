@@ -317,7 +317,6 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	// Add to the UBDByUnbondingOp index to look up the UBD by the UBDE ID
 	k.SetUnbondingDelegationByUnbondingID(ctx, ubd, id)
 
-	// Call hook
 	if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
 		k.Logger(ctx).Error("failed to call after unbonding initiated hook", "error", err)
 	}
@@ -510,7 +509,6 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	// Add to the UBDByEntry index to look up the UBD by the UBDE ID
 	k.SetRedelegationByUnbondingID(ctx, red, id)
 
-	// Call hook
 	if err := k.Hooks().AfterUnbondingInitiated(ctx, id); err != nil {
 		k.Logger(ctx).Error("failed to call after unbonding initiated hook", "error", err)
 	}

@@ -124,7 +124,9 @@ func (k Keeper) SetValidatorUpdates(ctx sdk.Context, valUpdates []abci.Validator
 func (k Keeper) GetValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.ValidatorUpdatesKey)
+
 	var valUpdates types.ValidatorUpdates
 	k.cdc.MustUnmarshal(bz, &valUpdates)
+
 	return valUpdates.Updates
 }

@@ -76,8 +76,6 @@ func SetupUnbondingTests(t *testing.T, app *simapp.SimApp, ctx sdk.Context, hook
 	validator2 = stakingkeeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
 	require.Equal(t, types.Bonded, validator2.Status)
 	require.True(t, validator2.IsBonded())
-
-	return
 }
 
 func doUnbondingDelegation(
@@ -165,8 +163,10 @@ func doValidatorUnbonding(
 }
 
 func TestValidatorUnbondingOnHold1(t *testing.T) {
-	var hookCalled bool
-	var ubdeID uint64
+	var (
+		hookCalled bool
+		ubdeID     uint64
+	)
 
 	_, app, ctx := createTestInput(t)
 	_, _, addrVals := SetupUnbondingTests(t, app, ctx, &hookCalled, &ubdeID)
@@ -206,9 +206,11 @@ func TestValidatorUnbondingOnHold1(t *testing.T) {
 }
 
 func TestValidatorUnbondingOnHold2(t *testing.T) {
-	var hookCalled bool
-	var ubdeID uint64
-	var ubdeIDs []uint64
+	var (
+		hookCalled bool
+		ubdeID     uint64
+		ubdeIDs    []uint64
+	)
 
 	_, app, ctx := createTestInput(t)
 	_, _, addrVals := SetupUnbondingTests(t, app, ctx, &hookCalled, &ubdeID)
@@ -284,8 +286,10 @@ func TestValidatorUnbondingOnHold2(t *testing.T) {
 }
 
 func TestRedelegationOnHold1(t *testing.T) {
-	var hookCalled bool
-	var ubdeID uint64
+	var (
+		hookCalled bool
+		ubdeID     uint64
+	)
 
 	_, app, ctx := createTestInput(t)
 	_, addrDels, addrVals := SetupUnbondingTests(t, app, ctx, &hookCalled, &ubdeID)
@@ -310,8 +314,10 @@ func TestRedelegationOnHold1(t *testing.T) {
 }
 
 func TestRedelegationOnHold2(t *testing.T) {
-	var hookCalled bool
-	var ubdeID uint64
+	var (
+		hookCalled bool
+		ubdeID     uint64
+	)
 
 	_, app, ctx := createTestInput(t)
 	_, addrDels, addrVals := SetupUnbondingTests(t, app, ctx, &hookCalled, &ubdeID)
@@ -336,8 +342,10 @@ func TestRedelegationOnHold2(t *testing.T) {
 }
 
 func TestUnbondingDelegationOnHold1(t *testing.T) {
-	var hookCalled bool
-	var ubdeID uint64
+	var (
+		hookCalled bool
+		ubdeID     uint64
+	)
 
 	_, app, ctx := createTestInput(t)
 	bondDenom, addrDels, addrVals := SetupUnbondingTests(t, app, ctx, &hookCalled, &ubdeID)
@@ -370,8 +378,10 @@ func TestUnbondingDelegationOnHold1(t *testing.T) {
 }
 
 func TestUnbondingDelegationOnHold2(t *testing.T) {
-	var hookCalled bool
-	var ubdeID uint64
+	var (
+		hookCalled bool
+		ubdeID     uint64
+	)
 
 	_, app, ctx := createTestInput(t)
 	bondDenom, addrDels, addrVals := SetupUnbondingTests(t, app, ctx, &hookCalled, &ubdeID)

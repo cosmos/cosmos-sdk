@@ -70,9 +70,9 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.ParamsKey)
 	if bz == nil {
-		return
+		return params
 	}
 
 	k.cdc.MustUnmarshal(bz, &params)
-	return
+	return params
 }

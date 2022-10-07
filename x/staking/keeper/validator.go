@@ -182,7 +182,6 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(types.GetValidatorByConsAddrKey(valConsAddr))
 	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 
-	// call hooks
 	if err := k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator()); err != nil {
 		k.Logger(ctx).Error("error in after validator removed hook", "error", err)
 	}
@@ -460,6 +459,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 					for _, id := range val.UnbondingIds {
 						k.DeleteUnbondingIndex(ctx, id)
 					}
+
 					val = k.UnbondingToUnbonded(ctx, val)
 					if val.GetDelegatorShares().IsZero() {
 						k.RemoveValidator(ctx, val.GetOperator())
@@ -467,6 +467,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 						// remove unbonding ids
 						val.UnbondingIds = []uint64{}
 					}
+
 					// remove validator from queue
 					k.DeleteValidatorQueue(ctx, val)
 				}
@@ -476,8 +477,8 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 }
 
 func (k Keeper) IsValidatorJailed(ctx sdk.Context, addr sdk.ConsAddress) bool {
-	v, f := k.GetValidatorByConsAddr(ctx, addr)
-	if !f {
+	v, ok := k.GetValidatorByConsAddr(ctx, addr)
+	if !ok {
 		return false
 	}
 

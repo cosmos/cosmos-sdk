@@ -8,7 +8,7 @@ sidebar_position: 1
 
 The [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) is an open-source framework for building multi-asset public Proof-of-Stake (PoS) <df value="blockchain">blockchains</df>, like the Cosmos Hub, as well as permissioned Proof-of-Authority (PoA) blockchains. Blockchains built with the Cosmos SDK are generally referred to as **application-specific blockchains**.
 
-The goal of the Cosmos SDK is to allow developers to easily create custom blockchains from scratch that can natively interoperate with other blockchains. We envision the Cosmos SDK as the npm-like framework to build secure blockchain applications on top of [Tendermint](https://github.com/tendermint/tendermint). SDK-based blockchains are built out of composable [modules](../building-modules/intro.md), most of which are open-source and readily available for any developers to use. Anyone can create a module for the Cosmos SDK, and integrating already-built modules is as simple as importing them into your blockchain application. What's more, the Cosmos SDK is a capabilities-based system that allows developers to better reason about the security of interactions between modules. For a deeper look at capabilities, jump to [Object-Capability Model](../core/ocap.md).
+The goal of the Cosmos SDK is to allow developers to easily create custom blockchains from scratch that can natively interoperate with other blockchains. We envision the Cosmos SDK as the npm-like framework to build secure blockchain applications on top of [Tendermint](https://github.com/tendermint/tendermint). SDK-based blockchains are built out of composable [modules](../building-modules/01-intro.md), most of which are open-source and readily available for any developers to use. Anyone can create a module for the Cosmos SDK, and integrating already-built modules is as simple as importing them into your blockchain application. What's more, the Cosmos SDK is a capabilities-based system that allows developers to better reason about the security of interactions between modules. For a deeper look at capabilities, jump to [Object-Capability Model](../core/10-ocap.md).
 
 ## What are Application-Specific Blockchains
 
@@ -16,7 +16,7 @@ One development paradigm in the blockchain world today is that of virtual-machin
 
 Application-specific blockchains offer a radically different development paradigm than virtual-machine blockchains. An application-specific blockchain is a blockchain customized to operate a single application: developers have all the freedom to make the design decisions required for the application to run optimally. They can also provide better sovereignty, security and performance.
 
-Learn more about [application-specific blockchains](./why-app-specific.md).
+Learn more about [application-specific blockchains](./01-why-app-specific.md).
 
 ## Why the Cosmos SDK
 
@@ -29,5 +29,5 @@ The Cosmos SDK is the most advanced framework for building custom application-sp
 
 ## Getting started with the Cosmos SDK
 
-* Learn more about the [architecture of a Cosmos SDK application](./sdk-app-architecture.md)
+* Learn more about the [architecture of a Cosmos SDK application](./02-sdk-app-architecture.md)
 * Learn how to build an application-specific blockchain from scratch with the [Cosmos SDK Tutorial](https://cosmos.network/docs/tutorial)

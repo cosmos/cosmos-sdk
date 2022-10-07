@@ -6,7 +6,7 @@ sidebar_position: 1
 
 ## Prerequisites
 
-* [Cosmos Blockchain Simulator](./../core/simulation.md)
+* [Cosmos Blockchain Simulator](./../using-the-sdk/12-simulation.md)
 
 ## Synopsis
 
@@ -64,7 +64,7 @@ Operations are one of the crucial parts of the Cosmos SDK simulation. They are t
 (`Msg`) that are simulated with random field values. The sender of the operation
 is also assigned randomly.
 
-Operations on the simulation are simulated using the full [transaction cycle](../core/transactions.md) of a
+Operations on the simulation are simulated using the full [transaction cycle](../core/01-transactions.md) of a
 `ABCI` application that exposes the `BaseApp`.
 
 Shown below is how weights are set:

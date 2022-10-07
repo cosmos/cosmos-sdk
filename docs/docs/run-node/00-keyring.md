@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Setting up the keyring
 
-This document describes how to configure and use the keyring and its various backends for an [**application**](../basics/app-anatomy.md). {synopsis}
+This document describes how to configure and use the keyring and its various backends for an [**application**](../basics/00-app-anatomy.md). {synopsis}
 
 The keyring holds the private/public keypairs used to interact with a node. For instance, a validator key needs to be set up before running the blockchain node, so that blocks can be correctly signed. The private key can be stored in different locations, called "backends", such as a file or the operating system's own key storage.
 
@@ -129,4 +129,4 @@ MY_VALIDATOR_ADDRESS=$(simd keys show my_validator -a --keyring-backend test)
 
 This command generates a new 24-word mnemonic phrase, persists it to the relevant backend, and outputs information about the keypair. If this keypair will be used to hold value-bearing tokens, be sure to write down the mnemonic phrase somewhere safe!
 
-By default, the keyring generates a `secp256k1` keypair. The keyring also supports `ed25519` keys, which may be created by passing the `--algo ed25519` flag. A keyring can of course hold both types of keys simultaneously, and the Cosmos SDK's `x/auth` module (in particular its [middlewares](../core/baseapp.md#middleware)) supports natively these two public key algorithms.
+By default, the keyring generates a `secp256k1` keypair. The keyring also supports `ed25519` keys, which may be created by passing the `--algo ed25519` flag. A keyring can of course hold both types of keys simultaneously, and the Cosmos SDK's `x/auth` module (in particular its [middlewares](../core/00-baseapp.md#middleware)) supports natively these two public key algorithms.

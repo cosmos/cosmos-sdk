@@ -52,7 +52,7 @@ aside: false
 
 ## Get Started
 
-* **[Cosmos SDK Intro](./intro/overview.md)**: High-level overview of the Cosmos SDK.
+* **[Cosmos SDK Intro](./intro/00-overview.md)**: High-level overview of the Cosmos SDK.
 * **[Ignite CLI](https://docs.ignite.com)**: A developer-friendly interface to the Cosmos SDK to scaffold, launch, and maintain any crypto application on a sovereign and secured blockchain.
 * **[SDK Tutorials](https://tutorials.cosmos.network/)**: Tutorials that showcase how to build Cosmos SDK-based blockchains from scratch and explain the basic Cosmos SDK principles in the process.
 
@@ -71,7 +71,7 @@ aside: false
 * **[Specifications](./spec/)**: Specifications of modules and other parts of the Cosmos SDK.
 * **[Cosmos SDK API Reference](https://pkg.go.dev/github.com/cosmos/cosmos-sdk)**: Godocs of the Cosmos SDK.
 * **[REST and RPC Endpoints](https://cosmos.network/rpc/)**: List of endpoints to interact with a `gaia` full-node.
-* **[Rosetta API](./run-node/rosetta.md)**: Rosetta API integration.
+* **[Rosetta API](./run-node/04-rosetta.md)**: Rosetta API integration.
 
 ## Cosmos Hub
 

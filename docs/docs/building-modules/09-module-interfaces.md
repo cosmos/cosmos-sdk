@@ -8,15 +8,15 @@ This document details how to build CLI and REST interfaces for a module. Example
 
 ## Prerequisite Readings
 
-* [Building Modules Intro](./intro.md) {prereq}
+* [Building Modules Intro](./01-intro.md) {prereq}
 
 ## CLI
 
-One of the main interfaces for an application is the [command-line interface](../core/cli.md). This entrypoint adds commands from the application's modules enabling end-users to create [**messages**](./messages-and-queries.md#messages) wrapped in transactions and [**queries**](./messages-and-queries.md#queries). The CLI files are typically found in the module's `./client/cli` folder.
+One of the main interfaces for an application is the [command-line interface](../core/07-cli.md). This entrypoint adds commands from the application's modules enabling end-users to create [**messages**](./02-messages-and-queries.md#messages) wrapped in transactions and [**queries**](./02-messages-and-queries.md#queries). The CLI files are typically found in the module's `./client/cli` folder.
 
 ### Transaction Commands
 
-In order to create messages that trigger state changes, end-users must create [transactions](../core/transactions.md) that wrap and deliver the messages. A transaction command creates a transaction that includes one or more messages.
+In order to create messages that trigger state changes, end-users must create [transactions](../core/01-transactions.md) that wrap and deliver the messages. A transaction command creates a transaction that includes one or more messages.
 
 Transaction commands typically have their own `tx.go` file that lives within the module's `./client/cli` folder. The commands are specified in getter functions and the name of the function should include the name of the command.
 
@@ -35,7 +35,7 @@ In general, the getter function does the following:
     * **RunE:** Defines a function that can return an error. This is the function that is called when the command is executed. This function encapsulates all of the logic to create a new transaction.
         * The function typically starts by getting the `clientCtx`, which can be done with `client.GetClientTxContext(cmd)`. The `clientCtx` contains information relevant to transaction handling, including information about the user. In this example, the `clientCtx` is used to retrieve the address of the sender by calling `clientCtx.GetFromAddress()`.
         * If applicable, the command's arguments are parsed. In this example, the arguments `[to_address]` and `[amount]` are both parsed.
-        * A [message](./messages-and-queries.md) is created using the parsed arguments and information from the `clientCtx`. The constructor function of the message type is called directly. In this case, `types.NewMsgSend(fromAddr, toAddr, amount)`. Its good practice to call [`msg.ValidateBasic()`](../basics/tx-lifecycle.md#ValidateBasic) and other validation methods before broadcasting the message.
+        * A [message](./02-messages-and-queries.md) is created using the parsed arguments and information from the `clientCtx`. The constructor function of the message type is called directly. In this case, `types.NewMsgSend(fromAddr, toAddr, amount)`. Its good practice to call [`msg.ValidateBasic()`](../basics/01-tx-lifecycle.md#ValidateBasic) and other validation methods before broadcasting the message.
         * Depending on what the user wants, the transaction is either generated offline or signed and broadcasted to the preconfigured node using `tx.GenerateOrBroadcastTxCLI(clientCtx, flags, msg)`.
 * **Adds transaction flags:** All transaction commands must add a set of transaction [flags](#flags). The transaction flags are used to collect additional information from the user (e.g. the amount of fees the user is willing to pay). The transaction flags are added to the constructed command using `AddTxFlagsToCmd(cmd)`.
 * **Returns the command:** Finally, the transaction command is returned.
@@ -50,7 +50,7 @@ Each module must also implement the `GetTxCmd()` method for `AppModuleBasic` tha
 
 ### Query Commands
 
-[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module's `./client/cli` folder. Like transaction commands, they are specified in getter functions. Here is an example of a query command from the `x/auth` module:
+[Queries](./02-messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module's `./client/cli` folder. Like transaction commands, they are specified in getter functions. Here is an example of a query command from the `x/auth` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/client/cli/query.go#L83-L125
 
@@ -65,7 +65,7 @@ In general, the getter function does the following:
     * **RunE:** Defines a function that can return an error. This is the function that is called when the command is executed. This function encapsulates all of the logic to create a new query.
         * The function typically starts by getting the `clientCtx`, which can be done with `client.GetClientQueryContext(cmd)`. The `clientCtx` contains information relevant to query handling.
         * If applicable, the command's arguments are parsed. In this example, the argument `[address]` is parsed.
-        * A new `queryClient` is initialized using `NewQueryClient(clientCtx)`. The `queryClient` is then used to call the appropriate [query](./messages-and-queries.md#grpc-queries).
+        * A new `queryClient` is initialized using `NewQueryClient(clientCtx)`. The `queryClient` is then used to call the appropriate [query](./02-messages-and-queries.md#grpc-queries).
         * The `clientCtx.PrintProto` method is used to format the `proto.Message` object so that the results can be printed back to the user.
 * **Adds query flags:** All query commands must add a set of query [flags](#flags). The query flags are added to the constructed command using `AddQueryFlagsToCmd(cmd)`.
 * **Returns the command:** Finally, the query command is returned.
@@ -80,7 +80,7 @@ Each module must also implement the `GetQueryCmd()` method for `AppModuleBasic` 
 
 ### Flags
 
-[Flags](../core/cli.md#flags) allow users to customize commands. `--fees` and `--gas-prices` are examples of flags that allow users to set the [fees](../basics/gas-fees.md) and gas prices for their transactions.
+[Flags](../core/07-cli.md#flags) allow users to customize commands. `--fees` and `--gas-prices` are examples of flags that allow users to set the [fees](../basics/04-gas-fees.md) and gas prices for their transactions.
 
 Flags that are specific to a module are typically created in a `flags.go` file in the module's `./client/cli` folder. When creating a flag, developers set the value type, the name of the flag, the default value, and a description about the flag. Developers also have the option to mark flags as _required_ so that an error is thrown if the user does not include a value for the flag.
 
@@ -130,6 +130,6 @@ Modules that want to expose REST queries should add `google.api.http` annotation
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/auth/v1beta1/query.proto#L13-L59
 
-gRPC gateway is started in-process along with the application and Tendermint. It can be enabled or disabled by setting gRPC Configuration `enable` in [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml).
+gRPC gateway is started in-process along with the application and Tendermint. It can be enabled or disabled by setting gRPC Configuration `enable` in [`app.toml`](../run-node/01-run-03-node.md#configuring-the-node-using-apptoml).
 
-The Cosmos SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`). Setting `swagger` in [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml) defines if swagger documentation should be automatically registered.
+The Cosmos SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`). Setting `swagger` in [`app.toml`](../run-node/01-run-03-node.md#configuring-the-node-using-apptoml) defines if swagger documentation should be automatically registered.

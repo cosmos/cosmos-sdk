@@ -24,7 +24,7 @@ they don't vote themselves.
 deposits if the proposal was accepted OR if the proposal never entered voting period.
 
 This module will be used in the Cosmos Hub, the first Hub in the Cosmos network.
-Features that may be added in the future are described in [Future Improvements](05_future_improvements.md).
+Features that may be added in the future are described in [Future Improvements](#future-improvements).
 
 ## Contents
 
@@ -536,7 +536,7 @@ These proposal are defined by their types.
 
 While proposals should use the new implementation of the governance proposal, we need still to use legacy proposal in order to submit a `software-upgrade` and a `cancel-software-upgrade` proposal.
 
-More information on how to submit proposals in the [client section](07_client.md).
+More information on how to submit proposals in the [client section](#client).
 
 # Messages
 
@@ -2640,7 +2640,7 @@ The gov module has two locations for metadata where users can provide further co
 
 ## Proposal
 
-Location: off-chain as json object stored on IPFS (mirrors [group proposal](../../group/spec/06_metadata.md#proposal))
+Location: off-chain as json object stored on IPFS (mirrors [group proposal](../group/README.md#metadata))
 
 ```json
 {
@@ -2655,7 +2655,7 @@ Location: off-chain as json object stored on IPFS (mirrors [group proposal](../.
 
 ## Vote
 
-Location: on-chain as json within 255 character limit (mirrors [group vote](../../group/spec/06_metadata.md#vote))
+Location: on-chain as json within 255 character limit (mirrors [group vote](../group/README.md#metadata))
 
 ```json
 {

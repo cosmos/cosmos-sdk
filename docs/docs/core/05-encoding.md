@@ -8,7 +8,7 @@ While encoding in the Cosmos SDK used to be mainly handled by `go-amino` codec, 
 
 ## Pre-requisite Readings
 
-* [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
+* [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md) {prereq}
 
 ## Encoding
 
@@ -107,7 +107,7 @@ In addition to [following official Protocol Buffer guidelines](https://developer
 ### Transaction Encoding
 
 Another important use of Protobuf is the encoding and decoding of
-[transactions](./transactions.md). Transactions are defined by the application or
+[transactions](./01-transactions.md). Transactions are defined by the application or
 the Cosmos SDK but are then passed to the underlying consensus engine to be relayed to
 other peers. Since the underlying consensus engine is agnostic to the application,
 the consensus engine accepts only transactions in the form of raw bytes.
@@ -123,11 +123,11 @@ A standard implementation of both these objects can be found in the [`auth` modu
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/tx/encoder.go
 
-See [ADR-020](../architecture/adr-020-protobuf-transaction-encoding.md) for details of how a transaction is encoded.
+See [ADR-020](../architecture/adr-020-protobuf-transaction-05-encoding.md) for details of how a transaction is encoded.
 
 ### Interface Encoding and Usage of `Any`
 
-The Protobuf DSL is strongly typed, which can make inserting variable-typed fields difficult. Imagine we want to create a `Profile` protobuf message that serves as a wrapper over [an account](../basics/accounts.md):
+The Protobuf DSL is strongly typed, which can make inserting variable-typed fields difficult. Imagine we want to create a `Profile` protobuf message that serves as a wrapper over [an account](../basics/03-accounts.md):
 
 ```proto
 message Profile {
@@ -138,11 +138,11 @@ message Profile {
 }
 ```
 
-In this `Profile` example, we hardcoded `account` as a `BaseAccount`. However, there are several other types of [user accounts related to vesting](../../x/auth/spec/05_vesting.md), such as `BaseVestingAccount` or `ContinuousVestingAccount`. All of these accounts are different, but they all implement the `AccountI` interface. How would you create a `Profile` that allows all these types of accounts with an `account` field that accepts an `AccountI` interface?
+In this `Profile` example, we hardcoded `account` as a `BaseAccount`. However, there are several other types of [user accounts related to vesting](../../../x/auth/vesting/README.md), such as `BaseVestingAccount` or `ContinuousVestingAccount`. All of these accounts are different, but they all implement the `AccountI` interface. How would you create a `Profile` that allows all these types of accounts with an `account` field that accepts an `AccountI` interface?
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/types/account.go#L301-L324
 
-In [ADR-019](../architecture/adr-019-protobuf-state-encoding.md), it has been decided to use [`Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto)s to encode interfaces in protobuf. An `Any` contains an arbitrary serialized message as bytes, along with a URL that acts as a globally unique identifier for and resolves to that message's type. This strategy allows us to pack arbitrary Go types inside protobuf messages. Our new `Profile` then looks like:
+In [ADR-019](../architecture/adr-019-protobuf-state-05-encoding.md), it has been decided to use [`Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto)s to encode interfaces in protobuf. An `Any` contains an arbitrary serialized message as bytes, along with a URL that acts as a globally unique identifier for and resolves to that message's type. This strategy allows us to pack arbitrary Go types inside protobuf messages. Our new `Profile` then looks like:
 
 ```protobuf
 message Profile {
@@ -211,7 +211,7 @@ func (p *Profile) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 The `UnpackInterfaces` gets called recursively on all structs implementing this method, to allow all `Any`s to have their `GetCachedValue()` correctly populated.
 
-For more information about interface encoding, and especially on `UnpackInterfaces` and how the `Any`'s `type_url` gets resolved using the `InterfaceRegistry`, please refer to [ADR-019](../architecture/adr-019-protobuf-state-encoding.md).
+For more information about interface encoding, and especially on `UnpackInterfaces` and how the `Any`'s `type_url` gets resolved using the `InterfaceRegistry`, please refer to [ADR-019](../architecture/adr-019-protobuf-state-05-encoding.md).
 
 #### `Any` Encoding in the Cosmos SDK
 
@@ -237,9 +237,9 @@ A real-life example of encoding the pubkey as `Any` inside the Validator struct 
 Protobuf types can be defined to encode:
 
 * state
-* [`Msg`s](../building-modules/messages-and-queries.md#messages)
-* [Query services](../building-modules/query-services.md)
-* [genesis](../building-modules/genesis.md)
+* [`Msg`s](../building-modules/02-messages-and-queries.md#messages)
+* [Query services](../building-modules/04-query-services.md)
+* [genesis](../building-modules/08-genesis.md)
 
 #### Naming and conventions
 

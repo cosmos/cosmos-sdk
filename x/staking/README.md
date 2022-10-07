@@ -99,7 +99,7 @@ Validators can have one of three statuses
 * `Unbonded`: The validator is not in the active set. They cannot sign blocks and do not earn
   rewards. They can receive delegations.
 * `Bonded`: Once the validator receives sufficient bonded tokens they automatically join the
-  active set during [`EndBlock`](./05_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
+  active set during [`EndBlock`](#validator-set-changes) and their status is updated to `Bonded`.
   They are signing blocks and receiving rewards. They can receive further delegations.
   They can be slashed for misbehavior. Delegators to this validator who unbond their delegation
   must wait the duration of the UnbondingTime, a chain-specific param, during which time
@@ -143,7 +143,7 @@ where `Jailed` is true are not stored within this index.
 
 `LastValidatorsPower` is a special index that provides a historical list of the
 last-block's bonded validators. This index remains constant during a block but
-is updated during the validator set update process which takes place in [`EndBlock`](./05_end_block.md).
+is updated during the validator set update process which takes place in [`EndBlock`](#end-block).
 
 Each validator's state is stored in a `Validator` struct:
 
@@ -311,13 +311,13 @@ historical entries.
 
 This document describes the state transition operations pertaining to:
 
-1. [Validators](./02_state_transitions.md#validators)
-2. [Delegations](./02_state_transitions.md#delegations)
-3. [Slashing](./02_state_transitions.md#slashing)
+1. [Validators](#validators)
+2. [Delegations](#delegations)
+3. [Slashing](#slashing)
 
 ## Validators
 
-State transitions in validators are performed on every [`EndBlock`](./05_end_block.md#validator-set-changes)
+State transitions in validators are performed on every [`EndBlock`](#validator-set-changes)
 in order to check for changes in the active `ValidatorSet`.
 
 A validator can be `Unbonded`, `Unbonding` or `Bonded`. `Unbonded`
@@ -492,7 +492,7 @@ So a validator that hasn't received any rewards and has not been slashed will ha
 
 # Messages
 
-In this section we describe the processing of the staking messages and the corresponding updates to the state. All created/modified state objects specified by each message are defined within the [state](./02_state_transitions.md) section.
+In this section we describe the processing of the staking messages and the corresponding updates to the state. All created/modified state objects specified by each message are defined within the [state](#state) section.
 
 ## MsgCreateValidator
 

@@ -4,12 +4,12 @@ sidebar_position: 1
 
 # Query Services
 
-A Protobuf Query service processes [`queries`](./messages-and-queries.md#queries). Query services are specific to the module in which they are defined, and only process `queries` defined within said module. They are called from `BaseApp`'s [`Query` method](../core/baseapp.md#query). {synopsis}
+A Protobuf Query service processes [`queries`](./02-messages-and-queries.md#queries). Query services are specific to the module in which they are defined, and only process `queries` defined within said module. They are called from `BaseApp`'s [`Query` method](../core/00-baseapp.md#query). {synopsis}
 
 ## Pre-requisite Readings
 
-* [Module Manager](./module-manager.md) {prereq}
-* [Messages and Queries](./messages-and-queries.md) {prereq}
+* [Module Manager](./01-module-manager.md) {prereq}
+* [Messages and Queries](./02-messages-and-queries.md) {prereq}
 
 ## `Querier` type
 
@@ -19,10 +19,10 @@ The `querier` type defined in the Cosmos SDK will be deprecated in favor of [gRP
 
 Let us break it down:
 
-* The [`Context`](../core/context.md) contains all the necessary information needed to process the `query`, as well as a branch of the latest state. It is primarily used by the [`keeper`](./keeper.md) to access the state.
-* The `path` is an array of `string`s that contains the type of the query, and that can also contain `query` arguments. See [`queries`](./messages-and-queries.md#queries) for more information.
+* The [`Context`](../core/02-context.md) contains all the necessary information needed to process the `query`, as well as a branch of the latest state. It is primarily used by the [`keeper`](./06-keeper.md) to access the state.
+* The `path` is an array of `string`s that contains the type of the query, and that can also contain `query` arguments. See [`queries`](./02-messages-and-queries.md#queries) for more information.
 * The `req` itself is primarily used to retrieve arguments if they are too large to fit in the `path`. This is done using the `Data` field of `req`.
-* The result in `[]byte` returned to `BaseApp`, marshalled using the application's [`codec`](../core/encoding.md).
+* The result in `[]byte` returned to `BaseApp`, marshalled using the application's [`codec`](../core/05-encoding.md).
 
 ## Implementation of a module query service
 

@@ -8,11 +8,11 @@ A store is a data structure that holds the state of the application. {synopsis}
 
 ## Pre-requisite Readings
 
-* [Anatomy of a Cosmos SDK application](../basics/app-anatomy.md) {prereq}
+* [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md) {prereq}
 
 ## Introduction to Cosmos SDK Stores
 
-The Cosmos SDK comes with a large set of stores to persist the state of applications. By default, the main store of Cosmos SDK applications is a `multistore`, i.e. a store of stores. Developers can add any number of key-value stores to the multistore, depending on their application needs. The multistore exists to support the modularity of the Cosmos SDK, as it lets each module declare and manage their own subset of the state. Key-value stores in the multistore can only be accessed with a specific capability `key`, which is typically held in the [`keeper`](../building-modules/keeper.md) of the module that declared the store.
+The Cosmos SDK comes with a large set of stores to persist the state of applications. By default, the main store of Cosmos SDK applications is a `multistore`, i.e. a store of stores. Developers can add any number of key-value stores to the multistore, depending on their application needs. The multistore exists to support the modularity of the Cosmos SDK, as it lets each module declare and manage their own subset of the state. Key-value stores in the multistore can only be accessed with a specific capability `key`, which is typically held in the [`keeper`](../building-modules/06-keeper.md) of the module that declared the store.
 
 ```text
 +-----------------------------------------------------+
@@ -64,7 +64,7 @@ The `GetStoreType` is a simple method that returns the type of store, whereas a 
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L247-L277
 
-Branching and cache is used ubiquitously in the Cosmos SDK and required to be implemented on every store type. A storage branch creates an isolated, ephemeral branch of a store that can be passed around and updated without affecting the main underlying store. This is used to trigger temporary state-transitions that may be reverted later should an error occur. Read more about it in [context](./context.md#Store-branching)
+Branching and cache is used ubiquitously in the Cosmos SDK and required to be implemented on every store type. A storage branch creates an isolated, ephemeral branch of a store that can be passed around and updated without affecting the main underlying store. This is used to trigger temporary state-transitions that may be reverted later should an error occur. Read more about it in [context](./02-context.md#Store-branching)
 
 ### Commit Store
 
@@ -76,7 +76,7 @@ The `Committer` is an interface that defines methods to persist changes to disk:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L21-L28
 
-The `CommitID` is a deterministic commit of the state tree. Its hash is returned to the underlying consensus engine and stored in the block header. Note that commit store interfaces exist for various purposes, one of which is to make sure not every object can commit the store. As part of the [object-capabilities model](./ocap.md) of the Cosmos SDK, only `baseapp` should have the ability to commit stores. For example, this is the reason why the `ctx.KVStore()` method by which modules typically access stores returns a `KVStore` and not a `CommitKVStore`.
+The `CommitID` is a deterministic commit of the state tree. Its hash is returned to the underlying consensus engine and stored in the block header. Note that commit store interfaces exist for various purposes, one of which is to make sure not every object can commit the store. As part of the [object-capabilities model](./10-ocap.md) of the Cosmos SDK, only `baseapp` should have the ability to commit stores. For example, this is the reason why the `ctx.KVStore()` method by which modules typically access stores returns a `KVStore` and not a `CommitKVStore`.
 
 The Cosmos SDK comes with many types of stores, the most used being [`CommitMultiStore`](#multistore), [`KVStore`](#kvstore) and [`GasKv` store](#gaskv-store). [Other types of stores](#other-stores) include `Transient` and `TraceKV` stores.
 
@@ -100,7 +100,7 @@ As for concrete implementation, the [`rootMulti.Store`] is the go-to implementat
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/rootmulti/store.go#L38-L61
 
-The `rootMulti.Store` is a base-layer multistore built around a `db` on top of which multiple `KVStores` can be mounted, and is the default multistore store used in [`baseapp`](./baseapp.md).
+The `rootMulti.Store` is a base-layer multistore built around a `db` on top of which multiple `KVStores` can be mounted, and is the default multistore store used in [`baseapp`](./00-baseapp.md).
 
 ### CacheMultiStore
 
@@ -116,9 +116,9 @@ Whenever the `rootMulti.Store` needs to be branched, a [`cachemulti.Store`](http
 
 A `KVStore` is a simple key-value store used to store and retrieve data. A `CommitKVStore` is a `KVStore` that also implements a `Committer`. By default, stores mounted in `baseapp`'s main `CommitMultiStore` are `CommitKVStore`s. The `KVStore` interface is primarily used to restrict modules from accessing the committer.
 
-Individual `KVStore`s are used by modules to manage a subset of the global state. `KVStores` can be accessed by objects that hold a specific key. This `key` should only be exposed to the [`keeper`](../building-modules/keeper.md) of the module that defines the store.
+Individual `KVStore`s are used by modules to manage a subset of the global state. `KVStores` can be accessed by objects that hold a specific key. This `key` should only be exposed to the [`keeper`](../building-modules/06-keeper.md) of the module that defines the store.
 
-`CommitKVStore`s are declared by proxy of their respective `key` and mounted on the application's [multistore](#multistore) in the [main application file](../basics/app-anatomy.md#core-application-file). In the same file, the `key` is also passed to the module's `keeper` that is responsible for managing the store.
+`CommitKVStore`s are declared by proxy of their respective `key` and mounted on the application's [multistore](#multistore) in the [main application file](../basics/00-app-anatomy.md#core-application-file). In the same file, the `key` is also passed to the module's `keeper` that is responsible for managing the store.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L192-L226
 
@@ -160,7 +160,7 @@ This type of store is useful to persist information that is only relevant per-bl
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/params/types/subspace.go#L21-L31
 
-Transient stores are typically accessed via the [`context`](./context.md) via the `TransientStore()` method:
+Transient stores are typically accessed via the [`context`](./02-context.md) via the `TransientStore()` method:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/context.go#L264-L267
 
@@ -188,7 +188,7 @@ This is the type used whenever an IAVL Store needs to be branched to create an i
 
 ### `GasKv` Store
 
-Cosmos SDK applications use [`gas`](../basics/gas-fees.md) to track resources usage and prevent spam. [`GasKv.Store`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/gaskv/store.go) is a `KVStore` wrapper that enables automatic gas consumption each time a read or write to the store is made. It is the solution of choice to track storage usage in Cosmos SDK applications.
+Cosmos SDK applications use [`gas`](../basics/04-gas-fees.md) to track resources usage and prevent spam. [`GasKv.Store`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/gaskv/store.go) is a `KVStore` wrapper that enables automatic gas consumption each time a read or write to the store is made. It is the solution of choice to track storage usage in Cosmos SDK applications.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/gaskv/store.go#L11-L17
 
@@ -196,7 +196,7 @@ When methods of the parent `KVStore` are called, `GasKv.Store` automatically con
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/gas.go#L219-L228
 
-By default, all `KVStores` are wrapped in `GasKv.Stores` when retrieved. This is done in the `KVStore()` method of the [`context`](./context.md):
+By default, all `KVStores` are wrapped in `GasKv.Stores` when retrieved. This is done in the `KVStore()` method of the [`context`](./02-context.md):
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/context.go#L259-L262
 

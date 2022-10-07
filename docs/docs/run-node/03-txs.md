@@ -8,7 +8,7 @@ This document describes how to generate an (unsigned) transaction, signing it (w
 
 ## Using the CLI
 
-The easiest way to send transactions is using the CLI, as we have seen in the previous page when [interacting with a node](./interact-node.md#using-the-cli). For example, running the following command
+The easiest way to send transactions is using the CLI, as we have seen in the previous page when [interacting with a node](./interact-03-node.md#using-the-cli). For example, running the following command
 
 ```bash
 simd tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-chain --keyring-backend test
@@ -18,7 +18,7 @@ will run the following steps:
 
 * generate a transaction with one `Msg` (`x/bank`'s `MsgSend`), and print the generated transaction to the console.
 * ask the user for confirmation to send the transaction from the `$MY_VALIDATOR_ADDRESS` account.
-* fetch `$MY_VALIDATOR_ADDRESS` from the keyring. This is possible because we have [set up the CLI's keyring](./keyring.md) in a previous step.
+* fetch `$MY_VALIDATOR_ADDRESS` from the keyring. This is possible because we have [set up the CLI's keyring](./00-keyring.md) in a previous step.
 * sign the generated transaction with the keyring's account.
 * broadcast the signed transaction to the network. This is possible because the CLI connects to the node's Tendermint RPC endpoint.
 
@@ -175,7 +175,7 @@ At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 
 ### Signing a Transaction
 
-We set encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:
+We set encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-020-protobuf-transaction-05-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:
 
 * for each signer, populate the signer's `SignerInfo` inside `TxBuilder`,
 * once all `SignerInfo`s are populated, for each signer, sign the `SignDoc` (the payload to be signed).
@@ -263,7 +263,7 @@ func sendTx() error {
 
 ### Broadcasting a Transaction
 
-The preferred way to broadcast a transaction is to use gRPC, though using REST (via `gRPC-gateway`) or the Tendermint RPC is also posible. An overview of the differences between these methods is exposed [here](../core/grpc_rest.md). For this tutorial, we will only describe the gRPC method.
+The preferred way to broadcast a transaction is to use gRPC, though using REST (via `gRPC-gateway`) or the Tendermint RPC is also posible. An overview of the differences between these methods is exposed [here](../core/06-grpc_rest.md). For this tutorial, we will only describe the gRPC method.
 
 ```go
 import (

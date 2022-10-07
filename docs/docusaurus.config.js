@@ -64,8 +64,7 @@ const config = {
         hideOnScroll: true,
         logo: {
           alt: "Cosmos SDK Logo",
-          src: "img/favicon.svg",
-          srcDark: "img/favicon-dark.svg",
+          src: "img/logo-sdk.svg",
         },
         items: [
           {

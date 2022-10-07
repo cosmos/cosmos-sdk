@@ -42,8 +42,9 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 
 	// write some data in substore
 	kv, _ := rs.GetStore(key).(storetypes.KVStore)
+	newKV := store2.NewStoreAPI(kv)
 	require.NotNil(t, kv)
-	store2.Set(kv, k, v)
+	newKV.Set(k, v)
 	commitID := rs.Commit()
 	require.Equal(t, int64(1), commitID.Version)
 }
@@ -59,9 +60,10 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 
 	// query data in substore
 	kv, _ := rs.GetStore(key).(storetypes.KVStore)
+	newKV := store2.NewStoreAPI(kv)
 
 	require.NotNil(t, kv)
-	require.Equal(t, v, store2.Get(kv, k))
+	require.Equal(t, v, newKV.Get(k))
 }
 
 // Test that we can make commits and then reload old versions.

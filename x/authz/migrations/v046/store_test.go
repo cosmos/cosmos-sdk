@@ -99,11 +99,11 @@ func TestMigration(t *testing.T) {
 		},
 	}
 
-	store := ctx.KVStore(authzKey)
+	store := store2.NewStoreAPI(ctx.KVStore(authzKey))
 
 	for _, g := range grants {
 		grant := g.authorization()
-		store2.Set(store, v046.GrantStoreKey(g.grantee, g.granter, g.msgType), cdc.MustMarshal(&grant))
+		store.Set(v046.GrantStoreKey(g.grantee, g.granter, g.msgType), cdc.MustMarshal(&grant))
 	}
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(1 * time.Hour))

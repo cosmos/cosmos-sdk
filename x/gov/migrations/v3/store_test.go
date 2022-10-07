@@ -24,6 +24,7 @@ func TestMigrateStore(t *testing.T) {
 	govKey := sdk.NewKVStoreKey("gov")
 	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(govKey)
+	newStore := store2.NewStoreAPI(store)
 
 	propTime := time.Unix(1e9, 0)
 
@@ -39,8 +40,8 @@ func TestMigrateStore(t *testing.T) {
 	prop2Bz, err := cdc.Marshal(&prop2)
 	require.NoError(t, err)
 
-	store2.Set(store, v1gov.ProposalKey(prop1.ProposalId), prop1Bz)
-	store2.Set(store, v1gov.ProposalKey(prop2.ProposalId), prop2Bz)
+	newStore.Set(v1gov.ProposalKey(prop1.ProposalId), prop1Bz)
+	newStore.Set(v1gov.ProposalKey(prop2.ProposalId), prop2Bz)
 
 	// Run migrations.
 	err = v3gov.MigrateStore(ctx, govKey, cdc)

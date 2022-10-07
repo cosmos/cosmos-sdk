@@ -21,6 +21,7 @@ var ParamsKey = []byte{0x09}
 // module state.
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
+	newStore := store2.NewStoreAPI(store)
 	var currParams types.Params
 	legacySubspace.GetParamSet(ctx, &currParams)
 
@@ -33,7 +34,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace 
 		return err
 	}
 
-	store2.Set(store, ParamsKey, bz)
+	newStore.Set(ParamsKey, bz)
 
 	return nil
 }

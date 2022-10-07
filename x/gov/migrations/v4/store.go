@@ -11,6 +11,7 @@ import (
 
 func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.ParamSubspace, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
+	newStore := store2.NewStoreAPI(store)
 
 	dp := govv1.DepositParams{}
 	vp := govv1.VotingParams{}
@@ -34,7 +35,7 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 		return err
 	}
 
-	store2.Set(store, ParamsKey, bz)
+	newStore.Set(ParamsKey, bz)
 
 	return nil
 }

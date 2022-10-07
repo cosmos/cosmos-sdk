@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/math"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -15,10 +14,10 @@ import (
 
 // GetDelegation returns a specific delegation.
 func (k Keeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation types.Delegation, found bool) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := types.GetDelegationKey(delAddr, valAddr)
 
-	value := store2.Get(store, key)
+	value := store.Get(key)
 	if value == nil {
 		return delegation, false
 	}
@@ -95,9 +94,9 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddres
 func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
-	store2.Set(store, types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()), b)
+	store.Set(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()), b)
 }
 
 // RemoveDelegation removes a delegation
@@ -109,8 +108,8 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) e
 		return err
 	}
 
-	store := ctx.KVStore(k.storeKey)
-	store2.Delete(store, types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()))
+	store := k.getStore(ctx)
+	store.Delete(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()))
 	return nil
 }
 
@@ -136,9 +135,9 @@ func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddres
 
 // GetUnbondingDelegation returns a unbonding delegation.
 func (k Keeper) GetUnbondingDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (ubd types.UnbondingDelegation, found bool) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := types.GetUBDKey(delAddr, valAddr)
-	value := store2.Get(store, key)
+	value := store.Get(key)
 
 	if value == nil {
 		return ubd, false
@@ -152,14 +151,14 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context, delAddr sdk.AccAddress, 
 // GetUnbondingDelegationsFromValidator returns all unbonding delegations from a
 // particular validator.
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.GetUBDsByValIndexKey(valAddr))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		key := types.GetUBDKeyFromValIndexKey(iterator.Key())
-		value := store2.Get(store, key)
+		value := store.Get(key)
 		ubd := types.MustUnmarshalUBD(k.cdc, value)
 		ubds = append(ubds, ubd)
 	}
@@ -275,29 +274,29 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx sdk.Context, delegatorAddr 
 func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	delegatorAddress := sdk.MustAccAddressFromBech32(ubd.DelegatorAddress)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	bz := types.MustMarshalUBD(k.cdc, ubd)
 	addr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
 	if err != nil {
 		panic(err)
 	}
 	key := types.GetUBDKey(delegatorAddress, addr)
-	store2.Set(store, key, bz)
-	store2.Set(store, types.GetUBDByValIndexKey(delegatorAddress, addr), []byte{}) // index, store empty bytes
+	store.Set(key, bz)
+	store.Set(types.GetUBDByValIndexKey(delegatorAddress, addr), []byte{}) // index, store empty bytes
 }
 
 // RemoveUnbondingDelegation removes the unbonding delegation object and associated index.
 func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	delegatorAddress := sdk.MustAccAddressFromBech32(ubd.DelegatorAddress)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	addr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
 	if err != nil {
 		panic(err)
 	}
 	key := types.GetUBDKey(delegatorAddress, addr)
-	store2.Delete(store, key)
-	store2.Delete(store, types.GetUBDByValIndexKey(delegatorAddress, addr))
+	store.Delete(key)
+	store.Delete(types.GetUBDByValIndexKey(delegatorAddress, addr))
 }
 
 // SetUnbondingDelegationEntry adds an entry to the unbonding delegation at
@@ -324,9 +323,9 @@ func (k Keeper) SetUnbondingDelegationEntry(
 // is a slice of DVPairs corresponding to unbonding delegations that expire at a
 // certain time.
 func (k Keeper) GetUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvPairs []types.DVPair) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
-	bz := store2.Get(store, types.GetUnbondingDelegationTimeKey(timestamp))
+	bz := store.Get(types.GetUnbondingDelegationTimeKey(timestamp))
 	if bz == nil {
 		return []types.DVPair{}
 	}
@@ -339,9 +338,9 @@ func (k Keeper) GetUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvPa
 
 // SetUBDQueueTimeSlice sets a specific unbonding queue timeslice.
 func (k Keeper) SetUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVPair) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	bz := k.cdc.MustMarshal(&types.DVPairs{Pairs: keys})
-	store2.Set(store, types.GetUnbondingDelegationTimeKey(timestamp), bz)
+	store.Set(types.GetUnbondingDelegationTimeKey(timestamp), bz)
 }
 
 // InsertUBDQueue inserts an unbonding delegation to the appropriate timeslice
@@ -381,7 +380,7 @@ func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context, currTime time.Time) (m
 
 		matureUnbonds = append(matureUnbonds, timeslice.Pairs...)
 
-		store2.Delete(store, unbondingTimesliceIterator.Key())
+		store.Delete(unbondingTimesliceIterator.Key())
 	}
 
 	return matureUnbonds
@@ -409,10 +408,10 @@ func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress, maxR
 
 // GetRedelegation returns a redelegation.
 func (k Keeper) GetRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) (red types.Redelegation, found bool) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := types.GetREDKey(delAddr, valSrcAddr, valDstAddr)
 
-	value := store2.Get(store, key)
+	value := store.Get(key)
 	if value == nil {
 		return red, false
 	}
@@ -425,14 +424,14 @@ func (k Keeper) GetRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, valSrcA
 // GetRedelegationsFromSrcValidator returns all redelegations from a particular
 // validator.
 func (k Keeper) GetRedelegationsFromSrcValidator(ctx sdk.Context, valAddr sdk.ValAddress) (reds []types.Redelegation) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.GetREDsFromValSrcIndexKey(valAddr))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		key := types.GetREDKeyFromValSrcIndexKey(iterator.Key())
-		value := store2.Get(store, key)
+		value := store.Get(key)
 		red := types.MustUnmarshalRED(k.cdc, value)
 		reds = append(reds, red)
 	}
@@ -465,7 +464,7 @@ func (k Keeper) HasMaxRedelegationEntries(ctx sdk.Context, delegatorAddr sdk.Acc
 func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 	delegatorAddress := sdk.MustAccAddressFromBech32(red.DelegatorAddress)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	bz := types.MustMarshalRED(k.cdc, red)
 	valSrcAddr, err := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
 	if err != nil {
@@ -476,9 +475,9 @@ func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 		panic(err)
 	}
 	key := types.GetREDKey(delegatorAddress, valSrcAddr, valDestAddr)
-	store2.Set(store, key, bz)
-	store2.Set(store, types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr), []byte{})
-	store2.Set(store, types.GetREDByValDstIndexKey(delegatorAddress, valSrcAddr, valDestAddr), []byte{})
+	store.Set(key, bz)
+	store.Set(types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr), []byte{})
+	store.Set(types.GetREDByValDstIndexKey(delegatorAddress, valSrcAddr, valDestAddr), []byte{})
 }
 
 // SetRedelegationEntry adds an entry to the unbonding delegation at the given
@@ -522,7 +521,7 @@ func (k Keeper) IterateRedelegations(ctx sdk.Context, fn func(index int64, red t
 func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 	delegatorAddress := sdk.MustAccAddressFromBech32(red.DelegatorAddress)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	valSrcAddr, err := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
 	if err != nil {
 		panic(err)
@@ -532,9 +531,9 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 		panic(err)
 	}
 	redKey := types.GetREDKey(delegatorAddress, valSrcAddr, valDestAddr)
-	store2.Delete(store, redKey)
-	store2.Delete(store, types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr))
-	store2.Delete(store, types.GetREDByValDstIndexKey(delegatorAddress, valSrcAddr, valDestAddr))
+	store.Delete(redKey)
+	store.Delete(types.GetREDByValSrcIndexKey(delegatorAddress, valSrcAddr, valDestAddr))
+	store.Delete(types.GetREDByValDstIndexKey(delegatorAddress, valSrcAddr, valDestAddr))
 }
 
 // redelegation queue timeslice operations
@@ -543,9 +542,9 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 // timeslice is a slice of DVVTriplets corresponding to redelegations that
 // expire at a certain time.
 func (k Keeper) GetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvvTriplets []types.DVVTriplet) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
-	bz := store2.Get(store, types.GetRedelegationTimeKey(timestamp))
+	bz := store.Get(types.GetRedelegationTimeKey(timestamp))
 	if bz == nil {
 		return []types.DVVTriplet{}
 	}
@@ -558,9 +557,9 @@ func (k Keeper) GetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Ti
 
 // SetRedelegationQueueTimeSlice sets a specific redelegation queue timeslice.
 func (k Keeper) SetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVVTriplet) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	bz := k.cdc.MustMarshal(&types.DVVTriplets{Triplets: keys})
-	store2.Set(store, types.GetRedelegationTimeKey(timestamp), bz)
+	store.Set(types.GetRedelegationTimeKey(timestamp), bz)
 }
 
 // InsertRedelegationQueue insert an redelegation delegation to the appropriate
@@ -605,7 +604,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 
 		matureRedelegations = append(matureRedelegations, timeslice.Triplets...)
 
-		store2.Delete(store, redelegationTimesliceIterator.Key())
+		store.Delete(redelegationTimesliceIterator.Key())
 	}
 
 	return matureRedelegations

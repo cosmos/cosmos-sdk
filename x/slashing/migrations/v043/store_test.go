@@ -19,6 +19,7 @@ func TestStoreMigration(t *testing.T) {
 	slashingKey := sdk.NewKVStoreKey("slashing")
 	ctx := testutil.DefaultContext(slashingKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(slashingKey)
+	newStore := store2.NewStoreAPI(store)
 
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	consAddr := sdk.ConsAddress(addr1)
@@ -49,7 +50,7 @@ func TestStoreMigration(t *testing.T) {
 
 	// Set all the old keys to the store
 	for _, tc := range testCases {
-		store2.Set(store, tc.oldKey, value)
+		newStore.Set(tc.oldKey, value)
 	}
 
 	// Run migrations.
@@ -61,9 +62,9 @@ func TestStoreMigration(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			if !bytes.Equal(tc.oldKey, tc.newKey) {
-				require.Nil(t, store2.Get(store, tc.oldKey))
+				require.Nil(t, newStore.Get(tc.oldKey))
 			}
-			require.Equal(t, value, store2.Get(store, tc.newKey))
+			require.Equal(t, value, newStore.Get(tc.newKey))
 		})
 	}
 }

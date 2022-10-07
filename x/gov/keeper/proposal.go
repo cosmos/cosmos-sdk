@@ -128,14 +128,14 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 		panic(err)
 	}
 
-	store := ctx.KVStore(keeper.storeKey)
-	store2.Set(store, types.ProposalKey(proposal.Id), bz)
+	store := keeper.getStore(ctx)
+	store.Set(types.ProposalKey(proposal.Id), bz)
 }
 
 // DeleteProposal deletes a proposal from store.
 // Panics if the proposal doesn't exist.
 func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := keeper.getStore(ctx)
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
 		panic(fmt.Sprintf("couldn't find proposal with id#%d", proposalID))
@@ -148,7 +148,7 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 		keeper.RemoveFromActiveProposalQueue(ctx, proposalID, *proposal.VotingEndTime)
 	}
 
-	store2.Delete(store, types.ProposalKey(proposalID))
+	store.Delete(types.ProposalKey(proposalID))
 }
 
 // IterateProposals iterates over the all the proposals and performs a callback function.
@@ -248,8 +248,8 @@ func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err erro
 
 // SetProposalID sets the new proposal ID to the store
 func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
-	store := ctx.KVStore(keeper.storeKey)
-	store2.Set(store, types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
+	store := keeper.getStore(ctx)
+	store.Set(types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
 }
 
 func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal v1.Proposal) {

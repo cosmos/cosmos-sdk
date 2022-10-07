@@ -76,27 +76,31 @@ func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []types.Accoun
 	return accounts
 }
 
+func (ak AccountKeeper) getStore(ctx sdk.Context) store2.StoreAPI {
+	return store2.NewStoreAPI(ctx.KVStore(ak.storeKey))
+}
+
 // SetAccount implements AccountKeeperI.
 func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.AccountI) {
 	addr := acc.GetAddress()
-	store := ctx.KVStore(ak.storeKey)
+	store := ak.getStore(ctx)
 
 	bz, err := ak.MarshalAccount(acc)
 	if err != nil {
 		panic(err)
 	}
 
-	store2.Set(store, types.AddressStoreKey(addr), bz)
-	store2.Set(store, types.AccountNumberStoreKey(acc.GetAccountNumber()), addr.Bytes())
+	store.Set(types.AddressStoreKey(addr), bz)
+	store.Set(types.AccountNumberStoreKey(acc.GetAccountNumber()), addr.Bytes())
 }
 
 // RemoveAccount removes an account for the account mapper store.
 // NOTE: this will cause supply invariant violation if called
 func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountI) {
 	addr := acc.GetAddress()
-	store := ctx.KVStore(ak.storeKey)
-	store2.Delete(store, types.AddressStoreKey(addr))
-	store2.Delete(store, types.AccountNumberStoreKey(acc.GetAccountNumber()))
+	store := ak.getStore(ctx)
+	store.Delete(types.AddressStoreKey(addr))
+	store.Delete(types.AccountNumberStoreKey(acc.GetAccountNumber()))
 }
 
 // IterateAccounts iterates over all the stored accounts and performs a callback function.

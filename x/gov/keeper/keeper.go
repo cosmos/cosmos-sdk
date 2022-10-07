@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -146,28 +145,28 @@ func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) authtypes.ModuleAccou
 
 // InsertActiveProposalQueue inserts a ProposalID into the active proposal queue at endTime
 func (keeper Keeper) InsertActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := keeper.getStore(ctx)
 	bz := types.GetProposalIDBytes(proposalID)
-	store2.Set(store, types.ActiveProposalQueueKey(proposalID, endTime), bz)
+	store.Set(types.ActiveProposalQueueKey(proposalID, endTime), bz)
 }
 
 // RemoveFromActiveProposalQueue removes a proposalID from the Active Proposal Queue
 func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
-	store := ctx.KVStore(keeper.storeKey)
-	store2.Delete(store, types.ActiveProposalQueueKey(proposalID, endTime))
+	store := keeper.getStore(ctx)
+	store.Delete(types.ActiveProposalQueueKey(proposalID, endTime))
 }
 
 // InsertInactiveProposalQueue Inserts a ProposalID into the inactive proposal queue at endTime
 func (keeper Keeper) InsertInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := keeper.getStore(ctx)
 	bz := types.GetProposalIDBytes(proposalID)
-	store2.Set(store, types.InactiveProposalQueueKey(proposalID, endTime), bz)
+	store.Set(types.InactiveProposalQueueKey(proposalID, endTime), bz)
 }
 
 // RemoveFromInactiveProposalQueue removes a proposalID from the Inactive Proposal Queue
 func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
-	store := ctx.KVStore(keeper.storeKey)
-	store2.Delete(store, types.InactiveProposalQueueKey(proposalID, endTime))
+	store := keeper.getStore(ctx)
+	store.Delete(types.InactiveProposalQueueKey(proposalID, endTime))
 }
 
 // Iterators

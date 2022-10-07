@@ -72,20 +72,24 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
+func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
+	return store2.NewStoreAPI(ctx.KVStore(k.storeKey))
+}
+
 // setProtocolVersion sets the protocol version to state
 func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	versionBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(versionBytes, v)
-	store2.Set(store, []byte{types.ProtocolVersionByte}, versionBytes)
+	store.Set([]byte{types.ProtocolVersionByte}, versionBytes)
 }
 
 // getProtocolVersion gets the protocol version from state
 func (k Keeper) getProtocolVersion(ctx sdk.Context) uint64 {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	ok := store.Has([]byte{types.ProtocolVersionByte})
 	if ok {
-		pvBytes := store2.Get(store, []byte{types.ProtocolVersionByte})
+		pvBytes := store.Get([]byte{types.ProtocolVersionByte})
 		protocolVersion := binary.BigEndian.Uint64(pvBytes)
 
 		return protocolVersion
@@ -97,8 +101,9 @@ func (k Keeper) getProtocolVersion(ctx sdk.Context) uint64 {
 // SetModuleVersionMap saves a given version map to state
 func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 	if len(vm) > 0 {
-		store := ctx.KVStore(k.storeKey)
+		store := k.getStore(ctx)
 		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
+		newVersionStore := store2.NewStoreAPI(versionStore)
 		// Even though the underlying store (cachekv) store is sorted, we still
 		// prefer a deterministic iteration order of the map, to avoid undesired
 		// surprises if we ever change stores.
@@ -114,7 +119,7 @@ func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 			nameBytes := []byte(modName)
 			verBytes := make([]byte, 8)
 			binary.BigEndian.PutUint64(verBytes, ver)
-			store2.Set(versionStore, nameBytes, verBytes)
+			newVersionStore.Set(nameBytes, verBytes)
 		}
 	}
 }
@@ -192,7 +197,7 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
 	}
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	// clear any old IBC state stored by previous plan
 	oldPlan, found := k.GetUpgradePlan(ctx)
@@ -201,22 +206,22 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	}
 
 	bz := k.cdc.MustMarshal(&plan)
-	store2.Set(store, types.PlanKey(), bz)
+	store.Set(types.PlanKey(), bz)
 
 	return nil
 }
 
 // SetUpgradedClient sets the expected upgraded client for the next version of this chain at the last height the current chain will commit.
 func (k Keeper) SetUpgradedClient(ctx sdk.Context, planHeight int64, bz []byte) error {
-	store := ctx.KVStore(k.storeKey)
-	store2.Set(store, types.UpgradedClientKey(planHeight), bz)
+	store := k.getStore(ctx)
+	store.Set(types.UpgradedClientKey(planHeight), bz)
 	return nil
 }
 
 // GetUpgradedClient gets the expected upgraded client for the next version of this chain
 func (k Keeper) GetUpgradedClient(ctx sdk.Context, height int64) ([]byte, bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store2.Get(store, types.UpgradedClientKey(height))
+	store := k.getStore(ctx)
+	bz := store.Get(types.UpgradedClientKey(height))
 	if len(bz) == 0 {
 		return nil, false
 	}
@@ -227,15 +232,15 @@ func (k Keeper) GetUpgradedClient(ctx sdk.Context, height int64) ([]byte, bool) 
 // SetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
 // using the last height committed on this chain.
 func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, planHeight int64, bz []byte) error {
-	store := ctx.KVStore(k.storeKey)
-	store2.Set(store, types.UpgradedConsStateKey(planHeight), bz)
+	store := k.getStore(ctx)
+	store.Set(types.UpgradedConsStateKey(planHeight), bz)
 	return nil
 }
 
 // GetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
 func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]byte, bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store2.Get(store, types.UpgradedConsStateKey(lastHeight))
+	store := k.getStore(ctx)
+	bz := store.Get(types.UpgradedConsStateKey(lastHeight))
 	if len(bz) == 0 {
 		return nil, false
 	}
@@ -289,9 +294,9 @@ func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
 // ClearIBCState clears any planned IBC state
 func (k Keeper) ClearIBCState(ctx sdk.Context, lastHeight int64) {
 	// delete IBC client and consensus state from store if this is IBC plan
-	store := ctx.KVStore(k.storeKey)
-	store2.Delete(store, types.UpgradedClientKey(lastHeight))
-	store2.Delete(store, types.UpgradedConsStateKey(lastHeight))
+	store := k.getStore(ctx)
+	store.Delete(types.UpgradedClientKey(lastHeight))
+	store.Delete(types.UpgradedConsStateKey(lastHeight))
 }
 
 // ClearUpgradePlan clears any schedule upgrade and associated IBC states.
@@ -302,8 +307,8 @@ func (k Keeper) ClearUpgradePlan(ctx sdk.Context) {
 		k.ClearIBCState(ctx, oldPlan.Height)
 	}
 
-	store := ctx.KVStore(k.storeKey)
-	store2.Delete(store, types.PlanKey())
+	store := k.getStore(ctx)
+	store.Delete(types.PlanKey())
 }
 
 // Logger returns a module-specific logger.
@@ -314,8 +319,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // GetUpgradePlan returns the currently scheduled Plan if any, setting havePlan to true if there is a scheduled
 // upgrade or false if there is none
 func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store2.Get(store, types.PlanKey())
+	store := k.getStore(ctx)
+	bz := store.Get(types.PlanKey())
 	if bz == nil {
 		return plan, false
 	}
@@ -326,8 +331,8 @@ func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool)
 
 // setDone marks this upgrade name as being done so the name can't be reused accidentally
 func (k Keeper) setDone(ctx sdk.Context, name string) {
-	store := ctx.KVStore(k.storeKey)
-	store2.Set(store, encodeDoneKey(name, ctx.BlockHeight()), []byte{1})
+	store := k.getStore(ctx)
+	store.Set(encodeDoneKey(name, ctx.BlockHeight()), []byte{1})
 }
 
 // HasHandler returns true iff there is a handler registered for this name

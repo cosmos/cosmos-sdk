@@ -27,7 +27,9 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 
 func migrateDoneUpgradeKeys(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	store := ctx.KVStore(storeKey)
+	newStore := store2.NewStoreAPI(store)
 	oldDoneStore := prefix.NewStore(store, []byte{types.DoneByte})
+	oldDoneStore2 := store2.NewStoreAPI(oldDoneStore)
 	oldDoneStoreIter := oldDoneStore.Iterator(nil, nil)
 	defer oldDoneStoreIter.Close()
 
@@ -37,8 +39,8 @@ func migrateDoneUpgradeKeys(ctx sdk.Context, storeKey storetypes.StoreKey) error
 		upgradeHeight := int64(binary.BigEndian.Uint64(oldDoneStoreIter.Value()))
 		newKey := encodeDoneKey(upgradeName, upgradeHeight)
 
-		store2.Set(store, newKey, []byte{1})
-		store2.Delete(oldDoneStore, oldKey)
+		newStore.Set(newKey, []byte{1})
+		oldDoneStore2.Delete(oldKey)
 	}
 	return nil
 }

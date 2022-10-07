@@ -79,6 +79,7 @@ func TestKeeper(t *testing.T) {
 	cdc, ctx, skey, _, keeper := testComponents()
 
 	store := prefix.NewStore(ctx.KVStore(skey), []byte("test/"))
+	newStore := store2.NewStoreAPI(store)
 	space := keeper.Subspace("test")
 	require.False(t, space.HasKeyTable())
 	space = space.WithKeyTable(table)
@@ -110,7 +111,7 @@ func TestKeeper(t *testing.T) {
 	// Test store.Get equals space.Get
 	for i, kv := range kvs {
 		var param int64
-		bz := store2.Get(store, []byte(kv.key))
+		bz := newStore.Get([]byte(kv.key))
 		require.NotNil(t, bz, "KVStore.Get returns nil, tc #%d", i)
 		err := cdc.UnmarshalJSON(bz, &param)
 		require.NoError(t, err, "UnmarshalJSON returns error, tc #%d", i)

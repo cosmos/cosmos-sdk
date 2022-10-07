@@ -140,7 +140,7 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 	var ubds types.UnbondingDelegations
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 	if err != nil {
@@ -151,7 +151,7 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 	ubdStore := prefix.NewStore(store, srcValPrefix)
 	pageRes, err := query.Paginate(ubdStore, req.Pagination, func(key []byte, value []byte) error {
 		storeKey := types.GetUBDKeyFromValIndexKey(append(srcValPrefix, key...))
-		storeValue := store2.Get(store, storeKey)
+		storeValue := store.Get(storeKey)
 
 		ubd, err := types.UnmarshalUBD(k.cdc, storeValue)
 		if err != nil {
@@ -503,7 +503,8 @@ func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Querier, req *types
 	redStore := prefix.NewStore(store, srcValPrefix)
 	res, err = query.Paginate(redStore, req.Pagination, func(key []byte, value []byte) error {
 		storeKey := types.GetREDKeyFromValSrcIndexKey(append(srcValPrefix, key...))
-		storeValue := store2.Get(store, storeKey)
+		newStore := store2.NewStoreAPI(store)
+		storeValue := newStore.Get(storeKey)
 		red, err := types.UnmarshalRED(k.cdc, storeValue)
 		if err != nil {
 			return err

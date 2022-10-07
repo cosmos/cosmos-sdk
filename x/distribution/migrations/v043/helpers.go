@@ -14,6 +14,8 @@ import (
 // prefix_bytes | address_len (1 byte) | address_bytes
 func MigratePrefixAddress(store sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(store, prefixBz)
+	oldStore2 := store2.NewStoreAPI(oldStore)
+	newStore := store2.NewStoreAPI(store)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -24,8 +26,8 @@ func MigratePrefixAddress(store sdk.KVStore, prefixBz []byte) {
 		newStoreKey = append(newStoreKey, address.MustLengthPrefix(addr)...)
 
 		// Set new key on store. Values don't change.
-		store2.Set(store, newStoreKey, oldStoreIter.Value())
-		store2.Delete(oldStore, oldStoreIter.Key())
+		newStore.Set(newStoreKey, oldStoreIter.Value())
+		oldStore2.Delete(oldStoreIter.Key())
 	}
 }
 
@@ -35,6 +37,8 @@ func MigratePrefixAddress(store sdk.KVStore, prefixBz []byte) {
 // prefix_bytes | address_len (1 byte) | address_bytes | arbitrary_bytes
 func MigratePrefixAddressBytes(store sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(store, prefixBz)
+	oldStore2 := store2.NewStoreAPI(oldStore)
+	newStore := store2.NewStoreAPI(store)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -45,8 +49,8 @@ func MigratePrefixAddressBytes(store sdk.KVStore, prefixBz []byte) {
 		newStoreKey := append(append(prefixBz, address.MustLengthPrefix(addr)...), endBz...)
 
 		// Set new key on store. Values don't change.
-		store2.Set(store, newStoreKey, oldStoreIter.Value())
-		store2.Delete(oldStore, oldStoreIter.Key())
+		newStore.Set(newStoreKey, oldStoreIter.Value())
+		oldStore2.Delete(oldStoreIter.Key())
 	}
 }
 
@@ -56,6 +60,8 @@ func MigratePrefixAddressBytes(store sdk.KVStore, prefixBz []byte) {
 // prefix_bytes | address_1_len (1 byte) | address_1_bytes | address_2_len (1 byte) | address_2_bytes
 func MigratePrefixAddressAddress(store sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(store, prefixBz)
+	oldStore2 := store2.NewStoreAPI(oldStore)
+	newStore := store2.NewStoreAPI(store)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -66,7 +72,7 @@ func MigratePrefixAddressAddress(store sdk.KVStore, prefixBz []byte) {
 		newStoreKey := append(append(prefixBz, address.MustLengthPrefix(addr1)...), address.MustLengthPrefix(addr2)...)
 
 		// Set new key on store. Values don't change.
-		store2.Set(store, newStoreKey, oldStoreIter.Value())
-		store2.Delete(oldStore, oldStoreIter.Key())
+		newStore.Set(newStoreKey, oldStoreIter.Value())
+		oldStore2.Delete(oldStoreIter.Key())
 	}
 }

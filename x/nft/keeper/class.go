@@ -16,8 +16,8 @@ func (k Keeper) SaveClass(ctx sdk.Context, class nft.Class) error {
 	if err != nil {
 		return sdkerrors.Wrap(err, "Marshal nft.Class failed")
 	}
-	store := ctx.KVStore(k.storeKey)
-	store2.Set(store, classStoreKey(class.Id), bz)
+	store := k.getStore(ctx)
+	store.Set(classStoreKey(class.Id), bz)
 	return nil
 }
 
@@ -30,8 +30,8 @@ func (k Keeper) UpdateClass(ctx sdk.Context, class nft.Class) error {
 	if err != nil {
 		return sdkerrors.Wrap(err, "Marshal nft.Class failed")
 	}
-	store := ctx.KVStore(k.storeKey)
-	store2.Set(store, classStoreKey(class.Id), bz)
+	store := k.getStore(ctx)
+	store.Set(classStoreKey(class.Id), bz)
 	return nil
 }
 

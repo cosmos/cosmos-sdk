@@ -18,6 +18,8 @@ import (
 // prefix_bytes | address_1_len (1 byte) | address_1_bytes | address_2_len (1 byte) | address_2_bytes | address_3_len (1 byte) | address_3_bytes
 func migratePrefixAddressAddressAddress(store sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(store, prefixBz)
+	oldStore2 := store2.NewStoreAPI(oldStore)
+	newStore := store2.NewStoreAPI(store)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -32,8 +34,8 @@ func migratePrefixAddressAddressAddress(store sdk.KVStore, prefixBz []byte) {
 		)
 
 		// Set new key on store. Values don't change.
-		store2.Set(store, newStoreKey, oldStoreIter.Value())
-		store2.Delete(oldStore, oldStoreIter.Key())
+		newStore.Set(newStoreKey, oldStoreIter.Value())
+		oldStore2.Delete(oldStoreIter.Key())
 	}
 }
 
@@ -41,6 +43,8 @@ const powerBytesLen = 8
 
 func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 	oldStore := prefix.NewStore(store, v1.ValidatorsByPowerIndexKey)
+	oldStore2 := store2.NewStoreAPI(oldStore)
+	newStore := store2.NewStoreAPI(store)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -51,8 +55,8 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 		newStoreKey := append(append(types.ValidatorsByPowerIndexKey, powerBytes...), address.MustLengthPrefix(valAddr)...)
 
 		// Set new key on store. Values don't change.
-		store2.Set(store, newStoreKey, oldStoreIter.Value())
-		store2.Delete(oldStore, oldStoreIter.Key())
+		newStore.Set(newStoreKey, oldStoreIter.Value())
+		oldStore2.Delete(oldStoreIter.Key())
 	}
 }
 

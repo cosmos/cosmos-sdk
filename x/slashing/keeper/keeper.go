@@ -46,15 +46,19 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
+func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
+	return store2.NewStoreAPI(ctx.KVStore(k.storeKey))
+}
+
 // AddPubkey sets a address-pubkey relation
 func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
 	bz, err := k.cdc.MarshalInterface(pubkey)
 	if err != nil {
 		return err
 	}
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := types.AddrPubkeyRelationKey(pubkey.Address())
-	store2.Set(store, key, bz)
+	store.Set(key, bz)
 	return nil
 }
 
@@ -108,6 +112,6 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address) {
-	store := ctx.KVStore(k.storeKey)
-	store2.Delete(store, types.AddrPubkeyRelationKey(addr))
+	store := k.getStore(ctx)
+	store.Delete(types.AddrPubkeyRelationKey(addr))
 }

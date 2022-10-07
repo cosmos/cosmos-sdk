@@ -64,6 +64,7 @@ func TestMigration(t *testing.T) {
 	}
 
 	store := ctx.KVStore(feegrantKey)
+	newStore := store2.NewStoreAPI(store)
 	for _, grant := range grants {
 		newGrant, err := feegrant.NewGrant(grant.granter, grant.grantee, &feegrant.BasicAllowance{
 			SpendLimit: grant.spendLimit,
@@ -74,7 +75,7 @@ func TestMigration(t *testing.T) {
 		bz, err := cdc.Marshal(&newGrant)
 		require.NoError(t, err)
 
-		store2.Set(store, v046.FeeAllowanceKey(grant.granter, grant.grantee), bz)
+		newStore.Set(v046.FeeAllowanceKey(grant.granter, grant.grantee), bz)
 	}
 
 	ctx = ctx.WithBlockTime(now.Add(30 * time.Hour))

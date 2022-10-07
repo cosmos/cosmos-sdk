@@ -25,6 +25,7 @@ func TestMigrateDoneUpgradeKeys(t *testing.T) {
 	upgradeKey := sdk.NewKVStoreKey("upgrade")
 	ctx := testutil.DefaultContext(upgradeKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(upgradeKey)
+	newStore := store2.NewStoreAPI(store)
 
 	testCases := []struct {
 		name     string
@@ -45,7 +46,7 @@ func TestMigrateDoneUpgradeKeys(t *testing.T) {
 			bz := make([]byte, 8)
 			binary.BigEndian.PutUint64(bz, uint64(upgrade.height))
 			oldKey := encodeOldDoneKey(upgrade)
-			store2.Set(store, oldKey, bz)
+			newStore.Set(oldKey, bz)
 		}
 
 		err := migrateDoneUpgradeKeys(ctx, upgradeKey)
@@ -54,8 +55,8 @@ func TestMigrateDoneUpgradeKeys(t *testing.T) {
 		for _, upgrade := range tc.upgrades {
 			newKey := encodeDoneKey(upgrade.name, upgrade.height)
 			oldKey := encodeOldDoneKey(upgrade)
-			require.Nil(t, store2.Get(store, oldKey))
-			require.Equal(t, []byte{1}, store2.Get(store, newKey))
+			require.Nil(t, newStore.Get(oldKey))
+			require.Equal(t, []byte{1}, newStore.Get(newKey))
 		}
 	}
 }

@@ -86,10 +86,14 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	k.hooks = sh
 }
 
+func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
+	return store2.NewStoreAPI(ctx.KVStore(k.storeKey))
+}
+
 // GetLastTotalPower Load the last total validator power.
 func (k Keeper) GetLastTotalPower(ctx sdk.Context) math.Int {
-	store := ctx.KVStore(k.storeKey)
-	bz := store2.Get(store, types.LastTotalPowerKey)
+	store := k.getStore(ctx)
+	bz := store.Get(types.LastTotalPowerKey)
 
 	if bz == nil {
 		return math.ZeroInt()
@@ -103,9 +107,9 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) math.Int {
 
 // SetLastTotalPower Set the last total validator power.
 func (k Keeper) SetLastTotalPower(ctx sdk.Context, power math.Int) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: power})
-	store2.Set(store, types.LastTotalPowerKey, bz)
+	store.Set(types.LastTotalPowerKey, bz)
 }
 
 // GetAuthority returns the x/staking module's authority.

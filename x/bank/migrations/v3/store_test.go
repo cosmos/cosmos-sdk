@@ -26,6 +26,7 @@ func TestMigrateStore(t *testing.T) {
 
 	addr := sdk.AccAddress([]byte("addr________________"))
 	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
+	newStore := store2.NewStoreAPI(prefixAccStore)
 
 	balances := sdk.NewCoins(
 		sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -36,7 +37,7 @@ func TestMigrateStore(t *testing.T) {
 		bz, err := encCfg.Codec.Marshal(&b)
 		require.NoError(t, err)
 
-		store2.Set(prefixAccStore, []byte(b.Denom), bz)
+		newStore.Set([]byte(b.Denom), bz)
 	}
 
 	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
@@ -88,6 +89,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		},
 	}
 	denomMetadataStore := prefix.NewStore(store, v2.DenomMetadataPrefix)
+	newDenomMetadataStore := store2.NewStoreAPI(denomMetadataStore)
 
 	for i := range []int{0, 1} {
 		key := append(v2.DenomMetadataPrefix, []byte(metaData[i].Base)...)
@@ -95,7 +97,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		key = append(key, []byte(metaData[i].Base)...)
 		bz, err := encCfg.Codec.Marshal(&metaData[i])
 		require.NoError(t, err)
-		store2.Set(denomMetadataStore, key, bz)
+		newDenomMetadataStore.Set(key, bz)
 	}
 
 	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))

@@ -32,11 +32,11 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 // SetDeposit sets a Deposit to the gov store
 func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit v1.Deposit) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := keeper.getStore(ctx)
 	bz := keeper.cdc.MustMarshal(&deposit)
 	depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
 
-	store2.Set(store, types.DepositKey(deposit.ProposalId, depositor), bz)
+	store.Set(types.DepositKey(deposit.ProposalId, depositor), bz)
 }
 
 // GetAllDeposits returns all the deposits from the store
@@ -59,9 +59,13 @@ func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) (deposits v
 	return
 }
 
+func (keeper Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
+	return store2.NewStoreAPI(ctx.KVStore(keeper.storeKey))
+}
+
 // DeleteAndBurnDeposits deletes and burn all the deposits on a specific proposal.
 func (keeper Keeper) DeleteAndBurnDeposits(ctx sdk.Context, proposalID uint64) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := keeper.getStore(ctx)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit v1.Deposit) bool {
 		err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, deposit.Amount)
@@ -71,7 +75,7 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx sdk.Context, proposalID uint64) {
 
 		depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
 
-		store2.Delete(store, types.DepositKey(proposalID, depositor))
+		store.Delete(types.DepositKey(proposalID, depositor))
 		return false
 	})
 }
@@ -172,7 +176,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 // RefundAndDeleteDeposits refunds and deletes all the deposits on a specific proposal.
 func (keeper Keeper) RefundAndDeleteDeposits(ctx sdk.Context, proposalID uint64) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := keeper.getStore(ctx)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit v1.Deposit) bool {
 		depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
@@ -182,7 +186,7 @@ func (keeper Keeper) RefundAndDeleteDeposits(ctx sdk.Context, proposalID uint64)
 			panic(err)
 		}
 
-		store2.Delete(store, types.DepositKey(proposalID, depositor))
+		store.Delete(types.DepositKey(proposalID, depositor))
 		return false
 	})
 }

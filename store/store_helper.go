@@ -17,15 +17,37 @@ func GetAndDecode[T any](store types.KVStore, dec func([]byte) (T, error), key [
 	return resp, err
 }
 
-func Set(store types.KVStore, key []byte, value []byte) {
-	store.Set(key, value)
+// func Set(store types.KVStore, key []byte, value []byte) {
+// 	store.Set(key, value)
+// }
+
+// func Delete(store types.KVStore, key []byte) {
+// 	store.Delete(key)
+// }
+
+// func Get(store types.KVStore, key []byte) []byte {
+// 	bz := store.Get(key)
+// 	return bz
+// }
+
+type StoreAPI struct {
+	types.KVStore
 }
 
-func Delete(store types.KVStore, key []byte) {
-	store.Delete(key)
+func NewStoreAPI(store types.KVStore) StoreAPI {
+	return StoreAPI{
+		KVStore: store,
+	}
 }
 
-func Get(store types.KVStore, key []byte) []byte {
-	bz := store.Get(key)
-	return bz
+func (store StoreAPI) Set(key []byte, value []byte) {
+	store.KVStore.Set(key, value)
+}
+
+func (store StoreAPI) Get(key []byte) []byte {
+	return store.KVStore.Get(key)
+}
+
+func (store StoreAPI) Delete(key []byte) {
+	store.KVStore.Delete(key)
 }

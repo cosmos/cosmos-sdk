@@ -101,7 +101,8 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 // by address.
 func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	accountStore := k.getAccountStore(ctx, addr)
-	bz := store2.Get(accountStore, []byte(denom))
+	newAccStore := store2.NewStoreAPI(accountStore)
+	bz := newAccStore.Get([]byte(denom))
 	balance, err := UnmarshalBalanceCompat(k.cdc, bz, denom)
 	if err != nil {
 		panic(err)

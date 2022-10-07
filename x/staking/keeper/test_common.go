@@ -3,7 +3,6 @@ package keeper // noalias
 import (
 	"bytes"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -19,7 +18,7 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 	keeper.SetValidator(ctx, validator)
 
 	// Remove any existing power key for validator.
-	store := ctx.KVStore(keeper.storeKey)
+	store := keeper.getStore(ctx)
 	deleted := false
 
 	iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsByPowerIndexKey)
@@ -34,7 +33,7 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 				deleted = true
 			}
 
-			store2.Delete(store, iterator.Key())
+			store.Delete(iterator.Key())
 		}
 	}
 

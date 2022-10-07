@@ -216,16 +216,10 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 }
 
 func decodeCoin(bz []byte) (sdk.Coin, error) {
-	if bz == nil {
-		return sdk.Coin{
-			Amount: sdk.NewInt(0),
-		}, nil
-	}
-
 	var amount math.Int
 	err := amount.Unmarshal(bz)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("unable to unmarshal supply value %v", err))
 	}
 	return sdk.Coin{
 		Amount: amount,
@@ -240,6 +234,10 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 	coin, err := store2.GetAndDecode(supplyStore, decodeCoin, conv.UnsafeStrToBytes(denom))
 	if err != nil {
 		panic(err)
+	}
+
+	if coin.IsNil() {
+		coin.Amount = sdk.NewInt(0)
 	}
 
 	return sdk.Coin{
@@ -322,9 +320,10 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metad
 func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata) {
 	store := ctx.KVStore(k.storeKey)
 	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataPrefix)
+	newStore := store2.NewStoreAPI(denomMetaDataStore)
 
 	m := k.cdc.MustMarshal(&denomMetaData)
-	store2.Set(denomMetaDataStore, []byte(denomMetaData.Base), m)
+	newStore.Set([]byte(denomMetaData.Base), m)
 }
 
 // SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.
@@ -494,12 +493,13 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 
 	store := ctx.KVStore(k.storeKey)
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
+	newStore := store2.NewStoreAPI(supplyStore)
 
 	// Bank invariants and IBC requires to remove zero coins.
 	if coin.IsZero() {
-		store2.Delete(supplyStore, conv.UnsafeStrToBytes(coin.GetDenom()))
+		newStore.Delete(conv.UnsafeStrToBytes(coin.GetDenom()))
 	} else {
-		store2.Set(supplyStore, []byte(coin.GetDenom()), intBytes)
+		newStore.Set([]byte(coin.GetDenom()), intBytes)
 	}
 }
 

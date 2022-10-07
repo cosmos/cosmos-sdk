@@ -1,17 +1,16 @@
 package keeper
 
 import (
-	store2 "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GetHistoricalInfo gets the historical info at a given height
 func (k Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (types.HistoricalInfo, bool) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := types.GetHistoricalInfoKey(height)
 
-	value := store2.Get(store, key)
+	value := store.Get(key)
 	if value == nil {
 		return types.HistoricalInfo{}, false
 	}
@@ -21,18 +20,18 @@ func (k Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (types.Historic
 
 // SetHistoricalInfo sets the historical info at a given height
 func (k Keeper) SetHistoricalInfo(ctx sdk.Context, height int64, hi *types.HistoricalInfo) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := types.GetHistoricalInfoKey(height)
 	value := k.cdc.MustMarshal(hi)
-	store2.Set(store, key, value)
+	store.Set(key, value)
 }
 
 // DeleteHistoricalInfo deletes the historical info at a given height
 func (k Keeper) DeleteHistoricalInfo(ctx sdk.Context, height int64) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := types.GetHistoricalInfoKey(height)
 
-	store2.Delete(store, key)
+	store.Delete(key)
 }
 
 // IterateHistoricalInfo provides an interator over all stored HistoricalInfo

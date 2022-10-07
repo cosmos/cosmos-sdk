@@ -60,19 +60,23 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return v4.Migrate(ctx, ctx.KVStore(m.keeper.storeKey), m.legacySubspace, m.keeper.cdc)
 }
 
+func (m Migrator) getStore(ctx sdk.Context) store2.StoreAPI {
+	return store2.NewStoreAPI(ctx.KVStore(m.keeper.storeKey))
+}
+
 // V45_SetAccount implements V45_SetAccount
 // set the account without map to accAddr to accNumber.
 //
 // NOTE: This is used for testing purposes only.
 func (m Migrator) V45_SetAccount(ctx sdk.Context, acc types.AccountI) error {
 	addr := acc.GetAddress()
-	store := ctx.KVStore(m.keeper.storeKey)
+	store := m.getStore(ctx)
 
 	bz, err := m.keeper.MarshalAccount(acc)
 	if err != nil {
 		return err
 	}
 
-	store2.Set(store, types.AddressStoreKey(addr), bz)
+	store.Set(types.AddressStoreKey(addr), bz)
 	return nil
 }

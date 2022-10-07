@@ -401,7 +401,8 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 		t.Run(msg, func(t *testing.T) {
 			storeKey := sdk.NewKVStoreKey("test")
 			store := NewMockContext().KVStore(storeKey)
-			store2.Set(store, presetKey, []byte{})
+			newStore := store2.NewStoreAPI(store)
+			newStore.Set(presetKey, []byte{})
 
 			err := uniqueKeysAddFunc(store, spec.srcKey, myRowID)
 			require.True(t, spec.expErr.Is(err))
@@ -444,7 +445,8 @@ func TestMultiKeyAddFunc(t *testing.T) {
 		t.Run(msg, func(t *testing.T) {
 			storeKey := sdk.NewKVStoreKey("test")
 			store := NewMockContext().KVStore(storeKey)
-			store2.Set(store, presetKey, []byte{})
+			newStore := store2.NewStoreAPI(store)
+			newStore.Set(presetKey, []byte{})
 
 			err := multiKeyAddFunc(store, spec.srcKey, myRowID)
 			require.True(t, spec.expErr.Is(err))

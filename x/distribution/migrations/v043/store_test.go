@@ -19,6 +19,7 @@ func TestStoreMigration(t *testing.T) {
 	distributionKey := sdk.NewKVStoreKey("distribution")
 	ctx := testutil.DefaultContext(distributionKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(distributionKey)
+	newStore := store2.NewStoreAPI(store)
 
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	valAddr := sdk.ValAddress(addr1)
@@ -80,7 +81,7 @@ func TestStoreMigration(t *testing.T) {
 
 	// Set all the old keys to the store
 	for _, tc := range testCases {
-		store2.Set(store, tc.oldKey, value)
+		newStore.Set(tc.oldKey, value)
 	}
 
 	// Run migrations.

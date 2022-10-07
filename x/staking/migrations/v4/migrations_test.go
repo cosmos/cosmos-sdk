@@ -39,6 +39,7 @@ func TestMigrate(t *testing.T) {
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
+	newStore := store2.NewStoreAPI(store)
 	duplicateCreationHeight := int64(1)
 
 	accAddrs := sims.CreateIncrementalAccounts(1)
@@ -76,7 +77,7 @@ func TestMigrate(t *testing.T) {
 			ubd := getUBD(t, accAddr, valAddr, store, cdc)
 			if tc.doMigration {
 				var res types.Params
-				bz := store2.Get(store, v4.ParamsKey)
+				bz := newStore.Get(v4.ParamsKey)
 				require.NoError(t, cdc.Unmarshal(bz, &res))
 				require.Equal(t, legacySubspace.ps, res)
 
@@ -126,14 +127,16 @@ func createOldStateUnbonding(t *testing.T, creationHeight int64, valAddr sdk.Val
 	// set the unbond delegation with validator and delegator
 	bz := types.MustMarshalUBD(cdc, ubd)
 	key := getUBDKey(accAddr, valAddr)
-	store2.Set(store, key, bz)
+	newStore := store2.NewStoreAPI(store)
+	newStore.Set(key, bz)
 	return nil
 }
 
 func getUBD(t *testing.T, accAddr sdk.AccAddress, valAddr sdk.ValAddress, store storetypes.KVStore, cdc codec.BinaryCodec) types.UnbondingDelegation {
 	// get the unbonding delegations
 	var ubdRes types.UnbondingDelegation
-	ubdbz := store2.Get(store, getUBDKey(accAddr, valAddr))
+	newStore := store2.NewStoreAPI(store)
+	ubdbz := newStore.Get(getUBDKey(accAddr, valAddr))
 	require.NoError(t, cdc.Unmarshal(ubdbz, &ubdRes))
 	return ubdRes
 }

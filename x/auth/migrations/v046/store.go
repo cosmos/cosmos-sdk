@@ -9,7 +9,7 @@ import (
 )
 
 func mapAccountAddressToAccountID(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
-	store := ctx.KVStore(storeKey)
+	store := store2.NewStoreAPI(ctx.KVStore(storeKey))
 	iterator := sdk.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
 
 	defer iterator.Close()
@@ -18,7 +18,7 @@ func mapAccountAddressToAccountID(ctx sdk.Context, storeKey storetypes.StoreKey,
 		if err := cdc.UnmarshalInterface(iterator.Value(), &acc); err != nil {
 			return err
 		}
-		store2.Set(store, types.AccountNumberStoreKey(acc.GetAccountNumber()), acc.GetAddress().Bytes())
+		store.Set(types.AccountNumberStoreKey(acc.GetAccountNumber()), acc.GetAddress().Bytes())
 	}
 
 	return nil

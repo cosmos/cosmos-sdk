@@ -27,6 +27,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 
 func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	grantsStore := prefix.NewStore(store, GrantPrefix)
+	newStore := store2.NewStoreAPI(grantsStore)
 
 	grantsIter := grantsStore.Iterator(nil, nil)
 	defer grantsIter.Close()
@@ -43,7 +44,7 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 		// delete expired authorization
 		// before 0.46 Expiration was required so it's safe to dereference
 		if grant.Expiration.Before(now) {
-			store2.Delete(grantsStore, grantsIter.Key())
+			newStore.Delete(grantsIter.Key())
 		} else {
 			granter, grantee, msgType := ParseGrantKey(grantsIter.Key())
 			// before 0.46 expiration was not a pointer, so now it's safe to dereference
@@ -66,7 +67,7 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 		if err != nil {
 			return err
 		}
-		store2.Set(store, conv.UnsafeStrToBytes(key), bz)
+		newStore.Set(conv.UnsafeStrToBytes(key), bz)
 	}
 
 	return nil

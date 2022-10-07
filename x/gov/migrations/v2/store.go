@@ -21,6 +21,8 @@ const proposalIDLen = 8
 // <prefix_bytes><proposal_id (8 bytes)><address_len (1 byte)><address_bytes>
 func migratePrefixProposalAddress(store sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(store, prefixBz)
+	oldStore2 := store2.NewStoreAPI(oldStore)
+	newStore := store2.NewStoreAPI(store)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -31,8 +33,8 @@ func migratePrefixProposalAddress(store sdk.KVStore, prefixBz []byte) {
 		newStoreKey := append(append(prefixBz, proposalID...), address.MustLengthPrefix(addr)...)
 
 		// Set new key on store. Values don't change.
-		store2.Set(store, newStoreKey, oldStoreIter.Value())
-		store2.Delete(oldStore, oldStoreIter.Key())
+		newStore.Set(newStoreKey, oldStoreIter.Value())
+		oldStore2.Delete(oldStoreIter.Key())
 	}
 }
 
@@ -50,6 +52,7 @@ func migrateVote(oldVote v1beta1.Vote) v1beta1.Vote {
 // migrateStoreWeightedVotes migrates in-place all legacy votes to ADR-037 weighted votes.
 func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	iterator := sdk.KVStorePrefixIterator(store, types.VotesKeyPrefix)
+	newStore := store2.NewStoreAPI(store)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -66,7 +69,7 @@ func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
 			return err
 		}
 
-		store2.Set(store, iterator.Key(), bz)
+		newStore.Set(iterator.Key(), bz)
 	}
 
 	return nil

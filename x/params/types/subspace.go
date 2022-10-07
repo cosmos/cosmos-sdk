@@ -99,13 +99,17 @@ func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error
 	return nil
 }
 
+func (s Subspace) getStore(ctx sdk.Context) store2.StoreAPI {
+	return store2.NewStoreAPI(s.kvStore(ctx))
+}
+
 // Get queries for a parameter by key from the Subspace's KVStore and sets the
 // value to the provided pointer. If the value does not exist, it will panic.
 func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	s.checkType(key, ptr)
 
-	store := s.kvStore(ctx)
-	bz := store2.Get(store, key)
+	store := s.getStore(ctx)
+	bz := store.Get(key)
 
 	if err := s.legacyAmino.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
@@ -116,8 +120,8 @@ func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 // sets the value to the provided pointer. If the value does not exist, it will
 // perform a no-op.
 func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
-	store := s.kvStore(ctx)
-	bz := store2.Get(store, key)
+	store := s.getStore(ctx)
+	bz := store.Get(key)
 	if bz == nil {
 		return
 	}
@@ -147,8 +151,8 @@ func (s Subspace) IterateKeys(ctx sdk.Context, cb func(key []byte) bool) {
 
 // GetRaw queries for the raw values bytes for a parameter by key.
 func (s Subspace) GetRaw(ctx sdk.Context, key []byte) []byte {
-	store := s.kvStore(ctx)
-	return store2.Get(store, key)
+	store := s.getStore(ctx)
+	return store.Get(key)
 }
 
 // Has returns if a parameter key exists or not in the Subspace's KVStore.
@@ -188,17 +192,17 @@ func (s Subspace) checkType(key []byte, value interface{}) {
 // transient KVStore to mark the parameter as modified.
 func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 	s.checkType(key, value)
-	store := s.kvStore(ctx)
+	store := s.getStore(ctx)
 
 	bz, err := s.legacyAmino.MarshalJSON(value)
 	if err != nil {
 		panic(err)
 	}
 
-	store2.Set(store, key, bz)
+	store.Set(key, bz)
 
-	tstore := s.transientStore(ctx)
-	store2.Set(tstore, key, []byte{})
+	newtStore := store2.NewStoreAPI(s.transientStore(ctx))
+	newtStore.Set(key, []byte{})
 }
 
 // Update stores an updated raw value for a given parameter key assuming the

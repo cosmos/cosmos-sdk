@@ -51,9 +51,13 @@ func (k Keeper) decodeID(bz []byte) (uint64, error) {
 	return id, nil
 }
 
+func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
+	return store2.NewStoreAPI(ctx.KVStore(k.storeKey))
+}
+
 // GetNewActionID returns ID to be used for next epoch
 func (k Keeper) GetNewActionID(ctx sdk.Context) uint64 {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	id, err := store2.GetAndDecode(store, k.decodeID, NextEpochActionID)
 	if err != nil {
@@ -61,7 +65,7 @@ func (k Keeper) GetNewActionID(ctx sdk.Context) uint64 {
 	}
 
 	// increment next action ID
-	store2.Set(store, NextEpochActionID, sdk.Uint64ToBigEndian(id+1))
+	store.Set(NextEpochActionID, sdk.Uint64ToBigEndian(id+1))
 
 	return id
 }
@@ -73,7 +77,7 @@ func ActionStoreKey(epochNumber int64, actionID uint64) []byte {
 
 // QueueMsgForEpoch save the actions that need to be executed on next epoch
 func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, msg sdk.Msg) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	bz, err := k.cdc.MarshalInterface(msg)
 	if err != nil {
@@ -81,12 +85,12 @@ func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, msg sdk.Msg
 	}
 
 	actionID := k.GetNewActionID(ctx)
-	store2.Set(store, ActionStoreKey(epochNumber, actionID), bz)
+	store.Set(ActionStoreKey(epochNumber, actionID), bz)
 }
 
 // RestoreEpochAction restore the actions that need to be executed on next epoch
 func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *codectypes.Any) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	// reference from TestMarshalAny(t *testing.T)
 	bz, err := k.cdc.MarshalInterface(action)
@@ -95,7 +99,7 @@ func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *c
 	}
 
 	actionID := k.GetNewActionID(ctx)
-	store2.Set(store, ActionStoreKey(epochNumber, actionID), bz)
+	store.Set(ActionStoreKey(epochNumber, actionID), bz)
 }
 
 func (k Keeper) decodeMsg(bz []byte) (sdk.Msg, error) {
@@ -145,20 +149,20 @@ func (k Keeper) GetEpochActionsIterator(ctx sdk.Context) db.Iterator {
 
 // DequeueEpochActions dequeue all the actions store on epoch
 func (k Keeper) DequeueEpochActions(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	iterator := sdk.KVStorePrefixIterator(store, EpochActionQueuePrefix)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
-		store2.Delete(store, key)
+		store.Delete(key)
 	}
 }
 
 // DeleteByKey delete item by key
 func (k Keeper) DeleteByKey(ctx sdk.Context, key []byte) {
-	store := ctx.KVStore(k.storeKey)
-	store2.Delete(store, key)
+	store := k.getStore(ctx)
+	store.Delete(key)
 }
 
 // GetEpochActionByIterator get action by iterator
@@ -173,8 +177,8 @@ func (k Keeper) GetEpochActionByIterator(iterator db.Iterator) sdk.Msg {
 
 // SetEpochNumber set epoch number
 func (k Keeper) SetEpochNumber(ctx sdk.Context, epochNumber int64) {
-	store := ctx.KVStore(k.storeKey)
-	store2.Set(store, EpochNumberID, sdk.Uint64ToBigEndian(uint64(epochNumber)))
+	store := k.getStore(ctx)
+	store.Set(EpochNumberID, sdk.Uint64ToBigEndian(uint64(epochNumber)))
 }
 
 func (k Keeper) decodeNumberID(bz []byte) (int64, error) {

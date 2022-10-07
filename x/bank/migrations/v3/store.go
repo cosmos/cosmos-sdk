@@ -57,24 +57,29 @@ func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
 		}
 
 		newStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
-		store2.Set(newStore, []byte(coin.Denom), bz)
+		newPrefixStore := store2.NewStoreAPI(newStore)
+		newPrefixStore.Set([]byte(coin.Denom), bz)
 
 		denomPrefixStore, ok := denomPrefixStores[balance.Denom]
+		newDenomPrefixStore := store2.NewStoreAPI(denomPrefixStore)
 		if !ok {
 			denomPrefixStore = prefix.NewStore(store, CreateDenomAddressPrefix(balance.Denom))
+			newDenomPrefixStore = store2.NewStoreAPI(denomPrefixStore)
 			denomPrefixStores[balance.Denom] = denomPrefixStore
 		}
 
 		// Store a reverse index from denomination to account address with a
 		// sentinel value.
-		store2.Set(denomPrefixStore, address.MustLengthPrefix(addr), []byte{0})
+		newDenomPrefixStore.Set(address.MustLengthPrefix(addr), []byte{0})
 	}
 
 	return nil
 }
 
 func migrateDenomMetadata(store sdk.KVStore) error {
+	newStore := store2.NewStoreAPI(store)
 	oldDenomMetaDataStore := prefix.NewStore(store, v2.DenomMetadataPrefix)
+	oldDenomMetaDataStore2 := store2.NewStoreAPI(oldDenomMetaDataStore)
 
 	oldDenomMetaDataIter := oldDenomMetaDataStore.Iterator(nil, nil)
 	defer oldDenomMetaDataIter.Close()
@@ -87,8 +92,8 @@ func migrateDenomMetadata(store sdk.KVStore) error {
 		// old key: prefix_bytes | denom_bytes | denom_bytes
 		copy(newKey, types.DenomMetadataPrefix)
 		copy(newKey[len(types.DenomMetadataPrefix):], oldKey[:l])
-		store2.Set(store, newKey, oldDenomMetaDataIter.Value())
-		store2.Delete(oldDenomMetaDataStore, oldKey)
+		newStore.Set(newKey, oldDenomMetaDataIter.Value())
+		oldDenomMetaDataStore2.Delete(oldKey)
 	}
 
 	return nil

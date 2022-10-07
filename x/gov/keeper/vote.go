@@ -86,11 +86,11 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 
 // SetVote sets a Vote to the gov store
 func (keeper Keeper) SetVote(ctx sdk.Context, vote v1.Vote) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := keeper.getStore(ctx)
 	bz := keeper.cdc.MustMarshal(&vote)
 	addr := sdk.MustAccAddressFromBech32(vote.Voter)
 
-	store2.Set(store, types.VoteKey(vote.ProposalId, addr), bz)
+	store.Set(types.VoteKey(vote.ProposalId, addr), bz)
 }
 
 // IterateAllVotes iterates over all the stored votes and performs a callback function
@@ -127,6 +127,6 @@ func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vo
 
 // deleteVote deletes a vote from a given proposalID and voter from the store
 func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
-	store := ctx.KVStore(keeper.storeKey)
-	store2.Delete(store, types.VoteKey(proposalID, voterAddr))
+	store := keeper.getStore(ctx)
+	store.Delete(types.VoteKey(proposalID, voterAddr))
 }

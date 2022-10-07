@@ -12,9 +12,9 @@ func (ak AccountKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 		return err
 	}
 
-	store := ctx.KVStore(ak.storeKey)
+	store := ak.getStore(ctx)
 	bz := ak.cdc.MustMarshal(&params)
-	store2.Set(store, types.ParamsKey, bz)
+	store.Set(types.ParamsKey, bz)
 
 	return nil
 }

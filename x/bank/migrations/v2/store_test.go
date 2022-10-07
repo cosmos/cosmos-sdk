@@ -17,11 +17,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+func getStore(store store2.KVStore) store2.StoreAPI {
+	return store2.NewStoreAPI(store)
+}
+
 func TestSupplyMigration(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
+	newStore := getStore(store)
 
 	v1bank.RegisterInterfaces(encCfg.InterfaceRegistry)
 
@@ -34,7 +39,7 @@ func TestSupplyMigration(t *testing.T) {
 	oldSupply = &types.Supply{Total: sdk.Coins{oldFooCoin, oldBarCoin, oldFooBarCoin}}
 	oldSupplyBz, err := encCfg.Codec.MarshalInterface(oldSupply)
 	require.NoError(t, err)
-	store2.Set(store, v1bank.SupplyKey, oldSupplyBz)
+	newStore.Set(v1bank.SupplyKey, oldSupplyBz)
 
 	// Run migration.
 	err = v2bank.MigrateStore(ctx, bankKey, encCfg.Codec)
@@ -73,6 +78,7 @@ func TestBalanceKeysMigration(t *testing.T) {
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
+	newStore := getStore(store)
 
 	_, _, addr := testdata.KeyTestPubAddr()
 
@@ -81,14 +87,14 @@ func TestBalanceKeysMigration(t *testing.T) {
 	oldFooKey := append(append(v1bank.BalancesPrefix, addr...), []byte(fooCoin.Denom)...)
 	fooBz, err := encCfg.Codec.Marshal(&fooCoin)
 	require.NoError(t, err)
-	store2.Set(store, oldFooKey, fooBz)
+	newStore.Set(oldFooKey, fooBz)
 
 	// set 0 foobar coin
 	fooBarCoin := sdk.NewCoin("foobar", sdk.NewInt(0))
 	oldKeyFooBar := append(append(v1bank.BalancesPrefix, addr...), []byte(fooBarCoin.Denom)...)
 	fooBarBz, err := encCfg.Codec.Marshal(&fooBarCoin)
 	require.NoError(t, err)
-	store2.Set(store, oldKeyFooBar, fooBarBz)
+	newStore.Set(oldKeyFooBar, fooBarBz)
 	require.NotNil(t, store.Get(oldKeyFooBar)) // before store migation zero values can also exist in store.
 
 	err = v2bank.MigrateStore(ctx, bankKey, encCfg.Codec)

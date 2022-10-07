@@ -22,14 +22,14 @@ func TestTypeSafeRowGetter(t *testing.T) {
 	ctx := NewMockContext()
 	prefixKey := [2]byte{0x2}
 	store := prefix.NewStore(ctx.KVStore(storeKey), prefixKey[:])
+	newStore := store2.NewStoreAPI(store)
 	md := testdata.TableModel{
 		Id:   1,
 		Name: "some name",
 	}
 	bz, err := md.Marshal()
 	require.NoError(t, err)
-	store2.Set(store,
-		EncodeSequence(1), bz)
+	newStore.Set(EncodeSequence(1), bz)
 
 	specs := map[string]struct {
 		srcRowID     RowID

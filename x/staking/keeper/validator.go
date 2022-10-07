@@ -44,9 +44,9 @@ func (k Keeper) mustGetValidator(ctx sdk.Context, addr sdk.ValAddress) types.Val
 
 // get a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) (validator types.Validator, found bool) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
-	opAddr := store2.Get(store, types.GetValidatorByConsAddrKey(consAddr))
+	opAddr := store.Get(types.GetValidatorByConsAddrKey(consAddr))
 	if opAddr == nil {
 		return validator, false
 	}
@@ -65,9 +65,9 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAdd
 
 // set the main record holding validator details
 func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	bz := types.MustMarshalValidator(k.cdc, &validator)
-	store2.Set(store, types.GetValidatorKey(validator.GetOperator()), bz)
+	store.Set(types.GetValidatorKey(validator.GetOperator()), bz)
 }
 
 // validator index
@@ -76,8 +76,8 @@ func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validato
 	if err != nil {
 		return err
 	}
-	store := ctx.KVStore(k.storeKey)
-	store2.Set(store, types.GetValidatorByConsAddrKey(consPk), validator.GetOperator())
+	store := k.getStore(ctx)
+	store.Set(types.GetValidatorByConsAddrKey(consPk), validator.GetOperator())
 	return nil
 }
 
@@ -88,20 +88,20 @@ func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Valida
 		return
 	}
 
-	store := ctx.KVStore(k.storeKey)
-	store2.Set(store, types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
+	store :=  k.getStore(ctx)
+	store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
 }
 
 // validator index
 func (k Keeper) DeleteValidatorByPowerIndex(ctx sdk.Context, validator types.Validator) {
-	store := ctx.KVStore(k.storeKey)
-	store2.Delete(store, types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
+	store := k.getStore(ctx)
+	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 }
 
 // validator index
 func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Validator) {
-	store := ctx.KVStore(k.storeKey)
-	store2.Set(store, types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
+	store :=  k.getStore(ctx)
+	store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
 }
 
 // Update the tokens of an existing validator, update the validators power index key
@@ -186,10 +186,10 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	}
 
 	// delete the old validator record
-	store := ctx.KVStore(k.storeKey)
-	store2.Delete(store, types.GetValidatorKey(address))
-	store2.Delete(store, types.GetValidatorByConsAddrKey(valConsAddr))
-	store2.Delete(store, types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
+	store := k.getStore(ctx)
+	store.Delete(types.GetValidatorKey(address))
+	store.Delete(types.GetValidatorByConsAddrKey(valConsAddr))
+	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 
 	// call hooks
 	if err := k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator()); err != nil {
@@ -265,9 +265,9 @@ func (k Keeper) ValidatorsPowerStoreIterator(ctx sdk.Context) sdk.Iterator {
 // Load the last validator power.
 // Returns zero if the operator was not a validator last block.
 func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) (power int64) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
-	bz := store2.Get(store, types.GetLastValidatorPowerKey(operator))
+	bz := store.Get(types.GetLastValidatorPowerKey(operator))
 	if bz == nil {
 		return 0
 	}
@@ -280,15 +280,15 @@ func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) 
 
 // Set the last validator power.
 func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power int64) {
-	store := ctx.KVStore(k.storeKey)
+	store :=  k.getStore(ctx)
 	bz := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: power})
-	store2.Set(store, types.GetLastValidatorPowerKey(operator), bz)
+	store.Set(types.GetLastValidatorPowerKey(operator), bz)
 }
 
 // Delete the last validator power.
 func (k Keeper) DeleteLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) {
-	store := ctx.KVStore(k.storeKey)
-	store2.Delete(store, types.GetLastValidatorPowerKey(operator))
+	store := k.getStore(ctx)
+	store.Delete(types.GetLastValidatorPowerKey(operator))
 }
 
 // returns an iterator for the consensus validators in the last block
@@ -349,9 +349,9 @@ func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator
 // GetUnbondingValidators returns a slice of mature validator addresses that
 // complete their unbonding at a given time and height.
 func (k Keeper) GetUnbondingValidators(ctx sdk.Context, endTime time.Time, endHeight int64) []string {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
-	bz := store2.Get(store, types.GetValidatorQueueKey(endTime, endHeight))
+	bz := store.Get(types.GetValidatorQueueKey(endTime, endHeight))
 	if bz == nil {
 		return []string{}
 	}
@@ -365,9 +365,9 @@ func (k Keeper) GetUnbondingValidators(ctx sdk.Context, endTime time.Time, endHe
 // SetUnbondingValidatorsQueue sets a given slice of validator addresses into
 // the unbonding validator queue by a given height and time.
 func (k Keeper) SetUnbondingValidatorsQueue(ctx sdk.Context, endTime time.Time, endHeight int64, addrs []string) {
-	store := ctx.KVStore(k.storeKey)
+	store :=  k.getStore(ctx)
 	bz := k.cdc.MustMarshal(&types.ValAddresses{Addresses: addrs})
-	store2.Set(store, types.GetValidatorQueueKey(endTime, endHeight), bz)
+	store.Set(types.GetValidatorQueueKey(endTime, endHeight), bz)
 }
 
 // InsertUnbondingValidatorQueue inserts a given unbonding validator address into
@@ -381,8 +381,8 @@ func (k Keeper) InsertUnbondingValidatorQueue(ctx sdk.Context, val types.Validat
 // DeleteValidatorQueueTimeSlice deletes all entries in the queue indexed by a
 // given height and time.
 func (k Keeper) DeleteValidatorQueueTimeSlice(ctx sdk.Context, endTime time.Time, endHeight int64) {
-	store := ctx.KVStore(k.storeKey)
-	store2.Delete(store, types.GetValidatorQueueKey(endTime, endHeight))
+	store := k.getStore(ctx)
+	store.Delete(types.GetValidatorQueueKey(endTime, endHeight))
 }
 
 // DeleteValidatorQueue removes a validator by address from the unbonding queue
@@ -426,7 +426,7 @@ func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time, endHe
 // UnbondAllMatureValidators unbonds all the mature unbonding validators that
 // have finished their unbonding period.
 func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	blockTime := ctx.BlockTime()
 	blockHeight := ctx.BlockHeight()
@@ -473,7 +473,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 				}
 			}
 
-			store2.Delete(store, key)
+			store.Delete(key)
 		}
 	}
 }

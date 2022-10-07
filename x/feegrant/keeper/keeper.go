@@ -48,7 +48,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 		k.authKeeper.SetAccount(ctx, granteeAcc)
 	}
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 
 	var oldExp *time.Time
@@ -111,7 +111,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 		return err
 	}
 
-	store2.Set(store, key, bz)
+	store.Set(key, bz)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			feegrant.EventTypeSetFeeGrant,
@@ -125,7 +125,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 
 // UpdateAllowance updates the existing grant.
 func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 
 	_, err := k.getGrant(ctx, granter, grantee)
@@ -143,7 +143,7 @@ func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 		return err
 	}
 
-	store2.Set(store, key, bz)
+	store.Set(key, bz)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -156,6 +156,10 @@ func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 	return nil
 }
 
+func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
+	return store2.NewStoreAPI(ctx.KVStore(k.storeKey))
+}
+
 // revokeAllowance removes an existing grant
 func (k Keeper) revokeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) error {
 	_, err := k.getGrant(ctx, granter, grantee)
@@ -163,9 +167,9 @@ func (k Keeper) revokeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 		return err
 	}
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
-	store2.Delete(store, key)
+	store.Delete(key)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -320,26 +324,26 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (*feegrant.GenesisState, error) {
 
 func (k Keeper) removeFromGrantQueue(ctx sdk.Context, exp *time.Time, allowanceKey []byte) {
 	key := feegrant.FeeAllowancePrefixQueue(exp, allowanceKey)
-	store := ctx.KVStore(k.storeKey)
-	store2.Delete(store, key)
+	store := k.getStore(ctx)
+	store.Delete(key)
 }
 
 func (k Keeper) addToFeeAllowanceQueue(ctx sdk.Context, grantKey []byte, exp *time.Time) {
-	store := ctx.KVStore(k.storeKey)
-	store2.Set(store, feegrant.FeeAllowancePrefixQueue(exp, grantKey), []byte{})
+	store := k.getStore(ctx)
+	store.Set(feegrant.FeeAllowancePrefixQueue(exp, grantKey), []byte{})
 }
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
 func (k Keeper) RemoveExpiredAllowances(ctx sdk.Context) {
 	exp := ctx.BlockTime()
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	iterator := store.Iterator(feegrant.FeeAllowanceQueueKeyPrefix, sdk.InclusiveEndBytes(feegrant.AllowanceByExpTimeKey(&exp)))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		store2.Delete(store, iterator.Key())
+		store.Delete(iterator.Key())
 
 		granter, grantee := feegrant.ParseAddressesFromFeeAllowanceQueueKey(iterator.Key())
-		store2.Delete(store, feegrant.FeeAllowanceKey(granter, grantee))
+		store.Delete(feegrant.FeeAllowanceKey(granter, grantee))
 	}
 }

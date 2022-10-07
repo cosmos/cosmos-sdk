@@ -72,6 +72,7 @@ func (i Indexer) OnCreate(store sdk.KVStore, rowID RowID, value interface{}) err
 
 // OnDelete removes the secondary index entries for the deleted object.
 func (i Indexer) OnDelete(store sdk.KVStore, rowID RowID, value interface{}) error {
+	newStore := store2.NewStoreAPI(store)
 	secondaryIndexKeys, err := i.indexerFunc(value)
 	if err != nil {
 		return err
@@ -82,13 +83,14 @@ func (i Indexer) OnDelete(store sdk.KVStore, rowID RowID, value interface{}) err
 		if err != nil {
 			return err
 		}
-		store2.Delete(store, indexKey)
+		newStore.Delete(indexKey)
 	}
 	return nil
 }
 
 // OnUpdate rebuilds the secondary index entries for the updated object.
 func (i Indexer) OnUpdate(store sdk.KVStore, rowID RowID, newValue, oldValue interface{}) error {
+	newStore := store2.NewStoreAPI(store)
 	oldSecIdxKeys, err := i.indexerFunc(oldValue)
 	if err != nil {
 		return err
@@ -106,7 +108,7 @@ func (i Indexer) OnUpdate(store sdk.KVStore, rowID RowID, newValue, oldValue int
 		if err != nil {
 			return err
 		}
-		store2.Delete(store, indexKey)
+		newStore.Delete(indexKey)
 	}
 	newKeys, err := difference(newSecIdxKeys, oldSecIdxKeys)
 	if err != nil {
@@ -122,6 +124,7 @@ func (i Indexer) OnUpdate(store sdk.KVStore, rowID RowID, newValue, oldValue int
 
 // uniqueKeysAddFunc enforces keys to be unique
 func uniqueKeysAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID RowID) error {
+	newStore := store2.NewStoreAPI(store)
 	secondaryIndexKeyBytes, err := keyPartBytes(secondaryIndexKey, false)
 	if err != nil {
 		return err
@@ -139,7 +142,7 @@ func uniqueKeysAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID R
 		return err
 	}
 
-	store2.Set(store, indexKey, []byte{})
+	newStore.Set(indexKey, []byte{})
 	return nil
 }
 
@@ -155,6 +158,7 @@ func checkUniqueIndexKey(store sdk.KVStore, secondaryIndexKeyBytes []byte) error
 
 // multiKeyAddFunc allows multiple entries for a key
 func multiKeyAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID RowID) error {
+	newStore := store2.NewStoreAPI(store)
 	secondaryIndexKeyBytes, err := keyPartBytes(secondaryIndexKey, false)
 	if err != nil {
 		return err
@@ -171,7 +175,7 @@ func multiKeyAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID Row
 		return sdkerrors.Wrap(errors.ErrORMInvalidArgument, "empty index key")
 	}
 
-	store2.Set(store, encodedKey, []byte{})
+	newStore.Set(encodedKey, []byte{})
 	return nil
 }
 

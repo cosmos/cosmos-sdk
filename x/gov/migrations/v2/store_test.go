@@ -24,6 +24,7 @@ func TestMigrateStore(t *testing.T) {
 	govKey := sdk.NewKVStoreKey("gov")
 	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(govKey)
+	newStore := store2.NewStoreAPI(store)
 
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	proposalID := uint64(6)
@@ -74,7 +75,7 @@ func TestMigrateStore(t *testing.T) {
 
 	// Set all the old keys to the store
 	for _, tc := range testCases {
-		store2.Set(store, tc.oldKey, tc.oldValue)
+		newStore.Set(tc.oldKey, tc.oldValue)
 	}
 
 	// Run migratio

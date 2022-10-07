@@ -14,6 +14,7 @@ import (
 // proposals.
 func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	propStore := prefix.NewStore(store, v1.ProposalsKeyPrefix)
+	newPropStore := store2.NewStoreAPI(propStore)
 
 	iter := propStore.Iterator(nil, nil)
 	defer iter.Close()
@@ -35,7 +36,7 @@ func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 		}
 
 		// Set new value on store.
-		store2.Set(propStore, iter.Key(), bz)
+		newPropStore.Set(iter.Key(), bz)
 	}
 
 	return nil

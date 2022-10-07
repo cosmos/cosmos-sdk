@@ -149,52 +149,14 @@ func pubkeyGenerator(t *rapid.T) *rapid.Generator[secp256k1.PubKey] {
 	})
 }
 
-func (suite *DeterministicTestSuite) matchAccounts(acc1, acc2 types.AccountI) {
-	suite.Require().Equal(acc1.GetAddress(), acc2.GetAddress())
-	suite.Require().Equal(acc1.GetPubKey(), acc2.GetPubKey())
-	suite.Require().Equal(acc1.GetAccountNumber(), acc2.GetAccountNumber())
-	suite.Require().Equal(acc1.GetSequence(), acc2.GetSequence())
-}
-
-func (suite *DeterministicTestSuite) matchMultipleAccounts(accs1, accs2 []types.AccountI) {
-	suite.Require().Equal(len(accs1), len(accs2))
-
-	for i := 0; i < len(accs1); i++ {
-		suite.matchAccounts(accs1[i], accs2[i])
-	}
-}
-
-func (suite *DeterministicTestSuite) runAccountsIterations(prevRes []types.AccountI) {
+func (suite *DeterministicTestSuite) runAccountsIterations(req *types.QueryAccountsRequest, prevRes *types.QueryAccountsResponse) {
 	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.Accounts(suite.ctx, &types.QueryAccountsRequest{})
+		res, err := suite.queryClient.Accounts(suite.ctx, req)
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
-		suite.Require().NotNil(res.Accounts)
-		suite.Require().Len(res.Accounts, len(prevRes))
 
-		unpackedAccs := make([]types.AccountI, 0, len(res.Accounts))
-		for i := 0; i < len(res.Accounts); i++ {
-			var account types.AccountI
-			err = suite.encCfg.InterfaceRegistry.UnpackAny(res.Accounts[i], &account)
-			suite.Require().NoError(err)
-
-			unpackedAccs = append(unpackedAccs, account)
-		}
-
-		if i == 0 {
-			unpackedAccs1 := make([]types.AccountI, len(unpackedAccs))
-			copy(unpackedAccs1, unpackedAccs)
-
-			sort.Slice(unpackedAccs1, func(i2, j int) bool {
-				return unpackedAccs1[i2].GetAccountNumber() < unpackedAccs1[j].GetAccountNumber()
-			})
-
-			suite.matchMultipleAccounts(unpackedAccs1, prevRes)
-		} else {
-			suite.matchMultipleAccounts(unpackedAccs, prevRes)
-		}
-
-		prevRes = unpackedAccs
+		suite.Require().Len(res.GetAccounts(), len(prevRes.GetAccounts()))
+		suite.Require().Equal(res, prevRes)
 	}
 }
 
@@ -203,11 +165,14 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 		numAccs := rapid.IntRange(1, 10).Draw(t, "accounts")
 		accs := suite.createAndSetAccounts(t, numAccs)
 
-		sort.Slice(accs, func(i, j int) bool {
-			return accs[i].GetAccountNumber() < accs[j].GetAccountNumber()
-		})
+		req := types.QueryAccountsRequest{
+			Pagination: testdata.PaginationGenerator(t, uint64(numAccs)).Draw(t, "accounts"),
+		}
 
-		suite.runAccountsIterations(accs)
+		res, err := suite.queryClient.Accounts(suite.ctx, &req)
+		suite.Require().NoError(err)
+
+		suite.runAccountsIterations(&req, res)
 
 		for i := 0; i < numAccs; i++ {
 			suite.accountKeeper.RemoveAccount(suite.ctx, accs[i])
@@ -236,12 +201,11 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 	suite.accountKeeper.SetAccount(suite.ctx, acc2)
 
-	accs := []types.AccountI{acc1, acc2}
-	sort.Slice(accs, func(i, j int) bool {
-		return accs[i].GetAccountNumber() < accs[j].GetAccountNumber()
-	})
+	req := types.QueryAccountsRequest{}
+	res, err := suite.queryClient.Accounts(suite.ctx, &req)
+	suite.Require().NoError(err)
 
-	suite.runAccountsIterations(accs)
+	suite.runAccountsIterations(&req, res)
 }
 
 func (suite *DeterministicTestSuite) runAccountAddressByIDIterations(id int64, prevRes string) {

@@ -271,7 +271,14 @@ func (c Context) TransientStore(key storetypes.StoreKey) KVStore {
 // is called. Note, events are automatically emitted on the parent context's
 // EventManager when the caller executes the write.
 func (c Context) CacheContext() (cc Context, writeCache func()) {
+	return c.CacheContextWithListeners(nil)
+}
+
+func (c Context) CacheContextWithListeners(listeners map[storetypes.StoreKey][]storetypes.WriteListener) (cc Context, writeCache func()) {
 	cms := c.MultiStore().CacheMultiStore()
+	if len(listeners) > 0 {
+		cms = cms.SetListeners(listeners)
+	}
 	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
 
 	writeCache = func() {

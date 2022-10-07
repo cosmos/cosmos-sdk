@@ -2,6 +2,7 @@
 
 ## Changelog
 
+* 10/11/2022: Explicitly enable listeners on specific cache stores to prevent duplicated observations on nested cache stores.
 * 11/23/2020: Initial draft
 
 ## Status
@@ -20,12 +21,12 @@ In addition to these request/response queries, it would be beneficial to have a 
 
 ## Decision
 
-We will modify the `MultiStore` interface and its concrete (`rootmulti` and `cachemulti`) implementations and introduce a new `listenkv.Store` to allow listening to state changes in underlying KVStores.
+We will modify the `CacheMultiStore` interface and its concrete (`cachemulti`) implementations and introduce a new `listenkv.Store` to allow listening to state changes in underlying KVStores, the listeners are notified when the `CacheMultiStore` flush the dirty writes to the underlying store in the `Write()`.
 We will introduce a plugin system for configuring and running streaming services that write these state changes and their surrounding ABCI message context to different destinations.
 
 ### Listening interface
 
-In a new file, `store/types/listening.go`, we will create a `WriteListener` interface for streaming out state changes from a KVStore.
+In a new file, `store/types/listening.go`, we will create a `WriteListener` interface for streaming out state changes from a `KVStore`.
 
 ```go
 // WriteListener interface for streaming data out from a listenkv.Store
@@ -137,19 +138,19 @@ func (s *Store) onWrite(delete bool, key, value []byte) {
 
 ### MultiStore interface updates
 
-We will update the `MultiStore` interface to allow us to wrap a set of listeners around a specific `KVStore`.
+We will update the `CacheMultiStore` interface to allow us to wrap a set of listeners around a specific `KVStore`.
 Additionally, we will update the `CacheWrap` and `CacheWrapper` interfaces to enable listening in the caching layer.
 
 ```go
-type MultiStore interface {
+type CacheMultiStore interface {
     ...
 
     // ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
     ListeningEnabled(key StoreKey) bool
 
-    // AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
-    // It appends the listeners to a current set, if one already exists
-    AddListeners(key StoreKey, listeners []WriteListener)
+    // SetListeners set the state listeners for the KVStores.
+    // It override existing ones and re-wire the kv stores.
+    SetListeners(key StoreKey, listeners []WriteListener)
 }
 ```
 
@@ -169,37 +170,54 @@ type CacheWrapper interface {
 }
 ```
 
-### MultiStore implementation updates
+### CacheMultiStore implementation updates
 
-We will modify all of the `Store` and `MultiStore` implementations to satisfy these new interfaces, and adjust the `rootmulti` `GetKVStore` method
-to wrap the returned `KVStore` with a `listenkv.Store` if listening is turned on for that `Store`.
+We will modify all of the `Store` and `CacheMultiStore` implementations to satisfy these new interfaces.
 
-```go
-func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
-    store := rs.stores[key].(types.KVStore)
+### Context changes
 
-    if rs.TracingEnabled() {
-        store = tracekv.NewStore(store, rs.traceWriter, rs.traceContext)
-    }
-    if rs.ListeningEnabled(key) {
-        store = listenkv.NewStore(key, store, rs.listeners[key])
-    }
+We add a new method `CacheContextWithListeners` to `sdk.Context` to keep it convenient to enable listeners on the cache store.
 
-    return store
-}
+### When to listen
+
+cosmos-sdk use multiple layers of cache stores internally, we should only listen to one of them to avoid duplicated notifications, the most inner layer is the `app.deliverState.ctx` which writes to `rootmulti` at commit event, to be able to segment the writes with the ABCI events and transactions, we should listener to the second layer. We also need to wrap the consensus state machine logic in a second layer of cache store with listeners enabled, for example:
+
 ```
+InitChain:
+  // branch out from cms, inner cache layer, without listeners
+  setDeliverState()
 
-We will also adjust the `cachemulti` constructor methods and the `rootmulti` `CacheMultiStore` method to forward the listeners
-to and enable listening in the cache layer.
+  // second cache layer, with listeners
+  cacheCtx, write := deliverState.ctx.CacheContextWithListeners(app.writeListeners)
+  initChainer(cacheCtx)
+  
+  // listeners are notified here
+  write()
 
-```go
-func (rs *Store) CacheMultiStore() types.CacheMultiStore {
-    stores := make(map[types.StoreKey]types.CacheWrapper)
-    for k, v := range rs.stores {
-        stores[k] = v
-    }
-    return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners)
-}
+BeginBlocker:
+  setDeliverState()
+
+  cacheCtx, write := deliverState.ctx.CacheContextWithListeners(app.writeListeners)
+  beginBlockers(cacheCtx)
+  write()
+
+DeliverTx:
+  anteCtx, write := deliverState.ctx.CacheContextWithListeners(app.writeListeners)
+  anteHandler(anteCtx)
+  write()
+
+  runMsgsCtx, write := deliverState.ctx.CacheContextWithListeners(app.writeListeners)
+  runMsgs(runMsgsCtx)
+  write()
+
+EndBlocker:
+  cacheCtx, write := deliverState.ctx.CacheContextWithListeners(app.writeListeners)
+  endBlocker(cacheCtx)
+  write()
+
+Commit:
+  deliverState.ms.Write()
+  app.cms.Commit()
 ```
 
 ### Exposing the data

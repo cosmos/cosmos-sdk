@@ -228,8 +228,9 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 // SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
 func (app *BaseApp) SetStreamingService(s StreamingService) {
 	// add the listeners for each StoreKey
+	// register the listeners on app, which will be passed to cache store when necessary.
 	for key, lis := range s.Listeners() {
-		app.cms.AddListeners(key, lis)
+		app.AddListeners(key, lis)
 	}
 	// register the StreamingService within the BaseApp
 	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context

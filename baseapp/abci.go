@@ -53,21 +53,25 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	app.setDeliverState(initHeader)
 	app.setCheckState(initHeader)
 
+	// add block gas meter for any genesis transactions (allow infinite gas)
+	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+
+	// wrap in a cache context for state listening to work.
+	cacheCtx, write := app.deliverState.ctx.CacheContextWithListeners(app.writeListeners)
+
 	// Store the consensus params in the BaseApp's paramstore. Note, this must be
 	// done after the deliver state and context have been set as it's persisted
 	// to state.
 	if req.ConsensusParams != nil {
-		app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
+		app.StoreConsensusParams(cacheCtx, req.ConsensusParams)
 	}
 
 	if app.initChainer == nil {
 		return
 	}
 
-	// add block gas meter for any genesis transactions (allow infinite gas)
-	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
-
-	res = app.initChainer(app.deliverState.ctx, req)
+	res = app.initChainer(cacheCtx, req)
+	write()
 
 	// sanity check
 	if len(req.Validators) > 0 {
@@ -191,7 +195,12 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.deliverState.ctx, req)
+		// wrap in a cache context for state listening to work.
+		cacheCtx, write := app.deliverState.ctx.CacheContextWithListeners(app.writeListeners)
+
+		res = app.beginBlocker(cacheCtx, req)
+
+		write()
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 	// set the signed validators for addition to context in deliverTx
@@ -214,7 +223,12 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	if app.endBlocker != nil {
-		res = app.endBlocker(app.deliverState.ctx, req)
+		// wrap in a cache context for state listening to work.
+		cacheCtx, write := app.deliverState.ctx.CacheContextWithListeners(app.writeListeners)
+
+		res = app.endBlocker(cacheCtx, req)
+
+		write()
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 

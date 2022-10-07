@@ -34,7 +34,7 @@ Where is the other file, relative to the current one?
 
 Where is the other file, given the root of the repo?
 
-* works on GitHub, doesn't work for the Docusaurus build
+* works on GitHub, works in Docusaurus
 * this is much nicer: `/docs/hereitis/myfile.md`
 * if you move that file around, the links inside of it are preserved
 
@@ -67,30 +67,6 @@ Run `pre` and `post` hooks and start a hot-reloading web-server. See output of t
 
 To build documentation as a static website run `npm run build`.
 
-## Build RPC Docs
-
-First, run `make tools` from the root of repo, to install the swagger-ui tool.
-
-Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/main/client/lcd/swagger-ui/swagger.yaml)
-
 ## Search
 
 We are using [Algolia](https://www.algolia.com) to power full-text search. This uses a public API search-only key in the `config.js` as well as a [cosmos_network.json](https://github.com/algolia/docsearch-configs/blob/master/configs/cosmos_network.json) configuration file that we can update with PRs.
-
-### Update and Build the RPC docs
-
-1. Execute the following command at the root directory to install the swagger-ui generate tool.
-
-   ```bash
-   make tools
-   ```
-
-2. Edit API docs
-   1. Directly Edit API docs manually: `client/lcd/swagger-ui/swagger.yaml`.
-   2. Edit API docs within the [Swagger Editor](https://editor.swagger.io/). Please refer to this [document](https://swagger.io/docs/specification/2-0/basic-structure/) for the correct structure in `.yaml`.
-3. Download `swagger.yaml` and replace the old `swagger.yaml` under fold `client/lcd/swagger-ui`.
-4. Compile simd
-
-   ```bash
-   make install
-   ```

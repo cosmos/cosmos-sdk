@@ -461,6 +461,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 					}
 
 					val = k.UnbondingToUnbonded(ctx, val)
+
 					if val.GetDelegatorShares().IsZero() {
 						k.RemoveValidator(ctx, val.GetOperator())
 					} else {

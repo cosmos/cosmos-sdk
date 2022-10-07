@@ -204,7 +204,7 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 
 ### Exposing the data
 
-#### Streaming service
+#### Streaming Service
 
 We will introduce a new `StreamingService` struct for exposing `WriteListener` data streams to external consumers.
 In addition to streaming state changes as `StoreKVPair`s, the struct satisfies an `ABCIListener` interface that plugs

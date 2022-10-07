@@ -4,7 +4,9 @@ sidebar_position: 1
 
 # Command-Line Interface
 
-This document describes how command-line interface (CLI) works on a high-level, for an [**application**](../basics/00-app-anatomy.md). A separate document for implementing a CLI for a Cosmos SDK [**module**](../building-modules/01-intro.md) can be found [here](../building-modules/09-module-interfaces.md#cli). {synopsis}
+:::note Synopsis
+This document describes how command-line interface (CLI) works on a high-level, for an [**application**](../basics/00-app-anatomy.md). A separate document for implementing a CLI for a Cosmos SDK [**module**](../building-modules/01-intro.md) can be found [here](../building-modules/09-module-interfaces.md#cli).
+:::
 
 ## Command-Line Interface
 
@@ -22,7 +24,7 @@ The first four strings specify the command:
 
 * The root command for the entire application `simd`.
 * The subcommand `tx`, which contains all commands that let users create transactions.
-* The subcommand `bank` to indicate which module to route the command to ([`x/bank`](./modules/bank/README.md) module in this case).
+* The subcommand `bank` to indicate which module to route the command to ([`x/bank`](../modules/bank/README.md) module in this case).
 * The type of transaction `send`.
 
 The next two strings are arguments: the `from_address` the user wishes to send from, the `to_address` of the recipient, and the `amount` they want to send. Finally, the last few strings of the command are optional flags to indicate how much the user is willing to pay in fees (calculated using the amount of gas used to execute the transaction and the gas prices provided by the user).

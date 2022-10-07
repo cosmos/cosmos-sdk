@@ -4,11 +4,13 @@ sidebar_position: 1
 
 # Encoding
 
-While encoding in the Cosmos SDK used to be mainly handled by `go-amino` codec, the Cosmos SDK is moving towards using `gogoprotobuf` for both state and client-side encoding. {synopsis}
+:::note Synopsis
+While encoding in the Cosmos SDK used to be mainly handled by `go-amino` codec, the Cosmos SDK is moving towards using `gogoprotobuf` for both state and client-side encoding.
+:::
 
 :::note
 
-## Pre-requisite Readings
+### Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md)
 

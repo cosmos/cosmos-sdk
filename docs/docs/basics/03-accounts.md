@@ -4,11 +4,13 @@ sidebar_position: 1
 
 # Accounts
 
-This document describes the in-built account and public key system of the Cosmos SDK. {synopsis}
+:::note Synopsis
+This document describes the in-built account and public key system of the Cosmos SDK.
+:::
 
 :::note
 
-## Pre-requisite Readings
+### Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK Application](./00-app-anatomy.md)
 

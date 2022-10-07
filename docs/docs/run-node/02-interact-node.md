@@ -4,11 +4,13 @@ sidebar_position: 1
 
 # Interacting with the Node
 
-There are multiple ways to interact with a node: using the CLI, using gRPC or using the REST endpoints. {synopsis}
+:::note Synopsis
+There are multiple ways to interact with a node: using the CLI, using gRPC or using the REST endpoints.
+:::
 
 :::note
 
-## Pre-requisite Readings
+### Pre-requisite Readings
 
 * [gRPC, REST and Tendermint Endpoints](../core/06-grpc_rest.md)
 * [Running a Node](./01-run-node.md)

@@ -4,7 +4,9 @@ sidebar_position: 1
 
 # Telemetry
 
-Gather relevant insights about your application and modules with custom metrics and telemetry. {synopsis}
+:::note Synopsis
+Gather relevant insights about your application and modules with custom metrics and telemetry.
+:::
 
 The Cosmos SDK enables operators and developers to gain insight into the performance and behavior of
 their application through the use of the `telemetry` package. To enable telemetrics, set `telemetry.enabled = true` in the app.toml config file.

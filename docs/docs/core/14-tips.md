@@ -4,7 +4,9 @@ sidebar_position: 1
 
 # Transaction Tips
 
-Transaction tips are a mechanism to pay for transaction fees using another denom than the native fee denom of the chain. They are still in beta, and are not included by default in the SDK. {synopsis}
+:::note Synopsis
+Transaction tips are a mechanism to pay for transaction fees using another denom than the native fee denom of the chain. They are still in beta, and are not included by default in the SDK.
+:::
 
 ## Context
 

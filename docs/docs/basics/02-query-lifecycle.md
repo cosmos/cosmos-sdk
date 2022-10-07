@@ -4,14 +4,15 @@ sidebar_position: 1
 
 # Query Lifecycle
 
-This document describes the lifecycle of a query in a Cosmos SDK application, from the user interface to application stores and back. {synopsis}
+:::note Synopsis
+This document describes the lifecycle of a query in a Cosmos SDK application, from the user interface to application stores and back.
+:::
 
 :::note
 
-## Pre-requisite Readings
+### Pre-requisite Readings
 
 * [Transaction Lifecycle](./01-tx-lifecycle.md)
-
 :::
 
 ## Query Creation

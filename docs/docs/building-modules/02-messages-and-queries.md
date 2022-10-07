@@ -4,11 +4,13 @@ sidebar_position: 1
 
 # Messages and Queries
 
-`Msg`s and `Queries` are the two primary objects handled by modules. Most of the core components defined in a module, like `Msg` services, `keeper`s and `Query` services, exist to process `message`s and `queries`. {synopsis}
+:::note Synopsis
+`Msg`s and `Queries` are the two primary objects handled by modules. Most of the core components defined in a module, like `Msg` services, `keeper`s and `Query` services, exist to process `message`s and `queries`.
+:::
 
 :::note
 
-## Pre-requisite Readings
+### Pre-requisite Readings
 
 * [Introduction to Cosmos SDK Modules](./01-intro.md)
 

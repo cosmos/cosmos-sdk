@@ -4,11 +4,13 @@ sidebar_position: 1
 
 # Gas and Fees
 
-This document describes the default strategies to handle gas and fees within a Cosmos SDK application. {synopsis}
+:::note Synopsis
+This document describes the default strategies to handle gas and fees within a Cosmos SDK application.
+:::
 
 :::note
 
-## Pre-requisite Readings
+### Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK Application](./00-app-anatomy.md)
 

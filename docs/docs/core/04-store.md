@@ -4,11 +4,13 @@ sidebar_position: 1
 
 # Store
 
-A store is a data structure that holds the state of the application. {synopsis}
+:::note Synopsis
+A store is a data structure that holds the state of the application.
+:::
 
 :::note
 
-## Pre-requisite Readings
+### Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md)
 

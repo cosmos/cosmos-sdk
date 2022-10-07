@@ -8,7 +8,9 @@ sidebar_position: 1
 Read and understand all the in-place store migration documentation before you run a migration on a live chain.
 :::
 
-Upgrade your app modules smoothly with custom in-place store migration logic. {synopsis}
+:::note Synopsis
+Upgrade your app modules smoothly with custom in-place store migration logic.
+:::
 
 The Cosmos SDK uses two methods to perform upgrades:
 

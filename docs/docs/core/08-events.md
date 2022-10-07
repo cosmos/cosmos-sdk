@@ -3,11 +3,13 @@ sidebar_position: 1
 ---
 # Events
 
-`Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallet to track the execution of various messages and index transactions. {synopsis}
+:::note Synopsis
+`Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallet to track the execution of various messages and index transactions.
+:::
 
 :::note
 
-## Pre-requisite Readings
+### Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md)
 * [Tendermint Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events)
@@ -54,7 +56,7 @@ The following examples show how to query Events using the Cosmos SDK.
 | `message.action='/cosmos.bank.v1beta1.Msg/Send'` | Query all transactions containing a x/bank `Send` [Service `Msg`](../building-modules/03-msg-services.md). Note the `'`s around the value.                  |
 | `message.action='send'`                          | Query all transactions containing a x/bank `Send` [legacy `Msg`](../building-modules/03-msg-services.md#legacy-amino-msgs). Note the `'`s around the value. |
 | `message.module='bank'`                          | Query all transactions containing messages from the x/bank module. Note the `'`s around the value.                                                       |
-| `create_validator.validator='cosmosval1...'`     | x/staking-specific Event, see [x/staking SPEC](../../../cosmos-sdk/x/staking/README.md).                                                         |
+| `create_validator.validator='cosmosval1...'`     | x/staking-specific Event, see [x/staking SPEC](../modules/staking/README.md).                                                         |
 
 ## EventManager
 

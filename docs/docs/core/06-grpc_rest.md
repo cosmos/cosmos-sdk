@@ -4,7 +4,9 @@ sidebar_position: 1
 
 # gRPC, REST, and Tendermint Endpoints
 
-This document presents an overview of all the endpoints a node exposes: gRPC, REST as well as some other endpoints. {synopsis}
+:::note Synopsis
+This document presents an overview of all the endpoints a node exposes: gRPC, REST as well as some other endpoints.
+:::
 
 ## An Overview of All Endpoints
 
@@ -37,7 +39,7 @@ The `grpc.Server` is a concrete gRPC server, which spawns and serves all gRPC qu
 `~/.simapp` is the directory where the node's configuration and databases are stored. By default, it's set to `~/.{app_name}`.
 :::
 
-Once the gRPC server is started, you can send requests to it using a gRPC client. Some examples are given in our [Interact with the Node](../run-node/interact-03-node.md#using-grpc) tutorial.
+Once the gRPC server is started, you can send requests to it using a gRPC client. Some examples are given in our [Interact with the Node](../run-node/02-interact-node.md#using-grpc) tutorial.
 
 An overview of all available gRPC endpoints shipped with the Cosmos SDK is [Protobuf documentation](https://buf.build/cosmos/cosmos-sdk).
 

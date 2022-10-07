@@ -4,8 +4,9 @@ sidebar_position: 1
 
 # Recommended Folder Structure
 
-This document outlines the recommended structure of Cosmos SDK modules. These ideas are meant to be applied as suggestions. Application developers are encouraged to improve upon and contribute to module structure and development design. {synopsis}
-
+:::note Synopsis
+This document outlines the recommended structure of Cosmos SDK modules. These ideas are meant to be applied as suggestions. Application developers are encouraged to improve upon and contribute to module structure and development design.
+:::
 ## Structure
 
 A typical Cosmos SDK module can be structured as follows:

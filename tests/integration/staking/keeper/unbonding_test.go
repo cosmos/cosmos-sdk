@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// SetupUnbondingTests creates two validators and setup mocked staking hooks for testing unbonding
 func SetupUnbondingTests(t *testing.T, app *simapp.SimApp, ctx sdk.Context, hookCalled *bool, ubdeID *uint64) (bondDenom string, addrDels []sdk.AccAddress, addrVals []sdk.ValAddress) {
 	// setup hooks
 	mockCtrl := gomock.NewController(t)
@@ -76,6 +77,8 @@ func SetupUnbondingTests(t *testing.T, app *simapp.SimApp, ctx sdk.Context, hook
 	validator2 = stakingkeeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
 	require.Equal(t, types.Bonded, validator2.Status)
 	require.True(t, validator2.IsBonded())
+
+	return bondDenom, addrDels, addrVals
 }
 
 func doUnbondingDelegation(

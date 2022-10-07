@@ -8,7 +8,7 @@ sidebar_position: 1
 The `simd testnet` subcommand makes it easy to initialize and start a simulated test network for testing purposes.
 :::
 
-In addition to the commands for [running a node](./run-node.html), the `simd` binary also includes a `testnet` command that allows you to start a simulated test network in-process or to initialize files for a simulated test network that runs in a separate process.
+In addition to the commands for [running a node](./run-node/01-run-node.md), the `simd` binary also includes a `testnet` command that allows you to start a simulated test network in-process or to initialize files for a simulated test network that runs in a separate process.
 
 ## Initialize Files
 

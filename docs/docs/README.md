@@ -67,7 +67,7 @@ aside: false
 
 ## Other Resources
 
-* **[Module Directory](../x/)**: Cosmos SDK module implementations and their respective documentation.
+* **[Module Directory](./modules/)**: Cosmos SDK module implementations and their respective documentation.
 * **[Specifications](./spec/)**: Specifications of modules and other parts of the Cosmos SDK.
 * **[Cosmos SDK API Reference](https://pkg.go.dev/github.com/cosmos/cosmos-sdk)**: Godocs of the Cosmos SDK.
 * **[REST and RPC Endpoints](https://cosmos.network/rpc/)**: List of endpoints to interact with a `gaia` full-node.

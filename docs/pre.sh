@@ -28,3 +28,6 @@ cp ../depinject/README.md ./docs/building-apps/01-depinject.md
 
 ## Add architecture documentation
 cp -r ./architecture ./docs
+
+## Add spec documentation
+cp -r ./spec ./docs

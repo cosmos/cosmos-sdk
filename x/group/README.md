@@ -2066,7 +2066,7 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov
 
 ## Vote
 
-Location: on-chain as json within 255 character limit (mirrors [gov vote](../gov/README#metadata))
+Location: on-chain as json within 255 character limit (mirrors [gov vote](../gov/README.md#metadata))
 
 ```json
 {

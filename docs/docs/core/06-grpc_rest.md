@@ -28,7 +28,7 @@ Each module exposes a [Protobuf `Query` service](../building-modules/02-messages
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/server/types/app.go#L45-L47
 
-Note: It is not possible to expose any [Protobuf `Msg` service](../building-modules/02-messages-and-queries.md#messages) endpoints via gRPC. Transactions must be generated and signed using the CLI or programmatically before they can be broadcasted using gRPC. See [Generating, Signing, and Broadcasting Transactions](../run-node/txs.html) for more information.
+Note: It is not possible to expose any [Protobuf `Msg` service](../building-modules/02-messages-and-queries.md#messages) endpoints via gRPC. Transactions must be generated and signed using the CLI or programmatically before they can be broadcasted using gRPC. See [Generating, Signing, and Broadcasting Transactions](../run-node/03-txs.md) for more information.
 
 The `grpc.Server` is a concrete gRPC server, which spawns and serves all gRPC query requests and a broadcast transaction request. This server can be configured inside `~/.simapp/config/app.toml`:
 

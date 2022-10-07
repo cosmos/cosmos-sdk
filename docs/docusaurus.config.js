@@ -10,7 +10,7 @@ const config = {
   tagline: "Cosmos SDK Documentation",
   url: "https://docs.cosmos.network",
   baseUrl: "/",
-  onBrokenLinks: "throw",
+  onBrokenLinks: "warn",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.svg",
   trailingSlash: false,
@@ -27,13 +27,6 @@ const config = {
     defaultLocale: "en",
     locales: ["en"],
   },
-
-  scripts: [
-    {
-      async: true,
-      src: "https://www.googletagmanager.com/gtag/js?id=UA-51029217-2",
-    },
-  ],
 
   presets: [
     [
@@ -176,6 +169,26 @@ const config = {
         },
       };
     },
+    [
+      "@docusaurus/plugin-google-analytics",
+      {
+        trackingID: "UA-51029217-2",
+        anonymizeIP: true,
+      },
+    ],
+    [
+      "@docusaurus/plugin-client-redirects",
+      {
+        fromExtensions: ["html"],
+        toExtensions: ["html"],
+        redirects: [
+          {
+            from: "/main/",
+            to: `/`,
+          },
+        ],
+      },
+    ],
   ],
 };
 

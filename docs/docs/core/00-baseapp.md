@@ -6,10 +6,14 @@ sidebar_position: 1
 
 This document describes `BaseApp`, the abstraction that implements the core functionalities of a Cosmos SDK application. {synopsis}
 
+:::note
+
 ## Pre-requisite Readings
 
-* [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md) {prereq}
-* [Lifecycle of a Cosmos SDK transaction](../basics/01-tx-lifecycle.md) {prereq}
+* [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md)
+* [Lifecycle of a Cosmos SDK transaction](../basics/01-tx-lifecycle.md)
+
+:::
 
 ## Introduction
 

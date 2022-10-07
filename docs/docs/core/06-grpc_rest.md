@@ -14,7 +14,7 @@ Each node exposes the following endpoints for users to interact with a node, eac
 * the REST server (default port: `1317`),
 * the Tendermint RPC endpoint (default port: `26657`).
 
-::: tip
+:::tip
 The node also exposes some other endpoints, such as the Tendermint P2P endpoint, or the [Prometheus endpoint](https://docs.tendermint.com/master/nodes/metrics.html#metrics), which are not directly related to the Cosmos SDK. Please refer to the [Tendermint documentation](https://docs.tendermint.com/master/tendermint-core/using-tendermint.html#configuration) for more information about these endpoints.
 :::
 

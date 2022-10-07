@@ -6,9 +6,13 @@ sidebar_position: 1
 
 This document describes the lifecycle of a query in a Cosmos SDK application, from the user interface to application stores and back. {synopsis}
 
+:::note
+
 ## Pre-requisite Readings
 
-* [Transaction Lifecycle](./01-tx-lifecycle.md) {prereq}
+* [Transaction Lifecycle](./01-tx-lifecycle.md)
+
+:::
 
 ## Query Creation
 

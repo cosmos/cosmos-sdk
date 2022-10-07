@@ -6,10 +6,14 @@ sidebar_position: 1
 
 The `context` is a data structure intended to be passed from function to function that carries information about the current state of the application. It provides access to a branched storage (a safe branch of the entire state) as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more. {synopsis}
 
+:::note
+
 ## Pre-requisites Readings
 
-* [Anatomy of a Cosmos SDK Application](../basics/00-app-anatomy.md) {prereq}
-* [Lifecycle of a Transaction](../basics/01-tx-lifecycle.md) {prereq}
+* [Anatomy of a Cosmos SDK Application](../basics/00-app-anatomy.md)
+* [Lifecycle of a Transaction](../basics/01-tx-lifecycle.md)
+
+:::
 
 ## Context Definition
 

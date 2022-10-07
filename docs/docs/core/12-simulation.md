@@ -55,7 +55,7 @@ In addition to the various inputs and commands, the simulator runs in three mode
    This allows for a more controlled and deterministic simulation setup while allowing the state space to still be pseudo-randomly simulated.
    The list of available parameters are listed [here](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/config.go#L33-L57).
 
-::: tip
+:::tip
 These modes are not mutually exclusive. So you can for example run a randomly
 generated genesis state (`1`) with manually generated simulation params (`3`).
 :::

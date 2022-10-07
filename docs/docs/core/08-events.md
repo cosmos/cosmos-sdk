@@ -5,10 +5,14 @@ sidebar_position: 1
 
 `Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallet to track the execution of various messages and index transactions. {synopsis}
 
+:::note
+
 ## Pre-requisite Readings
 
-* [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md) {prereq}
-* [Tendermint Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events) {prereq}
+* [Anatomy of a Cosmos SDK application](../basics/00-app-anatomy.md)
+* [Tendermint Documentation on Events](https://docs.tendermint.com/master/spec/abci/abci.html#events)
+
+:::
 
 ## Typed Events
 
@@ -22,7 +26,7 @@ An Event contains:
 * A `type` to categorize the Event at a high-level; for example, the Cosmos SDK uses the `"message"` type to filter Events by `Msg`s.
 * A list of `attributes` are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter Events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
 
-::: tip
+:::tip
 To parse the attribute values as strings, make sure to add `'` (single quotes) around each attribute value.
 :::
 

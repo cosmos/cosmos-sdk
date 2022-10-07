@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # In-Place Store Migrations
 
-::: warning
+:::warning
 Read and understand all the in-place store migration documentation before you run a migration on a live chain.
 :::
 
@@ -130,7 +130,7 @@ The Cosmos SDK offers modules that the application developer can import in their
 
 You can write your own `InitGenesis` function for an imported module. To do this, manually trigger your custom genesis function in the upgrade handler.
 
-::: warning
+:::warning
 You MUST manually set the consensus version in the version map passed to the `UpgradeHandler` function. Without this, the SDK will run the Module's existing `InitGenesis` code even if you triggered your custom function in the `UpgradeHandler`.
 :::
 

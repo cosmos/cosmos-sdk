@@ -6,7 +6,7 @@
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: theme(colors.gray.1000);
+  --ifm-color-primary: #5064fb;
   --ifm-color-primary-dark: theme(colors.gray.1000);
   --ifm-color-primary-darker: theme(colors.gray.1000);
   --ifm-color-primary-darkest: theme(colors.gray.1000);
@@ -67,37 +67,18 @@ html[data-theme="dark"] {
 
 html {
   @apply bg-docusaurusBgColor;
-  body > div {
-    @apply max-w-[90rem] m-auto;
-    @media (min-width: 997px) {
-      @apply px-6;
-    }
-  }
-
   /* Banner */
 
   #__docusaurus > div[role="banner"] {
     @apply bg-gray-30 text-gray-1000 font-normal;
-    & > div {
-      @apply flex py-3;
-    }
     a {
-      @apply no-underline block w-full text-2;
+      @apply no-underline w-full text-2;
     }
-    @media (min-width: 997px) {
-      @apply hidden;
-    }
-  }
-  &[data-theme="dark"] #__docusaurus > div[role="banner"] {
-    @apply bg-fg text-mutedLight font-normal;
   }
 
   /* MAINNAV */
   .navbar {
-    @apply py-6 mx-6 px-0 h-auto border-b border-b-docusaurusColorBorder shadow-none bg-docusaurusBgColor;
-    @media (min-width: 997px) {
-      @apply mx-0;
-    }
+    @apply py-2 h-auto border-b border-b-docusaurusColorBorder shadow-none bg-docusaurusBgColor;
     &__toggle {
       @apply bg-card rounded-s h-8 w-8 flex justify-center items-center;
       @media (min-width: 997px) {
@@ -269,15 +250,10 @@ html {
   /* SIDEBAR */
   .theme-doc-sidebar-container {
     @media (min-width: 997px) {
-      @apply border-r border-r-docusaurusColorBorder;
+      @apply ml-4 border-r border-r-docusaurusColorBorder;
     }
     & > div:first-child > a {
       @apply m-0;
-    }
-    nav {
-      @media (min-width: 997px) {
-        @apply pt-7;
-      }
     }
   }
 
@@ -429,7 +405,7 @@ html {
     background-color: var(--ifm-background-color);
     @apply border-t border-t-docusaurusColorBorder pt-10 mb-10;
     &__link-item {
-      @apply hover:no-underline hover:text-linkHover;
+      @apply hover:underline;
     }
     &__bottom {
       margin: 0 calc(var(--ifm-spacing-horizontal) * -1);
@@ -494,7 +470,8 @@ html {
       @apply my-7;
     }
     a {
-      @apply underline underline-offset-2 hover:text-linkHover hover:decoration-linkHover;
+      @apply no-underline hover:underline;
+      color: var(--ifm-color-primary);
     }
     ol,
     ul {

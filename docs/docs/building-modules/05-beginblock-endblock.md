@@ -6,9 +6,13 @@ sidebar_position: 1
 
 `BeginBlocker` and `EndBlocker` are optional methods module developers can implement in their module. They will be triggered at the beginning and at the end of each block respectively, when the [`BeginBlock`](../core/00-baseapp.md#beginblock) and [`EndBlock`](../core/00-baseapp.md#endblock) ABCI messages are received from the underlying consensus engine. {synopsis}
 
+:::note
+
 ## Pre-requisite Readings
 
-* [Module Manager](./01-module-manager.md) {prereq}
+* [Module Manager](./01-module-manager.md)
+
+:::
 
 ## BeginBlocker and EndBlocker
 

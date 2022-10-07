@@ -6,9 +6,13 @@ sidebar_position: 1
 
 `Keeper`s refer to a Cosmos SDK abstraction whose role is to manage access to the subset of the state defined by various modules. `Keeper`s are module-specific, i.e. the subset of state defined by a module can only be accessed by a `keeper` defined in said module. If a module needs to access the subset of state defined by another module, a reference to the second module's internal `keeper` needs to be passed to the first one. This is done in `app.go` during the instantiation of module keepers. {synopsis}
 
+:::note
+
 ## Pre-requisite Readings
 
-* [Introduction to Cosmos SDK Modules](./01-intro.md) {prereq}
+* [Introduction to Cosmos SDK Modules](./01-intro.md)
+
+:::
 
 ## Motivation
 

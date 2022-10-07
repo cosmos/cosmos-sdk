@@ -6,9 +6,13 @@ sidebar_position: 1
 
 The main endpoint of a Cosmos SDK application is the daemon client, otherwise known as the full-node client. The full-node runs the state-machine, starting from a genesis file. It connects to peers running the same client in order to receive and relay transactions, block proposals and signatures. The full-node is constituted of the application, defined with the Cosmos SDK, and of a consensus engine connected to the application via the ABCI. {synopsis}
 
+:::note
+
 ## Pre-requisite Readings
 
-* [Anatomy of an SDK application](../basics/00-app-anatomy.md) {prereq}
+* [Anatomy of an SDK application](../basics/00-app-anatomy.md)
+
+:::
 
 ## `main` function
 

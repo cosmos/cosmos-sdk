@@ -8,7 +8,7 @@ This document describes how to generate an (unsigned) transaction, signing it (w
 
 ## Using the CLI
 
-The easiest way to send transactions is using the CLI, as we have seen in the previous page when [interacting with a node](./interact-03-node.md#using-the-cli). For example, running the following command
+The easiest way to send transactions is using the CLI, as we have seen in the previous page when [interacting with a node](./02-interact-node.md#using-the-cli). For example, running the following command
 
 ```bash
 simd tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-chain --keyring-backend test
@@ -51,7 +51,7 @@ Some useful flags to consider in the `tx sign` command:
 
 #### Signing with Multiple Signers
 
-::: warning
+:::warning
 Please note that signing a transaction with multiple signers or with a multisig account, where at least one signer uses `SIGN_MODE_DIRECT`, is not yet possible. You may follow [this Github issue](https://github.com/cosmos/cosmos-sdk/issues/8141) for more info.
 :::
 

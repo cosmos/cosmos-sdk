@@ -61,7 +61,8 @@ const config = {
         },
       },
       navbar: {
-        hideOnScroll: true,
+        title: "Cosmos SDK",
+        hideOnScroll: false,
         logo: {
           alt: "Cosmos SDK Logo",
           src: "img/logo-sdk.svg",

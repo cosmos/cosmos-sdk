@@ -6,9 +6,13 @@ sidebar_position: 1
 
 `Transactions` are objects created by end-users to trigger state changes in the application. {synopsis}
 
+:::note
+
 ## Pre-requisite Readings
 
-* [Anatomy of a Cosmos SDK Application](../basics/00-app-anatomy.md) {prereq}
+* [Anatomy of a Cosmos SDK Application](../basics/00-app-anatomy.md)
+
+:::
 
 ## Transactions
 
@@ -93,7 +97,7 @@ The next paragraphs will describe each of these components, in this order.
 
 ### Messages
 
-::: tip
+:::tip
 Module `sdk.Msg`s are not to be confused with [ABCI Messages](https://docs.tendermint.com/master/spec/abci/abci.html#messages) which define interactions between the Tendermint and application layers.
 :::
 

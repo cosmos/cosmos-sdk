@@ -56,7 +56,7 @@ $ (echo $KEYPASSWD; echo $KEYPASSWD) | gaiacli keys add me        # multiple pro
 $ echo $KEYPASSWD | gaiacli keys show me                          # single prompt
 ```
 
-::: tip
+:::tip
 The first time you add a key to an empty keyring, you will be prompted to type the password twice.
 :::
 
@@ -68,7 +68,7 @@ within app-specific directories. `pass` is available for the most popular UNIX
 operating systems as well as GNU/Linux distributions. Please refer to its manual page for
 information on how to download and install it.
 
-::: tip
+:::tip
 **pass** uses [GnuPG](https://gnupg.org/) for encryption. `gpg` automatically invokes the `gpg-agent`
 daemon upon execution, which handles the caching of GnuPG credentials. Please refer to `gpg-agent`
 man page for more information on how to configure cache parameters such as credentials TTL and
@@ -106,7 +106,7 @@ The `memory` backend stores keys in memory. The keys are immediately deleted aft
 
 ## Adding keys to the keyring
 
-::: warning
+:::warning
 Make sure you can build your own binary, and replace `simd` with the name of your binary in the snippets.
 :::
 
@@ -114,7 +114,7 @@ Applications developed using the Cosmos SDK come with the `keys` subcommand. For
 
 You can use `simd keys` for help about the keys command and `simd keys [command] --help` for more information about a particular subcommand.
 
-::: tip
+:::tip
 You can also enable auto-completion with the `simd completion` command. For example, at the start of a bash session, run `. <(simd completion)`, and all `simd` subcommands will be auto-completed.
 :::
 

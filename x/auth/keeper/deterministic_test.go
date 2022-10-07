@@ -34,9 +34,20 @@ type DeterministicTestSuite struct {
 
 var (
 	iterCount = 1000
-	addr      = "cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6"
-	pubkey    = "01090C02812F010C25200ED40E004105160196E801F70005070EA21603FF06001E"
+	addr      sdk.AccAddress
+	pub       []byte
 )
+
+func init() {
+	addr = sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	pubkey := "01090C02812F010C25200ED40E004105160196E801F70005070EA21603FF06001E"
+
+	var err error
+	pub, err = hex.DecodeString(pubkey)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func TestDeterministicTestSuite(t *testing.T) {
 	suite.Run(t, new(DeterministicTestSuite))
@@ -125,20 +136,14 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 		suite.runAccountIterations(accs[0].GetAddress(), accs[0])
 	})
 
-	// Regression test
-	addr1, err := sdk.AccAddressFromBech32(addr)
-	suite.Require().NoError(err)
-
-	pub, err := hex.DecodeString(pubkey)
-	suite.Require().NoError(err)
-
+	// Regression tests
 	accNum := uint64(10087)
 	seq := uint64(98)
 
-	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub}, accNum, seq)
+	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
-	suite.runAccountIterations(addr1, acc1)
+	suite.runAccountIterations(addr, acc1)
 }
 
 // pubkeyGenerator creates and returns a random pubkey generator using rapid.
@@ -187,16 +192,11 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	accNum1 := uint64(107)
 	seq1 := uint64(10001)
 
-	addr2, err := sdk.AccAddressFromBech32(addr)
-	suite.Require().NoError(err)
-	pub2, err := hex.DecodeString(pubkey)
-	suite.Require().NoError(err)
-
 	accNum2 := uint64(100)
 	seq2 := uint64(10)
 
 	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub1}, accNum1, seq1)
-	acc2 := types.NewBaseAccount(addr2, &secp256k1.PubKey{Key: pub2}, accNum2, seq2)
+	acc2 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum2, seq2)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 	suite.accountKeeper.SetAccount(suite.ctx, acc2)
@@ -233,18 +233,13 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 	})
 
 	// Regression test
-	addr1, err := sdk.AccAddressFromBech32(addr)
-	suite.Require().NoError(err)
-	pub, err := hex.DecodeString(pubkey)
-	suite.Require().NoError(err)
-
 	accNum := uint64(10087)
 	seq := uint64(0)
 
-	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub}, accNum, seq)
+	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
-	suite.runAccountAddressByIDIterations(int64(accNum), addr1.String())
+	suite.runAccountAddressByIDIterations(int64(accNum), addr.String())
 }
 
 func (suite *DeterministicTestSuite) runParamsIterations(prevRes types.Params) {
@@ -312,18 +307,13 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 	})
 
 	// Regression test
-	addr1, err := sdk.AccAddressFromBech32(addr)
-	suite.Require().NoError(err)
-	pub, err := hex.DecodeString(pubkey)
-	suite.Require().NoError(err)
-
 	accNum := uint64(10087)
 	seq := uint64(10)
 
-	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub}, accNum, seq)
+	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
-	suite.runAccountInfoIterations(addr1, acc1)
+	suite.runAccountInfoIterations(addr, acc1)
 }
 
 func (suite *DeterministicTestSuite) createAndReturnQueryClient(ak keeper.AccountKeeper) types.QueryClient {
@@ -381,9 +371,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAddressBytesToString() {
 		suite.runAddressBytesToStringIterations(address.Bytes(), address.String())
 	})
 
-	address, err := sdk.AccAddressFromBech32(addr)
-	suite.Require().NoError(err)
-	suite.runAddressBytesToStringIterations(address.Bytes(), address.String())
+	suite.runAddressBytesToStringIterations(addr.Bytes(), addr.String())
 }
 
 func (suite *DeterministicTestSuite) runStringToAddressBytesIterations(addressString string, prevRes []byte) {
@@ -405,9 +393,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAddressStringToBytes() {
 		suite.runStringToAddressBytesIterations(address.String(), address.Bytes())
 	})
 
-	address, err := sdk.AccAddressFromBech32(addr)
-	suite.Require().NoError(err)
-	suite.runStringToAddressBytesIterations(address.String(), address.Bytes())
+	suite.runStringToAddressBytesIterations(addr.String(), addr.Bytes())
 }
 
 func (suite *DeterministicTestSuite) setModuleAccounts(

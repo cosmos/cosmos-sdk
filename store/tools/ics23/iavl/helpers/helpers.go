@@ -87,7 +87,7 @@ func GetNonKey(allkeys [][]byte, loc tmproofs.Where) []byte {
 // BuildTree creates random key/values and stores in tree
 // returns a list of all keys in sorted order
 func BuildTree(size int) (tree *iavl.MutableTree, keys [][]byte, err error) {
-	tree, err = iavl.NewMutableTree(db.NewMemDB(), 0)
+	tree, err = iavl.NewMutableTree(db.NewMemDB(), 0, false)
 	if err != nil {
 		return nil, nil, err
 	}

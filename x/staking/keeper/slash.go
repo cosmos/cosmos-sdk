@@ -30,6 +30,9 @@ import (
 //
 //	Infraction was committed at the current height or at a past height,
 //	not at a height in the future
+//	---
+//
+// Slash implementation doesn't require the infraction (types.Infraction) to work but the IS one does. It is here to have IS satisfy the Slash signature.
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec, _ types.Infraction) math.Int {
 	logger := k.Logger(ctx)
 

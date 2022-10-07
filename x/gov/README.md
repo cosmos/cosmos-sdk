@@ -125,8 +125,6 @@ staking token of the chain.
     * [Proposal](#proposal-3)
     * [Vote](#vote-5)
 
-<!-- order: 1 -->
-
 # Concepts
 
 *Disclaimer: This is work in progress. Mechanisms are susceptible to change.*
@@ -326,8 +324,6 @@ nodes, non-validating full nodes and light-nodes) are expected to switch to the
 new version of the software.
 
 Validators and full nodes can use an automation tool, such as [Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/main/cosmovisor/README.md), for automatically switching version of the chain.
-
-<!-- order: 2 -->
 
 # State
 
@@ -545,8 +541,6 @@ While proposals should use the new implementation of the governance proposal, we
 
 More information on how to submit proposals in the [client section](07_client.md).
 
-<!-- order: 3 -->
-
 # Messages
 
 ## Proposal Submission
@@ -727,8 +721,6 @@ handled:
         store(Governance, <txGovVote.ProposalID|'addresses'|sender>, txGovVote.Vote)   // Voters can vote multiple times. Re-voting overrides previous vote. This is ok because tallying is done once at the end.
 ```
 
-<!-- order: 4 -->
-
 # Events
 
 The governance module emits the following events:
@@ -791,8 +783,6 @@ The governance module emits the following events:
 
 * [0] Event only emitted if the voting period starts during the submission.
 
-<!-- order: 5 -->
-
 # Future Improvements
 
 The current documentation only describes the minimum viable product for the
@@ -820,8 +810,6 @@ governance module. Future improvements may include:
   `proposal.Deposit`, one for anti-spam (same as in MVP) and an other one to
   reward third party auditors.
 
-<!-- order: 6 -->
-
 # Parameters
 
 The governance module contains the following parameters:
@@ -846,8 +834,6 @@ The governance module contains the following parameters:
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need
 to be included and not the entire parameter object structure.
-
-<!-- order: 7 -->
 
 # Client
 
@@ -2650,7 +2636,6 @@ Example Output:
 }
 ```
 
-<!-- order: 8 -->
 
 # Metadata
 

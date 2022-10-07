@@ -280,6 +280,16 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
+	// Clean up the traceWriter in the cpuProfileCleanup routine that is invoked
+	// when the server is shutting down.
+	fn := cpuProfileCleanup
+	cpuProfileCleanup = func() {
+		if fn != nil {
+			fn()
+		}
+		traceWriter.Close()
+	}
+
 	config, err := serverconfig.GetConfig(ctx.Viper)
 	if err != nil {
 		return err

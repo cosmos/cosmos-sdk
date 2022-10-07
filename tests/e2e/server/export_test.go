@@ -157,7 +157,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	app.Commit()
 
 	cmd := server.ExportCmd(
-		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions) (types.ExportedApp, error) {
+		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
 			var simApp *simapp.SimApp
 			if height != -1 {
 				simApp = simapp.NewSimApp(logger, db, nil, false, appOptions)
@@ -169,7 +169,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 				simApp = simapp.NewSimApp(logger, db, nil, true, appOptions)
 			}
 
-			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 		}, tempDir)
 
 	ctx := context.Background()

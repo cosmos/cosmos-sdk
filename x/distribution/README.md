@@ -97,8 +97,6 @@ to set up a script to periodically withdraw and rebond rewards.
     * [CLI](#cli)
     * [gRPC](#grpc)
 
-<!-- order: 1 -->
-
 # Concepts
 
 In Proof of Stake (PoS) blockchains, rewards gained from transaction fees are paid to validators. The fee distribution module fairly distributes the rewards to the validators' constituent delegators.
@@ -129,8 +127,6 @@ along with each historical reward storage entry. Each time a new object (delegat
 is created which might need to reference the historical record, the reference count is incremented.
 Each time one object which previously needed to reference the historical record is deleted, the reference
 count is decremented. If the reference count hits zero, the historical record is deleted.
-
-<!-- order: 2 -->
 
 # State
 
@@ -201,8 +197,6 @@ it can be updated with governance or the address with authority.
 * Params: `0x09 | ProtocolBuffer(Params)`
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30
-
-<!-- order: 3 -->
 
 # Begin Block
 
@@ -275,8 +269,6 @@ the total rewards. Consequently, the reward for a single delegator is:
 = (delegator proportion of the validator power / total bonded power) * (1 -
 community tax rate) * (1 - validator commission rate)
 ```
-
-<!-- order: 4 -->
 
 # Messages
 
@@ -407,8 +399,6 @@ The message handling can fail if:
 
 * signer is not the gov module account address.
 
-<!-- order: 5 -->
-
 # Hooks
 
 Available hooks that can be called by and from this module.
@@ -465,8 +455,6 @@ Any remaining rewards are dust amounts.
 * The slash event is stored for later use.
   The slash event will be referenced when calculating delegator rewards.
 
-<!-- order: 6 -->
-
 # Events
 
 The distribution module emits the following events:
@@ -512,8 +500,6 @@ The distribution module emits the following events:
 | message    | action        | withdraw_validator_commission |
 | message    | sender        | {senderAddress}               |
 
-<!-- order: 7 -->
-
 # Parameters
 
 The distribution module contains the following parameters:
@@ -527,8 +513,6 @@ The distribution module contains the following parameters:
 
 * [0] `communitytax`, `baseproposerreward` and `bonusproposerreward` must be
   positive and their sum cannot exceed 1.00.
-
-<!-- order: 8 -->
 
 # Client
 

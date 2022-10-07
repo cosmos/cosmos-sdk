@@ -32,8 +32,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
@@ -73,8 +71,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		var (
 			bankKeeper        bankkeeper.Keeper
 			accountKeeper     authkeeper.AccountKeeper
-			paramsKeeper      paramskeeper.Keeper
-			stakingKeeper     *stakingkeeper.Keeper
 			appBuilder        *runtime.AppBuilder
 			txConfig          client.TxConfig
 			cdc               codec.Codec
@@ -88,8 +84,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		err = depinject.Inject(appConfig,
 			&bankKeeper,
 			&accountKeeper,
-			&paramsKeeper,
-			&stakingKeeper,
 			&interfaceRegistry,
 			&txConfig,
 			&cdc,

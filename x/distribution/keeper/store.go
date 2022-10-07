@@ -388,23 +388,23 @@ func (k Keeper) IterateValidatorOutstandingRewards(ctx sdk.Context, handler func
 	}
 }
 
-func (k Keeper) decodeSlashEvent(bz []byte) (types.ValidatorSlashEvent, error) {
+func (k Keeper) decodeSlashEvent(bz []byte) (types.ValidatorSlashEvent, bool) {
 	var event types.ValidatorSlashEvent
 	if bz == nil {
-		return types.ValidatorSlashEvent{}, nil
+		return types.ValidatorSlashEvent{}, false
 	}
 	k.cdc.MustUnmarshal(bz, &event)
-	return event, nil
+	return event, true
 }
 
 // get slash event for height
 func (k Keeper) GetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, height, period uint64) (event types.ValidatorSlashEvent, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	event, err := store2.GetAndDecode(store, k.decodeSlashEvent, types.GetValidatorSlashEventKey(val, height, period))
-	if err != nil {
-		panic(err)
+	event, found = store2.GetAndDecodeWithBool(store, k.decodeSlashEvent, types.GetValidatorSlashEventKey(val, height, period))
+	if !found {
+		return event, found
 	}
-	return event, true
+	return event, found
 }
 
 // set slash event for height

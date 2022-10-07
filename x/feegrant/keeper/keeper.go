@@ -194,9 +194,6 @@ func (k Keeper) GetAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (
 }
 
 func (k Keeper) decodeFeegrant(bz []byte) (*feegrant.Grant, error) {
-	if len(bz) == 0 {
-		return nil, sdkerrors.ErrNotFound.Wrap("fee-grant not found")
-	}
 	var feegrant feegrant.Grant
 	if err := k.cdc.Unmarshal(bz, &feegrant); err != nil {
 		return nil, err
@@ -209,8 +206,11 @@ func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.Ac
 	store := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 	feegrant, err := store2.GetAndDecode(store, k.decodeFeegrant, key)
+	if feegrant == nil {
+		return nil, sdkerrors.ErrNotFound.Wrap("fee-grant not found")
+	}
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return feegrant, nil

@@ -12,25 +12,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (k Keeper) decodeValidator(bz []byte) (types.Validator, error) {
+func (k Keeper) decodeValidator(bz []byte) (types.Validator, bool) {
 	var validator types.Validator
 	if bz == nil {
-		return validator, nil
+		return validator, false
 	}
 	validator = types.MustUnmarshalValidator(k.cdc, bz)
-	return validator, nil
+	return validator, true
 }
 
 // get a single validator
 func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
-	validator, err := store2.GetAndDecode(store, k.decodeValidator, types.GetValidatorKey(addr))
-	if err != nil {
-		found = false
-		panic(err)
+	validator, found = store2.GetAndDecodeWithBool(store, k.decodeValidator, types.GetValidatorKey(addr))
+	if !found {
+		return validator, found
 	}
-	return validator, true
+	return validator, found
 }
 
 func (k Keeper) mustGetValidator(ctx sdk.Context, addr sdk.ValAddress) types.Validator {
@@ -88,7 +87,7 @@ func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Valida
 		return
 	}
 
-	store :=  k.getStore(ctx)
+	store := k.getStore(ctx)
 	store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
 }
 
@@ -100,7 +99,7 @@ func (k Keeper) DeleteValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 
 // validator index
 func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Validator) {
-	store :=  k.getStore(ctx)
+	store := k.getStore(ctx)
 	store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
 }
 
@@ -280,7 +279,7 @@ func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) 
 
 // Set the last validator power.
 func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power int64) {
-	store :=  k.getStore(ctx)
+	store := k.getStore(ctx)
 	bz := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: power})
 	store.Set(types.GetLastValidatorPowerKey(operator), bz)
 }
@@ -365,7 +364,7 @@ func (k Keeper) GetUnbondingValidators(ctx sdk.Context, endTime time.Time, endHe
 // SetUnbondingValidatorsQueue sets a given slice of validator addresses into
 // the unbonding validator queue by a given height and time.
 func (k Keeper) SetUnbondingValidatorsQueue(ctx sdk.Context, endTime time.Time, endHeight int64, addrs []string) {
-	store :=  k.getStore(ctx)
+	store := k.getStore(ctx)
 	bz := k.cdc.MustMarshal(&types.ValAddresses{Addresses: addrs})
 	store.Set(types.GetValidatorQueueKey(endTime, endHeight), bz)
 }

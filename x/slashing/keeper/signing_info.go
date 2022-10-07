@@ -88,7 +88,7 @@ func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
 	address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool),
 ) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	index := int64(0)
 	// Array may be sparse
 	for ; index < k.SignedBlocksWindow(ctx); index++ {

@@ -10,24 +10,24 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-func (keeper Keeper) decodeDeposit(bz []byte) (v1.Deposit, error) {
+func (keeper Keeper) decodeDeposit(bz []byte) (v1.Deposit, bool) {
 	var deposit v1.Deposit
 	if bz == nil {
-		return deposit, nil
+		return deposit, false
 	}
 	keeper.cdc.MustUnmarshal(bz, &deposit)
-	return deposit, nil
+	return deposit, true
 }
 
 // GetDeposit gets the deposit of a specific depositor on a specific proposal
 func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) (deposit v1.Deposit, found bool) {
 	store := ctx.KVStore(keeper.storeKey)
-	deposit, err := store2.GetAndDecode(store, keeper.decodeDeposit, types.DepositKey(proposalID, depositorAddr))
-	if err != nil {
-		return deposit, false
+	deposit, found = store2.GetAndDecodeWithBool(store, keeper.decodeDeposit, types.DepositKey(proposalID, depositorAddr))
+	if !found {
+		return deposit, found
 	}
 
-	return deposit, true
+	return deposit, found
 }
 
 // SetDeposit sets a Deposit to the gov store

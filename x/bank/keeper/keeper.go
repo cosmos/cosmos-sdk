@@ -218,12 +218,9 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 func decodeCoin(bz []byte) (sdk.Coin, error) {
 	var amount math.Int
 	err := amount.Unmarshal(bz)
-	if err != nil {
-		panic(fmt.Errorf("unable to unmarshal supply value %v", err))
-	}
 	return sdk.Coin{
 		Amount: amount,
-	}, nil
+	}, err
 }
 
 // GetSupply retrieves the Supply from store
@@ -253,15 +250,15 @@ func (k BaseKeeper) HasSupply(ctx sdk.Context, denom string) bool {
 	return supplyStore.Has(conv.UnsafeStrToBytes(denom))
 }
 
-func (k BaseKeeper) decodeMetadata(bz []byte) (types.Metadata, error) {
+func (k BaseKeeper) decodeMetadata(bz []byte) (types.Metadata, bool) {
 	if bz == nil {
-		return types.Metadata{}, nil
+		return types.Metadata{}, false
 	}
 
 	var metadata types.Metadata
 	k.cdc.MustUnmarshal(bz, &metadata)
 
-	return metadata, nil
+	return metadata, true
 }
 
 // GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,
@@ -270,12 +267,12 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metad
 	store := ctx.KVStore(k.storeKey)
 	store = prefix.NewStore(store, types.DenomMetadataPrefix)
 
-	metadata, err := store2.GetAndDecode(store, k.decodeMetadata, conv.UnsafeStrToBytes(denom))
-	if err != nil {
-		panic(err)
+	metadata, boolVal := store2.GetAndDecodeWithBool(store, k.decodeMetadata, conv.UnsafeStrToBytes(denom))
+	if !boolVal {
+		return metadata, boolVal
 	}
 
-	return metadata, true
+	return metadata, boolVal
 }
 
 // HasDenomMetaData checks if the denomination metadata exists in store.

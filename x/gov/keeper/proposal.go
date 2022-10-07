@@ -96,15 +96,15 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	return proposal, nil
 }
 
-func (keeper Keeper) decodeProposal(bz []byte) (v1.Proposal, error) {
+func (keeper Keeper) decodeProposal(bz []byte) (v1.Proposal, bool) {
 	var proposal v1.Proposal
 	if bz == nil {
-		return v1.Proposal{}, nil
+		return v1.Proposal{}, false
 	}
 	if err := keeper.UnmarshalProposal(bz, &proposal); err != nil {
 		panic(err)
 	}
-	return proposal, nil
+	return proposal, true
 }
 
 // GetProposal gets a proposal from store by ProposalID.
@@ -112,12 +112,12 @@ func (keeper Keeper) decodeProposal(bz []byte) (v1.Proposal, error) {
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	proposal, err := store2.GetAndDecode(store, keeper.decodeProposal, types.ProposalKey(proposalID))
-	if err != nil {
-		return v1.Proposal{}, false
+	proposal, boolVal := store2.GetAndDecodeWithBool(store, keeper.decodeProposal, types.ProposalKey(proposalID))
+	if !boolVal {
+		return v1.Proposal{}, boolVal
 	}
 
-	return proposal, true
+	return proposal, boolVal
 }
 
 // SetProposal sets a proposal to store.

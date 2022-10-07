@@ -107,12 +107,12 @@ func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
 	newStore.Set(evidence.Hash(), k.MustMarshalEvidence(evidence))
 }
 
-func (k Keeper) decodeEvidence(bz []byte) (exported.Evidence, error) {
+func (k Keeper) decodeEvidence(bz []byte) (exported.Evidence, bool) {
 	if len(bz) == 0 {
-		return nil, nil
+		return nil, false
 	}
 	evidence := k.MustUnmarshalEvidence(bz)
-	return evidence, nil
+	return evidence, true
 }
 
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
@@ -120,12 +120,12 @@ func (k Keeper) decodeEvidence(bz []byte) (exported.Evidence, error) {
 func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Evidence, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 
-	evidence, err := store2.GetAndDecode(store, k.decodeEvidence, hash)
-	if err != nil {
-		panic(err)
+	evidence, boolVal := store2.GetAndDecodeWithBool(store, k.decodeEvidence, hash)
+	if !boolVal {
+		return evidence, boolVal
 	}
 
-	return evidence, true
+	return evidence, boolVal
 }
 
 // IterateEvidence provides an interator over all stored Evidence objects. For

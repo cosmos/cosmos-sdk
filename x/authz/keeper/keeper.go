@@ -50,23 +50,23 @@ func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
 	return store2.NewStoreAPI(ctx.KVStore(k.storeKey))
 }
 
-func (k Keeper) decodeGrant(bz []byte) (authz.Grant, error) {
+func (k Keeper) decodeGrant(bz []byte) (authz.Grant, bool) {
 	var grant authz.Grant
 	if bz == nil {
-		return grant, nil
+		return grant, false
 	}
 	k.cdc.MustUnmarshal(bz, &grant)
-	return grant, nil
+	return grant, true
 }
 
 // getGrant returns grant stored at skey.
 func (k Keeper) getGrant(ctx sdk.Context, skey []byte) (grant authz.Grant, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	grant, err := store2.GetAndDecode(store, k.decodeGrant, skey)
-	if err != nil {
-		panic(err)
+	grant, found = store2.GetAndDecodeWithBool(store, k.decodeGrant, skey)
+	if !found {
+		return grant, found
 	}
-	return grant, true
+	return grant, found
 }
 
 func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated authz.Authorization) error {

@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/cosmovisor
 go 1.19
 
 require (
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20220909113810-4882f933b1a1
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20221007002647-5f01f6f5e511
 	github.com/hashicorp/go-getter v1.6.2
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.28.0
@@ -132,5 +132,6 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	pgregory.net/rapid v0.5.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )

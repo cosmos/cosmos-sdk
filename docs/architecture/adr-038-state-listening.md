@@ -215,7 +215,6 @@ requests that affected them and the ABCI responses they affected. The `ABCIListe
 ```go
 // ABCIListener interface used to hook into the ABCI message processing of the BaseApp
 type ABCIListener interface {
-<<<<<<< Updated upstream
     // ListenBeginBlock updates the streaming service with the latest BeginBlock messages
     ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
     // ListenEndBlock updates the steaming service with the latest EndBlock messages

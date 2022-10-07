@@ -102,6 +102,7 @@ func TestDispatcher(t *testing.T) {
 		{"SDKDEC", false, valuerenderer.NewDecValueRenderer()},
 		{"BYTES", false, valuerenderer.NewBytesValueRenderer()},
 		{"TIMESTAMP", false, valuerenderer.NewTimestampValueRenderer()},
+		{"DURATION", false, valuerenderer.NewDurationValueRenderer()},
 		{"COIN", false, valuerenderer.NewCoinsValueRenderer(nil)},
 		{"COINS", false, valuerenderer.NewCoinsValueRenderer(nil)},
 		{"FLOAT", true, nil},

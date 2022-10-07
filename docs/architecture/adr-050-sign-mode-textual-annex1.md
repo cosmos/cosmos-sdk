@@ -218,12 +218,37 @@ as `2006-01-02T15:04:05.7Z`.
 The timestamp with 1136214245 seconds and zero nanoseconds is rendered
 as `2006-01-02T15:04:05Z`.
 
-### `google.protobuf.Duration` (TODO)
+### `google.protobuf.Duration`
 
-- rendered in terms of weeks, days, hours, minutes and seconds as these time units can be measured independently of any calendar and duration values are in seconds (so months and years can't be used precisely)
-- total seconds values included at the end so users have both pieces of information
-- Ex:
-  - `1483530 seconds` -> `2 weeks, 3 days, 4 hours, 5 minutes, 30 seconds (1483530 seconds total)`
+The duration proto expresses a raw number of seconds and nanoseconds.
+This will be rendered as longer time units of days, hours, and minutes,
+plus any remaining seconds, in that order.
+Leading and trailing zero-quantity units will be omitted, but all
+units in between nonzero units will be shown, e.g. ` 3 days, 0 hours, 0 minutes, 5 seconds`.
+
+Even longer time units such as months or years are imprecise.
+Weeks are precise, but not commonly used - `91 days` is more immediately
+legible than `13 weeks`.  Although `days` can be problematic,
+e.g. noon to noon on subsequent days can be 23 or 25 hours depending on
+daylight savings transitions, there is significant advantage in using
+strict 24-hour days over using only hours (e.g. `91 days` vs `2184 hours`).
+
+When nanoseconds are nonzero, they will be shown as fractional seconds,
+with only the minimum number of digits, e.g `0.5 seconds`.
+
+A duration of exactly zero is shown as `0 seconds`.
+
+Units will be given as singular (no trailing `s`) when the quantity is exactly one,
+and will be shown in plural otherwise.
+
+Negative durations will be indicated with a leading minus sign (`-`).
+
+Examples:
+
+- `1 day`
+- `30 days`
+- `-1 day, 12 hours`
+- `3 hours, 0 minutes, 53.025 seconds`
 
 ### bytes
 

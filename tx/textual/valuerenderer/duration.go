@@ -176,7 +176,9 @@ func (dr durationValueRenderer) Parse(_ context.Context, r io.Reader) (protorefl
 
 	dur := &dpb.Duration{}
 	dur.Seconds = days*day_sec + hours*hour_sec + minutes*min_sec + seconds
-	dur.Nanos = int32(nanos & (2<<32 - 1))
+	// #nosec G701
+	// Since there are 9 digits or fewer, this conversion is safe.
+	dur.Nanos = int32(nanos)
 
 	if negative {
 		dur.Seconds *= -1

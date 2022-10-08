@@ -8186,11 +8186,16 @@ func (x *AddressStringToBytesResponse) GetAddressBytes() []byte {
 }
 
 // QueryAccountAddressByIDRequest is the request type for AccountAddressByID rpc method
+//
+// Since: cosmos-sdk 0.46.2
 type QueryAccountAddressByIDRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// id is the account number of the address to be queried. This field
+	// should have been an uint64 (like all account numbers), and will be
+	// updated to uint64 in a future version of the auth query.
 	Id int64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
@@ -8222,6 +8227,8 @@ func (x *QueryAccountAddressByIDRequest) GetId() int64 {
 }
 
 // QueryAccountAddressByIDResponse is the response type for AccountAddressByID rpc method
+//
+// Since: cosmos-sdk 0.46.2
 type QueryAccountAddressByIDResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -8258,6 +8265,8 @@ func (x *QueryAccountAddressByIDResponse) GetAccountAddress() string {
 }
 
 // QueryAccountInfoRequest is the Query/AccountInfo request type.
+//
+// Since: cosmos-sdk 0.47
 type QueryAccountInfoRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -8295,6 +8304,8 @@ func (x *QueryAccountInfoRequest) GetAddress() string {
 }
 
 // QueryAccountInfoResponse is the Query/AccountInfo response type.
+//
+// Since: cosmos-sdk 0.47
 type QueryAccountInfoResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

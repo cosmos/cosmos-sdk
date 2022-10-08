@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -40,7 +40,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 
 	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 3, sdk.NewInt(1234))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
@@ -86,7 +86,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1234))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
@@ -179,7 +179,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 3, sdk.NewInt(1234))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 
 	// create validator with 10% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), math.LegacyNewDec(0))

@@ -708,6 +708,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	// msg vote
 	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
 	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
+	defer execMsg.Close()
 
 	// waiting for authorization to expires
 	time.Sleep(12 * time.Second)
@@ -752,6 +753,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	// msg vote
 	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
 	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
+	defer execMsg.Close()
 
 	testCases := []struct {
 		name         string
@@ -867,6 +869,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	)
 	s.Require().NoError(err)
 	execMsg := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())
+	defer execMsg.Close()
 	testCases := []struct {
 		name         string
 		args         []string
@@ -980,6 +983,7 @@ func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
 	)
 	s.Require().NoError(err)
 	execMsg := testutil.WriteToNewTempFile(s.T(), validGeneratedTx.String())
+	defer execMsg.Close()
 
 	invalidGeneratedTx, err := clitestutil.MsgSendExec(
 		val.ClientCtx,
@@ -993,6 +997,7 @@ func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
 	)
 	s.Require().NoError(err)
 	execMsg1 := testutil.WriteToNewTempFile(s.T(), invalidGeneratedTx.String())
+	defer execMsg1.Close()
 
 	// test sending to allowed address
 	args := []string{
@@ -1057,6 +1062,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	delegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgDelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg := testutil.WriteToNewTempFile(s.T(), delegateTx)
+	defer execMsg.Close()
 
 	testCases := []struct {
 		name         string
@@ -1149,6 +1155,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	delegateTx = fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgDelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg = testutil.WriteToNewTempFile(s.T(), delegateTx)
+	defer execMsg.Close()
 
 	testCases = []struct {
 		name         string
@@ -1287,6 +1294,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg := testutil.WriteToNewTempFile(s.T(), undelegateTx)
+	defer execMsg.Close()
 
 	testCases := []struct {
 		name         string
@@ -1382,6 +1390,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	undelegateTx = fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg = testutil.WriteToNewTempFile(s.T(), undelegateTx)
+	defer execMsg.Close()
 
 	testCases = []struct {
 		name         string

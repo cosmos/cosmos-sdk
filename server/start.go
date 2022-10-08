@@ -33,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 const (
@@ -61,6 +62,7 @@ const (
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
 	FlagStateSyncSnapshotKeepRecent = "state-sync.snapshot-keep-recent"
+	FlagStateSyncRestoreHeight      = "state-sync.restore-height"
 
 	// api-related flags
 	FlagAPIEnable             = "api.enable"
@@ -186,6 +188,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
+	cmd.Flags().Uint64(FlagStateSyncRestoreHeight, 0, "Height of local statesync backup to restore")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -242,6 +245,53 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 
 	// Wait for SIGINT or SIGTERM signal
 	return WaitForQuitSignals()
+}
+
+func restoreLocalSnapshot(ctx *Context, app types.Application, ssRestoreHeight uint64) error {
+	ctx.Logger.Info(fmt.Sprintf("Local Statesync Restore Snapshot With Height: %d", ssRestoreHeight))
+	ctx.Config.StateSync.RestoreHeight = ssRestoreHeight // Should be a one-shot command
+
+	ctx.Logger.Info("Searching local snapshots")
+	resp := app.ListSnapshots(abci.RequestListSnapshots{})
+	if len(resp.Snapshots) < 1 {
+		panic("No available snapshots")
+	}
+	var snapshot *abci.Snapshot
+	for i, s := range resp.Snapshots {
+		//fmt.Printf("%+v", s)
+		ctx.Logger.Info(fmt.Sprintf("Found Local Snapshot #%d) Height %d", i, s.Height))
+		if ssRestoreHeight == s.Height {
+			ctx.Logger.Info(fmt.Sprintf("Restoring Selected Local Snapshot #%d) Height %d", i, s.Height))
+			snapshot = s
+		}
+	}
+	if snapshot == nil {
+		panic(fmt.Sprintf("Could not find local snapshot for height: %d", ssRestoreHeight))
+	}
+
+	app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: snapshot})
+
+	for index := uint32(0); index < snapshot.Chunks; index++ {
+		ctx.Logger.Info(fmt.Sprintf("Loading Chunk %d", index))
+		respChunk := app.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
+			Height: snapshot.Height,
+			Format: snapshot.Format,
+			Chunk:  index,
+		})
+		ctx.Logger.Info(fmt.Sprintf("Apply Chunk %d", index))
+		applyRes := app.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
+			Index: index,
+			Chunk: respChunk.Chunk,
+		})
+		if applyRes.Result != abci.ResponseApplySnapshotChunk_ACCEPT {
+			ctx.Logger.Info(fmt.Sprintf("Local snapshot chunk %d apply fail: %v", index, applyRes))
+		} else {
+			ctx.Logger.Info(fmt.Sprintf("Local snapshot chunk %d apply ok", index))
+		}
+
+	}
+	ctx.Logger.Info(fmt.Sprintf("Local Statesync Restore Complete"))
+	return nil
 }
 
 func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
@@ -316,6 +366,14 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		ctx.Logger.Info("starting node in gRPC only mode; Tendermint is disabled")
 		config.GRPC.Enable = true
 	} else {
+		ssRestoreHeight := ctx.Viper.GetUint64(FlagStateSyncRestoreHeight)
+		if ssRestoreHeight == 0 {
+			// no restore height specified
+			ctx.Logger.Debug("**** No local snapshot restore height specified")
+		} else {
+			restoreLocalSnapshot(ctx, app, ssRestoreHeight)
+		}
+
 		ctx.Logger.Info("starting node with ABCI Tendermint in-process")
 
 		tmNode, err = node.NewNode(

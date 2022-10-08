@@ -52,7 +52,7 @@ Concretely `SimApp` uses the implementation in `x/auth`, but this design allows 
 
 Given the following types
 
-```golang
+```go
 package duck
 
 type Duck interface {
@@ -76,7 +76,7 @@ type Pond struct {
 
 This usage
 
-```golang
+```go
 var pond Pond
 
 depinject.Inject(
@@ -91,7 +91,7 @@ depinject.Inject(
 results in an *implicit* binding of `Duck` to `Mallard`.  This works because there is only one implementation of `Duck`
 in the container.  However, adding a second provider of `Duck` will result in an error:
 
-```golang
+```go
 var pond Pond
 
 depinject.Inject(
@@ -110,7 +110,7 @@ A specific binding preference for `Duck` is required.
 
 In the above situation registering a binding for a given interface binding may look like
 
-```golang
+```go
 depinject.Inject(
   depinject.Configs(
     depinject.BindInterface(
@@ -174,7 +174,7 @@ be printed to stderr and a rendering of the dependency graph in Graphviz DOT for
 `debug_container.dot`.
 
 Here is an example Graphviz rendering of a successful build of a dependency graph:
-![Graphviz Example](./testdata/example.svg)
+![Graphviz Example](https://raw.githubusercontent.com/cosmos/cosmos-sdk/ff39d243d421442b400befcd959ec3ccd2525154/depinject/testdata/example.svg)
 
 Rectangles represent functions, ovals represent types, rounded rectangles represent modules and the single hexagon
 represents the function which called `Build`. Black-colored shapes mark functions and types that were called/resolved
@@ -182,7 +182,7 @@ without an error. Gray-colored nodes mark functions and types that could have be
 were left unused.
 
 Here is an example Graphviz rendering of a dependency graph build which failed:
-![Graphviz Error Example](./testdata/example_error.svg)
+![Graphviz Error Example](https://raw.githubusercontent.com/cosmos/cosmos-sdk/ff39d243d421442b400befcd959ec3ccd2525154/depinject/testdata/example_error.svg)
 
 Graphviz DOT files can be converted into SVG's for viewing in a web browser using the `dot` command-line tool, ex:
 

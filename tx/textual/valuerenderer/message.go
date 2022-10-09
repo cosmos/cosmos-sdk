@@ -1,11 +1,8 @@
 package valuerenderer
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"sort"
 	"strings"
 
@@ -16,9 +13,11 @@ type messageValueRenderer struct {
 	tr *Textual
 }
 
-var _ ValueRenderer = (*messageValueRenderer)(nil)
+func NewMessageValueRenderer(t *Textual) ValueRenderer {
+	return &messageValueRenderer{tr: t}
+}
 
-func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value, w io.Writer) error {
+func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	fields := v.Message().Descriptor().Fields()
 	fds := make([]protoreflect.FieldDescriptor, 0, fields.Len())
 	for i := 0; i < fields.Len(); i++ {
@@ -26,43 +25,45 @@ func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value
 	}
 	sort.Slice(fds, func(i, j int) bool { return fds[i].Number() < fds[j].Number() })
 
-	fmt.Fprintf(w, "%s object\n", v.Message().Descriptor().Name())
-	buf := &bytes.Buffer{}
+	screens := make([]Screen, 1)
+	screens[0].Text = fmt.Sprintf("%s object", v.Message().Descriptor().Name())
+
 	for _, fd := range fds {
 		vr, err := mr.tr.GetValueRenderer(fd)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		// Skip default values.
 		if !v.Message().Has(fd) {
 			continue
 		}
 
-		buf.Reset()
-		if err := vr.Format(ctx, v.Message().Get(fd), buf); err != nil {
-			return fmt.Errorf("failed to format subfield %s: %w", fd.FullName(), err)
+		subscreens, err := vr.Format(ctx, v.Message().Get(fd))
+		if err != nil {
+			return nil, err
+		}
+		if len(subscreens) == 0 {
+			return nil, fmt.Errorf("empty rendering for field %s", fd.Name())
 		}
 
-		sc := bufio.NewScanner(buf)
-		if sc.Scan() {
-			str := sc.Text()
-			fmt.Fprintf(w, "> %s: %s\n", formatFieldName(string(fd.Name())), str)
+		headerScreen := Screen{
+			Text:   fmt.Sprintf("%s: %s", formatFieldName(string(fd.Name())), subscreens[0].Text),
+			Indent: subscreens[0].Indent + 1,
+			Expert: subscreens[0].Expert,
 		}
-		for sc.Scan() {
-			str := sc.Text()
-			// Only add a space after the > if the field isn't already nested.
-			nesting := "> "
-			if len(str) > 0 && str[0] == '>' {
-				nesting = ">"
+		screens = append(screens, headerScreen)
+
+		for i := 1; i < len(subscreens); i++ {
+			extraScreen := Screen{
+				Text:   subscreens[i].Text,
+				Indent: subscreens[i].Indent + 1,
+				Expert: subscreens[i].Expert,
 			}
-			fmt.Fprintf(w, "%s%s\n", nesting, str)
-		}
-		if err := sc.Err(); err != nil {
-			return err
+			screens = append(screens, extraScreen)
 		}
 	}
 
-	return nil
+	return screens, nil
 }
 
 // formatFieldName formats a field name in sentence case, as specified in:
@@ -74,6 +75,6 @@ func formatFieldName(name string) string {
 	return strings.ToTitle(name[0:1]) + strings.ReplaceAll(name[1:], "_", " ")
 }
 
-func (mr *messageValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
+func (mr *messageValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
 	panic("implement me")
 }

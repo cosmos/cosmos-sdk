@@ -83,8 +83,7 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 		if found {
 			return vr, nil
 		}
-		// TODO default message renderer
-		return nil, fmt.Errorf("no value renderer for message %s", fullName)
+		return NewMessageValueRenderer(&r), nil
 
 	case fd.Kind() == protoreflect.StringKind:
 		return stringValueRenderer{}, nil

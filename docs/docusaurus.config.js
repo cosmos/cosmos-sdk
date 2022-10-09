@@ -7,7 +7,8 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Cosmos SDK",
-  tagline: "Cosmos SDK Documentation",
+  tagline:
+    "Cosmos SDK is the world's most popular framework for building application-specific blockchains.",
   url: "https://docs.cosmos.network",
   baseUrl: "/",
   onBrokenLinks: "warn",
@@ -36,6 +37,7 @@ const config = {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
           routeBasePath: "/",
+          editUrl: "https://github.com/cosmos/cosmos-sdk/tree/main/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),

@@ -127,7 +127,7 @@ func TestFileStreamingService(t *testing.T) {
 	if os.Getenv("CI") != "" {
 		t.Skip("Skipping TestFileStreamingService in CI environment")
 	}
-	err := os.Mkdir(testDir, 0700)
+	err := os.Mkdir(testDir, 0o700)
 	require.Nil(t, err)
 	defer os.RemoveAll(testDir)
 

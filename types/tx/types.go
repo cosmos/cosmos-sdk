@@ -20,7 +20,8 @@ const MaxGasWanted = uint64((1 << 63) - 1)
 
 // Interface implementation checks.
 var (
-	_, _, _, _ gogoprotoany.UnpackInterfacesMessage = &Tx{}, &TxBody{}, &AuthInfo{}, &SignerInfo{}
+	_, _, _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}, &AuthInfo{}, &SignerInfo{}
+	_          sdk.Tx                             = &Tx{}
 )
 
 // GetMsgs implements the GetMsgs method on sdk.Tx.

@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (x/staking) [#13122](https://github.com/cosmos/cosmos-sdk/pull/13122) Add `UnbondingCanComplete` and `PutUnbondingOnHold` to `x/staking` module.
 * [#13437](https://github.com/cosmos/cosmos-sdk/pull/13437) Add new flag `--modules-to-export` in `simd export` command to export only selected modules.
 * [#13435](https://github.com/cosmos/cosmos-sdk/pull/13435) Extend error context when a simulation fails.
 * [#13298](https://github.com/cosmos/cosmos-sdk/pull/13298) Add `AddGenesisAccount` helper func in x/auth module which helps adding accounts to genesis state.
@@ -101,6 +102,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (x/slashing, x/staking) [#13122](https://github.com/cosmos/cosmos-sdk/pull/13122) Add the infraction a validator commited type as an argument to the `Slash` keeper method.
 * [#13437](https://github.com/cosmos/cosmos-sdk/pull/13437) Add a list of modules to export argument in `ExportAppStateAndValidators`.
 * (x/slashing) [#13427](https://github.com/cosmos/cosmos-sdk/pull/13427) Move `x/slashing/testslashing` to `x/slashing/testutil` for consistency with other modules.
 * (x/staking) [#13427](https://github.com/cosmos/cosmos-sdk/pull/13427) Move `x/staking/teststaking` to `x/staking/testutil` for consistency with other modules.

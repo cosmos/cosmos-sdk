@@ -3,6 +3,7 @@ on:
   pull_request:
     types:
       - opened
+
 jobs:
   track_issue:
     runs-on: ubuntu-latest
@@ -31,16 +32,16 @@ jobs:
 
           echo 'PROJECT_ID='$(jq '.data.organization.projectNext.id' project_data.json) >> $GITHUB_ENV
                     
-      - name: Add Pull Request to project
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_ID: ${{ github.event.pull_request.node_id }}
-        run: |
-          item_id="$( gh api graphql -f query='
-            mutation($project:ID!, $issue:ID!) {
-              addProjectV2ItemById(input: {projectId: $project, contentId: $pr}) {
-                item {
-                  id
-                }
-              }
-            }' -f project=$PROJECT_ID -f issue=$PR_ID --jq '.data.addProjectV2ItemById.item.id')"  
+      # - name: Add Pull Request to project
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     PR_ID: ${{ github.event.pull_request.node_id }}
+      #   run: |
+      #     item_id="$( gh api graphql -f query='
+      #       mutation($project:ID!, $issue:ID!) {
+      #         addProjectV2ItemById(input: {projectId: $project, contentId: $pr}) {
+      #           item {
+      #             id
+      #           }
+      #         }
+      #       }' -f project=$PROJECT_ID -f issue=$PR_ID --jq '.data.addProjectV2ItemById.item.id')"  

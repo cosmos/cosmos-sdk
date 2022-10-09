@@ -73,6 +73,19 @@ Store entries prefixed with "Last" must remain unchanged until EndBlock.
 
 * LastTotalPower: `0x12 -> ProtocolBuffer(math.Int)`
 
+## ValidatorUpdates
+
+ValidatorUpdates contains the validator updates returned to ABCI at the end of every block. 
+The values are overwritten in every block. 
+
+* ValidatorUpdates `0x61 -> []abci.ValidatorUpdate`
+
+## UnbondingID
+
+UnbondingID stores the ID of the latest unbonding operation. It enables to create unique IDs for unbonding operation, i.e., UnbondingID is incremented every time a new unbonding operation (validator unbonding, unbonding delegation, redelegation) is initiated.
+
+* UnbondingID: `0x37 -> uint64`
+
 ## Params
 
 The staking module stores its params in state with the prefix of `0x51`,
@@ -111,11 +124,15 @@ records within a block.
 * ValidatorsByConsAddr: `0x22 | ConsAddrLen (1 byte) | ConsAddr -> OperatorAddr`
 * ValidatorsByPower: `0x23 | BigEndian(ConsensusPower) | OperatorAddrLen (1 byte) | OperatorAddr -> OperatorAddr`
 * LastValidatorsPower: `0x11 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(ConsensusPower)`
+* ValidatorsByUnbondingID: `0x38 | UnbondingID ->  0x21 | OperatorAddrLen (1 byte) | OperatorAddr`
 
 `Validators` is the primary index - it ensures that each operator can have only one
 associated validator, where the public key of that validator can change in the
 future. Delegators can refer to the immutable operator of the validator, without
 concern for the changing public key.
+
+`ValidatorsByUnbondingID` is an additional index that enables lookups for 
+ validators by the unbonding IDs corresponding to their current unbonding.
 
 `ValidatorByConsAddr` is an additional index that enables lookups for slashing.
 When Tendermint reports evidence, it provides the validator address, so this
@@ -180,11 +197,18 @@ detected.
 
 * UnbondingDelegation: `0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(unbondingDelegation)`
 * UnbondingDelegationsFromValidator: `0x33 | ValidatorAddrLen (1 byte) | ValidatorAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+* UnbondingDelegationByUnbondingId: `0x38 | UnbondingId -> 0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr`
+ `UnbondingDelegation` is used in queries, to lookup all unbonding delegations for
+ a given delegator.
 
-The first map here is used in queries, to lookup all unbonding delegations for
-a given delegator, while the second map is used in slashing, to lookup all
-unbonding delegations associated with a given validator that need to be
-slashed.
+`UnbondingDelegationsFromValidator` is used in slashing, to lookup all
+ unbonding delegations associated with a given validator that need to be
+ slashed.
+
+ `UnbondingDelegationByUnbondingId` is an additional index that enables 
+ lookups for unbonding delegations by the unbonding IDs of the containing 
+ unbonding delegation entries.
+
 
 A UnbondingDelegation object is created every time an unbonding is initiated.
 
@@ -203,10 +227,22 @@ committed by the source validator.
 * Redelegations: `0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr -> ProtocolBuffer(redelegation)`
 * RedelegationsBySrc: `0x35 | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
 * RedelegationsByDst: `0x36 | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+* RedelegationByUnbondingId: `0x38 | UnbondingId -> 0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr`
+
+ `Redelegations` is used for queries, to lookup all redelegations for a given
+ delegator.
+
+ `RedelegationsBySrc` is used for slashing based on the `ValidatorSrcAddr`.
+
+ `RedelegationsByDst` is used for slashing based on the `ValidatorDstAddr`
 
 The first map here is used for queries, to lookup all redelegations for a given
 delegator. The second map is used for slashing based on the `ValidatorSrcAddr`,
 while the third map is for slashing based on the `ValidatorDstAddr`.
+
+`RedelegationByUnbondingId` is an additional index that enables 
+ lookups for redelegations by the unbonding IDs of the containing 
+ redelegation entries.
 
 A redelegation object is created every time a redelegation occurs. To prevent
 "redelegation hopping" redelegations may not occur under the situation that:
@@ -355,13 +391,17 @@ As a part of the Undelegate and Complete Unbonding state transitions Unbond
 Delegation may be called.
 
 * subtract the unbonded shares from delegator
-* add the unbonded tokens to an `UnbondingDelegation` Entry
+* add the unbonded tokens to an `UnbondingDelegationEntry`
 * update the delegation or remove the delegation if there are no more shares
 * if the delegation is the operator of the validator and no more shares exist then trigger a jail validator
 * update the validator with removed the delegator shares and associated coins
 * if the validator state is `Bonded`, transfer the `Coins` worth of the unbonded
   shares from the `BondedPool` to the `NotBondedPool` `ModuleAccount`
 * remove the validator if it is unbonded and there are no more delegation shares.
+* remove the validator if it is unbonded and there are no more delegation shares
+* get a unique `unbondingId` and map it to the `UnbondingDelegationEntry` in `UnbondingDelegationByUnbondingId` 
+* call the `AfterUnbondingInitiated(unbondingId)` hook
+* add the unbonding delegation to `UnbondingDelegationQueue` with the completion time set to `UnbondingTime`
 
 ### Cancel an `UnbondingDelegation` Entry 
 
@@ -705,6 +745,12 @@ validators that still have remaining delegations, the `validator.Status` is
 switched from `types.Unbonding` to
 `types.Unbonded`.
 
+Unbonding operations can be put on hold by external modules via the `PutUnbondingOnHold(unbondingId)` method. 
+ As a result, an unbonding operation (e.g., an unbonding delegation) that is on hold, cannot complete 
+ even if it reaches maturity. For an unbonding operation with `unbondingId` to eventually complete 
+ (after it reaches maturity), every call to `PutUnbondingOnHold(unbondingId)` must be matched 
+ by a call to `UnbondingCanComplete(unbondingId)`. 
+
 ### Unbonding Delegations
 
 Complete the unbonding of all mature `UnbondingDelegations.Entries` within the
@@ -749,6 +795,9 @@ following hooks can registered with staking:
     * called when a delegation is created or modified
 * `BeforeDelegationRemoved(Context, AccAddress, ValAddress) error`
     * called when a delegation is removed
+* `AfterUnbondingInitiated(Context, UnbondingID)`
+    * called when an unbonding operation (validator unbonding, unbonding delegation, redelegation) was initiated
+
 
 # Events
 

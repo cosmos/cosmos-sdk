@@ -152,6 +152,7 @@ func (s *KeeperTestSuite) TestUnbondingDelegation() {
 		0,
 		time.Unix(0, 0).UTC(),
 		sdk.NewInt(5),
+		0,
 	)
 
 	// set and retrieve a record
@@ -491,7 +492,7 @@ func (s *KeeperTestSuite) TestGetRedelegationsFromSrcValidator() {
 
 	rd := stakingtypes.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
 		time.Unix(0, 0), sdk.NewInt(5),
-		math.LegacyNewDec(5))
+		math.LegacyNewDec(5), 0)
 
 	// set and retrieve a record
 	keeper.SetRedelegation(ctx, rd)
@@ -518,7 +519,7 @@ func (s *KeeperTestSuite) TestRedelegation() {
 
 	rd := stakingtypes.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
 		time.Unix(0, 0).UTC(), sdk.NewInt(5),
-		math.LegacyNewDec(5))
+		math.LegacyNewDec(5), 0)
 
 	// test shouldn't have and redelegations
 	has := keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])

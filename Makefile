@@ -190,11 +190,10 @@ godocs:
 
 # This builds the docs.cosmos.network docs.
 build-docs:
-	@cd docs
 	@echo "building docs"
-	@npm run build
-	@mv build ~/output
-	@echo $(DOCS_DOMAIN) > ~/output/CNAME
+	cd docs && npm ci && npm run build
+	mv docs/build ~/output
+	echo $(DOCS_DOMAIN) > ~/output/CNAME
 
 .PHONY: build-docs
 

@@ -5,10 +5,9 @@ import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/node";
 
-// Service defines the gRPC querier service for application operator
-// configuration.
+// Service defines the gRPC querier service for node related queries.
 service Service {
-  // Config queries for the application and operator configuration.
+  // Config queries for the operator configuration.
   rpc Config(ConfigRequest) returns (ConfigResponse) {
     option (google.api.http).get = "/cosmos/base/node/v1beta1/config";
   }
@@ -19,11 +18,5 @@ message ConfigRequest {}
 
 // ConfigResponse defines the response structure for the Config gRPC query.
 message ConfigResponse {
-  string minimum_gas_price     = 1;
-  string bech32_account_addr   = 2;
-  string bech32_validator_addr = 3;
-  string bech32_consensus_addr = 4;
-  string bech32_account_pub    = 5;
-  string bech32_validator_pub  = 6;
-  string bech32_consensus_pub  = 7;
+  string minimum_gas_price = 1;
 }

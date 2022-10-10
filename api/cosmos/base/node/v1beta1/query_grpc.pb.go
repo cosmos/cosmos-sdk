@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ServiceClient interface {
-	// Config queries for the application and operator configuration.
+	// Config queries for the operator configuration.
 	Config(ctx context.Context, in *ConfigRequest, opts ...grpc.CallOption) (*ConfigResponse, error)
 }
 
@@ -47,7 +47,7 @@ func (c *serviceClient) Config(ctx context.Context, in *ConfigRequest, opts ...g
 // All implementations must embed UnimplementedServiceServer
 // for forward compatibility
 type ServiceServer interface {
-	// Config queries for the application and operator configuration.
+	// Config queries for the operator configuration.
 	Config(context.Context, *ConfigRequest) (*ConfigResponse, error)
 	mustEmbedUnimplementedServiceServer()
 }

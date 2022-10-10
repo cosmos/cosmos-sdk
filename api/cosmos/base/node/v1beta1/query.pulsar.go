@@ -370,26 +370,14 @@ func (x *fastReflection_ConfigRequest) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_ConfigResponse                       protoreflect.MessageDescriptor
-	fd_ConfigResponse_minimum_gas_price     protoreflect.FieldDescriptor
-	fd_ConfigResponse_bech32_account_addr   protoreflect.FieldDescriptor
-	fd_ConfigResponse_bech32_validator_addr protoreflect.FieldDescriptor
-	fd_ConfigResponse_bech32_consensus_addr protoreflect.FieldDescriptor
-	fd_ConfigResponse_bech32_account_pub    protoreflect.FieldDescriptor
-	fd_ConfigResponse_bech32_validator_pub  protoreflect.FieldDescriptor
-	fd_ConfigResponse_bech32_consensus_pub  protoreflect.FieldDescriptor
+	md_ConfigResponse                   protoreflect.MessageDescriptor
+	fd_ConfigResponse_minimum_gas_price protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_base_node_v1beta1_query_proto_init()
 	md_ConfigResponse = File_cosmos_base_node_v1beta1_query_proto.Messages().ByName("ConfigResponse")
 	fd_ConfigResponse_minimum_gas_price = md_ConfigResponse.Fields().ByName("minimum_gas_price")
-	fd_ConfigResponse_bech32_account_addr = md_ConfigResponse.Fields().ByName("bech32_account_addr")
-	fd_ConfigResponse_bech32_validator_addr = md_ConfigResponse.Fields().ByName("bech32_validator_addr")
-	fd_ConfigResponse_bech32_consensus_addr = md_ConfigResponse.Fields().ByName("bech32_consensus_addr")
-	fd_ConfigResponse_bech32_account_pub = md_ConfigResponse.Fields().ByName("bech32_account_pub")
-	fd_ConfigResponse_bech32_validator_pub = md_ConfigResponse.Fields().ByName("bech32_validator_pub")
-	fd_ConfigResponse_bech32_consensus_pub = md_ConfigResponse.Fields().ByName("bech32_consensus_pub")
 }
 
 var _ protoreflect.Message = (*fastReflection_ConfigResponse)(nil)
@@ -463,42 +451,6 @@ func (x *fastReflection_ConfigResponse) Range(f func(protoreflect.FieldDescripto
 			return
 		}
 	}
-	if x.Bech32AccountAddr != "" {
-		value := protoreflect.ValueOfString(x.Bech32AccountAddr)
-		if !f(fd_ConfigResponse_bech32_account_addr, value) {
-			return
-		}
-	}
-	if x.Bech32ValidatorAddr != "" {
-		value := protoreflect.ValueOfString(x.Bech32ValidatorAddr)
-		if !f(fd_ConfigResponse_bech32_validator_addr, value) {
-			return
-		}
-	}
-	if x.Bech32ConsensusAddr != "" {
-		value := protoreflect.ValueOfString(x.Bech32ConsensusAddr)
-		if !f(fd_ConfigResponse_bech32_consensus_addr, value) {
-			return
-		}
-	}
-	if x.Bech32AccountPub != "" {
-		value := protoreflect.ValueOfString(x.Bech32AccountPub)
-		if !f(fd_ConfigResponse_bech32_account_pub, value) {
-			return
-		}
-	}
-	if x.Bech32ValidatorPub != "" {
-		value := protoreflect.ValueOfString(x.Bech32ValidatorPub)
-		if !f(fd_ConfigResponse_bech32_validator_pub, value) {
-			return
-		}
-	}
-	if x.Bech32ConsensusPub != "" {
-		value := protoreflect.ValueOfString(x.Bech32ConsensusPub)
-		if !f(fd_ConfigResponse_bech32_consensus_pub, value) {
-			return
-		}
-	}
 }
 
 // Has reports whether a field is populated.
@@ -516,18 +468,6 @@ func (x *fastReflection_ConfigResponse) Has(fd protoreflect.FieldDescriptor) boo
 	switch fd.FullName() {
 	case "cosmos.base.node.v1beta1.ConfigResponse.minimum_gas_price":
 		return x.MinimumGasPrice != ""
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_account_addr":
-		return x.Bech32AccountAddr != ""
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_validator_addr":
-		return x.Bech32ValidatorAddr != ""
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_consensus_addr":
-		return x.Bech32ConsensusAddr != ""
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_account_pub":
-		return x.Bech32AccountPub != ""
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_validator_pub":
-		return x.Bech32ValidatorPub != ""
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_consensus_pub":
-		return x.Bech32ConsensusPub != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.node.v1beta1.ConfigResponse"))
@@ -546,18 +486,6 @@ func (x *fastReflection_ConfigResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "cosmos.base.node.v1beta1.ConfigResponse.minimum_gas_price":
 		x.MinimumGasPrice = ""
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_account_addr":
-		x.Bech32AccountAddr = ""
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_validator_addr":
-		x.Bech32ValidatorAddr = ""
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_consensus_addr":
-		x.Bech32ConsensusAddr = ""
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_account_pub":
-		x.Bech32AccountPub = ""
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_validator_pub":
-		x.Bech32ValidatorPub = ""
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_consensus_pub":
-		x.Bech32ConsensusPub = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.node.v1beta1.ConfigResponse"))
@@ -576,24 +504,6 @@ func (x *fastReflection_ConfigResponse) Get(descriptor protoreflect.FieldDescrip
 	switch descriptor.FullName() {
 	case "cosmos.base.node.v1beta1.ConfigResponse.minimum_gas_price":
 		value := x.MinimumGasPrice
-		return protoreflect.ValueOfString(value)
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_account_addr":
-		value := x.Bech32AccountAddr
-		return protoreflect.ValueOfString(value)
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_validator_addr":
-		value := x.Bech32ValidatorAddr
-		return protoreflect.ValueOfString(value)
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_consensus_addr":
-		value := x.Bech32ConsensusAddr
-		return protoreflect.ValueOfString(value)
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_account_pub":
-		value := x.Bech32AccountPub
-		return protoreflect.ValueOfString(value)
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_validator_pub":
-		value := x.Bech32ValidatorPub
-		return protoreflect.ValueOfString(value)
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_consensus_pub":
-		value := x.Bech32ConsensusPub
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
@@ -617,18 +527,6 @@ func (x *fastReflection_ConfigResponse) Set(fd protoreflect.FieldDescriptor, val
 	switch fd.FullName() {
 	case "cosmos.base.node.v1beta1.ConfigResponse.minimum_gas_price":
 		x.MinimumGasPrice = value.Interface().(string)
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_account_addr":
-		x.Bech32AccountAddr = value.Interface().(string)
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_validator_addr":
-		x.Bech32ValidatorAddr = value.Interface().(string)
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_consensus_addr":
-		x.Bech32ConsensusAddr = value.Interface().(string)
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_account_pub":
-		x.Bech32AccountPub = value.Interface().(string)
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_validator_pub":
-		x.Bech32ValidatorPub = value.Interface().(string)
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_consensus_pub":
-		x.Bech32ConsensusPub = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.node.v1beta1.ConfigResponse"))
@@ -651,18 +549,6 @@ func (x *fastReflection_ConfigResponse) Mutable(fd protoreflect.FieldDescriptor)
 	switch fd.FullName() {
 	case "cosmos.base.node.v1beta1.ConfigResponse.minimum_gas_price":
 		panic(fmt.Errorf("field minimum_gas_price of message cosmos.base.node.v1beta1.ConfigResponse is not mutable"))
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_account_addr":
-		panic(fmt.Errorf("field bech32_account_addr of message cosmos.base.node.v1beta1.ConfigResponse is not mutable"))
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_validator_addr":
-		panic(fmt.Errorf("field bech32_validator_addr of message cosmos.base.node.v1beta1.ConfigResponse is not mutable"))
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_consensus_addr":
-		panic(fmt.Errorf("field bech32_consensus_addr of message cosmos.base.node.v1beta1.ConfigResponse is not mutable"))
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_account_pub":
-		panic(fmt.Errorf("field bech32_account_pub of message cosmos.base.node.v1beta1.ConfigResponse is not mutable"))
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_validator_pub":
-		panic(fmt.Errorf("field bech32_validator_pub of message cosmos.base.node.v1beta1.ConfigResponse is not mutable"))
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_consensus_pub":
-		panic(fmt.Errorf("field bech32_consensus_pub of message cosmos.base.node.v1beta1.ConfigResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.node.v1beta1.ConfigResponse"))
@@ -677,18 +563,6 @@ func (x *fastReflection_ConfigResponse) Mutable(fd protoreflect.FieldDescriptor)
 func (x *fastReflection_ConfigResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.base.node.v1beta1.ConfigResponse.minimum_gas_price":
-		return protoreflect.ValueOfString("")
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_account_addr":
-		return protoreflect.ValueOfString("")
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_validator_addr":
-		return protoreflect.ValueOfString("")
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_consensus_addr":
-		return protoreflect.ValueOfString("")
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_account_pub":
-		return protoreflect.ValueOfString("")
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_validator_pub":
-		return protoreflect.ValueOfString("")
-	case "cosmos.base.node.v1beta1.ConfigResponse.bech32_consensus_pub":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -763,30 +637,6 @@ func (x *fastReflection_ConfigResponse) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.Bech32AccountAddr)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Bech32ValidatorAddr)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Bech32ConsensusAddr)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Bech32AccountPub)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Bech32ValidatorPub)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Bech32ConsensusPub)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -815,48 +665,6 @@ func (x *fastReflection_ConfigResponse) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.Bech32ConsensusPub) > 0 {
-			i -= len(x.Bech32ConsensusPub)
-			copy(dAtA[i:], x.Bech32ConsensusPub)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Bech32ConsensusPub)))
-			i--
-			dAtA[i] = 0x3a
-		}
-		if len(x.Bech32ValidatorPub) > 0 {
-			i -= len(x.Bech32ValidatorPub)
-			copy(dAtA[i:], x.Bech32ValidatorPub)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Bech32ValidatorPub)))
-			i--
-			dAtA[i] = 0x32
-		}
-		if len(x.Bech32AccountPub) > 0 {
-			i -= len(x.Bech32AccountPub)
-			copy(dAtA[i:], x.Bech32AccountPub)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Bech32AccountPub)))
-			i--
-			dAtA[i] = 0x2a
-		}
-		if len(x.Bech32ConsensusAddr) > 0 {
-			i -= len(x.Bech32ConsensusAddr)
-			copy(dAtA[i:], x.Bech32ConsensusAddr)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Bech32ConsensusAddr)))
-			i--
-			dAtA[i] = 0x22
-		}
-		if len(x.Bech32ValidatorAddr) > 0 {
-			i -= len(x.Bech32ValidatorAddr)
-			copy(dAtA[i:], x.Bech32ValidatorAddr)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Bech32ValidatorAddr)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if len(x.Bech32AccountAddr) > 0 {
-			i -= len(x.Bech32AccountAddr)
-			copy(dAtA[i:], x.Bech32AccountAddr)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Bech32AccountAddr)))
-			i--
-			dAtA[i] = 0x12
 		}
 		if len(x.MinimumGasPrice) > 0 {
 			i -= len(x.MinimumGasPrice)
@@ -946,198 +754,6 @@ func (x *fastReflection_ConfigResponse) ProtoMethods() *protoiface.Methods {
 				}
 				x.MinimumGasPrice = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Bech32AccountAddr", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Bech32AccountAddr = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Bech32ValidatorAddr", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Bech32ValidatorAddr = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Bech32ConsensusAddr", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Bech32ConsensusAddr = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 5:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Bech32AccountPub", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Bech32AccountPub = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 6:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Bech32ValidatorPub", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Bech32ValidatorPub = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 7:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Bech32ConsensusPub", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Bech32ConsensusPub = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1219,13 +835,7 @@ type ConfigResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	MinimumGasPrice     string `protobuf:"bytes,1,opt,name=minimum_gas_price,json=minimumGasPrice,proto3" json:"minimum_gas_price,omitempty"`
-	Bech32AccountAddr   string `protobuf:"bytes,2,opt,name=bech32_account_addr,json=bech32AccountAddr,proto3" json:"bech32_account_addr,omitempty"`
-	Bech32ValidatorAddr string `protobuf:"bytes,3,opt,name=bech32_validator_addr,json=bech32ValidatorAddr,proto3" json:"bech32_validator_addr,omitempty"`
-	Bech32ConsensusAddr string `protobuf:"bytes,4,opt,name=bech32_consensus_addr,json=bech32ConsensusAddr,proto3" json:"bech32_consensus_addr,omitempty"`
-	Bech32AccountPub    string `protobuf:"bytes,5,opt,name=bech32_account_pub,json=bech32AccountPub,proto3" json:"bech32_account_pub,omitempty"`
-	Bech32ValidatorPub  string `protobuf:"bytes,6,opt,name=bech32_validator_pub,json=bech32ValidatorPub,proto3" json:"bech32_validator_pub,omitempty"`
-	Bech32ConsensusPub  string `protobuf:"bytes,7,opt,name=bech32_consensus_pub,json=bech32ConsensusPub,proto3" json:"bech32_consensus_pub,omitempty"`
+	MinimumGasPrice string `protobuf:"bytes,1,opt,name=minimum_gas_price,json=minimumGasPrice,proto3" json:"minimum_gas_price,omitempty"`
 }
 
 func (x *ConfigResponse) Reset() {
@@ -1255,48 +865,6 @@ func (x *ConfigResponse) GetMinimumGasPrice() string {
 	return ""
 }
 
-func (x *ConfigResponse) GetBech32AccountAddr() string {
-	if x != nil {
-		return x.Bech32AccountAddr
-	}
-	return ""
-}
-
-func (x *ConfigResponse) GetBech32ValidatorAddr() string {
-	if x != nil {
-		return x.Bech32ValidatorAddr
-	}
-	return ""
-}
-
-func (x *ConfigResponse) GetBech32ConsensusAddr() string {
-	if x != nil {
-		return x.Bech32ConsensusAddr
-	}
-	return ""
-}
-
-func (x *ConfigResponse) GetBech32AccountPub() string {
-	if x != nil {
-		return x.Bech32AccountPub
-	}
-	return ""
-}
-
-func (x *ConfigResponse) GetBech32ValidatorPub() string {
-	if x != nil {
-		return x.Bech32ValidatorPub
-	}
-	return ""
-}
-
-func (x *ConfigResponse) GetBech32ConsensusPub() string {
-	if x != nil {
-		return x.Bech32ConsensusPub
-	}
-	return ""
-}
-
 var File_cosmos_base_node_v1beta1_query_proto protoreflect.FileDescriptor
 
 var file_cosmos_base_node_v1beta1_query_proto_rawDesc = []byte{
@@ -1307,53 +875,34 @@ var file_cosmos_base_node_v1beta1_query_proto_rawDesc = []byte{
 	0x1a, 0x1c, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x61, 0x6e, 0x6e,
 	0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x0f,
 	0x0a, 0x0d, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22,
-	0xe6, 0x02, 0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x2a, 0x0a, 0x11, 0x6d, 0x69, 0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x5f, 0x67, 0x61,
-	0x73, 0x5f, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x6d,
-	0x69, 0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x47, 0x61, 0x73, 0x50, 0x72, 0x69, 0x63, 0x65, 0x12, 0x2e,
-	0x0a, 0x13, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x5f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
-	0x5f, 0x61, 0x64, 0x64, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x11, 0x62, 0x65, 0x63,
-	0x68, 0x33, 0x32, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72, 0x12, 0x32,
-	0x0a, 0x15, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x13, 0x62,
-	0x65, 0x63, 0x68, 0x33, 0x32, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64,
-	0x64, 0x72, 0x12, 0x32, 0x0a, 0x15, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x5f, 0x63, 0x6f, 0x6e,
-	0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x13, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73,
-	0x75, 0x73, 0x41, 0x64, 0x64, 0x72, 0x12, 0x2c, 0x0a, 0x12, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32,
-	0x5f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x70, 0x75, 0x62, 0x18, 0x05, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x10, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x50, 0x75, 0x62, 0x12, 0x30, 0x0a, 0x14, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x5f, 0x76,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x70, 0x75, 0x62, 0x18, 0x06, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x12, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x50, 0x75, 0x62, 0x12, 0x30, 0x0a, 0x14, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32,
-	0x5f, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x5f, 0x70, 0x75, 0x62, 0x18, 0x07,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x12, 0x62, 0x65, 0x63, 0x68, 0x33, 0x32, 0x43, 0x6f, 0x6e, 0x73,
-	0x65, 0x6e, 0x73, 0x75, 0x73, 0x50, 0x75, 0x62, 0x32, 0x91, 0x01, 0x0a, 0x07, 0x53, 0x65, 0x72,
-	0x76, 0x69, 0x63, 0x65, 0x12, 0x85, 0x01, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12,
-	0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x6e, 0x6f,
-	0x64, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69,
-	0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x28, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x22, 0x12, 0x20, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x6e, 0x6f, 0x64, 0x65, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x42, 0xe4, 0x01, 0x0a,
-	0x1c, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
-	0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0a, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x35, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x6e, 0x6f, 0x64, 0x65, 0x2f, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x6e, 0x6f, 0x64, 0x65, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x42, 0x4e, 0xaa, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x42, 0x61, 0x73, 0x65, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x2e, 0x56, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0xca, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x73,
-	0x65, 0x5c, 0x4e, 0x6f, 0x64, 0x65, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02,
-	0x24, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x73, 0x65, 0x5c, 0x4e, 0x6f, 0x64,
-	0x65, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x1b, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a,
-	0x42, 0x61, 0x73, 0x65, 0x3a, 0x3a, 0x4e, 0x6f, 0x64, 0x65, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x3c, 0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x2a, 0x0a, 0x11, 0x6d, 0x69, 0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x5f, 0x67, 0x61, 0x73,
+	0x5f, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x6d, 0x69,
+	0x6e, 0x69, 0x6d, 0x75, 0x6d, 0x47, 0x61, 0x73, 0x50, 0x72, 0x69, 0x63, 0x65, 0x32, 0x91, 0x01,
+	0x0a, 0x07, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x85, 0x01, 0x0a, 0x06, 0x43, 0x6f,
+	0x6e, 0x66, 0x69, 0x67, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
+	0x73, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x28, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x22, 0x12,
+	0x20, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x6e, 0x6f,
+	0x64, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69,
+	0x67, 0x42, 0xe4, 0x01, 0x0a, 0x1c, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x35, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61,
+	0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x6e,
+	0x6f, 0x64, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x6e, 0x6f, 0x64, 0x65,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x42, 0x4e, 0xaa, 0x02, 0x18,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x42, 0x61, 0x73, 0x65, 0x2e, 0x4e, 0x6f, 0x64, 0x65,
+	0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x42, 0x61, 0x73, 0x65, 0x5c, 0x4e, 0x6f, 0x64, 0x65, 0x5c, 0x56, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0xe2, 0x02, 0x24, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x73,
+	0x65, 0x5c, 0x4e, 0x6f, 0x64, 0x65, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47,
+	0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x1b, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x42, 0x61, 0x73, 0x65, 0x3a, 0x3a, 0x4e, 0x6f, 0x64, 0x65, 0x3a,
+	0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

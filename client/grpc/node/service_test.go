@@ -18,10 +18,4 @@ func TestServiceServer_Config(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Equal(t, ctx.MinGasPrices().String(), resp.MinimumGasPrice)
-	require.NotEmpty(t, resp.Bech32AccountAddr)
-	require.NotEmpty(t, resp.Bech32ValidatorAddr)
-	require.NotEmpty(t, resp.Bech32ConsensusAddr)
-	require.NotEmpty(t, resp.Bech32AccountPub)
-	require.NotEmpty(t, resp.Bech32ValidatorPub)
-	require.NotEmpty(t, resp.Bech32ConsensusPub)
 }

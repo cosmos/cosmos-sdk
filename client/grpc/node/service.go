@@ -34,16 +34,9 @@ func NewQueryServer(clientCtx client.Context) ServiceServer {
 }
 
 func (s queryServer) Config(ctx context.Context, _ *ConfigRequest) (*ConfigResponse, error) {
-	typesCfg := sdk.GetConfig()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &ConfigResponse{
-		MinimumGasPrice:     sdkCtx.MinGasPrices().String(),
-		Bech32AccountAddr:   typesCfg.GetBech32AccountAddrPrefix(),
-		Bech32ValidatorAddr: typesCfg.GetBech32ValidatorAddrPrefix(),
-		Bech32ConsensusAddr: typesCfg.GetBech32ConsensusAddrPrefix(),
-		Bech32AccountPub:    typesCfg.GetBech32AccountPubPrefix(),
-		Bech32ValidatorPub:  typesCfg.GetBech32ValidatorPubPrefix(),
-		Bech32ConsensusPub:  typesCfg.GetBech32ConsensusPubPrefix(),
+		MinimumGasPrice: sdkCtx.MinGasPrices().String(),
 	}, nil
 }

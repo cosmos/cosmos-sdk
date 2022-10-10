@@ -67,13 +67,7 @@ var xxx_messageInfo_ConfigRequest proto.InternalMessageInfo
 
 // ConfigResponse defines the response structure for the Config gRPC query.
 type ConfigResponse struct {
-	MinimumGasPrice     string `protobuf:"bytes,1,opt,name=minimum_gas_price,json=minimumGasPrice,proto3" json:"minimum_gas_price,omitempty"`
-	Bech32AccountAddr   string `protobuf:"bytes,2,opt,name=bech32_account_addr,json=bech32AccountAddr,proto3" json:"bech32_account_addr,omitempty"`
-	Bech32ValidatorAddr string `protobuf:"bytes,3,opt,name=bech32_validator_addr,json=bech32ValidatorAddr,proto3" json:"bech32_validator_addr,omitempty"`
-	Bech32ConsensusAddr string `protobuf:"bytes,4,opt,name=bech32_consensus_addr,json=bech32ConsensusAddr,proto3" json:"bech32_consensus_addr,omitempty"`
-	Bech32AccountPub    string `protobuf:"bytes,5,opt,name=bech32_account_pub,json=bech32AccountPub,proto3" json:"bech32_account_pub,omitempty"`
-	Bech32ValidatorPub  string `protobuf:"bytes,6,opt,name=bech32_validator_pub,json=bech32ValidatorPub,proto3" json:"bech32_validator_pub,omitempty"`
-	Bech32ConsensusPub  string `protobuf:"bytes,7,opt,name=bech32_consensus_pub,json=bech32ConsensusPub,proto3" json:"bech32_consensus_pub,omitempty"`
+	MinimumGasPrice string `protobuf:"bytes,1,opt,name=minimum_gas_price,json=minimumGasPrice,proto3" json:"minimum_gas_price,omitempty"`
 }
 
 func (m *ConfigResponse) Reset()         { *m = ConfigResponse{} }
@@ -116,48 +110,6 @@ func (m *ConfigResponse) GetMinimumGasPrice() string {
 	return ""
 }
 
-func (m *ConfigResponse) GetBech32AccountAddr() string {
-	if m != nil {
-		return m.Bech32AccountAddr
-	}
-	return ""
-}
-
-func (m *ConfigResponse) GetBech32ValidatorAddr() string {
-	if m != nil {
-		return m.Bech32ValidatorAddr
-	}
-	return ""
-}
-
-func (m *ConfigResponse) GetBech32ConsensusAddr() string {
-	if m != nil {
-		return m.Bech32ConsensusAddr
-	}
-	return ""
-}
-
-func (m *ConfigResponse) GetBech32AccountPub() string {
-	if m != nil {
-		return m.Bech32AccountPub
-	}
-	return ""
-}
-
-func (m *ConfigResponse) GetBech32ValidatorPub() string {
-	if m != nil {
-		return m.Bech32ValidatorPub
-	}
-	return ""
-}
-
-func (m *ConfigResponse) GetBech32ConsensusPub() string {
-	if m != nil {
-		return m.Bech32ConsensusPub
-	}
-	return ""
-}
-
 func init() {
 	proto.RegisterType((*ConfigRequest)(nil), "cosmos.base.node.v1beta1.ConfigRequest")
 	proto.RegisterType((*ConfigResponse)(nil), "cosmos.base.node.v1beta1.ConfigResponse")
@@ -168,32 +120,25 @@ func init() {
 }
 
 var fileDescriptor_8324226a07064341 = []byte{
-	// 397 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x92, 0x4f, 0x8b, 0x13, 0x31,
-	0x18, 0xc6, 0x3b, 0x55, 0xbb, 0x18, 0xd0, 0x75, 0xa3, 0xc2, 0xb0, 0xc8, 0xb0, 0x0c, 0x82, 0x45,
-	0xdc, 0xc4, 0xb6, 0x9f, 0xa0, 0xf6, 0xd0, 0x6b, 0xa9, 0xe0, 0xc1, 0xcb, 0x90, 0x64, 0xe2, 0x34,
-	0xd8, 0x49, 0xa6, 0xf9, 0x53, 0xf0, 0x2a, 0x78, 0x57, 0xfc, 0x52, 0x1e, 0x0b, 0x5e, 0x3c, 0x4a,
-	0x2b, 0x7e, 0x0e, 0x99, 0x64, 0x46, 0xdb, 0x4a, 0xd9, 0x53, 0x20, 0xcf, 0xef, 0xf7, 0xf2, 0x90,
-	0x37, 0xe0, 0x29, 0x53, 0xa6, 0x54, 0x06, 0x53, 0x62, 0x38, 0x96, 0x2a, 0xe7, 0x78, 0x3d, 0xa0,
-	0xdc, 0x92, 0x01, 0x5e, 0x39, 0xae, 0x3f, 0xa0, 0x4a, 0x2b, 0xab, 0x60, 0x1c, 0x28, 0x54, 0x53,
-	0xa8, 0xa6, 0x50, 0x43, 0x5d, 0x3e, 0x29, 0x94, 0x2a, 0x96, 0x1c, 0x93, 0x4a, 0x60, 0x22, 0xa5,
-	0xb2, 0xc4, 0x0a, 0x25, 0x4d, 0xf0, 0xd2, 0x73, 0x70, 0x6f, 0xa2, 0xe4, 0x3b, 0x51, 0xcc, 0xf9,
-	0xca, 0x71, 0x63, 0xd3, 0xdf, 0x5d, 0x70, 0xbf, 0xbd, 0x31, 0x95, 0x92, 0x86, 0xc3, 0xe7, 0xe0,
-	0xa2, 0x14, 0x52, 0x94, 0xae, 0xcc, 0x0a, 0x62, 0xb2, 0x4a, 0x0b, 0xc6, 0xe3, 0xe8, 0x2a, 0xea,
-	0xdf, 0x9d, 0x9f, 0x37, 0xc1, 0x94, 0x98, 0x59, 0x7d, 0x0d, 0x11, 0x78, 0x48, 0x39, 0x5b, 0x8c,
-	0x86, 0x19, 0x61, 0x4c, 0x39, 0x69, 0x33, 0x92, 0xe7, 0x3a, 0xee, 0x7a, 0xfa, 0x22, 0x44, 0xe3,
-	0x90, 0x8c, 0xf3, 0x5c, 0xc3, 0x21, 0x78, 0xdc, 0xf0, 0x6b, 0xb2, 0x14, 0x39, 0xb1, 0x4a, 0x07,
-	0xe3, 0x96, 0x37, 0x9a, 0x61, 0x6f, 0xda, 0xec, 0xc8, 0x61, 0x75, 0x3f, 0x69, 0x9c, 0x09, 0xce,
-	0xed, 0x7d, 0x67, 0xd2, 0x66, 0xde, 0x79, 0x01, 0xe0, 0x51, 0xaf, 0xca, 0xd1, 0xf8, 0x8e, 0x17,
-	0x1e, 0x1c, 0xd4, 0x9a, 0x39, 0x0a, 0x5f, 0x82, 0x47, 0xff, 0xb5, 0xaa, 0xf9, 0x9e, 0xe7, 0xe1,
-	0x51, 0xa9, 0x43, 0xe3, 0x5f, 0xa7, 0xda, 0x38, 0xdb, 0x37, 0xfe, 0x56, 0x9a, 0x39, 0x3a, 0xfc,
-	0x12, 0x81, 0xb3, 0xd7, 0x5c, 0xaf, 0xeb, 0x57, 0xfb, 0x14, 0x81, 0x5e, 0x78, 0x74, 0xf8, 0x0c,
-	0x9d, 0xda, 0x24, 0x3a, 0x58, 0xd4, 0x65, 0xff, 0x66, 0x30, 0xec, 0x2f, 0xed, 0x7f, 0xfc, 0xfe,
-	0xeb, 0x6b, 0x37, 0x85, 0x57, 0xf8, 0xe4, 0x57, 0x62, 0xde, 0x78, 0x35, 0xfd, 0xb6, 0x4d, 0xa2,
-	0xcd, 0x36, 0x89, 0x7e, 0x6e, 0x93, 0xe8, 0xf3, 0x2e, 0xe9, 0x6c, 0x76, 0x49, 0xe7, 0xc7, 0x2e,
-	0xe9, 0xbc, 0xbd, 0x2e, 0x84, 0x5d, 0x38, 0x8a, 0x98, 0x2a, 0xdb, 0x29, 0xe1, 0xb8, 0x36, 0xf9,
-	0x7b, 0xcc, 0x96, 0x82, 0x4b, 0x8b, 0x0b, 0x5d, 0x31, 0x3f, 0x97, 0xf6, 0xfc, 0xef, 0x1a, 0xfd,
-	0x09, 0x00, 0x00, 0xff, 0xff, 0xde, 0x1d, 0x0e, 0x23, 0xbd, 0x02, 0x00, 0x00,
+	// 282 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x90, 0xb1, 0x4b, 0xc3, 0x40,
+	0x18, 0xc5, 0x73, 0x0e, 0x15, 0x0f, 0xb4, 0x98, 0xa9, 0x14, 0x39, 0x4a, 0x10, 0x0c, 0x42, 0xef,
+	0xa8, 0xae, 0x4e, 0x3a, 0x74, 0x95, 0xba, 0xb9, 0x94, 0xcb, 0xf5, 0xf3, 0x3c, 0x6c, 0xee, 0x4b,
+	0x73, 0x97, 0x82, 0xab, 0xe0, 0xae, 0xf8, 0x4f, 0x39, 0x16, 0x5c, 0x1c, 0x25, 0xf1, 0x0f, 0x91,
+	0x24, 0xed, 0xe0, 0x50, 0x3a, 0x1d, 0xbc, 0xfb, 0xbd, 0xf7, 0x3d, 0x1e, 0x3d, 0x55, 0xe8, 0x52,
+	0x74, 0x22, 0x91, 0x0e, 0x84, 0xc5, 0x19, 0x88, 0xe5, 0x28, 0x01, 0x2f, 0x47, 0x62, 0x51, 0x40,
+	0xfe, 0xcc, 0xb3, 0x1c, 0x3d, 0x86, 0xbd, 0x96, 0xe2, 0x35, 0xc5, 0x6b, 0x8a, 0xaf, 0xa9, 0xfe,
+	0x89, 0x46, 0xd4, 0x73, 0x10, 0x32, 0x33, 0x42, 0x5a, 0x8b, 0x5e, 0x7a, 0x83, 0xd6, 0xb5, 0xbe,
+	0xa8, 0x4b, 0x0f, 0x6f, 0xd0, 0x3e, 0x18, 0x3d, 0x81, 0x45, 0x01, 0xce, 0x47, 0x57, 0xf4, 0x68,
+	0x23, 0xb8, 0x0c, 0xad, 0x83, 0xf0, 0x9c, 0x1e, 0xa7, 0xc6, 0x9a, 0xb4, 0x48, 0xa7, 0x5a, 0xba,
+	0x69, 0x96, 0x1b, 0x05, 0x3d, 0x32, 0x20, 0xf1, 0xc1, 0xa4, 0xbb, 0xfe, 0x18, 0x4b, 0x77, 0x5b,
+	0xcb, 0x17, 0xef, 0x84, 0xee, 0xdf, 0x41, 0xbe, 0x34, 0x0a, 0xc2, 0x57, 0x42, 0x3b, 0x6d, 0x54,
+	0x78, 0xc6, 0xb7, 0xd5, 0xe3, 0xff, 0xae, 0xf7, 0xe3, 0xdd, 0x60, 0xdb, 0x2a, 0x8a, 0x5f, 0xbe,
+	0x7e, 0x3f, 0xf6, 0xa2, 0x70, 0x20, 0xb6, 0xee, 0xa3, 0x1a, 0xc7, 0xf5, 0xf8, 0xb3, 0x64, 0x64,
+	0x55, 0x32, 0xf2, 0x53, 0x32, 0xf2, 0x56, 0xb1, 0x60, 0x55, 0xb1, 0xe0, 0xbb, 0x62, 0xc1, 0xfd,
+	0x50, 0x1b, 0xff, 0x58, 0x24, 0x5c, 0x61, 0xba, 0x49, 0x69, 0x9f, 0xa1, 0x9b, 0x3d, 0x09, 0x35,
+	0x37, 0x60, 0xbd, 0xd0, 0x79, 0xa6, 0x9a, 0xdc, 0xa4, 0xd3, 0x4c, 0x76, 0xf9, 0x17, 0x00, 0x00,
+	0xff, 0xff, 0x7d, 0x46, 0xb4, 0x93, 0x92, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -208,7 +153,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ServiceClient interface {
-	// Config queries for the application and operator configuration.
+	// Config queries for the operator configuration.
 	Config(ctx context.Context, in *ConfigRequest, opts ...grpc.CallOption) (*ConfigResponse, error)
 }
 
@@ -231,7 +176,7 @@ func (c *serviceClient) Config(ctx context.Context, in *ConfigRequest, opts ...g
 
 // ServiceServer is the server API for Service service.
 type ServiceServer interface {
-	// Config queries for the application and operator configuration.
+	// Config queries for the operator configuration.
 	Config(context.Context, *ConfigRequest) (*ConfigResponse, error)
 }
 
@@ -321,48 +266,6 @@ func (m *ConfigResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Bech32ConsensusPub) > 0 {
-		i -= len(m.Bech32ConsensusPub)
-		copy(dAtA[i:], m.Bech32ConsensusPub)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Bech32ConsensusPub)))
-		i--
-		dAtA[i] = 0x3a
-	}
-	if len(m.Bech32ValidatorPub) > 0 {
-		i -= len(m.Bech32ValidatorPub)
-		copy(dAtA[i:], m.Bech32ValidatorPub)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Bech32ValidatorPub)))
-		i--
-		dAtA[i] = 0x32
-	}
-	if len(m.Bech32AccountPub) > 0 {
-		i -= len(m.Bech32AccountPub)
-		copy(dAtA[i:], m.Bech32AccountPub)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Bech32AccountPub)))
-		i--
-		dAtA[i] = 0x2a
-	}
-	if len(m.Bech32ConsensusAddr) > 0 {
-		i -= len(m.Bech32ConsensusAddr)
-		copy(dAtA[i:], m.Bech32ConsensusAddr)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Bech32ConsensusAddr)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.Bech32ValidatorAddr) > 0 {
-		i -= len(m.Bech32ValidatorAddr)
-		copy(dAtA[i:], m.Bech32ValidatorAddr)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Bech32ValidatorAddr)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Bech32AccountAddr) > 0 {
-		i -= len(m.Bech32AccountAddr)
-		copy(dAtA[i:], m.Bech32AccountAddr)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Bech32AccountAddr)))
-		i--
-		dAtA[i] = 0x12
-	}
 	if len(m.MinimumGasPrice) > 0 {
 		i -= len(m.MinimumGasPrice)
 		copy(dAtA[i:], m.MinimumGasPrice)
@@ -400,30 +303,6 @@ func (m *ConfigResponse) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.MinimumGasPrice)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	l = len(m.Bech32AccountAddr)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	l = len(m.Bech32ValidatorAddr)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	l = len(m.Bech32ConsensusAddr)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	l = len(m.Bech32AccountPub)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	l = len(m.Bech32ValidatorPub)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	l = len(m.Bech32ConsensusPub)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
@@ -546,198 +425,6 @@ func (m *ConfigResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.MinimumGasPrice = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Bech32AccountAddr", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Bech32AccountAddr = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Bech32ValidatorAddr", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Bech32ValidatorAddr = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Bech32ConsensusAddr", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Bech32ConsensusAddr = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Bech32AccountPub", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Bech32AccountPub = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Bech32ValidatorPub", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Bech32ValidatorPub = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Bech32ConsensusPub", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Bech32ConsensusPub = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

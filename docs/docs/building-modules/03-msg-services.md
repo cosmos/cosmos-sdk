@@ -25,15 +25,21 @@ As further described in [ADR 031](../architecture/adr-031-msg-service.md), this 
 
 Protobuf generates a `MsgServer` interface based on a definition of `Msg` service. It is the role of the module developer to implement this interface, by implementing the state transition logic that should happen upon receival of each `sdk.Msg`. As an example, here is the generated `MsgServer` interface for `x/bank`, which exposes two `sdk.Msg`s:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/types/tx.pb.go#L288-L294
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/types/tx.pb.go#L288-L294
+```
 
 When possible, the existing module's [`Keeper`](06-keeper.md) should implement `MsgServer`, otherwise a `msgServer` struct that embeds the `Keeper` can be created, typically in `./keeper/msg_server.go`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/msg_server.go#L14-L16
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/msg_server.go#L14-L16
+```
 
 `msgServer` methods can retrieve the `sdk.Context` from the `context.Context` parameter method using the `sdk.UnwrapSDKContext`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/msg_server.go#L27-L27
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/msg_server.go#L27-L27
+```
 
 `sdk.Msg` processing usually follows these 3 steps:
 
@@ -83,11 +89,15 @@ These events are relayed back to the underlying consensus engine and can be used
 
 The invoked `msgServer` method returns a `proto.Message` response and an `error`. These return values are then wrapped into an `*sdk.Result` or an `error` using `sdk.WrapServiceResult(ctx sdk.Context, res proto.Message, err error)`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/msg_service_router.go#L127
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/msg_service_router.go#L127
+```
 
 This method takes care of marshaling the `res` parameter to protobuf and attaching any events on the `ctx.EventManager()` to the `sdk.Result`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/base/abci/v1beta1/abci.proto#L88-L109
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/base/abci/v1beta1/abci.proto#L88-L109
+```
 
 This diagram shows a typical structure of a Protobuf `Msg` service, and how the message propagates through the module.
 
@@ -99,4 +109,6 @@ New [telemetry metrics](../core/09-telemetry.md) can be created from `msgServer`
 
 This is an example from the `x/auth/vesting` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/vesting/msg_server.go#L73-L85
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/vesting/msg_server.go#L73-L85
+```

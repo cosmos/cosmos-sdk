@@ -68,13 +68,17 @@ Operations on the simulation are simulated using the full [transaction cycle](..
 
 Shown below is how weights are set:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/simulation/operations.go#L17-L75
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/simulation/operations.go#L17-L75
+```
 
 As you can see, the weights are predefined in this case. Options exist to override this behavior with different weights. One option is to use `*rand.Rand` to define a random weight for the operation, or you can inject your own predefined weights.
 
 Here is how one can override the above package `simappparams`.
 
-+++ https://github.com/cosmos/gaia/blob/main/sims.mk#L9-L22
+```go reference
+https://github.com/cosmos/gaia/blob/main/sims.mk#L9-L22
+```
 
 For the last test a tool called runsim  <!-- # TODO: add link to runsim readme when its created --> is used, this is used to parallelize go test instances, provide info to Github and slack integrations to provide information to your team on how the simulations are running.  
 
@@ -88,7 +92,9 @@ them to be used on the parameters.
 
 Now that all the required functions are defined, we need to integrate them into the module pattern within the `module.go`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/distribution/module.go
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/distribution/module.go
+```
 
 ## App Simulator manager
 

@@ -182,7 +182,7 @@ func (m msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSend
 
 The query service methods for the `x/nft` module are:
 
-```proto
+```protobuf
 service Query {
   // Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {

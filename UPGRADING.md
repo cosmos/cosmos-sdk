@@ -237,7 +237,7 @@ The protos can as well be downloaded using `buf export buf.build/cosmos/cosmos-s
 
 Cosmos message protobufs should be extended with `cosmos.msg.v1.signer`: 
 
-```proto
+```protobuf
 message MsgSetWithdrawAddress {
   option (cosmos.msg.v1.signer) = "delegator_address"; ++
 

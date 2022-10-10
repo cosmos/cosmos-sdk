@@ -783,6 +783,296 @@ func (m *QueryDenomMetadataResponse) GetMetadata() Metadata {
 	return Metadata{}
 }
 
+<<<<<<< HEAD
+=======
+// QueryDenomOwnersRequest defines the request type for the DenomOwners RPC query,
+// which queries for a paginated set of all account holders of a particular
+// denomination.
+type QueryDenomOwnersRequest struct {
+	// denom defines the coin denomination to query all account holders for.
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryDenomOwnersRequest) Reset()         { *m = QueryDenomOwnersRequest{} }
+func (m *QueryDenomOwnersRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryDenomOwnersRequest) ProtoMessage()    {}
+func (*QueryDenomOwnersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c6fc1939682df13, []int{16}
+}
+func (m *QueryDenomOwnersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDenomOwnersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDenomOwnersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDenomOwnersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDenomOwnersRequest.Merge(m, src)
+}
+func (m *QueryDenomOwnersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDenomOwnersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDenomOwnersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDenomOwnersRequest proto.InternalMessageInfo
+
+func (m *QueryDenomOwnersRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *QueryDenomOwnersRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// DenomOwner defines structure representing an account that owns or holds a
+// particular denominated token. It contains the account address and account
+// balance of the denominated token.
+//
+// Since: cosmos-sdk 0.46
+type DenomOwner struct {
+	// address defines the address that owns a particular denomination.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// balance is the balance of the denominated coin for an account.
+	Balance types.Coin `protobuf:"bytes,2,opt,name=balance,proto3" json:"balance"`
+}
+
+func (m *DenomOwner) Reset()         { *m = DenomOwner{} }
+func (m *DenomOwner) String() string { return proto.CompactTextString(m) }
+func (*DenomOwner) ProtoMessage()    {}
+func (*DenomOwner) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c6fc1939682df13, []int{17}
+}
+func (m *DenomOwner) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DenomOwner) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DenomOwner.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DenomOwner) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DenomOwner.Merge(m, src)
+}
+func (m *DenomOwner) XXX_Size() int {
+	return m.Size()
+}
+func (m *DenomOwner) XXX_DiscardUnknown() {
+	xxx_messageInfo_DenomOwner.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DenomOwner proto.InternalMessageInfo
+
+func (m *DenomOwner) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *DenomOwner) GetBalance() types.Coin {
+	if m != nil {
+		return m.Balance
+	}
+	return types.Coin{}
+}
+
+// QueryDenomOwnersResponse defines the RPC response of a DenomOwners RPC query.
+//
+// Since: cosmos-sdk 0.46
+type QueryDenomOwnersResponse struct {
+	DenomOwners []*DenomOwner `protobuf:"bytes,1,rep,name=denom_owners,json=denomOwners,proto3" json:"denom_owners,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryDenomOwnersResponse) Reset()         { *m = QueryDenomOwnersResponse{} }
+func (m *QueryDenomOwnersResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryDenomOwnersResponse) ProtoMessage()    {}
+func (*QueryDenomOwnersResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c6fc1939682df13, []int{18}
+}
+func (m *QueryDenomOwnersResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDenomOwnersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDenomOwnersResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDenomOwnersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDenomOwnersResponse.Merge(m, src)
+}
+func (m *QueryDenomOwnersResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDenomOwnersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDenomOwnersResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDenomOwnersResponse proto.InternalMessageInfo
+
+func (m *QueryDenomOwnersResponse) GetDenomOwners() []*DenomOwner {
+	if m != nil {
+		return m.DenomOwners
+	}
+	return nil
+}
+
+func (m *QueryDenomOwnersResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QuerySendEnabledRequest defines the RPC request for looking up SendEnabled entries.
+//
+// Since: cosmos-sdk 0.47
+type QuerySendEnabledRequest struct {
+	// denoms is the specific denoms you want look up. Leave empty to get all entries.
+	Denoms []string `protobuf:"bytes,1,rep,name=denoms,proto3" json:"denoms,omitempty"`
+	// pagination defines an optional pagination for the request. This field is
+	// only read if the denoms field is empty.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QuerySendEnabledRequest) Reset()         { *m = QuerySendEnabledRequest{} }
+func (m *QuerySendEnabledRequest) String() string { return proto.CompactTextString(m) }
+func (*QuerySendEnabledRequest) ProtoMessage()    {}
+func (*QuerySendEnabledRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c6fc1939682df13, []int{19}
+}
+func (m *QuerySendEnabledRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySendEnabledRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySendEnabledRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySendEnabledRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySendEnabledRequest.Merge(m, src)
+}
+func (m *QuerySendEnabledRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySendEnabledRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySendEnabledRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySendEnabledRequest proto.InternalMessageInfo
+
+func (m *QuerySendEnabledRequest) GetDenoms() []string {
+	if m != nil {
+		return m.Denoms
+	}
+	return nil
+}
+
+func (m *QuerySendEnabledRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QuerySendEnabledResponse defines the RPC response of a SendEnable query.
+//
+// Since: cosmos-sdk 0.47
+type QuerySendEnabledResponse struct {
+	SendEnabled []*SendEnabled `protobuf:"bytes,1,rep,name=send_enabled,json=sendEnabled,proto3" json:"send_enabled,omitempty"`
+	// pagination defines the pagination in the response. This field is only
+	// populated if the denoms field in the request is empty.
+	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QuerySendEnabledResponse) Reset()         { *m = QuerySendEnabledResponse{} }
+func (m *QuerySendEnabledResponse) String() string { return proto.CompactTextString(m) }
+func (*QuerySendEnabledResponse) ProtoMessage()    {}
+func (*QuerySendEnabledResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c6fc1939682df13, []int{20}
+}
+func (m *QuerySendEnabledResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySendEnabledResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySendEnabledResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySendEnabledResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySendEnabledResponse.Merge(m, src)
+}
+func (m *QuerySendEnabledResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySendEnabledResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySendEnabledResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySendEnabledResponse proto.InternalMessageInfo
+
+func (m *QuerySendEnabledResponse) GetSendEnabled() []*SendEnabled {
+	if m != nil {
+		return m.SendEnabled
+	}
+	return nil
+}
+
+func (m *QuerySendEnabledResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+>>>>>>> c60c55616 (feat: gRPC query for operator and chain configuration (#13485))
 func init() {
 	proto.RegisterType((*QueryBalanceRequest)(nil), "cosmos.bank.v1beta1.QueryBalanceRequest")
 	proto.RegisterType((*QueryBalanceResponse)(nil), "cosmos.bank.v1beta1.QueryBalanceResponse")

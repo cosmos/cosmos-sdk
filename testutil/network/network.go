@@ -50,6 +50,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
@@ -140,6 +141,7 @@ func MinimumAppConfig() depinject.Config {
 		configurator.BankModule(),
 		configurator.GenutilModule(),
 		configurator.StakingModule(),
+		configurator.ConsensusModule(),
 		configurator.TxModule())
 }
 

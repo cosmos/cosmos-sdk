@@ -4,6 +4,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
@@ -11,6 +12,7 @@ import (
 	"cosmossdk.io/core/appconfig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -19,6 +21,7 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
@@ -37,6 +40,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					banktypes.ModuleName,
 					genutiltypes.ModuleName,
 					paramstypes.ModuleName,
+					consensustypes.ModuleName,
 				},
 				EndBlockers: []string{
 					stakingtypes.ModuleName,
@@ -44,6 +48,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					banktypes.ModuleName,
 					genutiltypes.ModuleName,
 					paramstypes.ModuleName,
+					consensustypes.ModuleName,
 				},
 				InitGenesis: []string{
 					authtypes.ModuleName,
@@ -51,6 +56,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					stakingtypes.ModuleName,
 					genutiltypes.ModuleName,
 					paramstypes.ModuleName,
+					consensustypes.ModuleName,
 				},
 			}),
 		},
@@ -76,6 +82,10 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		{
 			Name:   paramstypes.ModuleName,
 			Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
+		},
+		{
+			Name:   consensustypes.ModuleName,
+			Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
 		},
 		{
 			Name:   "tx",

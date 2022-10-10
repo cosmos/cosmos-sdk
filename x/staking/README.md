@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Staking Overview
-parent:
-  title: "staking"
--->
+---
+sidebar_position: 1
+---
 
 # `x/staking`
 
@@ -60,8 +57,6 @@ network.
     * [gRPC](#grpc)
     * [REST](#rest)
 
-<!-- order: 1 -->
-
 # State
 
 ## Pool
@@ -75,6 +70,19 @@ Store entries prefixed with "Last" must remain unchanged until EndBlock.
 
 * LastTotalPower: `0x12 -> ProtocolBuffer(math.Int)`
 
+## ValidatorUpdates
+
+ValidatorUpdates contains the validator updates returned to ABCI at the end of every block. 
+The values are overwritten in every block. 
+
+* ValidatorUpdates `0x61 -> []abci.ValidatorUpdate`
+
+## UnbondingID
+
+UnbondingID stores the ID of the latest unbonding operation. It enables to create unique IDs for unbonding operation, i.e., UnbondingID is incremented every time a new unbonding operation (validator unbonding, unbonding delegation, redelegation) is initiated.
+
+* UnbondingID: `0x37 -> uint64`
+
 ## Params
 
 The staking module stores its params in state with the prefix of `0x51`,
@@ -82,7 +90,9 @@ it can be updated with governance or the address with authority.
 
 * Params: `0x51 | ProtocolBuffer(Params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L285-L306
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L285-L306
+```
 
 ## Validator
 
@@ -91,7 +101,7 @@ Validators can have one of three statuses
 * `Unbonded`: The validator is not in the active set. They cannot sign blocks and do not earn
   rewards. They can receive delegations.
 * `Bonded`: Once the validator receives sufficient bonded tokens they automatically join the
-  active set during [`EndBlock`](./05_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
+  active set during [`EndBlock`](#validator-set-changes) and their status is updated to `Bonded`.
   They are signing blocks and receiving rewards. They can receive further delegations.
   They can be slashed for misbehavior. Delegators to this validator who unbond their delegation
   must wait the duration of the UnbondingTime, a chain-specific param, during which time
@@ -113,11 +123,15 @@ records within a block.
 * ValidatorsByConsAddr: `0x22 | ConsAddrLen (1 byte) | ConsAddr -> OperatorAddr`
 * ValidatorsByPower: `0x23 | BigEndian(ConsensusPower) | OperatorAddrLen (1 byte) | OperatorAddr -> OperatorAddr`
 * LastValidatorsPower: `0x11 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(ConsensusPower)`
+* ValidatorsByUnbondingID: `0x38 | UnbondingID ->  0x21 | OperatorAddrLen (1 byte) | OperatorAddr`
 
 `Validators` is the primary index - it ensures that each operator can have only one
 associated validator, where the public key of that validator can change in the
 future. Delegators can refer to the immutable operator of the validator, without
 concern for the changing public key.
+
+`ValidatorsByUnbondingID` is an additional index that enables lookups for 
+ validators by the unbonding IDs corresponding to their current unbonding.
 
 `ValidatorByConsAddr` is an additional index that enables lookups for slashing.
 When Tendermint reports evidence, it provides the validator address, so this
@@ -131,13 +145,17 @@ where `Jailed` is true are not stored within this index.
 
 `LastValidatorsPower` is a special index that provides a historical list of the
 last-block's bonded validators. This index remains constant during a block but
-is updated during the validator set update process which takes place in [`EndBlock`](./05_end_block.md).
+is updated during the validator set update process which takes place in [`EndBlock`](#end-block).
 
 Each validator's state is stored in a `Validator` struct:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L78-L127
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L78-L127
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L24-L76
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L24-L76
+```
 
 ## Delegation
 
@@ -151,7 +169,9 @@ funds are held in a `Delegation` data structure. It is owned by one
 delegator, and is associated with the shares for one validator. The sender of
 the transaction is the owner of the bond.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L187-L205
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L187-L205
+```
 
 ### Delegator Shares
 
@@ -182,15 +202,24 @@ detected.
 
 * UnbondingDelegation: `0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(unbondingDelegation)`
 * UnbondingDelegationsFromValidator: `0x33 | ValidatorAddrLen (1 byte) | ValidatorAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+* UnbondingDelegationByUnbondingId: `0x38 | UnbondingId -> 0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr`
+ `UnbondingDelegation` is used in queries, to lookup all unbonding delegations for
+ a given delegator.
 
-The first map here is used in queries, to lookup all unbonding delegations for
-a given delegator, while the second map is used in slashing, to lookup all
-unbonding delegations associated with a given validator that need to be
-slashed.
+`UnbondingDelegationsFromValidator` is used in slashing, to lookup all
+ unbonding delegations associated with a given validator that need to be
+ slashed.
+
+ `UnbondingDelegationByUnbondingId` is an additional index that enables 
+ lookups for unbonding delegations by the unbonding IDs of the containing 
+ unbonding delegation entries.
+
 
 A UnbondingDelegation object is created every time an unbonding is initiated.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L207-L220
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L207-L220
+```
 
 ## Redelegation
 
@@ -205,10 +234,22 @@ committed by the source validator.
 * Redelegations: `0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr -> ProtocolBuffer(redelegation)`
 * RedelegationsBySrc: `0x35 | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
 * RedelegationsByDst: `0x36 | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+* RedelegationByUnbondingId: `0x38 | UnbondingId -> 0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr`
+
+ `Redelegations` is used for queries, to lookup all redelegations for a given
+ delegator.
+
+ `RedelegationsBySrc` is used for slashing based on the `ValidatorSrcAddr`.
+
+ `RedelegationsByDst` is used for slashing based on the `ValidatorDstAddr`
 
 The first map here is used for queries, to lookup all redelegations for a given
 delegator. The second map is used for slashing based on the `ValidatorSrcAddr`,
 while the third map is for slashing based on the `ValidatorDstAddr`.
+
+`RedelegationByUnbondingId` is an additional index that enables 
+ lookups for redelegations by the unbonding IDs of the containing 
+ redelegation entries.
 
 A redelegation object is created every time a redelegation occurs. To prevent
 "redelegation hopping" redelegations may not occur under the situation that:
@@ -218,7 +259,9 @@ A redelegation object is created every time a redelegation occurs. To prevent
 * and, the (re)delegator is attempting to create a _new_ redelegation
   where the source validator for this new redelegation is `Validator X`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L245-L283
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L245-L283
+```
 
 ## Queues
 
@@ -240,7 +283,9 @@ delegations queue is kept.
 
 * UnbondingDelegation: `0x41 | format(time) -> []DVPair`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L151-L161
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L151-L161
+```
 
 ### RedelegationQueue
 
@@ -249,7 +294,9 @@ kept.
 
 * RedelegationQueue: `0x42 | format(time) -> []DVVTriplet`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L168-L179
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L168-L179
+```
 
 ### ValidatorQueue
 
@@ -268,7 +315,9 @@ that multiple validators exist in the queue at the same location.
 HistoricalInfo objects are stored and pruned at each block such that the staking keeper persists
 the `n` most recent historical info defined by staking module parameter: `HistoricalEntries`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L15-L22
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L15-L22
+```
 
 At each BeginBlock, the staking keeper will persist the current Header and the Validators that committed
 the current block in a `HistoricalInfo` object. The Validators are sorted on their address to ensure that
@@ -276,19 +325,17 @@ they are in a deterministic order.
 The oldest HistoricalEntries will be pruned to ensure that there only exist the parameter-defined number of
 historical entries.
 
-<!-- order: 2 -->
-
 # State Transitions
 
 This document describes the state transition operations pertaining to:
 
-1. [Validators](./02_state_transitions.md#validators)
-2. [Delegations](./02_state_transitions.md#delegations)
-3. [Slashing](./02_state_transitions.md#slashing)
+1. [Validators](#validators)
+2. [Delegations](#delegations)
+3. [Slashing](#slashing)
 
 ## Validators
 
-State transitions in validators are performed on every [`EndBlock`](./05_end_block.md#validator-set-changes)
+State transitions in validators are performed on every [`EndBlock`](#validator-set-changes)
 in order to check for changes in the active `ValidatorSet`.
 
 A validator can be `Unbonded`, `Unbonding` or `Bonded`. `Unbonded`
@@ -359,13 +406,17 @@ As a part of the Undelegate and Complete Unbonding state transitions Unbond
 Delegation may be called.
 
 * subtract the unbonded shares from delegator
-* add the unbonded tokens to an `UnbondingDelegation` Entry
+* add the unbonded tokens to an `UnbondingDelegationEntry`
 * update the delegation or remove the delegation if there are no more shares
 * if the delegation is the operator of the validator and no more shares exist then trigger a jail validator
 * update the validator with removed the delegator shares and associated coins
 * if the validator state is `Bonded`, transfer the `Coins` worth of the unbonded
   shares from the `BondedPool` to the `NotBondedPool` `ModuleAccount`
 * remove the validator if it is unbonded and there are no more delegation shares.
+* remove the validator if it is unbonded and there are no more delegation shares
+* get a unique `unbondingId` and map it to the `UnbondingDelegationEntry` in `UnbondingDelegationByUnbondingId` 
+* call the `AfterUnbondingInitiated(unbondingId)` hook
+* add the unbonding delegation to `UnbondingDelegationQueue` with the completion time set to `UnbondingTime`
 
 ### Cancel an `UnbondingDelegation` Entry 
 
@@ -457,20 +508,22 @@ A special case is the initial delegation, when `T = 0` and `S = 0`, so `T_j / T`
 For the initial delegation, delegator `j` who delegates `T_j` tokens receive `S_j = T_j` shares.
 So a validator that hasn't received any rewards and has not been slashed will have `T = S`.
 
-<!-- order: 3 -->
-
 # Messages
 
-In this section we describe the processing of the staking messages and the corresponding updates to the state. All created/modified state objects specified by each message are defined within the [state](./02_state_transitions.md) section.
+In this section we describe the processing of the staking messages and the corresponding updates to the state. All created/modified state objects specified by each message are defined within the [state](#state) section.
 
 ## MsgCreateValidator
 
 A validator is created using the `MsgCreateValidator` message.
 The validator must be created with an initial delegation from the operator.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L18-L19
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L18-L19
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L43-L65
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L43-L65
+```
 
 This message is expected to fail if:
 
@@ -493,9 +546,13 @@ in the first end-block.
 The `Description`, `CommissionRate` of a validator can be updated using the
 `MsgEditValidator` message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L21-L22
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L21-L22
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L70-L88
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L70-L88
+```
 
 This message is expected to fail if:
 
@@ -512,9 +569,13 @@ Within this message the delegator provides coins, and in return receives
 some amount of their validator's (newly created) delegator-shares that are
 assigned to `Delegation.Shares`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L24-L26
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L24-L26
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L93-L104
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L93-L104
+```
 
 This message is expected to fail if:
 
@@ -537,20 +598,26 @@ tracked in validator object in the `Validators` index.
 It is possible to delegate to a jailed validator, the only difference being it
 will not be added to the power index until it is unjailed.
 
-![Delegation sequence](../../../docs/uml/svg/delegation_sequence.svg)
+![Delegation sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/delegation_sequence.svg)
 
 ## MsgUndelegate
 
 The `MsgUndelegate` message allows delegators to undelegate their tokens from
 validator.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L32-L34
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L32-L34
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L128-L139
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L128-L139
+```
 
 This message returns a response containing the completion time of the undelegation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L128-L144
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L128-L144
+```
 
 This message is expected to fail if:
 
@@ -571,15 +638,19 @@ When this message is processed the following actions occur:
 * if there are no more `Shares` in the delegation, then the delegation object is removed from the store
     * under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
-![Unbond sequence](../../../docs/uml/svg/unbond_sequence.svg)
+![Unbond sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/unbond_sequence.svg)
 
 ## MsgCancelUnbondingDelegation
 
 The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and delegate back to a previous validator.
 
-+++ hhttps://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L36-L40
+```protobuf reference
+hhttps://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L36-L40
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L146-L165
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L146-L165
+```
 
 This message is expected to fail if:
 
@@ -600,13 +671,19 @@ The redelegation command allows delegators to instantly switch validators. Once
 the unbonding period has passed, the redelegation is automatically completed in
 the EndBlocker.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L28-L30
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L28-L30
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L109-L121
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L109-L121
+```
 
 This message returns a response containing the completion time of the redelegation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L123-L126
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L123-L126
+```
 
 This message is expected to fail if:
 
@@ -629,7 +706,7 @@ When this message is processed the following actions occur:
 * if there are no more `Shares` in the source delegation, then the source delegation object is removed from the store
     * under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
-![Begin redelegation sequence](../../../docs/uml/svg/begin_redelegation_sequence.svg)
+![Begin redelegation sequence](https://raw.githubusercontent.com/cosmos/cosmos-sdk/release/v0.46.x/docs/uml/svg/begin_redelegation_sequence.svg)
 
 
 ## MsgUpdateParams
@@ -637,13 +714,13 @@ When this message is processed the following actions occur:
 The `MsgUpdateParams` update the staking module parameters.
 The params are updated through a governance proposal where the signer is the gov module account address.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/e412ce990251768579d49947991be76a87564f7d/proto/cosmos/staking/v1beta1/tx.proto#L172-L190
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/e412ce990251768579d49947991be76a87564f7d/proto/cosmos/staking/v1beta1/tx.proto#L172-L190
+```
 
 The message handling can fail if:
 
 * signer is not the authority defined in the staking keeper (usually the gov module account).
-
-<!-- order: 4 -->
 
 # Begin-Block
 
@@ -657,8 +734,6 @@ If the `HistoricalEntries` parameter is 0, then the `BeginBlock` performs a no-o
 Otherwise, the latest historical info is stored under the key `historicalInfoKey|height`, while any entries older than `height - HistoricalEntries` is deleted.
 In most cases, this results in a single entry being pruned per block.
 However, if the parameter `HistoricalEntries` has changed to a lower value there will be multiple entries in the store that must be pruned.
-
-<!-- order: 5 -->
 
 # End-Block
 
@@ -715,6 +790,12 @@ validators that still have remaining delegations, the `validator.Status` is
 switched from `types.Unbonding` to
 `types.Unbonded`.
 
+Unbonding operations can be put on hold by external modules via the `PutUnbondingOnHold(unbondingId)` method. 
+ As a result, an unbonding operation (e.g., an unbonding delegation) that is on hold, cannot complete 
+ even if it reaches maturity. For an unbonding operation with `unbondingId` to eventually complete 
+ (after it reaches maturity), every call to `PutUnbondingOnHold(unbondingId)` must be matched 
+ by a call to `UnbondingCanComplete(unbondingId)`. 
+
 ### Unbonding Delegations
 
 Complete the unbonding of all mature `UnbondingDelegations.Entries` within the
@@ -733,8 +814,6 @@ Complete the unbonding of all mature `Redelegation.Entries` within the
 * remove the mature entry from `Redelegation.Entries`
 * remove the `Redelegation` object from the store if there are no
   remaining entries.
-
-<!-- order: 6 -->
 
 # Hooks
 
@@ -761,8 +840,9 @@ following hooks can registered with staking:
     * called when a delegation is created or modified
 * `BeforeDelegationRemoved(Context, AccAddress, ValAddress) error`
     * called when a delegation is removed
+* `AfterUnbondingInitiated(Context, UnbondingID)`
+    * called when an unbonding operation (validator unbonding, unbonding delegation, redelegation) was initiated
 
-<!-- order: 7 -->
 
 # Events
 
@@ -851,8 +931,6 @@ The staking module emits the following events:
 
 * [0] Time is formatted in the RFC3339 standard
 
-<!-- order: 8 -->
-
 # Parameters
 
 The staking module contains the following parameters:
@@ -865,8 +943,6 @@ The staking module contains the following parameters:
 | HistoricalEntries | uint16           | 3                      |
 | BondDenom         | string           | "stake"                |
 | MinCommissionRate | string           | "0.000000000000000000" |
-
-<!-- order: 9 -->
 
 # Client
 

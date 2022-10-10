@@ -168,7 +168,7 @@ removed from each `KVStore`. Note, it is up to the underlying `KVStore`
 implementation to determine how pruning is actually performed. The `PruningOptions`
 are defined as follows:
 
-```golang
+```go
 type PruningOptions struct {
 	// KeepRecent defines how many recent heights to keep on disk.
 	KeepRecent uint64
@@ -198,7 +198,7 @@ to it's respective `KVStore` instance.
 
 Example:
 
-```golang
+```go
 func NewApp(...) Application {
   // ...
   

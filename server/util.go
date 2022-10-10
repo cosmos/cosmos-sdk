@@ -398,7 +398,7 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 	return dbm.NewDB("application", backendType, dataDir)
 }
 
-func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {
+func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 	if traceWriterFile == "" {
 		return
 	}

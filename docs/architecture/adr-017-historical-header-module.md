@@ -15,7 +15,7 @@ The application MUST store the most recent `n` headers in a persistent store. At
 
 The application MUST store this information by storing new headers immediately when handling `abci.RequestBeginBlock`:
 
-```golang
+```go
 func BeginBlock(ctx sdk.Context, keeper HistoricalHeaderKeeper, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
   info := HistoricalInfo{
     Header: ctx.BlockHeader(),

@@ -52,8 +52,10 @@ Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.0`) for ge
 
 #### Broadcast Mode
 
-Broadcast mode `block` was deprecated and has been removed. Please use `sync` mode instead.
-When upgrading your tests from `block` to `sync` and checking for a transaction code, you need to query the transaction first (with its hash) to get the correct code.
+Broadcast mode `block` was deprecated and has been removed. Please use `sync` mode
+instead. When upgrading your tests from `block` to `sync` and checking for a
+transaction code, you need to query the transaction first (with its hash) to get
+the correct code.
 
 ### Modules
 
@@ -68,6 +70,53 @@ the necessary proportion of coins needed at the proposal submission time. The mo
 By default, the new `MinInitialDepositRatio` parameter is set to zero during migration. The value of zero signifies that this 
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
+
+#### `x/consensus`
+
+Introducing a new `x/consensus` module to handle managing Tendermint consensus
+parameters. For migration it is required to call a specific migration to migrate
+existing parameters from the deprecated `x/params` to `x/consensus` module. App
+developers should ensure to call `baseapp.MigrateParams` in their upgrade handler.
+
+Example:
+
+```go
+func (app SimApp) RegisterUpgradeHandlers() {
+ 	----> baseAppLegacySS := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()) <----
+
+ 	app.UpgradeKeeper.SetUpgradeHandler(
+ 		UpgradeName,
+ 		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+ 			// Migrate Tendermint consensus parameters from x/params module to a
+ 			// dedicated x/consensus module.
+ 			----> baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper) <----
+
+			// ...
+
+ 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+ 		},
+ 	)
+
+  // ...
+}
+```
+
+The old params module is required to still be imported in your app.go in order to handle this migration. 
+
+##### App.go Changes
+
+Previous:
+
+```go
+bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
+```
+
+After:
+
+```go
+app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
+bApp.SetParamStore(&app.ConsensusParamsKeeper)
+```
 
 ### Ledger
 
@@ -180,7 +229,7 @@ The protos can as well be downloaded using `buf export buf.build/cosmos/cosmos-s
 
 Cosmos message protobufs should be extended with `cosmos.msg.v1.signer`: 
 
-```proto
+```protobuf
 message MsgSetWithdrawAddress {
   option (cosmos.msg.v1.signer) = "delegator_address"; ++
 

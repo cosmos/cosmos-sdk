@@ -1,11 +1,8 @@
-<!--
-order: 0
-title: Params Overview
-parent:
-  title: "params (depreacated)"
--->
+---
+sidebar_position: 1
+---
 
-# `x/params` (Deprecated)
+# `x/params`
 
 > Note: The Params module has been depreacted in favour of each module housing its own parameters. 
 
@@ -30,8 +27,6 @@ The following contents explains how to use params module for master and user mod
     * [KeyTable](#keytable)
     * [ParamSet](#paramset)
 
-<!-- order: 1 -->
-
 # Keeper
 
 In the app initialization stage, [subspaces](#subspace) can be allocated for other modules' keeper using `Keeper.Subspace` and are stored in `Keeper.spaces`. Then, those modules can have a reference to their specific parameter store through `Keeper.GetSubspace`.
@@ -47,8 +42,6 @@ func (k ExampleKeeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 ```
-
-<!-- order: 2 -->
 
 # Subspace
 

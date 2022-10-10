@@ -1,10 +1,10 @@
 ---
-order: false
+sidebar_position: 1
 ---
 
-# simapp
+# `SimApp`
 
-simapp is an application built using the Cosmos SDK for testing and educational purposes.
+`SimApp` is an application built using the Cosmos SDK for testing and educational purposes.
 
 ## Running testnets with `simd`
 

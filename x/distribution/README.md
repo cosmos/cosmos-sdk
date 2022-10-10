@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Distribution Overview
-parent:
-  title: "distribution"
--->
+---
+sidebar_position: 1
+---
 
 # `x/distribution`
 
@@ -210,7 +207,7 @@ block, the different claims on the fees collected are updated as follows:
 
 ## The Distribution Scheme
 
-See [params](07_params.md) for description of parameters.
+See [params](#params) for description of parameters.
 
 Let `fees` be the total fees collected in the previous block, including
 inflationary rewards to the stake. All fees are collected in a specific module
@@ -249,8 +246,7 @@ validator sets a maximum rate and a maximum daily increase. These maximums canno
 
 The outstanding rewards that the operator is entitled to are stored in
 `ValidatorAccumulatedCommission`, while the rewards the delegators are entitled
-to are stored in `ValidatorCurrentRewards`. The [F1 fee distribution
-scheme](01_concepts.md) is used to calculate the rewards per delegator as they
+to are stored in `ValidatorCurrentRewards`. The [F1 fee distribution scheme](#concepts) is used to calculate the rewards per delegator as they
 withdraw or update their delegation, and is thus not handled in `BeginBlock`.
 
 ### Example Distribution

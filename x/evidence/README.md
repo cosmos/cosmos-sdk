@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Evidence Overview
-parent:
-  title: "evidence"
--->
+---
+sidebar_position: 1
+---
 
 # `x/evidence`
 
@@ -248,7 +245,7 @@ The `Equivocation` evidence is handled as follows:
 
 **Note:** The slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module
 that emits informative events and finally delegates calls to the `x/staking` module. See documentation
-on slashing and jailing in [State Transitions](/.././cosmos-sdk/x/staking/spec/02_state_transitions.md).
+on slashing and jailing in [State Transitions](../staking/README.md#state-transitions).
 
 # Client
 

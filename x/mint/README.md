@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Mint Overview
-parent:
-  title: "mint"
--->
+---
+sidebar_position: 1
+---
 
 # `x/mint`
 

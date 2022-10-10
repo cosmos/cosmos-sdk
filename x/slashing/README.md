@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Slashing Overview
-parent:
-  title: "slashing"
--->
+---
+sidebar_position: 1
+---
 
 # `x/slashing`
 
@@ -109,7 +106,7 @@ long as it contains precommits from +2/3 of total voting power.
 
 Proposers are incentivized to include precommits from all validators in the Tendermint `LastCommitInfo`
 by receiving additional fees proportional to the difference between the voting
-power included in the `LastCommitInfo` and +2/3 (see [fee distribution](x/distribution/spec/03_begin_block.md)).
+power included in the `LastCommitInfo` and +2/3 (see [fee distribution](../distribution/README.md#begin-block)).
 
 ```go
 type LastCommitInfo struct {
@@ -283,7 +280,7 @@ for vote in block.LastCommitInfo.Votes {
     // That's fine since this is just used to filter unbonding delegations & redelegations.
     distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
-    Slash(vote.Validator.Address, distributionHeight, vote.Validator.Power, SlashFractionDowntime())
+    Slash(vote.Validator.Address, distributionHeight, vote.Validator.Power, SlashFractionDowntime(), stakingtypes.Downtime)
     Jail(vote.Validator.Address)
 
     signInfo.JailedUntil = block.Time.Add(DowntimeJailDuration())

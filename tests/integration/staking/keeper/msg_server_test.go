@@ -45,6 +45,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		delegatorAddr, validatorAddr, 10,
 		ctx.BlockTime().Add(time.Minute*10),
 		unbondingAmount.Amount,
+		0,
 	)
 
 	// set and retrieve a record

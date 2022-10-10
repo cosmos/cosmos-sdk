@@ -1,11 +1,8 @@
-<!--
-order: 0
-title: Group Overview
-parent:
-  title: "group"
--->
+---
+sidebar_position: 1
+---
 
-# Group Module
+# `x/group`
 
 ## Abstract
 
@@ -2054,7 +2051,7 @@ The group module has four locations for metadata where users can provide further
 
 ## Proposal
 
-Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../../gov/spec/08_metadata.md#proposal))
+Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov/README.md#metadata))
 
 ```json
 {
@@ -2069,7 +2066,7 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../../
 
 ## Vote
 
-Location: on-chain as json within 255 character limit (mirrors [gov vote](../../gov/spec/08_metadata.md#vote))
+Location: on-chain as json within 255 character limit (mirrors [gov vote](../gov/README.md#metadata))
 
 ```json
 {

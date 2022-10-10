@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: "Auth Overview"
-parent:
-  title: "auth"
--->
+---
+sidebar_position: 1
+---
 
 # `x/auth`
 

@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Upgrade Overview
-parent:
-  title: "upgrade"
--->
+---
+sidebar_position: 1
+---
 
 # `x/upgrade`
 

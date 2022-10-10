@@ -211,7 +211,10 @@ func (msg MsgUpdateDenomMetadata) Type() string {
 
 // ValidateBasic Implements Msg.
 func (msg MsgUpdateDenomMetadata) ValidateBasic() error {
-	//TODO
+	err := msg.Metadata.Validate()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

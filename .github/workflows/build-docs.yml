@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   check-docs-build:
-    if: ${{ github.event.label.name == 'docs' }}
+    if: ${{ contains(github.event.label.name, 'docs') }}
 
     name: Check docs build
     runs-on: ubuntu-latest

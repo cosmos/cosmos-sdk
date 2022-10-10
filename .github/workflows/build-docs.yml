@@ -26,4 +26,5 @@ jobs:
 
       - name: Build docs
         run: |
+          npm install -g npm@8.5.5
           make build-docs

@@ -28,19 +28,19 @@ The transaction tips flow happens in multiple steps.
 
 2. The tipper drafts a transaction to be executed on the chain A. It can include chain A `Msg`s. However, instead of creating a normal transaction, they create the following `AuxSignerData` document:
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L230-L249
 ```
 
 where we have defined `SignDocDirectAux` as:
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L67-L93
 ```
 
 where `Tip` is defined as
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L219-L228
 ```
 

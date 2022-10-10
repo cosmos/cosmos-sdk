@@ -28,7 +28,7 @@ Defining Protobuf `Msg` services is the recommended way to handle messages. A Pr
 
 See an example of a `Msg` service definition from `x/bank` module:
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L12-L19
 ```
 
@@ -89,7 +89,7 @@ Queries should be defined using [Protobuf services](https://developers.google.co
 
 Here's an example of such a `Query` service definition:
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/auth/v1beta1/query.proto#L13-L59
 ```
 

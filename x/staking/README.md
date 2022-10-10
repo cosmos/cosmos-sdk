@@ -90,7 +90,7 @@ it can be updated with governance or the address with authority.
 
 * Params: `0x51 | ProtocolBuffer(Params)`
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L285-L306
 ```
 
@@ -149,11 +149,11 @@ is updated during the validator set update process which takes place in [`EndBlo
 
 Each validator's state is stored in a `Validator` struct:
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L78-L127
 ```
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L24-L76
 ```
 
@@ -169,7 +169,7 @@ funds are held in a `Delegation` data structure. It is owned by one
 delegator, and is associated with the shares for one validator. The sender of
 the transaction is the owner of the bond.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L187-L205
 ```
 
@@ -217,7 +217,7 @@ detected.
 
 A UnbondingDelegation object is created every time an unbonding is initiated.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L207-L220
 ```
 
@@ -259,7 +259,7 @@ A redelegation object is created every time a redelegation occurs. To prevent
 * and, the (re)delegator is attempting to create a _new_ redelegation
   where the source validator for this new redelegation is `Validator X`.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L245-L283
 ```
 
@@ -283,7 +283,7 @@ delegations queue is kept.
 
 * UnbondingDelegation: `0x41 | format(time) -> []DVPair`
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L151-L161
 ```
 
@@ -294,7 +294,7 @@ kept.
 
 * RedelegationQueue: `0x42 | format(time) -> []DVVTriplet`
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/staking.proto#L168-L179
 ```
 
@@ -517,11 +517,11 @@ In this section we describe the processing of the staking messages and the corre
 A validator is created using the `MsgCreateValidator` message.
 The validator must be created with an initial delegation from the operator.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L18-L19
 ```
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L43-L65
 ```
 
@@ -546,11 +546,11 @@ in the first end-block.
 The `Description`, `CommissionRate` of a validator can be updated using the
 `MsgEditValidator` message.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L21-L22
 ```
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L70-L88
 ```
 
@@ -569,11 +569,11 @@ Within this message the delegator provides coins, and in return receives
 some amount of their validator's (newly created) delegator-shares that are
 assigned to `Delegation.Shares`.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L24-L26
 ```
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L93-L104
 ```
 
@@ -605,17 +605,17 @@ will not be added to the power index until it is unjailed.
 The `MsgUndelegate` message allows delegators to undelegate their tokens from
 validator.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L32-L34
 ```
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L128-L139
 ```
 
 This message returns a response containing the completion time of the undelegation:
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L128-L144
 ```
 
@@ -644,11 +644,11 @@ When this message is processed the following actions occur:
 
 The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and delegate back to a previous validator.
 
-```proto reference
+```protobuf reference
 hhttps://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L36-L40
 ```
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L146-L165
 ```
 
@@ -671,17 +671,17 @@ The redelegation command allows delegators to instantly switch validators. Once
 the unbonding period has passed, the redelegation is automatically completed in
 the EndBlocker.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L28-L30
 ```
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L109-L121
 ```
 
 This message returns a response containing the completion time of the redelegation:
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/staking/v1beta1/tx.proto#L123-L126
 ```
 
@@ -714,7 +714,7 @@ When this message is processed the following actions occur:
 The `MsgUpdateParams` update the staking module parameters.
 The params are updated through a governance proposal where the signer is the gov module account address.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/e412ce990251768579d49947991be76a87564f7d/proto/cosmos/staking/v1beta1/tx.proto#L172-L190
 ```
 

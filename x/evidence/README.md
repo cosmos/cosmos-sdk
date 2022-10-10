@@ -219,7 +219,7 @@ The Cosmos SDK handles two types of evidence inside the ABCI `BeginBlock`:
 
 The evidence module handles these two evidence types the same way. First, the Cosmos SDK converts the Tendermint concrete evidence type to an SDK `Evidence` interface using `Equivocation` as the concrete type.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/proto/cosmos/evidence/v1beta1/evidence.proto#L11-L22
 ```
 

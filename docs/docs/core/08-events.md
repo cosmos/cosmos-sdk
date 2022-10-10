@@ -21,7 +21,7 @@ sidebar_position: 1
 Events are implemented in the Cosmos SDK as an alias of the ABCI `Event` type and
 take the form of: `{eventType}.{attributeKey}={attributeValue}`.
 
-```proto reference
+```protobuf reference
 https://github.com/tendermint/tendermint/blob/v0.34.21/proto/tendermint/abci/types.proto#L310-L319
 ```
 

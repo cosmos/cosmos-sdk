@@ -244,11 +244,11 @@ Often times the entity owning that address might not be a single individual. For
 
 To represent weighted vote on chain, we use the following Protobuf message.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L33-L43
 ```
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L136-L150
 ```
 
@@ -336,7 +336,7 @@ to resolve and then execute if the proposal passes. `Proposal`'s are identified 
 unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`,
 `voting_start_time`, `voting_end_time` which track the lifecycle of a proposal
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L42-L59
 ```
 
@@ -384,19 +384,19 @@ parameter set has to be created and the previous one rendered inactive.
 
 ### DepositParams
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L102-L112
 ```
 
 ### VotingParams
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L114-L118
 ```
 
 ### TallyParams
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L120-L132
 ```
 
@@ -436,7 +436,7 @@ const (
 
 ## Deposit
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L34-L40
 ```
 
@@ -559,7 +559,7 @@ More information on how to submit proposals in the [client section](#client).
 Proposals can be submitted by any account via a `MsgSubmitProposal`
 transaction.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L33-L43
 ```
 
@@ -630,7 +630,7 @@ Once a proposal is submitted, if
 `Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
 `MsgDeposit` transactions to increase the proposal's deposit.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L90-L97
 ```
 
@@ -698,7 +698,7 @@ Once `ActiveParam.MinDeposit` is reached, voting period starts. From there,
 bonded Atom holders are able to send `MsgVote` transactions to cast their
 vote on the proposal.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L64-L72
 ```
 

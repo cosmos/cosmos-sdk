@@ -29,7 +29,7 @@ In an effort to remove Amino from the SDK, a new sign mode needs to be created f
 
 We propose to have SIGN_MODE_TEXTUAL’s signing payload `SignDocTextual` to be an array of strings, encoded as a `\n`-delimited string (see point #9). Each string corresponds to one "screen" on the hardware wallet device, with no (or little) additional formatting done by the hardware wallet itself.
 
-```proto
+```protobuf
 message SignDocTextual {
   repeated string screens = 1;
 }
@@ -136,7 +136,7 @@ End of transaction messages
 
 Given the following Protobuf message:
 
-```proto
+```protobuf
 message Grant {
   google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
@@ -167,7 +167,7 @@ Application developers may choose to not follow default renderer value output fo
 
 This is done by setting the `cosmos.msg.v1.textual.expert_custom_renderer` Protobuf option to a non-empty string. This option CAN ONLY be set on a Protobuf message representing transaction message object (implementing `sdk.Msg` interface).
 
-```proto
+```protobuf
 message MsgFooBar {
   // Optional comments to describe in human-readable language the formatting
   // rules of the custom renderer.

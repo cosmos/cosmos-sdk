@@ -104,25 +104,25 @@ type VestingAccount interface {
 
 ### BaseVestingAccount
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L10-L24
 ```
 
 ### ContinuousVestingAccount
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L26-L34
 ```
 
 ### DelayedVestingAccount
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L36-L44
 ```
 
 ### Period
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L46-L53
 ```
 
@@ -134,7 +134,7 @@ type Periods []Period
 
 ### PeriodicVestingAccount
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L55-L64
 ```
 
@@ -156,7 +156,7 @@ type ViewKeeper interface {
 
 ### PermanentLockedAccount
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L66-L76
 ```
 

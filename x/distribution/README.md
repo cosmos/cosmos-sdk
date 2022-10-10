@@ -150,7 +150,7 @@ type DecCoin struct {
 }
 ```
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
 ```
 
@@ -195,7 +195,7 @@ it can be updated with governance or the address with authority.
 
 * Params: `0x09 | ProtocolBuffer(Params)`
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30
 ```
 
@@ -281,7 +281,7 @@ The withdraw address cannot be any of the module accounts. These accounts are bl
 
 Response:
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L31-L41
 ```
 
@@ -333,7 +333,7 @@ The final calculated stake is equivalent to the actual staked coins in the deleg
 
 Response:
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L46-L56
 ```
 
@@ -397,7 +397,7 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 
 Distribution module params can be updated through `MsgUpdateParams`, which can be done using governance proposal and the signer will always be gov module account address. 
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/8822ef2695a1eb8cb30b7432f58f631c73951f1d/proto/cosmos/distribution/v1beta1/tx.proto#L106-L119
 ```
 

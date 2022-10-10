@@ -141,7 +141,7 @@ See [ADR-020](../architecture/adr-020-protobuf-transaction-encoding.md) for deta
 
 The Protobuf DSL is strongly typed, which can make inserting variable-typed fields difficult. Imagine we want to create a `Profile` protobuf message that serves as a wrapper over [an account](../basics/03-accounts.md):
 
-```proto
+```protobuf
 message Profile {
   // account is the account associated to a profile.
   cosmos.auth.v1beta1.BaseAccount account = 1;

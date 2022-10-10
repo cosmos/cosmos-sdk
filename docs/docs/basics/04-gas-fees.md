@@ -87,7 +87,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/tx_msg.go#L38-L46
 
   This enables developers to play with various types for the transaction of their application. In the default `auth` module, the default transaction type is `Tx`: 
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L13-L26
 ```
 

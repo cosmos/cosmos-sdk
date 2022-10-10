@@ -152,7 +152,7 @@ Applications need to support web services that use HTTP requests (e.g. a web wal
 
 Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods, such as in the example below from the `x/auth` module:
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/auth/v1beta1/query.proto#L13-L59
 ```
 

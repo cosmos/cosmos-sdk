@@ -95,7 +95,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/msg_service_router.go#
 
 This method takes care of marshaling the `res` parameter to protobuf and attaching any events on the `ctx.EventManager()` to the `sdk.Result`.
 
-```proto reference
+```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/base/abci/v1beta1/abci.proto#L88-L109
 ```
 

@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -651,6 +652,19 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		priority = ctx.Priority()
 		msCache.Write()
 		anteEvents = events.ToABCIEvents()
+	}
+
+	if mode == runTxModeCheck {
+		err = app.mempool.Insert(ctx, tx.(mempool.Tx))
+		if err != nil {
+			return gInfo, nil, anteEvents, priority, err
+		}
+	} else if mode == runTxModeDeliver {
+		err = app.mempool.Remove(tx.(mempool.Tx))
+		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+			return gInfo, nil, anteEvents, priority,
+				fmt.Errorf("failed to remove tx from mempool: %w", err)
+		}
 	}
 
 	// TODO remove nil check when implemented

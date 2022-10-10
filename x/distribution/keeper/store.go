@@ -20,6 +20,9 @@ func decodeAddr(bz []byte) (sdk.AccAddress, error) {
 func (k Keeper) GetDelegatorWithdrawAddr(ctx sdk.Context, delAddr sdk.AccAddress) sdk.AccAddress {
 	store := ctx.KVStore(k.storeKey)
 	addr, err := store2.GetAndDecode(store, decodeAddr, types.GetDelegatorWithdrawAddrKey(delAddr))
+	if addr == nil {
+		return delAddr
+	}
 	if err != nil {
 		panic(err)
 	}

@@ -27,19 +27,6 @@ func GetAndDecodeWithBool[T any](store types.KVStore, dec func([]byte) (T, bool)
 	return resp, boolval
 }
 
-// func Set(store types.KVStore, key []byte, value []byte) {
-// 	store.Set(key, value)
-// }
-
-// func Delete(store types.KVStore, key []byte) {
-// 	store.Delete(key)
-// }
-
-// func Get(store types.KVStore, key []byte) []byte {
-// 	bz := store.Get(key)
-// 	return bz
-// }
-
 type StoreAPI struct {
 	types.KVStore
 }

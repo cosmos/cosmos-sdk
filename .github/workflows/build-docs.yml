@@ -24,6 +24,11 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+
       - name: Build docs
         run: |
           npm install -g npm@8.5.5

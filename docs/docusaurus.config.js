@@ -4,7 +4,7 @@
 const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
-const lastVersion = "v0.47";
+const lastVersion = "v0.46";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -40,16 +40,16 @@ const config = {
           sidebarPath: require.resolve("./sidebars.js"),
           routeBasePath: "/",
           editUrl: "https://github.com/cosmos/cosmos-sdk/tree/main/",
-          lastVersion: lastVersion,
+          // lastVersion: lastVersion, // we should enable this when we have a stable release with docusaurus
           versions: {
             current: {
               path: "main",
             },
-            "v0.47": {
-              label: "v0.47",
-              path: "v0.47",
-              banner: "none",
-            },
+            // "v0.47": {
+            //   label: "v0.47",
+            //   path: "v0.47",
+            //   banner: "none",
+            // },
           },
         },
         theme: {

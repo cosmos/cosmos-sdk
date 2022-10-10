@@ -159,17 +159,17 @@ func init() {
 	appmodule.Register(
 		&modulev1.Module{},
 		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
+			ProvideModuleBasic,
+			ProvideModule,
 		),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type authzInputs struct {
+type AuthzInputs struct {
 	depinject.In
 
 	Key              *store.KVStoreKey
@@ -180,17 +180,17 @@ type authzInputs struct {
 	MsgServiceRouter *baseapp.MsgServiceRouter
 }
 
-type authzOutputs struct {
+type AuthzOutputs struct {
 	depinject.Out
 
 	AuthzKeeper keeper.Keeper
 	Module      runtime.AppModuleWrapper
 }
 
-func provideModule(in authzInputs) authzOutputs {
+func ProvideModule(in AuthzInputs) AuthzOutputs {
 	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return authzOutputs{AuthzKeeper: k, Module: runtime.WrapAppModule(m)}
+	return AuthzOutputs{AuthzKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 
 // ____________________________________________________________________________

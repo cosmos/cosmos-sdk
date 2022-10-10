@@ -34,6 +34,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 	if err := types.Validate(tmtypes.ConsensusParamsFromProto(consensusParams)); err != nil {
 		return nil, err
 	}
+
 	k.Set(ctx, &consensusParams)
 
 	ctx.EventManager().EmitEvent(

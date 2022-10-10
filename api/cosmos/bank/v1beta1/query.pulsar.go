@@ -2,10 +2,14 @@
 package bankv1beta1
 
 import (
+	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	v1beta11 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	_ "cosmossdk.io/api/cosmos/query/v1"
-	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -13,9 +17,6 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var (
@@ -11132,7 +11133,8 @@ type QuerySendEnabledRequest struct {
 
 	// denoms is the specific denoms you want look up. Leave empty to get all entries.
 	Denoms []string `protobuf:"bytes,1,rep,name=denoms,proto3" json:"denoms,omitempty"`
-	// pagination defines an optional pagination for the request.
+	// pagination defines an optional pagination for the request. This field is
+	// only read if the denoms field is empty.
 	Pagination *v1beta11.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -11179,7 +11181,8 @@ type QuerySendEnabledResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	SendEnabled []*SendEnabled `protobuf:"bytes,1,rep,name=send_enabled,json=sendEnabled,proto3" json:"send_enabled,omitempty"`
-	// pagination defines the pagination in the response.
+	// pagination defines the pagination in the response. This field is only
+	// populated if the denoms field in the request is empty.
 	Pagination *v1beta11.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 

@@ -12,10 +12,10 @@ Accepted
 
 This ADR is a continuation of the motivation, design, and context established in
 [ADR 019](./adr-019-protobuf-state-encoding.md) and
-[ARD 020](./adr-019-protobuf-transaction-encoding.md), namely, we aim to design the
+[ADR 020](./adr-020-protobuf-transaction-encoding.md), namely, we aim to design the
 Protocol Buffer migration path for the client-side of the Cosmos SDK.
 
-This ADR continues from [ARD 020](./adr-020-protobuf-transaction-encoding.md)
+This ADR continues from [ADD 020](./adr-020-protobuf-transaction-encoding.md)
 to specify the encoding of queries.
 
 ## Decision
@@ -31,7 +31,7 @@ custom ABCI queries and even reuse a substantial amount of the GRPC infrastructu
 
 Each module with custom queries should define a service canonically named `Query`:
 
-```proto
+```protobuf
 // x/bank/types/types.proto
 
 service Query {
@@ -54,7 +54,7 @@ from also providing app-level queries that return use the app-level `oneof`s.
 
 A hypothetical example for the `gov` module would look something like:
 
-```proto
+```protobuf
 // x/gov/types/types.proto
 
 import "google/protobuf/any.proto";
@@ -159,7 +159,7 @@ translates REST calls into GRPC calls using special annotations on service
 methods. Modules that want to expose REST queries should add `google.api.http`
 annotations to their `rpc` methods as in this example below.
 
-```proto
+```protobuf
 // x/bank/types/types.proto
 
 service Query {

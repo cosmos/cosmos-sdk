@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Bank Overview
-parent:
-  title: "bank"
--->
+---
+sidebar_position: 1
+---
 
 # `x/bank`
 
@@ -109,8 +106,6 @@ The available permissions are:
 * `Burner`: allows for a module to burn a specific amount of coins.
 * `Staking`: allows for a module to delegate and undelegate a specific amount of coins.
 
-<!-- order: 1 -->
-
 ## State
 
 The `x/bank` module keeps state of the following primary objects:
@@ -135,9 +130,9 @@ it can be updated with governance or the address with authority.
 
 * Params: `0x05 | ProtocolBuffer(Params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc3/proto/cosmos/bank/v1beta1/bank.proto#L11-L16
-
-<!-- order: 2 -->
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc3/proto/cosmos/bank/v1beta1/bank.proto#L11-L16
+```
 
 ## Keepers
 
@@ -284,15 +279,15 @@ type ViewKeeper interface {
 }
 ```
 
-<!-- order: 3 -->
-
 ## Messages
 
 ### MsgSend
 
 Send coins from one address to another.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L21-L32
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L21-L32
+```
 
 The message will fail under the following conditions:
 
@@ -302,7 +297,10 @@ The message will fail under the following conditions:
 ### MsgMultiSend
 
 Send coins from and to a series of different address. If any of the receiving addresses do not correspond to an existing account, a new account is created.
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L37-L45
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L37-L45
+```
 
 The message will fail under the following conditions:
 
@@ -315,7 +313,9 @@ The message will fail under the following conditions:
 
 The `bank` module params can be updated through `MsgUpdateParams`, which can be done using governance proposal. The signer will always be the `gov` module account address. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/e167855c9b99c4e58c1455533c6f88af5ff78ae1/proto/cosmos/bank/v1beta1/tx.proto#L56-L69
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/e167855c9b99c4e58c1455533c6f88af5ff78ae1/proto/cosmos/bank/v1beta1/tx.proto#L56-L69
+```
 
 The message handling can fail if:
 
@@ -324,7 +324,10 @@ The message handling can fail if:
 ### MsgSetSendEnabled
 
 Used with the x/gov module to set create/edit SendEnabled entries.
-+++ https://github.com/cosmos/cosmos-sdk/blob/1bb627e7324278218560d2dd61e010881394f504/proto/cosmos/bank/v1beta1/tx.proto#L94-L107
+
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/1bb627e7324278218560d2dd61e010881394f504/proto/cosmos/bank/v1beta1/tx.proto#L94-L107
+```
 
 The message will fail under the following conditions:
 
@@ -332,8 +335,6 @@ The message will fail under the following conditions:
 * The authority is not x/gov module's address.
 * There are multiple SendEnabled entries with the same Denom.
 * One or more SendEnabled entries has an invalid Denom.
-
-<!-- order: 4 -->
 
 ## Events
 
@@ -481,8 +482,6 @@ In addition to message events, the bank keeper will produce events when the foll
 }
 ```
 
-<!-- order: 5 -->
-
 ## Parameters
 
 The bank module contains the following parameters
@@ -498,8 +497,6 @@ with state store records.
 The default send enabled value controls send transfer capability for all
 coin denominations unless specifically included in the array of `SendEnabled`
 parameters.
-
-<!-- order: 6 -->
 
 ## Client
 

@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 # Cosmovisor
 
 `cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
@@ -265,7 +269,7 @@ Set up app config:
 ```sh
 ./build/simd config chain-id test
 ./build/simd config keyring-backend test
-./build/simd config broadcast-mode block
+./build/simd config broadcast-mode sync
 ```
 
 Initialize the node and overwrite any previous genesis file (never do this in a production environment):

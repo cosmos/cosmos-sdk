@@ -90,7 +90,6 @@ func snapshotItems(items [][]byte, ext snapshottypes.ExtensionSnapshotter) [][]b
 			return snapshottypes.WriteExtensionPayload(protoWriter, payload)
 		})
 		_ = protoWriter.Close()
-		_ = zWriter.Close()
 		_ = bufWriter.Flush()
 		_ = chunkWriter.Close()
 	}()

@@ -13,14 +13,14 @@ permissions:
 jobs:
   release:
     permissions:
-      contents: write  # for goreleaser/goreleaser-action to create a GitHub release
+      contents: write # for goreleaser/goreleaser-action to create a GitHub release
     runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: actions/checkout@v3
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - name: Unshallow
         run: git fetch --prune --unshallow
       - name: Create release

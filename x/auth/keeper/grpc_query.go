@@ -25,13 +25,13 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 	}
 
 	if req.Id < 0 {
-		return nil, status.Error(codes.InvalidArgument, "Invalid account id")
+		return nil, status.Error(codes.InvalidArgument, "invalid account number")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 	address := ak.GetAccountAddressByID(ctx, uint64(req.GetId()))
 	if len(address) == 0 {
-		return nil, status.Errorf(codes.NotFound, "account address not found with id %d", req.Id)
+		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
 	}
 
 	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil
@@ -181,4 +181,40 @@ func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.Add
 	}
 
 	return &types.AddressStringToBytesResponse{AddressBytes: bz}, nil
+}
+
+// AccountInfo implements the AccountInfo query.
+func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccountInfoRequest) (*types.QueryAccountInfoResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Address == "" {
+		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	account := ak.GetAccount(ctx, addr)
+	if account == nil {
+		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
+	}
+
+	pkAny, err := codectypes.NewAnyWithValue(account.GetPubKey())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAccountInfoResponse{
+		Info: &types.BaseAccount{
+			Address:       addr.String(),
+			PubKey:        pkAny,
+			AccountNumber: account.GetAccountNumber(),
+			Sequence:      account.GetSequence(),
+		},
+	}, nil
 }

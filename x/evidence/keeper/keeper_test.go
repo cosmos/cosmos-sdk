@@ -72,8 +72,7 @@ func testEquivocationHandler(_ interface{}) types.Handler {
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx     sdk.Context
-	querier sdk.Querier
+	ctx sdk.Context
 
 	evidenceKeeper keeper.Keeper
 	bankKeeper     *evidencetestutil.MockBankKeeper

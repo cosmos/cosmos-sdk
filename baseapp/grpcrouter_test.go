@@ -11,6 +11,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -35,9 +36,9 @@ func TestGRPCQueryRouter(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, "hello", res.Message)
 
-	require.Panics(t, func() {
-		_, _ = client.Echo(context.Background(), nil)
-	})
+	res, err = client.Echo(context.Background(), nil)
+	require.Nil(t, err)
+	require.Empty(t, res.Message)
 
 	res2, err := client.SayHello(context.Background(), &testdata.SayHelloRequest{Name: "Foo"})
 	require.Nil(t, err)
@@ -153,9 +154,9 @@ func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GR
 			require.NotNil(t, res)
 			require.Equal(t, "hello", res.Message)
 
-			require.Panics(t, func() {
-				_, _ = client.Echo(context.Background(), nil)
-			})
+			res, err = client.Echo(context.Background(), nil)
+			require.Nil(t, err)
+			require.Empty(t, res.Message)
 
 			res2, err := client.SayHello(context.Background(), &testdata.SayHelloRequest{Name: "Foo"})
 			require.Nil(t, err)

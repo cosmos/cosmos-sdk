@@ -1,11 +1,8 @@
-<!--
-order: 0
-title: Group Overview
-parent:
-  title: "group"
--->
+---
+sidebar_position: 1
+---
 
-# Group Module
+# `x/group`
 
 ## Abstract
 
@@ -58,8 +55,6 @@ This module allows the creation and management of on-chain multisig accounts and
     * [REST](#rest)
 * [Metadata](#metadata)
 
-<!-- order: 1 -->
-
 # Concepts
 
 ## Group
@@ -104,7 +99,9 @@ and percentage. Any chain developer can extend upon these two, by creating
 custom decision policies, as long as they adhere to the `DecisionPolicy`
 interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/group/types.go#L27-L41
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/group/types.go#L27-L41
+```
 
 ### Threshold decision policy
 
@@ -214,8 +211,6 @@ Proposals are pruned:
 
 whichever happens first.
 
-<!-- order: 2 -->
-
 # State
 
 The `group` module uses the `orm` package which provides table storage with support for
@@ -318,8 +313,6 @@ The `voteTable` is a primary key table and its `PrimaryKey` is given by
 `voteByVoterIndex` allows to retrieve votes by voter address:
 `0x42 | len([]byte(voter.Address)) | []byte(voter.Address) | PrimaryKey -> []byte()`.
 
-<!-- order: 3 -->
-
 # Msg Service
 
 ## Msg/CreateGroup
@@ -329,7 +322,9 @@ A new group can be created with the `MsgCreateGroup`, which has an admin address
 The metadata has a maximum length that is chosen by the app developer, and
 passed into the group keeper as a config.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L66-L78
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L66-L78
+```
 
 It's expected to fail if
 
@@ -341,7 +336,9 @@ It's expected to fail if
 
 Group members can be updated with the `UpdateGroupMembers`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L87-L100
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L87-L100
+```
 
 In the list of `MemberUpdates`, an existing member can be removed by setting its weight to 0.
 
@@ -354,7 +351,9 @@ It's expected to fail if:
 
 The `UpdateGroupAdmin` can be used to update a group admin.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L105-L117
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L105-L117
+```
 
 It's expected to fail if the signer is not the admin of the group.
 
@@ -362,7 +361,9 @@ It's expected to fail if the signer is not the admin of the group.
 
 The `UpdateGroupMetadata` can be used to update a group metadata.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L122-L134
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L122-L134
+```
 
 It's expected to fail if:
 
@@ -373,7 +374,9 @@ It's expected to fail if:
 
 A new group policy can be created with the `MsgCreateGroupPolicy`, which has an admin address, a group id, a decision policy and some optional metadata.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L143-L160
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L143-L160
+```
 
 It's expected to fail if:
 
@@ -385,7 +388,9 @@ It's expected to fail if:
 
 A new group with policy can be created with the `MsgCreateGroupWithPolicy`, which has an admin address, a list of members, a decision policy, a `group_policy_as_admin` field to optionally set group and group policy admin with group policy address and some optional metadata for group and group policy.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L183-L206
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L183-L206
+```
 
 It's expected to fail for the same reasons as `Msg/CreateGroup` and `Msg/CreateGroupPolicy`.
 
@@ -393,7 +398,9 @@ It's expected to fail for the same reasons as `Msg/CreateGroup` and `Msg/CreateG
 
 The `UpdateGroupPolicyAdmin` can be used to update a group policy admin.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L169-L181
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L169-L181
+```
 
 It's expected to fail if the signer is not the admin of the group policy.
 
@@ -401,7 +408,9 @@ It's expected to fail if the signer is not the admin of the group policy.
 
 The `UpdateGroupPolicyDecisionPolicy` can be used to update a decision policy.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L219-L235
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L219-L235
+```
 
 It's expected to fail if:
 
@@ -412,7 +421,9 @@ It's expected to fail if:
 
 The `UpdateGroupPolicyMetadata` can be used to update a group policy metadata.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L240-L252
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L240-L252
+```
 
 It's expected to fail if:
 
@@ -424,7 +435,9 @@ It's expected to fail if:
 A new proposal can be created with the `MsgSubmitProposal`, which has a group policy account address, a list of proposers addresses, a list of messages to execute if the proposal is accepted and some optional metadata.
 An optional `Exec` value can be provided to try to execute the proposal immediately after proposal creation. Proposers signatures are considered as yes votes in this case.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L275-L298
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L275-L298
+```
 
 It's expected to fail if:
 
@@ -435,7 +448,9 @@ It's expected to fail if:
 
 A proposal can be withdrawn using `MsgWithdrawProposal` which has an `address` (can be either a proposer or the group policy admin) and a `proposal_id` (which has to be withdrawn).
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L307-L316
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L307-L316
+```
 
 It's expected to fail if:
 
@@ -447,7 +462,9 @@ It's expected to fail if:
 A new vote can be created with the `MsgVote`, given a proposal id, a voter address, a choice (yes, no, veto or abstain) and some optional metadata.
 An optional `Exec` value can be provided to try to execute the proposal immediately after voting.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L321-L339
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L321-L339
+```
 
 It's expected to fail if:
 
@@ -458,7 +475,9 @@ It's expected to fail if:
 
 A proposal can be executed with the `MsgExec`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L341-L353
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L341-L353
+```
 
 The messages that are part of this proposal won't be executed if:
 
@@ -469,14 +488,14 @@ The messages that are part of this proposal won't be executed if:
 
 The `MsgLeaveGroup` allows group member to leave a group.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L362-L370
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L362-L370
+```
 
 It's expected to fail if:
 
 * the group member is not part of the group.
 * for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated group.
-
-<!-- order: 4 -->
 
 # Events
 
@@ -547,7 +566,6 @@ The group module emits the following events:
 | cosmos.group.v1.EventLeaveGroup | proposal_id   | {proposalId}                    |
 | cosmos.group.v1.EventLeaveGroup | address       | {address}                       |
 
-<!-- order: 5 -->
 
 # Client
 
@@ -2057,15 +2075,13 @@ Example Output:
 }
 ```
 
-<!-- order: 6 -->
-
 # Metadata
 
 The group module has four locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the group and gov modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure accross chains.
 
 ## Proposal
 
-Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../../gov/spec/08_metadata.md#proposal))
+Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov/README.md#metadata))
 
 ```json
 {
@@ -2073,14 +2089,14 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../../
   "authors": "",
   "summary": "",
   "details": "",
-  "proposalForumURL": "",
-  "voteOptionContext": "",
+  "proposal_forum_url": "",
+  "vote_option_context": "",
 }
 ```
 
 ## Vote
 
-Location: on-chain as json within 255 character limit (mirrors [gov vote](../../gov/spec/08_metadata.md#vote))
+Location: on-chain as json within 255 character limit (mirrors [gov vote](../gov/README.md#metadata))
 
 ```json
 {
@@ -2096,8 +2112,8 @@ Location: off-chain as json object stored on IPFS
 {
   "name": "",
   "description": "",
-  "groupWebsiteURL": "",
-  "groupForumURL": "",
+  "group_website_url": "",
+  "group_forum_url": "",
 }
 ```
 

@@ -1,0 +1,41 @@
+name: Build SimApp
+#  This workflow is run on pushes to main & every Pull Requests where a .go, .mod, .sum have been changed
+on:
+  pull_request:
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+  push:
+    branches:
+      - main
+      - release/**
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: buildjet-4vcpu-ubuntu-2004
+    strategy:
+      matrix:
+        go-arch: ["amd64", "arm", "arm64"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - name: Build
+        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
+      - name: Build Legacy
+        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false COSMOS_BUILD_OPTIONS=legacy make build
+
+      - name: Build Cosmovisor
+        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor

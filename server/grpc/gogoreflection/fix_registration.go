@@ -70,6 +70,7 @@ func compress(fd *dpb.FileDescriptorProto) ([]byte, error) {
 	cw := gzip.NewWriter(buf)
 	_, err = cw.Write(fdBytes)
 	if err != nil {
+		cw.Close()
 		return nil, err
 	}
 	err = cw.Close()

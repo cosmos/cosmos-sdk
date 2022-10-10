@@ -31,7 +31,7 @@ type txKey struct {
 
 // txKeyLess is a comparator for txKeys that first compares priority, then sender, then nonce, uniquely identifying
 // a transaction.
-func txKeyLess(a, b interface{}) int {
+func txKeyLess(a, b any) int {
 	keyA := a.(txKey)
 	keyB := b.(txKey)
 	res := huandu.Int64.Compare(keyA.priority, keyB.priority)
@@ -129,7 +129,7 @@ func (mp *defaultMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 				break
 			}
 
-			mempoolTx, _ := senderTx.Value.(Tx)
+			mempoolTx := senderTx.Value.(Tx)
 			// otherwise, select the transaction and continue iteration
 			selectedTxs = append(selectedTxs, mempoolTx)
 			if txBytes += mempoolTx.Size(); txBytes >= maxBytes {

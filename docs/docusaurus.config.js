@@ -4,7 +4,7 @@
 const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
-const lastVersion = "v0.46";
+// const lastVersion = "v0.47";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -90,8 +90,8 @@ const config = {
             dropdownActiveClassDisabled: true,
             // versions not yet migrated to docusaurus
             dropdownItemsAfter: [
-              { to: "/v0.46", label: "v0.46" },
-              { to: "/v0.45", label: "v0.45" },
+              { to: "/v0.46/", label: "v0.46" },
+              { to: "/v0.45/", label: "v0.45" },
             ],
           },
         ],
@@ -207,7 +207,7 @@ const config = {
         redirects: [
           {
             from: "/",
-            to: "/" + lastVersion,
+            to: "/main",
           },
         ],
       },

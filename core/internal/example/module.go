@@ -3,17 +3,17 @@ package example
 import (
 	"context"
 
-	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+
+	"cosmossdk.io/depinject"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/blockinfo"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/store"
-	"github.com/cosmos/cosmos-sdk/depinject"
-	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 func init() {
@@ -37,7 +37,7 @@ type keeper struct {
 	EventService          event.Service
 	GasService            gas.Service
 	RootInterModuleClient appmodule.RootInterModuleClient
-	AddressCodec          address.Codec
+	AddressCodec          AddressCodec
 }
 
 const (
@@ -96,3 +96,10 @@ func (s keeper) mustEmbedUnimplementedQueryServer() {}
 
 var _ MsgServer = keeper{}
 var _ QueryServer = keeper{}
+
+type AddressCodec interface {
+	// StringToBytes decodes text to bytes
+	StringToBytes(text string) ([]byte, error)
+	// BytesToString encodes bytes to text
+	BytesToString(bz []byte) (string, error)
+}

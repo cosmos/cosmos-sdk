@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"golang.org/x/exp/slices"
 
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -134,8 +134,12 @@ func (a *App) RegisterAPIRoutes(apiSvr *api.Server, _ config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
 	// Register new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register node gRPC service for grpc-gateway.
+	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register grpc-gateway routes for all modules.
 	a.basicManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
@@ -154,6 +158,10 @@ func (a *App) RegisterTendermintService(clientCtx client.Context) {
 		a.interfaceRegistry,
 		a.Query,
 	)
+}
+
+func (a *App) RegisterNodeService(clientCtx client.Context) {
+	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter())
 }
 
 func (a *App) Configurator() module.Configurator {

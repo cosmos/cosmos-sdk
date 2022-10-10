@@ -18,7 +18,9 @@ All packages and modules should have unit test coverage. Modules should have the
 
 The SDK uses `mockgen` to generate mocks for keepers:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/dd556936b23d7443cb7fb1da394c35117efa9da7/scripts/mockgen.sh#L29
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/dd556936b23d7443cb7fb1da394c35117efa9da7/scripts/mockgen.sh#L29
+```
 
 You can read more about mockgen [here](https://github.com/golang/mock).
 
@@ -28,19 +30,27 @@ As an example, we will walkthrough the [keeper tests](https://github.com/cosmos/
 
 The `x/gov` module has a `Keeper` type requires a few external dependencies (ie. imports outside `x/gov` to work properly).
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/keeper.go#L64-L68
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/keeper.go#L64-L68
+```
 
 In order to only test `x/gov`, we mock the [expected keepers](https://docs.cosmos.network/v0.46/building-modules/keeper.html#type-definition) and instantiate the `Keeper` with the mocked dependencies. Note that we may need to configure the mocked dependencies to return the expected values:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/common_test.go#L66-L83
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/common_test.go#L66-L83
+```
 
 This allows us to test the `x/gov` module without having to import other modules.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/keeper_test.go#L3-L35
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/keeper_test.go#L3-L35
+```
 
 We can test then create unit tests using the newly created `Keeper` instance.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/keeper_test.go#L73-L91
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/a92c291880eb6240b7221173282fee0c5f2adb05/x/gov/keeper/keeper_test.go#L73-L91
+```
 
 ## Integration Tests
 
@@ -65,11 +75,15 @@ This is a stripped down version of the `simapp` `AppConfig`:
 
 _Note, you can as well use the `AppConfig` configurator for creating an `AppConfig` [inline](https://github.com/cosmos/cosmos-sdk/blob/15b04c2a87e433fe97877a32162b96ba2ebf8982/x/slashing/app_test.go#L54-L61). There no difference between those two ways, use whichever you prefer._
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/e09516f4795c637ab12b30bf732ce5d86da78424/tests/integration/distribution/keeper/keeper_test.go#L28-L33
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/e09516f4795c637ab12b30bf732ce5d86da78424/tests/integration/distribution/keeper/keeper_test.go#L28-L33
+```
 
 Now the types are injected and we can use them for our tests:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/e09516f4795c637ab12b30bf732ce5d86da78424/tests/integration/distribution/keeper/keeper_test.go#L21-L53
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/e09516f4795c637ab12b30bf732ce5d86da78424/tests/integration/distribution/keeper/keeper_test.go#L21-L53
+```
 
 ## Simulations
 
@@ -77,9 +91,13 @@ Simulations uses as well a minimal application, built with [`depinject`](../buil
 
 Following is an example for `x/gov/` simulations:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/0fbcb0b18381d19b7e556ed07e5467129678d68d/x/gov/simulation/operations_test.go#L290-L307
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/0fbcb0b18381d19b7e556ed07e5467129678d68d/x/gov/simulation/operations_test.go#L290-L307
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/simulation/operations_test.go#L67-L109
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/simulation/operations_test.go#L67-L109
+```
 
 ## End-to-end Tests
 

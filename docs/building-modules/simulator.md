@@ -6,7 +6,7 @@ order: 14
 
 ## Prerequisites
 
-* [Cosmos Blockchain Simulator](./../using-the-sdk/simulation.md)
+* [Cosmos Blockchain Simulator](./../core/simulation.md)
 
 ## Synopsis
 

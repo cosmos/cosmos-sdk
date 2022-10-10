@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"cosmossdk.io/core/appmodule"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -189,15 +190,15 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Provide(ProvideModuleBasic, ProvideModule),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type evidenceInputs struct {
+type EvidenceInputs struct {
 	depinject.In
 
 	Key *store.KVStoreKey
@@ -207,16 +208,16 @@ type evidenceInputs struct {
 	SlashingKeeper types.SlashingKeeper
 }
 
-type evidenceOutputs struct {
+type EvidenceOutputs struct {
 	depinject.Out
 
 	EvidenceKeeper keeper.Keeper
 	Module         runtime.AppModuleWrapper
 }
 
-func provideModule(in evidenceInputs) evidenceOutputs {
+func ProvideModule(in EvidenceInputs) EvidenceOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.SlashingKeeper)
 	m := NewAppModule(*k)
 
-	return evidenceOutputs{EvidenceKeeper: *k, Module: runtime.WrapAppModule(m)}
+	return EvidenceOutputs{EvidenceKeeper: *k, Module: runtime.WrapAppModule(m)}
 }

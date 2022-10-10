@@ -174,11 +174,10 @@ func (k Keeper) decodeValHistoricalRewards(bz []byte) (types.ValidatorHistorical
 // get historical rewards for a particular period
 func (k Keeper) GetValidatorHistoricalRewards(ctx sdk.Context, val sdk.ValAddress, period uint64) (rewards types.ValidatorHistoricalRewards) {
 	store := ctx.KVStore(k.storeKey)
-	r, err := store2.GetAndDecode(store, k.decodeValHistoricalRewards, types.GetValidatorHistoricalRewardsKey(val, period))
+	rewards, err := store2.GetAndDecode(store, k.decodeValHistoricalRewards, types.GetValidatorHistoricalRewardsKey(val, period))
 	if err != nil {
 		panic(err)
 	}
-	rewards = types.ValidatorHistoricalRewards(r)
 	return
 }
 

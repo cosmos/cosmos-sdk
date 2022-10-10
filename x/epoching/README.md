@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Epoching Overview
-parent:
-  title: "epoching"
--->
+---
+sidebar_position: 1
+---
 
 # `x/epoching`
 
@@ -35,8 +32,6 @@ func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey) Keeper {
 ### Contents
 
 * [State](#state)
-
-<!-- order: 1 -->
 
 # State
 

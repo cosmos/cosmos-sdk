@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: "Auth Overview"
-parent:
-  title: "auth"
--->
+---
+sidebar_position: 1
+---
 
 # `x/auth`
 
@@ -29,11 +26,9 @@ This module is used in the Cosmos Hub.
     * [Account Keeper](#account-keeper)
 * [Parameters](#parameters)
 * [Client](#client)
-  * [CLI](#cli)
-  * [gRPC](#grpc)
-  * [REST](#rest)
-
-<!-- order: 1 -->
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 
 # Concepts
 
@@ -74,8 +69,6 @@ minimum gas prices set, such a mechanism could be implemented by node operators.
 Because the market value for tokens will fluctuate, validators are expected to
 dynamically adjust their minimum gas prices to a level that would encourage the
 use of the network.		
-
-<!-- order: 2 -->
 
 # State
 
@@ -147,8 +140,6 @@ message BaseAccount {
 
 See [Vesting](https://docs.cosmos.network/main/modules/vesting/).
 
-<!-- order: 3 -->
-
 # AnteHandlers
 
 The `x/auth` module presently has no transaction handlers of its own, but does expose the special `AnteHandler`, used for performing basic validity checks on a transaction, such that it could be thrown out of the mempool.
@@ -185,8 +176,6 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 * `SigVerificationDecorator`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
 
 * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
-
-<!-- order: 4 -->
 
 # Keepers
 
@@ -232,8 +221,6 @@ type AccountKeeperI interface {
 }
 ```
 
-<!-- order: 5 -->
-
 # Parameters
 
 The auth module contains the following parameters:
@@ -245,8 +232,6 @@ The auth module contains the following parameters:
 | TxSizeCostPerByte      |      uint64     | 10      |
 | SigVerifyCostED25519   |      uint64     | 590     |
 | SigVerifyCostSecp256k1 |      uint64     | 1000    |
-
-<!-- order: 6 -->
 
 # Client
 

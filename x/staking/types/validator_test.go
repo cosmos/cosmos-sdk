@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -290,7 +290,7 @@ func TestValidatorsSortTendermint(t *testing.T) {
 	valz := types.Validators(vals)
 
 	// create expected tendermint validators by converting to tendermint then sorting
-	expectedVals, err := teststaking.ToTmValidators(valz, sdk.DefaultPowerReduction)
+	expectedVals, err := testutil.ToTmValidators(valz, sdk.DefaultPowerReduction)
 	require.NoError(t, err)
 	sort.Sort(tmtypes.ValidatorsByVotingPower(expectedVals))
 
@@ -298,7 +298,7 @@ func TestValidatorsSortTendermint(t *testing.T) {
 	sort.SliceStable(valz, func(i, j int) bool {
 		return types.ValidatorsByVotingPower(valz).Less(i, j, sdk.DefaultPowerReduction)
 	})
-	actualVals, err := teststaking.ToTmValidators(valz, sdk.DefaultPowerReduction)
+	actualVals, err := testutil.ToTmValidators(valz, sdk.DefaultPowerReduction)
 	require.NoError(t, err)
 
 	require.Equal(t, expectedVals, actualVals, "sorting in SDK is not the same as sorting in Tendermint")
@@ -318,7 +318,7 @@ func TestValidatorToTm(t *testing.T) {
 		require.NoError(t, err)
 		expected[i] = tmtypes.NewValidator(tmPk, val.ConsensusPower(sdk.DefaultPowerReduction))
 	}
-	vs, err := teststaking.ToTmValidators(vals, sdk.DefaultPowerReduction)
+	vs, err := testutil.ToTmValidators(vals, sdk.DefaultPowerReduction)
 	require.NoError(t, err)
 	require.Equal(t, expected, vs)
 }

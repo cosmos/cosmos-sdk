@@ -19,12 +19,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -196,7 +195,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
 	// unbonding delegation
-	udb := types.NewUnbondingDelegation(delegator.Address, validator0.GetOperator(), s.app.LastBlockHeight(), blockTime.Add(2*time.Minute), delTokens)
+	udb := types.NewUnbondingDelegation(delegator.Address, validator0.GetOperator(), s.app.LastBlockHeight(), blockTime.Add(2*time.Minute), delTokens, 0)
 	s.stakingKeeper.SetUnbondingDelegation(ctx, udb)
 	s.setupValidatorRewards(ctx, validator0.GetOperator())
 
@@ -367,7 +366,7 @@ func (s *SimTestSuite) getTestingValidator(ctx sdk.Context, commission types.Com
 	account := s.accounts[n]
 	valPubKey := account.PubKey
 	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
-	validator := teststaking.NewValidator(s.T(), valAddr, valPubKey)
+	validator := testutil.NewValidator(s.T(), valAddr, valPubKey)
 	validator, err := validator.SetInitialCommission(commission)
 	s.Require().NoError(err)
 

@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Distribution Overview
-parent:
-  title: "distribution"
--->
+---
+sidebar_position: 1
+---
 
 # `x/distribution`
 
@@ -97,8 +94,6 @@ to set up a script to periodically withdraw and rebond rewards.
     * [CLI](#cli)
     * [gRPC](#grpc)
 
-<!-- order: 1 -->
-
 # Concepts
 
 In Proof of Stake (PoS) blockchains, rewards gained from transaction fees are paid to validators. The fee distribution module fairly distributes the rewards to the validators' constituent delegators.
@@ -129,8 +124,6 @@ along with each historical reward storage entry. Each time a new object (delegat
 is created which might need to reference the historical record, the reference count is incremented.
 Each time one object which previously needed to reference the historical record is deleted, the reference
 count is decremented. If the reference count hits zero, the historical record is deleted.
-
-<!-- order: 2 -->
 
 # State
 
@@ -202,8 +195,6 @@ it can be updated with governance or the address with authority.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30
 
-<!-- order: 3 -->
-
 # Begin Block
 
 At each `BeginBlock`, all fees received in the previous block are transferred to
@@ -216,7 +207,7 @@ block, the different claims on the fees collected are updated as follows:
 
 ## The Distribution Scheme
 
-See [params](07_params.md) for description of parameters.
+See [params](#params) for description of parameters.
 
 Let `fees` be the total fees collected in the previous block, including
 inflationary rewards to the stake. All fees are collected in a specific module
@@ -255,8 +246,7 @@ validator sets a maximum rate and a maximum daily increase. These maximums canno
 
 The outstanding rewards that the operator is entitled to are stored in
 `ValidatorAccumulatedCommission`, while the rewards the delegators are entitled
-to are stored in `ValidatorCurrentRewards`. The [F1 fee distribution
-scheme](01_concepts.md) is used to calculate the rewards per delegator as they
+to are stored in `ValidatorCurrentRewards`. The [F1 fee distribution scheme](#concepts) is used to calculate the rewards per delegator as they
 withdraw or update their delegation, and is thus not handled in `BeginBlock`.
 
 ### Example Distribution
@@ -275,8 +265,6 @@ the total rewards. Consequently, the reward for a single delegator is:
 = (delegator proportion of the validator power / total bonded power) * (1 -
 community tax rate) * (1 - validator commission rate)
 ```
-
-<!-- order: 4 -->
 
 # Messages
 
@@ -407,8 +395,6 @@ The message handling can fail if:
 
 * signer is not the gov module account address.
 
-<!-- order: 5 -->
-
 # Hooks
 
 Available hooks that can be called by and from this module.
@@ -465,8 +451,6 @@ Any remaining rewards are dust amounts.
 * The slash event is stored for later use.
   The slash event will be referenced when calculating delegator rewards.
 
-<!-- order: 6 -->
-
 # Events
 
 The distribution module emits the following events:
@@ -512,8 +496,6 @@ The distribution module emits the following events:
 | message    | action        | withdraw_validator_commission |
 | message    | sender        | {senderAddress}               |
 
-<!-- order: 7 -->
-
 # Parameters
 
 The distribution module contains the following parameters:
@@ -527,8 +509,6 @@ The distribution module contains the following parameters:
 
 * [0] `communitytax`, `baseproposerreward` and `bonusproposerreward` must be
   positive and their sum cannot exceed 1.00.
-
-<!-- order: 8 -->
 
 # Client
 

@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -38,7 +38,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 
 	distrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
@@ -107,7 +107,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(100000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
@@ -137,7 +137,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// slash the validator by 50%
-	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1))
+	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1), stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 
 	// retrieve validator
 	val = stakingKeeper.Validator(ctx, valAddrs[0])
@@ -180,7 +180,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(100000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 
@@ -212,7 +212,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// slash the validator by 50%
-	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1))
+	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1), stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 
 	// fetch the validator again
 	val = stakingKeeper.Validator(ctx, valAddrs[0])
@@ -226,7 +226,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// slash the validator by 50% again
-	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower/2, sdk.NewDecWithPrec(5, 1))
+	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower/2, sdk.NewDecWithPrec(5, 1), stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 
 	// fetch the validator again
 	val = stakingKeeper.Validator(ctx, valAddrs[0])
@@ -267,7 +267,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(100000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 
@@ -350,7 +350,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	balanceTokens := stakingKeeper.TokensFromConsensusPower(ctx, balancePower)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 
 	// set module account coins
 	distrAcc := distrKeeper.GetDistributionAccount(ctx)
@@ -431,7 +431,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 
 	// create validator with 50% commission
 	valPower := int64(100)
@@ -466,10 +466,10 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// slash the validator by 50%
-	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1))
+	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1), stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 
 	// slash the validator by 50% again
-	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower/2, sdk.NewDecWithPrec(5, 1))
+	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower/2, sdk.NewDecWithPrec(5, 1), stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 
 	// fetch the validator again
 	val = stakingKeeper.Validator(ctx, valAddrs[0])
@@ -509,7 +509,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 
@@ -535,7 +535,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	// slash the validator
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
-	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1))
+	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1), stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// second delegation
@@ -554,7 +554,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	// slash the validator again
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
-	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1))
+	stakingKeeper.Slash(ctx, valConsAddr0, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1), stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// fetch updated validator
@@ -599,7 +599,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	distrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 	initial := int64(20)
@@ -758,7 +758,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
 	initial := int64(20)

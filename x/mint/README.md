@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Mint Overview
-parent:
-  title: "mint"
--->
+---
+sidebar_position: 1
+---
 
 # `x/mint`
 
@@ -49,7 +46,6 @@ It can be broken down in the following way:
 * If the inflation rate is above the goal %-bonded the inflation rate will
    decrease until a minimum value is reached
 
-<!-- order: 1 -->
 
 # State
 
@@ -70,7 +66,6 @@ it can be updated with governance or the address with authority.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/mint/v1beta1/mint.proto#L25-L57
 
-<!-- order: 2 -->
 
 # Begin-Block
 
@@ -135,7 +130,6 @@ BlockProvision(params Params) sdk.Coin {
 	return sdk.NewCoin(params.MintDenom, provisionAmt.Truncate())
 ```
 
-<!-- order: 3 -->
 
 # Parameters
 
@@ -150,7 +144,6 @@ The minting module contains the following parameters:
 | GoalBonded          | string (dec)    | "0.670000000000000000" |
 | BlocksPerYear       | string (uint64) | "6311520"              |
 
-<!-- order: 4 -->
 
 # Events
 
@@ -165,7 +158,6 @@ The minting module emits the following events:
 | mint | annual_provisions | {annualProvisions} |
 | mint | amount            | {amount}           |
 
-<!-- order: 5 -->
 
 # Client
 

@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Authz Overview
-parent:
-  title: "authz"
--->
+---
+sidebar_position: 1
+---
 
 # `x/authz`
 
@@ -30,8 +27,6 @@ granting arbitrary privileges from one account (the granter) to another account 
     * [CLI](#cli)
     * [gRPC](#grpc)
     * [REST](#rest)
-
-<!-- order: 1 -->
 
 # Concepts
 
@@ -85,8 +80,6 @@ In order to prevent DoS attacks, granting `StakeAuthorization`s with `x/authz` i
 
 Since the state maintaining a list for granter, grantee pair with same expiration, we are iterating over the list to remove the grant (incase of any revoke of paritcular `msgType`) from the list and we are charging 20 gas per iteration.
 
-<!-- order: 2 -->
-
 # State
 
 ## Grant
@@ -110,8 +103,6 @@ The `expiration_bytes` are the expiration date in UTC with the format `"2006-01-
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/authz/keeper/keys.go#L78-L93
 
 The `GrantQueueItem` object contains the list of type urls between granter and grantee that expire at the time indicated in the key.
-
-<!-- order: 3 -->
 
 # Messages
 
@@ -156,13 +147,9 @@ The message handling should fail if:
 * grantee doesn't have permission to run the transaction.
 * if granted authorization is expired.
 
-<!-- order: 4 -->
-
 # Events
 
 The authz module emits proto events defined in [the Protobuf reference](https://buf.build/cosmos/cosmos-sdk/docs/main/cosmos.authz.v1beta1#cosmos.authz.v1beta1.EventGrant).
-
-<!-- order: 5 -->
 
 # Client
 

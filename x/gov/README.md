@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Gov Overview
-parent:
-  title: "gov"
--->
+---
+sidebar_position: 1
+---
 
 # `x/gov`
 
@@ -27,7 +24,7 @@ they don't vote themselves.
 deposits if the proposal was accepted OR if the proposal never entered voting period.
 
 This module will be used in the Cosmos Hub, the first Hub in the Cosmos network.
-Features that may be added in the future are described in [Future Improvements](05_future_improvements.md).
+Features that may be added in the future are described in [Future Improvements](#future-improvements).
 
 ## Contents
 
@@ -124,8 +121,6 @@ staking token of the chain.
 * [Metadata](#metadata)
     * [Proposal](#proposal-3)
     * [Vote](#vote-5)
-
-<!-- order: 1 -->
 
 # Concepts
 
@@ -326,8 +321,6 @@ nodes, non-validating full nodes and light-nodes) are expected to switch to the
 new version of the software.
 
 Validators and full nodes can use an automation tool, such as [Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/main/cosmovisor/README.md), for automatically switching version of the chain.
-
-<!-- order: 2 -->
 
 # State
 
@@ -543,9 +536,7 @@ These proposal are defined by their types.
 
 While proposals should use the new implementation of the governance proposal, we need still to use legacy proposal in order to submit a `software-upgrade` and a `cancel-software-upgrade` proposal.
 
-More information on how to submit proposals in the [client section](07_client.md).
-
-<!-- order: 3 -->
+More information on how to submit proposals in the [client section](#client).
 
 # Messages
 
@@ -727,8 +718,6 @@ handled:
         store(Governance, <txGovVote.ProposalID|'addresses'|sender>, txGovVote.Vote)   // Voters can vote multiple times. Re-voting overrides previous vote. This is ok because tallying is done once at the end.
 ```
 
-<!-- order: 4 -->
-
 # Events
 
 The governance module emits the following events:
@@ -791,8 +780,6 @@ The governance module emits the following events:
 
 * [0] Event only emitted if the voting period starts during the submission.
 
-<!-- order: 5 -->
-
 # Future Improvements
 
 The current documentation only describes the minimum viable product for the
@@ -820,8 +807,6 @@ governance module. Future improvements may include:
   `proposal.Deposit`, one for anti-spam (same as in MVP) and an other one to
   reward third party auditors.
 
-<!-- order: 6 -->
-
 # Parameters
 
 The governance module contains the following parameters:
@@ -846,8 +831,6 @@ The governance module contains the following parameters:
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need
 to be included and not the entire parameter object structure.
-
-<!-- order: 7 -->
 
 # Client
 
@@ -2650,7 +2633,6 @@ Example Output:
 }
 ```
 
-<!-- order: 8 -->
 
 # Metadata
 
@@ -2658,7 +2640,7 @@ The gov module has two locations for metadata where users can provide further co
 
 ## Proposal
 
-Location: off-chain as json object stored on IPFS (mirrors [group proposal](../../group/spec/06_metadata.md#proposal))
+Location: off-chain as json object stored on IPFS (mirrors [group proposal](../group/README.md#metadata))
 
 ```json
 {
@@ -2673,7 +2655,7 @@ Location: off-chain as json object stored on IPFS (mirrors [group proposal](../.
 
 ## Vote
 
-Location: on-chain as json within 255 character limit (mirrors [group vote](../../group/spec/06_metadata.md#vote))
+Location: on-chain as json within 255 character limit (mirrors [group vote](../group/README.md#metadata))
 
 ```json
 {

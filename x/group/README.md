@@ -1,11 +1,8 @@
-<!--
-order: 0
-title: Group Overview
-parent:
-  title: "group"
--->
+---
+sidebar_position: 1
+---
 
-# Group Module
+# `x/group`
 
 ## Abstract
 
@@ -57,8 +54,6 @@ This module allows the creation and management of on-chain multisig accounts and
     * [gRPC](#grpc)
     * [REST](#rest)
 * [Metadata](#metadata)
-
-<!-- order: 1 -->
 
 # Concepts
 
@@ -214,8 +209,6 @@ Proposals are pruned:
 
 whichever happens first.
 
-<!-- order: 2 -->
-
 # State
 
 The `group` module uses the `orm` package which provides table storage with support for
@@ -317,8 +310,6 @@ The `voteTable` is a primary key table and its `PrimaryKey` is given by
 
 `voteByVoterIndex` allows to retrieve votes by voter address:
 `0x42 | len([]byte(voter.Address)) | []byte(voter.Address) | PrimaryKey -> []byte()`.
-
-<!-- order: 3 -->
 
 # Msg Service
 
@@ -476,8 +467,6 @@ It's expected to fail if:
 * the group member is not part of the group.
 * for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated group.
 
-<!-- order: 4 -->
-
 # Events
 
 The group module emits the following events:
@@ -547,7 +536,6 @@ The group module emits the following events:
 | cosmos.group.v1.EventLeaveGroup | proposal_id   | {proposalId}                    |
 | cosmos.group.v1.EventLeaveGroup | address       | {address}                       |
 
-<!-- order: 5 -->
 
 # Client
 
@@ -2057,15 +2045,13 @@ Example Output:
 }
 ```
 
-<!-- order: 6 -->
-
 # Metadata
 
 The group module has four locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the group and gov modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure accross chains.
 
 ## Proposal
 
-Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../../gov/spec/08_metadata.md#proposal))
+Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov/README.md#metadata))
 
 ```json
 {
@@ -2080,7 +2066,7 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../../
 
 ## Vote
 
-Location: on-chain as json within 255 character limit (mirrors [gov vote](../../gov/spec/08_metadata.md#vote))
+Location: on-chain as json within 255 character limit (mirrors [gov vote](../gov/README.md#metadata))
 
 ```json
 {

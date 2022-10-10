@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/url"
@@ -17,6 +18,14 @@ import (
 	"unsafe"
 
 	"cosmossdk.io/depinject"
+	"github.com/cosmos/gogoproto/jsonpb"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -34,13 +43,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	"github.com/cosmos/gogoproto/jsonpb"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var (
@@ -102,10 +104,13 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*baseapp.Base
 
 	// patch in TxConfig instead of using an output from x/auth/tx
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
 
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
 
 	r := rand.New(rand.NewSource(3920758213583))
 	keyCounter := 0
@@ -571,9 +576,13 @@ func TestGRPCQuery(t *testing.T) {
 	app := setupBaseApp(t, grpcQueryOpt)
 	app.GRPCQueryRouter().SetInterfaceRegistry(codectypes.NewInterfaceRegistry())
 
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	app.Commit()
 
 	req := testdata.SayHelloRequest{Name: "foo"}
@@ -1886,7 +1895,9 @@ func TestQuery(t *testing.T) {
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
 
 	// NOTE: "/store/key1" tells us KVStore
 	// and the final "/key" says to use the data as the
@@ -2152,17 +2163,19 @@ type paramStore struct {
 	db *dbm.MemDB
 }
 
-func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
+var ParamstoreKey = []byte("paramstore")
+
+func (ps *paramStore) Set(_ sdk.Context, value *tmproto.ConsensusParams) {
 	bz, err := json.Marshal(value)
 	if err != nil {
 		panic(err)
 	}
 
-	ps.db.Set(key, bz)
+	ps.db.Set(ParamstoreKey, bz)
 }
 
-func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
-	ok, err := ps.db.Has(key)
+func (ps *paramStore) Has(_ sdk.Context) bool {
+	ok, err := ps.db.Has(ParamstoreKey)
 	if err != nil {
 		panic(err)
 	}
@@ -2170,17 +2183,21 @@ func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
 	return ok
 }
 
-func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
-	bz, err := ps.db.Get(key)
+func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
+	bz, err := ps.db.Get(ParamstoreKey)
 	if err != nil {
 		panic(err)
 	}
 
 	if len(bz) == 0 {
-		return
+		return nil, errors.New("params not found")
 	}
 
-	if err := json.Unmarshal(bz, ptr); err != nil {
+	var params tmproto.ConsensusParams
+
+	if err := json.Unmarshal(bz, &params); err != nil {
 		panic(err)
 	}
+
+	return &params, nil
 }

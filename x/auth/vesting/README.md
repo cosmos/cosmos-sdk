@@ -1,41 +1,37 @@
-<!--
-order: 0
-title: "Vesting Overview"
-parent:
-  title: "vesting"
--->
+---
+sidebar_position: 1
+---
 
-# Vesting
+# `x/auth/vesting`
 
-* [Vesting](#vesting)
-    * [Intro and Requirements](#intro-and-requirements)
-    * [Note](#note)
-    * [Vesting Account Types](#vesting-account-types)
-        * [BaseVestingAccount](#basevestingaccount)
-        * [ContinuousVestingAccount](#continuousvestingaccount)
-        * [DelayedVestingAccount](#delayedvestingaccount)
-        * [Period](#period)
-        * [PeriodicVestingAccount](#periodicvestingaccount)
-        * [PermanentLockedAccount](#permanentlockedaccount)
-    * [Vesting Account Specification](#vesting-account-specification)
-        * [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
-            * [Continuously Vesting Accounts](#continuously-vesting-accounts)
-        * [Periodic Vesting Accounts](#periodic-vesting-accounts)
-            * [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
-        * [Transferring/Sending](#transferringsending)
-            * [Keepers/Handlers](#keepershandlers)
-        * [Delegating](#delegating)
-            * [Keepers/Handlers](#keepershandlers-1)
-        * [Undelegating](#undelegating)
-            * [Keepers/Handlers](#keepershandlers-2)
-    * [Keepers & Handlers](#keepers--handlers)
-    * [Genesis Initialization](#genesis-initialization)
-    * [Examples](#examples)
-        * [Simple](#simple)
-        * [Slashing](#slashing)
-        * [Periodic Vesting](#periodic-vesting)
-    * [Glossary](#glossary)
- * [Client](#client)
+* [Intro and Requirements](#intro-and-requirements)
+* [Note](#note)
+* [Vesting Account Types](#vesting-account-types)
+    * [BaseVestingAccount](#basevestingaccount)
+    * [ContinuousVestingAccount](#continuousvestingaccount)
+    * [DelayedVestingAccount](#delayedvestingaccount)
+    * [Period](#period)
+    * [PeriodicVestingAccount](#periodicvestingaccount)
+    * [PermanentLockedAccount](#permanentlockedaccount)
+* [Vesting Account Specification](#vesting-account-specification)
+    * [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
+        * [Continuously Vesting Accounts](#continuously-vesting-accounts)
+    * [Periodic Vesting Accounts](#periodic-vesting-accounts)
+        * [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
+    * [Transferring/Sending](#transferringsending)
+        * [Keepers/Handlers](#keepershandlers)
+    * [Delegating](#delegating)
+        * [Keepers/Handlers](#keepershandlers-1)
+    * [Undelegating](#undelegating)
+        * [Keepers/Handlers](#keepershandlers-2)
+* [Keepers & Handlers](#keepers--handlers)
+* [Genesis Initialization](#genesis-initialization)
+* [Examples](#examples)
+    * [Simple](#simple)
+    * [Slashing](#slashing)
+    * [Periodic Vesting](#periodic-vesting)
+* [Glossary](#glossary)
+* [Client](#client)
     * [CLI](#vesting#cli)
 
 ## Intro and Requirements

@@ -13,14 +13,15 @@ import (
 var _ Mempool = (*defaultMempool)(nil)
 
 // defaultMempool is the SDK's default mempool implementation which stores txs in a partially ordered set
-// by 2 dimensions; priority, and sender-nonce.  Internally it uses one priority ordered skip list and one skip list
-// per sender ordered by nonce (sender-nonce).  When there are multiple txs from the same sender, they are not
-// always comparable by priority to other sender txs and must be partially ordered by both sender-nonce and priority.
+// by 2 dimensions: priority, and sender-nonce (sequence number).  Internally it uses one priority ordered skip list
+// and one skip per sender ordered by nonce (sender-nonce).  When there are multiple txs from the same sender,
+// they are not always comparable by priority to other sender txs and must be partially ordered by both sender-nonce
+// and priority.
 type defaultMempool struct {
-	priorities *huandu.SkipList
-	senders    map[string]*huandu.SkipList
-	scores     map[txKey]int64
-	iterations int
+	priorityIndex *huandu.SkipList
+	senderIndices map[string]*huandu.SkipList
+	scores        map[txKey]int64
+	iterations    int
 }
 
 type txKey struct {
@@ -51,9 +52,9 @@ func txKeyLess(a, b any) int {
 // by 2 dimensions; priority, and sender-nonce.
 func NewDefaultMempool() Mempool {
 	return &defaultMempool{
-		priorities: huandu.New(huandu.LessThanFunc(txKeyLess)),
-		senders:    make(map[string]*huandu.SkipList),
-		scores:     make(map[txKey]int64),
+		priorityIndex: huandu.New(huandu.LessThanFunc(txKeyLess)),
+		senderIndices: make(map[string]*huandu.SkipList),
+		scores:        make(map[txKey]int64),
 	}
 }
 
@@ -77,27 +78,27 @@ func (mp *defaultMempool) Insert(ctx sdk.Context, tx Tx) error {
 	nonce := sig.Sequence
 	tk := txKey{nonce: nonce, priority: ctx.Priority(), sender: sender}
 
-	senderTxs, ok := mp.senders[sender]
-	// initialize sender mempool if not found
+	senderIndex, ok := mp.senderIndices[sender]
 	if !ok {
-		senderTxs = huandu.New(huandu.LessThanFunc(func(a, b interface{}) int {
+		senderIndex = huandu.New(huandu.LessThanFunc(func(a, b any) int {
 			return huandu.Uint64.Compare(b.(txKey).nonce, a.(txKey).nonce)
 		}))
-		mp.senders[sender] = senderTxs
+		// initialize sender index if not found
+		mp.senderIndices[sender] = senderIndex
 	}
 
-	// Since senderTxs is scored by nonce, a changed priority will overwrite the existing txKey.
-	senderTxs.Set(tk, tx)
+	// Since senderIndex is scored by nonce, a changed priority will overwrite the existing txKey.
+	senderIndex.Set(tk, tx)
 
-	// Since mp.priorities is scored by priority, then sender, then nonce, a changed priority will create a new key,
-	// so we must remove the old key and re-insert it to avoid having the same tx with different priorities indexed
+	// Since mp.priorityIndex is scored by priority, then sender, then nonce, a changed priority will create a new key,
+	// so we must remove the old key and re-insert it to avoid having the same tx with different priorityIndex indexed
 	// twice in the mempool.  This O(log n) remove operation is rare and only happens when a tx's priority changes.
 	sk := txKey{nonce: nonce, sender: sender}
 	if oldScore, txExists := mp.scores[sk]; txExists {
-		mp.priorities.Remove(txKey{nonce: nonce, priority: oldScore, sender: sender})
+		mp.priorityIndex.Remove(txKey{nonce: nonce, priority: oldScore, sender: sender})
 	}
 	mp.scores[sk] = ctx.Priority()
-	mp.priorities.Set(tk, tx)
+	mp.priorityIndex.Set(tk, tx)
 
 	return nil
 }
@@ -111,7 +112,7 @@ func (mp *defaultMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 	senderCursors := make(map[string]*huandu.Element)
 
 	// start with the highest priority sender
-	priorityNode := mp.priorities.Front()
+	priorityNode := mp.priorityIndex.Front()
 	for priorityNode != nil {
 		priorityKey := priorityNode.Key().(txKey)
 		nextHighestPriority, nextPriorityNode := nextPriority(priorityNode)
@@ -149,7 +150,7 @@ func (mp *defaultMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 func (mp *defaultMempool) fetchSenderCursor(senderCursors map[string]*huandu.Element, sender string) *huandu.Element {
 	senderTx, ok := senderCursors[sender]
 	if !ok {
-		senderTx = mp.senders[sender].Front()
+		senderTx = mp.senderIndices[sender].Front()
 	}
 	return senderTx
 }
@@ -167,7 +168,7 @@ func nextPriority(priorityNode *huandu.Element) (int64, *huandu.Element) {
 
 // CountTx returns the number of transactions in the mempool.
 func (mp *defaultMempool) CountTx() int {
-	return mp.priorities.Len()
+	return mp.priorityIndex.Len()
 }
 
 // Remove removes a transaction from the mempool in O(log n) time, returning an error if unsuccessful.
@@ -190,12 +191,12 @@ func (mp *defaultMempool) Remove(tx Tx) error {
 	}
 	tk := txKey{nonce: nonce, priority: priority, sender: sender}
 
-	senderTxs, ok := mp.senders[sender]
+	senderTxs, ok := mp.senderIndices[sender]
 	if !ok {
 		return fmt.Errorf("sender %s not found", sender)
 	}
 
-	mp.priorities.Remove(tk)
+	mp.priorityIndex.Remove(tk)
 	senderTxs.Remove(tk)
 	delete(mp.scores, sk)
 
@@ -204,7 +205,7 @@ func (mp *defaultMempool) Remove(tx Tx) error {
 
 func DebugPrintKeys(mempool Mempool) {
 	mp := mempool.(*defaultMempool)
-	n := mp.priorities.Front()
+	n := mp.priorityIndex.Front()
 	for n != nil {
 		k := n.Key().(txKey)
 		fmt.Printf("%s, %d, %d\n", k.sender, k.priority, k.nonce)

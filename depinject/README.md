@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 # Cosmos SDK Dependency Injection `depinject` Module
 
 ## Overview

@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Authz Overview
-parent:
-  title: "authz"
--->
+---
+sidebar_position: 1
+---
 
 # `x/authz`
 

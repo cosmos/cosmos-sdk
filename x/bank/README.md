@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Bank Overview
-parent:
-  title: "bank"
--->
+---
+sidebar_position: 1
+---
 
 # `x/bank`
 

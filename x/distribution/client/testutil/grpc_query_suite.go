@@ -8,7 +8,6 @@ import (
 
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -65,7 +64,7 @@ func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := rest.GetRequest(tc.url)
+		resp, err := sdktestutil.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
 			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
@@ -100,7 +99,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorDistributionInfoGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := rest.GetRequest(tc.url)
+		resp, err := sdktestutil.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			if tc.expErr {
 				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
@@ -265,7 +264,7 @@ func (s *GRPCQueryTestSuite) TestQuerySlashesGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := rest.GetRequest(tc.url)
+		resp, err := sdktestutil.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
@@ -393,7 +392,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorsGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := rest.GetRequest(tc.url)
+		resp, err := sdktestutil.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
@@ -445,7 +444,7 @@ func (s *GRPCQueryTestSuite) TestQueryWithdrawAddressGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := rest.GetRequest(tc.url)
+		resp, err := sdktestutil.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {
 			if tc.expErr {

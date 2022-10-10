@@ -1,13 +1,8 @@
-<!--
-parent:
-  order: false
--->
-
 <div align="center">
   <h1> Cosmos SDK </h1>
 </div>
 
-![banner](docs/cosmos-sdk-image.jpg)
+![banner](docs/static/img/banner.jpg)
 
 <div align="center">
   <a href="https://github.com/cosmos/cosmos-sdk/blob/main/LICENSE">
@@ -41,7 +36,7 @@ The Cosmos SDK is a framework for building blockchain applications. [Tendermint 
 
 **WARNING**: The Cosmos SDK has mostly stabilized, but we are still making some breaking changes.
 
-**Note**: Requires [Go 1.18+](https://go.dev/dl)
+**Note**: Requires [Go 1.19+](https://go.dev/dl)
 
 ## Quick Start
 

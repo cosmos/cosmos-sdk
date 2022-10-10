@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/url"
@@ -17,6 +18,14 @@ import (
 	"unsafe"
 
 	"cosmossdk.io/depinject"
+	"github.com/cosmos/gogoproto/jsonpb"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -34,13 +43,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	"github.com/cosmos/gogoproto/jsonpb"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var (
@@ -102,10 +104,13 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*baseapp.Base
 
 	// patch in TxConfig instead of using an output from x/auth/tx
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
 
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
 
 	r := rand.New(rand.NewSource(3920758213583))
 	keyCounter := 0
@@ -571,9 +576,13 @@ func TestGRPCQuery(t *testing.T) {
 	app := setupBaseApp(t, grpcQueryOpt)
 	app.GRPCQueryRouter().SetInterfaceRegistry(codectypes.NewInterfaceRegistry())
 
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	app.Commit()
 
 	req := testdata.SayHelloRequest{Name: "foo"}
@@ -666,7 +675,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 20, Format: 2, Chunks: 5},
+				{Height: 20, Format: snapshottypes.CurrentFormat, Chunks: 5},
 			},
 		},
 		"prune everything with snapshot": {
@@ -678,7 +687,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningEverything),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 20, Format: 2, Chunks: 5},
+				{Height: 20, Format: snapshottypes.CurrentFormat, Chunks: 5},
 			},
 		},
 		"default pruning with snapshot": {
@@ -690,7 +699,7 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningDefault),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 20, Format: 2, Chunks: 5},
+				{Height: 20, Format: snapshottypes.CurrentFormat, Chunks: 5},
 			},
 		},
 		"custom": {
@@ -702,8 +711,8 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:        pruningtypes.NewCustomPruningOptions(12, 12),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 25, Format: 2, Chunks: 6},
-				{Height: 20, Format: 2, Chunks: 5},
+				{Height: 25, Format: snapshottypes.CurrentFormat, Chunks: 6},
+				{Height: 20, Format: snapshottypes.CurrentFormat, Chunks: 5},
 			},
 		},
 		"no snapshots": {
@@ -724,9 +733,9 @@ func TestSnapshotWithPruning(t *testing.T) {
 				pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 			},
 			expectedSnapshots: []*abci.Snapshot{
-				{Height: 9, Format: 2, Chunks: 2},
-				{Height: 6, Format: 2, Chunks: 2},
-				{Height: 3, Format: 2, Chunks: 1},
+				{Height: 9, Format: snapshottypes.CurrentFormat, Chunks: 2},
+				{Height: 6, Format: snapshottypes.CurrentFormat, Chunks: 2},
+				{Height: 3, Format: snapshottypes.CurrentFormat, Chunks: 1},
 			},
 		},
 	}
@@ -788,7 +797,7 @@ func TestLoadSnapshotChunk(t *testing.T) {
 		blocks:             2,
 		blockTxs:           5,
 		snapshotInterval:   2,
-		snapshotKeepRecent: 2,
+		snapshotKeepRecent: snapshottypes.CurrentFormat,
 		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 	}
 	app, err := setupBaseAppWithSnapshots(t, setupConfig)
@@ -802,7 +811,7 @@ func TestLoadSnapshotChunk(t *testing.T) {
 	}{
 		"Existing snapshot": {2, snapshottypes.CurrentFormat, 1, false},
 		"Missing height":    {100, snapshottypes.CurrentFormat, 1, true},
-		"Missing format":    {2, 3, 1, true},
+		"Missing format":    {2, snapshottypes.CurrentFormat + 1, 1, true},
 		"Missing chunk":     {2, snapshottypes.CurrentFormat, 9, true},
 		"Zero height":       {0, snapshottypes.CurrentFormat, 1, true},
 		"Zero format":       {2, 0, 1, true},
@@ -1886,7 +1895,9 @@ func TestQuery(t *testing.T) {
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
 
 	// NOTE: "/store/key1" tells us KVStore
 	// and the final "/key" says to use the data as the
@@ -2152,17 +2163,19 @@ type paramStore struct {
 	db *dbm.MemDB
 }
 
-func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
+var ParamstoreKey = []byte("paramstore")
+
+func (ps *paramStore) Set(_ sdk.Context, value *tmproto.ConsensusParams) {
 	bz, err := json.Marshal(value)
 	if err != nil {
 		panic(err)
 	}
 
-	ps.db.Set(key, bz)
+	ps.db.Set(ParamstoreKey, bz)
 }
 
-func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
-	ok, err := ps.db.Has(key)
+func (ps *paramStore) Has(_ sdk.Context) bool {
+	ok, err := ps.db.Has(ParamstoreKey)
 	if err != nil {
 		panic(err)
 	}
@@ -2170,17 +2183,21 @@ func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
 	return ok
 }
 
-func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
-	bz, err := ps.db.Get(key)
+func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
+	bz, err := ps.db.Get(ParamstoreKey)
 	if err != nil {
 		panic(err)
 	}
 
 	if len(bz) == 0 {
-		return
+		return nil, errors.New("params not found")
 	}
 
-	if err := json.Unmarshal(bz, ptr); err != nil {
+	var params tmproto.ConsensusParams
+
+	if err := json.Unmarshal(bz, &params); err != nil {
 		panic(err)
 	}
+
+	return &params, nil
 }

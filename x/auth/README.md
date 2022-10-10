@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: "Auth Overview"
-parent:
-  title: "auth"
--->
+---
+sidebar_position: 1
+---
 
 # `x/auth`
 
@@ -29,13 +26,11 @@ This module is used in the Cosmos Hub.
     * [Account Keeper](#account-keeper)
 * [Parameters](#parameters)
 * [Client](#client)
-  * [CLI](#cli)
-  * [gRPC](#grpc)
-  * [REST](#rest)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 
-<!-- order: 1 -->
-
-# Concepts
+## Concepts
 
 **Note:** The auth module is different from the [authz module](../modules/authz/).
 
@@ -44,7 +39,7 @@ The differences are:
 * `auth` - authentication of accounts and transactions for Cosmos SDK applications and is responsible for specifying the base transaction and account types.
 * `authz` - authorization for accounts to perform actions on behalf of other accounts and enables a granter to grant authorizations to a grantee that allows the grantee to execute messages on behalf of the granter.
 
-## Gas & Fees
+### Gas & Fees
 
 Fees serve two purposes for an operator of the network.
 
@@ -75,11 +70,9 @@ Because the market value for tokens will fluctuate, validators are expected to
 dynamically adjust their minimum gas prices to a level that would encourage the
 use of the network.		
 
-<!-- order: 2 -->
+## State
 
-# State
-
-## Accounts
+### Accounts
 
 Accounts contain authentication information for a uniquely identified external user of an SDK blockchain,
 including public key, address, and account number / sequence number for replay protection. For efficiency,
@@ -92,7 +85,7 @@ account types may do so.
 
 * `0x01 | Address -> ProtocolBuffer(account)`
 
-### Account Interface
+#### Account Interface
 
 The account interface exposes methods to read and write standard account information.
 Note that all of these methods operate on an account struct confirming to the
@@ -126,7 +119,7 @@ type AccountI interface {
 }
 ```
 
-#### Base Account
+##### Base Account
 
 A base account is the simplest and most common account type, which just stores all requisite
 fields directly in a struct.
@@ -147,16 +140,14 @@ message BaseAccount {
 
 See [Vesting](https://docs.cosmos.network/main/modules/vesting/).
 
-<!-- order: 3 -->
-
-# AnteHandlers
+## AnteHandlers
 
 The `x/auth` module presently has no transaction handlers of its own, but does expose the special `AnteHandler`, used for performing basic validity checks on a transaction, such that it could be thrown out of the mempool.
 The `AnteHandler` can be seen as a set of decorators that check transactions within the current context, per [ADR 010](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-010-modular-antehandler.md).
 
 Note that the `AnteHandler` is called on both `CheckTx` and `DeliverTx`, as Tendermint proposers presently have the ability to include in their proposed block transactions which fail `CheckTx`.
 
-## Decorators
+### Decorators
 
 The auth module provides `AnteDecorator`s that are recursively chained together into a single `AnteHandler` in the following order:
 
@@ -186,13 +177,11 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 
 * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 
-<!-- order: 4 -->
-
-# Keepers
+## Keepers
 
 The auth module only exposes one keeper, the account keeper, which can be used to read and write accounts.
 
-## Account Keeper
+### Account Keeper
 
 Presently only one fully-permissioned account keeper is exposed, which has the ability to both read and write
 all fields of all accounts, and to iterate over all stored accounts.
@@ -232,9 +221,7 @@ type AccountKeeperI interface {
 }
 ```
 
-<!-- order: 5 -->
-
-# Parameters
+## Parameters
 
 The auth module contains the following parameters:
 
@@ -246,15 +233,13 @@ The auth module contains the following parameters:
 | SigVerifyCostED25519   |      uint64     | 590     |
 | SigVerifyCostSecp256k1 |      uint64     | 1000    |
 
-<!-- order: 6 -->
+## Client
 
-# Client
-
-## CLI
+### CLI
 
 A user can query and interact with the `auth` module using the CLI.
 
-### Query
+#### Query
 
 The `query` commands allow users to query `auth` state.
 
@@ -262,7 +247,7 @@ The `query` commands allow users to query `auth` state.
 simd query auth --help
 ```
 
-#### account
+##### account
 
 The `account` command allow users to query for an account by it's address.
 
@@ -288,7 +273,7 @@ pub_key:
 sequence: "1"
 ```
 
-#### accounts
+##### accounts
 
 The `accounts` command allow users to query all the available accounts.
 
@@ -387,7 +372,7 @@ pagination:
   total: "0"
 ```
 
-#### params
+##### params
 
 The `params` command allow users to query the current auth parameters.
 
@@ -411,11 +396,11 @@ tx_sig_limit: "7"
 tx_size_cost_per_byte: "10"
 ```
 
-## gRPC
+### gRPC
 
 A user can query the `auth` module using gRPC endpoints.
 
-### Account
+#### Account
 
 The `account` endpoint allow users to query for an account by it's address.
 
@@ -448,7 +433,7 @@ Example Output:
 }
 ```
 
-### Accounts
+#### Accounts
 
 The `accounts` endpoint allow users to query all the available accounts.
 
@@ -564,7 +549,7 @@ Example Output:
 }
 ```
 
-### Params
+#### Params
 
 The `params` endpoint allow users to query the current auth parameters.
 
@@ -594,11 +579,11 @@ Example Output:
 }
 ```
 
-## REST
+### REST
 
 A user can query the `auth` module using REST endpoints.
 
-### Account
+#### Account
 
 The `account` endpoint allow users to query for an account by it's address.
 
@@ -606,7 +591,7 @@ The `account` endpoint allow users to query for an account by it's address.
 /cosmos/auth/v1beta1/account?address={address}
 ```
 
-### Accounts
+#### Accounts
 
 The `accounts` endpoint allow users to query all the available accounts.
 
@@ -614,7 +599,7 @@ The `accounts` endpoint allow users to query all the available accounts.
 /cosmos/auth/v1beta1/accounts
 ```
 
-### Params
+#### Params
 
 The `params` endpoint allow users to query the current auth parameters.
 

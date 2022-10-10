@@ -5,14 +5,13 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
-
-	"github.com/cosmos/gogoproto/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -270,7 +269,6 @@ func (app *BaseApp) MountStore(key storetypes.StoreKey, typ storetypes.StoreType
 // LoadLatestVersion loads the latest application version. It will panic if
 // called more than once on a running BaseApp.
 func (app *BaseApp) LoadLatestVersion() error {
-
 	err := app.storeLoader(app.cms)
 	if err != nil {
 		return fmt.Errorf("failed to load latest version: %w", err)
@@ -408,37 +406,12 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
 		return nil
 	}
 
-	cp := new(tmproto.ConsensusParams)
-
-	if app.paramStore.Has(ctx, ParamStoreKeyBlockParams) {
-		var bp tmproto.BlockParams
-
-		app.paramStore.Get(ctx, ParamStoreKeyBlockParams, &bp)
-		cp.Block = &bp
-	}
-
-	if app.paramStore.Has(ctx, ParamStoreKeyEvidenceParams) {
-		var ep tmproto.EvidenceParams
-
-		app.paramStore.Get(ctx, ParamStoreKeyEvidenceParams, &ep)
-		cp.Evidence = &ep
-	}
-
-	if app.paramStore.Has(ctx, ParamStoreKeyValidatorParams) {
-		var vp tmproto.ValidatorParams
-
-		app.paramStore.Get(ctx, ParamStoreKeyValidatorParams, &vp)
-		cp.Validator = &vp
+	cp, err := app.paramStore.Get(ctx)
+	if err != nil {
+		panic(err)
 	}
 
 	return cp
-}
-
-// AddRunTxRecoveryHandler adds custom app.runTx method panic handlers.
-func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
-	for _, h := range handlers {
-		app.runTxRecoveryMiddleware = newRecoveryMiddleware(h, app.runTxRecoveryMiddleware)
-	}
 }
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
@@ -451,11 +424,16 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusP
 		return
 	}
 
-	app.paramStore.Set(ctx, ParamStoreKeyBlockParams, cp.Block)
-	app.paramStore.Set(ctx, ParamStoreKeyEvidenceParams, cp.Evidence)
-	app.paramStore.Set(ctx, ParamStoreKeyValidatorParams, cp.Validator)
+	app.paramStore.Set(ctx, cp)
 	// We're explicitly not storing the Tendermint app_version in the param store. It's
 	// stored instead in the x/upgrade store, with its own bump logic.
+}
+
+// AddRunTxRecoveryHandler adds custom app.runTx method panic handlers.
+func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
+	for _, h := range handlers {
+		app.runTxRecoveryMiddleware = newRecoveryMiddleware(h, app.runTxRecoveryMiddleware)
+	}
 }
 
 // getMaximumBlockGas gets the maximum gas from the consensus params. It panics

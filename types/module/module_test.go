@@ -191,14 +191,19 @@ func TestManager_ExportGenesis(t *testing.T) {
 	ctx := sdk.Context{}
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key1": "value1"}`))
-	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key2": "value2"}`))
+	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).AnyTimes().Return(json.RawMessage(`{"key1": "value1"}`))
+	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).AnyTimes().Return(json.RawMessage(`{"key2": "value2"}`))
 
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key1": "value1"}`),
 		"module2": json.RawMessage(`{"key2": "value2"}`),
 	}
 	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
+	require.Equal(t, want, mm.ExportGenesisForModules(ctx, cdc, []string{}))
+
+	require.Panics(t, func() {
+		mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"})
+	})
 }
 
 func TestManager_BeginBlock(t *testing.T) {

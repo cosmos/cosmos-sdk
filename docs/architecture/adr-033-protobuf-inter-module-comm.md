@@ -20,7 +20,7 @@ service definitions defined in [ADR 021](./adr-021-protobuf-query-encoding.md) a
 
 ## Context
 
-In the current Cosmos SDK documentation on the [Object-Capability Model](../core/ocap.md), it is stated that:
+In the current Cosmos SDK documentation on the [Object-Capability Model](../core/10-ocap.md), it is stated that:
 
 > We assume that a thriving ecosystem of Cosmos SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
@@ -397,4 +397,4 @@ replacing `Keeper` interfaces altogether.
 * [ADR 031](./adr-031-msg-service.md)
 * [ADR 028](./adr-028-public-key-addresses.md)
 * [ADR 030 draft](https://github.com/cosmos/cosmos-sdk/pull/7105)
-* [Object-Capability Model](../docs/core/ocap.md)
+* [Object-Capability Model](https://docs.network.com/main/core/ocap)

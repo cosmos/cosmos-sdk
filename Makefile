@@ -18,7 +18,6 @@ DOCS_DOMAIN=docs.cosmos.network
 # RocksDB is a native dependency, so we don't assume the library is installed.
 # Instead, it must be explicitly enabled and we warn when it is not.
 ENABLE_ROCKSDB ?= false
-GOWORK = off # we disable the `go.work` for consistency with our CI
 
 # process build tags
 build_tags = netgo
@@ -146,6 +145,7 @@ cosmovisor:
 
 
 mocks: $(MOCKS_DIR)
+	@go install github.com/golang/mock/mockgen@v1.6.0
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
@@ -188,19 +188,23 @@ godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	godoc -http=:6060
 
-# This builds a docs site for each branch/tag in `./docs/versions`
-# and copies each site to a version prefixed path. The last entry inside
-# the `versions` file will be the default root index.html (and it should be main).
+# This builds the docs.cosmos.network docs using docusaurus.
+# Old documentation, which have not been migrated to docusaurus are generated with vuepress.
 build-docs:
+	@echo "building docusaurus docs"
+	@cd docs && npm ci && npm run build
+	mv docs/build ~/output
+
+	@echo "building old docs"
 	@cd docs && \
-	while read -r branch path_prefix; do \
-		echo "building branch $${branch}" ; \
-		(git clean -fdx && git reset --hard && git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
-		mkdir -p ~/output/$${path_prefix} ; \
-		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
-		cp ~/output/$${path_prefix}/index.html ~/output ; \
-		cp ~/output/$${path_prefix}/404.html ~/output ; \
-	done < versions ;
+			while read -r branch path_prefix; do \
+			echo "building vuepress $${branch} docs" ; \
+			(git clean -fdx && git reset --hard && git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
+			mkdir -p ~/output/$${path_prefix} ; \
+			cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
+	done < vuepress_versions ;	
+
+	@echo "setup domain"
 	@echo $(DOCS_DOMAIN) > ~/output/CNAME
 
 .PHONY: build-docs

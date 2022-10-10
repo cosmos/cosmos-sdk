@@ -20,23 +20,8 @@ The [README.md](./README.md) is both the README for the repository and the confi
 **NOTE:** Strongly consider the existing links - both within this directory
 and to the website docs - when moving or deleting files.
 
-Absolute links should be used nearly everywhere, having discovered and weighed the following:
-
-### Relative
-
-Where is the other file, relative to the current one?
-
-* works both on GitHub and for the Docusaurus build
-* confusing / annoying to have things like: `../../../../myfile.md`
-* requires more updates when files are re-shuffled
-
-### Absolute
-
-Where is the other file, given the root of the repo?
-
-* works on GitHub, works in Docusaurus
-* this is much nicer: `/docs/hereitis/myfile.md`
-* if you move that file around, the links inside of it are preserved
+Relative links should be used nearly everywhere, due to versionning.
+Note that in case of page reshufling, you must update all links references.
 
 ### Full
 

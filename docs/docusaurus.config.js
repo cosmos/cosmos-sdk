@@ -4,6 +4,8 @@
 const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
+const lastVersion = "v0.47";
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Cosmos SDK",
@@ -38,6 +40,17 @@ const config = {
           sidebarPath: require.resolve("./sidebars.js"),
           routeBasePath: "/",
           editUrl: "https://github.com/cosmos/cosmos-sdk/tree/main/",
+          lastVersion: lastVersion,
+          versions: {
+            current: {
+              path: "main",
+            },
+            "v0.47": {
+              label: "v0.47",
+              path: "v0.47",
+              banner: "none",
+            },
+          },
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
@@ -71,6 +84,16 @@ const config = {
             `,
             position: "right",
           },
+          {
+            type: "docsVersionDropdown",
+            position: "left",
+            dropdownActiveClassDisabled: true,
+            // versions not yet migrated to docusaurus
+            dropdownItemsAfter: [
+              { to: "/v0.46", label: "v0.46" },
+              { to: "/v0.45", label: "v0.45" },
+            ],
+          },
         ],
       },
       footer: {
@@ -78,9 +101,7 @@ const config = {
           {
             items: [
               {
-                html: `
-                <a href="https://cosmos.network"><img src="/img/logo-bw.svg" alt="Cosmos Logo"></a>
-              `,
+                html: `<a href="https://cosmos.network"><img src="/img/logo-bw.svg" alt="Cosmos Logo"></a>`,
               },
             ],
           },
@@ -185,8 +206,8 @@ const config = {
         toExtensions: ["html"],
         redirects: [
           {
-            from: "/main/",
-            to: `/`,
+            from: "/",
+            to: "/" + lastVersion,
           },
         ],
       },

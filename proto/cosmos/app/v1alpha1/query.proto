@@ -15,7 +15,7 @@ service Query {
   // FileDescriptorSet returns the full FileDescriptorSet of the app in order
   // to enable easier generation of dynamic clients.
   rpc FileDescriptorSet(QueryFileDescriptorSetRequest) returns (QueryFileDescriptorSetResponse) {
-    option (cosmos.query.v1.deterministic) = false;
+    option (cosmos.query.v1.module_query_safe) = false;
   }
 }
 

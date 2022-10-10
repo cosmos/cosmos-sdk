@@ -12,7 +12,7 @@ option go_package = "cosmossdk.io/api/cosmos/base/cli/v1;cliv1";
 service RemoteInfoService {
   // AppOptions returns the autocli options for all of the modules in an app.
   rpc AppOptions(AppOptionsRequest) returns (AppOptionsResponse) {
-    option (cosmos.query.v1.deterministic) = false;
+    option (cosmos.query.v1.module_query_safe) = false;
   }
 }
 

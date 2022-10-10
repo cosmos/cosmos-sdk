@@ -202,7 +202,7 @@ func (mp *defaultMempool) Remove(tx Tx) error {
 	sk := txKey{nonce: nonce, sender: sender}
 	priority, ok := mp.scores[sk]
 	if !ok {
-		return ErrTxNotFound{fmt.Errorf("tx %v not found in mempool", tx)}
+		return ErrTxNotFound
 	}
 	tk := txKey{nonce: nonce, priority: priority, sender: sender}
 

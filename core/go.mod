@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	google.golang.org/protobuf v1.28.1
-	gotest.tools/v3 v3.3.0
+	gotest.tools/v3 v3.4.0
 	sigs.k8s.io/yaml v1.3.0
 )
 

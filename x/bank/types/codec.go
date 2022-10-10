@@ -16,6 +16,7 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgSend{}, "cosmos-sdk/MsgSend")
 	legacy.RegisterAminoMsg(cdc, &MsgMultiSend{}, "cosmos-sdk/MsgMultiSend")
+	legacy.RegisterAminoMsg(cdc, &MsgUpdateDenomMetadata{}, "cosmos-sdk/MsgUpdateDenomMetadata")
 	cdc.RegisterConcrete(&SendAuthorization{}, "cosmos-sdk/SendAuthorization", nil)
 }
 
@@ -23,14 +24,11 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSend{},
 		&MsgMultiSend{},
+		&MsgUpdateDenomMetadata{},
 	)
 	registry.RegisterImplementations(
 		(*authz.Authorization)(nil),
 		&SendAuthorization{},
-	)
-
-	registry.RegisterImplementations(
-		&UpdateDenomMetadataProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

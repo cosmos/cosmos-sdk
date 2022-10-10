@@ -59,6 +59,7 @@ type BaseKeeper struct {
 	storeKey               storetypes.StoreKey
 	paramSpace             paramtypes.Subspace
 	mintCoinsRestrictionFn MintingRestrictionFn
+	authority  			   string
 }
 
 type MintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error

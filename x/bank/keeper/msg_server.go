@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	"github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -13,6 +12,17 @@ import (
 
 type msgServer struct {
 	Keeper
+}
+
+func (k msgServer) UpdateDenomMetadata(goCtx context.Context, msg *types.MsgUpdateDenomMetadata) (*types.MsgUpdateDenomMetadataResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	k.Keeper.SetDenomMetaData(ctx, *msg.Metadata)
+
+	//TODO: telemetry?
+
+	// TODO: should it emit events?
+
+	return &types.MsgUpdateDenomMetadataResponse{}, nil
 }
 
 // NewMsgServerImpl returns an implementation of the bank MsgServer interface
@@ -102,3 +112,4 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 
 	return &types.MsgMultiSendResponse{}, nil
 }
+

@@ -1,13 +1,7 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/version"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"io/ioutil"
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,7 +26,6 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		NewSendTxCmd(),
 		NewMultiSendTxCmd(),
-		GetUpdateDenomMetadataProposal(),
 	)
 
 	return txCmd
@@ -147,53 +140,5 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 
 	flags.AddTxFlagsToCmd(cmd)
 
-	return cmd
-}
-
-//TODO: change msgfees related docs
-func GetUpdateDenomMetadataProposal() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "update-denom-metadata-proposal <path-to-proposal-file.json> <deposit>",
-		Aliases: []string{"udmp", "u-d-m-p"},
-		Args:    cobra.ExactArgs(2),
-		Short:   "Proposal to update fee denom metadata",
-		Long:    strings.TrimSpace(`Submit a proposal to update fee denom metadata along with an initial deposit.`),
-		Example: fmt.Sprintf(`$ %[1]s tx msgfees update-denom-metadata-proposal path/to/proposal/file.json 1000000000nhash
-$ %[1]s tx msgfees udmp path/to/proposal/file.json 1000000000nhash
-$ %[1]s tx msgfees u-d-m-p path/to/proposal/file.json 1000000000nhash
-`, version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			depositArg := args[1]
-
-			contents, err := ioutil.ReadFile(args[0])
-			if err != nil {
-				return err
-			}
-
-			proposal := &types.UpdateDenomMetadataProposal{}
-
-			err = json.Unmarshal(contents, proposal)
-			if err != nil {
-				return err
-			}
-
-			deposit, err := sdk.ParseCoinsNormalized(depositArg)
-			if err != nil {
-				return err
-			}
-			callerAddr := clientCtx.GetFromAddress()
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(proposal, deposit, callerAddr)
-			if err != nil {
-				return fmt.Errorf("invalid governance proposal. Error: %w", err)
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

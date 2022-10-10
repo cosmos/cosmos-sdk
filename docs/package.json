@@ -35,6 +35,9 @@
   "devDependencies": {
     "@docusaurus/module-type-aliases": "2.1.0"
   },
+  "overrides": {
+    "trim": "0.0.3"
+  },
   "browserslist": {
     "production": [
       ">0.5%",

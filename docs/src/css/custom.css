@@ -465,7 +465,7 @@ html {
     ol,
     code,
     blockquote {
-      @apply text-[1.125rem];
+      @apply text-[1rem];
     }
     code {
       @apply border-0 px-3;

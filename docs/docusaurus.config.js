@@ -40,7 +40,6 @@ const config = {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
           routeBasePath: "/",
-          editUrl: "https://github.com/cosmos/cosmos-sdk/tree/main/",
           lastVersion: lastVersion,
           versions: {
             current: {
@@ -191,6 +190,7 @@ const config = {
         contextualSearch: false,
       },
     }),
+  themes: ["@you54f/theme-github-codeblock"],
   plugins: [
     async function myPlugin(context, options) {
       return {

@@ -960,6 +960,124 @@ func (m *QueryDenomOwnersResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+<<<<<<< HEAD
+=======
+// QuerySendEnabledRequest defines the RPC request for looking up SendEnabled entries.
+//
+// Since: cosmos-sdk 0.47
+type QuerySendEnabledRequest struct {
+	// denoms is the specific denoms you want look up. Leave empty to get all entries.
+	Denoms []string `protobuf:"bytes,1,rep,name=denoms,proto3" json:"denoms,omitempty"`
+	// pagination defines an optional pagination for the request. This field is
+	// only read if the denoms field is empty.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QuerySendEnabledRequest) Reset()         { *m = QuerySendEnabledRequest{} }
+func (m *QuerySendEnabledRequest) String() string { return proto.CompactTextString(m) }
+func (*QuerySendEnabledRequest) ProtoMessage()    {}
+func (*QuerySendEnabledRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c6fc1939682df13, []int{19}
+}
+func (m *QuerySendEnabledRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySendEnabledRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySendEnabledRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySendEnabledRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySendEnabledRequest.Merge(m, src)
+}
+func (m *QuerySendEnabledRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySendEnabledRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySendEnabledRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySendEnabledRequest proto.InternalMessageInfo
+
+func (m *QuerySendEnabledRequest) GetDenoms() []string {
+	if m != nil {
+		return m.Denoms
+	}
+	return nil
+}
+
+func (m *QuerySendEnabledRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QuerySendEnabledResponse defines the RPC response of a SendEnable query.
+//
+// Since: cosmos-sdk 0.47
+type QuerySendEnabledResponse struct {
+	SendEnabled []*SendEnabled `protobuf:"bytes,1,rep,name=send_enabled,json=sendEnabled,proto3" json:"send_enabled,omitempty"`
+	// pagination defines the pagination in the response. This field is only
+	// populated if the denoms field in the request is empty.
+	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QuerySendEnabledResponse) Reset()         { *m = QuerySendEnabledResponse{} }
+func (m *QuerySendEnabledResponse) String() string { return proto.CompactTextString(m) }
+func (*QuerySendEnabledResponse) ProtoMessage()    {}
+func (*QuerySendEnabledResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9c6fc1939682df13, []int{20}
+}
+func (m *QuerySendEnabledResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySendEnabledResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySendEnabledResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySendEnabledResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySendEnabledResponse.Merge(m, src)
+}
+func (m *QuerySendEnabledResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySendEnabledResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySendEnabledResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySendEnabledResponse proto.InternalMessageInfo
+
+func (m *QuerySendEnabledResponse) GetSendEnabled() []*SendEnabled {
+	if m != nil {
+		return m.SendEnabled
+	}
+	return nil
+}
+
+func (m *QuerySendEnabledResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+>>>>>>> c60c55616 (feat: gRPC query for operator and chain configuration (#13485))
 func init() {
 	proto.RegisterType((*QueryBalanceRequest)(nil), "cosmos.bank.v1beta1.QueryBalanceRequest")
 	proto.RegisterType((*QueryBalanceResponse)(nil), "cosmos.bank.v1beta1.QueryBalanceResponse")

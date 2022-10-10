@@ -330,10 +330,15 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	// service if API or gRPC is enabled, and avoid doing so in the general
 	// case, because it spawns a new local tendermint RPC client.
 	if (config.API.Enable || config.GRPC.Enable) && tmNode != nil {
+<<<<<<< HEAD
 		clientCtx = clientCtx.WithClient(local.New(tmNode))
+=======
+		clientCtx := clientCtx.WithClient(local.New(tmNode))
+>>>>>>> c60c55616 (feat: gRPC query for operator and chain configuration (#13485))
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
+		app.RegisterNodeService(clientCtx)
 	}
 
 	metrics, err := startTelemetry(config)

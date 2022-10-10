@@ -5,6 +5,7 @@ const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
 // const lastVersion = "v0.47";
+const lastVersion = "current";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -40,10 +41,11 @@ const config = {
           sidebarPath: require.resolve("./sidebars.js"),
           routeBasePath: "/",
           editUrl: "https://github.com/cosmos/cosmos-sdk/tree/main/",
-          // lastVersion: lastVersion, // we should enable this when we have a stable release with docusaurus
+          lastVersion: lastVersion,
           versions: {
             current: {
               path: "main",
+              // banner: "unreleased",
             },
             // "v0.47": {
             //   label: "v0.47",
@@ -74,6 +76,7 @@ const config = {
         logo: {
           alt: "Cosmos SDK Logo",
           src: "img/logo-sdk.svg",
+          href: "https://docs.cosmos.network",
         },
         items: [
           {
@@ -206,10 +209,20 @@ const config = {
         toExtensions: ["html"],
         redirects: [
           {
-            from: "/",
+            from: ["/", "/master", "/v0.43", "/v0.44"],
             to: "/main",
           },
         ],
+        createRedirects: function(existingPath) {
+          // modules redirections
+          const modulesRegex = /\/main\/modules\/([A-z]+)\/([0-9]+)/g;
+          const modulesMatch = modulesRegex.exec(existingPath);
+          if (modulesMatch) {
+            return ["/main/modules/" + modulesMatch[0]];
+          }
+
+          return undefined;
+        },
       },
     ],
   ],

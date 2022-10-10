@@ -342,11 +342,15 @@ type MempoolTestSuite struct {
 	suite.Suite
 	numTxs      int
 	numAccounts int
+	iterations  int
 	mempool     mempool.Mempool
 }
 
 func (s *MempoolTestSuite) resetMempool() {
-	s.mempool = mempool.NewDefaultMempool()
+	s.iterations = 0
+	s.mempool = mempool.NewDefaultMempool(mempool.WithOnRead(func(tx mempool.Tx) {
+		s.iterations++
+	}))
 }
 
 func (s *MempoolTestSuite) SetupTest() {
@@ -453,7 +457,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	duration := time.Since(start)
 
 	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
-		seed, mempool.DebugIterations(mp), duration.Milliseconds())
+		seed, s.iterations, duration.Milliseconds())
 }
 
 func (s *MempoolTestSuite) TestRandomWalkTxs() {
@@ -501,7 +505,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	duration := time.Since(start)
 
 	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
-		seed, mempool.DebugIterations(mp), duration.Milliseconds())
+		seed, s.iterations, duration.Milliseconds())
 }
 
 func (s *MempoolTestSuite) TestSampleTxs() {

@@ -21,7 +21,7 @@ type defaultMempool struct {
 	priorityIndex *huandu.SkipList
 	senderIndices map[string]*huandu.SkipList
 	scores        map[txKey]int64
-	iterations    int
+	onRead        func(tx Tx)
 }
 
 type txKey struct {
@@ -48,14 +48,27 @@ func txKeyLess(a, b any) int {
 	return huandu.Uint64.Compare(keyA.nonce, keyB.nonce)
 }
 
+type DefaultMempoolOption func(*defaultMempool)
+
+// WithOnRead sets a callback to be called when a tx is read from the mempool.
+func WithOnRead(onRead func(tx Tx)) DefaultMempoolOption {
+	return func(mp *defaultMempool) {
+		mp.onRead = onRead
+	}
+}
+
 // NewDefaultMempool returns the SDK's default mempool implementation which returns txs in a partial order
 // by 2 dimensions; priority, and sender-nonce.
-func NewDefaultMempool() Mempool {
-	return &defaultMempool{
+func NewDefaultMempool(opts ...DefaultMempoolOption) Mempool {
+	mp := &defaultMempool{
 		priorityIndex: huandu.New(huandu.LessThanFunc(txKeyLess)),
 		senderIndices: make(map[string]*huandu.SkipList),
 		scores:        make(map[txKey]int64),
 	}
+	for _, opt := range opts {
+		opt(mp)
+	}
+	return mp
 }
 
 // Insert attempts to insert a Tx into the app-side mempool in O(log n) time, returning an error if unsuccessful.
@@ -103,7 +116,7 @@ func (mp *defaultMempool) Insert(ctx sdk.Context, tx Tx) error {
 	return nil
 }
 
-// Select returns a set of transactions from the mempool, prioritized by priority and sender-nonce in O(n) time.
+// Select returns a set of transactions from the mempool, ordered by priority and sender-nonce in O(n) time.
 // The passed in list of transactions are ignored.  This is a readonly operation, the mempool is not modified.
 // maxBytes is the maximum number of bytes of transactions to return.
 func (mp *defaultMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
@@ -121,8 +134,11 @@ func (mp *defaultMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 
 		// iterate through the sender's transactions in nonce order
 		for senderTx != nil {
-			// time complexity tracking
-			mp.iterations++
+			mempoolTx := senderTx.Value.(Tx)
+			if mp.onRead != nil {
+				mp.onRead(mempoolTx)
+			}
+
 			k := senderTx.Key().(txKey)
 
 			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
@@ -130,7 +146,6 @@ func (mp *defaultMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 				break
 			}
 
-			mempoolTx := senderTx.Value.(Tx)
 			// otherwise, select the transaction and continue iteration
 			selectedTxs = append(selectedTxs, mempoolTx)
 			if txBytes += mempoolTx.Size(); txBytes >= maxBytes {
@@ -211,9 +226,4 @@ func DebugPrintKeys(mempool Mempool) {
 		fmt.Printf("%s, %d, %d\n", k.sender, k.priority, k.nonce)
 		n = n.Next()
 	}
-}
-
-func DebugIterations(mempool Mempool) int {
-	mp := mempool.(*defaultMempool)
-	return mp.iterations
 }

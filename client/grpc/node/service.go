@@ -21,7 +21,7 @@ func NewQueryServer(clientCtx client.Context) ServiceServer {
 	}
 }
 
-func (s queryServer) Config(ctx context.Context, req *ConfigRequest) (*ConfigResponse, error) {
+func (s queryServer) Config(ctx context.Context, _ *ConfigRequest) (*ConfigResponse, error) {
 	typesCfg := sdk.GetConfig()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

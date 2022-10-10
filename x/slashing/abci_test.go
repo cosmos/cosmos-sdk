@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -41,7 +41,7 @@ func TestBeginBlocker(t *testing.T) {
 	pks := simtestutil.CreateTestPubKeys(1)
 	simtestutil.AddTestAddrsFromPubKeys(bankKeeper, stakingKeeper, ctx, pks, stakingKeeper.TokensFromConsensusPower(ctx, 200))
 	addr, pk := sdk.ValAddress(pks[0].Address()), pks[0]
-	tstaking := teststaking.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 
 	// bond the validator
 	power := int64(100)
@@ -60,7 +60,7 @@ func TestBeginBlocker(t *testing.T) {
 
 	// mark the validator as having signed
 	req := abci.RequestBeginBlock{
-		LastCommitInfo: abci.LastCommitInfo{
+		LastCommitInfo: abci.CommitInfo{
 			Votes: []abci.VoteInfo{{
 				Validator:       val,
 				SignedLastBlock: true,
@@ -83,7 +83,7 @@ func TestBeginBlocker(t *testing.T) {
 	for ; height < slashingKeeper.SignedBlocksWindow(ctx); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
-			LastCommitInfo: abci.LastCommitInfo{
+			LastCommitInfo: abci.CommitInfo{
 				Votes: []abci.VoteInfo{{
 					Validator:       val,
 					SignedLastBlock: true,
@@ -98,7 +98,7 @@ func TestBeginBlocker(t *testing.T) {
 	for ; height < ((slashingKeeper.SignedBlocksWindow(ctx) * 2) - slashingKeeper.MinSignedPerWindow(ctx) + 1); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
-			LastCommitInfo: abci.LastCommitInfo{
+			LastCommitInfo: abci.CommitInfo{
 				Votes: []abci.VoteInfo{{
 					Validator:       val,
 					SignedLastBlock: false,

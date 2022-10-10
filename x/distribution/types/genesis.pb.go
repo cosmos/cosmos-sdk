@@ -8,8 +8,8 @@ import (
 	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -73,7 +73,7 @@ var xxx_messageInfo_DelegatorWithdrawInfo proto.InternalMessageInfo
 type ValidatorOutstandingRewardsRecord struct {
 	// validator_address is the address of the validator.
 	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
-	// outstanding_rewards represents the oustanding rewards of a validator.
+	// outstanding_rewards represents the outstanding rewards of a validator.
 	OutstandingRewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=outstanding_rewards,json=outstandingRewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"outstanding_rewards"`
 }
 
@@ -284,7 +284,7 @@ var xxx_messageInfo_DelegatorStartingInfoRecord proto.InternalMessageInfo
 type ValidatorSlashEventRecord struct {
 	// validator_address is the address of the validator.
 	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
-	// height defines the block height at which the slash event occured.
+	// height defines the block height at which the slash event occurred.
 	Height uint64 `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
 	// period is the period of the slash event.
 	Period uint64 `protobuf:"varint,3,opt,name=period,proto3" json:"period,omitempty"`

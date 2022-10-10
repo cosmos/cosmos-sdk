@@ -19,26 +19,23 @@ element as a part of a larger description.
 
 ## Common Layout
 
-The following generalized file structure should be used to breakdown
-specifications for modules. With the exception of README.md, `XX` at the
-beginning of the file name should be replaced with a number to indicate
-document flow (ex. read `01_state.md` before `02_state_transitions.md`). The
-following list is nonbinding and all files are optional.
+The following generalized `README` structure should be used to breakdown
+specifications for modules. The following list is nonbinding and all sections are optional.
 
-* `README.md` - overview of the module
-* `XX_concepts.md` - describe specialized concepts and definitions used throughout the spec
-* `XX_state.md` - specify and describe structures expected to marshalled into the store, and their keys
-* `XX_state_transitions.md` - standard state transition operations triggered by hooks, messages, etc.
-* `XX_messages.md` - specify message structure(s) and expected state machine behaviour(s)
-* `XX_begin_block.md` - specify any begin-block operations
-* `XX_end_block.md` - specify any end-block operations
-* `XX_hooks.md` - describe available hooks to be called by/from this module
-* `XX_events.md` - list and describe event tags used
-* `XX_client.md` - list and describe CLI commands and gRPC and REST endpoints
-* `XX_params.md` - list all module parameters, their types (in JSON) and examples
-* `XX_future_improvements.md` - describe future improvements of this module
-* `XX_tests.md` - acceptance tests
-* `XX_appendix.md` - supplementary details referenced elsewhere within the spec
+* `# {Module Name}` - overview of the module
+* `## Concepts` - describe specialized concepts and definitions used throughout the spec
+* `## State` - specify and describe structures expected to marshalled into the store, and their keys
+* `## State Transitions` - standard state transition operations triggered by hooks, messages, etc.
+* `## Messages` - specify message structure(s) and expected state machine behaviour(s)
+* `## Begin Block` - specify any begin-block operations
+* `## End Block` - specify any end-block operations
+* `## Hooks` - describe available hooks to be called by/from this module
+* `## Events` - list and describe event tags used
+* `## Client` - list and describe CLI commands and gRPC and REST endpoints
+* `## Params` - list all module parameters, their types (in JSON) and examples
+* `## Future Improvements` - describe future improvements of this module
+* `## Tests` - acceptance tests
+* `## Appendix` - supplementary details referenced elsewhere within the spec
 
 ### Notation for key-value mapping
 

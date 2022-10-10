@@ -2,17 +2,18 @@
 package stakingv1beta1
 
 import (
-	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-proto"
-	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoiface "google.golang.org/protobuf/runtime/protoiface"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	io "io"
 	reflect "reflect"
 	sync "sync"
+
+	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	_ "github.com/cosmos/cosmos-proto"
+	runtime "github.com/cosmos/cosmos-proto/runtime"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoiface "google.golang.org/protobuf/runtime/protoiface"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 var (
@@ -1286,6 +1287,7 @@ type StakeAuthorization struct {
 	// validators is the oneof that represents either allow_list or deny_list
 	//
 	// Types that are assignable to Validators:
+	//
 	//	*StakeAuthorization_AllowList
 	//	*StakeAuthorization_DenyList
 	Validators isStakeAuthorization_Validators `protobuf_oneof:"validators"`

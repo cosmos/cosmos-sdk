@@ -5,8 +5,8 @@ package v1beta1
 
 import (
 	fmt "fmt"
-	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -33,11 +33,11 @@ type GenesisState struct {
 	Votes Votes `protobuf:"bytes,3,rep,name=votes,proto3,castrepeated=Votes" json:"votes"`
 	// proposals defines all the proposals present at genesis.
 	Proposals Proposals `protobuf:"bytes,4,rep,name=proposals,proto3,castrepeated=Proposals" json:"proposals"`
-	// params defines all the paramaters of related to deposit.
+	// params defines all the parameters of related to deposit.
 	DepositParams DepositParams `protobuf:"bytes,5,opt,name=deposit_params,json=depositParams,proto3" json:"deposit_params"`
-	// params defines all the paramaters of related to voting.
+	// params defines all the parameters of related to voting.
 	VotingParams VotingParams `protobuf:"bytes,6,opt,name=voting_params,json=votingParams,proto3" json:"voting_params"`
-	// params defines all the paramaters of related to tally.
+	// params defines all the parameters of related to tally.
 	TallyParams TallyParams `protobuf:"bytes,7,opt,name=tally_params,json=tallyParams,proto3" json:"tally_params"`
 }
 

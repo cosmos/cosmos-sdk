@@ -30,7 +30,10 @@ import (
 //
 //	Infraction was committed at the current height or at a past height,
 //	not at a height in the future
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) math.Int {
+//	---
+//
+// Slash implementation doesn't require the infraction (types.Infraction) to work but the IS one does. It is here to have IS satisfy the Slash signature.
+func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec, _ types.Infraction) math.Int {
 	logger := k.Logger(ctx)
 
 	if slashFactor.IsNegative() {
@@ -65,7 +68,9 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	operatorAddress := validator.GetOperator()
 
 	// call the before-modification hook
-	k.BeforeValidatorModified(ctx, operatorAddress)
+	if err := k.Hooks().BeforeValidatorModified(ctx, operatorAddress); err != nil {
+		k.Logger(ctx).Error("failed to call before validator modified hook", "error", err)
+	}
 
 	// Track remaining slash amount for the validator
 	// This will decrease when we slash unbondings and
@@ -123,7 +128,9 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			effectiveFraction = math.LegacyOneDec()
 		}
 		// call the before-slashed hook
-		k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
+		if err := k.Hooks().BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction); err != nil {
+			k.Logger(ctx).Error("failed to call before validator slashed hook", "error", err)
+		}
 	}
 
 	// Deduct from validator's bonded tokens and update the validator.
@@ -187,7 +194,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 			continue
 		}
 
-		if entry.IsMature(now) {
+		if entry.IsMature(now) && !entry.OnHold() {
 			// Unbonding delegation no longer eligible for slashing, skip it
 			continue
 		}
@@ -241,7 +248,7 @@ func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator,
 			continue
 		}
 
-		if entry.IsMature(now) {
+		if entry.IsMature(now) && !entry.OnHold() {
 			// Redelegation no longer eligible for slashing, skip it
 			continue
 		}

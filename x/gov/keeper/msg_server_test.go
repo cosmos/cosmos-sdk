@@ -4,26 +4,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func (suite *KeeperTestSuite) TestSubmitProposalReq() {
-	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+	suite.reset()
+	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
 	initialDeposit := coins
-	minDeposit := suite.app.GovKeeper.GetParams(suite.ctx).MinDeposit
+	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -124,12 +121,13 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 }
 
 func (suite *KeeperTestSuite) TestVoteReq() {
-	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+	suite.reset()
+	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
-	minDeposit := suite.app.GovKeeper.GetParams(suite.ctx).MinDeposit
+	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -236,12 +234,13 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 }
 
 func (suite *KeeperTestSuite) TestVoteWeightedReq() {
-	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+	suite.reset()
+	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
-	minDeposit := suite.app.GovKeeper.GetParams(suite.ctx).MinDeposit
+	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -349,12 +348,12 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 }
 
 func (suite *KeeperTestSuite) TestDepositReq() {
-	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
-	minDeposit := suite.app.GovKeeper.GetParams(suite.ctx).MinDeposit
+	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -423,7 +422,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgSubmitProposal() {
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
 	initialDeposit := coins
-	minDeposit := suite.app.GovKeeper.GetParams(suite.ctx).MinDeposit
+	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
 
 	cases := map[string]struct {
 		preRun func() (*v1beta1.MsgSubmitProposal, error)
@@ -467,12 +466,12 @@ func (suite *KeeperTestSuite) TestLegacyMsgSubmitProposal() {
 }
 
 func (suite *KeeperTestSuite) TestLegacyMsgVote() {
-	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
-	minDeposit := suite.app.GovKeeper.GetParams(suite.ctx).MinDeposit
+	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -569,12 +568,13 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 }
 
 func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
-	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+	suite.reset()
+	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
-	minDeposit := suite.app.GovKeeper.GetParams(suite.ctx).MinDeposit
+	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -672,12 +672,12 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 }
 
 func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
-	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
-	minDeposit := suite.app.GovKeeper.GetParams(suite.ctx).MinDeposit
+	minDeposit := suite.govKeeper.GetParams(suite.ctx).MinDeposit
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -740,7 +740,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 }
 
 func (suite *KeeperTestSuite) TestMsgUpdateParams() {
-	authority := suite.app.GovKeeper.GetAuthority()
+	authority := suite.govKeeper.GetAuthority()
 	params := v1.DefaultParams()
 	testCases := []struct {
 		name      string
@@ -1059,17 +1059,8 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 	for name, tc := range testcases {
 		suite.Run(name, func() {
 			// Setup
-			privateKey := secp256k1.GenPrivKey()
-			address := sdk.AccAddress(privateKey.PubKey().Address())
-			acc := &authtypes.BaseAccount{
-				Address: address.String(),
-			}
-
-			genAccs := []authtypes.GenesisAccount{acc}
-			app := simapp.SetupWithGenesisAccounts(suite.T(), genAccs, banktypes.Balance{Address: acc.Address, Coins: tc.accountBalance})
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-			govKeeper := app.GovKeeper
-			msgServer := keeper.NewMsgServerImpl(govKeeper)
+			govKeeper, ctx := suite.govKeeper, suite.ctx
+			address := simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 1, tc.accountBalance[0].Amount)[0]
 
 			params := v1.DefaultParams()
 			params.MinDeposit = tc.minDeposit
@@ -1080,7 +1071,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			suite.Require().NoError(err)
 
 			// System under test
-			_, err = msgServer.SubmitProposal(sdk.WrapSDKContext(ctx), msg)
+			_, err = suite.msgSrvr.SubmitProposal(sdk.WrapSDKContext(ctx), msg)
 
 			// Assertions
 			if tc.expectError {

@@ -1,0 +1,17 @@
+go 1.19
+
+use (
+	.
+	./api
+	./client/v2
+	./core
+	./cosmovisor
+	./depinject
+	./errors
+	./math
+	./orm
+	./store/tools/ics23
+	./tx
+	./simapp
+	./tests
+)

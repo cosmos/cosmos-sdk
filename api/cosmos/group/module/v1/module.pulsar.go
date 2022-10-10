@@ -2,17 +2,18 @@
 package modulev1
 
 import (
-	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
+	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var (

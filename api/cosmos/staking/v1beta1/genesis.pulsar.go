@@ -3,15 +3,16 @@ package stakingv1beta1
 
 import (
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-proto"
-	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoiface "google.golang.org/protobuf/runtime/protoiface"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	io "io"
 	reflect "reflect"
 	sync "sync"
+
+	_ "github.com/cosmos/cosmos-proto"
+	runtime "github.com/cosmos/cosmos-proto/runtime"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoiface "google.golang.org/protobuf/runtime/protoiface"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 var _ protoreflect.List = (*_GenesisState_3_list)(nil)

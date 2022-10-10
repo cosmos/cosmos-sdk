@@ -6,7 +6,6 @@ run:
 linters:
   disable-all: true
   enable:
-    - deadcode
     - depguard
     - dogsled
     - exportloopref

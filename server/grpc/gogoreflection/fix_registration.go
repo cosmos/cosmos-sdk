@@ -6,18 +6,17 @@ import (
 	"fmt"
 	"reflect"
 
-	_ "github.com/gogo/protobuf/gogoproto" // required so it does register the gogoproto file descriptor
-	gogoproto "github.com/gogo/protobuf/proto"
+	_ "github.com/cosmos/gogoproto/gogoproto" // required so it does register the gogoproto file descriptor
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
-	//nolint: staticcheck
-	"github.com/golang/protobuf/proto"
+	_ "github.com/cosmos/cosmos-proto" // look above
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	_ "github.com/regen-network/cosmos-proto" // look above
 )
 
 var importsToFix = map[string]string{
-	"gogo.proto":   "gogoproto/gogo.proto",
-	"cosmos.proto": "cosmos_proto/cosmos.proto",
+	"gogo.proto": "gogoproto/gogo.proto",
+	// "cosmos.proto": "cosmos_proto/cosmos.proto",
 }
 
 // fixRegistration is required because certain files register themselves in a way
@@ -71,6 +70,7 @@ func compress(fd *dpb.FileDescriptorProto) ([]byte, error) {
 	cw := gzip.NewWriter(buf)
 	_, err = cw.Write(fdBytes)
 	if err != nil {
+		cw.Close()
 		return nil, err
 	}
 	err = cw.Close()
@@ -87,8 +87,8 @@ func getFileDescriptor(filePath string) []byte {
 	if len(fd) != 0 {
 		return fd
 	}
-	//nolint: staticcheck
-	return proto.FileDescriptor(filePath)
+
+	return proto.FileDescriptor(filePath) //nolint:staticcheck
 }
 
 func getMessageType(name string) reflect.Type {
@@ -96,8 +96,8 @@ func getMessageType(name string) reflect.Type {
 	if typ != nil {
 		return typ
 	}
-	//nolint: staticcheck
-	return proto.MessageType(name)
+
+	return proto.MessageType(name) //nolint:staticcheck
 }
 
 func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
@@ -107,9 +107,9 @@ func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
 			return desc
 		}
 	}
+
 	// check into proto registry
-	//nolint: staticcheck
-	for id, desc := range proto.RegisteredExtensions(m) {
+	for id, desc := range proto.RegisteredExtensions(m) { //nolint:staticcheck
 		if id == extID {
 			return &gogoproto.ExtensionDesc{
 				ExtendedType:  desc.ExtendedType,
@@ -134,8 +134,8 @@ func getExtensionsNumbers(m proto.Message) []int32 {
 	if len(out) != 0 {
 		return out
 	}
-	//nolint: staticcheck
-	protoExts := proto.RegisteredExtensions(m)
+
+	protoExts := proto.RegisteredExtensions(m) //nolint:staticcheck
 	out = make([]int32, 0, len(protoExts))
 	for id := range protoExts {
 		out = append(out, id)

@@ -1,7 +1,6 @@
 package baseapp_test
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
@@ -12,6 +11,7 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
@@ -29,6 +29,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
@@ -42,7 +43,7 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 	t.Helper()
 
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey(context.TODO())
+	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 
 	// create validator set with single validator
@@ -80,6 +81,7 @@ func makeTestConfig() depinject.Config {
 						"auth",
 						"bank",
 						"params",
+						"consensus",
 					},
 					EndBlockers: []string{
 						"staking",
@@ -87,6 +89,7 @@ func makeTestConfig() depinject.Config {
 						"bank",
 						"mint",
 						"params",
+						"consensus",
 					},
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{
@@ -100,6 +103,7 @@ func makeTestConfig() depinject.Config {
 						"staking",
 						"mint",
 						"params",
+						"consensus",
 					},
 				}),
 			},
@@ -130,6 +134,10 @@ func makeTestConfig() depinject.Config {
 			{
 				Name:   "mint",
 				Config: appconfig.WrapAny(&mintmodulev1.Module{}),
+			},
+			{
+				Name:   "consensus",
+				Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
 			},
 			{
 				Name:   "tx",

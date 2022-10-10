@@ -2,16 +2,17 @@
 package signingv1beta1
 
 import (
-	v1beta1 "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
+	v1beta1 "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var _ protoreflect.List = (*_SignatureDescriptors_1_list)(nil)
@@ -2900,6 +2901,7 @@ type SignatureDescriptor_Data struct {
 	// sum is the oneof that specifies whether this represents single or multi-signature data
 	//
 	// Types that are assignable to Sum:
+	//
 	//	*SignatureDescriptor_Data_Single_
 	//	*SignatureDescriptor_Data_Multi_
 	Sum isSignatureDescriptor_Data_Sum `protobuf_oneof:"sum"`

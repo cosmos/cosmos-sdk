@@ -3,7 +3,7 @@ package baseapp
 import (
 	"fmt"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
@@ -114,8 +114,5 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 	qrt.cdc = codec.NewProtoCodec(interfaceRegistry).GRPCCodec()
 	// Once we have an interface registry, we can register the interface
 	// registry reflection gRPC service.
-	reflection.RegisterReflectionServiceServer(
-		qrt,
-		reflection.NewReflectionServiceServer(interfaceRegistry),
-	)
+	reflection.RegisterReflectionServiceServer(qrt, reflection.NewReflectionServiceServer(interfaceRegistry))
 }

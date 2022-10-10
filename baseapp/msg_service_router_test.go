@@ -1,6 +1,7 @@
 package baseapp_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,6 +11,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -28,7 +30,7 @@ func TestRegisterMsgService(t *testing.T) {
 	)
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &registry)
 	require.NoError(t, err)
-	app := appBuilder.Build(log.MustNewDefaultLogger("plain", "info", false), dbm.NewMemDB(), nil)
+	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), dbm.NewMemDB(), nil)
 
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
@@ -57,7 +59,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &registry)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(log.MustNewDefaultLogger("plain", "info", false), db, nil)
+	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil)
 	testdata.RegisterInterfaces(registry)
 
 	// First time registering service shouldn't panic.

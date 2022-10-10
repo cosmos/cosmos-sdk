@@ -3,8 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/tendermint/tendermint/libs/log"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -80,8 +81,9 @@ func NewAccountKeeper(
 	maccPerms map[string][]string, bech32Prefix string, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
-	for name, perms := range maccPerms {
-		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
+	permNames := maps.Keys(maccPerms)
+	for _, name := range permNames {
+		permAddrs[name] = types.NewPermissionsForAddress(name, maccPerms[name])
 	}
 
 	bech32Codec := newBech32Codec(bech32Prefix)

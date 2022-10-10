@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
@@ -62,7 +62,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, _ := rest.GetRequest(tc.url)
+			resp, _ := testutil.GetRequest(tc.url)
 			require := s.Require()
 			if tc.expectErr {
 				require.Contains(string(resp), tc.errorMsg)
@@ -114,11 +114,12 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 					fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
 					fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-					fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+					fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
 				})
 				s.Require().NoError(err)
+				s.Require().NoError(s.network.WaitForNextBlock())
 			},
 			func(g *authz.QueryGrantsResponse) {
 				s.Require().Len(g.Grants, 2)
@@ -149,7 +150,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 		tc := tc
 		s.Run(tc.name, func() {
 			tc.preRun()
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			if tc.expectErr {
@@ -200,7 +201,7 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			require.NoError(err)
 
 			if tc.expectErr {
@@ -252,7 +253,7 @@ func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			require.NoError(err)
 
 			if tc.expectErr {

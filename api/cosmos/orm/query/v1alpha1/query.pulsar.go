@@ -2,8 +2,12 @@
 package queryv1alpha1
 
 import (
-	v1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
+	v1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
@@ -11,9 +15,6 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var _ protoreflect.List = (*_GetRequest_3_list)(nil)
@@ -4697,6 +4698,7 @@ type ListRequest struct {
 	// in the index.
 	//
 	// Types that are assignable to Query:
+	//
 	//	*ListRequest_Prefix_
 	//	*ListRequest_Range_
 	Query isListRequest_Query `protobuf_oneof:"query"`
@@ -4839,6 +4841,7 @@ type IndexValue struct {
 	// value specifies the index value
 	//
 	// Types that are assignable to Value:
+	//
 	//	*IndexValue_Uint
 	//	*IndexValue_Int
 	//	*IndexValue_Str

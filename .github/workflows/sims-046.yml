@@ -7,27 +7,21 @@ on:
   release:
     types: [published]
 
+concurrency:
+  group: ci-${{ github.ref }}-sims-046
+  cancel-in-progress: true
+
 jobs:
-  cleanup-runs:
-    permissions:
-      actions: write  # for rokroskar/workflow-run-cleanup-action to obtain workflow name & cancel it
-      contents: read  # for rokroskar/workflow-run-cleanup-action to obtain branch
-    runs-on: buildjet-4vcpu-ubuntu-2004
-    steps:
-      - uses: rokroskar/workflow-run-cleanup-action@master
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main'"
   build:
     runs-on: buildjet-4vcpu-ubuntu-2004
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: "release/v0.46.x"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
+          go-version: 1.19
       - run: make build
 
   install-runsim:
@@ -38,9 +32,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
+          go-version: 1.19
       - name: Install runsim
         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
       - uses: actions/cache@v3
@@ -58,9 +50,7 @@ jobs:
           ref: "release/v0.46.x"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
+          go-version: 1.19
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -78,9 +68,7 @@ jobs:
           ref: "release/v0.46.x"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
+          go-version: 1.19
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -98,9 +86,7 @@ jobs:
           ref: "release/v0.46.x"
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
-      - name: Display go version
-        run: go version
+          go-version: 1.19
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -115,9 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
+      - uses: actions/checkout@v3
       - name: Get previous workflow status
         uses: ./.github/actions/last-workflow-status
         id: last_status

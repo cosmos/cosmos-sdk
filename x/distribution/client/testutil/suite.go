@@ -7,12 +7,11 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,8 +61,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 // TearDownSuite cleans up the curret test network after _each_ test.
@@ -105,6 +103,48 @@ withdraw_addr_enabled: true`,
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryValidatorDistributionInfo() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"invalid val address",
+			[]string{"invalid address", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"json output",
+			[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+		{
+			"text output",
+			[]string{val.ValAddress.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryValidatorDistributionInfo()
+			clientCtx := val.ClientCtx
+
+			_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
 		})
 	}
 }
@@ -472,7 +512,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true, 0, nil,
@@ -484,7 +524,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
@@ -499,7 +539,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=true", cli.FlagCommission),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
@@ -523,8 +563,10 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bz, tc.respType), string(bz))
+				s.Require().NoError(s.network.WaitForNextBlock())
 
-				txResp := tc.respType.(*sdk.TxResponse)
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 
 				data, err := hex.DecodeString(txResp.Data)
@@ -573,7 +615,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagOffline),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true, 0, nil,
@@ -584,7 +626,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
@@ -609,8 +651,10 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(s.network.WaitForNextBlock())
 
-				txResp := tc.respType.(*sdk.TxResponse)
+				txResp, err := clitestutil.GetTxResponse(s.network, clientCtx, tc.respType.(*sdk.TxResponse).TxHash)
+				s.Require().NoError(err)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 
 				data, err := hex.DecodeString(txResp.Data)
@@ -659,7 +703,7 @@ func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 				"foo",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true, 0, nil,
@@ -670,7 +714,7 @@ func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 				val.Address.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
@@ -692,7 +736,7 @@ func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}
@@ -714,7 +758,7 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 				"-43foocoin",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true, 0, nil,
@@ -725,7 +769,7 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 				sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431))).String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
@@ -747,99 +791,7 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
-	s.T().Skip() // TODO to re-enable in #12274
-
-	val := s.network.Validators[0]
-	invalidProp := `{
-  "title": "",
-  "description": "Pay me some Atoms!",
-  "recipient": "foo",
-  "amount": "-343foocoin",
-  "deposit": -324foocoin
-}`
-
-	// fund some tokens to the community pool
-	args := []string{
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431))).String(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
-	invalidPropFile := sdktestutil.WriteToNewTempFile(s.T(), invalidProp)
-	cmd := cli.NewFundCommunityPoolCmd()
-	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	s.Require().NoError(err)
-
-	var txResp sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
-	s.Require().Equal(uint32(0), txResp.Code)
-
-	validProp := fmt.Sprintf(`{
-  "title": "Community Pool Spend",
-  "description": "Pay me some Atoms!",
-  "recipient": "%s",
-  "amount": "%s",
-  "deposit": "%s"
-}`, val.Address.String(), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
-
-	validPropFile := sdktestutil.WriteToNewTempFile(s.T(), validProp)
-	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectedCode uint32
-		respType     proto.Message
-	}{
-		{
-			"invalid proposal",
-			[]string{
-				invalidPropFile.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			true, 0, nil,
-		},
-		{
-			"valid transaction",
-			[]string{
-				validPropFile.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, 0, &sdk.TxResponse{},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdSubmitProposal()
-			clientCtx := val.ClientCtx
-			flags.AddTxFlagsToCmd(cmd)
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}

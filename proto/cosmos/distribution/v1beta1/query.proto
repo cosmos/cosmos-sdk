@@ -17,6 +17,12 @@ service Query {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/params";
   }
 
+  // ValidatorDistributionInfo queries validator commission and self-delegation rewards for validator
+  rpc ValidatorDistributionInfo(QueryValidatorDistributionInfoRequest)
+      returns (QueryValidatorDistributionInfoResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/{validator_address}";
+  }
+
   // ValidatorOutstandingRewards queries rewards of a validator address.
   rpc ValidatorOutstandingRewards(QueryValidatorOutstandingRewardsRequest)
       returns (QueryValidatorOutstandingRewardsResponse) {
@@ -74,6 +80,26 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
+// QueryValidatorDistributionInfoRequest is the request type for the Query/ValidatorDistributionInfo RPC method.
+message QueryValidatorDistributionInfoRequest {
+  // validator_address defines the validator address to query for.
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryValidatorDistributionInfoResponse is the response type for the Query/ValidatorDistributionInfo RPC method.
+message QueryValidatorDistributionInfoResponse {
+  // operator_address defines the validator operator address.
+  string operator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // self_bond_rewards defines the self delegations rewards.
+  repeated cosmos.base.v1beta1.DecCoin self_bond_rewards = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
+  // commission defines the commission the validator received.
+  repeated cosmos.base.v1beta1.DecCoin commission = 3 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)     = false
+  ];
+}
+
 // QueryValidatorOutstandingRewardsRequest is the request type for the
 // Query/ValidatorOutstandingRewards RPC method.
 message QueryValidatorOutstandingRewardsRequest {
@@ -97,7 +123,7 @@ message QueryValidatorCommissionRequest {
 // QueryValidatorCommissionResponse is the response type for the
 // Query/ValidatorCommission RPC method
 message QueryValidatorCommissionResponse {
-  // commission defines the commision the validator received.
+  // commission defines the commission the validator received.
   ValidatorAccumulatedCommission commission = 1 [(gogoproto.nullable) = false];
 }
 

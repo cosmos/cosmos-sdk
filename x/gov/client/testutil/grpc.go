@@ -4,11 +4,10 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 func (s *IntegrationTestSuite) TestGetProposalGRPC() {
@@ -39,7 +38,7 @@ func (s *IntegrationTestSuite) TestGetProposalGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var proposal v1.QueryProposalResponse
@@ -160,7 +159,7 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var vote v1.QueryVoteResponse
@@ -204,7 +203,7 @@ func (s *IntegrationTestSuite) TestGetProposalVotesGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var votes v1.QueryVotesResponse
@@ -253,7 +252,7 @@ func (s *IntegrationTestSuite) TestGetProposalDepositGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var deposit v1.QueryDepositResponse
@@ -292,7 +291,7 @@ func (s *IntegrationTestSuite) TestGetProposalDepositsGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var deposits v1.QueryDepositsResponse
@@ -337,7 +336,7 @@ func (s *IntegrationTestSuite) TestGetTallyGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var tally v1.QueryTallyResultResponse
@@ -399,7 +398,7 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)

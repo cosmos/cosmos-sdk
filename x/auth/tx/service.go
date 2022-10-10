@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
@@ -129,7 +129,7 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 
 	gasInfo, result, err := s.simulate(txBytes)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Unknown, "%v With gas wanted: '%d' and gas used: '%d' ", err, gasInfo.GasWanted, gasInfo.GasUsed)
 	}
 
 	return &txtypes.SimulateResponse{

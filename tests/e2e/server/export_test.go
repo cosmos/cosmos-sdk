@@ -22,11 +22,11 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -129,7 +129,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 		t.Fatalf("error creating config folder: %s", err)
 	}
 
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 
@@ -157,7 +157,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	app.Commit()
 
 	cmd := server.ExportCmd(
-		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions) (types.ExportedApp, error) {
+		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
 			var simApp *simapp.SimApp
 			if height != -1 {
 				simApp = simapp.NewSimApp(logger, db, nil, false, appOptions)
@@ -169,7 +169,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 				simApp = simapp.NewSimApp(logger, db, nil, true, appOptions)
 			}
 
-			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 		}, tempDir)
 
 	ctx := context.Background()

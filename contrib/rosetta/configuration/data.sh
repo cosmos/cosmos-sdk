@@ -7,7 +7,7 @@ wait_simd() {
 }
 # this script is used to recreate the data dir
 echo clearing /root/.simapp
-rm -rf /root/.simapp
+rm -rf /root/.simapp/*
 echo initting new chain
 # init config files
 simd init simd --chain-id testing
@@ -33,7 +33,7 @@ sed -i 's/127.0.0.1/0.0.0.0/g' /root/.simapp/config/config.toml
 
 # start simd
 echo starting simd...
-simd start --pruning=nothing --mode validator &
+simd start --pruning=nothing &
 pid=$!
 echo simd started with PID $pid
 
@@ -45,7 +45,7 @@ sleep 10
 
 # send transaction to deterministic address
 echo sending transaction with addr $addr
-simd tx bank send "$addr" cosmos19g9cm8ymzchq2qkcdv3zgqtwayj9asv3hjv5u5 100stake --yes --keyring-backend=test --broadcast-mode=block --chain-id=testing
+simd tx bank send "$addr" cosmos19g9cm8ymzchq2qkcdv3zgqtwayj9asv3hjv5u5 100stake --yes --keyring-backend=test --chain-id=testing
 
 sleep 10
 

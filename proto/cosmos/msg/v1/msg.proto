@@ -10,7 +10,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/types/msgservice";
 
 extend google.protobuf.ServiceOptions {
   // service indicates that the service is a Msg service and that requests
-  // should be routed through transactions rather than gRPC.
+  // must be transported via blockchain transactions rather than gRPC.
+  // Tooling can use this annotation to distinguish between Msg services and
+  // other types of services via reflection.
   bool service = 11110000;
 }
 

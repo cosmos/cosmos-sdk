@@ -56,6 +56,7 @@ type BaseApp struct { //nolint: maligned
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
+	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
 	mempool        mempool.Mempool  // application side mempool
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth

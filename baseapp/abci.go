@@ -249,8 +249,19 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-	// TODO: Implement.
-	return abci.ResponsePrepareProposal{Txs: req.Txs}
+	memTxs, selectErr := app.mempool.Select(req.Txs, req.MaxTxBytes)
+	if selectErr != nil {
+		panic(selectErr)
+	}
+	var txs [][]byte
+	for _, memTx := range memTxs {
+		bz, encErr := app.txEncoder(memTx)
+		if encErr != nil {
+			panic(encErr)
+		}
+		txs = append(txs, bz)
+	}
+	return abci.ResponsePrepareProposal{Txs: txs}
 }
 
 // ProcessProposal implements the ProcessProposal ABCI method and returns a
@@ -266,8 +277,19 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
-	// TODO: Implement.
-	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+	ctx := app.deliverState.ctx
+
+	for _, txBytes := range req.Txs {
+		anteCtx, _ := app.cacheTxContext(ctx, txBytes)
+		tx, err := app.txDecoder(txBytes)
+		if err != nil {
+			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+		}
+		ctx, err = app.anteHandler(anteCtx, tx, false)
+		if err != nil {
+			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+		}
+	}
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In

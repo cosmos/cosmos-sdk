@@ -32,95 +32,95 @@ The following specification uses *ATOM* as the native staking token. The module
 can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the native
 staking token of the chain.
 
-* [`x/gov`](#xgov)
-    * [Abstract](#abstract)
-    * [Contents](#contents)
-* [Concepts](#concepts)
-    * [Proposal submission](#proposal-submission)
-        * [Right to submit a proposal](#right-to-submit-a-proposal)
-        * [Proposal Messages](#proposal-messages)
-    * [Deposit](#deposit)
-        * [Deposit refund and burn](#deposit-refund-and-burn)
-    * [Vote](#vote)
-        * [Participants](#participants)
-        * [Voting period](#voting-period)
-        * [Option set](#option-set)
-        * [Weighted Votes](#weighted-votes)
-        * [Quorum](#quorum)
-        * [Threshold](#threshold)
-        * [Inheritance](#inheritance)
-        * [Validator’s punishment for non-voting](#validators-punishment-for-non-voting)
-        * [Governance address](#governance-address)
-    * [Software Upgrade](#software-upgrade)
-        * [Signal](#signal)
-        * [Switch](#switch)
-* [State](#state)
-    * [Proposals](#proposals)
-        * [Writing a module that uses governance](#writing-a-module-that-uses-governance)
-    * [Parameters and base types](#parameters-and-base-types)
-        * [DepositParams](#depositparams)
-        * [VotingParams](#votingparams)
-        * [TallyParams](#tallyparams)
-    * [Deposit](#deposit-1)
-    * [ValidatorGovInfo](#validatorgovinfo)
-    * [Stores](#stores)
-    * [Proposal Processing Queue](#proposal-processing-queue)
-    * [Legacy Proposal](#legacy-proposal)
-* [Messages](#messages)
-    * [Proposal Submission](#proposal-submission-1)
-    * [Deposit](#deposit-2)
-    * [Vote](#vote-1)
-* [Events](#events)
-    * [EndBlocker](#endblocker)
-    * [Handlers](#handlers)
-        * [MsgSubmitProposal](#msgsubmitproposal)
-        * [MsgVote](#msgvote)
-        * [MsgVoteWeighted](#msgvoteweighted)
-        * [MsgDeposit](#msgdeposit)
-* [Future Improvements](#future-improvements)
-* [Parameters](#parameters)
-    * [SubKeys](#subkeys)
-* [Client](#client)
-    * [CLI](#cli)
-        * [Query](#query)
-            * [deposit](#deposit-3)
-            * [deposits](#deposits)
-            * [param](#param)
-            * [params](#params)
-            * [proposal](#proposal)
-            * [proposals](#proposals-1)
-            * [proposer](#proposer)
-            * [tally](#tally)
-            * [vote](#vote-2)
-            * [votes](#votes)
-        * [Transactions](#transactions)
-            * [deposit](#deposit-4)
-            * [draft-proposal](#draft-proposal)
-            * [submit-proposal](#submit-proposal)
-            * [submit-legacy-proposal](#submit-legacy-proposal)
-            * [vote](#vote-3)
-            * [weighted-vote](#weighted-vote)
-    * [gRPC](#grpc)
-        * [Proposal](#proposal-1)
-        * [Proposals](#proposals-2)
-        * [Vote](#vote-4)
-        * [Votes](#votes-1)
-        * [Params](#params-1)
-        * [Deposit](#deposit-5)
-        * [deposits](#deposits-1)
-        * [TallyResult](#tallyresult)
-    * [REST](#rest)
-        * [proposal](#proposal-2)
-        * [proposals](#proposals-3)
-        * [voter vote](#voter-vote)
-        * [votes](#votes-2)
-        * [params](#params-2)
-        * [deposits](#deposits-2)
-        * [proposal deposits](#proposal-deposits)
-        * [tally](#tally-1)
-* [Metadata](#metadata)
-    * [Proposal](#proposal-3)
-    * [Vote](#vote-5)
+- [`x/gov`](#xgov)
+  - [Abstract](#abstract)
+  - [Contents](#contents)
+- [Concepts](#concepts)
+  - [Proposal submission](#proposal-submission)
+    - [Right to submit a proposal](#right-to-submit-a-proposal)
+    - [Proposal Messages](#proposal-messages)
+  - [Deposit](#deposit)
+    - [Deposit refund and burn](#deposit-refund-and-burn)
+  - [Vote](#vote)
+    - [Participants](#participants)
+    - [Voting period](#voting-period)
+    - [Option set](#option-set)
+    - [Weighted Votes](#weighted-votes)
+    - [Quorum](#quorum)
+    - [Threshold](#threshold)
+    - [Inheritance](#inheritance)
+    - [Validator’s punishment for non-voting](#validators-punishment-for-non-voting)
+    - [Governance address](#governance-address)
+  - [Software Upgrade](#software-upgrade)
+    - [Signal](#signal)
+    - [Switch](#switch)
+- [State](#state)
+  - [Proposals](#proposals)
+    - [Writing a module that uses governance](#writing-a-module-that-uses-governance)
+  - [Parameters and base types](#parameters-and-base-types)
+    - [DepositParams](#depositparams)
+    - [VotingParams](#votingparams)
+    - [TallyParams](#tallyparams)
+  - [Deposit](#deposit-1)
+  - [ValidatorGovInfo](#validatorgovinfo)
+  - [Stores](#stores)
+  - [Proposal Processing Queue](#proposal-processing-queue)
+  - [Legacy Proposal](#legacy-proposal)
+- [Messages](#messages)
+  - [Proposal Submission](#proposal-submission-1)
+  - [Deposit](#deposit-2)
+  - [Vote](#vote-1)
+- [Events](#events)
+  - [EndBlocker](#endblocker)
+  - [Handlers](#handlers)
+    - [MsgSubmitProposal](#msgsubmitproposal)
+    - [MsgVote](#msgvote)
+    - [MsgVoteWeighted](#msgvoteweighted)
+    - [MsgDeposit](#msgdeposit)
+- [Future Improvements](#future-improvements)
+- [Parameters](#parameters)
+  - [SubKeys](#subkeys)
+- [Client](#client)
+  - [CLI](#cli)
+    - [Query](#query)
+      - [deposit](#deposit-3)
+      - [deposits](#deposits)
+      - [param](#param)
+      - [params](#params)
+      - [proposal](#proposal)
+      - [proposals](#proposals-1)
+      - [proposer](#proposer)
+      - [tally](#tally)
+      - [vote](#vote-2)
+      - [votes](#votes)
+    - [Transactions](#transactions)
+      - [deposit](#deposit-4)
+      - [draft-proposal](#draft-proposal)
+      - [submit-proposal](#submit-proposal)
+      - [submit-legacy-proposal](#submit-legacy-proposal)
+      - [vote](#vote-3)
+      - [weighted-vote](#weighted-vote)
+  - [gRPC](#grpc)
+    - [Proposal](#proposal-1)
+    - [Proposals](#proposals-2)
+    - [Vote](#vote-4)
+    - [Votes](#votes-1)
+    - [Params](#params-1)
+    - [Deposit](#deposit-5)
+    - [deposits](#deposits-1)
+    - [TallyResult](#tallyresult)
+  - [REST](#rest)
+    - [proposal](#proposal-2)
+    - [proposals](#proposals-3)
+    - [voter vote](#voter-vote)
+    - [votes](#votes-2)
+    - [params](#params-2)
+    - [deposits](#deposits-2)
+    - [proposal deposits](#proposal-deposits)
+    - [tally](#tally-1)
+- [Metadata](#metadata)
+  - [Proposal](#proposal-3)
+  - [Vote](#vote-5)
 
 # Concepts
 
@@ -244,9 +244,13 @@ Often times the entity owning that address might not be a single individual. For
 
 To represent weighted vote on chain, we use the following Protobuf message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L33-L43
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L33-L43
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L136-L150
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L136-L150
+```
 
 For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 
@@ -332,7 +336,9 @@ to resolve and then execute if the proposal passes. `Proposal`'s are identified 
 unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`,
 `voting_start_time`, `voting_end_time` which track the lifecycle of a proposal
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L42-L59
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L42-L59
+```
 
 A proposal will generally require more than just a set of messages to explain its
 purpose but need some greater justification and allow a means for interested participants
@@ -378,15 +384,21 @@ parameter set has to be created and the previous one rendered inactive.
 
 ### DepositParams
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L102-L112
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L102-L112
+```
 
 ### VotingParams
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L114-L118
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L114-L118
+```
 
 ### TallyParams
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L120-L132
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L120-L132
+```
 
 Parameters are stored in a global `GlobalParams` KVStore.
 
@@ -424,7 +436,9 @@ const (
 
 ## Deposit
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L34-L40
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L34-L40
+```
 
 ## ValidatorGovInfo
 
@@ -545,7 +559,9 @@ More information on how to submit proposals in the [client section](#client).
 Proposals can be submitted by any account via a `MsgSubmitProposal`
 transaction.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L33-L43
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L33-L43
+```
 
 All `sdk.Msgs` passed into the `messages` field of a `MsgSubmitProposal` message
 must be registered in the app's `MsgServiceRouter`. Each of these messages must
@@ -614,7 +630,9 @@ Once a proposal is submitted, if
 `Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
 `MsgDeposit` transactions to increase the proposal's deposit.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L90-L97
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L90-L97
+```
 
 **State modifications:**
 
@@ -680,7 +698,9 @@ Once `ActiveParam.MinDeposit` is reached, voting period starts. From there,
 bonded Atom holders are able to send `MsgVote` transactions to cast their
 vote on the proposal.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L64-L72
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L64-L72
+```
 
 **State modifications:**
 

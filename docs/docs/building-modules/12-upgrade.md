@@ -10,7 +10,7 @@ sidebar_position: 1
 
 :::note
 
-## Prerequisite Readings
+### Pre-requisite Readings
 
 * [In-Place Store Migration](../core/15-upgrade.md)
 
@@ -47,7 +47,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 Since these migrations are functions that need access to a Keeper's store, use a wrapper around the keepers called `Migrator` as shown in this example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/migrations.go#L9-L27
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/migrations.go#L9-L27
+```
 
 ## Writing Migration Scripts
 

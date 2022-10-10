@@ -6,20 +6,35 @@ sidebar_position: 1
 
 ## Contents
 
-* [State](#state)
-    * [Minter](#minter)
-    * [Params](#params)
-* [Begin-Block](#begin-block)
-    * [NextInflationRate](#nextinflationrate)
-    * [NextAnnualProvisions](#nextannualprovisions)
-    * [BlockProvision](#blockprovision)
-* [Parameters](#parameters)
-* [Events](#events)
-    * [BeginBlocker](#beginblocker)
-* [Client](#client)
-        * [CLI](#cli)
-        * [gRPC](#grpc)
-        * [REST](#rest)
+- [`x/mint`](#xmint)
+  - [Contents](#contents)
+- [Concepts](#concepts)
+  - [The Minting Mechanism](#the-minting-mechanism)
+- [State](#state)
+  - [Minter](#minter)
+  - [Params](#params)
+- [Begin-Block](#begin-block)
+  - [Inflation rate calculation](#inflation-rate-calculation)
+    - [NextInflationRate](#nextinflationrate)
+  - [NextAnnualProvisions](#nextannualprovisions)
+  - [BlockProvision](#blockprovision)
+- [Parameters](#parameters)
+- [Events](#events)
+  - [BeginBlocker](#beginblocker)
+- [Client](#client)
+  - [CLI](#cli)
+    - [Query](#query)
+      - [annual-provisions](#annual-provisions)
+      - [inflation](#inflation)
+      - [params](#params-1)
+  - [gRPC](#grpc)
+    - [AnnualProvisions](#annualprovisions)
+    - [Inflation](#inflation-1)
+    - [Params](#params-2)
+  - [REST](#rest)
+    - [annual-provisions](#annual-provisions-1)
+    - [inflation](#inflation-2)
+    - [params](#params-3)
 
 # Concepts
 
@@ -55,7 +70,9 @@ The minter is a space for holding current inflation information.
 
 * Minter: `0x00 -> ProtocolBuffer(minter)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/mint/v1beta1/mint.proto#L9-L23
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/mint/v1beta1/mint.proto#L9-L23
+```
 
 ## Params
 
@@ -64,7 +81,9 @@ it can be updated with governance or the address with authority.
 
 * Params: `mint/params -> legacy_amino(params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/mint/v1beta1/mint.proto#L25-L57
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/mint/v1beta1/mint.proto#L25-L57
+```
 
 
 # Begin-Block

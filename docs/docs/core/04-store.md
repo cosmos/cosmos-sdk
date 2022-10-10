@@ -64,11 +64,15 @@ The Cosmos SDK comes with a large set of stores to persist the state of applicat
 
 At its very core, a Cosmos SDK `store` is an object that holds a `CacheWrapper` and has a `GetStoreType()` method:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L16-L19
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L16-L19
+```
 
 The `GetStoreType` is a simple method that returns the type of store, whereas a `CacheWrapper` is a simple interface that implements store read caching and write branching through `Write` method:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L247-L277
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L247-L277
+```
 
 Branching and cache is used ubiquitously in the Cosmos SDK and required to be implemented on every store type. A storage branch creates an isolated, ephemeral branch of a store that can be passed around and updated without affecting the main underlying store. This is used to trigger temporary state-transitions that may be reverted later should an error occur. Read more about it in [context](./02-context.md#Store-branching)
 
@@ -76,11 +80,15 @@ Branching and cache is used ubiquitously in the Cosmos SDK and required to be im
 
 A commit store is a store that has the ability to commit changes made to the underlying tree or db. The Cosmos SDK differentiates simple stores from commit stores by extending the basic store interfaces with a `Committer`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L30-L34
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L30-L34
+```
 
 The `Committer` is an interface that defines methods to persist changes to disk:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L21-L28
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L21-L28
+```
 
 The `CommitID` is a deterministic commit of the state tree. Its hash is returned to the underlying consensus engine and stored in the block header. Note that commit store interfaces exist for various purposes, one of which is to make sure not every object can commit the store. As part of the [object-capabilities model](./10-ocap.md) of the Cosmos SDK, only `baseapp` should have the ability to commit stores. For example, this is the reason why the `ctx.KVStore()` method by which modules typically access stores returns a `KVStore` and not a `CommitKVStore`.
 
@@ -92,7 +100,9 @@ The Cosmos SDK comes with many types of stores, the most used being [`CommitMult
 
 Each Cosmos SDK application holds a multistore at its root to persist its state. The multistore is a store of `KVStores` that follows the `Multistore` interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L97-L133
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L97-L133
+```
 
 If tracing is enabled, then branching the multistore will firstly wrap all the underlying `KVStore` in [`TraceKv.Store`](#tracekv-store).
 
@@ -100,11 +110,15 @@ If tracing is enabled, then branching the multistore will firstly wrap all the u
 
 The main type of `Multistore` used in the Cosmos SDK is `CommitMultiStore`, which is an extension of the `Multistore` interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L141-L187
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L141-L187
+```
 
 As for concrete implementation, the [`rootMulti.Store`] is the go-to implementation of the `CommitMultiStore` interface.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/rootmulti/store.go#L38-L61
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/rootmulti/store.go#L38-L61
+```
 
 The `rootMulti.Store` is a base-layer multistore built around a `db` on top of which multiple `KVStores` can be mounted, and is the default multistore store used in [`baseapp`](./00-baseapp.md).
 
@@ -112,7 +126,9 @@ The `rootMulti.Store` is a base-layer multistore built around a `db` on top of w
 
 Whenever the `rootMulti.Store` needs to be branched, a [`cachemulti.Store`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/cachemulti/store.go) is used.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/cachemulti/store.go#L20-L36
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/cachemulti/store.go#L20-L36
+```
 
 `cachemulti.Store` branches all substores (creates a virtual store for each substore) in its constructor and hold them in `Store.stores`. Moreover caches all read queries. `Store.GetKVStore()` returns the store from `Store.stores`, and `Store.Write()` recursively calls `CacheWrap.Write()` on all the substores.
 
@@ -126,17 +142,23 @@ Individual `KVStore`s are used by modules to manage a subset of the global state
 
 `CommitKVStore`s are declared by proxy of their respective `key` and mounted on the application's [multistore](#multistore) in the [main application file](../basics/00-app-anatomy.md#core-application-file). In the same file, the `key` is also passed to the module's `keeper` that is responsible for managing the store.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L192-L226
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/store.go#L192-L226
+```
 
 Apart from the traditional `Get` and `Set` methods, that a `KVStore` must implement via the `BasicKVStore` interface; a `KVStore` must provide an `Iterator(start, end)` method which returns an `Iterator` object. It is used to iterate over a range of keys, typically keys that share a common prefix. Below is an example from the bank's module keeper, used to iterate over all account balances:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/view.go#L114-L132
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/view.go#L114-L132
+```
 
 ### `IAVL` Store
 
 The default implementation of `KVStore` and `CommitKVStore` used in `baseapp` is the `iavl.Store`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/iavl/store.go#L37-L40
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/iavl/store.go#L37-L40
+```
 
 `iavl` stores are based around an [IAVL Tree](https://github.com/cosmos/iavl), a self-balancing binary tree which guarantees that:
 
@@ -150,7 +172,9 @@ The documentation on the IAVL Tree is located [here](https://github.com/cosmos/i
 
 `dbadapter.Store` is a adapter for `dbm.DB` making it fulfilling the `KVStore` interface.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/dbadapter/store.go#L14-L17
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/dbadapter/store.go#L14-L17
+```
 
 `dbadapter.Store` embeds `dbm.DB`, meaning most of the `KVStore` interface functions are implemented. The other functions (mostly miscellaneous) are manually implemented. This store is primarily used within [Transient Stores](#transient-stores)
 
@@ -158,17 +182,23 @@ The documentation on the IAVL Tree is located [here](https://github.com/cosmos/i
 
 `Transient.Store` is a base-layer `KVStore` which is automatically discarded at the end of the block.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/transient/store.go#L16-L19
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/transient/store.go#L16-L19
+```
 
 `Transient.Store` is a `dbadapter.Store` with a `dbm.NewMemDB()`. All `KVStore` methods are reused. When `Store.Commit()` is called, a new `dbadapter.Store` is assigned, discarding previous reference and making it garbage collected.
 
 This type of store is useful to persist information that is only relevant per-block. One example would be to store parameter changes (i.e. a bool set to `true` if a parameter changed in a block).
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/params/types/subspace.go#L21-L31
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/params/types/subspace.go#L21-L31
+```
 
 Transient stores are typically accessed via the [`context`](./02-context.md) via the `TransientStore()` method:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/context.go#L264-L267
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/context.go#L264-L267
+```
 
 ## KVStore Wrappers
 
@@ -176,7 +206,9 @@ Transient stores are typically accessed via the [`context`](./02-context.md) via
 
 `cachekv.Store` is a wrapper `KVStore` which provides buffered writing / cached reading functionalities over the underlying `KVStore`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/cachekv/store.go#L27-L35
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/cachekv/store.go#L27-L35
+```
 
 This is the type used whenever an IAVL Store needs to be branched to create an isolated store (typically when we need to mutate a state that might be reverted later).
 
@@ -196,25 +228,35 @@ This is the type used whenever an IAVL Store needs to be branched to create an i
 
 Cosmos SDK applications use [`gas`](../basics/04-gas-fees.md) to track resources usage and prevent spam. [`GasKv.Store`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/gaskv/store.go) is a `KVStore` wrapper that enables automatic gas consumption each time a read or write to the store is made. It is the solution of choice to track storage usage in Cosmos SDK applications.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/gaskv/store.go#L11-L17
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/gaskv/store.go#L11-L17
+```
 
 When methods of the parent `KVStore` are called, `GasKv.Store` automatically consumes appropriate amount of gas depending on the `Store.gasConfig`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/gas.go#L219-L228
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/gas.go#L219-L228
+```
 
 By default, all `KVStores` are wrapped in `GasKv.Stores` when retrieved. This is done in the `KVStore()` method of the [`context`](./02-context.md):
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/context.go#L259-L262
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/context.go#L259-L262
+```
 
 In this case, the default gas configuration is used:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/gas.go#L230-L241
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/gas.go#L230-L241
+```
 
 ### `TraceKv` Store
 
 `tracekv.Store` is a wrapper `KVStore` which provides operation tracing functionalities over the underlying `KVStore`. It is applied automatically by the Cosmos SDK on all `KVStore` if tracing is enabled on the parent `MultiStore`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/tracekv/store.go#L20-L43
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/tracekv/store.go#L20-L43
+```
 
 When each `KVStore` methods are called, `tracekv.Store` automatically logs `traceOperation` to the `Store.writer`. `traceOperation.Metadata` is filled with `Store.context` when it is not nil. `TraceContext` is a `map[string]interface{}`.
 
@@ -222,7 +264,9 @@ When each `KVStore` methods are called, `tracekv.Store` automatically logs `trac
 
 `prefix.Store` is a wrapper `KVStore` which provides automatic key-prefixing functionalities over the underlying `KVStore`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/prefix/store.go#L16-L22
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/prefix/store.go#L16-L22
+```
 
 When `Store.{Get, Set}()` is called, the store forwards the call to its parent, with the key prefixed with the `Store.prefix`.
 
@@ -234,7 +278,9 @@ When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`,
 It is applied automatically by the Cosmos SDK on any `KVStore` whose `StoreKey` is specified during state streaming configuration.
 Additional information about state streaming configuration can be found in the [store/streaming/README.md](https://github.com/cosmos/cosmos-sdk/tree/v0.46.0/store/streaming).
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/listenkv/store.go#L11-L18
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/listenkv/store.go#L11-L18
+```
 
 When `KVStore.Set` or `KVStore.Delete` methods are called, `listenkv.Store` automatically writes the operations to the set of `Store.listeners`.
 

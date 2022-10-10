@@ -4,35 +4,38 @@ sidebar_position: 1
 
 # `x/auth/vesting`
 
-* [Intro and Requirements](#intro-and-requirements)
-* [Note](#note)
-* [Vesting Account Types](#vesting-account-types)
-    * [BaseVestingAccount](#basevestingaccount)
-    * [ContinuousVestingAccount](#continuousvestingaccount)
-    * [DelayedVestingAccount](#delayedvestingaccount)
-    * [Period](#period)
-    * [PeriodicVestingAccount](#periodicvestingaccount)
-    * [PermanentLockedAccount](#permanentlockedaccount)
-* [Vesting Account Specification](#vesting-account-specification)
-    * [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
-        * [Continuously Vesting Accounts](#continuously-vesting-accounts)
-    * [Periodic Vesting Accounts](#periodic-vesting-accounts)
-        * [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
-    * [Transferring/Sending](#transferringsending)
-        * [Keepers/Handlers](#keepershandlers)
-    * [Delegating](#delegating)
-        * [Keepers/Handlers](#keepershandlers-1)
-    * [Undelegating](#undelegating)
-        * [Keepers/Handlers](#keepershandlers-2)
-* [Keepers & Handlers](#keepers--handlers)
-* [Genesis Initialization](#genesis-initialization)
-* [Examples](#examples)
-    * [Simple](#simple)
-    * [Slashing](#slashing)
-    * [Periodic Vesting](#periodic-vesting)
-* [Glossary](#glossary)
-* [Client](#client)
-    * [CLI](#vesting#cli)
+- [`x/auth/vesting`](#xauthvesting)
+  - [Intro and Requirements](#intro-and-requirements)
+  - [Note](#note)
+  - [Vesting Account Types](#vesting-account-types)
+    - [BaseVestingAccount](#basevestingaccount)
+    - [ContinuousVestingAccount](#continuousvestingaccount)
+    - [DelayedVestingAccount](#delayedvestingaccount)
+    - [Period](#period)
+    - [PeriodicVestingAccount](#periodicvestingaccount)
+    - [PermanentLockedAccount](#permanentlockedaccount)
+  - [Vesting Account Specification](#vesting-account-specification)
+    - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
+      - [Continuously Vesting Accounts](#continuously-vesting-accounts)
+    - [Periodic Vesting Accounts](#periodic-vesting-accounts)
+      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
+    - [Transferring/Sending](#transferringsending)
+      - [Keepers/Handlers](#keepershandlers)
+    - [Delegating](#delegating)
+      - [Keepers/Handlers](#keepershandlers-1)
+    - [Undelegating](#undelegating)
+      - [Keepers/Handlers](#keepershandlers-2)
+  - [Keepers & Handlers](#keepers--handlers)
+  - [Genesis Initialization](#genesis-initialization)
+  - [Examples](#examples)
+    - [Simple](#simple)
+    - [Slashing](#slashing)
+    - [Periodic Vesting](#periodic-vesting)
+  - [Glossary](#glossary)
+  - [CLI](#cli)
+    - [Transactions](#transactions)
+      - [create-periodic-vesting-account](#create-periodic-vesting-account)
+      - [create-vesting-account](#create-vesting-account)
 
 ## Intro and Requirements
 
@@ -101,19 +104,27 @@ type VestingAccount interface {
 
 ### BaseVestingAccount
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L10-L24
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L10-L24
+```
 
 ### ContinuousVestingAccount
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L26-L34
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L26-L34
+```
 
 ### DelayedVestingAccount
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L36-L44
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L36-L44
+```
 
 ### Period
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L46-L53
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L46-L53
+```
 
 ```go
 // Stores all vesting periods passed as part of a PeriodicVestingAccount
@@ -123,7 +134,9 @@ type Periods []Period
 
 ### PeriodicVestingAccount
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L55-L64
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L55-L64
+```
 
 In order to facilitate less ad-hoc type checking and assertions and to support
 flexibility in account balance usage, the existing `x/bank` `ViewKeeper` interface
@@ -143,7 +156,9 @@ type ViewKeeper interface {
 
 ### PermanentLockedAccount
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L66-L76
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/vesting/v1beta1/vesting.proto#L66-L76
+```
 
 ## Vesting Account Specification
 

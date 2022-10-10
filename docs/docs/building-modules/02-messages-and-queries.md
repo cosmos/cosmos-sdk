@@ -28,7 +28,9 @@ Defining Protobuf `Msg` services is the recommended way to handle messages. A Pr
 
 See an example of a `Msg` service definition from `x/bank` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L12-L19
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L12-L19
+```
 
 Each `Msg` service method must have exactly one argument, which must implement the `sdk.Msg` interface, and a Protobuf response. The naming convention is to call the RPC argument `Msg<service-rpc-name>` and the RPC response `Msg<service-rpc-name>Response`. For example:
 
@@ -55,7 +57,9 @@ Amino `LegacyMsg`s can be defined as protobuf messages. The messages definition 
 
 A `LegacyMsg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./09-module-interfaces.md). `message`s also need to implement the `sdk.Msg` interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/tx_msg.go#L10-L22
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/tx_msg.go#L10-L22
+```
 
 It extends `proto.Message` and contains the following methods:
 
@@ -65,11 +69,15 @@ It extends `proto.Message` and contains the following methods:
 * `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature.
 * `GetSigners() []AccAddress`: Return the list of signers. The Cosmos SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/migrations/legacytx/stdsign.go#L20-L36
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/migrations/legacytx/stdsign.go#L20-L36
+```
 
 See an example implementation of a `message` from the `gov` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/gov/types/v1/msgs.go#L106-L138
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/gov/types/v1/msgs.go#L106-L138
+```
 
 ## Queries
 
@@ -81,7 +89,9 @@ Queries should be defined using [Protobuf services](https://developers.google.co
 
 Here's an example of such a `Query` service definition:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/auth/v1beta1/query.proto#L13-L59
+```proto reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/auth/v1beta1/query.proto#L13-L59
+```
 
 As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://pkg.go.dev/fmt#Stringer).
 
@@ -114,4 +124,6 @@ Store queries query directly for store keys. They use `clientCtx.QueryABCI(req a
 
 See following examples:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/abci.go#L756-L777
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/abci.go#L756-L777
+```

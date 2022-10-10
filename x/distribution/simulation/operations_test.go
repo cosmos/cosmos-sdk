@@ -245,6 +245,7 @@ func (suite *SimTestSuite) SetupTest() {
 		configurator.BankModule(),
 		configurator.StakingModule(),
 		configurator.TxModule(),
+		configurator.ConsensusModule(),
 		configurator.DistributionModule(),
 	), &suite.accountKeeper,
 		&suite.bankKeeper,

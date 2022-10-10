@@ -8,6 +8,14 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 Remove `RandomizedParams` from `AppModuleSimulation` interface. Previously, it used to generate random parameter changes during simulations, however, it does so through ParamChangeProposal which is now legacy. Since all modules were migrated, we can now safely remove this from `AppModuleSimulation` interface.
 
+### gRPC
+
+A new gRPC service, `proto/cosmos/base/node/v1beta1/query.proto`, has been introduced
+which exposes various operator configuration. App developers should be sure to
+register the service with the gRPC-gateway service via
+`nodeservice.RegisterGRPCGatewayRoutes` in their application construction, which
+is typically found in `RegisterAPIRoutes`.
+
 ### AppModule Interface
 
 Remove `Querier`, `Route` and `LegacyQuerier` from the app module interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously known as the LCD, and the `sdk.Msg#Route` method won't be used anymore.

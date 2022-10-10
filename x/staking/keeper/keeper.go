@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -115,4 +116,22 @@ func (k Keeper) SetLastTotalPower(ctx sdk.Context, power math.Int) {
 // GetAuthority returns the x/staking module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// SetValidatorUpdates sets the ABCI validator power updates for the current block.
+func (k Keeper) SetValidatorUpdates(ctx sdk.Context, valUpdates []abci.ValidatorUpdate) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&types.ValidatorUpdates{Updates: valUpdates})
+	store.Set(types.ValidatorUpdatesKey, bz)
+}
+
+// GetValidatorUpdates returns the ABCI validator power updates within the current block.
+func (k Keeper) GetValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.ValidatorUpdatesKey)
+
+	var valUpdates types.ValidatorUpdates
+	k.cdc.MustUnmarshal(bz, &valUpdates)
+
+	return valUpdates.Updates
 }

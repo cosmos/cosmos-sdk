@@ -27,12 +27,12 @@ func (k Keeper) MaxEntries(ctx sdk.Context) uint32 {
 
 // HistoricalEntries = number of historical info entries
 // to persist in store
-func (k Keeper) HistoricalEntries(ctx sdk.Context) (res uint32) {
+func (k Keeper) HistoricalEntries(ctx sdk.Context) uint32 {
 	return k.GetParams(ctx).HistoricalEntries
 }
 
 // BondDenom - Bondable coin denomination
-func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
+func (k Keeper) BondDenom(ctx sdk.Context) string {
 	return k.GetParams(ctx).BondDenom
 }
 

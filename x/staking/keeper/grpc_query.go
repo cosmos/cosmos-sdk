@@ -599,6 +599,7 @@ func RedelegationsToRedelegationResponses(ctx sdk.Context, k *Keeper, redels typ
 				entry.SharesDst,
 				entry.InitialBalance,
 				val.TokensFromShares(entry.SharesDst).TruncateInt(),
+				entry.UnbondingId,
 			)
 		}
 

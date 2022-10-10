@@ -23,7 +23,7 @@ func TestParamsEqual(t *testing.T) {
 	require.False(t, ok)
 }
 
-func Test_validateParams(t *testing.T) {
+func TestValidateParams(t *testing.T) {
 	params := types.DefaultParams()
 
 	// default params have no error

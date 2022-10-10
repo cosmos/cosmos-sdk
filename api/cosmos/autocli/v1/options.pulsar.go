@@ -3,16 +3,15 @@ package autocliv1
 
 import (
 	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sort "sort"
-	sync "sync"
-
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	_ "google.golang.org/protobuf/types/descriptorpb"
+	io "io"
+	reflect "reflect"
+	sort "sort"
+	sync "sync"
 )
 
 var (

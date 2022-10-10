@@ -212,7 +212,10 @@ func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 }
 
 func ProvideModule(in CrisisInputs) CrisisOutputs {
-	invalidCheckPeriod := cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
+	var invalidCheckPeriod uint
+	if in.AppOpts != nil {
+		invalidCheckPeriod = cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
+	}
 
 	feeCollectorName := in.Config.FeeCollectorName
 	if feeCollectorName == "" {
@@ -234,7 +237,10 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 		authority.String(),
 	)
 
-	skipGenesisInvariants := cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
+	var skipGenesisInvariants bool
+	if in.AppOpts != nil {
+		skipGenesisInvariants = cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
+	}
 
 	m := NewAppModule(k, skipGenesisInvariants, in.LegacySubspace)
 

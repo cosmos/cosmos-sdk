@@ -29,6 +29,7 @@ jobs:
         with:
           node-version: "16.x"
 
+      # npm install npm should be removed when https://github.com/npm/cli/issues/4942 is fixed
       - name: Build docs
         run: |
           npm install -g npm@8.5.5

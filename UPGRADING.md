@@ -11,8 +11,8 @@ Remove `RandomizedParams` from `AppModuleSimulation` interface. Previously, it u
 ### gRPC
 
 A new gRPC service, `proto/cosmos/base/node/v1beta1/query.proto`, has been introduced
-which exposes various chain and operator configuration. App developers should be
-sure to register the service with the gRPC-gateway service via
+which exposes various operator configuration. App developers should be sure to
+register the service with the gRPC-gateway service via
 `nodeservice.RegisterGRPCGatewayRoutes` in their application construction, which
 is typically found in `RegisterAPIRoutes`.
 

@@ -239,7 +239,7 @@ func TestManager_ExportGenesis(t *testing.T) {
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key1": "value1"}`),
 		"module2": json.RawMessage(`{"key2": "value2"}`)}
-	require.Equal(t, want, mm.ExportGenesis(ctx, cdc, []string{}))
+	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
 }
 
 func TestManager_BeginBlock(t *testing.T) {

@@ -28,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
-	"github.com/cosmos/cosmos-sdk/server/config"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
@@ -244,7 +243,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
-	config := config.GetConfig(ctx.Viper)
+	config := serverconfig.GetConfig(ctx.Viper)
 	if err := config.ValidateBasic(); err != nil {
 		ctx.Logger.Error("WARNING: The minimum-gas-prices config in app.toml is set to the empty string. " +
 			"This defaults to 0 in the current version, but will error in the next version " +
@@ -287,6 +286,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
+	}
+
+	if config.GRPC.Concurrency {
+		clientCtx = clientCtx.WithConcurrency(true)
 	}
 
 	var apiSrv *api.Server

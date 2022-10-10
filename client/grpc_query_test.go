@@ -25,9 +25,10 @@ type IntegrationTestSuite struct {
 }
 
 type testcase struct {
-	clientContextHeight int64
-	grpcHeight          int64
-	expectedHeight      int64
+	clientContextHeight   int64
+	grpcHeight            int64
+	expectedHeight        int64
+	grpcConcurrentEnabled bool
 }
 
 const (
@@ -66,22 +67,6 @@ func (s *IntegrationTestSuite) TestGRPCQuery_TestService() {
 	s.Require().Equal("hello", testRes.Message)
 }
 
-func (s *IntegrationTestSuite) TestGRPCConcurrency() {
-	val0 := s.network.Validators[0]
-	clientCtx := val0.ClientCtx
-	clientCtx.GRPCConcurrency = true
-	in := &testdata.EchoRequest{Message: "hello"}
-	out := &testdata.EchoResponse{}
-	err := clientCtx.Invoke(context.Background(), "/testdata.Query/Echo", in, out)
-	s.Require().NoError(err)
-	s.Require().Equal("hello", out.Message)
-
-	clientCtx.GRPCConcurrency = false
-	err = clientCtx.Invoke(context.Background(), "/testdata.Query/Echo", in, out)
-	s.Require().NoError(err)
-	s.Require().Equal("hello", out.Message)
-}
-
 func (s *IntegrationTestSuite) TestGRPCQuery_BankService_VariousInputs() {
 	val0 := s.network.Validators[0]
 
@@ -106,7 +91,13 @@ func (s *IntegrationTestSuite) TestGRPCQuery_BankService_VariousInputs() {
 		"clientContextHeight 3; grpcHeight is 0 - grpcHeight is chosen": {
 			clientContextHeight: 1,
 			grpcHeight:          0, // chosen
-			expectedHeight:      3, // latest height
+			expectedHeight:      1, // context height
+		},
+		"clientContextHeight 3; grpcHeight is 0 - grpcHeight is chosen, grpcConcurrency on": {
+			clientContextHeight:   1,
+			grpcHeight:            0, // chosen
+			expectedHeight:        3, // latest height
+			grpcConcurrentEnabled: true,
 		},
 		"clientContextHeight 3; grpcHeight is 3 - 3 is returned": {
 			clientContextHeight: 3,
@@ -124,7 +115,7 @@ func (s *IntegrationTestSuite) TestGRPCQuery_BankService_VariousInputs() {
 		s.T().Run(name, func(t *testing.T) {
 			// Setup
 			clientCtx := val0.ClientCtx
-			clientCtx.GRPCConcurrency = true
+			clientCtx.GRPCConcurrency = tc.grpcConcurrentEnabled
 			clientCtx.Height = 0
 
 			if tc.clientContextHeight != heightNotSetFlag {

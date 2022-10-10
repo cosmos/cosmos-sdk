@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"net"
+	"strings"
 	"testing"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -200,6 +201,18 @@ func TestHelp(t *testing.T) {
 
 	conn = testExec(t, "skipecho", "-h")
 	golden.Assert(t, conn.out.String(), "help-skip.golden")
+}
+
+func TestDeprecated(t *testing.T) {
+	conn := testExec(t, "echo",
+		"1", "abc", `{}`,
+		"--deprecated-field", "foo")
+	assert.Assert(t, strings.Contains(conn.out.String(), "--deprecated-field has been deprecated"))
+
+	conn = testExec(t, "echo",
+		"1", "abc", `{}`,
+		"-s", "foo")
+	assert.Assert(t, strings.Contains(conn.out.String(), "--shorthand-deprecated-field has been deprecated"))
 }
 
 func TestBuildCustomQueryCommand(t *testing.T) {

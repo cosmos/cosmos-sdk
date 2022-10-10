@@ -8,7 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NOTE: this was copied from client/cmd.go
+// NOTE: this was copied from client/cmd.go to avoid introducing a dependency
+// on the v1 client package.
 
 // validateCmd returns unknown command error or Help display if help flag set
 func validateCmd(cmd *cobra.Command, args []string) error {

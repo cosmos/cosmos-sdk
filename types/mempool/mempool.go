@@ -1,6 +1,7 @@
 package mempool
 
 import (
+	"errors"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -34,8 +35,6 @@ type Mempool interface {
 	Remove(Tx) error
 }
 
-type ErrTxNotFound struct {
-	error
-}
+var ErrTxNotFound = errors.New("tx not found in mempool")
 
 type Factory func() Mempool

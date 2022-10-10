@@ -154,7 +154,7 @@ func TestDefaultMempool(t *testing.T) {
 	// removing a tx not in the mempool should error
 	mp = mempool.NewDefaultMempool()
 	require.NoError(t, mp.Insert(ctx, txs[0]))
-	require.ErrorAs(t, mp.Remove(txs[1]), &mempool.ErrTxNotFound{})
+	require.ErrorIs(t, mp.Remove(txs[1]), mempool.ErrTxNotFound)
 	mempool.DebugPrintKeys(mp)
 
 	// inserting a tx with a different priority should overwrite the old tx

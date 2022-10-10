@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	"cosmossdk.io/client/v2/cli"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"golang.org/x/exp/slices"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 
@@ -54,7 +55,7 @@ type App struct {
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	appConfig         *appv1alpha1.Config
-	cliConfigs        map[string]AutoCLIConfig
+	cliConfigs        map[string]cli.AutoCLIConfig
 }
 
 // RegisterModules registers the provided modules with the module manager and

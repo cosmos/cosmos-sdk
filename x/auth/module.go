@@ -5,16 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	cli2 "cosmossdk.io/client/v2/cli"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -201,8 +198,8 @@ func provideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-func provideAutoCLIConfig() runtime.AutoCLIConfig {
-	return runtime.AutoCLIConfig{
+func provideAutoCLIConfig() cli2.AutoCLIConfig {
+	return cli2.AutoCLIConfig{
 		AutoCLIOptions:     types.AutoCLIOptions,
 		CustomQueryCommand: cli.GetQueryCmd(),
 	}

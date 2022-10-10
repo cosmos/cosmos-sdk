@@ -6,6 +6,7 @@ import (
 	"context"
 	"io"
 
+	"cosmossdk.io/client/v2/cli"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 
@@ -62,7 +63,7 @@ type autocliService struct {
 	moduleOptions map[string]*autocliv1.ModuleOptions
 }
 
-func newAutocliService(cliConfigs map[string]AutoCLIConfig) *autocliService {
+func newAutocliService(cliConfigs map[string]*cli.ModuleConfig) *autocliService {
 	moduleOptions := map[string]*autocliv1.ModuleOptions{}
 	for module, cfg := range cliConfigs {
 		moduleOptions[module] = cfg.AutoCLIOptions

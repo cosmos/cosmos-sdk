@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 
+	"cosmossdk.io/client/v2/cli"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/core/appmodule"
@@ -86,7 +87,7 @@ type appInputs struct {
 	App            appWrapper
 	Modules        map[string]AppModuleWrapper
 	BaseAppOptions []BaseAppOption
-	CLIConfigs     map[string]AutoCLIConfig
+	CLIConfigs     map[string]cli.AutoCLIConfig
 }
 
 func provideAppBuilder(inputs appInputs) *AppBuilder {

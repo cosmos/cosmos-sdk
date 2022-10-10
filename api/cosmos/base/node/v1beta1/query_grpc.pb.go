@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: cosmos/base/node/query.proto
+// source: cosmos/base/node/v1beta1/query.proto
 
 package nodev1beta1
 
@@ -103,5 +103,5 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/base/node/query.proto",
+	Metadata: "cosmos/base/node/v1beta1/query.proto",
 }

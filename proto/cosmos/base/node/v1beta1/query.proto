@@ -1,7 +1,6 @@
 syntax = "proto3";
 package cosmos.base.node.v1beta1;
 
-import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/node";

@@ -93,8 +93,8 @@ const config = {
             dropdownActiveClassDisabled: true,
             // versions not yet migrated to docusaurus
             dropdownItemsAfter: [
-              { to: "/v0.46/", label: "v0.46" },
-              { to: "/v0.45/", label: "v0.45" },
+              { to: "https://docs.cosmos.network/v0.46/", label: "v0.46" },
+              { to: "https://docs.cosmos.network/v0.45/", label: "v0.45" },
             ],
           },
         ],

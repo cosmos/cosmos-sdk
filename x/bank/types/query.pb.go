@@ -966,7 +966,8 @@ func (m *QueryDenomOwnersResponse) GetPagination() *query.PageResponse {
 type QuerySendEnabledRequest struct {
 	// denoms is the specific denoms you want look up. Leave empty to get all entries.
 	Denoms []string `protobuf:"bytes,1,rep,name=denoms,proto3" json:"denoms,omitempty"`
-	// pagination defines an optional pagination for the request.
+	// pagination defines an optional pagination for the request. This field is
+	// only read if the denoms field is empty.
 	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -1022,7 +1023,8 @@ func (m *QuerySendEnabledRequest) GetPagination() *query.PageRequest {
 // Since: cosmos-sdk 0.47
 type QuerySendEnabledResponse struct {
 	SendEnabled []*SendEnabled `protobuf:"bytes,1,rep,name=send_enabled,json=sendEnabled,proto3" json:"send_enabled,omitempty"`
-	// pagination defines the pagination in the response.
+	// pagination defines the pagination in the response. This field is only
+	// populated if the denoms field in the request is empty.
 	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 

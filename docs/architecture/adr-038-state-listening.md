@@ -236,24 +236,24 @@ type StreamingService struct {
 }
 ```
 
-We will also introduce a new `KVStoreListener` struct as the writer for use in `StoreKVPairWriteListener`. `KVStoreListener` will expose `ABCIListener` for streaming state change events via `ABCIListener.ListenStoreKVPair`, a `BlockHeight` func for determining the block height for which the state change events belong to and a boolean flag for determine whether the node needs to be stopped or not.
+We will also introduce a new `KVStoreWriter` struct as the writer for use in `StoreKVPairWriteListener`. `KVStoreWriter` will expose `ABCIListener` for streaming state change events via `ABCIListener.ListenStoreKVPair`, a `BlockHeight` func for determining the block height for which the state change events belong to and a boolean flag for determine whether the node needs to be stopped or not.
 
 ```go
-// KVStoreListener is used so that we do not need to update the underlying
+// KVStoreWriter is used so that we do not need to update the underlying
 // io.Writer inside the StoreKVPairWriteListener everytime we begin writing
-type KVStoreListener struct {
+type KVStoreWriter struct {
 	BlockHeight   func() int64
 	listener      ABCIListener
 	stopNodeOnErr bool
 }
 
-// NewKVStoreListener create an instance of an NewKVStoreListener that sends StoreKVPair data to listening service
-func NewKVStoreListener(
+// NewKVStoreWriter create an instance of a KVStoreWriter that sends StoreKVPair data to listening service
+func NewKVStoreWriter(
 	listener ABCIListener,
 	stopNodeOnErr bool,
 	blockHeight func() int64,
-) *KVStoreListener {
-	return &KVStoreListener{
+) *KVStoreWriter {
+	return &KVStoreWriter{
 		listener:      listener,
 		stopNodeOnErr: stopNodeOnErr,
 		BlockHeight:   blockHeight,
@@ -261,7 +261,7 @@ func NewKVStoreListener(
 }
 
 // Write satisfies io.Writer
-func (iw *KVStoreListener) Write(b []byte) (int, error) {
+func (iw *KVStoreWriter) Write(b []byte) (int, error) {
 	blockHeight := iw.BlockHeight()
 	if err := iw.listener.ListenStoreKVPair(blockHeight, b); err != nil {
 		if iw.stopNodeOnErr {
@@ -296,7 +296,7 @@ func RegisterStreamingService(
 	stopNodeOnErrKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingStopNodeOnErrTomlKey)
 	stopNodeOnErr := cast.ToBool(appOpts.Get(stopNodeOnErrKey))
 	blockHeightFn := func() int64 { return bApp.deliverState.ctx.BlockHeight() }
-	writer := NewKVStoreListener(abciListener, stopNodeOnErr, blockHeightFn)
+	writer := NewKVStoreWriter(abciListener, stopNodeOnErr, blockHeightFn)
 	listener := types.NewStoreKVPairWriteListener(writer, kodec)
 	listeners := make(map[types.StoreKey][]types.WriteListener, len(exposeStoreKeys))
 	for _, key := range exposeStoreKeys {

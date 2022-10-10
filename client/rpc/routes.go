@@ -10,6 +10,7 @@ import (
 func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/node_info", NodeInfoRequestHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc("/syncing", NodeSyncingRequestHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc("/health", NodeHealthRequestHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc("/blocks/latest", LatestBlockRequestHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc("/blocks/{height}", BlockRequestHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc("/validatorsets/latest", LatestValidatorSetRequestHandlerFn(clientCtx)).Methods("GET")

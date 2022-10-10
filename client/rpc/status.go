@@ -130,3 +130,18 @@ func NodeSyncingRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		rest.PostProcessResponseBare(w, clientCtx, SyncingResponse{Syncing: status.SyncInfo.CatchingUp})
 	}
 }
+
+// REST handler for node health check - aws recognizes only http status codes
+func NodeHealthRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		status, err := getNodeStatus(clientCtx)
+		if rest.CheckInternalServerError(w, err) {
+			return
+		}
+		if status.SyncInfo.CatchingUp {
+			rest.WriteErrorResponse(w, http.StatusServiceUnavailable, "NOK")
+		} else {
+			rest.PostProcessResponseBare(w, clientCtx, []byte("OK"))
+		}
+	}
+}

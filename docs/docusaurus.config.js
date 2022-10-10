@@ -77,6 +77,7 @@ const config = {
           alt: "Cosmos SDK Logo",
           src: "img/logo-sdk.svg",
           href: "https://docs.cosmos.network",
+          target: "_self",
         },
         items: [
           {
@@ -93,8 +94,16 @@ const config = {
             dropdownActiveClassDisabled: true,
             // versions not yet migrated to docusaurus
             dropdownItemsAfter: [
-              { to: "https://docs.cosmos.network/v0.46/", label: "v0.46" },
-              { to: "https://docs.cosmos.network/v0.45/", label: "v0.45" },
+              {
+                href: "https://docs.cosmos.network/v0.46/",
+                label: "v0.46",
+                target: "_self",
+              },
+              {
+                href: "https://docs.cosmos.network/v0.45/",
+                label: "v0.45",
+                target: "_self",
+              },
             ],
           },
         ],

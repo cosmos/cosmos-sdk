@@ -1,3 +1,7 @@
+/*
+  Slighlty modified version of https://github.com/ignite/cli/blob/develop/docs/src/css/custom.css
+*/
+
 @import "tailwindcss/base";
 @import "./fonts.css";
 @import "./base.css";

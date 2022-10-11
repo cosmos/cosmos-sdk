@@ -334,6 +334,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
+		app.RegisterNodeService(clientCtx)
 	}
 
 	metrics, err := startTelemetry(config)

@@ -20,6 +20,7 @@ import (
 	_ "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
+	io_ioutil "io/ioutil"
 	math "math"
 	math_bits "math/bits"
 	reflect "reflect"
@@ -1881,7 +1882,7 @@ func StakingDescription() (desc *github_com_gogo_protobuf_protoc_gen_gogo_descri
 	if err != nil {
 		panic(err)
 	}
-	ungzipped, err := io.ReadAll(gzipr)
+	ungzipped, err := io_ioutil.ReadAll(gzipr)
 	if err != nil {
 		panic(err)
 	}

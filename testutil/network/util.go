@@ -103,9 +103,9 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.clientCtx = val.clientCtx.
 			WithClient(val.rPCClient)
 
-		app.RegisterTxService(val.clientCtx)
-		app.RegisterTendermintService(val.clientCtx)
-		app.RegisterNodeService(val.clientCtx, *val.AppConfig)
+		app.RegisterTxService(val.ClientCtx)
+		app.RegisterTendermintService(val.ClientCtx)
+		app.RegisterNodeService(val.ClientCtx)
 	}
 
 	ctx := context.Background()

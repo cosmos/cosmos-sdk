@@ -3,7 +3,6 @@ go 1.18
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.2.1
 	github.com/99designs/keyring v1.1.6
 	github.com/armon/go-metrics v0.3.10
 	github.com/bgentry/speakeasy v0.1.0
@@ -11,9 +10,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go v0.7.0
 	github.com/confio/ics23/go v0.7.0
 	github.com/cosmos/btcutil v1.0.4
-	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/gogoproto v1.4.2
 	github.com/cosmos/iavl v0.19.2-0.20220916140702-9b6be3095313
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gogo/gateway v1.1.0

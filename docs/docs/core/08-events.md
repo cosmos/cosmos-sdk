@@ -21,7 +21,9 @@ sidebar_position: 1
 Events are implemented in the Cosmos SDK as an alias of the ABCI `Event` type and
 take the form of: `{eventType}.{attributeKey}={attributeValue}`.
 
-+++ https://github.com/tendermint/tendermint/blob/v0.34.21/proto/tendermint/abci/types.proto#L310-L319
+```protobuf reference
+https://github.com/tendermint/tendermint/blob/v0.34.21/proto/tendermint/abci/types.proto#L310-L319
+```
 
 An Event contains:
 
@@ -64,19 +66,25 @@ In Cosmos SDK applications, Events are managed by an abstraction called the `Eve
 Internally, the `EventManager` tracks a list of Events for the entire execution flow of a
 transaction or `BeginBlock`/`EndBlock`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/events.go#L17-L25
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/events.go#L17-L25
+```
 
 The `EventManager` comes with a set of useful methods to manage Events. The method
 that is used most by module and application developers is `EmitTypedEvent` that tracks
 an Event in the `EventManager`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/events.go#L50-L59
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/events.go#L50-L59
+```
 
 Module developers should handle Event emission via the `EventManager#EmitTypedEvent` in each message
 `Handler` and in each `BeginBlock`/`EndBlock` handler. The `EventManager` is accessed via
 the [`Context`](./02-context.md), where Event should be already registered, and emitted like this:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/group/keeper/msg_server.go#L89-L92
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/group/keeper/msg_server.go#L89-L92
+```
 
 Module's `handler` function should also set a new `EventManager` to the `context` to isolate emitted Events per `message`:
 

@@ -31,7 +31,9 @@ are only used for genesis can take advantage of the `Module` patterns without ha
 
 The `AppModuleBasic` interface defines the independent methods modules need to implement.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/module/module.go#L47-L60
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/module/module.go#L47-L60
+```
 
 Let us go through the methods:
 
@@ -50,7 +52,9 @@ All the `AppModuleBasic` of an application are managed by the [`BasicManager`](#
 
 The `AppModuleGenesis` interface is a simple embedding of the `AppModuleBasic` interface with two added methods.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/module/module.go#L140-L146
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/module/module.go#L140-L146
+```
 
 Let us go through the two added methods:
 
@@ -63,7 +67,9 @@ It does not have its own manager, and exists separately from [`AppModule`](#appm
 
 The `AppModule` interface defines the inter-dependent methods that modules need to implement.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/module/module.go#L148-L176
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/module/module.go#L148-L176
+```
 
 `AppModule`s are managed by the [module manager](#manager). This interface embeds the `AppModuleGenesis` interface so that the manager can access all the independent and genesis inter-dependent methods of the module. This means that a concrete type implementing the `AppModule` interface must either implement all the methods of `AppModuleGenesis` (and by extension `AppModuleBasic`), or include a concrete type that does as parameter.
 
@@ -104,7 +110,9 @@ Module managers are used to manage collections of `AppModuleBasic` and `AppModul
 
 The `BasicManager` is a structure that lists all the `AppModuleBasic` of an application:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/module/module.go#L62-L72
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/module/module.go#L62-L72
+```
 
 It implements the following methods:
 
@@ -121,7 +129,9 @@ It implements the following methods:
 
 The `Manager` is a structure that holds all the `AppModule` of an application, and defines the order of execution between several key components of these modules:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/module/module.go#L216-L225
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/module/module.go#L216-L225
+```
 
 The module manager is used throughout the application whenever an action on a collection of modules is required. It implements the following methods:
 
@@ -143,4 +153,6 @@ The module manager is used throughout the application whenever an action on a co
 
 Here's an example of a concrete integration within an application:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L342-L409
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L342-L409
+```

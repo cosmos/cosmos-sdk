@@ -2,6 +2,7 @@ package mempool
 
 import (
 	"errors"
+
 	"github.com/cosmos/cosmos-sdk/types"
 )
 

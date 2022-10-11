@@ -14,9 +14,9 @@ import (
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
+// importsToFix lets us now that we're only fixing gogoproto/gogoproto.proto imports, we're not fixing cosmos protos.
 var importsToFix = map[string]string{
 	"gogo.proto": "gogoproto/gogo.proto",
-	// "cosmos.proto": "cosmos_proto/cosmos.proto",
 }
 
 // fixRegistration is required because certain files register themselves in a way
@@ -109,7 +109,8 @@ func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
 	}
 
 	// check into proto registry
-	for id, desc := range proto.RegisteredExtensions(m) { //nolint:staticcheck
+	//nolint:staticcheck // Seems likely that we should refactor this file.
+	for id, desc := range proto.RegisteredExtensions(m) {
 		if id == extID {
 			return &gogoproto.ExtensionDesc{
 				ExtendedType:  desc.ExtendedType,

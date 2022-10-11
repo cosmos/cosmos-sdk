@@ -142,7 +142,9 @@ bonded validator. The `SignedBlocksWindow` parameter defines the size
 
 The information stored for tracking validator liveness is as follows:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/slashing/v1beta1/slashing.proto#L12-L33
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/slashing/v1beta1/slashing.proto#L12-L33
+```
 
 ## Params
 
@@ -151,7 +153,9 @@ it can be updated with governance or the address with authority.
 
 * Params: `0x00 | ProtocolBuffer(Params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc3/proto/cosmos/slashing/v1beta1/slashing.proto#L35-L45
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc3/proto/cosmos/slashing/v1beta1/slashing.proto#L35-L45
+```
 
 # Messages
 

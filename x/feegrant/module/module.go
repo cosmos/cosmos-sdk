@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 
-	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"cosmossdk.io/core/appmodule"
 
 	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 
@@ -171,16 +172,16 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
+			ProvideModuleBasic,
+			ProvideModule,
 		))
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type feegrantInputs struct {
+type FeegrantInputs struct {
 	depinject.In
 
 	Key           *store.KVStoreKey
@@ -190,7 +191,7 @@ type feegrantInputs struct {
 	Registry      cdctypes.InterfaceRegistry
 }
 
-func provideModule(in feegrantInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
+func ProvideModule(in FeegrantInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
 	return k, runtime.WrapAppModule(m)

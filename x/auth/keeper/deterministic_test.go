@@ -35,20 +35,9 @@ type DeterministicTestSuite struct {
 
 var (
 	iterCount = 1000
-	addr      sdk.AccAddress
-	pub       []byte
+	addr      = sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	pub, _    = hex.DecodeString("01090C02812F010C25200ED40E004105160196E801F70005070EA21603FF06001E")
 )
-
-func init() {
-	addr = sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
-	pubkey := "01090C02812F010C25200ED40E004105160196E801F70005070EA21603FF06001E"
-
-	var err error
-	pub, err = hex.DecodeString(pubkey)
-	if err != nil {
-		panic(err)
-	}
-}
 
 func TestDeterministicTestSuite(t *testing.T) {
 	suite.Run(t, new(DeterministicTestSuite))
@@ -424,13 +413,8 @@ func (suite *DeterministicTestSuite) runModuleAccountsIterations(ak keeper.Accou
 				suite.Require().Equal(unpackedAccs[i].GetSequence(), prevRes[i].GetSequence())
 			}
 		}
-
-		prevRes = unpackedAccs
 	}
 
-	for i := 0; i < len(prevRes); i++ {
-		suite.accountKeeper.RemoveAccount(suite.ctx, prevRes[i])
-	}
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
@@ -473,6 +457,9 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 		storedMaccs := suite.setModuleAccounts(suite.ctx, ak, maccs)
 
 		suite.runModuleAccountsIterations(ak, storedMaccs)
+		for i := 0; i < len(storedMaccs); i++ {
+			suite.accountKeeper.RemoveAccount(suite.ctx, storedMaccs[i])
+		}
 	})
 
 	maccs := make([]string, 0, len(suite.maccPerms))

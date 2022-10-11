@@ -10,6 +10,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // Params defines the parameters for the bank module.
 message Params {
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/x/bank/Params";
   option (gogoproto.goproto_stringer) = false;
   // Deprecated: Use of SendEnabled in params is deprecated.
   // For genesis, use the newly added send_enabled field in the genesis object.

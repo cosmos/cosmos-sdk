@@ -5,6 +5,7 @@ package simapp
 import (
 	_ "embed"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"io"
 	"os"
 	"path/filepath"
@@ -196,7 +197,7 @@ func NewSimApp(
 			depinject.Supply(
 				// supply the application options
 				appOpts,
-
+				mempool.DefaultPriorityMempool,
 				// For providing a custom inflation function for x/mint add here your
 				// custom function that implements the minttypes.InflationCalculationFn
 				// interface.

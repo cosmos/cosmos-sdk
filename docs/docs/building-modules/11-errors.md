@@ -20,7 +20,9 @@ Registration of errors is handled via the [`errors` package](https://github.com/
 
 Example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/distribution/types/errors.go#L1-L21
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/distribution/types/errors.go#L1-L21
+```
 
 Each custom module error must provide the codespace, which is typically the module name
 (e.g. "distribution") and is unique per module, and a uint32 code. Together, the codespace and code
@@ -40,7 +42,9 @@ execution.
 
 Example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/keeper.go#L143-L184
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/keeper.go#L143-L184
+```
 
 Regardless if an error is wrapped or not, the Cosmos SDK's `errors` package provides a function to determine if
 an error is of a particular kind via `Is`.

@@ -10,7 +10,7 @@ The `context` is a data structure intended to be passed from function to functio
 
 :::note
 
-## Pre-requisites Readings
+### Pre-requisites Readings
 
 * [Anatomy of a Cosmos SDK Application](../basics/00-app-anatomy.md)
 * [Lifecycle of a Transaction](../basics/01-tx-lifecycle.md)
@@ -21,7 +21,9 @@ The `context` is a data structure intended to be passed from function to functio
 
 The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://pkg.go.dev/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. The `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./04-store.md#base-layer-kvstores) in the [`multistore`](./04-store.md#multistore) and retrieve transactional context such as the block header and gas meter.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/context.go#L17-L42
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/context.go#L17-L42
+```
 
 * **Base Context:** The base type is a Go [Context](https://pkg.go.dev/context), which is explained further in the [Go Context Package](#go-context-package) section below.
 * **Multistore:** Every application's `BaseApp` contains a [`CommitMultiStore`](./04-store.md#multistore) which is provided when a `Context` is created. Calling the `KVStore()` and `TransientStore()` methods allows modules to fetch their respective [`KVStore`](./04-store.md#base-layer-kvstores) using their unique `StoreKey`.

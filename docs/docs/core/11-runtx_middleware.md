@@ -12,7 +12,9 @@ More context can found in the corresponding [ADR-022](../architecture/adr-022-cu
 
 ## Interface
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/recovery.go#L11-L14
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/recovery.go#L11-L14
+```
 
 `recoveryObj` is a return value for `recover()` function from the `buildin` Go package.
 

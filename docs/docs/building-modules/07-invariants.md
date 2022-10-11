@@ -20,7 +20,9 @@ An invariant is a property of the application that should always be true. In the
 
 An `Invariant` is a function that checks for a particular invariant within a module. Module `Invariant`s must follow the `Invariant` type:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/invariant.go#L9
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/invariant.go#L9
+```
 
 The `string` return value is the invariant message, which can be used when printing logs, and the `bool` return value is the actual result of the invariant check.
 
@@ -57,7 +59,9 @@ func AllInvariants(k Keeper) sdk.Invariant {
 
 Finally, module developers need to implement the `RegisterInvariants` method as part of the [`AppModule` interface](./01-module-manager.md#appmodule). Indeed, the `RegisterInvariants` method of the module, implemented in the `module/module.go` file, typically only defers the call to a `RegisterInvariants` method implemented in the `keeper/invariants.go` file. The `RegisterInvariants` method registers a route for each `Invariant` function in the [`InvariantRegistry`](#invariant-registry):
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/keeper/invariants.go#L12-L21
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/keeper/invariants.go#L12-L21
+```
 
 For more, see an example of [`Invariant`s implementation from the `staking` module](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/keeper/invariants.go).
 
@@ -67,16 +71,22 @@ The `InvariantRegistry` is a registry where the `Invariant`s of all the modules 
 
 At its core, the `InvariantRegistry` is defined in the Cosmos SDK as an interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/invariant.go#L14-L17
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/invariant.go#L14-L17
+```
 
 Typically, this interface is implemented in the `keeper` of a specific module. The most used implementation of an `InvariantRegistry` can be found in the `crisis` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/crisis/keeper/keeper.go#L49-L53
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/crisis/keeper/keeper.go#L49-L53
+```
 
  The `InvariantRegistry` is therefore typically instantiated by instantiating the `keeper` of the `crisis` module in the [application's constructor function](../basics/00-app-anatomy.md#constructor-function).
 
 `Invariant`s can be checked manually via [`message`s](./02-messages-and-queries.md), but most often they are checked automatically at the end of each block. Here is an example from the `crisis` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/crisis/abci.go#L12-L21
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/crisis/abci.go#L12-L21
+```
 
 In both cases, if one of the `Invariant`s returns false, the `InvariantRegistry` can trigger special logic (e.g. have the application panic and print the `Invariant`s message in the log).

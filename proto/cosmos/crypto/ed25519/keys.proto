@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.crypto.ed25519;
 
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519";
@@ -11,6 +12,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519";
 // ADR-28. Nevertheless, you will like to use ed25519 in app user level
 // then you must create a new proto message and follow ADR-28 for Address construction.
 message PubKey {
+  option (cosmos.msg.v1.legacy_amino_name) = "tendermint/PubKeyEd25519";
   option (gogoproto.goproto_stringer) = false;
 
   bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
@@ -19,5 +21,7 @@ message PubKey {
 // Deprecated: PrivKey defines a ed25519 private key.
 // NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 message PrivKey {
+  option (cosmos.msg.v1.legacy_amino_name) = "tendermint/PrivKeyEd25519";
+
   bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PrivateKey"];
 }

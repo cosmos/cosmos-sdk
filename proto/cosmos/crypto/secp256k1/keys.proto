@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.crypto.secp256k1;
 
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1";
@@ -11,6 +12,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1";
 // the x-coordinate. Otherwise the first byte is a 0x03.
 // This prefix is followed with the x-coordinate.
 message PubKey {
+  option (cosmos.msg.v1.legacy_amino_name) = "tendermint/PubKeySecp256k1";
   option (gogoproto.goproto_stringer) = false;
 
   bytes key = 1;
@@ -18,5 +20,7 @@ message PubKey {
 
 // PrivKey defines a secp256k1 private key.
 message PrivKey {
+  option (cosmos.msg.v1.legacy_amino_name) = "tendermint/PrivKeySecp256k1";
+
   bytes key = 1;
 }

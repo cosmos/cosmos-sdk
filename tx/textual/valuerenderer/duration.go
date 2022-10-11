@@ -119,9 +119,7 @@ func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value, 
 	return err
 }
 
-var (
-	durRegexp = regexp.MustCompile(`^(-)?(?:([0-9]+) days?)?(?:, )?(?:([0-9]+) hours?)?(?:, )?(?:([0-9]+) minutes?)?(?:, )?(?:([0-9]+)(?:\.([0-9]+))? seconds?)?$`)
-)
+var durRegexp = regexp.MustCompile(`^(-)?(?:([0-9]+) days?)?(?:, )?(?:([0-9]+) hours?)?(?:, )?(?:([0-9]+) minutes?)?(?:, )?(?:([0-9]+)(?:\.([0-9]+))? seconds?)?$`)
 
 // Parse implements the ValueRenderer interface.
 func (dr durationValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {

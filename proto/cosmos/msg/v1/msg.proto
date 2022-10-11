@@ -27,4 +27,11 @@ extend google.protobuf.MessageOptions {
   // kind in case the signer information is contained within
   // a message inside the cosmos message.
   repeated string signer = 11110000;
+
+  // legacy_amino_name is the string used when registering a concrete
+  // type into the Amino type registry, via the Amino codec's
+  // `RegisterConcrete()` method. This string MUST be at most 39
+  // characters long, or else the message will be rejected by the
+  // Ledger hardware device.
+  string legacy_amino_name = 11110001;
 }

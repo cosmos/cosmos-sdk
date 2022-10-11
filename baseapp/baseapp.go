@@ -162,6 +162,14 @@ func NewBaseApp(
 		option(app)
 	}
 
+	// if execution of options has left certain required fields nil, let's set them to default values
+	if app.txEncoder == nil {
+		app.txEncoder = DefaultTxEncoder(app.cdc)
+	}
+	if app.mempool == nil {
+		app.mempool = mempool.NewDefaultMempool()
+	}
+
 	if app.interBlockCache != nil {
 		app.cms.SetInterBlockCache(app.interBlockCache)
 	}

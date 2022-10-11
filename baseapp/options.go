@@ -240,3 +240,8 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
+
+// SetTxEncoder sets the TxEncoder if it wasn't provided in the BaseApp constructor.
+func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
+	app.txEncoder = txEncoder
+}

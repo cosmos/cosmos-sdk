@@ -290,6 +290,8 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.Respon
 			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 		}
 	}
+
+	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In

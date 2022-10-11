@@ -1,0 +1,24 @@
+[
+    {
+        "proto": {},
+        "screens": [
+            {"text": "Foo object"}
+        ]
+    },
+    {
+        "proto": {
+            "full_name": "the scanner",
+            "child_bar": {
+                "bar_id": "goku",
+                "power_level": 9001
+            }
+        },
+        "screens": [
+            {"text": "Foo object"},
+            {"text": "Full name: the scanner", "indent": 1},
+            {"text": "Child bar: Bar object", "indent": 1},
+            {"text": "Bar id: goku", "indent": 2},
+            {"text": "Power level: 9'001", "indent": 2}
+        ]
+    }
+]

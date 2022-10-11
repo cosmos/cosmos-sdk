@@ -112,12 +112,12 @@ func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
 	for id, desc := range proto.RegisteredExtensions(m) { //nolint:staticcheck
 		if id == extID {
 			return &gogoproto.ExtensionDesc{
-				ExtendedType:  desc.ExtendedType,  
-				ExtensionType: desc.ExtensionType, 
-				Field:         desc.Field,         
-				Name:          desc.Name,          
-				Tag:           desc.Tag,           
-				Filename:      desc.Filename,      
+				ExtendedType:  desc.ExtendedType,
+				ExtensionType: desc.ExtensionType,
+				Field:         desc.Field,
+				Name:          desc.Name,
+				Tag:           desc.Tag,
+				Filename:      desc.Filename,
 			}
 		}
 	}

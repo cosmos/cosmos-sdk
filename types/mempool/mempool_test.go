@@ -118,7 +118,7 @@ func TestDefaultMempool(t *testing.T) {
 	}
 
 	// same sender-nonce just overwrites a tx
-	mp := mempool.NewDefaultMempool()
+	mp := mempool.NewPriorityMempool()
 	for _, tx := range txs {
 		ctx.WithPriority(tx.priority)
 		err := mp.Insert(ctx, tx)
@@ -127,7 +127,7 @@ func TestDefaultMempool(t *testing.T) {
 	require.Equal(t, len(accounts), mp.CountTx())
 
 	// distinct sender-nonce should not overwrite a tx
-	mp = mempool.NewDefaultMempool()
+	mp = mempool.NewPriorityMempool()
 	for i, tx := range txs {
 		tx.nonce = uint64(i)
 		err := mp.Insert(ctx, tx)
@@ -152,7 +152,7 @@ func TestDefaultMempool(t *testing.T) {
 	require.Error(t, mp.Remove(tx))
 
 	// removing a tx not in the mempool should error
-	mp = mempool.NewDefaultMempool()
+	mp = mempool.NewPriorityMempool()
 	require.NoError(t, mp.Insert(ctx, txs[0]))
 	require.ErrorIs(t, mp.Remove(txs[1]), mempool.ErrTxNotFound)
 	mempool.DebugPrintKeys(mp)
@@ -348,7 +348,7 @@ type MempoolTestSuite struct {
 
 func (s *MempoolTestSuite) resetMempool() {
 	s.iterations = 0
-	s.mempool = mempool.NewDefaultMempool(mempool.WithOnRead(func(tx mempool.Tx) {
+	s.mempool = mempool.NewPriorityMempool(mempool.WithOnRead(func(tx mempool.Tx) {
 		s.iterations++
 	}))
 }

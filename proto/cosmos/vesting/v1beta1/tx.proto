@@ -33,6 +33,7 @@ service Msg {
 // account.
 message MsgCreateVestingAccount {
   option (cosmos.msg.v1.signer) = "from_address";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgCreateVestingAccount";
 
   option (gogoproto.equal) = true;
 
@@ -53,6 +54,8 @@ message MsgCreateVestingAccountResponse {}
 //
 // Since: cosmos-sdk 0.46
 message MsgCreatePermanentLockedAccount {
+  option (cosmos.msg.v1.signer) = "from_address";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgCreatePermLockedAccount";
   option (gogoproto.equal) = true;
 
   string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
@@ -72,6 +75,7 @@ message MsgCreatePermanentLockedAccountResponse {}
 // Since: cosmos-sdk 0.46
 message MsgCreatePeriodicVestingAccount {
   option (cosmos.msg.v1.signer) = "from_address";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgCreatePeriodicVestingAccount";
 
   option (gogoproto.equal) = false;
 

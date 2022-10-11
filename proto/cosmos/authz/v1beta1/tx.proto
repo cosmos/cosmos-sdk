@@ -35,6 +35,7 @@ service Msg {
 // on behalf of the granter with the provided expiration time.
 message MsgGrant {
   option (cosmos.msg.v1.signer) = "granter";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgGrant";
 
   string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -52,6 +53,7 @@ message MsgExecResponse {
 // one signer corresponding to the granter of the authorization.
 message MsgExec {
   option (cosmos.msg.v1.signer) = "grantee";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgExec";
 
   string grantee = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Authorization Msg requests to execute. Each msg must implement Authorization interface
@@ -67,6 +69,7 @@ message MsgGrantResponse {}
 // granter's account with that has been granted to the grantee.
 message MsgRevoke {
   option (cosmos.msg.v1.signer) = "granter";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgRevoke";
 
   string granter      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string grantee      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];

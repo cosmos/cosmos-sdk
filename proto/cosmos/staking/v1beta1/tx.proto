@@ -54,6 +54,7 @@ message MsgCreateValidator {
   // is expected to sign, otherwise both are.
   option (cosmos.msg.v1.signer) = "delegator_address";
   option (cosmos.msg.v1.signer) = "validator_address";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgCreateValidator";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -77,6 +78,7 @@ message MsgCreateValidatorResponse {}
 // MsgEditValidator defines a SDK message for editing an existing validator.
 message MsgEditValidator {
   option (cosmos.msg.v1.signer) = "validator_address";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgEditValidator";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -101,6 +103,7 @@ message MsgEditValidatorResponse {}
 // from a delegator to a validator.
 message MsgDelegate {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgDelegate";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -117,6 +120,7 @@ message MsgDelegateResponse {}
 // of coins from a delegator and source validator to a destination validator.
 message MsgBeginRedelegate {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgBeginRedelegate";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -136,6 +140,7 @@ message MsgBeginRedelegateResponse {
 // delegate and a validator.
 message MsgUndelegate {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgUndelegate";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -155,6 +160,7 @@ message MsgUndelegateResponse {
 // Since: cosmos-sdk 0.46
 message MsgCancelUnbondingDelegation {
   option (cosmos.msg.v1.signer)      = "delegator_address";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgCancelUnbondingDelegation";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -176,6 +182,7 @@ message MsgCancelUnbondingDelegationResponse {}
 // Since: cosmos-sdk 0.47
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/x/staking/MsgUpdateParams";
 
   // authority is the address of the governance account.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];

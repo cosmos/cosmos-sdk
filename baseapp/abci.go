@@ -70,7 +70,14 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		return
 	}
 
+	// initChainer calls DeliverTx internally, which will use `deliverState.ctx` directly,
+	// to share the cache context with it, we override `deliverState.ctx` temporary here.
+	originalDeliverCtx := app.deliverState.ctx
+	app.deliverState.ctx = cacheCtx
+
 	res = app.initChainer(cacheCtx, req)
+
+	app.deliverState.ctx = originalDeliverCtx
 	write()
 
 	// sanity check

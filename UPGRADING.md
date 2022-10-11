@@ -39,6 +39,14 @@ Additionally, new packages have been introduced in order to further split the co
 * `authz.NewMsgGrant` `expiration` is now a pointer. When `nil` is used, then no expiration will be set (grant won't expire).
 * `authz.NewGrant` takes a new argument: block time, to correctly validate expire time.
 
+### gRPC
+
+A new gRPC service, `proto/cosmos/base/node/v1beta1/query.proto`, has been introduced
+which exposes various operator configuration. App developers should be sure to
+register the service with the gRPC-gateway service via
+`nodeservice.RegisterGRPCGatewayRoutes` in their application construction, which
+is typically found in `RegisterAPIRoutes`.
+
 ### Keyring
 
 The keyring has been refactored in v0.46.

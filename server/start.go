@@ -417,10 +417,7 @@ func startCmtNode(
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
-
-		if a, ok := app.(types.ApplicationQueryService); ok {
-			a.RegisterNodeService(clientCtx)
-		}
+		app.RegisterNodeService(clientCtx)
 	}
 	return config, nil
 }

@@ -1,7 +1,6 @@
 package node
 
 import (
-	context "context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,9 +11,7 @@ import (
 
 func TestServiceServer_Config(t *testing.T) {
 	svr := NewQueryServer(client.Context{})
-	ctx := sdk.Context{}.
-		WithMinGasPrices(sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 15))).
-		WithContext(context.Background())
+	ctx := sdk.Context{}.WithMinGasPrices(sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 15)))
 	goCtx := sdk.WrapSDKContext(ctx)
 
 	resp, err := svr.Config(goCtx, &ConfigRequest{})

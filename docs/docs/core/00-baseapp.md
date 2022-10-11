@@ -51,7 +51,9 @@ management logic.
 
 The `BaseApp` type holds many important parameters for any Cosmos SDK based application.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/baseapp.go#L45-L137
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/baseapp.go#L45-L137
+```
 
 Let us go through the most important components.
 
@@ -268,7 +270,9 @@ The response contains:
 * `Info (string):` Additional information. May be non-deterministic.
 * `GasWanted (int64)`: Amount of gas requested for transaction. It is provided by users when they generate the transaction.
 * `GasUsed (int64)`: Amount of gas consumed by transaction. During `CheckTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction. Next is an example:
-  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/ante/basic.go#L95-L95
+  ```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/ante/basic.go#L95-L95
+```
 * `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./08-events.md) for more.
 * `Codespace (string)`: Namespace for the Code.
 
@@ -294,7 +298,9 @@ Before the first transaction of a given block is processed, a [volatile state](#
 
 During the additional fifth step outlined in (2), each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/gas.go#L230-L241
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/gas.go#L230-L241
+```
 
 At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx` fails.
 
@@ -321,7 +327,9 @@ After that, `RunTx()` calls `ValidateBasic()` on each `sdk.Msg`in the `Tx`, whic
 
 Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/baseapp.go#L647-L654
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/baseapp.go#L647-L654
+```
 
 This allows `RunTx` not to commit the changes made to the state during the execution of `anteHandler` if it ends up failing. It also prevents the module implementing the `anteHandler` from writing to state, which is an important part of the [object-capabilities](./10-ocap.md) of the Cosmos SDK.
 
@@ -331,7 +339,9 @@ Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `sdk.Msg`
 
 The `AnteHandler` is a special handler that implements the `AnteHandler` interface and is used to authenticate the transaction before the transaction's internal messages are processed.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/handler.go#L6-L8
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/handler.go#L6-L8
+```
 
 The `AnteHandler` is theoretically optional, but still a very important component of public blockchain networks. It serves 3 primary purposes:
 
@@ -356,7 +366,9 @@ _PostHandler_ are like `AnteHandler` (they share the same signature), but they e
 Like `AnteHandler`s, `PostHandler`s are theoretically optional, one use case for `PostHandler`s is transaction tips (enabled by default in simapp).
 Other use cases like unused gas refund can also be enabled by `PostHandler`s.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/posthandler/post.go#L14:L27
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/posthandler/post.go#L14:L27
+```
 
 Note, when `PostHandler`s fail, the state from `runMsgs` is also reverted, effectively making the transaction fail.
 
@@ -377,7 +389,9 @@ Finally, the `InitChain(req abci.RequestInitChain)` method of `BaseApp` calls th
 The [`BeginBlock` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#beginblock) is sent from the underlying Tendermint engine when a block proposal created by the correct proposer is received, before [`DeliverTx`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
 
 * Initialize [`deliverState`](#state-updates) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the `setDeliverState` function.
-  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/baseapp.go#L386-L396
+  ```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/baseapp.go#L386-L396
+```
   This function also resets the [main gas meter](../basics/04-gas-fees.md#main-gas-meter).
 * Initialize the [block gas meter](../basics/04-gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters.
 * Run the application's [`beginBlocker()`](../basics/00-app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`BeginBlocker()`](../building-modules/05-beginblock-endblock.md#beginblock) method of each of the application's modules.

@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Epoching Overview
-parent:
-  title: "epoching"
--->
+---
+sidebar_position: 1
+---
 
 # `x/epoching`
 

@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"math/rand"
 	"net/url"
 	"os"
@@ -114,6 +116,7 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*baseapp.Base
 
 	r := rand.New(rand.NewSource(3920758213583))
 	keyCounter := 0
+	privKey := secp256k1.GenPrivKeyFromSecret([]byte("test"))
 	for height := int64(1); height <= int64(config.blocks); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
 		for txNum := 0; txNum < config.blockTxs; txNum++ {
@@ -129,6 +132,8 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*baseapp.Base
 
 			builder := txConfig.NewTxBuilder()
 			builder.SetMsgs(msgs...)
+			// TODO generate pubkey with account so that this resolves
+			builder.SetSignatures(signingtypes.SignatureV2{})
 
 			txBytes, err := txConfig.TxEncoder()(builder.GetTx())
 			require.NoError(t, err)

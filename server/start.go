@@ -342,8 +342,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	// case, because it spawns a new local tendermint RPC client.
 	if (config.API.Enable || config.GRPC.Enable) && tmNode != nil {
 		clientCtx := clientCtx.WithClient(local.New(tmNode))
+
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
+		app.RegisterNodeService(clientCtx)
 	}
 
 	metrics, err := startTelemetry(config)

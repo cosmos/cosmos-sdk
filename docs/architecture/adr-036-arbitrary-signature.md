@@ -57,7 +57,7 @@ It's applications developers decision how `Data` should be treated, by treated w
 
 Proto definition:
 
-```proto
+```protobuf
 // MsgSignData defines an arbitrary, general-purpose, off-chain message
 message MsgSignData {
     // Signer is the sdk.AccAddress of the message signer

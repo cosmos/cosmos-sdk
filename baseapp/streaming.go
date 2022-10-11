@@ -35,7 +35,7 @@ type StreamingService struct {
 // KVStoreListener is used so that we do not need to update the underlying
 // io.Writer inside the StoreKVPairWriteListener everytime we begin writing
 type KVStoreListener struct {
-	BlockHeight   func() int64
+	blockHeight   func() int64
 	listener      ABCIListener
 	stopNodeOnErr bool
 }
@@ -49,13 +49,13 @@ func NewKVStoreListener(
 	return &KVStoreListener{
 		listener:      listener,
 		stopNodeOnErr: stopNodeOnErr,
-		BlockHeight:   blockHeight,
+		blockHeight:   blockHeight,
 	}
 }
 
 // Write satisfies io.Writer
 func (iw *KVStoreListener) Write(b []byte) (int, error) {
-	blockHeight := iw.BlockHeight()
+	blockHeight := iw.blockHeight()
 	if err := iw.listener.ListenStoreKVPair(blockHeight, b); err != nil {
 		if iw.stopNodeOnErr {
 			panic(err)

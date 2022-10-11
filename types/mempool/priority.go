@@ -57,9 +57,14 @@ func WithOnRead(onRead func(tx Tx)) PriorityMempoolOption {
 	}
 }
 
-// NewDefaultMempool returns the SDK's default mempool implementation which returns txs in a partial order
+// DefaultPriorityMempool returns a priorityMempool with no options.
+func DefaultPriorityMempool() Mempool {
+	return NewPriorityMempool()
+}
+
+// NewPriorityMempool returns the SDK's default mempool implementation which returns txs in a partial order
 // by 2 dimensions; priority, and sender-nonce.
-func NewDefaultMempool(opts ...PriorityMempoolOption) Mempool {
+func NewPriorityMempool(opts ...PriorityMempoolOption) Mempool {
 	mp := &priorityMempool{
 		priorityIndex: huandu.New(huandu.LessThanFunc(txKeyLess)),
 		senderIndices: make(map[string]*huandu.SkipList),

@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Evidence Overview
-parent:
-  title: "evidence"
--->
+---
+sidebar_position: 1
+---
 
 # `x/evidence`
 
@@ -222,7 +219,9 @@ The Cosmos SDK handles two types of evidence inside the ABCI `BeginBlock`:
 
 The evidence module handles these two evidence types the same way. First, the Cosmos SDK converts the Tendermint concrete evidence type to an SDK `Evidence` interface using `Equivocation` as the concrete type.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/proto/cosmos/evidence/v1beta1/evidence.proto#L11-L22
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/proto/cosmos/evidence/v1beta1/evidence.proto#L11-L22
+```
 
 For some `Equivocation` submitted in `block` to be valid, it must satisfy:
 
@@ -244,11 +243,13 @@ validator to ever re-enter the validator set.
 
 The `Equivocation` evidence is handled as follows:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/83260b0c2f9afcc7ec94a102f83906e8e56ef18e/x/evidence/keeper/infraction.go#L26-L140
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/83260b0c2f9afcc7ec94a102f83906e8e56ef18e/x/evidence/keeper/infraction.go#L26-L140
+```
 
 **Note:** The slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module
 that emits informative events and finally delegates calls to the `x/staking` module. See documentation
-on slashing and jailing in [State Transitions](/.././cosmos-sdk/x/staking/spec/02_state_transitions.md).
+on slashing and jailing in [State Transitions](../staking/README.md#state-transitions).
 
 # Client
 

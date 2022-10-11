@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   check-docs-build:
-    if: ${{ github.event.label.name == 'docs' }}
+    if: ${{ contains(github.event.label.name, 'docs') }}
 
     name: Check docs build
     runs-on: ubuntu-latest
@@ -24,6 +24,13 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+
+      # npm install npm should be removed when https://github.com/npm/cli/issues/4942 is fixed
       - name: Build docs
         run: |
-          make build-docs LEDGER_ENABLED=false
+          npm install -g npm@8.5.5
+          make build-docs

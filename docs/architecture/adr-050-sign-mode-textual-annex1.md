@@ -81,7 +81,7 @@ where:
 
 Given the proto definition:
 
-```proto
+```protobuf
 message AllowedMsgAllowance {
   repeated string allowed_messages = 1;
 }
@@ -123,7 +123,7 @@ End of Allowed messages
 
 Given the following Protobuf messages:
 
-```proto
+```protobuf
 enum VoteOption {
   VOTE_OPTION_UNSPECIFIED = 0;
   VOTE_OPTION_YES = 1;
@@ -268,7 +268,7 @@ Strings are rendered as-is.
 
 #### Example
 
-```proto
+```protobuf
 message TestData {
   string signer = 1;
   string metadata = 2;
@@ -298,7 +298,7 @@ _This paragraph is in the Annex for informational purposes only, and will be rem
 - all protobuf messages to be used with `SIGN_MODE_TEXTUAL` CAN have a short title associated with them that can be used in format strings whenever the type URL is explicitly referenced via the `cosmos.msg.v1.textual.msg_title` Protobuf message option.
 - if this option is not specified for a Msg, then the Protobuf fully qualified name will be used.
 
-```proto
+```protobuf
 message MsgSend {
   option (cosmos.msg.v1.textual.msg_title) = "bank send coins";
 }

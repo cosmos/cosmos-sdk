@@ -150,7 +150,7 @@ For new multisig public keys, we define the `typ` parameter not based on any enc
 
 Example:
 
-```proto
+```protobuf
 package cosmos.crypto.multisig;
 
 message PubKey {
@@ -231,7 +231,7 @@ Since all Cosmos SDK account types are serialized in the state, we propose to us
 
 Example: all public key types have a unique protobuf message type similar to:
 
-```proto
+```protobuf
 package cosmos.crypto.sr25519;
 
 message PubKey {

@@ -40,7 +40,7 @@ func TestStreamingServiceConstructor(t *testing.T) {
 	var expectedType streaming.ServiceConstructor
 	require.IsType(t, expectedType, constructor)
 
-	serv, err := constructor(mockOptions, mockKeys, testMarshaller)
+	serv, err := constructor(mockOptions, mockKeys, testMarshaller, log.NewNopLogger())
 	require.Nil(t, err)
 	require.IsType(t, &file.StreamingService{}, serv)
 	listeners := serv.Listeners()
@@ -78,7 +78,7 @@ func TestLoadStreamingServices(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			activeStreamers, _, err := streaming.LoadStreamingServices(bApp, tc.appOpts, encCdc.Codec, keys)
+			activeStreamers, _, err := streaming.LoadStreamingServices(bApp, tc.appOpts, encCdc.Codec, log.NewNopLogger(), keys)
 			require.NoError(t, err)
 			require.Equal(t, tc.activeStreamersLen, len(activeStreamers))
 		})

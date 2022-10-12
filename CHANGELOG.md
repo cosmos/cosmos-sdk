@@ -176,6 +176,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 `cosmossdk.io/core/appmodule.AppModule` API.
 * (x/group) [#13876](https://github.com/cosmos/cosmos-sdk/pull/13876) Add `GetMinExecutionPeriod` method on DecisionPolicy interface.
 * (x/auth)[#13780](https://github.com/cosmos/cosmos-sdk/pull/13780) Querying with `id` (type of int64) in `AccountAddressByID` grpc query now throws error, use account-id(type of uint64) instead.
+* (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) Add method `ListenCommit` to `ABCIListener`, move `ListeningEnabled` `AddListener` methods to `CommitMultiStore`, remove `CacheWrapWithListeners` from `CacheWrap` and `CacheWrapper` interfaces, remove listening apis from caching layer, should only listen to the `rootmulti.Store`, add three new options to file streaming service constructor.
 
 ### CLI Breaking Changes
 
@@ -206,6 +207,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 * (server) [#13778](https://github.com/cosmos/cosmos-sdk/pull/13778) Set Cosmos SDK default endpoints to localhost to avoid unknown exposure of endpoints.
 * (x/auth) [#13877](https://github.com/cosmos/cosmos-sdk/pull/13877) Handle missing account numbers during `InitGenesis`.
 * (x/gov) [#13918](https://github.com/cosmos/cosmos-sdk/pull/13918) Fix propagation of message errors when executing a proposal.
+* (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) fix state listener observe writes at wrong time.
 
 ### Deprecated
 

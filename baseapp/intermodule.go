@@ -15,8 +15,6 @@ import (
 )
 
 func (app *BaseApp) InterModuleInvoker(moduleName string, callInfo intermodule.CallInfo) (intermodule.Invoker, error) {
-	moduleAddr := address.Module(moduleName, callInfo.DerivedPath)
-
 	methodName := callInfo.Method
 	msgHandler, found := app.msgServiceRouter.routes[methodName]
 
@@ -41,23 +39,23 @@ func (app *BaseApp) InterModuleInvoker(moduleName string, callInfo intermodule.C
 			return err
 		}
 
-		signers := msg.GetSigners()
-		if len(signers) != 1 {
-			return fmt.Errorf("inter module Msg invocation requires a single expected signer (%s), but %s expects multiple signers (%+v),  ", moduleAddr, methodName, signers)
+		// first check the inter-module authorizer to see if this request is allowed under a special case
+		if app.interModuleAuthorizer == nil || !app.interModuleAuthorizer(ctx, methodName, msg, moduleName) {
+			// check the ADR-028 module address against the first signer
+			moduleAddr := address.Module(moduleName, callInfo.DerivedPath)
+
+			signers := msg.GetSigners()
+			if len(signers) != 1 {
+				return fmt.Errorf("inter module Msg invocation requires a single expected signer (%s), but %s expects multiple signers (%+v),  ", moduleAddr, methodName, signers)
+			}
+
+			signer := signers[0]
+
+			if !bytes.Equal(moduleAddr, signer) {
+				return errors.Wrap(sdkerrors.ErrUnauthorized,
+					fmt.Sprintf("expected %s, got %s", signers[0], moduleAddr))
+			}
 		}
-
-		signer := signers[0]
-
-		if bytes.Equal(moduleAddr, signer) {
-			return nil
-		}
-
-		if app.interModuleAuthorizer != nil && app.interModuleAuthorizer(ctx, methodName, msg, moduleName) {
-			return nil
-		}
-
-		return errors.Wrap(sdkerrors.ErrUnauthorized,
-			fmt.Sprintf("expected %s, got %s", signers[0], moduleAddr))
 
 		// TODO
 		_, err = msgHandler(sdkCtx, msg)

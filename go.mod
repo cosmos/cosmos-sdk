@@ -169,5 +169,6 @@ replace (
 )
 
 replace cosmossdk.io/core => ./core
+replace cosmossdk.io/api => ./api
 
 retract v0.43.0

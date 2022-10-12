@@ -1,12 +1,18 @@
 package appmodule
 
-import "google.golang.org/grpc"
+import (
+	"context"
+
+	"google.golang.org/grpc"
+)
 
 // InterModuleClient is an inter-module client as specified in ADR-033. It
 // allows one module to send msg's and queries to other modules provided
 // that the request is valid and can be properly authenticated.
 type InterModuleClient interface {
 	grpc.ClientConnInterface
+
+	InvokeMsg(ctx context.Context, msg interface{}) (res interface{}, err error)
 
 	// Address is the ADR-028 address of this client against which messages will be authenticated.
 	Address() []byte

@@ -56,7 +56,6 @@ func TestDurationJSON(t *testing.T) {
 			require.IsType(t, &dpb.Duration{}, msg)
 			duration := msg.(*dpb.Duration)
 			require.True(t, proto.Equal(duration, tc.Proto), "%v vs %v", duration, tc.Proto)
-
 		})
 	}
 }

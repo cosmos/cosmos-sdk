@@ -12,14 +12,13 @@ import (
 type InterModuleClient interface {
 	grpc.ClientConnInterface
 
-	// InvokeMsgHandler invokes an arbitrary msg handler given a msg. This is to be used
-	// when a module dispatches msg's from another source - such as nested msg's in a transaction.
-	// res is expected to be a pointer type and will receive the response.
-	InvokeMsgHandler(ctx context.Context, msg interface{}, res interface{}) error
+	Invoker(methodName string) (Invoker, error)
 
 	// Address is the ADR-028 address of this client against which messages will be authenticated.
 	Address() []byte
 }
+
+type Invoker func(ctx context.Context, request, response interface{}, opts ...grpc.CallOption) error
 
 // RootInterModuleClient is the root inter-module client of a module which
 // uses the ADR-028 root module address.

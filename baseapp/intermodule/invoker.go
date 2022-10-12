@@ -1,14 +1,8 @@
 package intermodule
 
-import (
-	"context"
+import "cosmossdk.io/core/appmodule"
 
-	"google.golang.org/grpc"
-)
-
-type InvokerFactory func(callInfo CallInfo) (Invoker, error)
-
-type Invoker func(ctx context.Context, request, response interface{}, opts ...grpc.CallOption) error
+type InvokerFactory func(callInfo CallInfo) (appmodule.Invoker, error)
 
 type CallInfo struct {
 	Method      string

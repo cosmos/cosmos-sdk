@@ -649,6 +649,59 @@ func TestTxOrderN(t *testing.T) {
 	}
 }
 
+func BenchmarkDefaultMempool_Insert(b *testing.B) {
+	var inputs = []struct {
+		txN      int
+		addressN int
+	}{
+		{txN: 100, addressN: 4},
+		{txN: 1000, addressN: 10},
+		{txN: 100000, addressN: 1000},
+	}
+
+	for _, v := range inputs {
+		ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+		genedTx := genRandomTxs(time.Now().UnixNano(), v.txN, v.addressN)
+		pool := mempool.NewPriorityMempool()
+		b.Run(fmt.Sprintf("txs: %d, addreses: %d", v.txN, v.addressN), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				for _, txP := range genedTx {
+					newCtx := ctx.WithPriority(txP.priority)
+					pool.Insert(newCtx, txP)
+				}
+
+			}
+		})
+	}
+}
+
+func BenchmarkDefaultMempool_Select(b *testing.B) {
+	var inputs = []struct {
+		txN      int
+		addressN int
+	}{
+		{txN: 100, addressN: 4},
+		{txN: 1000, addressN: 10},
+		{txN: 100000, addressN: 1000},
+	}
+
+	for _, v := range inputs {
+		ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+		genedTx := genRandomTxs(time.Now().UnixNano(), v.txN, v.addressN)
+		pool := mempool.NewPriorityMempool()
+		for _, tx := range genedTx {
+			newCtx := ctx.WithPriority(tx.priority)
+			pool.Insert(newCtx, tx)
+		}
+		b.Run(fmt.Sprintf("txs: %d, addreses: %d", v.txN, v.addressN), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				pool.Select(nil, int64(v.txN))
+
+			}
+		})
+	}
+}
+
 func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
 	cfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{}, gov.AppModuleBasic{})
 	cfg.InterfaceRegistry.RegisterImplementations((*govtypes.Content)(nil), &disttypes.CommunityPoolSpendProposal{})

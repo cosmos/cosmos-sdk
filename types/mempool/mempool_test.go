@@ -120,7 +120,7 @@ func TestDefaultMempool(t *testing.T) {
 	// same sender-nonce just overwrites a tx
 	mp := mempool.NewPriorityMempool()
 	for _, tx := range txs {
-		ctx.WithPriority(tx.priority)
+		ctx = ctx.WithPriority(tx.priority)
 		err := mp.Insert(ctx, tx)
 		require.NoError(t, err)
 	}

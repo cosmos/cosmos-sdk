@@ -100,7 +100,7 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Bool(FlagValidateSplitModules, false, "validate the modules' genesis state in appHome/genesis folder")
+	cmd.Flags().Bool(FlagValidateSplitModules, false, "validate the modules' genesis state in current working path")
 
 	return cmd
 }

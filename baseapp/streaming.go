@@ -10,7 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-// ABCIListener interface used to hook into the ABCI message processing of the BaseApp
+// ABCIListener interface used to hook into the ABCI message processing of the BaseApp.
+// the error result won't stop consensus state machine, if you want to stop if, need to call panic explicitly.
 type ABCIListener interface {
 	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages
 	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
@@ -18,6 +19,8 @@ type ABCIListener interface {
 	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
 	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages
 	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
+	// ListenCommit updates the steaming service with the latest Commit event
+	ListenCommit(ctx types.Context, res abci.ResponseCommit) error
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks

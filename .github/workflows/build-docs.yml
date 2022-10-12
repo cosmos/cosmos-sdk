@@ -3,18 +3,20 @@ name: Build Docs
 # This will check if the docs build successfully by running `make build-docs`
 on:
   pull_request:
-    types: [labeled]
+    branches:
+      - main
+      - "release/**"
     paths:
       - "docs/**"
       - "x/**/*.md"
+      - .github/workflows/deploy-docs.yml
+      - .github/workflows/build-docs.yml
 
 permissions:
   contents: read
 
 jobs:
   check-docs-build:
-    if: ${{ github.event.label.name == 'docs' }}
-
     name: Check docs build
     runs-on: ubuntu-latest
     steps:
@@ -24,6 +26,13 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Build docs
+      - name: Setup Node.js 🔧
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+
+      # npm install npm should be removed when https://github.com/npm/cli/issues/4942 is fixed
+      - name: Build docs 🔧
         run: |
-          make build-docs LEDGER_ENABLED=false
+          npm install -g npm@8.5.5
+          make build-docs

@@ -2,7 +2,6 @@ package tx
 
 import (
 	"github.com/cosmos/cosmos-sdk/types/mempool"
-
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,9 +31,9 @@ type wrapper struct {
 	// from the client using TxRaw if the tx was decoded from the wire
 	authInfoBz []byte
 
-	numBytes int64
-
 	txBodyHasUnknownNonCriticals bool
+
+	txSize int64
 }
 
 var (
@@ -68,7 +67,7 @@ func newBuilder(cdc codec.Codec) *wrapper {
 }
 
 func (w *wrapper) Size() int64 {
-	return w.numBytes
+	return w.txSize
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {

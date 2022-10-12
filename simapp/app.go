@@ -5,6 +5,7 @@ package simapp
 import (
 	_ "embed"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"io"
 	"os"
 	"path/filepath"
@@ -14,7 +15,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -46,6 +46,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	consensus "github.com/cosmos/cosmos-sdk/x/consensus"
+	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -121,6 +124,7 @@ var (
 		groupmodule.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		nftmodule.AppModuleBasic{},
+		consensus.AppModuleBasic{},
 	)
 )
 
@@ -143,22 +147,23 @@ type SimApp struct {
 	keys map[string]*storetypes.KVStoreKey
 
 	// keepers
-	AccountKeeper    authkeeper.AccountKeeper
-	BankKeeper       bankkeeper.Keeper
-	CapabilityKeeper *capabilitykeeper.Keeper
-	StakingKeeper    *stakingkeeper.Keeper
-	SlashingKeeper   slashingkeeper.Keeper
-	MintKeeper       mintkeeper.Keeper
-	DistrKeeper      distrkeeper.Keeper
-	GovKeeper        *govkeeper.Keeper
-	CrisisKeeper     *crisiskeeper.Keeper
-	UpgradeKeeper    upgradekeeper.Keeper
-	ParamsKeeper     paramskeeper.Keeper
-	AuthzKeeper      authzkeeper.Keeper
-	EvidenceKeeper   evidencekeeper.Keeper
-	FeeGrantKeeper   feegrantkeeper.Keeper
-	GroupKeeper      groupkeeper.Keeper
-	NFTKeeper        nftkeeper.Keeper
+	AccountKeeper         authkeeper.AccountKeeper
+	BankKeeper            bankkeeper.Keeper
+	CapabilityKeeper      *capabilitykeeper.Keeper
+	StakingKeeper         *stakingkeeper.Keeper
+	SlashingKeeper        slashingkeeper.Keeper
+	MintKeeper            mintkeeper.Keeper
+	DistrKeeper           distrkeeper.Keeper
+	GovKeeper             *govkeeper.Keeper
+	CrisisKeeper          *crisiskeeper.Keeper
+	UpgradeKeeper         upgradekeeper.Keeper
+	ParamsKeeper          paramskeeper.Keeper
+	AuthzKeeper           authzkeeper.Keeper
+	EvidenceKeeper        evidencekeeper.Keeper
+	FeeGrantKeeper        feegrantkeeper.Keeper
+	GroupKeeper           groupkeeper.Keeper
+	NFTKeeper             nftkeeper.Keeper
+	ConsensusParamsKeeper consensuskeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -192,12 +197,14 @@ func NewSimApp(
 			depinject.Supply(
 				// supply the application options
 				appOpts,
-				// use a different mempool implementation by changing this factory fn
-				mempool.NewDefaultMempool,
-				// for providing a custom inflation function for x/mint
-				// add here your custom function that implements the minttypes.InflationCalculationFn interface.
+				mempool.DefaultPriorityMempool,
+				// For providing a custom inflation function for x/mint add here your
+				// custom function that implements the minttypes.InflationCalculationFn
+				// interface.
 
-				// for providing a custom authority to a module simply add it below. By default the governance module is the default authority.
+				// For providing a custom authority to a module simply add it below. By
+				// default the governance module is the default authority.
+				//
 				// map[string]sdk.AccAddress{
 				// 	minttypes.ModuleName: authtypes.NewModuleAddress(authtypes.ModuleName),
 				// },
@@ -227,6 +234,7 @@ func NewSimApp(
 		&app.FeeGrantKeeper,
 		&app.GroupKeeper,
 		&app.NFTKeeper,
+		&app.ConsensusParamsKeeper,
 	); err != nil {
 		panic(err)
 	}
@@ -256,7 +264,7 @@ func NewSimApp(
 		distrtypes.ModuleName, stakingtypes.ModuleName, slashingtypes.ModuleName, govtypes.ModuleName,
 		minttypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName, nft.ModuleName, group.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName,
-		vestingtypes.ModuleName,
+		vestingtypes.ModuleName, consensustypes.ModuleName,
 	}
 	app.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
 	app.ModuleManager.SetOrderExportGenesis(genesisModuleOrder...)

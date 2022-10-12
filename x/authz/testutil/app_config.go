@@ -5,6 +5,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
 	_ "github.com/cosmos/cosmos-sdk/x/authz/module"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
@@ -15,6 +16,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -26,6 +28,7 @@ import (
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
@@ -47,6 +50,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					genutiltypes.ModuleName,
 					authz.ModuleName,
 					paramstypes.ModuleName,
+					consensustypes.ModuleName,
 				},
 				EndBlockers: []string{
 					minttypes.ModuleName,
@@ -56,6 +60,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					genutiltypes.ModuleName,
 					authz.ModuleName,
 					paramstypes.ModuleName,
+					consensustypes.ModuleName,
 				},
 				InitGenesis: []string{
 					authtypes.ModuleName,
@@ -65,6 +70,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					genutiltypes.ModuleName,
 					authz.ModuleName,
 					paramstypes.ModuleName,
+					consensustypes.ModuleName,
 				},
 			}),
 		},
@@ -100,6 +106,10 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		{
 			Name:   genutiltypes.ModuleName,
 			Config: appconfig.WrapAny(&genutilmodulev1.Module{}),
+		},
+		{
+			Name:   consensustypes.ModuleName,
+			Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
 		},
 		{
 			Name:   authz.ModuleName,

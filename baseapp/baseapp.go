@@ -1,19 +1,18 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
-
 	"sort"
 	"strings"
 
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
-
-	"github.com/cosmos/gogoproto/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -161,6 +160,11 @@ func NewBaseApp(
 
 	for _, option := range options {
 		option(app)
+	}
+
+	// if execution of options has left certain required fields nil, let's set them to default values
+	if app.mempool == nil {
+		app.mempool = mempool.DefaultPriorityMempool()
 	}
 
 	if app.interBlockCache != nil {
@@ -410,37 +414,12 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
 		return nil
 	}
 
-	cp := new(tmproto.ConsensusParams)
-
-	if app.paramStore.Has(ctx, ParamStoreKeyBlockParams) {
-		var bp tmproto.BlockParams
-
-		app.paramStore.Get(ctx, ParamStoreKeyBlockParams, &bp)
-		cp.Block = &bp
-	}
-
-	if app.paramStore.Has(ctx, ParamStoreKeyEvidenceParams) {
-		var ep tmproto.EvidenceParams
-
-		app.paramStore.Get(ctx, ParamStoreKeyEvidenceParams, &ep)
-		cp.Evidence = &ep
-	}
-
-	if app.paramStore.Has(ctx, ParamStoreKeyValidatorParams) {
-		var vp tmproto.ValidatorParams
-
-		app.paramStore.Get(ctx, ParamStoreKeyValidatorParams, &vp)
-		cp.Validator = &vp
+	cp, err := app.paramStore.Get(ctx)
+	if err != nil {
+		panic(err)
 	}
 
 	return cp
-}
-
-// AddRunTxRecoveryHandler adds custom app.runTx method panic handlers.
-func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
-	for _, h := range handlers {
-		app.runTxRecoveryMiddleware = newRecoveryMiddleware(h, app.runTxRecoveryMiddleware)
-	}
 }
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
@@ -453,11 +432,16 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusP
 		return
 	}
 
-	app.paramStore.Set(ctx, ParamStoreKeyBlockParams, cp.Block)
-	app.paramStore.Set(ctx, ParamStoreKeyEvidenceParams, cp.Evidence)
-	app.paramStore.Set(ctx, ParamStoreKeyValidatorParams, cp.Validator)
+	app.paramStore.Set(ctx, cp)
 	// We're explicitly not storing the Tendermint app_version in the param store. It's
 	// stored instead in the x/upgrade store, with its own bump logic.
+}
+
+// AddRunTxRecoveryHandler adds custom app.runTx method panic handlers.
+func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
+	for _, h := range handlers {
+		app.runTxRecoveryMiddleware = newRecoveryMiddleware(h, app.runTxRecoveryMiddleware)
+	}
 }
 
 // getMaximumBlockGas gets the maximum gas from the consensus params. It panics
@@ -682,15 +666,18 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			return gInfo, nil, anteEvents, priority, err
 		}
 	} else if mode == runTxModeDeliver {
-		// TODO
-		// Most conservative behavior; if removal of the tx from the mempool fails then DeliverTx
-		// will fail as well.
-		//
-		// Should we be less conservative and still return a successful DeliverTx?
 		err = app.mempool.Remove(tx.(mempool.Tx))
-		if err != nil {
+		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 			return gInfo, nil, anteEvents, priority,
 				fmt.Errorf("failed to remove tx from mempool: %w", err)
+		}
+	}
+
+	// TODO remove nil check when implemented
+	if mode == runTxModeCheck && app.mempool != nil {
+		err = app.mempool.Insert(ctx, tx.(mempool.Tx))
+		if err != nil {
+			return gInfo, nil, anteEvents, priority, err
 		}
 	}
 

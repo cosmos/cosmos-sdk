@@ -280,6 +280,16 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
+	// Clean up the traceWriter in the cpuProfileCleanup routine that is invoked
+	// when the server is shutting down.
+	fn := cpuProfileCleanup
+	cpuProfileCleanup = func() {
+		if fn != nil {
+			fn()
+		}
+		traceWriter.Close()
+	}
+
 	config, err := serverconfig.GetConfig(ctx.Viper)
 	if err != nil {
 		return err
@@ -332,8 +342,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	// case, because it spawns a new local tendermint RPC client.
 	if (config.API.Enable || config.GRPC.Enable) && tmNode != nil {
 		clientCtx := clientCtx.WithClient(local.New(tmNode))
+
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
+		app.RegisterNodeService(clientCtx)
 	}
 
 	metrics, err := startTelemetry(config)

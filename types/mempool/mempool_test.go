@@ -7,25 +7,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
+	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // testPubKey is a dummy implementation of PubKey used for testing.
@@ -33,44 +30,21 @@ type testPubKey struct {
 	address sdk.AccAddress
 }
 
-func (t testPubKey) Reset() {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) Reset() { panic("implement me") }
 
-func (t testPubKey) String() string {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) String() string { panic("implement me") }
 
-func (t testPubKey) ProtoMessage() {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) ProtoMessage() { panic("implement me") }
 
-func (t testPubKey) Address() cryptotypes.Address {
-	return t.address.Bytes()
-}
+func (t testPubKey) Address() cryptotypes.Address { return t.address.Bytes() }
 
-func (t testPubKey) Bytes() []byte {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) Bytes() []byte { panic("implement me") }
 
-func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool { panic("implement me") }
 
-func (t testPubKey) Equals(key cryptotypes.PubKey) bool {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("implement me") }
 
-func (t testPubKey) Type() string {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) Type() string { panic("implement me") }
 
 // testTx is a dummy implementation of Tx used for testing.
 type testTx struct {
@@ -80,16 +54,12 @@ type testTx struct {
 	address  sdk.AccAddress
 }
 
-func (tx testTx) GetSigners() []sdk.AccAddress {
-	panic("implement me")
-}
+func (tx testTx) GetSigners() []sdk.AccAddress { panic("implement me") }
 
-func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) {
-	panic("GetPubkeys not implemented")
-}
+func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }
 
-func (tx testTx) GetSignaturesV2() (res []signing2.SignatureV2, err error) {
-	res = append(res, signing2.SignatureV2{
+func (tx testTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
+	res = append(res, txsigning.SignatureV2{
 		PubKey:   testPubKey{address: tx.address},
 		Data:     nil,
 		Sequence: tx.nonce})
@@ -104,47 +74,98 @@ var (
 	_ cryptotypes.PubKey      = (*testPubKey)(nil)
 )
 
-func (tx testTx) GetHash() [32]byte {
-	return tx.hash
-}
+func (tx testTx) GetHash() [32]byte { return tx.hash }
 
-func (tx testTx) Size() int64 {
-	return 1
-}
+func (tx testTx) Size() int64 { return 1 }
 
-func (tx testTx) GetMsgs() []sdk.Msg {
-	return nil
-}
+func (tx testTx) GetMsgs() []sdk.Msg { return nil }
 
-func (tx testTx) ValidateBasic() error {
-	return nil
-}
+func (tx testTx) ValidateBasic() error { return nil }
 
 func (tx testTx) String() string {
 	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
 }
 
-type txWithPriority struct {
-	priority int64
-	tx       sdk.Tx
-	address  string
+type sigErrTx struct {
+	getSigs func() ([]txsigning.SignatureV2, error)
 }
 
-//func TestNewStatefulMempool(t *testing.T) {
-//	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-//
-//	// general test
-//	transactions := simulateManyTx(ctx, 1000)
-//	require.Equal(t, 1000, len(transactions))
-//	mp := mempool.NewDefaultMempool()
-//
-//	for _, tx := range transactions {
-//		ctx.WithPriority(rand.Int63())
-//		err := mp.Insert(ctx, tx.(mempool.Tx))
-//		require.NoError(t, err)
-//	}
-//	require.Equal(t, 1000, mp.CountTx())
-//}
+func (_ sigErrTx) Size() int64 { return 0 }
+
+func (_ sigErrTx) GetMsgs() []sdk.Msg { return nil }
+
+func (_ sigErrTx) ValidateBasic() error { return nil }
+
+func (_ sigErrTx) GetSigners() []sdk.AccAddress { return nil }
+
+func (_ sigErrTx) GetPubKeys() ([]cryptotypes.PubKey, error) { return nil, nil }
+
+func (t sigErrTx) GetSignaturesV2() ([]txsigning.SignatureV2, error) { return t.getSigs() }
+
+func TestDefaultMempool(t *testing.T) {
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
+	txCount := 1000
+	var txs []testTx
+
+	for i := 0; i < txCount; i++ {
+		acc := accounts[i%len(accounts)]
+		tx := testTx{
+			address:  acc.Address,
+			priority: rand.Int63(),
+		}
+		txs = append(txs, tx)
+	}
+
+	// same sender-nonce just overwrites a tx
+	mp := mempool.NewPriorityMempool()
+	for _, tx := range txs {
+		ctx.WithPriority(tx.priority)
+		err := mp.Insert(ctx, tx)
+		require.NoError(t, err)
+	}
+	require.Equal(t, len(accounts), mp.CountTx())
+
+	// distinct sender-nonce should not overwrite a tx
+	mp = mempool.NewPriorityMempool()
+	for i, tx := range txs {
+		tx.nonce = uint64(i)
+		err := mp.Insert(ctx, tx)
+		require.NoError(t, err)
+	}
+	require.Equal(t, txCount, mp.CountTx())
+
+	sel, err := mp.Select(nil, 13)
+	require.NoError(t, err)
+	require.Equal(t, 13, len(sel))
+
+	// a tx which does not implement SigVerifiableTx should not be inserted
+	tx := &sigErrTx{getSigs: func() ([]txsigning.SignatureV2, error) {
+		return nil, fmt.Errorf("error")
+	}}
+	require.Error(t, mp.Insert(ctx, tx))
+	require.Error(t, mp.Remove(tx))
+	tx.getSigs = func() ([]txsigning.SignatureV2, error) {
+		return nil, nil
+	}
+	require.Error(t, mp.Insert(ctx, tx))
+	require.Error(t, mp.Remove(tx))
+
+	// removing a tx not in the mempool should error
+	mp = mempool.NewPriorityMempool()
+	require.NoError(t, mp.Insert(ctx, txs[0]))
+	require.ErrorIs(t, mp.Remove(txs[1]), mempool.ErrTxNotFound)
+	mempool.DebugPrintKeys(mp)
+
+	// inserting a tx with a different priority should overwrite the old tx
+	newPriorityTx := testTx{
+		address:  txs[0].address,
+		priority: txs[0].priority + 1,
+		nonce:    txs[0].nonce,
+	}
+	require.NoError(t, mp.Insert(ctx, newPriorityTx))
+	require.Equal(t, 1, mp.CountTx())
+}
 
 type txSpec struct {
 	i int
@@ -184,7 +205,8 @@ func TestOutOfOrder(t *testing.T) {
 		for _, mtx := range outOfOrder {
 			mtxs = append(mtxs, mtx)
 		}
-		require.Error(t, validateOrder(mtxs))
+		err := validateOrder(mtxs)
+		require.Error(t, err)
 	}
 
 	seed := time.Now().UnixNano()
@@ -195,6 +217,7 @@ func TestOutOfOrder(t *testing.T) {
 	}
 
 	require.Error(t, validateOrder(rmtxs))
+
 }
 
 func (s *MempoolTestSuite) TestTxOrder() {
@@ -204,8 +227,6 @@ func (s *MempoolTestSuite) TestTxOrder() {
 	sa := accounts[0].Address
 	sb := accounts[1].Address
 	sc := accounts[2].Address
-	//sd := accounts[3].Address
-	//se := accounts[4].Address
 
 	tests := []struct {
 		txs   []txSpec
@@ -321,11 +342,15 @@ type MempoolTestSuite struct {
 	suite.Suite
 	numTxs      int
 	numAccounts int
+	iterations  int
 	mempool     mempool.Mempool
 }
 
 func (s *MempoolTestSuite) resetMempool() {
-	s.mempool = mempool.NewDefaultMempool()
+	s.iterations = 0
+	s.mempool = mempool.NewPriorityMempool(mempool.WithOnRead(func(tx mempool.Tx) {
+		s.iterations++
+	}))
 }
 
 func (s *MempoolTestSuite) SetupTest() {
@@ -339,7 +364,7 @@ func TestMempoolTestSuite(t *testing.T) {
 }
 
 func (s *MempoolTestSuite) TestRandomTxOrderManyTimes() {
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 3; i++ {
 		s.Run("TestRandomGeneratedTxs", func() {
 			s.TestRandomGeneratedTxs()
 		})
@@ -354,8 +379,10 @@ func (s *MempoolTestSuite) TestRandomTxOrderManyTimes() {
 // validateOrder checks that the txs are ordered by priority and nonce
 // in O(n^2) time by checking each tx against all the other txs
 func validateOrder(mtxs []mempool.Tx) error {
+	iterations := 0
 	var itxs []txSpec
 	for i, mtx := range mtxs {
+		iterations++
 		tx := mtx.(testTx)
 		itxs = append(itxs, txSpec{p: int(tx.priority), n: int(tx.nonce), a: tx.address, i: i})
 	}
@@ -368,6 +395,7 @@ func validateOrder(mtxs []mempool.Tx) error {
 
 	for _, a := range itxs {
 		for _, b := range itxs {
+			iterations++
 			// when b is before a
 
 			// when a is before b
@@ -387,6 +415,7 @@ func validateOrder(mtxs []mempool.Tx) error {
 						// find a tx with same sender as b and lower nonce
 						found := false
 						for _, c := range itxs {
+							iterations++
 							if c.a.Equals(b.a) && c.n < b.n && c.p <= a.p {
 								found = true
 								break
@@ -400,6 +429,7 @@ func validateOrder(mtxs []mempool.Tx) error {
 			}
 		}
 	}
+	// fmt.Printf("validation in iterations: %d\n", iterations)
 	return nil
 }
 
@@ -427,7 +457,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	duration := time.Since(start)
 
 	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
-		seed, mempool.Iterations(mp), duration.Milliseconds())
+		seed, s.iterations, duration.Milliseconds())
 }
 
 func (s *MempoolTestSuite) TestRandomWalkTxs() {
@@ -470,22 +500,12 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 
 	errMsg := fmt.Sprintf("Expected order: %v\nGot order: %v\nSeed: %v", orderedStr, selectedStr, seed)
 
-	//mempool.DebugPrintKeys(mp)
-
 	start := time.Now()
 	require.NoError(t, validateOrder(selected), errMsg)
 	duration := time.Since(start)
 
-	/*for i, tx := range selected {
-		msg := fmt.Sprintf("Failed tx at index %d\n%s", i, errMsg)
-		require.Equal(t, ordered[i], tx.(testTx), msg)
-		require.Equal(t, tx.(testTx).priority, ordered[i].priority, msg)
-		require.Equal(t, tx.(testTx).nonce, ordered[i].nonce, msg)
-		require.Equal(t, tx.(testTx).address, ordered[i].address, msg)
-	}*/
-
 	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
-		seed, mempool.Iterations(mp), duration.Milliseconds())
+		seed, s.iterations, duration.Milliseconds())
 }
 
 func (s *MempoolTestSuite) TestSampleTxs() {
@@ -629,150 +649,9 @@ func TestTxOrderN(t *testing.T) {
 	}
 }
 
-func BenchmarkDefaultMempool_Insert(b *testing.B) {
-	var inputs = []struct {
-		txN      int
-		addressN int
-	}{
-		{txN: 100, addressN: 4},
-		{txN: 1000, addressN: 10},
-		{txN: 100000, addressN: 1000},
-	}
-
-	for _, v := range inputs {
-		ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-		genedTx := genManyTestTx(ctx, v.txN, v.addressN)
-		pool := mempool.NewDefaultMempool()
-		b.Run(fmt.Sprintf("txs: %d, addreses: %d", v.txN, v.addressN), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				for _, txP := range genedTx {
-					newCtx := ctx.WithPriority(txP.priority)
-					pool.Insert(newCtx, txP.tx.(mempool.Tx))
-				}
-
-			}
-		})
-	}
-}
-
-func BenchmarkDefaultMempool_Select(b *testing.B) {
-	var inputs = []struct {
-		txN      int
-		addressN int
-	}{
-		{txN: 100, addressN: 4},
-		{txN: 1000, addressN: 10},
-		{txN: 100000, addressN: 1000},
-	}
-
-	for _, v := range inputs {
-		ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-		genedTx := genManyTestTx(ctx, v.txN, v.addressN)
-		pool := mempool.NewDefaultMempool()
-		for _, txP := range genedTx {
-			newCtx := ctx.WithPriority(txP.priority)
-			pool.Insert(newCtx, txP.tx.(mempool.Tx))
-		}
-		b.Run(fmt.Sprintf("txs: %d, addreses: %d", v.txN, v.addressN), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				pool.Select(nil, int64(v.txN))
-
-			}
-		})
-	}
-}
-
-func genManyTestTx(ctx sdk.Context, txN int, addressN int) []txWithPriority {
-	s1 := rand.NewSource(time.Now().UnixNano())
-	r1 := rand.New(s1)
-	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), addressN)
-	accountsNonce := make(map[string]int)
-	var genTx []txWithPriority
-	for _, acc := range accounts {
-		accountsNonce[acc.Address.String()] = 0
-	}
-	for i := 0; i < txN; i++ {
-		acc := accounts[r1.Intn(addressN)]
-		p := r1.Intn(1000)
-		n := accountsNonce[acc.Address.String()]
-		accountsNonce[acc.Address.String()] = n + 1
-		tx := txWithPriority{
-			priority: int64(p),
-			tx:       simulateTx(ctx, acc, uint64(n)),
-			address:  acc.Address.String(),
-		}
-		genTx = append(genTx, tx)
-	}
-	return genTx
-}
-
-//
-//func simulateManyTx(ctx sdk.Context, n int) []sdk.Tx {
-//	transactions := make([]sdk.Tx, n)
-//	for i := 0; i < n; i++ {
-//		tx := simulateTx(ctx)
-//		transactions[i] = tx
-//	}
-//	return transactions
-//}
-
-func simulateTx(ctx sdk.Context, acc simtypes.Account, nonce uint64) sdk.Tx {
-	s := rand.NewSource(time.Now().UnixNano())
-	r := rand.New(s)
-	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
-	msg := group.MsgUpdateGroupMembers{
-		GroupId:       1,
-		Admin:         acc.Address.String(),
-		MemberUpdates: []group.MemberRequest{},
-	}
-	fees, _ := simtypes.RandomFees(r, ctx, sdk.NewCoins(sdk.NewCoin("coin", sdk.NewInt(100000000))))
-
-	tx, _ := simtestutil.GenSignedMockTx(
-		r,
-		txGen,
-		[]sdk.Msg{&msg},
-		fees,
-		simtestutil.DefaultGenTxGas,
-		ctx.ChainID(),
-		[]uint64{authtypes.NewBaseAccountWithAddress(acc.Address).GetAccountNumber()},
-		[]uint64{nonce},
-		acc.PrivKey,
-	)
-	return tx
-}
-
-//
-//func simulateTx(ctx sdk.Context) sdk.Tx {
-//	acc := authtypes.NewEmptyModuleAccount("anaccount")
-//
-//	s := rand.NewSource(1)
-//	r := rand.New(s)
-//	msg := group.MsgUpdateGroupMembers{
-//		GroupId:       1,
-//		Admin:         "test",
-//		MemberUpdates: []group.MemberRequest{},
-//	}
-//	fees, _ := simtypes.RandomFees(r, ctx, sdk.NewCoins(sdk.NewCoin("coin", sdk.NewInt(100000000))))
-//
-//	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
-//	accounts := simtypes.RandomAccounts(r, 2)
-//
-//	tx, _ := simtestutil.GenSignedMockTx(
-//		r,
-//		txGen,
-//		[]sdk.Msg{&msg},
-//		fees,
-//		simtestutil.DefaultGenTxGas,
-//		ctx.ChainID(),
-//		[]uint64{acc.GetAccountNumber()},
-//		[]uint64{acc.GetSequence()},
-//		accounts[0].PrivKey,
-//	)
-//	return tx
-//}
-
 func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
 	cfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{}, gov.AppModuleBasic{})
+	cfg.InterfaceRegistry.RegisterImplementations((*govtypes.Content)(nil), &disttypes.CommunityPoolSpendProposal{})
 	return cfg.TxConfig.TxJSONDecoder()(txBytes)
 }
 

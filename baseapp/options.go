@@ -12,7 +12,6 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -242,14 +241,7 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
 
+// SetTxEncoder sets the TxEncoder if it wasn't provided in the BaseApp constructor.
 func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
 	app.txEncoder = txEncoder
-}
-
-func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
-	if app.sealed {
-		panic("SetMempool() on sealed BaseApp")
-	}
-
-	app.mempool = mempool
 }

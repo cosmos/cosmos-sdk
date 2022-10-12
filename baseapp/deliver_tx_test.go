@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/url"
@@ -16,6 +17,9 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -24,6 +28,8 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
+	"github.com/cosmos/gogoproto/jsonpb"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -39,11 +45,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	"github.com/cosmos/gogoproto/jsonpb"
 )
 
 var (
@@ -80,7 +83,6 @@ func setupBaseApp(t *testing.T, options ...func(*baseapp.BaseApp)) *baseapp.Base
 
 	app.MountStores(capKey1, capKey2)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
-	app.SetMempool(mempool.NewDefaultMempool())
 
 	// stores are mounted
 	err := app.LoadLatestVersion()
@@ -106,10 +108,13 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*baseapp.Base
 
 	// patch in TxConfig instead of using an output from x/auth/tx
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+
 	// set the TxDecoder in the BaseApp for minimal tx simulations
 	app.SetTxDecoder(txConfig.TxDecoder())
 
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
 
 	r := rand.New(rand.NewSource(3920758213583))
 	keyCounter := 0
@@ -128,7 +133,7 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*baseapp.Base
 
 			builder := txConfig.NewTxBuilder()
 			builder.SetMsgs(msgs...)
-			builder.SetSignatures(signingtypes.SignatureV2{})
+			setTxSignature(builder, 0)
 
 			txBytes, err := txConfig.TxEncoder()(builder.GetTx())
 			require.NoError(t, err)
@@ -576,9 +581,13 @@ func TestGRPCQuery(t *testing.T) {
 	app := setupBaseApp(t, grpcQueryOpt)
 	app.GRPCQueryRouter().SetInterfaceRegistry(codectypes.NewInterfaceRegistry())
 
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	app.Commit()
 
 	req := testdata.SayHelloRequest{Name: "foo"}
@@ -1057,9 +1066,9 @@ func TestCheckTx(t *testing.T) {
 
 		require.NoError(t, err)
 		r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
+		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 		require.Equal(t, testTxPriority, r.Priority)
 		require.Empty(t, r.GetEvents())
-		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 	}
 
 	checkStateStore := getCheckStateCtx(app.BaseApp).KVStore(capKey1)
@@ -1204,6 +1213,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 
 	builder.SetMsgs(msgs...)
 	builder.SetMemo(tx.GetMemo())
+	setTxSignature(builder, 0)
 
 	txBytes, err = txConfig.TxEncoder()(builder.GetTx())
 	require.NoError(t, err)
@@ -1385,6 +1395,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	{
 		txBuilder := txConfig.NewTxBuilder()
 		txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{})
+		setTxSignature(txBuilder, 0)
 		unknownRouteTx := txBuilder.GetTx()
 
 		_, result, err := app.SimDeliver(txConfig.TxEncoder(), unknownRouteTx)
@@ -1397,6 +1408,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 		txBuilder = txConfig.NewTxBuilder()
 		txBuilder.SetMsgs(&baseapptestutil.MsgCounter{}, &baseapptestutil.MsgCounter2{})
+		setTxSignature(txBuilder, 0)
 		unknownRouteTx = txBuilder.GetTx()
 		_, result, err = app.SimDeliver(txConfig.TxEncoder(), unknownRouteTx)
 		require.Error(t, err)
@@ -1891,7 +1903,9 @@ func TestQuery(t *testing.T) {
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
 
 	// NOTE: "/store/key1" tells us KVStore
 	// and the final "/key" says to use the data as the
@@ -1983,6 +1997,7 @@ func newTxCounter(cfg client.TxConfig, counter int64, msgCounters ...int64) sign
 	builder := cfg.NewTxBuilder()
 	builder.SetMsgs(msgs...)
 	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
+	setTxSignature(builder, uint64(counter))
 
 	return builder.GetTx()
 }
@@ -2157,17 +2172,19 @@ type paramStore struct {
 	db *dbm.MemDB
 }
 
-func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
+var ParamstoreKey = []byte("paramstore")
+
+func (ps *paramStore) Set(_ sdk.Context, value *tmproto.ConsensusParams) {
 	bz, err := json.Marshal(value)
 	if err != nil {
 		panic(err)
 	}
 
-	ps.db.Set(key, bz)
+	ps.db.Set(ParamstoreKey, bz)
 }
 
-func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
-	ok, err := ps.db.Has(key)
+func (ps *paramStore) Has(_ sdk.Context) bool {
+	ok, err := ps.db.Has(ParamstoreKey)
 	if err != nil {
 		panic(err)
 	}
@@ -2175,17 +2192,27 @@ func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
 	return ok
 }
 
-func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
-	bz, err := ps.db.Get(key)
+func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
+	bz, err := ps.db.Get(ParamstoreKey)
 	if err != nil {
 		panic(err)
 	}
 
 	if len(bz) == 0 {
-		return
+		return nil, errors.New("params not found")
 	}
 
-	if err := json.Unmarshal(bz, ptr); err != nil {
+	var params tmproto.ConsensusParams
+
+	if err := json.Unmarshal(bz, &params); err != nil {
 		panic(err)
 	}
+
+	return &params, nil
+}
+
+func setTxSignature(builder client.TxBuilder, nonce uint64) {
+	privKey := secp256k1.GenPrivKeyFromSecret([]byte("test"))
+	pubKey := privKey.PubKey()
+	builder.SetSignatures(signingtypes.SignatureV2{PubKey: pubKey, Sequence: nonce})
 }

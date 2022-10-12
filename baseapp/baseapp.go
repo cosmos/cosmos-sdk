@@ -13,6 +13,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/intermodule"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -134,7 +135,7 @@ type BaseApp struct { //nolint: maligned
 	// and exposing the requests and responses to external consumers
 	abciListeners []ABCIListener
 
-	interModuleAuthorizer InterModuleAuthorizer
+	interModuleAuthorizer intermodule.Authorizer
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/depinject"
 
 	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/baseapp/intermodule"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -143,6 +144,7 @@ func ProvideDeliverTx(appBuilder *AppBuilder) func(abci.RequestDeliverTx) abci.R
 }
 
 func ProvideInterModuleClient(key depinject.ModuleKey, app *AppBuilder) appmodule.RootInterModuleClient {
-	// NOTE: this will fail as is because BaseApp will be nil!!
-	return app.app.BaseApp.RootInterModuleClient(key.Name())
+	return intermodule.NewRootInterModuleClient(key.Name(), func(callInfo intermodule.CallInfo) (intermodule.Invoker, error) {
+		return app.app.BaseApp.InterModuleInvoker(key.Name(), callInfo)
+	})
 }

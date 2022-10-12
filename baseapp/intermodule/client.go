@@ -1,4 +1,4 @@
-package baseapp
+package intermodule
 
 import (
 	"context"
@@ -10,23 +10,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
-type invokerFactory func(callInfo callInfo) (invoker, error)
-
-type invoker func(ctx context.Context, request, response interface{}, opts ...grpc.CallOption) error
-
-type callInfo struct {
-	method      string
-	derivedPath []byte
-}
-
 type interModuleClient struct {
 	module         string
 	address        []byte
 	path           []byte
-	invokerFactory invokerFactory
+	invokerFactory InvokerFactory
 }
 
-func newInterModuleClient(module string, path []byte, invokerFactory invokerFactory) *interModuleClient {
+func newInterModuleClient(module string, path []byte, invokerFactory InvokerFactory) *interModuleClient {
 	return &interModuleClient{
 		module:         module,
 		path:           path,
@@ -36,9 +27,9 @@ func newInterModuleClient(module string, path []byte, invokerFactory invokerFact
 }
 
 func (c *interModuleClient) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
-	invoker, err := c.invokerFactory(callInfo{
-		method:      method,
-		derivedPath: c.path,
+	invoker, err := c.invokerFactory(CallInfo{
+		Method:      method,
+		DerivedPath: c.path,
 	})
 	if err != nil {
 		return err
@@ -61,7 +52,7 @@ type rootInterModuleClient struct {
 	*interModuleClient
 }
 
-func newRootInterModuleClient(module string, invokerFactory invokerFactory) *rootInterModuleClient {
+func NewRootInterModuleClient(module string, invokerFactory InvokerFactory) appmodule.RootInterModuleClient {
 	return &rootInterModuleClient{newInterModuleClient(module, nil, invokerFactory)}
 }
 

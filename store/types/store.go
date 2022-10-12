@@ -123,13 +123,6 @@ type MultiStore interface {
 	// implied that the caller should update the context when necessary between
 	// tracing operations. The modified MultiStore is returned.
 	SetTracingContext(TraceContext) MultiStore
-
-	// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
-	ListeningEnabled(key StoreKey) bool
-
-	// AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
-	// It appends the listeners to a current set, if one already exists
-	AddListeners(key StoreKey, listeners []WriteListener)
 }
 
 // From MultiStore.CacheMultiStore()....
@@ -184,6 +177,13 @@ type CommitMultiStore interface {
 
 	// SetIAVLCacheSize sets the cache size of the IAVL tree.
 	SetIAVLCacheSize(size int)
+
+	// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
+	ListeningEnabled(key StoreKey) bool
+
+	// AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
+	// It appends the listeners to a current set, if one already exists
+	AddListeners(key StoreKey, listeners []WriteListener)
 }
 
 //---------subsp-------------------------------
@@ -191,7 +191,7 @@ type CommitMultiStore interface {
 
 // BasicKVStore is a simple interface to get/set data
 type BasicKVStore interface {
-	// Get returns nil iff key doesn't exist. Panics on nil key.
+	// Get returns nil if key doesn't exist. Panics on nil key.
 	Get(key []byte) []byte
 
 	// Has checks if a key exists. Panics on nil key.
@@ -260,9 +260,6 @@ type CacheWrap interface {
 
 	// CacheWrapWithTrace recursively wraps again with tracing enabled.
 	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
-
-	// CacheWrapWithListeners recursively wraps again with listening enabled
-	CacheWrapWithListeners(storeKey StoreKey, listeners []WriteListener) CacheWrap
 }
 
 type CacheWrapper interface {
@@ -271,9 +268,6 @@ type CacheWrapper interface {
 
 	// CacheWrapWithTrace branches a store with tracing enabled.
 	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
-
-	// CacheWrapWithListeners recursively wraps again with listening enabled
-	CacheWrapWithListeners(storeKey StoreKey, listeners []WriteListener) CacheWrap
 }
 
 func (cid CommitID) IsZero() bool {

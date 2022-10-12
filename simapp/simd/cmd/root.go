@@ -319,6 +319,7 @@ func appExport(
 	jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions,
 	modulesToExport []string,
+	splitModules bool,
 ) (servertypes.ExportedApp, error) {
 	var simApp *simapp.SimApp
 
@@ -348,5 +349,5 @@ func appExport(
 		simApp = simapp.NewSimApp(logger, db, traceStore, true, appOpts)
 	}
 
-	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport, splitModules)
 }

@@ -134,7 +134,7 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation and export the genesis state
-	exported := randomSimulation(t, app, config, db)
+	exported := randomSimulation(t, app, config, db, false)
 
 	fmt.Printf("importing genesis...\n")
 
@@ -218,7 +218,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	fmt.Printf("exporting genesis...\n")
 
-	exported, err := app.ExportAppStateAndValidators(true, []string{}, []string{})
+	exported, err := app.ExportAppStateAndValidators(true, []string{}, []string{}, false)
 	require.NoError(t, err)
 
 	fmt.Printf("importing genesis...\n")
@@ -341,15 +341,14 @@ func TestAppImportExportWithAppStatePath(t *testing.T) {
 	tmp := t.TempDir()
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
-	appOptions[flags.FlagHome] = DefaultNodeHome
+	appOptions[flags.FlagHome] = tmp
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
-	appOptions[flags.FlagGenesisFilePath] = tmp
 
 	app := NewSimApp(logger, db, nil, true, appOptions, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation and export the genesis state
-	exported := randomSimulation(t, app, config, db)
+	exported := randomSimulation(t, app, config, db, true)
 
 	fmt.Printf("importing genesis...\n")
 
@@ -375,11 +374,11 @@ func TestAppImportExportWithAppStatePath(t *testing.T) {
 		}
 	}()
 
-	newApp.ModuleManager.SetGenesisPath(tmp)
+	newApp.ModuleManager.GenesisPath = tmp
 	checkStoresAfterInitGenesis(t, app, newApp, exported.ConsensusParams, nil)
 }
 
-func randomSimulation(t *testing.T, app *SimApp, config simtypes.Config, db dbm.DB) servertypes.ExportedApp {
+func randomSimulation(t *testing.T, app *SimApp, config simtypes.Config, db dbm.DB, splitModule bool) servertypes.ExportedApp {
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
@@ -403,7 +402,7 @@ func randomSimulation(t *testing.T, app *SimApp, config simtypes.Config, db dbm.
 
 	fmt.Printf("exporting genesis...\n")
 
-	exported, err := app.ExportAppStateAndValidators(false, []string{}, []string{})
+	exported, err := app.ExportAppStateAndValidators(false, []string{}, []string{}, splitModule)
 	require.NoError(t, err)
 
 	return exported

@@ -197,11 +197,7 @@ type SimApp struct {
 	// module configurator
 	configurator module.Configurator
 
-	// the root folder of the app config and data
-	homepath string
-
-	// the path for the genesis state exporting
-	exportpath string
+	appOpts servertypes.AppOptions
 }
 
 func init() {
@@ -263,12 +259,7 @@ func NewSimApp(
 		keys:              keys,
 		tkeys:             tkeys,
 		memKeys:           memKeys,
-	}
-
-	app.homepath = cast.ToString(appOpts.Get(flags.FlagHome))
-	ep := cast.ToString(appOpts.Get(flags.FlagGenesisFilePath))
-	if len(ep) > 0 {
-		app.exportpath = filepath.Join(ep, "genesis")
+		appOpts:           appOpts,
 	}
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
@@ -571,7 +562,8 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.
 
 	var genesisState GenesisState
 	if bytes.Equal(loadAppStateFromFolder, buf.Bytes()) {
-		app.ModuleManager.SetGenesisPath(filepath.Join(app.homepath, "config", "genesis"))
+		homepath := cast.ToString(app.appOpts.Get(flags.FlagHome))
+		app.ModuleManager.GenesisPath = filepath.Join(homepath, "config", "genesis")
 	} else {
 		if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 			panic(err)

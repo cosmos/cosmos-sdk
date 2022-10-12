@@ -21,6 +21,7 @@ const (
 	FlagForZeroHeight    = "for-zero-height"
 	FlagJailAllowedAddrs = "jail-allowed-addrs"
 	FlagModulesToExport  = "modules-to-export"
+	FlagSplitModules     = "split-modules"
 )
 
 // ExportCmd dumps app state to JSON.
@@ -34,11 +35,6 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 
 			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
 			config.SetRoot(homeDir)
-
-			genesisExportPath, err := cmd.Flags().GetString(flags.FlagGenesisFilePath)
-			if err != nil {
-				return err
-			}
 
 			if _, err := os.Stat(config.GenesisFile()); os.IsNotExist(err) {
 				return err
@@ -73,8 +69,9 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			forZeroHeight, _ := cmd.Flags().GetBool(FlagForZeroHeight)
 			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(FlagJailAllowedAddrs)
 			modulesToExport, _ := cmd.Flags().GetStringSlice(FlagModulesToExport)
+			splitModules, _ := cmd.Flags().GetBool(FlagSplitModules)
 
-			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs, serverCtx.Viper, modulesToExport)
+			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs, serverCtx.Viper, modulesToExport, splitModules)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %v", err)
 			}
@@ -102,8 +99,13 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				},
 			}
 
-			if len(genesisExportPath) > 0 {
-				if err := doc.SaveAs(filepath.Join(genesisExportPath, "genesis", "genesis.json")); err != nil {
+			if splitModules {
+				wd, err := os.Getwd()
+				if err != nil {
+					return err
+				}
+
+				if err := doc.SaveAs(filepath.Join(wd, "genesis", "genesis.json")); err != nil {
 					return err
 				}
 			} else {
@@ -128,7 +130,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 	cmd.Flags().Bool(FlagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
 	cmd.Flags().StringSlice(FlagJailAllowedAddrs, []string{}, "Comma-separated list of operator addresses of jailed validators to unjail")
 	cmd.Flags().StringSlice(FlagModulesToExport, []string{}, "Comma-separated list of modules to export. If empty, will export all modules")
-	cmd.Flags().String(flags.FlagGenesisFilePath, "", "Export state to the designated file path")
+	cmd.Flags().Bool(FlagSplitModules, false, "Export module state and store it as separate file(s) in genesis/[module] folder")
 
 	return cmd
 }

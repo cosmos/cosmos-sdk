@@ -341,48 +341,45 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 // ExportGenesis performs export genesis functionality for modules
 func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) (map[string]json.RawMessage, error) {
-	return m.ExportGenesisForModules(ctx, cdc, []string{})
+	return m.ExportGenesisForModules(ctx, cdc, []string{}, false)
 }
 
 // ExportGenesisForModules performs export genesis functionality for modules
-// There are 3 ways to export the module's genesis state
-// a. export whole modules to file given the export path, separate by module name
-// b. export whole modules
-// c. export designated modules from the modulesToExport argument
-func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, modulesToExport []string) (map[string]json.RawMessage, error) {
+func (m *Manager) ExportGenesisForModules(
+	ctx sdk.Context,
+	cdc codec.JSONCodec,
+	modulesToExport []string,
+	splitModules bool,
+) (map[string]json.RawMessage, error) {
 	genesisData := make(map[string]json.RawMessage)
 
-	// a.
-	if len(m.GenesisPath) > 0 {
-		for _, moduleName := range m.OrderExportGenesis {
-			modulePath := filepath.Join(m.GenesisPath, moduleName)
-			fmt.Printf("exporting module: %s,path: %s\n", moduleName, modulePath)
-
-			bz := m.Modules[moduleName].ExportGenesis(ctx, cdc)
-			if err := FileWrite(modulePath, moduleName, bz); err != nil {
-				return nil, fmt.Errorf("ExportGenesis to file failed, module=%s err=%v", moduleName, err)
-			}
-		}
-
-		return genesisData, nil
-	}
-
-	// b.
 	if len(modulesToExport) == 0 {
 		for _, moduleName := range m.OrderExportGenesis {
-			genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
-		}
+			if splitModules {
+				if err := m.exportModuleStateToFile(ctx, cdc, moduleName); err != nil {
+					return nil, err
+				}
+			} else {
+				genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
 
+			}
+		}
 		return genesisData, nil
 	}
 
-	// c.
 	// verify modules exists in app, so that we don't panic in the middle of an export
 	if err := m.checkModulesExists(modulesToExport); err != nil {
 		panic(err)
 	}
+
 	for _, moduleName := range modulesToExport {
-		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
+		if splitModules {
+			if err := m.exportModuleStateToFile(ctx, cdc, moduleName); err != nil {
+				return nil, err
+			}
+		} else {
+			genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
+		}
 	}
 
 	return genesisData, nil
@@ -588,11 +585,6 @@ func (m *Manager) ModuleNames() []string {
 	return maps.Keys(m.Modules)
 }
 
-// SetGenesisPath sets the genesis binaries export/import path.
-func (m *Manager) SetGenesisPath(path string) {
-	m.GenesisPath = path
-}
-
 // DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,
 // except x/auth which will run last, see:
 // https://github.com/cosmos/cosmos-sdk/issues/10591
@@ -744,4 +736,15 @@ func FileRead(modulePath string, moduleName string) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func (m *Manager) exportModuleStateToFile(ctx sdk.Context, cdc codec.JSONCodec, moduleName string) error {
+	modulePath := filepath.Join(m.GenesisPath, moduleName)
+	fmt.Printf("exporting module: %s,path: %s\n", moduleName, modulePath)
+
+	bz := m.Modules[moduleName].ExportGenesis(ctx, cdc)
+	if err := FileWrite(modulePath, moduleName, bz); err != nil {
+		return fmt.Errorf("ExportGenesis to file failed, module=%s err=%v", moduleName, err)
+	}
+	return nil
 }

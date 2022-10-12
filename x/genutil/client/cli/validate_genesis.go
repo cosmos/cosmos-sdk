@@ -4,18 +4,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-const chainUpgradeGuide = "https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md"
+const (
+	chainUpgradeGuide        = "https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md"
+	FlagValidateSplitModules = "validate-split-modules"
+)
 
 // ValidateGenesisCmd takes a genesis file, and makes sure that it is valid.
 func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
@@ -37,12 +40,17 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 				genesis = args[0]
 			}
 
-			genesisFilePath, err := cmd.Flags().GetString(flags.FlagGenesisFilePath)
+			splitModules, err := cmd.Flags().GetBool(FlagValidateSplitModules)
 			if err != nil {
 				return err
 			}
 
-			if len(genesisFilePath) > 0 {
+			if splitModules {
+				wd, err := os.Getwd()
+				if err != nil {
+					return err
+				}
+				genesisFilePath := filepath.Join(wd, "genesis")
 				genDoc, err := validateGenDoc(filepath.Join(genesisFilePath, "genesis.json"))
 				if err != nil {
 					return err
@@ -92,7 +100,7 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flags.FlagGenesisFilePath, "", "the file path of app genesis states")
+	cmd.Flags().Bool(FlagValidateSplitModules, false, "validate the modules' genesis state in appHome/genesis folder")
 
 	return cmd
 }

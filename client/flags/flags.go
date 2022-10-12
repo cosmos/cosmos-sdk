@@ -77,7 +77,6 @@ const (
 	FlagTip              = "tip"
 	FlagAux              = "aux"
 	FlagOutput           = tmcli.OutputFlag
-	FlagGenesisFilePath  = "genesis-path"
 
 	// Tendermint logging flags
 	FlagLogLevel  = "log_level"

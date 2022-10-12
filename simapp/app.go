@@ -171,11 +171,7 @@ type SimApp struct {
 	// simulation manager
 	sm *module.SimulationManager
 
-	// the root folder of the app config and data
-	homepath string
-
-	// the path for the genesis state exporting
-	exportpath string
+	appOpts servertypes.AppOptions
 }
 
 func init() {
@@ -249,11 +245,7 @@ func NewSimApp(
 	}
 
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
-	app.homepath = cast.ToString(appOpts.Get(flags.FlagHome))
-	ep := cast.ToString(appOpts.Get(flags.FlagGenesisFilePath))
-	if len(ep) > 0 {
-		app.exportpath = filepath.Join(ep, "genesis")
-	}
+	app.appOpts = appOpts
 
 	// configure state listening capabilities using AppOptions
 	// we are doing nothing with the returned streamingServices and waitGroup in this case
@@ -336,7 +328,8 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.
 	}
 
 	if bytes.Equal(loadAppStateFromFolder, buf.Bytes()) {
-		app.App.ModuleManager.SetGenesisPath(filepath.Join(app.homepath, "config", "genesis"))
+		homepath := cast.ToString(app.appOpts.Get(flags.FlagHome))
+		app.App.ModuleManager.GenesisPath = filepath.Join(homepath, "config", "genesis")
 	}
 
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())

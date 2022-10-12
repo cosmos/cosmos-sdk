@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -16,7 +17,12 @@ import (
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
-func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs []string, modulesToExport []string) (servertypes.ExportedApp, error) {
+func (app *SimApp) ExportAppStateAndValidators(
+	forZeroHeight bool,
+	jailAllowedAddrs []string,
+	modulesToExport []string,
+	splitModules bool,
+) (servertypes.ExportedApp, error) {
 	// as if they could withdraw from the start of the next block
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
@@ -28,14 +34,18 @@ func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAd
 		app.prepForZeroHeightGenesis(ctx, jailAllowedAddrs)
 	}
 
-	app.ModuleManager.SetGenesisPath(app.exportpath)
-	genState, err := app.ModuleManager.ExportGenesisForModules(ctx, app.appCodec, modulesToExport)
+	wd, err := os.Getwd()
+	if err != nil {
+		return servertypes.ExportedApp{}, err
+	}
+	app.ModuleManager.GenesisPath = wd
+	genState, err := app.ModuleManager.ExportGenesisForModules(ctx, app.appCodec, modulesToExport, splitModules)
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}
 
 	var appState []byte
-	if app.exportpath != "" {
+	if splitModules {
 		jsonObj := make(map[string]json.RawMessage)
 		jsonObj["module_genesis_state"] = []byte("true")
 		appState, err = json.MarshalIndent(jsonObj, "", "  ")

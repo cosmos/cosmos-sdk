@@ -206,12 +206,12 @@ func TestManager_ExportGenesis(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, want, actual)
 
-	actual, err = mm.ExportGenesisForModules(ctx, cdc, []string{})
+	actual, err = mm.ExportGenesisForModules(ctx, cdc, []string{}, false)
 	require.NoError(t, err)
 	require.Equal(t, want, actual)
 
 	require.Panics(t, func() {
-		mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"})
+		mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"}, false)
 	})
 }
 
@@ -423,7 +423,7 @@ func TestManager_InitGenesisWithPath(t *testing.T) {
 	require.NoError(t, err)
 
 	// set the file import path
-	mm.SetGenesisPath(tmp)
+	mm.GenesisPath = tmp
 	var res abci.ResponseInitChain
 	require.NotPanics(t, func() {
 		res = mm.InitGenesis(ctx, cdc, nil)
@@ -462,10 +462,10 @@ func TestManager_ExportGenesisWithPath(t *testing.T) {
 	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(appGenesisState[mod2])
 
 	// assign the export path
-	mm.SetGenesisPath(tmp)
+	mm.GenesisPath = tmp
 
 	// run actual genesis state export
-	actual, err := mm.ExportGenesis(ctx, cdc)
+	actual, err := mm.ExportGenesisForModules(ctx, cdc, []string{}, true)
 	require.NoError(t, err)
 	require.Equal(t, make(map[string]json.RawMessage), actual)
 

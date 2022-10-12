@@ -7,32 +7,33 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 type messageValueRenderer struct {
 	tr      *Textual
-	msgType protoreflect.ProtoMessage
+	msgDesc protoreflect.MessageDescriptor
 	fds     []protoreflect.FieldDescriptor
 }
 
-func NewMessageValueRenderer(t *Textual, msgType protoreflect.ProtoMessage) ValueRenderer {
-	fields := msgType.ProtoReflect().Descriptor().Fields()
+func NewMessageValueRenderer(t *Textual, msgDesc protoreflect.MessageDescriptor) ValueRenderer {
+	fields := msgDesc.Fields()
 	fds := make([]protoreflect.FieldDescriptor, 0, fields.Len())
 	for i := 0; i < fields.Len(); i++ {
 		fds = append(fds, fields.Get(i))
 	}
 	sort.Slice(fds, func(i, j int) bool { return fds[i].Number() < fds[j].Number() })
 
-	return &messageValueRenderer{tr: t, msgType: msgType, fds: fds}
+	return &messageValueRenderer{tr: t, msgDesc: msgDesc, fds: fds}
 }
 
 func (mr *messageValueRenderer) header() string {
-	return fmt.Sprintf("%s object", mr.msgType.ProtoReflect().Descriptor().Name())
+	return fmt.Sprintf("%s object", mr.msgDesc.Name())
 }
 
 func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	fullName := v.Message().Descriptor().FullName()
-	wantFullName := mr.msgType.ProtoReflect().Descriptor().FullName()
+	wantFullName := mr.msgDesc.FullName()
 	if fullName != wantFullName {
 		return nil, fmt.Errorf(`bad message type: want "%s", got "%s"`, wantFullName, fullName)
 	}
@@ -94,7 +95,7 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 		return nilValue, fmt.Errorf("expect at least one screen")
 	}
 
-	wantHeader := fmt.Sprintf("%s object", mr.msgType.ProtoReflect().Descriptor().Name())
+	wantHeader := fmt.Sprintf("%s object", mr.msgDesc.Name())
 	if screens[0].Text != wantHeader {
 		return nilValue, fmt.Errorf(`bad header: want "%s", got "%s"`, wantHeader, screens[0].Text)
 	}
@@ -102,7 +103,11 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 		return nilValue, fmt.Errorf("bad message indentation: want 0, got %d", screens[0].Indent)
 	}
 
-	msg := mr.msgType.ProtoReflect().New()
+	msgType, err := protoregistry.GlobalTypes.FindMessageByName(mr.msgDesc.FullName())
+	if err != nil {
+		return nilValue, err
+	}
+	msg := msgType.New()
 	idx := 1
 
 	for _, fd := range mr.fds {
@@ -116,8 +121,8 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 			return nilValue, err
 		}
 
-		if screens[idx].Indent != 0 {
-			return nilValue, fmt.Errorf("bad message indentation: want 0, got %d", screens[0].Indent)
+		if screens[idx].Indent != 1 {
+			return nilValue, fmt.Errorf("bad message indentation: want 1, got %d", screens[idx].Indent)
 		}
 
 		prefix := formatFieldName(string(fd.Name())) + ": "
@@ -126,13 +131,15 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 			continue
 		}
 
+		// Make a new screen without the prefix
 		subscreens := make([]Screen, 1)
 		subscreens[0] = screens[idx]
 		subscreens[0].Text = strings.TrimPrefix(screens[idx].Text, prefix)
+		subscreens[0].Indent--
 		idx++
 
 		// Gather nested screens
-		for idx < len(screens) && subscreens[idx].Indent > 0 {
+		for idx < len(screens) && screens[idx].Indent > 1 {
 			scr := screens[idx]
 			scr.Indent--
 			subscreens = append(subscreens, scr)

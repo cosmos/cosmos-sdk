@@ -39,6 +39,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* Provide the logger to the store when creating a new BaseApp [#283](https://github.com/provenance-io/cosmos-sdk/pull/283).
+
 ---
 
 ## [v0.46.2-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.2-pio-1) - 2022-10-03

@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/rosetta/lib/errors"
@@ -21,8 +19,6 @@ func (on OnlineNetwork) AccountBalance(ctx context.Context, request *types.Accou
 
 	switch {
 	case request.BlockIdentifier == nil:
-		fmt.Println("No block identifier")
-
 		syncStatus, err := on.client.Status(ctx)
 		if err != nil {
 			return nil, errors.ToRosetta(err)
@@ -32,17 +28,12 @@ func (on OnlineNetwork) AccountBalance(ctx context.Context, request *types.Accou
 			return nil, errors.ToRosetta(err)
 		}
 	case request.BlockIdentifier.Hash != nil:
-		fmt.Println("We have block identifier hash")
-
 		block, err = on.client.BlockByHash(ctx, *request.BlockIdentifier.Hash)
 		if err != nil {
 			return nil, errors.ToRosetta(err)
 		}
 		height = block.Block.Index
 	case request.BlockIdentifier.Index != nil:
-		fmt.Println("We have a block identifier index")
-		fmt.Println(*request.BlockIdentifier.Index)
-
 		height = *request.BlockIdentifier.Index
 		block, err = on.client.BlockByHeight(ctx, &height)
 		if err != nil {
@@ -54,9 +45,6 @@ func (on OnlineNetwork) AccountBalance(ctx context.Context, request *types.Accou
 	if err != nil {
 		return nil, errors.ToRosetta(err)
 	}
-
-	s, _ := json.Marshal(accountCoins)
-	fmt.Println(s)
 
 	return &types.AccountBalanceResponse{
 		BlockIdentifier: block.Block,

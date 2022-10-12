@@ -144,7 +144,7 @@ func ProvideDeliverTx(appBuilder *AppBuilder) func(abci.RequestDeliverTx) abci.R
 }
 
 func ProvideInterModuleClient(key depinject.ModuleKey, app *AppBuilder) appmodule.RootInterModuleClient {
-	return intermodule.NewRootInterModuleClient(key.Name(), func(callInfo intermodule.CallInfo) (intermodule.Invoker, error) {
+	return intermodule.NewRootInterModuleClient(key.Name(), func(callInfo intermodule.CallInfo) (appmodule.InterModuleInvoker, error) {
 		return app.app.BaseApp.InterModuleInvoker(key.Name(), callInfo)
 	})
 }

@@ -36,8 +36,8 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 	}
 
 	t := authorization.MsgTypeURL()
-	if k.router.HandlerByTypeURL(t) == nil {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("%s doesn't exist.", t)
+	if _, err := k.router.InvokerByMethod(t); err != nil {
+		return nil, sdkerrors.ErrInvalidType.Wrapf("%s doesn't exist or is blocked: %v", t, err)
 	}
 
 	err = k.SaveGrant(ctx, grantee, granter, authorization, msg.Grant.Expiration)

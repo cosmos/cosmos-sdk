@@ -37,6 +37,10 @@ message Module {
   // override_store_keys is an optional list of overrides for the module store keys
   // to be used in keeper construction.
   repeated StoreKeyConfig override_store_keys = 6;
+
+  // admin_modules are modules that have admin privileges with respect to inter-module
+  // communication, meaning that they can invoke any message from any sender.
+  repeated string admin_modules = 7;
 }
 
 // StoreKeyConfig may be supplied to override the default module store key, which

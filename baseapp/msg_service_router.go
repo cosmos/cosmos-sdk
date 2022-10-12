@@ -45,6 +45,8 @@ func (msr *MsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler 
 	}
 
 	return func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
+		evtMgr := sdk.NewEventManager()
+		ctx = ctx.WithEventManager(evtMgr)
 		res, err := handler(ctx, req)
 		if err != nil {
 			return nil, err
@@ -90,12 +92,13 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			return nil
 		}, noopInterceptor)
 
+		requestTypeUrl := "/" + requestTypeName
 		// Check that the service Msg fully-qualified method name has already
 		// been registered (via RegisterInterfaces). If the user registers a
 		// service without registering according service Msg type, there might be
 		// some unexpected behavior down the road. Since we can't return an error
 		// (`Server.RegisterService` interface restriction) we panic (at startup).
-		reqType, err := msr.interfaceRegistry.Resolve(requestTypeName)
+		reqType, err := msr.interfaceRegistry.Resolve(requestTypeUrl)
 		if err != nil || reqType == nil {
 			panic(
 				fmt.Errorf(
@@ -124,7 +127,6 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		}
 
 		handler := func(ctx sdk.Context, req sdk.Msg) (interface{}, error) {
-			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, h grpc.UnaryHandler) (interface{}, error) {
 				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
 				return h(goCtx, req)
@@ -134,9 +136,9 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			return methodHandler(handler, sdk.WrapSDKContext(ctx), noopDecoder, interceptor)
 		}
 		// we index via type name, type URL and method name for inter-module calls
-		msr.routes[requestTypeName] = handler     // type name
-		msr.routes["/"+requestTypeName] = handler // type URL
-		msr.routes[method.MethodName] = handler   // method name
+		msr.routes[requestTypeName] = handler
+		msr.routes[requestTypeUrl] = handler
+		msr.routes[method.MethodName] = handler
 	}
 }
 

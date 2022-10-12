@@ -8,6 +8,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/golang/mock/gomock"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -17,7 +19,6 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/golang/mock/gomock"
 )
 
 type GenesisTestSuite struct {
@@ -50,9 +51,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 	bank.RegisterInterfaces(suite.encCfg.InterfaceRegistry)
 
-	msr := suite.baseApp.MsgServiceRouter()
-	msr.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
-
+	msr := suite.baseApp.InterModuleClient("authz")
 	suite.keeper = keeper.NewKeeper(key, suite.encCfg.Codec, msr, suite.accountKeeper)
 }
 

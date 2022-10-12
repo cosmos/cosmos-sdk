@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"cosmossdk.io/core/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -123,15 +124,15 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Provide(ProvideModuleBasic, ProvideModule),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type consensusParamInputs struct {
+type ConsensusParamInputs struct {
 	depinject.In
 
 	Cdc       codec.Codec
@@ -140,7 +141,7 @@ type consensusParamInputs struct {
 	Authority map[string]sdk.AccAddress `optional:"true"`
 }
 
-type consensusParamOutputs struct {
+type ConsensusParamOutputs struct {
 	depinject.Out
 
 	Keeper        keeper.Keeper
@@ -148,7 +149,7 @@ type consensusParamOutputs struct {
 	BaseAppOption runtime.BaseAppOption
 }
 
-func provideModule(in consensusParamInputs) consensusParamOutputs {
+func ProvideModule(in ConsensusParamInputs) ConsensusParamOutputs {
 	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
 	if !ok {
 		// default to governance authority if not provided
@@ -161,7 +162,7 @@ func provideModule(in consensusParamInputs) consensusParamOutputs {
 		app.SetParamStore(&k)
 	}
 
-	return consensusParamOutputs{
+	return ConsensusParamOutputs{
 		Keeper:        k,
 		Module:        runtime.WrapAppModule(m),
 		BaseAppOption: baseappOpt,

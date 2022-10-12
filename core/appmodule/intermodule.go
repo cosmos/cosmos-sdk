@@ -10,15 +10,20 @@ import (
 // allows one module to send msg's and queries to other modules provided
 // that the request is valid and can be properly authenticated.
 type InterModuleClient interface {
+	// ClientConnInterface is implemented in such a way that an empty string
+	// can be passed as the method argument to Invoke and the request will be
+	// routed based on the request type which is how Cosmos SDK Msg's are
+	// often routed.
 	grpc.ClientConnInterface
 
-	Invoker(methodName string) (Invoker, error)
+	InvokerByMethod(method string) (InterModuleInvoker, error)
+	InvokerByRequest(request interface{}) (InterModuleInvoker, error)
 
 	// Address is the ADR-028 address of this client against which messages will be authenticated.
 	Address() []byte
 }
 
-type Invoker func(ctx context.Context, request, response interface{}, opts ...grpc.CallOption) error
+type InterModuleInvoker func(ctx context.Context, request, response interface{}, opts ...grpc.CallOption) error
 
 // RootInterModuleClient is the root inter-module client of a module which
 // uses the ADR-028 root module address.

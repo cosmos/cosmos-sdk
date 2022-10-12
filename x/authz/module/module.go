@@ -9,10 +9,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
+
 	"cosmossdk.io/core/appmodule"
 
 	"cosmossdk.io/depinject"
-	"github.com/cosmos/cosmos-sdk/baseapp"
+
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -172,12 +173,12 @@ func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 type AuthzInputs struct {
 	depinject.In
 
-	Key              *store.KVStoreKey
-	Cdc              codec.Codec
-	AccountKeeper    authz.AccountKeeper
-	BankKeeper       authz.BankKeeper
-	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter *baseapp.MsgServiceRouter
+	Key               *store.KVStoreKey
+	Cdc               codec.Codec
+	AccountKeeper     authz.AccountKeeper
+	BankKeeper        authz.BankKeeper
+	Registry          cdctypes.InterfaceRegistry
+	InterModuleClient appmodule.RootInterModuleClient
 }
 
 type AuthzOutputs struct {
@@ -188,7 +189,7 @@ type AuthzOutputs struct {
 }
 
 func ProvideModule(in AuthzInputs) AuthzOutputs {
-	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
+	k := keeper.NewKeeper(in.Key, in.Cdc, in.InterModuleClient, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return AuthzOutputs{AuthzKeeper: k, Module: runtime.WrapAppModule(m)}
 }

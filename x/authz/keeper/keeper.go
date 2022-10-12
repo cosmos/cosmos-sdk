@@ -9,7 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -26,12 +26,12 @@ const gasCostPerIteration = uint64(20)
 type Keeper struct {
 	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
-	router     *baseapp.MsgServiceRouter
+	router     appmodule.RootInterModuleClient
 	authKeeper authz.AccountKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, router *baseapp.MsgServiceRouter, ak authz.AccountKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, router appmodule.RootInterModuleClient, ak authz.AccountKeeper) Keeper {
 	return Keeper{
 		storeKey:   storeKey,
 		cdc:        cdc,
@@ -132,29 +132,32 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 			}
 		}
 
-		handler := k.router.Handler(msg)
-		if handler == nil {
-			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
+		handler, err := k.router.InvokerByRequest(msg)
+		if err != nil {
+			return nil, err
 		}
 
-		msgResp, err := handler(ctx, msg)
+		origEvtMgr := ctx.EventManager()
+		evtMgr := sdk.NewEventManager()
+		ctx = ctx.WithEventManager(evtMgr)
+
+		res := new(codec.ProtoMarshaler)
+		err = handler(ctx, msg, res)
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %v", msg)
 		}
 
-		results[i] = msgResp.Data
+		bz, err := k.cdc.Marshal(*res)
+		if err != nil {
+			return nil, err
+		}
+		results[i] = bz
 
 		// emit the events from the dispatched actions
-		events := msgResp.Events
-		sdkEvents := make([]sdk.Event, 0, len(events))
-		for _, event := range events {
-			e := event
-			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: "authz_msg_index", Value: strconv.Itoa(i)})
-
-			sdkEvents = append(sdkEvents, sdk.Event(e))
+		for _, event := range evtMgr.Events() {
+			event.Attributes = append(event.Attributes, abci.EventAttribute{Key: "authz_msg_index", Value: strconv.Itoa(i)})
+			origEvtMgr.EmitEvent(event)
 		}
-
-		ctx.EventManager().EmitEvents(sdkEvents)
 	}
 
 	return results, nil

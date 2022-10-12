@@ -9,13 +9,24 @@ import (
 	"cosmossdk.io/errors"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/baseapp/intermodule"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func (app *BaseApp) InterModuleInvoker(moduleName string, callInfo intermodule.CallInfo) (intermodule.Invoker, error) {
+func (app *BaseApp) SetInterModuleAuthorizer(authorizer intermodule.Authorizer) {
+	app.interModuleAuthorizer = authorizer
+}
+
+func (app *BaseApp) InterModuleClient(moduleName string) appmodule.RootInterModuleClient {
+	return intermodule.NewRootInterModuleClient(moduleName, func(callInfo intermodule.CallInfo) (appmodule.InterModuleInvoker, error) {
+		return app.InterModuleInvoker(moduleName, callInfo)
+	})
+}
+
+func (app *BaseApp) InterModuleInvoker(moduleName string, callInfo intermodule.CallInfo) (appmodule.InterModuleInvoker, error) {
 	methodName := callInfo.Method
 	msgHandler, found := app.msgServiceRouter.routes[methodName]
 
@@ -29,6 +40,10 @@ func (app *BaseApp) InterModuleInvoker(moduleName string, callInfo intermodule.C
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		cacheMs := sdkCtx.MultiStore().CacheMultiStore()
 		sdkCtx = sdkCtx.WithMultiStore(cacheMs)
+
+		origEvtMr := sdkCtx.EventManager()
+		evtMgr := sdk.NewEventManager()
+		sdkCtx = sdkCtx.WithEventManager(evtMgr)
 
 		msg, ok := request.(sdk.Msg)
 		if !ok {
@@ -71,8 +86,11 @@ func (app *BaseApp) InterModuleInvoker(moduleName string, callInfo intermodule.C
 			reflect.ValueOf(response).Elem().Set(resValue.Elem())
 		}
 
-		// only commit writes if there is no error so that calls are atomic
+		// only commit writes and events if there is no error so that calls are atomic
 		cacheMs.Write()
+		for _, event := range evtMgr.Events() {
+			origEvtMr.EmitEvent(event)
+		}
 
 		return nil
 	}, nil

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 
@@ -19,7 +18,7 @@ type MsgServiceRouter struct {
 	routes            map[string]MsgServiceHandler
 }
 
-var _ gogogrpc.Server = &MsgServiceRouter{}
+var _ grpc.ServiceRegistrar = &MsgServiceRouter{}
 
 // NewMsgServiceRouter creates a new MsgServiceRouter.
 func NewMsgServiceRouter() *MsgServiceRouter {

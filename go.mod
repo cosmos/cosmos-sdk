@@ -5,7 +5,7 @@ module github.com/cosmos/cosmos-sdk
 require (
 	cosmossdk.io/api v0.2.1
 	cosmossdk.io/core v0.2.0
-	cosmossdk.io/depinject v1.0.0-alpha.2
+	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.3
 	github.com/99designs/keyring v1.2.1
@@ -54,7 +54,7 @@ require (
 	github.com/tendermint/tendermint v0.37.0-alpha.2
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/crypto v0.0.0-20221005025214-4161e89ecf1b
-	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
+	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
 	google.golang.org/genproto v0.0.0-20220930163606-c98284e70a91
 	google.golang.org/grpc v1.50.0
 	google.golang.org/protobuf v1.28.1
@@ -167,5 +167,7 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 	github.com/gogo/gateway => github.com/notional-labs/gateway v1.1.1-0.20220417180718-8e60e17a098d
 )
+
+replace cosmossdk.io/core => ./core
 
 retract v0.43.0

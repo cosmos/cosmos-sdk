@@ -133,6 +133,8 @@ type BaseApp struct { //nolint: maligned
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
 	abciListeners []ABCIListener
+
+	interModuleAuthorizer InterModuleAuthorizer
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

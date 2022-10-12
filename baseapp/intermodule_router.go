@@ -1,0 +1,96 @@
+package baseapp
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+
+	"cosmossdk.io/errors"
+	"google.golang.org/grpc"
+
+	"cosmossdk.io/core/appmodule"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+func (app *BaseApp) RootInterModuleClient(moduleName string) appmodule.RootInterModuleClient {
+	return newRootInterModuleClient(moduleName, app.invokerFactory(moduleName))
+}
+
+type InterModuleAuthorizer func(ctx context.Context, methodName string, req interface{}, callingModule string) bool
+
+func (app *BaseApp) invoker(methodName string, allowMsgCall func(context.Context, string, sdk.Msg) error) (invoker, error) {
+	msgHandler, found := app.msgServiceRouter.routes[methodName]
+
+	if !found {
+		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("cannot find method named %s", methodName))
+	}
+
+	return func(ctx context.Context, request interface{}, response interface{}, opts ...grpc.CallOption) error {
+		// cache wrap the multistore so that inter-module writes are atomic
+		// see https://github.com/cosmos/cosmos-sdk/issues/8030
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		cacheMs := sdkCtx.MultiStore().CacheMultiStore()
+		sdkCtx = sdkCtx.WithMultiStore(cacheMs)
+
+		msg, ok := request.(sdk.Msg)
+		if !ok {
+			return errors.Wrapf(sdkerrors.ErrInvalidRequest, "expected an sdk.Msg, got %t", request)
+		}
+
+		err := msg.ValidateBasic()
+		if err != nil {
+			return err
+		}
+
+		err = allowMsgCall(ctx, methodName, msg)
+		if err != nil {
+			return err
+		}
+
+		// TODO
+		_, err = msgHandler(sdkCtx, msg)
+		if err != nil {
+			return err
+		}
+
+		// only commit writes if there is no error so that calls are atomic
+		cacheMs.Write()
+
+		return nil
+	}, nil
+}
+
+func (app *BaseApp) invokerFactory(moduleName string) invokerFactory {
+	return func(callInfo callInfo) (invoker, error) {
+		//if moduleName != callingModule {
+		//	return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized,
+		//		fmt.Sprintf("expected a call from module %s, but module %s is calling", moduleName, callingModule.ModuleName))
+		//}
+
+		moduleAddr := address.Module(moduleName, callInfo.derivedPath)
+
+		writeCondition := func(ctx context.Context, methodName string, msgReq sdk.Msg) error {
+			signers := msgReq.GetSigners()
+			if len(signers) != 1 {
+				return fmt.Errorf("inter module Msg invocation requires a single expected signer (%s), but %s expects multiple signers (%+v),  ", moduleAddr, methodName, signers)
+			}
+
+			signer := signers[0]
+
+			if bytes.Equal(moduleAddr, signer) {
+				return nil
+			}
+
+			if app.interModuleAuthorizer != nil && app.interModuleAuthorizer(ctx, methodName, msgReq, moduleName) {
+				return nil
+			}
+
+			return sdkerrors.Wrap(sdkerrors.ErrUnauthorized,
+				fmt.Sprintf("expected %s, got %s", signers[0], moduleAddr))
+		}
+
+		return app.invoker(callInfo.method, writeCondition)
+	}
+}

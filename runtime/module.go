@@ -6,8 +6,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
+	"cosmossdk.io/core/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -32,6 +33,7 @@ func init() {
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
 			ProvideDeliverTx,
+			ProvideInterModuleClient,
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
@@ -138,4 +140,9 @@ func ProvideDeliverTx(appBuilder *AppBuilder) func(abci.RequestDeliverTx) abci.R
 	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
 		return appBuilder.app.BaseApp.DeliverTx(tx)
 	}
+}
+
+func ProvideInterModuleClient(key depinject.ModuleKey, app *AppBuilder) appmodule.RootInterModuleClient {
+	// NOTE: this will fail as is because BaseApp will be nil!!
+	return app.app.BaseApp.RootInterModuleClient(key.Name())
 }

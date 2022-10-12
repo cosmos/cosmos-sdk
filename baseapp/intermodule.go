@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"reflect"
 
 	"cosmossdk.io/errors"
 	"google.golang.org/grpc"
@@ -57,10 +58,17 @@ func (app *BaseApp) InterModuleInvoker(moduleName string, callInfo intermodule.C
 			}
 		}
 
-		// TODO
-		_, err = msgHandler(sdkCtx, msg)
+		res, err := msgHandler(sdkCtx, msg)
 		if err != nil {
 			return err
+		}
+
+		// reflection is needed here because of the way that gRPC clients code is
+		// generated in that it allocates an instance of the response type, but
+		// we already have one from the msg handler, so we just need to set the pointer
+		resValue := reflect.ValueOf(res)
+		if !resValue.IsZero() && response != nil {
+			reflect.ValueOf(response).Elem().Set(resValue.Elem())
 		}
 
 		// only commit writes if there is no error so that calls are atomic

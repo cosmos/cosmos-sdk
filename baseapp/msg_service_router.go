@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/errors"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 
@@ -15,7 +16,7 @@ import (
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
-	routes            map[string]MsgServiceHandler
+	routes            map[string]func(ctx sdk.Context, req sdk.Msg) (interface{}, error)
 }
 
 var _ grpc.ServiceRegistrar = &MsgServiceRouter{}
@@ -23,7 +24,7 @@ var _ grpc.ServiceRegistrar = &MsgServiceRouter{}
 // NewMsgServiceRouter creates a new MsgServiceRouter.
 func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
-		routes: map[string]MsgServiceHandler{},
+		routes: map[string]func(ctx sdk.Context, req sdk.Msg) (interface{}, error){},
 	}
 }
 
@@ -32,13 +33,30 @@ type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
 
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
 func (msr *MsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
-	return msr.routes[sdk.MsgTypeURL(msg)]
+	return msr.HandlerByTypeURL(sdk.MsgTypeURL(msg))
 }
 
 // HandlerByTypeURL returns the MsgServiceHandler for a given query route path or nil
 // if not found.
 func (msr *MsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler {
-	return msr.routes[typeURL]
+	handler := msr.routes[typeURL]
+	if handler == nil {
+		return nil
+	}
+
+	return func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
+		res, err := handler(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		resMsg, ok := res.(proto.Message)
+		if !ok {
+			return nil, errors.Wrapf(sdkerrors.ErrInvalidType, "Expecting proto.Message, got %T", resMsg)
+		}
+
+		return sdk.WrapServiceResult(ctx, resMsg, err)
+	}
 }
 
 // RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC
@@ -105,26 +123,19 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			)
 		}
 
-		msr.routes[requestTypeName] = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error) {
+		handler := func(ctx sdk.Context, req sdk.Msg) (interface{}, error) {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+			interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, h grpc.UnaryHandler) (interface{}, error) {
 				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
-				return handler(goCtx, req)
+				return h(goCtx, req)
 			}
 			// Call the method handler from the service description with the handler object.
 			// We don't do any decoding here because the decoding was already done.
-			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), noopDecoder, interceptor)
-			if err != nil {
-				return nil, err
-			}
-
-			resMsg, ok := res.(proto.Message)
-			if !ok {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting proto.Message, got %T", resMsg)
-			}
-
-			return sdk.WrapServiceResult(ctx, resMsg, err)
+			return methodHandler(handler, sdk.WrapSDKContext(ctx), noopDecoder, interceptor)
 		}
+		// we index via both the type name and method name for inter-module calls
+		msr.routes[requestTypeName] = handler
+		msr.routes[method.MethodName] = handler
 	}
 }
 

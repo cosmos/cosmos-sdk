@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 0
           path: "."
 
-      - name: Use Node.js
+      - name: Setup Node.js 🔧
         uses: actions/setup-node@v3
         with:
           node-version: "16.x"

@@ -668,24 +668,29 @@ func FileWrite(modulePath, moduleName string, bz []byte) error {
 	}
 	totalWritten := 0
 	for i := 0; i < chunks; i++ {
-		f, err := CreateExportFile(modulePath, moduleName, i)
-		if err != nil {
+		if err := func() error {
+			f, err := CreateExportFile(modulePath, moduleName, i)
+			if err != nil {
+				return err
+			}
+
+			defer func() error {
+				err := f.Close()
+				if err != nil {
+					return fmt.Errorf("failed to close file: %w", err)
+				}
+				return nil
+			}()
+
+			n, err := f.Write(byteChunk(bz, i))
+			if err != nil {
+				return fmt.Errorf("failed to write genesis file: %w", err)
+			}
+			totalWritten += n
+			return nil
+		}(); err != nil {
 			return err
 		}
-
-		defer func() error {
-			err := f.Close()
-			if err != nil {
-				return fmt.Errorf("failed to close file: %w", err)
-			}
-			return nil
-		}()
-
-		n, err := f.Write(byteChunk(bz, i))
-		if err != nil {
-			return fmt.Errorf("failed to write genesis file: %w", err)
-		}
-		totalWritten += n
 	}
 
 	if totalWritten != len(bz) {

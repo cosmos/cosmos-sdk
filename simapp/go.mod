@@ -157,6 +157,7 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	github.com/coinbase/rosetta-sdk-go => github.com/coinbase/rosetta-sdk-go v0.8.2-0.20221007214527-e03849ba430a
 	github.com/cosmos/cosmos-sdk => ../.
 	github.com/cosmos/cosmos-sdk/rosetta => ../server/rosetta
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

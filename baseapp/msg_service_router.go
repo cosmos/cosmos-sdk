@@ -86,7 +86,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				panic(fmt.Errorf("unable to register service method %s: %T does not implement sdk.Msg", fqMethod, i))
 			}
 
-			requestTypeName = sdk.MsgTypeURL(msg)
+			requestTypeName = proto.MessageName(msg)
 			return nil
 		}, noopInterceptor)
 
@@ -133,9 +133,10 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			// We don't do any decoding here because the decoding was already done.
 			return methodHandler(handler, sdk.WrapSDKContext(ctx), noopDecoder, interceptor)
 		}
-		// we index via both the type name and method name for inter-module calls
-		msr.routes[requestTypeName] = handler
-		msr.routes[method.MethodName] = handler
+		// we index via type name, type URL and method name for inter-module calls
+		msr.routes[requestTypeName] = handler     // type name
+		msr.routes["/"+requestTypeName] = handler // type URL
+		msr.routes[method.MethodName] = handler   // method name
 	}
 }
 

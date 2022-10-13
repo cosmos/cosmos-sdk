@@ -237,22 +237,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 			continue
 		}
 
-		grantee, err := sdk.AccAddressFromBech32(entry.Grantee)
-		if err != nil {
-			panic(err)
-		}
-
-		granter, err := sdk.AccAddressFromBech32(entry.Granter)
-		if err != nil {
-			panic(err)
-		}
-
+		grantee := sdk.MustAccAddressFromBech32(entry.Grantee)
+		granter := sdk.MustAccAddressFromBech32(entry.Granter)
 		a, ok := entry.Authorization.GetCachedValue().(authz.Authorization)
 		if !ok {
 			panic("expected authorization")
 		}
 
-		err = k.SaveGrant(ctx, grantee, granter, a, entry.Expiration)
+		err := k.SaveGrant(ctx, grantee, granter, a, entry.Expiration)
 		if err != nil {
 			panic(err)
 		}

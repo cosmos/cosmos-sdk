@@ -122,10 +122,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
 
-			// We overwrite the SDK default for side-effects, namely:
-			// - setting the default bond denom in the app state
-			// Note, that is should not be done at any other place.
-			// This can break tests.
+			// Overwrites the SDK default denom for side-effects
 			if defaultDenom != "" {
 				sdk.DefaultBondDenom = defaultDenom
 			}

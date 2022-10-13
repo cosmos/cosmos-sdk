@@ -13,6 +13,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1";
 // This prefix is followed with the x-coordinate.
 message PubKey {
   option (cosmos.msg.v1.legacy_amino_name) = "tendermint/PubKeySecp256k1";
+  option (cosmos_proto.scalar) = "cosmos.crypto.LegacyAminoPk";
   option (gogoproto.goproto_stringer) = false;
 
   bytes key = 1;

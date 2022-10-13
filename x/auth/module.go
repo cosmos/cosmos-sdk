@@ -104,8 +104,6 @@ type AppModule struct {
 
 func (am AppModule) IsOnePerModuleType() {}
 
-func (am AppModule) IsAppModule() {}
-
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return types.AutoCLIOptions
 }

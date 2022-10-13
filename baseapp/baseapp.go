@@ -669,7 +669,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
-
 	if err == nil {
 
 		// Run optional postHandlers.
@@ -728,7 +727,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			return nil, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
 
-		// create event messages
+		// create message events
 		msgEvents := createEvents(msg).AppendEvents(msgResult.GetEvents())
 
 		// append message events, data and logs

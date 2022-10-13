@@ -133,9 +133,10 @@ html {
         @apply w-auto justify-between;
       }
       .DocSearch-Search-Icon {
-        @media (min-width: 997px) {
-          @apply hidden;
-        }
+        @apply text-docusaurusColorBase;
+      }
+      .DocSearch-Button-Keys {
+        @apply hidden;
       }
       .DocSearch-Button-Placeholder {
         @apply pr-10;

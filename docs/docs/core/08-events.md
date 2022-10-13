@@ -16,7 +16,7 @@ sidebar_position: 1
 
 :::
 
-## Typed Events
+## Events
 
 Events are implemented in the Cosmos SDK as an alias of the ABCI `Event` type and
 take the form of: `{eventType}.{attributeKey}={attributeValue}`.
@@ -35,11 +35,12 @@ To parse the attribute values as strings, make sure to add `'` (single quotes) a
 :::
 
 _Typed Events_ are Protobuf-defined [messages](../architecture/adr-032-typed-events.md) used by the Cosmos SDK
-for emitting and querying Events. They are defined in a `event.proto` file, on a **per-module basis**.
+for emitting and querying Events. They are defined in a `event.proto` file, on a **per-module basis** and are read as `proto.Message`.
+_Legacy Events_ are defined on a **per-module basis** in the module's `/types/events.go` file.
 They are triggered from the module's Protobuf [`Msg` service](../building-modules/03-msg-services.md)
-by using the [`EventManager`](#eventmanager), where they are read as `proto.Message`.
+by using the [`EventManager`](#eventmanager).
 
-In addition, each module documents its Events under `spec/xx_events.md`.
+In addition, each module documents its events under in the `Events` sections of its specs (x/{moduleName}/`README.md`).
 
 Lastly, Events are returned to the underlying consensus engine in the response of the following ABCI messages:
 
@@ -71,19 +72,30 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/events.go#L17-L25
 ```
 
 The `EventManager` comes with a set of useful methods to manage Events. The method
-that is used most by module and application developers is `EmitTypedEvent` that tracks
+that is used most by module and application developers is `EmitTypedEvent` or `EmitEvent` that tracks
 an Event in the `EventManager`.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/events.go#L50-L59
 ```
 
-Module developers should handle Event emission via the `EventManager#EmitTypedEvent` in each message
+Module developers should handle Event emission via the `EventManager#EmitTypedEvent` or `EventManager#EmitEvent` in each message
 `Handler` and in each `BeginBlock`/`EndBlock` handler. The `EventManager` is accessed via
 the [`Context`](./02-context.md), where Event should be already registered, and emitted like this:
 
+
+**Typed events:**
+
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/group/keeper/msg_server.go#L89-L92
+```
+
+**Legacy events:**
+
+```go
+ctx.EventManager().EmitEvent(
+    sdk.NewEvent(eventType, sdk.NewAttribute(attributeKey, attributeValue)),
+)
 ```
 
 Module's `handler` function should also set a new `EventManager` to the `context` to isolate emitted Events per `message`:
@@ -139,10 +151,4 @@ Subscribing to this Event would be done like so:
 
 where `ownerAddress` is an address following the [`AccAddress`](../basics/03-accounts.md#addresses) format.
 
-## Events
-
-Previously, the Cosmos SDK supported emitting Events that were defined in `types/events.go`. It is the responsibility of the module developer to define Event types and Event attributes. Except in the `spec/XX_events.md` file, these Event types and attributes are unfortunately not easily discoverable, 
-
-This is why this methods as been deprecated, and replaced by [Typed Events](#typed-events).
-
-To learn more about the previous way of defining events, please refer to the [previous SDK documentation](https://docs.cosmos.network/v0.45/core/events.html#events-2).
+The same way can be used to subscribe to [legacy events](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/types/events.go).

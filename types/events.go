@@ -229,11 +229,10 @@ const (
 
 	EventTypeMessage = "message"
 
-	AttributeKeyAction     = "action"
-	AttributeKeyModule     = "module"
-	AttributeKeyModulePath = "module_path"
-	AttributeKeySender     = "sender"
-	AttributeKeyAmount     = "amount"
+	AttributeKeyAction = "action"
+	AttributeKeyModule = "module"
+	AttributeKeySender = "sender"
+	AttributeKeyAmount = "amount"
 )
 
 type (

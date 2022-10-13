@@ -784,7 +784,6 @@ func createEvents(msg sdk.Msg) sdk.Events {
 	moduleName := strings.Split(eventMsgName, ".")
 	if len(moduleName) > 1 {
 		msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeyModule, moduleName[1]))
-		msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeyModulePath, strings.Join(moduleName[0:1], ".")))
 	}
 
 	return sdk.Events{msgEvent}

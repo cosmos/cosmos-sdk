@@ -1,16 +1,17 @@
 package keeper_test
 
 import (
+	"context"
 	"encoding/hex"
 	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"google.golang.org/grpc"
 	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -76,6 +77,30 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.maccPerms = maccPerms
 }
 
+type QueryRequest interface {
+	*types.QueryAccountRequest | *types.QueryAccountsRequest
+}
+
+type QueryResponse interface {
+	*types.QueryAccountResponse | *types.QueryAccountsResponse
+}
+
+func queryReq[request QueryRequest, response QueryResponse](
+	suite *DeterministicTestSuite,
+	req request, prevRes response,
+	grpcFn func(context.Context, request, ...grpc.CallOption) (response, error),
+	gasConsumed uint64,
+) {
+
+	for i := 0; i < iterCount; i++ {
+		before := suite.ctx.GasMeter().GasConsumed()
+		res, err := grpcFn(suite.ctx, req)
+		suite.Require().Equal(suite.ctx.GasMeter().GasConsumed()-before, gasConsumed)
+		suite.Require().NoError(err)
+		suite.Require().Equal(res, prevRes)
+	}
+}
+
 // createAndSetAccount creates a random account and sets to the keeper store.
 func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int) []types.AccountI {
 	accs := make([]types.AccountI, 0, count)
@@ -97,22 +122,16 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 	return accs
 }
 
-func (suite *DeterministicTestSuite) runAccountIterations(addr sdk.AccAddress, prevRes *codectypes.Any) {
-	for i := 0; i < iterCount; i++ {
-		acc, err := suite.queryClient.Account(suite.ctx, &types.QueryAccountRequest{Address: addr.String()})
-		suite.Require().NoError(err)
-		suite.Require().NotNil(acc)
-		suite.Require().Equal(acc.Account, prevRes)
-	}
-}
-
 func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		accs := suite.createAndSetAccounts(t, 1)
-		suite.Require().Len(accs, 1)
-		any, err := codectypes.NewAnyWithValue(accs[0])
+
+		req := &types.QueryAccountRequest{Address: accs[0].GetAddress().String()}
+		before := suite.ctx.GasMeter().GasConsumed()
+		res, err := suite.queryClient.Account(suite.ctx, req)
 		suite.Require().NoError(err)
-		suite.runAccountIterations(accs[0].GetAddress(), any)
+
+		queryReq(suite, req, res, suite.queryClient.Account, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	// Regression tests
@@ -122,10 +141,11 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 
-	any, err := codectypes.NewAnyWithValue(acc1)
+	req := &types.QueryAccountRequest{Address: acc1.GetAddress().String()}
+	res, err := suite.queryClient.Account(suite.ctx, req)
 	suite.Require().NoError(err)
 
-	suite.runAccountIterations(addr, any)
+	queryReq(suite, req, res, suite.queryClient.Account, 1543)
 }
 
 // pubkeyGenerator creates and returns a random pubkey generator using rapid.
@@ -136,30 +156,20 @@ func pubkeyGenerator(t *rapid.T) *rapid.Generator[secp256k1.PubKey] {
 	})
 }
 
-func (suite *DeterministicTestSuite) runAccountsIterations(req *types.QueryAccountsRequest, prevRes *types.QueryAccountsResponse) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.Accounts(suite.ctx, req)
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Len(res.GetAccounts(), len(prevRes.GetAccounts()))
-		suite.Require().Equal(res, prevRes)
-	}
-}
-
 func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		numAccs := rapid.IntRange(1, 10).Draw(t, "accounts")
 		accs := suite.createAndSetAccounts(t, numAccs)
 
-		req := types.QueryAccountsRequest{
+		req := &types.QueryAccountsRequest{
 			Pagination: testdata.PaginationGenerator(t, uint64(numAccs)).Draw(t, "accounts"),
 		}
 
-		res, err := suite.queryClient.Accounts(suite.ctx, &req)
+		before := suite.ctx.GasMeter().GasConsumed()
+		res, err := suite.queryClient.Accounts(suite.ctx, req)
 		suite.Require().NoError(err)
 
-		suite.runAccountsIterations(&req, res)
+		queryReq(suite, req, res, suite.queryClient.Accounts, suite.ctx.GasMeter().GasConsumed()-before)
 
 		for i := 0; i < numAccs; i++ {
 			suite.accountKeeper.RemoveAccount(suite.ctx, accs[i])
@@ -183,11 +193,11 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
 	suite.accountKeeper.SetAccount(suite.ctx, acc2)
 
-	req := types.QueryAccountsRequest{}
-	res, err := suite.queryClient.Accounts(suite.ctx, &req)
+	req := &types.QueryAccountsRequest{}
+	res, err := suite.queryClient.Accounts(suite.ctx, req)
 	suite.Require().NoError(err)
 
-	suite.runAccountsIterations(&req, res)
+	queryReq(suite, req, res, suite.queryClient.Accounts, 1716)
 }
 
 func (suite *DeterministicTestSuite) runAccountAddressByIDIterations(id int64, prevRes string) {

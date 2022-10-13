@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strings"
 	"testing"
 	"time"
@@ -91,7 +92,7 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	)
 	keeper := keeper.NewBaseKeeper(
 		appCodec, app.GetKey(types.StoreKey), authKeeper,
-		app.GetSubspace(types.ModuleName), blockedAddrs,
+		app.GetSubspace(types.ModuleName), blockedAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	return authKeeper, keeper
@@ -1058,7 +1059,7 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 	)
 
 	suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
-		suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil,
+		suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// set account with multiple permissions
@@ -1221,6 +1222,7 @@ func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
 	for _, test := range tests {
 		suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
 			suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil,
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		).WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
 		for _, testCase := range test.testCases {
 			if testCase.expectPass {

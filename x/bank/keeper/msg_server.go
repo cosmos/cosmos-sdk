@@ -2,12 +2,13 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/errors"
 	"github.com/armon/go-metrics"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type msgServer struct {
@@ -15,13 +16,12 @@ type msgServer struct {
 }
 
 func (k msgServer) UpdateDenomMetadata(goCtx context.Context, msg *types.MsgUpdateDenomMetadata) (*types.MsgUpdateDenomMetadataResponse, error) {
+	if k.GetAuthority() != msg.FromAddress {
+		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.FromAddress)
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	k.Keeper.SetDenomMetaData(ctx, *msg.Metadata)
-
-	//TODO: telemetry?
-
-	// TODO: should it emit events?
-
 	return &types.MsgUpdateDenomMetadataResponse{}, nil
 }
 

@@ -39,6 +39,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* Add functionality to update denom metadata via gov proposal [#270](https://github.com/provenance-io/cosmos-sdk/pull/270)
+
 ---
 
 ## [v0.46.2-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.2-pio-1) - 2022-10-03

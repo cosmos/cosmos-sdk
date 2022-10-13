@@ -13,8 +13,8 @@ const (
 	ValidatorUpdateDelay int64 = 1
 )
 
-// DefaultBondDenom is the default bondable coin denomination (stake)
-// Overwriting this value has the side effect of changing the default genesis denomination
+// DefaultBondDenom is the default bondable coin denomination (defaults to stake)
+// Overwriting this value has the side effect of changing the default denomination in genesis
 var DefaultBondDenom = "stake"
 
 // DefaultPowerReduction is the default amount of staking tokens required for 1 unit of consensus-engine power

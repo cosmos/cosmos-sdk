@@ -35,15 +35,6 @@ func (k Keeper) UpdateClass(ctx sdk.Context, class nft.Class) error {
 	return nil
 }
 
-// func (k Keeper) decodeClass(bz []byte) (nft.Class, error) {
-// 	var class nft.Class
-// 	if len(bz) == 0 {
-// 		return class, nil
-// 	}
-// 	k.cdc.MustUnmarshal(bz, &class)
-// 	return class, nil
-// }
-
 func (k Keeper) decodeClass(bz []byte) (nft.Class, bool) {
 	var class nft.Class
 	if len(bz) == 0 {

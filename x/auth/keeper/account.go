@@ -59,10 +59,7 @@ func decodeAccAddr(bz []byte) (string, error) {
 // GetAccountAddressById returns account address by id.
 func (ak AccountKeeper) GetAccountAddressByID(ctx sdk.Context, id uint64) string {
 	store := ctx.KVStore(ak.storeKey)
-	addr, err := store2.GetAndDecode(store, decodeAccAddr, types.AccountNumberStoreKey(id))
-	if err != nil {
-		panic(err)
-	}
+	addr, _ := store2.GetAndDecode(store, decodeAccAddr, types.AccountNumberStoreKey(id))
 	return addr
 }
 

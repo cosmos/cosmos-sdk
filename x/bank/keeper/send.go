@@ -100,10 +100,7 @@ func (k BaseSendKeeper) decodeParams(bz []byte) (types.Params, error) {
 // GetParams returns the total set of bank parameters.
 func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	params, err := store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
-	if err != nil {
-		panic(err)
-	}
+	params, _ = store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
 	return params
 }
 

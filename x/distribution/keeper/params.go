@@ -17,10 +17,7 @@ func (k Keeper) decodeParams(bz []byte) (types.Params, error) {
 // GetParams returns the total set of distribution parameters.
 func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
 	store := clientCtx.KVStore(k.storeKey)
-	params, err := store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
-	if err != nil {
-		panic(err)
-	}
+	params, _ = store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
 	return params
 }
 

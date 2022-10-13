@@ -50,10 +50,7 @@ func (k Keeper) decodeParams(bz []byte) (types.Params, error) {
 // GetParams returns the current x/slashing module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	params, err := store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
-	if err != nil {
-		panic(err)
-	}
+	params, _ = store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
 	return params
 }
 

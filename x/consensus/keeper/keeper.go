@@ -49,7 +49,7 @@ func (k *Keeper) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
 
 	cp, err := store2.GetAndDecode(store, k.decodeConsensusParams, types.ParamStoreKeyConsensusParams)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return cp, nil

@@ -22,9 +22,6 @@ func (ak AccountKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 // GetParams gets the auth module's parameters.
 func (ak AccountKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 	store := ctx.KVStore(ak.storeKey)
-	params, err := store2.GetAndDecode(store, ak.decodeParams, types.ParamsKey)
-	if err != nil {
-		panic(err)
-	}
+	params, _ = store2.GetAndDecode(store, ak.decodeParams, types.ParamsKey)
 	return params
 }

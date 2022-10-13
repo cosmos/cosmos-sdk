@@ -19,10 +19,7 @@ func (k *Keeper) decodeConstantFee(bz []byte) (sdk.Coin, error) {
 // GetConstantFee get's the constant fee from the store
 func (k *Keeper) GetConstantFee(ctx sdk.Context) (constantFee sdk.Coin) {
 	store := ctx.KVStore(k.storeKey)
-	constantFee, err := store2.GetAndDecode(store, k.decodeConstantFee, types.ConstantFeeKey)
-	if err != nil {
-		panic(err)
-	}
+	constantFee, _ = store2.GetAndDecode(store, k.decodeConstantFee, types.ConstantFeeKey)
 	return constantFee
 }
 

@@ -240,7 +240,7 @@ func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err erro
 	store := ctx.KVStore(keeper.storeKey)
 	proposalID, err = store2.GetAndDecode(store, keeper.decodeProposalID, types.ProposalIDKey)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 
 	return proposalID, nil

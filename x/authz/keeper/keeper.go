@@ -313,7 +313,7 @@ func (k Keeper) getGrantQueueItem(ctx sdk.Context, expiration time.Time, granter
 
 	queueItems, err := store2.GetAndDecode(store, k.decodeQueueItems, GrantQueueKey(expiration, granter, grantee))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	return &queueItems, nil
 }

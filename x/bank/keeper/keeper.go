@@ -230,7 +230,7 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 
 	coin, err := store2.GetAndDecode(supplyStore, decodeCoin, conv.UnsafeStrToBytes(denom))
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("unable to unmarshal supply value %v", err))
 	}
 
 	if coin.IsNil() {

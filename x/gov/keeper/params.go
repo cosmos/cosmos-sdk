@@ -29,9 +29,6 @@ func (k Keeper) decodeParams(bz []byte) (v1.Params, error) {
 
 func (k Keeper) GetParams(clientCtx sdk.Context) (params v1.Params) {
 	store := clientCtx.KVStore(k.storeKey)
-	params, err := store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
-	if err != nil {
-		panic(err)
-	}
+	params, _ = store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
 	return params
 }

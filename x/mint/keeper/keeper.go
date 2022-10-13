@@ -77,10 +77,7 @@ func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
 // get the minter
 func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
-	minter, err := store2.GetAndDecode(store, k.decodeMinter, types.MinterKey)
-	if err != nil {
-		panic(err)
-	}
+	minter, _ = store2.GetAndDecode(store, k.decodeMinter, types.MinterKey)
 	return
 }
 
@@ -116,10 +113,7 @@ func (k Keeper) decodeParams(bz []byte) (types.Params, error) {
 // GetParams returns the current x/mint module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (p types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	params, err := store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
-	if err != nil {
-		panic(err)
-	}
+	params, _ := store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
 	return params
 }
 

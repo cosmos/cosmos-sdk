@@ -6,7 +6,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	"cosmossdk.io/core/intermodule"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,7 +40,7 @@ type Keeper struct {
 	legacyRouter v1beta1.Router
 
 	// Msg server router
-	router *baseapp.MsgServiceRouter
+	router intermodule.Client
 
 	config types.Config
 
@@ -61,11 +61,7 @@ func (k Keeper) GetAuthority() string {
 // - and tallying the result of the vote.
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
-func NewKeeper(
-	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, sk types.StakingKeeper,
-	router *baseapp.MsgServiceRouter, config types.Config, authority string,
-) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper, router intermodule.Client, config types.Config, authority string) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -127,7 +123,7 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Router returns the gov keeper's router
-func (keeper Keeper) Router() *baseapp.MsgServiceRouter {
+func (keeper Keeper) Router() intermodule.Client {
 	return keeper.router
 }
 

@@ -152,3 +152,11 @@ Subscribing to this Event would be done like so:
 where `ownerAddress` is an address following the [`AccAddress`](../basics/03-accounts.md#addresses) format.
 
 The same way can be used to subscribe to [legacy events](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/types/events.go).
+
+## Default Events
+
+There is a few events that are automatically emitted for all messages, directly from `baseapp`.
+
+* `message.action`: The name of the message type.
+* `message.sender`: The address of the message signer.
+* `message.module`: The name of the module that emitted the message.

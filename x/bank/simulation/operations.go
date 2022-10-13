@@ -49,6 +49,10 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		from, to, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
+		// if coins slice is empty, we can not create valid types.MsgSend
+		if len(coins) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "empty coins slice"), nil, nil
+		}
 
 		// Check send_enabled status of each coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
@@ -83,6 +87,10 @@ func SimulateMsgSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper, mo
 
 		spendable := bk.SpendableCoins(ctx, from.Address)
 		coins := simtypes.RandSubsetCoins(r, spendable)
+		// if coins slice is empty, we can not create valid types.MsgSend
+		if len(coins) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "empty coins slice"), nil, nil
+		}
 
 		// Check send_enabled status of each coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
@@ -129,6 +137,7 @@ func sendMsgSend(
 	}
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 	tx, err := helpers.GenTx(
+		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,

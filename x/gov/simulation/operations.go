@@ -159,6 +159,7 @@ func SimulateMsgSubmitProposal(
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
+			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -246,6 +247,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		}
 
 		txCtx := simulation.OperationInput{
+			R:             r,
 			App:           app,
 			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,

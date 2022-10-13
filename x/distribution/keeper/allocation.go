@@ -56,7 +56,9 @@ func (k Keeper) AllocateTokens(
 		return err
 	}
 
-	voteMultiplier := math.LegacyOneDec().Sub(communityTax)
+	// calculate fraction allocated to validators
+	communityTax := k.GetCommunityTax(ctx)
+	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
 	feeMultiplier := feesCollected.MulDecTruncate(voteMultiplier)
 
 	// allocate tokens proportionally to voting power
@@ -66,21 +68,13 @@ func (k Keeper) AllocateTokens(
 	// Ref: https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range bondedVotes {
 
-		validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
-		if err != nil {
-			return err
-		}
-
 		// TODO: Consider micro-slashing for missing votes.
 		//
 		// Ref: https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		powerFraction := math.LegacyNewDec(vote.Validator.Power).QuoTruncate(math.LegacyNewDec(totalPreviousPower))
+		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower))
 		reward := feeMultiplier.MulDecTruncate(powerFraction)
 
-		if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
-			return err
-		}
-
+		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
 	}
 	// send to community pool and set remainder in fee pool
@@ -98,7 +92,7 @@ func (k Keeper) AllocateTokens(
 
 // AllocateTokensToValidator allocate tokens to a particular validator,
 // splitting according to commission.
-func (k Keeper) AllocateTokensToValidator(ctx context.Context, val sdk.ValidatorI, tokens sdk.DecCoins) error {
+func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.ValidatorI, tokens sdk.DecCoins) {
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)
@@ -141,19 +135,15 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val sdk.Validator
 	}
 
 	// update outstanding rewards
-	if err = k.EventService.EventManager(ctx).EmitKV(
-		types.EventTypeRewards,
-		event.NewAttribute(sdk.AttributeKeyAmount, tokens.String()),
-		event.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
-	); err != nil {
-		return err
-	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRewards,
+			sdk.NewAttribute(sdk.AttributeKeyAmount, tokens.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+		),
+	)
 
-	outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, valBz)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		return err
-	}
-
+	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
 	return k.ValidatorOutstandingRewards.Set(ctx, valBz, outstanding)
 }

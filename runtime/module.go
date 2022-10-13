@@ -3,11 +3,11 @@ package runtime
 import (
 	"fmt"
 
-	"cosmossdk.io/client/v2/cli"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
+	"cosmossdk.io/core/appmodule"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
@@ -84,7 +84,7 @@ type appInputs struct {
 	AppBuilder     *AppBuilder
 	Modules        map[string]AppModuleWrapper
 	BaseAppOptions []BaseAppOption
-	CLIConfigs     map[string]cli.AutoCLIConfig
+	AppModules     map[string]appmodule.AppModule
 }
 
 func SetupAppBuilder(inputs appInputs) {
@@ -97,8 +97,7 @@ func SetupAppBuilder(inputs appInputs) {
 	app.config = inputs.Config
 	app.ModuleManager = mm
 	app.appConfig = inputs.AppConfig
-	app.cliConfigs = inputs.CLIConfigs
-	return &AppBuilder{app: app}
+	app.appModules = inputs.AppModules
 }
 
 func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {

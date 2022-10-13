@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	cli2 "cosmossdk.io/client/v2/cli"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/core/appmodule"
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -101,8 +102,16 @@ type AppModule struct {
 	legacySubspace exported.Subspace
 }
 
+func (am AppModule) IsOnePerModuleType() {}
+
+func (am AppModule) IsAppModule() {}
+
+func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return types.AutoCLIOptions
+}
+
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, ss exported.Subspace) AppModule {
+func NewAppModule(accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, ss exported.Subspace) AppModule {
 	return AppModule{
 		AppModuleBasic:    AppModuleBasic{},
 		accountKeeper:     accountKeeper,
@@ -188,7 +197,6 @@ func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
 			ProvideModuleBasic,
-			ProvideAutoCLIConfig,
 			ProvideModule,
 		),
 	)
@@ -196,13 +204,6 @@ func init() {
 
 func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-func ProvideAutoCLIConfig() cli2.AutoCLIConfig {
-	return cli2.AutoCLIConfig{
-		AutoCLIOptions:     types.AutoCLIOptions,
-		CustomQueryCommand: cli.GetQueryCmd(),
-	}
 }
 
 type AuthInputs struct {
@@ -221,6 +222,7 @@ type AuthOutputs struct {
 
 	AccountKeeper keeper.AccountKeeper
 	Module        runtime.AppModuleWrapper
+	NewAppModule  appmodule.AppModule
 }
 
 func ProvideModule(in AuthInputs) AuthOutputs {
@@ -230,7 +232,7 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 	}
 
 	k := keeper.NewAccountKeeper(in.Cdc, in.Key, types.ProtoBaseAccount, maccPerms, in.Config.Bech32Prefix, types.NewModuleAddress(govtypes.ModuleName).String())
-	m := NewAppModule(in.Cdc, k, simulation.RandomGenesisAccounts, in.LegacySubspace)
+	m := NewAppModule(k, simulation.RandomGenesisAccounts, in.LegacySubspace)
 
-	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}
+	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m), NewAppModule: m}
 }

@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.2.1
 	cosmossdk.io/client/v2 v2.0.0-20221010202744-f3a558c6b473
 	cosmossdk.io/core v0.2.0
-	cosmossdk.io/depinject v1.0.0-alpha.2
+	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.3
 	github.com/99designs/keyring v1.2.1
@@ -55,7 +55,7 @@ require (
 	github.com/tendermint/tendermint v0.37.0-alpha.2
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/crypto v0.0.0-20221010152910-d6f0a8c073c2
-	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
+	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
 	google.golang.org/genproto v0.0.0-20220930163606-c98284e70a91
 	google.golang.org/grpc v1.50.0
 	google.golang.org/protobuf v1.28.1
@@ -170,7 +170,9 @@ replace (
 	github.com/gogo/gateway => github.com/notional-labs/gateway v1.1.1-0.20220417180718-8e60e17a098d
 )
 
-// temporary until API is tagged
+// TODO: tag API and core and remove these
 replace cosmossdk.io/api => ./api
+
+replace cosmossdk.io/core => ./core
 
 retract v0.43.0

@@ -50,6 +50,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (store) [#13459](https://github.com/cosmos/cosmos-sdk/pull/13459) Don't let state listener observe the uncommitted writes.
 
+### API Breaking Changes
+
+* (server) [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485) The `Application` service now requires the `RegisterNodeService` method to be implemented.
+
 ## [v0.46.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.2) - 2022-10-03
 
 ### API Breaking Changes

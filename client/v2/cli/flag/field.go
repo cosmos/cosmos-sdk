@@ -2,8 +2,8 @@ package flag
 
 import (
 	"context"
-	"fmt"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/proto"
@@ -12,59 +12,68 @@ import (
 	"cosmossdk.io/client/v2/internal/util"
 )
 
-// FieldValueBinder wraps a flag value in a way that allows it to be bound
-// to a particular field in a protobuf message.
-type FieldValueBinder interface {
-	Bind(message protoreflect.Message, field protoreflect.FieldDescriptor)
-}
-
-// Options specifies options for specific flags.
-type Options struct {
+// namingOptions specifies internal naming options for flags.
+type namingOptions struct {
 	// Prefix is a prefix to prepend to all flags.
 	Prefix string
 }
 
-// AddFieldFlag adds a flag for the provided field to the flag set.
-func (b *Builder) AddFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, options Options) FieldValueBinder {
-	if field.Kind() == protoreflect.MessageKind && field.Message().FullName() == "cosmos.base.query.v1beta1.PageRequest" {
-		return b.bindPageRequest(ctx, flagSet, field)
+// addFieldFlag adds a flag for the provided field to the flag set.
+func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, opts *autocliv1.FlagOptions, options namingOptions) (name string, hasValue HasValue, err error) {
+	if opts == nil {
+		opts = &autocliv1.FlagOptions{}
 	}
 
-	name := options.Prefix + util.DescriptorKebabName(field)
-	usage := util.DescriptorDocs(field)
-	shorthand := ""
+	if field.Kind() == protoreflect.MessageKind && field.Message().FullName() == "cosmos.base.query.v1beta1.PageRequest" {
+		hasValue, err := b.bindPageRequest(ctx, flagSet, field)
+		return "", hasValue, err
+	}
+
+	name = opts.Name
+	if name == "" {
+		name = options.Prefix + util.DescriptorKebabName(field)
+	}
+
+	usage := opts.Usage
+	if usage == "" {
+		usage = util.DescriptorDocs(field)
+	}
+
+	shorthand := opts.Shorthand
+	defaultValue := opts.DefaultValue
 
 	if typ := b.resolveFlagType(field); typ != nil {
+		if defaultValue == "" {
+			defaultValue = typ.DefaultValue()
+		}
+
 		val := typ.NewValue(ctx, b)
 		flagSet.AddFlag(&pflag.Flag{
 			Name:      name,
 			Shorthand: shorthand,
 			Usage:     usage,
-			DefValue:  typ.DefaultValue(),
+			DefValue:  defaultValue,
 			Value:     val,
 		})
-		switch val := val.(type) {
-		case SimpleValue:
-			return simpleValueBinder{val}
-		case ListValue:
-			return listValueBinder{val}
-		default:
-			panic(fmt.Errorf("%T does not implement SimpleValue or ListValue", val))
-		}
+		return name, val, nil
 	}
 
+	// use the built-in pflag StringP, Int32P, etc. functions
+	var val HasValue
 	if field.IsList() {
-		if value := bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage); value != nil {
-			return listValueBinder{value}
-		}
-		return nil
+		val = bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage)
+
+	} else {
+		val = bindSimpleFlag(flagSet, field.Kind(), name, shorthand, usage)
 	}
 
-	if value := bindSimpleFlag(flagSet, field.Kind(), name, shorthand, usage); value != nil {
-		return simpleValueBinder{value}
+	// This is a bit of hacking around the pflag API, but the
+	// defaultValue is set in this way because this is much easier than trying
+	// to parse the string into the types that StringSliceP, Int32P, etc. expect
+	if defaultValue != "" {
+		err = flagSet.Set(name, defaultValue)
 	}
-
-	return nil
+	return name, val, err
 }
 
 func (b *Builder) resolveFlagType(field protoreflect.FieldDescriptor) Type {
@@ -104,25 +113,4 @@ func (b *Builder) resolveFlagTypeBasic(field protoreflect.FieldDescriptor) Type 
 	default:
 		return nil
 	}
-}
-
-type simpleValueBinder struct {
-	SimpleValue
-}
-
-func (s simpleValueBinder) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
-	val := s.Get()
-	if val.IsValid() {
-		message.Set(field, val)
-	} else {
-		message.Clear(field)
-	}
-}
-
-type listValueBinder struct {
-	ListValue
-}
-
-func (s listValueBinder) Bind(message protoreflect.Message, field protoreflect.FieldDescriptor) {
-	s.AppendTo(message.NewField(field).List())
 }

@@ -76,11 +76,6 @@ func (c *interModuleClient) InvokerByMethod(method string) (intermodule.Invoker,
 			return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "expected an sdk.Msg, got %t", request)
 		}
 
-		err := msg.ValidateBasic()
-		if err != nil {
-			return nil, err
-		}
-
 		// first check the inter-module authorizer to see if this request is allowed under a special case
 		if c.bApp.interModuleAuthorizer == nil || !c.bApp.interModuleAuthorizer(ctx, method, msg, c.module) {
 			signers := msg.GetSigners()

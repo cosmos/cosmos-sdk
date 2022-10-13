@@ -35,7 +35,7 @@ const (
 	commitInfoKeyFmt = "s/%d" // s/<version>
 )
 
-const iavlDisablefastNodeDefault = false
+const iavlDisablefastNodeDefault = true
 
 // Store is composed of many CommitStores. Name contrasts with
 // cacheMultiStore which is used for branching other MultiStores. It implements

@@ -776,14 +776,14 @@ func createEvents(msg sdk.Msg) sdk.Events {
 
 	// we set the signer attribute as the sender
 	if len(msg.GetSigners()) > 0 && !msg.GetSigners()[0].Empty() {
-		msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, msg.GetSigners()[0].String()))
+		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, msg.GetSigners()[0].String()))
 	}
 
 	// here we assume that routes module name is the second element of the route
 	// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
 	moduleName := strings.Split(eventMsgName, ".")
 	if len(moduleName) > 1 {
-		msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeyModule, moduleName[1]))
+		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeyModule, moduleName[1]))
 	}
 
 	return sdk.Events{msgEvent}

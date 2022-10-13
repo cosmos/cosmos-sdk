@@ -1,11 +1,6 @@
 package types
 
-// staking constants
 const (
-
-	// default bond denomination
-	DefaultBondDenom = "stake"
-
 	// Delay, in blocks, between when validator updates are returned to the
 	// consensus-engine and when they are applied. For example, if
 	// ValidatorUpdateDelay is set to X, and if a validator set update is
@@ -17,6 +12,9 @@ const (
 	// https://tendermint.com/docs/spec/abci/apps.html#endblock
 	ValidatorUpdateDelay int64 = 1
 )
+
+// DefaultBondDenom is the default bondable coin denomination (stake)
+var DefaultBondDenom = "stake"
 
 // DefaultPowerReduction is the default amount of staking tokens required for 1 unit of consensus-engine power
 var DefaultPowerReduction = NewIntFromUint64(1000000)

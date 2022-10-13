@@ -60,10 +60,9 @@ func (s *DeterministicTestSuite) SetupTest() {
 	)
 	s.Require().NoError(err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	s.ctx = ctx
+	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now()}).WithGasMeter(sdk.NewInfiniteGasMeter())
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
 	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: s.stakingKeeper})
 	s.queryClient = stakingtypes.NewQueryClient(queryHelper)
 
@@ -237,9 +236,15 @@ func (suite *DeterministicTestSuite) fundAccountAndDelegate(delegator sdk.AccAdd
 	return shares, err
 }
 
-func (suite *DeterministicTestSuite) runValidatorIterations(req *stakingtypes.QueryValidatorRequest, prevValRes *stakingtypes.QueryValidatorResponse) {
+func (suite *DeterministicTestSuite) runValidatorIterations(
+	req *stakingtypes.QueryValidatorRequest,
+	prevValRes *stakingtypes.QueryValidatorResponse,
+	gasConsumed uint64,
+) {
 	for i := 0; i < 1000; i++ {
+		before := suite.ctx.GasMeter().GasConsumed()
 		res, err := suite.queryClient.Validator(suite.ctx, req)
+		suite.Require().Equal(suite.ctx.GasMeter().GasConsumed()-before, gasConsumed)
 
 		suite.Require().NoError(err)
 		suite.Require().Equal(res, prevValRes)
@@ -253,25 +258,35 @@ func (suite *DeterministicTestSuite) TestGRPCValidator() {
 		req := &stakingtypes.QueryValidatorRequest{
 			ValidatorAddr: val.OperatorAddress,
 		}
+
+		before := suite.ctx.GasMeter().GasConsumed()
 		res, err := suite.queryClient.Validator(suite.ctx, req)
 		suite.Require().NoError(err)
 
-		suite.runValidatorIterations(req, res)
+		suite.runValidatorIterations(req, res, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	val := suite.getStaticValidator()
 	req := &stakingtypes.QueryValidatorRequest{
 		ValidatorAddr: val.OperatorAddress,
 	}
+
+	before := suite.ctx.GasMeter().GasConsumed()
 	res, err := suite.queryClient.Validator(suite.ctx, req)
 	suite.Require().NoError(err)
 
-	suite.runValidatorIterations(req, res)
+	suite.runValidatorIterations(req, res, suite.ctx.GasMeter().GasConsumed()-before)
 }
 
-func (suite *DeterministicTestSuite) runValidatorsIterations(req *stakingtypes.QueryValidatorsRequest, prevRes *stakingtypes.QueryValidatorsResponse) {
+func (suite *DeterministicTestSuite) runValidatorsIterations(
+	req *stakingtypes.QueryValidatorsRequest,
+	prevRes *stakingtypes.QueryValidatorsResponse,
+	gasConsumed uint64,
+) {
 	for i := 0; i < 1000; i++ {
+		before := suite.ctx.GasMeter().GasConsumed()
 		res, err := suite.queryClient.Validators(suite.ctx, req)
+		suite.Require().Equal(suite.ctx.GasMeter().GasConsumed()-before, gasConsumed)
 
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
@@ -295,10 +310,11 @@ func (suite *DeterministicTestSuite) TestGRPCValidators() {
 			Status:     validatorStatus[rapid.IntRange(0, 3).Draw(t, "status")],
 			Pagination: testdata.PaginationGenerator(t, uint64(valsCount)).Draw(t, "pagination"),
 		}
+		before := suite.ctx.GasMeter().GasConsumed()
 		res, err := suite.queryClient.Validators(suite.ctx, req)
 		suite.Require().NoError(err)
 
-		suite.runValidatorsIterations(req, res)
+		suite.runValidatorsIterations(req, res, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	suite.SetupTest() // reset
@@ -309,7 +325,7 @@ func (suite *DeterministicTestSuite) TestGRPCValidators() {
 	res, err := suite.queryClient.Validators(suite.ctx, req)
 	suite.Require().NoError(err)
 
-	suite.runValidatorsIterations(req, res)
+	suite.runValidatorsIterations(req, res, 3489)
 }
 
 func (suite *DeterministicTestSuite) runValidatorDelegationsIterations(req *stakingtypes.QueryValidatorDelegationsRequest, prevDels *stakingtypes.QueryValidatorDelegationsResponse) {

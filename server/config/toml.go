@@ -77,7 +77,7 @@ index-events = {{ .BaseConfig.IndexEvents }}
 iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 
 # IAVLDisableFastNode enables or disables the fast node feature of IAVL. 
-# Default is false.
+# Default is true.
 iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
 
 ###############################################################################

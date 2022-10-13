@@ -1,11 +1,8 @@
-<!--
-order: 0
-title: Params Overview
-parent:
-  title: "params (depreacated)"
--->
+---
+sidebar_position: 1
+---
 
-# `x/params` (Deprecated)
+# `x/params`
 
 > Note: The Params module has been depreacted in favour of each module housing its own parameters. 
 

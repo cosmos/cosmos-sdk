@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"cosmossdk.io/core/appmodule"
 
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	"cosmossdk.io/depinject"
@@ -149,17 +150,17 @@ func init() {
 	appmodule.Register(
 		&modulev1.Module{},
 		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
+			ProvideModuleBasic,
+			ProvideModule,
 		),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type groupInputs struct {
+type GroupInputs struct {
 	depinject.In
 
 	Config           *modulev1.Module
@@ -171,14 +172,14 @@ type groupInputs struct {
 	MsgServiceRouter *baseapp.MsgServiceRouter
 }
 
-type groupOutputs struct {
+type GroupOutputs struct {
 	depinject.Out
 
 	GroupKeeper keeper.Keeper
 	Module      runtime.AppModuleWrapper
 }
 
-func provideModule(in groupInputs) groupOutputs {
+func ProvideModule(in GroupInputs) GroupOutputs {
 	/*
 		Example of setting group params:
 		in.Config.MaxMetadataLen = 1000
@@ -187,7 +188,7 @@ func provideModule(in groupInputs) groupOutputs {
 
 	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return groupOutputs{GroupKeeper: k, Module: runtime.WrapAppModule(m)}
+	return GroupOutputs{GroupKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 
 // ____________________________________________________________________________

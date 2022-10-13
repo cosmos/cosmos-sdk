@@ -1,7 +1,5 @@
 ---
-order: false
-parent:
-  order: false
+sidebar_position: 1
 ---
 
 # Architecture Decision Records (ADR)

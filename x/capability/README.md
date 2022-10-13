@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Capability Overview
-parent:
-  title: "capability"
--->
+---
+sidebar_position: 1
+---
 
 # `x/capability`
 

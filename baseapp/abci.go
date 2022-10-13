@@ -195,15 +195,15 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		if app.stopNodeOnStreamingErr {
 			reqBz, err := req.Marshal()
 			if err != nil {
-				panic(err)
+				os.Exit(1)
 			}
 			resBz, err := res.Marshal()
 			if err != nil {
-				panic(err)
+				os.Exit(1)
 			}
 			if err := app.abciListener.ListenBeginBlock(blockHeight, reqBz, resBz); err != nil {
 				app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
-				panic(err)
+				os.Exit(1)
 			}
 		} else {
 			ebReq, ebRes := req, res
@@ -250,15 +250,15 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		if app.stopNodeOnStreamingErr {
 			reqBz, err := req.Marshal()
 			if err != nil {
-				panic(err)
+				os.Exit(1)
 			}
 			resBz, err := res.Marshal()
 			if err != nil {
-				panic(err)
+				os.Exit(1)
 			}
 			if err := app.abciListener.ListenEndBlock(blockHeight, reqBz, resBz); err != nil {
 				app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
-				panic(err)
+				os.Exit(1)
 			}
 		} else {
 			ebReq, ebRes := req, res
@@ -333,15 +333,15 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 			if app.stopNodeOnStreamingErr {
 				reqBz, err := req.Marshal()
 				if err != nil {
-					panic(err)
+					os.Exit(1)
 				}
 				resBz, err := abciRes.Marshal()
 				if err != nil {
-					panic(err)
+					os.Exit(1)
 				}
 				if err := app.abciListener.ListenDeliverTx(blockHeight, reqBz, resBz); err != nil {
 					app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
-					panic(err)
+					os.Exit(1)
 				}
 			} else {
 				txReq, txRes := req, abciRes

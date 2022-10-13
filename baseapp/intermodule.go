@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/errors"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/tendermint/tendermint/crypto"
 	"google.golang.org/grpc"
 	protov2 "google.golang.org/protobuf/proto"
 
@@ -28,29 +29,33 @@ func (app *BaseApp) InterModuleClient(moduleName string) intermodule.Client {
 }
 
 func newInterModuleClient(module string, paths [][]byte, bApp *BaseApp) *interModuleClient {
-	var addr []byte
+	var addresses [][]byte
 	n := len(paths)
 	if n == 0 {
-		addr = address.Module(module, nil)
+		addresses = append(addresses, address.Module(module, nil))
+		// for legacy module addresses (before ADR 028), add a fallback address
+		addresses = append(addresses, crypto.AddressHash([]byte(module)))
 	} else {
-		addr = address.Module(module, paths[0])
+		addr := address.Module(module, paths[0])
 		for i := 1; i < n; i++ {
 			addr = address.Derive(addr, paths[i])
 		}
+		addresses = append(addresses, addr)
 	}
+
 	return &interModuleClient{
-		module:  module,
-		paths:   paths,
-		bApp:    bApp,
-		address: addr,
+		module:    module,
+		paths:     paths,
+		bApp:      bApp,
+		addresses: addresses,
 	}
 }
 
 type interModuleClient struct {
-	module  string
-	address []byte
-	paths   [][]byte
-	bApp    *BaseApp
+	module    string
+	addresses [][]byte
+	paths     [][]byte
+	bApp      *BaseApp
 }
 
 func (c *interModuleClient) InvokerByMethod(method string) (intermodule.Invoker, error) {
@@ -80,14 +85,22 @@ func (c *interModuleClient) InvokerByMethod(method string) (intermodule.Invoker,
 		if c.bApp.interModuleAuthorizer == nil || !c.bApp.interModuleAuthorizer(ctx, method, msg, c.module) {
 			signers := msg.GetSigners()
 			if len(signers) != 1 {
-				return nil, fmt.Errorf("inter module Msg invocation requires a single expected signer (%s), but %s expects multiple signers (%+v),  ", c.address, method, signers)
+				return nil, fmt.Errorf("inter module Msg invocation requires a single expected signer (%s), but %s expects multiple signers (%+v),  ", c.addresses, method, signers)
 			}
 
 			signer := signers[0]
 
-			if !bytes.Equal(c.address, signer) {
-				return nil, errors.Wrap(sdkerrors.ErrUnauthorized,
-					fmt.Sprintf("expected %s, got %s", signers[0], c.address))
+			authorized := false
+			for _, addr := range c.addresses {
+				if bytes.Equal(addr, signer) {
+					authorized = true
+					break
+				}
+			}
+
+			if !authorized {
+				return nil, errors.Wrapf(sdkerrors.ErrUnauthorized,
+					"expected msg from %s, not %s", c.addresses, signer)
 			}
 		}
 
@@ -144,7 +157,7 @@ func (c *interModuleClient) NewStream(context.Context, *grpc.StreamDesc, string,
 }
 
 func (c *interModuleClient) Address() []byte {
-	return c.address
+	return c.addresses[0]
 }
 
 func (c *interModuleClient) DerivedClient(key []byte) intermodule.Client {

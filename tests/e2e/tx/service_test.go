@@ -221,13 +221,13 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
 				//
-				// The 13 events are:
+				// The 12 events are:
 				// - Sending Fee to the pool: coin_spent, coin_received, transfer and message.sender=<val1>
 				// - tx.* events: tx.fee, tx.acc_seq, tx.signature
 				// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
-				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend
-				s.Require().Equal(len(res.GetResult().GetEvents()), 13) // 1 coin recv 1 coin spent, 1 transfer, 3 messages.
-				s.Require().True(res.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, just check it's not empty.
+				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend (in one message)
+				s.Require().Equal(len(res.GetResult().GetEvents()), 12)
+				s.Require().True(res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
 			}
 		})
 	}

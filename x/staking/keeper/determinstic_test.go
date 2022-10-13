@@ -68,7 +68,7 @@ func (s *DeterministicTestSuite) SetupTest() {
 	s.queryClient = stakingtypes.NewQueryClient(queryHelper)
 
 	s.amt1 = s.stakingKeeper.TokensFromConsensusPower(s.ctx, 101)
-	s.amt2 = s.stakingKeeper.TokensFromConsensusPower(s.ctx, 101)
+	s.amt2 = s.stakingKeeper.TokensFromConsensusPower(s.ctx, 102)
 }
 
 func TestDeterministicTestSuite(t *testing.T) {

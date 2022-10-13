@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
 
@@ -64,6 +65,7 @@ type CLITestSuite struct {
 	encCfg    testutilmod.TestEncodingConfig
 	baseCtx   client.Context
 	clientCtx client.Context
+	val       sdk.AccAddress
 }
 
 func TestCLITestSuite(t *testing.T) {
@@ -71,7 +73,7 @@ func TestCLITestSuite(t *testing.T) {
 }
 
 func (s *CLITestSuite) SetupSuite() {
-	s.encCfg = testutilmod.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).
@@ -92,9 +94,17 @@ func (s *CLITestSuite) SetupSuite() {
 	}
 	s.clientCtx = ctxGen().WithOutput(&outBuf)
 
+	// val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
+	// s.val = val[0].Address
+
 	kb := s.clientCtx.Keyring
-	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	valAcc, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
+	valAddr, err := valAcc.GetAddress()
+	if err == nil {
+		s.val = valAddr
+		fmt.Println("addr set with val", s.val)
+	}
 
 	account1, _, err := kb.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
@@ -116,20 +126,19 @@ func (s *CLITestSuite) SetupSuite() {
 }
 
 func (s *CLITestSuite) TestCLIValidateSignatures() {
-	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
-
 	sendTokens := sdk.NewCoins(
-		sdk.NewCoin("monikertoken", sdk.NewInt(10)),
+		sdk.NewCoin("testtoken", sdk.NewInt(10)),
 		sdk.NewCoin("stake", sdk.NewInt(10)))
 
-	res, err := s.createBankMsg(s.clientCtx, accounts[0].Address, sendTokens,
+	res, err := s.createBankMsg(s.clientCtx, s.val, sendTokens,
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
 	s.Require().NoError(err)
 
 	// write  unsigned tx to file
 	unsignedTx := testutil.WriteToNewTempFile(s.T(), res.String())
 	defer unsignedTx.Close()
-	res, err = authtestutil.TxSignExec(s.clientCtx, accounts[0].Address, unsignedTx.Name())
+	res, err = authtestutil.TxSignExec(s.clientCtx, s.val, unsignedTx.Name())
+
 	s.Require().NoError(err)
 	signedTx, err := s.clientCtx.TxConfig.TxJSONDecoder()(res.Bytes())
 	s.Require().NoError(err)
@@ -161,7 +170,7 @@ func (s *CLITestSuite) createBankMsg(clientCtx client.Context, toAddr sdk.AccAdd
 	}
 
 	flags = append(flags, extraFlags...)
-	return clitestutil.MsgSendExec(clientCtx, toAddr, toAddr, amount, flags...)
+	return clitestutil.MsgSendExec(clientCtx, s.val, toAddr, amount, flags...)
 }
 
 func (s *CLITestSuite) TestCLISignGenOnly() {

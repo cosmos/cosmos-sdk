@@ -735,9 +735,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			return nil, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
 
-		msgEvents := sdk.Events{
-			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName)),
-		}
+		// create event messages
+		msgEvents := createEvents(msg, eventMsgName)
 		msgEvents = msgEvents.AppendEvents(msgResult.GetEvents())
 
 		// append message events, data and logs
@@ -754,7 +753,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		if len(msgResult.MsgResponses) > 0 {
 			msgResponse := msgResult.MsgResponses[0]
 			if msgResponse == nil {
-				return nil, sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d for msg %s", i, sdk.MsgTypeURL(msg))
+				return nil, sdkerrors.ErrLogic.Wrapf("got nil Msg response at index %d for msg %s", i, eventMsgName)
 			}
 			msgResponses = append(msgResponses, msgResponse)
 		}
@@ -778,4 +777,22 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 // makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.
 func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
+}
+
+func createEvents(msg sdk.Msg, eventMsgName string) sdk.Events {
+	msgEvent := sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName))
+
+	// we set the signer attribute as the sender
+	if len(msg.GetSigners()) > 0 && !msg.GetSigners()[0].Empty() {
+		msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, msg.GetSigners()[0].String()))
+	}
+
+	// here we assume that routes module name is the second element of the route
+	// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
+	moduleName := strings.Split(eventMsgName, ".")
+	if len(moduleName) > 1 {
+		msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeyModule, moduleName[1]))
+	}
+
+	return sdk.Events{msgEvent}
 }

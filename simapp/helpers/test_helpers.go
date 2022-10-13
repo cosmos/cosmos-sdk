@@ -15,7 +15,7 @@ import (
 // TODO: Implement a tool to check for gas growth. For now,
 // we must increase this across the board for longer runs to work
 const (
-	DefaultGenTxGas = 2000000
+	DefaultGenTxGas = 10000000
 	SimAppChainID   = "simulation-app"
 )
 

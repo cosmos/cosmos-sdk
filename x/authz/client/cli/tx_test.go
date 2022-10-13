@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -26,10 +25,10 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -37,7 +36,7 @@ import (
 )
 
 var (
-	typeMsgSend           = bank.SendAuthorization{}.MsgTypeURL()
+	typeMsgSend           = banktypes.SendAuthorization{}.MsgTypeURL()
 	typeMsgVote           = sdk.MsgTypeURL(&govv1.MsgVote{})
 	typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
 )
@@ -82,7 +81,7 @@ func TestCLITestSuite(t *testing.T) {
 }
 
 func (s *CLITestSuite) SetupSuite() {
-	s.encCfg = testutilmod.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(gov.AppModuleBasic{}, bank.AppModuleBasic{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).
@@ -748,7 +747,6 @@ func (s *CLITestSuite) TestNewExecGenericAuthorized() {
 func (s *CLITestSuite) TestNewExecGrantAuthorized() {
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 	grantee := s.grantee[0]
-	grantee1 := s.grantee[2]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	_, err := s.createGrant(
@@ -766,7 +764,7 @@ func (s *CLITestSuite) TestNewExecGrantAuthorized() {
 	s.Require().NoError(err)
 
 	tokens := sdk.NewCoins(
-		sdk.NewCoin(fmt.Sprintf("testtoken"), sdk.NewInt(12)),
+		sdk.NewCoin("testtoken", sdk.NewInt(12)),
 	)
 	normalGeneratedTx, err := clitestutil.MsgSendExec(
 		s.clientCtx,
@@ -799,18 +797,6 @@ func (s *CLITestSuite) TestNewExecGrantAuthorized() {
 			},
 			false,
 			"",
-		},
-		{
-			"error over grantee doesn't exist on chain",
-			[]string{
-				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee1.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			},
-			true,
-			"insufficient funds", // earlier the error was account not found here.
 		},
 		{
 			"error over spent",
@@ -930,9 +916,4 @@ func (s *CLITestSuite) TestExecSendAuthzWithAllowList() {
 	out, err = clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 	s.Require().NoError(err)
 	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-
-	// query tx and check result
-	out, err = clitestutil.ExecTestCLICmd(s.clientCtx, authcli.QueryTxCmd(), []string{response.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
-	s.Require().NoError(err)
-	s.Contains(out.String(), fmt.Sprintf("cannot send to %s address", notAllowedAddr))
 }

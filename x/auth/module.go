@@ -187,25 +187,25 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
-			provideModuleBasic,
-			provideAutoCLIConfig,
-			provideModule,
+			ProvideModuleBasic,
+			ProvideAutoCLIConfig,
+			ProvideModule,
 		),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-func provideAutoCLIConfig() cli2.AutoCLIConfig {
+func ProvideAutoCLIConfig() cli2.AutoCLIConfig {
 	return cli2.AutoCLIConfig{
 		AutoCLIOptions:     types.AutoCLIOptions,
 		CustomQueryCommand: cli.GetQueryCmd(),
 	}
 }
 
-type authInputs struct {
+type AuthInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -216,14 +216,14 @@ type authInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-type authOutputs struct {
+type AuthOutputs struct {
 	depinject.Out
 
 	AccountKeeper keeper.AccountKeeper
 	Module        runtime.AppModuleWrapper
 }
 
-func provideModule(in authInputs) authOutputs {
+func ProvideModule(in AuthInputs) AuthOutputs {
 	maccPerms := map[string][]string{}
 	for _, permission := range in.Config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
@@ -232,5 +232,5 @@ func provideModule(in authInputs) authOutputs {
 	k := keeper.NewAccountKeeper(in.Cdc, in.Key, types.ProtoBaseAccount, maccPerms, in.Config.Bech32Prefix, types.NewModuleAddress(govtypes.ModuleName).String())
 	m := NewAppModule(in.Cdc, k, simulation.RandomGenesisAccounts, in.LegacySubspace)
 
-	return authOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}
+	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}
 }

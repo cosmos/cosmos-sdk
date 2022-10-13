@@ -13,7 +13,6 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Capability](./capability/README.md) - Object capability implementation.
 * [Crisis](./crisis/README.md) - Halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 * [Distribution](./distribution/README.md) - Fee distribution, and staking token provision distribution.
-* [Epoching](./epoching/README.md) - Allows modules to queue messages for execution at a certain block height.
 * [Evidence](./evidence/README.md) - Evidence handling for double signing, misbehaviour, etc.
 * [Feegrant](./feegrant/README.md) - Grant fee allowances for executing transactions.
 * [Governance](./gov/README.md) - On-chain proposals and voting.

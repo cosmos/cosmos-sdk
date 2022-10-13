@@ -135,17 +135,17 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
-			provideSubspace,
+			ProvideModuleBasic,
+			ProvideModule,
+			ProvideSubspace,
 		))
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type paramsInputs struct {
+type ParamsInputs struct {
 	depinject.In
 
 	KvStoreKey        *store.KVStoreKey
@@ -154,7 +154,7 @@ type paramsInputs struct {
 	LegacyAmino       *codec.LegacyAmino
 }
 
-type paramsOutputs struct {
+type ParamsOutputs struct {
 	depinject.Out
 
 	ParamsKeeper keeper.Keeper
@@ -162,16 +162,16 @@ type paramsOutputs struct {
 	GovHandler   govv1beta1.HandlerRoute
 }
 
-func provideModule(in paramsInputs) paramsOutputs {
+func ProvideModule(in ParamsInputs) ParamsOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.KvStoreKey, in.TransientStoreKey)
 
 	m := runtime.WrapAppModule(NewAppModule(k))
 	govHandler := govv1beta1.HandlerRoute{RouteKey: proposal.RouterKey, Handler: NewParamChangeProposalHandler(k)}
 
-	return paramsOutputs{ParamsKeeper: k, Module: m, GovHandler: govHandler}
+	return ParamsOutputs{ParamsKeeper: k, Module: m, GovHandler: govHandler}
 }
 
-type subspaceInputs struct {
+type SubspaceInputs struct {
 	depinject.In
 
 	Key       depinject.ModuleKey
@@ -179,7 +179,7 @@ type subspaceInputs struct {
 	KeyTables map[string]types.KeyTable
 }
 
-func provideSubspace(in subspaceInputs) types.Subspace {
+func ProvideSubspace(in SubspaceInputs) types.Subspace {
 	moduleName := in.Key.Name()
 	kt, exists := in.KeyTables[moduleName]
 	if !exists {

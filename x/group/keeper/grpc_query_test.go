@@ -4,6 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -14,8 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
-	"github.com/golang/mock/gomock"
-	"github.com/tendermint/tendermint/libs/log"
 
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
 
@@ -57,7 +58,7 @@ func TestQueryGroupsByMember(t *testing.T) {
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), addrs[4]).Return(authtypes.NewBaseAccountWithAddress(addrs[4])).AnyTimes()
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), addrs[5]).Return(authtypes.NewBaseAccountWithAddress(addrs[5])).AnyTimes()
 
-	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
+	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.InterModuleClient("group"), accountKeeper, group.DefaultConfig())
 
 	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{

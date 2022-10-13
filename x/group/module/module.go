@@ -10,10 +10,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/intermodule"
+
+	"cosmossdk.io/depinject"
 
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
-	"cosmossdk.io/depinject"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -169,7 +170,7 @@ type GroupInputs struct {
 	AccountKeeper    group.AccountKeeper
 	BankKeeper       group.BankKeeper
 	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter *baseapp.MsgServiceRouter
+	MsgServiceRouter intermodule.Client
 }
 
 type GroupOutputs struct {

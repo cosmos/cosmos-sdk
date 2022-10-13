@@ -179,6 +179,8 @@ message GroupPolicyInfo {
 
   // created_at is a timestamp specifying when a group policy was created.
   google.protobuf.Timestamp created_at = 7 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+
+  repeated bytes derivation_keys = 8;
 }
 
 // Proposal defines a group proposal. Any member of a group can submit a proposal

@@ -45,7 +45,6 @@ func ProvideApp(moduleBasics map[string]AppModuleBasicWrapper) (
 	*codec.LegacyAmino,
 	*AppBuilder,
 	codec.ProtoCodecMarshaler,
-	*baseapp.MsgServiceRouter,
 ) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	amino := codec.NewLegacyAmino()
@@ -74,7 +73,7 @@ func ProvideApp(moduleBasics map[string]AppModuleBasicWrapper) (
 		},
 	}
 
-	return interfaceRegistry, cdc, amino, app, cdc, msgServiceRouter
+	return interfaceRegistry, cdc, amino, app, cdc
 }
 
 type appInputs struct {

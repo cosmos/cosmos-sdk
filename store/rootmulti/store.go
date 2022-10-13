@@ -1035,8 +1035,14 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
 
 	for key, store := range storeMap {
-		commitID := store.Commit()
-
+		last := store.LastCommitID()
+		var commitID types.CommitID
+		if last.Version >= version {
+			last.Version = version
+			commitID = last
+		} else {
+			commitID = store.Commit()
+		}
 		if store.GetStoreType() == types.StoreTypeTransient {
 			continue
 		}

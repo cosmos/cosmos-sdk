@@ -9,7 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/intermodule"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -26,12 +26,12 @@ const gasCostPerIteration = uint64(20)
 type Keeper struct {
 	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
-	router     appmodule.RootInterModuleClient
+	router     intermodule.Client
 	authKeeper authz.AccountKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, router appmodule.RootInterModuleClient, ak authz.AccountKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, router intermodule.Client, ak authz.AccountKeeper) Keeper {
 	return Keeper{
 		storeKey:   storeKey,
 		cdc:        cdc,
@@ -141,13 +141,17 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		evtMgr := sdk.NewEventManager()
 		ctx = ctx.WithEventManager(evtMgr)
 
-		res := new(codec.ProtoMarshaler)
-		err = handler(ctx, msg, res)
+		res, err := handler(ctx, msg)
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %v", msg)
 		}
 
-		bz, err := k.cdc.Marshal(*res)
+		resMsg, ok := res.(codec.ProtoMarshaler)
+		if !ok {
+			return nil, fmt.Errorf("expected a ProtoMarshaler, got %T", res)
+		}
+
+		bz, err := k.cdc.Marshal(resMsg)
 		if err != nil {
 			return nil, err
 		}

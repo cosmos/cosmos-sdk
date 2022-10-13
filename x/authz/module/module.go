@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
+	"cosmossdk.io/core/intermodule"
 
 	"cosmossdk.io/core/appmodule"
 
@@ -178,7 +179,7 @@ type AuthzInputs struct {
 	AccountKeeper     authz.AccountKeeper
 	BankKeeper        authz.BankKeeper
 	Registry          cdctypes.InterfaceRegistry
-	InterModuleClient appmodule.RootInterModuleClient
+	InterModuleClient intermodule.Client
 }
 
 type AuthzOutputs struct {

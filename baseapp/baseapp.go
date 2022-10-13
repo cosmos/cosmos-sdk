@@ -13,7 +13,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
 
-	"github.com/cosmos/cosmos-sdk/baseapp/intermodule"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -135,7 +134,7 @@ type BaseApp struct { //nolint: maligned
 	// and exposing the requests and responses to external consumers
 	abciListeners []ABCIListener
 
-	interModuleAuthorizer intermodule.Authorizer
+	interModuleAuthorizer InterModuleAuthorizer
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -146,17 +145,23 @@ type BaseApp struct { //nolint: maligned
 func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
-	app := &BaseApp{
-		logger:           logger,
-		name:             name,
-		db:               db,
-		cms:              store.NewCommitMultiStore(db),
-		storeLoader:      DefaultStoreLoader,
-		grpcQueryRouter:  NewGRPCQueryRouter(),
-		msgServiceRouter: NewMsgServiceRouter(),
-		txDecoder:        txDecoder,
-		fauxMerkleMode:   false,
-	}
+	app := &BaseApp{}
+	app.Setup(name, logger, db, txDecoder, options...)
+	return app
+}
+
+func (app *BaseApp) Setup(
+	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
+) {
+	app.logger = logger
+	app.name = name
+	app.db = db
+	app.cms = store.NewCommitMultiStore(db)
+	app.storeLoader = DefaultStoreLoader
+	app.grpcQueryRouter = NewGRPCQueryRouter()
+	app.msgServiceRouter = NewMsgServiceRouter()
+	app.txDecoder = txDecoder
+	app.fauxMerkleMode = false
 
 	for _, option := range options {
 		option(app)
@@ -167,8 +172,6 @@ func NewBaseApp(
 	}
 
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
-
-	return app
 }
 
 // Name returns the name of the BaseApp.

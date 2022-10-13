@@ -3,14 +3,13 @@ package runtime
 import (
 	"fmt"
 
+	"cosmossdk.io/depinject"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	"cosmossdk.io/depinject"
+	"cosmossdk.io/core/intermodule"
 
 	"cosmossdk.io/core/appmodule"
-	"github.com/cosmos/cosmos-sdk/baseapp/intermodule"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -29,7 +28,7 @@ func (b BaseAppOption) IsManyPerContainerType() {}
 func init() {
 	appmodule.Register(&runtimev1alpha1.Module{},
 		appmodule.Provide(
-			ProvideCodecs,
+			ProvideApp,
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
@@ -40,7 +39,7 @@ func init() {
 	)
 }
 
-func ProvideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
+func ProvideApp(moduleBasics map[string]AppModuleBasicWrapper) (
 	codectypes.InterfaceRegistry,
 	codec.Codec,
 	*codec.LegacyAmino,
@@ -71,6 +70,7 @@ func ProvideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 			amino:             amino,
 			basicManager:      basicManager,
 			msgServiceRouter:  msgServiceRouter,
+			BaseApp:           &baseapp.BaseApp{},
 		},
 	}
 
@@ -143,8 +143,6 @@ func ProvideDeliverTx(appBuilder *AppBuilder) func(abci.RequestDeliverTx) abci.R
 	}
 }
 
-func ProvideInterModuleClient(key depinject.ModuleKey, app *AppBuilder) appmodule.RootInterModuleClient {
-	return intermodule.NewRootInterModuleClient(key.Name(), func(callInfo intermodule.CallInfo) (appmodule.InterModuleInvoker, error) {
-		return app.app.BaseApp.InterModuleInvoker(key.Name(), callInfo)
-	})
+func ProvideInterModuleClient(key depinject.ModuleKey, app *AppBuilder) intermodule.Client {
+	return app.app.BaseApp.InterModuleClient(key.Name())
 }

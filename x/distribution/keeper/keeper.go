@@ -98,6 +98,17 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 		return nil, err
 	}
 
+	// TODO - rollback https://github.com/cosmos/cosmos-sdk/pull/13340
+	// to prevent state breaking
+	//
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeWithdrawRewards,
+			sdk.NewAttribute(sdk.AttributeKeyAmount, rewards.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, valAddr.String()),
+		),
+	)
+
 	// reinitialize the delegation
 	k.initializeDelegation(ctx, valAddr, delAddr)
 	return rewards, nil

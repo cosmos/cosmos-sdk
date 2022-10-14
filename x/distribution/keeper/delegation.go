@@ -188,24 +188,27 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 	// remove delegator starting info
 	k.DeleteDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 
-	if finalRewards.IsZero() {
-		baseDenom, _ := sdk.GetBaseDenom()
-		if baseDenom == "" {
-			baseDenom = sdk.DefaultBondDenom
-		}
+	// TODO - rollback https://github.com/cosmos/cosmos-sdk/pull/13340
+	// to prevent state breaking
+	//
+	// if finalRewards.IsZero() {
+	// 	baseDenom, _ := sdk.GetBaseDenom()
+	// 	if baseDenom == "" {
+	// 		baseDenom = sdk.DefaultBondDenom
+	// 	}
 
-		// Note, we do not call the NewCoins constructor as we do not want the zero
-		// coin removed.
-		finalRewards = sdk.Coins{sdk.NewCoin(baseDenom, sdk.ZeroInt())}
-	}
+	// 	// Note, we do not call the NewCoins constructor as we do not want the zero
+	// 	// coin removed.
+	// 	finalRewards = sdk.Coins{sdk.NewCoin(baseDenom, sdk.ZeroInt())}
+	// }
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeWithdrawRewards,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
-		),
-	)
+	// ctx.EventManager().EmitEvent(
+	// 	sdk.NewEvent(
+	// 		types.EventTypeWithdrawRewards,
+	// 		sdk.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
+	// 		sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+	// 	),
+	// )
 
 	return finalRewards, nil
 }

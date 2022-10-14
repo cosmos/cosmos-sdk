@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 type DeterministicTestSuite struct {
@@ -77,21 +78,12 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.maccPerms = maccPerms
 }
 
-type QueryRequest interface {
-	*types.QueryAccountRequest | *types.QueryAccountsRequest
-}
-
-type QueryResponse interface {
-	*types.QueryAccountResponse | *types.QueryAccountsResponse
-}
-
-func queryReq[request QueryRequest, response QueryResponse](
+func queryReq[request proto.Message, response proto.Message](
 	suite *DeterministicTestSuite,
 	req request, prevRes response,
 	grpcFn func(context.Context, request, ...grpc.CallOption) (response, error),
 	gasConsumed uint64,
 ) {
-
 	for i := 0; i < iterCount; i++ {
 		before := suite.ctx.GasMeter().GasConsumed()
 		res, err := grpcFn(suite.ctx, req)
@@ -200,15 +192,6 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	queryReq(suite, req, res, suite.queryClient.Accounts, 1716)
 }
 
-func (suite *DeterministicTestSuite) runAccountAddressByIDIterations(id int64, prevRes string) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.AccountAddressByID(suite.ctx, &types.QueryAccountAddressByIDRequest{Id: id})
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-		suite.Require().Equal(res.AccountAddress, prevRes)
-	}
-}
-
 func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		pub := pubkeyGenerator(t).Draw(t, "pubkey")
@@ -220,7 +203,11 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 		acc1 := types.NewBaseAccount(addr, &pub, uint64(accNum), seq)
 		suite.accountKeeper.SetAccount(suite.ctx, acc1)
 
-		suite.runAccountAddressByIDIterations(accNum, addr.String())
+		before := suite.ctx.GasMeter().GasConsumed()
+		req := &types.QueryAccountAddressByIDRequest{Id: accNum}
+		res, err := suite.queryClient.AccountAddressByID(suite.ctx, req)
+		suite.Require().NoError(err)
+		queryReq(suite, req, res, suite.queryClient.AccountAddressByID, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	// Regression test
@@ -230,17 +217,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, uint64(accNum), seq)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
-	suite.runAccountAddressByIDIterations(accNum, addr.String())
-}
-
-func (suite *DeterministicTestSuite) runParamsIterations(prevRes types.Params) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.Params(suite.ctx, &types.QueryParamsRequest{})
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(res.Params, prevRes)
-	}
+	req := &types.QueryAccountAddressByIDRequest{Id: accNum}
+	res, err := suite.queryClient.AccountAddressByID(suite.ctx, req)
+	suite.Require().NoError(err)
+	queryReq(suite, req, res, suite.queryClient.AccountAddressByID, 1123)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryParameters() {
@@ -252,11 +232,14 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParameters() {
 			rapid.Uint64Min(1).Draw(t, "sig-verify-cost-ed25519"),
 			rapid.Uint64Min(1).Draw(t, "sig-verify-cost-Secp256k1"),
 		)
-
 		err := suite.accountKeeper.SetParams(suite.ctx, params)
 		suite.Require().NoError(err)
 
-		suite.runParamsIterations(params)
+		before := suite.ctx.GasMeter().GasConsumed()
+		req := &types.QueryParamsRequest{}
+		res, err := suite.queryClient.Params(suite.ctx, req)
+		suite.Require().NoError(err)
+		queryReq(suite, req, res, suite.queryClient.Params, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	// Regression test
@@ -265,22 +248,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParameters() {
 	err := suite.accountKeeper.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
-	suite.runParamsIterations(params)
-}
-
-func (suite *DeterministicTestSuite) runAccountInfoIterations(addr sdk.AccAddress, prevRes *types.BaseAccount) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.AccountInfo(suite.ctx, &types.QueryAccountInfoRequest{Address: addr.String()})
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-		suite.Require().NotNil(res.Info)
-
-		suite.Require().Equal(res.GetInfo().Address, prevRes.Address)
-		suite.Require().True(res.GetInfo().PubKey.Equal(prevRes.PubKey))
-		suite.Require().Equal(res.GetInfo().AccountNumber, prevRes.AccountNumber)
-		suite.Require().Equal(res.GetInfo().Sequence, prevRes.Sequence)
-
-	}
+	req := &types.QueryParamsRequest{}
+	res, err := suite.queryClient.Params(suite.ctx, req)
+	suite.Require().NoError(err)
+	queryReq(suite, req, res, suite.queryClient.Params, 1042)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
@@ -288,38 +259,30 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 		accs := suite.createAndSetAccounts(t, 1)
 		suite.Require().Len(accs, 1)
 
-		acc, ok := accs[0].(*types.BaseAccount)
-		suite.Require().True(ok)
-
-		suite.runAccountInfoIterations(acc.GetAddress(), acc)
+		req := &types.QueryAccountInfoRequest{Address: accs[0].GetAddress().String()}
+		before := suite.ctx.GasMeter().GasConsumed()
+		res, err := suite.queryClient.AccountInfo(suite.ctx, req)
+		suite.Require().NoError(err)
+		queryReq(suite, req, res, suite.queryClient.AccountInfo, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	// Regression test
 	accNum := uint64(10087)
 	seq := uint64(10)
 
-	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
+	acc := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
-	suite.accountKeeper.SetAccount(suite.ctx, acc1)
-	suite.runAccountInfoIterations(addr, acc1)
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+	req := &types.QueryAccountInfoRequest{Address: acc.GetAddress().String()}
+	res, err := suite.queryClient.AccountInfo(suite.ctx, req)
+	suite.Require().NoError(err)
+	queryReq(suite, req, res, suite.queryClient.AccountInfo, 1543)
 }
 
 func (suite *DeterministicTestSuite) createAndReturnQueryClient(ak keeper.AccountKeeper) types.QueryClient {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, ak)
 	return types.NewQueryClient(queryHelper)
-}
-
-func (suite *DeterministicTestSuite) runBech32PrefixIterations(ak keeper.AccountKeeper, preRes string) {
-	queryClient := suite.createAndReturnQueryClient(ak)
-
-	for i := 0; i < iterCount; i++ {
-		res, err := queryClient.Bech32Prefix(suite.ctx, &types.Bech32PrefixRequest{})
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(res.Bech32Prefix, preRes)
-	}
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryBech32Prefix() {
@@ -334,54 +297,52 @@ func (suite *DeterministicTestSuite) TestGRPCQueryBech32Prefix() {
 			types.NewModuleAddress("gov").String(),
 		)
 
-		suite.runBech32PrefixIterations(ak, prefix)
+		queryClient := suite.createAndReturnQueryClient(ak)
+		before := suite.ctx.GasMeter().GasConsumed()
+		req := &types.Bech32PrefixRequest{}
+		res, err := queryClient.Bech32Prefix(suite.ctx, req)
+		suite.Require().NoError(err)
+		queryReq(suite, req, res, queryClient.Bech32Prefix, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
-	suite.runBech32PrefixIterations(suite.accountKeeper, "cosmos")
-}
-
-func (suite *DeterministicTestSuite) runAddressBytesToStringIterations(addressBytes []byte, prevRes string) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.AddressBytesToString(suite.ctx, &types.AddressBytesToStringRequest{
-			AddressBytes: addressBytes,
-		})
-
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(res.AddressString, prevRes)
-	}
+	req := &types.Bech32PrefixRequest{}
+	res, err := suite.queryClient.Bech32Prefix(suite.ctx, req)
+	suite.Require().NoError(err)
+	queryReq(suite, req, res, suite.queryClient.Bech32Prefix, 0)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAddressBytesToString() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		address := testdata.AddressGenerator(t).Draw(t, "address-bytes")
-		suite.runAddressBytesToStringIterations(address.Bytes(), address.String())
+
+		before := suite.ctx.GasMeter().GasConsumed()
+		req := &types.AddressBytesToStringRequest{AddressBytes: address.Bytes()}
+		res, err := suite.queryClient.AddressBytesToString(suite.ctx, req)
+		suite.Require().NoError(err)
+		queryReq(suite, req, res, suite.queryClient.AddressBytesToString, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
-	suite.runAddressBytesToStringIterations(addr.Bytes(), addr.String())
-}
-
-func (suite *DeterministicTestSuite) runStringToAddressBytesIterations(addressString string, prevRes []byte) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.AddressStringToBytes(suite.ctx, &types.AddressStringToBytesRequest{
-			AddressString: addressString,
-		})
-
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(res.AddressBytes, prevRes)
-	}
+	req := &types.AddressBytesToStringRequest{AddressBytes: addr.Bytes()}
+	res, err := suite.queryClient.AddressBytesToString(suite.ctx, req)
+	suite.Require().NoError(err)
+	queryReq(suite, req, res, suite.queryClient.AddressBytesToString, 0)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAddressStringToBytes() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		address := testdata.AddressGenerator(t).Draw(t, "address-string")
-		suite.runStringToAddressBytesIterations(address.String(), address.Bytes())
+
+		before := suite.ctx.GasMeter().GasConsumed()
+		req := &types.AddressStringToBytesRequest{AddressString: address.String()}
+		res, err := suite.queryClient.AddressStringToBytes(suite.ctx, req)
+		suite.Require().NoError(err)
+		queryReq(suite, req, res, suite.queryClient.AddressStringToBytes, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
-	suite.runStringToAddressBytesIterations(addr.String(), addr.Bytes())
+	req := &types.AddressStringToBytesRequest{AddressString: addr.String()}
+	res, err := suite.queryClient.AddressStringToBytes(suite.ctx, req)
+	suite.Require().NoError(err)
+	queryReq(suite, req, res, suite.queryClient.AddressStringToBytes, 0)
 }
 
 func (suite *DeterministicTestSuite) setModuleAccounts(
@@ -396,35 +357,6 @@ func (suite *DeterministicTestSuite) setModuleAccounts(
 	}
 
 	return moduleAccounts
-}
-
-func (suite *DeterministicTestSuite) runModuleAccountsIterations(ak keeper.AccountKeeper, prevRes []types.AccountI) {
-	queryClient := suite.createAndReturnQueryClient(ak)
-	for i := 0; i < iterCount; i++ {
-		res, err := queryClient.ModuleAccounts(suite.ctx, &types.QueryModuleAccountsRequest{})
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-		suite.Require().NotNil(res.Accounts)
-		suite.Require().Len(res.Accounts, len(prevRes))
-
-		unpackedAccs := make([]types.AccountI, len(res.Accounts))
-		for i := 0; i < len(res.Accounts); i++ {
-			var account types.AccountI
-			err = suite.encCfg.InterfaceRegistry.UnpackAny(res.Accounts[i], &account)
-			suite.Require().NoError(err)
-
-			unpackedAccs[i] = account
-		}
-
-		if prevRes != nil {
-			for i := 0; i < len(prevRes); i++ {
-				suite.Require().Equal(unpackedAccs[i].GetAddress(), prevRes[i].GetAddress())
-				suite.Require().Equal(unpackedAccs[i].GetAccountNumber(), prevRes[i].GetAccountNumber())
-				suite.Require().Equal(unpackedAccs[i].GetSequence(), prevRes[i].GetSequence())
-			}
-		}
-	}
-
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
@@ -463,13 +395,14 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
 		)
+		suite.setModuleAccounts(suite.ctx, ak, maccs)
 
-		storedMaccs := suite.setModuleAccounts(suite.ctx, ak, maccs)
-
-		suite.runModuleAccountsIterations(ak, storedMaccs)
-		for i := 0; i < len(storedMaccs); i++ {
-			suite.accountKeeper.RemoveAccount(suite.ctx, storedMaccs[i])
-		}
+		before := suite.ctx.GasMeter().GasConsumed()
+		queryClient := suite.createAndReturnQueryClient(ak)
+		req := &types.QueryModuleAccountsRequest{}
+		res, err := queryClient.ModuleAccounts(suite.ctx, &types.QueryModuleAccountsRequest{})
+		suite.Require().NoError(err)
+		queryReq(suite, req, res, queryClient.ModuleAccounts, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	maccs := make([]string, 0, len(suite.maccPerms))
@@ -477,7 +410,11 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 		maccs = append(maccs, k)
 	}
 
-	sort.Strings(maccs)
-	storedMaccs := suite.setModuleAccounts(suite.ctx, suite.accountKeeper, maccs)
-	suite.runModuleAccountsIterations(suite.accountKeeper, storedMaccs)
+	suite.setModuleAccounts(suite.ctx, suite.accountKeeper, maccs)
+
+	queryClient := suite.createAndReturnQueryClient(suite.accountKeeper)
+	req := &types.QueryModuleAccountsRequest{}
+	res, err := queryClient.ModuleAccounts(suite.ctx, &types.QueryModuleAccountsRequest{})
+	suite.Require().NoError(err)
+	queryReq(suite, req, res, queryClient.ModuleAccounts, 0x2175)
 }

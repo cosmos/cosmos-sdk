@@ -8,57 +8,51 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func bindSimpleListFlag(flagSet *pflag.FlagSet, kind protoreflect.Kind, name, shorthand, usage string) ListValue {
+func bindSimpleListFlag(flagSet *pflag.FlagSet, kind protoreflect.Kind, name, shorthand, usage string) HasValue {
 	switch kind {
 	case protoreflect.StringKind:
 		val := flagSet.StringSliceP(name, shorthand, nil, usage)
-		return listValue(func(list protoreflect.List) {
-			for _, x := range *val {
-				list.Append(protoreflect.ValueOfString(x))
-			}
-		})
-	case protoreflect.BytesKind:
-		// TODO
-		return nil
+		return newListValue(val, protoreflect.ValueOfString)
 	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind,
 		protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
 		val := flagSet.UintSliceP(name, shorthand, nil, usage)
-		return listValue(func(list protoreflect.List) {
-			for _, x := range *val {
-				list.Append(protoreflect.ValueOfUint64(uint64(x)))
-			}
-		})
-	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind,
-		protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-		val := flagSet.IntSliceP(name, shorthand, nil, usage)
-		return listValue(func(list protoreflect.List) {
-			for _, x := range *val {
-				list.Append(protoreflect.ValueOfInt64(int64(x)))
-			}
-		})
+		return newListValue(val, func(x uint) protoreflect.Value { return protoreflect.ValueOfUint64(uint64(x)) })
+	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
+		val := flagSet.Int32SliceP(name, shorthand, nil, usage)
+		return newListValue(val, protoreflect.ValueOfInt32)
+	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
+		val := flagSet.Int64SliceP(name, shorthand, nil, usage)
+		return newListValue(val, protoreflect.ValueOfInt64)
 	case protoreflect.BoolKind:
 		val := flagSet.BoolSliceP(name, shorthand, nil, usage)
-		return listValue(func(list protoreflect.List) {
-			for _, x := range *val {
-				list.Append(protoreflect.ValueOfBool(x))
-			}
-		})
+		return newListValue(val, protoreflect.ValueOfBool)
 	default:
 		return nil
 	}
 }
 
-type listValue func(protoreflect.List)
+type listValue[T any] struct {
+	array               *[]T
+	toProtoreflectValue func(T) protoreflect.Value
+}
 
-func (f listValue) AppendTo(list protoreflect.List) {
-	f(list)
+func newListValue[T any](array *[]T, toProtoreflectValue func(T) protoreflect.Value) listValue[T] {
+	return listValue[T]{array: array, toProtoreflectValue: toProtoreflectValue}
+}
+
+func (v listValue[T]) Get(mutable protoreflect.Value) (protoreflect.Value, error) {
+	list := mutable.List()
+	for _, x := range *v.array {
+		list.Append(v.toProtoreflectValue(x))
+	}
+	return mutable, nil
 }
 
 type compositeListType struct {
 	simpleType Type
 }
 
-func (t compositeListType) NewValue(ctx context.Context, opts *Builder) pflag.Value {
+func (t compositeListType) NewValue(ctx context.Context, opts *Builder) Value {
 	return &compositeListValue{
 		simpleType: t.simpleType,
 		values:     nil,
@@ -78,13 +72,15 @@ type compositeListValue struct {
 	opts       *Builder
 }
 
-func (c compositeListValue) AppendTo(list protoreflect.List) {
+func (c *compositeListValue) Get(mutable protoreflect.Value) (protoreflect.Value, error) {
+	list := mutable.List()
 	for _, value := range c.values {
 		list.Append(value)
 	}
+	return mutable, nil
 }
 
-func (c compositeListValue) String() string {
+func (c *compositeListValue) String() string {
 	if len(c.values) == 0 {
 		return ""
 	}
@@ -98,10 +94,14 @@ func (c *compositeListValue) Set(val string) error {
 	if err != nil {
 		return err
 	}
-	c.values = append(c.values, simpleVal.(SimpleValue).Get())
+	v, err := simpleVal.Get(protoreflect.Value{})
+	if err != nil {
+		return err
+	}
+	c.values = append(c.values, v)
 	return nil
 }
 
-func (c compositeListValue) Type() string {
+func (c *compositeListValue) Type() string {
 	return fmt.Sprintf("%s (repeated)", c.simpleType.NewValue(c.ctx, c.opts).Type())
 }

@@ -23,6 +23,8 @@ var _ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
 var _ sdk.Msg = &MsgDonateAllVestingTokens{}
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
+//
+//nolint:interfacer
 func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins, endTime int64, delayed bool) *MsgCreateVestingAccount {
 	return &MsgCreateVestingAccount{
 		FromAddress: fromAddr.String(),
@@ -88,6 +90,7 @@ func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCreatePeriodicVestingAccount returns a reference to a new MsgCreatePeriodicVestingAccount.
+//
 //nolint:interfacer
 func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime int64, periods []Period) *MsgCreatePeriodicVestingAccount {
 	return &MsgCreatePeriodicVestingAccount{

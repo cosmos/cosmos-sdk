@@ -410,7 +410,7 @@ func TestMultiStoreQuery(t *testing.T) {
 	k2, v2 := []byte("water"), []byte("flows")
 	// v3 := []byte("is cold")
 
-	cid := multi.Commit()
+	cid1 := multi.Commit()
 
 	// Make sure we can get by name.
 	garbage := multi.GetStoreByName("bad-name")
@@ -425,8 +425,8 @@ func TestMultiStoreQuery(t *testing.T) {
 	store2.Set(k2, v2)
 
 	// Commit the multistore.
-	cid = multi.Commit()
-	ver := cid.Version
+	cid2 := multi.Commit()
+	ver := cid2.Version
 
 	// Reload multistore from database
 	multi = newMultiStoreWithMounts(db, types.PruneNothing)
@@ -468,6 +468,26 @@ func TestMultiStoreQuery(t *testing.T) {
 	qres = multi.Query(query)
 	require.EqualValues(t, 0, qres.Code)
 	require.Equal(t, v2, qres.Value)
+
+	// Test proofs latest height
+	query.Path = fmt.Sprintf("/%s", proofsPath)
+	qres = multi.Query(query)
+	require.EqualValues(t, 0, qres.Code)
+	require.NotNil(t, qres.ProofOps)
+	require.Equal(t, []byte(proofsPath), qres.Key)
+	require.Equal(t, cid2.Hash, qres.Value)
+	require.Equal(t, cid2.Version, qres.Height)
+	require.Equal(t, 3, len(qres.ProofOps.Ops)) // 3 mounted stores
+
+	// Test proofs second latest height
+	query.Height = query.Height - 1
+	qres = multi.Query(query)
+	require.EqualValues(t, 0, qres.Code)
+	require.NotNil(t, qres.ProofOps)
+	require.Equal(t, []byte(proofsPath), qres.Key)
+	require.Equal(t, cid1.Hash, qres.Value)
+	require.Equal(t, cid1.Version, qres.Height)
+	require.Equal(t, 3, len(qres.ProofOps.Ops)) // 3 mounted stores
 }
 
 func TestMultiStore_Pruning(t *testing.T) {
@@ -812,4 +832,53 @@ func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 		}.GetHash()
 	}
 	return sdkmaps.HashFromMap(m)
+}
+
+type MockListener struct {
+	stateCache []types.StoreKVPair
+}
+
+func (tl *MockListener) OnWrite(storeKey types.StoreKey, key []byte, value []byte, delete bool) error {
+	tl.stateCache = append(tl.stateCache, types.StoreKVPair{
+		StoreKey: storeKey.Name(),
+		Key:      key,
+		Value:    value,
+		Delete:   delete,
+	})
+	return nil
+}
+
+func TestStateListeners(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, types.NewPruningOptionsFromString(types.PruningOptionNothing))
+
+	listener := &MockListener{}
+	ms.AddListeners(testStoreKey1, []types.WriteListener{listener})
+
+	require.NoError(t, ms.LoadLatestVersion())
+	cacheMulti := ms.CacheMultiStore()
+
+	store1 := cacheMulti.GetKVStore(testStoreKey1)
+	store1.Set([]byte{1}, []byte{1})
+	require.Empty(t, listener.stateCache)
+
+	// writes are observed when cache store commit.
+	cacheMulti.Write()
+	require.Equal(t, 1, len(listener.stateCache))
+
+	// test nested cache store
+	listener.stateCache = []types.StoreKVPair{}
+	nested := cacheMulti.CacheMultiStore()
+
+	store1 = nested.GetKVStore(testStoreKey1)
+	store1.Set([]byte{1}, []byte{1})
+	require.Empty(t, listener.stateCache)
+
+	// writes are not observed when nested cache store commit
+	nested.Write()
+	require.Empty(t, listener.stateCache)
+
+	// writes are observed when inner cache store commit
+	cacheMulti.Write()
+	require.Equal(t, 1, len(listener.stateCache))
 }

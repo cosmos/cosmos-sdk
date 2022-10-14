@@ -18,7 +18,7 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgUnjail = "op_weight_msg_unjail"
+	OpWeightMsgUnjail = "op_weight_msg_unjail" //nolint:gosec
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -88,7 +88,6 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
-			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,

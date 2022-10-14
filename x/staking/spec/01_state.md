@@ -30,7 +30,7 @@ Validators can have one of three statuses
 
 - `Unbonded`: The validator is not in the active set. They cannot sign blocks and do not earn
   rewards. They can receive delegations.
-- `Bonded`": Once the validator receives sufficient bonded tokens they automtically join the
+- `Bonded`: Once the validator receives sufficient bonded tokens they automtically join the
   active set during [`EndBlock`](./05_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
   They are signing blocks and receiving rewards. They can receive further delegations.
   They can be slashed for misbehavior. Delegators to this validator who unbond their delegation

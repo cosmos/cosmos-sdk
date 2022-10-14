@@ -35,7 +35,63 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## Unreleased
+## [Unreleased]
+
+## v0.45.9 - 2022-10-14
+
+ATTENTION:
+
+This is a security release for the 
+[Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702). 
+
+All users should upgrade immediately.
+
+Users *must* add a replace directive in their go.mod for the
+new `ics23` package in the SDK:
+
+```
+replace (
+    github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23
+)
+
+```
+
+### Features
+
+* [#13435](https://github.com/cosmos/cosmos-sdk/pull/13435) Extend error context when a simulation fails.
+
+### Improvements
+
+* [#13369](https://github.com/cosmos/cosmos-sdk/pull/13369) Improve UX for `keyring.List` by returning all retrieved keys.
+* [#13323](https://github.com/cosmos/cosmos-sdk/pull/13323) Ensure `withdraw_rewards` rewards are emitted from all actions that result in rewards being withdrawn.
+* [#13321](https://github.com/cosmos/cosmos-sdk/pull/13321) Add flag to disable fast node migration and usage.
+* (store) [#13326](https://github.com/cosmos/cosmos-sdk/pull/13326) Implementation of ADR-038 file StreamingService, backport #8664.
+* (store) [#13540](https://github.com/cosmos/cosmos-sdk/pull/13540) Default fastnode migration to false to prevent suprises. Operators must enable it, unless they have it enabled already. 
+
+### API Breaking Changes
+
+* (cli) [#13089](https://github.com/cosmos/cosmos-sdk/pull/13089) Fix rollback command don't actually delete multistore versions, added method `RollbackToVersion` to interface `CommitMultiStore` and added method `CommitMultiStore` to `Application` interface.
+
+### Bug Fixes
+
+* [#...](https://github.com/cosmos/cosmos-sdk/pull/) Implement dragonberry security patch.
+  * For applying the patch please refer to the [RELEASE NOTES](./RELEASE_NOTES.md)
+* (store) [#13459](https://github.com/cosmos/cosmos-sdk/pull/13459) Don't let state listener observe the uncommitted writes.
+
+## v0.45.8 - 2022-08-25
+
+### Improvements
+
+* [#12981](https://github.com/cosmos/cosmos-sdk/pull/12981) Return proper error when parsing telemetry configuration.
+* [#12885](https://github.com/cosmos/cosmos-sdk/pull/12885) Amortize cost of processing cache KV store.
+* [#12970](https://github.com/cosmos/cosmos-sdk/pull/12970) Bump Tendermint to `v0.34.21` and IAVL to `v0.19.1`.
+* [#12693](https://github.com/cosmos/cosmos-sdk/pull/12693) Make sure the order of each node is consistent when emitting proto events.
+* (simapp) [#13107](https://github.com/cosmos/cosmos-sdk/pull/13107) Call `SetIAVLCacheSize` with the configured value in simapp.
+* (cli) [#12742](https://github.com/cosmos/cosmos-sdk/pull/12742) Add the `prune` CLI cmd to manually prune app store history versions based on the pruning options.
+
+### Bug Fixes
+
+* [#13046](https://github.com/cosmos/cosmos-sdk/pull/13046) Fix missing return statement in BaseApp.Query.
 
 ## v0.45.7 - 2022-08-04
 
@@ -45,18 +101,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (events) [#12850](https://github.com/cosmos/cosmos-sdk/pull/12850) Add a new `fee_payer` attribute to the `tx` event that is emitted from the `DeductFeeDecorator` AnteHandler decorator.
 * (x/params) [#12724](https://github.com/cosmos/cosmos-sdk/pull/12724) Add `GetParamSetIfExists` function to params `Subspace` to prevent panics on breaking changes.
 * [#12668](https://github.com/cosmos/cosmos-sdk/pull/12668) Add `authz_msg_index` event attribute to message events emitted when executing via `MsgExec` through `x/authz`.
 * [#12697](https://github.com/cosmos/cosmos-sdk/pull/12697) Upgrade IAVL to v0.19.0 with fast index and error propagation. NOTE: first start will take a while to propagate into new model.
-  - Note: after upgrading to this version it may take up to 15 minutes to migrate from 0.17 to 0.19. This time is used to create the fast cache introduced into IAVL for performance
-* [#12784](https://github.com/cosmos/cosmos-sdk/pull/12784) Upgrade Tendermint to 0.34.20. 
+    - Note: after upgrading to this version it may take up to 15 minutes to migrate from 0.17 to 0.19. This time is used to create the fast cache introduced into IAVL for performance
+* [#12784](https://github.com/cosmos/cosmos-sdk/pull/12784) Upgrade Tendermint to 0.34.20.
 * (x/bank) [#12674](https://github.com/cosmos/cosmos-sdk/pull/12674) Add convenience function `CreatePrefixedAccountStoreKey()` to construct key to access account's balance for a given denom.
 
 ### Bug Fixes
 
 * (x/mint) [#12384](https://github.com/cosmos/cosmos-sdk/pull/12384) Ensure `GoalBonded` must be positive when performing `x/mint` parameter validation.
-* (simapp) [#12437](https://github.com/cosmos/cosmos-sdk/pull/12437) fix the non-determinstic behavior in simulations caused by `GenTx` and check 
-empty coins slice before it is used to create `banktype.MsgSend`.
 
 ### State Machine Breaking
 

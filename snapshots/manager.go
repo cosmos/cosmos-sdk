@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"sort"
 	"sync"
@@ -41,12 +40,12 @@ type restoreDone struct {
 // Although the ABCI interface (and this manager) passes chunks as byte slices, the internal
 // snapshot/restore APIs use IO streams (i.e. chan io.ReadCloser), for two reasons:
 //
-// 1) In the future, ABCI should support streaming. Consider e.g. InitChain during chain
-//    upgrades, which currently passes the entire chain state as an in-memory byte slice.
-//    https://github.com/tendermint/tendermint/issues/5184
+//  1. In the future, ABCI should support streaming. Consider e.g. InitChain during chain
+//     upgrades, which currently passes the entire chain state as an in-memory byte slice.
+//     https://github.com/tendermint/tendermint/issues/5184
 //
-// 2) io.ReadCloser streams automatically propagate IO errors, and can pass arbitrary
-//    errors via io.Pipe.CloseWithError().
+//  2. io.ReadCloser streams automatically propagate IO errors, and can pass arbitrary
+//     errors via io.Pipe.CloseWithError().
 type Manager struct {
 	store      *Store
 	multistore types.Snapshotter
@@ -220,7 +219,7 @@ func (m *Manager) LoadChunk(height uint64, format uint32, chunk uint32) ([]byte,
 	}
 	defer reader.Close()
 
-	return ioutil.ReadAll(reader)
+	return io.ReadAll(reader)
 }
 
 // Prune prunes snapshots, if no other operations are in progress.
@@ -353,7 +352,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	}
 
 	// Pass the chunk to the restore, and wait for completion if it was the final one.
-	m.chRestore <- ioutil.NopCloser(bytes.NewReader(chunk))
+	m.chRestore <- io.NopCloser(bytes.NewReader(chunk))
 	m.restoreChunkIndex++
 
 	if int(m.restoreChunkIndex) >= len(m.restoreChunkHashes) {

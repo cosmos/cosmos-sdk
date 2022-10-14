@@ -24,14 +24,18 @@ In general, developers will implement the `main.go` function with the following 
 
 * First, an [`encodingCodec`](./05-encoding.md) is instantiated for the application.
 * Then, the `config` is retrieved and config parameters are set. This mainly involves setting the Bech32 prefixes for [addresses](../basics/03-accounts.md#addresses).
-  ```go reference
+
+```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/config.go#L14-L29
 ```
+
 * Using [cobra](https://github.com/spf13/cobra), the root command of the full-node client is created. After that, all the custom commands of the application are added using the `AddCommand()` method of `rootCmd`.
 * Add default server commands to `rootCmd` using the `server.AddCommands()` method. These commands are separated from the ones added above since they are standard and defined at Cosmos SDK level. They should be shared by all Cosmos SDK-based applications. They include the most important command: the [`start` command](#start-command).
 * Prepare and execute the `executor`.
-   ```go reference
+  
+```go reference
 https://github.com/tendermint/tendermint/blob/v0.34.21/libs/cli/setup.go#L74-L78
+
 ```
 
 See an example of `main` function from the `simapp` application, the Cosmos SDK's application for demo purposes:
@@ -59,7 +63,7 @@ The flow of the `start` command is pretty straightforward. First, it retrieves t
 With the `db`, the `start` command creates a new instance of the application using an `appCreator` function:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/server/start.go#L209-L209
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/server/start.go#L211
 ```
 
 Note that an `appCreator` is a function that fulfills the `AppCreator` signature:

@@ -1,10 +1,13 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"google.golang.org/grpc"
 	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -13,11 +16,17 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/params"
+	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 type DeterministicTestSuite struct {
@@ -98,13 +107,18 @@ func (suite *DeterministicTestSuite) getCoin(t *rapid.T) sdk.Coin {
 	)
 }
 
-func (suite *DeterministicTestSuite) runQueryBalanceIterations(addr sdk.AccAddress, prevRes *sdk.Coin) {
+func queryReq[request proto.Message, response proto.Message](
+	suite *DeterministicTestSuite,
+	req request, prevRes response,
+	grpcFn func(context.Context, request, ...grpc.CallOption) (response, error),
+	gasConsumed uint64,
+) {
 	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.Balance(suite.ctx, banktypes.NewQueryBalanceRequest(addr, prevRes.GetDenom()))
+		before := suite.ctx.GasMeter().GasConsumed()
+		res, err := grpcFn(suite.ctx, req)
+		suite.Require().Equal(suite.ctx.GasMeter().GasConsumed()-before, gasConsumed)
 		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(res.GetBalance(), prevRes)
+		suite.Require().Equal(res, prevRes)
 	}
 }
 
@@ -114,22 +128,18 @@ func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
 		coin := suite.getCoin(t)
 		suite.fundAccount(addr, coin)
 
-		suite.runQueryBalanceIterations(addr, &coin)
+		before := suite.ctx.GasMeter().GasConsumed()
+		req := banktypes.NewQueryBalanceRequest(addr, coin.GetDenom())
+		res, err := suite.queryClient.Balance(suite.ctx, req)
+		suite.Require().NoError(err)
+		queryReq(suite, req, res, suite.queryClient.Balance, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	suite.fundAccount(addr1, coin1)
-	suite.runQueryBalanceIterations(addr1, &coin1)
-}
-
-func (suite *DeterministicTestSuite) runAllBalancesIterations(req *banktypes.QueryAllBalancesRequest, prevRes *banktypes.QueryAllBalancesResponse) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.AllBalances(suite.ctx, req)
-
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(res, prevRes)
-	}
+	req := banktypes.NewQueryBalanceRequest(addr1, coin1.GetDenom())
+	res, err := suite.queryClient.Balance(suite.ctx, req)
+	suite.Require().NoError(err)
+	queryReq(suite, req, res, suite.queryClient.Balance, 1087)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
@@ -147,11 +157,12 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 
 		suite.fundAccount(addr, coins...)
 
+		before := suite.ctx.GasMeter().GasConsumed()
 		req := banktypes.NewQueryAllBalancesRequest(addr, testdata.PaginationGenerator(t, uint64(numCoins)).Draw(t, "pagination"))
 		res, err := suite.queryClient.AllBalances(suite.ctx, req)
 		suite.Require().NoError(err)
 
-		suite.runAllBalancesIterations(req, res)
+		queryReq(suite, req, res, suite.queryClient.AllBalances, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	coins := sdk.NewCoins(
@@ -160,20 +171,11 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 	)
 
 	suite.fundAccount(addr1, coins...)
-	suite.runAllBalancesIterations(
-		banktypes.NewQueryAllBalancesRequest(addr1, nil),
-		&banktypes.QueryAllBalancesResponse{Balances: coins, Pagination: &query.PageResponse{Total: 2}},
-	)
-}
+	req := banktypes.NewQueryAllBalancesRequest(addr1, nil)
+	res, err := suite.queryClient.AllBalances(suite.ctx, req)
+	suite.Require().NoError(err)
 
-func (suite *DeterministicTestSuite) runSpendableBalancesIterations(req *banktypes.QuerySpendableBalancesRequest, prevRes *banktypes.QuerySpendableBalancesResponse) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.SpendableBalances(suite.ctx, req)
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(res, prevRes)
-	}
+	queryReq(suite, req, res, suite.queryClient.AllBalances, 357)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
@@ -195,10 +197,12 @@ func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 		err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, coins)
 		suite.Require().NoError(err)
 
+		before := suite.ctx.GasMeter().GasConsumed()
 		req := banktypes.NewQuerySpendableBalancesRequest(addr, testdata.PaginationGenerator(t, uint64(numCoins)).Draw(t, "pagination"))
 		res, err := suite.queryClient.SpendableBalances(suite.ctx, req)
 		suite.Require().NoError(err)
-		suite.runSpendableBalancesIterations(req, res)
+
+		queryReq(suite, req, res, suite.queryClient.SpendableBalances, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	coins := sdk.NewCoins(
@@ -209,21 +213,10 @@ func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 	err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
 
-	suite.runSpendableBalancesIterations(
-		banktypes.NewQuerySpendableBalancesRequest(addr1, nil),
-		&banktypes.QuerySpendableBalancesResponse{Balances: coins, Pagination: &query.PageResponse{Total: 2}},
-	)
-}
-
-func (suite *DeterministicTestSuite) runTotalSupplyIterations(req *banktypes.QueryTotalSupplyRequest, prevRes *banktypes.QueryTotalSupplyResponse) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.TotalSupply(suite.ctx, req)
-
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(res, prevRes)
-	}
+	req := banktypes.NewQuerySpendableBalancesRequest(addr1, nil)
+	res, err := suite.queryClient.SpendableBalances(suite.ctx, req)
+	suite.Require().NoError(err)
+	queryReq(suite, req, res, suite.queryClient.SpendableBalances, 2032)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
@@ -232,6 +225,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 	initialSupply := res.GetSupply()
 
 	rapid.Check(suite.T(), func(t *rapid.T) {
+
 		numCoins := rapid.IntRange(1, 3).Draw(t, "num-count")
 		coins := make(sdk.Coins, 0, numCoins)
 
@@ -248,15 +242,18 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 
 		initialSupply = initialSupply.Add(coins...)
 
+		before := suite.ctx.GasMeter().GasConsumed()
 		req := &banktypes.QueryTotalSupplyRequest{
 			Pagination: testdata.PaginationGenerator(t, uint64(len(initialSupply))).Draw(t, "pagination"),
 		}
+
 		res, err = suite.queryClient.TotalSupply(suite.ctx, req)
 		suite.Require().NoError(err)
 
-		suite.runTotalSupplyIterations(req, res)
+		queryReq(suite, req, res, suite.queryClient.TotalSupply, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
+	suite.SetupTest() // reset
 	res, err = suite.queryClient.TotalSupply(suite.ctx, &banktypes.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -268,24 +265,11 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 
 	suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins))
 
-	coins = initialSupply.Add(coins...)
-	suite.runTotalSupplyIterations(
-		&banktypes.QueryTotalSupplyRequest{Pagination: &query.PageRequest{Limit: uint64(len(coins)), CountTotal: true}},
-		&banktypes.QueryTotalSupplyResponse{Supply: coins, Pagination: &query.PageResponse{Total: uint64(len(coins))}},
-	)
-}
+	req := &banktypes.QueryTotalSupplyRequest{}
+	res, err = suite.queryClient.TotalSupply(suite.ctx, req)
+	suite.Require().NoError(err)
 
-func (suite *DeterministicTestSuite) runTotalSupplyOfIterations(denom string, prevRes sdk.Coin) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.SupplyOf(suite.ctx, &banktypes.QuerySupplyOfRequest{
-			Denom: denom,
-		})
-
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(res.GetAmount(), prevRes)
-	}
+	queryReq(suite, req, res, suite.queryClient.TotalSupply, 243)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
@@ -297,25 +281,21 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
 
 		suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
 
-		suite.runTotalSupplyOfIterations(coin.Denom, coin)
+		before := suite.ctx.GasMeter().GasConsumed()
+		req := &banktypes.QuerySupplyOfRequest{Denom: coin.GetDenom()}
+		res, err := suite.queryClient.SupplyOf(suite.ctx, req)
+		suite.Require().NoError(err)
+		queryReq(suite, req, res, suite.queryClient.SupplyOf, suite.ctx.GasMeter().GasConsumed()-before)
+
 	})
 
 	coin := sdk.NewCoin("bar", sdk.NewInt(100))
 
 	suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
-
-	suite.runTotalSupplyOfIterations(coin.Denom, coin)
-}
-
-func (suite *DeterministicTestSuite) runParamsIterations(prevRes banktypes.Params) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.Params(suite.ctx, &banktypes.QueryParamsRequest{})
-
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(res.GetParams(), prevRes)
-	}
+	req := &banktypes.QuerySupplyOfRequest{Denom: coin.GetDenom()}
+	res, err := suite.queryClient.SupplyOf(suite.ctx, req)
+	suite.Require().NoError(err)
+	queryReq(suite, req, res, suite.queryClient.SupplyOf, 1021)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryParams() {
@@ -330,10 +310,14 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParams() {
 			DefaultSendEnabled: rapid.Bool().Draw(t, "send"),
 		}
 
-		// SetParams overwrites `SendEnabled` to nil
 		suite.bankKeeper.SetParams(suite.ctx, params)
-		params.SendEnabled = nil
-		suite.runParamsIterations(params)
+
+		before := suite.ctx.GasMeter().GasConsumed()
+		req := &banktypes.QueryParamsRequest{}
+		res, err := suite.queryClient.Params(suite.ctx, req)
+		suite.Require().NoError(err)
+
+		queryReq(suite, req, res, suite.queryClient.Params, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	enabledStatus := banktypes.SendEnabled{
@@ -346,10 +330,13 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParams() {
 		DefaultSendEnabled: false,
 	}
 
-	// SetParams overwrites `SendEnabled` to nil
 	suite.bankKeeper.SetParams(suite.ctx, params)
-	params.SendEnabled = nil
-	suite.runParamsIterations(params)
+
+	req := &banktypes.QueryParamsRequest{}
+	res, err := suite.queryClient.Params(suite.ctx, req)
+	suite.Require().NoError(err)
+
+	queryReq(suite, req, res, suite.queryClient.Params, 1003)
 }
 
 func (suite *DeterministicTestSuite) createAndReturnMetadatas(t *rapid.T, count int) []banktypes.Metadata {
@@ -387,16 +374,6 @@ func (suite *DeterministicTestSuite) createAndReturnMetadatas(t *rapid.T, count 
 	return denomsMetadata
 }
 
-func (suite *DeterministicTestSuite) runDenomsMetadataIterations(req *banktypes.QueryDenomsMetadataRequest, prevRes *banktypes.QueryDenomsMetadataResponse) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.DenomsMetadata(suite.ctx, req)
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(res, prevRes)
-	}
-}
-
 func (suite *DeterministicTestSuite) TestGRPCDenomsMetadata() {
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		count := rapid.IntRange(1, 3).Draw(t, "count")
@@ -407,36 +384,25 @@ func (suite *DeterministicTestSuite) TestGRPCDenomsMetadata() {
 			suite.bankKeeper.SetDenomMetaData(suite.ctx, denomsMetadata[i])
 		}
 
+		before := suite.ctx.GasMeter().GasConsumed()
 		req := &banktypes.QueryDenomsMetadataRequest{
 			Pagination: testdata.PaginationGenerator(t, uint64(count)).Draw(t, "pagination"),
 		}
+
 		res, err := suite.queryClient.DenomsMetadata(suite.ctx, req)
 		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.runDenomsMetadataIterations(req, res)
+		queryReq(suite, req, res, suite.queryClient.DenomsMetadata, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	suite.SetupTest() // reset
 
 	suite.bankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
-	suite.runDenomsMetadataIterations(
-		&banktypes.QueryDenomsMetadataRequest{},
-		&banktypes.QueryDenomsMetadataResponse{Metadatas: []banktypes.Metadata{metadataAtom}, Pagination: &query.PageResponse{Total: 1}},
-	)
-}
 
-func (suite *DeterministicTestSuite) runDenomMetadataIterations(denom string, prevRes banktypes.Metadata) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.DenomMetadata(suite.ctx, &banktypes.QueryDenomMetadataRequest{
-			Denom: denom,
-		})
+	req := &banktypes.QueryDenomsMetadataRequest{}
+	res, err := suite.queryClient.DenomsMetadata(suite.ctx, req)
+	suite.Require().NoError(err)
 
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(res.GetMetadata(), prevRes)
-	}
+	queryReq(suite, req, res, suite.queryClient.DenomsMetadata, 660)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDenomMetadata() {
@@ -444,21 +410,28 @@ func (suite *DeterministicTestSuite) TestGRPCDenomMetadata() {
 		denomMetadata := suite.createAndReturnMetadatas(t, 1)
 		suite.Require().Len(denomMetadata, 1)
 		suite.bankKeeper.SetDenomMetaData(suite.ctx, denomMetadata[0])
-		suite.runDenomMetadataIterations(denomMetadata[0].Base, denomMetadata[0])
+
+		req := &banktypes.QueryDenomMetadataRequest{
+			Denom: denomMetadata[0].Base,
+		}
+
+		before := suite.ctx.GasMeter().GasConsumed()
+		res, err := suite.queryClient.DenomMetadata(suite.ctx, req)
+		suite.Require().NoError(err)
+
+		queryReq(suite, req, res, suite.queryClient.DenomMetadata, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	suite.bankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
-	suite.runDenomMetadataIterations(metadataAtom.Base, metadataAtom)
-}
 
-func (suite *DeterministicTestSuite) runSendEnabledIterations(req *banktypes.QuerySendEnabledRequest, prevRes *banktypes.QuerySendEnabledResponse) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.SendEnabled(suite.ctx, req)
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-
-		suite.Require().Equal(prevRes, res)
+	req := &banktypes.QueryDenomMetadataRequest{
+		Denom: metadataAtom.Base,
 	}
+
+	res, err := suite.queryClient.DenomMetadata(suite.ctx, req)
+	suite.Require().NoError(err)
+
+	queryReq(suite, req, res, suite.queryClient.DenomMetadata, 1300)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
@@ -480,6 +453,7 @@ func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 
 		allDenoms = append(allDenoms, denoms...)
 
+		before := suite.ctx.GasMeter().GasConsumed()
 		req := &banktypes.QuerySendEnabledRequest{
 			Denoms: denoms,
 			// Pagination is only taken into account when `denoms` is an empty array
@@ -488,7 +462,7 @@ func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 		res, err := suite.queryClient.SendEnabled(suite.ctx, req)
 		suite.Require().NoError(err)
 
-		suite.runSendEnabledIterations(req, res)
+		queryReq(suite, req, res, suite.queryClient.SendEnabled, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	coin1 := banktypes.SendEnabled{
@@ -503,19 +477,13 @@ func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 	suite.bankKeeper.SetSendEnabled(suite.ctx, coin1.Denom, false)
 	suite.bankKeeper.SetSendEnabled(suite.ctx, coin2.Denom, true)
 
-	suite.runSendEnabledIterations(
-		&banktypes.QuerySendEnabledRequest{Denoms: []string{coin1.Denom, coin2.Denom}},
-		&banktypes.QuerySendEnabledResponse{SendEnabled: []*banktypes.SendEnabled{&coin1, &coin2}},
-	)
-}
-
-func (suite *DeterministicTestSuite) runDenomOwnerIterations(req *banktypes.QueryDenomOwnersRequest, prevRes *banktypes.QueryDenomOwnersResponse) {
-	for i := 0; i < iterCount; i++ {
-		res, err := suite.queryClient.DenomOwners(suite.ctx, req)
-
-		suite.Require().NoError(err)
-		suite.Require().Equal(prevRes, res)
+	req := &banktypes.QuerySendEnabledRequest{
+		Denoms: []string{coin1.GetDenom(), coin2.GetDenom()},
 	}
+	res, err := suite.queryClient.SendEnabled(suite.ctx, req)
+	suite.Require().NoError(err)
+
+	queryReq(suite, req, res, suite.queryClient.SendEnabled, 4063)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDenomOwners() {
@@ -534,14 +502,14 @@ func (suite *DeterministicTestSuite) TestGRPCDenomOwners() {
 			suite.Require().NoError(err)
 		}
 
+		before := suite.ctx.GasMeter().GasConsumed()
 		req := &banktypes.QueryDenomOwnersRequest{
 			Denom:      denom,
 			Pagination: testdata.PaginationGenerator(t, uint64(numAddr)).Draw(t, "pagination"),
 		}
 		res, err := suite.queryClient.DenomOwners(suite.ctx, req)
 		suite.Require().NoError(err)
-
-		suite.runDenomOwnerIterations(req, res)
+		queryReq(suite, req, res, suite.queryClient.DenomOwners, suite.ctx.GasMeter().GasConsumed()-before)
 	})
 
 	denomOwners := []*banktypes.DenomOwner{
@@ -563,8 +531,10 @@ func (suite *DeterministicTestSuite) TestGRPCDenomOwners() {
 		suite.Require().NoError(err)
 	}
 
-	suite.runDenomOwnerIterations(
-		&banktypes.QueryDenomOwnersRequest{Denom: coin1.Denom},
-		&banktypes.QueryDenomOwnersResponse{DenomOwners: denomOwners, Pagination: &query.PageResponse{Total: 2}},
-	)
+	req := &banktypes.QueryDenomOwnersRequest{
+		Denom: coin1.GetDenom(),
+	}
+	res, err := suite.queryClient.DenomOwners(suite.ctx, req)
+	suite.Require().NoError(err)
+	queryReq(suite, req, res, suite.queryClient.DenomOwners, 2525)
 }

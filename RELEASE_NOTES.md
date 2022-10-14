@@ -1,10 +1,19 @@
-# Cosmos SDK v0.44.5 Release Notes
+# Cosmos SDK v0.44.5-patch Release Notes - Dragonberry Patch
 
-This release introduces bug fixes and improvements on the Cosmos SDK v0.44 series:
+This is a security release for the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702).
+Please upgrade ASAP.
 
-- Emit ante handler events for failed transactions: ant events can cause blockchain change (eg tx fees) and related events should be emitted.
-- (fix) Upgrade IAVL to 0.17.3 to solve race condition bug in IAVL.
+Next to this, we have also included a few minor bugfixes.
 
-See the [Cosmos SDK v0.44.5 Changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/CHANGELOG.md) for the exhaustive list of all changes.
+Chains must add the following to their go.mod for the application:
 
-**Full Changelog**: https://github.com/cosmos/cosmos-sdk/compare/v0.44.4...v0.44.5
+```go
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go
+```
+
+Bumping the SDK version should be smooth, however, feel free to tag core devs to review your upgrading PR:
+
+- **CET**: @tac0turtle, @okwme, @AdityaSripal, @colin-axner, @julienrbrt
+- **EST**: @ebuchman, @alexanderbez, @aaronc
+- **PST**: @jtremback, @nicolaslara, @czarcas7ic, @p0mvn
+- **CDT**: @ValarDragon, @zmanian

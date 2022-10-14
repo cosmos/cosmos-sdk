@@ -59,20 +59,6 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 				return err
 			}
 
-			coins, err := sdk.ParseCoinsNormalized(args[len(args)-1])
-			if err != nil {
-				return err
-			}
-
-			if coins.IsZero() {
-				return errors.New("must send positive amount")
-			}
-
-			split, err := cmd.Flags().GetBool(FlagSplit)
-			if err != nil {
-				return err
-			}
-
 			totalAddrs := sdkmath.NewInt(int64(len(args) - 2))
 			// coins to be received by the addresses
 			sendCoins := coins
@@ -105,7 +91,14 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 				return err
 			}
 
-			msg := types.NewMsgMultiSend(types.NewInput(fromAddr, amount), output)
+			msg := &types.MsgSend{
+				FromAddress: clientCtx.GetFromAddress().String(),
+				ToAddress:   args[1],
+				Amount:      coins,
+			}
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

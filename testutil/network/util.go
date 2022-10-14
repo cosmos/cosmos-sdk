@@ -103,9 +103,11 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.clientCtx = val.clientCtx.
 			WithClient(val.rPCClient)
 
+		// Add the tx service in the gRPC router.
 		app.RegisterTxService(val.ClientCtx)
+
+		// Add the tendermint queries service in the gRPC router.
 		app.RegisterTendermintService(val.ClientCtx)
-		app.RegisterNodeService(val.ClientCtx)
 	}
 
 	ctx := context.Background()

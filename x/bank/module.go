@@ -33,11 +33,12 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasInvariants       = AppModule{}
 
-	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasMigrations         = AppModule{}
-	_ appmodule.HasGenesis            = AppModule{}
-	_ appmodule.HasRegisterInterfaces = AppModule{}
-)
+func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
+	return AppModuleBasic{cdc}
+}
+
+// Name returns the bank module's name.
+func (AppModuleBasic) Name() string { return types.ModuleName }
 
 // AppModule implements an application module for the bank module.
 type AppModule struct {

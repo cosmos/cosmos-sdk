@@ -50,10 +50,10 @@ for dir in $proto_dirs; do
     fi
   fi
 
-  cd $home
-done
+# generate baseapp test messages
+(cd baseapp/testutil; buf generate)
 
-# move generated files to the right places
+# move proto files to the right places
 cp -r github.com/cosmos/cosmos-sdk/* ./
 rm -rf github.com
 

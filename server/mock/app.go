@@ -7,21 +7,13 @@ import (
 	"fmt"
 	"path/filepath"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	dbm "github.com/cosmos/cosmos-db"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protodesc"
-	"google.golang.org/protobuf/reflect/protoregistry"
-	"google.golang.org/protobuf/types/descriptorpb"
-
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/testutil"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -41,25 +33,7 @@ func NewApp(rootDir string, logger log.Logger) (servertypes.ABCI, error) {
 	baseApp.MountStores(capKeyMainStore)
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 
-	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
-	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &KVStoreTx{})
-	baseApp.SetInterfaceRegistry(interfaceRegistry)
-
-	router := bam.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(interfaceRegistry)
-
-	newDesc := &grpc.ServiceDesc{
-		ServiceName: "Test",
-		Methods: []grpc.MethodDesc{
-			{
-				MethodName: "Test",
-				Handler:    MsgTestHandler,
-			},
-		},
-	}
-
-	router.RegisterService(newDesc, &MsgServerImpl{capKeyMainStore})
-	baseApp.SetMsgServiceRouter(router)
+	baseApp.Router().AddRoute(sdk.NewRoute("kvstore", KVStoreHandler(capKeyMainStore)))
 
 	if err := baseApp.LoadLatestVersion(); err != nil {
 		return nil, err
@@ -148,77 +122,15 @@ func AppGenStateEmpty(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMess
 	return
 }
 
-// MsgServer manually write the handlers for this custom message
+// Manually write the handlers for this custom message
 type MsgServer interface {
-	Test(ctx context.Context, msg *KVStoreTx) (*sdk.Result, error)
+	Test(ctx context.Context, msg *kvstoreTx) (*sdk.Result, error)
 }
 
 type MsgServerImpl struct {
 	capKeyMainStore *storetypes.KVStoreKey
 }
 
-func MsgTestHandler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(KVStoreTx)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).Test(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/KVStoreTx",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Test(ctx, req.(*KVStoreTx))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func (m MsgServerImpl) Test(ctx context.Context, msg *KVStoreTx) (*sdk.Result, error) {
+func (m MsgServerImpl) Test(ctx context.Context, msg *kvstoreTx) (*sdk.Result, error) {
 	return KVStoreHandler(m.capKeyMainStore)(sdk.UnwrapSDKContext(ctx), msg)
-}
-
-func init() {
-	err := registerFauxDescriptor()
-	if err != nil {
-		panic(err)
-	}
-}
-
-func registerFauxDescriptor() error {
-	fauxDescriptor, err := protodesc.NewFile(&descriptorpb.FileDescriptorProto{
-		Name:             proto.String("faux_proto/test.proto"),
-		Dependency:       nil,
-		PublicDependency: nil,
-		WeakDependency:   nil,
-		MessageType: []*descriptorpb.DescriptorProto{
-			{
-				Name: proto.String("KVStoreTx"),
-			},
-		},
-		EnumType: nil,
-		Service: []*descriptorpb.ServiceDescriptorProto{
-			{
-				Name: proto.String("Test"),
-				Method: []*descriptorpb.MethodDescriptorProto{
-					{
-						Name:       proto.String("Test"),
-						InputType:  proto.String("KVStoreTx"),
-						OutputType: proto.String("KVStoreTx"),
-					},
-				},
-			},
-		},
-		Extension:      nil,
-		Options:        nil,
-		SourceCodeInfo: nil,
-		Syntax:         nil,
-		Edition:        nil,
-	}, nil)
-	if err != nil {
-		return err
-	}
-
-	return protoregistry.GlobalFiles.RegisterFile(fauxDescriptor)
 }

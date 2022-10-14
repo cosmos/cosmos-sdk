@@ -50,13 +50,10 @@ type (
 
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
 		// simulation, fetching txs by hash...).
-		RegisterTxService(client.Context)
+		RegisterTxService(clientCtx client.Context)
 
 		// RegisterTendermintService registers the gRPC Query service for tendermint queries.
-		RegisterTendermintService(client.Context)
-
-		// RegisterNodeService registers the node gRPC Query service.
-		RegisterNodeService(client.Context)
+		RegisterTendermintService(clientCtx client.Context)
 
 		// CommitMultiStore Returns the multistore instance
 		CommitMultiStore() sdk.CommitMultiStore

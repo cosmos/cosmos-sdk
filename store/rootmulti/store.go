@@ -18,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -35,6 +36,8 @@ import (
 const (
 	latestVersionKey = "s/latest"
 	commitInfoKeyFmt = "s/%d" // s/<version>
+
+	proofsPath = "proofs"
 )
 
 const iavlDisablefastNodeDefault = true
@@ -240,10 +243,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 
 		// If it was deleted, remove all data
 		if upgrades.IsDeleted(key.Name()) {
-			if err := deleteKVStore(store.(types.KVStore)); err != nil {
-				return errorsmod.Wrapf(err, "failed to delete store %s", key.Name())
-			}
-			rs.removalMap[key] = true
+			deleteKVStore(store.(types.KVStore))
 		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
 			// handle renames specially
 			// make an unregistered key to satisfy loadCommitStore params
@@ -257,14 +257,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			}
 
 			// move all data
-			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
-				return errorsmod.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
-			}
-
-			// add the old key so its deletion is committed
-			newStores[oldKey] = oldStore
-			// this will ensure it's not perpetually stored in commitInfo
-			rs.removalMap[oldKey] = true
+			moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore))
 		}
 	}
 
@@ -288,7 +281,7 @@ func (rs *Store) getCommitID(infos map[string]types.StoreInfo, name string) type
 	return info.CommitId
 }
 
-func deleteKVStore(kv types.KVStore) error {
+func deleteKVStore(kv types.KVStore) {
 	// Note that we cannot write while iterating, so load all keys here, delete below
 	var keys [][]byte
 	itr := kv.Iterator(nil, nil)
@@ -303,11 +296,10 @@ func deleteKVStore(kv types.KVStore) error {
 	for _, k := range keys {
 		kv.Delete(k)
 	}
-	return nil
 }
 
 // we simulate move by a copy and delete
-func moveKVStoreData(oldDB, newDB types.KVStore) error {
+func moveKVStoreData(oldDB types.KVStore, newDB types.KVStore) {
 	// we read from one and write to another
 	itr := oldDB.Iterator(nil, nil)
 	for itr.Valid() {
@@ -319,7 +311,7 @@ func moveKVStoreData(oldDB, newDB types.KVStore) error {
 	}
 
 	// then delete the old store
-	return deleteKVStore(oldDB)
+	deleteKVStore(oldDB)
 }
 
 // PruneSnapshotHeight prunes the given height according to the prune strategy.
@@ -691,22 +683,28 @@ func (rs *Store) GetStoreByName(name string) types.Store {
 // Query calls substore.Query with the same `req` where `req.Path` is
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
-// TODO: add proof for `multistore -> substore`.
-func (rs *Store) Query(req *types.RequestQuery) (*types.ResponseQuery, error) {
+// Special case: if `req.Path` is `/proofs`, the commit hash is included
+// as response value. In addition, proofs of every store are appended to the response for
+// the requested height
+func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	path := req.Path
-	storeName, subpath, err := parsePath(path)
+	firstPath, subpath, err := parsePath(path)
 	if err != nil {
 		return &types.ResponseQuery{}, err
 	}
 
-	store := rs.GetStoreByName(storeName)
+	if firstPath == proofsPath {
+		return rs.doProofsQuery(req)
+	}
+
+	store := rs.GetStoreByName(firstPath)
 	if store == nil {
-		return &types.ResponseQuery{}, errorsmod.Wrapf(types.ErrUnknownRequest, "no such store: %s", storeName)
+		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no such store: %s", firstPath))
 	}
 
 	queryable, ok := store.(types.Queryable)
 	if !ok {
-		return &types.ResponseQuery{}, errorsmod.Wrapf(types.ErrUnknownRequest, "store %s (type %T) doesn't support queries", storeName, store)
+		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "store %s (type %T) doesn't support queries", firstPath, store))
 	}
 
 	// trim the path and make the query
@@ -736,13 +734,14 @@ func (rs *Store) Query(req *types.RequestQuery) (*types.ResponseQuery, error) {
 	}
 
 	// Restore origin path and append proof op.
-	res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(storeName))
+	res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(firstPath))
 
 	return res, nil
 }
 
 // SetInitialVersion sets the initial version of the IAVL tree. It is used when
 // starting a new chain at an arbitrary height.
+// NOTE: this never errors. Can we fix the function signature ?
 func (rs *Store) SetInitialVersion(version int64) error {
 	rs.initialVersion = version
 
@@ -1118,7 +1117,44 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 	}
 }
 
-func flushCommitInfo(batch corestore.Batch, version int64, cInfo *types.CommitInfo) {
+func (rs *Store) doProofsQuery(req abci.RequestQuery) abci.ResponseQuery {
+	commitInfo, err := getCommitInfo(rs.db, req.Height)
+	if err != nil {
+		return sdkerrors.QueryResult(err)
+	}
+	res := abci.ResponseQuery{
+		Height:   req.Height,
+		Key:      []byte(proofsPath),
+		Value:    commitInfo.CommitID().Hash,
+		ProofOps: &crypto.ProofOps{Ops: make([]crypto.ProofOp, 0, len(commitInfo.StoreInfos))},
+	}
+
+	for _, storeInfo := range commitInfo.StoreInfos {
+		res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(storeInfo.Name))
+	}
+	return res
+}
+
+// Gets commitInfo from disk.
+func getCommitInfo(db dbm.DB, ver int64) (*types.CommitInfo, error) {
+	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
+
+	bz, err := db.Get([]byte(cInfoKey))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get commit info")
+	} else if bz == nil {
+		return nil, errors.New("no commit info found")
+	}
+
+	cInfo := &types.CommitInfo{}
+	if err = cInfo.Unmarshal(bz); err != nil {
+		return nil, errors.Wrap(err, "failed unmarshal commit info")
+	}
+
+	return cInfo, nil
+}
+
+func setCommitInfo(batch dbm.Batch, version int64, cInfo *types.CommitInfo) {
 	bz, err := cInfo.Marshal()
 	if err != nil {
 		panic(err)

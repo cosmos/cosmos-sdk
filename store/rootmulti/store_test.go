@@ -442,8 +442,7 @@ func TestMultiStoreQuery(t *testing.T) {
 	k2, v2 := []byte("water"), []byte("flows")
 	// v3 := []byte("is cold")
 
-	// Commit the multistore.
-	_ = multi.Commit()
+	cid1 := multi.Commit()
 
 	// Make sure we can get by name.
 	garbage := multi.GetStoreByName("bad-name")
@@ -458,8 +457,8 @@ func TestMultiStoreQuery(t *testing.T) {
 	store2.Set(k2, v2)
 
 	// Commit the multistore.
-	cid := multi.Commit()
-	ver := cid.Version
+	cid2 := multi.Commit()
+	ver := cid2.Version
 
 	// Reload multistore from database
 	multi = newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
@@ -506,6 +505,26 @@ func TestMultiStoreQuery(t *testing.T) {
 	qres, err = multi.Query(&query)
 	require.NoError(t, err)
 	require.Equal(t, v2, qres.Value)
+
+	// Test proofs latest height
+	query.Path = fmt.Sprintf("/%s", proofsPath)
+	qres = multi.Query(query)
+	require.EqualValues(t, 0, qres.Code)
+	require.NotNil(t, qres.ProofOps)
+	require.Equal(t, []byte(proofsPath), qres.Key)
+	require.Equal(t, cid2.Hash, qres.Value)
+	require.Equal(t, cid2.Version, qres.Height)
+	require.Equal(t, 3, len(qres.ProofOps.Ops)) // 3 mounted stores
+
+	// Test proofs second latest height
+	query.Height = query.Height - 1
+	qres = multi.Query(query)
+	require.EqualValues(t, 0, qres.Code)
+	require.NotNil(t, qres.ProofOps)
+	require.Equal(t, []byte(proofsPath), qres.Key)
+	require.Equal(t, cid1.Hash, qres.Value)
+	require.Equal(t, cid1.Version, qres.Height)
+	require.Equal(t, 3, len(qres.ProofOps.Ops)) // 3 mounted stores
 }
 
 func TestMultiStore_Pruning(t *testing.T) {

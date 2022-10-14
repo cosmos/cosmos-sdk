@@ -51,8 +51,8 @@ module.exports = {
         "key": "v0.44"
       },
       {
-        "label": "master",
-        "key": "master"
+        "label": "main",
+        "key": "main"
       }
     ],
     topbar: {
@@ -189,7 +189,7 @@ module.exports = {
             {
               title: "Contributing to the docs",
               url:
-                "https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md"
+                "https://github.com/cosmos/cosmos-sdk/blob/main/docs/DOCS_README.md"
             },
             {
               title: "Source code on GitHub",

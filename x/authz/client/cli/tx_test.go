@@ -633,7 +633,7 @@ func (s *CLITestSuite) TestExecAuthorizationWithExpiration() {
 	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 	defer execMsg.Close()
 
-	// waiting for authorization to expires
+	// waiting for authorization to expire
 	time.Sleep(12 * time.Second)
 
 	cmd := cli.NewCmdExecAuthorization()

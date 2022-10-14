@@ -126,7 +126,7 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
 	// vendor ics23
-	github.com/confio/ics23/go => ./ics23
+	github.com/confio/ics23/go => ./ics23/go
 
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409

@@ -133,32 +133,16 @@ html {
         @apply w-auto justify-between;
       }
       .DocSearch-Search-Icon {
-        @media (min-width: 997px) {
-          @apply hidden;
-        }
+        @apply text-docusaurusColorBase;
       }
-      .DocSearch-Button-Placeholder {
-        @apply pr-8;
-      }
-      .DocSearch-Button-Key {
-        background: none;
-        @apply shadow-none bg-transparent border border-inactive text-inactive p-3 text-2 rounded-s h-6 w-6;
-      }
-      .DocSearch-Button-Keys,
-      .DocSearch-Button-Placeholder {
+      .DocSearch-Button-Keys {
         @apply hidden;
-        @media (min-width: 997px) {
-          @apply flex;
-        }
+      }
+      .DocSearch-Button-Placeholder {
+        @apply pr-10;
       }
     }
 
-    &-Search-Icon path {
-      @apply fill-transparent;
-    }
-    path {
-      @apply fill-transparent;
-    }
     &-Logo path {
       @apply fill-docusaurusColorBase;
     }
@@ -441,6 +425,10 @@ html {
   }
 
   /* MARKDOWN */
+  .theme-code-block {
+    @apply font-jetbrain;
+  }
+
   .markdown {
     --ifm-heading-vertical-rhythm-bottom: 1;
     --ifm-h1-vertical-rhythm-bottom: 1;

@@ -3,7 +3,7 @@ module cosmossdk.io/api
 go 1.19
 
 require (
-	github.com/cosmos/cosmos-proto v1.0.0-alpha8
+	github.com/cosmos/cosmos-proto v1.0.0-alpha8.0.20221015074124-b9276ab8e72c
 	github.com/cosmos/gogoproto v1.4.2
 	google.golang.org/genproto v0.0.0-20220930163606-c98284e70a91
 	google.golang.org/grpc v1.50.0

@@ -1,5 +1,5 @@
-github.com/cosmos/cosmos-proto v1.0.0-alpha8 h1:d3pCRuMYYvGA5bM0ZbbjKn+AoQD4A7dyNG2wzwWalUw=
-github.com/cosmos/cosmos-proto v1.0.0-alpha8/go.mod h1:6/p+Bc4O8JKeZqe0VqUGTX31eoYqemTT4C1hLCWsO7I=
+github.com/cosmos/cosmos-proto v1.0.0-alpha8.0.20221015074124-b9276ab8e72c h1:fcMrPJiU6gfTzoLsR9Jcy05jjB48FiZmm+q+Ty/k7LY=
+github.com/cosmos/cosmos-proto v1.0.0-alpha8.0.20221015074124-b9276ab8e72c/go.mod h1:6/p+Bc4O8JKeZqe0VqUGTX31eoYqemTT4C1hLCWsO7I=
 github.com/cosmos/gogoproto v1.4.2 h1:UeGRcmFW41l0G0MiefWhkPEVEwvu78SZsHBvI78dAYw=
 github.com/cosmos/gogoproto v1.4.2/go.mod h1:cLxOsn1ljAHSV527CHOtaIP91kK6cCrZETRBrkzItWU=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=

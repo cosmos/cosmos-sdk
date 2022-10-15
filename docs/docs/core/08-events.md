@@ -155,7 +155,7 @@ The same way can be used to subscribe to [legacy events](https://github.com/cosm
 
 ## Default Events
 
-There is a few events that are automatically emitted for all messages, directly from `baseapp`.
+There are a few events that are automatically emitted for all messages, directly from `baseapp`.
 
 * `message.action`: The name of the message type.
 * `message.sender`: The address of the message signer.

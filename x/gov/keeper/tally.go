@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"golang.org/x/exp/maps"
 )
 
 // TODO: Break into several smaller functions for clarity
@@ -73,7 +74,8 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes bool, 
 	})
 
 	// iterate over the validators again to tally their voting power
-	for _, val := range currValidators {
+	valL := maps.Values(currValidators)
+	for _, val := range valL {
 		if len(val.Vote) == 0 {
 			continue
 		}

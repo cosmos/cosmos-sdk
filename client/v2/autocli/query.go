@@ -2,10 +2,12 @@ package autocli
 
 import (
 	"fmt"
+	"sort"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -19,12 +21,17 @@ import (
 func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
 	queryCmd := topLevelCmd("query", "Querying subcommands")
 	queryCmd.Aliases = []string{"q"}
-	for moduleName, modOpts := range moduleOptions {
+
+	// Ensure that building module query commands is in a deterministic pattern.
+	moduleNames := maps.Keys(moduleOptions)
+	sort.Strings(moduleNames)
+	for _, moduleName := range moduleNames {
 		if customCmds[moduleName] != nil {
 			// custom commands get added lower down
 			continue
 		}
 
+		modOpts := moduleOptions[moduleName]
 		queryCmdDesc := modOpts.Query
 		if queryCmdDesc != nil {
 			cmd, err := b.BuildModuleQueryCommand(moduleName, queryCmdDesc)

@@ -3,6 +3,8 @@ package types
 import (
 	"reflect"
 
+	"golang.org/x/exp/maps"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -72,7 +74,7 @@ func (t KeyTable) RegisterParamSet(ps ParamSet) KeyTable {
 }
 
 func (t KeyTable) maxKeyLength() (res int) {
-	for k := range t.m {
+	for _, k := range maps.Keys(t.m) {
 		l := len(k)
 		if l > res {
 			res = l

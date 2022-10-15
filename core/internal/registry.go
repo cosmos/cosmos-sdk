@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -29,7 +30,7 @@ type ModuleInitializer struct {
 func ModulesByProtoMessageName() (map[protoreflect.FullName]*ModuleInitializer, error) {
 	res := map[protoreflect.FullName]*ModuleInitializer{}
 
-	for _, initializer := range ModuleRegistry {
+	for _, initializer := range maps.Values(ModuleRegistry) {
 		descriptor := initializer.ConfigProtoMessage.ProtoReflect().Descriptor()
 		fullName := descriptor.FullName()
 		if _, ok := res[fullName]; ok {

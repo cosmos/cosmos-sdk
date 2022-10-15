@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -185,8 +186,9 @@ func HashFromMap(m map[string][]byte) []byte {
 // The keys are sorted before the proofs are computed.
 func ProofsFromMap(m map[string][]byte) ([]byte, map[string]*tmcrypto.Proof, []string) {
 	sm := newSimpleMap()
-	for k, v := range m {
-		sm.Set(k, v)
+	kL := maps.Keys(m)
+	for _, k := range kL {
+		sm.Set(k, m[k])
 	}
 
 	sm.Sort()

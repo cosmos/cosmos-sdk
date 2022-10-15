@@ -230,7 +230,7 @@ func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
 // MountKVStores mounts all IAVL or DB stores to the provided keys in the
 // BaseApp multistore.
 func (app *BaseApp) MountKVStores(keys map[string]*storetypes.KVStoreKey) {
-	for _, key := range keys {
+	for _, key := range maps.Values(keys) {
 		if !app.fauxMerkleMode {
 			app.MountStore(key, storetypes.StoreTypeIAVL)
 		} else {
@@ -244,7 +244,8 @@ func (app *BaseApp) MountKVStores(keys map[string]*storetypes.KVStoreKey) {
 // MountTransientStores mounts all transient stores to the provided keys in
 // the BaseApp multistore.
 func (app *BaseApp) MountTransientStores(keys map[string]*storetypes.TransientStoreKey) {
-	for _, key := range keys {
+	keyL := maps.Values(keys)
+	for _, key := range keyL {
 		app.MountStore(key, storetypes.StoreTypeTransient)
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"golang.org/x/exp/maps"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -399,7 +400,8 @@ func sortNoLongerBonded(last validatorsByAddr) ([][]byte, error) {
 	noLongerBonded := make([][]byte, len(last))
 	index := 0
 
-	for valAddrStr := range last {
+	valAddrL := maps.Keys(last)
+	for _, valAddrStr := range valAddrL {
 		valAddrBytes, err := sdk.ValAddressFromBech32(valAddrStr)
 		if err != nil {
 			return nil, err

@@ -1,6 +1,10 @@
 package v046
 
 import (
+	"sort"
+
+	"golang.org/x/exp/maps"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -58,7 +62,10 @@ func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.
 		}
 	}
 
-	for key, v := range queueItems {
+	keys := maps.Keys(queueItems)
+	sort.Strings(keys)
+	for _, key := range keys {
+		v := queueItems[key]
 		bz, err := cdc.Marshal(&authz.GrantQueueItem{
 			MsgTypeUrls: v,
 		})

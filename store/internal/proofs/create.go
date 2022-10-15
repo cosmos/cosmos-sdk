@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	ics23 "github.com/confio/ics23/go"
+	"golang.org/x/exp/maps"
 
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 )
@@ -84,7 +85,8 @@ func CreateNonMembershipProof(data map[string][]byte, key []byte) (*ics23.Commit
 }
 
 func createExistenceProof(data map[string][]byte, key []byte) (*ics23.ExistenceProof, error) {
-	for k := range data {
+	keys := maps.Keys(data)
+	for _, k := range keys {
 		if k == "" {
 			return nil, ErrEmptyKeyInData
 		}

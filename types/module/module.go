@@ -533,7 +533,7 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 // GetVersionMap gets consensus version from all modules
 func (m *Manager) GetVersionMap() VersionMap {
 	vermap := make(VersionMap)
-	for _, v := range m.Modules {
+	for _, v := range maps.Values(m.Modules) {
 		version := v.ConsensusVersion()
 		name := v.Name()
 		vermap[name] = version

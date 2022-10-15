@@ -8,7 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
+
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 )
@@ -77,10 +80,12 @@ func (m BinaryDownloadURLMap) ValidateBasic() error {
 	}
 
 	osArchRx := regexp.MustCompile(`[a-zA-Z0-9]+/[a-zA-Z0-9]+`)
-	for key, val := range m {
+	for _, key := range maps.Keys(m) {
 		if key != "any" && !osArchRx.MatchString(key) {
 			return fmt.Errorf("invalid os/arch format in key \"%s\"", key)
 		}
+
+		val := m[key]
 		if err := ValidateIsURLWithChecksum(val); err != nil {
 			return fmt.Errorf("invalid url \"%s\" in binaries[%s]: %v", val, key, err)
 		}
@@ -99,7 +104,12 @@ func (m BinaryDownloadURLMap) CheckURLs(daemonName string) error {
 		return fmt.Errorf("could not create temp directory: %w", err)
 	}
 	defer os.RemoveAll(tempDir)
-	for osArch, url := range m {
+
+	// Ensure that downloads proceed in a deterministic pattern.
+	osArches := maps.Keys(m)
+	sort.Strings(osArches)
+	for _, osArch := range osArches {
+		url := m[osArch]
 		dstRoot := filepath.Join(tempDir, strings.ReplaceAll(osArch, "/", "-"))
 		if err = DownloadUpgrade(dstRoot, url, daemonName); err != nil {
 			return fmt.Errorf("error downloading binary for os/arch %s: %v", osArch, err)

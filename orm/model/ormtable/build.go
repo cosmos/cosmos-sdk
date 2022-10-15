@@ -9,6 +9,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoregistry"
 
+	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -259,7 +260,7 @@ func Build(options Options) (Table, error) {
 			}
 		}
 
-		for name := range altNames {
+		for _, name := range maps.Keys(altNames) {
 			if _, ok := table.indexesByFields[name]; ok {
 				return nil, fmt.Errorf("duplicate index for fields %s", name)
 			}

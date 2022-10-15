@@ -439,7 +439,11 @@ func (rs *Store) Commit() types.CommitID {
 	defer rs.flushMetadata(rs.db, version, rs.lastCommitInfo)
 
 	// remove remnants of removed stores
-	for sk := range rs.removalMap {
+	keys := make([]types.StoreKey, 0, len(rs.removalMap))
+	for key := range rs.removalMap {
+		keys = append(keys, key)
+	}
+	for _, sk := range keys {
 		if _, ok := rs.stores[sk]; ok {
 			delete(rs.stores, sk)
 			delete(rs.storesParams, sk)
@@ -586,7 +590,12 @@ func (rs *Store) PruneStores(clearPruningManager bool, pruningHeights []int64) (
 
 	rs.logger.Debug("pruning heights", "heights", pruningHeights)
 
-	for key, store := range rs.stores {
+	keys := make([]types.StoreKey, 0, len(rs.stores))
+	for key := range rs.stores {
+		keys = append(keys, key)
+	}
+	for _, key := range keys {
+		store := rs.stores[key]
 		// If the store is wrapped with an inter-block cache, we must first unwrap
 		// it to get the underlying IAVL store.
 		if store.GetStoreType() != types.StoreTypeIAVL {
@@ -1034,7 +1043,16 @@ func GetLatestVersion(db dbm.DB) int64 {
 func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
 
-	for key, store := range storeMap {
+	keys := make([]types.StoreKey, 0, len(storeMap))
+	for key := range storeMap {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		ki, kj := keys[i], keys[j]
+		return ki.Name() < kj.Name()
+	})
+	for _, key := range keys {
+		store := storeMap[key]
 		commitID := store.Commit()
 
 		if store.GetStoreType() == types.StoreTypeTransient {

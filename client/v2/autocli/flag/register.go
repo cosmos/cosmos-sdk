@@ -68,7 +68,8 @@ func (b *Builder) addMessageFlags(ctx context.Context, flagSet *pflag.FlagSet, m
 	}
 
 	// validate flag options
-	for name := range commandOptions.FlagOptions {
+	names := maps.Keys(commandOptions.FlagOptions)
+	for _, name := range names {
 		if fields.ByName(protoreflect.Name(name)) == nil {
 			return nil, fmt.Errorf("can't find field %s on %s specified as a flag", name, messageType.Descriptor().FullName())
 		}

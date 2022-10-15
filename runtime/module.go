@@ -8,6 +8,7 @@ import (
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -50,7 +51,9 @@ func ProvideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 
 	// build codecs
 	basicManager := module.BasicManager{}
-	for name, wrapper := range moduleBasics {
+	names := maps.Keys(moduleBasics)
+	for _, name := range names {
+		wrapper := moduleBasics[name]
 		basicManager[name] = wrapper
 		wrapper.RegisterInterfaces(interfaceRegistry)
 		wrapper.RegisterLegacyAminoCodec(amino)

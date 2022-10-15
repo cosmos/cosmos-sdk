@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"math"
 
+	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
@@ -119,12 +120,12 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 		}
 
 		db.filesById[id] = fdSchema
-		for name, table := range fdSchema.tablesByName {
+		for _, name := range maps.Keys(fdSchema.tablesByName) {
 			if _, ok := db.tablesByName[name]; ok {
 				return nil, ormerrors.UnexpectedError.Wrapf("duplicate table %s", name)
 			}
 
-			db.tablesByName[name] = table
+			db.tablesByName[name] = fdSchema.tablesByName[name]
 		}
 	}
 

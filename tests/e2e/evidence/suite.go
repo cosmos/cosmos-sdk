@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/stretchr/testify/suite"
+	"golang.org/x/exp/maps"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -56,8 +57,8 @@ func (s *IntegrationTestSuite) TestGetQueryCmd() {
 		},
 	}
 
-	for name, tc := range testCases {
-		tc := tc
+	for _, name := range maps.Keys(testCases) {
+		tc := testCases[name]
 
 		s.Run(name, func() {
 			cmd := cli.GetQueryCmd()

@@ -116,7 +116,7 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			r,
 			txCfg,
 			[]sdk.Msg{msg},
@@ -183,7 +183,7 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, a.MsgTypeURL())
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		account := ak.GetAccount(ctx, granterAddr)
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			r,
 			txCfg,
 			[]sdk.Msg{&msg},
@@ -278,7 +278,7 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
 			r,
 			txCfg,
 			[]sdk.Msg{&msgExec},

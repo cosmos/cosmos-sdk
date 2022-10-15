@@ -536,6 +536,7 @@ Users _must_ add a replace directive in their go.mod for the new `ics23` package
 ```go
 replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23 v0.8.0
 ```
+
 ### Features
 
 * [#13435](https://github.com/cosmos/cosmos-sdk/pull/13435) Extend error context when a simulation fails.

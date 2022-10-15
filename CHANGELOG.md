@@ -37,6 +37,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* [](https://github.com/cosmos/cosmos-sdk/pull/) - Add `GenSignedMockTx` (as it is in v0.46.0+). This can be used as workaround of the #12437 revertion.
+
 ## v0.45.9 - 2022-10-14
 
 ATTENTION:

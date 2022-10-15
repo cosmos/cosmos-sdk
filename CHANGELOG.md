@@ -536,7 +536,6 @@ Users _must_ add a replace directive in their go.mod for the new `ics23` package
 ```go
 replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23 v0.8.0
 ```
-
 ### Features
 
 * [#13435](https://github.com/cosmos/cosmos-sdk/pull/13435) Extend error context when a simulation fails.
@@ -558,6 +557,10 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23 v0.8.0
 * Implement dragonberry security patch.
     * For applying the patch please refer to the [RELEASE NOTES](./RELEASE_NOTES.md)
 * (store) [#13459](https://github.com/cosmos/cosmos-sdk/pull/13459) Don't let state listener observe the uncommitted writes.
+
+### Notes
+
+Reverted #12437 due to API breaking changes.
 
 ## [v0.45.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.8) - 2022-08-25
 

@@ -523,8 +523,43 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/upgrade) [#9906](https://github.com/cosmos/cosmos-sdk/pull/9906) Deprecate `UpgradeConsensusState` gRPC query since this functionality is only used for IBC, which now has its own [IBC replacement](https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54)
 * (types) [#10948](https://github.com/cosmos/cosmos-sdk/issues/10948) Deprecate the types.DBBackend variable and types.NewLevelDB function. They are replaced by a new entry in `app.toml`: `app-db-backend` and `tendermint/tm-db`s `NewDB` function. If `app-db-backend` is defined, then it is used. Otherwise, if `types.DBBackend` is defined, it is used (until removed: [#11241](https://github.com/cosmos/cosmos-sdk/issues/11241)). Otherwise, Tendermint config's `db-backend` is used.
 
+## [v0.45.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.9) - 2022-10-14
 
-## v0.45.8 - 2022-08-25
+ATTENTION:
+
+This is a security release for the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702). 
+
+All users should upgrade immediately.
+
+Users _must_ add a replace directive in their go.mod for the new `ics23` package in the SDK:
+
+```go
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23 v0.8.0
+```
+
+### Features
+
+* [#13435](https://github.com/cosmos/cosmos-sdk/pull/13435) Extend error context when a simulation fails.
+
+### Improvements
+
+* [#13369](https://github.com/cosmos/cosmos-sdk/pull/13369) Improve UX for `keyring.List` by returning all retrieved keys.
+* [#13323](https://github.com/cosmos/cosmos-sdk/pull/13323) Ensure `withdraw_rewards` rewards are emitted from all actions that result in rewards being withdrawn.
+* [#13321](https://github.com/cosmos/cosmos-sdk/pull/13321) Add flag to disable fast node migration and usage.
+* (store) [#13326](https://github.com/cosmos/cosmos-sdk/pull/13326) Implementation of ADR-038 file StreamingService, backport #8664.
+* (store) [#13540](https://github.com/cosmos/cosmos-sdk/pull/13540) Default fastnode migration to false to prevent suprises. Operators must enable it, unless they have it enabled already. 
+
+### API Breaking Changes
+
+* (cli) [#13089](https://github.com/cosmos/cosmos-sdk/pull/13089) Fix rollback command don't actually delete multistore versions, added method `RollbackToVersion` to interface `CommitMultiStore` and added method `CommitMultiStore` to `Application` interface.
+
+### Bug Fixes
+
+* Implement dragonberry security patch.
+    * For applying the patch please refer to the [RELEASE NOTES](./RELEASE_NOTES.md)
+* (store) [#13459](https://github.com/cosmos/cosmos-sdk/pull/13459) Don't let state listener observe the uncommitted writes.
+
+## [v0.45.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.8) - 2022-08-25
 
 ### Improvements
 
@@ -537,7 +572,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#13046](https://github.com/cosmos/cosmos-sdk/pull/13046) Fix missing return statement in BaseApp.Query.
 
-## v0.45.7 - 2022-08-04
+## [v0.45.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.7) - 2022-08-04
 
 ### Features
 
@@ -746,6 +781,20 @@ empty coins slice before it is used to create `banktype.MsgSend`.
 ### Improvements
 
 * [#10823](https://github.com/cosmos/cosmos-sdk/pull/10823) updated ambiguous cli description for creating feegrant.
+
+## [v0.44.5-patch](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.5-patch) - 2021-10-14
+
+ATTENTION:
+
+This is a security release for the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702). 
+
+All users should upgrade immediately.
+
+Users _must_ add a replace directive in their go.mod for the new `ics23` package in the SDK:
+
+```go
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go
+```
 
 ## [v0.44.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.5) - 2021-12-02
 

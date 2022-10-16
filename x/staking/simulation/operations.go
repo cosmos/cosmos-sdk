@@ -16,11 +16,11 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgCreateValidator = "op_weight_msg_create_validator"
-	OpWeightMsgEditValidator   = "op_weight_msg_edit_validator"
-	OpWeightMsgDelegate        = "op_weight_msg_delegate"
-	OpWeightMsgUndelegate      = "op_weight_msg_undelegate"
-	OpWeightMsgBeginRedelegate = "op_weight_msg_begin_redelegate"
+	OpWeightMsgCreateValidator = "op_weight_msg_create_validator" //nolint:gosec
+	OpWeightMsgEditValidator   = "op_weight_msg_edit_validator"   //nolint:gosec
+	OpWeightMsgDelegate        = "op_weight_msg_delegate"         //nolint:gosec
+	OpWeightMsgUndelegate      = "op_weight_msg_undelegate"       //nolint:gosec
+	OpWeightMsgBeginRedelegate = "op_weight_msg_begin_redelegate" //nolint:gosec
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -152,7 +152,6 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		}
 
 		txCtx := simulation.OperationInput{
-			R:             r,
 			App:           app,
 			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,
@@ -277,7 +276,6 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		msg := types.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
 
 		txCtx := simulation.OperationInput{
-			R:             r,
 			App:           app,
 			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,

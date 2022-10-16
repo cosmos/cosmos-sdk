@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck
 )
 
 const (
@@ -142,7 +142,7 @@ type (
 )
 
 func (v Validator) MarshalJSON() ([]byte, error) {
-	bechConsPubKey, err := legacybech32.MarshalPubKey(legacybech32.ConsPK, v.ConsPubKey)
+	bechConsPubKey, err := legacybech32.MarshalPubKey(legacybech32.ConsPK, v.ConsPubKey) //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 	if err := legacy.Cdc.UnmarshalJSON(data, bv); err != nil {
 		return err
 	}
-	consPubKey, err := legacybech32.UnmarshalPubKey(legacybech32.ConsPK, bv.ConsPubKey)
+	consPubKey, err := legacybech32.UnmarshalPubKey(legacybech32.ConsPK, bv.ConsPubKey) //nolint:staticcheck
 	if err != nil {
 		return err
 	}

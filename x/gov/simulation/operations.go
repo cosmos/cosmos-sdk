@@ -20,9 +20,9 @@ var initialProposalID = uint64(100000000000000)
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgDeposit      = "op_weight_msg_deposit"
-	OpWeightMsgVote         = "op_weight_msg_vote"
-	OpWeightMsgVoteWeighted = "op_weight_msg_weighted_vote"
+	OpWeightMsgDeposit      = "op_weight_msg_deposit"       //nolint:gosec
+	OpWeightMsgVote         = "op_weight_msg_vote"          //nolint:gosec
+	OpWeightMsgVoteWeighted = "op_weight_msg_weighted_vote" //nolint:gosec
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -155,7 +155,6 @@ func SimulateMsgSubmitProposal(
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
-			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -242,7 +241,6 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		}
 
 		txCtx := simulation.OperationInput{
-			R:             r,
 			App:           app,
 			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,

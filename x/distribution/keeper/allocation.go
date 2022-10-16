@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -94,15 +95,24 @@ func (k Keeper) AllocateTokens(
 		remaining = remaining.Sub(foundationTaxSum)
 	}
 
+	feeMultiplier := feesCollected.MulDecTruncate(voteMultiplier)
+
 	// allocate tokens proportionally to voting power minus any taxes
 	// TODO consider parallelizing later, ref https://github.com/enigmampc/cosmos-sdk/pull/3099#discussion_r246276376
+	// allocate tokens proportionally to voting power
+	//
+	// TODO: Consider parallelizing later
+	//
+	// Ref: https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range bondedVotes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 
-		// TODO consider microslashing for missing votes.
-		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
+		// TODO: Consider micro-slashing for missing votes.
+		//
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower))
-		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
+		reward := feeMultiplier.MulDecTruncate(powerFraction)
+
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
 	}
@@ -124,7 +134,8 @@ func (k Keeper) AllocateTokens(
 	k.SetFeePool(ctx, feePool)
 }
 
-// AllocateTokensToValidator allocate tokens to a particular validator, splitting according to commission
+// AllocateTokensToValidator allocate tokens to a particular validator,
+// splitting according to commission.
 func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.ValidatorI, tokens sdk.DecCoins) {
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())
@@ -155,6 +166,7 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
 		),
 	)
+
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)

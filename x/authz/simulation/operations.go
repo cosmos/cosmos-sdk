@@ -27,6 +27,8 @@ var (
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec
 const (
 	OpWeightMsgGrant = "op_weight_msg_grant"
 	OpWeightRevoke   = "op_weight_msg_revoke"
@@ -115,7 +117,6 @@ func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keep
 		}
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
-			r,
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,
@@ -182,7 +183,6 @@ func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Kee
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		account := ak.GetAccount(ctx, granterAddr)
 		tx, err := helpers.GenTx(
-			r,
 			txCfg,
 			[]sdk.Msg{&msg},
 			fees,
@@ -241,10 +241,6 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 
 		granterspendableCoins := bk.SpendableCoins(ctx, granterAddr)
 		coins := simtypes.RandSubsetCoins(r, granterspendableCoins)
-		// if coins slice is empty, we can not create valid banktype.MsgSend
-		if len(coins) == 0 {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "empty coins slice"), nil, nil
-		}
 		// Check send_enabled status of each sent coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
@@ -277,7 +273,6 @@ func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keepe
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
 		tx, err := helpers.GenTx(
-			r,
 			txCfg,
 			[]sdk.Msg{&msgExec},
 			fees,

@@ -278,7 +278,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
-	ctx := app.deliverState.ctx
+	ctx := app.checkState.ctx
 
 	for _, txBytes := range req.Txs {
 		anteCtx, _ := app.cacheTxContext(ctx, txBytes)

@@ -534,7 +534,7 @@ All users should upgrade immediately.
 Users _must_ add a replace directive in their go.mod for the new `ics23` package in the SDK:
 
 ```go
-replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23 v0.8.0
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 ```
 
 ### Features

@@ -21,7 +21,6 @@ module.exports = {
       circle: "100%",
     },
     fontFamily: {
-      termina: ["termina", defaultTheme.fontFamily.sans],
       intervar: ['"Inter var"', defaultTheme.fontFamily.sans],
       inter: ["Inter", defaultTheme.fontFamily.sans],
       jetbrain: ["JetBrains Mono", defaultTheme.fontFamily.mono],

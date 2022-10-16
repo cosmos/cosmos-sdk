@@ -288,13 +288,6 @@ const config = {
           },
           {
             from: [
-              "/main/modules/epoching/01_state",
-              "/main/modules/epoching/03_to_improve",
-            ],
-            to: "/main/modules/epoching",
-          },
-          {
-            from: [
               "/main/modules/evidence/01_concepts",
               "/main/modules/evidence/02_state",
               "/main/modules/evidence/03_messages",

@@ -21,7 +21,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 	keeper.IterateCanceledProposalQueue(ctx, func(proposal v1.Proposal) (stop bool) {
 		// burn the (deposits * proposal_cancel_burn_rate) amount.
 		// and deposits * (1 - proposal_cancel_burn_rate) will be move to community pool.
-		keeper.BurnAndSendDepositsToCommunityPool(ctx, proposal.Id)
+		keeper.BurnAndSendDepositsToCommunityPool(ctx, proposal.Id, proposal.TotalDeposit)
 		// delete the proposal.
 		keeper.DeleteProposal(ctx, proposal.Id)
 		return false

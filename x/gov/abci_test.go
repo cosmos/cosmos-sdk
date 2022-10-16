@@ -391,9 +391,20 @@ func TestProposalCanceledEndblocker(t *testing.T) {
 	err = suite.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
 	require.NoError(t, err)
 
-	minDepositsForProposal, err := suite.GovKeeper.GetProposalMinDeposit(ctx)
-	minDepositsForProposalInDec := sdk.NewDecCoinsFromCoins(minDepositsForProposal...)
-	require.NoError(t, err)
+	params := suite.GovKeeper.GetParams(ctx)
+	cancelProposalBurnRate := params.ProposalCancelBurnRate
+	burnRate := sdk.MustNewDecFromStr(cancelProposalBurnRate)
+
+	var burnDepositAmount sdk.Coins
+	for _, deposit := range deposits {
+		burnAmount := sdk.NewCoin(
+			deposit.Denom,
+			sdk.NewDecFromInt(deposit.Amount).Mul(burnRate).RoundInt(),
+		)
+		burnDepositAmount = append(burnDepositAmount, burnAmount)
+	}
+
+	communityFund := deposits.Sub(burnDepositAmount...)
 
 	// get the community pool funds
 	beforeCommunityFund := suite.DistributionKeeper.GetFeePoolCommunityCoins(ctx)
@@ -410,10 +421,8 @@ func TestProposalCanceledEndblocker(t *testing.T) {
 
 	macc = suite.GovKeeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
-	require.Equal(t, beforeCommunityFund.Add(minDepositsForProposalInDec...), afterCommunityFund)
+	require.Equal(t, beforeCommunityFund.Add(sdk.NewDecCoinsFromCoins(communityFund...)...), afterCommunityFund)
 	require.True(t, suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).IsEqual(initialModuleAccCoins))
-	require.True(t, suite.BankKeeper.GetAllBalances(ctx, proposer).IsEqual(intitalProposerBalance.Sub(minDepositsForProposal...)))
-	require.True(t, suite.BankKeeper.GetAllBalances(ctx, depositer).IsEqual(depositerBalance))
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {

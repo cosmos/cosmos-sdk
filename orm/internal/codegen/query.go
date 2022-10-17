@@ -243,6 +243,7 @@ func (g queryProtoGen) genSingletonRPCMethods(msg *protogen.Message) error {
 	g.msgs.F("")
 	return nil
 }
+
 func (g queryProtoGen) startRequestType(format string, args ...any) {
 	g.startRequestResponseType("request", format, args...)
 }
@@ -298,7 +299,6 @@ func (w *writer) F(format string, args ...interface{}) {
 	if err != nil {
 		panic(err)
 	}
-
 }
 
 func (w *writer) Indent() {

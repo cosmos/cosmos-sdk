@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
-	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
+	"cosmossdk.io/core/appmodule"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -33,7 +34,7 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -202,15 +203,15 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Provide(ProvideModuleBasic, ProvideModule),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type mintInputs struct {
+type MintInputs struct {
 	depinject.In
 
 	ModuleKey              depinject.OwnModuleKey
@@ -228,14 +229,14 @@ type mintInputs struct {
 	StakingKeeper types.StakingKeeper
 }
 
-type mintOutputs struct {
+type MintOutputs struct {
 	depinject.Out
 
 	MintKeeper keeper.Keeper
 	Module     runtime.AppModuleWrapper
 }
 
-func provideModule(in mintInputs) mintOutputs {
+func ProvideModule(in MintInputs) MintOutputs {
 	feeCollectorName := in.Config.FeeCollectorName
 	if feeCollectorName == "" {
 		feeCollectorName = authtypes.FeeCollectorName
@@ -260,5 +261,5 @@ func provideModule(in mintInputs) mintOutputs {
 	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn, in.LegacySubspace)
 
-	return mintOutputs{MintKeeper: k, Module: runtime.WrapAppModule(m)}
+	return MintOutputs{MintKeeper: k, Module: runtime.WrapAppModule(m)}
 }

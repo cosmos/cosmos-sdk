@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Distribution Overview
-parent:
-  title: "distribution"
--->
+---
+sidebar_position: 1
+---
 
 # `x/distribution`
 
@@ -153,7 +150,9 @@ type DecCoin struct {
 }
 ```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
+```
 
 ## Validator Distribution
 
@@ -196,7 +195,9 @@ it can be updated with governance or the address with authority.
 
 * Params: `0x09 | ProtocolBuffer(Params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30
+```
 
 # Begin Block
 
@@ -210,7 +211,7 @@ block, the different claims on the fees collected are updated as follows:
 
 ## The Distribution Scheme
 
-See [params](07_params.md) for description of parameters.
+See [params](#params) for description of parameters.
 
 Let `fees` be the total fees collected in the previous block, including
 inflationary rewards to the stake. All fees are collected in a specific module
@@ -249,8 +250,7 @@ validator sets a maximum rate and a maximum daily increase. These maximums canno
 
 The outstanding rewards that the operator is entitled to are stored in
 `ValidatorAccumulatedCommission`, while the rewards the delegators are entitled
-to are stored in `ValidatorCurrentRewards`. The [F1 fee distribution
-scheme](01_concepts.md) is used to calculate the rewards per delegator as they
+to are stored in `ValidatorCurrentRewards`. The [F1 fee distribution scheme](#concepts) is used to calculate the rewards per delegator as they
 withdraw or update their delegation, and is thus not handled in `BeginBlock`.
 
 ### Example Distribution
@@ -281,7 +281,9 @@ The withdraw address cannot be any of the module accounts. These accounts are bl
 
 Response:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L31-L41
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L31-L41
+```
 
 ```go
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error
@@ -331,7 +333,9 @@ The final calculated stake is equivalent to the actual staked coins in the deleg
 
 Response:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L46-L56
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L46-L56
+```
 
 ## WithdrawValidatorCommission
 
@@ -393,7 +397,9 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 
 Distribution module params can be updated through `MsgUpdateParams`, which can be done using governance proposal and the signer will always be gov module account address. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/8822ef2695a1eb8cb30b7432f58f631c73951f1d/proto/cosmos/distribution/v1beta1/tx.proto#L106-L119
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/8822ef2695a1eb8cb30b7432f58f631c73951f1d/proto/cosmos/distribution/v1beta1/tx.proto#L106-L119
+```
 
 The message handling can fail if:
 

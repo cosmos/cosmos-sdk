@@ -1,7 +1,7 @@
 # Server
 
 The `server` package is responsible for providing the mechanisms necessary to
-start an ABCI Tendermint application and provides the CLI framework (based on [cobra](github.com/spf13/cobra))
+start an ABCI Tendermint application and provides the CLI framework (based on [cobra](https://github.com/spf13/cobra))
 necessary to fully bootstrap an application. The package exposes two core functions: `StartCmd`
 and `ExportCmd` which creates commands to start the application and export state respectively.
 

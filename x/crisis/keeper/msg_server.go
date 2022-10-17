@@ -57,11 +57,6 @@ func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInva
 			types.EventTypeInvariant,
 			sdk.NewAttribute(types.AttributeKeyRoute, msg.InvariantRoute),
 		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCrisis),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
 	})
 
 	return &types.MsgVerifyInvariantResponse{}, nil

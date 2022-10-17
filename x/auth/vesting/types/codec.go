@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+	groupcodec "github.com/cosmos/cosmos-sdk/x/group/codec"
 )
 
 // RegisterLegacyAminoCodec registers the vesting interfaces and concrete types on the
@@ -24,6 +25,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&PermanentLockedAccount{}, "cosmos-sdk/PermanentLockedAccount", nil)
 	legacy.RegisterAminoMsg(cdc, &MsgCreateVestingAccount{}, "cosmos-sdk/MsgCreateVestingAccount")
 	legacy.RegisterAminoMsg(cdc, &MsgCreatePermanentLockedAccount{}, "cosmos-sdk/MsgCreatePermLockedAccount")
+	legacy.RegisterAminoMsg(cdc, &MsgCreatePeriodicVestingAccount{}, "cosmos-sdk/MsgCreatePeriodVestAccount")
 }
 
 // RegisterInterface associates protoName with AccountI and VestingAccount
@@ -79,4 +81,5 @@ func init() {
 	// used to properly serialize MsgGrant, MsgExec and MsgSubmitProposal instances
 	RegisterLegacyAminoCodec(authzcodec.Amino)
 	RegisterLegacyAminoCodec(govcodec.Amino)
+	RegisterLegacyAminoCodec(groupcodec.Amino)
 }

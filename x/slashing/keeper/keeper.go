@@ -10,6 +10,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Keeper of the slashing store
@@ -70,8 +71,8 @@ func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.P
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
 // module to make the necessary validator changes.
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.Dec, power, distributionHeight int64) {
-	coinsBurned := k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
+func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.Dec, power, distributionHeight int64, infraction stakingtypes.Infraction) {
+	coinsBurned := k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction, infraction)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,

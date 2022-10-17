@@ -65,20 +65,12 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, govtypes.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.GetProposer()),
-		),
-	)
-
 	if votingStarted {
-		submitEvent := sdk.NewEvent(govtypes.EventTypeSubmitProposal,
-			sdk.NewAttribute(govtypes.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.Id)),
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(govtypes.EventTypeSubmitProposal,
+				sdk.NewAttribute(govtypes.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.Id)),
+			),
 		)
-
-		ctx.EventManager().EmitEvent(submitEvent)
 	}
 
 	return &v1.MsgSubmitProposalResponse{
@@ -131,14 +123,6 @@ func (k msgServer) Vote(goCtx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResp
 		},
 	)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, govtypes.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Voter),
-		),
-	)
-
 	return &v1.MsgVoteResponse{}, nil
 }
 
@@ -161,14 +145,6 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) 
 		},
 	)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, govtypes.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Voter),
-		),
-	)
-
 	return &v1.MsgVoteWeightedResponse{}, nil
 }
 
@@ -189,14 +165,6 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 		[]metrics.Label{
 			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
 		},
-	)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, govtypes.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Depositor),
-		),
 	)
 
 	if votingStarted {

@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -123,6 +122,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.accountKeeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.accountKeeper)
+
 	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer(), am.legacySubspace)
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(err)
@@ -184,15 +184,15 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Provide(ProvideModuleBasic, ProvideModule),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type authInputs struct {
+type AuthInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -203,14 +203,14 @@ type authInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-type authOutputs struct {
+type AuthOutputs struct {
 	depinject.Out
 
 	AccountKeeper keeper.AccountKeeper
 	Module        runtime.AppModuleWrapper
 }
 
-func provideModule(in authInputs) authOutputs {
+func ProvideModule(in AuthInputs) AuthOutputs {
 	maccPerms := map[string][]string{}
 	for _, permission := range in.Config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
@@ -219,5 +219,5 @@ func provideModule(in authInputs) authOutputs {
 	k := keeper.NewAccountKeeper(in.Cdc, in.Key, types.ProtoBaseAccount, maccPerms, in.Config.Bech32Prefix, types.NewModuleAddress(govtypes.ModuleName).String())
 	m := NewAppModule(in.Cdc, k, simulation.RandomGenesisAccounts, in.LegacySubspace)
 
-	return authOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}
+	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}
 }

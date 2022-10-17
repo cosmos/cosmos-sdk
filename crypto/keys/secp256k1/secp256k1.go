@@ -37,7 +37,7 @@ func (privKey *PrivKey) Bytes() []byte {
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
 func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
-	_, pubkeyObject := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey.Key)
+	_, pubkeyObject := secp256k1.PrivKeyFromBytes(privKey.Key)
 	pk := pubkeyObject.SerializeCompressed()
 	return &PubKey{Key: pk}
 }

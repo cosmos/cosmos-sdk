@@ -164,6 +164,6 @@ replace (
 )
 
 replace (
-	cosmossdk.io/core => ../core
 	cosmossdk.io/api => ../api
+	cosmossdk.io/core => ../core
 )

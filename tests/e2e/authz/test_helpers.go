@@ -1,4 +1,4 @@
-package testutil
+package authz
 
 import (
 	"github.com/cosmos/cosmos-sdk/testutil"

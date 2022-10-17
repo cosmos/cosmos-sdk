@@ -150,7 +150,7 @@ func makeTestConfig() depinject.Config {
 
 func makeMinimalConfig() depinject.Config {
 	return depinject.Configs(
-		depinject.Supply(mempool.DefaultMempoolFactory),
+		depinject.Supply(mempool.DefaultPriorityMempool()),
 		appconfig.Compose(&appv1alpha1.Config{
 			Modules: []*appv1alpha1.ModuleConfig{
 				{

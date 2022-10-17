@@ -41,13 +41,6 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/context.go#L17-L42
   `Events` by defining various `Types` and `Attributes` or use the common definitions found in `types/`. Clients can subscribe or query for these `Events`. These `Events` are collected throughout `DeliverTx`, `BeginBlock`, and `EndBlock` and are returned to Tendermint for indexing. For example:
 * **Priority:** The transaction priority, only relevant in `CheckTx`.
 
-```go
-ctx.EventManager().EmitEvent(sdk.NewEvent(
-    sdk.EventTypeMessage,
-    sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory)),
-)
-```
-
 ## Go Context Package
 
 A basic `Context` is defined in the [Golang Context Package](https://pkg.go.dev/context). A `Context`

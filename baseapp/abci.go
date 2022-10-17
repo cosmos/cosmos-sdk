@@ -649,7 +649,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 		qms = app.cms.(sdk.MultiStore)
 	}
 
-	lastBlockHeight := ms.LatestVersion()
+	lastBlockHeight := qms.LatestVersion()
 	if height > lastBlockHeight {
 		return sdk.Context{},
 			sdkerrors.Wrap(
@@ -671,7 +671,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 			)
 	}
 
-	cacheMS, err := ms.CacheMultiStoreWithVersion(height)
+	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
 	if err != nil {
 		return sdk.Context{},
 			sdkerrors.Wrapf(

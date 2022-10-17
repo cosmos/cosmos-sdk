@@ -1,0 +1,123 @@
+syntax = "proto3";
+package cosmos.staking.v1beta1;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
+
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/staking/v1beta1/staking.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+
+// Msg defines the staking Msg service.
+service Msg {
+  // CreateValidator defines a method for creating a new validator.
+  rpc CreateValidator(MsgCreateValidator) returns (MsgCreateValidatorResponse);
+
+  // EditValidator defines a method for editing an existing validator.
+  rpc EditValidator(MsgEditValidator) returns (MsgEditValidatorResponse);
+
+  // Delegate defines a method for performing a delegation of coins
+  // from a delegator to a validator.
+  rpc Delegate(MsgDelegate) returns (MsgDelegateResponse);
+
+  // BeginRedelegate defines a method for performing a redelegation
+  // of coins from a delegator and source validator to a destination validator.
+  rpc BeginRedelegate(MsgBeginRedelegate) returns (MsgBeginRedelegateResponse);
+
+  // Undelegate defines a method for performing an undelegation from a
+  // delegate and a validator.
+  rpc Undelegate(MsgUndelegate) returns (MsgUndelegateResponse);
+}
+
+// MsgCreateValidator defines a SDK message for creating a new validator.
+message MsgCreateValidator {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  Description     description         = 1 [(gogoproto.nullable) = false];
+  CommissionRates commission          = 2 [(gogoproto.nullable) = false];
+  string          min_self_delegation = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
+    (gogoproto.nullable)   = false
+  ];
+  string                   delegator_address = 4 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_address = 5 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+  cosmos.base.v1beta1.Coin value             = 7 [(gogoproto.nullable) = false];
+}
+
+// MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
+message MsgCreateValidatorResponse {}
+
+// MsgEditValidator defines a SDK message for editing an existing validator.
+message MsgEditValidator {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  Description description       = 1 [(gogoproto.nullable) = false];
+  string      validator_address = 2 [(gogoproto.moretags) = "yaml:\"address\""];
+
+  // We pass a reference to the new commission rate and min self delegation as
+  // it's not mandatory to update. If not updated, the deserialized rate will be
+  // zero with no way to distinguish if an update was intended.
+  // REF: #2373
+  string commission_rate = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags)   = "yaml:\"commission_rate\""
+  ];
+  string min_self_delegation = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags)   = "yaml:\"min_self_delegation\""
+  ];
+}
+
+// MsgEditValidatorResponse defines the Msg/EditValidator response type.
+message MsgEditValidatorResponse {}
+
+// MsgDelegate defines a SDK message for performing a delegation of coins
+// from a delegator to a validator.
+message MsgDelegate {
+  option (gogoproto.equal) = false;
+
+  string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgDelegateResponse defines the Msg/Delegate response type.
+message MsgDelegateResponse {}
+
+// MsgBeginRedelegate defines a SDK message for performing a redelegation
+// of coins from a delegator and source validator to a destination validator.
+message MsgBeginRedelegate {
+  option (gogoproto.equal) = false;
+
+  string                   delegator_address     = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_src_address = 2 [(gogoproto.moretags) = "yaml:\"validator_src_address\""];
+  string                   validator_dst_address = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
+  cosmos.base.v1beta1.Coin amount                = 4 [(gogoproto.nullable) = false];
+}
+
+// MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
+message MsgBeginRedelegateResponse {
+  google.protobuf.Timestamp completion_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+// MsgUndelegate defines a SDK message for performing an undelegation from a
+// delegate and a validator.
+message MsgUndelegate {
+  option (gogoproto.equal) = false;
+
+  string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgUndelegateResponse defines the Msg/Undelegate response type.
+message MsgUndelegateResponse {
+  google.protobuf.Timestamp completion_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}

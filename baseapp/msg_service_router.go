@@ -201,11 +201,18 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 			if err := m.ValidateBasic(); err != nil {
 				return nil, err
 			}
-		}
-
-		if msr.circuitBreaker != nil {
-			msgURL := sdk.MsgTypeURL(msg)
-			isAllowed, err := msr.circuitBreaker.IsAllowed(ctx, msgURL)
+			if err := req.ValidateBasic(); err != nil {
+				if mm, ok := req.(getter1); ok {
+					if !mm.GetAmount().Amount.IsZero() {
+						return nil, err
+					}
+				} else {
+					return nil, err
+				}
+			}
+			// Call the method handler from the service description with the handler object.
+			// We don't do any decoding here because the decoding was already done.
+			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), noopDecoder, interceptor)
 			if err != nil {
 				return nil, err
 			}
@@ -253,4 +260,8 @@ func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.I
 func noopDecoder(_ interface{}) error { return nil }
 func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
 	return nil, nil
+}
+
+type getter1 interface {
+	GetAmount() sdk.Coin
 }

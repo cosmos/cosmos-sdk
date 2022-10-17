@@ -94,6 +94,40 @@ By default, the new `MinInitialDepositRatio` parameter is set to zero during mig
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
 
+##### Proposer field to Proposal 
+The `Proposal` state has been updated with proposer field. For proposal state migraton
+developers should ensure to call `v4.AddProposerAddressToProposal` in their upgrade handler.
+
+```go
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	v4 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+)
+
+func (app SimApp) RegisterUpgradeHandlers() {
+	app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
+		func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			// add proposal ids with proposers
+			proposals := make(map[uint64]string)
+			// proposals[1] = "cosmos1luyncewxk4lm24k6gqy8y5dxkj0klr4tu0lmnj" ...
+			v4.AddProposerAddressToProposal(ctx, sdk.NewKVStoreKey(v4.ModuleName), app.appCodec, proposals)
+			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+		})
+}
+
+```
+##### Proposal Cancel Burn Rate param
+The `gov` module has been updated to support the cancel the goverance proposal. When proposal is cancel all the deposits of proposal either burned or send to community pool. the deposits burn rate will be determinted by a new parameter called `ProposalCancelBurnRate` parameter.
+
+```go
+	1. deposits * proposal_cancel_burn_rate will be burned
+	2. deposits * (1 - proposal_cancel_burn_rate) will be send to community pool
+```
+
+By default, the new `ProposalCancelBurnRate` parameter is set to zero during migration. 
+
 #### `x/consensus`
 
 Introducing a new `x/consensus` module to handle managing Tendermint consensus

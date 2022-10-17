@@ -242,7 +242,8 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 }
 
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
-// see: https://github.com/cosmos/cosmos-sdk/issues/13317
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
 func (app *BaseApp) SetQueryMultiStore(ms sdk.MultiStore) {
 	app.qms = ms
 }

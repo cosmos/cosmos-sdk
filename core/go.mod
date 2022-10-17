@@ -31,4 +31,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+// temporary until we tag a new go module
 replace cosmossdk.io/math => ../math

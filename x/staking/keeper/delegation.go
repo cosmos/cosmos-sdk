@@ -697,6 +697,9 @@ func (k Keeper) UnbondAndUndelegateCoins(
 	if err != nil {
 		return amount, err
 	}
+	if amount.IsZero() {
+		return sdk.ZeroInt(), nil
+	}
 
 	val, _ := k.GetValidator(ctx, valAddr)
 	if val.IsBonded() {

@@ -18,6 +18,10 @@ See the official [`ibc-go` documentation](https://ibc.cosmos.network).
 
 Read more about writing smart contracts with CosmWasm at their [documentation site](https://docs.cosmwasm.com/docs/1.0/), or visit [the repository](https://github.com/CosmWasm/cosmwasm).
 
+## EVM
+
+Read more about writing smart contracts with solidity at the official [`evm` documentation page](https://docs.evmos.org/modules/evm/).
+
 
 
 > Note: If you would like to add your tooling to this section, please make a pr to the cosmos-sdk, we will gladly accept it. 

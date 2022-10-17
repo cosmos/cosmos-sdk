@@ -40,7 +40,7 @@ type Keeper struct {
 	legacyRouter v1beta1.Router
 
 	// Msg server router
-	router intermodule.Client
+	interModuleClient intermodule.Client
 
 	config types.Config
 
@@ -77,14 +77,14 @@ func NewKeeper(cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.
 	}
 
 	return &Keeper{
-		storeKey:   key,
-		authKeeper: authKeeper,
-		bankKeeper: bankKeeper,
-		sk:         sk,
-		cdc:        cdc,
-		router:     router,
-		config:     config,
-		authority:  authority,
+		storeKey:          key,
+		authKeeper:        authKeeper,
+		bankKeeper:        bankKeeper,
+		sk:                sk,
+		cdc:               cdc,
+		interModuleClient: router,
+		config:            config,
+		authority:         authority,
 	}
 }
 
@@ -124,7 +124,7 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // Router returns the gov keeper's router
 func (keeper Keeper) Router() intermodule.Client {
-	return keeper.router
+	return keeper.interModuleClient
 }
 
 // LegacyRouter returns the gov keeper's legacy router

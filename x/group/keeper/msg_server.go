@@ -750,7 +750,7 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		// Caching context so that we don't update the store in case of failure.
 		cacheCtx, flush := ctx.CacheContext()
 
-		router := k.router
+		router := k.interModuleClient
 		for _, key := range policyInfo.DerivationKeys {
 			router = router.DerivedClient(key)
 		}

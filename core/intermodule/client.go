@@ -12,7 +12,12 @@ import (
 type Client interface {
 	grpc.ClientConnInterface
 
+	// InvokerByMethod resolves an invoker for the provided method or returns an error.
 	InvokerByMethod(method string) (Invoker, error)
+
+	// InvokerByRequest resolves an invoker for the provided request type or returns an error.
+	// This only works for Msg's as they are routed based on type name in transactions already.
+	// For queries use InvokerByMethod instead.
 	InvokerByRequest(request any) (Invoker, error)
 
 	// DerivedClient returns an inter-module client for the ADR-028 derived
@@ -23,4 +28,5 @@ type Client interface {
 	Address() []byte
 }
 
+// Invoker is an inter-module invoker that has already been resolved to a specific method route.
 type Invoker func(ctx context.Context, request any, opts ...grpc.CallOption) (res any, err error)

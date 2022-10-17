@@ -75,7 +75,7 @@ type Keeper struct {
 	voteByProposalIndex orm.Index
 	voteByVoterIndex    orm.Index
 
-	router intermodule.Client
+	interModuleClient intermodule.Client
 
 	config group.Config
 }
@@ -83,9 +83,9 @@ type Keeper struct {
 // NewKeeper creates a new group keeper.
 func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router intermodule.Client, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
-		key:       storeKey,
-		router:    router,
-		accKeeper: accKeeper,
+		key:               storeKey,
+		interModuleClient: router,
+		accKeeper:         accKeeper,
 	}
 
 	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)

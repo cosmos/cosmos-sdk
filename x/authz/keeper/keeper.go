@@ -24,19 +24,19 @@ import (
 const gasCostPerIteration = uint64(20)
 
 type Keeper struct {
-	storeKey   storetypes.StoreKey
-	cdc        codec.BinaryCodec
-	router     intermodule.Client
-	authKeeper authz.AccountKeeper
+	storeKey          storetypes.StoreKey
+	cdc               codec.BinaryCodec
+	interModuleClient intermodule.Client
+	authKeeper        authz.AccountKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper
 func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, router intermodule.Client, ak authz.AccountKeeper) Keeper {
 	return Keeper{
-		storeKey:   storeKey,
-		cdc:        cdc,
-		router:     router,
-		authKeeper: ak,
+		storeKey:          storeKey,
+		cdc:               cdc,
+		interModuleClient: router,
+		authKeeper:        ak,
 	}
 }
 
@@ -132,7 +132,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 			}
 		}
 
-		handler, err := k.router.InvokerByRequest(msg)
+		handler, err := k.interModuleClient.InvokerByRequest(msg)
 		if err != nil {
 			return nil, err
 		}

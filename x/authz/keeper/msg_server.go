@@ -36,7 +36,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 	}
 
 	t := authorization.MsgTypeURL()
-	if _, err := k.router.InvokerByMethod(t); err != nil {
+	if _, err := k.interModuleClient.InvokerByMethod(t); err != nil {
 		return nil, sdkerrors.ErrInvalidType.Wrapf("%s doesn't exist or is blocked: %v", t, err)
 	}
 

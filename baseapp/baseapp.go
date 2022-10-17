@@ -45,7 +45,17 @@ type (
 type BaseApp struct { // nolint: maligned
 	// initialized on creation
 	logger            log.Logger
+<<<<<<< HEAD
 	name              string // application name from abci.Info
+=======
+	name              string               // application name from abci.Info
+	db                dbm.DB               // common DB backend
+	cms               sdk.CommitMultiStore // Main (uncached) state
+	qms               sdk.MultiStore       // Optional alternative multistore for querying only.
+	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
+	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
+	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
+>>>>>>> 15accd76f (feat: support alternative query multistore (#13529))
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 

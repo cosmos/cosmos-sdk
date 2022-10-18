@@ -290,14 +290,16 @@ func IsEmpty(mempool Mempool) error {
 	if mp.priorityIndex.Len() != 0 {
 		return fmt.Errorf("priorityIndex not empty")
 	}
-	for key, v := range mp.priorityCounts {
+	for k := range mp.priorityCounts {
+		v := mp.priorityCounts[k]
 		if v != 0 {
-			return fmt.Errorf("priorityCounts not zero at %v, got %v", key, v)
+			return fmt.Errorf("priorityCounts not zero at %v, got %v", k, v)
 		}
 	}
-	for key, v := range mp.senderIndices {
+	for k := range mp.senderIndices {
+		v := mp.senderIndices[k]
 		if v.Len() != 0 {
-			return fmt.Errorf("senderIndex not empty for sender %v", key)
+			return fmt.Errorf("senderIndex not empty for sender %v", k)
 		}
 	}
 	return nil

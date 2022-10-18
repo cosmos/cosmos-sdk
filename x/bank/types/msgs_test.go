@@ -294,7 +294,6 @@ func TestUpdateDenomMetadataGetSignBytes(t *testing.T) {
 	res := msg.GetSignBytes()
 
 	expected := `{"type":"cosmos-sdk/MsgUpdateDenomMetadata","value":{"description":"description","metadata":{"denom_units":[{"aliases":["microatom"],"denom":"uatom"}],"description":"The native staking token of the Cosmos Hub.","name":"Cosmos Hub Atom","symbol":"ATOM"},"title":"title"}}`
-	print(string(res))
 	require.Equal(t, expected, string(res))
 }
 

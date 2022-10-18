@@ -40,6 +40,29 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (grpc) [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485) Implement a new gRPC query, `/cosmos/base/node/v1beta1/config`, which provides operator configuration.
+* [#13557](https://github.com/cosmos/cosmos-sdk/pull/#13557) - Add `GenSignedMockTx`. This can be used as workaround for #12437 revertion. `v0.46+` contains as well a `GenSignedMockTx` that behaves the same way.
+
+### Bug Fixes
+
+* [#13564](https://github.com/cosmos/cosmos-sdk/pull/13564) - Fix `make proto-gen`.
+
+## v0.45.9 - 2022-10-14
+
+ATTENTION:
+
+This is a security release for the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702).
+
+All users should upgrade immediately.
+
+Users *must* add a replace directive in their go.mod for thenew `ics23` package in the SDK:
+
+```go
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+```
+
+### Features
+
+* [#13435](https://github.com/cosmos/cosmos-sdk/pull/13435) Extend error context when a simulation fails.
 
 ### Improvements
 
@@ -47,14 +70,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#13323](https://github.com/cosmos/cosmos-sdk/pull/13323) Ensure `withdraw_rewards` rewards are emitted from all actions that result in rewards being withdrawn.
 * [#13321](https://github.com/cosmos/cosmos-sdk/pull/13321) Add flag to disable fast node migration and usage.
 * (store) [#13326](https://github.com/cosmos/cosmos-sdk/pull/13326) Implementation of ADR-038 file StreamingService, backport #8664.
+* (store) [#13540](https://github.com/cosmos/cosmos-sdk/pull/13540) Default fastnode migration to false to prevent suprises. Operators must enable it, unless they have it enabled already.
 
 ### API Breaking Changes
 
-- (cli) [#13089](https://github.com/cosmos/cosmos-sdk/pull/13089) Fix rollback command don't actually delete multistore versions, added method `RollbackToVersion` to interface `CommitMultiStore` and added method `CommitMultiStore` to `Application` interface.
+* (cli) [#13089](https://github.com/cosmos/cosmos-sdk/pull/13089) Fix rollback command don't actually delete multistore versions, added method `RollbackToVersion` to interface `CommitMultiStore` and added method `CommitMultiStore` to `Application` interface.
 
 ### Bug Fixes
 
+* Implement dragonberry security patch.
+    * For applying the patch please refer to the [RELEASE NOTES](./RELEASE_NOTES.md)
 * (store) [#13459](https://github.com/cosmos/cosmos-sdk/pull/13459) Don't let state listener observe the uncommitted writes.
+
+### Notes
+
+Reverted #12437 due to API breaking changes.
 
 ## v0.45.8 - 2022-08-25
 
@@ -92,7 +122,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/mint) [#12384](https://github.com/cosmos/cosmos-sdk/pull/12384) Ensure `GoalBonded` must be positive when performing `x/mint` parameter validation.
 * (simapp) [#12437](https://github.com/cosmos/cosmos-sdk/pull/12437) fix the non-determinstic behavior in simulations caused by `GenTx` and check
 empty coins slice before it is used to create `banktype.MsgSend`.
-* (x/capability) [12818](https://github.com/cosmos/cosmos-sdk/pull/12818) Use fixed length hex for pointer at FwdCapabilityKey.
+* (x/capability) [#12818](https://github.com/cosmos/cosmos-sdk/pull/12818) Use fixed length hex for pointer at FwdCapabilityKey.
 
 ## [v0.45.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.6) - 2022-06-28
 
@@ -259,7 +289,7 @@ empty coins slice before it is used to create `banktype.MsgSend`.
 
 ### Improvements
 
-* (types) [\#10630](https://github.com/cosmos/cosmos-sdk/pull/10630) Add an `Events` field to the `TxResponse` type that captures _all_ events emitted by a transaction, unlike `Logs` which only contains events emitted during message execution.
+* (types) [\#10630](https://github.com/cosmos/cosmos-sdk/pull/10630) Add an `Events` field to the `TxResponse` type that captures *all* events emitted by a transaction, unlike `Logs` which only contains events emitted during message execution.
 * (x/upgrade) [\#10532](https://github.com/cosmos/cosmos-sdk/pull/10532)  Add `keeper.DumpUpgradeInfoWithInfoToDisk` to include `Plan.Info` in the upgrade-info file.
 * (store) [\#10544](https://github.com/cosmos/cosmos-sdk/pull/10544) Use the new IAVL iterator structure which significantly improves iterator performance.
 
@@ -1269,7 +1299,7 @@ by the new key store:
     * `file`: use encrypted file-based store.
     * `kwallet`: use [KDE Wallet](https://utils.kde.org/projects/kwalletmanager/) service.
     * `pass`: use the [pass](https://www.passwordstore.org/) command line password manager.
-    * `test`: use password-less key store. _For testing purposes only. Use it at your own risk._
+    * `test`: use password-less key store. *For testing purposes only. Use it at your own risk.*
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
 to the new keyring.
 * (keys) [\#5366](https://github.com/cosmos/cosmos-sdk/pull/5366) `keys list` now accepts a `--list-names` option to list key names only, whilst the `keys delete`
@@ -2763,7 +2793,7 @@ BUG FIXES
 
 ## 0.25.0
 
-_October 24th, 2018_
+*October 24th, 2018*
 
 BREAKING CHANGES
 
@@ -3010,7 +3040,7 @@ BUG FIXES
 
 ## 0.24.2
 
-_August 22nd, 2018_
+*August 22nd, 2018*
 
 BUG FIXES
 
@@ -3019,7 +3049,7 @@ BUG FIXES
 
 ## 0.24.1
 
-_August 21st, 2018_
+*August 21st, 2018*
 
 BUG FIXES
 
@@ -3028,7 +3058,7 @@ BUG FIXES
 
 ## 0.24.0
 
-_August 13th, 2018_
+*August 13th, 2018*
 
 BREAKING CHANGES
 
@@ -3144,7 +3174,7 @@ BUG FIXES
 
 ## 0.23.1
 
-_July 27th, 2018_
+*July 27th, 2018*
 
 BUG FIXES
 
@@ -3154,7 +3184,7 @@ BUG FIXES
 
 ## 0.23.0
 
-_July 25th, 2018_
+*July 25th, 2018*
 
 BREAKING CHANGES
 
@@ -3177,7 +3207,7 @@ BUG FIXES
 
 ## 0.22.0
 
-_July 16th, 2018_
+*July 16th, 2018*
 
 BREAKING CHANGES
 
@@ -3196,7 +3226,7 @@ BUG FIXES
 
 ## 0.21.1
 
-_July 14th, 2018_
+*July 14th, 2018*
 
 BUG FIXES
 
@@ -3205,7 +3235,7 @@ BUG FIXES
 
 ## 0.21.0
 
-_July 13th, 2018_
+*July 13th, 2018*
 
 BREAKING CHANGES
 
@@ -3236,7 +3266,7 @@ BUG FIXES
 
 ## 0.20.0
 
-_July 10th, 2018_
+*July 10th, 2018*
 
 BREAKING CHANGES
 
@@ -3379,7 +3409,7 @@ BUG FIXES
 
 ## 0.19.0
 
-_June 13, 2018_
+*June 13, 2018*
 
 BREAKING CHANGES
 
@@ -3419,7 +3449,7 @@ FEATURES
 
 ## 0.18.0
 
-_June 9, 2018_
+*June 9, 2018*
 
 BREAKING CHANGES
 
@@ -3484,45 +3514,45 @@ BUG FIXES
 
 ## 0.17.5
 
-_June 5, 2018_
+*June 5, 2018*
 
 Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
 memory leak)
 
 ## 0.17.4
 
-_May 31, 2018_
+*May 31, 2018*
 
 Update to Tendermint v0.19.7 (WAL fixes and more)
 
 ## 0.17.3
 
-_May 29, 2018_
+*May 29, 2018*
 
 Update to Tendermint v0.19.6 (fix fast-sync halt)
 
 ## 0.17.5
 
-_June 5, 2018_
+*June 5, 2018*
 
 Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
 memory leak)
 
 ## 0.17.4
 
-_May 31, 2018_
+*May 31, 2018*
 
 Update to Tendermint v0.19.7 (WAL fixes and more)
 
 ## 0.17.3
 
-_May 29, 2018_
+*May 29, 2018*
 
 Update to Tendermint v0.19.6 (fix fast-sync halt)
 
 ## 0.17.2
 
-_May 20, 2018_
+*May 20, 2018*
 
 Update to Tendermint v0.19.5 (reduce WAL use, bound the mempool and some rpcs, improve logging)
 

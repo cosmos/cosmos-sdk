@@ -177,7 +177,7 @@ func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposa
 			deposit.Denom,
 			sdk.NewDecFromInt(deposit.Amount).Mul(burnRate).RoundInt(),
 		)
-		burnDepositAmount = append(burnDepositAmount, burnAmount)
+		burnDepositAmount = burnDepositAmount.Add(burnAmount)
 	}
 
 	// burn the deposits
@@ -190,7 +190,7 @@ func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposa
 
 	// send (deposits - burnAmount) to community pool from proposal deposits (gov module)
 	communityPoolAmount := sdk.NewCoins(totalDeposits...).Sub(burnDepositAmount...)
-	err := keeper.dk.FundCommunityPool(ctx, communityPoolAmount, keeper.authKeeper.GetModuleAddress(types.ModuleName))
+	err := keeper.distrkeeper.FundCommunityPool(ctx, communityPoolAmount, keeper.ModuleAccountAddress())
 	if err != nil {
 		panic(err)
 	}

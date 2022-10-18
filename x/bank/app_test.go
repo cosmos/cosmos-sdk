@@ -23,7 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
-	dk "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
@@ -93,7 +93,7 @@ var (
 type suite struct {
 	BankKeeper         bankkeeper.Keeper
 	AccountKeeper      types.AccountKeeper
-	DistributionKeeper dk.Keeper
+	DistributionKeeper distrkeeper.Keeper
 	App                *runtime.App
 }
 

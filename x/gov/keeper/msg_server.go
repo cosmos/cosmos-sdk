@@ -97,7 +97,6 @@ func (k msgServer) CancelProposal(goCtx context.Context, msg *v1.MsgCancelPropos
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, govtypes.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Proposer),
 			sdk.NewAttribute(govtypes.AttributeKeyProposalID, fmt.Sprint(msg.ProposalId)),
 		),

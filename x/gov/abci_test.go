@@ -401,7 +401,7 @@ func TestProposalCanceledEndblocker(t *testing.T) {
 			deposit.Denom,
 			sdk.NewDecFromInt(deposit.Amount).Mul(burnRate).RoundInt(),
 		)
-		burnDepositAmount = append(burnDepositAmount, burnAmount)
+		burnDepositAmount = burnDepositAmount.Add(burnAmount)
 	}
 
 	communityFund := deposits.Sub(burnDepositAmount...)

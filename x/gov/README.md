@@ -1312,6 +1312,7 @@ simd tx gov submit-legacy-proposal software-upgrade v2 --title="Test Proposal" -
 ```
 
 #### cancel-proposal
+
 The `cancel-proposal` command allows the proposer to cancel the goverance proposal before voting period ends.
 
 ```bash

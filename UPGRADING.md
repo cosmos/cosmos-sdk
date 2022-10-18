@@ -94,7 +94,8 @@ By default, the new `MinInitialDepositRatio` parameter is set to zero during mig
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
 
-##### Proposer field to Proposal 
+##### Proposer field to Proposal
+
 The `Proposal` state has been updated with proposer field. For proposal state migraton
 developers should ensure to call `v4.AddProposerAddressToProposal` in their upgrade handler.
 
@@ -118,8 +119,8 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 
 ```
-##### Proposal Cancel Burn Rate param
-The `gov` module has been updated to support the cancel the goverance proposal. When proposal is cancel all the deposits of proposal either burned or send to community pool. the deposits burn rate will be determinted by a new parameter called `ProposalCancelBurnRate` parameter.
+##### Proposal Cancel Burn Rate Param
+The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burned or sent to community pool. The deposits burn rate will be determined by a new parameter called `ProposalCancelBurnRate` parameter.
 
 ```go
 	1. deposits * proposal_cancel_burn_rate will be burned

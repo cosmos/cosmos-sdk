@@ -24,7 +24,7 @@ type Keeper struct {
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
 	// Distribution Keeper
-	dk types.DistributionKeeper
+	distrkeeper types.DistributionKeeper
 
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk types.StakingKeeper
@@ -65,7 +65,7 @@ func (k Keeper) GetAuthority() string {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, sk types.StakingKeeper, dk types.DistributionKeeper,
+	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrkeeper types.DistributionKeeper,
 	router *baseapp.MsgServiceRouter, config types.Config, authority string,
 ) *Keeper {
 	// ensure governance module account is set
@@ -83,15 +83,15 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-		storeKey:   key,
-		authKeeper: authKeeper,
-		bankKeeper: bankKeeper,
-		dk:         dk,
-		sk:         sk,
-		cdc:        cdc,
-		router:     router,
-		config:     config,
-		authority:  authority,
+		storeKey:    key,
+		authKeeper:  authKeeper,
+		bankKeeper:  bankKeeper,
+		distrkeeper: distrkeeper,
+		sk:          sk,
+		cdc:         cdc,
+		router:      router,
+		config:      config,
+		authority:   authority,
 	}
 }
 
@@ -260,6 +260,11 @@ func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time
 func (keeper Keeper) CanceledProposalQueueIterator(ctx sdk.Context) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
 	return sdk.KVStorePrefixIterator(store, types.CanceledProposalQueuePrefix)
+}
+
+// ModuleAccountAddress returns gov module account address
+func (keeper Keeper) ModuleAccountAddress() sdk.AccAddress {
+	return keeper.authKeeper.GetModuleAddress(types.ModuleName)
 }
 
 // assertMetadataLength returns an error if given metadata length

@@ -307,6 +307,39 @@ func (s *MempoolTestSuite) TestTxOrder() {
 			},
 			order: []int{3, 2, 0, 4, 1, 5, 6, 7, 8},
 		},
+		{
+			txs: []txSpec{
+				{p: 5, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sb},
+			},
+			order: []int{2, 3, 0, 1},
+		},
+		{
+			txs: []txSpec{
+				{p: 5, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 20, n: 2, a: sb},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sc},
+				{p: 5, n: 1, a: sc},
+			},
+			order: []int{5, 4, 3, 2, 0, 1},
+		},
+		// TODO find tx insert order which fails
+		// create test with random orders of these txs
+		{
+			txs: []txSpec{
+				{p: 5, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sb},
+				{p: 20, n: 2, a: sb},
+				{p: 5, n: 1, a: sc},
+				{p: 99, n: 2, a: sc},
+			},
+			order: []int{4, 5, 2, 3, 0, 1},
+		},
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
@@ -319,6 +352,8 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				err := pool.Insert(c, tx)
 				require.NoError(t, err)
 			}
+
+			mempool.DebugPrintKeys(pool)
 
 			orderedTxs, err := pool.Select(nil, 1000)
 			require.NoError(t, err)
@@ -333,9 +368,13 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				require.NoError(t, pool.Remove(tx))
 			}
 
-			require.Equal(t, 0, pool.CountTx())
+			require.NoError(t, mempool.IsEmpty(pool))
 		})
 	}
+}
+
+func (s *MempoolTestSuite) TestPriorityTies() {
+
 }
 
 type MempoolTestSuite struct {

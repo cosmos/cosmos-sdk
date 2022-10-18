@@ -48,7 +48,7 @@ func (t testPubKey) Type() string { panic("implement me") }
 
 // testTx is a dummy implementation of Tx used for testing.
 type testTx struct {
-	hash     [32]byte
+	id       int
 	priority int64
 	nonce    uint64
 	address  sdk.AccAddress
@@ -73,8 +73,6 @@ var (
 	_ signing.SigVerifiableTx = (*testTx)(nil)
 	_ cryptotypes.PubKey      = (*testPubKey)(nil)
 )
-
-func (tx testTx) GetHash() [32]byte { return tx.hash }
 
 func (tx testTx) Size() int64 { return 1 }
 
@@ -169,7 +167,6 @@ func TestDefaultMempool(t *testing.T) {
 
 type txSpec struct {
 	i int
-	h int
 	p int
 	n int
 	a sdk.AccAddress
@@ -307,6 +304,18 @@ func (s *MempoolTestSuite) TestTxOrder() {
 			},
 			order: []int{3, 2, 0, 4, 1, 5, 6, 7, 8},
 		},
+		/*
+			The next 4 tests are different permutations of the same set:
+
+			  		{p: 5, n: 1, a: sa},
+					{p: 10, n: 2, a: sa},
+					{p: 20, n: 2, a: sb},
+					{p: 5, n: 1, a: sb},
+					{p: 99, n: 2, a: sc},
+					{p: 5, n: 1, a: sc},
+
+			which exercises the actions required to resolve priority ties.
+		*/
 		{
 			txs: []txSpec{
 				{p: 5, n: 1, a: sa},
@@ -356,19 +365,17 @@ func (s *MempoolTestSuite) TestTxOrder() {
 
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
-				tx := testTx{hash: [32]byte{byte(i)}, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
 				c := ctx.WithPriority(tx.priority)
 				err := pool.Insert(c, tx)
 				require.NoError(t, err)
 			}
 
-			mempool.DebugPrintKeys(pool)
-
 			orderedTxs, err := pool.Select(nil, 1000)
 			require.NoError(t, err)
 			var txOrder []int
 			for _, tx := range orderedTxs {
-				txOrder = append(txOrder, int(tx.(testTx).hash[0]))
+				txOrder = append(txOrder, tx.(testTx).id)
 			}
 			require.Equal(t, tt.order, txOrder)
 			require.NoError(t, validateOrder(orderedTxs))
@@ -383,7 +390,50 @@ func (s *MempoolTestSuite) TestTxOrder() {
 }
 
 func (s *MempoolTestSuite) TestPriorityTies() {
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)
+	sa := accounts[0].Address
+	sb := accounts[1].Address
+	sc := accounts[2].Address
 
+	txSet := []txSpec{
+		{p: 5, n: 1, a: sc},
+		{p: 99, n: 2, a: sc},
+		{p: 5, n: 1, a: sb},
+		{p: 20, n: 2, a: sb},
+		{p: 5, n: 1, a: sa},
+		{p: 10, n: 2, a: sa},
+	}
+
+	for i := 0; i < 100; i++ {
+		s.resetMempool()
+		var shuffled []txSpec
+		for _, t := range txSet {
+			tx := txSpec{
+				p: t.p,
+				n: t.n,
+				a: t.a,
+			}
+			shuffled = append(shuffled, tx)
+		}
+		rand.Shuffle(len(shuffled), func(i, j int) { shuffled[i], shuffled[j] = shuffled[j], shuffled[i] })
+
+		for id, ts := range shuffled {
+			tx := testTx{priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a, id: id}
+			c := ctx.WithPriority(tx.priority)
+			err := s.mempool.Insert(c, tx)
+			s.NoError(err)
+		}
+		selected, err := s.mempool.Select(nil, 1000)
+		s.NoError(err)
+		var orderedTxs []txSpec
+		for _, tx := range selected {
+			ttx := tx.(testTx)
+			ts := txSpec{p: int(ttx.priority), n: int(ttx.nonce), a: ttx.address}
+			orderedTxs = append(orderedTxs, ts)
+		}
+		s.Equal(txSet, orderedTxs)
+	}
 }
 
 type MempoolTestSuite struct {
@@ -490,7 +540,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	mp := s.mempool
 
 	for _, otx := range generated {
-		tx := testTx{hash: otx.hash, priority: otx.priority, nonce: otx.nonce, address: otx.address}
+		tx := testTx{id: otx.id, priority: otx.priority, nonce: otx.nonce, address: otx.address}
 		c := ctx.WithPriority(tx.priority)
 		err := mp.Insert(c, tx)
 		require.NoError(t, err)
@@ -522,7 +572,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	mp := s.mempool
 
 	for _, otx := range shuffled {
-		tx := testTx{hash: otx.hash, priority: otx.priority, nonce: otx.nonce, address: otx.address}
+		tx := testTx{id: otx.id, priority: otx.priority, nonce: otx.nonce, address: otx.address}
 		c := ctx.WithPriority(tx.priority)
 		err := mp.Insert(c, tx)
 		require.NoError(t, err)
@@ -538,9 +588,9 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 		otx := ordered[i]
 		stx := selected[i].(testTx)
 		orderedStr = fmt.Sprintf("%s\n%s, %d, %d; %d",
-			orderedStr, otx.address, otx.priority, otx.nonce, otx.hash[0])
+			orderedStr, otx.address, otx.priority, otx.nonce, otx.id)
 		selectedStr = fmt.Sprintf("%s\n%s, %d, %d; %d",
-			selectedStr, stx.address, stx.priority, stx.nonce, stx.hash[0])
+			selectedStr, stx.address, stx.priority, stx.nonce, stx.id)
 	}
 
 	require.NoError(t, err)
@@ -591,7 +641,7 @@ func genRandomTxs(seed int64, countTx int, countAccount int) (res []testTx) {
 			priority: priority,
 			nonce:    nonce,
 			address:  addr,
-			hash:     [32]byte{byte(i)}})
+			id:       i})
 	}
 
 	return res
@@ -655,7 +705,7 @@ func genOrderedTxs(seed int64, maxTx int, numAcc int) (ordered []testTx, shuffle
 			tx = testTx{nonce: nonce, address: sender, priority: txCursor}
 			samepChain[sender.String()] = true
 		}
-		tx.hash = [32]byte{byte(i)}
+		tx.id = i
 		accountNonces[tx.address.String()] = tx.nonce
 		ordered = append(ordered, tx)
 		ptx = tx
@@ -670,7 +720,7 @@ func genOrderedTxs(seed int64, maxTx int, numAcc int) (ordered []testTx, shuffle
 			priority: item.priority,
 			nonce:    item.nonce,
 			address:  item.address,
-			hash:     item.hash,
+			id:       item.id,
 		}
 		shuffled = append(shuffled, tx)
 	}

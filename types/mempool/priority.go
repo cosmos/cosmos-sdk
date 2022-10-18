@@ -119,22 +119,9 @@ func (mp *priorityMempool) Insert(ctx sdk.Context, tx Tx) error {
 	}
 
 	mp.priorityCounts[priority] = mp.priorityCounts[priority] + 1
+
 	// Since senderIndex is scored by nonce, a changed priority will overwrite the existing key.
 	senderTx := senderIndex.Set(key, tx)
-
-	// multiple txs at the same priority require a weight to differentiate them.
-	//if mp.priorityCounts[priority] > 1 {
-	//	// needs a weight
-	//	key.weight = senderWeight(senderTx)
-	//}
-	//if mp.priorityCounts[priority] == 2 {
-	//
-	//}
-	//prevSenderTx := senderTx.Prev()
-	//if prevSenderTx != nil && mp.priorityCounts[prevSenderTx.Key().(txMeta).priority] > 1 {
-	//	// previous elements need their weights updated now
-	//	// delete/insert
-	//}
 
 	// Since mp.priorityIndex is scored by priority, then sender, then nonce, a changed priority will create a new key,
 	// so we must remove the old key and re-insert it to avoid having the same tx with different priorityIndex indexed
@@ -162,7 +149,7 @@ func (mp *priorityMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 	var selectedTxs []Tx
 	var txBytes int64
 	mp.senderCursors = make(map[string]*huandu.Element)
-	mp.reorderByWeight()
+	mp.reorderPriorityTies()
 
 	priorityNode := mp.priorityIndex.Front()
 	for priorityNode != nil {
@@ -212,7 +199,7 @@ type reorderKey struct {
 	tx        Tx
 }
 
-func (mp *priorityMempool) reorderByWeight() {
+func (mp *priorityMempool) reorderPriorityTies() {
 	node := mp.priorityIndex.Front()
 	var reordering []reorderKey
 	for node != nil {

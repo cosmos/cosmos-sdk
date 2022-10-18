@@ -66,6 +66,8 @@ func newBuilder(cdc codec.Codec) *wrapper {
 	}
 }
 
+// Size returns the size of the transaction, but is only correct immediately after decoding a proto-marshal transaction.
+// It should not be used in any other cases.
 func (w *wrapper) Size() int64 {
 	return w.txSize
 }

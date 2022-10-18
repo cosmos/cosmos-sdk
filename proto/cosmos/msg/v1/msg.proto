@@ -50,3 +50,18 @@ extend google.protobuf.MessageOptions {
   // annotation, whereas this one operates on a protobuf _message_.
   string legacy_amino_encoding = 11110002;
 }
+
+extend google.protobuf.FieldOptions {
+  // legacy_amino_field_name sets a different field name (i.e. key name) in
+  // the JSON object.
+  //
+  // Example:
+  //
+  // message Foo {
+  //   string bar = 1 [(cosmos.msg.v1.legacy_amino_field_name) = "baz"];
+  // }
+  //
+  // Then the Amino encoding of Foo will be:
+  // `{"baz":"some value"}`
+  string legacy_amino_field_name = 11110003;
+}

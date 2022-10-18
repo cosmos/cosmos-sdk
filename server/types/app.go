@@ -60,7 +60,7 @@ type (
 	// ApplicationQueryService defines an extension of the Application interface
 	// that facilitates gRPC query Services.
 	//
-	// NOTE: This interfaces exists only in the v0.46.x line to ensure the existing
+	// NOTE: This interfaces exists only in the v0.45.x line to ensure the existing
 	// Application interface does not introduce API breaking changes.
 	ApplicationQueryService interface {
 		// RegisterNodeService registers the node gRPC Query service.

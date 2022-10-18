@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (grpc) [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485) Implement a new gRPC query, `/cosmos/base/node/v1beta1/config`, which provides operator configuration.
+* [#13577](https://github.com/cosmos/cosmos-sdk/pull/13577) Added `ApplicationQueryService` interface (the related method is added directly to the `Application` interface and `ApplicationQueryService` is removed in the future version). Applications implementing `ApplicationQueryService` enabling registration of module external gRPC services. When implemented the SDK will automatically register chain information query service introduced in [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485).
 
 ### Improvements
 

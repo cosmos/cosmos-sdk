@@ -28,7 +28,6 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 
 	msgs := suite.govKeeper.GetProposalMessages(suite.ctx, proposalID)
 	suite.Require().Equal(len(tp), len(msgs))
-
 	gotProposal.Messages, err = sdktx.SetMsgs(msgs)
 	suite.Require().NoError(err)
 

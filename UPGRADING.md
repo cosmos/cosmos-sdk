@@ -67,6 +67,21 @@ the correct code.
 
 ### Modules
 
+#### `**all**`
+
+`EventTypeMessage` events, with `sdk.AttributeKeyModule` and `sdk.AttributeKeySender` are now emitted directly at message excecution (in `baseapp`).
+This means that you can remove the following boilerplate from all your custom modules:
+
+```go
+ctx.EventManager().EmitEvent(
+	sdk.NewEvent(
+		sdk.EventTypeMessage,
+		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		sdk.NewAttribute(sdk.AttributeKeySender, `signer/sender`),
+	),
+)
+```
+
 #### `x/gov`
 
 ##### Minimum Proposal Deposit At Time of Submission

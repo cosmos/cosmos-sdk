@@ -180,15 +180,12 @@ func (mp *priorityMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 
 			key := senderTx.Key().(txMeta)
 
-			fmt.Printf("read key: %v\n", key)
-
 			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
 			if key.priority < nextHighestPriority {
 				break
 			} else if key.priority == nextHighestPriority {
 				weight := mp.scores[txMeta{nonce: key.nonce, sender: key.sender}].weight
 				if weight < nextPriorityNode.Key().(txMeta).weight {
-					fmt.Printf("skipping %v due to weight %v\n", key, weight)
 					break
 				}
 			}

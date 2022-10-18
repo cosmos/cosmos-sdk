@@ -60,6 +60,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v8.0
 
 ### Improvements
 
+* [#13585](https://github.com/cosmos/cosmos-sdk/pull/13585) Bump Tendermint to `v0.34.22`.
 * (auth) [#13460](https://github.com/cosmos/cosmos-sdk/pull/13460) The `q auth address-by-id` CLI command has been renamed to `q auth address-by-acc-num` to be more explicit. However, the old `address-by-id` version is still kept as an alias, for backwards compatibility.
 * [#13433](https://github.com/cosmos/cosmos-sdk/pull/13433) Remove dead code in cacheMergeIterator `Domain()`.
 

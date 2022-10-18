@@ -48,7 +48,7 @@ service Msg {
 // MsgSetWithdrawAddress sets the withdraw address for
 // a delegator (or validator self-delegation).
 message MsgSetWithdrawAddress {
-  option (cosmos.msg.v1.signer) = "delegator_address";
+  option (cosmos.msg.v1.signer)            = "delegator_address";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgSetWithdrawAddress";
 
   option (gogoproto.equal)           = false;
@@ -65,7 +65,7 @@ message MsgSetWithdrawAddressResponse {}
 // MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
 // from a single validator.
 message MsgWithdrawDelegatorReward {
-  option (cosmos.msg.v1.signer) = "delegator_address";
+  option (cosmos.msg.v1.signer)            = "delegator_address";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgWithdrawDelegatorReward";
 
   option (gogoproto.equal)           = false;
@@ -86,7 +86,7 @@ message MsgWithdrawDelegatorRewardResponse {
 // MsgWithdrawValidatorCommission withdraws the full commission to the validator
 // address.
 message MsgWithdrawValidatorCommission {
-  option (cosmos.msg.v1.signer) = "validator_address";
+  option (cosmos.msg.v1.signer)            = "validator_address";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgWithdrawValCommission";
 
   option (gogoproto.equal)           = false;
@@ -106,7 +106,7 @@ message MsgWithdrawValidatorCommissionResponse {
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 message MsgFundCommunityPool {
-  option (cosmos.msg.v1.signer) = "depositor";
+  option (cosmos.msg.v1.signer)            = "depositor";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgFundCommunityPool";
 
   option (gogoproto.equal)           = false;
@@ -124,7 +124,7 @@ message MsgFundCommunityPoolResponse {}
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParams {
-  option (cosmos.msg.v1.signer) = "authority";
+  option (cosmos.msg.v1.signer)            = "authority";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/distribution/MsgUpdateParams";
 
   // authority is the address of the governance account.
@@ -148,7 +148,7 @@ message MsgUpdateParamsResponse {}
 //
 // Since: cosmos-sdk 0.47
 message MsgCommunityPoolSpend {
-  option (cosmos.msg.v1.signer) = "authority";
+  option (cosmos.msg.v1.signer)            = "authority";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/distr/MsgCommunityPoolSpend";
 
   // authority is the address of the governance account.

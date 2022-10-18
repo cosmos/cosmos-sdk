@@ -33,7 +33,7 @@ service Msg {
 // MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
 // proposal Content.
 message MsgSubmitProposal {
-  option (cosmos.msg.v1.signer) = "proposer";
+  option (cosmos.msg.v1.signer)            = "proposer";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgSubmitProposal";
 
   option (gogoproto.equal)            = false;
@@ -54,7 +54,7 @@ message MsgSubmitProposalResponse {
 
 // MsgVote defines a message to cast a vote.
 message MsgVote {
-  option (cosmos.msg.v1.signer) = "voter";
+  option (cosmos.msg.v1.signer)            = "voter";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgVote";
 
   option (gogoproto.equal)            = false;
@@ -74,7 +74,7 @@ message MsgVoteResponse {}
 //
 // Since: cosmos-sdk 0.43
 message MsgVoteWeighted {
-  option (cosmos.msg.v1.signer) = "voter";
+  option (cosmos.msg.v1.signer)            = "voter";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgVoteWeighted";
 
   option (gogoproto.equal)            = false;
@@ -94,7 +94,7 @@ message MsgVoteWeightedResponse {}
 
 // MsgDeposit defines a message to submit a deposit to an existing proposal.
 message MsgDeposit {
-  option (cosmos.msg.v1.signer) = "depositor";
+  option (cosmos.msg.v1.signer)            = "depositor";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgDeposit";
 
   option (gogoproto.equal)            = false;

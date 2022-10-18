@@ -13,8 +13,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 //
 // Since: cosmos-sdk 0.43
 message SendAuthorization {
-  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/SendAuthorization";
   option (cosmos_proto.implements_interface) = "Authorization";
+  option (cosmos.msg.v1.legacy_amino_name)   = "cosmos-sdk/SendAuthorization";
 
   repeated cosmos.base.v1beta1.Coin spend_limit = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];

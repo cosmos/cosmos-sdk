@@ -27,7 +27,7 @@ service Msg {
 
 // MsgUnjail defines the Msg/Unjail request type
 message MsgUnjail {
-  option (cosmos.msg.v1.signer) = "validator_addr";
+  option (cosmos.msg.v1.signer)            = "validator_addr";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgUnjail";
 
   option (gogoproto.goproto_getters)  = false;
@@ -43,7 +43,7 @@ message MsgUnjailResponse {}
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParams {
-  option (cosmos.msg.v1.signer) = "authority";
+  option (cosmos.msg.v1.signer)            = "authority";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/x/slashing/MsgUpdateParams";
 
   // authority is the address of the governance account.

@@ -23,7 +23,7 @@ service Msg {
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParams {
-  option (cosmos.msg.v1.signer) = "authority";
+  option (cosmos.msg.v1.signer)            = "authority";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/x/mint/MsgUpdateParams";
 
   // authority is the address of the governance account.

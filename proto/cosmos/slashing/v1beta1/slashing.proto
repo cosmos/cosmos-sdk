@@ -8,6 +8,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 
 // ValidatorSigningInfo defines a validator's signing info for monitoring their
 // liveness activity.
@@ -34,6 +35,8 @@ message ValidatorSigningInfo {
 
 // Params represents the parameters used for by the slashing module.
 message Params {
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/x/slashing/Params";
+
   int64 signed_blocks_window  = 1;
   bytes min_signed_per_window = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];

@@ -4,14 +4,17 @@ package cosmos.distribution.v1beta1;
 option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 option (gogoproto.equal_all) = true;
 
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 
 // Params defines the set of params for the distribution module.
 message Params {
-  option (gogoproto.goproto_stringer) = false;
-  string community_tax                = 1 [
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/x/distribution/Params";
+  option (gogoproto.goproto_stringer)      = false;
+
+  string community_tax = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false

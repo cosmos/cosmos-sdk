@@ -41,7 +41,7 @@ service Msg {
 // MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
 // proposal Content.
 message MsgSubmitProposal {
-  option (cosmos.msg.v1.signer) = "proposer";
+  option (cosmos.msg.v1.signer)            = "proposer";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/v1/MsgSubmitProposal";
 
   repeated google.protobuf.Any messages             = 1;
@@ -59,7 +59,7 @@ message MsgSubmitProposalResponse {
 // MsgExecLegacyContent is used to wrap the legacy content field into a message.
 // This ensures backwards compatibility with v1beta1.MsgSubmitProposal.
 message MsgExecLegacyContent {
-  option (cosmos.msg.v1.signer) = "authority";
+  option (cosmos.msg.v1.signer)            = "authority";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/v1/MsgExecLegacyContent";
 
   // content is the proposal's content.
@@ -73,7 +73,7 @@ message MsgExecLegacyContentResponse {}
 
 // MsgVote defines a message to cast a vote.
 message MsgVote {
-  option (cosmos.msg.v1.signer) = "voter";
+  option (cosmos.msg.v1.signer)            = "voter";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/v1/MsgVote";
 
   uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
@@ -87,7 +87,7 @@ message MsgVoteResponse {}
 
 // MsgVoteWeighted defines a message to cast a vote.
 message MsgVoteWeighted {
-  option (cosmos.msg.v1.signer) = "voter";
+  option (cosmos.msg.v1.signer)            = "voter";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/v1/MsgVoteWeighted";
 
   uint64                      proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
@@ -101,7 +101,7 @@ message MsgVoteWeightedResponse {}
 
 // MsgDeposit defines a message to submit a deposit to an existing proposal.
 message MsgDeposit {
-  option (cosmos.msg.v1.signer) = "depositor";
+  option (cosmos.msg.v1.signer)            = "depositor";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/v1/MsgDeposit";
 
   uint64   proposal_id                     = 1 [(gogoproto.jsontag) = "proposal_id"];
@@ -116,7 +116,7 @@ message MsgDepositResponse {}
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParams {
-  option (cosmos.msg.v1.signer) = "authority";
+  option (cosmos.msg.v1.signer)            = "authority";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/x/gov/v1/MsgUpdateParams";
 
   // authority is the address of the governance account.

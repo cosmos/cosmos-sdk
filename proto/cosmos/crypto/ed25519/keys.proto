@@ -13,7 +13,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519";
 // then you must create a new proto message and follow ADR-28 for Address construction.
 message PubKey {
   option (cosmos.msg.v1.legacy_amino_name) = "tendermint/PubKeyEd25519";
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer)      = false;
 
   bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
 }

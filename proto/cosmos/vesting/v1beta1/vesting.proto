@@ -12,8 +12,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 // the necessary fields needed for any vesting account implementation.
 message BaseVestingAccount {
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/BaseVestingAccount";
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_getters)       = false;
+  option (gogoproto.goproto_stringer)      = false;
 
   cosmos.auth.v1beta1.BaseAccount base_account       = 1 [(gogoproto.embed) = true];
   repeated cosmos.base.v1beta1.Coin original_vesting = 2
@@ -29,8 +29,8 @@ message BaseVestingAccount {
 // continuously vests by unlocking coins linearly with respect to time.
 message ContinuousVestingAccount {
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/ContinuousVestingAccount";
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_getters)       = false;
+  option (gogoproto.goproto_stringer)      = false;
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
   int64              start_time           = 2;
@@ -41,8 +41,8 @@ message ContinuousVestingAccount {
 // locked until a specified time.
 message DelayedVestingAccount {
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/DelayedVestingAccount";
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_getters)       = false;
+  option (gogoproto.goproto_stringer)      = false;
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
 }
@@ -60,8 +60,8 @@ message Period {
 // periodically vests by unlocking coins during each specified period.
 message PeriodicVestingAccount {
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/PeriodicVestingAccount";
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_getters)       = false;
+  option (gogoproto.goproto_stringer)      = false;
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
   int64              start_time           = 2;
@@ -75,8 +75,8 @@ message PeriodicVestingAccount {
 // Since: cosmos-sdk 0.43
 message PermanentLockedAccount {
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/PermanentLockedAccount";
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_getters)       = false;
+  option (gogoproto.goproto_stringer)      = false;
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
 }

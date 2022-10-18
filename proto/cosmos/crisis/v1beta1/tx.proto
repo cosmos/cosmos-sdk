@@ -24,7 +24,7 @@ service Msg {
 
 // MsgVerifyInvariant represents a message to verify a particular invariance.
 message MsgVerifyInvariant {
-  option (cosmos.msg.v1.signer) = "sender";
+  option (cosmos.msg.v1.signer)            = "sender";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgVerifyInvariant";
 
   option (gogoproto.equal)           = false;
@@ -42,7 +42,7 @@ message MsgVerifyInvariantResponse {}
 //
 // Since: cosmos-sdk 0.47
 message MsgUpdateParams {
-  option (cosmos.msg.v1.signer) = "authority";
+  option (cosmos.msg.v1.signer)            = "authority";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/x/crisis/MsgUpdateParams";
 
   // authority is the address of the governance account.

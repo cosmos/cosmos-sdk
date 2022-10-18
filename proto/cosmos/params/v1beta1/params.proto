@@ -6,12 +6,14 @@ option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 
 // ParameterChangeProposal defines a proposal to change one or more parameters.
 message ParameterChangeProposal {
   option (gogoproto.goproto_getters)         = false;
   option (gogoproto.goproto_stringer)        = false;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+  option (cosmos.msg.v1.legacy_amino_name)   = "cosmos-sdk/ParameterChangeProposal";
 
   string               title       = 1;
   string               description = 2;

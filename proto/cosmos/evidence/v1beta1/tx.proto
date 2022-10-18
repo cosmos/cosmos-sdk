@@ -21,7 +21,7 @@ service Msg {
 // MsgSubmitEvidence represents a message that supports submitting arbitrary
 // Evidence of misbehavior such as equivocation or counterfactual signing.
 message MsgSubmitEvidence {
-  option (cosmos.msg.v1.signer) = "submitter";
+  option (cosmos.msg.v1.signer)            = "submitter";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgSubmitEvidence";
 
   option (gogoproto.equal)           = false;

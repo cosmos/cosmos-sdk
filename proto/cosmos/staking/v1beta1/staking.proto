@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 import "tendermint/types/types.proto";
 import "tendermint/abci/types.proto";
 
@@ -223,7 +224,7 @@ message UnbondingDelegation {
   // validator_address is the bech32-encoded address of the validator.
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // entries are the unbonding delegation entries.
-  repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false];  // unbonding delegation entries
+  repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false]; // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry defines an unbonding object with relevant metadata.
@@ -296,13 +297,14 @@ message Redelegation {
   // validator_dst_address is the validator redelegation destination operator address.
   string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // entries are the redelegation entries.
-  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false];  // redelegation entries
+  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries
 }
 
 // Params defines the parameters for the x/staking module.
 message Params {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/x/staking/Params";
+  option (gogoproto.equal)                 = true;
+  option (gogoproto.goproto_stringer)      = false;
 
   // unbonding_time is the time duration of unbonding.
   google.protobuf.Duration unbonding_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];

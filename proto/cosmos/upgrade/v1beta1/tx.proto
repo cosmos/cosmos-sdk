@@ -28,7 +28,7 @@ service Msg {
 //
 // Since: cosmos-sdk 0.46
 message MsgSoftwareUpgrade {
-  option (cosmos.msg.v1.signer) = "authority";
+  option (cosmos.msg.v1.signer)            = "authority";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgSoftwareUpgrade";
 
   // authority is the address of the governance account.
@@ -47,7 +47,7 @@ message MsgSoftwareUpgradeResponse {}
 //
 // Since: cosmos-sdk 0.46
 message MsgCancelUpgrade {
-  option (cosmos.msg.v1.signer) = "authority";
+  option (cosmos.msg.v1.signer)            = "authority";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgCancelUpgrade";
 
   // authority is the address of the governance account.

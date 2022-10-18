@@ -11,8 +11,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/types";
 // signed and with which modes.
 message MultiSignature {
   option (cosmos.msg.v1.legacy_amino_name) = "tendermint/PubKeyMultisigThreshold";
-  option (gogoproto.goproto_unrecognized) = true;
-  repeated bytes signatures               = 1;
+  option (gogoproto.goproto_unrecognized)  = true;
+  repeated bytes signatures                = 1;
 }
 
 // CompactBitArray is an implementation of a space efficient bit array.

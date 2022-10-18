@@ -24,7 +24,7 @@ service Msg {
 // MsgGrantAllowance adds permission for Grantee to spend up to Allowance
 // of fees from the account of Granter.
 message MsgGrantAllowance {
-  option (cosmos.msg.v1.signer) = "granter";
+  option (cosmos.msg.v1.signer)            = "granter";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgGrantAllowance";
 
   // granter is the address of the user granting an allowance of their funds.
@@ -42,7 +42,7 @@ message MsgGrantAllowanceResponse {}
 
 // MsgRevokeAllowance removes any existing Allowance from Granter to Grantee.
 message MsgRevokeAllowance {
-  option (cosmos.msg.v1.signer) = "granter";
+  option (cosmos.msg.v1.signer)            = "granter";
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/MsgRevokeAllowance";
 
   // granter is the address of the user granting an allowance of their funds.

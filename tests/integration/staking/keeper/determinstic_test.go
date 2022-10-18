@@ -285,16 +285,11 @@ func (suite *DeterministicTestSuite) TestGRPCValidator() {
 func (suite *DeterministicTestSuite) runValidatorsIterations(
 	req *stakingtypes.QueryValidatorsRequest,
 	prevRes *stakingtypes.QueryValidatorsResponse,
-	gasConsumed uint64,
 ) {
 	for i := 0; i < 1000; i++ {
-		before := suite.ctx.GasMeter().GasConsumed()
 		res, err := suite.queryClient.Validators(suite.ctx, req)
-		suite.Require().Equal(suite.ctx.GasMeter().GasConsumed()-before, gasConsumed)
-
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
-
 		suite.Require().Equal(res, prevRes)
 	}
 }
@@ -303,7 +298,6 @@ func (suite *DeterministicTestSuite) TestGRPCValidators() {
 	validatorStatus := []string{stakingtypes.BondStatusBonded, stakingtypes.BondStatusUnbonded, stakingtypes.BondStatusUnbonding, ""}
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		valsCount := rapid.IntRange(1, 3).Draw(t, "num-validators")
-
 		for i := 0; i < valsCount; i++ {
 			suite.createAndSetValidator(t)
 		}
@@ -312,11 +306,10 @@ func (suite *DeterministicTestSuite) TestGRPCValidators() {
 			Status:     validatorStatus[rapid.IntRange(0, 3).Draw(t, "status")],
 			Pagination: testdata.PaginationGenerator(t, uint64(valsCount)).Draw(t, "pagination"),
 		}
-		before := suite.ctx.GasMeter().GasConsumed()
 		res, err := suite.queryClient.Validators(suite.ctx, req)
 		suite.Require().NoError(err)
 
-		suite.runValidatorsIterations(req, res, suite.ctx.GasMeter().GasConsumed()-before)
+		suite.runValidatorsIterations(req, res)
 	})
 
 	suite.SetupTest() // reset
@@ -327,7 +320,7 @@ func (suite *DeterministicTestSuite) TestGRPCValidators() {
 	res, err := suite.queryClient.Validators(suite.ctx, req)
 	suite.Require().NoError(err)
 
-	suite.runValidatorsIterations(req, res, 3489)
+	suite.runValidatorsIterations(req, res)
 }
 
 func (suite *DeterministicTestSuite) runValidatorDelegationsIterations(req *stakingtypes.QueryValidatorDelegationsRequest, prevDels *stakingtypes.QueryValidatorDelegationsResponse) {

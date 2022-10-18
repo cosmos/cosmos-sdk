@@ -95,6 +95,15 @@ func (q Keeper) Proposals(c context.Context, req *v1.QueryProposalsRequest) (*v1
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	for i := range filteredProposals {
+		msgs := q.GetProposalMessages(ctx, filteredProposals[i].Id)
+		var err error
+		filteredProposals[i].Messages, err = sdktx.SetMsgs(msgs)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to get proposal messages: %v", err)
+		}
+	}
+
 	return &v1.QueryProposalsResponse{Proposals: filteredProposals, Pagination: pageRes}, nil
 }
 

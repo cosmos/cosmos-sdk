@@ -23,12 +23,17 @@ const (
 )
 
 // NewProposal creates a new Proposal instance
-func NewProposal(id uint64, metadata string, submitTime, depositEndTime time.Time) (Proposal, error) {
+func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, depositEndTime time.Time) (Proposal, error) {
+	msgs, err := sdktx.SetMsgs(messages)
+	if err != nil {
+		return Proposal{}, err
+	}
+
 	tally := EmptyTallyResult()
 
 	p := Proposal{
-		Id: id,
-		// Messages:         msgs, // TODO: Remove
+		Id:               id,
+		Messages:         msgs,
 		Metadata:         metadata,
 		Status:           StatusDepositPeriod,
 		FinalTallyResult: &tally,

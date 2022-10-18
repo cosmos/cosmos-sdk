@@ -164,7 +164,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := suite.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(1, "", submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
 	require.NoError(t, err)
 
 	suite.GovKeeper.SetProposal(ctx, proposal)
@@ -212,7 +212,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := suite.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(1, "", submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
 	require.NoError(t, err)
 
 	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
@@ -257,7 +257,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := suite.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(1, "", submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
 	require.NoError(t, err)
 
 	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)

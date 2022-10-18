@@ -73,7 +73,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(proposalID, metadata, submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal(messages, proposalID, metadata, submitTime, submitTime.Add(*depositPeriod))
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -118,6 +118,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposa
 // SetProposal sets a proposal to store.
 // Panics if can't marshal the proposal.
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
+	proposal.Messages = nil
 	bz, err := keeper.MarshalProposal(proposal)
 	if err != nil {
 		panic(err)
@@ -128,12 +129,12 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 }
 
 func (keeper Keeper) SetProposalMessages(ctx sdk.Context, proposalID uint64, messages []sdk.Msg) {
-	msgs, err := sdktx.SetMsgs(messages)
+	anys, err := sdktx.SetMsgs(messages)
 	if err != nil {
 		panic(err)
 	}
 
-	bz, err := keeper.cdc.Marshal(&v1.ProposalMessages{Messages: msgs})
+	bz, err := keeper.cdc.Marshal(&v1.ProposalMessages{Messages: anys})
 	if err != nil {
 		panic(err)
 	}
@@ -156,7 +157,12 @@ func (keeper Keeper) GetProposalMessages(ctx sdk.Context, proposalID uint64) []s
 		panic(err)
 	}
 
-	msgs, err := sdktx.GetMsgs(propMsgs.Messages, "sdk.Msg")
+	err = sdktx.UnpackInterfaces(keeper.cdc, propMsgs.Messages)
+	if err != nil {
+		panic(err)
+	}
+
+	msgs, err := sdktx.GetMsgs(propMsgs.Messages, "sdk.MsgProposal")
 	if err != nil {
 		panic(err)
 	}

@@ -7,7 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func TestProposalStatus_Format(t *testing.T) {
@@ -32,10 +34,10 @@ func TestProposalStatus_Format(t *testing.T) {
 func TestNestedAnys(t *testing.T) {
 	// TODO https://github.com/cosmos/cosmos-sdk/issues/10965
 	t.Skip()
-	// testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
-	// msgContent, err := v1.NewLegacyContent(testProposal, "cosmos1govacct")
-	// require.NoError(t, err)
-	proposal, err := v1.NewProposal(1, "", time.Now(), time.Now())
+	testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
+	msgContent, err := v1.NewLegacyContent(testProposal, "cosmos1govacct")
+	require.NoError(t, err)
+	proposal, err := v1.NewProposal([]sdk.Msg{msgContent}, 1, "", time.Now(), time.Now())
 	require.NoError(t, err)
 
 	require.Equal(t, "TODO Fix panic here", proposal.String())

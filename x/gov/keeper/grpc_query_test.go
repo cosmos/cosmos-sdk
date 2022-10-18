@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 				suite.Require().NoError(err)
 				actualJSON, err := suite.cdc.MarshalJSON(proposalRes.Proposal)
 				suite.Require().NoError(err)
-				suite.Require().Equal(expJSON, actualJSON)
+				suite.Require().Equal(string(expJSON), string(actualJSON))
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(proposalRes)
@@ -306,7 +306,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 					actualJSON, err := suite.cdc.MarshalJSON(proposals.GetProposals()[i])
 					suite.Require().NoError(err)
 
-					suite.Require().Equal(expJSON, actualJSON)
+					suite.Require().Equal(string(expJSON), string(actualJSON))
 				}
 
 			} else {

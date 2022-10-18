@@ -13,6 +13,17 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519";
 // then you must create a new proto message and follow ADR-28 for Address construction.
 message PubKey {
   option (cosmos.msg.v1.legacy_amino_name) = "tendermint/PubKeyEd25519";
+  // The Amino encoding is simply the inner bytes field, and not the Amino
+  // encoding of the whole PubKey struct.
+  //
+  // Example (JSON):
+  // s := PubKey{Key: []byte{0x01}}
+  // out := AminoJSONEncoder(s)
+  //
+  // Then we have:
+  // out == `"MQ=="`
+  // out != `{"key":"MQ=="}`
+  option (cosmos.msg.v1.legacy_amino_encoding) = "bytes field";
   option (gogoproto.goproto_stringer)      = false;
 
   bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];

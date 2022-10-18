@@ -34,4 +34,19 @@ extend google.protobuf.MessageOptions {
   // characters long, or else the message will be rejected by the
   // Ledger hardware device.
   string legacy_amino_name = 11110001;
+
+  // legacy_amino_encoding describes the encoding format used by Amino 
+  // for the message. The field type is chosen to be a string so that
+  // the value can either be:
+  // - a machine-readable string, such as "base64", "bech32" or "utf8",
+  // - or a human-readable string, for instance a short specification of how
+  // a big integer would be encoded using Amino.
+  //
+  // If left empty, then the Amino encoding is expected to be the same as the
+  // Protobuf one.
+  //
+  // Please note that `cosmos_proto.ScalarDescriptor` has an option with the
+  // same name. The cosmos_proto one however is used as a protobuf _field_
+  // annotation, whereas this one operates on a protobuf _message_.
+  string legacy_amino_encoding = 11110002;
 }

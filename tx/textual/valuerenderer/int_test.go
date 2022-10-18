@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"os"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -31,11 +30,8 @@ func TestFormatInt(t *testing.T) {
 		if err == nil {
 			r, err := textual.GetValueRenderer(fieldDescriptorFromName("UINT64"))
 			require.NoError(t, err)
-			b := new(strings.Builder)
-			err = r.Format(context.Background(), protoreflect.ValueOf(i), b)
-			require.NoError(t, err)
 
-			require.Equal(t, tc[1], b.String())
+			checkNumberTest(t, r, protoreflect.ValueOf(i), tc[1])
 		}
 
 		// Parse test case strings as protobuf uint32
@@ -43,11 +39,8 @@ func TestFormatInt(t *testing.T) {
 		if err == nil {
 			r, err := textual.GetValueRenderer(fieldDescriptorFromName("UINT32"))
 			require.NoError(t, err)
-			b := new(strings.Builder)
-			err = r.Format(context.Background(), protoreflect.ValueOf(i), b)
-			require.NoError(t, err)
 
-			require.Equal(t, tc[1], b.String())
+			checkNumberTest(t, r, protoreflect.ValueOf(i), tc[1])
 		}
 
 		// Parse test case strings as sdk.Ints
@@ -55,11 +48,20 @@ func TestFormatInt(t *testing.T) {
 		if ok {
 			r, err := textual.GetValueRenderer(fieldDescriptorFromName("SDKINT"))
 			require.NoError(t, err)
-			b := new(strings.Builder)
-			err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
-			require.NoError(t, err)
 
-			require.Equal(t, tc[1], b.String())
+			checkNumberTest(t, r, protoreflect.ValueOf(tc[0]), tc[1])
 		}
 	}
+}
+
+// checkNumberTest checks that the output of a number value renderer
+// matches the expected string. Only use it to test numbers.
+func checkNumberTest(t *testing.T, r valuerenderer.ValueRenderer, pv protoreflect.Value, expected string) {
+	screens, err := r.Format(context.Background(), pv)
+	require.NoError(t, err)
+	require.Len(t, screens, 1)
+	require.Equal(t, 0, screens[0].Indent)
+	require.Equal(t, false, screens[0].Expert)
+
+	require.Equal(t, expected, screens[0].Text)
 }

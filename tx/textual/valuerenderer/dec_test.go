@@ -1,10 +1,8 @@
 package valuerenderer_test
 
 import (
-	"context"
 	"encoding/json"
 	"os"
-	"strings"
 	"testing"
 
 	"cosmossdk.io/tx/textual/valuerenderer"
@@ -27,11 +25,8 @@ func TestFormatDec(t *testing.T) {
 		t.Run(tc[0], func(t *testing.T) {
 			r, err := textual.GetValueRenderer(fieldDescriptorFromName("SDKDEC"))
 			require.NoError(t, err)
-			b := new(strings.Builder)
-			err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
-			require.NoError(t, err)
 
-			require.Equal(t, tc[1], b.String())
+			checkNumberTest(t, r, protoreflect.ValueOf(tc[0]), tc[1])
 		})
 	}
 }

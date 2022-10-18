@@ -35,8 +35,10 @@ type txMeta struct {
 	senderElement *huandu.Element
 }
 
-// txMetaLess is a comparator for txKeys that first compares priority, then sender, then nonce, uniquely identifying
-// a transaction.
+// txMetaLess is a comparator for txKeys that first compares priority, then weight, then sender, then nonce,
+// uniquely identifying a transaction.
+//
+// Note, txMetaLess is used as the comparator in the priority index.
 func txMetaLess(a, b any) int {
 	keyA := a.(txMeta)
 	keyB := b.(txMeta)
@@ -220,6 +222,9 @@ func (mp *priorityMempool) reorderPriorityTies() {
 	}
 }
 
+// senderWeight returns the weight of a given tx (t) at senderCursor.  Weight is defined as the first (nonce-wise)
+// same sender tx with a priority not equal to t.  It is used to resolve priority collisions, that is when 2 or more
+// txs from different senders have the same priority.
 func senderWeight(senderCursor *huandu.Element) int64 {
 	if senderCursor == nil {
 		return 0
@@ -276,12 +281,13 @@ func (mp *priorityMempool) Remove(tx Tx) error {
 	if len(sigs) == 0 {
 		return fmt.Errorf("attempted to remove a tx with no signatures")
 	}
+
 	sig := sigs[0]
 	sender := sig.PubKey.Address().String()
 	nonce := sig.Sequence
 
-	sk := txMeta{nonce: nonce, sender: sender}
-	score, ok := mp.scores[sk]
+	scoreKey := txMeta{nonce: nonce, sender: sender}
+	score, ok := mp.scores[scoreKey]
 	if !ok {
 		return ErrTxNotFound
 	}
@@ -294,7 +300,7 @@ func (mp *priorityMempool) Remove(tx Tx) error {
 
 	mp.priorityIndex.Remove(tk)
 	senderTxs.Remove(tk)
-	delete(mp.scores, sk)
+	delete(mp.scores, scoreKey)
 	mp.priorityCounts[score.priority] = mp.priorityCounts[score.priority] - 1
 
 	return nil
@@ -306,14 +312,12 @@ func IsEmpty(mempool Mempool) error {
 		return fmt.Errorf("priorityIndex not empty")
 	}
 	for k := range mp.priorityCounts {
-		v := mp.priorityCounts[k]
-		if v != 0 {
-			return fmt.Errorf("priorityCounts not zero at %v, got %v", k, v)
+		if mp.priorityCounts[k] != 0 {
+			return fmt.Errorf("priorityCounts not zero at %v, got %v", k, mp.priorityCounts[k])
 		}
 	}
 	for k := range mp.senderIndices {
-		v := mp.senderIndices[k]
-		if v.Len() != 0 {
+		if mp.senderIndices[k].Len() != 0 {
 			return fmt.Errorf("senderIndex not empty for sender %v", k)
 		}
 	}

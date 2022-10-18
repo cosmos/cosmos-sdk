@@ -257,7 +257,8 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 20, n: 1, a: sa},
 			},
-			order: []int{2, 0, 1}},
+			order: []int{2, 0, 1},
+		},
 		{
 			txs: []txSpec{
 				{p: 50, n: 3, a: sa},
@@ -303,6 +304,15 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 7, a: sc, n: 3},
 			},
 			order: []int{3, 2, 0, 4, 1, 5, 6, 7, 8},
+		},
+		{
+			txs: []txSpec{
+				{p: 6, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sb},
+			},
+			order: []int{0, 1, 2, 3},
 		},
 		/*
 			The next 4 tests are different permutations of the same set:

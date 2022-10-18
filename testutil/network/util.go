@@ -90,7 +90,10 @@ func startInProcess(cfg Config, val *Validator) error {
 
 		app.RegisterTxService(val.ClientCtx)
 		app.RegisterTendermintService(val.ClientCtx)
-		app.RegisterNodeService(val.ClientCtx)
+
+		if a, ok := app.(srvtypes.ApplicationQueryService); ok {
+			a.RegisterNodeService(val.ClientCtx)
+		}
 	}
 
 		if a, ok := app.(srvtypes.ApplicationQueryService); ok {

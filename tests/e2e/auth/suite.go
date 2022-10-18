@@ -1,4 +1,4 @@
-package testutil
+package auth
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
+
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client"

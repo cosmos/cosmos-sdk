@@ -314,6 +314,22 @@ func (s *MempoolTestSuite) TestTxOrder() {
 			},
 			order: []int{0, 1, 2, 3},
 		},
+		{
+			// if all txs have the same priority they will be ordered lexically sender address, and nonce with the
+			// sender.
+			txs: []txSpec{
+				{p: 10, n: 7, a: sc},
+				{p: 10, n: 8, a: sc},
+				{p: 10, n: 9, a: sc},
+				{p: 10, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 10, n: 3, a: sa},
+				{p: 10, n: 4, a: sb},
+				{p: 10, n: 5, a: sb},
+				{p: 10, n: 6, a: sb},
+			},
+			order: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+		},
 		/*
 			The next 4 tests are different permutations of the same set:
 
@@ -380,6 +396,8 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				err := pool.Insert(c, tx)
 				require.NoError(t, err)
 			}
+
+			mempool.DebugPrintKeys(pool)
 
 			orderedTxs, err := pool.Select(nil, 1000)
 			require.NoError(t, err)

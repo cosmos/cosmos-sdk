@@ -11,8 +11,6 @@ var (
 
 // Events
 const (
-	AttributeValueCategory = ModuleName
-
 	EventTypeUpdateParam = "update_param"
 
 	AttributeKeyParamUpdater = "param_updater"

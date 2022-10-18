@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: NFT Overview
-parent:
-  title: "nft"
--->
+---
+sidebar_position: 1
+---
 
 # `x/nft`
 

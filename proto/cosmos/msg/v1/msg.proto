@@ -83,5 +83,5 @@ extend google.protobuf.FieldOptions {
   // f := Foo{};
   // out := AminoJSONEncoder(&f);
   // out == {"baz":""}
-  string legacy_amino_dont_omitempty = 11110004;
+  bool legacy_amino_dont_omitempty = 11110004;
 }

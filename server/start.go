@@ -301,7 +301,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
-		app.RegisterNodeService(clientCtx)
+
+		if a, ok := app.(types.ApplicationQueryService); ok {
+			a.RegisterNodeService(clientCtx)
+		}
 	}
 
 	var apiSrv *api.Server

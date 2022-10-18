@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -32,6 +33,13 @@ func (q Keeper) Proposal(c context.Context, req *v1.QueryProposalRequest) (*v1.Q
 	proposal, found := q.GetProposal(ctx, req.ProposalId)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
+	}
+
+	msgs := q.GetProposalMessages(ctx, req.ProposalId)
+	var err error
+	proposal.Messages, err = sdktx.SetMsgs(msgs)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get proposal messages: %v", err)
 	}
 
 	return &v1.QueryProposalResponse{Proposal: &proposal}, nil

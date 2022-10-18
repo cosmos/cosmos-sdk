@@ -365,16 +365,18 @@ message Pool {
   option (gogoproto.description) = true;
   option (gogoproto.equal)       = true;
   string not_bonded_tokens       = 1 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable)   = false,
-    (gogoproto.jsontag)    = "not_bonded_tokens"
+    (cosmos_proto.scalar)                       = "cosmos.Int",
+    (gogoproto.customtype)                      = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)                        = false,
+    (gogoproto.jsontag)                         = "not_bonded_tokens",
+    (cosmos.msg.v1.legacy_amino_dont_omitempty) = true
   ];
   string bonded_tokens = 2 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable)   = false,
-    (gogoproto.jsontag)    = "bonded_tokens"
+    (cosmos_proto.scalar)                       = "cosmos.Int",
+    (gogoproto.customtype)                      = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)                        = false,
+    (gogoproto.jsontag)                         = "bonded_tokens",
+    (cosmos.msg.v1.legacy_amino_dont_omitempty) = true
   ];
 }
 

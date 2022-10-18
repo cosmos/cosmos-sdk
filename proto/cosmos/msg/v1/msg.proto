@@ -35,7 +35,7 @@ extend google.protobuf.MessageOptions {
   // Ledger hardware device.
   string legacy_amino_name = 11110001;
 
-  // legacy_amino_encoding describes the encoding format used by Amino 
+  // legacy_amino_encoding describes the encoding format used by Amino
   // for the message. The field type is chosen to be a string so that
   // the value can either be:
   // - a machine-readable string, such as "base64", "bech32" or "utf8",
@@ -53,7 +53,7 @@ extend google.protobuf.MessageOptions {
 
 extend google.protobuf.FieldOptions {
   // legacy_amino_field_name sets a different field name (i.e. key name) in
-  // the JSON object.
+  // the JSON object for the given field.
   //
   // Example:
   //
@@ -64,4 +64,24 @@ extend google.protobuf.FieldOptions {
   // Then the Amino encoding of Foo will be:
   // `{"baz":"some value"}`
   string legacy_amino_field_name = 11110003;
+
+  // legacy_amino_dont_omitempty sets the field in the JSON object even if
+  // its value is empty, i.e. equal to the Golang zero value. To learn what
+  // the zero values are, see https://go.dev/ref/spec#The_zero_value.
+  //
+  // Fields default to `omitempty`, which is the default behavior when this
+  // annotation is unset. When set to true, then the field value in the
+  // JSON object will be set, i.e. not `undefined`.
+  //
+  // Example:
+  //
+  // message Foo {
+  //   string bar = 1;
+  //   string baz = 2 [(cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
+  // }
+  //
+  // f := Foo{};
+  // out := AminoJSONEncoder(&f);
+  // out == {"baz":""}
+  string legacy_amino_dont_omitempty = 11110004;
 }

@@ -4,6 +4,7 @@ package cosmos.base.abci.v1beta1;
 import "gogoproto/gogo.proto";
 import "tendermint/abci/types.proto";
 import "google/protobuf/any.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
@@ -52,7 +53,7 @@ message TxResponse {
 message ABCIMessageLog {
   option (gogoproto.stringer) = true;
 
-  uint32 msg_index = 1 [(gogoproto.jsontag) = "msg_index"];
+  uint32 msg_index = 1 [(gogoproto.jsontag) = "msg_index", (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
   string log       = 2;
 
   // Events contains a slice of Event objects that were emitted during some

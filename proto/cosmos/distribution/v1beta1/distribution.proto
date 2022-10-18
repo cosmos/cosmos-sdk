@@ -4,10 +4,10 @@ package cosmos.distribution.v1beta1;
 option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 option (gogoproto.equal_all) = true;
 
-import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 
 // Params defines the set of params for the distribution module.
 message Params {
@@ -140,9 +140,9 @@ message DelegatorStartingInfo {
     (gogoproto.nullable)   = false
   ];
   uint64 height = 3 [
-    (gogoproto.jsontag) = "creation_height",
-    (cosmos.msg.v1.legacy_amino_field_name) = "creation_height",
-    (cosmos.msg.v1.omitempty) = false
+    (gogoproto.jsontag)                         = "creation_height",
+    (cosmos.msg.v1.legacy_amino_field_name)     = "creation_height",
+    (cosmos.msg.v1.legacy_amino_dont_omitempty) = true
   ];
 }
 

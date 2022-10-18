@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -72,12 +73,13 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(messages, proposalID, metadata, submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal(proposalID, metadata, submitTime, submitTime.Add(*depositPeriod))
 	if err != nil {
 		return v1.Proposal{}, err
 	}
 
 	keeper.SetProposal(ctx, proposal)
+	keeper.SetProposalMessages(ctx, proposalID, messages)
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
 	keeper.SetProposalID(ctx, proposalID+1)
 
@@ -123,6 +125,43 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 
 	store := ctx.KVStore(keeper.storeKey)
 	store.Set(types.ProposalKey(proposal.Id), bz)
+}
+
+func (keeper Keeper) SetProposalMessages(ctx sdk.Context, proposalID uint64, messages []sdk.Msg) {
+	msgs, err := sdktx.SetMsgs(messages)
+	if err != nil {
+		panic(err)
+	}
+
+	bz, err := keeper.cdc.Marshal(&v1.ProposalMessages{Messages: msgs})
+	if err != nil {
+		panic(err)
+	}
+
+	store := ctx.KVStore(keeper.storeKey)
+	store.Set(types.ProposalMessagesKey(proposalID), bz)
+}
+
+func (keeper Keeper) GetProposalMessages(ctx sdk.Context, proposalID uint64) []sdk.Msg {
+	store := ctx.KVStore(keeper.storeKey)
+
+	bz := store.Get(types.ProposalMessagesKey(proposalID))
+	if bz == nil {
+		return nil
+	}
+
+	var propMsgs v1.ProposalMessages
+	err := keeper.cdc.Unmarshal(bz, &propMsgs)
+	if err != nil {
+		panic(err)
+	}
+
+	msgs, err := sdktx.GetMsgs(propMsgs.Messages, "sdk.Msg")
+	if err != nil {
+		panic(err)
+	}
+
+	return msgs
 }
 
 // DeleteProposal deletes a proposal from store.

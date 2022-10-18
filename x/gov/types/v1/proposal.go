@@ -23,17 +23,12 @@ const (
 )
 
 // NewProposal creates a new Proposal instance
-func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, depositEndTime time.Time) (Proposal, error) {
-	msgs, err := sdktx.SetMsgs(messages)
-	if err != nil {
-		return Proposal{}, err
-	}
-
+func NewProposal(id uint64, metadata string, submitTime, depositEndTime time.Time) (Proposal, error) {
 	tally := EmptyTallyResult()
 
 	p := Proposal{
-		Id:               id,
-		Messages:         msgs,
+		Id: id,
+		// Messages:         msgs, // TODO: Remove
 		Metadata:         metadata,
 		Status:           StatusDepositPeriod,
 		FinalTallyResult: &tally,
@@ -44,7 +39,8 @@ func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, dep
 	return p, nil
 }
 
-// GetMessages returns the proposal messages
+// Deprecated: GetMessages returns the proposal messages
+// Use keeper.GetProposalMessages to get a stored proposal's messages.
 func (p Proposal) GetMsgs() ([]sdk.Msg, error) {
 	return sdktx.GetMsgs(p.Messages, "sdk.MsgProposal")
 }

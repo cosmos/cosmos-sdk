@@ -58,6 +58,10 @@ message Proposal {
   string metadata = 10;
 }
 
+message ProposalMessages {
+  repeated google.protobuf.Any messages = 1;
+}
+
 // ProposalStatus enumerates the valid statuses of a proposal.
 enum ProposalStatus {
   // PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.

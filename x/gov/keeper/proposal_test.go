@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 
 	for _, s := range status {
 		for i := 0; i < 50; i++ {
-			p, err := v1.NewProposal(TestProposal, proposalID, "", time.Now(), time.Now())
+			p, err := v1.NewProposal(proposalID, "", time.Now(), time.Now())
 			suite.Require().NoError(err)
 
 			p.Status = s
@@ -107,6 +107,7 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 			}
 
 			suite.govKeeper.SetProposal(suite.ctx, p)
+			suite.govKeeper.SetProposalMessages(suite.ctx, proposalID, TestProposal)
 			proposalID++
 		}
 	}

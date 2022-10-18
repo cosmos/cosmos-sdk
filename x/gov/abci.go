@@ -67,14 +67,14 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
 			cacheCtx, writeCache := ctx.CacheContext()
-			messages, err := proposal.GetMsgs()
-			if err == nil {
-				for idx, msg = range messages {
-					handler := keeper.Router().Handler(msg)
-					_, err = handler(cacheCtx, msg)
-					if err != nil {
-						break
-					}
+			messages := keeper.GetProposalMessages(ctx, proposal.GetId())
+
+			var err error
+			for idx, msg = range messages {
+				handler := keeper.Router().Handler(msg)
+				_, err = handler(cacheCtx, msg)
+				if err != nil {
+					break
 				}
 			}
 

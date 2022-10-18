@@ -44,7 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [#](https://github.com/cosmos/cosmos-sdk/pull/) Bump Tendermint to `v0.34.21`.
+* [#13585](https://github.com/cosmos/cosmos-sdk/pull/13585) Bump Tendermint to `v0.34.22`.
 
 ### Bug Fixes
 

@@ -150,7 +150,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResp
 		[]string{govtypes.ModuleName, "vote"},
 		1,
 		[]metrics.Label{
-			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
+			telemetry.NewLabel("proposal_id", strconv.FormatUint(msg.ProposalId, 10)),
 		},
 	)
 
@@ -172,7 +172,7 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) 
 		[]string{govtypes.ModuleName, "vote"},
 		1,
 		[]metrics.Label{
-			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
+			telemetry.NewLabel("proposal_id", strconv.FormatUint(msg.ProposalId, 10)),
 		},
 	)
 
@@ -194,7 +194,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 		[]string{govtypes.ModuleName, "deposit"},
 		1,
 		[]metrics.Label{
-			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
+			telemetry.NewLabel("proposal_id", strconv.FormatUint(msg.ProposalId, 10)),
 		},
 	)
 

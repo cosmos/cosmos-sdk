@@ -11,6 +11,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// coinsJsonTest is the type of test cases in the coin.json file.
+type coinJsonTest struct {
+	Proto    *basev1beta1.Coin
+	Metadata *bankv1beta1.Metadata
+	Text     string
+	Error    bool
+}
+
+// coinsJsonTest is the type of test cases in the coins.json file.
+type coinsJsonTest struct {
+	Proto    []*basev1beta1.Coin
+	Metadata map[string]*bankv1beta1.Metadata
+	Text     string
+	Error    bool
+}
+
 func TestFormatCoin(t *testing.T) {
 	var testcases []coinJsonTest
 	raw, err := os.ReadFile("../../tx/textual/internal/testdata/coin.json")
@@ -62,20 +78,4 @@ func TestFormatCoins(t *testing.T) {
 			}
 		})
 	}
-}
-
-// coinsJsonTest is the type of test cases in the coin.json file.
-type coinJsonTest struct {
-	Proto    *basev1beta1.Coin
-	Metadata *bankv1beta1.Metadata
-	Text     string
-	Error    bool
-}
-
-// coinsJsonTest is the type of test cases in the coins.json file.
-type coinsJsonTest struct {
-	Proto    []*basev1beta1.Coin
-	Metadata map[string]*bankv1beta1.Metadata
-	Text     string
-	Error    bool
 }

@@ -327,8 +327,6 @@ func (s *MempoolTestSuite) TestTxOrder() {
 			},
 			order: []int{5, 4, 3, 2, 0, 1},
 		},
-		// TODO find tx insert order which fails
-		// create test with random orders of these txs
 		{
 			txs: []txSpec{
 				{p: 5, n: 1, a: sa},
@@ -337,6 +335,17 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 20, n: 2, a: sb},
 				{p: 5, n: 1, a: sc},
 				{p: 99, n: 2, a: sc},
+			},
+			order: []int{4, 5, 2, 3, 0, 1},
+		},
+		{
+			txs: []txSpec{
+				{p: 5, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sc},
+				{p: 20, n: 2, a: sc},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sb},
 			},
 			order: []int{4, 5, 2, 3, 0, 1},
 		},

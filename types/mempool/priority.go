@@ -107,8 +107,7 @@ func (mp *priorityMempool) Insert(ctx sdk.Context, tx Tx) error {
 	sig := sigs[0]
 	sender := sig.PubKey.Address().String()
 	nonce := sig.Sequence
-	tk := txMeta{nonce: nonce, priority: priority, sender: sender}
-	weight := int64(0)
+	key := txMeta{nonce: nonce, priority: priority, sender: sender}
 
 	senderIndex, ok := mp.senderIndices[sender]
 	if !ok {
@@ -120,18 +119,22 @@ func (mp *priorityMempool) Insert(ctx sdk.Context, tx Tx) error {
 	}
 
 	mp.priorityCounts[priority] = mp.priorityCounts[priority] + 1
-	// Since senderIndex is scored by nonce, a changed priority will overwrite the existing txKey.
-	senderElement := senderIndex.Set(tk, tx)
-	if mp.priorityCounts[priority] > 1 {
-		// needs a weight
-		weight = senderWeight(senderElement)
-	}
-	if senderElement.Prev() != nil && mp.priorityCounts[senderElement.Prev().Key().(txMeta).priority] > 1 {
-		// previous element needs its weight updated
-		// delete/insert
-	}
+	// Since senderIndex is scored by nonce, a changed priority will overwrite the existing key.
+	senderTx := senderIndex.Set(key, tx)
 
-	tk.weight = weight
+	// multiple txs at the same priority require a weight to differentiate them.
+	//if mp.priorityCounts[priority] > 1 {
+	//	// needs a weight
+	//	key.weight = senderWeight(senderTx)
+	//}
+	//if mp.priorityCounts[priority] == 2 {
+	//
+	//}
+	//prevSenderTx := senderTx.Prev()
+	//if prevSenderTx != nil && mp.priorityCounts[prevSenderTx.Key().(txMeta).priority] > 1 {
+	//	// previous elements need their weights updated now
+	//	// delete/insert
+	//}
 
 	// Since mp.priorityIndex is scored by priority, then sender, then nonce, a changed priority will create a new key,
 	// so we must remove the old key and re-insert it to avoid having the same tx with different priorityIndex indexed
@@ -145,9 +148,9 @@ func (mp *priorityMempool) Insert(ctx sdk.Context, tx Tx) error {
 			weight:   oldScore.weight,
 		})
 	}
-	mp.scores[sk] = txMeta{priority: priority, weight: weight}
-	tk.senderElement = senderElement
-	mp.priorityIndex.Set(tk, tx)
+	mp.scores[sk] = txMeta{priority: priority, weight: key.weight}
+	key.senderElement = senderTx
+	mp.priorityIndex.Set(key, tx)
 
 	return nil
 }
@@ -159,6 +162,7 @@ func (mp *priorityMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 	var selectedTxs []Tx
 	var txBytes int64
 	mp.senderCursors = make(map[string]*huandu.Element)
+	mp.reorderByWeight()
 
 	priorityNode := mp.priorityIndex.Front()
 	for priorityNode != nil {
@@ -203,6 +207,33 @@ func (mp *priorityMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 	}
 
 	return selectedTxs, nil
+}
+
+type reorderKey struct {
+	deleteKey txMeta
+	insertKey txMeta
+	tx        Tx
+}
+
+func (mp *priorityMempool) reorderByWeight() {
+	node := mp.priorityIndex.Front()
+	var reordering []reorderKey
+	for node != nil {
+		key := node.Key().(txMeta)
+		if mp.priorityCounts[key.priority] > 1 {
+			newKey := key
+			newKey.weight = senderWeight(key.senderElement)
+			reordering = append(reordering, reorderKey{deleteKey: key, insertKey: newKey, tx: node.Value.(Tx)})
+		}
+		node = node.Next()
+	}
+
+	for _, k := range reordering {
+		mp.priorityIndex.Remove(k.deleteKey)
+		delete(mp.scores, txMeta{nonce: k.deleteKey.nonce, sender: k.deleteKey.sender})
+		mp.priorityIndex.Set(k.insertKey, k.tx)
+		mp.scores[txMeta{nonce: k.insertKey.nonce, sender: k.insertKey.sender}] = k.insertKey
+	}
 }
 
 func senderWeight(senderCursor *huandu.Element) int64 {

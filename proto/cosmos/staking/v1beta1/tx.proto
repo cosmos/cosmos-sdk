@@ -81,8 +81,7 @@ message MsgEditValidatorResponse {}
 // MsgDelegate defines a SDK message for performing a delegation of coins
 // from a delegator to a validator.
 message MsgDelegate {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal) = false;
 
   string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
@@ -95,8 +94,7 @@ message MsgDelegateResponse {}
 // MsgBeginRedelegate defines a SDK message for performing a redelegation
 // of coins from a delegator and source validator to a destination validator.
 message MsgBeginRedelegate {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal) = false;
 
   string                   delegator_address     = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   string                   validator_src_address = 2 [(gogoproto.moretags) = "yaml:\"validator_src_address\""];
@@ -112,8 +110,7 @@ message MsgBeginRedelegateResponse {
 // MsgUndelegate defines a SDK message for performing an undelegation from a
 // delegate and a validator.
 message MsgUndelegate {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal) = false;
 
   string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];

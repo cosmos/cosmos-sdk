@@ -119,8 +119,10 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposa
 // Panics if can't marshal the proposal.
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 	// store proposal messages in a different store and remove them from the proposal before marshaling
-	keeper.setProposalMessages(ctx, proposal.Id, proposal.Messages)
-	proposal.Messages = nil
+	if proposal.Messages != nil {
+		keeper.setProposalMessages(ctx, proposal.Id, proposal.Messages)
+		proposal.Messages = nil
+	}
 
 	store := ctx.KVStore(keeper.storeKey)
 	bz, err := keeper.MarshalProposal(proposal)

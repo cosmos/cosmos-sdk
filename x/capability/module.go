@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/core/appmodule"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -28,7 +29,7 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -175,16 +176,16 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
+			ProvideModuleBasic,
+			ProvideModule,
 		))
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type capabilityInputs struct {
+type CapabilityInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -194,18 +195,18 @@ type capabilityInputs struct {
 	Cdc         codec.Codec
 }
 
-type capabilityOutputs struct {
+type CapabilityOutputs struct {
 	depinject.Out
 
 	CapabilityKeeper *keeper.Keeper
 	Module           runtime.AppModuleWrapper
 }
 
-func provideModule(in capabilityInputs) capabilityOutputs {
+func ProvideModule(in CapabilityInputs) CapabilityOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.KvStoreKey, in.MemStoreKey)
 	m := NewAppModule(in.Cdc, *k, in.Config.SealKeeper)
 
-	return capabilityOutputs{
+	return CapabilityOutputs{
 		CapabilityKeeper: k,
 		Module:           runtime.WrapAppModule(m),
 	}

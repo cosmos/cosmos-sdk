@@ -223,7 +223,7 @@ message Proposal {
   TallyResult final_tally_result = 9 [(gogoproto.nullable) = false];
 
   // voting_period_end is the timestamp before which voting must be done.
-  // Unless a successfull MsgExec is called before (to execute a proposal whose
+  // Unless a successful MsgExec is called before (to execute a proposal whose
   // tally is successful before the voting period ends), tallying will be done
   // at this point, and the `final_tally_result`and `status` fields will be
   // accordingly updated.

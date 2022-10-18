@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Crisis Overview
-parent:
-  title: "crisis"
--->
+---
+sidebar_position: 1
+---
 
 # `x/crisis`
 
@@ -22,8 +19,6 @@ application initialization process.
 * [Client](#client)
     * [CLI](#cli)
 
-<!-- order: 1 -->
-
 # State
 
 ## ConstantFee
@@ -39,8 +34,6 @@ it can be updated with governance or the address with authority.
 
 * Params: `mint/params -> legacy_amino(sdk.Coin)`
 
-<!-- order: 2 -->
-
 # Messages
 
 In this section we describe the processing of the crisis messages and the
@@ -50,7 +43,9 @@ corresponding updates to the state.
 
 Blockchain invariants can be checked using the `MsgVerifyInvariant` message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/crisis/v1beta1/tx.proto#L16-L26
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/crisis/v1beta1/tx.proto#L16-L26
+```
 
 This message is expected to fail if:
 
@@ -62,8 +57,6 @@ panics, halting the blockchain. If the invariant is broken, the constant fee is
 never deducted as the transaction is never committed to a block (equivalent to
 being refunded). However, if the invariant is not broken, the constant fee will
 not be refunded.
-
-<!-- order: 3 -->
 
 # Events
 
@@ -87,8 +80,6 @@ The crisis module contains the following parameters:
 | Key         | Type          | Example                           |
 |-------------|---------------|-----------------------------------|
 | ConstantFee | object (coin) | {"denom":"uatom","amount":"1000"} |
-
-<!-- order: 4 -->
 
 # Client
 

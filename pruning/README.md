@@ -10,18 +10,19 @@ the states and prune nothing. On the other hand, a regular validator node may wa
 
 The strategies are configured in `app.toml`, with the format `pruning = "<strategy>"` where the options are:
 
-- `default`: only the last 362,880 states(approximately 3.5 weeks worth of state) are kept; pruning at 10 block intervals
-- `nothing`: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-- `everything`: 2 latest states will be kept; pruning at 10 block intervals.
-- `custom`: allow pruning options to be manually specified through 'pruning-keep-recent', and 'pruning-interval'
+* `default`: only the last 362,880 states(approximately 3.5 weeks worth of state) are kept; pruning at 10 block intervals
+* `nothing`: all historic states will be saved, nothing will be deleted (i.e. archiving node)
+* `everything`: 2 latest states will be kept; pruning at 10 block intervals.
+* `custom`: allow pruning options to be manually specified through 'pruning-keep-recent', and 'pruning-interval'
 
 If no strategy is given to the BaseApp, `nothing` is selected. However, we perform validation on the CLI layer to require these to be always set in the config file.
 
 ## Custom Pruning
 
 These are applied if and only if the pruning strategy is custom:
-- `pruning-keep-recent`: N means to keep all of the last N states
-- `pruning-interval`: N means to delete old states from disk every Nth block.
+
+* `pruning-keep-recent`: N means to keep all of the last N states
+* `pruning-interval`: N means to delete old states from disk every Nth block.
 
 ## Relationship to State Sync Snapshots
 

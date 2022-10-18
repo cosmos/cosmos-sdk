@@ -189,7 +189,7 @@ message ABCIQueryResponse {
 }
 
 // ProofOp defines an operation used for calculating Merkle root. The data could
-// be arbitrary format, providing nessecary data for example neighbouring node
+// be arbitrary format, providing necessary data for example neighbouring node
 // hash.
 //
 // Note: This type is a duplicate of the ProofOp proto type defined in Tendermint.

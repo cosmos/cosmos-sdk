@@ -15,7 +15,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -67,8 +67,8 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	val1 := teststaking.NewValidator(t, valAddrs[0], pks[0])
-	val2 := teststaking.NewValidator(t, valAddrs[1], pks[1])
+	val1 := testutil.NewValidator(t, valAddrs[0], pks[0])
+	val2 := testutil.NewValidator(t, valAddrs[1], pks[1])
 	vals := []types.Validator{val1, val2}
 
 	app.StakingKeeper.SetValidator(ctx, val1)

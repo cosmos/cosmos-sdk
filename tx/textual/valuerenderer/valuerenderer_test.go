@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -33,11 +32,10 @@ func TestFormatInteger(t *testing.T) {
 		if err == nil {
 			r, err := textual.GetValueRenderer(fieldDescriptorFromName("UINT64"))
 			require.NoError(t, err)
-			b := new(strings.Builder)
-			err = r.Format(context.Background(), protoreflect.ValueOf(i), b)
+			screens, err := r.Format(context.Background(), protoreflect.ValueOf(i))
 			require.NoError(t, err)
-
-			require.Equal(t, tc[1], b.String())
+			require.Equal(t, 1, len(screens))
+			require.Equal(t, tc[1], screens[0].Text)
 		}
 
 		// Parse test case strings as protobuf uint32
@@ -45,11 +43,10 @@ func TestFormatInteger(t *testing.T) {
 		if err == nil {
 			r, err := textual.GetValueRenderer(fieldDescriptorFromName("UINT32"))
 			require.NoError(t, err)
-			b := new(strings.Builder)
-			err = r.Format(context.Background(), protoreflect.ValueOf(i), b)
+			screens, err := r.Format(context.Background(), protoreflect.ValueOf(i))
 			require.NoError(t, err)
-
-			require.Equal(t, tc[1], b.String())
+			require.Equal(t, 1, len(screens))
+			require.Equal(t, tc[1], screens[0].Text)
 		}
 
 		// Parse test case strings as sdk.Ints
@@ -57,11 +54,10 @@ func TestFormatInteger(t *testing.T) {
 		if ok {
 			r, err := textual.GetValueRenderer(fieldDescriptorFromName("SDKINT"))
 			require.NoError(t, err)
-			b := new(strings.Builder)
-			err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
+			screens, err := r.Format(context.Background(), protoreflect.ValueOf(tc[0]))
 			require.NoError(t, err)
-
-			require.Equal(t, tc[1], b.String())
+			require.Equal(t, 1, len(screens))
+			require.Equal(t, tc[1], screens[0].Text)
 		}
 	}
 }
@@ -81,11 +77,10 @@ func TestFormatDecimal(t *testing.T) {
 		t.Run(tc[0], func(t *testing.T) {
 			r, err := textual.GetValueRenderer(fieldDescriptorFromName("SDKDEC"))
 			require.NoError(t, err)
-			b := new(strings.Builder)
-			err = r.Format(context.Background(), protoreflect.ValueOf(tc[0]), b)
+			screens, err := r.Format(context.Background(), protoreflect.ValueOf(tc[0]))
 			require.NoError(t, err)
-
-			require.Equal(t, tc[1], b.String())
+			require.Equal(t, 1, len(screens))
+			require.Equal(t, tc[1], screens[0].Text)
 		})
 	}
 }
@@ -102,6 +97,7 @@ func TestDispatcher(t *testing.T) {
 		{"SDKDEC", false, valuerenderer.NewDecValueRenderer()},
 		{"BYTES", false, valuerenderer.NewBytesValueRenderer()},
 		{"TIMESTAMP", false, valuerenderer.NewTimestampValueRenderer()},
+		{"DURATION", false, valuerenderer.NewDurationValueRenderer()},
 		{"COIN", false, valuerenderer.NewCoinsValueRenderer(nil)},
 		{"COINS", false, valuerenderer.NewCoinsValueRenderer(nil)},
 		{"FLOAT", true, nil},

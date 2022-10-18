@@ -4,7 +4,7 @@ import (
 	"cosmossdk.io/math"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -28,7 +28,7 @@ func (s *KeeperTestSuite) TestHistoricalInfo() {
 	validators := make([]stakingtypes.Validator, len(addrVals))
 
 	for i, valAddr := range addrVals {
-		validators[i] = teststaking.NewValidator(s.T(), valAddr, PKs[i])
+		validators[i] = testutil.NewValidator(s.T(), valAddr, PKs[i])
 	}
 
 	hi := stakingtypes.NewHistoricalInfo(ctx.BlockHeader(), validators, keeper.PowerReduction(ctx))
@@ -68,8 +68,8 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 		Height:  5,
 	}
 	valSet := []stakingtypes.Validator{
-		teststaking.NewValidator(s.T(), addrVals[0], PKs[0]),
-		teststaking.NewValidator(s.T(), addrVals[1], PKs[1]),
+		testutil.NewValidator(s.T(), addrVals[0], PKs[0]),
+		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
 	}
 	hi4 := stakingtypes.NewHistoricalInfo(h4, valSet, keeper.PowerReduction(ctx))
 	hi5 := stakingtypes.NewHistoricalInfo(h5, valSet, keeper.PowerReduction(ctx))
@@ -83,12 +83,12 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	require.Equal(hi5, recv)
 
 	// Set bonded validators in keeper
-	val1 := teststaking.NewValidator(s.T(), addrVals[2], PKs[2])
+	val1 := testutil.NewValidator(s.T(), addrVals[2], PKs[2])
 	val1.Status = stakingtypes.Bonded // when not bonded, consensus power is Zero
 	val1.Tokens = keeper.TokensFromConsensusPower(ctx, 10)
 	keeper.SetValidator(ctx, val1)
 	keeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10)
-	val2 := teststaking.NewValidator(s.T(), addrVals[3], PKs[3])
+	val2 := testutil.NewValidator(s.T(), addrVals[3], PKs[3])
 	val1.Status = stakingtypes.Bonded
 	val2.Tokens = keeper.TokensFromConsensusPower(ctx, 80)
 	keeper.SetValidator(ctx, val2)
@@ -131,8 +131,8 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 	_, addrVals := createValAddrs(50)
 
 	valSet := []stakingtypes.Validator{
-		teststaking.NewValidator(s.T(), addrVals[0], PKs[0]),
-		teststaking.NewValidator(s.T(), addrVals[1], PKs[1]),
+		testutil.NewValidator(s.T(), addrVals[0], PKs[0]),
+		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
 	}
 
 	header1 := tmproto.Header{ChainID: "HelloChain", Height: 10}

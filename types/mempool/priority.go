@@ -120,7 +120,7 @@ func (mp *priorityMempool) Insert(ctx sdk.Context, tx Tx) error {
 		mp.senderIndices[sender] = senderIndex
 	}
 
-	mp.priorityCounts[priority] = mp.priorityCounts[priority] + 1
+	mp.priorityCounts[priority]++
 
 	// Since senderIndex is scored by nonce, a changed priority will overwrite the existing key.
 	senderTx := senderIndex.Set(key, tx)
@@ -301,7 +301,7 @@ func (mp *priorityMempool) Remove(tx Tx) error {
 	mp.priorityIndex.Remove(tk)
 	senderTxs.Remove(tk)
 	delete(mp.scores, scoreKey)
-	mp.priorityCounts[score.priority] = mp.priorityCounts[score.priority] - 1
+	mp.priorityCounts[score.priority]--
 
 	return nil
 }

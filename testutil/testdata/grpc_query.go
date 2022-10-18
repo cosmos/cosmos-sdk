@@ -5,8 +5,17 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
+	grpc "google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+	// iterCount defines the number of iterations to run on each query to test
+	// determinism.
+	iterCount = 1000
 )
 
 type QueryImpl struct{}
@@ -50,4 +59,28 @@ var _ types.UnpackInterfacesMessage = &TestAnyResponse{}
 
 func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return m.HasAnimal.UnpackInterfaces(unpacker)
+}
+
+func QueryReq[request proto.Message, response proto.Message](
+	ctx sdk.Context,
+	require *require.Assertions,
+	req request,
+	grpcFn func(context.Context, request, ...grpc.CallOption) (response, error),
+	gasConsumed uint64,
+	gasOverwrite bool,
+) {
+	before := ctx.GasMeter().GasConsumed()
+	prevRes, err := grpcFn(ctx, req)
+	require.NoError(err)
+	if gasOverwrite { // to handle regressions
+		gasConsumed = ctx.GasMeter().GasConsumed() - before
+	}
+
+	for i := 0; i < iterCount; i++ {
+		before := ctx.GasMeter().GasConsumed()
+		res, err := grpcFn(ctx, req)
+		require.Equal(ctx.GasMeter().GasConsumed()-before, gasConsumed)
+		require.NoError(err)
+		require.Equal(res, prevRes)
+	}
 }

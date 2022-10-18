@@ -168,7 +168,6 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	require.NoError(t, err)
 
 	suite.GovKeeper.SetProposal(ctx, proposal)
-	suite.GovKeeper.SetProposalMessages(ctx, proposal.Id, []sdk.Msg{contentMsg})
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
@@ -216,7 +215,6 @@ func TestSimulateMsgVote(t *testing.T) {
 	require.NoError(t, err)
 
 	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
-	suite.GovKeeper.SetProposalMessages(ctx, proposal.Id, []sdk.Msg{contentMsg})
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
@@ -261,7 +259,6 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	require.NoError(t, err)
 
 	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
-	suite.GovKeeper.SetProposalMessages(ctx, proposal.Id, []sdk.Msg{contentMsg})
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})

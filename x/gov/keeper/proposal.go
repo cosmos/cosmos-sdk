@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
@@ -79,7 +80,6 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	}
 
 	keeper.SetProposal(ctx, proposal)
-	keeper.SetProposalMessages(ctx, proposalID, messages)
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
 	keeper.SetProposalID(ctx, proposalID+1)
 
@@ -118,23 +118,20 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposa
 // SetProposal sets a proposal to store.
 // Panics if can't marshal the proposal.
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
+	// store proposal messages in a different store and remove them from the proposal before marshaling
+	keeper.setProposalMessages(ctx, proposal.Id, proposal.Messages)
 	proposal.Messages = nil
+
+	store := ctx.KVStore(keeper.storeKey)
 	bz, err := keeper.MarshalProposal(proposal)
 	if err != nil {
 		panic(err)
 	}
-
-	store := ctx.KVStore(keeper.storeKey)
 	store.Set(types.ProposalKey(proposal.Id), bz)
 }
 
-func (keeper Keeper) SetProposalMessages(ctx sdk.Context, proposalID uint64, messages []sdk.Msg) {
-	anys, err := sdktx.SetMsgs(messages)
-	if err != nil {
-		panic(err)
-	}
-
-	bz, err := keeper.cdc.Marshal(&v1.ProposalMessages{Messages: anys})
+func (keeper Keeper) setProposalMessages(ctx sdk.Context, proposalID uint64, messages []*cdctypes.Any) {
+	bz, err := keeper.cdc.Marshal(&v1.ProposalMessages{Messages: messages})
 	if err != nil {
 		panic(err)
 	}

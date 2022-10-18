@@ -114,7 +114,6 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 			}
 
 			suite.govKeeper.SetProposal(suite.ctx, p)
-			suite.govKeeper.SetProposalMessages(suite.ctx, proposalID, TestProposal)
 			proposalID++
 		}
 	}

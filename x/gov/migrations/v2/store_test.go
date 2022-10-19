@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,8 +23,8 @@ func TestMigrateStore(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 	govKey := sdk.NewKVStoreKey("gov")
 	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(govKey)
-	newStore := store2.NewStoreAPI(store)
+	st := ctx.KVStore(govKey)
+	newStore := store.NewStoreAPI(st)
 
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	proposalID := uint64(6)
@@ -87,9 +87,9 @@ func TestMigrateStore(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			if !bytes.Equal(tc.oldKey, tc.newKey) {
-				require.Nil(t, store.Get(tc.oldKey))
+				require.Nil(t, newStore.Get(tc.oldKey))
 			}
-			require.Equal(t, tc.newValue, store.Get(tc.newKey))
+			require.Equal(t, tc.newValue, newStore.Get(tc.newKey))
 		})
 	}
 }

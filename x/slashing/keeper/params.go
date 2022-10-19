@@ -3,7 +3,7 @@ package keeper
 import (
 	"time"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -49,8 +49,8 @@ func (k Keeper) decodeParams(bz []byte) (types.Params, error) {
 
 // GetParams returns the current x/slashing module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	params, _ = store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
+	st := ctx.KVStore(k.storeKey)
+	params, _ = store.GetAndDecode(st, k.decodeParams, types.ParamsKey)
 	return params
 }
 

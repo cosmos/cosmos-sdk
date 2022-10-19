@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -102,8 +102,8 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) erro
 
 // SetEvidence sets Evidence by hash in the module's KVStore.
 func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
-	newStore := store2.NewStoreAPI(store)
+	st := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
+	newStore := store.NewStoreAPI(st)
 	newStore.Set(evidence.Hash(), k.MustMarshalEvidence(evidence))
 }
 
@@ -118,9 +118,9 @@ func (k Keeper) decodeEvidence(bz []byte) (exported.Evidence, bool) {
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
 // the given hash, (nil, false) is returned.
 func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Evidence, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
+	st := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 
-	evidence, boolVal := store2.GetAndDecodeWithBool(store, k.decodeEvidence, hash)
+	evidence, boolVal := store.GetAndDecodeWithBool(st, k.decodeEvidence, hash)
 	if !boolVal {
 		return evidence, boolVal
 	}

@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
@@ -63,8 +63,8 @@ func TestMigration(t *testing.T) {
 		},
 	}
 
-	store := ctx.KVStore(feegrantKey)
-	newStore := store2.NewStoreAPI(store)
+	st := ctx.KVStore(feegrantKey)
+	newStore := store.NewStoreAPI(st)
 	for _, grant := range grants {
 		newGrant, err := feegrant.NewGrant(grant.granter, grant.grantee, &feegrant.BasicAllowance{
 			SpendLimit: grant.spendLimit,
@@ -80,10 +80,9 @@ func TestMigration(t *testing.T) {
 
 	ctx = ctx.WithBlockTime(now.Add(30 * time.Hour))
 	require.NoError(t, v046.MigrateStore(ctx, feegrantKey, cdc))
-	store = ctx.KVStore(feegrantKey)
 
-	require.NotNil(t, store.Get(v046.FeeAllowanceKey(granter1, grantee1)))
-	require.Nil(t, store.Get(v046.FeeAllowanceKey(granter2, grantee2)))
-	require.NotNil(t, store.Get(v046.FeeAllowanceKey(granter1, grantee2)))
-	require.Nil(t, store.Get(v046.FeeAllowanceKey(granter2, grantee1)))
+	require.NotNil(t, newStore.Get(v046.FeeAllowanceKey(granter1, grantee1)))
+	require.Nil(t, newStore.Get(v046.FeeAllowanceKey(granter2, grantee2)))
+	require.NotNil(t, newStore.Get(v046.FeeAllowanceKey(granter1, grantee2)))
+	require.Nil(t, newStore.Get(v046.FeeAllowanceKey(granter2, grantee1)))
 }

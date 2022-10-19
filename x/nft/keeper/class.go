@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/nft"
@@ -46,8 +46,8 @@ func (k Keeper) decodeClass(bz []byte) (nft.Class, bool) {
 
 // GetClass defines a method for returning the class information of the specified id
 func (k Keeper) GetClass(ctx sdk.Context, classID string) (nft.Class, bool) {
-	store := ctx.KVStore(k.storeKey)
-	class, boolval := store2.GetAndDecodeWithBool(store, k.decodeClass, classStoreKey(classID))
+	st := ctx.KVStore(k.storeKey)
+	class, boolval := store.GetAndDecodeWithBool(st, k.decodeClass, classStoreKey(classID))
 	if !boolval {
 		return class, boolval
 	}

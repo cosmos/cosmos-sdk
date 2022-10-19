@@ -5,7 +5,7 @@ import (
 
 	gogotypes "github.com/cosmos/gogoproto/types"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -22,8 +22,8 @@ func (k Keeper) decodeInfo(bz []byte) (types.ValidatorSigningInfo, bool) {
 // GetValidatorSigningInfo retruns the ValidatorSigningInfo for a specific validator
 // ConsAddress
 func (k Keeper) GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (info types.ValidatorSigningInfo, found bool) {
-	store := ctx.KVStore(k.storeKey)
-	info, boolval := store2.GetAndDecodeWithBool(store, k.decodeInfo, types.ValidatorSigningInfoKey(address))
+	st := ctx.KVStore(k.storeKey)
+	info, boolval := store.GetAndDecodeWithBool(st, k.decodeInfo, types.ValidatorSigningInfoKey(address))
 	if !boolval {
 		found = false
 		return
@@ -75,8 +75,8 @@ func (k Keeper) decodeMissed(bz []byte) (bool, error) {
 
 // GetValidatorMissedBlockBitArray gets the bit for the missed blocks array
 func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) bool {
-	store := ctx.KVStore(k.storeKey)
-	missed, err := store2.GetAndDecode(store, k.decodeMissed, types.ValidatorMissedBlockBitArrayKey(address, index))
+	st := ctx.KVStore(k.storeKey)
+	missed, err := store.GetAndDecode(st, k.decodeMissed, types.ValidatorMissedBlockBitArrayKey(address, index))
 	if err != nil {
 		return false
 	}

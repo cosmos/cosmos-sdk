@@ -2,17 +2,17 @@ package v046
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
-func addAllowancesByExpTimeQueue(ctx types.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
-	prefixStore := prefix.NewStore(store, FeeAllowanceKeyPrefix)
-	newPrefixStore := store2.NewStoreAPI(prefixStore)
-	newStore := store2.NewStoreAPI(store)
+func addAllowancesByExpTimeQueue(ctx types.Context, st storetypes.KVStore, cdc codec.BinaryCodec) error {
+	prefixStore := prefix.NewStore(st, FeeAllowanceKeyPrefix)
+	newPrefixStore := store.NewStoreAPI(prefixStore)
+	newStore := store.NewStoreAPI(st)
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
 

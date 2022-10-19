@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/math"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -23,9 +23,9 @@ func (k Keeper) decodeValidator(bz []byte) (types.Validator, bool) {
 
 // get a single validator
 func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool) {
-	store := ctx.KVStore(k.storeKey)
+	st := ctx.KVStore(k.storeKey)
 
-	validator, found = store2.GetAndDecodeWithBool(store, k.decodeValidator, types.GetValidatorKey(addr))
+	validator, found = store.GetAndDecodeWithBool(st, k.decodeValidator, types.GetValidatorKey(addr))
 	if !found {
 		return validator, found
 	}

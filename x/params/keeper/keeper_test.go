@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,8 +78,8 @@ func TestKeeper(t *testing.T) {
 
 	cdc, ctx, skey, _, keeper := testComponents()
 
-	store := prefix.NewStore(ctx.KVStore(skey), []byte("test/"))
-	newStore := store2.NewStoreAPI(store)
+	st := prefix.NewStore(ctx.KVStore(skey), []byte("test/"))
+	newStore := store.NewStoreAPI(st)
 	space := keeper.Subspace("test")
 	require.False(t, space.HasKeyTable())
 	space = space.WithKeyTable(table)

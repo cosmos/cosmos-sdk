@@ -12,7 +12,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,8 +72,8 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
-	return store2.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
+	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
 }
 
 // setProtocolVersion sets the protocol version to state
@@ -101,9 +101,9 @@ func (k Keeper) getProtocolVersion(ctx sdk.Context) uint64 {
 // SetModuleVersionMap saves a given version map to state
 func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 	if len(vm) > 0 {
-		store := k.getStore(ctx)
-		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
-		newVersionStore := store2.NewStoreAPI(versionStore)
+		st := k.getStore(ctx)
+		versionStore := prefix.NewStore(st, []byte{types.VersionMapByte})
+		newVersionStore := store.NewStoreAPI(versionStore)
 		// Even though the underlying store (cachekv) store is sorted, we still
 		// prefer a deterministic iteration order of the map, to avoid undesired
 		// surprises if we ever change stores.

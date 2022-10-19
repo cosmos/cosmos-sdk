@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -493,17 +493,17 @@ func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegations
 	return redels, err
 }
 
-func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+func queryRedelegationsFromSrcValidator(st sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
 	valAddr, err := sdk.ValAddressFromBech32(req.SrcValidatorAddr)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	srcValPrefix := types.GetREDsFromValSrcIndexKey(valAddr)
-	redStore := prefix.NewStore(store, srcValPrefix)
+	redStore := prefix.NewStore(st, srcValPrefix)
 	res, err = query.Paginate(redStore, req.Pagination, func(key []byte, value []byte) error {
 		storeKey := types.GetREDKeyFromValSrcIndexKey(append(srcValPrefix, key...))
-		newStore := store2.NewStoreAPI(store)
+		newStore := store.NewStoreAPI(st)
 		storeValue := newStore.Get(storeKey)
 		red, err := types.UnmarshalRED(k.cdc, storeValue)
 		if err != nil {

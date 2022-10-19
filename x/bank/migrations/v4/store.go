@@ -2,7 +2,7 @@ package v4
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
@@ -18,8 +18,8 @@ var ParamsKey = []byte{0x05}
 // and managed by the x/params module and stores them directly into the x/bank
 // module state.
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
-	store := ctx.KVStore(storeKey)
-	newStore := store2.NewStoreAPI(store)
+	st := ctx.KVStore(storeKey)
+	newStore := store.NewStoreAPI(st)
 	var currParams types.Params
 	legacySubspace.GetParamSet(ctx, &currParams)
 

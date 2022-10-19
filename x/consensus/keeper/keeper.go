@@ -4,7 +4,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
@@ -45,9 +45,9 @@ func (k *Keeper) decodeConsensusParams(bz []byte) (*tmproto.ConsensusParams, err
 
 // Get gets the consensus parameters
 func (k *Keeper) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
-	store := ctx.KVStore(k.storeKey)
+	st := ctx.KVStore(k.storeKey)
 
-	cp, err := store2.GetAndDecode(store, k.decodeConsensusParams, types.ParamStoreKeyConsensusParams)
+	cp, err := store.GetAndDecode(st, k.decodeConsensusParams, types.ParamStoreKeyConsensusParams)
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +63,6 @@ func (k *Keeper) Has(ctx sdk.Context) bool {
 
 // Set sets the consensus parameters
 func (k *Keeper) Set(ctx sdk.Context, cp *tmproto.ConsensusParams) {
-	store := store2.NewStoreAPI(ctx.KVStore(k.storeKey))
+	store := store.NewStoreAPI(ctx.KVStore(k.storeKey))
 	store.Set(types.ParamStoreKeyConsensusParams, k.cdc.MustMarshal(cp))
 }

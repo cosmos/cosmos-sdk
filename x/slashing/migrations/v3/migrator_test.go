@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -34,11 +34,11 @@ func TestMigrate(t *testing.T) {
 	storeKey := sdk.NewKVStoreKey(v3.ModuleName)
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
-	store := ctx.KVStore(storeKey)
-	newStore := store2.NewStoreAPI(store)
+	st := ctx.KVStore(storeKey)
+	newStore := store.NewStoreAPI(st)
 
 	legacySubspace := newMockSubspace(types.DefaultParams())
-	require.NoError(t, v3.Migrate(ctx, store, legacySubspace, cdc))
+	require.NoError(t, v3.Migrate(ctx, st, legacySubspace, cdc))
 
 	var res types.Params
 	bz := newStore.Get(v3.ParamsKey)

@@ -3,7 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/gogoproto/grpc"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	v043 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v043"
@@ -60,8 +60,8 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return v4.Migrate(ctx, ctx.KVStore(m.keeper.storeKey), m.legacySubspace, m.keeper.cdc)
 }
 
-func (m Migrator) getStore(ctx sdk.Context) store2.StoreAPI {
-	return store2.NewStoreAPI(ctx.KVStore(m.keeper.storeKey))
+func (m Migrator) getStore(ctx sdk.Context) store.StoreAPI {
+	return store.NewStoreAPI(ctx.KVStore(m.keeper.storeKey))
 }
 
 // V45_SetAccount implements V45_SetAccount

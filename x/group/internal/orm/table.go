@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -99,7 +99,7 @@ func (a table) Update(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarsha
 //
 // Set iterates through the registered callbacks that may add secondary index
 // keys.
-func (a table) Set(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
+func (a table) Set(st sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
 	if len(rowID) == 0 {
 		return errors.ErrORMEmptyKey
 	}
@@ -110,13 +110,13 @@ func (a table) Set(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler
 		return err
 	}
 
-	pStore := prefix.NewStore(store, a.prefix[:])
-	newPStore := store2.NewStoreAPI(pStore)
+	pStore := prefix.NewStore(st, a.prefix[:])
+	newPStore := store.NewStoreAPI(pStore)
 
 	var oldValue codec.ProtoMarshaler
-	if a.Has(store, rowID) {
+	if a.Has(st, rowID) {
 		oldValue = reflect.New(a.model).Interface().(codec.ProtoMarshaler)
-		a.GetOne(store, rowID, oldValue)
+		a.GetOne(st, rowID, oldValue)
 	}
 
 	newValueEncoded, err := a.cdc.Marshal(newValue)
@@ -126,7 +126,7 @@ func (a table) Set(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler
 
 	newPStore.Set(rowID, newValueEncoded)
 	for i, itc := range a.afterSet {
-		if err := itc(store, rowID, newValue, oldValue); err != nil {
+		if err := itc(st, rowID, newValue, oldValue); err != nil {
 			return sdkerrors.Wrapf(err, "interceptor %d failed", i)
 		}
 	}
@@ -148,18 +148,18 @@ func assertValid(obj codec.ProtoMarshaler) error {
 //
 // Delete iterates through the registered callbacks that remove secondary index
 // keys.
-func (a table) Delete(store sdk.KVStore, rowID RowID) error {
-	pStore := prefix.NewStore(store, a.prefix[:])
-	newPStore := store2.NewStoreAPI(pStore)
+func (a table) Delete(st sdk.KVStore, rowID RowID) error {
+	pStore := prefix.NewStore(st, a.prefix[:])
+	newPStore := store.NewStoreAPI(pStore)
 
 	oldValue := reflect.New(a.model).Interface().(codec.ProtoMarshaler)
-	if err := a.GetOne(store, rowID, oldValue); err != nil {
+	if err := a.GetOne(st, rowID, oldValue); err != nil {
 		return sdkerrors.Wrap(err, "load old value")
 	}
 	newPStore.Delete(rowID)
 
 	for i, itc := range a.afterDelete {
-		if err := itc(store, rowID, oldValue); err != nil {
+		if err := itc(st, rowID, oldValue); err != nil {
 			return sdkerrors.Wrapf(err, "delete interceptor %d failed", i)
 		}
 	}

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -99,8 +99,8 @@ func (k BaseSendKeeper) decodeParams(bz []byte) (types.Params, error) {
 
 // GetParams returns the total set of bank parameters.
 func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	params, _ = store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
+	st := ctx.KVStore(k.storeKey)
+	params, _ = store.GetAndDecode(st, k.decodeParams, types.ParamsKey)
 	return params
 }
 
@@ -116,8 +116,8 @@ func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 		params = types.NewParams(params.DefaultSendEnabled)
 	}
 
-	store := ctx.KVStore(k.storeKey)
-	newStore := store2.NewStoreAPI(store)
+	st := ctx.KVStore(k.storeKey)
+	newStore := store.NewStoreAPI(st)
 	bz, err := k.cdc.Marshal(&params)
 	if err != nil {
 		return err
@@ -291,7 +291,7 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 // An error is returned upon failure.
 func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
 	accountStore := k.getAccountStore(ctx, addr)
-	newAccStore := store2.NewStoreAPI(accountStore)
+	newAccStore := store.NewStoreAPI(accountStore)
 	denomPrefixStores := make(map[string]prefix.Store) // memoize prefix stores
 
 	for i := range balances {
@@ -309,10 +309,10 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 			newAccStore.Set([]byte(balance.Denom), amount)
 
 			denomPrefixStore, ok := denomPrefixStores[balance.Denom]
-			newDenomPrefixStore := store2.NewStoreAPI(denomPrefixStore)
+			newDenomPrefixStore := store.NewStoreAPI(denomPrefixStore)
 			if !ok {
 				denomPrefixStore = k.getDenomAddressPrefixStore(ctx, balance.Denom)
-				newDenomPrefixStore = store2.NewStoreAPI(denomPrefixStore)
+				newDenomPrefixStore = store.NewStoreAPI(denomPrefixStore)
 				denomPrefixStores[balance.Denom] = denomPrefixStore
 
 			}
@@ -336,9 +336,9 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	}
 
 	accountStore := k.getAccountStore(ctx, addr)
-	newAccStore := store2.NewStoreAPI(accountStore)
+	newAccStore := store.NewStoreAPI(accountStore)
 	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, balance.Denom)
-	newDenomPrefixStore := store2.NewStoreAPI(denomPrefixStore)
+	newDenomPrefixStore := store.NewStoreAPI(denomPrefixStore)
 
 	// x/bank invariants prohibit persistence of zero balances
 	if balance.IsZero() {
@@ -433,18 +433,18 @@ func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types
 }
 
 // setSendEnabledEntry sets SendEnabled for the given denom to the give value in the provided store.
-func (k BaseSendKeeper) setSendEnabledEntry(store sdk.KVStore, denom string, value bool) {
+func (k BaseSendKeeper) setSendEnabledEntry(st sdk.KVStore, denom string, value bool) {
 	key := types.CreateSendEnabledKey(denom)
 	val := types.ToBoolB(value)
-	newStore := store2.NewStoreAPI(store)
+	newStore := store.NewStoreAPI(st)
 	newStore.Set(key, []byte{val})
 }
 
 // DeleteSendEnabled deletes the SendEnabled flags for one or more denoms.
 // If a denom is provided that doesn't have a SendEnabled entry, it is ignored.
 func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denoms ...string) {
-	store := ctx.KVStore(k.storeKey)
-	newStore := store2.NewStoreAPI(store)
+	st := ctx.KVStore(k.storeKey)
+	newStore := store.NewStoreAPI(st)
 	for _, denom := range denoms {
 		newStore.Delete(types.CreateSendEnabledKey(denom))
 	}

@@ -4,7 +4,7 @@ import (
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
@@ -29,7 +29,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 }
 
 // migrateParams will set the params to store from legacySubspace
-func migrateParams(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
+func migrateParams(ctx sdk.Context, st storetypes.KVStore, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
 	var legacyParams types.Params
 	legacySubspace.GetParamSet(ctx, &legacyParams)
 
@@ -38,7 +38,7 @@ func migrateParams(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCo
 	}
 
 	bz := cdc.MustMarshal(&legacyParams)
-	newStore := store2.NewStoreAPI(store)
+	newStore := store.NewStoreAPI(st)
 	newStore.Set(types.ParamsKey, bz)
 	return nil
 }
@@ -86,7 +86,7 @@ func migrateUBDEntries(ctx sdk.Context, store storetypes.KVStore, cdc codec.Bina
 	return nil
 }
 
-func setUBDToStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec, ubd types.UnbondingDelegation) {
+func setUBDToStore(ctx sdk.Context, st storetypes.KVStore, cdc codec.BinaryCodec, ubd types.UnbondingDelegation) {
 	delegatorAddress := sdk.MustAccAddressFromBech32(ubd.DelegatorAddress)
 
 	bz := types.MustMarshalUBD(cdc, ubd)
@@ -98,6 +98,6 @@ func setUBDToStore(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCo
 
 	key := types.GetUBDKey(delegatorAddress, addr)
 
-	newStore := store2.NewStoreAPI(store)
+	newStore := store.NewStoreAPI(st)
 	newStore.Set(key, bz)
 }

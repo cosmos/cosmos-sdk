@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -70,14 +70,14 @@ func (k Keeper) decodeMinter(bz []byte) (types.Minter, error) {
 	return minter, nil
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
-	return store2.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
+	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
 }
 
 // get the minter
 func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
-	store := ctx.KVStore(k.storeKey)
-	minter, _ = store2.GetAndDecode(store, k.decodeMinter, types.MinterKey)
+	st := ctx.KVStore(k.storeKey)
+	minter, _ = store.GetAndDecode(st, k.decodeMinter, types.MinterKey)
 	return
 }
 
@@ -112,8 +112,8 @@ func (k Keeper) decodeParams(bz []byte) (types.Params, error) {
 
 // GetParams returns the current x/mint module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (p types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	params, _ := store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
+	st := ctx.KVStore(k.storeKey)
+	params, _ := store.GetAndDecode(st, k.decodeParams, types.ParamsKey)
 	return params
 }
 

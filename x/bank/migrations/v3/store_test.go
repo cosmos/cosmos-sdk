@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/math"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,11 +22,11 @@ func TestMigrateStore(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
+	st := ctx.KVStore(bankKey)
 
 	addr := sdk.AccAddress([]byte("addr________________"))
-	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
-	newStore := store2.NewStoreAPI(prefixAccStore)
+	prefixAccStore := prefix.NewStore(st, v2.CreateAccountBalancesPrefix(addr))
+	newStore := store.NewStoreAPI(prefixAccStore)
 
 	balances := sdk.NewCoins(
 		sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -43,7 +43,7 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
 
 	for _, b := range balances {
-		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
+		addrPrefixStore := prefix.NewStore(st, types.CreateAccountBalancesPrefix(addr))
 		bz := addrPrefixStore.Get([]byte(b.Denom))
 		var expected math.Int
 		require.NoError(t, expected.Unmarshal(bz))
@@ -51,7 +51,7 @@ func TestMigrateStore(t *testing.T) {
 	}
 
 	for _, b := range balances {
-		denomPrefixStore := prefix.NewStore(store, v3.CreateDenomAddressPrefix(b.Denom))
+		denomPrefixStore := prefix.NewStore(st, v3.CreateDenomAddressPrefix(b.Denom))
 		bz := denomPrefixStore.Get(address.MustLengthPrefix(addr))
 		require.NotNil(t, bz)
 	}
@@ -61,7 +61,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
+	st := ctx.KVStore(bankKey)
 	metaData := []types.Metadata{
 		{
 			Name:        "Cosmos Hub Atom",
@@ -88,8 +88,8 @@ func TestMigrateDenomMetaData(t *testing.T) {
 			Display: "token",
 		},
 	}
-	denomMetadataStore := prefix.NewStore(store, v2.DenomMetadataPrefix)
-	newDenomMetadataStore := store2.NewStoreAPI(denomMetadataStore)
+	denomMetadataStore := prefix.NewStore(st, v2.DenomMetadataPrefix)
+	newDenomMetadataStore := store.NewStoreAPI(denomMetadataStore)
 
 	for i := range []int{0, 1} {
 		key := append(v2.DenomMetadataPrefix, []byte(metaData[i].Base)...)
@@ -102,7 +102,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 
 	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
 
-	denomMetadataStore = prefix.NewStore(store, v2.DenomMetadataPrefix)
+	denomMetadataStore = prefix.NewStore(st, v2.DenomMetadataPrefix)
 	denomMetadataIter := denomMetadataStore.Iterator(nil, nil)
 	defer denomMetadataIter.Close()
 	for i := 0; denomMetadataIter.Valid(); denomMetadataIter.Next() {

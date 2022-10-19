@@ -15,7 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,7 +42,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 
 	// write some data in substore
 	kv, _ := rs.GetStore(key).(storetypes.KVStore)
-	newKV := store2.NewStoreAPI(kv)
+	newKV := store.NewStoreAPI(kv)
 	require.NotNil(t, kv)
 	newKV.Set(k, v)
 	commitID := rs.Commit()
@@ -60,7 +60,7 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 
 	// query data in substore
 	kv, _ := rs.GetStore(key).(storetypes.KVStore)
-	newKV := store2.NewStoreAPI(kv)
+	newKV := store.NewStoreAPI(kv)
 
 	require.NotNil(t, kv)
 	require.Equal(t, v, newKV.Get(k))

@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -17,8 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func getStore(store store2.KVStore) store2.StoreAPI {
-	return store2.NewStoreAPI(store)
+func getStore(st store.KVStore) store.StoreAPI {
+	return store.NewStoreAPI(st)
 }
 
 func TestSupplyMigration(t *testing.T) {

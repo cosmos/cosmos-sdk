@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,10 +19,10 @@ const proposalIDLen = 8
 // <prefix_bytes><proposal_id (8 bytes)><address_bytes>
 // into format:
 // <prefix_bytes><proposal_id (8 bytes)><address_len (1 byte)><address_bytes>
-func migratePrefixProposalAddress(store sdk.KVStore, prefixBz []byte) {
-	oldStore := prefix.NewStore(store, prefixBz)
-	oldStore2 := store2.NewStoreAPI(oldStore)
-	newStore := store2.NewStoreAPI(store)
+func migratePrefixProposalAddress(st sdk.KVStore, prefixBz []byte) {
+	oldStore := prefix.NewStore(st, prefixBz)
+	oldStore2 := store.NewStoreAPI(oldStore)
+	newStore := store.NewStoreAPI(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -50,9 +50,9 @@ func migrateVote(oldVote v1beta1.Vote) v1beta1.Vote {
 }
 
 // migrateStoreWeightedVotes migrates in-place all legacy votes to ADR-037 weighted votes.
-func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
-	iterator := sdk.KVStorePrefixIterator(store, types.VotesKeyPrefix)
-	newStore := store2.NewStoreAPI(store)
+func migrateStoreWeightedVotes(st sdk.KVStore, cdc codec.BinaryCodec) error {
+	iterator := sdk.KVStorePrefixIterator(st, types.VotesKeyPrefix)
+	newStore := store.NewStoreAPI(st)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

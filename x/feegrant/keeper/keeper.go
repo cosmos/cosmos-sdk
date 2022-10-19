@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -156,8 +156,8 @@ func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 	return nil
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
-	return store2.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
+	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
 }
 
 // revokeAllowance removes an existing grant
@@ -203,9 +203,9 @@ func (k Keeper) decodeFeegrant(bz []byte) (*feegrant.Grant, error) {
 
 // getGrant returns entire grant between both accounts
 func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*feegrant.Grant, error) {
-	store := ctx.KVStore(k.storeKey)
+	st := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
-	feegrant, err := store2.GetAndDecode(store, k.decodeFeegrant, key)
+	feegrant, err := store.GetAndDecode(st, k.decodeFeegrant, key)
 	if feegrant == nil {
 		return nil, sdkerrors.ErrNotFound.Wrap("fee-grant not found")
 	}

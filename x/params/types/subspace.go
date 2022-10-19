@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -99,8 +99,8 @@ func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error
 	return nil
 }
 
-func (s Subspace) getStore(ctx sdk.Context) store2.StoreAPI {
-	return store2.NewStoreAPI(s.kvStore(ctx))
+func (s Subspace) getStore(ctx sdk.Context) store.StoreAPI {
+	return store.NewStoreAPI(s.kvStore(ctx))
 }
 
 // Get queries for a parameter by key from the Subspace's KVStore and sets the
@@ -192,16 +192,16 @@ func (s Subspace) checkType(key []byte, value interface{}) {
 // transient KVStore to mark the parameter as modified.
 func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 	s.checkType(key, value)
-	store := s.getStore(ctx)
+	st := s.getStore(ctx)
 
 	bz, err := s.legacyAmino.MarshalJSON(value)
 	if err != nil {
 		panic(err)
 	}
 
-	store.Set(key, bz)
+	st.Set(key, bz)
 
-	newtStore := store2.NewStoreAPI(s.transientStore(ctx))
+	newtStore := store.NewStoreAPI(s.transientStore(ctx))
 	newtStore.Set(key, []byte{})
 }
 

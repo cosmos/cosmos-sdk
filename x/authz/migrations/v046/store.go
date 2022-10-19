@@ -3,7 +3,7 @@ package v046
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,9 +25,9 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 	return nil
 }
 
-func addExpiredGrantsIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
-	grantsStore := prefix.NewStore(store, GrantPrefix)
-	newStore := store2.NewStoreAPI(grantsStore)
+func addExpiredGrantsIndex(ctx sdk.Context, st storetypes.KVStore, cdc codec.BinaryCodec) error {
+	grantsStore := prefix.NewStore(st, GrantPrefix)
+	newStore := store.NewStoreAPI(grantsStore)
 
 	grantsIter := grantsStore.Iterator(nil, nil)
 	defer grantsIter.Close()

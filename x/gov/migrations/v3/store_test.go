@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -23,8 +23,8 @@ func TestMigrateStore(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{}, gov.AppModuleBasic{}).Codec
 	govKey := sdk.NewKVStoreKey("gov")
 	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(govKey)
-	newStore := store2.NewStoreAPI(store)
+	st := ctx.KVStore(govKey)
+	newStore := store.NewStoreAPI(st)
 
 	propTime := time.Unix(1e9, 0)
 
@@ -48,12 +48,12 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, err)
 
 	var newProp1 v1.Proposal
-	err = cdc.Unmarshal(store.Get(v1gov.ProposalKey(prop1.ProposalId)), &newProp1)
+	err = cdc.Unmarshal(newStore.Get(v1gov.ProposalKey(prop1.ProposalId)), &newProp1)
 	require.NoError(t, err)
 	compareProps(t, prop1, newProp1)
 
 	var newProp2 v1.Proposal
-	err = cdc.Unmarshal(store.Get(v1gov.ProposalKey(prop2.ProposalId)), &newProp2)
+	err = cdc.Unmarshal(newStore.Get(v1gov.ProposalKey(prop2.ProposalId)), &newProp2)
 	require.NoError(t, err)
 	compareProps(t, prop2, newProp2)
 }

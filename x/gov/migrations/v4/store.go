@@ -2,7 +2,7 @@ package v4
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/exported"
@@ -10,8 +10,8 @@ import (
 )
 
 func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.ParamSubspace, cdc codec.BinaryCodec) error {
-	store := ctx.KVStore(storeKey)
-	newStore := store2.NewStoreAPI(store)
+	st := ctx.KVStore(storeKey)
+	newStore := store.NewStoreAPI(st)
 
 	dp := govv1.DepositParams{}
 	vp := govv1.VotingParams{}

@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -28,7 +28,7 @@ func (k Keeper) decodeParams(bz []byte) (v1.Params, error) {
 }
 
 func (k Keeper) GetParams(clientCtx sdk.Context) (params v1.Params) {
-	store := clientCtx.KVStore(k.storeKey)
-	params, _ = store2.GetAndDecode(store, k.decodeParams, types.ParamsKey)
+	st := clientCtx.KVStore(k.storeKey)
+	params, _ = store.GetAndDecode(st, k.decodeParams, types.ParamsKey)
 	return params
 }

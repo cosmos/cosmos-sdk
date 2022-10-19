@@ -1,7 +1,7 @@
 package v2
 
 import (
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,10 +16,10 @@ import (
 // prefix_bytes | address_1_bytes | address_2_bytes | address_3_bytes
 // into format:
 // prefix_bytes | address_1_len (1 byte) | address_1_bytes | address_2_len (1 byte) | address_2_bytes | address_3_len (1 byte) | address_3_bytes
-func migratePrefixAddressAddressAddress(store sdk.KVStore, prefixBz []byte) {
-	oldStore := prefix.NewStore(store, prefixBz)
-	oldStore2 := store2.NewStoreAPI(oldStore)
-	newStore := store2.NewStoreAPI(store)
+func migratePrefixAddressAddressAddress(st sdk.KVStore, prefixBz []byte) {
+	oldStore := prefix.NewStore(st, prefixBz)
+	oldStore2 := store.NewStoreAPI(oldStore)
+	newStore := store.NewStoreAPI(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -41,10 +41,10 @@ func migratePrefixAddressAddressAddress(store sdk.KVStore, prefixBz []byte) {
 
 const powerBytesLen = 8
 
-func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
-	oldStore := prefix.NewStore(store, v1.ValidatorsByPowerIndexKey)
-	oldStore2 := store2.NewStoreAPI(oldStore)
-	newStore := store2.NewStoreAPI(store)
+func migrateValidatorsByPowerIndexKey(st sdk.KVStore) {
+	oldStore := prefix.NewStore(st, v1.ValidatorsByPowerIndexKey)
+	oldStore2 := store.NewStoreAPI(oldStore)
+	newStore := store.NewStoreAPI(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()

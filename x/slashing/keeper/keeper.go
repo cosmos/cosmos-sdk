@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -47,8 +47,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
-	return store2.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
+	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
 }
 
 // AddPubkey sets a address-pubkey relation
@@ -74,8 +74,8 @@ func (k Keeper) decodePubKey(bz []byte) (cryptotypes.PubKey, error) {
 
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
-	store := ctx.KVStore(k.storeKey)
-	pubkey, err := store2.GetAndDecode(store, k.decodePubKey, types.AddrPubkeyRelationKey(a))
+	st := ctx.KVStore(k.storeKey)
+	pubkey, err := store.GetAndDecode(st, k.decodePubKey, types.AddrPubkeyRelationKey(a))
 	if pubkey == nil {
 		return pubkey, fmt.Errorf("address %s not found", sdk.ConsAddress(a))
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -46,8 +46,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", authz.ModuleName))
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
-	return store2.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
+	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
 }
 
 func (k Keeper) decodeGrant(bz []byte) (authz.Grant, bool) {
@@ -61,8 +61,8 @@ func (k Keeper) decodeGrant(bz []byte) (authz.Grant, bool) {
 
 // getGrant returns grant stored at skey.
 func (k Keeper) getGrant(ctx sdk.Context, skey []byte) (grant authz.Grant, found bool) {
-	store := ctx.KVStore(k.storeKey)
-	grant, found = store2.GetAndDecodeWithBool(store, k.decodeGrant, skey)
+	st := ctx.KVStore(k.storeKey)
+	grant, found = store.GetAndDecodeWithBool(st, k.decodeGrant, skey)
 	if !found {
 		return grant, found
 	}
@@ -309,9 +309,9 @@ func (k Keeper) decodeQueueItems(bz []byte) (authz.GrantQueueItem, error) {
 }
 
 func (k Keeper) getGrantQueueItem(ctx sdk.Context, expiration time.Time, granter, grantee sdk.AccAddress) (*authz.GrantQueueItem, error) {
-	store := ctx.KVStore(k.storeKey)
+	st := ctx.KVStore(k.storeKey)
 
-	queueItems, err := store2.GetAndDecode(store, k.decodeQueueItems, GrantQueueKey(expiration, granter, grantee))
+	queueItems, err := store.GetAndDecode(st, k.decodeQueueItems, GrantQueueKey(expiration, granter, grantee))
 	if err != nil {
 		return nil, err
 	}
@@ -352,9 +352,9 @@ func (k Keeper) insertIntoGrantQueue(ctx sdk.Context, granter, grantee sdk.AccAd
 
 // removeFromGrantQueue removes a grant key from the grant queue
 func (k Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, granter, grantee sdk.AccAddress, expiration time.Time) error {
-	store := ctx.KVStore(k.storeKey)
+	st := ctx.KVStore(k.storeKey)
 	key := GrantQueueKey(expiration, granter, grantee)
-	queueItem, err := store2.GetAndDecode(store, k.decodeQueueItems, key)
+	queueItem, err := store.GetAndDecode(st, k.decodeQueueItems, key)
 	if err != nil {
 		return sdkerrors.Wrap(authz.ErrNoGrantKeyFound, "can't remove grant from the expire queue, grant key not found")
 	}

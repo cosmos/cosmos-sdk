@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -110,9 +110,9 @@ func (keeper Keeper) decodeProposal(bz []byte) (v1.Proposal, bool) {
 // GetProposal gets a proposal from store by ProposalID.
 // Panics if can't unmarshal the proposal.
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
-	store := ctx.KVStore(keeper.storeKey)
+	st := ctx.KVStore(keeper.storeKey)
 
-	proposal, boolVal := store2.GetAndDecodeWithBool(store, keeper.decodeProposal, types.ProposalKey(proposalID))
+	proposal, boolVal := store.GetAndDecodeWithBool(st, keeper.decodeProposal, types.ProposalKey(proposalID))
 	if !boolVal {
 		return v1.Proposal{}, boolVal
 	}
@@ -237,8 +237,8 @@ func (keeper Keeper) decodeProposalID(bz []byte) (proposalID uint64, err error) 
 
 // GetProposalID gets the highest proposal ID
 func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err error) {
-	store := ctx.KVStore(keeper.storeKey)
-	proposalID, err = store2.GetAndDecode(store, keeper.decodeProposalID, types.ProposalIDKey)
+	st := ctx.KVStore(keeper.storeKey)
+	proposalID, err = store.GetAndDecode(st, keeper.decodeProposalID, types.ProposalIDKey)
 	if err != nil {
 		return 0, err
 	}

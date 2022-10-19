@@ -1,15 +1,15 @@
 package keeper
 
 import (
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
-func (k Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
-	return store2.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
+	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
 }
 
 // Mint defines a method for minting a new nft
@@ -62,7 +62,7 @@ func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 func (k Keeper) burnWithNoCheck(ctx sdk.Context, classID string, nftID string) error {
 	owner := k.GetOwner(ctx, classID, nftID)
 	nftStore := k.getNFTStore(ctx, classID)
-	newNftStore := store2.NewStoreAPI(nftStore)
+	newNftStore := store.NewStoreAPI(nftStore)
 	newNftStore.Delete([]byte(nftID))
 
 	k.deleteOwner(ctx, classID, nftID, owner)
@@ -140,8 +140,8 @@ func (k Keeper) decodeNFT(bz []byte) (nft.NFT, bool) {
 
 // GetNFT returns the nft information of the specified classID and nftID
 func (k Keeper) GetNFT(ctx sdk.Context, classID, nftID string) (nft.NFT, bool) {
-	store := k.getNFTStore(ctx, classID)
-	nft, boolval := store2.GetAndDecodeWithBool(store, k.decodeNFT, []byte(nftID))
+	st := k.getNFTStore(ctx, classID)
+	nft, boolval := store.GetAndDecodeWithBool(st, k.decodeNFT, []byte(nftID))
 	if !boolval {
 		return nft, boolval
 	}
@@ -204,26 +204,26 @@ func (k Keeper) HasNFT(ctx sdk.Context, classID, id string) bool {
 
 func (k Keeper) setNFT(ctx sdk.Context, token nft.NFT) {
 	nftStore := k.getNFTStore(ctx, token.ClassId)
-	newNftStore := store2.NewStoreAPI(nftStore)
+	newNftStore := store.NewStoreAPI(nftStore)
 	bz := k.cdc.MustMarshal(&token)
 	newNftStore.Set([]byte(token.Id), bz)
 }
 
 func (k Keeper) setOwner(ctx sdk.Context, classID, nftID string, owner sdk.AccAddress) {
-	store := k.getStore(ctx)
-	store.Set(ownerStoreKey(classID, nftID), owner.Bytes())
+	st := k.getStore(ctx)
+	st.Set(ownerStoreKey(classID, nftID), owner.Bytes())
 
 	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
-	newOwnerStore := store2.NewStoreAPI(ownerStore)
+	newOwnerStore := store.NewStoreAPI(ownerStore)
 	newOwnerStore.Set([]byte(nftID), Placeholder)
 }
 
 func (k Keeper) deleteOwner(ctx sdk.Context, classID, nftID string, owner sdk.AccAddress) {
-	store := k.getStore(ctx)
-	store.Delete(ownerStoreKey(classID, nftID))
+	st := k.getStore(ctx)
+	st.Delete(ownerStoreKey(classID, nftID))
 
 	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
-	newOwnerStore := store2.NewStoreAPI(ownerStore)
+	newOwnerStore := store.NewStoreAPI(ownerStore)
 	newOwnerStore.Delete([]byte(nftID))
 }
 

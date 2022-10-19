@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,8 +21,8 @@ func TestTypeSafeRowGetter(t *testing.T) {
 	storeKey := sdk.NewKVStoreKey("test")
 	ctx := NewMockContext()
 	prefixKey := [2]byte{0x2}
-	store := prefix.NewStore(ctx.KVStore(storeKey), prefixKey[:])
-	newStore := store2.NewStoreAPI(store)
+	st := prefix.NewStore(ctx.KVStore(storeKey), prefixKey[:])
+	newStore := store.NewStoreAPI(st)
 	md := testdata.TableModel{
 		Id:   1,
 		Name: "some name",

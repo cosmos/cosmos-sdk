@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -75,8 +75,8 @@ func (keeper Keeper) decodeVote(bz []byte) (vote v1.Vote, found bool) {
 
 // GetVote gets the vote from an address on a specific proposal
 func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote v1.Vote, found bool) {
-	store := ctx.KVStore(keeper.storeKey)
-	vote, boolVal := store2.GetAndDecodeWithBool(store, keeper.decodeVote, types.VoteKey(proposalID, voterAddr))
+	st := ctx.KVStore(keeper.storeKey)
+	vote, boolVal := store.GetAndDecodeWithBool(st, keeper.decodeVote, types.VoteKey(proposalID, voterAddr))
 	if !boolVal {
 		return vote, boolVal
 	}

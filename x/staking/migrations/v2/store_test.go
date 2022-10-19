@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdktestuil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,8 +21,8 @@ func TestStoreMigration(t *testing.T) {
 	stakingKey := sdk.NewKVStoreKey("staking")
 	tStakingKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := sdktestuil.DefaultContext(stakingKey, tStakingKey)
-	store := ctx.KVStore(stakingKey)
-	newStore := store2.NewStoreAPI(store)
+	st := ctx.KVStore(stakingKey)
+	newStore := store.NewStoreAPI(st)
 
 	_, pk1, addr1 := testdata.KeyTestPubAddr()
 	valAddr1 := sdk.ValAddress(addr1)

@@ -1,7 +1,7 @@
 package orm
 
 import (
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
@@ -71,8 +71,8 @@ func (i Indexer) OnCreate(store sdk.KVStore, rowID RowID, value interface{}) err
 }
 
 // OnDelete removes the secondary index entries for the deleted object.
-func (i Indexer) OnDelete(store sdk.KVStore, rowID RowID, value interface{}) error {
-	newStore := store2.NewStoreAPI(store)
+func (i Indexer) OnDelete(st sdk.KVStore, rowID RowID, value interface{}) error {
+	newStore := store.NewStoreAPI(st)
 	secondaryIndexKeys, err := i.indexerFunc(value)
 	if err != nil {
 		return err
@@ -89,8 +89,8 @@ func (i Indexer) OnDelete(store sdk.KVStore, rowID RowID, value interface{}) err
 }
 
 // OnUpdate rebuilds the secondary index entries for the updated object.
-func (i Indexer) OnUpdate(store sdk.KVStore, rowID RowID, newValue, oldValue interface{}) error {
-	newStore := store2.NewStoreAPI(store)
+func (i Indexer) OnUpdate(st sdk.KVStore, rowID RowID, newValue, oldValue interface{}) error {
+	newStore := store.NewStoreAPI(st)
 	oldSecIdxKeys, err := i.indexerFunc(oldValue)
 	if err != nil {
 		return err
@@ -115,7 +115,7 @@ func (i Indexer) OnUpdate(store sdk.KVStore, rowID RowID, newValue, oldValue int
 		return err
 	}
 	for _, newIdxKey := range newKeys {
-		if err := i.addFunc(store, newIdxKey, rowID); err != nil {
+		if err := i.addFunc(st, newIdxKey, rowID); err != nil {
 			return err
 		}
 	}
@@ -123,8 +123,8 @@ func (i Indexer) OnUpdate(store sdk.KVStore, rowID RowID, newValue, oldValue int
 }
 
 // uniqueKeysAddFunc enforces keys to be unique
-func uniqueKeysAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID RowID) error {
-	newStore := store2.NewStoreAPI(store)
+func uniqueKeysAddFunc(st sdk.KVStore, secondaryIndexKey interface{}, rowID RowID) error {
+	newStore := store.NewStoreAPI(st)
 	secondaryIndexKeyBytes, err := keyPartBytes(secondaryIndexKey, false)
 	if err != nil {
 		return err
@@ -133,7 +133,7 @@ func uniqueKeysAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID R
 		return sdkerrors.Wrap(errors.ErrORMInvalidArgument, "empty index key")
 	}
 
-	if err := checkUniqueIndexKey(store, secondaryIndexKeyBytes); err != nil {
+	if err := checkUniqueIndexKey(st, secondaryIndexKeyBytes); err != nil {
 		return err
 	}
 
@@ -157,8 +157,8 @@ func checkUniqueIndexKey(store sdk.KVStore, secondaryIndexKeyBytes []byte) error
 }
 
 // multiKeyAddFunc allows multiple entries for a key
-func multiKeyAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID RowID) error {
-	newStore := store2.NewStoreAPI(store)
+func multiKeyAddFunc(st sdk.KVStore, secondaryIndexKey interface{}, rowID RowID) error {
+	newStore := store.NewStoreAPI(st)
 	secondaryIndexKeyBytes, err := keyPartBytes(secondaryIndexKey, false)
 	if err != nil {
 		return err

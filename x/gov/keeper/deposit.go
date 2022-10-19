@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -21,8 +21,8 @@ func (keeper Keeper) decodeDeposit(bz []byte) (v1.Deposit, bool) {
 
 // GetDeposit gets the deposit of a specific depositor on a specific proposal
 func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) (deposit v1.Deposit, found bool) {
-	store := ctx.KVStore(keeper.storeKey)
-	deposit, found = store2.GetAndDecodeWithBool(store, keeper.decodeDeposit, types.DepositKey(proposalID, depositorAddr))
+	st := ctx.KVStore(keeper.storeKey)
+	deposit, found = store.GetAndDecodeWithBool(st, keeper.decodeDeposit, types.DepositKey(proposalID, depositorAddr))
 	if !found {
 		return deposit, found
 	}
@@ -59,8 +59,8 @@ func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) (deposits v
 	return
 }
 
-func (keeper Keeper) getStore(ctx sdk.Context) store2.StoreAPI {
-	return store2.NewStoreAPI(ctx.KVStore(keeper.storeKey))
+func (keeper Keeper) getStore(ctx sdk.Context) store.StoreAPI {
+	return store.NewStoreAPI(ctx.KVStore(keeper.storeKey))
 }
 
 // DeleteAndBurnDeposits deletes and burn all the deposits on a specific proposal.

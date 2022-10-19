@@ -2,15 +2,15 @@ package v046
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func mapAccountAddressToAccountID(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
-	store := store2.NewStoreAPI(ctx.KVStore(storeKey))
-	iterator := sdk.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
+	st := store.NewStoreAPI(ctx.KVStore(storeKey))
+	iterator := sdk.KVStorePrefixIterator(st, types.AddressStoreKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -18,7 +18,7 @@ func mapAccountAddressToAccountID(ctx sdk.Context, storeKey storetypes.StoreKey,
 		if err := cdc.UnmarshalInterface(iterator.Value(), &acc); err != nil {
 			return err
 		}
-		store.Set(types.AccountNumberStoreKey(acc.GetAccountNumber()), acc.GetAddress().Bytes())
+		st.Set(types.AccountNumberStoreKey(acc.GetAccountNumber()), acc.GetAddress().Bytes())
 	}
 
 	return nil

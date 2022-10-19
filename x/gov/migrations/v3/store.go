@@ -2,7 +2,7 @@ package v3
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,9 +12,9 @@ import (
 
 // migrateProposals migrates all legacy proposals into MsgExecLegacyContent
 // proposals.
-func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
-	propStore := prefix.NewStore(store, v1.ProposalsKeyPrefix)
-	newPropStore := store2.NewStoreAPI(propStore)
+func migrateProposals(st sdk.KVStore, cdc codec.BinaryCodec) error {
+	propStore := prefix.NewStore(st, v1.ProposalsKeyPrefix)
+	newPropStore := store.NewStoreAPI(propStore)
 
 	iter := propStore.Iterator(nil, nil)
 	defer iter.Close()

@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -225,10 +225,10 @@ func decodeCoin(bz []byte) (sdk.Coin, error) {
 
 // GetSupply retrieves the Supply from store
 func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
-	store := ctx.KVStore(k.storeKey)
-	supplyStore := prefix.NewStore(store, types.SupplyKey)
+	st := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(st, types.SupplyKey)
 
-	coin, err := store2.GetAndDecode(supplyStore, decodeCoin, conv.UnsafeStrToBytes(denom))
+	coin, err := store.GetAndDecode(supplyStore, decodeCoin, conv.UnsafeStrToBytes(denom))
 	if err != nil {
 		panic(fmt.Errorf("unable to unmarshal supply value %v", err))
 	}
@@ -264,10 +264,10 @@ func (k BaseKeeper) decodeMetadata(bz []byte) (types.Metadata, bool) {
 // GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,
 // false otherwise.
 func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool) {
-	store := ctx.KVStore(k.storeKey)
-	store = prefix.NewStore(store, types.DenomMetadataPrefix)
+	st := ctx.KVStore(k.storeKey)
+	st = prefix.NewStore(st, types.DenomMetadataPrefix)
 
-	metadata, boolVal := store2.GetAndDecodeWithBool(store, k.decodeMetadata, conv.UnsafeStrToBytes(denom))
+	metadata, boolVal := store.GetAndDecodeWithBool(st, k.decodeMetadata, conv.UnsafeStrToBytes(denom))
 	if !boolVal {
 		return metadata, boolVal
 	}
@@ -315,9 +315,9 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metad
 
 // SetDenomMetaData sets the denominations metadata
 func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata) {
-	store := ctx.KVStore(k.storeKey)
-	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataPrefix)
-	newStore := store2.NewStoreAPI(denomMetaDataStore)
+	st := ctx.KVStore(k.storeKey)
+	denomMetaDataStore := prefix.NewStore(st, types.DenomMetadataPrefix)
+	newStore := store.NewStoreAPI(denomMetaDataStore)
 
 	m := k.cdc.MustMarshal(&denomMetaData)
 	newStore.Set([]byte(denomMetaData.Base), m)
@@ -488,9 +488,9 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 		panic(fmt.Errorf("unable to marshal amount value %v", err))
 	}
 
-	store := ctx.KVStore(k.storeKey)
-	supplyStore := prefix.NewStore(store, types.SupplyKey)
-	newStore := store2.NewStoreAPI(supplyStore)
+	st := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(st, types.SupplyKey)
+	newStore := store.NewStoreAPI(supplyStore)
 
 	// Bank invariants and IBC requires to remove zero coins.
 	if coin.IsZero() {

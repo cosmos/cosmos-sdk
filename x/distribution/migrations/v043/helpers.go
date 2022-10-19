@@ -1,7 +1,7 @@
 package v043
 
 import (
-	store2 "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -12,10 +12,10 @@ import (
 // prefix_bytes | address_bytes
 // into format:
 // prefix_bytes | address_len (1 byte) | address_bytes
-func MigratePrefixAddress(store sdk.KVStore, prefixBz []byte) {
-	oldStore := prefix.NewStore(store, prefixBz)
-	oldStore2 := store2.NewStoreAPI(oldStore)
-	newStore := store2.NewStoreAPI(store)
+func MigratePrefixAddress(st sdk.KVStore, prefixBz []byte) {
+	oldStore := prefix.NewStore(st, prefixBz)
+	oldStore2 := store.NewStoreAPI(oldStore)
+	newStore := store.NewStoreAPI(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -35,10 +35,10 @@ func MigratePrefixAddress(store sdk.KVStore, prefixBz []byte) {
 // prefix_bytes | address_bytes | arbitrary_bytes
 // into format:
 // prefix_bytes | address_len (1 byte) | address_bytes | arbitrary_bytes
-func MigratePrefixAddressBytes(store sdk.KVStore, prefixBz []byte) {
-	oldStore := prefix.NewStore(store, prefixBz)
-	oldStore2 := store2.NewStoreAPI(oldStore)
-	newStore := store2.NewStoreAPI(store)
+func MigratePrefixAddressBytes(st sdk.KVStore, prefixBz []byte) {
+	oldStore := prefix.NewStore(st, prefixBz)
+	oldStore2 := store.NewStoreAPI(oldStore)
+	newStore := store.NewStoreAPI(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -58,10 +58,10 @@ func MigratePrefixAddressBytes(store sdk.KVStore, prefixBz []byte) {
 // prefix_bytes | address_1_bytes | address_2_bytes
 // into format:
 // prefix_bytes | address_1_len (1 byte) | address_1_bytes | address_2_len (1 byte) | address_2_bytes
-func MigratePrefixAddressAddress(store sdk.KVStore, prefixBz []byte) {
-	oldStore := prefix.NewStore(store, prefixBz)
-	oldStore2 := store2.NewStoreAPI(oldStore)
-	newStore := store2.NewStoreAPI(store)
+func MigratePrefixAddressAddress(st sdk.KVStore, prefixBz []byte) {
+	oldStore := prefix.NewStore(st, prefixBz)
+	oldStore2 := store.NewStoreAPI(oldStore)
+	newStore := store.NewStoreAPI(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()

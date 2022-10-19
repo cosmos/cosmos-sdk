@@ -66,10 +66,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			// Messages may mutate state thus we use a cached context. If one of
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
-			keeper.PopulateProposalContents(ctx, &proposal)
-			messages, err := proposal.GetMsgs()
-
 			cacheCtx, writeCache := ctx.CacheContext()
+			messages, err := proposal.GetMsgs()
 			if err == nil {
 				for idx, msg = range messages {
 					handler := keeper.Router().Handler(msg)

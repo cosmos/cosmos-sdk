@@ -29,6 +29,7 @@ https://github.com/cosmos/cosmos-sdk/blob/10e8aadcad3a30dda1d6163c39c9f86b4a877e
 At the root level directory a workspace is defined using [buf workspaces](https://docs.buf.build/configuration/v1/buf-work-yaml). This helps if there are one or more protobuf containing directories in your project. 
 
 Cosmos SDK example: 
+
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/buf.work.yaml#L6-L9
 ```

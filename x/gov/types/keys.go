@@ -70,6 +70,7 @@ func ProposalKey(proposalID uint64) []byte {
 	return append(ProposalsKeyPrefix, GetProposalIDBytes(proposalID)...)
 }
 
+// ProposalContentsKey gets a specific proposal content from the store
 func ProposalContentsKey(proposalID uint64) []byte {
 	return append(ProposalContentsKeyPrefix, GetProposalIDBytes(proposalID)...)
 }

@@ -139,7 +139,7 @@ require (
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20221010152910-d6f0a8c073c2 // indirect
-	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91 // indirect
+	golang.org/x/exp v0.0.0-20221018221608-02f3b879a704 // indirect
 	golang.org/x/net v0.0.0-20221017152216-f25eb7ecb193 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
 	golang.org/x/sys v0.0.0-20221013171732-95e765b1cc43 // indirect

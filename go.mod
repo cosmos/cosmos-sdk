@@ -4,7 +4,7 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	cosmossdk.io/api v0.2.1
-	cosmossdk.io/core v0.2.0
+	cosmossdk.io/core v0.3.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.3
@@ -55,7 +55,7 @@ require (
 	github.com/tendermint/tendermint v0.37.0-alpha.2
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/crypto v0.0.0-20221010152910-d6f0a8c073c2
-	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
+	golang.org/x/exp v0.0.0-20221018221608-02f3b879a704
 	google.golang.org/genproto v0.0.0-20221014213838-99cd37c6964a
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1

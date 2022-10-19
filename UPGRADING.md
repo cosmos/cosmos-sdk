@@ -119,12 +119,13 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 
 ```
+
 ##### Proposal Cancel Burn Rate Param
 The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burned or sent to community pool. The deposits burn rate will be determined by a new parameter called `ProposalCancelBurnRate` parameter.
 
-```go
+```
 	1. deposits * proposal_cancel_burn_rate will be burned
-	2. deposits * (1 - proposal_cancel_burn_rate) will be send to community pool
+	2. deposits * (1 - proposal_cancel_burn_rate) will be sent to community pool
 ```
 
 By default, the new `ProposalCancelBurnRate` parameter is set to zero during migration. 

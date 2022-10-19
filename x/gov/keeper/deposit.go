@@ -172,6 +172,7 @@ func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposa
 	burnRate := sdk.MustNewDecFromStr(proposalCancelBurnRate)
 
 	var burnDepositAmount sdk.Coins
+
 	for _, deposit := range totalDeposits {
 		burnAmount := sdk.NewCoin(
 			deposit.Denom,
@@ -181,7 +182,7 @@ func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposa
 	}
 
 	// burn the deposits
-	if !burnRate.IsZero() {
+	if !burnDepositAmount.IsZero() {
 		err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, burnDepositAmount)
 		if err != nil {
 			panic(err)

@@ -12,10 +12,12 @@ import (
 
 var _ Mempool = (*priorityMempool)(nil)
 
-// priorityMempool is the SDK's default mempool implementation which stores txs in a partially ordered set
-// by 2 dimensions: priority, and sender-nonce (sequence number).  Internally it uses one priority ordered skip list
-// and one skip per sender ordered by nonce (sender-nonce).  When there are multiple txs from the same sender,
-// they are not always comparable by priority to other sender txs and must be partially ordered by both sender-nonce
+// priorityMempool defines the SDK's default mempool implementation which stores
+// txs in a partially ordered set by 2 dimensions: priority, and sender-nonce
+// (sequence number). Internally it uses one priority ordered skip list and one
+// skip list per sender ordered by sender-nonce (sequence number). When there
+// are multiple txs from the same sender, they are not always comparable by
+// priority to other sender txs and must be partially ordered by both sender-nonce
 // and priority.
 type priorityMempool struct {
 	priorityIndex  *huandu.SkipList
@@ -35,8 +37,8 @@ type txMeta struct {
 	senderElement *huandu.Element
 }
 
-// txMetaLess is a comparator for txKeys that first compares priority, then weight, then sender, then nonce,
-// uniquely identifying a transaction.
+// txMetaLess is a comparator for txKeys that first compares priority, then weight,
+// then sender, then nonce, uniquely identifying a transaction.
 //
 // Note, txMetaLess is used as the comparator in the priority index.
 func txMetaLess(a, b any) int {
@@ -46,7 +48,9 @@ func txMetaLess(a, b any) int {
 	if res != 0 {
 		return res
 	}
-// below we compare by sender and then by nonce if necessary, when conflicting priorities are found
+
+	// Below we compare by sender and then by nonce if necessary, when conflicting
+	// priorities are found.
 	res = huandu.Int64.Compare(keyA.weight, keyB.weight)
 	if res != 0 {
 		return res
@@ -74,8 +78,8 @@ func DefaultPriorityMempool() Mempool {
 	return NewPriorityMempool()
 }
 
-// NewPriorityMempool returns the SDK's default mempool implementation which returns txs in a partial order
-// by 2 dimensions; priority, and sender-nonce.
+// NewPriorityMempool returns the SDK's default mempool implementation which
+// returns txs in a partial order by 2 dimensions; priority, and sender-nonce.
 func NewPriorityMempool(opts ...PriorityMempoolOption) Mempool {
 	mp := &priorityMempool{
 		priorityIndex:  huandu.New(huandu.LessThanFunc(txMetaLess)),
@@ -84,18 +88,23 @@ func NewPriorityMempool(opts ...PriorityMempoolOption) Mempool {
 		senderCursors:  make(map[string]*huandu.Element),
 		scores:         make(map[txMeta]txMeta),
 	}
+
 	for _, opt := range opts {
 		opt(mp)
 	}
+
 	return mp
 }
 
-// Insert attempts to insert a Tx into the app-side mempool in O(log n) time, returning an error if unsuccessful.
-// Sender and nonce are derived from the transaction's first signature.
-// Transactions are unique by sender and nonce.
-// Inserting a duplicate tx is an O(log n) no-op.
-// Inserting a duplicate tx with a different priority overwrites the existing tx, changing the total order of
-// the mempool.
+// Insert attempts to insert a Tx into the app-side mempool in O(log n) time,
+// returning an error if unsuccessful. Sender and nonce are derived from the
+// transaction's first signature.
+//
+// Transactions are unique by sender and nonce. Inserting a duplicate tx is an
+// O(log n) no-op.
+//
+// Inserting a duplicate tx with a different priority overwrites the existing tx,
+// changing the total order of the mempool.
 func (mp *priorityMempool) Insert(ctx sdk.Context, tx Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {

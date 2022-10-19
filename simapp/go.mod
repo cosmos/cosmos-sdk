@@ -164,4 +164,6 @@ replace (
 	github.com/gogo/gateway => github.com/notional-labs/gateway v1.1.1-0.20220417180718-8e60e17a098d
 )
 
-replace github.com/cosmos/cosmos-sdk => ../
+replace github.com/cosmos/cosmos-sdk => ../.
+replace cosmossdk.io/core => ../core
+replace cosmossdk.io/api => ../api

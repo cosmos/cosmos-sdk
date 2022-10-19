@@ -10,14 +10,15 @@ It is known that Cosmos SDK uses protocol buffers extensively, this docuemnt is 
 To generate the proto file, the Cosmos SDK uses a docker image, this image is provided to all to use as well. The latest version is `ghcr.io/cosmos/proto-builder:0.11.0`
 
 Below is the example of the Cosmos SDK's commands for generating, linting, and formatting protobuf files that can be reused in any applications makefile. 
-```
-https://github.com/cosmos/cosmos-sdk/blob/fae395818607e429e9f96f08f69b2ba377511fd9/Makefile#L408-L437
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/10ac33edb87dab12ffa496e76f1114ea9225a107/Makefile#L408-L437
 ```
 
 The script used to generate the protobuf files can be found in the `scripts/` directory. 
 
-```sh reference
-https://github.com/cosmos/cosmos-sdk/blob/10e8aadcad3a30dda1d6163c39c9f86b4a877e54/scripts/protocgen.sh#L1-L37
+```shell reference
+https://github.com/cosmos/cosmos-sdk/blob/10ac33edb87dab12ffa496e76f1114ea9225a107/scripts/protocgen.sh#L1-L37
 ```
 
 ## Buf
@@ -60,7 +61,9 @@ The above diagram all the files and directories within the Cosmos SDK `proto/` d
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.gogo.yaml#L1-l9
 ```
 
-> Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
+:::tip
+Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
+:::
 
 #### `buf.gen.pulsar.yaml`
 
@@ -70,7 +73,9 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.gogo.yaml#L1-l9
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.pulsar.yaml#L1-L18
 ```
 
-> Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
+:::tip
+Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
+:::
 
 #### `buf.gen.swagger.yaml`
 
@@ -80,7 +85,9 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.pulsar.yaml#L1-L18
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.swagger.yaml#L1-L6
 ```
 
-> Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
+:::tip
+Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
+:::
 
 #### `buf.lock`
 

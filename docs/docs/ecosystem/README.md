@@ -22,6 +22,12 @@ Read more about writing smart contracts with CosmWasm at their [documentation si
 
 Read more about writing smart contracts with solidity at the official [`evm` documentation page](https://docs.evmos.org/modules/evm/).
 
+## Explore Further
 
+:::tip
+For non Cosmos SDK related tooling, you can have a look at the [Awesome Cosmos](https://github.com/cosmos/awesome-cosmos) GitHub repository.
+:::
 
-> Note: If you would like to add your tooling to this section, please make a pr to the cosmos-sdk, we will gladly accept it. 
+:::note
+If you would like to add your tooling to this section, please make a [PR to the Cosmos SDK](https://github.com/cosmos/cosmos-sdk/edit/main/docs/docs/ecosystem/README.md). 
+:::

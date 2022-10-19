@@ -151,7 +151,7 @@ html {
   .navbar-sidebar {
     @apply w-full;
     &__brand {
-      @apply pb-7 pt-9 px-6 h-auto;
+      @apply px-6 h-auto;
     }
     &__item {
       @apply px-6 w-full;

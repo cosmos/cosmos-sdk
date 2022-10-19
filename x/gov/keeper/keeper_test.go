@@ -107,7 +107,7 @@ func TestProposalQueues(t *testing.T) {
 
 	govKeeper.ActivateVotingPeriod(ctx, proposal)
 
-	proposal, ok := govKeeper.GetProposal(ctx, proposal.Id, false)
+	proposal, ok := govKeeper.GetProposal(ctx, proposal.Id)
 	require.True(t, ok)
 
 	activeIterator := govKeeper.ActiveProposalQueueIterator(ctx, *proposal.VotingEndTime)

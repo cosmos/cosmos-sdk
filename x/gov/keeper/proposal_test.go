@@ -23,7 +23,7 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 	proposalID := proposal.Id
 	suite.govKeeper.SetProposal(suite.ctx, proposal)
 
-	gotProposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposalID, true)
+	gotProposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposalID)
 	suite.Require().True(ok)
 	suite.Require().Equal(proposal, gotProposal)
 }
@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 
 	suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
 
-	proposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposal.Id, false)
+	proposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
 	suite.Require().True(ok)
 	suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 

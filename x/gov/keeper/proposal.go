@@ -99,7 +99,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 // GetProposal gets a proposal from store by ProposalID.
 // If withStaticData is true, it will get the proposal's messages from the separate store.
 // Panics if can't unmarshal the proposal.
-func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64, withStaticData bool) (v1.Proposal, bool) {
+func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	bz := store.Get(types.ProposalKey(proposalID))
@@ -112,9 +112,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64, withStaticD
 		panic(err)
 	}
 
-	if withStaticData {
-		keeper.PopulateProposalStaticData(ctx, &proposal)
-	}
+	keeper.PopulateProposalStaticData(ctx, &proposal)
 
 	return proposal, true
 }
@@ -193,7 +191,7 @@ func (keeper Keeper) getProposalStaticData(ctx sdk.Context, proposalID uint64) (
 // Panics if the proposal doesn't exist.
 func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
-	proposal, ok := keeper.GetProposal(ctx, proposalID, false)
+	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
 		panic(fmt.Sprintf("couldn't find proposal with id#%d", proposalID))
 	}

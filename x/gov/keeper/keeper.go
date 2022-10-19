@@ -179,7 +179,7 @@ func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.T
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		proposalID, _ := types.SplitActiveProposalQueueKey(iterator.Key())
-		proposal, found := keeper.GetProposal(ctx, proposalID, false)
+		proposal, found := keeper.GetProposal(ctx, proposalID)
 		if !found {
 			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
 		}
@@ -198,7 +198,7 @@ func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		proposalID, _ := types.SplitInactiveProposalQueueKey(iterator.Key())
-		proposal, found := keeper.GetProposal(ctx, proposalID, false)
+		proposal, found := keeper.GetProposal(ctx, proposalID)
 		if !found {
 			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
 		}

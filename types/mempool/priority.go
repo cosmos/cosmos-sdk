@@ -134,7 +134,7 @@ func (mp *priorityMempool) Insert(ctx sdk.Context, tx Tx) error {
 
 	// Since senderIndex is scored by nonce, a changed priority will overwrite the
 	// existing key.
-	senderTx := senderIndex.Set(key, tx)
+	key.senderElement = senderIndex.Set(key, tx)
 
 	// Since mp.priorityIndex is scored by priority, then sender, then nonce, a
 	// changed priority will create a new key, so we must remove the old key and

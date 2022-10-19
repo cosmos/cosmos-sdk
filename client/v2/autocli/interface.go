@@ -1,4 +1,4 @@
-package cli
+package autocli
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"

@@ -91,8 +91,8 @@ func (a *App) Load(loadLatest bool) error {
 	if err != nil {
 		return err
 	}
-	appv1alpha1.RegisterQueryServer(a.configurator.QueryServer(), appConfigSvc)
-	autocliv1.RegisterRemoteInfoServiceServer(a.configurator.QueryServer(), newAutocliService(a.appModules))
+	appv1alpha1.RegisterQueryServer(a.GRPCQueryRouter(), appConfigSvc)
+	autocliv1.RegisterRemoteInfoServiceServer(a.GRPCQueryRouter(), newAutocliService(a.appModules))
 
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)

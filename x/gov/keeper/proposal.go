@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -176,6 +177,11 @@ func (keeper Keeper) getProposalStaticData(ctx sdk.Context, proposalID uint64) (
 
 	var staticData v1.ProposalStaticData
 	err := keeper.cdc.Unmarshal(bz, &staticData)
+	if err != nil {
+		panic(err)
+	}
+
+	err = sdktx.UnpackInterfaces(keeper.cdc, staticData.Messages)
 	if err != nil {
 		panic(err)
 	}

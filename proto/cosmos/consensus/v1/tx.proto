@@ -4,7 +4,6 @@ package cosmos.consensus.v1;
 
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
-import "cosmos/msg/v1/legacy_amino/amino.proto";
 import "tendermint/types/params.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/consensus/types";

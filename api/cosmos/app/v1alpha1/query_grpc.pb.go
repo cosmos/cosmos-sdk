@@ -24,6 +24,9 @@ const _ = grpc.SupportPackageIsVersion7
 type QueryClient interface {
 	// Config returns the current app config.
 	Config(ctx context.Context, in *QueryConfigRequest, opts ...grpc.CallOption) (*QueryConfigResponse, error)
+	// FileDescriptorSet returns the full FileDescriptorSet of the app in order
+	// to enable easier generation of dynamic clients.
+	FileDescriptorSet(ctx context.Context, in *QueryFileDescriptorSetRequest, opts ...grpc.CallOption) (*QueryFileDescriptorSetResponse, error)
 }
 
 type queryClient struct {
@@ -43,12 +46,24 @@ func (c *queryClient) Config(ctx context.Context, in *QueryConfigRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) FileDescriptorSet(ctx context.Context, in *QueryFileDescriptorSetRequest, opts ...grpc.CallOption) (*QueryFileDescriptorSetResponse, error) {
+	out := new(QueryFileDescriptorSetResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.app.v1alpha1.Query/FileDescriptorSet", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
 	// Config returns the current app config.
 	Config(context.Context, *QueryConfigRequest) (*QueryConfigResponse, error)
+	// FileDescriptorSet returns the full FileDescriptorSet of the app in order
+	// to enable easier generation of dynamic clients.
+	FileDescriptorSet(context.Context, *QueryFileDescriptorSetRequest) (*QueryFileDescriptorSetResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -58,6 +73,9 @@ type UnimplementedQueryServer struct {
 
 func (UnimplementedQueryServer) Config(context.Context, *QueryConfigRequest) (*QueryConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Config not implemented")
+}
+func (UnimplementedQueryServer) FileDescriptorSet(context.Context, *QueryFileDescriptorSetRequest) (*QueryFileDescriptorSetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FileDescriptorSet not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -90,6 +108,24 @@ func _Query_Config_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_FileDescriptorSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryFileDescriptorSetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).FileDescriptorSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.app.v1alpha1.Query/FileDescriptorSet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).FileDescriptorSet(ctx, req.(*QueryFileDescriptorSetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -100,6 +136,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Config",
 			Handler:    _Query_Config_Handler,
+		},
+		{
+			MethodName: "FileDescriptorSet",
+			Handler:    _Query_FileDescriptorSet_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -51,7 +51,7 @@ times in a single command resulting in repeated password prompts. If using bash 
 to execute commands using the `file` option you may want to utilize the following format
 for multiple prompts:
 
-```sh
+```shell
 # assuming that KEYPASSWD is set in the environment
 $ gaiacli config keyring-backend file                             # use file backend
 $ (echo $KEYPASSWD; echo $KEYPASSWD) | gaiacli keys add me        # multiple prompts
@@ -79,7 +79,7 @@ passphrase expiration.
 
 The password store must be set up prior to first use:
 
-```sh
+```shell
 pass init <GPG_KEY_ID>
 ```
 

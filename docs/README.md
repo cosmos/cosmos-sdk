@@ -32,19 +32,19 @@ to send users to the GitHub.
 
 Make sure you are in the `docs` directory and run the following commands:
 
-```sh
+```shell
 rm -rf node_modules
 ```
 
 This command will remove old version of the visual theme and required packages. This step is optional.
 
-```sh
+```shell
 npm install
 ```
 
 Install the theme and all dependencies.
 
-```sh
+```shell
 npm start
 ```
 

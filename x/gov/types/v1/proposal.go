@@ -45,7 +45,8 @@ func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, dep
 }
 
 // GetMessages returns the proposal messages
-// Use keeper.PopulateProposalContents first to populate the messages
+// If this proposal was obtained by calling `GetProposalWithoutContents` use
+// `PopulateProposalContents` first to populate the messages.
 func (p Proposal) GetMsgs() ([]sdk.Msg, error) {
 	return sdktx.GetMsgs(p.Messages, "sdk.MsgProposal")
 }

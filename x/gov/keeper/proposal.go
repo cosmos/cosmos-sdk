@@ -135,21 +135,35 @@ func (keeper Keeper) GetProposalWithoutContents(ctx sdk.Context, proposalID uint
 	return proposal, true
 }
 
-// SetProposal sets a proposal to store.
+// SetProposal sets a proposal and its contents to store.
 // Panics if can't marshal the proposal.
-// Static fields will be ignored (not updated) if the proposal already exists.
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
-	propKey := types.ProposalKey(proposal.Id)
 
-	// If this proposal already exists, we don't want to overwrite the static fields.
-	if !store.Has(propKey) {
-		data := v1.ProposalContents{
-			Messages: proposal.Messages,
-			Metadata: proposal.Metadata,
-		}
-		keeper.setProposalContents(ctx, proposal.Id, data)
+	// Store the proposal's content.
+	data := v1.ProposalContents{
+		Messages: proposal.Messages,
+		Metadata: proposal.Metadata,
 	}
+	keeper.setProposalContents(ctx, proposal.Id, data)
+
+	// Clear content fields before marshaling.
+	proposal.Messages = nil
+	proposal.Metadata = ""
+
+	// Store the proposal.
+	bz, err := keeper.MarshalProposal(proposal)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(types.ProposalKey(proposal.Id), bz)
+}
+
+// SetProposal sets a proposal to store.
+// Panics if can't marshal the proposal.
+// Content fields (messages and metadata) will be ignored.
+func (keeper Keeper) SetProposalWithoutContents(ctx sdk.Context, proposal v1.Proposal) {
+	store := ctx.KVStore(keeper.storeKey)
 
 	// Clear static fields before marshaling.
 	proposal.Messages = nil

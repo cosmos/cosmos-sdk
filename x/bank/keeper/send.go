@@ -117,7 +117,7 @@ func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 	}
 
 	st := ctx.KVStore(k.storeKey)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	bz, err := k.cdc.Marshal(&params)
 	if err != nil {
 		return err
@@ -291,7 +291,7 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 // An error is returned upon failure.
 func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
 	accountStore := k.getAccountStore(ctx, addr)
-	newAccStore := store.NewStoreAPI(accountStore)
+	newAccStore := store.NewKVStoreWrapper(accountStore)
 	denomPrefixStores := make(map[string]prefix.Store) // memoize prefix stores
 
 	for i := range balances {
@@ -309,10 +309,10 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 			newAccStore.Set([]byte(balance.Denom), amount)
 
 			denomPrefixStore, ok := denomPrefixStores[balance.Denom]
-			newDenomPrefixStore := store.NewStoreAPI(denomPrefixStore)
+			newDenomPrefixStore := store.NewKVStoreWrapper(denomPrefixStore)
 			if !ok {
 				denomPrefixStore = k.getDenomAddressPrefixStore(ctx, balance.Denom)
-				newDenomPrefixStore = store.NewStoreAPI(denomPrefixStore)
+				newDenomPrefixStore = store.NewKVStoreWrapper(denomPrefixStore)
 				denomPrefixStores[balance.Denom] = denomPrefixStore
 
 			}
@@ -336,9 +336,9 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	}
 
 	accountStore := k.getAccountStore(ctx, addr)
-	newAccStore := store.NewStoreAPI(accountStore)
+	newAccStore := store.NewKVStoreWrapper(accountStore)
 	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, balance.Denom)
-	newDenomPrefixStore := store.NewStoreAPI(denomPrefixStore)
+	newDenomPrefixStore := store.NewKVStoreWrapper(denomPrefixStore)
 
 	// x/bank invariants prohibit persistence of zero balances
 	if balance.IsZero() {
@@ -436,7 +436,7 @@ func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types
 func (k BaseSendKeeper) setSendEnabledEntry(st sdk.KVStore, denom string, value bool) {
 	key := types.CreateSendEnabledKey(denom)
 	val := types.ToBoolB(value)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	newStore.Set(key, []byte{val})
 }
 
@@ -444,7 +444,7 @@ func (k BaseSendKeeper) setSendEnabledEntry(st sdk.KVStore, denom string, value 
 // If a denom is provided that doesn't have a SendEnabled entry, it is ignored.
 func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denoms ...string) {
 	st := ctx.KVStore(k.storeKey)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	for _, denom := range denoms {
 		newStore.Delete(types.CreateSendEnabledKey(denom))
 	}

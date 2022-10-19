@@ -165,6 +165,6 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 	return nil
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
 }

@@ -79,7 +79,7 @@ func TestKeeper(t *testing.T) {
 	cdc, ctx, skey, _, keeper := testComponents()
 
 	st := prefix.NewStore(ctx.KVStore(skey), []byte("test/"))
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	space := keeper.Subspace("test")
 	require.False(t, space.HasKeyTable())
 	space = space.WithKeyTable(table)

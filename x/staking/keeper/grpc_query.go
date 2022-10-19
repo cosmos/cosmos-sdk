@@ -503,7 +503,7 @@ func queryRedelegationsFromSrcValidator(st sdk.KVStore, k Querier, req *types.Qu
 	redStore := prefix.NewStore(st, srcValPrefix)
 	res, err = query.Paginate(redStore, req.Pagination, func(key []byte, value []byte) error {
 		storeKey := types.GetREDKeyFromValSrcIndexKey(append(srcValPrefix, key...))
-		newStore := store.NewStoreAPI(st)
+		newStore := store.NewKVStoreWrapper(st)
 		storeValue := newStore.Get(storeKey)
 		red, err := types.UnmarshalRED(k.cdc, storeValue)
 		if err != nil {

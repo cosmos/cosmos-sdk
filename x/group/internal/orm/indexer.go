@@ -72,7 +72,7 @@ func (i Indexer) OnCreate(store sdk.KVStore, rowID RowID, value interface{}) err
 
 // OnDelete removes the secondary index entries for the deleted object.
 func (i Indexer) OnDelete(st sdk.KVStore, rowID RowID, value interface{}) error {
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	secondaryIndexKeys, err := i.indexerFunc(value)
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func (i Indexer) OnDelete(st sdk.KVStore, rowID RowID, value interface{}) error 
 
 // OnUpdate rebuilds the secondary index entries for the updated object.
 func (i Indexer) OnUpdate(st sdk.KVStore, rowID RowID, newValue, oldValue interface{}) error {
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	oldSecIdxKeys, err := i.indexerFunc(oldValue)
 	if err != nil {
 		return err
@@ -124,7 +124,7 @@ func (i Indexer) OnUpdate(st sdk.KVStore, rowID RowID, newValue, oldValue interf
 
 // uniqueKeysAddFunc enforces keys to be unique
 func uniqueKeysAddFunc(st sdk.KVStore, secondaryIndexKey interface{}, rowID RowID) error {
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	secondaryIndexKeyBytes, err := keyPartBytes(secondaryIndexKey, false)
 	if err != nil {
 		return err
@@ -158,7 +158,7 @@ func checkUniqueIndexKey(store sdk.KVStore, secondaryIndexKeyBytes []byte) error
 
 // multiKeyAddFunc allows multiple entries for a key
 func multiKeyAddFunc(st sdk.KVStore, secondaryIndexKey interface{}, rowID RowID) error {
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	secondaryIndexKeyBytes, err := keyPartBytes(secondaryIndexKey, false)
 	if err != nil {
 		return err

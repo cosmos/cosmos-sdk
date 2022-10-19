@@ -47,8 +47,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
 }
 
 // AddPubkey sets a address-pubkey relation

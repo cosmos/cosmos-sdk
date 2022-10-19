@@ -29,29 +29,29 @@ func GetAndDecodeWithBool[T any](store types.KVStore, dec func([]byte) (T, bool)
 	return resp, boolval
 }
 
-// StoreAPI is a wrapper around the store's KVStore to provide more safe key management and better ease-of-use.
-type StoreAPI struct {
+// KVStoreWrapper is a wrapper around the store's KVStore to provide more safe key management and better ease-of-use.
+type KVStoreWrapper struct {
 	types.KVStore
 }
 
-// NewStoreAPI returns a new KVStore.
-func NewStoreAPI(store types.KVStore) StoreAPI {
-	return StoreAPI{
+// NewKVStoreWrapper returns a new KVStore.
+func NewKVStoreWrapper(store types.KVStore) KVStoreWrapper {
+	return KVStoreWrapper{
 		KVStore: store,
 	}
 }
 
 // Set stores the value under the given key.
-func (store StoreAPI) Set(key []byte, value []byte) {
+func (store KVStoreWrapper) Set(key []byte, value []byte) {
 	store.KVStore.Set(key, value)
 }
 
 // Get returns the raw bytes stored under the given key. Returns nil when key does not exist.
-func (store StoreAPI) Get(key []byte) []byte {
+func (store KVStoreWrapper) Get(key []byte) []byte {
 	return store.KVStore.Get(key)
 }
 
 // Delete deletes the value stored under the given key, if it exists.
-func (store StoreAPI) Delete(key []byte) {
+func (store KVStoreWrapper) Delete(key []byte) {
 	store.KVStore.Delete(key)
 }

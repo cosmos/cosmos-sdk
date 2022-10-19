@@ -70,8 +70,8 @@ func (k Keeper) decodeMinter(bz []byte) (types.Minter, error) {
 	return minter, nil
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
 }
 
 // get the minter

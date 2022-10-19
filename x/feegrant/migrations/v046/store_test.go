@@ -64,7 +64,7 @@ func TestMigration(t *testing.T) {
 	}
 
 	st := ctx.KVStore(feegrantKey)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	for _, grant := range grants {
 		newGrant, err := feegrant.NewGrant(grant.granter, grant.grantee, &feegrant.BasicAllowance{
 			SpendLimit: grant.spendLimit,

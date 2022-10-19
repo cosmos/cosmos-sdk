@@ -46,8 +46,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", authz.ModuleName))
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
 }
 
 func (k Keeper) decodeGrant(bz []byte) (authz.Grant, bool) {

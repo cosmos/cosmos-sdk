@@ -11,8 +11,8 @@ import (
 
 func addAllowancesByExpTimeQueue(ctx types.Context, st storetypes.KVStore, cdc codec.BinaryCodec) error {
 	prefixStore := prefix.NewStore(st, FeeAllowanceKeyPrefix)
-	newPrefixStore := store.NewStoreAPI(prefixStore)
-	newStore := store.NewStoreAPI(st)
+	newPrefixStore := store.NewKVStoreWrapper(prefixStore)
+	newStore := store.NewKVStoreWrapper(st)
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
 

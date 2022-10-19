@@ -14,7 +14,7 @@ import (
 // proposals.
 func migrateProposals(st sdk.KVStore, cdc codec.BinaryCodec) error {
 	propStore := prefix.NewStore(st, v1.ProposalsKeyPrefix)
-	newPropStore := store.NewStoreAPI(propStore)
+	newPropStore := store.NewKVStoreWrapper(propStore)
 
 	iter := propStore.Iterator(nil, nil)
 	defer iter.Close()

@@ -14,8 +14,8 @@ import (
 // prefix_bytes | address_len (1 byte) | address_bytes
 func MigratePrefixAddress(st sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(st, prefixBz)
-	oldStore2 := store.NewStoreAPI(oldStore)
-	newStore := store.NewStoreAPI(st)
+	oldStore2 := store.NewKVStoreWrapper(oldStore)
+	newStore := store.NewKVStoreWrapper(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -37,8 +37,8 @@ func MigratePrefixAddress(st sdk.KVStore, prefixBz []byte) {
 // prefix_bytes | address_len (1 byte) | address_bytes | arbitrary_bytes
 func MigratePrefixAddressBytes(st sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(st, prefixBz)
-	oldStore2 := store.NewStoreAPI(oldStore)
-	newStore := store.NewStoreAPI(st)
+	oldStore2 := store.NewKVStoreWrapper(oldStore)
+	newStore := store.NewKVStoreWrapper(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -60,8 +60,8 @@ func MigratePrefixAddressBytes(st sdk.KVStore, prefixBz []byte) {
 // prefix_bytes | address_1_len (1 byte) | address_1_bytes | address_2_len (1 byte) | address_2_bytes
 func MigratePrefixAddressAddress(st sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(st, prefixBz)
-	oldStore2 := store.NewStoreAPI(oldStore)
-	newStore := store.NewStoreAPI(st)
+	oldStore2 := store.NewKVStoreWrapper(oldStore)
+	newStore := store.NewKVStoreWrapper(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()

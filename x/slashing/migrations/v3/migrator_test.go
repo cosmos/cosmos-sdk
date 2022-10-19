@@ -35,7 +35,7 @@ func TestMigrate(t *testing.T) {
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	st := ctx.KVStore(storeKey)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 
 	legacySubspace := newMockSubspace(types.DefaultParams())
 	require.NoError(t, v3.Migrate(ctx, st, legacySubspace, cdc))

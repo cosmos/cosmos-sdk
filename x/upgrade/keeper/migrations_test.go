@@ -25,7 +25,7 @@ func TestMigrateDoneUpgradeKeys(t *testing.T) {
 	upgradeKey := sdk.NewKVStoreKey("upgrade")
 	ctx := testutil.DefaultContext(upgradeKey, sdk.NewTransientStoreKey("transient_test"))
 	st := ctx.KVStore(upgradeKey)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 
 	testCases := []struct {
 		name     string

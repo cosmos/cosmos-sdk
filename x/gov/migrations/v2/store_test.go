@@ -24,7 +24,7 @@ func TestMigrateStore(t *testing.T) {
 	govKey := sdk.NewKVStoreKey("gov")
 	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
 	st := ctx.KVStore(govKey)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	proposalID := uint64(6)

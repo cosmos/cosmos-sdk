@@ -22,7 +22,7 @@ func TestStoreMigration(t *testing.T) {
 	tStakingKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := sdktestuil.DefaultContext(stakingKey, tStakingKey)
 	st := ctx.KVStore(stakingKey)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 
 	_, pk1, addr1 := testdata.KeyTestPubAddr()
 	valAddr1 := sdk.ValAddress(addr1)

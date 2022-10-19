@@ -24,7 +24,7 @@ var (
 // module state.
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
 	st := ctx.KVStore(storeKey)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	var currConstantFee sdk.Coin
 	legacySubspace.Get(ctx, ConstantFee, &currConstantFee)
 

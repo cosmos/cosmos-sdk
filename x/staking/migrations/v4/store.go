@@ -38,7 +38,7 @@ func migrateParams(ctx sdk.Context, st storetypes.KVStore, cdc codec.BinaryCodec
 	}
 
 	bz := cdc.MustMarshal(&legacyParams)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	newStore.Set(types.ParamsKey, bz)
 	return nil
 }
@@ -98,6 +98,6 @@ func setUBDToStore(ctx sdk.Context, st storetypes.KVStore, cdc codec.BinaryCodec
 
 	key := types.GetUBDKey(delegatorAddress, addr)
 
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	newStore.Set(key, bz)
 }

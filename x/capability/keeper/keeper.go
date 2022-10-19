@@ -141,7 +141,7 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 
 		// set the initialized flag so we don't rerun initialization logic
 		memStore := noGasCtx.KVStore(k.memKey)
-		newMemStore := store.NewStoreAPI(memStore)
+		newMemStore := store.NewKVStoreWrapper(memStore)
 		newMemStore.Set(types.KeyMemInitialized, []byte{1})
 	}
 }
@@ -152,8 +152,8 @@ func (k *Keeper) IsInitialized(ctx sdk.Context) bool {
 	return memStore.Get(types.KeyMemInitialized) != nil
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
 }
 
 // InitializeIndex sets the index to one (or greater) in InitChain according
@@ -183,7 +183,7 @@ func (k Keeper) GetLatestIndex(ctx sdk.Context) uint64 {
 // SetOwners set the capability owners to the store
 func (k Keeper) SetOwners(ctx sdk.Context, index uint64, owners types.CapabilityOwners) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
-	newPrefixStore := store.NewStoreAPI(prefixStore)
+	newPrefixStore := store.NewKVStoreWrapper(prefixStore)
 	indexKey := types.IndexToKey(index)
 
 	// set owners in persistent store
@@ -217,7 +217,7 @@ func (k Keeper) GetOwners(ctx sdk.Context, index uint64) (types.CapabilityOwners
 // It is used during initialization from genesis.
 func (k Keeper) InitializeCapability(ctx sdk.Context, index uint64, owners types.CapabilityOwners) {
 	memStore := ctx.KVStore(k.memKey)
-	newMemStore := store.NewStoreAPI(memStore)
+	newMemStore := store.NewKVStoreWrapper(memStore)
 
 	cap := types.NewCapability(index)
 	for _, owner := range owners.Owners {
@@ -236,12 +236,12 @@ func (k Keeper) InitializeCapability(ctx sdk.Context, index uint64, owners types
 	}
 }
 
-func (sk ScopedKeeper) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(sk.storeKey))
+func (sk ScopedKeeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(sk.storeKey))
 }
 
-func (sk ScopedKeeper) getMemStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(sk.memKey))
+func (sk ScopedKeeper) getMemStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(sk.memKey))
 }
 
 // NewCapability attempts to create a new capability with a given name. If the
@@ -371,7 +371,7 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability)
 	capOwners.Remove(types.NewOwner(sk.module, name))
 
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
-	newPrefixStore := store.NewStoreAPI(prefixStore)
+	newPrefixStore := store.NewKVStoreWrapper(prefixStore)
 	indexKey := types.IndexToKey(cap.GetIndex())
 
 	if len(capOwners.Owners) == 0 {
@@ -489,7 +489,7 @@ func (sk ScopedKeeper) LookupModules(ctx sdk.Context, name string) ([]string, *t
 
 func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap *types.Capability, name string) error {
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
-	newPrefixStore := store.NewStoreAPI(prefixStore)
+	newPrefixStore := store.NewKVStoreWrapper(prefixStore)
 	indexKey := types.IndexToKey(cap.GetIndex())
 
 	capOwners := sk.getOwners(ctx, cap)

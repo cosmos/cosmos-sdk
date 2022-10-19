@@ -27,7 +27,7 @@ func NewSequence(prefix byte) Sequence {
 // NextVal increments and persists the counter by one and returns the value.
 func (s Sequence) NextVal(st sdk.KVStore) uint64 {
 	pStore := prefix.NewStore(st, []byte{s.prefix})
-	newPStore := store.NewStoreAPI(pStore)
+	newPStore := store.NewKVStoreWrapper(pStore)
 	v := pStore.Get(sequenceStorageKey)
 	seq := DecodeSequence(v)
 	seq++
@@ -57,7 +57,7 @@ func (s Sequence) PeekNextVal(store sdk.KVStore) uint64 {
 // method consumes unnecessary gas otherwise. A scenario would be an import from genesis.
 func (s Sequence) InitVal(st sdk.KVStore, seq uint64) error {
 	pStore := prefix.NewStore(st, []byte{s.prefix})
-	newPStore := store.NewStoreAPI(pStore)
+	newPStore := store.NewKVStoreWrapper(pStore)
 	if pStore.Has(sequenceStorageKey) {
 		return sdkerrors.Wrap(errors.ErrORMUniqueConstraint, "already initialized")
 	}

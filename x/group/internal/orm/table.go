@@ -111,7 +111,7 @@ func (a table) Set(st sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) e
 	}
 
 	pStore := prefix.NewStore(st, a.prefix[:])
-	newPStore := store.NewStoreAPI(pStore)
+	newPStore := store.NewKVStoreWrapper(pStore)
 
 	var oldValue codec.ProtoMarshaler
 	if a.Has(st, rowID) {
@@ -150,7 +150,7 @@ func assertValid(obj codec.ProtoMarshaler) error {
 // keys.
 func (a table) Delete(st sdk.KVStore, rowID RowID) error {
 	pStore := prefix.NewStore(st, a.prefix[:])
-	newPStore := store.NewStoreAPI(pStore)
+	newPStore := store.NewKVStoreWrapper(pStore)
 
 	oldValue := reflect.New(a.model).Interface().(codec.ProtoMarshaler)
 	if err := a.GetOne(st, rowID, oldValue); err != nil {

@@ -57,14 +57,14 @@ func addDenomReverseIndex(st sdk.KVStore, cdc codec.BinaryCodec) error {
 		}
 
 		newStore := prefix.NewStore(st, types.CreateAccountBalancesPrefix(addr))
-		newPrefixStore := store.NewStoreAPI(newStore)
+		newPrefixStore := store.NewKVStoreWrapper(newStore)
 		newPrefixStore.Set([]byte(coin.Denom), bz)
 
 		denomPrefixStore, ok := denomPrefixStores[balance.Denom]
-		newDenomPrefixStore := store.NewStoreAPI(denomPrefixStore)
+		newDenomPrefixStore := store.NewKVStoreWrapper(denomPrefixStore)
 		if !ok {
 			denomPrefixStore = prefix.NewStore(st, CreateDenomAddressPrefix(balance.Denom))
-			newDenomPrefixStore = store.NewStoreAPI(denomPrefixStore)
+			newDenomPrefixStore = store.NewKVStoreWrapper(denomPrefixStore)
 			denomPrefixStores[balance.Denom] = denomPrefixStore
 		}
 
@@ -77,9 +77,9 @@ func addDenomReverseIndex(st sdk.KVStore, cdc codec.BinaryCodec) error {
 }
 
 func migrateDenomMetadata(st sdk.KVStore) error {
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	oldDenomMetaDataStore := prefix.NewStore(st, v2.DenomMetadataPrefix)
-	oldDenomMetaDataStore2 := store.NewStoreAPI(oldDenomMetaDataStore)
+	oldDenomMetaDataStore2 := store.NewKVStoreWrapper(oldDenomMetaDataStore)
 
 	oldDenomMetaDataIter := oldDenomMetaDataStore.Iterator(nil, nil)
 	defer oldDenomMetaDataIter.Close()

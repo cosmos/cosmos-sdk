@@ -60,8 +60,8 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return v4.Migrate(ctx, ctx.KVStore(m.keeper.storeKey), m.legacySubspace, m.keeper.cdc)
 }
 
-func (m Migrator) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(m.keeper.storeKey))
+func (m Migrator) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(m.keeper.storeKey))
 }
 
 // V45_SetAccount implements V45_SetAccount

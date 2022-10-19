@@ -59,8 +59,8 @@ func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) (deposits v
 	return
 }
 
-func (keeper Keeper) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(keeper.storeKey))
+func (keeper Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(keeper.storeKey))
 }
 
 // DeleteAndBurnDeposits deletes and burn all the deposits on a specific proposal.

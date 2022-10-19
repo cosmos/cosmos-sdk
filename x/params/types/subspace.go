@@ -99,8 +99,8 @@ func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error
 	return nil
 }
 
-func (s Subspace) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(s.kvStore(ctx))
+func (s Subspace) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(s.kvStore(ctx))
 }
 
 // Get queries for a parameter by key from the Subspace's KVStore and sets the
@@ -201,7 +201,7 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 
 	st.Set(key, bz)
 
-	newtStore := store.NewStoreAPI(s.transientStore(ctx))
+	newtStore := store.NewKVStoreWrapper(s.transientStore(ctx))
 	newtStore.Set(key, []byte{})
 }
 

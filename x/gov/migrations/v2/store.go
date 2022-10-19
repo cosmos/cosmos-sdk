@@ -21,8 +21,8 @@ const proposalIDLen = 8
 // <prefix_bytes><proposal_id (8 bytes)><address_len (1 byte)><address_bytes>
 func migratePrefixProposalAddress(st sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(st, prefixBz)
-	oldStore2 := store.NewStoreAPI(oldStore)
-	newStore := store.NewStoreAPI(st)
+	oldStore2 := store.NewKVStoreWrapper(oldStore)
+	newStore := store.NewKVStoreWrapper(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -52,7 +52,7 @@ func migrateVote(oldVote v1beta1.Vote) v1beta1.Vote {
 // migrateStoreWeightedVotes migrates in-place all legacy votes to ADR-037 weighted votes.
 func migrateStoreWeightedVotes(st sdk.KVStore, cdc codec.BinaryCodec) error {
 	iterator := sdk.KVStorePrefixIterator(st, types.VotesKeyPrefix)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

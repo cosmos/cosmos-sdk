@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
-func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
 }
 
 // Mint defines a method for minting a new nft
@@ -62,7 +62,7 @@ func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 func (k Keeper) burnWithNoCheck(ctx sdk.Context, classID string, nftID string) error {
 	owner := k.GetOwner(ctx, classID, nftID)
 	nftStore := k.getNFTStore(ctx, classID)
-	newNftStore := store.NewStoreAPI(nftStore)
+	newNftStore := store.NewKVStoreWrapper(nftStore)
 	newNftStore.Delete([]byte(nftID))
 
 	k.deleteOwner(ctx, classID, nftID, owner)
@@ -204,7 +204,7 @@ func (k Keeper) HasNFT(ctx sdk.Context, classID, id string) bool {
 
 func (k Keeper) setNFT(ctx sdk.Context, token nft.NFT) {
 	nftStore := k.getNFTStore(ctx, token.ClassId)
-	newNftStore := store.NewStoreAPI(nftStore)
+	newNftStore := store.NewKVStoreWrapper(nftStore)
 	bz := k.cdc.MustMarshal(&token)
 	newNftStore.Set([]byte(token.Id), bz)
 }
@@ -214,7 +214,7 @@ func (k Keeper) setOwner(ctx sdk.Context, classID, nftID string, owner sdk.AccAd
 	st.Set(ownerStoreKey(classID, nftID), owner.Bytes())
 
 	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
-	newOwnerStore := store.NewStoreAPI(ownerStore)
+	newOwnerStore := store.NewKVStoreWrapper(ownerStore)
 	newOwnerStore.Set([]byte(nftID), Placeholder)
 }
 
@@ -223,7 +223,7 @@ func (k Keeper) deleteOwner(ctx sdk.Context, classID, nftID string, owner sdk.Ac
 	st.Delete(ownerStoreKey(classID, nftID))
 
 	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
-	newOwnerStore := store.NewStoreAPI(ownerStore)
+	newOwnerStore := store.NewKVStoreWrapper(ownerStore)
 	newOwnerStore.Delete([]byte(nftID))
 }
 

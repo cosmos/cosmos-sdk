@@ -18,8 +18,8 @@ import (
 // prefix_bytes | address_1_len (1 byte) | address_1_bytes | address_2_len (1 byte) | address_2_bytes | address_3_len (1 byte) | address_3_bytes
 func migratePrefixAddressAddressAddress(st sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(st, prefixBz)
-	oldStore2 := store.NewStoreAPI(oldStore)
-	newStore := store.NewStoreAPI(st)
+	oldStore2 := store.NewKVStoreWrapper(oldStore)
+	newStore := store.NewKVStoreWrapper(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -43,8 +43,8 @@ const powerBytesLen = 8
 
 func migrateValidatorsByPowerIndexKey(st sdk.KVStore) {
 	oldStore := prefix.NewStore(st, v1.ValidatorsByPowerIndexKey)
-	oldStore2 := store.NewStoreAPI(oldStore)
-	newStore := store.NewStoreAPI(st)
+	oldStore2 := store.NewKVStoreWrapper(oldStore)
+	newStore := store.NewKVStoreWrapper(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()

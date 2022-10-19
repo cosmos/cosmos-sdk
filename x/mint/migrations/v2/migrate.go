@@ -31,7 +31,7 @@ func Migrate(
 		return err
 	}
 
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	bz := cdc.MustMarshal(&currParams)
 	newStore.Set(ParamsKey, bz)
 

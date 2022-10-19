@@ -22,7 +22,7 @@ func TestTypeSafeRowGetter(t *testing.T) {
 	ctx := NewMockContext()
 	prefixKey := [2]byte{0x2}
 	st := prefix.NewStore(ctx.KVStore(storeKey), prefixKey[:])
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	md := testdata.TableModel{
 		Id:   1,
 		Name: "some name",

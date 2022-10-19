@@ -73,8 +73,8 @@ func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []types.Accoun
 	return accounts
 }
 
-func (ak AccountKeeper) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(ak.storeKey))
+func (ak AccountKeeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(ak.storeKey))
 }
 
 // SetAccount implements AccountKeeperI.

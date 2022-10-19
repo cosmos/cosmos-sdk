@@ -26,7 +26,7 @@ func TestMigrateStore(t *testing.T) {
 
 	addr := sdk.AccAddress([]byte("addr________________"))
 	prefixAccStore := prefix.NewStore(st, v2.CreateAccountBalancesPrefix(addr))
-	newStore := store.NewStoreAPI(prefixAccStore)
+	newStore := store.NewKVStoreWrapper(prefixAccStore)
 
 	balances := sdk.NewCoins(
 		sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -89,7 +89,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		},
 	}
 	denomMetadataStore := prefix.NewStore(st, v2.DenomMetadataPrefix)
-	newDenomMetadataStore := store.NewStoreAPI(denomMetadataStore)
+	newDenomMetadataStore := store.NewKVStoreWrapper(denomMetadataStore)
 
 	for i := range []int{0, 1} {
 		key := append(v2.DenomMetadataPrefix, []byte(metaData[i].Base)...)

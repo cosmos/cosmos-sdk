@@ -19,7 +19,7 @@ func TestStoreMigration(t *testing.T) {
 	slashingKey := sdk.NewKVStoreKey("slashing")
 	ctx := testutil.DefaultContext(slashingKey, sdk.NewTransientStoreKey("transient_test"))
 	st := ctx.KVStore(slashingKey)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	consAddr := sdk.ConsAddress(addr1)

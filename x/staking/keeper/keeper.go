@@ -87,8 +87,8 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	k.hooks = sh
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
 }
 
 // GetLastTotalPower Load the last total validator power.

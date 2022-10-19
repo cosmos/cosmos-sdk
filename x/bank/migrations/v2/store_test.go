@@ -17,8 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func getStore(st store.KVStore) store.StoreAPI {
-	return store.NewStoreAPI(st)
+func getStore(st store.KVStore) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(st)
 }
 
 func TestSupplyMigration(t *testing.T) {

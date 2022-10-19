@@ -156,8 +156,8 @@ func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 	return nil
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store.StoreAPI {
-	return store.NewStoreAPI(ctx.KVStore(k.storeKey))
+func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
+	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
 }
 
 // revokeAllowance removes an existing grant

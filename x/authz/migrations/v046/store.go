@@ -27,7 +27,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 
 func addExpiredGrantsIndex(ctx sdk.Context, st storetypes.KVStore, cdc codec.BinaryCodec) error {
 	grantsStore := prefix.NewStore(st, GrantPrefix)
-	newStore := store.NewStoreAPI(grantsStore)
+	newStore := store.NewKVStoreWrapper(grantsStore)
 
 	grantsIter := grantsStore.Iterator(nil, nil)
 	defer grantsIter.Close()

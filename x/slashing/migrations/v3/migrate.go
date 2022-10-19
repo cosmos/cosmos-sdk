@@ -27,7 +27,7 @@ func Migrate(ctx sdk.Context, st sdk.KVStore, legacySubspace exported.Subspace, 
 	}
 
 	bz := cdc.MustMarshal(&currParams)
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	newStore.Set(ParamsKey, bz)
 
 	return nil

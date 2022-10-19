@@ -24,7 +24,7 @@ func migrateSupply(st sdk.KVStore, cdc codec.BinaryCodec) error {
 		return err
 	}
 
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	// We delete the single key holding the whole blob.
 	newStore.Delete(v1.SupplyKey)
 
@@ -34,7 +34,7 @@ func migrateSupply(st sdk.KVStore, cdc codec.BinaryCodec) error {
 
 	// We add a new key for each denom
 	supplyStore := prefix.NewStore(st, SupplyKey)
-	newSupplyStore := store.NewStoreAPI(supplyStore)
+	newSupplyStore := store.NewKVStoreWrapper(supplyStore)
 
 	// We're sure that SupplyI is a Supply struct, there's no other
 	// implementation.
@@ -59,9 +59,9 @@ func migrateBalanceKeys(st sdk.KVStore) {
 	// prefix ("balances") || addrBytes (20 bytes) || denomBytes
 	// new key is of format
 	// prefix (0x02) || addrLen (1 byte) || addrBytes || denomBytes
-	newStore := store.NewStoreAPI(st)
+	newStore := store.NewKVStoreWrapper(st)
 	oldStore := prefix.NewStore(st, v1.BalancesPrefix)
-	oldStore2 := store.NewStoreAPI(oldStore)
+	oldStore2 := store.NewKVStoreWrapper(oldStore)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -102,7 +102,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 // pruneZeroBalances removes the zero balance addresses from balances store.
 func pruneZeroBalances(st sdk.KVStore, cdc codec.BinaryCodec) error {
 	balancesStore := prefix.NewStore(st, BalancesPrefix)
-	newBalancesStore := store.NewStoreAPI(balancesStore)
+	newBalancesStore := store.NewKVStoreWrapper(balancesStore)
 	iterator := balancesStore.Iterator(nil, nil)
 	defer iterator.Close()
 
@@ -122,7 +122,7 @@ func pruneZeroBalances(st sdk.KVStore, cdc codec.BinaryCodec) error {
 // pruneZeroSupply removes zero balance denom from supply store.
 func pruneZeroSupply(st sdk.KVStore) error {
 	supplyStore := prefix.NewStore(st, SupplyKey)
-	newSupplyStore := store.NewStoreAPI(supplyStore)
+	newSupplyStore := store.NewKVStoreWrapper(supplyStore)
 	iterator := supplyStore.Iterator(nil, nil)
 	defer iterator.Close()
 

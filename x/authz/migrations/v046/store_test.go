@@ -99,7 +99,7 @@ func TestMigration(t *testing.T) {
 		},
 	}
 
-	st := store.NewStoreAPI(ctx.KVStore(authzKey))
+	st := store.NewKVStoreWrapper(ctx.KVStore(authzKey))
 
 	for _, g := range grants {
 		grant := g.authorization()

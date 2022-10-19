@@ -60,6 +60,7 @@ func (s *DeterministicTestSuite) SetupTest() {
 	)
 	s.Require().NoError(err)
 
+	// s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now()}).WithGasMeter(sdk.NewInfiniteGasMeter())
 	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
@@ -360,7 +361,7 @@ func (suite *DeterministicTestSuite) TestGRPCValidatorUnbondingDelegations() {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.QueryReq(suite.ctx, suite.Require(), req, suite.queryClient.ValidatorUnbondingDelegations, 3593, false)
+	testdata.QueryReq(suite.ctx, suite.Require(), req, suite.queryClient.ValidatorUnbondingDelegations, 3575, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDelegation() {
@@ -424,7 +425,7 @@ func (suite *DeterministicTestSuite) TestGRPCUnbondingDelegation() {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.QueryReq(suite.ctx, suite.Require(), req, suite.queryClient.UnbondingDelegation, 1558, false)
+	testdata.QueryReq(suite.ctx, suite.Require(), req, suite.queryClient.UnbondingDelegation, 1549, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDelegatorDelegations() {
@@ -525,7 +526,7 @@ func (suite *DeterministicTestSuite) TestGRPCDelegatorUnbondingDelegations() {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.QueryReq(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorUnbondingDelegations, 1176, false)
+	testdata.QueryReq(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorUnbondingDelegations, 1158, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCHistoricalInfo() {
@@ -682,7 +683,7 @@ func (suite *DeterministicTestSuite) TestGRPCRedelegations() {
 		DstValidatorAddr: validator2,
 	}
 
-	testdata.QueryReq(suite.ctx, suite.Require(), req, suite.queryClient.Redelegations, 3782, false)
+	testdata.QueryReq(suite.ctx, suite.Require(), req, suite.queryClient.Redelegations, 3776, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCParams() {

@@ -396,6 +396,10 @@ const config = {
             ],
             to: "/main/modules/upgrade/",
           },
+          {
+            from: ["/main/run-node/cosmovisor"],
+            to: "/main/tooling/cosmovisor",
+          },
         ],
       },
     ],

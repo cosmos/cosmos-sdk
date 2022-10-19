@@ -154,8 +154,6 @@ func (mp *priorityMempool) Insert(ctx sdk.Context, tx Tx) error {
 	}
 
 	mp.scores[sk] = txMeta{priority: priority, weight: key.weight}
-
-	key.senderElement = senderTx
 	mp.priorityIndex.Set(key, tx)
 
 	return nil

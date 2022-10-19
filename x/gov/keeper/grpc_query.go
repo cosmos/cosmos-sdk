@@ -87,10 +87,6 @@ func (q Keeper) Proposals(c context.Context, req *v1.QueryProposalsRequest) (*v1
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	for i := range filteredProposals {
-		q.PopulateProposalContents(ctx, filteredProposals[i])
-	}
-
 	return &v1.QueryProposalsResponse{Proposals: filteredProposals, Pagination: pageRes}, nil
 }
 

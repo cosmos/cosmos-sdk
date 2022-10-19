@@ -138,6 +138,11 @@ func (cms Store) ListeningEnabled(key types.StoreKey) bool {
 	return false
 }
 
+// LatestVersion returns the branch version of the store
+func (cms Store) LatestVersion() int64 {
+	panic("cannot get latest version from branch cached multi-store")
+}
+
 // GetStoreType returns the type of the store.
 func (cms Store) GetStoreType() types.StoreType {
 	return types.StoreTypeMulti

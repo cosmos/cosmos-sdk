@@ -11,7 +11,7 @@ func (k Keeper) GetDelegatorValidators(
 ) types.Validators {
 	validators := make([]types.Validator, maxRetrieve)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delegatorPrefixKey := types.GetDelegationsKey(delegatorAddr)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
@@ -54,7 +54,7 @@ func (k Keeper) GetDelegatorValidator(
 func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.Delegation {
 	delegations := make([]types.Delegation, 0)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delegatorPrefixKey := types.GetDelegationsKey(delegator)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
@@ -75,7 +75,7 @@ func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAdd
 func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.UnbondingDelegation {
 	unbondingDelegations := make([]types.UnbondingDelegation, 0)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delegatorPrefixKey := types.GetUBDsKey(delegator)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
@@ -94,7 +94,7 @@ func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAdd
 func (k Keeper) GetAllRedelegations(
 	ctx sdk.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
 ) []types.Redelegation {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delegatorPrefixKey := types.GetREDsKey(delegator)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest

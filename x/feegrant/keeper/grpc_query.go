@@ -73,7 +73,7 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 
 	var grants []*feegrant.Grant
 
-	store := ctx.KVStore(q.storeKey)
+	store := q.getStore(ctx)
 	grantsStore := prefix.NewStore(store, feegrant.FeeAllowancePrefixByGrantee(granteeAddr))
 
 	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key []byte, value []byte) error {
@@ -106,7 +106,7 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(q.storeKey)
+	store := q.getStore(ctx)
 	prefixStore := prefix.NewStore(store, feegrant.FeeAllowanceKeyPrefix)
 	grants, pageRes, err := query.GenericFilteredPaginate(q.cdc, prefixStore, req.Pagination, func(key []byte, grant *feegrant.Grant) (*feegrant.Grant, error) {
 		// ParseAddressesFromFeeAllowanceKey expects the full key including the prefix.

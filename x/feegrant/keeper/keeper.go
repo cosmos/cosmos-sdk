@@ -203,7 +203,7 @@ func (k Keeper) decodeFeegrant(bz []byte) (*feegrant.Grant, error) {
 
 // getGrant returns entire grant between both accounts
 func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*feegrant.Grant, error) {
-	st := ctx.KVStore(k.storeKey)
+	st := k.getStore(ctx)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 	feegrant, err := store.GetAndDecode(st, k.decodeFeegrant, key)
 	if feegrant == nil {
@@ -220,7 +220,7 @@ func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.Ac
 // Callback to get all data, returns true to stop, false to keep reading
 // Calling this without pagination is very expensive and only designed for export genesis
 func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(grant feegrant.Grant) bool) error {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	iter := sdk.KVStorePrefixIterator(store, feegrant.FeeAllowanceKeyPrefix)
 	defer iter.Close()
 

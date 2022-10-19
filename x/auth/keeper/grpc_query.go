@@ -43,14 +43,14 @@ func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequ
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(ak.storeKey)
+	store := ak.getStore(ctx)
 	accountsStore := prefix.NewStore(store, types.AddressStoreKeyPrefix)
 
 	var accounts []*codectypes.Any
 	pageRes, err := query.Paginate(accountsStore, req.Pagination, func(key, value []byte) error {
 		account, err := ak.decodeAccount(value)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		any, err := codectypes.NewAnyWithValue(account)
 		if err != nil {

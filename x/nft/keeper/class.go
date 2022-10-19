@@ -46,7 +46,7 @@ func (k Keeper) decodeClass(bz []byte) (nft.Class, bool) {
 
 // GetClass defines a method for returning the class information of the specified id
 func (k Keeper) GetClass(ctx sdk.Context, classID string) (nft.Class, bool) {
-	st := ctx.KVStore(k.storeKey)
+	st := k.getStore(ctx)
 	class, boolval := store.GetAndDecodeWithBool(st, k.decodeClass, classStoreKey(classID))
 	if !boolval {
 		return class, boolval
@@ -56,7 +56,7 @@ func (k Keeper) GetClass(ctx sdk.Context, classID string) (nft.Class, bool) {
 
 // GetClasses defines a method for returning all classes information
 func (k Keeper) GetClasses(ctx sdk.Context) (classes []*nft.Class) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	iterator := sdk.KVStorePrefixIterator(store, ClassKey)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -69,6 +69,6 @@ func (k Keeper) GetClasses(ctx sdk.Context) (classes []*nft.Class) {
 
 // HasClass determines whether the specified classID exist
 func (k Keeper) HasClass(ctx sdk.Context, classID string) bool {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	return store.Has(classStoreKey(classID))
 }

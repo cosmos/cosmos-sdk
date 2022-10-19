@@ -120,14 +120,14 @@ func (k Keeper) GetAuthority() string {
 
 // SetValidatorUpdates sets the ABCI validator power updates for the current block.
 func (k Keeper) SetValidatorUpdates(ctx sdk.Context, valUpdates []abci.ValidatorUpdate) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	bz := k.cdc.MustMarshal(&types.ValidatorUpdates{Updates: valUpdates})
 	store.Set(types.ValidatorUpdatesKey, bz)
 }
 
 // GetValidatorUpdates returns the ABCI validator power updates within the current block.
 func (k Keeper) GetValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	bz := store.Get(types.ValidatorUpdatesKey)
 
 	var valUpdates types.ValidatorUpdates

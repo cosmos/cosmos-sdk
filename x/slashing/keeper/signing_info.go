@@ -22,7 +22,7 @@ func (k Keeper) decodeInfo(bz []byte) (types.ValidatorSigningInfo, bool) {
 // GetValidatorSigningInfo retruns the ValidatorSigningInfo for a specific validator
 // ConsAddress
 func (k Keeper) GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (info types.ValidatorSigningInfo, found bool) {
-	st := ctx.KVStore(k.storeKey)
+	st := k.getStore(ctx)
 	info, boolval := store.GetAndDecodeWithBool(st, k.decodeInfo, types.ValidatorSigningInfoKey(address))
 	if !boolval {
 		found = false
@@ -50,7 +50,7 @@ func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
 	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool),
 ) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	iter := sdk.KVStorePrefixIterator(store, types.ValidatorSigningInfoKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -75,7 +75,7 @@ func (k Keeper) decodeMissed(bz []byte) (bool, error) {
 
 // GetValidatorMissedBlockBitArray gets the bit for the missed blocks array
 func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) bool {
-	st := ctx.KVStore(k.storeKey)
+	st := k.getStore(ctx)
 	missed, err := store.GetAndDecode(st, k.decodeMissed, types.ValidatorMissedBlockBitArrayKey(address, index))
 	if err != nil {
 		return false

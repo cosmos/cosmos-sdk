@@ -228,18 +228,18 @@ func (k Keeper) deleteOwner(ctx sdk.Context, classID, nftID string, owner sdk.Ac
 }
 
 func (k Keeper) getNFTStore(ctx sdk.Context, classID string) prefix.Store {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	return prefix.NewStore(store, nftStoreKey(classID))
 }
 
 func (k Keeper) getClassStoreByOwner(ctx sdk.Context, owner sdk.AccAddress, classID string) prefix.Store {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := nftOfClassByOwnerStoreKey(owner, classID)
 	return prefix.NewStore(store, key)
 }
 
 func (k Keeper) prefixStoreNftOfClassByOwner(ctx sdk.Context, owner sdk.AccAddress) prefix.Store {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := prefixNftOfClassByOwnerStoreKey(owner)
 	return prefix.NewStore(store, key)
 }

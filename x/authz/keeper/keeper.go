@@ -61,7 +61,7 @@ func (k Keeper) decodeGrant(bz []byte) (authz.Grant, bool) {
 
 // getGrant returns grant stored at skey.
 func (k Keeper) getGrant(ctx sdk.Context, skey []byte) (grant authz.Grant, found bool) {
-	st := ctx.KVStore(k.storeKey)
+	st := k.getStore(ctx)
 	grant, found = store.GetAndDecodeWithBool(st, k.decodeGrant, skey)
 	if !found {
 		return grant, found
@@ -240,7 +240,7 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 
 // GetAuthorizations Returns list of `Authorizations` granted to the grantee by the granter.
 func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) ([]authz.Authorization, error) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	key := grantStoreKey(grantee, granter, "")
 	iter := sdk.KVStorePrefixIterator(store, key)
 	defer iter.Close()
@@ -289,7 +289,7 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 func (k Keeper) IterateGrants(ctx sdk.Context,
 	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant authz.Grant) bool,
 ) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	iter := sdk.KVStorePrefixIterator(store, GrantKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -309,7 +309,7 @@ func (k Keeper) decodeQueueItems(bz []byte) (authz.GrantQueueItem, error) {
 }
 
 func (k Keeper) getGrantQueueItem(ctx sdk.Context, expiration time.Time, granter, grantee sdk.AccAddress) (*authz.GrantQueueItem, error) {
-	st := ctx.KVStore(k.storeKey)
+	st := k.getStore(ctx)
 
 	queueItems, err := store.GetAndDecode(st, k.decodeQueueItems, GrantQueueKey(expiration, granter, grantee))
 	if err != nil {
@@ -352,7 +352,7 @@ func (k Keeper) insertIntoGrantQueue(ctx sdk.Context, granter, grantee sdk.AccAd
 
 // removeFromGrantQueue removes a grant key from the grant queue
 func (k Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, granter, grantee sdk.AccAddress, expiration time.Time) error {
-	st := ctx.KVStore(k.storeKey)
+	st := k.getStore(ctx)
 	key := GrantQueueKey(expiration, granter, grantee)
 	queueItem, err := store.GetAndDecode(st, k.decodeQueueItems, key)
 	if err != nil {

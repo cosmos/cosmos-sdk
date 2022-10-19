@@ -28,19 +28,19 @@ func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc types.AccountI) types.Ac
 
 // HasAccount implements AccountKeeperI.
 func (ak AccountKeeper) HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
-	store := ctx.KVStore(ak.storeKey)
+	store := ak.getStore(ctx)
 	return store.Has(types.AddressStoreKey(addr))
 }
 
 // HasAccountAddressByID checks account address exists by id.
 func (ak AccountKeeper) HasAccountAddressByID(ctx sdk.Context, id uint64) bool {
-	store := ctx.KVStore(ak.storeKey)
+	store := ak.getStore(ctx)
 	return store.Has(types.AccountNumberStoreKey(id))
 }
 
 // GetAccount implements AccountKeeperI.
 func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
-	st := ctx.KVStore(ak.storeKey)
+	st := ak.getStore(ctx)
 	acc, err := store.GetAndDecode(st, ak.decodeAccount, types.AddressStoreKey(addr))
 	if err != nil {
 		panic(err)
@@ -58,7 +58,7 @@ func decodeAccAddr(bz []byte) (string, error) {
 
 // GetAccountAddressById returns account address by id.
 func (ak AccountKeeper) GetAccountAddressByID(ctx sdk.Context, id uint64) string {
-	st := ctx.KVStore(ak.storeKey)
+	st := ak.getStore(ctx)
 	addr, _ := store.GetAndDecode(st, decodeAccAddr, types.AccountNumberStoreKey(id))
 	return addr
 }
@@ -103,7 +103,7 @@ func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountI) {
 // IterateAccounts iterates over all the stored accounts and performs a callback function.
 // Stops iteration when callback returns true.
 func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, cb func(account types.AccountI) (stop bool)) {
-	store := ctx.KVStore(ak.storeKey)
+	store := ak.getStore(ctx)
 	iterator := sdk.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
 
 	defer iterator.Close()

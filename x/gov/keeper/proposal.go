@@ -110,7 +110,7 @@ func (keeper Keeper) decodeProposal(bz []byte) (v1.Proposal, bool) {
 // GetProposal gets a proposal from store by ProposalID.
 // Panics if can't unmarshal the proposal.
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
-	st := ctx.KVStore(keeper.storeKey)
+	st := keeper.getStore(ctx)
 
 	proposal, boolVal := store.GetAndDecodeWithBool(st, keeper.decodeProposal, types.ProposalKey(proposalID))
 	if !boolVal {
@@ -154,7 +154,7 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 // IterateProposals iterates over the all the proposals and performs a callback function.
 // Panics when the iterator encounters a proposal which can't be unmarshaled.
 func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal v1.Proposal) (stop bool)) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := keeper.getStore(ctx)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
 	defer iterator.Close()
@@ -237,7 +237,7 @@ func (keeper Keeper) decodeProposalID(bz []byte) (proposalID uint64, err error) 
 
 // GetProposalID gets the highest proposal ID
 func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err error) {
-	st := ctx.KVStore(keeper.storeKey)
+	st := keeper.getStore(ctx)
 	proposalID, err = store.GetAndDecode(st, keeper.decodeProposalID, types.ProposalIDKey)
 	if err != nil {
 		return 0, err

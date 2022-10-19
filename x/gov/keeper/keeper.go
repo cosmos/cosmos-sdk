@@ -211,13 +211,13 @@ func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time
 
 // ActiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Active Queue that expire by endTime
 func (keeper Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
-	store := ctx.KVStore(keeper.storeKey)
+	store := keeper.getStore(ctx)
 	return store.Iterator(types.ActiveProposalQueuePrefix, sdk.PrefixEndBytes(types.ActiveProposalByTimeKey(endTime)))
 }
 
 // InactiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Inactive Queue that expire by endTime
 func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
-	store := ctx.KVStore(keeper.storeKey)
+	store := keeper.getStore(ctx)
 	return store.Iterator(types.InactiveProposalQueuePrefix, sdk.PrefixEndBytes(types.InactiveProposalByTimeKey(endTime)))
 }
 

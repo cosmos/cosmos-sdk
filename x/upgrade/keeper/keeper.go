@@ -127,7 +127,7 @@ func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 // GetModuleVersionMap returns a map of key module name and value module consensus version
 // as defined in ADR-041.
 func (k Keeper) GetModuleVersionMap(ctx sdk.Context) module.VersionMap {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 
 	vm := make(module.VersionMap)
@@ -145,7 +145,7 @@ func (k Keeper) GetModuleVersionMap(ctx sdk.Context) module.VersionMap {
 
 // GetModuleVersions gets a slice of module consensus versions
 func (k Keeper) GetModuleVersions(ctx sdk.Context) []*types.ModuleVersion {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 	defer it.Close()
 
@@ -164,7 +164,7 @@ func (k Keeper) GetModuleVersions(ctx sdk.Context) []*types.ModuleVersion {
 
 // gets the version for a given module, and returns true if it exists, false otherwise
 func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 	defer it.Close()
 

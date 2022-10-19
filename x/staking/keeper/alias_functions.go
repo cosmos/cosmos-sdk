@@ -11,7 +11,7 @@ import (
 
 // iterate through the validator set and perform the provided function
 func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsKey)
 	defer iterator.Close()
@@ -31,7 +31,7 @@ func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validato
 
 // iterate through the bonded validator set and perform the provided function
 func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	maxValidators := k.MaxValidators(ctx)
 
 	iterator := sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
@@ -116,7 +116,7 @@ func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.
 func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
 	fn func(index int64, del types.DelegationI) (stop bool),
 ) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delegatorPrefixKey := types.GetDelegationsKey(delAddr)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
@@ -136,7 +136,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
 // return all delegations used during genesis dump
 // TODO: remove this func, change all usage for iterate functionality
 func (k Keeper) GetAllSDKDelegations(ctx sdk.Context) (delegations []types.Delegation) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.DelegationKey)
 	defer iterator.Close()

@@ -74,7 +74,7 @@ func (k Keeper) decodePubKey(bz []byte) (cryptotypes.PubKey, error) {
 
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
-	st := ctx.KVStore(k.storeKey)
+	st := k.getStore(ctx)
 	pubkey, err := store.GetAndDecode(st, k.decodePubKey, types.AddrPubkeyRelationKey(a))
 	if pubkey == nil {
 		return pubkey, fmt.Errorf("address %s not found", sdk.ConsAddress(a))

@@ -34,7 +34,7 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	valStore := prefix.NewStore(store, types.ValidatorsKey)
 
 	validators, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, val *types.Validator) (*types.Validator, error) {
@@ -93,7 +93,7 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	valStore := prefix.NewStore(store, types.DelegationKey)
 	delegations, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, delegation *types.Delegation) (*types.Delegation, error) {
 		valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
@@ -263,7 +263,7 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 		return nil, err
 	}
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
 	pageRes, err := query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
@@ -329,7 +329,7 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 	var unbondingDelegations types.UnbondingDelegations
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
@@ -382,7 +382,7 @@ func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsR
 	var err error
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	switch {
 	case req.DelegatorAddr != "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr != "":
 		redels, err = queryRedelegation(ctx, k, req)
@@ -414,7 +414,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 	var validators types.Validators
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err

@@ -132,7 +132,7 @@ func (k Querier) ValidatorSlashes(c context.Context, req *types.QueryValidatorSl
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator address")

@@ -29,7 +29,7 @@ func (k Keeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr s
 
 // IterateAllDelegations iterates through all of the delegations.
 func (k Keeper) IterateAllDelegations(ctx sdk.Context, cb func(delegation types.Delegation) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.DelegationKey)
 	defer iterator.Close()
@@ -55,7 +55,7 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 // GetValidatorDelegations returns all delegations to a specific validator.
 // Useful for querier.
 func (k Keeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress) (delegations []types.Delegation) { //nolint:interfacer
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.DelegationKey)
 	defer iterator.Close()
@@ -74,7 +74,7 @@ func (k Keeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress)
 // delegator.
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress, maxRetrieve uint16) (delegations []types.Delegation) {
 	delegations = make([]types.Delegation, maxRetrieve)
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delegatorPrefixKey := types.GetDelegationsKey(delegator)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
@@ -117,7 +117,7 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) e
 func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress, maxRetrieve uint16) (unbondingDelegations []types.UnbondingDelegation) {
 	unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delegatorPrefixKey := types.GetUBDsKey(delegator)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
@@ -168,7 +168,7 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 
 // IterateUnbondingDelegations iterates through all of the unbonding delegations.
 func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64, ubd types.UnbondingDelegation) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.UnbondingDelegationKey)
 	defer iterator.Close()
@@ -196,7 +196,7 @@ func (k Keeper) GetDelegatorUnbonding(ctx sdk.Context, delegator sdk.AccAddress)
 
 // IterateDelegatorUnbondingDelegations iterates through a delegator's unbonding delegations.
 func (k Keeper) IterateDelegatorUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(ubd types.UnbondingDelegation) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.GetUBDsKey(delegator))
 	defer iterator.Close()
@@ -231,7 +231,7 @@ func (k Keeper) GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) ma
 
 // IterateDelegatorDelegations iterates through one delegator's delegations.
 func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delegatorPrefixKey := types.GetDelegationsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
 	defer iterator.Close()
@@ -246,7 +246,7 @@ func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAd
 
 // IterateDelegatorRedelegations iterates through one delegator's redelegations.
 func (k Keeper) IterateDelegatorRedelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(red types.Redelegation) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delegatorPrefixKey := types.GetREDsKey(delegator)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
@@ -367,7 +367,7 @@ func (k Keeper) InsertUBDQueue(ctx sdk.Context, ubd types.UnbondingDelegation, c
 
 // UBDQueueIterator returns all the unbonding queue timeslices from time 0 until endTime.
 func (k Keeper) UBDQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	return store.Iterator(types.UnbondingQueueKey,
 		sdk.InclusiveEndBytes(types.GetUnbondingDelegationTimeKey(endTime)))
 }
@@ -375,7 +375,7 @@ func (k Keeper) UBDQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterato
 // DequeueAllMatureUBDQueue returns a concatenated list of all the timeslices inclusively previous to
 // currTime, and deletes the timeslices from the queue.
 func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context, currTime time.Time) (matureUnbonds []types.DVPair) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	unbondingTimesliceIterator := k.UBDQueueIterator(ctx, currTime)
@@ -398,7 +398,7 @@ func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context, currTime time.Time) (m
 func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress, maxRetrieve uint16) (redelegations []types.Redelegation) {
 	redelegations = make([]types.Redelegation, maxRetrieve)
 
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	delegatorPrefixKey := types.GetREDsKey(delegator)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
@@ -449,7 +449,7 @@ func (k Keeper) GetRedelegationsFromSrcValidator(ctx sdk.Context, valAddr sdk.Va
 
 // HasReceivingRedelegation checks if validator is receiving a redelegation.
 func (k Keeper) HasReceivingRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) bool {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	prefix := types.GetREDsByDelToValDstIndexKey(delAddr, valDstAddr)
 
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
@@ -519,7 +519,7 @@ func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 
 // IterateRedelegations iterates through all redelegations.
 func (k Keeper) IterateRedelegations(ctx sdk.Context, fn func(index int64, red types.Redelegation) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.RedelegationKey)
 	defer iterator.Close()
@@ -599,7 +599,7 @@ func (k Keeper) InsertRedelegationQueue(ctx sdk.Context, red types.Redelegation,
 // RedelegationQueueIterator returns all the redelegation queue timeslices from
 // time 0 until endTime.
 func (k Keeper) RedelegationQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	return store.Iterator(types.RedelegationQueueKey, sdk.InclusiveEndBytes(types.GetRedelegationTimeKey(endTime)))
 }
 
@@ -607,7 +607,7 @@ func (k Keeper) RedelegationQueueIterator(ctx sdk.Context, endTime time.Time) sd
 // timeslices inclusively previous to currTime, and deletes the timeslices from
 // the queue.
 func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	redelegationTimesliceIterator := k.RedelegationQueueIterator(ctx, ctx.BlockHeader().Time)

@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 			func() {
 				proposal.Status = v1.StatusPassed
 				app.GovKeeper.SetProposal(ctx, proposal)
-				proposal, _ = app.GovKeeper.GetProposal(ctx, proposal.Id)
+				proposal, _ = app.GovKeeper.GetProposal(ctx, proposal.Id, false)
 
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 			func() {
 				proposal.Status = v1.StatusPassed
 				app.GovKeeper.SetProposal(ctx, proposal)
-				proposal, _ = app.GovKeeper.GetProposal(ctx, proposal.Id)
+				proposal, _ = app.GovKeeper.GetProposal(ctx, proposal.Id, false)
 
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
 

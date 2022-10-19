@@ -1,13 +1,16 @@
 package math_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"math/rand"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
@@ -423,6 +426,21 @@ func TestRoundTripMarshalToInt(t *testing.T) {
 				t.Fatalf("roundtrip=%q != original=%q", rt, iv)
 			}
 		})
+	}
+}
+
+func TestFormatInt(t *testing.T) {
+	type integerTest []string
+	var testcases []integerTest
+	raw, err := os.ReadFile("../tx/textual/internal/testdata/integers.json")
+	require.NoError(t, err)
+	err = json.Unmarshal(raw, &testcases)
+	require.NoError(t, err)
+
+	for _, tc := range testcases {
+		out, err := math.FormatInt(tc[0])
+		require.NoError(t, err)
+		require.Equal(t, tc[1], out)
 	}
 }
 

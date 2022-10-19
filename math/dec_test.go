@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
 	"strings"
 	"testing"
 
@@ -665,6 +666,24 @@ func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 		b.Fatal("Benchmark did not run")
 	}
 	sink = (interface{})(nil)
+}
+
+func TestFormatDec(t *testing.T) {
+	type decimalTest []string
+	var testcases []decimalTest
+	raw, err := os.ReadFile("../tx/textual/internal/testdata/decimals.json")
+	require.NoError(t, err)
+	err = json.Unmarshal(raw, &testcases)
+	require.NoError(t, err)
+
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc[0], func(t *testing.T) {
+			out, err := math.FormatDec(tc[0])
+			require.NoError(t, err)
+			require.Equal(t, tc[1], out)
+		})
+	}
 }
 
 func TestFormatDecNonDigits(t *testing.T) {

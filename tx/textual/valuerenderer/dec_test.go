@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func TestFormatDec(t *testing.T) {
+func TestDecJsonTestcases(t *testing.T) {
 	type decimalTest []string
 	var testcases []decimalTest
 	raw, err := os.ReadFile("../internal/testdata/decimals.json")

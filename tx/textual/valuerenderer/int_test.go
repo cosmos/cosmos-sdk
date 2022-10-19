@@ -14,7 +14,7 @@ import (
 	"cosmossdk.io/tx/textual/valuerenderer"
 )
 
-func TestFormatInt(t *testing.T) {
+func TestIntJsonTestcases(t *testing.T) {
 	type integerTest []string
 	var testcases []integerTest
 	raw, err := os.ReadFile("../internal/testdata/integers.json")

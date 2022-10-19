@@ -61,6 +61,7 @@ func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return m.HasAnimal.UnpackInterfaces(unpacker)
 }
 
+// QueryReq is a generic func to handle deterministic query requests.
 func QueryReq[request proto.Message, response proto.Message](
 	ctx sdk.Context,
 	require *require.Assertions,

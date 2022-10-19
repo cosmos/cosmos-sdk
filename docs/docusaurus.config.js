@@ -397,8 +397,8 @@ const config = {
             to: "/main/modules/upgrade/",
           },
           {
-            from: ["/main/run-node/06-cosmovisor"],
-            to: "/main/tooling/01-cosmovisor",
+            from: ["/main/run-node/cosmovisor"],
+            to: "/main/tooling/cosmovisor",
           },
         ],
       },

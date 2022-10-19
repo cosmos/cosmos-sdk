@@ -894,3 +894,35 @@ func LegacyDecApproxEq(t *testing.T, d1 LegacyDec, d2 LegacyDec, tol LegacyDec) 
 	diff := d1.Sub(d2).Abs()
 	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
 }
+
+// FormatDec formats a decimal (as encoded in protobuf) into a value-rendered
+// string following ADR-050. This function operates with string manipulation
+// (instead of manipulating the sdk.Dec object).
+func FormatDec(v string) (string, error) {
+	parts := strings.Split(v, ".")
+	if len(parts) > 2 {
+		return "", fmt.Errorf("invalid decimal: too many points in %s", v)
+	}
+
+	intPart, err := FormatInt(parts[0])
+	if err != nil {
+		return "", err
+	}
+
+	if len(parts) == 1 {
+		return intPart, nil
+	}
+
+	decPart := strings.TrimRight(parts[1], "0")
+	if len(decPart) == 0 {
+		return intPart, nil
+	}
+
+	// Ensure that the decimal part has only digits.
+	// https://github.com/cosmos/cosmos-sdk/issues/12811
+	if !hasOnlyDigits(decPart) {
+		return "", fmt.Errorf("non-digits detected after decimal point in: %q", decPart)
+	}
+
+	return intPart + "." + decPart, nil
+}

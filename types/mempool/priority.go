@@ -46,7 +46,7 @@ func txMetaLess(a, b any) int {
 	if res != 0 {
 		return res
 	}
-
+// below we compare by sender and then by nonce if necessary, when conflicting priorities are found
 	res = huandu.Int64.Compare(keyA.weight, keyB.weight)
 	if res != 0 {
 		return res

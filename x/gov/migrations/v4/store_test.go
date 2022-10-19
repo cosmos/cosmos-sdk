@@ -105,7 +105,7 @@ func TestMigrateStore(t *testing.T) {
 	require.Equal(t, legacySubspace.tp.VetoThreshold, params.VetoThreshold)
 	require.Equal(t, sdk.ZeroDec().String(), params.MinInitialDepositRatio)
 
-	//Check proposals and contents (1)
+	// Check proposals and contents (1)
 	var newProposal v1.Proposal
 	bz = store.Get(v1gov.ProposalKey(proposal1.Id))
 	require.NoError(t, cdc.Unmarshal(bz, &newProposal))
@@ -119,7 +119,7 @@ func TestMigrateStore(t *testing.T) {
 
 	checkMigratedProp(t, proposal1, newProposal, newPropContents)
 
-	//Check proposals and contents (2)
+	// Check proposals and contents (2)
 	var newProposal2 v1.Proposal
 	bz = store.Get(v1gov.ProposalKey(proposal2.Id))
 	require.NoError(t, cdc.Unmarshal(bz, &newProposal2))
@@ -132,7 +132,6 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, err)
 
 	checkMigratedProp(t, proposal2, newProposal2, newPropContents2)
-
 }
 
 func getTestProposal() []sdk.Msg {
@@ -170,5 +169,4 @@ func checkMigratedProp(t *testing.T, oldProp v1.Proposal, newProp v1.Proposal, n
 
 	require.Equal(t, oldProp.Messages, newContents.Messages)
 	require.Equal(t, oldProp.Metadata, newContents.Metadata)
-
 }

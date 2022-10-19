@@ -80,7 +80,6 @@ func migrateProposalContents(ctx sdk.Context, storeKey storetypes.StoreKey, cdc 
 	}
 
 	return nil
-
 }
 
 // MigrateStore performs in-place store migrations from v3 (v0.46) to v4 (v0.47). The

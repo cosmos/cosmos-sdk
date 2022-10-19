@@ -45,6 +45,10 @@ func (msg *MsgCounter2) ValidateBasic() error {
 var _ sdk.Msg = &MsgKeyValue{}
 
 func (msg *MsgKeyValue) GetSigners() []sdk.AccAddress {
+	if len(msg.Signer) == 0 {
+		return []sdk.AccAddress{}
+	}
+
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Signer)}
 }
 

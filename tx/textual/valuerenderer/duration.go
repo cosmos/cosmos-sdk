@@ -3,7 +3,6 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
-	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -65,19 +64,19 @@ func formatSeconds(seconds int64, nanos int32) string {
 }
 
 // Format implements the ValueRenderer interface.
-func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.Writer) error {
+func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
 	// Reify the reflected message as a proto Duration
 	msg := v.Message().Interface()
 	duration, ok := msg.(*dpb.Duration)
 	if !ok {
-		return fmt.Errorf("expected Duration, got %T", msg)
+		return nil, fmt.Errorf("expected Duration, got %T", msg)
 	}
 
 	// Bypass use of time.Duration, as the range is more limited than that of dpb.Duration.
 	// (Too bad the companies that produced both technologies didn't coordinate better!)
 
 	if err := duration.CheckValid(); err != nil {
-		return err
+		return nil, err
 	}
 
 	negative := false
@@ -115,26 +114,25 @@ func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value, 
 		s = "-" + s
 	}
 
-	_, err := w.Write([]byte(s))
-	return err
+	return []Screen{{Text: s}}, nil
 }
 
 var durRegexp = regexp.MustCompile(`^(-)?(?:([0-9]+) days?)?(?:, )?(?:([0-9]+) hours?)?(?:, )?(?:([0-9]+) minutes?)?(?:, )?(?:([0-9]+)(?:\.([0-9]+))? seconds?)?$`)
 
 // Parse implements the ValueRenderer interface.
-func (dr durationValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
-	bz, err := io.ReadAll(r)
-	if err != nil {
-		return protoreflect.Value{}, err
+func (dr durationValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
+	if len(screens) != 1 {
+		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	parts := durRegexp.FindStringSubmatch(string(bz))
+	parts := durRegexp.FindStringSubmatch(screens[0].Text)
 	if parts == nil {
-		return protoreflect.Value{}, fmt.Errorf("bad duration format: %s", string(bz))
+		return protoreflect.Value{}, fmt.Errorf("bad duration format: %s", screens[0].Text)
 	}
 
 	negative := parts[1] != ""
 	var days, hours, minutes, seconds, nanos int64
+	var err error
 
 	if parts[2] != "" {
 		days, err = strconv.ParseInt(parts[2], 10, 64)

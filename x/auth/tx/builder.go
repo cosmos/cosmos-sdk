@@ -221,6 +221,8 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil
+	// set txSize to 0 because it is no longer correct
+	w.txSize = 0
 
 	return nil
 }
@@ -231,6 +233,8 @@ func (w *wrapper) SetTimeoutHeight(height uint64) {
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil
+	// set txSize to 0 because it is no longer correct
+	w.txSize = 0
 }
 
 func (w *wrapper) SetMemo(memo string) {
@@ -238,6 +242,8 @@ func (w *wrapper) SetMemo(memo string) {
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil
+	// set txSize to 0 because it is no longer correct
+	w.txSize = 0
 }
 
 func (w *wrapper) SetGasLimit(limit uint64) {
@@ -249,6 +255,8 @@ func (w *wrapper) SetGasLimit(limit uint64) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
+	// set txSize to 0 because it is no longer correct
+	w.txSize = 0
 }
 
 func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
@@ -260,6 +268,8 @@ func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
+	// set txSize to 0 because it is no longer correct
+	w.txSize = 0
 }
 
 func (w *wrapper) SetTip(tip *tx.Tip) {
@@ -267,6 +277,8 @@ func (w *wrapper) SetTip(tip *tx.Tip) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
+	// set txSize to 0 because it is no longer correct
+	w.txSize = 0
 }
 
 func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
@@ -278,6 +290,8 @@ func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
+	// set txSize to 0 because it is no longer correct
+	w.txSize = 0
 }
 
 func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
@@ -289,6 +303,8 @@ func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
+	// set txSize to 0 because it is no longer correct
+	w.txSize = 0
 }
 
 func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
@@ -320,6 +336,8 @@ func (w *wrapper) setSignerInfos(infos []*tx.SignerInfo) {
 	w.tx.AuthInfo.SignerInfos = infos
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
+	// set txSize to 0 because it is no longer correct
+	w.txSize = 0
 }
 
 func (w *wrapper) setSignerInfoAtIndex(index int, info *tx.SignerInfo) {
@@ -330,6 +348,8 @@ func (w *wrapper) setSignerInfoAtIndex(index int, info *tx.SignerInfo) {
 	w.tx.AuthInfo.SignerInfos[index] = info
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
+	// set txSize to 0 because it is no longer correct
+	w.txSize = 0
 }
 
 func (w *wrapper) setSignatures(sigs [][]byte) {
@@ -376,11 +396,15 @@ func (w *wrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
 func (w *wrapper) SetExtensionOptions(extOpts ...*codectypes.Any) {
 	w.tx.Body.ExtensionOptions = extOpts
 	w.bodyBz = nil
+	// set txSize to 0 because it is no longer correct
+	w.txSize = 0
 }
 
 func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.tx.Body.NonCriticalExtensionOptions = extOpts
 	w.bodyBz = nil
+	// set txSize to 0 because it is no longer correct
+	w.txSize = 0
 }
 
 func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {

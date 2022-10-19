@@ -25,8 +25,9 @@ func GetAndDecodeWithBool[T any](store types.KVStore, dec func([]byte) (T, bool)
 	if len(bz) == 0 {
 		return res, false
 	}
-	resp, boolval := dec(bz)
-	return resp, boolval
+	
+	resp, ok := dec(bz)
+	return resp, ok
 }
 
 // KVStoreWrapper is a wrapper around the store's KVStore to provide more safe key management and better ease-of-use.

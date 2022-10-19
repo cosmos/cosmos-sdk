@@ -227,6 +227,7 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	}
 
 	store.Delete(types.ProposalKey(proposalID))
+	store.Delete(types.ProposalContentsKey(proposalID))
 }
 
 // IterateProposals iterates over the all the proposals and performs a callback function.

@@ -195,26 +195,26 @@ func (keeper Keeper) PopulateProposalContents(ctx sdk.Context, proposal *v1.Prop
 		return
 	}
 
-	var staticData v1.ProposalContents
-	err := keeper.cdc.Unmarshal(bz, &staticData)
+	var contents v1.ProposalContents
+	err := keeper.cdc.Unmarshal(bz, &contents)
 	if err != nil {
 		panic(err)
 	}
 
-	err = sdktx.UnpackInterfaces(keeper.cdc, staticData.Messages)
+	err = sdktx.UnpackInterfaces(keeper.cdc, contents.Messages)
 	if err != nil {
 		panic(err)
 	}
 
-	proposal.Messages = staticData.Messages
-	proposal.Metadata = staticData.Metadata
+	proposal.Messages = contents.Messages
+	proposal.Metadata = contents.Metadata
 }
 
 // DeleteProposal deletes a proposal from store.
 // Panics if the proposal doesn't exist.
 func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := keeper.GetProposalWithoutContents(ctx, proposalID)
 	if !ok {
 		panic(fmt.Sprintf("couldn't find proposal with id#%d", proposalID))
 	}

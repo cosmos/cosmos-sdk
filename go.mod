@@ -170,7 +170,6 @@ replace (
 
 // TODO: tag API and core and remove these
 replace cosmossdk.io/api => ./api
-
 replace cosmossdk.io/core => ./core
 
 retract v0.43.0

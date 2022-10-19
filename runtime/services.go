@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/cosmos/gogoproto/proto"
+	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
@@ -36,7 +37,7 @@ func newAppConfigService(appConfig *appv1alpha1.Config) (*appConfigService, erro
 		}
 
 		fd := &descriptorpb.FileDescriptorProto{}
-		err = proto.Unmarshal(bz, fd)
+		err = protov2.Unmarshal(bz, fd)
 		if err != nil {
 			return nil, err
 		}

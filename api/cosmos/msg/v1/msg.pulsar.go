@@ -126,7 +126,7 @@ var (
 // Extension fields to descriptorpb.FieldOptions.
 var (
 	// legacy_amino_field_name sets a different field name (i.e. key name) in
-	// the JSON object for the given field.
+	// the amino JSON object for the given field.
 	//
 	// Example:
 	//

@@ -125,28 +125,36 @@ func (mp *priorityMempool) Insert(ctx sdk.Context, tx Tx) error {
 		senderIndex = huandu.New(huandu.LessThanFunc(func(a, b any) int {
 			return huandu.Uint64.Compare(b.(txMeta).nonce, a.(txMeta).nonce)
 		}))
+
 		// initialize sender index if not found
 		mp.senderIndices[sender] = senderIndex
 	}
 
 	mp.priorityCounts[priority]++
 
-	// Since senderIndex is scored by nonce, a changed priority will overwrite the existing key.
+	// Since senderIndex is scored by nonce, a changed priority will overwrite the
+	// existing key.
 	senderTx := senderIndex.Set(key, tx)
 
-	// Since mp.priorityIndex is scored by priority, then sender, then nonce, a changed priority will create a new key,
-	// so we must remove the old key and re-insert it to avoid having the same tx with different priorityIndex indexed
-	// twice in the mempool.  This O(log n) remove operation is rare and only happens when a tx's priority changes.
+	// Since mp.priorityIndex is scored by priority, then sender, then nonce, a
+	// changed priority will create a new key, so we must remove the old key and
+	// re-insert it to avoid having the same tx with different priorityIndex indexed
+	// twice in the mempool.
+	//
+	// This O(log n) remove operation is rare and only happens when a tx's priority
+	// changes.
 	sk := txMeta{nonce: nonce, sender: sender}
 	if oldScore, txExists := mp.scores[sk]; txExists {
 		mp.priorityIndex.Remove(txMeta{
 			nonce:    nonce,
-			priority: oldScore.priority,
 			sender:   sender,
+			priority: oldScore.priority,
 			weight:   oldScore.weight,
 		})
 	}
+
 	mp.scores[sk] = txMeta{priority: priority, weight: key.weight}
+
 	key.senderElement = senderTx
 	mp.priorityIndex.Set(key, tx)
 

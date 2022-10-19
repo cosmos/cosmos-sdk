@@ -11,7 +11,7 @@ import (
 
 // AddVote adds a vote on a specific proposal
 func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1.WeightedVoteOptions, metadata string) error {
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := keeper.GetProposal(ctx, proposalID, false)
 	if !ok {
 		return sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
 	}

@@ -263,7 +263,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	require.True(t, activeQueue.Valid())
 
 	activeProposalID := types.GetProposalIDFromBytes(activeQueue.Value())
-	proposal, ok := suite.GovKeeper.GetProposal(ctx, activeProposalID)
+	proposal, ok := suite.GovKeeper.GetProposal(ctx, activeProposalID, false)
 	require.True(t, ok)
 	require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
 

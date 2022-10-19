@@ -452,7 +452,7 @@ func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1
 		initialProposalID = proposalID
 	}
 
-	proposal, ok := k.GetProposal(ctx, proposalID)
+	proposal, ok := k.GetProposal(ctx, proposalID, false)
 	if !ok || proposal.Status != status {
 		return proposalID, false
 	}

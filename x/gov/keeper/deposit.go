@@ -108,7 +108,7 @@ func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func
 // Activates voting period when appropriate and returns true in that case, else returns false.
 func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins) (bool, error) {
 	// Checks to see if proposal exists
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := keeper.GetProposal(ctx, proposalID, false)
 	if !ok {
 		return false, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
 	}

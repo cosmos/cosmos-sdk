@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -30,16 +29,9 @@ func (q Keeper) Proposal(c context.Context, req *v1.QueryProposalRequest) (*v1.Q
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	proposal, found := q.GetProposal(ctx, req.ProposalId)
+	proposal, found := q.GetProposal(ctx, req.ProposalId, true)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
-	}
-
-	msgs := q.GetProposalMessages(ctx, req.ProposalId)
-	var err error
-	proposal.Messages, err = sdktx.SetMsgs(msgs)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get proposal messages: %v", err)
 	}
 
 	return &v1.QueryProposalResponse{Proposal: &proposal}, nil
@@ -96,12 +88,7 @@ func (q Keeper) Proposals(c context.Context, req *v1.QueryProposalsRequest) (*v1
 	}
 
 	for i := range filteredProposals {
-		msgs := q.GetProposalMessages(ctx, filteredProposals[i].Id)
-		var err error
-		filteredProposals[i].Messages, err = sdktx.SetMsgs(msgs)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to get proposal messages: %v", err)
-		}
+		q.PopulateProposalStaticData(ctx, filteredProposals[i])
 	}
 
 	return &v1.QueryProposalsResponse{Proposals: filteredProposals, Pagination: pageRes}, nil
@@ -276,7 +263,7 @@ func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) 
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	proposal, ok := q.GetProposal(ctx, req.ProposalId)
+	proposal, ok := q.GetProposal(ctx, req.ProposalId, false)
 	if !ok {
 		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 	}

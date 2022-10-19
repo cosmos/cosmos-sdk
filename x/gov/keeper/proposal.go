@@ -8,7 +8,6 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -98,8 +97,9 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 }
 
 // GetProposal gets a proposal from store by ProposalID.
+// If withStaticData is true, it will get the proposal's messages from the separate store.
 // Panics if can't unmarshal the proposal.
-func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
+func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64, withStaticData bool) (v1.Proposal, bool) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	bz := store.Get(types.ProposalKey(proposalID))
@@ -110,6 +110,10 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposa
 	var proposal v1.Proposal
 	if err := keeper.UnmarshalProposal(bz, &proposal); err != nil {
 		panic(err)
+	}
+
+	if withStaticData {
+		keeper.PopulateProposalStaticData(ctx, &proposal)
 	}
 
 	return proposal, true
@@ -142,7 +146,14 @@ func (keeper Keeper) setProposalMessages(ctx sdk.Context, proposalID uint64, mes
 	store.Set(types.ProposalMessagesKey(proposalID), bz)
 }
 
-func (keeper Keeper) GetProposalMessages(ctx sdk.Context, proposalID uint64) []sdk.Msg {
+// PopulateProposalStaticData populates the proposal's static data from the separate stores.
+func (keeper Keeper) PopulateProposalStaticData(ctx sdk.Context, proposal *v1.Proposal) {
+	proposal.Messages = keeper.getProposalMessages(ctx, proposal.Id)
+}
+
+// getProposalMessages gets the proposal's messages from the separate store.
+// TODO: define if we would like this to be exported.
+func (keeper Keeper) getProposalMessages(ctx sdk.Context, proposalID uint64) []*cdctypes.Any {
 	store := ctx.KVStore(keeper.storeKey)
 
 	bz := store.Get(types.ProposalMessagesKey(proposalID))
@@ -156,24 +167,14 @@ func (keeper Keeper) GetProposalMessages(ctx sdk.Context, proposalID uint64) []s
 		panic(err)
 	}
 
-	err = sdktx.UnpackInterfaces(keeper.cdc, propMsgs.Messages)
-	if err != nil {
-		panic(err)
-	}
-
-	msgs, err := sdktx.GetMsgs(propMsgs.Messages, "sdk.MsgProposal")
-	if err != nil {
-		panic(err)
-	}
-
-	return msgs
+	return propMsgs.Messages
 }
 
 // DeleteProposal deletes a proposal from store.
 // Panics if the proposal doesn't exist.
 func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	proposal, ok := keeper.GetProposal(ctx, proposalID, false)
 	if !ok {
 		panic(fmt.Sprintf("couldn't find proposal with id#%d", proposalID))
 	}

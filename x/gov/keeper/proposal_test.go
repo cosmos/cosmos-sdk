@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -24,13 +23,7 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 	proposalID := proposal.Id
 	suite.govKeeper.SetProposal(suite.ctx, proposal)
 
-	gotProposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposalID)
-
-	msgs := suite.govKeeper.GetProposalMessages(suite.ctx, proposalID)
-	suite.Require().Equal(len(tp), len(msgs))
-	gotProposal.Messages, err = sdktx.SetMsgs(msgs)
-	suite.Require().NoError(err)
-
+	gotProposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposalID, true)
 	suite.Require().True(ok)
 	suite.Require().Equal(proposal, gotProposal)
 }

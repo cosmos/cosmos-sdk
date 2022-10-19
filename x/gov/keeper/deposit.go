@@ -126,7 +126,8 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 	// Update proposal
 	proposal.TotalDeposit = sdk.NewCoins(proposal.TotalDeposit...).Add(depositAmount...)
-	keeper.SetProposal(ctx, proposal)
+	// Use SetProposalWithoutContents given that we are not changing the proposal contents
+	keeper.SetProposalWithoutContents(ctx, proposal)
 
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
 	activatedVotingPeriod := false

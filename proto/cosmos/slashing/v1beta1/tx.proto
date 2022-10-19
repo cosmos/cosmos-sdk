@@ -57,7 +57,7 @@ message MsgUpdateParams {
   // params defines the x/slashing parameters to update.
   //
   // NOTE: All parameters must be supplied.
-  Params params = 2 [(gogoproto.nullable) = false];
+  Params params = 2 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a

@@ -45,7 +45,7 @@ message MsgSubmitProposal {
   option (cosmos.msg.v1.legacy_amino_name) = "cosmos-sdk/v1/MsgSubmitProposal";
 
   repeated google.protobuf.Any messages             = 1;
-  repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
   string                            proposer        = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // metadata is any arbitrary metadata attached to the proposal.
   string metadata = 4;
@@ -106,7 +106,7 @@ message MsgDeposit {
 
   uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
   string   depositor   = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  repeated cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
 }
 
 // MsgDepositResponse defines the Msg/Deposit response type.
@@ -125,7 +125,7 @@ message MsgUpdateParams {
   // params defines the x/gov parameters to update.
   //
   // NOTE: All parameters must be supplied.
-  Params params = 2 [(gogoproto.nullable) = false];
+  Params params = 2 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a

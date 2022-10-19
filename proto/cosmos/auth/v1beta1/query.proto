@@ -8,6 +8,7 @@ import "google/api/annotations.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/query/v1/query.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
@@ -122,7 +123,7 @@ message QueryModuleAccountsRequest {}
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // params defines the parameters of the module.
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
 }
 
 // QueryAccountResponse is the response type for the Query/Account RPC method.

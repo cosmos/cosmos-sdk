@@ -28,7 +28,7 @@ message Plan {
   // Deprecated: Time based upgrades have been deprecated. Time based upgrade logic
   // has been removed from the SDK.
   // If this field is not empty, an error will be thrown.
-  google.protobuf.Timestamp time = 2 [deprecated = true, (gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp time = 2 [deprecated = true, (gogoproto.stdtime) = true, (gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
 
   // The height at which the upgrade must be performed.
   // Only used if Time is not set.
@@ -57,7 +57,7 @@ message SoftwareUpgradeProposal {
 
   string title       = 1;
   string description = 2;
-  Plan   plan        = 3 [(gogoproto.nullable) = false];
+  Plan   plan        = 3 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
 }
 
 // CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software

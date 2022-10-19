@@ -17,7 +17,7 @@ message SendAuthorization {
   option (cosmos.msg.v1.legacy_amino_name)   = "cosmos-sdk/SendAuthorization";
 
   repeated cosmos.base.v1beta1.Coin spend_limit = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // allow_list specifies an optional list of addresses to whom the grantee can send tokens on behalf of the
   // granter. If omitted, any recipient is allowed.

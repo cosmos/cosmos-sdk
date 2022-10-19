@@ -22,7 +22,7 @@ message BasicAllowance {
   // by this allowance and will be updated as coins are spent. If it is
   // empty, there is no spend limit and any amount of coins can be spent.
   repeated cosmos.base.v1beta1.Coin spend_limit = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // expiration specifies an optional time when this allowance expires
   google.protobuf.Timestamp expiration = 2 [(gogoproto.stdtime) = true];
@@ -35,25 +35,25 @@ message PeriodicAllowance {
   option (cosmos.msg.v1.legacy_amino_name)   = "cosmos-sdk/PeriodicAllowance";
 
   // basic specifies a struct of `BasicAllowance`
-  BasicAllowance basic = 1 [(gogoproto.nullable) = false];
+  BasicAllowance basic = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
 
   // period specifies the time duration in which period_spend_limit coins can
   // be spent before that allowance is reset
-  google.protobuf.Duration period = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  google.protobuf.Duration period = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
 
   // period_spend_limit specifies the maximum number of coins that can be spent
   // in the period
   repeated cosmos.base.v1beta1.Coin period_spend_limit = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // period_can_spend is the number of coins left to be spent before the period_reset time
   repeated cosmos.base.v1beta1.Coin period_can_spend = 4
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // period_reset is the time at which this period resets and a new one begins,
   // it is calculated from the start time of the first transaction after the
   // last period ended
-  google.protobuf.Timestamp period_reset = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp period_reset = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
 }
 
 // AllowedMsgAllowance creates allowance only for specified message types.

@@ -2,12 +2,13 @@ syntax = "proto3";
 package cosmos.base.kv.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/kv";
 
 // Pairs defines a repeated slice of Pair objects.
 message Pairs {
-  repeated Pair pairs = 1 [(gogoproto.nullable) = false];
+  repeated Pair pairs = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
 }
 
 // Pair defines a key/value bytes tuple.

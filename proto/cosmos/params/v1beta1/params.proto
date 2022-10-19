@@ -17,7 +17,7 @@ message ParameterChangeProposal {
 
   string               title       = 1;
   string               description = 2;
-  repeated ParamChange changes     = 3 [(gogoproto.nullable) = false];
+  repeated ParamChange changes     = 3 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
 }
 
 // ParamChange defines an individual parameter change, for use in

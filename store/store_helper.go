@@ -11,11 +11,13 @@ func GetAndDecode[T any](store types.KVStore, dec func([]byte) (T, error), key [
 	if bz == nil {
 		return res, nil
 	}
+
 	resp, err := dec(bz)
 	if err != nil {
 		return resp, err
 	}
-	return resp, err
+
+	return resp, nil
 }
 
 // GetAndDecodeWithBool gets and decodes key and returns it. Returns false if key doesn't exist.

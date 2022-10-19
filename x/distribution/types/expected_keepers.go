@@ -20,8 +20,11 @@ type AccountKeeper interface {
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
@@ -30,7 +33,7 @@ type BankKeeper interface {
 	BlockedAddr(addr sdk.AccAddress) bool
 }
 
-// StakingKeeper expected staking keeper (noalias)
+// StakingKeeper expected staking keeper
 type StakingKeeper interface {
 	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(sdk.Context,
@@ -47,8 +50,9 @@ type StakingKeeper interface {
 		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool))
 
 	GetAllSDKDelegations(ctx sdk.Context) []stakingtypes.Delegation
-	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
-	GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation
+
+	GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAddress) (tokenizeShareRecords []stakingtypes.TokenizeShareRecord)
+	GetTokenizeShareRecord(ctx sdk.Context, id uint64) (tokenizeShareRecord stakingtypes.TokenizeShareRecord, err error)
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

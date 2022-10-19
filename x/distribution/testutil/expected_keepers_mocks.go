@@ -141,6 +141,48 @@ func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalances", reflect.TypeOf((*MockBankKeeper)(nil).GetAllBalances), ctx, addr)
 }
 
+// GetBalance mocks base method.
+func (m *MockBankKeeper) GetBalance(ctx types.Context, addr types.AccAddress, denom string) types.Coin {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBalance", ctx, addr, denom)
+	ret0, _ := ret[0].(types.Coin)
+	return ret0
+}
+
+// GetBalance indicates an expected call of GetBalance.
+func (mr *MockBankKeeperMockRecorder) GetBalance(ctx, addr, denom interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBalance", reflect.TypeOf((*MockBankKeeper)(nil).GetBalance), ctx, addr, denom)
+}
+
+// LockedCoins mocks base method.
+func (m *MockBankKeeper) LockedCoins(ctx types.Context, addr types.AccAddress) types.Coins {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LockedCoins", ctx, addr)
+	ret0, _ := ret[0].(types.Coins)
+	return ret0
+}
+
+// LockedCoins indicates an expected call of LockedCoins.
+func (mr *MockBankKeeperMockRecorder) LockedCoins(ctx, addr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LockedCoins", reflect.TypeOf((*MockBankKeeper)(nil).LockedCoins), ctx, addr)
+}
+
+// SendCoins mocks base method.
+func (m *MockBankKeeper) SendCoins(ctx types.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendCoins", ctx, fromAddr, toAddr, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendCoins indicates an expected call of SendCoins.
+func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, fromAddr, toAddr, amt interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoins", reflect.TypeOf((*MockBankKeeper)(nil).SendCoins), ctx, fromAddr, toAddr, amt)
+}
+
 // SendCoinsFromAccountToModule mocks base method.
 func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx types.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
 	m.ctrl.T.Helper()
@@ -234,20 +276,6 @@ func (mr *MockStakingKeeperMockRecorder) Delegation(arg0, arg1, arg2 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delegation", reflect.TypeOf((*MockStakingKeeper)(nil).Delegation), arg0, arg1, arg2)
 }
 
-// GetAllDelegatorDelegations mocks base method.
-func (m *MockStakingKeeper) GetAllDelegatorDelegations(ctx types.Context, delegator types.AccAddress) []types1.Delegation {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllDelegatorDelegations", ctx, delegator)
-	ret0, _ := ret[0].([]types1.Delegation)
-	return ret0
-}
-
-// GetAllDelegatorDelegations indicates an expected call of GetAllDelegatorDelegations.
-func (mr *MockStakingKeeperMockRecorder) GetAllDelegatorDelegations(ctx, delegator interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllDelegatorDelegations", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllDelegatorDelegations), ctx, delegator)
-}
-
 // GetAllSDKDelegations mocks base method.
 func (m *MockStakingKeeper) GetAllSDKDelegations(ctx types.Context) []types1.Delegation {
 	m.ctrl.T.Helper()
@@ -262,18 +290,33 @@ func (mr *MockStakingKeeperMockRecorder) GetAllSDKDelegations(ctx interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSDKDelegations", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllSDKDelegations), ctx)
 }
 
-// GetAllValidators mocks base method.
-func (m *MockStakingKeeper) GetAllValidators(ctx types.Context) []types1.Validator {
+// GetTokenizeShareRecord mocks base method.
+func (m *MockStakingKeeper) GetTokenizeShareRecord(ctx types.Context, id uint64) (types1.TokenizeShareRecord, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllValidators", ctx)
-	ret0, _ := ret[0].([]types1.Validator)
+	ret := m.ctrl.Call(m, "GetTokenizeShareRecord", ctx, id)
+	ret0, _ := ret[0].(types1.TokenizeShareRecord)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTokenizeShareRecord indicates an expected call of GetTokenizeShareRecord.
+func (mr *MockStakingKeeperMockRecorder) GetTokenizeShareRecord(ctx, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTokenizeShareRecord", reflect.TypeOf((*MockStakingKeeper)(nil).GetTokenizeShareRecord), ctx, id)
+}
+
+// GetTokenizeShareRecordsByOwner mocks base method.
+func (m *MockStakingKeeper) GetTokenizeShareRecordsByOwner(ctx types.Context, owner types.AccAddress) []types1.TokenizeShareRecord {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTokenizeShareRecordsByOwner", ctx, owner)
+	ret0, _ := ret[0].([]types1.TokenizeShareRecord)
 	return ret0
 }
 
-// GetAllValidators indicates an expected call of GetAllValidators.
-func (mr *MockStakingKeeperMockRecorder) GetAllValidators(ctx interface{}) *gomock.Call {
+// GetTokenizeShareRecordsByOwner indicates an expected call of GetTokenizeShareRecordsByOwner.
+func (mr *MockStakingKeeperMockRecorder) GetTokenizeShareRecordsByOwner(ctx, owner interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllValidators", reflect.TypeOf((*MockStakingKeeper)(nil).GetAllValidators), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTokenizeShareRecordsByOwner", reflect.TypeOf((*MockStakingKeeper)(nil).GetTokenizeShareRecordsByOwner), ctx, owner)
 }
 
 // IterateDelegations mocks base method.

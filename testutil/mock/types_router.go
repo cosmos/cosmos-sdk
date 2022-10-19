@@ -3,30 +3,3 @@
 
 // Package mock is a generated GoMock package.
 package mock
-
-import (
-	gomock "github.com/golang/mock/gomock"
-)
-
-// MockQueryRouter is a mock of QueryRouter interface.
-type MockQueryRouter struct {
-	ctrl     *gomock.Controller
-	recorder *MockQueryRouterMockRecorder
-}
-
-// MockQueryRouterMockRecorder is the mock recorder for MockQueryRouter.
-type MockQueryRouterMockRecorder struct {
-	mock *MockQueryRouter
-}
-
-// NewMockQueryRouter creates a new mock instance.
-func NewMockQueryRouter(ctrl *gomock.Controller) *MockQueryRouter {
-	mock := &MockQueryRouter{ctrl: ctrl}
-	mock.recorder = &MockQueryRouterMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockQueryRouter) EXPECT() *MockQueryRouterMockRecorder {
-	return m.recorder
-}

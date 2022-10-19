@@ -99,6 +99,14 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 	return nil
 }
 
+func (h Hooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) error {
+	err := h.k.WithdrawSingleShareRecordReward(ctx, recordId)
+	if err != nil {
+		h.k.Logger(ctx).Error(err.Error())
+	}
+	return err
+}
+
 // create new delegation period record
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	h.k.initializeDelegation(ctx, valAddr, delAddr)

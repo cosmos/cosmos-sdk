@@ -12,13 +12,11 @@ SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
-DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.7.0
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 DOCS_DOMAIN=docs.cosmos.network
 # RocksDB is a native dependency, so we don't assume the library is installed.
 # Instead, it must be explicitly enabled and we warn when it is not.
 ENABLE_ROCKSDB ?= false
-GOWORK = off # we disable the `go.work` for consistency with our CI
 
 # process build tags
 build_tags = netgo
@@ -189,19 +187,23 @@ godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	godoc -http=:6060
 
-# This builds a docs site for each branch/tag in `./docs/versions`
-# and copies each site to a version prefixed path. The last entry inside
-# the `versions` file will be the default root index.html (and it should be main).
+# This builds the docs.cosmos.network docs using docusaurus.
+# Old documentation, which have not been migrated to docusaurus are generated with vuepress.
 build-docs:
+	@echo "building docusaurus docs"
+	@cd docs && npm ci && npm run build
+	mv docs/build ~/output
+
+	@echo "building old docs"
 	@cd docs && \
-	while read -r branch path_prefix; do \
-		echo "building branch $${branch}" ; \
-		(git clean -fdx && git reset --hard && git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
-		mkdir -p ~/output/$${path_prefix} ; \
-		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
-		cp ~/output/$${path_prefix}/index.html ~/output ; \
-		cp ~/output/$${path_prefix}/404.html ~/output ; \
-	done < versions ;
+			while read -r branch path_prefix; do \
+			echo "building vuepress $${branch} docs" ; \
+			(git clean -fdx && git reset --hard && git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
+			mkdir -p ~/output/$${path_prefix} ; \
+			cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
+	done < vuepress_versions ;	
+
+	@echo "setup domain"
 	@echo $(DOCS_DOMAIN) > ~/output/CNAME
 
 .PHONY: build-docs
@@ -352,7 +354,7 @@ benchmark:
 ###############################################################################
 
 golangci_lint_cmd=golangci-lint
-golangci_version=v1.49.0
+golangci_version=v1.50.0
 
 lint:
 	@echo "--> Running linter"
@@ -408,6 +410,7 @@ protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
 containerProtoGenSwagger=$(PROJECT_NAME)-proto-gen-swagger-$(protoVer)
 containerProtoFmt=$(PROJECT_NAME)-proto-fmt-$(protoVer)
+DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.7.0
 
 proto-all: proto-format proto-lint proto-gen
 

@@ -8,6 +8,14 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 Remove `RandomizedParams` from `AppModuleSimulation` interface. Previously, it used to generate random parameter changes during simulations, however, it does so through ParamChangeProposal which is now legacy. Since all modules were migrated, we can now safely remove this from `AppModuleSimulation` interface.
 
+### gRPC
+
+A new gRPC service, `proto/cosmos/base/node/v1beta1/query.proto`, has been introduced
+which exposes various operator configuration. App developers should be sure to
+register the service with the gRPC-gateway service via
+`nodeservice.RegisterGRPCGatewayRoutes` in their application construction, which
+is typically found in `RegisterAPIRoutes`.
+
 ### AppModule Interface
 
 Remove `Querier`, `Route` and `LegacyQuerier` from the app module interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously known as the LCD, and the `sdk.Msg#Route` method won't be used anymore.
@@ -58,6 +66,21 @@ transaction code, you need to query the transaction first (with its hash) to get
 the correct code.
 
 ### Modules
+
+#### `**all**`
+
+`EventTypeMessage` events, with `sdk.AttributeKeyModule` and `sdk.AttributeKeySender` are now emitted directly at message excecution (in `baseapp`).
+This means that you can remove the following boilerplate from all your custom modules:
+
+```go
+ctx.EventManager().EmitEvent(
+	sdk.NewEvent(
+		sdk.EventTypeMessage,
+		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		sdk.NewAttribute(sdk.AttributeKeySender, `signer/sender`),
+	),
+)
+```
 
 #### `x/gov`
 
@@ -229,7 +252,7 @@ The protos can as well be downloaded using `buf export buf.build/cosmos/cosmos-s
 
 Cosmos message protobufs should be extended with `cosmos.msg.v1.signer`: 
 
-```proto
+```protobuf
 message MsgSetWithdrawAddress {
   option (cosmos.msg.v1.signer) = "delegator_address"; ++
 

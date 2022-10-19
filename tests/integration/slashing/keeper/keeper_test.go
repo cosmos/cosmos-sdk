@@ -290,9 +290,11 @@ func (s *KeeperTestSuite) TestValidatorDippingInAndOut() {
 	// shouldn't be jailed/kicked yet
 	tstaking.CheckValidator(valAddr, stakingtypes.Bonded, false)
 
-	// validator misses an additional 500 more blocks, after the cooling off period of SignedBlockWindow (here 1000 blocks).
+	// validator misses an additional 500 more blocks within the SignedBlockWindow (here 1000 blocks).
 	latest := s.slashingKeeper.SignedBlocksWindow(ctx) + height
-	for ; height < latest+s.slashingKeeper.MinSignedPerWindow(ctx); height++ {
+	// misses 500 blocks + within the signing windows i.e. 700-1700
+	// validators misses all 1000 block of a SignedBlockWindows
+	for ; height < latest+1; height++ {
 		ctx = ctx.WithBlockHeight(height)
 		s.slashingKeeper.HandleValidatorSignature(ctx, val.Address(), newPower, false)
 	}
@@ -305,8 +307,8 @@ func (s *KeeperTestSuite) TestValidatorDippingInAndOut() {
 	signInfo, found := s.slashingKeeper.GetValidatorSigningInfo(ctx, consAddr)
 	s.Require().True(found)
 	s.Require().Equal(int64(700), signInfo.StartHeight)
-	s.Require().Equal(int64(499), signInfo.MissedBlocksCounter)
-	s.Require().Equal(int64(499), signInfo.IndexOffset)
+	s.Require().Equal(int64(0), signInfo.MissedBlocksCounter)
+	s.Require().Equal(int64(0), signInfo.IndexOffset)
 
 	// some blocks pass
 	height = int64(5000)

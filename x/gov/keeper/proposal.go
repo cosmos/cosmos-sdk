@@ -116,7 +116,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposa
 	return proposal, true
 }
 
-// GetProposal gets a proposal from store by ProposalID without messages and
+// GetProposalWithoutContents gets a proposal from store by ProposalID without messages and
 // metadata. Useful to reduce gas usage.
 // Panics if can't unmarshal the proposal.
 func (keeper Keeper) GetProposalWithoutContents(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
@@ -159,9 +159,9 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 	store.Set(types.ProposalKey(proposal.Id), bz)
 }
 
-// SetProposal sets a proposal to store.
+// SetProposalWithoutContents sets a proposal to store but not its contents
+// (messages and metadata).
 // Panics if can't marshal the proposal.
-// Content fields (messages and metadata) will be ignored.
 func (keeper Keeper) SetProposalWithoutContents(ctx sdk.Context, proposal v1.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 

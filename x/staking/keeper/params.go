@@ -36,6 +36,10 @@ func (k Keeper) BondDenom(ctx sdk.Context) string {
 	return k.GetParams(ctx).BondDenom
 }
 
+func (k Keeper) ExemptionFactor(ctx sdk.Context) (res sdk.Dec) {
+	return k.GetParams(ctx).ExemptionFactor
+}
+
 // PowerReduction - is the amount of staking tokens required for 1 unit of consensus-engine power.
 // Currently, this returns a global variable that the app developer can tweak.
 // TODO: we might turn this into an on-chain param:

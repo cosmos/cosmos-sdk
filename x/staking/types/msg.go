@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,13 +11,17 @@ import (
 
 // staking message types
 const (
-	TypeMsgUndelegate                = "begin_unbonding"
-	TypeMsgCancelUnbondingDelegation = "cancel_unbond"
-	TypeMsgEditValidator             = "edit_validator"
-	TypeMsgCreateValidator           = "create_validator"
-	TypeMsgDelegate                  = "delegate"
-	TypeMsgBeginRedelegate           = "begin_redelegate"
-	TypeMsgUpdateParams              = "update_params"
+	TypeMsgUndelegate                  = "begin_unbonding"
+	TypeMsgCancelUnbondingDelegation   = "cancel_unbond"
+	TypeMsgEditValidator               = "edit_validator"
+	TypeMsgCreateValidator             = "create_validator"
+	TypeMsgDelegate                    = "delegate"
+	TypeMsgBeginRedelegate             = "begin_redelegate"
+	TypeMsgUpdateParams                = "update_params"
+	TypeMsgTokenizeShares              = "tokenize_shares"
+	TypeMsgRedeemTokensforShares       = "redeem_tokens_for_shares"
+	TypeMsgTransferTokenizeShareRecord = "transfer_tokenize_share_record"
+	TypeMsgExemptDelegation            = "exempt_delegation"
 )
 
 var (
@@ -29,13 +34,16 @@ var (
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
 	_ sdk.Msg                            = &MsgUpdateParams{}
+	_ sdk.Msg                            = &MsgTokenizeShares{}
+	_ sdk.Msg                            = &MsgRedeemTokensforShares{}
+	_ sdk.Msg                            = &MsgTransferTokenizeShareRecord{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
 // Delegator address and validator address are the same.
 func NewMsgCreateValidator(
 	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, //nolint:interfacer
-	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation math.Int,
+	selfDelegation sdk.Coin, description Description, commission CommissionRates,
 ) (*MsgCreateValidator, error) {
 	var pkAny *codectypes.Any
 	if pubKey != nil {
@@ -45,13 +53,12 @@ func NewMsgCreateValidator(
 		}
 	}
 	return &MsgCreateValidator{
-		Description:       description,
-		DelegatorAddress:  sdk.AccAddress(valAddr).String(),
-		ValidatorAddress:  valAddr.String(),
-		Pubkey:            pkAny,
-		Value:             selfDelegation,
-		Commission:        commission,
-		MinSelfDelegation: minSelfDelegation,
+		Description:      description,
+		DelegatorAddress: sdk.AccAddress(valAddr).String(),
+		ValidatorAddress: valAddr.String(),
+		Pubkey:           pkAny,
+		Value:            selfDelegation,
+		Commission:       commission,
 	}, nil
 }
 
@@ -120,13 +127,6 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 		return err
 	}
 
-	if !msg.MinSelfDelegation.IsPositive() {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"minimum self delegation must be a positive integer",
-		)
-	}
-
 	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
 		return ErrSelfDelegationBelowMinimum
 	}
@@ -143,12 +143,11 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 // NewMsgEditValidator creates a new MsgEditValidator instance
 //
 //nolint:interfacer
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *math.Int) *MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec) *MsgEditValidator {
 	return &MsgEditValidator{
-		Description:       description,
-		CommissionRate:    newRate,
-		ValidatorAddress:  valAddr.String(),
-		MinSelfDelegation: newMinSelfDelegation,
+		Description:      description,
+		CommissionRate:   newRate,
+		ValidatorAddress: valAddr.String(),
 	}
 }
 
@@ -178,13 +177,6 @@ func (msg MsgEditValidator) ValidateBasic() error {
 
 	if msg.Description == (Description{}) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
-	}
-
-	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.IsPositive() {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"minimum self delegation must be a positive integer",
-		)
 	}
 
 	if msg.CommissionRate != nil {
@@ -420,4 +412,121 @@ func (m *MsgUpdateParams) ValidateBasic() error {
 func (m *MsgUpdateParams) GetSigners() []sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(m.Authority)
 	return []sdk.AccAddress{addr}
+}
+
+// NewMsgTokenizeShares creates a new MsgTokenizeShares instance.
+//
+//nolint:interfacer
+func NewMsgTokenizeShares(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin, shareOwner sdk.AccAddress) *MsgTokenizeShares {
+	return &MsgTokenizeShares{
+		DelegatorAddress:    delAddr.String(),
+		ValidatorAddress:    valAddr.String(),
+		Amount:              amount,
+		TokenizedShareOwner: shareOwner.String(),
+	}
+}
+
+// Type implements the sdk.Msg interface.
+func (msg MsgTokenizeShares) Type() string { return TypeMsgTokenizeShares }
+
+func (msg MsgTokenizeShares) GetSigners() []sdk.AccAddress {
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delegator}
+}
+
+func (msg MsgTokenizeShares) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgTokenizeShares) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.TokenizedShareOwner); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid tokenize share owner address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid shares amount",
+		)
+	}
+
+	return nil
+}
+
+// NewMsgRedeemTokensforShares creates a new MsgRedeemTokensforShares instance.
+//
+//nolint:interfacer
+func NewMsgRedeemTokensforShares(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin, shareOwner sdk.AccAddress) *MsgRedeemTokensforShares {
+	return &MsgRedeemTokensforShares{
+		DelegatorAddress: delAddr.String(),
+		Amount:           amount,
+	}
+}
+
+// Type implements the sdk.Msg interface.
+func (msg MsgRedeemTokensforShares) Type() string { return TypeMsgRedeemTokensforShares }
+
+func (msg MsgRedeemTokensforShares) GetSigners() []sdk.AccAddress {
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delegator}
+}
+
+func (msg MsgRedeemTokensforShares) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgRedeemTokensforShares) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid shares amount",
+		)
+	}
+
+	return nil
+}
+
+// Type implements the sdk.Msg interface.
+func (msg MsgTransferTokenizeShareRecord) Type() string { return TypeMsgTransferTokenizeShareRecord }
+
+func (msg MsgTransferTokenizeShareRecord) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+func (msg MsgTransferTokenizeShareRecord) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgTransferTokenizeShareRecord) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.NewOwner); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid new owner address: %s", err)
+	}
+
+	return nil
 }

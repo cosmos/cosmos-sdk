@@ -59,6 +59,11 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) er
 	return h.k.AddPubkey(ctx, consPk)
 }
 
+// Implements sdk.ValidatorHooks - just addition to fulfill the staking hook interface
+func (h Hooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) error {
+	return nil
+}
+
 func (h Hooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }

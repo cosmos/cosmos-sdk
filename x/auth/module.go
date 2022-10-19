@@ -102,7 +102,11 @@ type AppModule struct {
 	legacySubspace exported.Subspace
 }
 
+var _ appmodule.AppModule = AppModule{}
+
 func (am AppModule) IsOnePerModuleType() {}
+
+func (am AppModule) IsAppModule() {}
 
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return types.AutoCLIOptions

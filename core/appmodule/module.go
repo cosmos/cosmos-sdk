@@ -8,4 +8,7 @@ import "cosmossdk.io/depinject"
 // by other modules (usually via depinject) as app modules.
 type AppModule interface {
 	depinject.OnePerModuleType
+
+	// IsAppModule is a dummy method to tag a struct as implementing an AppModule.
+	IsAppModule()
 }

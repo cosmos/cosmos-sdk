@@ -161,12 +161,18 @@ func (mp *priorityMempool) Insert(ctx sdk.Context, tx Tx) error {
 	return nil
 }
 
-// Select returns a set of transactions from the mempool, ordered by priority and sender-nonce in O(n) time.
-// The passed in list of transactions are ignored.  This is a readonly operation, the mempool is not modified.
-// maxBytes is the maximum number of bytes of transactions to return.
+// Select returns a set of transactions from the mempool, ordered by priority
+// and sender-nonce in O(n) time. The passed in list of transactions are ignored.
+// This is a readonly operation, the mempool is not modified.
+//
+// The maxBytes parameter defines the maximum number of bytes of transactions to
+// return.
 func (mp *priorityMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
-	var selectedTxs []Tx
-	var txBytes int64
+	var (
+		selectedTxs []Tx
+		txBytes     int64
+	)
+
 	mp.senderCursors = make(map[string]*huandu.Element)
 	mp.reorderPriorityTies()
 

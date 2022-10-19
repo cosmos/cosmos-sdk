@@ -7,6 +7,47 @@ sidebar_position: 1
 
 It is known that cosmos-sdk uses protocol buffers extensively, this docuemnt is meant to provide a guide on how it is used in the cosmos-sdk. 
 
+To generate the proto file, the Cosmos-SDK uses a docker image, this image is provided to all to use as well. The latest version is `ghcr.io/cosmos/proto-builder:0.11.0`
+
+Below is the example of the Cosmos-SDK's commands for generating, linting, and formatting protobuf files that can be reused in any applications makefile. 
+```
+protoVer=0.11.0
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
+containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
+containerProtoGenSwagger=$(PROJECT_NAME)-proto-gen-swagger-$(protoVer)
+containerProtoFmt=$(PROJECT_NAME)-proto-fmt-$(protoVer)
+DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.7.0
+
+proto-all: proto-format proto-lint proto-gen
+
+proto-gen:
+	@echo "Generating Protobuf files"
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
+		sh ./scripts/protocgen.sh; fi
+
+proto-swagger-gen:
+	@echo "Generating Protobuf Swagger"
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then docker start -a $(containerProtoGenSwagger); else docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
+		sh ./scripts/protoc-swagger-gen.sh; fi
+
+proto-format:
+	@echo "Formatting Protobuf files"
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+		find ./ -name "*.proto" -exec clang-format -i {} \; ; fi
+
+
+proto-lint:
+	@$(DOCKER_BUF) lint --error-format=json
+
+proto-check-breaking:
+	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
+```
+
+The script used to generate the protobuf files can be found in the `scripts/` directory. 
+
+```sh reference
+https://github.com/cosmos/cosmos-sdk/blob/10e8aadcad3a30dda1d6163c39c9f86b4a877e54/scripts/protocgen.sh#L1-L37
+```
 
 ## Buf
 
@@ -21,7 +62,7 @@ Cosmos-SDK example:
 https://github.com/notional-labs/cosmos-sdk/blob/78c463c2130b18d823f7713f336a9b76e7b6d8b8/buf.work.yaml#L6-L9
 ```
 
-### Proto
+### Proto Directory
 
 Next is the `proto/` directory where all of our protobuf files live. In here there are many different buf files defined each serving a different purpose. 
 

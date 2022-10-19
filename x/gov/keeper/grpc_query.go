@@ -88,7 +88,7 @@ func (q Keeper) Proposals(c context.Context, req *v1.QueryProposalsRequest) (*v1
 	}
 
 	for i := range filteredProposals {
-		q.PopulateProposalStaticData(ctx, filteredProposals[i])
+		q.PopulateProposalContents(ctx, filteredProposals[i])
 	}
 
 	return &v1.QueryProposalsResponse{Proposals: filteredProposals, Pagination: pageRes}, nil

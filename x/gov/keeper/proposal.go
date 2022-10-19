@@ -111,7 +111,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposa
 		panic(err)
 	}
 
-	keeper.PopulateProposalStaticData(ctx, &proposal)
+	keeper.PopulateProposalContents(ctx, &proposal)
 
 	return proposal, true
 }
@@ -144,11 +144,11 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 
 	// If this proposal already exists, we don't want to overwrite the static fields.
 	if !store.Has(propKey) {
-		data := v1.ProposalStaticData{
+		data := v1.ProposalContents{
 			Messages: proposal.Messages,
 			Metadata: proposal.Metadata,
 		}
-		keeper.setProposalStaticData(ctx, proposal.Id, data)
+		keeper.setProposalContents(ctx, proposal.Id, data)
 	}
 
 	// Clear static fields before marshaling.
@@ -162,26 +162,26 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 	store.Set(types.ProposalKey(proposal.Id), bz)
 }
 
-func (keeper Keeper) setProposalStaticData(ctx sdk.Context, proposalID uint64, data v1.ProposalStaticData) {
+func (keeper Keeper) setProposalContents(ctx sdk.Context, proposalID uint64, data v1.ProposalContents) {
 	bz, err := keeper.cdc.Marshal(&data)
 	if err != nil {
 		panic(err)
 	}
 
 	store := ctx.KVStore(keeper.storeKey)
-	store.Set(types.ProposalStaticDataKey(proposalID), bz)
+	store.Set(types.ProposalContentsKey(proposalID), bz)
 }
 
-// PopulateProposalStaticData populates the proposal's contents from the separate store.
-func (keeper Keeper) PopulateProposalStaticData(ctx sdk.Context, proposal *v1.Proposal) {
+// PopulateProposalContents populates the proposal's contents from the separate store.
+func (keeper Keeper) PopulateProposalContents(ctx sdk.Context, proposal *v1.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	bz := store.Get(types.ProposalStaticDataKey(proposal.Id))
+	bz := store.Get(types.ProposalContentsKey(proposal.Id))
 	if bz == nil {
 		return
 	}
 
-	var staticData v1.ProposalStaticData
+	var staticData v1.ProposalContents
 	err := keeper.cdc.Unmarshal(bz, &staticData)
 	if err != nil {
 		panic(err)

@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package cosmos.msg.v1.legacy_amino;
+
+import "google/protobuf/descriptor.proto";
+
+// TODO(fdymylja): once we fully migrate to protov2 the go_package needs to be updated.
+// We need this right now because gogoproto codegen needs to import the extension.
+option go_package = "github.com/cosmos/cosmos-sdk/types/msgservice";
+
+extend google.protobuf.MessageOptions {
+  // name is the string used when registering a concrete
+  // type into the Amino type registry, via the Amino codec's
+  // `RegisterConcrete()` method. This string MUST be at most 39
+  // characters long, or else the message will be rejected by the
+  // Ledger hardware device.
+  string name = 11110001;
+
+  // encoding describes the encoding format used by Amino
+  // for the message. The field type is chosen to be a string so that
+  // the value can either be:
+  // - a machine-readable string, such as "base64", "bech32" or "utf8",
+  // - or a human-readable string, for instance a short specification of how
+  // a big integer would be encoded using Amino.
+  //
+  // If left empty, then the Amino encoding is expected to be the same as the
+  // Protobuf one.
+  //
+  // Please note that `cosmos_proto.ScalarDescriptor` has an option with the
+  // same name `legacy_amino_encoding`. The cosmos_proto one however is used
+  // as a protobuf _field_ annotation, whereas this one operates on a protobuf
+  // _message_.
+  string encoding = 11110002;
+}
+
+extend google.protobuf.FieldOptions {
+  // field_name sets a different field name (i.e. key name) in
+  // the amino JSON object for the given field.
+  //
+  // Example:
+  //
+  // message Foo {
+  //   string bar = 1 [(cosmos.msg.v1.legacy_amino.field_name) = "baz"];
+  // }
+  //
+  // Then the Amino encoding of Foo will be:
+  // `{"baz":"some value"}`
+  string field_name = 11110003;
+
+  // dont_omitempty sets the field in the JSON object even if
+  // its value is empty, i.e. equal to the Golang zero value. To learn what
+  // the zero values are, see https://go.dev/ref/spec#The_zero_value.
+  //
+  // Fields default to `omitempty`, which is the default behavior when this
+  // annotation is unset. When set to true, then the field value in the
+  // JSON object will be set, i.e. not `undefined`.
+  //
+  // Example:
+  //
+  // message Foo {
+  //   string bar = 1;
+  //   string baz = 2 [(cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  // }
+  //
+  // f := Foo{};
+  // out := AminoJSONEncoder(&f);
+  // out == {"baz":""}
+  bool dont_omitempty = 11110004;
+}

@@ -8,7 +8,7 @@ import "google/api/annotations.proto";
 import "cosmos/group/v1/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos_proto/cosmos.proto";
-import "cosmos/msg/v1/msg.proto";
+import "cosmos/msg/v1/legacy_amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/group";
 
@@ -310,5 +310,5 @@ message QueryTallyResultRequest {
 // QueryTallyResultResponse is the Query/TallyResult response type.
 message QueryTallyResultResponse {
   // tally defines the requested tally.
-  TallyResult tally = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
+  TallyResult tally = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
 }

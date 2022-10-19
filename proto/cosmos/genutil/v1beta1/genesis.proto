@@ -2,7 +2,7 @@ syntax = "proto3";
 package cosmos.genutil.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "cosmos/msg/v1/msg.proto";
+import "cosmos/msg/v1/legacy_amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/genutil/types";
 
@@ -12,7 +12,7 @@ message GenesisState {
   repeated bytes gen_txs = 1 [
     (gogoproto.casttype)                        = "encoding/json.RawMessage",
     (gogoproto.jsontag)                         = "gentxs",
-    (cosmos.msg.v1.legacy_amino_field_name)     = "gentxs",
-    (cosmos.msg.v1.legacy_amino_dont_omitempty) = true
+    (cosmos.msg.v1.legacy_amino.field_name)     = "gentxs",
+    (cosmos.msg.v1.legacy_amino.dont_omitempty) = true
   ];
 }

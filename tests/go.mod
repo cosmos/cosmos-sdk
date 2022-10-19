@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/api v0.2.1
-	cosmossdk.io/depinject v1.0.0-alpha.2
+	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.3
 	cosmossdk.io/simapp v0.0.0-20220908203654-84d4bf5accad
 	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000

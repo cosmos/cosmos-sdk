@@ -2,7 +2,6 @@ syntax = "proto3";
 package cosmos.base.snapshots.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/snapshots/types";
 
@@ -12,7 +11,7 @@ message Snapshot {
   uint32   format   = 2;
   uint32   chunks   = 3;
   bytes    hash     = 4;
-  Metadata metadata = 5 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
+  Metadata metadata = 5 [(gogoproto.nullable) = false];
 }
 
 // Metadata contains SDK-specific snapshot metadata.

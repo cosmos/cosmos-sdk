@@ -4,7 +4,6 @@ package cosmos.base.abci.v1beta1;
 import "gogoproto/gogo.proto";
 import "tendermint/abci/types.proto";
 import "google/protobuf/any.proto";
-import "cosmos/msg/v1/msg.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
@@ -27,7 +26,7 @@ message TxResponse {
   // non-deterministic.
   string raw_log = 6;
   // The output of the application's logger (typed). May be non-deterministic.
-  repeated ABCIMessageLog logs = 7 [(gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
+  repeated ABCIMessageLog logs = 7 [(gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false];
   // Additional information. May be non-deterministic.
   string info = 8;
   // Amount of gas requested for transaction.
@@ -46,19 +45,19 @@ message TxResponse {
   // additional metadata, emitted only by processing the messages.
   //
   // Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
-  repeated tendermint.abci.Event events = 13 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
+  repeated tendermint.abci.Event events = 13 [(gogoproto.nullable) = false];
 }
 
 // ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
 message ABCIMessageLog {
   option (gogoproto.stringer) = true;
 
-  uint32 msg_index = 1 [(gogoproto.jsontag) = "msg_index", (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
+  uint32 msg_index = 1 [(gogoproto.jsontag) = "msg_index"];
   string log       = 2;
 
   // Events contains a slice of Event objects that were emitted during some
   // execution.
-  repeated StringEvent events = 3 [(gogoproto.castrepeated) = "StringEvents", (gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
+  repeated StringEvent events = 3 [(gogoproto.castrepeated) = "StringEvents", (gogoproto.nullable) = false];
 }
 
 // StringEvent defines en Event object wrapper where all the attributes
@@ -67,7 +66,7 @@ message StringEvent {
   option (gogoproto.stringer) = true;
 
   string             type       = 1;
-  repeated Attribute attributes = 2 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
+  repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
 }
 
 // Attribute defines an attribute wrapper where the key and value are
@@ -101,7 +100,7 @@ message Result {
 
   // Events contains a slice of Event objects that were emitted during message
   // or handler execution.
-  repeated tendermint.abci.Event events = 3 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
+  repeated tendermint.abci.Event events = 3 [(gogoproto.nullable) = false];
 
   // msg_responses contains the Msg handler responses type packed in Anys.
   //
@@ -112,7 +111,7 @@ message Result {
 // SimulationResponse defines the response generated when a transaction is
 // successfully simulated.
 message SimulationResponse {
-  GasInfo gas_info = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino_dont_omitempty) = true];
+  GasInfo gas_info = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
   Result  result   = 2;
 }
 

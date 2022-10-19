@@ -97,7 +97,6 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 }
 
 // GetProposal gets a proposal from store by ProposalID.
-// If withStaticData is true, it will get the proposal's messages from the separate store.
 // Panics if can't unmarshal the proposal.
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
 	store := ctx.KVStore(keeper.storeKey)
@@ -113,6 +112,25 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposa
 	}
 
 	keeper.PopulateProposalStaticData(ctx, &proposal)
+
+	return proposal, true
+}
+
+// GetProposal gets a proposal from store by ProposalID without messages and
+// metadata. Useful to reduce gas usage.
+// Panics if can't unmarshal the proposal.
+func (keeper Keeper) GetProposalWithoutContents(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
+	store := ctx.KVStore(keeper.storeKey)
+
+	bz := store.Get(types.ProposalKey(proposalID))
+	if bz == nil {
+		return v1.Proposal{}, false
+	}
+
+	var proposal v1.Proposal
+	if err := keeper.UnmarshalProposal(bz, &proposal); err != nil {
+		panic(err)
+	}
 
 	return proposal, true
 }

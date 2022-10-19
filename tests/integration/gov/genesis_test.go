@@ -86,9 +86,9 @@ func TestImportExportQueues(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, votingStarted)
 
-	proposal1, ok := s1.GovKeeper.GetProposal(ctx, proposalID1)
+	proposal1, ok := s1.GovKeeper.GetProposal(ctx, proposalID1, false)
 	require.True(t, ok)
-	proposal2, ok = s1.GovKeeper.GetProposal(ctx, proposalID2)
+	proposal2, ok = s1.GovKeeper.GetProposal(ctx, proposalID2, false)
 	require.True(t, ok)
 	require.True(t, proposal1.Status == v1.StatusDepositPeriod)
 	require.True(t, proposal2.Status == v1.StatusVotingPeriod)
@@ -139,9 +139,9 @@ func TestImportExportQueues(t *testing.T) {
 	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*s2.GovKeeper.GetParams(ctx2).MaxDepositPeriod).Add(*s2.GovKeeper.GetParams(ctx2).VotingPeriod))
 
 	// Make sure that they are still in the DepositPeriod and VotingPeriod respectively
-	proposal1, ok = s2.GovKeeper.GetProposal(ctx2, proposalID1)
+	proposal1, ok = s2.GovKeeper.GetProposal(ctx2, proposalID1, false)
 	require.True(t, ok)
-	proposal2, ok = s2.GovKeeper.GetProposal(ctx2, proposalID2)
+	proposal2, ok = s2.GovKeeper.GetProposal(ctx2, proposalID2, false)
 	require.True(t, ok)
 	require.True(t, proposal1.Status == v1.StatusDepositPeriod)
 	require.True(t, proposal2.Status == v1.StatusVotingPeriod)
@@ -152,10 +152,10 @@ func TestImportExportQueues(t *testing.T) {
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
 	gov.EndBlocker(ctx2, s2.GovKeeper)
 
-	proposal1, ok = s2.GovKeeper.GetProposal(ctx2, proposalID1)
+	proposal1, ok = s2.GovKeeper.GetProposal(ctx2, proposalID1, false)
 	require.False(t, ok)
 
-	proposal2, ok = s2.GovKeeper.GetProposal(ctx2, proposalID2)
+	proposal2, ok = s2.GovKeeper.GetProposal(ctx2, proposalID2, false)
 	require.True(t, ok)
 	require.True(t, proposal2.Status == v1.StatusRejected)
 }

@@ -44,8 +44,8 @@ func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, dep
 	return p, nil
 }
 
-// Deprecated: GetMessages returns the proposal messages
-// Use keeper.GetProposalMessages to get a stored proposal's messages.
+// GetMessages returns the proposal messages
+// Use keeper.PopulateProposalStaticData first to populate the messages
 func (p Proposal) GetMsgs() ([]sdk.Msg, error) {
 	return sdktx.GetMsgs(p.Messages, "sdk.MsgProposal")
 }

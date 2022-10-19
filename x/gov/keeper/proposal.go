@@ -172,23 +172,13 @@ func (keeper Keeper) setProposalStaticData(ctx sdk.Context, proposalID uint64, d
 	store.Set(types.ProposalStaticDataKey(proposalID), bz)
 }
 
-// PopulateProposalStaticData populates the proposal's static data from the separate stores.
+// PopulateProposalStaticData populates the proposal's contents from the separate store.
 func (keeper Keeper) PopulateProposalStaticData(ctx sdk.Context, proposal *v1.Proposal) {
-	staticData, found := keeper.getProposalStaticData(ctx, proposal.Id)
-	if found {
-		proposal.Messages = staticData.Messages
-		proposal.Metadata = staticData.Metadata
-	}
-}
-
-// getProposalMessages gets the proposal's messages from the separate store.
-// TODO: define if we would like this to be exported.
-func (keeper Keeper) getProposalStaticData(ctx sdk.Context, proposalID uint64) (v1.ProposalStaticData, bool) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	bz := store.Get(types.ProposalStaticDataKey(proposalID))
+	bz := store.Get(types.ProposalStaticDataKey(proposal.Id))
 	if bz == nil {
-		return v1.ProposalStaticData{}, false
+		return
 	}
 
 	var staticData v1.ProposalStaticData
@@ -202,7 +192,8 @@ func (keeper Keeper) getProposalStaticData(ctx sdk.Context, proposalID uint64) (
 		panic(err)
 	}
 
-	return staticData, true
+	proposal.Messages = staticData.Messages
+	proposal.Metadata = staticData.Metadata
 }
 
 // DeleteProposal deletes a proposal from store.

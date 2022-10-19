@@ -58,10 +58,10 @@ message Proposal {
   string metadata = 10;
 }
 
-// ProposalStaticData defines the static data of a governance proposal. This data
-// is going to be stored separately from the Proposal object to avoid incurring
+// ProposalContents defines the contents (static data) of a governance proposal.
+// This data is stored separately from the Proposal object to avoid incurring
 // into high gas costs when querying/updating the main proposal object.
-message ProposalStaticData {
+message ProposalContents {
   repeated google.protobuf.Any messages = 1;
   string metadata = 2;
 }

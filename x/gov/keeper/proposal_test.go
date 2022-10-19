@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 
 	suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
 
-	proposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
+	proposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposal.Id, false)
 	suite.Require().True(ok)
 	suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 

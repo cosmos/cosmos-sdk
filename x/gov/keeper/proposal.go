@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -121,14 +120,24 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64, withStaticD
 
 // SetProposal sets a proposal to store.
 // Panics if can't marshal the proposal.
+// Static fields will be ignored (not updated) if the proposal already exists.
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
-	// store proposal messages in a different store and remove them from the proposal before marshaling
-	if proposal.Messages != nil {
-		keeper.setProposalMessages(ctx, proposal.Id, proposal.Messages)
-		proposal.Messages = nil
+	store := ctx.KVStore(keeper.storeKey)
+	propKey := types.ProposalKey(proposal.Id)
+
+	// If this proposal already exists, we don't want to overwrite the static fields.
+	if !store.Has(propKey) {
+		data := v1.ProposalStaticData{
+			Messages: proposal.Messages,
+			Metadata: proposal.Metadata,
+		}
+		keeper.setProposalStaticData(ctx, proposal.Id, data)
 	}
 
-	store := ctx.KVStore(keeper.storeKey)
+	// Clear static fields before marshaling.
+	proposal.Messages = nil
+	proposal.Metadata = ""
+
 	bz, err := keeper.MarshalProposal(proposal)
 	if err != nil {
 		panic(err)
@@ -136,38 +145,42 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 	store.Set(types.ProposalKey(proposal.Id), bz)
 }
 
-func (keeper Keeper) setProposalMessages(ctx sdk.Context, proposalID uint64, messages []*cdctypes.Any) {
-	bz, err := keeper.cdc.Marshal(&v1.ProposalMessages{Messages: messages})
+func (keeper Keeper) setProposalStaticData(ctx sdk.Context, proposalID uint64, data v1.ProposalStaticData) {
+	bz, err := keeper.cdc.Marshal(&data)
 	if err != nil {
 		panic(err)
 	}
 
 	store := ctx.KVStore(keeper.storeKey)
-	store.Set(types.ProposalMessagesKey(proposalID), bz)
+	store.Set(types.ProposalStaticDataKey(proposalID), bz)
 }
 
 // PopulateProposalStaticData populates the proposal's static data from the separate stores.
 func (keeper Keeper) PopulateProposalStaticData(ctx sdk.Context, proposal *v1.Proposal) {
-	proposal.Messages = keeper.getProposalMessages(ctx, proposal.Id)
+	staticData, found := keeper.getProposalStaticData(ctx, proposal.Id)
+	if found {
+		proposal.Messages = staticData.Messages
+		proposal.Metadata = staticData.Metadata
+	}
 }
 
 // getProposalMessages gets the proposal's messages from the separate store.
 // TODO: define if we would like this to be exported.
-func (keeper Keeper) getProposalMessages(ctx sdk.Context, proposalID uint64) []*cdctypes.Any {
+func (keeper Keeper) getProposalStaticData(ctx sdk.Context, proposalID uint64) (v1.ProposalStaticData, bool) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	bz := store.Get(types.ProposalMessagesKey(proposalID))
+	bz := store.Get(types.ProposalStaticDataKey(proposalID))
 	if bz == nil {
-		return nil
+		return v1.ProposalStaticData{}, false
 	}
 
-	var propMsgs v1.ProposalMessages
-	err := keeper.cdc.Unmarshal(bz, &propMsgs)
+	var staticData v1.ProposalStaticData
+	err := keeper.cdc.Unmarshal(bz, &staticData)
 	if err != nil {
 		panic(err)
 	}
 
-	return propMsgs.Messages
+	return staticData, true
 }
 
 // DeleteProposal deletes a proposal from store.

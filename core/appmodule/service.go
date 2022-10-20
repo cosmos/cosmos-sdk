@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/core/blockinfo"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/intermodule"
 	"cosmossdk.io/core/store"
 )
 
@@ -20,5 +21,5 @@ type Service interface {
 	event.Service
 	blockinfo.Service
 	gas.Service
-	RootInterModuleClient
+	intermodule.Client
 }

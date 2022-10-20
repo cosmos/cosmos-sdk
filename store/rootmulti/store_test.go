@@ -912,3 +912,52 @@ func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 	}
 	return sdkmaps.HashFromMap(m)
 }
+
+type MockListener struct {
+	stateCache []types.StoreKVPair
+}
+
+func (tl *MockListener) OnWrite(storeKey types.StoreKey, key []byte, value []byte, delete bool) error {
+	tl.stateCache = append(tl.stateCache, types.StoreKVPair{
+		StoreKey: storeKey.Name(),
+		Key:      key,
+		Value:    value,
+		Delete:   delete,
+	})
+	return nil
+}
+
+func TestStateListeners(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+
+	listener := &MockListener{}
+	ms.AddListeners(testStoreKey1, []types.WriteListener{listener})
+
+	require.NoError(t, ms.LoadLatestVersion())
+	cacheMulti := ms.CacheMultiStore()
+
+	store1 := cacheMulti.GetKVStore(testStoreKey1)
+	store1.Set([]byte{1}, []byte{1})
+	require.Empty(t, listener.stateCache)
+
+	// writes are observed when cache store commit.
+	cacheMulti.Write()
+	require.Equal(t, 1, len(listener.stateCache))
+
+	// test nested cache store
+	listener.stateCache = []types.StoreKVPair{}
+	nested := cacheMulti.CacheMultiStore()
+
+	store1 = nested.GetKVStore(testStoreKey1)
+	store1.Set([]byte{1}, []byte{1})
+	require.Empty(t, listener.stateCache)
+
+	// writes are not observed when nested cache store commit
+	nested.Write()
+	require.Empty(t, listener.stateCache)
+
+	// writes are observed when inner cache store commit
+	cacheMulti.Write()
+	require.Equal(t, 1, len(listener.stateCache))
+}

@@ -48,13 +48,23 @@ type (
 
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
 		// simulation, fetching txs by hash...).
-		RegisterTxService(clientCtx client.Context)
+		RegisterTxService(client.Context)
 
 		// RegisterTendermintService registers the gRPC Query service for tendermint queries.
-		RegisterTendermintService(clientCtx client.Context)
+		RegisterTendermintService(client.Context)
 
 		// Return the multistore instance
 		CommitMultiStore() sdk.CommitMultiStore
+	}
+
+	// ApplicationQueryService defines an extension of the Application interface
+	// that facilitates gRPC query Services.
+	//
+	// NOTE: This interfaces exists only in the v0.46.x line to ensure the existing
+	// Application interface does not introduce API breaking changes.
+	ApplicationQueryService interface {
+		// RegisterNodeService registers the node gRPC Query service.
+		RegisterNodeService(client.Context)
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

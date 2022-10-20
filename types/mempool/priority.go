@@ -30,10 +30,15 @@ type priorityMempool struct {
 
 // txMeta stores transaction metadata used in indices
 type txMeta struct {
-	nonce         uint64
-	priority      int64
-	sender        string
-	weight        int64
+	// nonce is the sender's sequence number
+	nonce uint64
+	// priority is the transaction's priority
+	priority int64
+	// sender is the transaction's sender
+	sender string
+	// weight is the transaction's weight, used as a tiebreaker for transactions with the same priority
+	weight int64
+	// senderElement is a pointer to the transaction's element in the sender index
 	senderElement *huandu.Element
 }
 

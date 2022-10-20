@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/tx/signing"
@@ -37,14 +39,24 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 	screens := make([]Screen, 3)
 	screens[0].Text = fmt.Sprintf("Chain ID: %s", vr.signerData.ChainID)
 	screens[1].Text = fmt.Sprintf("Account number: %d", vr.signerData.AccountNumber)
-	screens[2].Text = fmt.Sprintf("Public key: %s", &vr.signerData.PubKey)
+	pkMsgType, err := protoregistry.GlobalTypes.FindMessageByURL(vr.signerData.PubKey.TypeUrl)
+	if err != nil {
+		return nil, err
+	}
+	pk := pkMsgType.New()
+	err = proto.Unmarshal(vr.signerData.PubKey.GetValue(), pk.Interface())
+	if err != nil {
+		return nil, err
+	}
+	screens[2].Text = fmt.Sprintf("Public key: %s", pk)
+	screens[2].Expert = true
 
 	// Get sdk.Msgs screens, from Tx.Body.Messages (field number 1).
 	msgVr, err := vr.t.GetValueRenderer(protoTx.Body.ProtoReflect().Descriptor().Fields().ByNumber(1))
 	if err != nil {
 		return nil, err
 	}
-	msgScreens, err := msgVr.Format(ctx, protoreflect.ValueOf(protoTx.Body.Messages))
+	msgScreens, err := msgVr.Format(ctx, protoreflect.ValueOf(protoTx.Body.Messages)) // TODO not sure this works...
 	if err != nil {
 		return nil, err
 	}

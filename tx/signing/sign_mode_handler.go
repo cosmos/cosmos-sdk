@@ -1,5 +1,7 @@
 package signing
 
+import "google.golang.org/protobuf/types/known/anypb"
+
 // SignerData is the specific information needed to sign a transaction that generally
 // isn't included in the transaction body itself
 type SignerData struct {
@@ -28,5 +30,5 @@ type SignerData struct {
 	//
 	// In case of multisigs, this should be the pubkey of the member of the
 	// multisig that is signing the current sign doc.
-	PubKey cryptotypes.PubKey
+	PubKey *anypb.Any
 }

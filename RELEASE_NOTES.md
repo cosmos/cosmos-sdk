@@ -8,12 +8,12 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 
 ### Improvements
 
-* Bring in Cosmos-SDK [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) changes. TODO: Add link to the PR.
-* Updated the swagger files. TODO: Add link to the PR.
+* Bring in Cosmos-SDK [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) changes [#303](https://github.com/provenance-io/cosmos-sdk/pull/303).
+* Updated the swagger files [#303](https://github.com/provenance-io/cosmos-sdk/pull/303).
 
 ### Bug Fixes
 
-* Patch the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702). TODO: Add link to the PR.
+* Patch the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702) [#303](https://github.com/provenance-io/cosmos-sdk/pull/303).
 
 ### Full Commit History
 

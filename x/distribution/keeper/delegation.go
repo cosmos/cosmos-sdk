@@ -317,6 +317,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 		return nil, err
 	}
 
+	emittedRewards := finalRewards
 	if finalRewards.IsZero() {
 		baseDenom, _ := sdk.GetBaseDenom()
 		if baseDenom == "" {
@@ -324,14 +325,14 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 		}
 
 		// Note, we do not call the NewCoins constructor as we do not want the zero
-		// coin removed.
-		finalRewards = sdk.Coins{sdk.NewCoin(baseDenom, sdk.ZeroInt())}
+		// coin removed for event emission.
+		emittedRewards = sdk.Coins{sdk.NewCoin(baseDenom, sdk.ZeroInt())}
 	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeWithdrawRewards,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, emittedRewards.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
 		),
 	)

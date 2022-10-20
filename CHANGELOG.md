@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* [#13588](https://github.com/cosmos/cosmos-sdk/pull/13588) Fix regression in distrubtion.WithdrawDelegationRewards when rewards are zero
 * [#13564](https://github.com/cosmos/cosmos-sdk/pull/13564) - Fix `make proto-gen`.
 
 ## v0.45.9 - 2022-10-14

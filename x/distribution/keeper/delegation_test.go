@@ -585,6 +585,33 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	require.Nil(t, err)
 }
 
+func TestWithdrawDelegationZeroRewards(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	balancePower := int64(1000)
+	balanceTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, balancePower)
+	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
+	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+	// set module account coins
+	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
+	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens))))
+	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
+
+	// create validator with 50% commission
+	power := int64(100)
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	_ = tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, power, true)
+
+	// withdraw rewards -- should be 0
+	amount, err := app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+	require.NoError(t, err)
+	require.True(t, amount.IsZero(), "expected withdraw rewards to be zero")
+	require.True(t, amount.IsValid(), "expected returned coins to be valid")
+}
+
 func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)

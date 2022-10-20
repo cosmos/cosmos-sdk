@@ -39,13 +39,29 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+---
+
+## [v0.46.3-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-1) - 2022-10-20
+
+Chains using this version must also apply the following replace line to their `go.mod`:
+
+```go
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+```
+
 ### Improvements
 
-* Bring in Cosmos-SDK v0.46.3 changes. TODO: Add link to the PR.
+* Bring in Cosmos-SDK [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) changes. TODO: Add link to the PR.
+* Updated the swagger files. TODO: Add link to the PR.
 
 ### Bug Fixes
 
 * Patch the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702). TODO: Add link to the PR.
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.2-pio-2...v0.46.3-pio-1
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3...v0.46.3-pio-1
 
 ---
 
@@ -66,7 +82,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* Bring in Cosmos-SDK v0.46.2 changes. [#269](https://github.com/provenance-io/cosmos-sdk/pull/269)
+* Bring in Cosmos-SDK [v0.46.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.2) changes. [#269](https://github.com/provenance-io/cosmos-sdk/pull/269)
 
 ### Full Commit History
 

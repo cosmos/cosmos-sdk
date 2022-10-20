@@ -54,13 +54,15 @@ func txMetaLess(a, b any) int {
 		return res
 	}
 
-	// Below we compare by sender and then by nonce if necessary, when conflicting
-	// priorities are found.
+	// weight is used as a tiebreaker for transactions with the same priority.  weight is calculated in a single
+	// pass in .Select(...) and so will be 0 on .Insert(...)
 	res = huandu.Int64.Compare(keyA.weight, keyB.weight)
 	if res != 0 {
 		return res
 	}
 
+	// Because weight will be 0 on .Insert(...), we must also compare sender and nonce to resolve priority collisions.
+	// If we didn't then transactions with the same priority would overwrite each other in the priority index.
 	res = huandu.String.Compare(keyA.sender, keyB.sender)
 	if res != 0 {
 		return res

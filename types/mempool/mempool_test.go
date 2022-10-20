@@ -207,6 +207,7 @@ func TestOutOfOrder(t *testing.T) {
 	}
 
 	seed := time.Now().UnixNano()
+	t.Logf("running with seed: %d", seed)
 	randomTxs := genRandomTxs(seed, 1000, 10)
 	var rmtxs []mempool.Tx
 	for _, rtx := range randomTxs {
@@ -563,7 +564,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	seed := time.Now().UnixNano()
-
+	t.Logf("running with seed: %d", seed)
 	generated := genRandomTxs(seed, s.numTxs, s.numAccounts)
 	mp := s.mempool
 
@@ -595,6 +596,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	// seed := int64(1663971399133628000)
 	// seed := int64(1663989445512438000)
 	//
+	t.Logf("running with seed: %d", seed)
 
 	ordered, shuffled := genOrderedTxs(seed, s.numTxs, s.numAccounts)
 	mp := s.mempool
@@ -630,7 +632,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	require.NoError(t, validateOrder(selected), errMsg)
 	duration := time.Since(start)
 
-	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
+	t.Logf("seed: %d completed in %d iterations; validation in %dms\n",
 		seed, s.iterations, duration.Milliseconds())
 }
 

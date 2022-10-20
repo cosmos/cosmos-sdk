@@ -508,7 +508,7 @@ A user can query and interact with the `bank` module using the CLI.
 
 The `query` commands allow users to query `bank` state.
 
-```sh
+```shell
 simd query bank --help
 ```
 
@@ -516,13 +516,13 @@ simd query bank --help
 
 The `balances` command allows users to query account balances by address.
 
-```sh
+```shell
 simd query bank balances [address] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query bank balances cosmos1..
 ```
 
@@ -541,13 +541,13 @@ pagination:
 
 The `denom-metadata` command allows users to query metadata for coin denominations. A user can query metadata for a single denomination using the `--denom` flag or all denominations without it.
 
-```sh
+```shell
 simd query bank denom-metadata [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query bank denom-metadata --denom stake
 ```
 
@@ -570,13 +570,13 @@ metadata:
 
 The `total` command allows users to query the total supply of coins. A user can query the total supply for a single coin using the `--denom` flag or all coins without it.
 
-```sh
+```shell
 simd query bank total [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query bank total --denom stake
 ```
 
@@ -591,13 +591,13 @@ denom: stake
 
 The `send-enabled` command allows users to query for all or some SendEnabled entries.
 
-```sh
+```shell
 simd query bank send-enabled [denom1 ...] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query bank send-enabled
 ```
 
@@ -617,7 +617,7 @@ pagination:
 
 The `tx` commands allow users to interact with the `bank` module.
 
-```sh
+```shell
 simd tx bank --help
 ```
 
@@ -625,13 +625,13 @@ simd tx bank --help
 
 The `send` command allows users to send funds from one account to another.
 
-```sh
+```shell
 simd tx bank send [from_key_or_address] [to_address] [amount] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd tx bank send cosmos1.. cosmos1.. 100stake
 ```
 
@@ -643,13 +643,13 @@ A user can query the `bank` module using gRPC endpoints.
 
 The `Balance` endpoint allows users to query account balance by address for a given denomination.
 
-```sh
+```shell
 cosmos.bank.v1beta1.Query/Balance
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"address":"cosmos1..","denom":"stake"}' \
     localhost:9090 \
@@ -671,13 +671,13 @@ Example Output:
 
 The `AllBalances` endpoint allows users to query account balance by address for all denominations.
 
-```sh
+```shell
 cosmos.bank.v1beta1.Query/AllBalances
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"address":"cosmos1.."}' \
     localhost:9090 \
@@ -704,13 +704,13 @@ Example Output:
 
 The `DenomMetadata` endpoint allows users to query metadata for a single coin denomination.
 
-```sh
+```shell
 cosmos.bank.v1beta1.Query/DenomMetadata
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"denom":"stake"}' \
     localhost:9090 \
@@ -743,13 +743,13 @@ Example Output:
 
 The `DenomsMetadata` endpoint allows users to query metadata for all coin denominations.
 
-```sh
+```shell
 cosmos.bank.v1beta1.Query/DenomsMetadata
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     localhost:9090 \
     cosmos.bank.v1beta1.Query/DenomsMetadata
@@ -786,13 +786,13 @@ Example Output:
 
 The `DenomOwners` endpoint allows users to query metadata for a single coin denomination.
 
-```sh
+```shell
 cosmos.bank.v1beta1.Query/DenomOwners
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"denom":"stake"}' \
     localhost:9090 \
@@ -829,13 +829,13 @@ Example Output:
 
 The `TotalSupply` endpoint allows users to query the total supply of all coins.
 
-```sh
+```shell
 cosmos.bank.v1beta1.Query/TotalSupply
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     localhost:9090 \
     cosmos.bank.v1beta1.Query/TotalSupply
@@ -861,13 +861,13 @@ Example Output:
 
 The `SupplyOf` endpoint allows users to query the total supply of a single coin.
 
-```sh
+```shell
 cosmos.bank.v1beta1.Query/SupplyOf
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"denom":"stake"}' \
     localhost:9090 \
@@ -889,13 +889,13 @@ Example Output:
 
 The `Params` endpoint allows users to query the parameters of the `bank` module.
 
-```sh
+```shell
 cosmos.bank.v1beta1.Query/Params
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     localhost:9090 \
     cosmos.bank.v1beta1.Query/Params
@@ -917,13 +917,13 @@ The `SendEnabled` enpoints allows users to query the SendEnabled entries of the 
 
 Any denominations NOT returned, use the `Params.DefaultSendEnabled` value.
 
-```sh
+```shell
 cosmos.bank.v1beta1.Query/SendEnabled
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     localhost:9090 \
     cosmos.bank.v1beta1.Query/SendEnabled

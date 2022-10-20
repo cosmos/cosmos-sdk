@@ -529,7 +529,7 @@ A user can query and interact with the `slashing` module using the CLI.
 
 The `query` commands allow users to query `slashing` state.
 
-```sh
+```shell
 simd query slashing --help
 ```
 
@@ -537,13 +537,13 @@ simd query slashing --help
 
 The `params` command allows users to query genesis parameters for the slashing module.
 
-```sh
+```shell
 simd query slashing params [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query slashing params
 ```
 
@@ -561,13 +561,13 @@ slash_fraction_downtime: "0.010000000000000000"
 
 The `signing-info` command allows users to query signing-info of the validator using consensus public key.
 
-```sh
+```shell
 simd query slashing signing-infos [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"Auxs3865HpB/EfssYOzfqNhEJjzys6jD5B6tPgC8="}'
 
 ```
@@ -587,13 +587,13 @@ tombstoned: false
 
 The `signing-infos` command allows users to query signing infos of all validators.
 
-```sh
+```shell
 simd query slashing signing-infos [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query slashing signing-infos
 ```
 
@@ -625,7 +625,7 @@ simd tx slashing --help
 The `unjail` command allows users to unjail a validator previously jailed for downtime.
 
 ```bash
-  simd tx slashing unjail --from mykey [flags]
+simd tx slashing unjail --from mykey [flags]
 ```
 
 Example:
@@ -642,13 +642,13 @@ A user can query the `slashing` module using gRPC endpoints.
 
 The `Params` endpoint allows users to query the parameters of slashing module.
 
-```sh
+```shell
 cosmos.slashing.v1beta1.Query/Params
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/Params
 ```
 
@@ -670,13 +670,13 @@ Example Output:
 
 The SigningInfo queries the signing info of given cons address.
 
-```sh
+```shell
 cosmos.slashing.v1beta1.Query/SigningInfo
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext -d '{"cons_address":"cosmosvalcons1nrqsld3aw6lh6t082frdqc84uwxn0t958c"}' localhost:9090 cosmos.slashing.v1beta1.Query/SigningInfo
 ```
 
@@ -696,13 +696,13 @@ Example Output:
 
 The SigningInfos queries signing info of all validators.
 
-```sh
+```shell
 cosmos.slashing.v1beta1.Query/SigningInfos
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/SigningInfos
 ```
 
@@ -729,13 +729,13 @@ A user can query the `slashing` module using REST endpoints.
 
 ### Params
 
-```sh
+```shell
 /cosmos/slashing/v1beta1/params
 ```
 
 Example:
 
-```sh
+```shell
 curl "localhost:1317/cosmos/slashing/v1beta1/params"
 ```
 
@@ -754,13 +754,13 @@ Example Output:
 
 ### signing_info
 
-```sh
+```shell
 /cosmos/slashing/v1beta1/signing_infos/%s
 ```
 
 Example:
 
-```sh
+```shell
 curl "localhost:1317/cosmos/slashing/v1beta1/signing_infos/cosmosvalcons1nrqslkwd3pz096lh6t082frdqc84uwxn0t958c"
 ```
 
@@ -781,13 +781,13 @@ Example Output:
 
 ### signing_infos
 
-```sh
+```shell
 /cosmos/slashing/v1beta1/signing_infos
 ```
 
 Example:
 
-```sh
+```shell
 curl "localhost:1317/cosmos/slashing/v1beta1/signing_infos
 ```
 

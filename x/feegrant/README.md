@@ -217,7 +217,7 @@ A user can query and interact with the `feegrant` module using the CLI.
 
 The `query` commands allow users to query `feegrant` state.
 
-```sh
+```shell
 simd query feegrant --help
 ```
 
@@ -225,13 +225,13 @@ simd query feegrant --help
 
 The `grant` command allows users to query a grant for a given granter-grantee pair.
 
-```sh
+```shell
 simd query feegrant grant [granter] [grantee] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query feegrant grant cosmos1.. cosmos1..
 ```
 
@@ -252,13 +252,13 @@ granter: cosmos1..
 
 The `grants` command allows users to query all grants for a given grantee.
 
-```sh
+```shell
 simd query feegrant grants [grantee] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query feegrant grants cosmos1..
 ```
 
@@ -283,7 +283,7 @@ pagination:
 
 The `tx` commands allow users to interact with the `feegrant` module.
 
-```sh
+```shell
 simd tx feegrant --help
 ```
 
@@ -291,19 +291,19 @@ simd tx feegrant --help
 
 The `grant` command allows users to grant fee allowances to another account. The fee allowance can have an expiration date, a total spend limit, and/or a periodic spend limit.
 
-```sh
+```shell
 simd tx feegrant grant [granter] [grantee] [flags]
 ```
 
 Example (one-time spend limit):
 
-```sh
+```shell
 simd tx feegrant grant cosmos1.. cosmos1.. --spend-limit 100stake
 ```
 
 Example (periodic spend limit):
 
-```sh
+```shell
 simd tx feegrant grant cosmos1.. cosmos1.. --period 3600 --period-limit 10stake
 ```
 
@@ -311,13 +311,13 @@ simd tx feegrant grant cosmos1.. cosmos1.. --period 3600 --period-limit 10stake
 
 The `revoke` command allows users to revoke a granted fee allowance.
 
-```sh
+```shell
 simd tx feegrant revoke [granter] [grantee] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd tx feegrant revoke cosmos1.. cosmos1..
 ```
 
@@ -329,13 +329,13 @@ A user can query the `feegrant` module using gRPC endpoints.
 
 The `Allowance` endpoint allows users to query a granted fee allowance.
 
-```sh
+```shell
 cosmos.feegrant.v1beta1.Query/Allowance
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"grantee":"cosmos1..","granter":"cosmos1.."}' \
     localhost:9090 \
@@ -358,13 +358,13 @@ Example Output:
 
 The `Allowances` endpoint allows users to query all granted fee allowances for a given grantee.
 
-```sh
+```shell
 cosmos.feegrant.v1beta1.Query/Allowances
 ```
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"address":"cosmos1.."}' \
     localhost:9090 \

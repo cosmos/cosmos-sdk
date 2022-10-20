@@ -6,20 +6,21 @@ sidebar_position: 1
 
 `cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
-* [Design](#design)
-* [Contributing](#contributing)
-* [Setup](#setup)
-    * [Installation](#installation)
-    * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
-    * [Folder Layout](#folder-layout)
-* [Usage](#usage)
-    * [Initialization](#initialization)
-    * [Detecting Upgrades](#detecting-upgrades)
-    * [Auto-Download](#auto-download)
-* [Example: SimApp Upgrade](#example-simapp-upgrade)
-    * [Chain Setup](#chain-setup)
-        * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
-        * [Update App](#update-app)
+* [Cosmovisor](#cosmovisor)
+    * [Design](#design)
+    * [Contributing](#contributing)
+    * [Setup](#setup)
+        * [Installation](#installation)
+        * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
+        * [Folder Layout](#folder-layout)
+    * [Usage](#usage)
+        * [Initialization](#initialization)
+        * [Detecting Upgrades](#detecting-upgrades)
+        * [Auto-Download](#auto-download)
+    * [Example: SimApp Upgrade](#example-simapp-upgrade)
+        * [Chain Setup](#chain-setup)
+            * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+            * [Update App](#update-app)
 
 ## Design
 
@@ -49,13 +50,13 @@ You can download Cosmovisor from the [GitHub releases](https://github.com/cosmos
 To install the latest version of `cosmovisor`, run the following command:
 
 ```shell
-go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@latest
+go install cosmossdk.io/cmd/cosmovisor@latest
 ```
 
 To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos-SDK v0.44.3 or earlier (eg v0.44.2) and want to use auto-download feature MUST use `cosmovisor v0.1.0`
 
 ```shell
-go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
+go install cosmossdk.io/cmd/cosmovisor@v0.1.0
 ```
 
 Run `cosmovisor version` to check the cosmovisor version.

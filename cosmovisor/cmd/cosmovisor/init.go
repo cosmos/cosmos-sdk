@@ -10,8 +10,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	cverrors "github.com/cosmos/cosmos-sdk/cosmovisor/errors"
+	"cosmossdk.io/cosmovisor"
+	cverrors "cosmossdk.io/errors"
 )
 
 func init() {

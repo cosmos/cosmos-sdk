@@ -6,7 +6,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"cosmossdk.io/cosmovisor"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )

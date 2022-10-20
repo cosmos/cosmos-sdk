@@ -39,6 +39,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* Bring in Cosmos-SDK v0.46.3 changes. TODO: Add link to the PR.
+
+### Bug Fixes
+
+* Patch the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702). TODO: Add link to the PR.
+
 ---
 
 ## [v0.46.2-pio-2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.2-pio-2) - 2022-10-10

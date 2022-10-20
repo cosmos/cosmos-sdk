@@ -4,11 +4,11 @@ package cosmos.authz.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/authz/v1beta1/authz.proto";
-import "cosmos/msg/v1/legacy_amino/amino.proto";
+import "cosmos/msg/legacy_amino/v1/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/authz";
 
 // GenesisState defines the authz module's genesis state.
 message GenesisState {
-  repeated GrantAuthorization authorization = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  repeated GrantAuthorization authorization = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 }

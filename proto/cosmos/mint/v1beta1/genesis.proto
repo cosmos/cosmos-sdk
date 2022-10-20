@@ -3,15 +3,15 @@ package cosmos.mint.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/mint/v1beta1/mint.proto";
-import "cosmos/msg/v1/legacy_amino/amino.proto";
+import "cosmos/msg/legacy_amino/v1/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/mint/types";
 
 // GenesisState defines the mint module's genesis state.
 message GenesisState {
   // minter is a space for holding current inflation information.
-  Minter minter = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  Minter minter = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 
   // params defines all the parameters of the module.
-  Params params = 2 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  Params params = 2 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 }

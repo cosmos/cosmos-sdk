@@ -7,7 +7,7 @@ import "google/api/annotations.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/query/v1/query.proto";
-import "cosmos/msg/v1/legacy_amino/amino.proto";
+import "cosmos/msg/legacy_amino/v1/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
@@ -142,7 +142,7 @@ message QueryValidatorsRequest {
 // QueryValidatorsResponse is response type for the Query/Validators RPC method
 message QueryValidatorsResponse {
   // validators contains all the queried validators.
-  repeated Validator validators = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  repeated Validator validators = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -157,7 +157,7 @@ message QueryValidatorRequest {
 // QueryValidatorResponse is response type for the Query/Validator RPC method
 message QueryValidatorResponse {
   // validator defines the validator info.
-  Validator validator = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  Validator validator = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 }
 
 // QueryValidatorDelegationsRequest is request type for the
@@ -174,7 +174,7 @@ message QueryValidatorDelegationsRequest {
 // Query/ValidatorDelegations RPC method
 message QueryValidatorDelegationsResponse {
   repeated DelegationResponse delegation_responses = 1
-      [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true, (gogoproto.castrepeated) = "DelegationResponses"];
+      [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true, (gogoproto.castrepeated) = "DelegationResponses"];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -193,7 +193,7 @@ message QueryValidatorUnbondingDelegationsRequest {
 // QueryValidatorUnbondingDelegationsResponse is response type for the
 // Query/ValidatorUnbondingDelegations RPC method.
 message QueryValidatorUnbondingDelegationsResponse {
-  repeated UnbondingDelegation unbonding_responses = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  repeated UnbondingDelegation unbonding_responses = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -234,7 +234,7 @@ message QueryUnbondingDelegationRequest {
 // RPC method.
 message QueryUnbondingDelegationResponse {
   // unbond defines the unbonding information of a delegation.
-  UnbondingDelegation unbond = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  UnbondingDelegation unbond = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 }
 
 // QueryDelegatorDelegationsRequest is request type for the
@@ -254,7 +254,7 @@ message QueryDelegatorDelegationsRequest {
 // Query/DelegatorDelegations RPC method.
 message QueryDelegatorDelegationsResponse {
   // delegation_responses defines all the delegations' info of a delegator.
-  repeated DelegationResponse delegation_responses = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  repeated DelegationResponse delegation_responses = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -276,7 +276,7 @@ message QueryDelegatorUnbondingDelegationsRequest {
 // QueryUnbondingDelegatorDelegationsResponse is response type for the
 // Query/UnbondingDelegatorDelegations RPC method.
 message QueryDelegatorUnbondingDelegationsResponse {
-  repeated UnbondingDelegation unbonding_responses = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  repeated UnbondingDelegation unbonding_responses = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -304,7 +304,7 @@ message QueryRedelegationsRequest {
 // QueryRedelegationsResponse is response type for the Query/Redelegations RPC
 // method.
 message QueryRedelegationsResponse {
-  repeated RedelegationResponse redelegation_responses = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  repeated RedelegationResponse redelegation_responses = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -327,7 +327,7 @@ message QueryDelegatorValidatorsRequest {
 // Query/DelegatorValidators RPC method.
 message QueryDelegatorValidatorsResponse {
   // validators defines the validators' info of a delegator.
-  repeated Validator validators = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  repeated Validator validators = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -350,7 +350,7 @@ message QueryDelegatorValidatorRequest {
 // Query/DelegatorValidator RPC method.
 message QueryDelegatorValidatorResponse {
   // validator defines the validator info.
-  Validator validator = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  Validator validator = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 }
 
 // QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC
@@ -373,7 +373,7 @@ message QueryPoolRequest {}
 // QueryPoolResponse is response type for the Query/Pool RPC method.
 message QueryPoolResponse {
   // pool defines the pool info.
-  Pool pool = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  Pool pool = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -382,5 +382,5 @@ message QueryParamsRequest {}
 // QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // params holds all the parameters of this module.
-  Params params = 1 [(gogoproto.nullable) = false, (cosmos.msg.v1.legacy_amino.dont_omitempty) = true];
+  Params params = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
 }

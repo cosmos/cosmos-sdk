@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.crypto.secp256k1;
 
-import "cosmos/msg/v1/legacy_amino/amino.proto";
+import "cosmos/msg/legacy_amino/v1/amino.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1";
@@ -12,7 +12,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1";
 // the x-coordinate. Otherwise the first byte is a 0x03.
 // This prefix is followed with the x-coordinate.
 message PubKey {
-  option (cosmos.msg.v1.legacy_amino.name) = "tendermint/PubKeySecp256k1";
+  option (cosmos.msg.legacy_amino.v1.name) = "tendermint/PubKeySecp256k1";
   // The Amino encoding is simply the inner bytes field, and not the Amino
   // encoding of the whole PubKey struct.
   //
@@ -23,7 +23,7 @@ message PubKey {
   // Then we have:
   // out == `"MQ=="`
   // out != `{"key":"MQ=="}`
-  option (cosmos.msg.v1.legacy_amino.encoding) = "bytes field";
+  option (cosmos.msg.legacy_amino.v1.encoding) = "bytes field";
   option (gogoproto.goproto_stringer)          = false;
 
   bytes key = 1;
@@ -31,8 +31,8 @@ message PubKey {
 
 // PrivKey defines a secp256k1 private key.
 message PrivKey {
-  option (cosmos.msg.v1.legacy_amino.name)     = "tendermint/PrivKeySecp256k1";
-  option (cosmos.msg.v1.legacy_amino.encoding) = "bytes field";
+  option (cosmos.msg.legacy_amino.v1.name)     = "tendermint/PrivKeySecp256k1";
+  option (cosmos.msg.legacy_amino.v1.encoding) = "bytes field";
 
   bytes key = 1;
 }

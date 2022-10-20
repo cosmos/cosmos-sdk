@@ -5,6 +5,8 @@ import (
 
 	"cosmossdk.io/depinject"
 	"google.golang.org/grpc"
+
+	"cosmossdk.io/core/event"
 )
 
 // AppModule is a tag interface for app module implementations to use as a basis
@@ -25,16 +27,34 @@ type HasServices interface {
 }
 
 type HasBeginBlocker interface {
+	AppModule
+
 	BeginBlock(context.Context) error
 }
 
 type HasEndBlocker interface {
+	AppModule
+
 	EndBlock(context.Context) error
 }
 
 type HasGenesis interface {
+	AppModule
+
 	DefaultGenesis(GenesisTarget)
 	ValidateGenesis(GenesisSource) error
 	InitGenesis(context.Context, GenesisSource) error
 	ExportGenesis(context.Context, GenesisTarget)
+}
+
+type HasEventListeners interface {
+	AppModule
+
+	RegisterEventListeners(event.ListenerRegistrar)
+}
+
+type HasUpgradeHandlers interface {
+	AppModule
+
+	RegisterUpgradeHandlers(UpgradeRegistrar)
 }

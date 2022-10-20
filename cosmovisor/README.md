@@ -6,7 +6,6 @@ sidebar_position: 1
 
 `cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
-<!-- TOC -->
 * [Design](#design)
 * [Contributing](#contributing)
 * [Setup](#setup)
@@ -49,13 +48,13 @@ You can download Cosmovisor from the [GitHub releases](https://github.com/cosmos
 
 To install the latest version of `cosmovisor`, run the following command:
 
-```sh
+```shell
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@latest
 ```
 
 To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos-SDK v0.44.3 or earlier (eg v0.44.2) and want to use auto-download feature MUST use `cosmovisor v0.1.0`
 
-```sh
+```shell
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
 ```
 
@@ -63,7 +62,7 @@ Run `cosmovisor version` to check the cosmovisor version.
 
 You can also install from source by pulling the cosmos-sdk repository and switching to the correct version and building as follows:
 
-```sh
+```shell
 git clone git@github.com:cosmos/cosmos-sdk
 cd cosmos-sdk
 git checkout cosmovisor/vx.x.x
@@ -72,7 +71,7 @@ make cosmovisor
 
 This will build cosmovisor in `/cosmovisor` directory. Afterwards you may want to put it into your machine's PATH like as follows:
 
-```sh
+```shell
 cp cosmovisor/cosmovisor ~/go/bin/cosmovisor
 ```
 
@@ -210,7 +209,7 @@ If `DAEMON_ALLOW_DOWNLOAD_BINARIES` is set to `true`, and no local binary can be
 
     When submitting this as a proposal ensure there are no spaces. An example command using `gaiad` could look like:
 
-    ```sh
+    ```shell
     > gaiad tx gov submit-proposal software-upgrade Vega \
     --title Vega \
     --deposit 100uatom \
@@ -237,7 +236,7 @@ Note that for this mechanism to provide strong security guarantees, all URLs sho
 
 To properly create a sha256 checksum on linux, you can use the `sha256sum` utility. For example:
 
-```sh
+```shell
 sha256sum ./testdata/repo/zip_directory/autod.zip
 ```
 
@@ -253,20 +252,20 @@ The following instructions provide a demonstration of `cosmovisor` using the sim
 
 Let's create a new chain using the `v0.44` version of simapp (the Cosmos SDK demo app):
 
-```sh
+```shell
 git checkout v0.44.6
 make build
 ```
 
 Clean `~/.simapp` (never do this in a production environment):
 
-```sh
+```shell
 ./build/simd unsafe-reset-all
 ```
 
 Set up app config:
 
-```sh
+```shell
 ./build/simd config chain-id test
 ./build/simd config keyring-backend test
 ./build/simd config broadcast-mode sync
@@ -276,19 +275,19 @@ Initialize the node and overwrite any previous genesis file (never do this in a 
 
 <!-- TODO: init does not read chain-id from config -->
 
-```sh
+```shell
 ./build/simd init test --chain-id test --overwrite
 ```
 
 Set the minimum gas price to `0stake` in `~/.simapp/config/app.toml`:
 
-```sh
+```shell
 minimum-gas-prices = "0stake"
 ```
 
 For the sake of this demonstration, amend `voting_period` in `genesis.json` to a reduced time of 20 seconds (`20s`):
 
-```sh
+```shell
 cat <<< $(jq '.app_state.gov.voting_params.voting_period = "20s"' $HOME/.simapp/config/genesis.json) > $HOME/.simapp/config/genesis.json
 ```
 
@@ -297,7 +296,7 @@ Create a validator, and setup genesis transaction:
 <!-- TODO: add-genesis-account does not read keyring-backend from config -->
 <!-- TODO: gentx does not read chain-id from config -->
 
-```sh
+```shell
 ./build/simd keys add validator
 ./build/simd add-genesis-account validator 1000000000stake --keyring-backend test
 ./build/simd gentx validator 1000000stake --chain-id test
@@ -308,27 +307,27 @@ Create a validator, and setup genesis transaction:
 
 Set the required environment variables:
 
-```sh
+```shell
 export DAEMON_NAME=simd
 export DAEMON_HOME=$HOME/.simapp
 ```
 
 Set the optional environment variable to trigger an automatic app restart:
 
-```sh
+```shell
 export DAEMON_RESTART_AFTER_UPGRADE=true
 ```
 
 Create the folder for the genesis binary and copy the `simd` binary:
 
-```sh
+```shell
 mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/genesis/bin
 ```
 
 Now you can run cosmovisor with simapp v0.44:
 
-```sh
+```shell
 cosmovisor run start
 ```
 
@@ -340,13 +339,13 @@ Next, we can add a migration - which is defined using `x/upgrade` [upgrade plan]
 
 Build the new version `simd` binary:
 
-```sh
+```shell
 make build
 ```
 
 Create the folder for the upgrade binary and copy the `simd` binary:
 
-```sh
+```shell
 mkdir -p $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 ```
@@ -354,7 +353,7 @@ cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
 Note, when using a `v0.46+` chain, replace `submit-proposal` by `submit-legacy-proposal`.
 
-```sh
+```shell
 ./build/simd tx gov submit-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 200 --from validator --yes
 ./build/simd tx gov deposit 1 10000000stake --from validator --yes
 ./build/simd tx gov vote 1 yes --from validator --yes

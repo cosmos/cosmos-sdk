@@ -6,7 +6,7 @@ Please upgrade ASAP.
 Chains must add the following to their go.mod for the application:
 
 ```go
-replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v8.0.0
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 ```
 
 Bumping the SDK version should be smooth, however, feel free to tag core devs to review your upgrading PR:
@@ -17,7 +17,8 @@ Bumping the SDK version should be smooth, however, feel free to tag core devs to
 * **CDT**: @ValarDragon, @zmanian
 
 Other updates:
-+ `ApplicationQueryService` was introduced to enable additional query service registration. Applications should implement `RegisterNodeService(client.Context)` method to automatically expose chain information query service implemented in [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485). 
-+ Next to this, we have also included a few minor bugfixes.
+
+* `ApplicationQueryService` was introduced to enable additional query service registration. Applications should implement `RegisterNodeService(client.Context)` method to automatically expose chain information query service implemented in [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485). 
+* Next to this, we have also included a few minor bugfixes.
 
 Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/CHANGELOG.md) for an exhaustive list of changes.

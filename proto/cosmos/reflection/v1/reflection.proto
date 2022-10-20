@@ -17,13 +17,13 @@ service ReflectionService {
 }
 
 
-// QueryFileDescriptorSetRequest is the Query/FileDescriptorSet request type.
+// QueryFileDescriptorsRequest is the Query/FileDescriptorSet request type.
 message QueryFileDescriptorsRequest {
   // pagination defines the optional pagination request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryFileDescriptorSetResponse is the Query/FileDescriptorSet response type.
+// QueryFileDescriptorsResponse is the Query/FileDescriptorSet response type.
 message QueryFileDescriptorsResponse {
   // files is the file descriptors.
   repeated google.protobuf.FileDescriptorProto file = 1;

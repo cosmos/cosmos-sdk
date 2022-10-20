@@ -33,7 +33,7 @@ type BroadcastReq struct {
 	Mode string         `json:"mode" yaml:"mode"`
 }
 
-// GetSignCommand returns the sign command
+// GetMultiSignCommand returns the multi-sign command
 func GetMultiSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "multi-sign <file> <name> [<signature>...]",
@@ -301,19 +301,10 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			txFactory = txFactory.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 		}
 
-		infile := os.Stdin
-		if args[0] != "-" {
-			infile, err = os.Open(args[0])
-			defer func() {
-				err2 := infile.Close()
-				if err == nil {
-					err = err2
-				}
-			}()
-
-			if err != nil {
-				return fmt.Errorf("couldn't open %s: %w", args[0], err)
-			}
+		// reads tx from args[0]
+		scanner, err := authclient.ReadTxsFromInput(txCfg, args[0])
+		if err != nil {
+			return err
 		}
 
 		k, err := clientCtx.Keyring.Key(name)

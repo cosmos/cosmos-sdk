@@ -46,18 +46,12 @@ type BaseApp struct { //nolint: maligned
 	// initialized on creation
 	mu                sync.Mutex // mu protects the fields below.
 	logger            log.Logger
-	name              string               // application name from abci.Info
-	db                dbm.DB               // common DB backend
-	cms               sdk.CommitMultiStore // Main (uncached) state
-	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-	router            sdk.Router           // handle any kind of legacy message
-	queryRouter       sdk.QueryRouter      // router for redirecting query calls
-	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
-	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
+	name              string // application name from abci.Info
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
+	postHandler sdk.AnteHandler // post handler, optional, e.g. for tips
 
 	appStore
 	baseappVersions
@@ -163,9 +157,7 @@ type baseappVersions struct {
 // which then has a sub-item, persistence fields
 type snapshotData struct {
 	// manages snapshots, i.e. dumps of app state at certain intervals
-	snapshotManager    *snapshots.Manager
-	snapshotInterval   uint64 // block interval between state sync snapshots
-	snapshotKeepRecent uint32 // recent state sync snapshots to keep
+	snapshotManager *snapshots.Manager
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

@@ -219,6 +219,15 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 					return nil, err
 				}
 			}
+			if err := req.ValidateBasic(); err != nil {
+				if mm, ok := req.(getter1); ok {
+					if !mm.GetAmount().Amount.IsZero() {
+						return nil, err
+					}
+				} else {
+					return nil, err
+				}
+			}
 			// Call the method handler from the service description with the handler object.
 			// We don't do any decoding here because the decoding was already done.
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), noopDecoder, interceptor)

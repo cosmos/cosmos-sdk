@@ -163,6 +163,14 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 		return nil, err
 	}
 
+	if rewards.IsZero() {
+		baseDenom, _ := sdk.GetBaseDenom()
+		rewards = sdk.Coins{sdk.Coin{
+			Denom:  baseDenom,
+			Amount: sdk.ZeroInt(),
+		}}
+	}
+
 	// reinitialize the delegation
 	err = k.initializeDelegation(ctx, valAddr, delAddr)
 	if err != nil {

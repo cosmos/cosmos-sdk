@@ -1,7 +1,8 @@
 package baseapp_test
 
 import (
-	"encoding/json"
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"math/rand"
 	"os"
@@ -37,6 +38,14 @@ var (
 	capKey1 = sdk.NewKVStoreKey("key1")
 	capKey2 = sdk.NewKVStoreKey("key2")
 )
+
+type setupConfig struct {
+	blocks             uint64
+	blockTxs           int
+	snapshotInterval   uint64
+	snapshotKeepRecent uint32
+	pruningOpts        pruningtypes.PruningOptions
+}
 
 func defaultLogger() log.Logger {
 	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")

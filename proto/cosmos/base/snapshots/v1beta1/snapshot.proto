@@ -27,6 +27,8 @@ message SnapshotItem {
     SnapshotIAVLItem         iavl              = 2 [(gogoproto.customname) = "IAVL"];
     SnapshotExtensionMeta    extension         = 3;
     SnapshotExtensionPayload extension_payload = 4;
+    SnapshotKVItem           kv                = 5 [(gogoproto.customname) = "KV"];
+    SnapshotSchema           schema            = 6;
   }
 }
 
@@ -54,4 +56,19 @@ message SnapshotExtensionMeta {
 // SnapshotExtensionPayload contains payloads of an external snapshotter.
 message SnapshotExtensionPayload {
   bytes payload = 1;
+}
+
+// SnapshotKVItem is an exported Key/Value Pair
+//
+// Since: cosmos-sdk 0.46
+message SnapshotKVItem {
+  bytes key   = 1;
+  bytes value = 2;
+}
+
+// SnapshotSchema is an exported schema of smt store
+//
+// Since: cosmos-sdk 0.46
+message SnapshotSchema {
+  repeated bytes keys = 1;
 }

@@ -137,9 +137,9 @@ message FeePool {
 // pool funds, a simple MsgCommunityPoolSpend can be invoked from the x/gov
 // module via a v1 governance proposal.
 message CommunityPoolSpendProposal {
-  option deprecated                          = true;
   option (gogoproto.equal)                   = false;
   option (gogoproto.goproto_getters)         = false;
+  option (gogoproto.goproto_stringer)        = false;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
 
   string   title                           = 1;
@@ -190,8 +190,8 @@ message DelegationDelegatorReward {
 //
 // Deprecated: Do not use.
 message CommunityPoolSpendProposalWithDeposit {
-  option deprecated                          = true;
   option (gogoproto.goproto_getters)         = false;
+  option (gogoproto.goproto_stringer)        = true;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
 
   string title       = 1;

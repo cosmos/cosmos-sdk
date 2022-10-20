@@ -50,8 +50,8 @@ message Plan {
 message SoftwareUpgradeProposal {
   option deprecated                          = true;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
-  option (amino.name)                        = "cosmos-sdk/SoftwareUpgradeProposal";
   option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_stringer)        = false;
 
   // title of the proposal
   string title = 1;
@@ -70,11 +70,8 @@ message SoftwareUpgradeProposal {
 message CancelSoftwareUpgradeProposal {
   option deprecated                          = true;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
-  option (amino.name)                        = "cosmos-sdk/CancelSoftwareUpgradeProposal";
   option (gogoproto.equal)                   = true;
-
-  // title of the proposal
-  string title = 1;
+  option (gogoproto.goproto_stringer)        = false;
 
   // description of the proposal
   string description = 2;

@@ -1193,7 +1193,13 @@ func Test100PercentCommissionReward(t *testing.T) {
 	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, addr, valAddr)
 	require.NoError(t, err)
 
-	zeroRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt())}
+	denom, _ := sdk.GetBaseDenom()
+	zeroRewards := sdk.Coins{
+		sdk.Coin{
+			Denom:  denom,
+			Amount: sdk.ZeroInt(),
+		},
+	}
 	require.True(t, rewards.IsEqual(zeroRewards))
 
 	events := ctx.EventManager().Events()

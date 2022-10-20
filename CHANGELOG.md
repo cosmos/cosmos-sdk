@@ -38,17 +38,38 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) - 2022-10-16
+
+ATTENTION:
+
+This is a security release for the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702). 
+
+All users should upgrade immediately.
+
+Users *must* add a replace directive in their go.mod for the new `ics23` package in the SDK:
+
+```go
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v8.0.0
+```
+
 ### Features
 
+* [#13435](https://github.com/cosmos/cosmos-sdk/pull/13435) Extend error context when a simulation fails.
 * (grpc) [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485) Implement a new gRPC query, `/cosmos/base/node/v1beta1/config`, which provides operator configuration.
+* (cli) [#13147](https://github.com/cosmos/cosmos-sdk/pull/13147) Add the `--append` flag to the `sign-batch` CLI cmd to combine the messages and sign those txs which are created with `--generate-only`.
+* (cli) [#13454](https://github.com/cosmos/cosmos-sdk/pull/13454) `sign-batch` CLI can now read multiple transaction files.
 
 ### Improvements
 
 * (auth) [#13460](https://github.com/cosmos/cosmos-sdk/pull/13460) The `q auth address-by-id` CLI command has been renamed to `q auth address-by-acc-num` to be more explicit. However, the old `address-by-id` version is still kept as an alias, for backwards compatibility.
+* [#13433](https://github.com/cosmos/cosmos-sdk/pull/13433) Remove dead code in cacheMergeIterator `Domain()`.
 
 ### Bug Fixes
 
+* Implement dragonberry security patch.
+    * For applying the patch please refer to the [RELEASE NOTES](./RELEASE_NOTES.md)
 * (store) [#13459](https://github.com/cosmos/cosmos-sdk/pull/13459) Don't let state listener observe the uncommitted writes.
+* [#12548](https://github.com/cosmos/cosmos-sdk/pull/12548) Prevent signing from wrong key while using multisig.
 
 ### API Breaking Changes
 
@@ -163,7 +184,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (rosetta) [\#11590](https://github.com/cosmos/cosmos-sdk/pull/11590) Add fee suggestion for rosetta and enable offline mode. Also force set events about Fees to Success to pass reconciliation test.
 * (types) [\#11959](https://github.com/cosmos/cosmos-sdk/pull/11959) Added `sdk.Coins.Find` helper method to find a coin by denom.
 * (upgrade) [#12603](https://github.com/cosmos/cosmos-sdk/pull/12603) feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces
-* (telemetry) [#12405](https://github.com/cosmos/cosmos-sdk/pull/12405) Add _query_ calls metric to telemetry.
+* (telemetry) [#12405](https://github.com/cosmos/cosmos-sdk/pull/12405) Add *query* calls metric to telemetry.
 * (cli) [#12028](https://github.com/cosmos/cosmos-sdk/pull/12028) Add the `tendermint key-migrate` to perform Tendermint v0.35 DB key migration.
 * (query) [#12253](https://github.com/cosmos/cosmos-sdk/pull/12253) Add `GenericFilteredPaginate` to the `query` package to improve UX.
 
@@ -398,7 +419,28 @@ empty coins slice before it is used to create `banktype.MsgSend`.
 
 ## Improvements
 
-* [\#11886](https://github.com/cosmos/cosmos-sdk/pull/11886) Improve error messages
+* (baseapp) [\#11985](https://github.com/cosmos/cosmos-sdk/pull/11985) Add a `postHandler` to baseapp. This `postHandler` is like antehandler, but is run *after* the `runMsgs` execution. It is in the same store branch that `runMsgs`, meaning that both `runMsgs` and `postHandler`
+* (x/gov) [#11998](https://github.com/cosmos/cosmos-sdk/pull/11998) Tweak the `x/gov` `ModuleAccountInvariant` invariant to ensure deposits are `<=` total module account balance instead of strictly equal.
+* (x/upgrade) [\#11800](https://github.com/cosmos/cosmos-sdk/pull/11800) Fix `GetLastCompleteUpgrade` to properly return the latest upgrade.
+* [\#10564](https://github.com/cosmos/cosmos-sdk/pull/10564) Fix bug when updating allowance inside AllowedMsgAllowance
+* (x/auth)[\#9596](https://github.com/cosmos/cosmos-sdk/pull/9596) Enable creating periodic vesting accounts with a transactions instead of requiring them to be created in genesis.
+* (x/bank) [\#9611](https://github.com/cosmos/cosmos-sdk/pull/9611) Introduce a new index to act as a reverse index between a denomination and address allowing to query for
+  token holders of a specific denomination. `DenomOwners` is updated to use the new reverse index.
+* (x/bank) [\#9832](https://github.com/cosmos/cosmos-sdk/pull/9832) Account balance is stored as `sdk.Int` rather than `sdk.Coin`.
+* (x/bank) [\#9890](https://github.com/cosmos/cosmos-sdk/pull/9890) Remove duplicate denom from denom metadata key.
+* (x/upgrade) [\#10189](https://github.com/cosmos/cosmos-sdk/issues/10189) Removed potential sources of non-determinism in upgrades
+* [\#10422](https://github.com/cosmos/cosmos-sdk/pull/10422) and [\#10529](https://github.com/cosmos/cosmos-sdk/pull/10529) Add `MinCommissionRate` param to `x/staking` module.
+* (x/gov) [#10763](https://github.com/cosmos/cosmos-sdk/pull/10763) modify the fields in `TallyParams` to use `string` instead of `bytes`
+* [#10770](https://github.com/cosmos/cosmos-sdk/pull/10770) revert tx when block gas limit exceeded
+* (x/gov) [\#10868](https://github.com/cosmos/cosmos-sdk/pull/10868) Bump gov to v1beta2. Both v1beta1 and v1beta2 queries and Msgs are accepted.
+* [\#11011](https://github.com/cosmos/cosmos-sdk/pull/11011) Remove burning of deposits when qourum is not reached on a governance proposal and when the deposit is not fully met.
+* [\#11019](https://github.com/cosmos/cosmos-sdk/pull/11019) Add `MsgCreatePermanentLockedAccount` and CLI method for creating permanent locked account
+* (x/staking) [\#10885] (https://github.com/cosmos/cosmos-sdk/pull/10885) Add new `CancelUnbondingDelegation`
+  transaction to `x/staking` module. Delegators can now cancel unbonding delegation entry and delegate back to validator.
+* (x/feegrant) [\#10830](https://github.com/cosmos/cosmos-sdk/pull/10830) Expired allowances will be pruned from state.
+* (x/authz,x/feegrant) [\#11214](https://github.com/cosmos/cosmos-sdk/pull/11214) Fix Amino JSON encoding of authz and feegrant Msgs to be consistent with other modules.
+* (authz)[\#11060](https://github.com/cosmos/cosmos-sdk/pull/11060) Support grant with no expire time.
+* (x/gov) [\#10868](https://github.com/cosmos/cosmos-sdk/pull/10868) Bump gov to v1. 
 
 ## [v0.45.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.4) - 2022-04-25
 
@@ -4099,7 +4141,7 @@ BUG FIXES
 
 ## 0.25.0
 
-*October 24th, 2018*
+*October 24th, 2018*.
 
 BREAKING CHANGES
 
@@ -4346,7 +4388,7 @@ BUG FIXES
 
 ## 0.24.2
 
-*August 22nd, 2018*
+*August 22nd, 2018*.
 
 BUG FIXES
 
@@ -4355,7 +4397,7 @@ BUG FIXES
 
 ## 0.24.1
 
-*August 21st, 2018*
+*August 21st, 2018*.
 
 BUG FIXES
 
@@ -4364,7 +4406,7 @@ BUG FIXES
 
 ## 0.24.0
 
-*August 13th, 2018*
+*August 13th, 2018*.
 
 BREAKING CHANGES
 
@@ -4480,7 +4522,7 @@ BUG FIXES
 
 ## 0.23.1
 
-*July 27th, 2018*
+*July 27th, 2018*.
 
 BUG FIXES
 
@@ -4490,7 +4532,7 @@ BUG FIXES
 
 ## 0.23.0
 
-*July 25th, 2018*
+*July 25th, 2018*.
 
 BREAKING CHANGES
 
@@ -4513,7 +4555,7 @@ BUG FIXES
 
 ## 0.22.0
 
-*July 16th, 2018*
+*July 16th, 2018*.
 
 BREAKING CHANGES
 
@@ -4532,7 +4574,7 @@ BUG FIXES
 
 ## 0.21.1
 
-*July 14th, 2018*
+*July 14th, 2018*.
 
 BUG FIXES
 
@@ -4541,7 +4583,7 @@ BUG FIXES
 
 ## 0.21.0
 
-*July 13th, 2018*
+*July 13th, 2018*.
 
 BREAKING CHANGES
 
@@ -4572,7 +4614,7 @@ BUG FIXES
 
 ## 0.20.0
 
-*July 10th, 2018*
+*July 10th, 2018*.
 
 BREAKING CHANGES
 
@@ -4715,7 +4757,7 @@ BUG FIXES
 
 ## 0.19.0
 
-*June 13, 2018*
+*June 13, 2018*.
 
 BREAKING CHANGES
 
@@ -4755,7 +4797,7 @@ FEATURES
 
 ## 0.18.0
 
-*June 9, 2018*
+*June 9, 2018*.
 
 BREAKING CHANGES
 
@@ -4809,42 +4851,25 @@ BUG FIXES
 
 ## 0.17.5
 
-*June 5, 2018*
-
-### Features
-
-* (x/bank) [#10771](https://github.com/cosmos/cosmos-sdk/pull/10771) Add safety check on bank module perms to allow module-specific mint restrictions (e.g. only minting a certain denom).
-* (x/bank) [#10771](https://github.com/cosmos/cosmos-sdk/pull/10771) Add `bank.BankKeeper.WithMintCoinsRestriction` function to restrict use of bank `MintCoins` usage. This function is not on the bank `Keeper` interface, so it's not API-breaking, but only additive on the keeper implementation.
-
-*May 31, 2018*
-
-* [#11354](https://github.com/cosmos/cosmos-sdk/pull/11355) Added missing pagination flag for `bank q total` query.
-* (store) [#11177](https://github.com/cosmos/cosmos-sdk/pull/11177) Update the prune `everything` strategy to store the last two heights.
-* (store) [#11117](https://github.com/cosmos/cosmos-sdk/pull/11117) Fix data race in store trace component
-* (x/authz) [#11252](https://github.com/cosmos/cosmos-sdk/pull/11252) Allow insufficient funds error for authz simulation
-
-### Improvements
+*June 5, 2018*.
 
 *May 29, 2018*
 
 ## [v0.44.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.6) - 2022-02-02
 
-### Features
+*May 31, 2018*.
 
 *June 5, 2018*
 
 ### Bug Fixes
 
-* (grpc) [#10985](https://github.com/cosmos/cosmos-sdk/pull/10992) The `/cosmos/tx/v1beta1/txs/{hash}` endpoint returns a 404 when a tx does not exist.
-* (std/codec) [/#10595](https://github.com/cosmos/cosmos-sdk/pull/10595) Add evidence to std/codec to be able to decode evidence in client interactions.
-* [#10725](https://github.com/cosmos/cosmos-sdk/pull/10725) populate `ctx.ConsensusParams` for begin/end blockers.
-* [#10061](https://github.com/cosmos/cosmos-sdk/pull/10061) and [#10515](https://github.com/cosmos/cosmos-sdk/pull/10515) Ensure that `LegacyAminoPubKey` struct correctly unmarshals from JSON
+*May 29, 2018*.
 
 *May 31, 2018*
 
 * [#10823](https://github.com/cosmos/cosmos-sdk/pull/10823) updated ambiguous cli description for creating feegrant.
 
-## [v0.44.5-patch](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.5-patch) - 2021-10-14
+*May 20, 2018*.
 
 *May 29, 2018*
 

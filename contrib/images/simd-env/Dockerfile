@@ -2,6 +2,10 @@ FROM golang:1.19-alpine AS build
 RUN apk add build-base git linux-headers
 WORKDIR /work
 COPY go.mod go.sum /work/
+COPY db/go.mod db/go.sum /work/db/
+COPY errors/go.mod errors/go.sum /work/errors/
+COPY math/go.mod math/go.sum /work/math/
+COPY ./ics23/go/go.mod /work/ics23/go/go.mod
 
 RUN go mod download
 COPY ./ /work

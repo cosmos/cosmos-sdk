@@ -39,10 +39,12 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 	// "/p2p" prefix for p2p queries
 	if len(path) < 4 {
-		return sdkerrors.QueryResultWithDebug(
+		return sdkerrors.QueryResult(
 			sdkerrors.Wrap(
 				sdkerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>",
-			), app.trace)
+			),
+			app.trace,
+		)
 	}
 
 	var resp abci.ResponseQuery
@@ -59,7 +61,7 @@ func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 		}
 
 	default:
-		resp = sdkerrors.QueryResultWithDebug(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"), app.trace)
+		resp = sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"), app.trace)
 	}
 
 	return resp

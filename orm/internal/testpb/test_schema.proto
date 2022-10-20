@@ -10,30 +10,29 @@ message ExampleTable {
   // clang-format off
   option (cosmos.orm.v1.table) = {
     id: 1;
-    primary_key: {
-      fields:
-          "u32,i64,str"
-    }
-    index: {
-      id:
-          1;
-      fields:
-          "u64,str" unique: true
-    }
-    index: {
-      id:
-          2;
-      fields:
-          "str,u32"
-    }
-    index: {
-      id:
-          3;
-      fields:
-          "bz,str"
-    }
-  };
-// clang-format on
+primary_key: {
+fields:
+  "u32,i64,str"
+}
+index: {
+id:
+  1;
+fields:
+  "u64,str" unique: true
+}
+index: {
+id:
+  2;
+fields:
+  "str,u32"
+}
+index: {
+id:
+  3;
+fields:
+  "bz,str"
+}
+};
 
 // Valid key fields:
 uint32                    u32  = 1;
@@ -105,18 +104,6 @@ message ExampleTimestamp {
   uint64                    id   = 1;
   string                    name = 2;
   google.protobuf.Timestamp ts   = 3;
-}
-
-message ExampleDuration {
-  option (cosmos.orm.v1.table) = {
-    id: 4
-    primary_key: {fields: "id" auto_increment: true}
-    index: {id: 1 fields: "dur"}
-  };
-
-  uint64                   id   = 1;
-  string                   name = 2;
-  google.protobuf.Duration dur  = 3;
 }
 
 message SimpleExample {

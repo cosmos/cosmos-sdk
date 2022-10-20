@@ -170,12 +170,6 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	}
 }
 
-// SetOption implements the ABCI interface.
-func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
-	// TODO: Implement!
-	return
-}
-
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "begin_block")
@@ -1382,7 +1376,7 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.QueryRequest) *abci.Q
 
 			responseValue, err := json.Marshal(response)
 			if err != nil {
-				sdkerrors.QueryResult(sdkerrors.Wrap(err, fmt.Sprintf("failed to marshal list snapshots response %v", response)))
+				return sdkerrors.QueryResult(sdkerrors.Wrap(err, fmt.Sprintf("failed to marshal list snapshots response %v", response)), app.trace)
 			}
 
 			return abci.ResponseQuery{
@@ -1420,16 +1414,10 @@ func handleQueryStore(app *BaseApp, path []string, req abci.QueryRequest) *abci.
 			), app.trace)
 	}
 
-	sdkReq := storetypes.RequestQuery(req)
-	resp, err := queryable.Query(&sdkReq)
-	if err != nil {
-		return queryResult(err, app.trace)
-	}
+	resp := queryable.Query(req)
 	resp.Height = req.Height
 
-	abciResp := abci.QueryResponse(*resp)
-
-	return &abciResp
+	return resp
 }
 
 func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {

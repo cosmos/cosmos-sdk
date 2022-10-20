@@ -1,7 +1,7 @@
-# Cosmovisor v1.3.0 Release Notes
+# Cosmovisor v1.4.0 Release Notes
 
-* Fix failure when installing cosmovisor via `go install`.
+* Rename cosmovisor package to `cosmossdk.io/tools/cosmovisor`.
 
 ### Changelog
 
-For more details, please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/cosmovisor/v1.3.0/cosmovisor/CHANGELOG.md).
+For more details, please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/cosmovisor/v1.4.0/cosmovisor/CHANGELOG.md).

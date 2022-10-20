@@ -27,7 +27,7 @@ func GetAndDecodeWithBool[T any](store types.KVStore, dec func([]byte) (T, bool)
 	if len(bz) == 0 {
 		return res, false
 	}
-	
+
 	resp, ok := dec(bz)
 	return resp, ok
 }

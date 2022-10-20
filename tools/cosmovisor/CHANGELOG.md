@@ -40,7 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [](https://github.com/cosmos-sdk/pull/) Rename cosmovisor package to `cosmossdk.io/cosmovisor`.
+* [](https://github.com/cosmos-sdk/pull/) Rename cosmovisor package to `cosmossdk.io/tools/cosmovisor`.
 
 ## v1.3.0 2022-09-11
 

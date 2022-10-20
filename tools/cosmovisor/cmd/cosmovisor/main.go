@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
-	"cosmossdk.io/cosmovisor"
-	cverrors "gcosmossdk.io/cosmovisor/errors"
+	"cosmossdk.io/tools/cosmovisor"
+	cverrors "gcosmossdk.io/tools/cosmovisor/errors"
 )
 
 func main() {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/cosmovisor"
+	"cosmossdk.io/tools/cosmovisor"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/stretchr/testify/require"
 )

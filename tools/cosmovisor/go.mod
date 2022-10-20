@@ -1,4 +1,4 @@
-module cosmossdk.io/cosmovisor
+module cosmossdk.io/tools/cosmovisor
 
 go 1.19
 

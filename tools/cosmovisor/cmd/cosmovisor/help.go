@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"cosmossdk.io/cosmovisor"
+	"cosmossdk.io/tools/cosmovisor"
 )
 
 // GetHelpText creates the help text multi-line string.

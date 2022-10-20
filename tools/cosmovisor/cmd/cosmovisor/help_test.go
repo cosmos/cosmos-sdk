@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/cosmovisor"
+	"cosmossdk.io/tools/cosmovisor"
 )
 
 type HelpTestSuite struct {

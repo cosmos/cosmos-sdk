@@ -56,7 +56,7 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
-    directory: "/cosmovisor"
+    directory: "/tools/cosmovisor"
     schedule:
       interval: weekly
     labels:

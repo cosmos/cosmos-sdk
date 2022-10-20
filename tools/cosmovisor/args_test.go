@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/cosmovisor/errors"
+	"cosmossdk.io/tools/cosmovisor/errors"
 )
 
 type argsTestSuite struct {

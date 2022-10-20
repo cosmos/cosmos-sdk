@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/cosmovisor"
+	"cosmossdk.io/tools/cosmovisor"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 

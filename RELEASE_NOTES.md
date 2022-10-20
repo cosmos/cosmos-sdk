@@ -1,3 +1,27 @@
+## [v0.46.3-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-1) - 2022-10-20
+
+Chains using this version must also apply the following replace line to their `go.mod`:
+
+```go
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+```
+
+### Improvements
+
+* Bring in Cosmos-SDK [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) changes [#303](https://github.com/provenance-io/cosmos-sdk/pull/303).
+* Updated the swagger files [#303](https://github.com/provenance-io/cosmos-sdk/pull/303).
+
+### Bug Fixes
+
+* Patch the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702) [#303](https://github.com/provenance-io/cosmos-sdk/pull/303).
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.2-pio-2...v0.46.3-pio-1
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3...v0.46.3-pio-1
+
+---
+
 ## [v0.46.2-pio-2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.2-pio-2) - 2022-10-10
 
 ### Improvements
@@ -26,93 +50,77 @@
 
 ## [v0.46.1-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-1) - 2022-09-30
 
-### Improvements
-
-* (baseapp) Add a optional function to baseapp to manipulate events [#1092](https://github.com/provenance-io/provenance/issues/1092)
-
-### Full Commit History
-
-* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.1-pio-1-rc1...v0.46.1-pio-1
-* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.1...v0.46.1-pio-1
-
----
-
-## [v0.46.1-pio-1-rc1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-1-rc1) - 2022-09-19
-
-### Improvements
-
-* Bring in Cosmos-SDK v0.46.1 changes. [#235](https://github.com/provenance-io/cosmos-sdk/pull/235)
-
-### Full Commit History
-
-* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.0-pio-1-rc4...v0.46.1-pio-1-rc1
-* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.1...v0.46.1-pio-1-rc1
-
----
-
-## [v0.46.0-pio-1-rc4](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc4) - 2022-08-23
-
-### Improvements
-
-* Add support for event data injection into end block handlers (https://github.com/provenance-io/provenance/issues/626)
-* Updated the swagger files. [#1017](https://github.com/provenance-io/provenance/issues/1017)
-
-### Full Commit History
-
-* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.0-pio-1-rc3...v0.46.0-pio-1-rc4
-* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.0...v0.46.0-pio-1-rc4
-
----
-
-## [v0.46.0-pio-1-rc3](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc3) - 2022-08-18
-
-### Bug Fixes
-
-* (x/auth) Add the missing account number case to the sim state decoder. [#228](https://github.com/provenance-io/cosmos-sdk/pull/228)
-* (x/auth) Handle missing account numbers during InitGenesis. [#228](https://github.com/provenance-io/cosmos-sdk/pull/228)
-
-### Full Commit History
-
-* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.0-pio-1-rc2...v0.46.0-pio-1-rc3
-* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.0...v0.46.0-pio-1-rc3
-
----
-
-## [v0.46.0-pio-1-rc2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc2) - 2022-08-11
-
-### Improvements
-
-* (x/authz) Create the GetAuthorization to replace the previously removed GetCleanAuthorization. [#222](https://github.com/provenance-io/cosmos-sdk/pull/222)
-* (baseapp) Create the IMsgServiceRouter interface and baseapp.SetMsgServiceRouter function [#223](https://github.com/provenance-io/cosmos-sdk/pull/223).
-
-### Full Commit History
-
-* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.0-pio-1-rc1...v0.46.0-pio-1-rc2
-* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.0...v0.46.0-pio-1-rc2
-
----
-
-## [v0.46.0-pio-1-rc1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc1) - 2022-08-04
-
-This release is based on Cosmos-SDK release [v0.46.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0).
-It also contains the customizations that were included in [v0.45.5-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.45.5-pio-1), but weren't included in v0.46.0.
+This release is based on Cosmos-SDK release [v0.46.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.1).
+It also contains the Provenance Blockchain customizations that were part of [v0.45.9-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.45.9-pio-1) ([changes](https://github.com/provenance-io/cosmos-sdk/compare/v0.45.9...v0.45.9-pio-1)), but weren't included in v0.46.1.
 
 ### Features
 
 * (x/authz) [#807](https://github.com/provenance-io/provenance/issues/807) Create a CountAuthorization type.
 * (baseapp) Add custom fee handler [#354](https://github.com/provenance-io/provenance/issues/354)
+* (baseapp) Add a optional function to baseapp to manipulate events [#1092](https://github.com/provenance-io/provenance/issues/1092)
+* (x/authz) Create the GetAuthorization to replace the previously removed GetCleanAuthorization. [#222](https://github.com/provenance-io/cosmos-sdk/pull/222)
+* (baseapp) Create the IMsgServiceRouter interface and baseapp.SetMsgServiceRouter function [#223](https://github.com/provenance-io/cosmos-sdk/pull/223).
 
 ### Improvements
 
+* Bring in Cosmos-SDK [v0.46.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.1) changes. [#235](https://github.com/provenance-io/cosmos-sdk/pull/235)
+* Add support for event data injection into end block handlers (https://github.com/provenance-io/provenance/issues/626)
 * (x/bank) [#208](https://github.com/provenance-io/cosmos-sdk/pull/208) Apply the SendEnabled fix.
+* Updated the swagger files. [#1017](https://github.com/provenance-io/provenance/issues/1017)
 
 ### Bug Fixes
 
+* (x/auth) Add the missing account number case to the sim state decoder. [#228](https://github.com/provenance-io/cosmos-sdk/pull/228)
+* (x/auth) Handle missing account numbers during InitGenesis. [#228](https://github.com/provenance-io/cosmos-sdk/pull/228)
 * (store/rootmulti) [#12487](https://github.com/cosmos/cosmos-sdk/pull/12487) Fix non-deterministic map iteration.
 
 ### Full Commit History
 
-* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.0...v0.46.0-pio-1-rc1
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.1...v0.46.1-pio-1
+
+---
+
+## [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) - 2022-10-20
+
+ATTENTION:
+
+This is a security release for the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702). 
+
+All users should upgrade immediately.
+
+Users *must* add a replace directive in their go.mod for the new `ics23` package in the SDK:
+
+```go
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+```
+
+### Features
+
+* [#13435](https://github.com/cosmos/cosmos-sdk/pull/13435) Extend error context when a simulation fails.
+* (grpc) [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485) Implement a new gRPC query, `/cosmos/base/node/v1beta1/config`, which provides operator configuration.
+* (cli) [#13147](https://github.com/cosmos/cosmos-sdk/pull/13147) Add the `--append` flag to the `sign-batch` CLI cmd to combine the messages and sign those txs which are created with `--generate-only`.
+* (cli) [#13454](https://github.com/cosmos/cosmos-sdk/pull/13454) `sign-batch` CLI can now read multiple transaction files.
+
+### Improvements
+
+* [#13586](https://github.com/cosmos/cosmos-sdk/pull/13586) Bump Tendermint to `v0.34.22`.
+* (auth) [#13460](https://github.com/cosmos/cosmos-sdk/pull/13460) The `q auth address-by-id` CLI command has been renamed to `q auth address-by-acc-num` to be more explicit. However, the old `address-by-id` version is still kept as an alias, for backwards compatibility.
+* [#13433](https://github.com/cosmos/cosmos-sdk/pull/13433) Remove dead code in cacheMergeIterator `Domain()`.
+
+### Bug Fixes
+
+* Implement dragonberry security patch.
+    * For applying the patch please refer to the [RELEASE NOTES](./RELEASE_NOTES.md)
+* (store) [#13459](https://github.com/cosmos/cosmos-sdk/pull/13459) Don't let state listener observe the uncommitted writes.
+* [#12548](https://github.com/cosmos/cosmos-sdk/pull/12548) Prevent signing from wrong key while using multisig.
+
+### API Breaking Changes
+
+* (server) [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485) The `Application` service now requires the `RegisterNodeService` method to be implemented.
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.2...v0.46.3
 
 ---
 
@@ -151,6 +159,10 @@ It also contains the customizations that were included in [v0.45.5-pio-1](https:
 * (grpc) [#13417](https://github.com/cosmos/cosmos-sdk/pull/13417) fix grpc query panic that could crash the node (backport #13352).
 * (grpc) [#13418](https://github.com/cosmos/cosmos-sdk/pull/13418) Add close for grpc only mode.
 
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.1...v0.46.2
+
 ---
 
 ## [v0.46.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.1) - 2022-08-24
@@ -171,6 +183,10 @@ It also contains the customizations that were included in [v0.45.5-pio-1](https:
 
 * (x/group) [#12888](https://github.com/cosmos/cosmos-sdk/pull/12888) Fix event propagation to the current context of `x/group` message execution `[]sdk.Result`.
 * (x/upgrade) [#12906](https://github.com/cosmos/cosmos-sdk/pull/12906) Fix upgrade failure by moving downgrade verification logic after store migration.
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.0...v0.46.1
 
 ---
 

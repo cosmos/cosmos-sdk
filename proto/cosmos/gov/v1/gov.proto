@@ -168,5 +168,7 @@ message Params {
   string min_initial_deposit_ratio = 7 [(cosmos_proto.scalar) = "cosmos.Dec"];
   
   // The burn rate of deposits when cancel the proposal
+  //
+  // Since: cosmos-sdk 0.47
   string proposal_cancel_burn_rate = 8 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }

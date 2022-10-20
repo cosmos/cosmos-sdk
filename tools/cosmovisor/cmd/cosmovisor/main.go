@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"cosmossdk.io/tools/cosmovisor"
-	cverrors "gcosmossdk.io/tools/cosmovisor/errors"
+	cverrors "cosmossdk.io/tools/cosmovisor/errors"
 )
 
 func main() {

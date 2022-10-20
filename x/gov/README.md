@@ -429,7 +429,7 @@ const (
     StatusPassed        ProposalStatus = 0x03  // Proposal passed and successfully executed
     StatusRejected      ProposalStatus = 0x04  // Proposal has been rejected
     StatusFailed        ProposalStatus = 0x05  // Proposal passed but failed execution
-    StatusCanceled      ProposalStatus = 0x06  // Proposal is canceled before the voting period ends
+    StatusCanceled      ProposalStatus = 0x06  // Proposal has been canceled before the voting period ended
 )
 ```
 

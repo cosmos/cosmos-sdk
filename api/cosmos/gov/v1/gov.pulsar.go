@@ -6250,6 +6250,7 @@ const (
 	// PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
 	// failed.
 	ProposalStatus_PROPOSAL_STATUS_FAILED ProposalStatus = 5
+	// Since: cosmos-sdk 0.47
 	// PROPOSAL_STATUS_CANCELED defines a proposal status of a proposal that has
 	// canceled.
 	ProposalStatus_PROPOSAL_STATUS_CANCELED ProposalStatus = 6
@@ -6421,6 +6422,7 @@ type Proposal struct {
 	VotingEndTime    *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3" json:"voting_end_time,omitempty"`
 	// metadata is any arbitrary metadata attached to the proposal.
 	Metadata string `protobuf:"bytes,10,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	// Since: cosmos-sdk 0.47
 	// proposer defines the address of the proposal's proposer.
 	Proposer string `protobuf:"bytes,11,opt,name=proposer,proto3" json:"proposer,omitempty"`
 }

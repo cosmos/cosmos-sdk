@@ -173,12 +173,14 @@ func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposa
 
 	var burnDepositAmount sdk.Coins
 
-	for _, deposit := range totalDeposits {
-		burnAmount := sdk.NewCoin(
-			deposit.Denom,
-			sdk.NewDecFromInt(deposit.Amount).Mul(burnRate).RoundInt(),
-		)
-		burnDepositAmount = burnDepositAmount.Add(burnAmount)
+	if burnRate.IsPositive() {
+		for _, deposit := range totalDeposits {
+			burnAmount := sdk.NewCoin(
+				deposit.Denom,
+				sdk.NewDecFromInt(deposit.Amount).Mul(burnRate).RoundInt(),
+			)
+			burnDepositAmount = burnDepositAmount.Add(burnAmount)
+		}
 	}
 
 	// burn the deposits

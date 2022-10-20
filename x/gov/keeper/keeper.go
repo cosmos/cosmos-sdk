@@ -21,9 +21,8 @@ type Keeper struct {
 	// The reference to the Paramstore to get and set gov specific params
 	paramSpace types.ParamSubspace //nolint:unused
 
-	authKeeper types.AccountKeeper
-	bankKeeper types.BankKeeper
-	// Distribution Keeper
+	authKeeper  types.AccountKeeper
+	bankKeeper  types.BankKeeper
 	distrkeeper types.DistributionKeeper
 
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
@@ -159,14 +158,14 @@ func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID u
 	store.Delete(types.ActiveProposalQueueKey(proposalID, endTime))
 }
 
-// InsertCanceledProposalQueue inserts a ProposalID into the cancel proposal queue
+// InsertCanceledProposalQueue inserts a ProposalID into the Canceled Proposal Queue.
 func (keeper Keeper) InsertCanceledProposalQueue(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := types.GetProposalIDBytes(proposalID)
 	store.Set(types.CanceledProposalQueueKey(proposalID), bz)
 }
 
-// RemoveFromCanceledProposalQueue remove a proposalID from the Canceled Proposal Queue
+// RemoveFromCanceledProposalQueue removes a proposalID from the Canceled Proposal Queue.
 func (keeper Keeper) RemoveFromCanceledProposalQueue(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	store.Delete(types.CanceledProposalQueueKey(proposalID))

@@ -34,6 +34,7 @@ type StakingKeeper interface {
 	TokensFromConsensusPower(ctx sdk.Context, power int64) math.Int
 }
 
+// DistributionKeeper defines the expected distribution keeper
 type DistributionKeeper interface {
-	types.DistributionKeeper
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }

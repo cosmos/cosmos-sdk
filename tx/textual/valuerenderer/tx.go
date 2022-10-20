@@ -3,55 +3,58 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
-	tspb "google.golang.org/protobuf/types/known/timestamppb"
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/tx/signing"
 )
 
-type txValueRenderer struct{}
+type txValueRenderer struct {
+	signerData signing.SignerData
+	t          *Textual
+}
 
 // NewTimestampValueRenderer returns a ValueRenderer for the protobuf Tx type,
 // as called the transaction envelope. It follows the specification defined
 // in ADR-050.
-func NewTxValueRenderer() ValueRenderer {
-	return txValueRenderer{}
+func NewTxValueRenderer(t *Textual, signerData signing.SignerData) ValueRenderer {
+	return txValueRenderer{
+		t:          t,
+		signerData: signerData,
+	}
 }
 
 // Format implements the ValueRenderer interface.
-func (vr txValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
+func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	// Reify the reflected message as a proto Timestamp
 	msg := v.Message().Interface()
-	timestamp, ok := msg.(*txv1beta1.Tx)
+	protoTx, ok := msg.(*txv1beta1.Tx)
 	if !ok {
 		return nil, fmt.Errorf("expected Tx, got %T", msg)
 	}
 
-	// Convert proto timestamp to a Go Time.
-	t := timestamp.AsTime()
+	screens := make([]Screen, 3)
+	screens[0].Text = fmt.Sprintf("Chain ID: %s", vr.signerData.ChainID)
+	screens[1].Text = fmt.Sprintf("Account number: %d", vr.signerData.AccountNumber)
+	screens[2].Text = fmt.Sprintf("Public key: %s", &vr.signerData.PubKey)
 
-	// Format the Go Time as RFC 3339.
-	s := t.Format(time.RFC3339Nano)
-	return []Screen{{Text: s}}, nil
+	// Get sdk.Msgs screens, from Tx.Body.Messages (field number 1).
+	msgVr, err := vr.t.GetValueRenderer(protoTx.Body.ProtoReflect().Descriptor().Fields().ByNumber(1))
+	if err != nil {
+		return nil, err
+	}
+	msgScreens, err := msgVr.Format(ctx, protoreflect.ValueOf(protoTx.Body.Messages))
+	if err != nil {
+		return nil, err
+	}
+
+	screens = append(screens, msgScreens...)
+
+	return screens, nil
 }
 
 // Parse implements the ValueRenderer interface.
 func (vr txValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
-	// Parse the RFC 3339 input as a Go Time.
-	if len(screens) != 1 {
-		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
-	}
-	t, err := time.Parse(time.RFC3339Nano, screens[0].Text)
-	if err != nil {
-		return protoreflect.Value{}, err
-	}
-
-	// Convert Go Time to a proto Timestamp.
-	timestamp := tspb.New(t)
-
-	// Reflect the proto Timestamp.
-	msg := timestamp.ProtoReflect()
-	return protoreflect.ValueOfMessage(msg), nil
+	panic("TODO")
 }

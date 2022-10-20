@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"cosmossdk.io/tx/signing"
 	"cosmossdk.io/tx/textual/internal/testpb"
 	"cosmossdk.io/tx/textual/valuerenderer"
 )
@@ -32,7 +33,7 @@ func TestDispatcher(t *testing.T) {
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			textual := valuerenderer.NewTextual(nil)
+			textual := valuerenderer.NewTextual(nil, signing.SignerData{})
 			rend, err := textual.GetValueRenderer(fieldDescriptorFromName(tc.name))
 
 			if tc.expErr {

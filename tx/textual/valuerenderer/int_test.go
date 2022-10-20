@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/tx/signing"
 	"cosmossdk.io/tx/textual/valuerenderer"
 )
 
@@ -22,7 +23,7 @@ func TestIntJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := valuerenderer.NewTextual(nil)
+	textual := valuerenderer.NewTextual(nil, signing.SignerData{})
 
 	for _, tc := range testcases {
 		// Parse test case strings as protobuf uint64

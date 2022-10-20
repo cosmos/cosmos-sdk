@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"cosmossdk.io/tx/signing"
 	"cosmossdk.io/tx/textual/valuerenderer"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -21,7 +22,7 @@ func TestBytesJsonTestCases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
+	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier, signing.SignerData{})
 
 	for _, tc := range testcases {
 		data, err := base64.StdEncoding.DecodeString(tc.base64)

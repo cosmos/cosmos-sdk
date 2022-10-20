@@ -1,7 +1,19 @@
-# Cosmos SDK v0.46.2 Release Notes
+# Cosmos SDK v0.46.3 Release Notes
 
-This release introduces a number of bug fixes, features and improvements.
+This is a security release for the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702). 
+Please upgrade ASAP.
 
-Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/CHANGELOG.md) for an exhaustive list of changes.
+Next to this, we have also included a few minor bugfixes.
 
-**Full Commit History**: https://github.com/cosmos/cosmos-sdk/compare/v0.46.1...v0.46.2
+Chains must add the following to their go.mod for the application:
+
+```go
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v8.0.0
+```
+
+Bumping the SDK version should be smooth, however, feel free to tag core devs to review your upgrading PR:
+
+* **CET**: @tac0turtle, @okwme, @AdityaSripal, @colin-axner, @julienrbrt
+* **EST**: @ebuchman, @alexanderbez, @aaronc
+* **PST**: @jtremback, @nicolaslara, @czarcas7ic, @p0mvn
+* **CDT**: @ValarDragon, @zmanian

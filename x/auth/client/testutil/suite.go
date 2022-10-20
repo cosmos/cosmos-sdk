@@ -71,6 +71,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	pub2, err := account2.GetPubKey()
 	s.Require().NoError(err)
 
+	// Create a dummy account for testing purpose
+	_, _, err = kb.NewMnemonic("dummyAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub1, pub2})
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
@@ -970,6 +974,10 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
+	// Generate dummy account which is not a part of multisig.
+	dummyAcc, err := val1.ClientCtx.Keyring.Key("dummyAccount")
+	s.Require().NoError(err)
+
 	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, addr)
@@ -1027,13 +1035,20 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
-	// Sign with account1
+	// Sign with account2
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
 	account2Signature, err := TxSignExec(val1.ClientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
+
+	// Sign with dummy account
+	dummyAddr, err := dummyAcc.GetAddress()
+	s.Require().NoError(err)
+	_, err = TxSignExec(val1.ClientCtx, dummyAddr, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "signing key is not a part of multisig key")
 
 	multiSigWith2Signatures, err := TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
@@ -1089,7 +1104,7 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	// as the main point of this test is to test the `--multisig` flag with an address
 	// that is not in the keyring.
 	_, err = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
-	s.Require().Contains(err.Error(), "tx intended signer does not match the given signer")
+	s.Require().Contains(err.Error(), "error getting account from keybase")
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisign() {
@@ -1156,7 +1171,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-	// Sign with account1
+	// Sign with account2
 	account2Signature, err := TxSignExec(val1.ClientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
@@ -1227,7 +1242,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
 	// sign-batch file
-	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String())
+	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
@@ -1236,7 +1251,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
 	// sign-batch file with account2
-	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String())
+	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file2
@@ -1294,7 +1309,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	// sign-batch file
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
-	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
@@ -1303,7 +1318,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	// sign-batch file with account2
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 

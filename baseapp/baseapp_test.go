@@ -3,7 +3,6 @@ package baseapp
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
@@ -43,49 +42,12 @@ var (
 	testTxPriority = int64(42)
 )
 
-type paramStore struct {
-	db *dbm.MemDB
-}
-
 type setupConfig struct {
 	blocks             uint64
 	blockTxs           int
 	snapshotInterval   uint64
 	snapshotKeepRecent uint32
 	pruningOpts        pruningtypes.PruningOptions
-}
-
-func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
-	bz, err := json.Marshal(value)
-	if err != nil {
-		panic(err)
-	}
-
-	ps.db.Set(key, bz)
-}
-
-func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
-	ok, err := ps.db.Has(key)
-	if err != nil {
-		panic(err)
-	}
-
-	return ok
-}
-
-func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
-	bz, err := ps.db.Get(key)
-	if err != nil {
-		panic(err)
-	}
-
-	if len(bz) == 0 {
-		return
-	}
-
-	if err := json.Unmarshal(bz, ptr); err != nil {
-		panic(err)
-	}
 }
 
 func defaultLogger() log.Logger {

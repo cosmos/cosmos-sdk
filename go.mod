@@ -18,7 +18,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/iavl v0.19.2-0.20220916140702-9b6be3095313
+	github.com/cosmos/iavl v0.19.3
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gogo/gateway v1.1.0
 	github.com/gogo/protobuf v1.3.2
@@ -159,6 +159,8 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
+	// vendor ics23
+	github.com/confio/ics23/go => ./ics23/go
 
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
@@ -167,3 +169,5 @@ replace (
 
 	github.com/jhump/protoreflect => github.com/jhump/protoreflect v1.9.0
 )
+
+retract v0.46.2

@@ -7,10 +7,10 @@ option go_package = "github.com/cosmos/cosmos-sdk/snapshots/types";
 
 // Snapshot contains Tendermint state sync snapshot info.
 message Snapshot {
-  uint64   height = 1;
-  uint32   format = 2;
-  uint32   chunks = 3;
-  bytes    hash = 4;
+  uint64   height   = 1;
+  uint32   format   = 2;
+  uint32   chunks   = 3;
+  bytes    hash     = 4;
   Metadata metadata = 5 [(gogoproto.nullable) = false];
 }
 
@@ -25,12 +25,12 @@ message Metadata {
 message SnapshotItem {
   // item is the specific type of snapshot item.
   oneof item {
-    SnapshotStoreItem         store = 1;
-    SnapshotIAVLItem          iavl = 2 [(gogoproto.customname) = "IAVL"];
-    SnapshotExtensionMeta     extension = 3;
-    SnapshotExtensionPayload  extension_payload = 4;
-    SnapshotKVItem            kv = 5 [(gogoproto.customname) = "KV"];
-    SnapshotSchema            schema = 6;
+    SnapshotStoreItem        store             = 1;
+    SnapshotIAVLItem         iavl              = 2 [(gogoproto.customname) = "IAVL"];
+    SnapshotExtensionMeta    extension         = 3;
+    SnapshotExtensionPayload extension_payload = 4;
+    SnapshotKVItem           kv                = 5 [(gogoproto.customname) = "KV"];
+    SnapshotSchema           schema            = 6;
   }
 }
 
@@ -45,7 +45,7 @@ message SnapshotStoreItem {
 //
 // Since: cosmos-sdk 0.46
 message SnapshotIAVLItem {
-  bytes key = 1;
+  bytes key   = 1;
   bytes value = 2;
   // version is block height
   int64 version = 3;
@@ -57,7 +57,7 @@ message SnapshotIAVLItem {
 //
 // Since: cosmos-sdk 0.46
 message SnapshotExtensionMeta {
-  string name = 1;
+  string name   = 1;
   uint32 format = 2;
 }
 
@@ -72,13 +72,13 @@ message SnapshotExtensionPayload {
 //
 // Since: cosmos-sdk 0.46
 message SnapshotKVItem {
-  bytes key = 1;
+  bytes key   = 1;
   bytes value = 2;
 }
 
 // SnapshotSchema is an exported schema of smt store
 //
 // Since: cosmos-sdk 0.46
-message SnapshotSchema{
+message SnapshotSchema {
   repeated bytes keys = 1;
 }

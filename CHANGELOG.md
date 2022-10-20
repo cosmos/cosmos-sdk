@@ -37,18 +37,40 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) - 2022-10-20
+
+ATTENTION:
+
+This is a security release for the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702). 
+
+All users should upgrade immediately.
+
+Users *must* add a replace directive in their go.mod for the new `ics23` package in the SDK:
+
+```go
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v8.0.0
+```
+
 ### Features
 
+* [#13435](https://github.com/cosmos/cosmos-sdk/pull/13435) Extend error context when a simulation fails.
 * (grpc) [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485) Implement a new gRPC query, `/cosmos/base/node/v1beta1/config`, which provides operator configuration.
 * [#13577](https://github.com/cosmos/cosmos-sdk/pull/13577) Added `ApplicationQueryService` interface (the related method is added directly to the `Application` interface and `ApplicationQueryService` is removed in the future version). Applications implementing `ApplicationQueryService` enabling registration of module external gRPC services. When implemented the SDK will automatically register chain information query service introduced in [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485).
+* (cli) [#13147](https://github.com/cosmos/cosmos-sdk/pull/13147) Add the `--append` flag to the `sign-batch` CLI cmd to combine the messages and sign those txs which are created with `--generate-only`.
+* (cli) [#13454](https://github.com/cosmos/cosmos-sdk/pull/13454) `sign-batch` CLI can now read multiple transaction files.
 
 ### Improvements
 
+* [#13586](https://github.com/cosmos/cosmos-sdk/pull/13586) Bump Tendermint to `v0.34.22`.
 * (auth) [#13460](https://github.com/cosmos/cosmos-sdk/pull/13460) The `q auth address-by-id` CLI command has been renamed to `q auth address-by-acc-num` to be more explicit. However, the old `address-by-id` version is still kept as an alias, for backwards compatibility.
+* [#13433](https://github.com/cosmos/cosmos-sdk/pull/13433) Remove dead code in cacheMergeIterator `Domain()`.
 
 ### Bug Fixes
 
+* Implement dragonberry security patch.
+    * For applying the patch please refer to the [RELEASE NOTES](./RELEASE_NOTES.md)
 * (store) [#13459](https://github.com/cosmos/cosmos-sdk/pull/13459) Don't let state listener observe the uncommitted writes.
+* [#12548](https://github.com/cosmos/cosmos-sdk/pull/12548) Prevent signing from wrong key while using multisig.
 
 ### API Breaking Changes
 
@@ -163,7 +185,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (rosetta) [\#11590](https://github.com/cosmos/cosmos-sdk/pull/11590) Add fee suggestion for rosetta and enable offline mode. Also force set events about Fees to Success to pass reconciliation test.
 * (types) [\#11959](https://github.com/cosmos/cosmos-sdk/pull/11959) Added `sdk.Coins.Find` helper method to find a coin by denom.
 * (upgrade) [#12603](https://github.com/cosmos/cosmos-sdk/pull/12603) feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces
-* (telemetry) [#12405](https://github.com/cosmos/cosmos-sdk/pull/12405) Add _query_ calls metric to telemetry.
+* (telemetry) [#12405](https://github.com/cosmos/cosmos-sdk/pull/12405) Add *query* calls metric to telemetry.
 * (cli) [#12028](https://github.com/cosmos/cosmos-sdk/pull/12028) Add the `tendermint key-migrate` to perform Tendermint v0.35 DB key migration.
 * (query) [#12253](https://github.com/cosmos/cosmos-sdk/pull/12253) Add `GenericFilteredPaginate` to the `query` package to improve UX.
 
@@ -389,7 +411,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
-* (baseapp) [\#11985](https://github.com/cosmos/cosmos-sdk/pull/11985) Add a `postHandler` to baseapp. This `postHandler` is like antehandler, but is run _after_ the `runMsgs` execution. It is in the same store branch that `runMsgs`, meaning that both `runMsgs` and `postHandler`
+* (baseapp) [\#11985](https://github.com/cosmos/cosmos-sdk/pull/11985) Add a `postHandler` to baseapp. This `postHandler` is like antehandler, but is run *after* the `runMsgs` execution. It is in the same store branch that `runMsgs`, meaning that both `runMsgs` and `postHandler`
 * (x/gov) [#11998](https://github.com/cosmos/cosmos-sdk/pull/11998) Tweak the `x/gov` `ModuleAccountInvariant` invariant to ensure deposits are `<=` total module account balance instead of strictly equal.
 * (x/upgrade) [\#11800](https://github.com/cosmos/cosmos-sdk/pull/11800) Fix `GetLastCompleteUpgrade` to properly return the latest upgrade.
 * [\#10564](https://github.com/cosmos/cosmos-sdk/pull/10564) Fix bug when updating allowance inside AllowedMsgAllowance
@@ -655,7 +677,7 @@ empty coins slice before it is used to create `banktype.MsgSend`.
 
 ### Improvements
 
-* (types) [\#10630](https://github.com/cosmos/cosmos-sdk/pull/10630) Add an `Events` field to the `TxResponse` type that captures _all_ events emitted by a transaction, unlike `Logs` which only contains events emitted during message execution.
+* (types) [\#10630](https://github.com/cosmos/cosmos-sdk/pull/10630) Add an `Events` field to the `TxResponse` type that captures *all* events emitted by a transaction, unlike `Logs` which only contains events emitted during message execution.
 * (x/upgrade) [\#10532](https://github.com/cosmos/cosmos-sdk/pull/10532)  Add `keeper.DumpUpgradeInfoWithInfoToDisk` to include `Plan.Info` in the upgrade-info file.
 * (store) [\#10544](https://github.com/cosmos/cosmos-sdk/pull/10544) Use the new IAVL iterator structure which significantly improves iterator performance.
 
@@ -1737,7 +1759,7 @@ by the new key store:
     * `file`: use encrypted file-based store.
     * `kwallet`: use [KDE Wallet](https://utils.kde.org/projects/kwalletmanager/) service.
     * `pass`: use the [pass](https://www.passwordstore.org/) command line password manager.
-    * `test`: use password-less key store. _For testing purposes only. Use it at your own risk._
+    * `test`: use password-less key store. *For testing purposes only. Use it at your own risk.*
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
 to the new keyring.
 * (keys) [\#5366](https://github.com/cosmos/cosmos-sdk/pull/5366) `keys list` now accepts a `--list-names` option to list key names only, whilst the `keys delete`
@@ -3244,7 +3266,7 @@ BUG FIXES
 
 ## 0.25.0
 
-_October 24th, 2018_.
+*October 24th, 2018*.
 
 BREAKING CHANGES
 
@@ -3492,7 +3514,7 @@ BUG FIXES
 
 ## 0.24.2
 
-_August 22nd, 2018_.
+*August 22nd, 2018*.
 
 BUG FIXES
 
@@ -3501,7 +3523,7 @@ BUG FIXES
 
 ## 0.24.1
 
-_August 21st, 2018_.
+*August 21st, 2018*.
 
 BUG FIXES
 
@@ -3510,7 +3532,7 @@ BUG FIXES
 
 ## 0.24.0
 
-_August 13th, 2018_.
+*August 13th, 2018*.
 
 BREAKING CHANGES
 
@@ -3626,7 +3648,7 @@ BUG FIXES
 
 ## 0.23.1
 
-_July 27th, 2018_.
+*July 27th, 2018*.
 
 BUG FIXES
 
@@ -3636,7 +3658,7 @@ BUG FIXES
 
 ## 0.23.0
 
-_July 25th, 2018_.
+*July 25th, 2018*.
 
 BREAKING CHANGES
 
@@ -3659,7 +3681,7 @@ BUG FIXES
 
 ## 0.22.0
 
-_July 16th, 2018_.
+*July 16th, 2018*.
 
 BREAKING CHANGES
 
@@ -3678,7 +3700,7 @@ BUG FIXES
 
 ## 0.21.1
 
-_July 14th, 2018_.
+*July 14th, 2018*.
 
 BUG FIXES
 
@@ -3687,7 +3709,7 @@ BUG FIXES
 
 ## 0.21.0
 
-_July 13th, 2018_.
+*July 13th, 2018*.
 
 BREAKING CHANGES
 
@@ -3718,7 +3740,7 @@ BUG FIXES
 
 ## 0.20.0
 
-_July 10th, 2018_.
+*July 10th, 2018*.
 
 BREAKING CHANGES
 
@@ -3862,7 +3884,7 @@ BUG FIXES
 
 ## 0.19.0
 
-_June 13, 2018_.
+*June 13, 2018*.
 
 BREAKING CHANGES
 
@@ -3902,7 +3924,7 @@ FEATURES
 
 ## 0.18.0
 
-_June 9, 2018_.
+*June 9, 2018*.
 
 BREAKING CHANGES
 
@@ -3969,26 +3991,26 @@ BUG FIXES
 
 ## 0.17.5
 
-_June 5, 2018_.
+*June 5, 2018*.
 
 Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
 memory leak)
 
 ## 0.17.4
 
-_May 31, 2018_.
+*May 31, 2018*.
 
 Update to Tendermint v0.19.7 (WAL fixes and more)
 
 ## 0.17.3
 
-_May 29, 2018_.
+*May 29, 2018*.
 
 Update to Tendermint v0.19.6 (fix fast-sync halt)
 
 ## 0.17.2
 
-_May 20, 2018_.
+*May 20, 2018*.
 
 Update to Tendermint v0.19.5 (reduce WAL use, bound the mempool and some rpcs, improve logging)
 

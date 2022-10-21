@@ -56,6 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (tools) [#13603](https://github.com/cosmos/cosmos-sdk/pull/13603) Rename cosmovisor package name to `cosmossdk.io/tools/cosmovisor`. The new tool directory contains Cosmos SDK tools.
 * (deps) [#13397](https://github.com/cosmos/cosmos-sdk/pull/13397) Bump Go version minimum requirement to `1.19`.
 * [#13070](https://github.com/cosmos/cosmos-sdk/pull/13070) Migrate from `gogo/protobuf` to `cosmos/gogoproto`.
 * [#12995](https://github.com/cosmos/cosmos-sdk/pull/12995) Add `FormatTime` and `ParseTimeString` methods.

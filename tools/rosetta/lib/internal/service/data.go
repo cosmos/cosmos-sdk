@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
+	"cosmossdk.io/tools/rosetta/lib/errors"
+	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/cosmos/cosmos-sdk/rosetta/lib/errors"
-	crgtypes "github.com/cosmos/cosmos-sdk/rosetta/lib/types"
 )
 
 // AccountBalance retrieves the account balance of an address
@@ -160,7 +160,7 @@ func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 	if err != nil {
 		return nil, errors.ToRosetta(err)
 	}
-	
+
 	block, err := on.client.BlockByHeight(ctx, syncStatus.CurrentIndex)
 	if err != nil {
 		return nil, errors.ToRosetta(err)

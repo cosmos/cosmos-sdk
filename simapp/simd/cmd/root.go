@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"errors"
-	rosettaCmd "github.com/cosmos/cosmos-sdk/rosetta/cmd"
 	"io"
 	"os"
 	"path/filepath"

@@ -22,8 +22,8 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/http"
 	"google.golang.org/grpc"
 
-	crgerrs "github.com/cosmos/cosmos-sdk/rosetta/lib/errors"
-	crgtypes "github.com/cosmos/cosmos-sdk/rosetta/lib/types"
+	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
+	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"

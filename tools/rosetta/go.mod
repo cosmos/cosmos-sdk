@@ -1,10 +1,10 @@
-module github.com/cosmos/cosmos-sdk/rosetta
+module cosmossdk.io/tools/rosetta
 
 go 1.19
 
 require (
 	cosmossdk.io/math v1.0.0-beta.3
-	github.com/btcsuite/btcd v0.22.1
+	github.com/btcsuite/btcd/btcec/v2 v2.2.1
 	github.com/coinbase/rosetta-sdk-go v0.8.1
 	github.com/cosmos/cosmos-sdk v0.46.1
 	github.com/spf13/cobra v1.5.0
@@ -23,6 +23,7 @@ require (
 	github.com/armon/go-metrics v0.4.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
+	github.com/btcsuite/btcd v0.22.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/confio/ics23/go v0.7.0 // indirect
@@ -35,6 +36,7 @@ require (
 	github.com/cosmos/ledger-go v0.9.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect

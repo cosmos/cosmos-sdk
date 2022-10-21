@@ -277,6 +277,7 @@ func GetConfig(v *viper.Viper) (Config, error) {
 			InterBlockCache:     v.GetBool("inter-block-cache"),
 			Pruning:             v.GetString("pruning"),
 			PruningKeepRecent:   v.GetString("pruning-keep-recent"),
+			PruningKeepEvery:    v.GetString("pruning-keep-every"),
 			PruningInterval:     v.GetString("pruning-interval"),
 			HaltHeight:          v.GetUint64("halt-height"),
 			HaltTime:            v.GetUint64("halt-time"),

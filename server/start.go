@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/node"
@@ -211,7 +210,12 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
-	_, err = startTelemetry(ctx.Viper)
+	config, err := serverconfig.GetConfig(ctx.Viper)
+	if err != nil {
+		return err
+	}
+
+	_, err = startTelemetry(config)
 	if err != nil {
 		return err
 	}
@@ -332,7 +336,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		app.RegisterTendermintService(clientCtx)
 	}
 
-	metrics, err := startTelemetry(ctx.Viper)
+	metrics, err := startTelemetry(config)
 	if err != nil {
 		return err
 	}
@@ -506,8 +510,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	return WaitForQuitSignals()
 }
 
-func startTelemetry(v *viper.Viper) (telemetry.Metrics, error) {
+func startTelemetry(cfg serverconfig.Config) (telemetry.Metrics, error) {
 	var ops = []telemetry.Option{}
-	ops = append(ops, telemetry.OptionFromViper(v))
+	ops = append(ops, telemetry.OptionWithConfig(cfg.Telemetry))
 	return telemetry.New(ops...)
 }

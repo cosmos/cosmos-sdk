@@ -57,11 +57,6 @@ func WithOnRead(onRead func(tx Tx)) PriorityMempoolOption {
 	}
 }
 
-// DefaultPriorityMempool returns a priorityMempool with no options.
-func DefaultPriorityMempool() Mempool {
-	return NewPriorityMempool()
-}
-
 // NewPriorityMempool returns the SDK's default mempool implementation which returns txs in a partial order
 // by 2 dimensions; priority, and sender-nonce.
 func NewPriorityMempool(opts ...PriorityMempoolOption) Mempool {

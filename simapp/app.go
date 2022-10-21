@@ -5,10 +5,11 @@ package simapp
 import (
 	_ "embed"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -191,13 +192,14 @@ func NewSimApp(
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
 
+		mempoolOpt runtime.BaseAppOption = baseapp.SetMempool(mempool.NewPriorityMempool())
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig,
 			depinject.Supply(
 				// supply the application options
 				appOpts,
-				mempool.DefaultPriorityMempool,
+				mempoolOpt,
 				// For providing a custom inflation function for x/mint add here your
 				// custom function that implements the minttypes.InflationCalculationFn
 				// interface.

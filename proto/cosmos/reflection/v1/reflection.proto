@@ -11,20 +11,20 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 service ReflectionService {
   // FileDescriptors queries all the file descriptors in the app in order
   // to enable easier generation of dynamic clients.
-  rpc FileDescriptors(QueryFileDescriptorsRequest) returns (QueryFileDescriptorsResponse) {
+  rpc FileDescriptors(FileDescriptorsRequest) returns (FileDescriptorsResponse) {
     option (cosmos.query.v1.module_query_safe) = false;
   }
 }
 
 
-// QueryFileDescriptorsRequest is the Query/FileDescriptorSet request type.
-message QueryFileDescriptorsRequest {
+// FileDescriptorsRequest is the Query/FileDescriptors request type.
+message FileDescriptorsRequest {
   // pagination defines the optional pagination request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryFileDescriptorsResponse is the Query/FileDescriptorSet response type.
-message QueryFileDescriptorsResponse {
+// FileDescriptorsResponse is the Query/FileDescriptors response type.
+message FileDescriptorsResponse {
   // files is the file descriptors.
   repeated google.protobuf.FileDescriptorProto file = 1;
 

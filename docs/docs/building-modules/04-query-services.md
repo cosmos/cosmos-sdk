@@ -54,3 +54,26 @@ Here's an example implementation for the bank module:
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/grpc_query.go
 ```
+
+### Calling queries from the State Machine
+
+Introducing `module_query_safe` proto annotation which is used to describe a query is a deterministic (means safe to query), according to ADR-033 a module's Keeper can be called from another module's Keeper and CosmWasm contracts can also directly interact with Query Client.
+
+if the `module_query_safe` annotation set to `true` it means:
+ - The query is deterministic, given a block height it will return the same response upon multiple calls (ex: 1000 or more no.of calls), and doesn't introduce any state-machine breaking changes across the SDK patch version.
+ - Gas consumption never fluctuate across the patch versions.
+
+If you want to use `module_query_safe` annotation for a query, you have to ensure the following things
+ - The query is deterministic and won't introduce state-machine-breaking changes
+ - has its gas tracked, to avoid the attack vector where no gas is accounted for
+ on potentially high-computation queries.
+
+#### Deterministic and Regression tests	
+
+There are tests written for few modules in SDK (which had `module_query_safe` queries) by using [`rapid`](https://pkg.go.dev/pgregory.net/rapid@v0.5.3) which checks the tests using randomly generated states which each query goes through 1000 calls for every query. Also written regression tests with hardcoded values and gas with 1000 calls.
+
+Here's an example of regression tests:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/49ad3b0576f3af6b98e42536acf969792ad7ff98/tests/integration/bank/keeper/deterministic_test.go#L101-L122
+```

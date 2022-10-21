@@ -25,8 +25,29 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
+
+		// delete the votes
+		if proposal.VotingStartTime != nil {
+			keeper.DeleteVotes(ctx, proposal.Id)
+		}
+
 		// delete the proposal.
 		keeper.DeleteProposal(ctx, proposal.Id)
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeCancelProposal,
+				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
+				sdk.NewAttribute(types.AttributeKeyProposalResult, types.AttributeValueProposalCanceled),
+			),
+		)
+
+		logger.Info(
+			"proposal is canceled by proposer",
+			"proposal", proposal.Id,
+			"proposer", proposal.Proposer,
+		)
+
 		return false
 	})
 

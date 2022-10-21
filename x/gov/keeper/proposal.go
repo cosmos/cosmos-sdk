@@ -109,12 +109,12 @@ func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer
 
 	// Check if proposal is active or not
 	if (proposal.Status != v1.StatusDepositPeriod) && (proposal.Status != v1.StatusVotingPeriod) {
-		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
+		return sdkerrors.Wrap(types.ErrInvalidProposal, "proposal should be in the deposit or voting period")
 	}
 
 	// Check proposal voting period is ended.
 	if proposal.VotingEndTime != nil && proposal.VotingEndTime.Before(ctx.BlockTime()) {
-		return sdkerrors.Wrapf(types.ErrInactiveProposal, "voting period is already ended for this proposal %d", proposalID)
+		return sdkerrors.Wrapf(types.ErrVotingPeriodEnded, "voting period is already ended for this proposal %d", proposalID)
 	}
 
 	// update the status to StatusCanceled

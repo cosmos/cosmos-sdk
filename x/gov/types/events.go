@@ -8,6 +8,7 @@ const (
 	EventTypeInactiveProposal = "inactive_proposal"
 	EventTypeActiveProposal   = "active_proposal"
 	EventTypeSignalProposal   = "signal_proposal"
+	EventTypeCancelProposal   = "cancel_proposal"
 
 	AttributeKeyProposalResult     = "proposal_result"
 	AttributeKeyOption             = "option"
@@ -18,7 +19,9 @@ const (
 	AttributeValueProposalPassed   = "proposal_passed"   // met vote quorum
 	AttributeValueProposalRejected = "proposal_rejected" // didn't meet vote quorum
 	AttributeValueProposalFailed   = "proposal_failed"   // error on proposal handler
-	AttributeKeyProposalType       = "proposal_type"
-	AttributeSignalTitle           = "signal_title"
-	AttributeSignalDescription     = "signal_description"
+	AttributeValueProposalCanceled = "proposal_canceled" // error on proposal handler
+
+	AttributeKeyProposalType   = "proposal_type"
+	AttributeSignalTitle       = "signal_title"
+	AttributeSignalDescription = "signal_description"
 )

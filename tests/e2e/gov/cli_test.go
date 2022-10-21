@@ -18,7 +18,7 @@ import (
 
 func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
-	cfg.NumValidators = 1
+	cfg.NumValidators = 2
 	suite.Run(t, testutil.NewIntegrationTestSuite(cfg))
 }
 

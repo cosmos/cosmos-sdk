@@ -152,6 +152,6 @@ message MsgCancelProposalResponse {
   uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
   // canceled_time is the time when proposal is canceled.
   google.protobuf.Timestamp canceled_time = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-  // canceled_height defines the block height at which the proposal is cancel.
+  // canceled_height defines the block height at which the proposal is canceled.
   uint64 canceled_height = 3;
 }

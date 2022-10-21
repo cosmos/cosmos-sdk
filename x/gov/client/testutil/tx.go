@@ -274,6 +274,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 
 func (s *IntegrationTestSuite) TestNewCmdCancelProposal() {
 	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
 
 	testCases := []struct {
 		name         string
@@ -296,6 +297,17 @@ func (s *IntegrationTestSuite) TestNewCmdCancelProposal() {
 			[]string{
 				"asdasd",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0,
+		},
+		{
+			"valid proposal-id but invalid proposer",
+			[]string{
+				"4",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val2.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

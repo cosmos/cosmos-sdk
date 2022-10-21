@@ -61,9 +61,8 @@ func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 // The upper-layer application needs to check it when it needs to use it
 func (k Keeper) burnWithNoCheck(ctx sdk.Context, classID string, nftID string) error {
 	owner := k.GetOwner(ctx, classID, nftID)
-	nftStore := k.getNFTStore(ctx, classID)
-	newNftStore := store.NewKVStoreWrapper(nftStore)
-	newNftStore.Delete([]byte(nftID))
+	nftStore := store.NewKVStoreWrapper(k.getNFTStore(ctx, classID))
+	nftStore.Delete([]byte(nftID))
 
 	k.deleteOwner(ctx, classID, nftID, owner)
 	k.decrTotalSupply(ctx, classID)
@@ -203,28 +202,25 @@ func (k Keeper) HasNFT(ctx sdk.Context, classID, id string) bool {
 }
 
 func (k Keeper) setNFT(ctx sdk.Context, token nft.NFT) {
-	nftStore := k.getNFTStore(ctx, token.ClassId)
-	newNftStore := store.NewKVStoreWrapper(nftStore)
+	nftStore := store.NewKVStoreWrapper(k.getNFTStore(ctx, token.ClassId))
 	bz := k.cdc.MustMarshal(&token)
-	newNftStore.Set([]byte(token.Id), bz)
+	nftStore.Set([]byte(token.Id), bz)
 }
 
 func (k Keeper) setOwner(ctx sdk.Context, classID, nftID string, owner sdk.AccAddress) {
 	st := k.getStore(ctx)
 	st.Set(ownerStoreKey(classID, nftID), owner.Bytes())
 
-	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
-	newOwnerStore := store.NewKVStoreWrapper(ownerStore)
-	newOwnerStore.Set([]byte(nftID), Placeholder)
+	ownerStore := store.NewKVStoreWrapper(k.getClassStoreByOwner(ctx, owner, classID))
+	ownerStore.Set([]byte(nftID), Placeholder)
 }
 
 func (k Keeper) deleteOwner(ctx sdk.Context, classID, nftID string, owner sdk.AccAddress) {
 	st := k.getStore(ctx)
 	st.Delete(ownerStoreKey(classID, nftID))
 
-	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
-	newOwnerStore := store.NewKVStoreWrapper(ownerStore)
-	newOwnerStore.Delete([]byte(nftID))
+	ownerStore := store.NewKVStoreWrapper(k.getClassStoreByOwner(ctx, owner, classID))
+	ownerStore.Delete([]byte(nftID))
 }
 
 func (k Keeper) getNFTStore(ctx sdk.Context, classID string) prefix.Store {

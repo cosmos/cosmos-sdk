@@ -13,8 +13,7 @@ import (
 // into format:
 // prefix_bytes | address_len (1 byte) | address_bytes
 func MigratePrefixAddress(st sdk.KVStore, prefixBz []byte) {
-	oldStore := prefix.NewStore(st, prefixBz)
-	oldStore2 := store.NewKVStoreWrapper(oldStore)
+	oldStore := store.NewKVStoreWrapper(prefix.NewStore(st, prefixBz))
 	newStore := store.NewKVStoreWrapper(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
@@ -27,7 +26,7 @@ func MigratePrefixAddress(st sdk.KVStore, prefixBz []byte) {
 
 		// Set new key on store. Values don't change.
 		newStore.Set(newStoreKey, oldStoreIter.Value())
-		oldStore2.Delete(oldStoreIter.Key())
+		oldStore.Delete(oldStoreIter.Key())
 	}
 }
 
@@ -36,8 +35,7 @@ func MigratePrefixAddress(st sdk.KVStore, prefixBz []byte) {
 // into format:
 // prefix_bytes | address_len (1 byte) | address_bytes | arbitrary_bytes
 func MigratePrefixAddressBytes(st sdk.KVStore, prefixBz []byte) {
-	oldStore := prefix.NewStore(st, prefixBz)
-	oldStore2 := store.NewKVStoreWrapper(oldStore)
+	oldStore := store.NewKVStoreWrapper(prefix.NewStore(st, prefixBz))
 	newStore := store.NewKVStoreWrapper(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
@@ -50,7 +48,7 @@ func MigratePrefixAddressBytes(st sdk.KVStore, prefixBz []byte) {
 
 		// Set new key on store. Values don't change.
 		newStore.Set(newStoreKey, oldStoreIter.Value())
-		oldStore2.Delete(oldStoreIter.Key())
+		oldStore.Delete(oldStoreIter.Key())
 	}
 }
 
@@ -59,8 +57,7 @@ func MigratePrefixAddressBytes(st sdk.KVStore, prefixBz []byte) {
 // into format:
 // prefix_bytes | address_1_len (1 byte) | address_1_bytes | address_2_len (1 byte) | address_2_bytes
 func MigratePrefixAddressAddress(st sdk.KVStore, prefixBz []byte) {
-	oldStore := prefix.NewStore(st, prefixBz)
-	oldStore2 := store.NewKVStoreWrapper(oldStore)
+	oldStore := store.NewKVStoreWrapper(prefix.NewStore(st, prefixBz))
 	newStore := store.NewKVStoreWrapper(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
@@ -73,6 +70,6 @@ func MigratePrefixAddressAddress(st sdk.KVStore, prefixBz []byte) {
 
 		// Set new key on store. Values don't change.
 		newStore.Set(newStoreKey, oldStoreIter.Value())
-		oldStore2.Delete(oldStoreIter.Key())
+		oldStore.Delete(oldStoreIter.Key())
 	}
 }

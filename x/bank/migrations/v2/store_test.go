@@ -25,8 +25,8 @@ func TestSupplyMigration(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
-	newStore := getStore(store)
+	st := ctx.KVStore(bankKey)
+	newStore := getStore(st)
 
 	v1bank.RegisterInterfaces(encCfg.InterfaceRegistry)
 
@@ -46,7 +46,7 @@ func TestSupplyMigration(t *testing.T) {
 	require.NoError(t, err)
 
 	// New supply is indexed by denom.
-	supplyStore := prefix.NewStore(store, types.SupplyKey)
+	supplyStore := prefix.NewStore(st, types.SupplyKey)
 	bz := supplyStore.Get([]byte("foo"))
 	var amount math.Int
 	err = amount.Unmarshal(bz)
@@ -77,8 +77,8 @@ func TestBalanceKeysMigration(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
-	newStore := getStore(store)
+	st := ctx.KVStore(bankKey)
+	newStore := getStore(st)
 
 	_, _, addr := testdata.KeyTestPubAddr()
 
@@ -95,7 +95,7 @@ func TestBalanceKeysMigration(t *testing.T) {
 	fooBarBz, err := encCfg.Codec.Marshal(&fooBarCoin)
 	require.NoError(t, err)
 	newStore.Set(oldKeyFooBar, fooBarBz)
-	require.NotNil(t, store.Get(oldKeyFooBar)) // before store migation zero values can also exist in store.
+	require.NotNil(t, st.Get(oldKeyFooBar)) // before store migation zero values can also exist in store.
 
 	err = v2bank.MigrateStore(ctx, bankKey, encCfg.Codec)
 	require.NoError(t, err)
@@ -104,9 +104,9 @@ func TestBalanceKeysMigration(t *testing.T) {
 	// -7 because we replaced "balances" with 0x02,
 	// +1 because we added length-prefix to address.
 	require.Equal(t, len(oldFooKey)-7+1, len(newKey))
-	require.Nil(t, store.Get(oldFooKey))
-	require.Equal(t, fooBz, store.Get(newKey))
+	require.Nil(t, st.Get(oldFooKey))
+	require.Equal(t, fooBz, st.Get(newKey))
 
 	newKeyFooBar := types.CreatePrefixedAccountStoreKey(addr, []byte(fooBarCoin.Denom))
-	require.Nil(t, store.Get(newKeyFooBar)) // after migration zero balances pruned from store.
+	require.Nil(t, st.Get(newKeyFooBar)) // after migration zero balances pruned from store.
 }

@@ -201,8 +201,8 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 
 	st.Set(key, bz)
 
-	newtStore := store.NewKVStoreWrapper(s.transientStore(ctx))
-	newtStore.Set(key, []byte{})
+	tstore := store.NewKVStoreWrapper(s.transientStore(ctx))
+	tstore.Set(key, []byte{})
 }
 
 // Update stores an updated raw value for a given parameter key assuming the

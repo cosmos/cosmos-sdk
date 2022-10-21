@@ -316,11 +316,10 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metad
 // SetDenomMetaData sets the denominations metadata
 func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata) {
 	st := ctx.KVStore(k.storeKey)
-	denomMetaDataStore := prefix.NewStore(st, types.DenomMetadataPrefix)
-	newStore := store.NewKVStoreWrapper(denomMetaDataStore)
+	denomMetaDataStore := store.NewKVStoreWrapper(prefix.NewStore(st, types.DenomMetadataPrefix))
 
 	m := k.cdc.MustMarshal(&denomMetaData)
-	newStore.Set([]byte(denomMetaData.Base), m)
+	denomMetaDataStore.Set([]byte(denomMetaData.Base), m)
 }
 
 // SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.
@@ -489,14 +488,13 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 	}
 
 	st := ctx.KVStore(k.storeKey)
-	supplyStore := prefix.NewStore(st, types.SupplyKey)
-	newStore := store.NewKVStoreWrapper(supplyStore)
+	supplyStore := store.NewKVStoreWrapper(prefix.NewStore(st, types.SupplyKey))
 
 	// Bank invariants and IBC requires to remove zero coins.
 	if coin.IsZero() {
-		newStore.Delete(conv.UnsafeStrToBytes(coin.GetDenom()))
+		supplyStore.Delete(conv.UnsafeStrToBytes(coin.GetDenom()))
 	} else {
-		newStore.Set([]byte(coin.GetDenom()), intBytes)
+		supplyStore.Set([]byte(coin.GetDenom()), intBytes)
 	}
 }
 

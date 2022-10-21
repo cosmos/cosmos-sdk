@@ -100,9 +100,8 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 // GetBalance returns the balance of a specific denomination for a given account
 // by address.
 func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
-	accountStore := k.getAccountStore(ctx, addr)
-	newAccStore := store.NewKVStoreWrapper(accountStore)
-	bz := newAccStore.Get([]byte(denom))
+	accountStore := store.NewKVStoreWrapper(k.getAccountStore(ctx, addr))
+	bz := accountStore.Get([]byte(denom))
 	balance, err := UnmarshalBalanceCompat(k.cdc, bz, denom)
 	if err != nil {
 		panic(err)

@@ -33,8 +33,7 @@ func migrateSupply(st sdk.KVStore, cdc codec.BinaryCodec) error {
 	}
 
 	// We add a new key for each denom
-	supplyStore := prefix.NewStore(st, SupplyKey)
-	newSupplyStore := store.NewKVStoreWrapper(supplyStore)
+	supplyStore := store.NewKVStoreWrapper(prefix.NewStore(st, SupplyKey))
 
 	// We're sure that SupplyI is a Supply struct, there's no other
 	// implementation.
@@ -46,7 +45,7 @@ func migrateSupply(st sdk.KVStore, cdc codec.BinaryCodec) error {
 			return err
 		}
 
-		newSupplyStore.Set([]byte(coin.Denom), coinBz)
+		supplyStore.Set([]byte(coin.Denom), coinBz)
 	}
 
 	return nil
@@ -60,8 +59,7 @@ func migrateBalanceKeys(st sdk.KVStore) {
 	// new key is of format
 	// prefix (0x02) || addrLen (1 byte) || addrBytes || denomBytes
 	newStore := store.NewKVStoreWrapper(st)
-	oldStore := prefix.NewStore(st, v1.BalancesPrefix)
-	oldStore2 := store.NewKVStoreWrapper(oldStore)
+	oldStore := store.NewKVStoreWrapper(prefix.NewStore(st, v1.BalancesPrefix))
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -73,7 +71,7 @@ func migrateBalanceKeys(st sdk.KVStore) {
 
 		// Set new key on store. Values don't change.
 		newStore.Set(newStoreKey, oldStoreIter.Value())
-		oldStore2.Delete(oldStoreIter.Key())
+		oldStore.Delete(oldStoreIter.Key())
 	}
 }
 
@@ -101,8 +99,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 
 // pruneZeroBalances removes the zero balance addresses from balances store.
 func pruneZeroBalances(st sdk.KVStore, cdc codec.BinaryCodec) error {
-	balancesStore := prefix.NewStore(st, BalancesPrefix)
-	newBalancesStore := store.NewKVStoreWrapper(balancesStore)
+	balancesStore := store.NewKVStoreWrapper(prefix.NewStore(st, BalancesPrefix))
 	iterator := balancesStore.Iterator(nil, nil)
 	defer iterator.Close()
 
@@ -113,7 +110,7 @@ func pruneZeroBalances(st sdk.KVStore, cdc codec.BinaryCodec) error {
 		}
 
 		if balance.IsZero() {
-			newBalancesStore.Delete(iterator.Key())
+			balancesStore.Delete(iterator.Key())
 		}
 	}
 	return nil
@@ -121,8 +118,7 @@ func pruneZeroBalances(st sdk.KVStore, cdc codec.BinaryCodec) error {
 
 // pruneZeroSupply removes zero balance denom from supply store.
 func pruneZeroSupply(st sdk.KVStore) error {
-	supplyStore := prefix.NewStore(st, SupplyKey)
-	newSupplyStore := store.NewKVStoreWrapper(supplyStore)
+	supplyStore := store.NewKVStoreWrapper(prefix.NewStore(st, SupplyKey))
 	iterator := supplyStore.Iterator(nil, nil)
 	defer iterator.Close()
 
@@ -133,7 +129,7 @@ func pruneZeroSupply(st sdk.KVStore) error {
 		}
 
 		if amount.IsZero() {
-			newSupplyStore.Delete(iterator.Key())
+			supplyStore.Delete(iterator.Key())
 		}
 	}
 

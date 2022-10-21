@@ -13,8 +13,7 @@ import (
 // migrateProposals migrates all legacy proposals into MsgExecLegacyContent
 // proposals.
 func migrateProposals(st sdk.KVStore, cdc codec.BinaryCodec) error {
-	propStore := prefix.NewStore(st, v1.ProposalsKeyPrefix)
-	newPropStore := store.NewKVStoreWrapper(propStore)
+	propStore := store.NewKVStoreWrapper(prefix.NewStore(st, v1.ProposalsKeyPrefix))
 
 	iter := propStore.Iterator(nil, nil)
 	defer iter.Close()
@@ -36,7 +35,7 @@ func migrateProposals(st sdk.KVStore, cdc codec.BinaryCodec) error {
 		}
 
 		// Set new value on store.
-		newPropStore.Set(iter.Key(), bz)
+		propStore.Set(iter.Key(), bz)
 	}
 
 	return nil

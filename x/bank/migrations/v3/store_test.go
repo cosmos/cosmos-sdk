@@ -89,7 +89,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		},
 	}
 	denomMetadataStore := prefix.NewStore(st, v2.DenomMetadataPrefix)
-	newDenomMetadataStore := store.NewKVStoreWrapper(denomMetadataStore)
+	newDenomMetadataStore := store.NewKVStoreWrapper(prefix.NewStore(st, v2.DenomMetadataPrefix))
 
 	for i := range []int{0, 1} {
 		key := append(v2.DenomMetadataPrefix, []byte(metaData[i].Base)...)

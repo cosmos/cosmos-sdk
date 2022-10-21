@@ -290,8 +290,7 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 // initBalances sets the balance (multiple coins) for an account by address.
 // An error is returned upon failure.
 func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
-	accountStore := k.getAccountStore(ctx, addr)
-	newAccStore := store.NewKVStoreWrapper(accountStore)
+	accountStore := store.NewKVStoreWrapper(k.getAccountStore(ctx, addr))
 	denomPrefixStores := make(map[string]prefix.Store) // memoize prefix stores
 
 	for i := range balances {
@@ -306,7 +305,7 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 			if err != nil {
 				return err
 			}
-			newAccStore.Set([]byte(balance.Denom), amount)
+			accountStore.Set([]byte(balance.Denom), amount)
 
 			denomPrefixStore, ok := denomPrefixStores[balance.Denom]
 			newDenomPrefixStore := store.NewKVStoreWrapper(denomPrefixStore)
@@ -335,27 +334,25 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 	}
 
-	accountStore := k.getAccountStore(ctx, addr)
-	newAccStore := store.NewKVStoreWrapper(accountStore)
-	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, balance.Denom)
-	newDenomPrefixStore := store.NewKVStoreWrapper(denomPrefixStore)
+	accountStore := store.NewKVStoreWrapper(k.getAccountStore(ctx, addr))
+	denomPrefixStore := store.NewKVStoreWrapper(k.getDenomAddressPrefixStore(ctx, balance.Denom))
 
 	// x/bank invariants prohibit persistence of zero balances
 	if balance.IsZero() {
-		newAccStore.Delete([]byte(balance.Denom))
-		newDenomPrefixStore.Delete(address.MustLengthPrefix(addr))
+		accountStore.Delete([]byte(balance.Denom))
+		denomPrefixStore.Delete(address.MustLengthPrefix(addr))
 	} else {
 		amount, err := balance.Amount.Marshal()
 		if err != nil {
 			return err
 		}
-		newAccStore.Set([]byte(balance.Denom), amount)
+		accountStore.Set([]byte(balance.Denom), amount)
 
 		// Store a reverse index from denomination to account address with a
 		// sentinel value.
 		denomAddrKey := address.MustLengthPrefix(addr)
 		if !denomPrefixStore.Has(denomAddrKey) {
-			newDenomPrefixStore.Set(denomAddrKey, []byte{0})
+			denomPrefixStore.Set(denomAddrKey, []byte{0})
 		}
 	}
 

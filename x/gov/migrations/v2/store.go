@@ -20,8 +20,7 @@ const proposalIDLen = 8
 // into format:
 // <prefix_bytes><proposal_id (8 bytes)><address_len (1 byte)><address_bytes>
 func migratePrefixProposalAddress(st sdk.KVStore, prefixBz []byte) {
-	oldStore := prefix.NewStore(st, prefixBz)
-	oldStore2 := store.NewKVStoreWrapper(oldStore)
+	oldStore := store.NewKVStoreWrapper(prefix.NewStore(st, prefixBz))
 	newStore := store.NewKVStoreWrapper(st)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
@@ -34,7 +33,7 @@ func migratePrefixProposalAddress(st sdk.KVStore, prefixBz []byte) {
 
 		// Set new key on store. Values don't change.
 		newStore.Set(newStoreKey, oldStoreIter.Value())
-		oldStore2.Delete(oldStoreIter.Key())
+		oldStore.Delete(oldStoreIter.Key())
 	}
 }
 

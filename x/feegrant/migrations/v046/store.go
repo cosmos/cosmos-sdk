@@ -10,8 +10,7 @@ import (
 )
 
 func addAllowancesByExpTimeQueue(ctx types.Context, st storetypes.KVStore, cdc codec.BinaryCodec) error {
-	prefixStore := prefix.NewStore(st, FeeAllowanceKeyPrefix)
-	newPrefixStore := store.NewKVStoreWrapper(prefixStore)
+	prefixStore := store.NewKVStoreWrapper(prefix.NewStore(st, FeeAllowanceKeyPrefix))
 	newStore := store.NewKVStoreWrapper(st)
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
@@ -37,7 +36,7 @@ func addAllowancesByExpTimeQueue(ctx types.Context, st storetypes.KVStore, cdc c
 			// store key is not changed in 0.46
 			key := iterator.Key()
 			if exp.Before(ctx.BlockTime()) {
-				newPrefixStore.Delete(key)
+				prefixStore.Delete(key)
 			} else {
 				grantByExpTimeQueueKey := FeeAllowancePrefixQueue(exp, key)
 				newStore.Set(grantByExpTimeQueueKey, []byte{})

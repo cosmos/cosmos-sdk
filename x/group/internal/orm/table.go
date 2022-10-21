@@ -110,8 +110,7 @@ func (a table) Set(st sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) e
 		return err
 	}
 
-	pStore := prefix.NewStore(st, a.prefix[:])
-	newPStore := store.NewKVStoreWrapper(pStore)
+	pStore := store.NewKVStoreWrapper(prefix.NewStore(st, a.prefix[:]))
 
 	var oldValue codec.ProtoMarshaler
 	if a.Has(st, rowID) {
@@ -124,7 +123,7 @@ func (a table) Set(st sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) e
 		return sdkerrors.Wrapf(err, "failed to serialize %T", newValue)
 	}
 
-	newPStore.Set(rowID, newValueEncoded)
+	pStore.Set(rowID, newValueEncoded)
 	for i, itc := range a.afterSet {
 		if err := itc(st, rowID, newValue, oldValue); err != nil {
 			return sdkerrors.Wrapf(err, "interceptor %d failed", i)
@@ -149,14 +148,13 @@ func assertValid(obj codec.ProtoMarshaler) error {
 // Delete iterates through the registered callbacks that remove secondary index
 // keys.
 func (a table) Delete(st sdk.KVStore, rowID RowID) error {
-	pStore := prefix.NewStore(st, a.prefix[:])
-	newPStore := store.NewKVStoreWrapper(pStore)
+	pStore := store.NewKVStoreWrapper(prefix.NewStore(st, a.prefix[:]))
 
 	oldValue := reflect.New(a.model).Interface().(codec.ProtoMarshaler)
 	if err := a.GetOne(st, rowID, oldValue); err != nil {
 		return sdkerrors.Wrap(err, "load old value")
 	}
-	newPStore.Delete(rowID)
+	pStore.Delete(rowID)
 
 	for i, itc := range a.afterDelete {
 		if err := itc(st, rowID, oldValue); err != nil {

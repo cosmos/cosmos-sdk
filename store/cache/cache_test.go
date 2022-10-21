@@ -9,6 +9,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cache"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -87,4 +88,17 @@ func TestReset(t *testing.T) {
 
 	// check if the cache is recreated
 	require.Equal(t, store2, mngr.GetStoreCache(sKey, store))
+}
+
+func TestCacheWrap(t *testing.T) {
+	db := dbm.NewMemDB()
+	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
+
+	sKey := types.NewKVStoreKey("test")
+	tree, err := iavl.NewMutableTree(db, 100, false)
+	require.NoError(t, err)
+	store := iavlstore.UnsafeNewStore(tree)
+
+	cacheWrapper := mngr.GetStoreCache(sKey, store).CacheWrap()
+	require.IsType(t, &cachekv.Store{}, cacheWrapper)
 }

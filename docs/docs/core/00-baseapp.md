@@ -270,9 +270,11 @@ The response contains:
 * `Info (string):` Additional information. May be non-deterministic.
 * `GasWanted (int64)`: Amount of gas requested for transaction. It is provided by users when they generate the transaction.
 * `GasUsed (int64)`: Amount of gas consumed by transaction. During `CheckTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction. Next is an example:
-  ```go reference
+
+```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/ante/basic.go#L95-L95
 ```
+
 * `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./08-events.md) for more.
 * `Codespace (string)`: Namespace for the Code.
 
@@ -389,10 +391,13 @@ Finally, the `InitChain(req abci.RequestInitChain)` method of `BaseApp` calls th
 The [`BeginBlock` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#beginblock) is sent from the underlying Tendermint engine when a block proposal created by the correct proposer is received, before [`DeliverTx`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
 
 * Initialize [`deliverState`](#state-updates) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the `setDeliverState` function.
+
   ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/baseapp.go#L386-L396
-```
+  https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/baseapp.go#L386-L396
+  ```
+  
   This function also resets the [main gas meter](../basics/04-gas-fees.md#main-gas-meter).
+
 * Initialize the [block gas meter](../basics/04-gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters.
 * Run the application's [`beginBlocker()`](../basics/00-app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`BeginBlocker()`](../building-modules/05-beginblock-endblock.md#beginblock) method of each of the application's modules.
 * Set the [`VoteInfos`](https://docs.tendermint.com/master/spec/abci/abci.html#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./02-context.md) so that it can be used during `DeliverTx` and `EndBlock`.

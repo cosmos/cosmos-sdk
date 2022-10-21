@@ -201,6 +201,8 @@ func (mp *priorityMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 			if key.priority < nextHighestPriority {
 				break
 			} else if key.priority == nextHighestPriority {
+				// weight is incorporated into the priority index key only (not sender index) so we must fetch it here
+				// from the scores map.
 				weight := mp.scores[txMeta{nonce: key.nonce, sender: key.sender}].weight
 				if weight < nextPriorityNode.Key().(txMeta).weight {
 					break

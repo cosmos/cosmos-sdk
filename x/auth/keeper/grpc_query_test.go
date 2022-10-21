@@ -167,6 +167,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 		posttests func(res *types.QueryAccountAddressByIDResponse)
 	}{
 		{
+			"invalid request",
+			func() {
+				req = &types.QueryAccountAddressByIDRequest{Id: -1}
+			},
+			false,
+			func(res *types.QueryAccountAddressByIDResponse) {},
+		},
+		{
 			"account address not found",
 			func() {
 				req = &types.QueryAccountAddressByIDRequest{Id: math.MaxInt64}
@@ -179,7 +187,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 			func() {
 				account := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 				suite.accountKeeper.SetAccount(suite.ctx, account)
-				req = &types.QueryAccountAddressByIDRequest{Id: account.GetAccountNumber()}
+				req = &types.QueryAccountAddressByIDRequest{Id: int64(account.GetAccountNumber())}
 			},
 			true,
 			func(res *types.QueryAccountAddressByIDResponse) {

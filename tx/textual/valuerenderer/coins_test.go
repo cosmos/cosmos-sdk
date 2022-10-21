@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"strings"
 	"testing"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
@@ -35,9 +34,8 @@ func TestCoinsJsonTestcases(t *testing.T) {
 					ctx = context.WithValue(ctx, mockCoinMetadataKey(coin.Denom), tc.Metadata[coin.Denom])
 				}
 
-				b := new(strings.Builder)
 				listValue := NewGenericList(tc.Proto)
-				err = vr.Format(ctx, protoreflect.ValueOf(listValue), b)
+				screens, err := vr.Format(ctx, protoreflect.ValueOf(listValue))
 
 				if tc.Error {
 					require.Error(t, err)
@@ -45,7 +43,8 @@ func TestCoinsJsonTestcases(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				require.Equal(t, tc.Text, b.String())
+				require.Equal(t, 1, len(screens))
+				require.Equal(t, tc.Text, screens[0].Text)
 			}
 
 			// TODO Add parsing tests

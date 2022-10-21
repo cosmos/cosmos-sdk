@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -32,7 +32,7 @@ func (s *KeeperTestSuite) TestValidator() {
 	valTokens := keeper.TokensFromConsensusPower(ctx, 10)
 
 	// test how the validator is set from a purely unbonbed pool
-	validator := teststaking.NewValidator(s.T(), valAddr, valPubKey)
+	validator := testutil.NewValidator(s.T(), valAddr, valPubKey)
 	validator, _ = validator.AddTokensFromDel(valTokens)
 	require.Equal(stakingtypes.Unbonded, validator.Status)
 	require.Equal(valTokens, validator.Tokens)
@@ -90,7 +90,7 @@ func (s *KeeperTestSuite) TestValidatorBasics() {
 	var validators [3]stakingtypes.Validator
 	powers := []int64{9, 8, 7}
 	for i, power := range powers {
-		validators[i] = teststaking.NewValidator(s.T(), sdk.ValAddress(PKs[i].Address().Bytes()), PKs[i])
+		validators[i] = testutil.NewValidator(s.T(), sdk.ValAddress(PKs[i].Address().Bytes()), PKs[i])
 		validators[i].Status = stakingtypes.Unbonded
 		validators[i].Tokens = math.ZeroInt()
 		tokens := keeper.TokensFromConsensusPower(ctx, power)
@@ -189,7 +189,7 @@ func (s *KeeperTestSuite) TestUpdateValidatorByPowerIndex() {
 	valTokens := keeper.TokensFromConsensusPower(ctx, 100)
 
 	// add a validator
-	validator := teststaking.NewValidator(s.T(), valAddr, PKs[0])
+	validator := testutil.NewValidator(s.T(), valAddr, PKs[0])
 	validator, delSharesCreated := validator.AddTokensFromDel(valTokens)
 	require.Equal(stakingtypes.Unbonded, validator.Status)
 	require.Equal(valTokens, validator.Tokens)
@@ -231,7 +231,7 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesPowerDecrease() {
 	var validators [2]stakingtypes.Validator
 
 	for i, power := range powers {
-		validators[i] = teststaking.NewValidator(s.T(), sdk.ValAddress(PKs[i].Address().Bytes()), PKs[i])
+		validators[i] = testutil.NewValidator(s.T(), sdk.ValAddress(PKs[i].Address().Bytes()), PKs[i])
 		tokens := keeper.TokensFromConsensusPower(ctx, power)
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
 
@@ -282,8 +282,8 @@ func (s *KeeperTestSuite) TestUpdateValidatorCommission() {
 	)
 	commission2 := stakingtypes.NewCommission(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(3, 1), sdk.NewDecWithPrec(1, 1))
 
-	val1 := teststaking.NewValidator(s.T(), sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0])
-	val2 := teststaking.NewValidator(s.T(), sdk.ValAddress(PKs[1].Address().Bytes()), PKs[1])
+	val1 := testutil.NewValidator(s.T(), sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0])
+	val2 := testutil.NewValidator(s.T(), sdk.ValAddress(PKs[1].Address().Bytes()), PKs[1])
 
 	val1, _ = val1.SetInitialCommission(commission1)
 	val2, _ = val2.SetInitialCommission(commission2)
@@ -339,7 +339,7 @@ func (s *KeeperTestSuite) TestValidatorToken() {
 	addTokens := keeper.TokensFromConsensusPower(ctx, 10)
 	delTokens := keeper.TokensFromConsensusPower(ctx, 5)
 
-	validator := teststaking.NewValidator(s.T(), valAddr, valPubKey)
+	validator := testutil.NewValidator(s.T(), valAddr, valPubKey)
 	validator, _ = keeper.AddValidatorTokensAndShares(ctx, validator, addTokens)
 	require.Equal(addTokens, validator.Tokens)
 	validator, _ = keeper.GetValidator(ctx, valAddr)
@@ -361,7 +361,7 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 
 	valPubKey := PKs[0]
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
-	validator := teststaking.NewValidator(s.T(), valAddr, valPubKey)
+	validator := testutil.NewValidator(s.T(), valAddr, valPubKey)
 	addTokens := keeper.TokensFromConsensusPower(ctx, 10)
 
 	// set unbonding validator
@@ -375,7 +375,7 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 
 	// add another unbonding validator
 	valAddr1 := sdk.ValAddress(PKs[1].Address().Bytes())
-	validator1 := teststaking.NewValidator(s.T(), valAddr1, PKs[1])
+	validator1 := testutil.NewValidator(s.T(), valAddr1, PKs[1])
 	validator1.UnbondingHeight = endHeight
 	validator1.UnbondingTime = endTime
 	keeper.InsertUnbondingValidatorQueue(ctx, validator1)
@@ -408,7 +408,7 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	require.False(found)
 
 	keeper.SetUnbondingValidatorsQueue(ctx, endTime, endHeight, []string{valAddr.String()})
-	validator = teststaking.NewValidator(s.T(), valAddr, valPubKey)
+	validator = testutil.NewValidator(s.T(), valAddr, valPubKey)
 	validator, _ = validator.AddTokensFromDel(addTokens)
 	validator.Status = stakingtypes.Unbonding
 	keeper.SetValidator(ctx, validator)

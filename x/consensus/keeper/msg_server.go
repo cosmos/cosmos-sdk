@@ -34,15 +34,8 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 	if err := types.Validate(tmtypes.ConsensusParamsFromProto(consensusParams)); err != nil {
 		return nil, err
 	}
-	k.Set(ctx, &consensusParams)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, req.Authority),
-		),
-	)
+	k.Set(ctx, &consensusParams)
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }

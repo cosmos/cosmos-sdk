@@ -70,6 +70,7 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 		NewCmdVote(),
 		NewCmdWeightedVote(),
 		NewCmdSubmitProposal(),
+		NewCmdDraftProposal(),
 
 		// Deprecated
 		cmdSubmitLegacyProp,

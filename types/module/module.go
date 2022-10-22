@@ -36,6 +36,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -118,7 +119,8 @@ func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *
 // TODO: Remove clientCtx argument.
 // REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
-	for _, b := range bm {
+	values := maps.Values(bm)
+	for _, b := range values {
 		if cmd := b.GetTxCmd(); cmd != nil {
 			rootTxCmd.AddCommand(cmd)
 		}
@@ -130,7 +132,8 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
 // TODO: Remove clientCtx argument.
 // REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
-	for _, b := range bm {
+	values := maps.Values(bm)
+	for _, b := range values {
 		if cmd := b.GetQueryCmd(); cmd != nil {
 			rootQueryCmd.AddCommand(cmd)
 		}
@@ -189,14 +192,8 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
 // RegisterInvariants is a placeholder function register no invariants
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route empty module message route
-func (GenesisOnlyAppModule) Route() sdk.Route { return sdk.Route{} }
-
 // QuerierRoute returns an empty module querier route
 func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
-
-// LegacyQuerierHandler returns an empty module querier
-func (gam GenesisOnlyAppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
 // RegisterServices registers all services.
 func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
@@ -274,14 +271,16 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 
 // RegisterInvariants registers all module invariants
 func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
-	for _, module := range m.Modules {
+	modules := maps.Values(m.Modules)
+	for _, module := range modules {
 		module.RegisterInvariants(ir)
 	}
 }
 
 // RegisterServices registers all module services
 func (m *Manager) RegisterServices(cfg Configurator) {
-	for _, module := range m.Modules {
+	modules := maps.Values(m.Modules)
+	for _, module := range modules {
 		module.RegisterServices(cfg)
 	}
 }
@@ -322,12 +321,41 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 // ExportGenesis performs export genesis functionality for modules
 func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string]json.RawMessage {
+	return m.ExportGenesisForModules(ctx, cdc, []string{})
+}
+
+// ExportGenesisForModules performs export genesis functionality for modules
+func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, modulesToExport []string) map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
-	for _, moduleName := range m.OrderExportGenesis {
+	if len(modulesToExport) == 0 {
+		for _, moduleName := range m.OrderExportGenesis {
+			genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
+		}
+
+		return genesisData
+	}
+
+	// verify modules exists in app, so that we don't panic in the middle of an export
+	if err := m.checkModulesExists(modulesToExport); err != nil {
+		panic(err)
+	}
+
+	for _, moduleName := range modulesToExport {
 		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
 	}
 
 	return genesisData
+}
+
+// checkModulesExists verifies that all modules in the list exist in the app
+func (m *Manager) checkModulesExists(moduleName []string) error {
+	for _, name := range moduleName {
+		if _, ok := m.Modules[name]; !ok {
+			return fmt.Errorf("module %s does not exist", name)
+		}
+	}
+
+	return nil
 }
 
 // assertNoForgottenModules checks that we didn't forget any modules in the
@@ -337,13 +365,15 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 	for _, m := range moduleNames {
 		ms[m] = true
 	}
+	allKeys := maps.Keys(m.Modules)
 	var missing []string
-	for m := range m.Modules {
+	for _, m := range allKeys {
 		if !ms[m] {
 			missing = append(missing, m)
 		}
 	}
 	if len(missing) != 0 {
+		sort.Strings(missing)
 		panic(fmt.Sprintf(
 			"%s: all modules must be defined when setting %s, missing: %v", setOrderFnName, setOrderFnName, missing))
 	}
@@ -514,13 +544,7 @@ func (m *Manager) GetVersionMap() VersionMap {
 
 // ModuleNames returns list of all module names, without any particular order.
 func (m *Manager) ModuleNames() []string {
-	ms := make([]string, len(m.Modules))
-	i := 0
-	for m := range m.Modules {
-		ms[i] = m
-		i++
-	}
-	return ms
+	return maps.Keys(m.Modules)
 }
 
 // DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,

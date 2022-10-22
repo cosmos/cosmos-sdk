@@ -19,8 +19,10 @@ type memIterator struct {
 }
 
 func newMemIterator(start, end []byte, items *dbm.MemDB, deleted map[string]struct{}, ascending bool) *memIterator {
-	var iter types.Iterator
-	var err error
+	var (
+		iter types.Iterator
+		err  error
+	)
 
 	if ascending {
 		iter, err = items.Iterator(start, end)
@@ -34,9 +36,8 @@ func newMemIterator(start, end []byte, items *dbm.MemDB, deleted map[string]stru
 
 	return &memIterator{
 		Iterator: iter,
-
-		lastKey: nil,
-		deleted: deleted,
+		lastKey:  nil,
+		deleted:  deleted,
 	}
 }
 

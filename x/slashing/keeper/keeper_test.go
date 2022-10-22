@@ -11,11 +11,11 @@ import (
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	slashingtestutil "github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -38,7 +38,7 @@ type KeeperTestSuite struct {
 
 func (s *KeeperTestSuite) SetupTest() {
 	key := sdk.NewKVStoreKey(slashingtypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	testCtx := sdktestutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
@@ -55,7 +55,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		sdk.AccAddress(crypto.AddressHash([]byte(govtypes.ModuleName))).String(),
 	)
 	// set test params
-	s.slashingKeeper.SetParams(ctx, testslashing.TestParams())
+	s.slashingKeeper.SetParams(ctx, testutil.TestParams())
 
 	slashingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)

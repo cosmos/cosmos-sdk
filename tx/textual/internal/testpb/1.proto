@@ -3,6 +3,7 @@ syntax = "proto3";
 option go_package = "cosmossdk.io/tx/textual/internal/testpb";
 
 import "google/protobuf/descriptor.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
@@ -12,8 +13,9 @@ enum Enumeration {
   Two = 1;
 }
 
-// A contains fields that are parseable by SIGN_MODE_TEXTUAL.
+// A is used for testing value renderers. 
 message A {
+  // Fields that are parseable by SIGN_MODE_TEXTUAL.
   uint32                   UINT32         = 1;
   uint64                   UINT64         = 2;
   int32                    INT32          = 3;
@@ -24,20 +26,16 @@ message A {
   repeated cosmos.base.v1beta1.Coin COINS = 8;
   bytes                             BYTES = 9;
   google.protobuf.Timestamp    TIMESTAMP = 10;
-}
+  google.protobuf.Duration      DURATION = 11;
 
-// B contains fields that are not parseable by SIGN_MODE_TEXTUAL, some fields
-// may be moved to A at some point.
-message B {
-  int32          INT32    = 1;
-  sint32         SINT32   = 2;
-  int64          INT64    = 3;
-  sint64         SING64   = 4;
-  sfixed32       SFIXED32 = 5;
-  fixed32        FIXED32  = 6;
-  float          FLOAT    = 7;
-  sfixed64       SFIXED64 = 8;
-  fixed64        FIXED64  = 9;
-  double         DOUBLE   = 10;
-  map<string, B> MAP      = 11;
+  // Fields that are not handled by SIGN_MODE_TEXTUAL.
+  sint32         SINT32   = 101;
+  sint64         SINT64   = 102;
+  sfixed32       SFIXED32 = 105;
+  fixed32        FIXED32  = 106;
+  float          FLOAT    = 107;
+  sfixed64       SFIXED64 = 108;
+  fixed64        FIXED64  = 109;
+  double         DOUBLE   = 110;
+  map<string, A> MAP      = 111;
 }

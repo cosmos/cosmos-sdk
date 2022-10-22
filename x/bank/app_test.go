@@ -3,6 +3,7 @@ package bank_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -20,6 +21,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/gov"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -39,6 +43,7 @@ type (
 		accSeqs          []uint64
 		privKeys         []cryptotypes.PrivKey
 		expectedBalances []expectedBalance
+		expInError       []string
 	}
 )
 
@@ -105,7 +110,10 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 		configurator.AuthModule(),
 		configurator.StakingModule(),
 		configurator.TxModule(),
-		configurator.BankModule()),
+		configurator.ConsensusModule(),
+		configurator.BankModule(),
+		configurator.GovModule(),
+	),
 		startupCfg, &res.BankKeeper, &res.AccountKeeper)
 
 	res.App = app
@@ -331,5 +339,107 @@ func TestMsgMultiSendDependent(t *testing.T) {
 		for _, eb := range tc.expectedBalances {
 			checkBalance(t, baseApp, eb.addr, eb.coins, s.BankKeeper)
 		}
+	}
+}
+
+func TestMsgSetSendEnabled(t *testing.T) {
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+
+	genAccs := []authtypes.GenesisAccount{acc1}
+	s := createTestSuite(t, genAccs)
+
+	ctx := s.App.BaseApp.NewContext(false, tmproto.Header{})
+	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
+	addr1Str := addr1.String()
+	govAddr := s.BankKeeper.GetAuthority()
+	goodGovProp, err := govv1.NewMsgSubmitProposal(
+		[]sdk.Msg{
+			types.NewMsgSetSendEnabled(govAddr, nil, nil),
+		},
+		sdk.Coins{{"foocoin", sdk.NewInt(5)}},
+		addr1Str,
+		"set default send enabled to true",
+	)
+	require.NoError(t, err, "making goodGovProp")
+	badGovProp, err := govv1.NewMsgSubmitProposal(
+		[]sdk.Msg{
+			types.NewMsgSetSendEnabled(govAddr, []*types.SendEnabled{{"bad coin name!", true}}, nil),
+		},
+		sdk.Coins{{"foocoin", sdk.NewInt(5)}},
+		addr1Str,
+		"set default send enabled to true",
+	)
+	require.NoError(t, err, "making badGovProp")
+
+	testCases := []appTestCase{
+		{
+			desc:       "wrong authority",
+			expSimPass: false,
+			expPass:    false,
+			msgs: []sdk.Msg{
+				types.NewMsgSetSendEnabled(addr1Str, nil, nil),
+			},
+			accSeqs: []uint64{0},
+			expInError: []string{
+				"invalid authority",
+				"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+				addr1Str,
+				"expected gov account as only signer for proposal message",
+			},
+		},
+		{
+			desc:       "right authority wrong signer",
+			expSimPass: false,
+			expPass:    false,
+			msgs: []sdk.Msg{
+				types.NewMsgSetSendEnabled(govAddr, nil, nil),
+			},
+			accSeqs: []uint64{1}, // wrong signer, so this sequence doesn't actually get used.
+			expInError: []string{
+				"pubKey does not match signer address",
+				govAddr,
+				"with signer index: 0",
+				"invalid pubkey",
+			},
+		},
+		{
+			desc:       "submitted good as gov prop",
+			expSimPass: true,
+			expPass:    true,
+			msgs: []sdk.Msg{
+				goodGovProp,
+			},
+			accSeqs:    []uint64{1},
+			expInError: nil,
+		},
+		{
+			desc:       "submitted bad as gov prop",
+			expSimPass: false,
+			expPass:    false,
+			msgs: []sdk.Msg{
+				badGovProp,
+			},
+			accSeqs: []uint64{2},
+			expInError: []string{
+				"invalid denom: bad coin name!",
+				"invalid proposal message",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(tt *testing.T) {
+			header := tmproto.Header{Height: s.App.LastBlockHeight() + 1}
+			txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
+			_, _, err = simtestutil.SignCheckDeliver(tt, txGen, s.App.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
+			if len(tc.expInError) > 0 {
+				require.Error(tt, err)
+				for _, exp := range tc.expInError {
+					assert.ErrorContains(tt, err, exp)
+				}
+			} else {
+				require.NoError(tt, err)
+			}
+		})
 	}
 }

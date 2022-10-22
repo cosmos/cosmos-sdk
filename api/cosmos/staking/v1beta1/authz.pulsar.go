@@ -6,7 +6,7 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -1286,6 +1286,7 @@ type StakeAuthorization struct {
 	// validators is the oneof that represents either allow_list or deny_list
 	//
 	// Types that are assignable to Validators:
+	//
 	//	*StakeAuthorization_AllowList
 	//	*StakeAuthorization_DenyList
 	Validators isStakeAuthorization_Validators `protobuf_oneof:"validators"`

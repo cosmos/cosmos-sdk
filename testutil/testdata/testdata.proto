@@ -18,7 +18,7 @@ message Cat {
 
 message Bird {
   string species = 1;
-  int32  color = 2;
+  int32  color   = 2;
 }
 
 message HasAnimal {

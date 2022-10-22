@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"golang.org/x/exp/maps"
+
+	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -195,15 +197,15 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
-			provideModuleBasic,
-			provideModule))
+			ProvideModuleBasic,
+			ProvideModule))
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type bankInputs struct {
+type BankInputs struct {
 	depinject.In
 
 	ModuleKey depinject.OwnModuleKey
@@ -218,14 +220,14 @@ type bankInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-type bankOutputs struct {
+type BankOutputs struct {
 	depinject.Out
 
 	BankKeeper keeper.BaseKeeper
 	Module     runtime.AppModuleWrapper
 }
 
-func provideModule(in bankInputs) bankOutputs {
+func ProvideModule(in BankInputs) BankOutputs {
 	// Configure blocked module accounts.
 	//
 	// Default behavior for blockedAddresses is to regard any module mentioned in
@@ -236,7 +238,8 @@ func provideModule(in bankInputs) bankOutputs {
 			blockedAddresses[authtypes.NewModuleAddress(moduleName).String()] = true
 		}
 	} else {
-		for _, permission := range in.AccountKeeper.GetModulePermissions() {
+		permissions := maps.Values(in.AccountKeeper.GetModulePermissions())
+		for _, permission := range permissions {
 			blockedAddresses[permission.GetAddress().String()] = true
 		}
 	}
@@ -256,5 +259,5 @@ func provideModule(in bankInputs) bankOutputs {
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper, in.LegacySubspace)
 
-	return bankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
+	return BankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
 }

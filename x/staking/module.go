@@ -18,6 +18,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -37,7 +38,8 @@ const (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
+	_ module.EndBlockAppModule   = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -186,16 +188,16 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
-		appmodule.Invoke(invokeSetStakingHooks),
+		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Invoke(InvokeSetStakingHooks),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type stakingInputs struct {
+type StakingInputs struct {
 	depinject.In
 
 	Config        *modulev1.Module
@@ -210,14 +212,14 @@ type stakingInputs struct {
 }
 
 // Dependency Injection Outputs
-type stakingOutputs struct {
+type StakingOutputs struct {
 	depinject.Out
 
 	StakingKeeper *keeper.Keeper
 	Module        runtime.AppModuleWrapper
 }
 
-func provideModule(in stakingInputs) stakingOutputs {
+func ProvideModule(in StakingInputs) StakingOutputs {
 	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
 	if !ok {
 		// default to governance authority if not provided
@@ -232,10 +234,10 @@ func provideModule(in stakingInputs) stakingOutputs {
 		authority.String(),
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
-	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
+	return StakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
 }
 
-func invokeSetStakingHooks(
+func InvokeSetStakingHooks(
 	config *modulev1.Module,
 	keeper *keeper.Keeper,
 	stakingHooks map[string]types.StakingHooksWrapper,

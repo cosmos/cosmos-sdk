@@ -14,6 +14,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -28,16 +29,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// SimAppChainID hardcoded chainID for simulation
-const (
-	DefaultGenTxGas = 10000000
-	SimAppChainID   = "simulation-app"
-)
+const DefaultGenTxGas = 10000000
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // SimApp testing.
-var DefaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
+var DefaultConsensusParams = &tmproto.ConsensusParams{
+	Block: &tmproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
@@ -186,8 +183,11 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 }
 
 // GenesisStateWithValSet returns a new genesis state with the validator set
-func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawMessage,
-	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
+func GenesisStateWithValSet(
+	codec codec.Codec,
+	genesisState map[string]json.RawMessage,
+	valSet *tmtypes.ValidatorSet,
+	genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
 ) (map[string]json.RawMessage, error) {
 	// set genesis accounts
@@ -227,6 +227,7 @@ func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawM
 		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), math.LegacyOneDec()))
 
 	}
+
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
 	genesisState[stakingtypes.ModuleName] = codec.MustMarshalJSON(stakingGenesis)

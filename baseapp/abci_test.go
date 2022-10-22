@@ -1,10 +1,14 @@
 package baseapp
 
 import (
+	"encoding/json"
+	"errors"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
@@ -12,7 +16,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+func defaultLogger() log.Logger {
+	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+}
 
 func TestGetBlockRentionHeight(t *testing.T) {
 	logger := defaultLogger()
@@ -110,7 +119,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 		tc.bapp.InitChain(abci.RequestInitChain{
-			ConsensusParams: &abci.ConsensusParams{
+			ConsensusParams: &tmproto.ConsensusParams{
 				Evidence: &tmproto.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
 				},
@@ -163,4 +172,47 @@ func TestBaseAppCreateQueryContext(t *testing.T) {
 			}
 		})
 	}
+}
+
+type paramStore struct {
+	db *dbm.MemDB
+}
+
+var ParamstoreKey = []byte("paramstore")
+
+func (ps *paramStore) Set(_ sdk.Context, value *tmproto.ConsensusParams) {
+	bz, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+
+	ps.db.Set(ParamstoreKey, bz)
+}
+
+func (ps *paramStore) Has(_ sdk.Context) bool {
+	ok, err := ps.db.Has(ParamstoreKey)
+	if err != nil {
+		panic(err)
+	}
+
+	return ok
+}
+
+func (ps paramStore) Get(_ sdk.Context) (*tmproto.ConsensusParams, error) {
+	bz, err := ps.db.Get(ParamstoreKey)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(bz) == 0 {
+		return nil, errors.New("no consensus params")
+	}
+
+	var params tmproto.ConsensusParams
+
+	if err := json.Unmarshal(bz, &params); err != nil {
+		panic(err)
+	}
+
+	return &params, nil
 }

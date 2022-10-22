@@ -5,7 +5,7 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -7533,10 +7533,10 @@ func (x *MemberRequest) GetMetadata() string {
 
 // ThresholdDecisionPolicy is a decision policy where a proposal passes when it
 // satisfies the two following conditions:
-// 1. The sum of all `YES` voters' weights is greater or equal than the defined
-//    `threshold`.
-// 2. The voting and execution periods of the proposal respect the parameters
-//    given by `windows`.
+//  1. The sum of all `YES` voters' weights is greater or equal than the defined
+//     `threshold`.
+//  2. The voting and execution periods of the proposal respect the parameters
+//     given by `windows`.
 type ThresholdDecisionPolicy struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -7585,10 +7585,10 @@ func (x *ThresholdDecisionPolicy) GetWindows() *DecisionPolicyWindows {
 
 // PercentageDecisionPolicy is a decision policy where a proposal passes when
 // it satisfies the two following conditions:
-// 1. The percentage of all `YES` voters' weights out of the total group weight
-//    is greater or equal than the given `percentage`.
-// 2. The voting and execution periods of the proposal respect the parameters
-//    given by `windows`.
+//  1. The percentage of all `YES` voters' weights out of the total group weight
+//     is greater or equal than the given `percentage`.
+//  2. The voting and execution periods of the proposal respect the parameters
+//     given by `windows`.
 type PercentageDecisionPolicy struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -7950,7 +7950,7 @@ type Proposal struct {
 	// whichever happens first.
 	FinalTallyResult *TallyResult `protobuf:"bytes,9,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result,omitempty"`
 	// voting_period_end is the timestamp before which voting must be done.
-	// Unless a successfull MsgExec is called before (to execute a proposal whose
+	// Unless a successful MsgExec is called before (to execute a proposal whose
 	// tally is successful before the voting period ends), tallying will be done
 	// at this point, and the `final_tally_result`and `status` fields will be
 	// accordingly updated.

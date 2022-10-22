@@ -6,7 +6,6 @@ test_patterns = [
 ]
 
 exclude_patterns = [
-    "third_party/proto/**",
     "testutil/**",
     "proto/cosmos/**",
     "contrib/**"

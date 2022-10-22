@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -36,7 +37,6 @@ type SimTestSuite struct {
 }
 
 func (suite *SimTestSuite) SetupTest() {
-
 	var (
 		appBuilder *runtime.AppBuilder
 		err        error
@@ -46,6 +46,7 @@ func (suite *SimTestSuite) SetupTest() {
 		configurator.ParamsModule(),
 		configurator.BankModule(),
 		configurator.StakingModule(),
+		configurator.ConsensusModule(),
 		configurator.TxModule(),
 	), &suite.accountKeeper, &suite.bankKeeper, &suite.cdc, &appBuilder)
 

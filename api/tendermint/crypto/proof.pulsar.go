@@ -4,7 +4,7 @@ package crypto
 import (
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -2919,7 +2919,7 @@ func (x *DominoOp) GetOutput() string {
 }
 
 // ProofOp defines an operation used for calculating Merkle root
-// The data could be arbitrary format, providing nessecary data
+// The data could be arbitrary format, providing necessary data
 // for example neighbouring node hash
 type ProofOp struct {
 	state         protoimpl.MessageState

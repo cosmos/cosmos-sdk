@@ -1,6 +1,7 @@
 package v4
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -45,24 +46,33 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 // AddProposerAddressToProposal will add proposer to proposal
 // and set to the store
 func AddProposerAddressToProposal(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, proposals map[uint64]string) error {
-	proposalIDS := make([]uint64, 0, len(proposals))
+	proposalIDs := make([]uint64, 0, len(proposals))
 
-	for proposerID := range proposals {
-		proposalIDS = append(proposalIDS, proposerID)
+	for proposalID := range proposals {
+		proposalIDs = append(proposalIDs, proposalID)
 	}
-	// sort the proposalIDS
-	sort.Slice(proposalIDS, func(i, j int) bool { return proposalIDS[i] < proposalIDS[j] })
+
+	// sort the proposalIDs
+	sort.Slice(proposalIDs, func(i, j int) bool { return proposalIDs[i] < proposalIDs[j] })
 
 	store := ctx.KVStore(storeKey)
 
-	for _, proposerID := range proposalIDS {
-		bz := store.Get(types.ProposalKey(proposerID))
+	for _, proposalID := range proposalIDs {
+		if len(proposals[proposalID]) == 0 {
+			return fmt.Errorf("found missing proposer for proposal ID: %d", proposalID)
+		}
+
+		if _, err := sdk.AccAddressFromBech32(proposals[proposalID]); err != nil {
+			return fmt.Errorf("invalid proposer address : %s", proposals[proposalID])
+		}
+
+		bz := store.Get(types.ProposalKey(proposalID))
 		var proposal govv1.Proposal
 		if err := cdc.Unmarshal(bz, &proposal); err != nil {
 			panic(err)
 		}
 
-		proposal.Proposer = proposals[proposerID]
+		proposal.Proposer = proposals[proposalID]
 
 		// set the new proposal with proposer
 		bz, err := cdc.Marshal(&proposal)

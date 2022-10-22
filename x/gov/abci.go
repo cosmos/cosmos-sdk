@@ -26,12 +26,10 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			panic(err)
 		}
 
-		// delete the votes
 		if proposal.VotingStartTime != nil {
 			keeper.DeleteVotes(ctx, proposal.Id)
 		}
 
-		// delete the proposal.
 		keeper.DeleteProposal(ctx, proposal.Id)
 
 		ctx.EventManager().EmitEvent(

@@ -298,7 +298,10 @@ func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 //
 //nolint:interfacer
 func NewMsgCancelProposal(proposalID uint64, proposer sdk.AccAddress) *MsgCancelProposal {
-	return &MsgCancelProposal{proposalID, proposer.String()}
+	return &MsgCancelProposal{
+		ProposalId: proposalID,
+		Proposer:   proposer.String(),
+	}
 }
 
 // Route implements Msg

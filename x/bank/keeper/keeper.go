@@ -289,7 +289,6 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metad
 	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataPrefix)
 
 	iterator := denomMetaDataStore.Iterator(nil, nil)
-
 	defer util.LogDeferred(ctx.Logger(), func() error { return iterator.Close() })
 
 	for ; iterator.Valid(); iterator.Next() {

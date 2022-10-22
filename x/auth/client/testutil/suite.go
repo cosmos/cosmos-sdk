@@ -30,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
@@ -1428,11 +1427,11 @@ func (s *IntegrationTestSuite) TestQueryModuleAccountByNameCmd() {
 				var res authtypes.QueryModuleAccountByNameResponse
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 
-				var account types.AccountI
+				var account authtypes.AccountI
 				err := val.ClientCtx.InterfaceRegistry.UnpackAny(res.Account, &account)
 				s.Require().NoError(err)
 
-				moduleAccount, ok := account.(types.ModuleAccountI)
+				moduleAccount, ok := account.(authtypes.ModuleAccountI)
 				s.Require().True(ok)
 				s.Require().Equal(tc.moduleName, moduleAccount.GetName())
 			}

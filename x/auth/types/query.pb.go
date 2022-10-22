@@ -392,8 +392,6 @@ func (m *QueryModuleAccountsResponse) GetAccounts() []*types.Any {
 }
 
 // QueryModuleAccountByNameRequest is the request type for the Query/ModuleAccountByName RPC method.
-//
-// Since: cosmos-sdk 0.47
 type QueryModuleAccountByNameRequest struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
@@ -439,8 +437,6 @@ func (m *QueryModuleAccountByNameRequest) GetName() string {
 }
 
 // QueryModuleAccountByNameResponse is the response type for the Query/ModuleAccountByName RPC method.
-//
-// Since: cosmos-sdk 0.47
 type QueryModuleAccountByNameResponse struct {
 	Account *types.Any `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
 }
@@ -1078,8 +1074,6 @@ type QueryClient interface {
 	// Since: cosmos-sdk 0.46
 	ModuleAccounts(ctx context.Context, in *QueryModuleAccountsRequest, opts ...grpc.CallOption) (*QueryModuleAccountsResponse, error)
 	// ModuleAccountByName returns the module account info by module name
-	//
-	// Since: cosmos-sdk 0.47
 	ModuleAccountByName(ctx context.Context, in *QueryModuleAccountByNameRequest, opts ...grpc.CallOption) (*QueryModuleAccountByNameResponse, error)
 	// Bech32Prefix queries bech32Prefix
 	//
@@ -1219,8 +1213,6 @@ type QueryServer interface {
 	// Since: cosmos-sdk 0.46
 	ModuleAccounts(context.Context, *QueryModuleAccountsRequest) (*QueryModuleAccountsResponse, error)
 	// ModuleAccountByName returns the module account info by module name
-	//
-	// Since: cosmos-sdk 0.47
 	ModuleAccountByName(context.Context, *QueryModuleAccountByNameRequest) (*QueryModuleAccountByNameResponse, error)
 	// Bech32Prefix queries bech32Prefix
 	//

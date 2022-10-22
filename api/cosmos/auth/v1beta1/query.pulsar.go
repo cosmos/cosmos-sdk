@@ -8822,8 +8822,6 @@ func (x *QueryModuleAccountsResponse) GetAccounts() []*anypb.Any {
 }
 
 // QueryModuleAccountByNameRequest is the request type for the Query/ModuleAccountByName RPC method.
-//
-// Since: cosmos-sdk 0.47
 type QueryModuleAccountByNameRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -8860,8 +8858,6 @@ func (x *QueryModuleAccountByNameRequest) GetName() string {
 }
 
 // QueryModuleAccountByNameResponse is the response type for the Query/ModuleAccountByName RPC method.
-//
-// Since: cosmos-sdk 0.47
 type QueryModuleAccountByNameResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -43,6 +43,11 @@ func GetQueryCmd() *cobra.Command {
 		GetAccountCmd(),
 		GetAccountsCmd(),
 		QueryParamsCmd(),
+<<<<<<< HEAD
+=======
+		QueryModuleAccountsCmd(),
+		QueryModuleAccountByNameCmd(),
+>>>>>>> ddf5cf0d8 (feat(cli): add module-account cli cmd and grpc get api (#13612))
 	)
 
 	return cmd
@@ -143,6 +148,70 @@ func GetAccountsCmd() *cobra.Command {
 	return cmd
 }
 
+<<<<<<< HEAD
+=======
+// QueryAllModuleAccountsCmd returns a list of all the existing module accounts with their account information and permissions
+func QueryModuleAccountsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "module-accounts",
+		Short: "Query all module accounts",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.ModuleAccounts(context.Background(), &types.QueryModuleAccountsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// QueryModuleAccountByNameCmd returns a command to
+func QueryModuleAccountByNameCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "module-account [module-name]",
+		Short:   "Query module account info by module name",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s q auth module-account auth", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			moduleName := args[0]
+			if len(moduleName) == 0 {
+				return fmt.Errorf("module name should not be empty")
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.ModuleAccountByName(context.Background(), &types.QueryModuleAccountByNameRequest{Name: moduleName})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+>>>>>>> ddf5cf0d8 (feat(cli): add module-account cli cmd and grpc get api (#13612))
 // QueryTxsByEventsCmd returns a command to search through transactions by events.
 func QueryTxsByEventsCmd() *cobra.Command {
 	cmd := &cobra.Command{

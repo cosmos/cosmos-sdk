@@ -45,7 +45,6 @@ service Query {
 
   // ModuleAccountByName returns the module account info by module name
   rpc ModuleAccountByName(QueryModuleAccountByNameRequest) returns (QueryModuleAccountByNameResponse) {
-    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/module_accounts/{name}";
   }
 

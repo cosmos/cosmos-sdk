@@ -365,7 +365,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccountByName() {
 			true,
 			func(res *types.QueryModuleAccountByNameResponse) {
 				var account types.AccountI
-				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Account, &account)
+				err := suite.app.InterfaceRegistry().UnpackAny(res.Account, &account)
 				suite.Require().NoError(err)
 
 				moduleAccount, ok := account.(types.ModuleAccountI)

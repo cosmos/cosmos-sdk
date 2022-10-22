@@ -17,6 +17,7 @@ func CombineErrors(ret error, also error, desc string) error {
 	return ret
 }
 
+// Report errors in defers
 func LogDeferred(logger log.Logger, f func() error) {
 	if err := f(); err != nil {
 		logger.Error(err.Error())

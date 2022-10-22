@@ -1,0 +1,46 @@
+[
+    {
+        "url": "type.googleapis.com/Foo",
+        "msg": {},
+        "screens": [
+            {"text": "Object: type.googleapis.com/Foo"},
+            {"text": "Foo object", "indent": 1}
+        ]
+    },
+    {
+        "url": "type.googleapis.com/Foo",
+        "msg": {
+            "full_name": "testing"
+        },
+        "screens": [
+            {"text": "Object: type.googleapis.com/Foo"},
+            {"text": "Foo object", "indent": 1},
+            {"text": "Full name: testing", "indent": 2}
+        ]
+    },
+    {
+        "url": "type.googleapis.com/google.protobuf.Any",
+        "msg": {
+            "type_url": "type.googleapis.com/Foo",
+            "value": []
+        },
+        "screens": [
+            {"text": "Object: type.googleapis.com/google.protobuf.Any"},
+            {"text": "Object: type.googleapis.com/Foo", "indent": 1},
+            {"text": "Foo object", "indent": 2}
+        ]
+    },
+    {
+        "url": "type.googleapis.com/google.protobuf.Any",
+        "msg": {
+            "type_url": "type.googleapis.com/Foo",
+            "value": [10, 7, 116, 101, 115, 116, 105, 110, 103]
+        },
+        "screens": [
+            {"text": "Object: type.googleapis.com/google.protobuf.Any"},
+            {"text": "Object: type.googleapis.com/Foo", "indent": 1},
+            {"text": "Foo object", "indent": 2},
+            {"text": "Full name: testing", "indent": 3}
+        ]
+    }
+]

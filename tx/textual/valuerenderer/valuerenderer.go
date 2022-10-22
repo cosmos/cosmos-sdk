@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -103,6 +104,18 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 	}
 }
 
+// GetMessageValueRenderer is a specialization of GetValueRenderer for messages.
+// It is useful when the message type is discovered outside the context of a field,
+// e.g. when handling a google.protobuf.Any.
+func (r Textual) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (ValueRenderer, error) {
+	fullName := md.FullName()
+	vr, found := r.messages[fullName]
+	if found {
+		return vr, nil
+	}
+	return NewMessageValueRenderer(&r, md), nil
+}
+
 func (r *Textual) init() {
 	if r.scalars == nil {
 		r.scalars = map[string]ValueRenderer{}
@@ -114,6 +127,7 @@ func (r *Textual) init() {
 		r.messages[(&basev1beta1.Coin{}).ProtoReflect().Descriptor().FullName()] = NewCoinsValueRenderer(r.coinMetadataQuerier)
 		r.messages[(&durationpb.Duration{}).ProtoReflect().Descriptor().FullName()] = NewDurationValueRenderer()
 		r.messages[(&timestamppb.Timestamp{}).ProtoReflect().Descriptor().FullName()] = NewTimestampValueRenderer()
+		r.messages[(&anypb.Any{}).ProtoReflect().Descriptor().FullName()] = NewAnyValueRenderer(r)
 	}
 }
 

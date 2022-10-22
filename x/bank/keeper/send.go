@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	util "github.com/cosmos/cosmos-sdk/internal"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -442,7 +443,7 @@ func (k BaseSendKeeper) IterateSendEnabledEntries(ctx sdk.Context, cb func(denom
 	seStore := k.getSendEnabledPrefixStore(ctx)
 
 	iterator := seStore.Iterator(nil, nil)
-	defer iterator.Close()
+	defer util.LogDeferred(ctx.Logger(), func() error { return iterator.Close() })
 
 	for ; iterator.Valid(); iterator.Next() {
 		denom := string(iterator.Key())

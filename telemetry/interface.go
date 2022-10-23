@@ -48,8 +48,6 @@ type Metrics interface {
 	MeasureSince(start time.Time, keys ...string)
 }
 
-//go:generate mockgen -destination=./../testutil/mock/telemetry.go -package=mock -source=interface.go
-
 var _ Metrics = &metrics{}
 
 // Default is the default singleton object for the metrics.

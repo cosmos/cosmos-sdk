@@ -34,6 +34,7 @@ require (
 	github.com/hashicorp/go-getter v1.6.2
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3
+	github.com/huandu/skiplist v1.2.0
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/jhump/protoreflect v1.12.1-0.20220721211354-060cc04fc18b
 	github.com/magiconair/properties v1.8.6

@@ -2,7 +2,6 @@ package v3
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	util "github.com/cosmos/cosmos-sdk/internal"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,7 +31,7 @@ func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec, logger log.L
 	oldBalancesStore := prefix.NewStore(store, v2.BalancesPrefix)
 
 	oldBalancesIter := oldBalancesStore.Iterator(nil, nil)
-	defer util.LogDeferred(logger, func() error { return oldBalancesIter.Close() })
+	defer sdk.LogDeferred(logger, func() error { return oldBalancesIter.Close() })
 
 	denomPrefixStores := make(map[string]prefix.Store) // memoize prefix stores
 
@@ -78,7 +77,7 @@ func migrateDenomMetadata(store sdk.KVStore, logger log.Logger) error {
 	oldDenomMetaDataStore := prefix.NewStore(store, v2.DenomMetadataPrefix)
 
 	oldDenomMetaDataIter := oldDenomMetaDataStore.Iterator(nil, nil)
-	defer util.LogDeferred(logger, func() error { return oldDenomMetaDataIter.Close() })
+	defer sdk.LogDeferred(logger, func() error { return oldDenomMetaDataIter.Close() })
 
 	for ; oldDenomMetaDataIter.Valid(); oldDenomMetaDataIter.Next() {
 		oldKey := oldDenomMetaDataIter.Key()

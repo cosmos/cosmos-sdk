@@ -3,7 +3,6 @@ package v2
 import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
-	util "github.com/cosmos/cosmos-sdk/internal"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,7 +59,7 @@ func migrateBalanceKeys(store sdk.KVStore, logger log.Logger) {
 	oldStore := prefix.NewStore(store, v1.BalancesPrefix)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
-	defer util.LogDeferred(logger, func() error { return oldStoreIter.Close() })
+	defer sdk.LogDeferred(logger, func() error { return oldStoreIter.Close() })
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		addr := v1.AddressFromBalancesStore(oldStoreIter.Key())

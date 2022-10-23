@@ -5,14 +5,22 @@ import (
 	"testing"
 	"time"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 )
 
 func TestOptionWithConfig(t *testing.T) {
 	c := &Config{}
-	err := OptionWithConfig(Config{})(c)
+	serviceName := "SomeName"
+	globalLabels := []gometrics.Label{NewLabel("L1", "V1")}
+	err := OptionWithConfig(Config{
+		ServiceName:  serviceName,
+		globalLabels: globalLabels,
+	})(c)
 	require.NoError(t, err)
+	require.Equal(t, serviceName, c.ServiceName)
+	require.EqualValues(t, globalLabels, c.globalLabels)
 }
 
 func TestOptionFromViper(t *testing.T) {

@@ -11,10 +11,9 @@ import (
 type Option func(*Config) error
 
 // OptionWithConfig overwrites the initialization config with the new value.
-// ** DEPRECATED ** use other methods instead.
 func OptionWithConfig(C Config) Option {
 	return func(c *Config) error {
-		c = &C
+		*c = C
 		return nil
 	}
 }

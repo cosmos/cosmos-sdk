@@ -7,22 +7,16 @@ option java_multiple_files  = true;
 option java_outer_classname = "AbciListenerProto";
 option java_package         = "network.cosmos.sdk.grpc.abci.v1";
 
-// PutRequest is used for storing ABCI request and response
+// ListenRequest is used for storing ABCI request and response
 // and Store KV data for streaming to external grpc service.
-message PutRequest {
-  int64 block_height      = 1;
-  bytes req               = 2;
-  bytes res               = 3;
-  bytes store_kv_pair     = 4;
-  int64 store_kv_pair_idx = 5;
-  int64 tx_idx            = 6;
+message ListenRequest {
+  int64  block_height = 1;
+  string event_type   = 2;
+  bytes  data         = 3;
 }
 
 message Empty {}
 
 service ABCIListenerService {
-  rpc ListenBeginBlock(PutRequest) returns (Empty);
-  rpc ListenEndBlock(PutRequest) returns (Empty);
-  rpc ListenDeliverTx(PutRequest) returns (Empty);
-  rpc ListenStoreKVPair(PutRequest) returns (Empty);
+  rpc Listen(ListenRequest) returns (Empty);
 }

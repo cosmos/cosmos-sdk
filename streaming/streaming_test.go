@@ -2,10 +2,12 @@ package streaming
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	"os"
 	"testing"
 	"time"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -20,23 +22,71 @@ import (
 type PluginTestSuite struct {
 	suite.Suite
 
-	emptyCtx  sdk.Context
 	loggerCtx sdk.Context
 
 	workDir string
+
+	beginBlockReq abci.RequestBeginBlock
+	beginBlockRes abci.ResponseBeginBlock
+	endBlockReq   abci.RequestEndBlock
+	endBlockRes   abci.ResponseEndBlock
+	deliverTxReq  abci.RequestDeliverTx
+	deliverTxRes  abci.ResponseDeliverTx
+
+	storeKVPair types.StoreKVPair
 }
 
 func (s *PluginTestSuite) SetupTest() {
-	s.emptyCtx = sdk.Context{}
-	s.loggerCtx = s.emptyCtx.
-		WithLogger(log.TestingLogger()).
-		WithBlockHeader(tmproto.Header{Height: 1, Time: time.Now()})
+	s.loggerCtx = sdk.NewContext(
+		nil,
+		tmproto.Header{Height: 1, Time: time.Now()},
+		false,
+		log.TestingLogger(),
+	)
 
 	path, err := os.Getwd()
 	if err != nil {
 		s.T().Fail()
 	}
 	s.workDir = path
+
+	// test abci message types
+	s.beginBlockReq = abci.RequestBeginBlock{
+		Header:              tmproto.Header{Height: 1, Time: time.Now()},
+		ByzantineValidators: []abci.Evidence{},
+		Hash:                []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
+		LastCommitInfo:      abci.LastCommitInfo{Round: 1, Votes: []abci.VoteInfo{}},
+	}
+	s.beginBlockRes = abci.ResponseBeginBlock{
+		Events: []abci.Event{{Type: "testEventType1"}},
+	}
+	s.endBlockReq = abci.RequestEndBlock{Height: 1}
+	s.endBlockRes = abci.ResponseEndBlock{
+		Events:                []abci.Event{},
+		ConsensusParamUpdates: &tmproto.ConsensusParams{},
+		ValidatorUpdates:      []abci.ValidatorUpdate{},
+	}
+	s.deliverTxReq = abci.RequestDeliverTx{
+		Tx: []byte{9, 8, 7, 6, 5, 4, 3, 2, 1},
+	}
+	s.deliverTxRes = abci.ResponseDeliverTx{
+		Events:    []abci.Event{},
+		Code:      1,
+		Codespace: "mockCodeSpace",
+		Data:      []byte{5, 6, 7, 8},
+		GasUsed:   2,
+		GasWanted: 3,
+		Info:      "mockInfo",
+		Log:       "mockLog",
+	}
+
+	// test store kv pair types
+	s.storeKVPair = types.StoreKVPair{
+		StoreKey: "mockStore",
+		Delete:   false,
+		Key:      []byte{1, 2, 3},
+		Value:    []byte{3, 2, 1},
+	}
 }
 
 func TestPluginTestSuite(t *testing.T) {
@@ -56,23 +106,27 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 		raw, err := NewStreamingPlugin(pluginVersion, "trace")
 		require.NoError(t, err, "load", "streaming", "unexpected error")
 
-		listener, ok := raw.(baseapp.ABCIListener)
+		abciListener, ok := raw.(baseapp.ABCIListener)
 		require.True(t, ok, "should pass type check")
 
-		err = listener.ListenBeginBlock(s.loggerCtx.BlockHeight(), []byte{1, 2, 3}, []byte{1, 2, 3})
+		err = abciListener.ListenBeginBlock(s.loggerCtx, s.beginBlockReq, s.beginBlockRes)
 		assert.NoError(t, err, "ListenBeginBlock")
 
-		err = listener.ListenEndBlock(s.loggerCtx.BlockHeight(), []byte{1, 2, 3}, []byte{1, 2, 3})
-		assert.NoError(t, err, "ListenBeginBlock")
+		err = abciListener.ListenEndBlock(s.loggerCtx, s.endBlockReq, s.endBlockRes)
+		assert.NoError(t, err, "ListenEndBlock")
 
-		err = listener.ListenDeliverTx(s.loggerCtx.BlockHeight(), []byte{1, 2, 3}, []byte{1, 2, 3})
-		assert.NoError(t, err, "ListenBeginBlock")
-		err = listener.ListenDeliverTx(s.loggerCtx.BlockHeight(), []byte{1, 2, 3}, []byte{1, 2, 3})
-		assert.NoError(t, err, "ListenBeginBlock")
+		err = abciListener.ListenDeliverTx(s.loggerCtx, s.deliverTxReq, s.deliverTxRes)
+		assert.NoError(t, err, "ListenDeliverTx")
+		err = abciListener.ListenDeliverTx(s.loggerCtx, s.deliverTxReq, s.deliverTxRes)
+		assert.NoError(t, err, "ListenDeliverTx")
 
-		err = listener.ListenStoreKVPair(s.loggerCtx.BlockHeight(), []byte{1, 2, 3})
-		assert.NoError(t, err, "ListenBeginBlock")
-		err = listener.ListenStoreKVPair(s.loggerCtx.BlockHeight(), []byte{1, 2, 3})
-		assert.NoError(t, err, "ListenBeginBlock")
+		// streaming services can choose not to implement store listening
+		storeListener, ok := raw.(baseapp.StoreListener)
+		if ok {
+			err = storeListener.ListenStoreKVPair(s.loggerCtx, s.storeKVPair)
+			assert.NoError(t, err, "ListenStoreKVPair")
+			err = storeListener.ListenStoreKVPair(s.loggerCtx, s.storeKVPair)
+			assert.NoError(t, err, "ListenStoreKVPair")
+		}
 	})
 }

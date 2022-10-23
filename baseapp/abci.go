@@ -191,35 +191,18 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	// call the streaming service hook with the BeginBlock messages
 	if app.abciListener != nil {
-		blockHeight := app.deliverState.ctx.BlockHeight()
+		ctx := app.deliverState.ctx
+		blockHeight := ctx.BlockHeight()
 		if app.stopNodeOnStreamingErr {
-			reqBz, err := req.Marshal()
-			if err != nil {
-				os.Exit(1)
-			}
-			resBz, err := res.Marshal()
-			if err != nil {
-				os.Exit(1)
-			}
-			if err := app.abciListener.ListenBeginBlock(blockHeight, reqBz, resBz); err != nil {
+			if err := app.abciListener.ListenBeginBlock(ctx, req, res); err != nil {
 				app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
 				os.Exit(1)
 			}
 		} else {
-			ebReq, ebRes := req, res
+			rek, rez := req, res
 			go func() {
-				reqBz, reqErr := ebReq.Marshal()
-				if reqErr != nil {
-					app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", reqErr)
-				}
-				resBz, resErr := ebRes.Marshal()
-				if resErr != nil {
-					app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", resErr)
-				}
-				if reqErr == nil && resErr == nil {
-					if err := app.abciListener.ListenBeginBlock(blockHeight, reqBz, resBz); err != nil {
-						app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
-					}
+				if err := app.abciListener.ListenBeginBlock(ctx, rek, rez); err != nil {
+					app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
 				}
 			}()
 		}
@@ -246,35 +229,18 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	// call the streaming service hook with the EndBlock messages
 	if app.abciListener != nil {
-		blockHeight := app.deliverState.ctx.BlockHeight()
+		ctx := app.deliverState.ctx
+		blockHeight := ctx.BlockHeight()
 		if app.stopNodeOnStreamingErr {
-			reqBz, err := req.Marshal()
-			if err != nil {
-				os.Exit(1)
-			}
-			resBz, err := res.Marshal()
-			if err != nil {
-				os.Exit(1)
-			}
-			if err := app.abciListener.ListenEndBlock(blockHeight, reqBz, resBz); err != nil {
+			if err := app.abciListener.ListenEndBlock(ctx, req, res); err != nil {
 				app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
 				os.Exit(1)
 			}
 		} else {
-			ebReq, ebRes := req, res
+			rek, rez := req, res
 			go func() {
-				reqBz, reqErr := ebReq.Marshal()
-				if reqErr != nil {
-					app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", reqErr)
-				}
-				resBz, resErr := ebRes.Marshal()
-				if resErr != nil {
-					app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", resErr)
-				}
-				if reqErr == nil && resErr == nil {
-					if err := app.abciListener.ListenEndBlock(blockHeight, reqBz, resBz); err != nil {
-						app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
-					}
+				if err := app.abciListener.ListenEndBlock(ctx, rek, rez); err != nil {
+					app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
 				}
 			}()
 		}
@@ -329,35 +295,18 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 	defer func() {
 		// call the streaming service hook with the EndBlock messages
 		if app.abciListener != nil {
-			blockHeight := app.deliverState.ctx.BlockHeight()
+			ctx := app.deliverState.ctx
+			blockHeight := ctx.BlockHeight()
 			if app.stopNodeOnStreamingErr {
-				reqBz, err := req.Marshal()
-				if err != nil {
-					os.Exit(1)
-				}
-				resBz, err := abciRes.Marshal()
-				if err != nil {
-					os.Exit(1)
-				}
-				if err := app.abciListener.ListenDeliverTx(blockHeight, reqBz, resBz); err != nil {
+				if err := app.abciListener.ListenDeliverTx(ctx, req, abciRes); err != nil {
 					app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
 					os.Exit(1)
 				}
 			} else {
-				txReq, txRes := req, abciRes
+				rek, rez := req, abciRes
 				go func() {
-					reqBz, reqErr := txReq.Marshal()
-					if reqErr != nil {
-						app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", reqErr)
-					}
-					resBz, resErr := txRes.Marshal()
-					if resErr != nil {
-						app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", resErr)
-					}
-					if reqErr == nil && resErr == nil {
-						if err := app.abciListener.ListenDeliverTx(blockHeight, reqBz, resBz); err != nil {
-							app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
-						}
+					if err := app.abciListener.ListenDeliverTx(ctx, rek, rez); err != nil {
+						app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
 					}
 				}()
 			}

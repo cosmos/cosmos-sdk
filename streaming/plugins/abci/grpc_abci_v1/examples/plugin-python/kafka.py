@@ -19,25 +19,9 @@ class ABCIListenerServiceServicer(abci_listener_pb2_grpc.ABCIListenerServiceServ
     producer = Producer({'bootstrap.servers': "localhost:9092",
                          'client.id': socket.gethostname()})
 
-    def ListenBeginBlock(self, request, context):
-        self.producer.produce("raw_begin_block_req", key=str(request.block_height), value=str(request.req))
-        self.producer.produce("raw_begin_block_res", key=str(request.block_height), value=str(request.res))
-        return abci_listener_pb2.Empty()
-
-    def ListenEndBlock(self, request, context):
-        self.producer.produce("raw_end_block_req", key=str(request.block_height), value=str(request.req))
-        self.producer.produce("raw_end_block_res", key=str(request.block_height), value=str(request.res))
-        return abci_listener_pb2.Empty()
-
-    def ListenDeliverTx(self, request, context):
-        key = "{}.{}".format(request.block_height, request.tx_idx)
-        self. producer.produce("raw_deliver_tx_req", key=key, value=str(request.req))
-        self.producer.produce("raw_deliver_tx_res", key=key, value=str(request.res))
-        return abci_listener_pb2.Empty()
-
-    def ListenStoreKVPair(self, request, context):
-        key = "{}.{}".format(request.block_height, request.store_kv_pair_idx)
-        self.producer.produce("raw_state_change", key=key, value=str(request.store_kv_pair))
+    def Listen(self, request, context):
+        topic = "raw_{}".format(request.event_type)
+        self.producer.produce(topic, key=str(request.block_height), value=str(request.data))
         return abci_listener_pb2.Empty()
 
 def serve():

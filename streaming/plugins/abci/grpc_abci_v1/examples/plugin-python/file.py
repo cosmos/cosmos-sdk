@@ -17,33 +17,9 @@ class ABCIListenerServiceServicer(abci_listener_pb2_grpc.ABCIListenerServiceServ
 
     out_dir = str(Path.home())
 
-    def ListenBeginBlock(self, request, context):
-        filename = "{}/{}".format(self.out_dir, 'abci_begin_block.txt')
-        line = "{}:::{}:::{}\n".format(request.block_height, request.req, request.res)
-        with open(filename, 'a') as f:
-            f.write(line)
-
-        return abci_listener_pb2.Empty()
-
-    def ListenEndBlock(self, request, context):
-        filename = "{}/{}".format(self.out_dir, 'abci_end_block.txt')
-        line = "{}:::{}:::{}\n".format(request.block_height, request.req, request.res)
-        with open(filename, 'a') as f:
-            f.write(line)
-
-        return abci_listener_pb2.Empty()
-
-    def ListenDeliverTx(self, request, context):
-        filename = "{}/{}".format(self.out_dir, 'abci_deliver_tx.txt')
-        line = "{}:::{}:::{}:::{}\n".format(request.block_height, request.tx_idx, request.req, request.res)
-        with open(filename, 'a') as f:
-            f.write(line)
-
-        return abci_listener_pb2.Empty()
-
-    def ListenStoreKVPair(self, request, context):
-        filename = "{}/{}".format(self.out_dir, 'abci_store_kv_pair.txt')
-        line = "{}:::{}:::{}\n".format(request.block_height, request.store_kv_pair_idx, request.store_kv_pair)
+    def Listen(self, request, context):
+        filename = "{}/{}.{}".format(self.out_dir, request.event_type, 'txt').lower()
+        line = "{}:::{}\n".format(request.block_height, request.data)
         with open(filename, 'a') as f:
             f.write(line)
 

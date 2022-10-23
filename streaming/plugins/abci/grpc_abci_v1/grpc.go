@@ -2,95 +2,103 @@ package grpc_abci_v1
 
 import (
 	"context"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// GRPCClient is an implementation of the Listener interface that talks over RPC.
+var (
+	_ baseapp.ABCIListener  = (*GRPCClient)(nil)
+	_ baseapp.StoreListener = (*GRPCClient)(nil)
+	_ ABCIListenerPlugin    = (*GRPCClient)(nil)
+)
+
+// GRPCClient is an implementation of the ABCIListener and ABCIListenerPlugin interfaces that talks over RPC.
 type GRPCClient struct {
-	client         ABCIListenerServiceClient
-	blockHeight    int64
-	txIdx          int64
-	storeKVPairIdx int64
+	client ABCIListenerServiceClient
 }
 
-var _ baseapp.ABCIListener = (*GRPCClient)(nil)
-
-func (m *GRPCClient) ListenBeginBlock(blockHeight int64, req []byte, res []byte) error {
-	_, err := m.client.ListenBeginBlock(context.Background(), &PutRequest{
+func (m *GRPCClient) Listen(ctx context.Context, blockHeight int64, eventType string, data []byte) error {
+	_, err := m.client.Listen(ctx, &ListenRequest{
 		BlockHeight: blockHeight,
-		Req:         req,
-		Res:         res,
+		EventType:   eventType,
+		Data:        data,
 	})
 	return err
 }
 
-func (m *GRPCClient) ListenEndBlock(blockHeight int64, req []byte, res []byte) error {
-	_, err := m.client.ListenEndBlock(context.Background(), &PutRequest{
-		BlockHeight: blockHeight,
-		Req:         req,
-		Res:         res,
-	})
-	return err
-}
-
-func (m *GRPCClient) ListenDeliverTx(blockHeight int64, req []byte, res []byte) error {
-	m.updateTxIdx(blockHeight)
-	_, err := m.client.ListenDeliverTx(context.Background(), &PutRequest{
-		BlockHeight: blockHeight,
-		Req:         req,
-		Res:         res,
-		TxIdx:       m.txIdx,
-	})
-	return err
-}
-
-func (m *GRPCClient) ListenStoreKVPair(blockHeight int64, data []byte) error {
-	m.updateStoreKVPairIdx(blockHeight)
-	_, err := m.client.ListenStoreKVPair(context.Background(), &PutRequest{
-		BlockHeight:    blockHeight,
-		StoreKvPair:    data,
-		StoreKvPairIdx: m.storeKVPairIdx,
-	})
-	return err
-}
-
-func (m *GRPCClient) updateTxIdx(currBlockHeight int64) {
-	if m.blockHeight < currBlockHeight {
-		m.blockHeight = currBlockHeight
-		m.txIdx = 0
-	} else {
-		m.txIdx++
+func (m *GRPCClient) ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+	reqbz, err := req.Marshal()
+	if err != nil {
+		return err
 	}
+	resbz, err := res.Marshal()
+	if err != nil {
+		return err
+	}
+	if err := m.Listen(ctx, ctx.BlockHeight(), "BEGIN_BLOCK_REQ", reqbz); err != nil {
+		return err
+	}
+	if err := m.Listen(ctx, ctx.BlockHeight(), "BEGIN_BLOCK_RES", resbz); err != nil {
+		return err
+	}
+	return nil
 }
 
-func (m *GRPCClient) updateStoreKVPairIdx(currBlockHeight int64) {
-	if m.blockHeight < currBlockHeight {
-		m.blockHeight = currBlockHeight
-		m.storeKVPairIdx = 0
-	} else {
-		m.storeKVPairIdx++
+func (m *GRPCClient) ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+	reqbz, err := req.Marshal()
+	if err != nil {
+		return err
 	}
+	resbz, err := res.Marshal()
+	if err != nil {
+		return err
+	}
+	if err := m.Listen(ctx, ctx.BlockHeight(), "END_BLOCK_REQ", reqbz); err != nil {
+		return err
+	}
+	if err := m.Listen(ctx, ctx.BlockHeight(), "END_BLOCK_RES", resbz); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *GRPCClient) ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+	reqbz, err := req.Marshal()
+	if err != nil {
+		return err
+	}
+	resbz, err := res.Marshal()
+	if err != nil {
+		return err
+	}
+	if err := m.Listen(ctx, ctx.BlockHeight(), "DELIVER_TX_REQ", reqbz); err != nil {
+		return err
+	}
+	if err := m.Listen(ctx, ctx.BlockHeight(), "DELIVER_TX_RES", resbz); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *GRPCClient) ListenStoreKVPair(ctx types.Context, pair store.StoreKVPair) error {
+	pairbz, err := pair.Marshal()
+	if err != nil {
+		return err
+	}
+	if err := m.Listen(ctx, ctx.BlockHeight(), "STATE_CHANGE", pairbz); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GRPCServer is the gRPC server that GRPCClient talks to.
 type GRPCServer struct {
 	// This is the real implementation
-	Impl baseapp.ABCIListener
+	Impl ABCIListenerPlugin
 }
 
-func (m *GRPCServer) ListenBeginBlock(_ context.Context, req *PutRequest) (*Empty, error) {
-	return &Empty{}, m.Impl.ListenBeginBlock(req.BlockHeight, req.Req, req.Res)
-}
-
-func (m *GRPCServer) ListenEndBlock(_ context.Context, req *PutRequest) (*Empty, error) {
-	return &Empty{}, m.Impl.ListenEndBlock(req.BlockHeight, req.Req, req.Res)
-}
-
-func (m *GRPCServer) ListenDeliverTx(_ context.Context, req *PutRequest) (*Empty, error) {
-	return &Empty{}, m.Impl.ListenDeliverTx(req.BlockHeight, req.Req, req.Res)
-}
-
-func (m *GRPCServer) ListenStoreKVPair(_ context.Context, req *PutRequest) (*Empty, error) {
-	return &Empty{}, m.Impl.ListenStoreKVPair(req.BlockHeight, req.StoreKvPair)
+func (m *GRPCServer) Listen(ctx context.Context, req *ListenRequest) (*Empty, error) {
+	return &Empty{}, m.Impl.Listen(ctx, req.BlockHeight, req.EventType, req.Data)
 }

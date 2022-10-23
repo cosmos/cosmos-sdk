@@ -243,7 +243,7 @@ func NewSimApp(
 		if err != nil {
 			tmos.Exit(err.Error())
 		}
-		if err := baseapp.RegisterStreamingService(bApp, appOpts, appCodec, keys, plugin); err != nil {
+		if err := baseapp.RegisterStreamingService(bApp, appOpts, keys, plugin); err != nil {
 			tmos.Exit(err.Error())
 		}
 	}

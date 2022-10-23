@@ -21,7 +21,7 @@ var HandshakeMap = map[string]plugin.HandshakeConfig{
 
 // PluginMap contains a map of supported gRPC plugins
 var PluginMap = map[string]plugin.Plugin{
-	"grpc_abci_v1": &grpc_abci_v1.ListenerGRPCPlugin{},
+	"grpc_abci_v1": &grpc_abci_v1.ABCIListenerGRPCPlugin{},
 }
 
 func GetPluginEnvKey(name string) string {

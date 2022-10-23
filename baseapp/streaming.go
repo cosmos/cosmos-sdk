@@ -2,67 +2,86 @@ package baseapp
 
 import (
 	"fmt"
-
 	"github.com/spf13/cast"
+	"os"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// ABCIListener is the interface that we're exposing as a streaming.
+// ABCIListener is the interface that we're exposing as a streaming service.
 type ABCIListener interface {
 	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages
-	ListenBeginBlock(blockHeight int64, req []byte, res []byte) error
+	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
 	// ListenEndBlock updates the steaming service with the latest EndBlock messages
-	ListenEndBlock(blockHeight int64, req []byte, res []byte) error
+	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
 	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages
-	ListenDeliverTx(blockHeight int64, req []byte, res []byte) error
-	// ListenStoreKVPair updates the steaming service with the latest StoreKVPair messages
-	ListenStoreKVPair(blockHeight int64, data []byte) error
+	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
+}
+
+// StoreListener is the interface that we're exposing as a streaming service.
+type StoreListener interface {
+	// ListenStoreKVPair updates the streaming service with the latest state change message
+	ListenStoreKVPair(ctx types.Context, pair store.StoreKVPair) error
 }
 
 // StreamingService for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
 type StreamingService struct {
 	// Listeners returns the streaming service's listeners for the BaseApp to register
-	Listeners map[types.StoreKey][]types.WriteListener
+	Listeners map[store.StoreKey][]store.WriteListener
 	// ABCIListener interface for hooking into the ABCI messages from inside the BaseApp
 	ABCIListener ABCIListener
 	// StopNodeOnErr stops the node when true
 	StopNodeOnErr bool
 }
 
-// KVStoreListener is used so that we do not need to update the underlying
-// io.Writer inside the StoreKVPairWriteListener everytime we begin writing
-type KVStoreListener struct {
-	blockHeight   func() int64
-	listener      ABCIListener
+var (
+	_ store.WriteListener = (*WriteListener)(nil)
+)
+
+// WriteListener writes state changes out to listening service
+type WriteListener struct {
+	bApp          *BaseApp
+	listener      StoreListener
 	stopNodeOnErr bool
 }
 
-// NewKVStoreListener create an instance of an NewKVStoreListener that sends StoreKVPair data to listening service
-func NewKVStoreListener(
-	listener ABCIListener,
+// NewWriteListener create an instance of an NewWriteListener that sends StoreKVPair data to listening service
+func NewWriteListener(
+	bApp *BaseApp,
+	listener StoreListener,
 	stopNodeOnErr bool,
-	blockHeight func() int64,
-) *KVStoreListener {
-	return &KVStoreListener{
+) *WriteListener {
+	return &WriteListener{
+		bApp:          bApp,
 		listener:      listener,
 		stopNodeOnErr: stopNodeOnErr,
-		blockHeight:   blockHeight,
 	}
 }
 
-// Write satisfies io.Writer
-func (iw *KVStoreListener) Write(b []byte) (int, error) {
-	blockHeight := iw.blockHeight()
-	if err := iw.listener.ListenStoreKVPair(blockHeight, b); err != nil {
-		if iw.stopNodeOnErr {
-			panic(err)
+// OnWrite satisfies WriteListener.Listen
+func (iw *WriteListener) OnWrite(storeKey store.StoreKey, key []byte, value []byte, delete bool) {
+	ctx := iw.bApp.deliverState.ctx
+	logger := iw.bApp.logger
+	kvPair := new(store.StoreKVPair)
+	kvPair.StoreKey = storeKey.Name()
+	kvPair.Delete = delete
+	kvPair.Key = key
+	kvPair.Value = value
+	if iw.stopNodeOnErr {
+		if err := iw.listener.ListenStoreKVPair(ctx, *kvPair); err != nil {
+			logger.Error(err.Error(), "storeKey", storeKey)
+			os.Exit(1)
 		}
-		return 0, err
+	} else {
+		go func() {
+			if err := iw.listener.ListenStoreKVPair(ctx, *kvPair); err != nil {
+				logger.Error(err.Error(), "storeKey", storeKey)
+			}
+		}()
 	}
-	return len(b), nil
 }
 
 const (
@@ -77,8 +96,7 @@ const (
 func RegisterStreamingService(
 	bApp *BaseApp,
 	appOpts servertypes.AppOptions,
-	kodec codec.BinaryCodec,
-	keys map[string]*types.KVStoreKey,
+	keys map[string]*store.KVStoreKey,
 	streamingService interface{},
 ) error {
 	// type checking
@@ -87,20 +105,25 @@ func RegisterStreamingService(
 		return fmt.Errorf("failed to register streaming service: failed type check %v", streamingService)
 	}
 
-	// expose keys
-	keysKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingKeysTomlKey)
-	exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
-	exposeStoreKeys := exposeStoreKeys(exposeKeysStr, keys)
+	// streaming service config
 	stopNodeOnErrKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingStopNodeOnErrTomlKey)
 	stopNodeOnErr := cast.ToBool(appOpts.Get(stopNodeOnErrKey))
-	blockHeightFn := func() int64 { return bApp.deliverState.ctx.BlockHeight() }
-	writer := NewKVStoreListener(abciListener, stopNodeOnErr, blockHeightFn)
-	listener := types.NewStoreKVPairWriteListener(writer, kodec)
-	listeners := make(map[types.StoreKey][]types.WriteListener, len(exposeStoreKeys))
-	for _, key := range exposeStoreKeys {
-		listeners[key] = append(listeners[key], listener)
+	var listeners map[store.StoreKey][]store.WriteListener
+
+	// streaming services can choose not to implement store listening
+	storeListener, ok := streamingService.(StoreListener)
+	if ok {
+		keysKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingKeysTomlKey)
+		exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
+		exposeStoreKeys := exposeStoreKeys(exposeKeysStr, keys)
+		listeners = make(map[store.StoreKey][]store.WriteListener, len(exposeStoreKeys))
+		writeListener := NewWriteListener(bApp, storeListener, stopNodeOnErr)
+		for _, key := range exposeStoreKeys {
+			listeners[key] = append(listeners[key], writeListener)
+		}
 	}
 
+	// register service with the App
 	bApp.SetStreamingService(StreamingService{
 		Listeners:     listeners,
 		ABCIListener:  abciListener,
@@ -119,15 +142,15 @@ func exposeAll(list []string) bool {
 	return false
 }
 
-func exposeStoreKeys(keysStr []string, keys map[string]*types.KVStoreKey) []types.StoreKey {
-	var exposeStoreKeys []types.StoreKey
+func exposeStoreKeys(keysStr []string, keys map[string]*store.KVStoreKey) []store.StoreKey {
+	var exposeStoreKeys []store.StoreKey
 	if exposeAll(keysStr) {
-		exposeStoreKeys = make([]types.StoreKey, 0, len(keys))
+		exposeStoreKeys = make([]store.StoreKey, 0, len(keys))
 		for _, storeKey := range keys {
 			exposeStoreKeys = append(exposeStoreKeys, storeKey)
 		}
 	} else {
-		exposeStoreKeys = make([]types.StoreKey, 0, len(keysStr))
+		exposeStoreKeys = make([]store.StoreKey, 0, len(keysStr))
 		for _, keyStr := range keysStr {
 			if storeKey, ok := keys[keyStr]; ok {
 				exposeStoreKeys = append(exposeStoreKeys, storeKey)

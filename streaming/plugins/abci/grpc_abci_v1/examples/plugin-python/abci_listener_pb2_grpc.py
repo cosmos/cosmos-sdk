@@ -14,24 +14,9 @@ class ABCIListenerServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.ListenBeginBlock = channel.unary_unary(
-                '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/ListenBeginBlock',
-                request_serializer=abci__listener__pb2.PutRequest.SerializeToString,
-                response_deserializer=abci__listener__pb2.Empty.FromString,
-                )
-        self.ListenEndBlock = channel.unary_unary(
-                '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/ListenEndBlock',
-                request_serializer=abci__listener__pb2.PutRequest.SerializeToString,
-                response_deserializer=abci__listener__pb2.Empty.FromString,
-                )
-        self.ListenDeliverTx = channel.unary_unary(
-                '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/ListenDeliverTx',
-                request_serializer=abci__listener__pb2.PutRequest.SerializeToString,
-                response_deserializer=abci__listener__pb2.Empty.FromString,
-                )
-        self.ListenStoreKVPair = channel.unary_unary(
-                '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/ListenStoreKVPair',
-                request_serializer=abci__listener__pb2.PutRequest.SerializeToString,
+        self.Listen = channel.unary_unary(
+                '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/Listen',
+                request_serializer=abci__listener__pb2.ListenRequest.SerializeToString,
                 response_deserializer=abci__listener__pb2.Empty.FromString,
                 )
 
@@ -39,25 +24,7 @@ class ABCIListenerServiceStub(object):
 class ABCIListenerServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def ListenBeginBlock(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def ListenEndBlock(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def ListenDeliverTx(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def ListenStoreKVPair(self, request, context):
+    def Listen(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -66,24 +33,9 @@ class ABCIListenerServiceServicer(object):
 
 def add_ABCIListenerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'ListenBeginBlock': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListenBeginBlock,
-                    request_deserializer=abci__listener__pb2.PutRequest.FromString,
-                    response_serializer=abci__listener__pb2.Empty.SerializeToString,
-            ),
-            'ListenEndBlock': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListenEndBlock,
-                    request_deserializer=abci__listener__pb2.PutRequest.FromString,
-                    response_serializer=abci__listener__pb2.Empty.SerializeToString,
-            ),
-            'ListenDeliverTx': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListenDeliverTx,
-                    request_deserializer=abci__listener__pb2.PutRequest.FromString,
-                    response_serializer=abci__listener__pb2.Empty.SerializeToString,
-            ),
-            'ListenStoreKVPair': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListenStoreKVPair,
-                    request_deserializer=abci__listener__pb2.PutRequest.FromString,
+            'Listen': grpc.unary_unary_rpc_method_handler(
+                    servicer.Listen,
+                    request_deserializer=abci__listener__pb2.ListenRequest.FromString,
                     response_serializer=abci__listener__pb2.Empty.SerializeToString,
             ),
     }
@@ -97,7 +49,7 @@ class ABCIListenerService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def ListenBeginBlock(request,
+    def Listen(request,
             target,
             options=(),
             channel_credentials=None,
@@ -107,59 +59,8 @@ class ABCIListenerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/ListenBeginBlock',
-            abci__listener__pb2.PutRequest.SerializeToString,
-            abci__listener__pb2.Empty.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def ListenEndBlock(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/ListenEndBlock',
-            abci__listener__pb2.PutRequest.SerializeToString,
-            abci__listener__pb2.Empty.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def ListenDeliverTx(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/ListenDeliverTx',
-            abci__listener__pb2.PutRequest.SerializeToString,
-            abci__listener__pb2.Empty.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def ListenStoreKVPair(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/ListenStoreKVPair',
-            abci__listener__pb2.PutRequest.SerializeToString,
+        return grpc.experimental.unary_unary(request, target, '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/Listen',
+            abci__listener__pb2.ListenRequest.SerializeToString,
             abci__listener__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

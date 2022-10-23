@@ -50,7 +50,6 @@ type Metrics interface {
 
 //go:generate mockgen -destination=./../testutil/mock/telemetry.go -package=mock -source=interface.go
 
-// validation
 var _ Metrics = &metrics{}
 
 // Default is the default singleton object for the metrics.

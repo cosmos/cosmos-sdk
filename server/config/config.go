@@ -293,7 +293,6 @@ func DefaultConfig() *Config {
 
 // GetConfig returns a fully parsed Config object.
 func GetConfig(v *viper.Viper) (Config, error) {
-
 	globalLabelsRaw, ok := v.Get("telemetry.global-labels").([]interface{})
 	if !ok {
 		return Config{}, fmt.Errorf("failed to parse global-labels config")

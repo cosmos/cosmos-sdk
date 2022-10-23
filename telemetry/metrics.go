@@ -13,8 +13,6 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
-// ─── Types ──────────────────────────────────────────────────────────────────────
-
 // metrics defines a wrapper around application telemetry functionality. It allows
 // metrics to be gathered at any point in time. When creating a Metrics object,
 // internally, a global metrics is registered with a set of sinks as configured
@@ -34,8 +32,6 @@ type GatherResponse struct {
 	Metrics     []byte
 	ContentType string
 }
-
-// ─── Factory ────────────────────────────────────────────────────────────────────
 
 // New creates a new instance of metrics
 func New(opts ...Option) (Metrics, error) {
@@ -114,8 +110,6 @@ func Init(opts ...Option) error {
 	return nil
 }
 
-// ─── Functions ──────────────────────────────────────────────────────────────────
-
 // Gather collects all registered metrics and returns a GatherResponse where the
 // metrics are encoded depending on the type. metrics are either encoded via
 // Prometheus or JSON if in-memory.
@@ -186,8 +180,6 @@ func (m *metrics) SetGaugeWithLabels(keys []string, val float32, labels []gometr
 func (m *metrics) MeasureSince(start time.Time, keys ...string) {
 	gometrics.MeasureSinceWithLabels(keys, start.UTC(), m.cnf.globalLabels)
 }
-
-// ─── Utils ──────────────────────────────────────────────────────────────────────
 
 func (m *metrics) gatherPrometheus() (GatherResponse, error) {
 	if !m.prometheusEnabled {

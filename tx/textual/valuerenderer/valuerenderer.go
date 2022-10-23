@@ -46,8 +46,8 @@ func NewTextual(q CoinMetadataQueryFn) Textual {
 	return t
 }
 
-// GetValueRenderer returns the value renderer for the given FieldDescriptor.
-func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
+// GetFieldValueRenderer returns the value renderer for the given FieldDescriptor.
+func (r Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
 	// Scalars, such as sdk.Int and sdk.Dec encoded as strings.
 	case fd.Kind() == protoreflect.StringKind && proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "":

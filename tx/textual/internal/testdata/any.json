@@ -19,6 +19,16 @@
         ]
     },
     {
+        "url": "type.googleapis.com/google.protobuf.Timestamp",
+        "msg": {
+            "seconds": 1136214245
+        },
+        "screens": [
+            {"text": "Object: type.googleapis.com/google.protobuf.Timestamp"},
+            {"text": "2006-01-02T15:04:05Z", "indent": 1}
+        ]
+    },
+    {
         "url": "type.googleapis.com/google.protobuf.Any",
         "msg": {
             "type_url": "type.googleapis.com/Foo",
@@ -41,6 +51,22 @@
             {"text": "Object: type.googleapis.com/Foo", "indent": 1},
             {"text": "Foo object", "indent": 2},
             {"text": "Full name: testing", "indent": 3}
+        ]
+    },
+    {
+        "url": "type.googleapis.com/A",
+        "msg": {
+            "any": {
+                "type_url": "type.googleapis.com/Foo",
+                "value": [10, 7, 116, 101, 115, 116, 105, 110, 103]
+            }
+        },
+        "screens": [
+            {"text": "Object: type.googleapis.com/A"},
+            {"text": "A object", "indent": 1},
+            {"text": "ANY: Object: type.googleapis.com/Foo", "indent": 2},
+            {"text": "Foo object", "indent": 3},
+            {"text": "Full name: testing", "indent": 4}
         ]
     }
 ]

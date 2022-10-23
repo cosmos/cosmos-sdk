@@ -64,7 +64,6 @@ func (c *Config) fromViper(v *viper.Viper) error {
 	c.EnableServiceLabel = v.GetBool("telemetry.enable-service-label")
 	c.PrometheusRetentionTime = v.GetDuration("telemetry.prometheus-retention-time")
 
-	// ─── Global Labels ──────────────────────────────────────────────────────────────
 	globalLabelsRaw, ok := v.Get("telemetry.global-labels").([]interface{})
 	if !ok {
 		return fmt.Errorf("failed to parse global-labels config")

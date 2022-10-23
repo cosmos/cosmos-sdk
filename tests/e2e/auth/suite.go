@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/math"
 
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 
@@ -1418,6 +1419,68 @@ func (s *IntegrationTestSuite) TestGetAccountsCmd() {
 	s.Require().NoError(err)
 
 	var res authtypes.QueryAccountsResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
+	s.Require().NotEmpty(res.Accounts)
+}
+
+func (s *IntegrationTestSuite) TestQueryModuleAccountByNameCmd() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name       string
+		moduleName string
+		expectErr  bool
+	}{
+		{
+			"invalid module name",
+			"gover",
+			true,
+		},
+		{
+			"valid module name",
+			"mint",
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, authcli.QueryModuleAccountByNameCmd(), []string{
+				tc.moduleName,
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			})
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
+			} else {
+				var res authtypes.QueryModuleAccountByNameResponse
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
+
+				var account types.AccountI
+				err := val.ClientCtx.InterfaceRegistry.UnpackAny(res.Account, &account)
+				s.Require().NoError(err)
+
+				moduleAccount, ok := account.(types.ModuleAccountI)
+				s.Require().True(ok)
+				s.Require().Equal(tc.moduleName, moduleAccount.GetName())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestQueryModuleAccountsCmd() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, authcli.QueryModuleAccountsCmd(), []string{
+		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+	})
+	s.Require().NoError(err)
+
+	var res authtypes.QueryModuleAccountsResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 	s.Require().NotEmpty(res.Accounts)
 }

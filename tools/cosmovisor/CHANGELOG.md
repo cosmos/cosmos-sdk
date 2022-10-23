@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## v1.4.0 2022-10-21
+## v1.4.0 2022-10-23
 
 ### API Breaking Changes
 

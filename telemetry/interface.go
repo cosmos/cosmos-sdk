@@ -13,7 +13,6 @@ import (
 // by the operator. In addition to the sinks, when a process gets a SIGUSR1, a
 // dump of formatted recent metrics will be sent to STDERR.
 type Metrics interface {
-
 	// Gather collects all registered metrics and returns a GatherResponse where the
 	// metrics are encoded depending on the type. metrics are either encoded via
 	// Prometheus or JSON if in-memory.

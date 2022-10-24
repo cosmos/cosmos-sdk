@@ -113,15 +113,15 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposa
 	return proposal, true
 }
 
-// SetProposal sets a proposal and its contents to store.
+// SetProposal sets a proposal to store.
 // Panics if can't marshal the proposal.
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
-	store := ctx.KVStore(keeper.storeKey)
-
 	bz, err := keeper.MarshalProposal(proposal)
 	if err != nil {
 		panic(err)
 	}
+
+	store := ctx.KVStore(keeper.storeKey)
 	store.Set(types.ProposalKey(proposal.Id), bz)
 }
 

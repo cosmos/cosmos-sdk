@@ -37,11 +37,11 @@ const (
 //
 // - 0x30: Params
 var (
-	ProposalsKeyPrefix          = []byte{0x00}
-	ActiveProposalQueuePrefix   = []byte{0x01}
-	InactiveProposalQueuePrefix = []byte{0x02}
-	ProposalIDKey               = []byte{0x03}
-	ProposalContentsKeyPrefix   = []byte{0x04}
+	ProposalsKeyPrefix            = []byte{0x00}
+	ActiveProposalQueuePrefix     = []byte{0x01}
+	InactiveProposalQueuePrefix   = []byte{0x02}
+	ProposalIDKey                 = []byte{0x03}
+	VotingPeriodProposalKeyPrefix = []byte{0x04}
 
 	DepositsKeyPrefix = []byte{0x10}
 
@@ -70,9 +70,9 @@ func ProposalKey(proposalID uint64) []byte {
 	return append(ProposalsKeyPrefix, GetProposalIDBytes(proposalID)...)
 }
 
-// ProposalContentsKey gets a specific proposal content from the store
-func ProposalContentsKey(proposalID uint64) []byte {
-	return append(ProposalContentsKeyPrefix, GetProposalIDBytes(proposalID)...)
+// VotingPeriodProposalKey gets a specific proposal content from the store
+func VotingPeriodProposalKey(proposalID uint64) []byte {
+	return append(VotingPeriodProposalKeyPrefix, GetProposalIDBytes(proposalID)...)
 }
 
 // ActiveProposalByTimeKey gets the active proposal queue key by endTime

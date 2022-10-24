@@ -110,27 +110,6 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposa
 		panic(err)
 	}
 
-	keeper.PopulateProposalContents(ctx, &proposal)
-
-	return proposal, true
-}
-
-// GetProposalWithoutContents gets a proposal from store by ProposalID without messages and
-// metadata. Useful to reduce gas usage.
-// Panics if can't unmarshal the proposal.
-func (keeper Keeper) GetProposalWithoutContents(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
-	store := ctx.KVStore(keeper.storeKey)
-
-	bz := store.Get(types.ProposalKey(proposalID))
-	if bz == nil {
-		return v1.Proposal{}, false
-	}
-
-	var proposal v1.Proposal
-	if err := keeper.UnmarshalProposal(bz, &proposal); err != nil {
-		panic(err)
-	}
-
 	return proposal, true
 }
 
@@ -163,7 +142,6 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	}
 
 	store.Delete(types.ProposalKey(proposalID))
-	store.Delete(types.ProposalContentsKey(proposalID))
 }
 
 // IterateProposals iterates over the all the proposals and performs a callback function.

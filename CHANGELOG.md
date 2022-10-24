@@ -38,6 +38,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v0.45.10 - 2022-10-24
+
 ### Features
 
 * (grpc) [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485) Implement a new gRPC query, `/cosmos/base/node/v1beta1/config`, which provides operator configuration. Applications that wish to expose operator minimum gas prices via gRPC should have their application implement the `ApplicationQueryService` interface (see `SimApp#RegisterNodeService` as an example).
@@ -50,7 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* [#13588](https://github.com/cosmos/cosmos-sdk/pull/13588) Fix regression in distrubtion.WithdrawDelegationRewards when rewards are zero
+* [#13588](https://github.com/cosmos/cosmos-sdk/pull/13588) Fix regression in distrubtion.WithdrawDelegationRewards when rewards are zero.
 * [#13564](https://github.com/cosmos/cosmos-sdk/pull/13564) - Fix `make proto-gen`.
 * (server) [#13610](https://github.com/cosmos/cosmos-sdk/pull/13610) Read the pruning-keep-every field again.
 

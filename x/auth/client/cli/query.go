@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"strings"
 
@@ -25,10 +25,25 @@ const (
 	typeAccSeq = "acc_seq"
 	typeSig    = "signature"
 
-	TypeHash   = "hash"
-	TypeAccSeq = "acc_seq"
-	TypeSig    = "signature"
-	TypeHeight = "height"
+	eventFormat = "{eventType}.{eventAttribute}={value}"
+)
+
+// GetQueryCmd returns the transaction commands for this module
+func GetQueryCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:                        types.ModuleName,
+		Short:                      "Querying commands for the auth module",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
+	}
+
+	cmd.AddCommand(
+		GetAccountCmd(),
+		GetAccountsCmd(),
+		QueryParamsCmd(),
+		QueryModuleAccountByNameCmd(),
+	)
 
 	EventFormat = "{eventType}.{eventAttribute}={value}"
 )
@@ -147,7 +162,51 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 					return sdkerrors.ErrLogic.Wrapf("found %d txs matching given signatures", len(txs.Txs))
 				}
 
-				return clientCtx.PrintProto(txs.Txs[0])
+// QueryModuleAccountByNameCmd returns a command to
+func QueryModuleAccountByNameCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "module-account [module-name]",
+		Short:   "Query module account info by module name",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s q auth module-account auth", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			moduleName := args[0]
+			if len(moduleName) == 0 {
+				return fmt.Errorf("module name should not be empty")
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.ModuleAccountByName(context.Background(), &types.QueryModuleAccountByNameRequest{Name: moduleName})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// QueryTxsByEventsCmd returns a command to search through transactions by events.
+func QueryTxsByEventsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "txs",
+		Short: "Query for paginated transactions that match a set of events",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`
+Search for transactions that match the exact given events where results are paginated.
+Each event takes the form of '%s'. Please refer
+to each module's documentation for the full set of events to query for. Each module
+documents its respective events under 'xx_events.md'.
 
 			case TypeAccSeq:
 				if args[0] == "" {

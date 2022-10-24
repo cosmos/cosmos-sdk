@@ -12,6 +12,8 @@ option go_package = "cosmossdk.io/api/cosmos/base/cli/v1;cliv1";
 service Query {
   // AppOptions returns the autocli options for all of the modules in an app.
   rpc AppOptions(AppOptionsRequest) returns (AppOptionsResponse) {
+    // NOTE: autocli options SHOULD NOT be part of consensus and module_query_safe
+    // should be kept as false.
     option (cosmos.query.v1.module_query_safe) = false;
   }
 }

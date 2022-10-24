@@ -112,14 +112,10 @@ func (mp *senderPriorityMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error
 			txBytes += tx.Size()
 
 			if txBytes >= maxBytes {
-				break
+				return selectedTxs, nil
 			}
 
 			senderNode = senderNode.Next()
-		}
-
-		if txBytes >= maxBytes {
-			break
 		}
 
 		priorityNode = priorityNode.Next()

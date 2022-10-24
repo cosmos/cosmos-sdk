@@ -13,7 +13,7 @@ import (
 func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1.WeightedVoteOptions, metadata string) error {
 	// Check if proposal is in voting period.
 	store := ctx.KVStore(keeper.storeKey)
-	if store.Has(types.VotingPeriodProposalKey(proposalID)) {
+	if !store.Has(types.VotingPeriodProposalKey(proposalID)) {
 		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 

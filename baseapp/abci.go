@@ -250,17 +250,9 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-	memTxs, selectErr := app.mempool.Select(req.Txs, req.MaxTxBytes)
-	if selectErr != nil {
-		panic(selectErr)
-	}
-	var txs [][]byte
-	for _, memTx := range memTxs {
-		bz, encErr := app.txEncoder(memTx)
-		if encErr != nil {
-			panic(encErr)
-		}
-		txs = append(txs, bz)
+	txs, err := app.prepareProposal(req)
+	if err != nil {
+		fmt.Println("do something go error en prepare propossal", err)
 	}
 	return abci.ResponsePrepareProposal{Txs: txs}
 }
@@ -278,18 +270,9 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
-	ctx := app.checkState.ctx
-
-	for _, txBytes := range req.Txs {
-		anteCtx, _ := app.cacheTxContext(ctx, txBytes)
-		tx, err := app.txDecoder(txBytes)
-		if err != nil {
-			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
-		}
-		ctx, err = app.anteHandler(anteCtx, tx, false)
-		if err != nil {
-			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
-		}
+	err := app.processProposal(req)
+	if err != nil {
+		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 	}
 	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 }

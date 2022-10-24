@@ -3,7 +3,7 @@ module cosmossdk.io/math
 go 1.19
 
 require (
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	sigs.k8s.io/yaml v1.3.0
 )
 

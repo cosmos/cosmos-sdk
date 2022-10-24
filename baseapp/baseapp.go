@@ -30,6 +30,8 @@ const (
 	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
 	runTxModeSimulate                  // Simulate a transaction
 	runTxModeDeliver                   // Deliver a transaction
+	runTxPrepareProposal
+	runTxProcessProposal
 )
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -58,6 +60,7 @@ type BaseApp struct { //nolint: maligned
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
+	txEncoder         sdk.TxEncoder
 
 	mempool        mempool.Mempool  // application side mempool
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
@@ -76,8 +79,10 @@ type BaseApp struct { //nolint: maligned
 	//
 	// checkState is set on InitChain and reset on Commit
 	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
-	checkState   *state // for CheckTx
-	deliverState *state // for DeliverTx
+	checkState           *state // for CheckTx
+	deliverState         *state // for DeliverTx
+	processProposalState *state // for CheckTx
+	prepareProposalState *state // for DeliverTx
 
 	// an inter-block write-through cache provided to the context during deliverState
 	interBlockCache sdk.MultiStorePersistentCache
@@ -165,7 +170,7 @@ func NewBaseApp(
 
 	// if execution of options has left certain required fields nil, set them to sane default values
 	if app.mempool == nil {
-		app.mempool = mempool.NewPriorityMempool()
+		app.mempool = mempool.NewSimpleMempool()
 	}
 
 	if app.interBlockCache != nil {
@@ -408,6 +413,30 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	}
 }
 
+// setPrepareProposalState sets the BaseApp's deliverState with a branched multi-store
+// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
+// and provided header. It is set on InitChain and BeginBlock and set to nil on
+// Commit.
+func (app *BaseApp) setPrepareProposalState(header tmproto.Header) {
+	ms := app.cms.CacheMultiStore()
+	app.prepareProposalState = &state{
+		ms:  ms,
+		ctx: sdk.NewContext(ms, header, false, app.logger),
+	}
+}
+
+// setProcessProposalState sets the BaseApp's deliverState with a branched multi-store
+// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
+// and provided header. It is set on InitChain and BeginBlock and set to nil on
+// Commit.
+func (app *BaseApp) setProcessProposalState(header tmproto.Header) {
+	ms := app.cms.CacheMultiStore()
+	app.processProposalState = &state{
+		ms:  ms,
+		ctx: sdk.NewContext(ms, header, false, app.logger),
+	}
+}
+
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
 func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams {
@@ -516,6 +545,10 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 func (app *BaseApp) getState(mode runTxMode) *state {
 	if mode == runTxModeDeliver {
 		return app.deliverState
+	} else if mode == runTxPrepareProposal {
+		return app.prepareProposalState
+	} else if mode == runTxProcessProposal {
+		return app.processProposalState
 	}
 
 	return app.checkState
@@ -809,46 +842,43 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 		panic(selectErr)
 	}
 	var txsBytes [][]byte
-	var txs []sdk.Tx
 	for _, memTx := range memTxs {
 		bz, encErr := app.txEncoder(memTx)
 		if encErr != nil {
 			panic(encErr)
 		}
-		txsBytes = append(txsBytes, bz)
-		txs = append(txs, memTx.(sdk.Tx))
-	}
-	ctx := app.checkState.ctx
-	err := app.checkTxsValidity(ctx, txs, txsBytes)
-	if err != nil {
-		return nil, err
+		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
+		if err != nil {
+			_ = app.mempool.Remove(memTx)
+		} else {
+			txsBytes = append(txsBytes, bz)
+		}
+
 	}
 	return txsBytes, nil
 }
 
 func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {
-	ctx := app.checkState.ctx
-	var txs []sdk.Tx
 	for _, txBytes := range req.Txs {
 		tx, err := app.txDecoder(txBytes)
 		if err != nil {
 			return err
 		}
-		txs = append(txs, tx)
-	}
-	err := app.checkTxsValidity(ctx, txs, req.Txs)
-	if err != nil {
-		return err
+
+		_, _, _, _, err = app.runTx(runTxPrepareProposal, txBytes)
+		if err != nil {
+			_ = app.mempool.Remove(tx.(mempool.Tx))
+		}
 	}
 	return nil
 }
 
-func (app *BaseApp) checkTxsValidity(ctx sdk.Context, txs []sdk.Tx, txBytes [][]byte) error {
-	for i, tx := range txs {
-		anteCtx, _ := app.cacheTxContext(ctx, txBytes[i])
-		_, err := app.anteHandler(anteCtx, tx, false)
+func (app *BaseApp) checkTxsValidity(txMode runTxMode, txBytes [][]byte) error {
+	for _, txByte := range txBytes {
+		_, _, _, _, err := app.runTx(txMode, txByte)
 		if err != nil {
-			return err
+			tx, _ := app.txDecoder(txByte)
+			_ = app.mempool.Remove(tx.(mempool.Tx))
 		}
 	}
 	return nil

@@ -165,7 +165,7 @@ func NewBaseApp(
 
 	// if execution of options has left certain required fields nil, let's set them to default values
 	if app.mempool == nil {
-		app.mempool = mempool.DefaultPriorityMempool()
+		app.mempool = mempool.DefaultSimpleMempool()
 	}
 
 	if app.interBlockCache != nil {
@@ -674,14 +674,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		}
 	}
 
-	// TODO remove nil check when implemented
-	if mode == runTxModeCheck && app.mempool != nil {
-		err = app.mempool.Insert(ctx, tx.(mempool.Tx))
-		if err != nil {
-			return gInfo, nil, anteEvents, priority, err
-		}
-	}
-
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
@@ -809,4 +801,55 @@ func createEvents(msg sdk.Msg) sdk.Events {
 	}
 
 	return sdk.Events{msgEvent}
+}
+
+func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, error) {
+	memTxs, selectErr := app.mempool.Select(req.Txs, req.MaxTxBytes)
+	if selectErr != nil {
+		panic(selectErr)
+	}
+	var txsBytes [][]byte
+	var txs []sdk.Tx
+	for _, memTx := range memTxs {
+		bz, encErr := app.txEncoder(memTx)
+		if encErr != nil {
+			panic(encErr)
+		}
+		txsBytes = append(txsBytes, bz)
+		txs = append(txs, memTx.(sdk.Tx))
+	}
+	ctx := app.checkState.ctx
+	err := app.checkTxsValidity(ctx, txs, txsBytes)
+	if err != nil {
+		return nil, err
+	}
+	return txsBytes, nil
+}
+
+func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {
+	ctx := app.checkState.ctx
+	var txs []sdk.Tx
+	for _, txBytes := range req.Txs {
+		tx, err := app.txDecoder(txBytes)
+		if err != nil {
+			return err
+		}
+		txs = append(txs, tx)
+	}
+	err := app.checkTxsValidity(ctx, txs, req.Txs)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (app *BaseApp) checkTxsValidity(ctx sdk.Context, txs []sdk.Tx, txBytes [][]byte) error {
+	for i, tx := range txs {
+		anteCtx, _ := app.cacheTxContext(ctx, txBytes[i])
+		_, err := app.anteHandler(anteCtx, tx, false)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

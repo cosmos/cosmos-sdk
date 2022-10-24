@@ -61,7 +61,12 @@ func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return m.HasAnimal.UnpackInterfaces(unpacker)
 }
 
-// DeterministicIterations is a generic func to handle deterministic query requests.
+// DeterministicIterations is a function to handle deterministic query requests. It tests 2 things:
+// 1. That the response is always the same when calling the
+// grpc query `iterCount` times (defaults to 1000).
+// 2. That the gas consumption of the query is the same. When
+// `gasOverwrite` is set to true, we also check that this consumed
+// gas value is equal to the hardcoded `gasConsumed`.
 func DeterministicIterations[request proto.Message, response proto.Message](
 	ctx sdk.Context,
 	require *require.Assertions,

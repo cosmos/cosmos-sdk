@@ -106,7 +106,7 @@ func (r *Textual) init() {
 		r.messages[(&basev1beta1.Coin{}).ProtoReflect().Descriptor().FullName()] = NewCoinsValueRenderer(r.coinMetadataQuerier)
 		r.messages[(&durationpb.Duration{}).ProtoReflect().Descriptor().FullName()] = NewDurationValueRenderer()
 		r.messages[(&timestamppb.Timestamp{}).ProtoReflect().Descriptor().FullName()] = NewTimestampValueRenderer()
-		r.messages[(&txv1beta1.Tx{}).ProtoReflect().Descriptor().FullName()] = NewTxValueRenderer(r, r.signerData)
+		r.messages[(&txv1beta1.Tx{}).ProtoReflect().Descriptor().FullName()] = NewTxValueRenderer(r)
 	}
 }
 

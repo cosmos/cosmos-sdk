@@ -9,21 +9,18 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/tx/signing"
 )
 
 type txValueRenderer struct {
-	signerData signing.SignerData
-	t          *Textual
+	tr *Textual
 }
 
 // NewTimestampValueRenderer returns a ValueRenderer for the protobuf Tx type,
 // as called the transaction envelope. It follows the specification defined
 // in ADR-050.
-func NewTxValueRenderer(t *Textual, signerData signing.SignerData) ValueRenderer {
+func NewTxValueRenderer(tr *Textual) ValueRenderer {
 	return txValueRenderer{
-		t:          t,
-		signerData: signerData,
+		tr: tr,
 	}
 }
 
@@ -37,14 +34,14 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 	}
 
 	screens := make([]Screen, 3)
-	screens[0].Text = fmt.Sprintf("Chain ID: %s", vr.signerData.ChainID)
-	screens[1].Text = fmt.Sprintf("Account number: %d", vr.signerData.AccountNumber)
-	pkMsgType, err := protoregistry.GlobalTypes.FindMessageByURL(vr.signerData.PubKey.TypeUrl)
+	screens[0].Text = fmt.Sprintf("Chain ID: %s", vr.tr.signerData.ChainID)
+	screens[1].Text = fmt.Sprintf("Account number: %d", vr.tr.signerData.AccountNumber)
+	pkMsgType, err := protoregistry.GlobalTypes.FindMessageByURL(vr.tr.signerData.PubKey.TypeUrl)
 	if err != nil {
 		return nil, err
 	}
 	pk := pkMsgType.New()
-	err = proto.Unmarshal(vr.signerData.PubKey.GetValue(), pk.Interface())
+	err = proto.Unmarshal(vr.tr.signerData.PubKey.GetValue(), pk.Interface())
 	if err != nil {
 		return nil, err
 	}

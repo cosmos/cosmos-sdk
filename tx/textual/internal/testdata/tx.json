@@ -7,7 +7,10 @@
 			"auth_info": {
 				"signer_infos": [
 					{
-						"public_key": "iQ...==",
+						"public_key": {
+							"@type": "/cosmos.crypto.secp256k1.PubKey",
+							"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+						},
 						"mode_info": { "single": { "mode": "SIGN_MODE_TEXTUAL" } },
 						"sequence": 2
 					}
@@ -15,12 +18,18 @@
 				"fee": {
 					"amount": [
 						{
-							"denom": "atom",
-							"amount": 0.002
+							"denom": "uatom",
+							"amount": "5000"
 						}
 					],
 					"gas_limit": 100000
 				}
+			}
+		},
+		"signer_data": {
+			"pubkey": {
+				"@type": "/cosmos.crypto.secp256k1.PubKey",
+				"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
 			}
 		},
 		"text": "0 COSM"

@@ -7,30 +7,41 @@ import (
 	"os"
 	"testing"
 
-	"cosmossdk.io/tx/textual/valuerenderer"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
+
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/tx/signing"
+	"cosmossdk.io/tx/textual/valuerenderer"
 )
 
+// TODO Remove once we upstream Jim's PR
+func EmptyCoinMetadataQuerier(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
+	return nil, nil
+}
+
 type txJsonTest struct {
-	Proto *tspb.Timestamp
-	Error bool
-	Text  string
+	Proto      *txv1beta1.Tx
+	SignerData signing.SignerData
+	Error      bool
+	Text       string
 }
 
 func TestTxJsonTestcases(t *testing.T) {
 	raw, err := os.ReadFile("../internal/testdata/tx.json")
 	require.NoError(t, err)
 
-	var testcases []timestampJsonTest
+	var testcases []txJsonTest
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			rend := valuerenderer.NewTxValueRenderer()
+			tr := valuerenderer.NewTextual(EmptyCoinMetadataQuerier, tc.SignerData)
+			rend := valuerenderer.NewTxValueRenderer(&tr)
 
 			var screens []valuerenderer.Screen
 			if tc.Proto != nil {

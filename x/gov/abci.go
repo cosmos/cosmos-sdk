@@ -15,40 +15,7 @@ import (
 func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
-	logger := keeper.Logger(ctx)
-
-	// delete the canceled proposals from store.
-	keeper.IterateCanceledProposalQueue(ctx, func(proposal v1.Proposal) (stop bool) {
-		// burn the (deposits * proposal_cancel_burn_rate) amount.
-		// and deposits * (1 - proposal_cancel_burn_rate) will be move to community pool.
-		err := keeper.BurnAndSendDepositsToCommunityPool(ctx, proposal.Id, proposal.TotalDeposit)
-		if err != nil {
-			panic(err)
-		}
-
-		if proposal.VotingStartTime != nil {
-			keeper.DeleteVotes(ctx, proposal.Id)
-		}
-
-		keeper.DeleteProposal(ctx, proposal.Id)
-
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeCancelProposal,
-				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
-				sdk.NewAttribute(types.AttributeKeyProposalResult, types.AttributeValueProposalCanceled),
-			),
-		)
-
-		logger.Info(
-			"proposal is canceled by proposer",
-			"proposal", proposal.Id,
-			"proposer", proposal.Proposer,
-		)
-
-		return false
-	})
-
+	logger := ctx.Logger().With("module", "x/"+types.ModuleName)
 	// delete dead proposals from store and returns theirs deposits.
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal v1.Proposal) bool {

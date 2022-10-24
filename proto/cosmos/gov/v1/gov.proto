@@ -82,11 +82,6 @@ enum ProposalStatus {
   // PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
   // failed.
   PROPOSAL_STATUS_FAILED = 5;
-  // PROPOSAL_STATUS_CANCELED defines a proposal status of a proposal that has
-  // canceled.
-  //
-  // Since: cosmos-sdk 0.47
-  PROPOSAL_STATUS_CANCELED = 6;
 }
 
 // TallyResult defines a standard tally for a governance proposal.

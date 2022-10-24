@@ -7393,7 +7393,7 @@ type MsgCancelProposalResponse struct {
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 	// canceled_time is the time when proposal is canceled.
 	CanceledTime *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=canceled_time,json=canceledTime,proto3" json:"canceled_time,omitempty"`
-	// canceled_height defines the block height at which the proposal is cancel.
+	// canceled_height defines the block height at which the proposal is canceled.
 	CanceledHeight uint64 `protobuf:"varint,3,opt,name=canceled_height,json=canceledHeight,proto3" json:"canceled_height,omitempty"`
 }
 

@@ -20,7 +20,6 @@ const (
 	StatusPassed        = ProposalStatus_PROPOSAL_STATUS_PASSED
 	StatusRejected      = ProposalStatus_PROPOSAL_STATUS_REJECTED
 	StatusFailed        = ProposalStatus_PROPOSAL_STATUS_FAILED
-	StatusCanceled      = ProposalStatus_PROPOSAL_STATUS_CANCELED
 )
 
 // NewProposal creates a new Proposal instance
@@ -115,8 +114,7 @@ func ValidProposalStatus(status ProposalStatus) bool {
 		status == StatusVotingPeriod ||
 		status == StatusPassed ||
 		status == StatusRejected ||
-		status == StatusFailed ||
-		status == StatusCanceled {
+		status == StatusFailed {
 		return true
 	}
 	return false

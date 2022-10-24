@@ -187,7 +187,7 @@ func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposa
 	if !burnDepositAmount.IsZero() {
 		err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, burnDepositAmount)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -195,7 +195,7 @@ func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposa
 	communityPoolAmount := sdk.NewCoins(totalDeposits...).Sub(burnDepositAmount...)
 	err := keeper.distrkeeper.FundCommunityPool(ctx, communityPoolAmount, keeper.ModuleAccountAddress())
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	store.Delete(types.DepositsKey(proposalID))

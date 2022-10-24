@@ -117,12 +117,24 @@ func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer
 		return sdkerrors.Wrapf(types.ErrVotingPeriodEnded, "voting period is already ended for this proposal %d", proposalID)
 	}
 
-	// update the status to StatusCanceled
-	proposal.Status = v1.StatusCanceled
-	// set to store
-	keeper.SetProposal(ctx, proposal)
-	// insert the proposal into cancel proposal queue
-	keeper.InsertCanceledProposalQueue(ctx, proposalID)
+	// burn the (deposits * proposal_cancel_burn_rate) amount.
+	// and deposits * (1 - proposal_cancel_burn_rate) will be move to community pool.
+	err := keeper.BurnAndSendDepositsToCommunityPool(ctx, proposal.Id, proposal.TotalDeposit)
+	if err != nil {
+		return err
+	}
+
+	if proposal.VotingStartTime != nil {
+		keeper.DeleteVotes(ctx, proposal.Id)
+	}
+
+	keeper.DeleteProposal(ctx, proposal.Id)
+
+	keeper.Logger(ctx).Info(
+		"proposal is canceled by proposer",
+		"proposal", proposal.Id,
+		"proposer", proposal.Proposer,
+	)
 
 	return nil
 }
@@ -171,9 +183,6 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	}
 	if proposal.VotingEndTime != nil {
 		keeper.RemoveFromActiveProposalQueue(ctx, proposalID, *proposal.VotingEndTime)
-	}
-	if proposal.Status == v1.StatusCanceled {
-		keeper.RemoveFromCanceledProposalQueue(ctx, proposalID)
 	}
 
 	store.Delete(types.ProposalKey(proposalID))

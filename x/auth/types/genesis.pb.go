@@ -6,7 +6,7 @@ package types
 import (
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
-	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
+	_ "github.com/cosmos/cosmos-sdk/types/tx/legacy_amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"

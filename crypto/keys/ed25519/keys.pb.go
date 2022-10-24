@@ -6,7 +6,7 @@ package ed25519
 import (
 	crypto_ed25519 "crypto/ed25519"
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
+	_ "github.com/cosmos/cosmos-sdk/types/tx/legacy_amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"

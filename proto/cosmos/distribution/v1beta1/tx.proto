@@ -50,7 +50,7 @@ service Msg {
 // a delegator (or validator self-delegation).
 message MsgSetWithdrawAddress {
   option (cosmos.msg.v1.signer)            = "delegator_address";
-  option (cosmos.msg.legacy_amino.v1.name) = "cosmos-sdk/MsgSetWithdrawAddress";
+  option (cosmos.msg.legacy_amino.v1.name) = "cosmos-sdk/MsgModifyWithdrawAddress";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -67,7 +67,7 @@ message MsgSetWithdrawAddressResponse {}
 // from a single validator.
 message MsgWithdrawDelegatorReward {
   option (cosmos.msg.v1.signer)            = "delegator_address";
-  option (cosmos.msg.legacy_amino.v1.name) = "cosmos-sdk/MsgWithdrawDelegatorReward";
+  option (cosmos.msg.legacy_amino.v1.name) = "cosmos-sdk/MsgWithdrawDelegationReward";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;

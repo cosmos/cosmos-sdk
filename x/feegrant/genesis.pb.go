@@ -5,7 +5,7 @@ package feegrant
 
 import (
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
+	_ "github.com/cosmos/cosmos-sdk/types/tx/legacy_amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"

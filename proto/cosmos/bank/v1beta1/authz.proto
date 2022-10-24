@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.bank.v1beta1;
 
-import "legacy_amino/v1/amino.proto";
+import "legacy_amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
@@ -14,10 +14,10 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 // Since: cosmos-sdk 0.43
 message SendAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
-  option (legacy_amino.v1.name)   = "cosmos-sdk/SendAuthorization";
+  option (legacy_amino.name)   = "cosmos-sdk/SendAuthorization";
 
   repeated cosmos.base.v1beta1.Coin spend_limit = 1
-      [(gogoproto.nullable) = false, (legacy_amino.v1.dont_omitempty) = true, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+      [(gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // allow_list specifies an optional list of addresses to whom the grantee can send tokens on behalf of the
   // granter. If omitted, any recipient is allowed.

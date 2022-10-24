@@ -2,7 +2,7 @@
 syntax = "proto3";
 package cosmos.crypto.hd.v1;
 
-import "legacy_amino/v1/amino.proto";
+import "legacy_amino/amino.proto";
 import "gogoproto/gogo.proto";
 
 option go_package                      = "github.com/cosmos/cosmos-sdk/crypto/hd";
@@ -10,7 +10,7 @@ option (gogoproto.goproto_getters_all) = false;
 
 // BIP44Params is used as path field in ledger item in Record.
 message BIP44Params {
-  option (legacy_amino.v1.name) = "crypto/keys/hd/BIP44Params";
+  option (legacy_amino.name) = "crypto/keys/hd/BIP44Params";
 
   option (gogoproto.goproto_stringer) = false;
   // purpose is a constant set to 44' (or 0x8000002C) following the BIP43 recommendation

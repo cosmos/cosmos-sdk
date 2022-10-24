@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.crypto.ed25519;
 
-import "legacy_amino/v1/amino.proto";
+import "legacy_amino/amino.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519";
@@ -12,7 +12,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519";
 // ADR-28. Nevertheless, you will like to use ed25519 in app user level
 // then you must create a new proto message and follow ADR-28 for Address construction.
 message PubKey {
-  option (legacy_amino.v1.name) = "tendermint/PubKeyEd25519";
+  option (legacy_amino.name) = "tendermint/PubKeyEd25519";
   // The Amino encoding is simply the inner bytes field, and not the Amino
   // encoding of the whole PubKey struct.
   //
@@ -23,7 +23,7 @@ message PubKey {
   // Then we have:
   // out == `"MQ=="`
   // out != `{"key":"MQ=="}`
-  option (legacy_amino.v1.encoding) = "bytes field";
+  option (legacy_amino.encoding) = "bytes field";
   option (gogoproto.goproto_stringer)          = false;
 
   bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
@@ -32,8 +32,8 @@ message PubKey {
 // Deprecated: PrivKey defines a ed25519 private key.
 // NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 message PrivKey {
-  option (legacy_amino.v1.name)     = "tendermint/PrivKeyEd25519";
-  option (legacy_amino.v1.encoding) = "bytes field";
+  option (legacy_amino.name)     = "tendermint/PrivKeyEd25519";
+  option (legacy_amino.encoding) = "bytes field";
 
   bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PrivateKey"];
 }

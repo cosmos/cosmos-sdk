@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package legacy_amino.v1;
+package legacy_amino;
 
 import "google/protobuf/descriptor.proto";
 
@@ -40,7 +40,7 @@ extend google.protobuf.FieldOptions {
   // Example:
   //
   // message Foo {
-  //   string bar = 1 [(legacy_amino.v1.field_name) = "baz"];
+  //   string bar = 1 [(legacy_amino.field_name) = "baz"];
   // }
   //
   // Then the Amino encoding of Foo will be:
@@ -59,7 +59,7 @@ extend google.protobuf.FieldOptions {
   //
   // message Foo {
   //   string bar = 1;
-  //   string baz = 2 [(legacy_amino.v1.dont_omitempty) = true];
+  //   string baz = 2 [(legacy_amino.dont_omitempty) = true];
   // }
   //
   // f := Foo{};

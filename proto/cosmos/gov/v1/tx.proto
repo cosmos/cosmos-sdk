@@ -8,7 +8,7 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 import "cosmos/msg/v1/msg.proto";
-import "legacy_amino/v1/amino.proto";
+import "legacy_amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
 
@@ -43,10 +43,10 @@ service Msg {
 // proposal Content.
 message MsgSubmitProposal {
   option (cosmos.msg.v1.signer)            = "proposer";
-  option (legacy_amino.v1.name) = "cosmos-sdk/v1/MsgSubmitProposal";
+  option (legacy_amino.name) = "cosmos-sdk/v1/MsgSubmitProposal";
 
   repeated google.protobuf.Any messages             = 1;
-  repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [(gogoproto.nullable) = false, (legacy_amino.v1.dont_omitempty) = true];
+  repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [(gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true];
   string                            proposer        = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // metadata is any arbitrary metadata attached to the proposal.
   string metadata = 4;
@@ -61,7 +61,7 @@ message MsgSubmitProposalResponse {
 // This ensures backwards compatibility with v1beta1.MsgSubmitProposal.
 message MsgExecLegacyContent {
   option (cosmos.msg.v1.signer)            = "authority";
-  option (legacy_amino.v1.name) = "cosmos-sdk/v1/MsgExecLegacyContent";
+  option (legacy_amino.name) = "cosmos-sdk/v1/MsgExecLegacyContent";
 
   // content is the proposal's content.
   google.protobuf.Any content = 1 [(cosmos_proto.accepts_interface) = "Content"];
@@ -75,9 +75,9 @@ message MsgExecLegacyContentResponse {}
 // MsgVote defines a message to cast a vote.
 message MsgVote {
   option (cosmos.msg.v1.signer)            = "voter";
-  option (legacy_amino.v1.name) = "cosmos-sdk/v1/MsgVote";
+  option (legacy_amino.name) = "cosmos-sdk/v1/MsgVote";
 
-  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (legacy_amino.v1.dont_omitempty) = true];
+  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (legacy_amino.dont_omitempty) = true];
   string     voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   VoteOption option      = 3;
   string     metadata    = 4;
@@ -89,9 +89,9 @@ message MsgVoteResponse {}
 // MsgVoteWeighted defines a message to cast a vote.
 message MsgVoteWeighted {
   option (cosmos.msg.v1.signer)            = "voter";
-  option (legacy_amino.v1.name) = "cosmos-sdk/v1/MsgVoteWeighted";
+  option (legacy_amino.name) = "cosmos-sdk/v1/MsgVoteWeighted";
 
-  uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (legacy_amino.v1.dont_omitempty) = true];
+  uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (legacy_amino.dont_omitempty) = true];
   string voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated WeightedVoteOption options  = 3;
   string                      metadata = 4;
@@ -103,11 +103,11 @@ message MsgVoteWeightedResponse {}
 // MsgDeposit defines a message to submit a deposit to an existing proposal.
 message MsgDeposit {
   option (cosmos.msg.v1.signer)            = "depositor";
-  option (legacy_amino.v1.name) = "cosmos-sdk/v1/MsgDeposit";
+  option (legacy_amino.name) = "cosmos-sdk/v1/MsgDeposit";
 
-  uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (legacy_amino.v1.dont_omitempty) = true];
+  uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (legacy_amino.dont_omitempty) = true];
   string   depositor   = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  repeated cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false, (legacy_amino.v1.dont_omitempty) = true];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true];
 }
 
 // MsgDepositResponse defines the Msg/Deposit response type.
@@ -118,7 +118,7 @@ message MsgDepositResponse {}
 // Since: cosmos-sdk 0.47
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer)            = "authority";
-  option (legacy_amino.v1.name) = "cosmos-sdk/x/gov/v1/MsgUpdateParams";
+  option (legacy_amino.name) = "cosmos-sdk/x/gov/v1/MsgUpdateParams";
 
   // authority is the address of the governance account.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -126,7 +126,7 @@ message MsgUpdateParams {
   // params defines the x/gov parameters to update.
   //
   // NOTE: All parameters must be supplied.
-  Params params = 2 [(gogoproto.nullable) = false, (legacy_amino.v1.dont_omitempty) = true];
+  Params params = 2 [(gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a

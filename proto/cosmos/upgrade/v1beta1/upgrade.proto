@@ -5,14 +5,14 @@ import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
-import "legacy_amino/v1/amino.proto";
+import "legacy_amino/amino.proto";
 
 option go_package                      = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 option (gogoproto.goproto_getters_all) = false;
 
 // Plan specifies information about a planned upgrade and when it should occur.
 message Plan {
-  option (legacy_amino.v1.name) = "cosmos-sdk/Plan";
+  option (legacy_amino.name) = "cosmos-sdk/Plan";
   option (gogoproto.equal)                 = true;
   option (gogoproto.goproto_stringer)      = false;
 
@@ -28,7 +28,7 @@ message Plan {
   // Deprecated: Time based upgrades have been deprecated. Time based upgrade logic
   // has been removed from the SDK.
   // If this field is not empty, an error will be thrown.
-  google.protobuf.Timestamp time = 2 [deprecated = true, (gogoproto.stdtime) = true, (gogoproto.nullable) = false, (legacy_amino.v1.dont_omitempty) = true];
+  google.protobuf.Timestamp time = 2 [deprecated = true, (gogoproto.stdtime) = true, (gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true];
 
   // The height at which the upgrade must be performed.
   // Only used if Time is not set.
@@ -51,13 +51,13 @@ message Plan {
 message SoftwareUpgradeProposal {
   option deprecated                          = true;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
-  option (legacy_amino.v1.name)   = "cosmos-sdk/SoftwareUpgradeProposal";
+  option (legacy_amino.name)   = "cosmos-sdk/SoftwareUpgradeProposal";
   option (gogoproto.equal)                   = true;
   option (gogoproto.goproto_stringer)        = false;
 
   string title       = 1;
   string description = 2;
-  Plan   plan        = 3 [(gogoproto.nullable) = false, (legacy_amino.v1.dont_omitempty) = true];
+  Plan   plan        = 3 [(gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true];
 }
 
 // CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
@@ -67,7 +67,7 @@ message SoftwareUpgradeProposal {
 message CancelSoftwareUpgradeProposal {
   option deprecated                          = true;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
-  option (legacy_amino.v1.name)   = "cosmos-sdk/CancelSoftwareUpgradeProposal";
+  option (legacy_amino.name)   = "cosmos-sdk/CancelSoftwareUpgradeProposal";
   option (gogoproto.equal)                   = true;
   option (gogoproto.goproto_stringer)        = false;
 

@@ -16,7 +16,7 @@ This annex provides normative guidance on how devices should render a
 ## Context
 
 `SIGN_MODE_TEXTUAL` allows a legible version of a transaction to be signed
-on a hardware security devices, such as a Ledger. Early versions of the
+on a hardware security device, such as a Ledger. Early versions of the
 design rendered transactions directly to lines of ASCII text, but this
 proved awkward from its in-band signaling, and for the need to display
 Unicode text within the transaction.
@@ -53,13 +53,13 @@ sequence, with user controls for going forward or backward a line.
 - Expert mode screens are only presented if the device is in expert mode.
 
 - Each line of the screen starts with a number of `>` characters equal
-to the screen's indetation level, followed by a `+` character if this
+to the screen's indentation level, followed by a `+` character if this
 isn't the first line of the screen, followed by a space if either a
 `>` or a `+` has been emitted,
 or if this header is followed by a `>`, `+`, or space.
 
-- If the line ends with whitespace or an `@` character, and `@` character
-is appended to the line.
+- If the line ends with whitespace or an `@` character, an additional `@`
+character is appended to the line.
 
 - The following ASCII control characters or backslash (`\`) are converted
 to a backslash followed by a letter code, in the manner of string literals

@@ -375,7 +375,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAddressStringToBytes() {
 }
 
 func (suite *DeterministicTestSuite) setModuleAccounts(
-	ctx sdk.Context, ak keeper.AccountKeeper, maccs []string) []types.AccountI {
+	ctx sdk.Context, ak keeper.AccountKeeper, maccs []string,
+) []types.AccountI {
 	sort.Strings(maccs)
 	moduleAccounts := make([]types.AccountI, 0, len(maccs))
 	for _, m := range maccs {
@@ -414,7 +415,6 @@ func (suite *DeterministicTestSuite) runModuleAccountsIterations(ak keeper.Accou
 			}
 		}
 	}
-
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {

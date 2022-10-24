@@ -3,6 +3,7 @@ package tx
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -42,7 +43,16 @@ func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interface
 	}
 }
 
-var _ txtypes.ServiceServer = txServer{}
+var (
+	_ txtypes.ServiceServer = txServer{}
+
+	// EventRegex checks that an event string is formatted with {alphabetic}.{alphabetic}={value}
+	EventRegex = regexp.MustCompile(`^[a-zA-Z]+\.[a-zA-Z]+=\S+$`)
+)
+
+const (
+	eventFormat = "{eventType}.{eventAttribute}={value}"
+)
 
 // GetTxsEvent implements the ServiceServer.TxsByEvents RPC method.
 func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
@@ -63,7 +73,17 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	}
 	orderBy := parseOrderBy(req.OrderBy)
 
-	result, err := QueryTxsByEvents(s.clientCtx, int(req.Page), int(req.Limit), req.Query, orderBy)
+	if len(req.Events) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "must declare at least one event to search")
+	}
+
+	for _, event := range req.Events {
+		if !EventRegex.Match([]byte(event)) {
+			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
+		}
+	}
+
+	result, err := QueryTxsByEvents(s.clientCtx, req.Events, page, limit, orderBy)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

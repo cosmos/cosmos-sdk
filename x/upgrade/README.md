@@ -45,7 +45,7 @@ automatically upgrade to.
 
 If an operator running the application binary also runs a sidecar process to assist
 in the automatic download and upgrade of a binary, the `Info` allows this process to
-be seamless. This tool is [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor#readme).
+be seamless. This tool is [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree/main/tools/cosmovisor#readme).
 
 ```go
 type Plan struct {

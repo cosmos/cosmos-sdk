@@ -4,11 +4,11 @@ package cosmos.feegrant.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/feegrant/v1beta1/feegrant.proto";
-import "cosmos/msg/legacy_amino/v1/amino.proto";
+import "legacy_amino/v1/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant";
 
 // GenesisState contains a set of fee allowances, persisted from the store
 message GenesisState {
-  repeated Grant allowances = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
+  repeated Grant allowances = 1 [(gogoproto.nullable) = false, (legacy_amino.v1.dont_omitempty) = true];
 }

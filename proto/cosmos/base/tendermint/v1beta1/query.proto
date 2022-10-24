@@ -10,7 +10,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/tendermint/v1beta1/types.proto";
 import "cosmos_proto/cosmos.proto";
 import "tendermint/types/block.proto";
-import "cosmos/msg/legacy_amino/v1/amino.proto";
+import "legacy_amino/v1/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/tmservice";
 
@@ -204,5 +204,5 @@ message ProofOp {
 //
 // Note: This type is a duplicate of the ProofOps proto type defined in Tendermint.
 message ProofOps {
-  repeated ProofOp ops = 1 [(gogoproto.nullable) = false, (cosmos.msg.legacy_amino.v1.dont_omitempty) = true];
+  repeated ProofOp ops = 1 [(gogoproto.nullable) = false, (legacy_amino.v1.dont_omitempty) = true];
 }

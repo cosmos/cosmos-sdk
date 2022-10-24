@@ -5,7 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/mint/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
-import "cosmos/msg/legacy_amino/v1/amino.proto";
+import "legacy_amino/v1/amino.proto";
 
 // Minter represents the minting state.
 message Minter {
@@ -26,7 +26,7 @@ message Minter {
 // Params defines the parameters for the x/mint module.
 message Params {
   option (gogoproto.goproto_stringer)      = false;
-  option (cosmos.msg.legacy_amino.v1.name) = "cosmos-sdk/x/mint/Params";
+  option (legacy_amino.v1.name) = "cosmos-sdk/x/mint/Params";
 
   // type of coin to mint
   string mint_denom = 1;

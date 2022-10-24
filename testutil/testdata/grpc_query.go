@@ -78,7 +78,7 @@ func DeterministicIterations[request proto.Message, response proto.Message](
 	before := ctx.GasMeter().GasConsumed()
 	prevRes, err := grpcFn(ctx, req)
 	require.NoError(err)
-	if gasOverwrite { // to handle regressions
+	if gasOverwrite { // to handle regressions, i.e. check that gas consumption didn't change
 		gasConsumed = ctx.GasMeter().GasConsumed() - before
 	}
 

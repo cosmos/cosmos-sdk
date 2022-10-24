@@ -70,7 +70,7 @@ func ProposalKey(proposalID uint64) []byte {
 	return append(ProposalsKeyPrefix, GetProposalIDBytes(proposalID)...)
 }
 
-// VotingPeriodProposalKey gets a specific proposal content from the store
+// VotingPeriodProposalKey gets if a proposal is in voting period.
 func VotingPeriodProposalKey(proposalID uint64) []byte {
 	return append(VotingPeriodProposalKeyPrefix, GetProposalIDBytes(proposalID)...)
 }

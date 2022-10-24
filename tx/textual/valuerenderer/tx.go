@@ -52,16 +52,18 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 	screens[2].Expert = true
 
 	// Get sdk.Msgs screens, from Tx.Body.Messages (field number 1).
-	msgVr, err := vr.t.GetValueRenderer(protoTx.Body.ProtoReflect().Descriptor().Fields().ByNumber(1))
-	if err != nil {
-		return nil, err
-	}
-	msgScreens, err := msgVr.Format(ctx, protoreflect.ValueOf(protoTx.Body.Messages)) // TODO not sure this works...
-	if err != nil {
-		return nil, err
-	}
+	// msgVr, err := vr.t.GetValueRenderer(protoTx.Body.ProtoReflect().Descriptor().Fields().ByNumber(1))
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// msgScreens, err := msgVr.Format(ctx, protoreflect.ValueOf(protoTx.Body.Messages)) // TODO not sure this works...
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// screens = append(screens, msgScreens...)
 
-	screens = append(screens, msgScreens...)
+	// Fees
+	vr.Format(ctx, protoTx.AuthInfo.Fee.ProtoReflect().Get(protoTx.AuthInfo.Fee.ProtoReflect().Descriptor().Fields().ByNumber(1)))
 
 	return screens, nil
 }

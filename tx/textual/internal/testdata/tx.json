@@ -1,0 +1,28 @@
+[
+	{
+		"proto": {
+			"body": {
+				"messages": []
+			},
+			"auth_info": {
+				"signer_infos": [
+					{
+						"public_key": "iQ...==",
+						"mode_info": { "single": { "mode": "SIGN_MODE_TEXTUAL" } },
+						"sequence": 2
+					}
+				],
+				"fee": {
+					"amount": [
+						{
+							"denom": "atom",
+							"amount": 0.002
+						}
+					],
+					"gas_limit": 100000
+				}
+			}
+		},
+		"text": "0 COSM"
+	}
+]

@@ -574,7 +574,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v8.0
 
 ### Bug Fixes
 
-* [#13588](https://github.com/cosmos/cosmos-sdk/pull/13588) Fix regression in distrubtion.WithdrawDelegationRewards when rewards are zero
+* [#13588](https://github.com/cosmos/cosmos-sdk/pull/13588) Fix regression in distrubtion.WithdrawDelegationRewards when rewards are zero.
 * [#13564](https://github.com/cosmos/cosmos-sdk/pull/13564) - Fix `make proto-gen`.
 * (server) [#13610](https://github.com/cosmos/cosmos-sdk/pull/13610) Read the pruning-keep-every field again.
 

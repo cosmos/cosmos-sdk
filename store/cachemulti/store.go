@@ -45,6 +45,9 @@ func NewFromKVStore(
 	keys map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext,
 	listeners map[types.StoreKey][]types.WriteListener,
 ) Store {
+	if listeners == nil {
+		listeners = make(map[types.StoreKey][]types.WriteListener)
+	}
 	cms := Store{
 		db:           cachekv.NewStore(store),
 		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
@@ -86,7 +89,8 @@ func newCacheMultiStoreFromCMS(cms Store) Store {
 		stores[k] = v
 	}
 
-	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext, cms.listeners)
+	// don't pass listeners to nested cache store.
+	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext, nil)
 }
 
 // SetTracer sets the tracer for the MultiStore that the underlying
@@ -132,6 +136,11 @@ func (cms Store) ListeningEnabled(key types.StoreKey) bool {
 		return len(ls) != 0
 	}
 	return false
+}
+
+// LatestVersion returns the branch version of the store
+func (cms Store) LatestVersion() int64 {
+	panic("cannot get latest version from branch cached multi-store")
 }
 
 // GetStoreType returns the type of the store.

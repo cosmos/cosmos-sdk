@@ -3,7 +3,7 @@ package valuerenderer
 import (
 	"context"
 	"encoding/hex"
-	"io"
+	"fmt"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -19,16 +19,16 @@ type bytesValueRenderer struct{}
 
 var _ ValueRenderer = bytesValueRenderer{}
 
-func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value, w io.Writer) error {
-	_, err := io.WriteString(w, strings.ToUpper(hex.EncodeToString(v.Bytes())))
-	return err
+func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
+	text := strings.ToUpper(hex.EncodeToString(v.Bytes()))
+	return []Screen{{Text: text}}, nil
 }
 
-func (vr bytesValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
-	formatted, err := io.ReadAll(r)
-	if err != nil {
-		return protoreflect.ValueOfBytes([]byte{}), err
+func (vr bytesValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
+	if len(screens) != 1 {
+		return protoreflect.ValueOfBytes([]byte{}), fmt.Errorf("expected single screen: %v", screens)
 	}
+	formatted := screens[0].Text
 
 	data, err := hex.DecodeString(string(formatted))
 	if err != nil {

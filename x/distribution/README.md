@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Distribution Overview
-parent:
-  title: "distribution"
--->
+---
+sidebar_position: 1
+---
 
 # `x/distribution`
 
@@ -97,8 +94,6 @@ to set up a script to periodically withdraw and rebond rewards.
     * [CLI](#cli)
     * [gRPC](#grpc)
 
-<!-- order: 1 -->
-
 # Concepts
 
 In Proof of Stake (PoS) blockchains, rewards gained from transaction fees are paid to validators. The fee distribution module fairly distributes the rewards to the validators' constituent delegators.
@@ -130,8 +125,6 @@ is created which might need to reference the historical record, the reference co
 Each time one object which previously needed to reference the historical record is deleted, the reference
 count is decremented. If the reference count hits zero, the historical record is deleted.
 
-<!-- order: 2 -->
-
 # State
 
 ## FeePool
@@ -157,7 +150,9 @@ type DecCoin struct {
 }
 ```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
+```
 
 ## Validator Distribution
 
@@ -200,9 +195,9 @@ it can be updated with governance or the address with authority.
 
 * Params: `0x09 | ProtocolBuffer(Params)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30
-
-<!-- order: 3 -->
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30
+```
 
 # Begin Block
 
@@ -216,7 +211,7 @@ block, the different claims on the fees collected are updated as follows:
 
 ## The Distribution Scheme
 
-See [params](07_params.md) for description of parameters.
+See [params](#params) for description of parameters.
 
 Let `fees` be the total fees collected in the previous block, including
 inflationary rewards to the stake. All fees are collected in a specific module
@@ -255,8 +250,7 @@ validator sets a maximum rate and a maximum daily increase. These maximums canno
 
 The outstanding rewards that the operator is entitled to are stored in
 `ValidatorAccumulatedCommission`, while the rewards the delegators are entitled
-to are stored in `ValidatorCurrentRewards`. The [F1 fee distribution
-scheme](01_concepts.md) is used to calculate the rewards per delegator as they
+to are stored in `ValidatorCurrentRewards`. The [F1 fee distribution scheme](#concepts) is used to calculate the rewards per delegator as they
 withdraw or update their delegation, and is thus not handled in `BeginBlock`.
 
 ### Example Distribution
@@ -276,8 +270,6 @@ the total rewards. Consequently, the reward for a single delegator is:
 community tax rate) * (1 - validator commission rate)
 ```
 
-<!-- order: 4 -->
-
 # Messages
 
 ## MsgSetWithdrawAddress
@@ -289,7 +281,9 @@ The withdraw address cannot be any of the module accounts. These accounts are bl
 
 Response:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L31-L41
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L31-L41
+```
 
 ```go
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error
@@ -339,7 +333,9 @@ The final calculated stake is equivalent to the actual staked coins in the deleg
 
 Response:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L46-L56
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L46-L56
+```
 
 ## WithdrawValidatorCommission
 
@@ -401,13 +397,13 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 
 Distribution module params can be updated through `MsgUpdateParams`, which can be done using governance proposal and the signer will always be gov module account address. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/8822ef2695a1eb8cb30b7432f58f631c73951f1d/proto/cosmos/distribution/v1beta1/tx.proto#L106-L119
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/8822ef2695a1eb8cb30b7432f58f631c73951f1d/proto/cosmos/distribution/v1beta1/tx.proto#L106-L119
+```
 
 The message handling can fail if:
 
 * signer is not the gov module account address.
-
-<!-- order: 5 -->
 
 # Hooks
 
@@ -465,8 +461,6 @@ Any remaining rewards are dust amounts.
 * The slash event is stored for later use.
   The slash event will be referenced when calculating delegator rewards.
 
-<!-- order: 6 -->
-
 # Events
 
 The distribution module emits the following events:
@@ -512,8 +506,6 @@ The distribution module emits the following events:
 | message    | action        | withdraw_validator_commission |
 | message    | sender        | {senderAddress}               |
 
-<!-- order: 7 -->
-
 # Parameters
 
 The distribution module contains the following parameters:
@@ -528,8 +520,6 @@ The distribution module contains the following parameters:
 * [0] `communitytax`, `baseproposerreward` and `bonusproposerreward` must be
   positive and their sum cannot exceed 1.00.
 
-<!-- order: 8 -->
-
 # Client
 
 ## CLI
@@ -540,7 +530,7 @@ A user can query and interact with the `distribution` module using the CLI.
 
 The `query` commands allow users to query `distribution` state.
 
-```sh
+```shell
 simd query distribution --help
 ```
 
@@ -548,13 +538,13 @@ simd query distribution --help
 
 The `commission` command allows users to query validator commission rewards by address.
 
-```sh
+```shell
 simd query distribution commission [address] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query distribution commission cosmosvaloper1..
 ```
 
@@ -570,13 +560,13 @@ commission:
 
 The `community-pool` command allows users to query all coin balances within the community pool.
 
-```sh
+```shell
 simd query distribution community-pool [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query distribution community-pool
 ```
 
@@ -592,13 +582,13 @@ pool:
 
 The `params` command allows users to query the parameters of the `distribution` module.
 
-```sh
+```shell
 simd query distribution params [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query distribution params
 ```
 
@@ -615,13 +605,13 @@ withdraw_addr_enabled: true
 
 The `rewards` command allows users to query delegator rewards. Users can optionally include the validator address to query rewards earned from a specific validator.
 
-```sh
+```shell
 simd query distribution rewards [delegator-addr] [validator-addr] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query distribution rewards cosmos1..
 ```
 
@@ -642,13 +632,13 @@ total:
 
 The `slashes` command allows users to query all slashes for a given block range.
 
-```sh
+```shell
 simd query distribution slashes [validator] [start-height] [end-height] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query distribution slashes cosmosvaloper1.. 1 1000
 ```
 
@@ -667,13 +657,13 @@ slashes:
 
 The `validator-outstanding-rewards` command allows users to query all outstanding (un-withdrawn) rewards for a validator and all their delegations.
 
-```sh
+```shell
 simd query distribution validator-outstanding-rewards [validator] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd query distribution validator-outstanding-rewards cosmosvaloper1..
 ```
 
@@ -689,7 +679,7 @@ rewards:
 
 The `tx` commands allow users to interact with the `distribution` module.
 
-```sh
+```shell
 simd tx distribution --help
 ```
 
@@ -697,13 +687,13 @@ simd tx distribution --help
 
 The `fund-community-pool` command allows users to send funds to the community pool.
 
-```sh
+```shell
 simd tx distribution fund-community-pool [amount] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd tx distribution fund-community-pool 100stake --from cosmos1..
 ```
 
@@ -711,13 +701,13 @@ simd tx distribution fund-community-pool 100stake --from cosmos1..
 
 The `set-withdraw-addr` command allows users to set the withdraw address for rewards associated with a delegator address.
 
-```sh
+```shell
 simd tx distribution set-withdraw-addr [withdraw-addr] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd tx distribution set-withdraw-addr cosmos1.. --from cosmos1..
 ```
 
@@ -725,13 +715,13 @@ simd tx distribution set-withdraw-addr cosmos1.. --from cosmos1..
 
 The `withdraw-all-rewards` command allows users to withdraw all rewards for a delegator.
 
-```sh
+```shell
 simd tx distribution withdraw-all-rewards [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd tx distribution withdraw-all-rewards --from cosmos1..
 ```
 
@@ -740,13 +730,13 @@ simd tx distribution withdraw-all-rewards --from cosmos1..
 The `withdraw-rewards` command allows users to withdraw all rewards from a given delegation address,
 and optionally withdraw validator commission if the delegation address given is a validator operator and the user proves the `--commision` flag.
 
-```sh
+```shell
 simd tx distribution withdraw-rewards [validator-addr] [flags]
 ```
 
 Example:
 
-```sh
+```shell
 simd tx distribution withdraw-rewards cosmosvaloper1.. --from cosmos1.. --commision
 ```
 
@@ -760,7 +750,7 @@ The `Params` endpoint allows users to query parameters of the `distribution` mod
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     localhost:9090 \
     cosmos.distribution.v1beta1.Query/Params
@@ -785,7 +775,7 @@ The `ValidatorOutstandingRewards` endpoint allows users to query rewards of a va
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"validator_address":"cosmosvalop1.."}' \
     localhost:9090 \
@@ -813,7 +803,7 @@ The `ValidatorCommission` endpoint allows users to query accumulated commission 
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"validator_address":"cosmosvalop1.."}' \
     localhost:9090 \
@@ -841,7 +831,7 @@ The `ValidatorSlashes` endpoint allows users to query slash events of a validato
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"validator_address":"cosmosvalop1.."}' \
     localhost:9090 \
@@ -870,7 +860,7 @@ The `DelegationRewards` endpoint allows users to query the total rewards accrued
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"delegator_address":"cosmos1..","validator_address":"cosmosvalop1.."}' \
     localhost:9090 \
@@ -896,7 +886,7 @@ The `DelegationTotalRewards` endpoint allows users to query the total rewards ac
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"delegator_address":"cosmos1.."}' \
     localhost:9090 \
@@ -933,7 +923,7 @@ The `DelegatorValidators` endpoint allows users to query all validators for give
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"delegator_address":"cosmos1.."}' \
     localhost:9090 \
@@ -956,7 +946,7 @@ The `DelegatorWithdrawAddress` endpoint allows users to query the withdraw addre
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     -d '{"delegator_address":"cosmos1.."}' \
     localhost:9090 \
@@ -977,7 +967,7 @@ The `CommunityPool` endpoint allows users to query the community pool coins.
 
 Example:
 
-```sh
+```shell
 grpcurl -plaintext \
     localhost:9090 \
     cosmos.distribution.v1beta1.Query/CommunityPool

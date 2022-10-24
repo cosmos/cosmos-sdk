@@ -167,6 +167,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 		posttests func(res *types.QueryAccountAddressByIDResponse)
 	}{
 		{
+			"invalid request",
+			func() {
+				req = &types.QueryAccountAddressByIDRequest{Id: -1}
+			},
+			false,
+			func(res *types.QueryAccountAddressByIDResponse) {},
+		},
+		{
 			"account address not found",
 			func() {
 				req = &types.QueryAccountAddressByIDRequest{Id: math.MaxInt64}
@@ -179,7 +187,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 			func() {
 				account := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 				suite.accountKeeper.SetAccount(suite.ctx, account)
-				req = &types.QueryAccountAddressByIDRequest{Id: account.GetAccountNumber()}
+				req = &types.QueryAccountAddressByIDRequest{Id: int64(account.GetAccountNumber())}
 			},
 			true,
 			func(res *types.QueryAccountAddressByIDResponse) {
@@ -332,6 +340,61 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 					moduleNames = append(moduleNames, moduleAccount.GetName())
 				}
 				suite.Require().True(sort.StringsAreSorted(moduleNames))
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
+			}
+
+			tc.posttests(res)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryModuleAccountByName() {
+	var req *types.QueryModuleAccountByNameRequest
+
+	testCases := []struct {
+		msg       string
+		malleate  func()
+		expPass   bool
+		posttests func(res *types.QueryModuleAccountByNameResponse)
+	}{
+		{
+			"success",
+			func() {
+				req = &types.QueryModuleAccountByNameRequest{Name: "mint"}
+			},
+			true,
+			func(res *types.QueryModuleAccountByNameResponse) {
+				var account types.AccountI
+				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Account, &account)
+				suite.Require().NoError(err)
+
+				moduleAccount, ok := account.(types.ModuleAccountI)
+				suite.Require().True(ok)
+				suite.Require().Equal(moduleAccount.GetName(), "mint")
+			},
+		},
+		{
+			"invalid module name",
+			func() {
+				req = &types.QueryModuleAccountByNameRequest{Name: "gover"}
+			},
+			false,
+			func(res *types.QueryModuleAccountByNameResponse) {
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.ctx)
+			res, err := suite.queryClient.ModuleAccountByName(ctx, req)
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)

@@ -403,17 +403,17 @@ func (mr *MockValidatorSetMockRecorder) MaxValidators(arg0 interface{}) *gomock.
 }
 
 // Slash mocks base method.
-func (m *MockValidatorSet) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec) math.Int {
+func (m *MockValidatorSet) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec, arg5 types1.Infraction) math.Int {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].(math.Int)
 	return ret0
 }
 
 // Slash indicates an expected call of Slash.
-func (mr *MockValidatorSetMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockValidatorSetMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Slash", reflect.TypeOf((*MockValidatorSet)(nil).Slash), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Slash", reflect.TypeOf((*MockValidatorSet)(nil).Slash), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // StakingTokenSupply mocks base method.
@@ -568,6 +568,20 @@ func (m *MockStakingHooks) AfterDelegationModified(ctx types.Context, delAddr ty
 func (mr *MockStakingHooksMockRecorder) AfterDelegationModified(ctx, delAddr, valAddr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterDelegationModified", reflect.TypeOf((*MockStakingHooks)(nil).AfterDelegationModified), ctx, delAddr, valAddr)
+}
+
+// AfterUnbondingInitiated mocks base method.
+func (m *MockStakingHooks) AfterUnbondingInitiated(ctx types.Context, id uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterUnbondingInitiated", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterUnbondingInitiated indicates an expected call of AfterUnbondingInitiated.
+func (mr *MockStakingHooksMockRecorder) AfterUnbondingInitiated(ctx, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterUnbondingInitiated", reflect.TypeOf((*MockStakingHooks)(nil).AfterUnbondingInitiated), ctx, id)
 }
 
 // AfterValidatorBeginUnbonding mocks base method.

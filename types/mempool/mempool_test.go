@@ -7,25 +7,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
+	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // testPubKey is a dummy implementation of PubKey used for testing.
@@ -33,63 +30,36 @@ type testPubKey struct {
 	address sdk.AccAddress
 }
 
-func (t testPubKey) Reset() {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) Reset() { panic("implement me") }
 
-func (t testPubKey) String() string {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) String() string { panic("implement me") }
 
-func (t testPubKey) ProtoMessage() {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) ProtoMessage() { panic("implement me") }
 
-func (t testPubKey) Address() cryptotypes.Address {
-	return t.address.Bytes()
-}
+func (t testPubKey) Address() cryptotypes.Address { return t.address.Bytes() }
 
-func (t testPubKey) Bytes() []byte {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) Bytes() []byte { panic("implement me") }
 
-func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool { panic("implement me") }
 
-func (t testPubKey) Equals(key cryptotypes.PubKey) bool {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("implement me") }
 
-func (t testPubKey) Type() string {
-	//TODO implement me
-	panic("implement me")
-}
+func (t testPubKey) Type() string { panic("implement me") }
 
 // testTx is a dummy implementation of Tx used for testing.
 type testTx struct {
-	hash     [32]byte
+	id       int
 	priority int64
 	nonce    uint64
 	address  sdk.AccAddress
 }
 
-func (tx testTx) GetSigners() []sdk.AccAddress {
-	panic("implement me")
-}
+func (tx testTx) GetSigners() []sdk.AccAddress { panic("implement me") }
 
-func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) {
-	panic("GetPubkeys not implemented")
-}
+func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }
 
-func (tx testTx) GetSignaturesV2() (res []signing2.SignatureV2, err error) {
-	res = append(res, signing2.SignatureV2{
+func (tx testTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
+	res = append(res, txsigning.SignatureV2{
 		PubKey:   testPubKey{address: tx.address},
 		Data:     nil,
 		Sequence: tx.nonce})
@@ -104,45 +74,99 @@ var (
 	_ cryptotypes.PubKey      = (*testPubKey)(nil)
 )
 
-func (tx testTx) GetHash() [32]byte {
-	return tx.hash
-}
+func (tx testTx) Size() int64 { return 1 }
 
-func (tx testTx) Size() int64 {
-	return 1
-}
+func (tx testTx) GetMsgs() []sdk.Msg { return nil }
 
-func (tx testTx) GetMsgs() []sdk.Msg {
-	return nil
-}
-
-func (tx testTx) ValidateBasic() error {
-	return nil
-}
+func (tx testTx) ValidateBasic() error { return nil }
 
 func (tx testTx) String() string {
 	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
 }
 
-func TestNewStatefulMempool(t *testing.T) {
+type sigErrTx struct {
+	getSigs func() ([]txsigning.SignatureV2, error)
+}
+
+func (_ sigErrTx) Size() int64 { return 0 }
+
+func (_ sigErrTx) GetMsgs() []sdk.Msg { return nil }
+
+func (_ sigErrTx) ValidateBasic() error { return nil }
+
+func (_ sigErrTx) GetSigners() []sdk.AccAddress { return nil }
+
+func (_ sigErrTx) GetPubKeys() ([]cryptotypes.PubKey, error) { return nil, nil }
+
+func (t sigErrTx) GetSignaturesV2() ([]txsigning.SignatureV2, error) { return t.getSigs() }
+
+func TestDefaultMempool(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
+	txCount := 1000
+	var txs []testTx
 
-	// general test
-	transactions := simulateManyTx(ctx, 1000)
-	require.Equal(t, 1000, len(transactions))
-	mp := mempool.NewDefaultMempool()
+	for i := 0; i < txCount; i++ {
+		acc := accounts[i%len(accounts)]
+		tx := testTx{
+			address:  acc.Address,
+			priority: rand.Int63(),
+		}
+		txs = append(txs, tx)
+	}
 
-	for _, tx := range transactions {
-		ctx.WithPriority(rand.Int63())
-		err := mp.Insert(ctx, tx.(mempool.Tx))
+	// same sender-nonce just overwrites a tx
+	mp := mempool.NewPriorityMempool()
+	for _, tx := range txs {
+		ctx = ctx.WithPriority(tx.priority)
+		err := mp.Insert(ctx, tx)
 		require.NoError(t, err)
 	}
-	require.Equal(t, 1000, mp.CountTx())
+	require.Equal(t, len(accounts), mp.CountTx())
+
+	// distinct sender-nonce should not overwrite a tx
+	mp = mempool.NewPriorityMempool()
+	for i, tx := range txs {
+		tx.nonce = uint64(i)
+		err := mp.Insert(ctx, tx)
+		require.NoError(t, err)
+	}
+	require.Equal(t, txCount, mp.CountTx())
+
+	sel, err := mp.Select(nil, 13)
+	require.NoError(t, err)
+	require.Equal(t, 13, len(sel))
+
+	// a tx which does not implement SigVerifiableTx should not be inserted
+	tx := &sigErrTx{getSigs: func() ([]txsigning.SignatureV2, error) {
+		return nil, fmt.Errorf("error")
+	}}
+	require.Error(t, mp.Insert(ctx, tx))
+	require.Error(t, mp.Remove(tx))
+	tx.getSigs = func() ([]txsigning.SignatureV2, error) {
+		return nil, nil
+	}
+	require.Error(t, mp.Insert(ctx, tx))
+	require.Error(t, mp.Remove(tx))
+
+	// removing a tx not in the mempool should error
+	mp = mempool.NewPriorityMempool()
+	require.NoError(t, mp.Insert(ctx, txs[0]))
+	require.ErrorIs(t, mp.Remove(txs[1]), mempool.ErrTxNotFound)
+	mempool.DebugPrintKeys(mp)
+
+	// inserting a tx with a different priority should overwrite the old tx
+	newPriorityTx := testTx{
+		address:  txs[0].address,
+		priority: txs[0].priority + 1,
+		nonce:    txs[0].nonce,
+	}
+	require.NoError(t, mp.Insert(ctx, newPriorityTx))
+	require.Equal(t, 1, mp.CountTx())
 }
 
 type txSpec struct {
 	i int
-	h int
 	p int
 	n int
 	a sdk.AccAddress
@@ -178,10 +202,12 @@ func TestOutOfOrder(t *testing.T) {
 		for _, mtx := range outOfOrder {
 			mtxs = append(mtxs, mtx)
 		}
-		require.Error(t, validateOrder(mtxs))
+		err := validateOrder(mtxs)
+		require.Error(t, err)
 	}
 
 	seed := time.Now().UnixNano()
+	t.Logf("running with seed: %d", seed)
 	randomTxs := genRandomTxs(seed, 1000, 10)
 	var rmtxs []mempool.Tx
 	for _, rtx := range randomTxs {
@@ -189,6 +215,7 @@ func TestOutOfOrder(t *testing.T) {
 	}
 
 	require.Error(t, validateOrder(rmtxs))
+
 }
 
 func (s *MempoolTestSuite) TestTxOrder() {
@@ -198,8 +225,6 @@ func (s *MempoolTestSuite) TestTxOrder() {
 	sa := accounts[0].Address
 	sb := accounts[1].Address
 	sc := accounts[2].Address
-	//sd := accounts[3].Address
-	//se := accounts[4].Address
 
 	tests := []struct {
 		txs   []txSpec
@@ -233,7 +258,8 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 20, n: 1, a: sa},
 			},
-			order: []int{2, 0, 1}},
+			order: []int{2, 0, 1},
+		},
 		{
 			txs: []txSpec{
 				{p: 50, n: 3, a: sa},
@@ -280,6 +306,85 @@ func (s *MempoolTestSuite) TestTxOrder() {
 			},
 			order: []int{3, 2, 0, 4, 1, 5, 6, 7, 8},
 		},
+		{
+			txs: []txSpec{
+				{p: 6, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sb},
+			},
+			order: []int{0, 1, 2, 3},
+		},
+		{
+			// if all txs have the same priority they will be ordered lexically sender address, and nonce with the
+			// sender.
+			txs: []txSpec{
+				{p: 10, n: 7, a: sc},
+				{p: 10, n: 8, a: sc},
+				{p: 10, n: 9, a: sc},
+				{p: 10, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 10, n: 3, a: sa},
+				{p: 10, n: 4, a: sb},
+				{p: 10, n: 5, a: sb},
+				{p: 10, n: 6, a: sb},
+			},
+			order: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+		},
+		/*
+			The next 4 tests are different permutations of the same set:
+
+			  		{p: 5, n: 1, a: sa},
+					{p: 10, n: 2, a: sa},
+					{p: 20, n: 2, a: sb},
+					{p: 5, n: 1, a: sb},
+					{p: 99, n: 2, a: sc},
+					{p: 5, n: 1, a: sc},
+
+			which exercises the actions required to resolve priority ties.
+		*/
+		{
+			txs: []txSpec{
+				{p: 5, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sb},
+			},
+			order: []int{2, 3, 0, 1},
+		},
+		{
+			txs: []txSpec{
+				{p: 5, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 20, n: 2, a: sb},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sc},
+				{p: 5, n: 1, a: sc},
+			},
+			order: []int{5, 4, 3, 2, 0, 1},
+		},
+		{
+			txs: []txSpec{
+				{p: 5, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sb},
+				{p: 20, n: 2, a: sb},
+				{p: 5, n: 1, a: sc},
+				{p: 99, n: 2, a: sc},
+			},
+			order: []int{4, 5, 2, 3, 0, 1},
+		},
+		{
+			txs: []txSpec{
+				{p: 5, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sc},
+				{p: 20, n: 2, a: sc},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sb},
+			},
+			order: []int{4, 5, 2, 3, 0, 1},
+		},
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
@@ -287,17 +392,19 @@ func (s *MempoolTestSuite) TestTxOrder() {
 
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
-				tx := testTx{hash: [32]byte{byte(i)}, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
 				c := ctx.WithPriority(tx.priority)
 				err := pool.Insert(c, tx)
 				require.NoError(t, err)
 			}
 
+			mempool.DebugPrintKeys(pool)
+
 			orderedTxs, err := pool.Select(nil, 1000)
 			require.NoError(t, err)
 			var txOrder []int
 			for _, tx := range orderedTxs {
-				txOrder = append(txOrder, int(tx.(testTx).hash[0]))
+				txOrder = append(txOrder, tx.(testTx).id)
 			}
 			require.Equal(t, tt.order, txOrder)
 			require.NoError(t, validateOrder(orderedTxs))
@@ -306,144 +413,55 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				require.NoError(t, pool.Remove(tx))
 			}
 
-			require.Equal(t, 0, pool.CountTx())
+			require.NoError(t, mempool.IsEmpty(pool))
 		})
 	}
 }
 
-func TestTxOrder2(t *testing.T) {
+func (s *MempoolTestSuite) TestPriorityTies() {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 5)
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
 	sc := accounts[2].Address
-	//sd := accounts[3].Address
-	//se := accounts[4].Address
 
-	tests := []struct {
-		txs   []txSpec
-		order []int
-		fail  bool
-	}{
-		{
-			txs: []txSpec{
-				{p: 21, n: 4, a: sa},
-				{p: 8, n: 3, a: sa},
-				{p: 6, n: 2, a: sa},
-				{p: 15, n: 1, a: sb},
-				{p: 20, n: 1, a: sa},
-			},
-			order: []int{4, 3, 2, 1, 0},
-		},
-		{
-			// a very interesting breaking case
-			txs: []txSpec{
-				{p: 3, n: 0, a: sa},
-				{p: 5, n: 1, a: sa},
-				{p: 9, n: 2, a: sa},
-				{p: 6, n: 0, a: sb},
-				{p: 5, n: 1, a: sb},
-				{p: 8, n: 2, a: sb},
-			},
-			order: []int{3, 4, 5, 0, 1, 2},
-		},
-		{
-			txs: []txSpec{
-				{p: 21, n: 4, a: sa},
-				{p: 15, n: 1, a: sb},
-				{p: 20, n: 1, a: sa},
-			},
-			order: []int{2, 0, 1}},
-		{
-			txs: []txSpec{
-				{p: 50, n: 3, a: sa},
-				{p: 30, n: 2, a: sa},
-				{p: 10, n: 1, a: sa},
-				{p: 15, n: 1, a: sb},
-				{p: 21, n: 2, a: sb},
-			},
-			order: []int{3, 4, 2, 1, 0},
-		},
-		{
-			txs: []txSpec{
-				{p: 50, n: 3, a: sa},
-				{p: 10, n: 2, a: sa},
-				{p: 99, n: 1, a: sa},
-				{p: 15, n: 1, a: sb},
-				{p: 8, n: 2, a: sb},
-			},
-			order: []int{2, 3, 1, 0, 4},
-		},
-		{
-			txs: []txSpec{
-				{p: 30, a: sa, n: 2},
-				{p: 20, a: sb, n: 1},
-				{p: 15, a: sa, n: 1},
-				{p: 10, a: sa, n: 0},
-				{p: 8, a: sb, n: 0},
-				{p: 6, a: sa, n: 3},
-				{p: 4, a: sb, n: 3},
-			},
-			order: []int{3, 2, 0, 4, 1, 5, 6},
-		},
-		{
-			txs: []txSpec{
-				{p: 30, multi: []txSpec{
-					{n: 2, a: sa},
-					{n: 1, a: sc}}},
-				{p: 20, a: sb, n: 1},
-				{p: 15, a: sa, n: 1},
-				{p: 10, a: sa, n: 0},
-				{p: 8, a: sb, n: 0},
-				{p: 6, a: sa, n: 3},
-				{p: 4, a: sb, n: 3},
-				{p: 2, a: sc, n: 0},
-				{p: 7, a: sc, n: 3},
-			},
-			//order: []int{3, 2, 4, 1, 6, 7, 0, 5, 8},
-			order: []int{3, 2, 4, 1, 6, 7, 0, 8, 5},
-		},
+	txSet := []txSpec{
+		{p: 5, n: 1, a: sc},
+		{p: 99, n: 2, a: sc},
+		{p: 5, n: 1, a: sb},
+		{p: 20, n: 2, a: sb},
+		{p: 5, n: 1, a: sa},
+		{p: 10, n: 2, a: sa},
 	}
-	for i, tt := range tests {
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			// create fresh mempool
-			//pool := mempool.NewDefaultMempool()
-			pool := mempool.NewMemPoolI()
 
-			// create test txs and insert into mempool
-			for i, ts := range tt.txs {
-				var tx testTx
-				if len(ts.multi) == 0 {
-					tx = testTx{hash: [32]byte{byte(i)}, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
-				} else {
-					var nonces []uint64
-					var addresses []sdk.AccAddress
-					for _, ms := range ts.multi {
-						nonces = append(nonces, uint64(ms.n))
-						addresses = append(addresses, ms.a)
-					}
-					tx = testTx{
-						hash:         [32]byte{byte(i)},
-						priority:     int64(ts.p),
-						multiNonces:  nonces,
-						multiAddress: addresses,
-					}
-				}
-
-				c := ctx.WithPriority(tx.priority)
-				err := pool.Insert(c, tx)
-				require.NoError(t, err)
+	for i := 0; i < 100; i++ {
+		s.resetMempool()
+		var shuffled []txSpec
+		for _, t := range txSet {
+			tx := txSpec{
+				p: t.p,
+				n: t.n,
+				a: t.a,
 			}
+			shuffled = append(shuffled, tx)
+		}
+		rand.Shuffle(len(shuffled), func(i, j int) { shuffled[i], shuffled[j] = shuffled[j], shuffled[i] })
 
-			orderedTxs, err := pool.Select(ctx, nil, 10000)
-			require.NoError(t, err)
-			var txOrder []int
-			for _, tx := range orderedTxs {
-				txOrder = append(txOrder, int(tx.(testTx).hash[0]))
-			}
-			require.Equal(t, tt.order, txOrder)
-			require.NoError(t, validateOrder(orderedTxs))
-		})
+		for id, ts := range shuffled {
+			tx := testTx{priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a, id: id}
+			c := ctx.WithPriority(tx.priority)
+			err := s.mempool.Insert(c, tx)
+			s.NoError(err)
+		}
+		selected, err := s.mempool.Select(nil, 1000)
+		s.NoError(err)
+		var orderedTxs []txSpec
+		for _, tx := range selected {
+			ttx := tx.(testTx)
+			ts := txSpec{p: int(ttx.priority), n: int(ttx.nonce), a: ttx.address}
+			orderedTxs = append(orderedTxs, ts)
+		}
+		s.Equal(txSet, orderedTxs)
 	}
 }
 
@@ -451,11 +469,15 @@ type MempoolTestSuite struct {
 	suite.Suite
 	numTxs      int
 	numAccounts int
+	iterations  int
 	mempool     mempool.Mempool
 }
 
 func (s *MempoolTestSuite) resetMempool() {
-	s.mempool = mempool.NewDefaultMempool()
+	s.iterations = 0
+	s.mempool = mempool.NewPriorityMempool(mempool.WithOnRead(func(tx mempool.Tx) {
+		s.iterations++
+	}))
 }
 
 func (s *MempoolTestSuite) SetupTest() {
@@ -469,7 +491,7 @@ func TestMempoolTestSuite(t *testing.T) {
 }
 
 func (s *MempoolTestSuite) TestRandomTxOrderManyTimes() {
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 3; i++ {
 		s.Run("TestRandomGeneratedTxs", func() {
 			s.TestRandomGeneratedTxs()
 		})
@@ -484,8 +506,10 @@ func (s *MempoolTestSuite) TestRandomTxOrderManyTimes() {
 // validateOrder checks that the txs are ordered by priority and nonce
 // in O(n^2) time by checking each tx against all the other txs
 func validateOrder(mtxs []mempool.Tx) error {
+	iterations := 0
 	var itxs []txSpec
 	for i, mtx := range mtxs {
+		iterations++
 		tx := mtx.(testTx)
 		itxs = append(itxs, txSpec{p: int(tx.priority), n: int(tx.nonce), a: tx.address, i: i})
 	}
@@ -498,6 +522,7 @@ func validateOrder(mtxs []mempool.Tx) error {
 
 	for _, a := range itxs {
 		for _, b := range itxs {
+			iterations++
 			// when b is before a
 
 			// when a is before b
@@ -517,6 +542,7 @@ func validateOrder(mtxs []mempool.Tx) error {
 						// find a tx with same sender as b and lower nonce
 						found := false
 						for _, c := range itxs {
+							iterations++
 							if c.a.Equals(b.a) && c.n < b.n && c.p <= a.p {
 								found = true
 								break
@@ -530,6 +556,7 @@ func validateOrder(mtxs []mempool.Tx) error {
 			}
 		}
 	}
+	// fmt.Printf("validation in iterations: %d\n", iterations)
 	return nil
 }
 
@@ -537,12 +564,12 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	seed := time.Now().UnixNano()
-
+	t.Logf("running with seed: %d", seed)
 	generated := genRandomTxs(seed, s.numTxs, s.numAccounts)
 	mp := s.mempool
 
 	for _, otx := range generated {
-		tx := testTx{hash: otx.hash, priority: otx.priority, nonce: otx.nonce, address: otx.address}
+		tx := testTx{id: otx.id, priority: otx.priority, nonce: otx.nonce, address: otx.address}
 		c := ctx.WithPriority(tx.priority)
 		err := mp.Insert(c, tx)
 		require.NoError(t, err)
@@ -557,7 +584,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	duration := time.Since(start)
 
 	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
-		seed, mempool.Iterations(mp), duration.Milliseconds())
+		seed, s.iterations, duration.Milliseconds())
 }
 
 func (s *MempoolTestSuite) TestRandomWalkTxs() {
@@ -569,12 +596,13 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	// seed := int64(1663971399133628000)
 	// seed := int64(1663989445512438000)
 	//
+	t.Logf("running with seed: %d", seed)
 
 	ordered, shuffled := genOrderedTxs(seed, s.numTxs, s.numAccounts)
 	mp := s.mempool
 
 	for _, otx := range shuffled {
-		tx := testTx{hash: otx.hash, priority: otx.priority, nonce: otx.nonce, address: otx.address}
+		tx := testTx{id: otx.id, priority: otx.priority, nonce: otx.nonce, address: otx.address}
 		c := ctx.WithPriority(tx.priority)
 		err := mp.Insert(c, tx)
 		require.NoError(t, err)
@@ -590,9 +618,9 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 		otx := ordered[i]
 		stx := selected[i].(testTx)
 		orderedStr = fmt.Sprintf("%s\n%s, %d, %d; %d",
-			orderedStr, otx.address, otx.priority, otx.nonce, otx.hash[0])
+			orderedStr, otx.address, otx.priority, otx.nonce, otx.id)
 		selectedStr = fmt.Sprintf("%s\n%s, %d, %d; %d",
-			selectedStr, stx.address, stx.priority, stx.nonce, stx.hash[0])
+			selectedStr, stx.address, stx.priority, stx.nonce, stx.id)
 	}
 
 	require.NoError(t, err)
@@ -600,22 +628,12 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 
 	errMsg := fmt.Sprintf("Expected order: %v\nGot order: %v\nSeed: %v", orderedStr, selectedStr, seed)
 
-	//mempool.DebugPrintKeys(mp)
-
 	start := time.Now()
 	require.NoError(t, validateOrder(selected), errMsg)
 	duration := time.Since(start)
 
-	/*for i, tx := range selected {
-		msg := fmt.Sprintf("Failed tx at index %d\n%s", i, errMsg)
-		require.Equal(t, ordered[i], tx.(testTx), msg)
-		require.Equal(t, tx.(testTx).priority, ordered[i].priority, msg)
-		require.Equal(t, tx.(testTx).nonce, ordered[i].nonce, msg)
-		require.Equal(t, tx.(testTx).address, ordered[i].address, msg)
-	}*/
-
-	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
-		seed, mempool.Iterations(mp), duration.Milliseconds())
+	t.Logf("seed: %d completed in %d iterations; validation in %dms\n",
+		seed, s.iterations, duration.Milliseconds())
 }
 
 func (s *MempoolTestSuite) TestSampleTxs() {
@@ -653,7 +671,7 @@ func genRandomTxs(seed int64, countTx int, countAccount int) (res []testTx) {
 			priority: priority,
 			nonce:    nonce,
 			address:  addr,
-			hash:     [32]byte{byte(i)}})
+			id:       i})
 	}
 
 	return res
@@ -717,7 +735,7 @@ func genOrderedTxs(seed int64, maxTx int, numAcc int) (ordered []testTx, shuffle
 			tx = testTx{nonce: nonce, address: sender, priority: txCursor}
 			samepChain[sender.String()] = true
 		}
-		tx.hash = [32]byte{byte(i)}
+		tx.id = i
 		accountNonces[tx.address.String()] = tx.nonce
 		ordered = append(ordered, tx)
 		ptx = tx
@@ -732,7 +750,7 @@ func genOrderedTxs(seed int64, maxTx int, numAcc int) (ordered []testTx, shuffle
 			priority: item.priority,
 			nonce:    item.nonce,
 			address:  item.address,
-			hash:     item.hash,
+			id:       item.id,
 		}
 		shuffled = append(shuffled, tx)
 	}
@@ -759,46 +777,9 @@ func TestTxOrderN(t *testing.T) {
 	}
 }
 
-func simulateManyTx(ctx sdk.Context, n int) []sdk.Tx {
-	transactions := make([]sdk.Tx, n)
-	for i := 0; i < n; i++ {
-		tx := simulateTx(ctx)
-		transactions[i] = tx
-	}
-	return transactions
-}
-
-func simulateTx(ctx sdk.Context) sdk.Tx {
-	acc := authtypes.NewEmptyModuleAccount("anaccount")
-
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	msg := group.MsgUpdateGroupMembers{
-		GroupId:       1,
-		Admin:         "test",
-		MemberUpdates: []group.MemberRequest{},
-	}
-	fees, _ := simtypes.RandomFees(r, ctx, sdk.NewCoins(sdk.NewCoin("coin", sdk.NewInt(100000000))))
-
-	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
-	accounts := simtypes.RandomAccounts(r, 2)
-
-	tx, _ := simtestutil.GenSignedMockTx(
-		r,
-		txGen,
-		[]sdk.Msg{&msg},
-		fees,
-		simtestutil.DefaultGenTxGas,
-		ctx.ChainID(),
-		[]uint64{acc.GetAccountNumber()},
-		[]uint64{acc.GetSequence()},
-		accounts[0].PrivKey,
-	)
-	return tx
-}
-
 func unmarshalTx(txBytes []byte) (sdk.Tx, error) {
 	cfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{}, gov.AppModuleBasic{})
+	cfg.InterfaceRegistry.RegisterImplementations((*govtypes.Content)(nil), &disttypes.CommunityPoolSpendProposal{})
 	return cfg.TxConfig.TxJSONDecoder()(txBytes)
 }
 

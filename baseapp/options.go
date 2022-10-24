@@ -12,7 +12,6 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -242,14 +241,9 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
 
-func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
-	app.txEncoder = txEncoder
-}
-
-func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
-	if app.sealed {
-		panic("SetMempool() on sealed BaseApp")
-	}
-
-	app.mempool = mempool
+// SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
+func (app *BaseApp) SetQueryMultiStore(ms sdk.MultiStore) {
+	app.qms = ms
 }

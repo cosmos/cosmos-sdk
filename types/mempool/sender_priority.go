@@ -83,6 +83,11 @@ func (mp *senderPriorityMempool) Insert(ctx sdk.Context, tx Tx) error {
 	return nil
 }
 
+// Select returns a slice of transactions from the mempool. The transactions are ordered by the following criteria:
+// 1) Given a set senders each with one or many txs, select the sender which has the tx with the single
+// highest priority globally.
+// 2) Process all txs for that sender in nonce order
+// 3) Repeat for the next highest sender.
 func (mp *senderPriorityMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 	var (
 		selectedTxs []Tx

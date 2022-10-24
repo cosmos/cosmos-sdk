@@ -3,12 +3,12 @@ package group
 import (
 	proto "github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	errors "github.com/cosmos/cosmos-sdk/x/group/errors"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
+	"github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	sdkerrors "github.com/pointnetwork/cosmos-point-sdk/types/errors"
+	"github.com/pointnetwork/cosmos-point-sdk/types/tx"
+	errors "github.com/pointnetwork/cosmos-point-sdk/x/group/errors"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group/internal/math"
 )
 
 var _ sdk.Msg = &MsgCreateGroup{}

@@ -5,9 +5,9 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/gov/types"
+	v1 "github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1"
 )
 
 // RegisterInvariants registers all governance invariants

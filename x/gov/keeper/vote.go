@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	sdkerrors "github.com/pointnetwork/cosmos-point-sdk/types/errors"
+	"github.com/pointnetwork/cosmos-point-sdk/x/gov/types"
+	v1 "github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1"
 )
 
 // AddVote adds a vote on a specific proposal

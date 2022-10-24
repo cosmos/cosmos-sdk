@@ -6,17 +6,17 @@ import (
 	"testing"
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "github.com/pointnetwork/cosmos-point-sdk/store/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	"github.com/pointnetwork/cosmos-point-sdk/store"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/params/types"
 )
 
 type SubspaceTestSuite struct {

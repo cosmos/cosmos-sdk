@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/pointnetwork/cosmos-point-sdk/crypto/keys/secp256k1"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	"github.com/pointnetwork/cosmos-point-sdk/x/auth/keeper"
+	"github.com/pointnetwork/cosmos-point-sdk/x/auth/types"
 )
 
 // TestMigrateMapAccAddressToAccNumberKey test cases for state migration of map to accAddr to accNum

@@ -8,15 +8,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/crypto/hd"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/testdata"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/client/flags"
+	"github.com/pointnetwork/cosmos-point-sdk/crypto/keyring"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
 )
 
 func Test_runExportCmd(t *testing.T) {

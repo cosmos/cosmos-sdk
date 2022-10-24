@@ -9,17 +9,17 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	sdkclient "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
+	sdkclient "github.com/pointnetwork/cosmos-point-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	cdctypes "github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	sdkerrors "github.com/pointnetwork/cosmos-point-sdk/types/errors"
+	"github.com/pointnetwork/cosmos-point-sdk/types/module"
+	simtypes "github.com/pointnetwork/cosmos-point-sdk/types/simulation"
+	"github.com/pointnetwork/cosmos-point-sdk/x/feegrant"
+	"github.com/pointnetwork/cosmos-point-sdk/x/feegrant/client/cli"
+	"github.com/pointnetwork/cosmos-point-sdk/x/feegrant/keeper"
+	"github.com/pointnetwork/cosmos-point-sdk/x/feegrant/simulation"
 )
 
 var (

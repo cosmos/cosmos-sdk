@@ -22,16 +22,16 @@ and subject to change, it is hard for clients to generically index, query and ve
 
 The known first instance of an "ORM" in the Cosmos ecosystem was in [weave](https://github.com/iov-one/weave/tree/master/orm).
 A later version was built for [regen-ledger](https://github.com/regen-network/regen-ledger/tree/157181f955823149e1825263a317ad8e16096da4/orm) for
-use in the group module and later [ported to the SDK](https://github.com/cosmos/cosmos-sdk/tree/35d3312c3be306591fcba39892223f1244c8d108/x/group/internal/orm)
+use in the group module and later [ported to the SDK](https://github.com/pointnetwork/cosmos-point-sdk/tree/35d3312c3be306591fcba39892223f1244c8d108/x/group/internal/orm)
 just for that purpose.
 
 While these earlier designs made it significantly easier to write state machines, they still required a lot of manual
 configuration, didn't expose state format directly to clients, and were limited in their support of different types
 of index keys, composite keys, and range queries.
 
-Discussions about the design continued in https://github.com/cosmos/cosmos-sdk/discussions/9156 and more
+Discussions about the design continued in https://github.com/pointnetwork/cosmos-point-sdk/discussions/9156 and more
 sophisticated proofs of concept were created in https://github.com/allinbits/cosmos-sdk-poc/tree/master/runtime/orm
-and https://github.com/cosmos/cosmos-sdk/pull/10454.
+and https://github.com/pointnetwork/cosmos-point-sdk/pull/10454.
 
 ## Decision
 
@@ -63,9 +63,9 @@ A code generator is included with the ORM which creates type safe wrappers aroun
 implementation and is the recommended way for modules to use the ORM.
 
 The ORM tests provide a simplified bank module demonstration which illustrates:
-- [ORM proto options](https://github.com/cosmos/cosmos-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/internal/testpb/bank.proto)
-- [Generated Code](https://github.com/cosmos/cosmos-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/internal/testpb/bank.cosmos_orm.go)
-- [Example Usage in a Module Keeper](https://github.com/cosmos/cosmos-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/model/ormdb/module_test.go)
+- [ORM proto options](https://github.com/pointnetwork/cosmos-point-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/internal/testpb/bank.proto)
+- [Generated Code](https://github.com/pointnetwork/cosmos-point-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/internal/testpb/bank.cosmos_orm.go)
+- [Example Usage in a Module Keeper](https://github.com/pointnetwork/cosmos-point-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/model/ormdb/module_test.go)
 
 ## Consequences
 
@@ -105,7 +105,7 @@ Further discussions will happen within the Cosmos SDK Framework Working Group. C
 
 * https://github.com/iov-one/weave/tree/master/orm).
 * https://github.com/regen-network/regen-ledger/tree/157181f955823149e1825263a317ad8e16096da4/orm
-* https://github.com/cosmos/cosmos-sdk/tree/35d3312c3be306591fcba39892223f1244c8d108/x/group/internal/orm
-* https://github.com/cosmos/cosmos-sdk/discussions/9156
+* https://github.com/pointnetwork/cosmos-point-sdk/tree/35d3312c3be306591fcba39892223f1244c8d108/x/group/internal/orm
+* https://github.com/pointnetwork/cosmos-point-sdk/discussions/9156
 * https://github.com/allinbits/cosmos-sdk-poc/tree/master/runtime/orm
-* https://github.com/cosmos/cosmos-sdk/pull/10454
+* https://github.com/pointnetwork/cosmos-point-sdk/pull/10454

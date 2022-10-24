@@ -5,10 +5,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/db/dbtest"
-	"github.com/cosmos/cosmos-sdk/db/memdb"
-	pfx "github.com/cosmos/cosmos-sdk/db/prefix"
+	"github.com/pointnetwork/cosmos-point-sdk/db"
+	"github.com/pointnetwork/cosmos-point-sdk/db/dbtest"
+	"github.com/pointnetwork/cosmos-point-sdk/db/memdb"
+	pfx "github.com/pointnetwork/cosmos-point-sdk/db/prefix"
 )
 
 func fillDBWithStuff(t *testing.T, dbw db.DBWriter) {

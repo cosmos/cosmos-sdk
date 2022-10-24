@@ -8,10 +8,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
-	"github.com/cosmos/cosmos-sdk/store/v2alpha1/dbadapter"
-	mocks "github.com/cosmos/cosmos-sdk/tests/mocks/db"
+	"github.com/pointnetwork/cosmos-point-sdk/store/cachekv"
+	types "github.com/pointnetwork/cosmos-point-sdk/store/v2alpha1"
+	"github.com/pointnetwork/cosmos-point-sdk/store/v2alpha1/dbadapter"
+	mocks "github.com/pointnetwork/cosmos-point-sdk/tests/mocks/db"
 )
 
 var errFoo = errors.New("dummy")

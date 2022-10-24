@@ -1,13 +1,13 @@
 package multi
 
 import (
-	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/store/mem"
-	v1Store "github.com/cosmos/cosmos-sdk/store/rootmulti"
-	"github.com/cosmos/cosmos-sdk/store/transient"
-	"github.com/cosmos/cosmos-sdk/store/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	dbm "github.com/pointnetwork/cosmos-point-sdk/db"
+	"github.com/pointnetwork/cosmos-point-sdk/store/iavl"
+	"github.com/pointnetwork/cosmos-point-sdk/store/mem"
+	v1Store "github.com/pointnetwork/cosmos-point-sdk/store/rootmulti"
+	"github.com/pointnetwork/cosmos-point-sdk/store/transient"
+	"github.com/pointnetwork/cosmos-point-sdk/store/types"
+	sdkerrors "github.com/pointnetwork/cosmos-point-sdk/types/errors"
 )
 
 // MigrateFromV1 will migrate the state from iavl to smt

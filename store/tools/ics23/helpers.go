@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
+	tmproofs "github.com/pointnetwork/cosmos-point-sdk/store/internal/proofs"
 )
 
 func ParseArgs(args []string) (exist bool, loc tmproofs.Where, size int, err error) {

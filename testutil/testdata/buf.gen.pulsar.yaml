@@ -2,7 +2,7 @@ version: v1
 managed:
   enabled: true
   go_package_prefix:
-    default: github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar
+    default: github.com/pointnetwork/cosmos-point-sdk/testutil/testdata_pulsar
     except:
       - buf.build/googleapis/googleapis
       - buf.build/cosmos/gogo-proto

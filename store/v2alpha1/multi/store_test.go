@@ -9,13 +9,13 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
-	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/db/memdb"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
-	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
-	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	codecTypes "github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	dbm "github.com/pointnetwork/cosmos-point-sdk/db"
+	"github.com/pointnetwork/cosmos-point-sdk/db/memdb"
+	pruningtypes "github.com/pointnetwork/cosmos-point-sdk/pruning/types"
+	types "github.com/pointnetwork/cosmos-point-sdk/store/v2alpha1"
+	"github.com/pointnetwork/cosmos-point-sdk/types/kv"
 )
 
 var (

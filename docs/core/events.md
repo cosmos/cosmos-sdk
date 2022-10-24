@@ -59,19 +59,19 @@ In Cosmos SDK applications, Events are managed by an abstraction called the `Eve
 Internally, the `EventManager` tracks a list of Events for the entire execution flow of a
 transaction or `BeginBlock`/`EndBlock`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/events.go#L17-L25
++++ https://github.com/pointnetwork/cosmos-point-sdk/blob/v0.46.0-rc1/types/events.go#L17-L25
 
 The `EventManager` comes with a set of useful methods to manage Events. The method
 that is used most by module and application developers is `EmitTypedEvent` that tracks
 an Event in the `EventManager`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/types/events.go#L50-L59
++++ https://github.com/pointnetwork/cosmos-point-sdk/blob/v0.46.0-rc1/types/events.go#L50-L59
 
 Module developers should handle Event emission via the `EventManager#EmitTypedEvent` in each message
 `Handler` and in each `BeginBlock`/`EndBlock` handler. The `EventManager` is accessed via
 the [`Context`](./context.md), where Event should be already registered, and emitted like this:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/x/group/keeper/msg_server.go#L89-L92
++++ https://github.com/pointnetwork/cosmos-point-sdk/blob/v0.46.0-rc1/x/group/keeper/msg_server.go#L89-L92
 
 Module's `handler` function should also set a new `EventManager` to the `context` to isolate emitted Events per `message`:
 
@@ -109,7 +109,7 @@ The main `eventCategory` you can subscribe to are:
 These Events are triggered from the `state` package after a block is committed. You can get the
 full list of Event categories [on the Tendermint Go documentation](https://pkg.go.dev/github.com/tendermint/tendermint/types#pkg-constants).
 
-The `type` and `attribute` value of the `query` allow you to filter the specific Event you are looking for. For example, a `Mint` transaction triggers an Event of type `EventMint` and has an `Id` and an `Owner` as `attributes` (as defined in the [`events.proto` file of the `NFT` module](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/nft/v1beta1/event.proto#L14-L19)).
+The `type` and `attribute` value of the `query` allow you to filter the specific Event you are looking for. For example, a `Mint` transaction triggers an Event of type `EventMint` and has an `Id` and an `Owner` as `attributes` (as defined in the [`events.proto` file of the `NFT` module](https://github.com/pointnetwork/cosmos-point-sdk/blob/v0.46.0-rc1/proto/cosmos/nft/v1beta1/event.proto#L14-L19)).
 
 Subscribing to this Event would be done like so:
 

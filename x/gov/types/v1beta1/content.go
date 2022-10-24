@@ -1,6 +1,6 @@
 package v1beta1
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import sdk "github.com/pointnetwork/cosmos-point-sdk/types"
 
 // Content defines an interface that a proposal must implement. It contains
 // information such as the title and description along with the type and routing

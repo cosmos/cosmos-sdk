@@ -3,8 +3,8 @@ package orm
 import (
 	"fmt"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
+	sdkerrors "github.com/pointnetwork/cosmos-point-sdk/types/errors"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group/errors"
 )
 
 // MaxBytesLen is the maximum allowed length for a key part of type []byte

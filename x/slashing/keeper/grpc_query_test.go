@@ -8,14 +8,14 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/pointnetwork/cosmos-point-sdk/baseapp"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/query"
+	authtypes "github.com/pointnetwork/cosmos-point-sdk/x/auth/types"
+	banktypes "github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/slashing/testslashing"
+	"github.com/pointnetwork/cosmos-point-sdk/x/slashing/types"
 )
 
 type SlashingTestSuite struct {

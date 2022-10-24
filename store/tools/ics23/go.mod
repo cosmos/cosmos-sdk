@@ -1,10 +1,10 @@
-module github.com/cosmos/cosmos-sdk/store/tools/ics23
+module github.com/pointnetwork/cosmos-point-sdk/store/tools/ics23
 
 go 1.18
 
 require (
 	github.com/confio/ics23/go v0.7.0
-	github.com/cosmos/cosmos-sdk v0.46.1
+	github.com/pointnetwork/cosmos-point-sdk v0.46.1
 	github.com/cosmos/iavl v0.19.1
 	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
 	github.com/tendermint/tendermint v0.34.21
@@ -37,6 +37,6 @@ require (
 	google.golang.org/protobuf v1.28.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk/store/tools/ics23 => ./
+replace github.com/pointnetwork/cosmos-point-sdk/store/tools/ics23 => ./
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1

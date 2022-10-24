@@ -6,14 +6,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	v042gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v042"
-	v046gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	v042gov "github.com/pointnetwork/cosmos-point-sdk/x/gov/migrations/v042"
+	v046gov "github.com/pointnetwork/cosmos-point-sdk/x/gov/migrations/v046"
+	v1 "github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1"
+	"github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1beta1"
+	upgradetypes "github.com/pointnetwork/cosmos-point-sdk/x/upgrade/types"
 )
 
 func TestMigrateStore(t *testing.T) {

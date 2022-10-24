@@ -5,15 +5,15 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/pointnetwork/cosmos-point-sdk/crypto/hd"
+	"github.com/pointnetwork/cosmos-point-sdk/crypto/keyring"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/rest"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	grpctypes "github.com/pointnetwork/cosmos-point-sdk/types/grpc"
+	"github.com/pointnetwork/cosmos-point-sdk/types/query"
+	"github.com/pointnetwork/cosmos-point-sdk/x/staking/client/cli"
+	"github.com/pointnetwork/cosmos-point-sdk/x/staking/types"
 )
 
 func (s *IntegrationTestSuite) TestGRPCQueryValidatorsHandler() {

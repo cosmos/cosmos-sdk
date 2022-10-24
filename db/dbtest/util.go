@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	dbm "github.com/pointnetwork/cosmos-point-sdk/db"
 )
 
 func AssertNext(t *testing.T, itr dbm.Iterator, expected bool) {

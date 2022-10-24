@@ -6,8 +6,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	cryptotypes "github.com/pointnetwork/cosmos-point-sdk/crypto/types"
 )
 
 type (

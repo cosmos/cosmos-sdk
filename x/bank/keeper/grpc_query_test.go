@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/pointnetwork/cosmos-point-sdk/baseapp"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/testdata"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/query"
+	authtypes "github.com/pointnetwork/cosmos-point-sdk/x/auth/types"
+	vestingtypes "github.com/pointnetwork/cosmos-point-sdk/x/auth/vesting/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/bank/testutil"
+	"github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
+	minttypes "github.com/pointnetwork/cosmos-point-sdk/x/mint/types"
 )
 
 func (suite *IntegrationTestSuite) TestQueryBalance() {

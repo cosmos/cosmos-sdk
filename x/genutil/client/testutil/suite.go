@@ -8,15 +8,15 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/pointnetwork/cosmos-point-sdk/client/flags"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	clitestutil "github.com/pointnetwork/cosmos-point-sdk/testutil/cli"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/network"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	banktypes "github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/genutil/client/cli"
+	stakingcli "github.com/pointnetwork/cosmos-point-sdk/x/staking/client/cli"
+	"github.com/pointnetwork/cosmos-point-sdk/x/staking/types"
 )
 
 type IntegrationTestSuite struct {

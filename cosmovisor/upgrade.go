@@ -10,9 +10,9 @@ import (
 	"runtime"
 	"strings"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/hashicorp/go-getter"
 	"github.com/otiai10/copy"
+	upgradetypes "github.com/pointnetwork/cosmos-point-sdk/x/upgrade/types"
 	"github.com/rs/zerolog"
 )
 

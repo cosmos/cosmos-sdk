@@ -8,21 +8,21 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+	ormv1alpha1 "github.com/pointnetwork/cosmos-point-sdk/api/cosmos/orm/v1alpha1"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/types/ormjson"
 
 	"google.golang.org/protobuf/reflect/protodesc"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/encoding/encodeutil"
 
 	"google.golang.org/protobuf/proto"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/encoding/ormkv"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/model/ormtable"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/types/ormerrors"
 )
 
 // ModuleDB defines the ORM database type to be used by modules.

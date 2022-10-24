@@ -7,7 +7,7 @@ import "tendermint/types/evidence.proto";
 import "tendermint/version/types.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/tmservice";
+option go_package = "github.com/pointnetwork/cosmos-point-sdk/client/grpc/tmservice";
 
 // Block is tendermint type Block, with the Header proposer address
 // field converted to bech32 string.

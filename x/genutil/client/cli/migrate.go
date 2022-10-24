@@ -10,20 +10,20 @@ import (
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	v043 "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v043"
-	v046 "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v046"
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/client/flags"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/version"
+	v043 "github.com/pointnetwork/cosmos-point-sdk/x/genutil/migrations/v043"
+	v046 "github.com/pointnetwork/cosmos-point-sdk/x/genutil/migrations/v046"
+	"github.com/pointnetwork/cosmos-point-sdk/x/genutil/types"
 )
 
 const flagGenesisTime = "genesis-time"
 
 // Allow applications to extend and modify the migration process.
 //
-// Ref: https://github.com/cosmos/cosmos-sdk/issues/5041
+// Ref: https://github.com/pointnetwork/cosmos-point-sdk/issues/5041
 var migrationMap = types.MigrationMap{
 	"v0.43": v043.Migrate, // NOTE: v0.43, v0.44 and v0.45 are genesis compatible.
 	"v0.46": v046.Migrate,

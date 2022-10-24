@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/kv"
+	"github.com/pointnetwork/cosmos-point-sdk/x/nft"
+	"github.com/pointnetwork/cosmos-point-sdk/x/nft/keeper"
 )
 
 // NewDecodeStore returns a decoder function closure that umarshals the KVPair's

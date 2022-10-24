@@ -1,7 +1,7 @@
 package tx
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/pointnetwork/cosmos-point-sdk/codec/types"
 )
 
 // TxExtensionOptionI defines the interface for tx extension options

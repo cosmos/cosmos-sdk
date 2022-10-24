@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/module"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/bank/testutil"
+	banktypes "github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group/module"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

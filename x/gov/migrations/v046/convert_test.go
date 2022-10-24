@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/tx"
+	v046 "github.com/pointnetwork/cosmos-point-sdk/x/gov/migrations/v046"
+	v1 "github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1"
+	"github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/require"
 )
 

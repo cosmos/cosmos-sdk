@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	codectypes "github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	cryptocodec "github.com/pointnetwork/cosmos-point-sdk/crypto/codec"
+	"github.com/pointnetwork/cosmos-point-sdk/types/module"
+	simtypes "github.com/pointnetwork/cosmos-point-sdk/types/simulation"
+	"github.com/pointnetwork/cosmos-point-sdk/x/staking/simulation"
+	"github.com/pointnetwork/cosmos-point-sdk/x/staking/types"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.

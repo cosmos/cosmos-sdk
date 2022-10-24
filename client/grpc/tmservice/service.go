@@ -9,13 +9,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	qtypes "github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/pointnetwork/cosmos-point-sdk/baseapp"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/client/rpc"
+	codectypes "github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	cryptotypes "github.com/pointnetwork/cosmos-point-sdk/crypto/types"
+	qtypes "github.com/pointnetwork/cosmos-point-sdk/types/query"
+	"github.com/pointnetwork/cosmos-point-sdk/version"
 )
 
 var (

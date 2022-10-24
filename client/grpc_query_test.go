@@ -12,11 +12,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/network"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/testdata"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	grpctypes "github.com/pointnetwork/cosmos-point-sdk/types/grpc"
+	banktypes "github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {

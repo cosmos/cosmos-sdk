@@ -7,9 +7,9 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	govutils "github.com/pointnetwork/cosmos-point-sdk/x/gov/client/utils"
 )
 
 type legacyProposal struct {

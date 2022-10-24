@@ -16,14 +16,14 @@ import (
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/client/flags"
+	"github.com/pointnetwork/cosmos-point-sdk/client/input"
+	"github.com/pointnetwork/cosmos-point-sdk/server"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/module"
+	"github.com/pointnetwork/cosmos-point-sdk/x/genutil"
+	stakingtypes "github.com/pointnetwork/cosmos-point-sdk/x/staking/types"
 )
 
 const (

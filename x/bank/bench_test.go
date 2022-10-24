@@ -7,19 +7,19 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	simappparams "github.com/pointnetwork/cosmos-point-sdk/simapp/params"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/auth/types"
+	authtypes "github.com/pointnetwork/cosmos-point-sdk/x/auth/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/bank/testutil"
+	stakingtypes "github.com/pointnetwork/cosmos-point-sdk/x/staking/types"
 )
 
 var moduleAccAddr = authtypes.NewModuleAddress(stakingtypes.BondedPoolName)
 
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
-	b.Skip("Skipping benchmark with buggy code reported at https://github.com/cosmos/cosmos-sdk/issues/10023")
+	b.Skip("Skipping benchmark with buggy code reported at https://github.com/pointnetwork/cosmos-point-sdk/issues/10023")
 
 	b.ReportAllocs()
 	// Add an account at genesis
@@ -63,7 +63,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 }
 
 func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
-	b.Skip("Skipping benchmark with buggy code reported at https://github.com/cosmos/cosmos-sdk/issues/10023")
+	b.Skip("Skipping benchmark with buggy code reported at https://github.com/pointnetwork/cosmos-point-sdk/issues/10023")
 
 	b.ReportAllocs()
 	// Add an account at genesis

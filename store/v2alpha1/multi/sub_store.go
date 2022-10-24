@@ -5,12 +5,12 @@ import (
 	"io"
 	"sync"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
-	dbutil "github.com/cosmos/cosmos-sdk/internal/db"
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	dbm "github.com/pointnetwork/cosmos-point-sdk/db"
+	dbutil "github.com/pointnetwork/cosmos-point-sdk/internal/db"
+	"github.com/pointnetwork/cosmos-point-sdk/store/cachekv"
+	"github.com/pointnetwork/cosmos-point-sdk/store/listenkv"
+	"github.com/pointnetwork/cosmos-point-sdk/store/tracekv"
+	"github.com/pointnetwork/cosmos-point-sdk/store/types"
 )
 
 // Get implements KVStore.

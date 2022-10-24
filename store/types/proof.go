@@ -7,9 +7,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
-	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
-	sdkproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkmaps "github.com/pointnetwork/cosmos-point-sdk/store/internal/maps"
+	sdkproofs "github.com/pointnetwork/cosmos-point-sdk/store/internal/proofs"
+	sdkerrors "github.com/pointnetwork/cosmos-point-sdk/types/errors"
 )
 
 const (

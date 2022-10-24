@@ -1,6 +1,6 @@
 # Updating the docs
 
-If you want to open a PR in Cosmos SDK to update the documentation, please follow the guidelines in [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/main/CONTRIBUTING.md#updating-documentation).
+If you want to open a PR in Cosmos SDK to update the documentation, please follow the guidelines in [`CONTRIBUTING.md`](https://github.com/pointnetwork/cosmos-point-sdk/tree/main/CONTRIBUTING.md#updating-documentation).
 
 ## Docs Build Workflow
 
@@ -77,7 +77,7 @@ To build documentation as a static website run `npm run build`. You will find th
 
 First, run `make tools` from the root of repo, to install the swagger-ui tool.
 
-Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/main/client/lcd/swagger-ui/swagger.yaml)
+Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/pointnetwork/cosmos-point-sdk/blob/main/client/lcd/swagger-ui/swagger.yaml)
 
 Finally, run `make update_gaia_lite_docs` from the root of the repo.
 

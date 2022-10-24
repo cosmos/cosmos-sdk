@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk/container
+module github.com/pointnetwork/cosmos-point-sdk/container
 
 go 1.18
 

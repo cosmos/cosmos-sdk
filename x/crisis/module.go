@@ -9,15 +9,15 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	codectypes "github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	"github.com/pointnetwork/cosmos-point-sdk/telemetry"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/module"
+	"github.com/pointnetwork/cosmos-point-sdk/x/crisis/client/cli"
+	"github.com/pointnetwork/cosmos-point-sdk/x/crisis/keeper"
+	"github.com/pointnetwork/cosmos-point-sdk/x/crisis/types"
 )
 
 var (

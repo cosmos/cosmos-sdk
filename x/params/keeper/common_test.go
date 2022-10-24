@@ -1,12 +1,12 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	storetypes "github.com/pointnetwork/cosmos-point-sdk/store/types"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	paramskeeper "github.com/pointnetwork/cosmos-point-sdk/x/params/keeper"
 )
 
 func testComponents() (*codec.LegacyAmino, sdk.Context, storetypes.StoreKey, storetypes.StoreKey, paramskeeper.Keeper) {

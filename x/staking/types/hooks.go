@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
 )
 
 // combine multiple staking hooks, all hook functions are run in array sequence

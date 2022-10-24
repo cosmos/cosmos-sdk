@@ -5,15 +5,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/pointnetwork/cosmos-point-sdk/client/tx"
+	clienttx "github.com/pointnetwork/cosmos-point-sdk/client/tx"
+	codectypes "github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/testdata"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	txtypes "github.com/pointnetwork/cosmos-point-sdk/types/tx"
+	"github.com/pointnetwork/cosmos-point-sdk/types/tx/signing"
+	authsigning "github.com/pointnetwork/cosmos-point-sdk/x/auth/signing"
 )
 
 var (

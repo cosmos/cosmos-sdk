@@ -40,12 +40,12 @@ state transitions in the application during an attempt to change param(s).
 ## Decision
 
 We will build off of the alignment of `x/gov` and `x/authz` work per
-[#9810](https://github.com/cosmos/cosmos-sdk/pull/9810). Namely, module developers
+[#9810](https://github.com/pointnetwork/cosmos-point-sdk/pull/9810). Namely, module developers
 will create one or more unique parameter data structures that must be serialized
 to state. The Param data structures must implement `sdk.Msg` interface with respective
 Protobuf Msg service method which will validate and update the parameters with all
 necessary changes. The `x/gov` module via the work done in
-[#9810](https://github.com/cosmos/cosmos-sdk/pull/9810), will dispatch Param
+[#9810](https://github.com/pointnetwork/cosmos-point-sdk/pull/9810), will dispatch Param
 messages, which will be handled by Protobuf Msg services.
 
 Note, it is up to developers to decide how to structure their parameters and
@@ -135,7 +135,7 @@ message QueryParamsResponse {
 As a result of implementing the module parameter methodology, we gain the ability
 for module parameter changes to be stateful and extensible to fit nearly every
 application's use case. We will be able to emit events (and trigger hooks registered
-to that events using the work proposed in [even hooks](https://github.com/cosmos/cosmos-sdk/discussions/9656)),
+to that events using the work proposed in [even hooks](https://github.com/pointnetwork/cosmos-point-sdk/discussions/9656)),
 call other Msg service methods or perform migration.
 In addition, there will be significant gains in performance when it comes to reading
 and writing parameters from and to state, especially if a specific set of parameters
@@ -169,7 +169,7 @@ module may be removed entirely in a future release.
 
 ### Neutral
 
-* Requires [#9810](https://github.com/cosmos/cosmos-sdk/pull/9810) to be reviewed
+* Requires [#9810](https://github.com/pointnetwork/cosmos-point-sdk/pull/9810) to be reviewed
   and merged.
 
 <!-- ## Further Discussions
@@ -179,6 +179,6 @@ Later, this section can optionally list ideas or improvements the author or revi
 
 ## References
 
-* https://github.com/cosmos/cosmos-sdk/pull/9810
-* https://github.com/cosmos/cosmos-sdk/issues/9438
-* https://github.com/cosmos/cosmos-sdk/discussions/9913
+* https://github.com/pointnetwork/cosmos-point-sdk/pull/9810
+* https://github.com/pointnetwork/cosmos-point-sdk/issues/9438
+* https://github.com/pointnetwork/cosmos-point-sdk/discussions/9913

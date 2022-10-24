@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
-	"github.com/cosmos/cosmos-sdk/store/tools/ics23/iavl/helpers"
+	tmproofs "github.com/pointnetwork/cosmos-point-sdk/store/internal/proofs"
+	"github.com/pointnetwork/cosmos-point-sdk/store/tools/ics23/iavl/helpers"
 )
 
 func TestConvertExistence(t *testing.T) {

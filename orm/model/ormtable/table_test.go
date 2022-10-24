@@ -20,18 +20,18 @@ import (
 	"gotest.tools/v3/golden"
 	"pgregory.net/rapid"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/types/kv"
 
 	sdkerrors "cosmossdk.io/errors"
-	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
+	queryv1beta1 "github.com/pointnetwork/cosmos-point-sdk/api/cosmos/base/query/v1beta1"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/encoding/ormkv"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/testkv"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/testpb"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/testutil"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/model/ormlist"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/model/ormtable"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/types/ormerrors"
 )
 
 func TestScenario(t *testing.T) {
@@ -69,7 +69,7 @@ func TestScenario(t *testing.T) {
 	checkEncodeDecodeEntries(t, table, store.IndexStoreReader())
 }
 
-// isolated test for bug - https://github.com/cosmos/cosmos-sdk/issues/11431
+// isolated test for bug - https://github.com/pointnetwork/cosmos-point-sdk/issues/11431
 func TestPaginationLimitCountTotal(t *testing.T) {
 	table, err := ormtable.Build(ormtable.Options{
 		MessageType: (&testpb.ExampleTable{}).ProtoReflect().Type(),

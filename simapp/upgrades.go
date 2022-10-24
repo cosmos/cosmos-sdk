@@ -1,12 +1,12 @@
 package simapp
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	storetypes "github.com/pointnetwork/cosmos-point-sdk/store/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/module"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group"
+	"github.com/pointnetwork/cosmos-point-sdk/x/nft"
+	upgradetypes "github.com/pointnetwork/cosmos-point-sdk/x/upgrade/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample simap upgrade from v045 to v046.

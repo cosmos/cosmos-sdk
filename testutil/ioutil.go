@@ -77,8 +77,8 @@ func TempFile(t testing.TB) *os.File {
 func GetTempDir(t testing.TB) string {
 	t.Helper()
 	// os.MkDir() is used instead of testing.T.TempDir()
-	// see https://github.com/cosmos/cosmos-sdk/pull/8475 and
-	// https://github.com/cosmos/cosmos-sdk/pull/10341 for
+	// see https://github.com/pointnetwork/cosmos-point-sdk/pull/8475 and
+	// https://github.com/pointnetwork/cosmos-point-sdk/pull/10341 for
 	// this change's rationale.
 	tempdir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)

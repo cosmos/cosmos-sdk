@@ -6,13 +6,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
-	"github.com/cosmos/cosmos-sdk/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/x/group/simulation"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/testdata"
+	"github.com/pointnetwork/cosmos-point-sdk/types/kv"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group/internal/orm"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group/keeper"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group/simulation"
 )
 
 func TestDecodeStore(t *testing.T) {

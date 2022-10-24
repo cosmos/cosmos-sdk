@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/require"
 )
 

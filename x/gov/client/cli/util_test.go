@@ -7,15 +7,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	codectypes "github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/testdata"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	banktypes "github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
+	v1 "github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1"
+	"github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1beta1"
+	stakingtypes "github.com/pointnetwork/cosmos-point-sdk/x/staking/types"
 )
 
 func TestParseSubmitLegacyProposalFlags(t *testing.T) {

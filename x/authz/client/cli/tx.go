@@ -8,15 +8,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/client/flags"
+	"github.com/pointnetwork/cosmos-point-sdk/client/tx"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/version"
+	authclient "github.com/pointnetwork/cosmos-point-sdk/x/auth/client"
+	"github.com/pointnetwork/cosmos-point-sdk/x/authz"
+	bank "github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
+	staking "github.com/pointnetwork/cosmos-point-sdk/x/staking/types"
 )
 
 // Flag names and values

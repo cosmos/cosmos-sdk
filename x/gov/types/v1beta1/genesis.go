@@ -3,8 +3,8 @@ package v1beta1
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
 )
 
 // NewGenesisState creates a new genesis state for the governance module

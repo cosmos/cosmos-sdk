@@ -6,7 +6,7 @@ import "google/protobuf/descriptor.proto";
 
 // TODO(fdymylja): once we fully migrate to protov2 the go_package needs to be updated.
 // We need this right now because gogoproto codegen needs to import the extension.
-option go_package = "github.com/cosmos/cosmos-sdk/types/msgservice";
+option go_package = "github.com/pointnetwork/cosmos-point-sdk/types/msgservice";
 
 extend google.protobuf.MessageOptions {
   // signer must be used in cosmos messages in order

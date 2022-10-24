@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	"github.com/pointnetwork/cosmos-point-sdk/x/params/types/proposal"
 )
 
 type (

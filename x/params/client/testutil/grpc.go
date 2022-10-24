@@ -5,8 +5,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil"
+	"github.com/pointnetwork/cosmos-point-sdk/x/params/types/proposal"
 )
 
 func (s *IntegrationTestSuite) TestQueryParamsGRPC() {

@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/pointnetwork/cosmos-point-sdk/baseapp"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	simappparams "github.com/pointnetwork/cosmos-point-sdk/simapp/params"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	simtypes "github.com/pointnetwork/cosmos-point-sdk/types/simulation"
+	"github.com/pointnetwork/cosmos-point-sdk/x/simulation"
+	"github.com/pointnetwork/cosmos-point-sdk/x/staking/keeper"
+	"github.com/pointnetwork/cosmos-point-sdk/x/staking/types"
 )
 
 // Simulation operation weights constants
@@ -415,7 +415,7 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 		// currently the staking msgServer chooses the first unbondingDelegationEntry
 		// with the matching creationHeight.
 		//
-		// ref: https://github.com/cosmos/cosmos-sdk/issues/12932
+		// ref: https://github.com/pointnetwork/cosmos-point-sdk/issues/12932
 		creationHeight := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))].CreationHeight
 
 		var unbondingDelegationEntry types.UnbondingDelegationEntry

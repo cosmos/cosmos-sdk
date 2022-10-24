@@ -5,9 +5,9 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	paramtypes "github.com/pointnetwork/cosmos-point-sdk/x/params/types"
 )
 
 const (

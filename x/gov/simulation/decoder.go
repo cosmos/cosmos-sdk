@@ -5,10 +5,10 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	"github.com/pointnetwork/cosmos-point-sdk/types/kv"
+	"github.com/pointnetwork/cosmos-point-sdk/x/gov/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1beta1"
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's

@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/pointnetwork/cosmos-point-sdk/types/errors"
 )
 
 // groupCodespace is the codespace for all errors defined in group package

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/types/ormerrors"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

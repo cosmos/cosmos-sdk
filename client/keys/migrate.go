@@ -3,7 +3,7 @@ package keys
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
 )
 
 // MigrateCommand migrates key information from legacy keybase to OS secret store.
@@ -17,7 +17,7 @@ If this is the case, the key is already migrated. Therefore, we skip it and cont
 Otherwise, we try to deserialize it using Amino into LegacyInfo. If this attempt is successful, we serialize 
 LegacyInfo to Protobuf serialization format and overwrite the keyring entry. If any error occurred, it will be 
 outputted in CLI and migration will be continued until all keys in the keyring DB are exhausted.
-See https://github.com/cosmos/cosmos-sdk/pull/9695 for more details.
+See https://github.com/pointnetwork/cosmos-point-sdk/pull/9695 for more details.
 
 It is recommended to run in 'dry-run' mode first to verify all key migration material.
 `,

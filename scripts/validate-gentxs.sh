@@ -10,7 +10,7 @@ echo "
 DAEMON= # ex: simd
 CHAIN_ID= # ex: testnet-1
 DENOM= # ex: ustake
-GH_URL= # ex: https://github.com/cosmos/cosmos-sdk
+GH_URL= # ex: https://github.com/pointnetwork/cosmos-point-sdk
 BINARY_VERSION= # ex :v0.44.0
 GO_VERSION=1.17
 PRELAUNCH_GENESIS_URL= # ex: https://raw.githubusercontent.com/cosmos/cosmos-sdk/master/$CHAIN_ID/genesis-prelaunch.json
@@ -18,7 +18,7 @@ GENTXS_DIR= # ex: $GOPATH/github.com/cosmos/mainnet/$CHAIN_ID/gentxs"
 echo
 
 if [[ -z "${GH_URL}" ]]; then
-  echo "GH_URL in not set, required. Ex: https://github.com/cosmos/cosmos-sdk"
+  echo "GH_URL in not set, required. Ex: https://github.com/pointnetwork/cosmos-point-sdk"
   exit 0
 fi
 if [[ -z "${DAEMON}" ]]; then

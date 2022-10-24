@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "github.com/pointnetwork/cosmos-point-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	paramtypes "github.com/pointnetwork/cosmos-point-sdk/x/params/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/staking/types"
 )
 
 // Implements ValidatorSet interface

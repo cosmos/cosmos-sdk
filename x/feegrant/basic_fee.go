@@ -3,8 +3,8 @@ package feegrant
 import (
 	time "time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	sdkerrors "github.com/pointnetwork/cosmos-point-sdk/types/errors"
 )
 
 var _ FeeAllowanceI = (*BasicAllowance)(nil)

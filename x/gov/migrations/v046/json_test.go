@@ -8,15 +8,15 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	codectypes "github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	authtypes "github.com/pointnetwork/cosmos-point-sdk/x/auth/types"
+	v046 "github.com/pointnetwork/cosmos-point-sdk/x/gov/migrations/v046"
+	"github.com/pointnetwork/cosmos-point-sdk/x/gov/types"
+	v1 "github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1"
+	"github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1beta1"
 )
 
 func TestMigrateJSON(t *testing.T) {

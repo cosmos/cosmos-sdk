@@ -3,10 +3,10 @@ package orm
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/gaskv"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/store"
+	"github.com/pointnetwork/cosmos-point-sdk/store/gaskv"
+	storetypes "github.com/pointnetwork/cosmos-point-sdk/store/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
 	dbm "github.com/tendermint/tm-db"
 )
 

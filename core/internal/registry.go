@@ -7,9 +7,9 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/container"
+	"github.com/pointnetwork/cosmos-point-sdk/container"
 
-	appv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/app/v1alpha1"
+	appv1alpha1 "github.com/pointnetwork/cosmos-point-sdk/api/cosmos/app/v1alpha1"
 )
 
 // ModuleRegistry is the registry of module initializers indexed by their golang

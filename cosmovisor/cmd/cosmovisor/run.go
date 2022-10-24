@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/pointnetwork/cosmos-point-sdk/cosmovisor"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )

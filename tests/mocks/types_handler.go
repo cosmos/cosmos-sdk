@@ -9,8 +9,8 @@ package mocks
 import (
 	reflect "reflect"
 
-	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
+	types "github.com/pointnetwork/cosmos-point-sdk/types"
 )
 
 // MockAnteDecorator is a mock of AnteDecorator interface.

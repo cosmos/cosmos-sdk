@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"errors"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
+	dbm "github.com/pointnetwork/cosmos-point-sdk/db"
 )
 
 type (

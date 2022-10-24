@@ -6,12 +6,12 @@ import (
 	"io"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	codecTypes "github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	"github.com/pointnetwork/cosmos-point-sdk/store/dbadapter"
+	"github.com/pointnetwork/cosmos-point-sdk/store/listenkv"
+	"github.com/pointnetwork/cosmos-point-sdk/store/prefix"
+	"github.com/pointnetwork/cosmos-point-sdk/store/types"
 
 	"github.com/stretchr/testify/require"
 

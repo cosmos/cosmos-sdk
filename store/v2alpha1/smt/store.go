@@ -4,9 +4,9 @@ import (
 	"crypto/sha256"
 	"errors"
 
-	dbm "github.com/cosmos/cosmos-sdk/db"
-	"github.com/cosmos/cosmos-sdk/db/prefix"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	dbm "github.com/pointnetwork/cosmos-point-sdk/db"
+	"github.com/pointnetwork/cosmos-point-sdk/db/prefix"
+	"github.com/pointnetwork/cosmos-point-sdk/store/types"
 
 	"github.com/celestiaorg/smt"
 	ics23 "github.com/confio/ics23/go"

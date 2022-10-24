@@ -5,9 +5,9 @@ package testpb
 import (
 	context "context"
 
-	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
-	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	ormlist "github.com/pointnetwork/cosmos-point-sdk/orm/model/ormlist"
+	ormtable "github.com/pointnetwork/cosmos-point-sdk/orm/model/ormtable"
+	ormerrors "github.com/pointnetwork/cosmos-point-sdk/orm/types/ormerrors"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 

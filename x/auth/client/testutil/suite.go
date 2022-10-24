@@ -15,28 +15,28 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/client/flags"
+	"github.com/pointnetwork/cosmos-point-sdk/crypto/hd"
+	"github.com/pointnetwork/cosmos-point-sdk/crypto/keyring"
+	kmultisig "github.com/pointnetwork/cosmos-point-sdk/crypto/keys/multisig"
+	cryptotypes "github.com/pointnetwork/cosmos-point-sdk/crypto/types"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil"
+	clitestutil "github.com/pointnetwork/cosmos-point-sdk/testutil/cli"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/network"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/testdata"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/tx"
+	"github.com/pointnetwork/cosmos-point-sdk/types/tx/signing"
+	authcli "github.com/pointnetwork/cosmos-point-sdk/x/auth/client/cli"
+	authtypes "github.com/pointnetwork/cosmos-point-sdk/x/auth/types"
+	bank "github.com/pointnetwork/cosmos-point-sdk/x/bank/client/cli"
+	bankcli "github.com/pointnetwork/cosmos-point-sdk/x/bank/client/testutil"
+	banktypes "github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/genutil/client/cli"
+	govtestutil "github.com/pointnetwork/cosmos-point-sdk/x/gov/client/testutil"
+	govtypes "github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1beta1"
 )
 
 type IntegrationTestSuite struct {
@@ -1459,7 +1459,7 @@ func (s *IntegrationTestSuite) TestQueryParamsCmd() {
 
 // TestTxWithoutPublicKey makes sure sending a proto tx message without the
 // public key doesn't cause any error in the RPC layer (broadcast).
-// See https://github.com/cosmos/cosmos-sdk/issues/7585 for more details.
+// See https://github.com/pointnetwork/cosmos-point-sdk/issues/7585 for more details.
 func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	val1 := s.network.Validators[0]
 	txCfg := val1.ClientCtx.TxConfig

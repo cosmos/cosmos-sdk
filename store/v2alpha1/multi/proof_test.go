@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/db/memdb"
-	"github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
+	"github.com/pointnetwork/cosmos-point-sdk/db/memdb"
+	"github.com/pointnetwork/cosmos-point-sdk/store/v2alpha1/smt"
 )
 
 // We hash keys produce SMT paths, so reflect that here

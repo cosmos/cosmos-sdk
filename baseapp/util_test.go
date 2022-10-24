@@ -1,12 +1,12 @@
 package baseapp
 
 import (
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/snapshots"
+	"github.com/pointnetwork/cosmos-point-sdk/types"
 )
 
 // TODO: Can be removed once we move all middleware tests into x/auth/middleware
-// ref: #https://github.com/cosmos/cosmos-sdk/issues/10282
+// ref: #https://github.com/pointnetwork/cosmos-point-sdk/issues/10282
 
 // CheckState is an exported method to be able to access baseapp's
 // checkState in tests.

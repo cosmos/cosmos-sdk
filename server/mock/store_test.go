@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "github.com/pointnetwork/cosmos-point-sdk/store/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
 )
 
 func TestStore(t *testing.T) {

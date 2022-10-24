@@ -3,18 +3,18 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	grouperrors "github.com/cosmos/cosmos-sdk/x/group/errors"
+	"github.com/pointnetwork/cosmos-point-sdk/baseapp"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/errors"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group"
+	grouperrors "github.com/pointnetwork/cosmos-point-sdk/x/group/errors"
 )
 
 // doExecuteMsgs routes the messages to the registered handlers. Messages are limited to those that require no authZ or
 // by the account of group policy only. Otherwise this gives access to other peoples accounts as the sdk middlewares are bypassed
 func (s Keeper) doExecuteMsgs(ctx sdk.Context, router *baseapp.MsgServiceRouter, proposal group.Proposal, groupPolicyAcc sdk.AccAddress) ([]sdk.Result, error) {
 	// Ensure it's not too late to execute the messages.
-	// After https://github.com/cosmos/cosmos-sdk/issues/11245, proposals should
+	// After https://github.com/pointnetwork/cosmos-point-sdk/issues/11245, proposals should
 	// be pruned automatically, so this function should not even be called, as
 	// the proposal doesn't exist in state. For sanity check, we can still keep
 	// this simple and cheap check.

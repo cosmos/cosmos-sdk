@@ -3,12 +3,12 @@
 ## Changelog
 
 * 20.08.2021: Initial draft.
-* 07.12.2021: Update `tx.Handler` interface ([\#10693](https://github.com/cosmos/cosmos-sdk/pull/10693)).
+* 07.12.2021: Update `tx.Handler` interface ([\#10693](https://github.com/pointnetwork/cosmos-point-sdk/pull/10693)).
 * 17.05.2022: ADR is abandoned, as middlewares are deemed too hard to reason about.
 
 ## Status
 
-ABANDONED. Replacement is being discussed in [#11955](https://github.com/cosmos/cosmos-sdk/issues/11955).
+ABANDONED. Replacement is being discussed in [#11955](https://github.com/pointnetwork/cosmos-point-sdk/issues/11955).
 
 ## Abstract
 
@@ -16,9 +16,9 @@ This ADR replaces the current BaseApp `runTx` and antehandlers design with a mid
 
 ## Context
 
-BaseApp's implementation of ABCI `{Check,Deliver}Tx()` and its own `Simulate()` method call the `runTx` method under the hood, which first runs antehandlers, then executes `Msg`s. However, the [transaction Tips](https://github.com/cosmos/cosmos-sdk/issues/9406) and [refunding unused gas](https://github.com/cosmos/cosmos-sdk/issues/2150) use cases require custom logic to be run after the `Msg`s execution. There is currently no way to achieve this.
+BaseApp's implementation of ABCI `{Check,Deliver}Tx()` and its own `Simulate()` method call the `runTx` method under the hood, which first runs antehandlers, then executes `Msg`s. However, the [transaction Tips](https://github.com/pointnetwork/cosmos-point-sdk/issues/9406) and [refunding unused gas](https://github.com/pointnetwork/cosmos-point-sdk/issues/2150) use cases require custom logic to be run after the `Msg`s execution. There is currently no way to achieve this.
 
-An naive solution would be to add post-`Msg` hooks to BaseApp. However, the Cosmos SDK team thinks in parallel about the bigger picture of making app wiring simpler ([#9181](https://github.com/cosmos/cosmos-sdk/discussions/9182)), which includes making BaseApp more lightweight and modular.
+An naive solution would be to add post-`Msg` hooks to BaseApp. However, the Cosmos SDK team thinks in parallel about the bigger picture of making app wiring simpler ([#9181](https://github.com/pointnetwork/cosmos-point-sdk/discussions/9182)), which includes making BaseApp more lightweight and modular.
 
 ## Decision
 
@@ -225,7 +225,7 @@ While the app developer can define and compose the middlewares of their choice, 
 | {Antehandlers}          | Each antehandler is converted to its own middleware. These middlewares perform signature verification, fee deductions and other validations on the incoming transaction.                                                                                                                                                                                                                                                                                                                 |
 | IndexEventsTxMiddleware | This is a simple middleware that chooses which events to index in Tendermint. Replaces `baseapp.indexEvents` (which unfortunately still exists in baseapp too, because it's used to index Begin/EndBlock events)                                                                                                                                                                                                                                                                         |
 | RecoveryTxMiddleware    | This index recovers from panics. It replaces baseapp.runTx's panic recovery described in [ADR-022](./adr-022-custom-panic-handling.md).                                                                                                                                                                                                                                                                                                                                                  |
-| GasTxMiddleware         | This replaces the [`Setup`](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/setup.go) Antehandler. It sets a GasMeter on sdk.Context. Note that before, GasMeter was set on sdk.Context inside the antehandlers, and there was some mess around the fact that antehandlers had their own panic recovery system so that the GasMeter could be read by baseapp's recovery system. Now, this mess is all removed: one middleware sets GasMeter, another one handles recovery. |
+| GasTxMiddleware         | This replaces the [`Setup`](https://github.com/pointnetwork/cosmos-point-sdk/blob/v0.43.0/x/auth/ante/setup.go) Antehandler. It sets a GasMeter on sdk.Context. Note that before, GasMeter was set on sdk.Context inside the antehandlers, and there was some mess around the fact that antehandlers had their own panic recovery system so that the GasMeter could be read by baseapp's recovery system. Now, this mess is all removed: one middleware sets GasMeter, another one handles recovery. |
 
 ### Similarities and Differences between Antehandlers and Middlewares
 
@@ -282,7 +282,7 @@ This ADR does not introduce any state-machine-, client- or CLI-breaking changes.
 
 ### Positive
 
-* Allow custom logic to be run before an after `Msg` execution. This enables the [tips](https://github.com/cosmos/cosmos-sdk/issues/9406) and [gas refund](https://github.com/cosmos/cosmos-sdk/issues/2150) uses cases, and possibly other ones.
+* Allow custom logic to be run before an after `Msg` execution. This enables the [tips](https://github.com/pointnetwork/cosmos-point-sdk/issues/9406) and [gas refund](https://github.com/pointnetwork/cosmos-point-sdk/issues/2150) uses cases, and possibly other ones.
 * Make BaseApp more lightweight, and defer complex logic to small modular components.
 * Separate paths for `{Check,Deliver,Simulate}Tx` with different returns types. This allows for improved readability (replace `if sdkCtx.IsRecheckTx() && !simulate {...}` with separate methods) and more flexibility (e.g. returning a `priority` in `ResponseCheckTx`).
 
@@ -297,7 +297,7 @@ No neutral consequences.
 
 ## Further Discussions
 
-* [#9934](https://github.com/cosmos/cosmos-sdk/discussions/9934) Decomposing BaseApp's other ABCI methods into middlewares.
+* [#9934](https://github.com/pointnetwork/cosmos-point-sdk/discussions/9934) Decomposing BaseApp's other ABCI methods into middlewares.
 * Replace `sdk.Tx` interface with the concrete protobuf Tx type in the `tx.Handler` methods signature.
 
 ## Test Cases
@@ -308,5 +308,5 @@ For new middlewares, we introduce unit tests. Since middlewares are purposefully
 
 ## References
 
-* Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/9585
-* Implementation: [#9920 BaseApp refactor](https://github.com/cosmos/cosmos-sdk/pull/9920) and [#10028 Antehandlers migration](https://github.com/cosmos/cosmos-sdk/pull/10028)
+* Initial discussion: https://github.com/pointnetwork/cosmos-point-sdk/issues/9585
+* Implementation: [#9920 BaseApp refactor](https://github.com/pointnetwork/cosmos-point-sdk/pull/9920) and [#10028 Antehandlers migration](https://github.com/pointnetwork/cosmos-point-sdk/pull/10028)

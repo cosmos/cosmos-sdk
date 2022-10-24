@@ -37,7 +37,7 @@ addition to the other complexities related to protobuf generated code that will
 be addressed in a separate ADR.
 
 Nevertheless, the desire for semantic versioning has been [strong in the
-community](https://github.com/cosmos/cosmos-sdk/discussions/10162) and the
+community](https://github.com/pointnetwork/cosmos-point-sdk/discussions/10162) and the
 single go module release process has made it very hard to
 release small changes to isolated features in a timely manner. Release cycles
 often exceed six months which means small improvements done in a day or
@@ -47,7 +47,7 @@ two get bottle-necked by everything else in the monolithic release cycle.
 
 To improve the current situation, the SDK is being refactored into multiple
 go modules within the current repository. There has been a [fair amount of
-debate](https://github.com/cosmos/cosmos-sdk/discussions/10582#discussioncomment-1813377)
+debate](https://github.com/pointnetwork/cosmos-point-sdk/discussions/10582#discussioncomment-1813377)
 as to how to do this, with some developers arguing for larger vs smaller
 module scopes. There are pros and cons to both approaches (which will be
 discussed below in the [Consequences](#consequences) section), but the
@@ -56,8 +56,8 @@ approach being adopted is the following:
 functionality (such as math, errors, store, etc.)
 * when code is removed from the core SDK and moved to a new module path, every 
 effort should be made to avoid API breaking changes in the existing code using
-aliases and wrapper types (as done in https://github.com/cosmos/cosmos-sdk/pull/10779
-and https://github.com/cosmos/cosmos-sdk/pull/11788)
+aliases and wrapper types (as done in https://github.com/pointnetwork/cosmos-point-sdk/pull/10779
+and https://github.com/pointnetwork/cosmos-point-sdk/pull/11788)
 * new go modules should be moved to a standalone domain (`cosmossdk.io`) before
 being tagged as `v1.0.0` to accommodate the possibility that they may be
 better served by a standalone repository in the future
@@ -96,14 +96,14 @@ per-project, although most of these will hopefully be indirect
 ## Further Discussions
 
 Further discussions are occurring in primarily in
-https://github.com/cosmos/cosmos-sdk/discussions/10582 and within
+https://github.com/pointnetwork/cosmos-point-sdk/discussions/10582 and within
 the Cosmos SDK Framework Working Group.
 
 ## References
 
 * https://go.dev/doc/modules/release-workflow
 * https://go.dev/blog/module-compatibility
-* https://github.com/cosmos/cosmos-sdk/discussions/10162
-* https://github.com/cosmos/cosmos-sdk/discussions/10582
-* https://github.com/cosmos/cosmos-sdk/pull/10779
-* https://github.com/cosmos/cosmos-sdk/pull/11788
+* https://github.com/pointnetwork/cosmos-point-sdk/discussions/10162
+* https://github.com/pointnetwork/cosmos-point-sdk/discussions/10582
+* https://github.com/pointnetwork/cosmos-point-sdk/pull/10779
+* https://github.com/pointnetwork/cosmos-point-sdk/pull/11788

@@ -5,7 +5,7 @@ VERSION := $(shell echo $(shell git describe --always --match "cosmovisor/v*") |
 all: cosmovisor test
 
 cosmovisor:
-	go build -ldflags="-X 'github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor/cmd.Version=$(VERSION)'" -mod=readonly ./cmd/cosmovisor
+	go build -ldflags="-X 'github.com/pointnetwork/cosmos-point-sdk/cosmovisor/cmd/cosmovisor/cmd.Version=$(VERSION)'" -mod=readonly ./cmd/cosmovisor
 
 test:
 	go test -mod=readonly -race ./...

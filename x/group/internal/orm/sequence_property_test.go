@@ -3,7 +3,7 @@ package orm
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 )

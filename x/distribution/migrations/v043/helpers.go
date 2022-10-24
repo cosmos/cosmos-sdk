@@ -1,10 +1,10 @@
 package v043
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
-	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
+	"github.com/pointnetwork/cosmos-point-sdk/store/prefix"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/address"
+	v042auth "github.com/pointnetwork/cosmos-point-sdk/x/auth/migrations/v042"
 )
 
 // MigratePrefixAddress is a helper function that migrates all keys of format:

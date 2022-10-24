@@ -8,8 +8,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/testdata"
 )
 
 func TestRejectUnknownFieldsRepeated(t *testing.T) {
@@ -651,7 +651,7 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 	}
 }
 
-// Issue https://github.com/cosmos/cosmos-sdk/issues/7222, we need to ensure that repeated
+// Issue https://github.com/pointnetwork/cosmos-point-sdk/issues/7222, we need to ensure that repeated
 // uint64 are recognized as packed.
 func TestPackedEncoding(t *testing.T) {
 	data := testdata.TestRepeatedUints{Nums: []uint64{12, 13}}

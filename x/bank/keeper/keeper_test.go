@@ -10,17 +10,17 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/pointnetwork/cosmos-point-sdk/baseapp"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/query"
+	authkeeper "github.com/pointnetwork/cosmos-point-sdk/x/auth/keeper"
+	authtypes "github.com/pointnetwork/cosmos-point-sdk/x/auth/types"
+	vesting "github.com/pointnetwork/cosmos-point-sdk/x/auth/vesting/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/bank/keeper"
+	"github.com/pointnetwork/cosmos-point-sdk/x/bank/testutil"
+	"github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
+	minttypes "github.com/pointnetwork/cosmos-point-sdk/x/mint/types"
 )
 
 const (

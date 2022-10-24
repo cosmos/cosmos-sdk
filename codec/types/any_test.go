@@ -7,8 +7,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/testdata"
 )
 
 type errOnMarshal struct {
@@ -26,12 +26,12 @@ func (eom *errOnMarshal) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 var eom = &errOnMarshal{}
 
 // Ensure that returning an error doesn't suddenly allocate and waste bytes.
-// See https://github.com/cosmos/cosmos-sdk/issues/8537
+// See https://github.com/pointnetwork/cosmos-point-sdk/issues/8537
 func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 	// This tests continues to fail inconsistently.
 	//
-	// Example: https://github.com/cosmos/cosmos-sdk/pull/9246/checks?check_run_id=2643313958#step:6:118
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/9010
+	// Example: https://github.com/pointnetwork/cosmos-point-sdk/pull/9246/checks?check_run_id=2643313958#step:6:118
+	// Ref: https://github.com/pointnetwork/cosmos-point-sdk/issues/9010
 	t.SkipNow()
 
 	// make sure we're not in the middle of a GC.

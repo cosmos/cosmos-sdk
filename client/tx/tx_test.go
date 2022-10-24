@@ -8,17 +8,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/client/tx"
+	"github.com/pointnetwork/cosmos-point-sdk/crypto/hd"
+	"github.com/pointnetwork/cosmos-point-sdk/crypto/keyring"
+	cryptotypes "github.com/pointnetwork/cosmos-point-sdk/crypto/types"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	txtypes "github.com/pointnetwork/cosmos-point-sdk/types/tx"
+	signingtypes "github.com/pointnetwork/cosmos-point-sdk/types/tx/signing"
+	"github.com/pointnetwork/cosmos-point-sdk/x/auth/signing"
+	banktypes "github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
 )
 
 func NewTestTxConfig() client.TxConfig {

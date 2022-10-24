@@ -3,9 +3,9 @@ package legacy
 import (
 	"encoding/binary"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
-	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/kv"
+	v042auth "github.com/pointnetwork/cosmos-point-sdk/x/auth/migrations/v042"
 )
 
 const (

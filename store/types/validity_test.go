@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/pointnetwork/cosmos-point-sdk/store/types"
 )
 
 func TestAssertValidKey(t *testing.T) {

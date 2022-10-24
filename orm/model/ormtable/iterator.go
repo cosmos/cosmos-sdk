@@ -4,12 +4,12 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/listinternal"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormlist"
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+	queryv1beta1 "github.com/pointnetwork/cosmos-point-sdk/api/cosmos/base/query/v1beta1"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/encoding/encodeutil"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/encoding/ormkv"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/listinternal"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/model/ormlist"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/types/kv"
 )
 
 // Iterator defines the interface for iterating over indexes.

@@ -1,8 +1,8 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	cryptocodec "github.com/pointnetwork/cosmos-point-sdk/crypto/codec"
 )
 
 var amino = codec.NewLegacyAmino()

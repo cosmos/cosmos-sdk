@@ -1,11 +1,11 @@
 package v046
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	storetypes "github.com/pointnetwork/cosmos-point-sdk/store/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	paramtypes "github.com/pointnetwork/cosmos-point-sdk/x/params/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/staking/types"
 )
 
 // MigrateStore performs in-place store migrations from v0.43/v0.44/v0.45 to v0.46.

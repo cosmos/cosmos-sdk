@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"math"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	groupmath "github.com/cosmos/cosmos-sdk/x/group/internal/math"
-	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
+	storetypes "github.com/pointnetwork/cosmos-point-sdk/store/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group/errors"
+	groupmath "github.com/pointnetwork/cosmos-point-sdk/x/group/internal/math"
+	"github.com/pointnetwork/cosmos-point-sdk/x/group/internal/orm"
 )
 
 const weightInvariant = "Group-TotalWeight"

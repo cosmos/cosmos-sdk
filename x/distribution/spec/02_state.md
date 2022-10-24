@@ -27,7 +27,7 @@ type DecCoin struct {
 }
 ```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
++++ https://github.com/pointnetwork/cosmos-point-sdk/blob/v0.46.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
 
 ## Validator Distribution
 

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/types/ormerrors"
 
-	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/types/ormjson"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 

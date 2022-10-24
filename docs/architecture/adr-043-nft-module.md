@@ -21,9 +21,9 @@ This ADR defines the `x/nft` module which is a generic implementation of NFTs, r
 
 ## Context
 
-NFTs are more than just crypto art, which is very helpful for accruing value to the Cosmos ecosystem. As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs as discussed in https://github.com/cosmos/cosmos-sdk/discussions/9065.
+NFTs are more than just crypto art, which is very helpful for accruing value to the Cosmos ecosystem. As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs as discussed in https://github.com/pointnetwork/cosmos-point-sdk/discussions/9065.
 
-As discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/9065), several potential solutions can be considered:
+As discussed in [#9065](https://github.com/pointnetwork/cosmos-point-sdk/discussions/9065), several potential solutions can be considered:
 
 * irismod/nft and modules/incubator/nft
 * CW721
@@ -296,7 +296,7 @@ message QueryClassesResponse {
 Interoperability is all about reusing assets between modules and chains. The former one is achieved by ADR-33: Protobuf client - server communication. At the time of writing ADR-33 is not finalized. The latter is achieved by IBC. Here we will focus on the IBC side.
 IBC is implemented per module. Here, we aligned that NFTs will be recorded and managed in the x/nft. This requires creation of a new IBC standard and implementation of it.
 
-For IBC interoperability, NFT custom modules MUST use the NFT object type understood by the IBC client. So, for x/nft interoperability, custom NFT implementations (example: x/cryptokitty) should use the canonical x/nft module and proxy all NFT balance keeping functionality to x/nft or else re-implement all functionality using the NFT object type understood by the IBC client. In other words: x/nft becomes the standard NFT registry for all Cosmos NFTs (example: x/cryptokitty will register a kitty NFT in x/nft and use x/nft for book keeping). This was [discussed](https://github.com/cosmos/cosmos-sdk/discussions/9065#discussioncomment-873206) in the context of using x/bank as a general asset balance book. Not using x/nft will require implementing another module for IBC.
+For IBC interoperability, NFT custom modules MUST use the NFT object type understood by the IBC client. So, for x/nft interoperability, custom NFT implementations (example: x/cryptokitty) should use the canonical x/nft module and proxy all NFT balance keeping functionality to x/nft or else re-implement all functionality using the NFT object type understood by the IBC client. In other words: x/nft becomes the standard NFT registry for all Cosmos NFTs (example: x/cryptokitty will register a kitty NFT in x/nft and use x/nft for book keeping). This was [discussed](https://github.com/pointnetwork/cosmos-point-sdk/discussions/9065#discussioncomment-873206) in the context of using x/bank as a general asset balance book. Not using x/nft will require implementing another module for IBC.
 
 ## Consequences
 
@@ -335,6 +335,6 @@ Other networks in the Cosmos ecosystem could design and implement their own NFT 
 
 ## References
 
-* Initial discussion: https://github.com/cosmos/cosmos-sdk/discussions/9065
-* x/nft: initialize module: https://github.com/cosmos/cosmos-sdk/pull/9174
-* [ADR 033](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-033-protobuf-inter-module-comm.md)
+* Initial discussion: https://github.com/pointnetwork/cosmos-point-sdk/discussions/9065
+* x/nft: initialize module: https://github.com/pointnetwork/cosmos-point-sdk/pull/9174
+* [ADR 033](https://github.com/pointnetwork/cosmos-point-sdk/blob/main/docs/architecture/adr-033-protobuf-inter-module-comm.md)

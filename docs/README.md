@@ -64,7 +64,7 @@ aside: false
 
 * **[Module Directory](../x/)**: Cosmos SDK module implementations and their respective documentation.
 * **[Specifications](./spec/)**: Specifications of modules and other parts of the Cosmos SDK.
-* **[Cosmos SDK API Reference](https://pkg.go.dev/github.com/cosmos/cosmos-sdk)**: Godocs of the Cosmos SDK.
+* **[Cosmos SDK API Reference](https://pkg.go.dev/github.com/pointnetwork/cosmos-point-sdk)**: Godocs of the Cosmos SDK.
 * **[REST and RPC Endpoints](https://cosmos.network/rpc/)**: List of endpoints to interact with a `gaia` full-node.
 * **[Rosetta API](./run-node/rosetta.md)**: Rosetta API integration.
 
@@ -78,4 +78,4 @@ The Cosmos SDK is written in [Golang](https://golang.org/), though the framework
 
 ## Contribute
 
-See the [DOCS_README.md](https://github.com/cosmos/cosmos-sdk/blob/main/docs/DOCS_README.md) for details of the build process and considerations when making changes.
+See the [DOCS_README.md](https://github.com/pointnetwork/cosmos-point-sdk/blob/main/docs/DOCS_README.md) for details of the build process and considerations when making changes.

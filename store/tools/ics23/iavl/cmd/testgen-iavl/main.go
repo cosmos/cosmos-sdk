@@ -8,10 +8,10 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 
-	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
-	tools "github.com/cosmos/cosmos-sdk/store/tools/ics23"
-	iavlproofs "github.com/cosmos/cosmos-sdk/store/tools/ics23/iavl"
-	"github.com/cosmos/cosmos-sdk/store/tools/ics23/iavl/helpers"
+	tmproofs "github.com/pointnetwork/cosmos-point-sdk/store/internal/proofs"
+	tools "github.com/pointnetwork/cosmos-point-sdk/store/tools/ics23"
+	iavlproofs "github.com/pointnetwork/cosmos-point-sdk/store/tools/ics23/iavl"
+	"github.com/pointnetwork/cosmos-point-sdk/store/tools/ics23/iavl/helpers"
 )
 
 /**

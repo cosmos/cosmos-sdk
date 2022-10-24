@@ -3,7 +3,7 @@ package types
 import (
 	"bytes"
 
-	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/pointnetwork/cosmos-point-sdk/types/kv"
 )
 
 // KVStorePrefixIterator iterates over all the keys with a certain prefix in ascending order

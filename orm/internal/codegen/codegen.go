@@ -7,14 +7,14 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-proto/generator"
-	ormv1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1"
+	ormv1 "github.com/pointnetwork/cosmos-point-sdk/api/cosmos/orm/v1"
 )
 
 const (
 	contextPkg  = protogen.GoImportPath("context")
-	ormListPkg  = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormlist")
-	ormErrPkg   = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/types/ormerrors")
-	ormTablePkg = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormtable")
+	ormListPkg  = protogen.GoImportPath("github.com/pointnetwork/cosmos-point-sdk/orm/model/ormlist")
+	ormErrPkg   = protogen.GoImportPath("github.com/pointnetwork/cosmos-point-sdk/orm/types/ormerrors")
+	ormTablePkg = protogen.GoImportPath("github.com/pointnetwork/cosmos-point-sdk/orm/model/ormtable")
 )
 
 func PluginRunner(p *protogen.Plugin) error {

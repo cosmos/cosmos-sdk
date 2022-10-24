@@ -5,8 +5,8 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	paramtypes "github.com/pointnetwork/cosmos-point-sdk/x/params/types"
 )
 
 // Parameter keys

@@ -3,7 +3,7 @@ package tmservice
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/db"
+	"github.com/pointnetwork/cosmos-point-sdk/db"
 )
 
 // IteratePrefix is a convenience function for iterating over a key domain

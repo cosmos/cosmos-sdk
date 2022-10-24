@@ -1,15 +1,15 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	"github.com/pointnetwork/cosmos-point-sdk/codec/legacy"
+	"github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	cryptocodec "github.com/pointnetwork/cosmos-point-sdk/crypto/codec"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/msgservice"
+	authtypes "github.com/pointnetwork/cosmos-point-sdk/x/auth/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/auth/vesting/exported"
+	authzcodec "github.com/pointnetwork/cosmos-point-sdk/x/authz/codec"
 )
 
 // RegisterLegacyAminoCodec registers the vesting interfaces and concrete types on the

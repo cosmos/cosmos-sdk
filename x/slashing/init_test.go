@@ -1,7 +1,7 @@
 package slashing_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
 )
 
 // The default power validators are initialized to have within tests

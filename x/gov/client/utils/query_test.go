@@ -10,12 +10,12 @@ import (
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/auth/migrations/legacytx"
+	"github.com/pointnetwork/cosmos-point-sdk/x/gov/client/utils"
+	v1 "github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1"
 )
 
 type TxSearchMock struct {

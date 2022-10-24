@@ -8,14 +8,14 @@ import (
 	"io"
 	"math"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/fieldnames"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/encoding/encodeutil"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/encoding/ormkv"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/types/ormerrors"
 )
 
 // tableImpl implements Table.

@@ -9,10 +9,10 @@ import (
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
-	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/encoding/encodeutil"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/encoding/ormkv"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/testpb"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/testutil"
 )
 
 func TestKeyCodec(t *testing.T) {

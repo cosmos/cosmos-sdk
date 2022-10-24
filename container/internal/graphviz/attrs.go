@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/container/internal/util"
+	"github.com/pointnetwork/cosmos-point-sdk/container/internal/util"
 )
 
 // Attributes represents a graphviz attributes map.

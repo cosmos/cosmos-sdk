@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "github.com/pointnetwork/cosmos-point-sdk/x/upgrade/types"
 	"github.com/rs/zerolog"
 )
 

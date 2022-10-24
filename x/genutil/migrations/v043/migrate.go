@@ -1,14 +1,14 @@
 package v043
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	v042bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v042"
-	v043bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	v042gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v042"
-	v043gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v043"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	v042bank "github.com/pointnetwork/cosmos-point-sdk/x/bank/migrations/v042"
+	v043bank "github.com/pointnetwork/cosmos-point-sdk/x/bank/migrations/v043"
+	bank "github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/genutil/types"
+	v042gov "github.com/pointnetwork/cosmos-point-sdk/x/gov/migrations/v042"
+	v043gov "github.com/pointnetwork/cosmos-point-sdk/x/gov/migrations/v043"
+	gov "github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1beta1"
 )
 
 // Migrate migrates exported state from v0.40 to a v0.43 genesis state.

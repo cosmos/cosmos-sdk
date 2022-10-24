@@ -6,8 +6,8 @@ import (
 	"crypto/elliptic"
 	"fmt"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	codectypes "github.com/pointnetwork/cosmos-point-sdk/codec/types"
+	cryptotypes "github.com/pointnetwork/cosmos-point-sdk/crypto/types"
 )
 
 const (

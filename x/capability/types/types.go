@@ -6,7 +6,7 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/pointnetwork/cosmos-point-sdk/types/errors"
 )
 
 // NewCapability returns a reference to a new Capability to be used as an

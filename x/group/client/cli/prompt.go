@@ -6,13 +6,13 @@ import (
 	"os"
 	"sort"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/manifoldco/promptui"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/client/flags"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	govcli "github.com/pointnetwork/cosmos-point-sdk/x/gov/client/cli"
+	govtypes "github.com/pointnetwork/cosmos-point-sdk/x/gov/types"
 	"github.com/spf13/cobra"
 )
 

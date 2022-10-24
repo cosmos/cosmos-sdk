@@ -18,7 +18,7 @@ It also defines a structure for providing downloadable artifacts involved in an 
 The `upgrade` module in conjunction with Cosmovisor are designed to facilitate and automate a blockchain's transition from one version to another.
 
 Users submit a software upgrade governance proposal containing an upgrade `Plan`.
-The [Plan](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/proto/cosmos/upgrade/v1beta1/upgrade.proto#L12) currently contains the following fields:
+The [Plan](https://github.com/pointnetwork/cosmos-point-sdk/blob/v0.44.5/proto/cosmos/upgrade/v1beta1/upgrade.proto#L12) currently contains the following fields:
 - `name`: A short string identifying the new version.
 - `height`: The chain height at which the upgrade is to be performed.
 - `info`: A string containing information about the upgrade.
@@ -35,7 +35,7 @@ If the URL returns something other than an archive, it is downloaded to `{DAEMON
 
 If an upgrade height is reached and the new version of the executable version isn't available, Cosmovisor will stop running.
 
-Both `DAEMON_HOME` and `DAEMON_NAME` are [environment variables used to configure Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/cosmovisor/v1.0.0/cosmovisor/README.md#command-line-arguments-and-environment-variables).
+Both `DAEMON_HOME` and `DAEMON_NAME` are [environment variables used to configure Cosmovisor](https://github.com/pointnetwork/cosmos-point-sdk/blob/cosmovisor/v1.0.0/cosmovisor/README.md#command-line-arguments-and-environment-variables).
 
 Currently, there is no mechanism that makes Cosmovisor run a command after the upgraded chain has been restarted.
 
@@ -81,7 +81,7 @@ All fields in the `UpgradeInstructions` are optional.
 - `pre_run` is a command to run prior to the upgraded chain restarting.
   If defined, it will be executed after halting and downloading the new artifact but before restarting the upgraded chain.
   The working directory this command runs from MUST be `{DAEMON_HOME}/cosmovisor/{upgrade name}`.
-  This command MUST behave the same as the current [pre-upgrade](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md) command.
+  This command MUST behave the same as the current [pre-upgrade](https://github.com/pointnetwork/cosmos-point-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md) command.
   It does not take in any command-line arguments and is expected to terminate with the following exit codes:
 
   | Exit status code | How it is handled in Cosmosvisor                                                                                    |
@@ -220,26 +220,26 @@ In order to utilize the `UpgradeInstructions` as part of a software upgrade, bot
 
 ## Further Discussions
 
-1.  [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r698708349):
+1.  [Draft PR #10032 Comment](https://github.com/pointnetwork/cosmos-point-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r698708349):
     Consider different names for `UpgradeInstructions instructions` (either the message type or field name).
-1.  [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r754655072):
+1.  [Draft PR #10032 Comment](https://github.com/pointnetwork/cosmos-point-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r754655072):
     1.  Consider putting the `string platform` field inside `UpgradeInstructions` and make `UpgradeInstructions` a repeated field in `Plan`.
     1.  Consider using a `oneof` field in the `Plan` which could either be `UpgradeInstructions` or else a URL that should return the `UpgradeInstructions`.
     1.  Consider allowing `info` to either be a JSON serialized version of `UpgradeInstructions` or else a URL that returns that.
-1.  [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r755462876):
+1.  [Draft PR #10032 Comment](https://github.com/pointnetwork/cosmos-point-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r755462876):
     Consider not including the `UpgradeInstructions.description` field, using the `info` field for that purpose instead.
-1.  [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r754643691):
+1.  [Draft PR #10032 Comment](https://github.com/pointnetwork/cosmos-point-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r754643691):
     Consider allowing multiple artifacts to be downloaded for any given `platform` by adding a `name` field to the `Artifact` message.
-1.  [PR #10502 Comment](https://github.com/cosmos/cosmos-sdk/pull/10602#discussion_r781438288)
+1.  [PR #10502 Comment](https://github.com/pointnetwork/cosmos-point-sdk/pull/10602#discussion_r781438288)
     Allow the new `UpgradeInstructions` to be provided via URL.
-1.  [PR #10502 Comment](https://github.com/cosmos/cosmos-sdk/pull/10602#discussion_r781438288)
+1.  [PR #10502 Comment](https://github.com/pointnetwork/cosmos-point-sdk/pull/10602#discussion_r781438288)
     Allow definition of a `signer` for assets (as an alternative to using a `checksum`).
 
 ## References
 
-- [Current upgrade.proto](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/proto/cosmos/upgrade/v1beta1/upgrade.proto)
-- [Upgrade Module README](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/x/upgrade/spec/README.md)
-- [Cosmovisor README](https://github.com/cosmos/cosmos-sdk/blob/cosmovisor/v1.0.0/cosmovisor/README.md)
-- [Pre-upgrade README](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md)
-- [Draft/POC PR #10032](https://github.com/cosmos/cosmos-sdk/pull/10032)
+- [Current upgrade.proto](https://github.com/pointnetwork/cosmos-point-sdk/blob/v0.44.5/proto/cosmos/upgrade/v1beta1/upgrade.proto)
+- [Upgrade Module README](https://github.com/pointnetwork/cosmos-point-sdk/blob/v0.44.5/x/upgrade/spec/README.md)
+- [Cosmovisor README](https://github.com/pointnetwork/cosmos-point-sdk/blob/cosmovisor/v1.0.0/cosmovisor/README.md)
+- [Pre-upgrade README](https://github.com/pointnetwork/cosmos-point-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md)
+- [Draft/POC PR #10032](https://github.com/pointnetwork/cosmos-point-sdk/pull/10032)
 - [RFC 1738: Uniform Resource Locators](https://www.ietf.org/rfc/rfc1738.txt)

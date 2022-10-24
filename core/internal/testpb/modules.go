@@ -5,7 +5,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/cosmos/cosmos-sdk/container"
+	"github.com/pointnetwork/cosmos-point-sdk/container"
 
 	"cosmossdk.io/core/appmodule"
 )

@@ -21,7 +21,7 @@ In the current design, IAVL is used for both data storage and as a Merkle Tree f
 
 * Each object query requires a tree traversal from the root. Subsequent queries for the same object are cached on the Cosmos SDK level.
 * Each edge traversal requires a DB query.
-* Creating snapshots is [expensive](https://github.com/cosmos/cosmos-sdk/issues/7215#issuecomment-684804950). It takes about 30 seconds to export less than 100 MB of state (as of March 2020).
+* Creating snapshots is [expensive](https://github.com/pointnetwork/cosmos-point-sdk/issues/7215#issuecomment-684804950). It takes about 30 seconds to export less than 100 MB of state (as of March 2020).
 * Updates in IAVL may trigger tree reorganization and possible O(log(n)) hashes re-computation, which can become a CPU bottleneck.
 * The node structure is pretty expensive - it contains a standard tree node elements (key, value, left and right element) and additional metadata such as height, version (which is not required by the Cosmos SDK). The entire node is hashed, and that hash is used as the key in the underlying database, [ref](https://github.com/cosmos/iavl/blob/master/docs/node/node.md
 ).
@@ -105,7 +105,7 @@ One of the functional requirements is to access old state. This is done through 
 
 Moreover, Cosmos SDK could provide a way to directly access a historical state. However, a state machine shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
 
-We positively [validated](https://github.com/cosmos/cosmos-sdk/discussions/8297) a versioning and snapshot mechanism for querying old state with regards to the database we evaluated.
+We positively [validated](https://github.com/pointnetwork/cosmos-point-sdk/discussions/8297) a versioning and snapshot mechanism for querying old state with regards to the database we evaluated.
 
 ### State Proofs
 
@@ -121,7 +121,7 @@ We identified use-cases, where modules will need to save an object commitment wi
 
 ### Refactor MultiStore
 
-The Stargate `/store` implementation (store/v1) adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database. The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and atomic DB commits (see: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370) and [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297#discussioncomment-757043)).
+The Stargate `/store` implementation (store/v1) adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database. The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and atomic DB commits (see: [\#6370](https://github.com/pointnetwork/cosmos-point-sdk/issues/6370) and [discussion](https://github.com/pointnetwork/cosmos-point-sdk/discussions/8297#discussioncomment-757043)).
 
 We propose to reduce the multistore concept from the SDK, and to use a single instance of `SC` and `SS` in a `RootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore`. The `RootStore` will have the following interface; the methods for configuring tracing and listeners are omitted for brevity.
 
@@ -278,12 +278,12 @@ We were discussing use case where modules can use a support database, which is n
 
 ## References
 
-* [IAVL What's Next?](https://github.com/cosmos/cosmos-sdk/issues/7100)
+* [IAVL What's Next?](https://github.com/pointnetwork/cosmos-point-sdk/issues/7100)
 * [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of it's state v0.15
 * [State commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h)
 * [Celestia (LazyLedger) SMT](https://github.com/lazyledger/smt)
 * Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
 * [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).
-* Design and implementation [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297).
+* Design and implementation [discussion](https://github.com/pointnetwork/cosmos-point-sdk/discussions/8297).
 * [How to Upgrade IBC Chains and their Clients](https://github.com/cosmos/ibc-go/blob/main/docs/ibc/upgrades/quick-guide.md)
 * [ADR-40 Effect on IBC](https://github.com/cosmos/ibc-go/discussions/256)

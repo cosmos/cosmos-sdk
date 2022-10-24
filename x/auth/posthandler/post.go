@@ -1,7 +1,7 @@
 package posthandler
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
 )
 
 // HandlerOptions are the options required for constructing a default SDK PostHandler.

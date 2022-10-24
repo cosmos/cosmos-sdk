@@ -7,9 +7,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
+	pruningtypes "github.com/pointnetwork/cosmos-point-sdk/pruning/types"
+	snapshottypes "github.com/pointnetwork/cosmos-point-sdk/snapshots/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/kv"
 )
 
 type Store interface {

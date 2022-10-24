@@ -17,8 +17,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/pointnetwork/cosmos-point-sdk/cosmovisor"
+	upgradetypes "github.com/pointnetwork/cosmos-point-sdk/x/upgrade/types"
 )
 
 type upgradeTestSuite struct {
@@ -155,7 +155,7 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 		},
 		"follow reference": {
 			info: ref,
-			url:  "https://github.com/cosmos/cosmos-sdk/raw/main/cosmovisor/testdata/repo/chain3-zip_dir/autod.zip?checksum=sha256:8951f52a0aea8617de0ae459a20daf704c29d259c425e60d520e363df0f166b4",
+			url:  "https://github.com/pointnetwork/cosmos-point-sdk/raw/main/cosmovisor/testdata/repo/chain3-zip_dir/autod.zip?checksum=sha256:8951f52a0aea8617de0ae459a20daf704c29d259c425e60d520e363df0f166b4",
 		},
 		"malformated reference target": {
 			info: badref,

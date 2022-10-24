@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/cosmovisor"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/pointnetwork/cosmos-point-sdk/cosmovisor"
+	upgradetypes "github.com/pointnetwork/cosmos-point-sdk/x/upgrade/types"
 )
 
 type processTestSuite struct {

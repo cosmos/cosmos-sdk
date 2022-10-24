@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
 
 	"github.com/jhump/protoreflect/grpcreflect"
 
@@ -20,21 +20,21 @@ import (
 	"google.golang.org/grpc/metadata"
 	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	reflectionv1 "github.com/cosmos/cosmos-sdk/client/grpc/reflection"
-	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	reflectionv2 "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	reflectionv1 "github.com/pointnetwork/cosmos-point-sdk/client/grpc/reflection"
+	clienttx "github.com/pointnetwork/cosmos-point-sdk/client/tx"
+	reflectionv2 "github.com/pointnetwork/cosmos-point-sdk/server/grpc/reflection/v2alpha1"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/network"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil/testdata"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	grpctypes "github.com/pointnetwork/cosmos-point-sdk/types/grpc"
+	"github.com/pointnetwork/cosmos-point-sdk/types/tx"
+	txtypes "github.com/pointnetwork/cosmos-point-sdk/types/tx"
+	"github.com/pointnetwork/cosmos-point-sdk/types/tx/signing"
+	authclient "github.com/pointnetwork/cosmos-point-sdk/x/auth/client"
+	banktypes "github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
+	stakingtypes "github.com/pointnetwork/cosmos-point-sdk/x/staking/types"
 )
 
 type IntegrationTestSuite struct {
@@ -161,7 +161,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_InterfaceReflection() {
 
 func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
 	// Query the tx via gRPC without pagination. This used to panic, see
-	// https://github.com/cosmos/cosmos-sdk/issues/8038.
+	// https://github.com/pointnetwork/cosmos-point-sdk/issues/8038.
 	txServiceClient := txtypes.NewServiceClient(s.conn)
 	_, err := txServiceClient.GetTxsEvent(
 		context.Background(),
@@ -196,7 +196,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 
 // Test and enforce that we upfront reject any connections to baseapp containing
 // invalid initial x-cosmos-block-height that aren't positive  and in the range [0, max(int64)]
-// See issue https://github.com/cosmos/cosmos-sdk/issues/7662.
+// See issue https://github.com/pointnetwork/cosmos-point-sdk/issues/7662.
 func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 	t := s.T()
 
@@ -224,7 +224,7 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 }
 
 // TestGRPCUnpacker - tests the grpc endpoint for Validator and using the interface registry unpack and extract the
-// ConsAddr. (ref: https://github.com/cosmos/cosmos-sdk/issues/8045)
+// ConsAddr. (ref: https://github.com/pointnetwork/cosmos-point-sdk/issues/8045)
 func (s *IntegrationTestSuite) TestGRPCUnpacker() {
 	ir := s.app.InterfaceRegistry()
 	queryClient := stakingtypes.NewQueryClient(s.conn)

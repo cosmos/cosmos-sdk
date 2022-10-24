@@ -2,7 +2,7 @@
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
 
-## [v0.46.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0)
+## [v0.46.x](https://github.com/pointnetwork/cosmos-point-sdk/releases/tag/v0.46.0)
 
 ### Go API Changes
 
@@ -25,7 +25,7 @@ To improve clarity of the API, some renaming and improvements has been done:
 | `x/gov`   | `keeper.RefundDeposits`            | `keeper.RefundAndDeleteDeposits`     |
 | `x/{mod}` | package `legacy`                   | package `migrations`                 |
 
-For the exhaustive list of API renaming, please refer to the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/main/CHANGELOG.md).
+For the exhaustive list of API renaming, please refer to the [CHANGELOG](https://github.com/pointnetwork/cosmos-point-sdk/blob/main/CHANGELOG.md).
 
 #### new packages
 
@@ -80,7 +80,7 @@ mistakes.
 
 #### `x/params`
 
-* The `x/param` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos-SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
+* The `x/param` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos-SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/pointnetwork/cosmos-point-sdk/pull/12363). 
 * The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
 
 #### `x/gov`
@@ -93,7 +93,7 @@ More information can be found in the gov module [client documentation](https://d
 
 ### Protobuf
 
-The `third_party/proto` folder that existed in [previous version](https://github.com/cosmos/cosmos-sdk/tree/v0.45.3/third_party/proto) now does not contains directly the [proto files](https://github.com/cosmos/cosmos-sdk/tree/release/v0.46.x/third_party/proto).
+The `third_party/proto` folder that existed in [previous version](https://github.com/pointnetwork/cosmos-point-sdk/tree/v0.45.3/third_party/proto) now does not contains directly the [proto files](https://github.com/pointnetwork/cosmos-point-sdk/tree/release/v0.46.x/third_party/proto).
 
 Instead, the SDK uses [`buf`](https://buf.build). Clients should have their own [`buf.yaml`](https://docs.buf.build/configuration/v1/buf-yaml) with `buf.build/cosmos/cosmos-sdk` as dependency, in order to avoid having to copy paste these files.
 

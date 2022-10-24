@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/celestiaorg/smt"
-	"github.com/cosmos/cosmos-sdk/db/memdb"
-	smtstore "github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
+	"github.com/pointnetwork/cosmos-point-sdk/db/memdb"
+	smtstore "github.com/pointnetwork/cosmos-point-sdk/store/v2alpha1/smt"
 )
 
 func TestProofOpInterface(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/pointnetwork/cosmos-point-sdk/types/kv"
 	dbm "github.com/tendermint/tm-db"
 )
 

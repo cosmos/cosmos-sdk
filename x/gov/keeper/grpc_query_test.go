@@ -4,12 +4,12 @@ import (
 	gocontext "context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	v046 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v046"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/types/query"
+	v046 "github.com/pointnetwork/cosmos-point-sdk/x/gov/migrations/v046"
+	v1 "github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1"
+	"github.com/pointnetwork/cosmos-point-sdk/x/gov/types/v1beta1"
 )
 
 func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 			if testCase.expPass {
 				suite.Require().NoError(err)
 				// Instead of using MashalJSON, we could compare .String() output too.
-				// https://github.com/cosmos/cosmos-sdk/issues/10965
+				// https://github.com/pointnetwork/cosmos-point-sdk/issues/10965
 				expJSON, err := suite.app.AppCodec().MarshalJSON(&expProposal)
 				suite.Require().NoError(err)
 				actualJSON, err := suite.app.AppCodec().MarshalJSON(proposalRes.Proposal)
@@ -147,7 +147,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 			if testCase.expPass {
 				suite.Require().NoError(err)
 				// Instead of using MashalJSON, we could compare .String() output too.
-				// https://github.com/cosmos/cosmos-sdk/issues/10965
+				// https://github.com/pointnetwork/cosmos-point-sdk/issues/10965
 				expJSON, err := suite.app.AppCodec().MarshalJSON(&expProposal)
 				suite.Require().NoError(err)
 				actualJSON, err := suite.app.AppCodec().MarshalJSON(&proposalRes.Proposal)
@@ -295,7 +295,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 				suite.Require().Len(proposals.GetProposals(), len(expRes.GetProposals()))
 				for i := 0; i < len(proposals.GetProposals()); i++ {
 					// Instead of using MashalJSON, we could compare .String() output too.
-					// https://github.com/cosmos/cosmos-sdk/issues/10965
+					// https://github.com/pointnetwork/cosmos-point-sdk/issues/10965
 					expJSON, err := suite.app.AppCodec().MarshalJSON(expRes.GetProposals()[i])
 					suite.Require().NoError(err)
 					actualJSON, err := suite.app.AppCodec().MarshalJSON(proposals.GetProposals()[i])

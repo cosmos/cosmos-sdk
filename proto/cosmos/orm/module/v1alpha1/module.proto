@@ -9,6 +9,6 @@ import "cosmos/app/v1alpha1/module.proto";
 // with ORM data.
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "github.com/cosmos/cosmos-sdk/orm"
+    go_import: "github.com/pointnetwork/cosmos-point-sdk/orm"
   };
 }

@@ -5,11 +5,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/store/streaming/file"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/pointnetwork/cosmos-point-sdk/baseapp"
+	"github.com/pointnetwork/cosmos-point-sdk/codec"
+	serverTypes "github.com/pointnetwork/cosmos-point-sdk/server/types"
+	"github.com/pointnetwork/cosmos-point-sdk/store/streaming/file"
+	"github.com/pointnetwork/cosmos-point-sdk/store/types"
 
 	"github.com/spf13/cast"
 )

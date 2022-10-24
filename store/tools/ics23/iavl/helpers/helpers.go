@@ -14,7 +14,7 @@ import (
 	"github.com/tendermint/tendermint/libs/rand"
 	db "github.com/tendermint/tm-db"
 
-	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
+	tmproofs "github.com/pointnetwork/cosmos-point-sdk/store/internal/proofs"
 )
 
 // IavlResult is the result of one match

@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/crypto/hd"
+	"github.com/pointnetwork/cosmos-point-sdk/types"
 )
 
 var defaultBIP39Passphrase = ""
@@ -119,7 +119,7 @@ func TestCreateHDPath(t *testing.T) {
 // the extended keys specification. If the index belongs to that of a hardened key,
 // its 0x80000000 bit will be set, so we can still accept values in [0, max(int32)] and then
 // increase its value as deriveKeyPath already augments.
-// See issue https://github.com/cosmos/cosmos-sdk/issues/7627.
+// See issue https://github.com/pointnetwork/cosmos-point-sdk/issues/7627.
 func TestDeriveHDPathRange(t *testing.T) {
 	seed := mnemonicToSeed("I am become Death, the destroyer of worlds!")
 
@@ -282,7 +282,7 @@ func ExampleSomeBIP32TestVecs() {
 }
 
 // Ensuring that we don't crash if values have trailing slashes
-// See issue https://github.com/cosmos/cosmos-sdk/issues/8557.
+// See issue https://github.com/pointnetwork/cosmos-point-sdk/issues/8557.
 func TestDerivePrivateKeyForPathDoNotCrash(t *testing.T) {
 	paths := []string{
 		"m/5/",

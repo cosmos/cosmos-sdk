@@ -7,10 +7,10 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	bankv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/bank/v1beta1"
-	basev1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/v1beta1"
-	txv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/tx/v1beta1"
-	"github.com/cosmos/cosmos-sdk/orm/internal/stablejson"
+	bankv1beta1 "github.com/pointnetwork/cosmos-point-sdk/api/cosmos/bank/v1beta1"
+	basev1beta1 "github.com/pointnetwork/cosmos-point-sdk/api/cosmos/base/v1beta1"
+	txv1beta1 "github.com/pointnetwork/cosmos-point-sdk/api/cosmos/tx/v1beta1"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/stablejson"
 )
 
 func TestStableJSON(t *testing.T) {

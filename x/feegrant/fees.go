@@ -3,7 +3,7 @@ package feegrant
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
 )
 
 // FeeAllowance implementations are tied to a given fee delegator and delegatee,

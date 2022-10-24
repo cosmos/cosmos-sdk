@@ -88,7 +88,7 @@ grpcurl \
     cosmos.bank.v1beta1.Query/AllBalances
 ```
 
-The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
+The list of all available gRPC query endpoints is [coming soon](https://github.com/pointnetwork/cosmos-point-sdk/issues/7786).
 
 #### Query for historical state using grpcurl
 
@@ -111,14 +111,14 @@ The following snippet shows how to query the state using gRPC inside a Go progra
 
 #### Install Cosmos SDK
 
-Add below line to `go.mod` to replace protobuf, read more [#8469](https://github.com/cosmos/cosmos-sdk/issues/8469)
+Add below line to `go.mod` to replace protobuf, read more [#8469](https://github.com/pointnetwork/cosmos-point-sdk/issues/8469)
 
 ```go
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 ```
 
 ```bash
-go get github.com/cosmos/cosmos-sdk@main
+go get github.com/pointnetwork/cosmos-point-sdk@main
 ```
 
 ```go
@@ -128,9 +128,9 @@ import (
 
     "google.golang.org/grpc"
 
-    "github.com/cosmos/cosmos-sdk/codec"
-    sdk "github.com/cosmos/cosmos-sdk/types"
-    banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+    "github.com/pointnetwork/cosmos-point-sdk/codec"
+    sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+    banktypes "github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
 )
 
 func queryState() error {
@@ -168,7 +168,7 @@ func queryState() error {
 }
 ```
 
-You can replace the query client (here we are using `x/bank`'s) with one generated from any other Protobuf service. The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
+You can replace the query client (here we are using `x/bank`'s) with one generated from any other Protobuf service. The list of all available gRPC query endpoints is [coming soon](https://github.com/pointnetwork/cosmos-point-sdk/issues/7786).
 
 #### Query for historical state using Go
 
@@ -182,10 +182,10 @@ import (
     "google.golang.org/grpc"
     "google.golang.org/grpc/metadata"
 
-    "github.com/cosmos/cosmos-sdk/codec"
-    sdk "github.com/cosmos/cosmos-sdk/types"
-    grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-    banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+    "github.com/pointnetwork/cosmos-point-sdk/codec"
+    sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+    grpctypes "github.com/pointnetwork/cosmos-point-sdk/types/grpc"
+    banktypes "github.com/pointnetwork/cosmos-point-sdk/x/bank/types"
 )
 
 func queryState() error {

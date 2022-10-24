@@ -4,9 +4,9 @@ package ormlist
 import (
 	"google.golang.org/protobuf/proto"
 
-	queryv1beta1 "github.com/cosmos/cosmos-sdk/api/cosmos/base/query/v1beta1"
+	queryv1beta1 "github.com/pointnetwork/cosmos-point-sdk/api/cosmos/base/query/v1beta1"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/listinternal"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/listinternal"
 )
 
 // Option represents a list option.

@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	v046 "github.com/cosmos/cosmos-sdk/x/feegrant/migrations/v046"
+	"github.com/pointnetwork/cosmos-point-sdk/crypto/keys/ed25519"
+	"github.com/pointnetwork/cosmos-point-sdk/simapp"
+	"github.com/pointnetwork/cosmos-point-sdk/testutil"
+	sdk "github.com/pointnetwork/cosmos-point-sdk/types"
+	"github.com/pointnetwork/cosmos-point-sdk/x/feegrant"
+	v046 "github.com/pointnetwork/cosmos-point-sdk/x/feegrant/migrations/v046"
 	"github.com/stretchr/testify/require"
 )
 

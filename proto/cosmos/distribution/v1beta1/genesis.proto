@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.distribution.v1beta1;
 
-option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+option go_package            = "github.com/pointnetwork/cosmos-point-sdk/x/distribution/types";
 option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
@@ -33,7 +33,7 @@ message ValidatorOutstandingRewardsRecord {
 
   // outstanding_rewards represents the oustanding rewards of a validator.
   repeated cosmos.base.v1beta1.DecCoin outstanding_rewards = 2
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+      [(gogoproto.castrepeated) = "github.com/pointnetwork/cosmos-point-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
 // ValidatorAccumulatedCommissionRecord is used for import / export via genesis

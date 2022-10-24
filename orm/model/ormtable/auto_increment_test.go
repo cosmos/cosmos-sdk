@@ -10,9 +10,9 @@ import (
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/testkv"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/testpb"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/model/ormtable"
 )
 
 func TestAutoIncrementScenario(t *testing.T) {

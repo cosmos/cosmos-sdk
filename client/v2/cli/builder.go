@@ -5,7 +5,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/cosmos/cosmos-sdk/client/v2/cli/flag"
+	"github.com/pointnetwork/cosmos-point-sdk/client/v2/cli/flag"
 )
 
 // Builder manages options for building CLI commands.

@@ -8,11 +8,11 @@ import (
 
 	protoio "github.com/gogo/protobuf/io"
 
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/pointnetwork/cosmos-point-sdk/snapshots"
+	snapshottypes "github.com/pointnetwork/cosmos-point-sdk/snapshots/types"
+	storetypes "github.com/pointnetwork/cosmos-point-sdk/store/types"
+	types "github.com/pointnetwork/cosmos-point-sdk/store/v2alpha1"
+	sdkerrors "github.com/pointnetwork/cosmos-point-sdk/types/errors"
 )
 
 // Snapshot implements snapshottypes.Snapshotter.

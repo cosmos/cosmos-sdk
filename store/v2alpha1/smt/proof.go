@@ -7,8 +7,8 @@ import (
 	"hash"
 
 	"github.com/celestiaorg/smt"
-	"github.com/cosmos/cosmos-sdk/store/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/pointnetwork/cosmos-point-sdk/store/types"
+	sdkerrors "github.com/pointnetwork/cosmos-point-sdk/types/errors"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )

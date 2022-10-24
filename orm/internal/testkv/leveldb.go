@@ -6,7 +6,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/model/ormtable"
 )
 
 func NewGoLevelDBBackend(t testing.TB) ormtable.Backend {

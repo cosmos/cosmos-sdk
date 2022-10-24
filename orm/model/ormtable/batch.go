@@ -1,7 +1,7 @@
 package ormtable
 
 import (
-	"github.com/cosmos/cosmos-sdk/orm/types/kv"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/types/kv"
 )
 
 type batchIndexCommitmentWriter struct {

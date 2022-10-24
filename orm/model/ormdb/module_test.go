@@ -8,22 +8,22 @@ import (
 	"strings"
 	"testing"
 
-	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+	ormv1alpha1 "github.com/pointnetwork/cosmos-point-sdk/api/cosmos/orm/v1alpha1"
 
 	"github.com/golang/mock/gomock"
 
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormmocks"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/testing/ormmocks"
 
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
-	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
-	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
-	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
-	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/testkv"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/internal/testpb"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/model/ormdb"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/model/ormtable"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/testing/ormtest"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/types/ormerrors"
+	"github.com/pointnetwork/cosmos-point-sdk/orm/types/ormjson"
 )
 
 // These tests use a simulated bank keeper. Addresses and balances use

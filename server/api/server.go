@@ -15,14 +15,14 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmrpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/cosmos/cosmos-sdk/telemetry"
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/pointnetwork/cosmos-point-sdk/client"
+	"github.com/pointnetwork/cosmos-point-sdk/codec/legacy"
+	"github.com/pointnetwork/cosmos-point-sdk/server/config"
+	"github.com/pointnetwork/cosmos-point-sdk/telemetry"
+	grpctypes "github.com/pointnetwork/cosmos-point-sdk/types/grpc"
 
 	// unnamed import of statik for swagger UI support
-	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
+	_ "github.com/pointnetwork/cosmos-point-sdk/client/docs/statik"
 )
 
 // Server defines the server's API interface.

@@ -13,7 +13,7 @@ import (
 
 	"github.com/celestiaorg/smt"
 
-	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
+	tmproofs "github.com/pointnetwork/cosmos-point-sdk/store/internal/proofs"
 )
 
 // PreimageMap maps each tree path back to its preimage

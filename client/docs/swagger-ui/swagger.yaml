@@ -31952,7 +31952,7 @@ definitions:
               called memo,
 
               but should be called `note` instead (see
-              https://github.com/cosmos/cosmos-sdk/issues/9122).
+              https://github.com/pointnetwork/cosmos-point-sdk/issues/9122).
           timeout_height:
             type: string
             format: uint64
@@ -32529,7 +32529,7 @@ definitions:
           memo,
 
           but should be called `note` instead (see
-          https://github.com/cosmos/cosmos-sdk/issues/9122).
+          https://github.com/pointnetwork/cosmos-point-sdk/issues/9122).
       timeout_height:
         type: string
         format: uint64

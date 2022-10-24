@@ -8,7 +8,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "tendermint/types/block.proto";
 import "tendermint/types/types.proto";
 
-option go_package                       = "github.com/cosmos/cosmos-sdk/types/tx";
+option go_package                       = "github.com/pointnetwork/cosmos-point-sdk/types/tx";
 
 // Service defines a gRPC service for interacting with transactions.
 service Service {

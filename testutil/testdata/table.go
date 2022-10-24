@@ -1,6 +1,6 @@
 package testdata
 
-import "github.com/cosmos/cosmos-sdk/types/errors"
+import "github.com/pointnetwork/cosmos-point-sdk/types/errors"
 
 var ErrTest = errors.Register("table_testdata", 2, "test")
 

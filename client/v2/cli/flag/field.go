@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
+	"github.com/pointnetwork/cosmos-point-sdk/client/v2/internal/util"
 )
 
 // FieldValueBinder wraps a flag value in a way that allows it to be bound

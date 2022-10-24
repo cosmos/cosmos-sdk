@@ -6,7 +6,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/pointnetwork/cosmos-point-sdk/codec/types"
 )
 
 type QueryImpl struct{}

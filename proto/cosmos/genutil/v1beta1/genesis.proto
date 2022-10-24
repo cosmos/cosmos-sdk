@@ -10,8 +10,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/genutil/types";
 message GenesisState {
   // gen_txs defines the genesis transactions.
   repeated bytes gen_txs = 1 [
-    (gogoproto.casttype)                        = "encoding/json.RawMessage",
-    (gogoproto.jsontag)                         = "gentxs",
+    (gogoproto.casttype)          = "encoding/json.RawMessage",
+    (gogoproto.jsontag)           = "gentxs",
     (legacy_amino.field_name)     = "gentxs",
     (legacy_amino.dont_omitempty) = true
   ];

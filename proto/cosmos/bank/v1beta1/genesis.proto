@@ -19,8 +19,11 @@ message GenesisState {
 
   // supply represents the total supply. If it is left empty, then supply will be calculated based on the provided
   // balances. Otherwise, it will be used to validate that the sum of the balances equals this amount.
-  repeated cosmos.base.v1beta1.Coin supply = 3
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true];
+  repeated cosmos.base.v1beta1.Coin supply = 3 [
+    (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)          = false,
+    (legacy_amino.dont_omitempty) = true
+  ];
 
   // denom_metadata defines the metadata of the different coins.
   repeated Metadata denom_metadata = 4 [(gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true];
@@ -41,6 +44,9 @@ message Balance {
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // coins defines the different coins this balance holds.
-  repeated cosmos.base.v1beta1.Coin coins = 2
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true];
+  repeated cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)          = false,
+    (legacy_amino.dont_omitempty) = true
+  ];
 }

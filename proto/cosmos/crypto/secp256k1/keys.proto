@@ -23,8 +23,8 @@ message PubKey {
   // Then we have:
   // out == `"MQ=="`
   // out != `{"key":"MQ=="}`
-  option (legacy_amino.encoding) = "bytes field";
-  option (gogoproto.goproto_stringer)          = false;
+  option (legacy_amino.encoding)      = "bytes field";
+  option (gogoproto.goproto_stringer) = false;
 
   bytes key = 1;
 }

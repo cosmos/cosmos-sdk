@@ -104,6 +104,7 @@ func (mp *senderPriorityMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error
 
 		// process each sender's txs in order of nonce completely before moving on to the next sender
 		senderIndex := mp.senderIndices[key.sender]
+		seenSenders[key.sender] = true
 		senderNode := senderIndex.Front()
 		for senderNode != nil {
 			tx := senderNode.Value.(Tx)
@@ -120,8 +121,6 @@ func (mp *senderPriorityMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error
 		if txBytes >= maxBytes {
 			break
 		}
-
-		seenSenders[key.sender] = true
 
 		priorityNode = priorityNode.Next()
 	}
@@ -146,12 +145,14 @@ func (mp *senderPriorityMempool) Remove(tx Tx) error {
 	sender := sig.PubKey.Address().String()
 	nonce := sig.Sequence
 
-	priority, ok := mp.priorities[senderPriorityMetadata{sender: sender, nonce: nonce}]
+	priorityKey := senderPriorityMetadata{sender: sender, nonce: nonce}
+	priority, ok := mp.priorities[priorityKey]
 	if !ok {
 		return ErrTxNotFound
 	}
 
-	mp.priorityIndex.Remove(senderPriorityMetadata{sender: sender, priority: priority})
+	delete(mp.priorities, priorityKey)
+	mp.priorityIndex.Remove(senderPriorityMetadata{sender: sender, priority: priority, nonce: nonce})
 	senderIndex, ok := mp.senderIndices[sender]
 	if !ok {
 		return fmt.Errorf("sender %s not found", sender)

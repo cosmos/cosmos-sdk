@@ -2,6 +2,7 @@ package mempool
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -39,3 +40,53 @@ type Mempool interface {
 var ErrTxNotFound = errors.New("tx not found in mempool")
 
 type Factory func() Mempool
+
+func IsEmpty(mempool Mempool) error {
+	pmp, ok := mempool.(*priorityMempool)
+	if ok {
+		if pmp.priorityIndex.Len() != 0 {
+			return fmt.Errorf("priorityIndex not empty")
+		}
+
+		var countKeys []int64
+		for k := range pmp.priorityCounts {
+			countKeys = append(countKeys, k)
+		}
+		for _, k := range countKeys {
+			if pmp.priorityCounts[k] != 0 {
+				return fmt.Errorf("priorityCounts not zero at %v, got %v", k, pmp.priorityCounts[k])
+			}
+		}
+
+		var senderKeys []string
+		for k := range pmp.senderIndices {
+			senderKeys = append(senderKeys, k)
+		}
+		for _, k := range senderKeys {
+			if pmp.senderIndices[k].Len() != 0 {
+				return fmt.Errorf("senderIndex not empty for sender %v", k)
+			}
+		}
+		return nil
+	}
+
+	smp, ok := mempool.(*senderPriorityMempool)
+	if ok {
+		if smp.priorityIndex.Len() != 0 {
+			return fmt.Errorf("priorityIndex not empty")
+		}
+
+		var senderKeys []string
+		for k := range smp.senderIndices {
+			senderKeys = append(senderKeys, k)
+		}
+		for _, k := range senderKeys {
+			if smp.senderIndices[k].Len() != 0 {
+				return fmt.Errorf("senderIndex not empty for sender %v", k)
+			}
+		}
+		return nil
+	}
+
+	return fmt.Errorf("unknown mempool type")
+}

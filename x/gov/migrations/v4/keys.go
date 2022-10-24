@@ -12,12 +12,12 @@ var (
 	ParamsKey = []byte{0x30}
 
 	// - 0x04<proposalID_Bytes>: ProposalContents
-	ProposalContentsKeyPrefix = []byte{0x04}
+	VotingPeriodProposalKeyPrefix = []byte{0x04}
 )
 
-// ProposalContentsKey gets a specific proposal content from the store
-func ProposalContentsKey(proposalID uint64) []byte {
-	return append(ProposalContentsKeyPrefix, GetProposalIDBytes(proposalID)...)
+// VotingPeriodProposalKey gets if a proposal is in voting period.
+func VotingPeriodProposalKey(proposalID uint64) []byte {
+	return append(VotingPeriodProposalKeyPrefix, GetProposalIDBytes(proposalID)...)
 }
 
 // GetProposalIDBytes returns the byte representation of the proposalID

@@ -40,7 +40,7 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 	return nil
 }
 
-func migrateProposalContents(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
+func migrateProposalVotingPeriod(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 	propStore := prefix.NewStore(store, v1.ProposalsKeyPrefix)
 
@@ -54,29 +54,9 @@ func migrateProposalContents(ctx sdk.Context, storeKey storetypes.StoreKey, cdc 
 			return err
 		}
 
-		// First set the contents.
-		contents := govv1.ProposalContents{
-			Messages: prop.Messages,
-			Metadata: prop.Metadata,
+		if prop.Status == govv1.StatusVotingPeriod {
+			store.Set(VotingPeriodProposalKey(prop.Id), []byte{1})
 		}
-
-		bz, err := cdc.Marshal(&contents)
-		if err != nil {
-			return err
-		}
-		store.Set(ProposalContentsKey(prop.Id), bz)
-
-		// Clear the proposal contents and re-store.
-		prop.Messages = nil
-		prop.Metadata = ""
-
-		bz, err = cdc.Marshal(&prop)
-		if err != nil {
-			return err
-		}
-
-		// Set new value on store.
-		propStore.Set(iter.Key(), bz)
 	}
 
 	return nil
@@ -87,9 +67,9 @@ func migrateProposalContents(ctx sdk.Context, storeKey storetypes.StoreKey, cdc 
 //
 // Params migrations from x/params to gov
 // Addition of the new min initial deposit ratio parameter that is set to 0 by default.
-// Proposal contents are stored separately from the proposal itself.
+// Proposals in voting period are tracked in a separate index.
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.ParamSubspace, cdc codec.BinaryCodec) error {
-	if err := migrateProposalContents(ctx, storeKey, cdc); err != nil {
+	if err := migrateProposalVotingPeriod(ctx, storeKey, cdc); err != nil {
 		return err
 	}
 

@@ -18,6 +18,7 @@ import (
 	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -149,8 +150,9 @@ func makeTestConfig() depinject.Config {
 }
 
 func makeMinimalConfig() depinject.Config {
+	var mempoolOpt runtime.BaseAppOption = baseapp.SetMempool(mempool.NewPriorityMempool())
 	return depinject.Configs(
-		depinject.Supply(mempool.DefaultPriorityMempool()),
+		depinject.Supply(mempoolOpt),
 		appconfig.Compose(&appv1alpha1.Config{
 			Modules: []*appv1alpha1.ModuleConfig{
 				{

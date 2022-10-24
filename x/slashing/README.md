@@ -625,7 +625,7 @@ simd tx slashing --help
 The `unjail` command allows users to unjail a validator previously jailed for downtime.
 
 ```bash
-  simd tx slashing unjail --from mykey [flags]
+simd tx slashing unjail --from mykey [flags]
 ```
 
 Example:

@@ -6,13 +6,14 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -163,9 +164,9 @@ func NewBaseApp(
 		option(app)
 	}
 
-	// if execution of options has left certain required fields nil, let's set them to default values
+	// if execution of options has left certain required fields nil, set them to sane default values
 	if app.mempool == nil {
-		app.mempool = mempool.DefaultPriorityMempool()
+		app.mempool = mempool.NewPriorityMempool()
 	}
 
 	if app.interBlockCache != nil {

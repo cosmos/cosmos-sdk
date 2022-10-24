@@ -244,31 +244,19 @@ The main interface is the [Command-Line Interface](../core/07-cli.md). The CLI o
 See an example of an application's main command-line file from the [Cosmos Hub](https://github.com/cosmos/gaia)
 
 ```go reference
-https://github.com/cosmos/gaia/blob/Theta-main/cmd/gaiad/cmd/root.go#L39-L77
+https://github.com/cosmos/gaia/blob/26ae7c2/cmd/gaiad/cmd/root.go#L39-L80
 ```
 
 ## Dependencies and Makefile
-
-:::warning
-A patch introduced in `go-grpc v1.34.0` made gRPC incompatible with the `gogoproto` library, making some [gRPC queries](https://github.com/cosmos/cosmos-sdk/issues/8426) panic. As such, the Cosmos SDK requires that `go-grpc <=v1.33.2` is installed in your `go.mod`.
-
-To make sure that gRPC is working properly, it is **highly recommended** to add the following line in your application's `go.mod`:
-
-```go
-replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
-```
-
-Please see [issue #8392](https://github.com/cosmos/cosmos-sdk/issues/8392) for more info.
-:::
 
 This section is optional, as developers are free to choose their dependency manager and project building method. That said, the current most used framework for versioning control is [`go.mod`](https://github.com/golang/go/wiki/Modules). It ensures each of the libraries used throughout the application are imported with the correct version.
 
 Below, the `go.mod` of the [Cosmos Hub](https://github.com/cosmos/gaia) is provided as an example.
 
 ```go reference
-https://github.com/cosmos/gaia/blob/Theta-main/go.mod#L1-L20
+https://github.com/cosmos/gaia/blob/26ae7c2/go.mod#L1-L28
 ```
 
 For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefile) is generally used. The Makefile primarily ensures that the `go.mod` is run before building the two entrypoints to the application, [`appd`](#node-client) and [`appd`](#application-interface).
 
-Here is an example of the [Cosmos Hub Makefile](https://github.com/cosmos/gaia/blob/Theta-main/Makefile).
+Here is an example of the [Cosmos Hub Makefile](https://github.com/cosmos/gaia/blob/main/Makefile).

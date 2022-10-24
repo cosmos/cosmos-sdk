@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -83,6 +82,7 @@ func TestMigrateStore(t *testing.T) {
 	store.Set(v1gov.ProposalKey(proposal1.Id), prop1Bz)
 
 	proposal2, err := v1.NewProposal(getTestProposal(), 2, "some metadata for the legacy content", propTime, propTime)
+	proposal2.Status = v1.StatusVotingPeriod
 	require.NoError(t, err)
 	prop2Bz, err := cdc.Marshal(&proposal2)
 	require.NoError(t, err)
@@ -105,33 +105,21 @@ func TestMigrateStore(t *testing.T) {
 	require.Equal(t, legacySubspace.tp.VetoThreshold, params.VetoThreshold)
 	require.Equal(t, sdk.ZeroDec().String(), params.MinInitialDepositRatio)
 
-	// Check proposals and contents (1)
-	var newProposal v1.Proposal
+	// Check proposals' status
+	var migratedProp1 v1.Proposal
 	bz = store.Get(v1gov.ProposalKey(proposal1.Id))
-	require.NoError(t, cdc.Unmarshal(bz, &newProposal))
+	require.NoError(t, cdc.Unmarshal(bz, &migratedProp1))
+	require.Equal(t, v1.StatusDepositPeriod, migratedProp1.Status)
 
-	var newPropContents v1.ProposalContents
-	bz = store.Get(v4.ProposalContentsKey(newProposal.Id))
-	require.NoError(t, cdc.Unmarshal(bz, &newPropContents))
-
-	err = sdktx.UnpackInterfaces(cdc, newPropContents.Messages)
-	require.NoError(t, err)
-
-	checkMigratedProp(t, proposal1, newProposal, newPropContents)
-
-	// Check proposals and contents (2)
-	var newProposal2 v1.Proposal
+	var migratedProp2 v1.Proposal
 	bz = store.Get(v1gov.ProposalKey(proposal2.Id))
-	require.NoError(t, cdc.Unmarshal(bz, &newProposal2))
+	require.NoError(t, cdc.Unmarshal(bz, &migratedProp2))
+	require.Equal(t, v1.StatusVotingPeriod, migratedProp2.Status)
 
-	var newPropContents2 v1.ProposalContents
-	bz = store.Get(v4.ProposalContentsKey(newProposal2.Id))
-	require.NoError(t, cdc.Unmarshal(bz, &newPropContents2))
+	// Check if proposal 2 is in the new store but not proposal 1
+	require.Nil(t, store.Get(v4.VotingPeriodProposalKey(proposal1.Id)))
+	require.Equal(t, []byte{0x1}, store.Get(v4.VotingPeriodProposalKey(proposal2.Id)))
 
-	err = sdktx.UnpackInterfaces(cdc, newPropContents2.Messages)
-	require.NoError(t, err)
-
-	checkMigratedProp(t, proposal2, newProposal2, newPropContents2)
 }
 
 func getTestProposal() []sdk.Msg {
@@ -144,29 +132,4 @@ func getTestProposal() []sdk.Msg {
 		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))),
 		legacyProposalMsg,
 	}
-}
-
-func checkMigratedProp(t *testing.T, oldProp v1.Proposal, newProp v1.Proposal, newContents v1.ProposalContents) {
-	// We are not changing any of these fields but we are checking them to make sure
-	require.Equal(t, oldProp.Id, newProp.Id)
-	require.Equal(t, oldProp.Status.String(), newProp.Status.String())
-	require.Equal(t, sdk.Coins(newProp.TotalDeposit).String(), sdk.Coins(newProp.TotalDeposit).String())
-	require.Equal(t, oldProp.FinalTallyResult, newProp.FinalTallyResult)
-
-	// Compare UNIX times, as a simple Equal gives difference between Local and
-	// UTC times.
-	// ref: https://github.com/golang/go/issues/19486#issuecomment-292968278
-	require.Equal(t, oldProp.SubmitTime.Unix(), newProp.SubmitTime.Unix())
-	require.Equal(t, oldProp.DepositEndTime.Unix(), newProp.DepositEndTime.Unix())
-	require.Equal(t, oldProp.VotingStartTime, newProp.VotingStartTime)
-	require.Equal(t, oldProp.VotingEndTime, newProp.VotingEndTime)
-
-	// Check contents
-
-	// These 2 should be empty now
-	require.Empty(t, newProp.Messages)
-	require.Empty(t, newProp.Metadata)
-
-	require.Equal(t, oldProp.Messages, newContents.Messages)
-	require.Equal(t, oldProp.Metadata, newContents.Metadata)
 }

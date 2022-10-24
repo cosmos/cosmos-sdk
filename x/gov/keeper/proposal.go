@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -140,74 +139,11 @@ func (keeper Keeper) GetProposalWithoutContents(ctx sdk.Context, proposalID uint
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	// Store the proposal's content.
-	data := v1.ProposalContents{
-		Messages: proposal.Messages,
-		Metadata: proposal.Metadata,
-	}
-	keeper.setProposalContents(ctx, proposal.Id, data)
-
-	// Clear content fields before marshaling.
-	proposal.Messages = nil
-	proposal.Metadata = ""
-
-	// Store the proposal.
 	bz, err := keeper.MarshalProposal(proposal)
 	if err != nil {
 		panic(err)
 	}
 	store.Set(types.ProposalKey(proposal.Id), bz)
-}
-
-// SetProposalWithoutContents sets a proposal to store but not its contents
-// (messages and metadata).
-// Panics if can't marshal the proposal.
-func (keeper Keeper) SetProposalWithoutContents(ctx sdk.Context, proposal v1.Proposal) {
-	store := ctx.KVStore(keeper.storeKey)
-
-	// Clear static fields before marshaling.
-	proposal.Messages = nil
-	proposal.Metadata = ""
-
-	bz, err := keeper.MarshalProposal(proposal)
-	if err != nil {
-		panic(err)
-	}
-	store.Set(types.ProposalKey(proposal.Id), bz)
-}
-
-func (keeper Keeper) setProposalContents(ctx sdk.Context, proposalID uint64, data v1.ProposalContents) {
-	bz, err := keeper.cdc.Marshal(&data)
-	if err != nil {
-		panic(err)
-	}
-
-	store := ctx.KVStore(keeper.storeKey)
-	store.Set(types.ProposalContentsKey(proposalID), bz)
-}
-
-// PopulateProposalContents populates the proposal's contents from the separate store.
-func (keeper Keeper) PopulateProposalContents(ctx sdk.Context, proposal *v1.Proposal) {
-	store := ctx.KVStore(keeper.storeKey)
-
-	bz := store.Get(types.ProposalContentsKey(proposal.Id))
-	if bz == nil {
-		return
-	}
-
-	var contents v1.ProposalContents
-	err := keeper.cdc.Unmarshal(bz, &contents)
-	if err != nil {
-		panic(err)
-	}
-
-	err = sdktx.UnpackInterfaces(keeper.cdc, contents.Messages)
-	if err != nil {
-		panic(err)
-	}
-
-	proposal.Messages = contents.Messages
-	proposal.Metadata = contents.Metadata
 }
 
 // DeleteProposal deletes a proposal from store.

@@ -58,14 +58,6 @@ message Proposal {
   string metadata = 10;
 }
 
-// ProposalContents defines the contents (static data) of a governance proposal.
-// This data is stored separately from the Proposal object to avoid incurring
-// into high gas costs when querying/updating the main proposal object.
-message ProposalContents {
-  repeated google.protobuf.Any messages = 1;
-  string metadata = 2;
-}
-
 // ProposalStatus enumerates the valid statuses of a proposal.
 enum ProposalStatus {
   // PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.

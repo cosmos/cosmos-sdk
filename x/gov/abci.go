@@ -100,8 +100,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 		proposal.FinalTallyResult = &tallyResults
 
-		// Use SetProposalWithoutContents given that we are not changing the proposal contents
-		keeper.SetProposalWithoutContents(ctx, proposal)
+		keeper.SetProposal(ctx, proposal)
 		keeper.RemoveFromActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 
 		// when proposal become active

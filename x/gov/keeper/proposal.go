@@ -214,7 +214,7 @@ func (keeper Keeper) PopulateProposalContents(ctx sdk.Context, proposal *v1.Prop
 // Panics if the proposal doesn't exist.
 func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
-	proposal, ok := keeper.GetProposalWithoutContents(ctx, proposalID)
+	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
 		panic(fmt.Sprintf("couldn't find proposal with id#%d", proposalID))
 	}
@@ -331,8 +331,7 @@ func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal v1.Proposal)
 	endTime := proposal.VotingStartTime.Add(*votingPeriod)
 	proposal.VotingEndTime = &endTime
 	proposal.Status = v1.StatusVotingPeriod
-	// Use SetProposalWithoutContents given that we are not changing the proposal contents
-	keeper.SetProposalWithoutContents(ctx, proposal)
+	keeper.SetProposal(ctx, proposal)
 
 	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.Id, *proposal.DepositEndTime)
 	keeper.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)

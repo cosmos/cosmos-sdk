@@ -48,7 +48,7 @@ func (t testPubKey) Type() string { panic("implement me") }
 
 // testTx is a dummy implementation of Tx used for testing.
 type testTx struct {
-	hash     [32]byte
+	id       int
 	priority int64
 	nonce    uint64
 	address  sdk.AccAddress
@@ -73,8 +73,6 @@ var (
 	_ signing.SigVerifiableTx = (*testTx)(nil)
 	_ cryptotypes.PubKey      = (*testPubKey)(nil)
 )
-
-func (tx testTx) GetHash() [32]byte { return tx.hash }
 
 func (tx testTx) Size() int64 { return 1 }
 
@@ -120,7 +118,7 @@ func TestDefaultMempool(t *testing.T) {
 	// same sender-nonce just overwrites a tx
 	mp := mempool.NewPriorityMempool()
 	for _, tx := range txs {
-		ctx.WithPriority(tx.priority)
+		ctx = ctx.WithPriority(tx.priority)
 		err := mp.Insert(ctx, tx)
 		require.NoError(t, err)
 	}
@@ -169,7 +167,6 @@ func TestDefaultMempool(t *testing.T) {
 
 type txSpec struct {
 	i int
-	h int
 	p int
 	n int
 	a sdk.AccAddress
@@ -210,6 +207,7 @@ func TestOutOfOrder(t *testing.T) {
 	}
 
 	seed := time.Now().UnixNano()
+	t.Logf("running with seed: %d", seed)
 	randomTxs := genRandomTxs(seed, 1000, 10)
 	var rmtxs []mempool.Tx
 	for _, rtx := range randomTxs {
@@ -260,7 +258,8 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 20, n: 1, a: sa},
 			},
-			order: []int{2, 0, 1}},
+			order: []int{2, 0, 1},
+		},
 		{
 			txs: []txSpec{
 				{p: 50, n: 3, a: sa},
@@ -307,6 +306,85 @@ func (s *MempoolTestSuite) TestTxOrder() {
 			},
 			order: []int{3, 2, 0, 4, 1, 5, 6, 7, 8},
 		},
+		{
+			txs: []txSpec{
+				{p: 6, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sb},
+			},
+			order: []int{0, 1, 2, 3},
+		},
+		{
+			// if all txs have the same priority they will be ordered lexically sender address, and nonce with the
+			// sender.
+			txs: []txSpec{
+				{p: 10, n: 7, a: sc},
+				{p: 10, n: 8, a: sc},
+				{p: 10, n: 9, a: sc},
+				{p: 10, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 10, n: 3, a: sa},
+				{p: 10, n: 4, a: sb},
+				{p: 10, n: 5, a: sb},
+				{p: 10, n: 6, a: sb},
+			},
+			order: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+		},
+		/*
+			The next 4 tests are different permutations of the same set:
+
+			  		{p: 5, n: 1, a: sa},
+					{p: 10, n: 2, a: sa},
+					{p: 20, n: 2, a: sb},
+					{p: 5, n: 1, a: sb},
+					{p: 99, n: 2, a: sc},
+					{p: 5, n: 1, a: sc},
+
+			which exercises the actions required to resolve priority ties.
+		*/
+		{
+			txs: []txSpec{
+				{p: 5, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sb},
+			},
+			order: []int{2, 3, 0, 1},
+		},
+		{
+			txs: []txSpec{
+				{p: 5, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 20, n: 2, a: sb},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sc},
+				{p: 5, n: 1, a: sc},
+			},
+			order: []int{5, 4, 3, 2, 0, 1},
+		},
+		{
+			txs: []txSpec{
+				{p: 5, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sb},
+				{p: 20, n: 2, a: sb},
+				{p: 5, n: 1, a: sc},
+				{p: 99, n: 2, a: sc},
+			},
+			order: []int{4, 5, 2, 3, 0, 1},
+		},
+		{
+			txs: []txSpec{
+				{p: 5, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sc},
+				{p: 20, n: 2, a: sc},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sb},
+			},
+			order: []int{4, 5, 2, 3, 0, 1},
+		},
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
@@ -314,17 +392,19 @@ func (s *MempoolTestSuite) TestTxOrder() {
 
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
-				tx := testTx{hash: [32]byte{byte(i)}, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
 				c := ctx.WithPriority(tx.priority)
 				err := pool.Insert(c, tx)
 				require.NoError(t, err)
 			}
 
+			mempool.DebugPrintKeys(pool)
+
 			orderedTxs, err := pool.Select(nil, 1000)
 			require.NoError(t, err)
 			var txOrder []int
 			for _, tx := range orderedTxs {
-				txOrder = append(txOrder, int(tx.(testTx).hash[0]))
+				txOrder = append(txOrder, tx.(testTx).id)
 			}
 			require.Equal(t, tt.order, txOrder)
 			require.NoError(t, validateOrder(orderedTxs))
@@ -333,8 +413,55 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				require.NoError(t, pool.Remove(tx))
 			}
 
-			require.Equal(t, 0, pool.CountTx())
+			require.NoError(t, mempool.IsEmpty(pool))
 		})
+	}
+}
+
+func (s *MempoolTestSuite) TestPriorityTies() {
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)
+	sa := accounts[0].Address
+	sb := accounts[1].Address
+	sc := accounts[2].Address
+
+	txSet := []txSpec{
+		{p: 5, n: 1, a: sc},
+		{p: 99, n: 2, a: sc},
+		{p: 5, n: 1, a: sb},
+		{p: 20, n: 2, a: sb},
+		{p: 5, n: 1, a: sa},
+		{p: 10, n: 2, a: sa},
+	}
+
+	for i := 0; i < 100; i++ {
+		s.resetMempool()
+		var shuffled []txSpec
+		for _, t := range txSet {
+			tx := txSpec{
+				p: t.p,
+				n: t.n,
+				a: t.a,
+			}
+			shuffled = append(shuffled, tx)
+		}
+		rand.Shuffle(len(shuffled), func(i, j int) { shuffled[i], shuffled[j] = shuffled[j], shuffled[i] })
+
+		for id, ts := range shuffled {
+			tx := testTx{priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a, id: id}
+			c := ctx.WithPriority(tx.priority)
+			err := s.mempool.Insert(c, tx)
+			s.NoError(err)
+		}
+		selected, err := s.mempool.Select(nil, 1000)
+		s.NoError(err)
+		var orderedTxs []txSpec
+		for _, tx := range selected {
+			ttx := tx.(testTx)
+			ts := txSpec{p: int(ttx.priority), n: int(ttx.nonce), a: ttx.address}
+			orderedTxs = append(orderedTxs, ts)
+		}
+		s.Equal(txSet, orderedTxs)
 	}
 }
 
@@ -437,12 +564,12 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	seed := time.Now().UnixNano()
-
+	t.Logf("running with seed: %d", seed)
 	generated := genRandomTxs(seed, s.numTxs, s.numAccounts)
 	mp := s.mempool
 
 	for _, otx := range generated {
-		tx := testTx{hash: otx.hash, priority: otx.priority, nonce: otx.nonce, address: otx.address}
+		tx := testTx{id: otx.id, priority: otx.priority, nonce: otx.nonce, address: otx.address}
 		c := ctx.WithPriority(tx.priority)
 		err := mp.Insert(c, tx)
 		require.NoError(t, err)
@@ -469,12 +596,13 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	// seed := int64(1663971399133628000)
 	// seed := int64(1663989445512438000)
 	//
+	t.Logf("running with seed: %d", seed)
 
 	ordered, shuffled := genOrderedTxs(seed, s.numTxs, s.numAccounts)
 	mp := s.mempool
 
 	for _, otx := range shuffled {
-		tx := testTx{hash: otx.hash, priority: otx.priority, nonce: otx.nonce, address: otx.address}
+		tx := testTx{id: otx.id, priority: otx.priority, nonce: otx.nonce, address: otx.address}
 		c := ctx.WithPriority(tx.priority)
 		err := mp.Insert(c, tx)
 		require.NoError(t, err)
@@ -490,9 +618,9 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 		otx := ordered[i]
 		stx := selected[i].(testTx)
 		orderedStr = fmt.Sprintf("%s\n%s, %d, %d; %d",
-			orderedStr, otx.address, otx.priority, otx.nonce, otx.hash[0])
+			orderedStr, otx.address, otx.priority, otx.nonce, otx.id)
 		selectedStr = fmt.Sprintf("%s\n%s, %d, %d; %d",
-			selectedStr, stx.address, stx.priority, stx.nonce, stx.hash[0])
+			selectedStr, stx.address, stx.priority, stx.nonce, stx.id)
 	}
 
 	require.NoError(t, err)
@@ -504,7 +632,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	require.NoError(t, validateOrder(selected), errMsg)
 	duration := time.Since(start)
 
-	fmt.Printf("seed: %d completed in %d iterations; validation in %dms\n",
+	t.Logf("seed: %d completed in %d iterations; validation in %dms\n",
 		seed, s.iterations, duration.Milliseconds())
 }
 
@@ -543,7 +671,7 @@ func genRandomTxs(seed int64, countTx int, countAccount int) (res []testTx) {
 			priority: priority,
 			nonce:    nonce,
 			address:  addr,
-			hash:     [32]byte{byte(i)}})
+			id:       i})
 	}
 
 	return res
@@ -607,7 +735,7 @@ func genOrderedTxs(seed int64, maxTx int, numAcc int) (ordered []testTx, shuffle
 			tx = testTx{nonce: nonce, address: sender, priority: txCursor}
 			samepChain[sender.String()] = true
 		}
-		tx.hash = [32]byte{byte(i)}
+		tx.id = i
 		accountNonces[tx.address.String()] = tx.nonce
 		ordered = append(ordered, tx)
 		ptx = tx
@@ -622,7 +750,7 @@ func genOrderedTxs(seed int64, maxTx int, numAcc int) (ordered []testTx, shuffle
 			priority: item.priority,
 			nonce:    item.nonce,
 			address:  item.address,
-			hash:     item.hash,
+			id:       item.id,
 		}
 		shuffled = append(shuffled, tx)
 	}
@@ -646,59 +774,6 @@ func TestTxOrderN(t *testing.T) {
 	fmt.Println("shuffled")
 	for _, tx := range shuffled {
 		fmt.Printf("%s, %d, %d\n", tx.address, tx.priority, tx.nonce)
-	}
-}
-
-func BenchmarkDefaultMempool_Insert(b *testing.B) {
-	var inputs = []struct {
-		txN      int
-		addressN int
-	}{
-		{txN: 100, addressN: 4},
-		{txN: 1000, addressN: 10},
-		{txN: 100000, addressN: 1000},
-	}
-
-	for _, v := range inputs {
-		ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-		genedTx := genRandomTxs(time.Now().UnixNano(), v.txN, v.addressN)
-		pool := mempool.NewPriorityMempool()
-		b.Run(fmt.Sprintf("txs: %d, addreses: %d", v.txN, v.addressN), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				for _, txP := range genedTx {
-					newCtx := ctx.WithPriority(txP.priority)
-					pool.Insert(newCtx, txP)
-				}
-
-			}
-		})
-	}
-}
-
-func BenchmarkDefaultMempool_Select(b *testing.B) {
-	var inputs = []struct {
-		txN      int
-		addressN int
-	}{
-		{txN: 100, addressN: 4},
-		{txN: 1000, addressN: 10},
-		{txN: 100000, addressN: 1000},
-	}
-
-	for _, v := range inputs {
-		ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-		genedTx := genRandomTxs(time.Now().UnixNano(), v.txN, v.addressN)
-		pool := mempool.NewPriorityMempool()
-		for _, tx := range genedTx {
-			newCtx := ctx.WithPriority(tx.priority)
-			pool.Insert(newCtx, tx)
-		}
-		b.Run(fmt.Sprintf("txs: %d, addreses: %d", v.txN, v.addressN), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				pool.Select(nil, int64(v.txN))
-
-			}
-		})
 	}
 }
 

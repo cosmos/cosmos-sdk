@@ -199,6 +199,7 @@ func NewSimApp(
 			depinject.Supply(
 				// supply the application options
 				appOpts,
+
 				mempoolOpt,
 				// For providing a custom inflation function for x/mint add here your
 				// custom function that implements the minttypes.InflationCalculationFn

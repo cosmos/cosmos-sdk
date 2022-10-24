@@ -543,15 +543,16 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 // Returns the application's deliverState if app is in runTxModeDeliver,
 // otherwise it returns the application's checkstate.
 func (app *BaseApp) getState(mode runTxMode) *state {
-	if mode == runTxModeDeliver {
+	switch mode {
+	case runTxModeDeliver:
 		return app.deliverState
-	} else if mode == runTxPrepareProposal {
+	case runTxPrepareProposal:
 		return app.prepareProposalState
-	} else if mode == runTxProcessProposal {
+	case runTxProcessProposal:
 		return app.processProposalState
+	default:
+		return app.checkState
 	}
-
-	return app.checkState
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
@@ -867,17 +868,6 @@ func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {
 
 		_, _, _, _, err = app.runTx(runTxPrepareProposal, txBytes)
 		if err != nil {
-			_ = app.mempool.Remove(tx.(mempool.Tx))
-		}
-	}
-	return nil
-}
-
-func (app *BaseApp) checkTxsValidity(txMode runTxMode, txBytes [][]byte) error {
-	for _, txByte := range txBytes {
-		_, _, _, _, err := app.runTx(txMode, txByte)
-		if err != nil {
-			tx, _ := app.txDecoder(txByte)
 			_ = app.mempool.Remove(tx.(mempool.Tx))
 		}
 	}

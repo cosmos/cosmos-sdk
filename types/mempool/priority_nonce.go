@@ -10,16 +10,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-var _ Mempool = (*priorityMempool)(nil)
+var _ Mempool = (*priorityNonceMempool)(nil)
 
-// priorityMempool defines the SDK's default mempool implementation which stores
+// priorityNonceMempool defines the SDK's default mempool implementation which stores
 // txs in a partially ordered set by 2 dimensions: priority, and sender-nonce
 // (sequence number). Internally it uses one priority ordered skip list and one
 // skip list per sender ordered by sender-nonce (sequence number). When there
 // are multiple txs from the same sender, they are not always comparable by
 // priority to other sender txs and must be partially ordered by both sender-nonce
 // and priority.
-type priorityMempool struct {
+type priorityNonceMempool struct {
 	priorityIndex  *huandu.SkipList
 	priorityCounts map[int64]int
 	senderIndices  map[string]*huandu.SkipList
@@ -71,24 +71,24 @@ func txMetaLess(a, b any) int {
 	return huandu.Uint64.Compare(keyA.nonce, keyB.nonce)
 }
 
-type PriorityMempoolOption func(*priorityMempool)
+type PriorityNonceMempoolOption func(*priorityNonceMempool)
 
 // WithOnRead sets a callback to be called when a tx is read from the mempool.
-func WithOnRead(onRead func(tx Tx)) PriorityMempoolOption {
-	return func(mp *priorityMempool) {
+func WithOnRead(onRead func(tx Tx)) PriorityNonceMempoolOption {
+	return func(mp *priorityNonceMempool) {
 		mp.onRead = onRead
 	}
 }
 
-// DefaultPriorityMempool returns a priorityMempool with no options.
+// DefaultPriorityMempool returns a priorityNonceMempool with no options.
 func DefaultPriorityMempool() Mempool {
 	return NewPriorityMempool()
 }
 
 // NewPriorityMempool returns the SDK's default mempool implementation which
 // returns txs in a partial order by 2 dimensions; priority, and sender-nonce.
-func NewPriorityMempool(opts ...PriorityMempoolOption) Mempool {
-	mp := &priorityMempool{
+func NewPriorityMempool(opts ...PriorityNonceMempoolOption) Mempool {
+	mp := &priorityNonceMempool{
 		priorityIndex:  huandu.New(huandu.LessThanFunc(txMetaLess)),
 		priorityCounts: make(map[int64]int),
 		senderIndices:  make(map[string]*huandu.SkipList),
@@ -112,7 +112,7 @@ func NewPriorityMempool(opts ...PriorityMempoolOption) Mempool {
 //
 // Inserting a duplicate tx with a different priority overwrites the existing tx,
 // changing the total order of the mempool.
-func (mp *priorityMempool) Insert(ctx sdk.Context, tx Tx) error {
+func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -172,7 +172,7 @@ func (mp *priorityMempool) Insert(ctx sdk.Context, tx Tx) error {
 //
 // The maxBytes parameter defines the maximum number of bytes of transactions to
 // return.
-func (mp *priorityMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
+func (mp *priorityNonceMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 	var (
 		selectedTxs []Tx
 		txBytes     int64
@@ -231,7 +231,7 @@ type reorderKey struct {
 	tx        Tx
 }
 
-func (mp *priorityMempool) reorderPriorityTies() {
+func (mp *priorityNonceMempool) reorderPriorityTies() {
 	node := mp.priorityIndex.Front()
 	var reordering []reorderKey
 	for node != nil {
@@ -272,7 +272,7 @@ func senderWeight(senderCursor *huandu.Element) int64 {
 	return weight
 }
 
-func (mp *priorityMempool) fetchSenderCursor(sender string) *huandu.Element {
+func (mp *priorityNonceMempool) fetchSenderCursor(sender string) *huandu.Element {
 	senderTx, ok := mp.senderCursors[sender]
 	if !ok {
 		senderTx = mp.senderIndices[sender].Front()
@@ -280,7 +280,7 @@ func (mp *priorityMempool) fetchSenderCursor(sender string) *huandu.Element {
 	return senderTx
 }
 
-func (mp *priorityMempool) nextPriority(priorityNode *huandu.Element) (int64, *huandu.Element) {
+func (mp *priorityNonceMempool) nextPriority(priorityNode *huandu.Element) (int64, *huandu.Element) {
 	var nextPriorityNode *huandu.Element
 	if priorityNode == nil {
 		nextPriorityNode = mp.priorityIndex.Front()
@@ -298,12 +298,12 @@ func (mp *priorityMempool) nextPriority(priorityNode *huandu.Element) (int64, *h
 }
 
 // CountTx returns the number of transactions in the mempool.
-func (mp *priorityMempool) CountTx() int {
+func (mp *priorityNonceMempool) CountTx() int {
 	return mp.priorityIndex.Len()
 }
 
 // Remove removes a transaction from the mempool in O(log n) time, returning an error if unsuccessful.
-func (mp *priorityMempool) Remove(tx Tx) error {
+func (mp *priorityNonceMempool) Remove(tx Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -337,7 +337,7 @@ func (mp *priorityMempool) Remove(tx Tx) error {
 }
 
 func IsEmpty(mempool Mempool) error {
-	mp := mempool.(*priorityMempool)
+	mp := mempool.(*priorityNonceMempool)
 	if mp.priorityIndex.Len() != 0 {
 		return fmt.Errorf("priorityIndex not empty")
 	}
@@ -366,7 +366,7 @@ func IsEmpty(mempool Mempool) error {
 }
 
 func DebugPrintKeys(mempool Mempool) {
-	mp := mempool.(*priorityMempool)
+	mp := mempool.(*priorityNonceMempool)
 	n := mp.priorityIndex.Front()
 	for n != nil {
 		k := n.Key().(txMeta)

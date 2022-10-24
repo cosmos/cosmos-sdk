@@ -61,6 +61,11 @@ service Query {
     option (google.api.http).get               = "/cosmos/auth/v1beta1/module_accounts/{name}";
   }
 
+  // ModuleAccountByName returns the module account info by module name
+  rpc ModuleAccountByName(QueryModuleAccountByNameRequest) returns (QueryModuleAccountByNameResponse) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/module_accounts/{name}";
+  }
+
   // Bech32Prefix queries bech32Prefix
   rpc Bech32Prefix(Bech32PrefixRequest) returns (Bech32PrefixResponse) {
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
@@ -135,6 +140,54 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryModuleAccountsRequest is the request type for the Query/ModuleAccounts RPC method.
+//
+// Since: cosmos-sdk 0.46
+message QueryModuleAccountsRequest {}
+
+// QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
+//
+// Since: cosmos-sdk 0.46
+message QueryModuleAccountsResponse {
+  repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "ModuleAccountI"];
+}
+
+// QueryModuleAccountByNameRequest is the request type for the Query/ModuleAccountByName RPC method.
+message QueryModuleAccountByNameRequest {
+  string name = 1;
+}
+
+// QueryModuleAccountByNameResponse is the response type for the Query/ModuleAccountByName RPC method.
+message QueryModuleAccountByNameResponse {
+  google.protobuf.Any account = 1 [(cosmos_proto.accepts_interface) = "ModuleAccountI"];
+}
+
+// Bech32PrefixRequest is the request type for Bech32Prefix rpc method.
+//
+// Since: cosmos-sdk 0.46
+message Bech32PrefixRequest {}
+
+// Bech32PrefixResponse is the response type for Bech32Prefix rpc method.
+//
+// Since: cosmos-sdk 0.46
+message Bech32PrefixResponse {
+  string bech32_prefix = 1;
+}
+
+// AddressBytesToStringRequest is the request type for AddressString rpc method.
+//
+// Since: cosmos-sdk 0.46
+message AddressBytesToStringRequest {
+  bytes address_bytes = 1;
+}
+
+// AddressBytesToStringResponse is the response type for AddressString rpc method.
+//
+// Since: cosmos-sdk 0.46
+message AddressBytesToStringResponse {
+  string address_string = 1;
 }
 
 // QueryModuleAccountByNameRequest is the request type for the Query/ModuleAccountByName RPC method.

@@ -115,8 +115,76 @@ func (ak accountKeeper) Params(c context.Context, req *types.QueryParamsRequest)
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
+// ModuleAccounts returns all the existing Module Accounts
+func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModuleAccountsRequest) (*types.QueryModuleAccountsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	// For deterministic output, sort the permAddrs by module name.
+	sortedPermAddrs := make([]string, 0, len(ak.permAddrs))
+	for moduleName := range ak.permAddrs {
+		sortedPermAddrs = append(sortedPermAddrs, moduleName)
+	}
+	sort.Strings(sortedPermAddrs)
+
+	modAccounts := make([]*codectypes.Any, 0, len(ak.permAddrs))
+
+	for _, moduleName := range sortedPermAddrs {
+		account := ak.GetModuleAccount(ctx, moduleName)
+		if account == nil {
+			return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
+		}
+		any, err := codectypes.NewAnyWithValue(account)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+		modAccounts = append(modAccounts, any)
+	}
+
+	return &types.QueryModuleAccountsResponse{Accounts: modAccounts}, nil
+}
+
 // ModuleAccountByName returns module account by module name
 func (ak AccountKeeper) ModuleAccountByName(c context.Context, req *types.QueryModuleAccountByNameRequest) (*types.QueryModuleAccountByNameResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if len(req.Name) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "module name is empty")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	moduleName := req.Name
+
+	account := ak.GetModuleAccount(ctx, moduleName)
+	if account == nil {
+		return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
+	}
+	any, err := codectypes.NewAnyWithValue(account)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &types.QueryModuleAccountByNameResponse{Account: any}, nil
+}
+
+// Bech32Prefix returns the keeper internally stored bech32 prefix.
+func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
+	bech32Prefix, err := ak.getBech32Prefix()
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil
+}
+
+// AddressBytesToString converts an address from bytes to string, using the
+// keeper's bech32 prefix.
+func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.AddressBytesToStringRequest) (*types.AddressBytesToStringResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}

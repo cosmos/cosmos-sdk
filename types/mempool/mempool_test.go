@@ -189,7 +189,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 20, n: 1, a: sa},
 			},
-			order: []int{4, 2, 1, 0, 3},
+			order: []int{3, 4, 2, 1, 0},
 		},
 		{
 			txs: []txSpec{
@@ -200,7 +200,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 5, n: 1, a: sb},
 				{p: 8, n: 2, a: sb},
 			},
-			order: []int{0, 1, 2, 3, 4, 5},
+			order: []int{3, 0, 4, 1, 5, 2},
 		},
 		{
 			txs: []txSpec{
@@ -208,7 +208,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 20, n: 1, a: sa},
 			},
-			order: []int{2, 0, 1},
+			order: []int{1, 2, 0},
 		},
 		{
 			txs: []txSpec{

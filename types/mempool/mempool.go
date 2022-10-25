@@ -42,20 +42,10 @@ var ErrTxNotFound = errors.New("tx not found in mempool")
 type Factory func() Mempool
 
 func IsEmpty(mempool Mempool) error {
-	smp, ok := mempool.(*senderPriorityMempool)
+	smp, ok := mempool.(*nonceMempool)
 	if ok {
-		if smp.priorityIndex.Len() != 0 {
-			return fmt.Errorf("priorityIndex not empty")
-		}
-
-		var senderKeys []string
-		for k := range smp.senderIndices {
-			senderKeys = append(senderKeys, k)
-		}
-		for _, k := range senderKeys {
-			if smp.senderIndices[k].Len() != 0 {
-				return fmt.Errorf("senderIndex not empty for sender %v", k)
-			}
+		if smp.txQueue.Len() != 0 {
+			return fmt.Errorf("mempool is not empty")
 		}
 		return nil
 	}

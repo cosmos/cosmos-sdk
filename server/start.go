@@ -3,6 +3,7 @@ package server
 // DONTCOVER
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -262,7 +263,8 @@ func lazyLoadLocalSnapshot(ctx *Context, app types.Application, ssRestoreHeight 
 	ctx.Logger.Info("Searching local snapshots")
 	resp := app.ListSnapshots(abci.RequestListSnapshots{})
 	if len(resp.Snapshots) < 1 {
-		panic("No available snapshots")
+		ctx.Logger.Error("No available snapshots")
+		return errors.New("No available snapshots")
 	}
 	var snapshot *abci.Snapshot
 	for i, s := range resp.Snapshots {
@@ -273,7 +275,8 @@ func lazyLoadLocalSnapshot(ctx *Context, app types.Application, ssRestoreHeight 
 		}
 	}
 	if snapshot == nil {
-		panic(fmt.Sprintf("Could not find local snapshot for height: %d", ssRestoreHeight))
+		ctx.Logger.Error("Could not find local snapshot", "height", ssRestoreHeight)
+		return errors.New("Could not find local snapshot")
 	}
 
 	app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: snapshot})
@@ -291,9 +294,10 @@ func lazyLoadLocalSnapshot(ctx *Context, app types.Application, ssRestoreHeight 
 			Chunk: respChunk.Chunk,
 		})
 		if applyRes.Result != abci.ResponseApplySnapshotChunk_ACCEPT {
-			ctx.Logger.Error("Local State Sync snapshot chunk apply Fail", "snapshot", index, "reason", applyRes)
+			ctx.Logger.Error("Local State Sync snapshot chunk apply fail", "snapshot", index, "reason", applyRes)
+			return errors.New("Snapshot chunk apply fail")
 		} else {
-			ctx.Logger.Info("Local State Sync snapshot chunk apply OK", "snapshot", index)
+			ctx.Logger.Info("Local State Sync snapshot chunk apply ok", "snapshot", index)
 		}
 
 	}
@@ -378,7 +382,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			// no restore height specified
 			ctx.Logger.Debug("**** No local snapshot restore height specified")
 		} else {
-			lazyLoadLocalSnapshot(ctx, app, ssRestoreHeight)
+			err := lazyLoadLocalSnapshot(ctx, app, ssRestoreHeight)
+			if err != nil {
+				return err
+			}
 		}
 
 		ctx.Logger.Info("starting node with ABCI Tendermint in-process")

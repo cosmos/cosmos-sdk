@@ -66,20 +66,23 @@ func NewTextual(q CoinMetadataQueryFn, signerData signing.SignerData, bodyBz, au
 func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
 	// Scalars, such as sdk.Int and sdk.Dec encoded as strings.
-	case fd.Kind() == protoreflect.StringKind && proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "":
+	case fd.Kind() == protoreflect.StringKind:
 		{
-			scalar, ok := proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar).(string)
-			if !ok || scalar == "" {
-				return nil, fmt.Errorf("got extension option %s of type %T", scalar, scalar)
+			if proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "" {
+				scalar, ok := proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar).(string)
+				if !ok || scalar == "" {
+					return nil, fmt.Errorf("got extension option %s of type %T", scalar, scalar)
+				}
+
+				vr := r.scalars[scalar]
+				if vr != nil {
+					return vr, nil
+				}
 			}
 
-			vr := r.scalars[scalar]
-			if vr == nil {
-				return nil, fmt.Errorf("got empty value renderer for scalar %s", scalar)
-			}
-
-			return vr, nil
+			return stringValueRenderer{}, nil
 		}
+
 	case fd.Kind() == protoreflect.BytesKind:
 		return NewBytesValueRenderer(), nil
 
@@ -91,10 +94,6 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 		{
 			return NewIntValueRenderer(), nil
 		}
-
-	case fd.Kind() == protoreflect.StringKind:
-		return stringValueRenderer{}, nil
-
 	case fd.Kind() == protoreflect.MessageKind:
 		md := fd.Message()
 		fullName := md.FullName()

@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"cosmossdk.io/tx/signing"
 	"cosmossdk.io/tx/textual/valuerenderer"
 	"github.com/stretchr/testify/require"
 
@@ -33,7 +34,7 @@ func TestMessageJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	tr := valuerenderer.NewTextual(EmptyCoinMetadataQuerier)
+	tr := valuerenderer.NewTextual(EmptyCoinMetadataQuerier, signing.SignerData{}, nil, nil)
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			rend := valuerenderer.NewMessageValueRenderer(&tr, (&testpb.Foo{}).ProtoReflect().Descriptor())

@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
 	_ "cosmossdk.io/api/cosmos/crypto/ed25519"
 	_ "cosmossdk.io/api/cosmos/crypto/multisig"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
@@ -20,11 +20,6 @@ import (
 	"cosmossdk.io/tx/textual/internal/testpb"
 	"cosmossdk.io/tx/textual/valuerenderer"
 )
-
-// TODO Remove once we upstream Jim's PR
-func EmptyCoinMetadataQuerier(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
-	return nil, nil
-}
 
 type txJsonTest struct {
 	Proto      json.RawMessage

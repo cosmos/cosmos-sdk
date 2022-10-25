@@ -2,7 +2,19 @@
 	{
 		"proto": {
 			"body": {
-				"messages": []
+				"messages": [
+					{
+						"@type": "/cosmos.bank.v1beta1.MsgSend",
+						"from_address": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
+						"to_address": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t",
+						"amount": [
+							{
+								"denom": "uatom",
+								"amount": "5000"
+							}
+						]
+					}
+				]
 			},
 			"auth_info": {
 				"signer_infos": [
@@ -31,12 +43,13 @@
 			"pubKey": {
 				"@type": "/cosmos.crypto.secp256k1.PubKey",
 				"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
-			}
+			},
+			"sequence": "2"
 		},
 		"screens": [
 			{ "text": "Chain ID: my-chain" },
 			{ "text": "Account number: 0" },
-			{ "text": "Public key: TODO Any", "expert": true },
+			{ "text": "Sequence: 2" },
 			{ "text": "Fees: 5'000 uatom" },
 			{ "text": "Gas limit: 100'000", "expert": true },
 			{
@@ -133,7 +146,7 @@
 		"screens": [
 			{ "text": "Chain ID: my-chain" },
 			{ "text": "Account number: 0" },
-			{ "text": "Public key: TODO Any", "expert": true },
+			{ "text": "Sequence: 0" },
 			{ "text": "Fees: 5'000 uatom" },
 			{
 				"text": "Fee payer: cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45",

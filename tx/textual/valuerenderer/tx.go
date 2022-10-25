@@ -9,7 +9,6 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 )
@@ -39,31 +38,12 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 	screens := make([]Screen, 3)
 	screens[0].Text = fmt.Sprintf("Chain ID: %s", vr.tr.signerData.ChainID)
 	screens[1].Text = fmt.Sprintf("Account number: %d", vr.tr.signerData.AccountNumber)
-	pkMsgType, err := protoregistry.GlobalTypes.FindMessageByURL(vr.tr.signerData.PubKey.TypeUrl)
-	if err != nil {
-		return nil, err
-	}
-	pk := pkMsgType.New()
-	err = proto.Unmarshal(vr.tr.signerData.PubKey.GetValue(), pk.Interface())
-	if err != nil {
-		return nil, err
-	}
-	screens[2].Text = "Public key: TODO Any"
-	screens[2].Expert = true
+	screens[2].Text = fmt.Sprintf("Sequence: %d", vr.tr.signerData.Sequence)
 
-	// Get sdk.Msgs screens, from Tx.Body.Messages (field number 1).
-	// msgVr, err := vr.t.GetValueRenderer(protoTx.Body.ProtoReflect().Descriptor().Fields().ByNumber(1))
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// msgScreens, err := msgVr.Format(ctx, protoreflect.ValueOf(protoTx.Body.Messages)) // TODO not sure this works...
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// screens = append(screens, msgScreens...)
+	// TODO Public key: needs Any
+	// TODO Body messages: needs repeated
 
-	// TODO BODY MSGS
-	screens, err = vr.appendScreen(screens, ctx, protoTx.AuthInfo.Fee.ProtoReflect(), "amount", "Fees", false)
+	screens, err := vr.appendScreen(screens, ctx, protoTx.AuthInfo.Fee.ProtoReflect(), "amount", "Fees", false)
 	if err != nil {
 		return nil, err
 	}

@@ -143,8 +143,8 @@ We define "transaction envelope" as all data in a transaction that is not in the
 ```
 Chain ID: <string>
 Account number: <uint64>
-*Public Key: <hex_string>
 Sequence: <uint64>
+*Public Key: <hex_string>
 <TxBody>                                                    // See #8.
 Fee: <coins>                                                // See value renderers for coins encoding.
 *Fee payer: <string>                                        // Skipped if no fee_payer set
@@ -306,8 +306,8 @@ SIGN_MODE_TEXTUAL:
 ```
 Chain ID: simapp-1
 Account number: 10
-*Public Key: iQ...==        // Hex pubkey
 Sequence: 2
+*Public Key: 0xA1DE...E5DE        // Hex pubkey
 This transaction has 1 message:
 Message (1/1): bank v1beta1 send coins
 From: cosmos1...abc
@@ -386,8 +386,8 @@ SIGN_MODE_TEXTUAL for the feepayer:
 ```
 Chain ID: simapp-1
 Account number: 10
-*Public Key: iR...==
 Sequence: 2
+*Public Key: iR...==
 This transaction has 1 message:
 Message (1/1): bank v1beta1 send coins
 From: cosmos1...abc
@@ -401,7 +401,7 @@ Tip: 200 ibc/CDC4587874B85BEA4FCEC3CEA5A1195139799A1FEE711A07D972537E18FDA39D
 *Gas: 100'000
 *This transaction has 1 other signer:
 *Signer (1/2):
-*Public Key: iQ...==
+*Public Key: 0xA1DE...E5DE
 *Sign mode: Direct Aux
 *Sequence: 42
 *End of other signers
@@ -515,8 +515,8 @@ SIGN_MODE_TEXTUAL for 1st signer `cosmos1...abc`:
 ```
 Chain ID: simapp-1
 Account number: 10
-*Public Key: iQ...==
 Sequence: 2
+*Public Key: 0xA1DE...E5DE
 This transaction has 2 messages:
 Message (1/2): bank v1beta1 send coins
 From: cosmos1...abc

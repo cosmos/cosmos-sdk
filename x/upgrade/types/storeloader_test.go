@@ -13,7 +13,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/store"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -34,16 +33,15 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db, tmlog.NewNopLogger())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := sdk.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil) 
+	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, int64(0), rs.LastCommitID().Version)
 
 	// write some data in substore
 	kv, _ := rs.GetStore(key).(storetypes.KVStore)
-	newKV := store.NewKVStoreWrapper(kv)
 	require.NotNil(t, kv)
-	newKV.Set(k, v)
+	kv.Set(k, v)
 	commitID := rs.Commit()
 	require.Equal(t, int64(1), commitID.Version)
 }
@@ -59,10 +57,9 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 
 	// query data in substore
 	kv, _ := rs.GetStore(key).(storetypes.KVStore)
-	newKV := store.NewKVStoreWrapper(kv)
 
 	require.NotNil(t, kv)
-	require.Equal(t, v, newKV.Get(k))
+	require.Equal(t, v, kv.Get(k))
 }
 
 // Test that we can make commits and then reload old versions.

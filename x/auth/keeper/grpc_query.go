@@ -43,7 +43,7 @@ func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequ
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ak.getStore(ctx)
+	store := ctx.KVStore(ak.storeKey)
 	accountsStore := prefix.NewStore(store, types.AddressStoreKeyPrefix)
 
 	var accounts []*codectypes.Any

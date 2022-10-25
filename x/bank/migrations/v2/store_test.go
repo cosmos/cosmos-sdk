@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -17,16 +16,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func getStore(st store.KVStore) store.KVStoreWrapper {
-	return store.NewKVStoreWrapper(st)
-}
-
 func TestSupplyMigration(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
-	st := ctx.KVStore(bankKey)
-	newStore := getStore(st)
+	store := ctx.KVStore(bankKey)
 
 	v1bank.RegisterInterfaces(encCfg.InterfaceRegistry)
 
@@ -39,14 +33,14 @@ func TestSupplyMigration(t *testing.T) {
 	oldSupply = &types.Supply{Total: sdk.Coins{oldFooCoin, oldBarCoin, oldFooBarCoin}}
 	oldSupplyBz, err := encCfg.Codec.MarshalInterface(oldSupply)
 	require.NoError(t, err)
-	newStore.Set(v1bank.SupplyKey, oldSupplyBz)
+	store.Set(v1bank.SupplyKey, oldSupplyBz)
 
 	// Run migration.
 	err = v2bank.MigrateStore(ctx, bankKey, encCfg.Codec)
 	require.NoError(t, err)
 
 	// New supply is indexed by denom.
-	supplyStore := prefix.NewStore(st, types.SupplyKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
 	bz := supplyStore.Get([]byte("foo"))
 	var amount math.Int
 	err = amount.Unmarshal(bz)
@@ -77,8 +71,7 @@ func TestBalanceKeysMigration(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
-	st := ctx.KVStore(bankKey)
-	newStore := getStore(st)
+	store := ctx.KVStore(bankKey)
 
 	_, _, addr := testdata.KeyTestPubAddr()
 
@@ -87,15 +80,15 @@ func TestBalanceKeysMigration(t *testing.T) {
 	oldFooKey := append(append(v1bank.BalancesPrefix, addr...), []byte(fooCoin.Denom)...)
 	fooBz, err := encCfg.Codec.Marshal(&fooCoin)
 	require.NoError(t, err)
-	newStore.Set(oldFooKey, fooBz)
+	store.Set(oldFooKey, fooBz)
 
 	// set 0 foobar coin
 	fooBarCoin := sdk.NewCoin("foobar", sdk.NewInt(0))
 	oldKeyFooBar := append(append(v1bank.BalancesPrefix, addr...), []byte(fooBarCoin.Denom)...)
 	fooBarBz, err := encCfg.Codec.Marshal(&fooBarCoin)
 	require.NoError(t, err)
-	newStore.Set(oldKeyFooBar, fooBarBz)
-	require.NotNil(t, st.Get(oldKeyFooBar)) // before store migation zero values can also exist in store.
+	store.Set(oldKeyFooBar, fooBarBz)
+	require.NotNil(t, store.Get(oldKeyFooBar)) // before store migation zero values can also exist in store.
 
 	err = v2bank.MigrateStore(ctx, bankKey, encCfg.Codec)
 	require.NoError(t, err)
@@ -104,9 +97,9 @@ func TestBalanceKeysMigration(t *testing.T) {
 	// -7 because we replaced "balances" with 0x02,
 	// +1 because we added length-prefix to address.
 	require.Equal(t, len(oldFooKey)-7+1, len(newKey))
-	require.Nil(t, st.Get(oldFooKey))
-	require.Equal(t, fooBz, st.Get(newKey))
+	require.Nil(t, store.Get(oldFooKey))
+	require.Equal(t, fooBz, store.Get(newKey))
 
 	newKeyFooBar := types.CreatePrefixedAccountStoreKey(addr, []byte(fooBarCoin.Denom))
-	require.Nil(t, st.Get(newKeyFooBar)) // after migration zero balances pruned from store.
+	require.Nil(t, store.Get(newKeyFooBar)) // after migration zero balances pruned from store.
 }

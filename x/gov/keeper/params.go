@@ -8,7 +8,7 @@ import (
 )
 
 func (k Keeper) SetParams(ctx sdk.Context, params v1.Params) error {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(&params)
 	if err != nil {
 		return err

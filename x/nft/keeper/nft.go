@@ -8,10 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
-func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
-	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
-}
-
 // Mint defines a method for minting a new nft
 func (k Keeper) Mint(ctx sdk.Context, token nft.NFT, receiver sdk.AccAddress) error {
 	if !k.HasClass(ctx, token.ClassId) {
@@ -61,7 +57,7 @@ func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 // The upper-layer application needs to check it when it needs to use it
 func (k Keeper) burnWithNoCheck(ctx sdk.Context, classID string, nftID string) error {
 	owner := k.GetOwner(ctx, classID, nftID)
-	nftStore := store.NewKVStoreWrapper(k.getNFTStore(ctx, classID))
+	nftStore := k.getNFTStore(ctx, classID)
 	nftStore.Delete([]byte(nftID))
 
 	k.deleteOwner(ctx, classID, nftID, owner)
@@ -176,7 +172,7 @@ func (k Keeper) GetNFTsOfClass(ctx sdk.Context, classID string) (nfts []nft.NFT)
 
 // GetOwner returns the owner information of the specified nft
 func (k Keeper) GetOwner(ctx sdk.Context, classID string, nftID string) sdk.AccAddress {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(ownerStoreKey(classID, nftID))
 	return sdk.AccAddress(bz)
@@ -190,7 +186,7 @@ func (k Keeper) GetBalance(ctx sdk.Context, classID string, owner sdk.AccAddress
 
 // GetTotalSupply returns the number of all nfts under the specified classID
 func (k Keeper) GetTotalSupply(ctx sdk.Context, classID string) uint64 {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(classTotalSupply(classID))
 	return sdk.BigEndianToUint64(bz)
 }
@@ -202,40 +198,40 @@ func (k Keeper) HasNFT(ctx sdk.Context, classID, id string) bool {
 }
 
 func (k Keeper) setNFT(ctx sdk.Context, token nft.NFT) {
-	nftStore := store.NewKVStoreWrapper(k.getNFTStore(ctx, token.ClassId))
+	nftStore := k.getNFTStore(ctx, token.ClassId)
 	bz := k.cdc.MustMarshal(&token)
 	nftStore.Set([]byte(token.Id), bz)
 }
 
 func (k Keeper) setOwner(ctx sdk.Context, classID, nftID string, owner sdk.AccAddress) {
-	st := k.getStore(ctx)
+	st := ctx.KVStore(k.storeKey)
 	st.Set(ownerStoreKey(classID, nftID), owner.Bytes())
 
-	ownerStore := store.NewKVStoreWrapper(k.getClassStoreByOwner(ctx, owner, classID))
+	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
 	ownerStore.Set([]byte(nftID), Placeholder)
 }
 
 func (k Keeper) deleteOwner(ctx sdk.Context, classID, nftID string, owner sdk.AccAddress) {
-	st := k.getStore(ctx)
+	st := ctx.KVStore(k.storeKey)
 	st.Delete(ownerStoreKey(classID, nftID))
 
-	ownerStore := store.NewKVStoreWrapper(k.getClassStoreByOwner(ctx, owner, classID))
+	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
 	ownerStore.Delete([]byte(nftID))
 }
 
 func (k Keeper) getNFTStore(ctx sdk.Context, classID string) prefix.Store {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, nftStoreKey(classID))
 }
 
 func (k Keeper) getClassStoreByOwner(ctx sdk.Context, owner sdk.AccAddress, classID string) prefix.Store {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	key := nftOfClassByOwnerStoreKey(owner, classID)
 	return prefix.NewStore(store, key)
 }
 
 func (k Keeper) prefixStoreNftOfClassByOwner(ctx sdk.Context, owner sdk.AccAddress) prefix.Store {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	key := prefixNftOfClassByOwnerStoreKey(owner)
 	return prefix.NewStore(store, key)
 }
@@ -251,7 +247,7 @@ func (k Keeper) decrTotalSupply(ctx sdk.Context, classID string) {
 }
 
 func (k Keeper) updateTotalSupply(ctx sdk.Context, classID string, supply uint64) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	supplyKey := classTotalSupply(classID)
 	store.Set(supplyKey, sdk.Uint64ToBigEndian(supply))
 }

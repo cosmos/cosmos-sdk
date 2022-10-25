@@ -10,7 +10,7 @@ import (
 
 // Increments and returns a unique ID for an unbonding operation
 func (k Keeper) IncrementUnbondingID(ctx sdk.Context) (unbondingID uint64) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UnbondingIDKey)
 	if bz != nil {
 		unbondingID = binary.BigEndian.Uint64(bz)
@@ -29,12 +29,12 @@ func (k Keeper) IncrementUnbondingID(ctx sdk.Context) (unbondingID uint64) {
 
 // Remove a mapping from UnbondingId to unbonding operation
 func (k Keeper) DeleteUnbondingIndex(ctx sdk.Context, id uint64) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetUnbondingIndexKey(id))
 }
 
 func (k Keeper) GetUnbondingType(ctx sdk.Context, id uint64) (unbondingType types.UnbondingType, found bool) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(types.GetUnbondingTypeKey(id))
 	if bz == nil {
@@ -45,7 +45,7 @@ func (k Keeper) GetUnbondingType(ctx sdk.Context, id uint64) (unbondingType type
 }
 
 func (k Keeper) SetUnbondingType(ctx sdk.Context, id uint64, unbondingType types.UnbondingType) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	// Convert into bytes for storage
 	bz := make([]byte, 8)
@@ -56,7 +56,7 @@ func (k Keeper) SetUnbondingType(ctx sdk.Context, id uint64, unbondingType types
 
 // GetUnbondingDelegationByUnbondingID returns a unbonding delegation that has an unbonding delegation entry with a certain ID
 func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx sdk.Context, id uint64) (ubd types.UnbondingDelegation, found bool) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	ubdKey := store.Get(types.GetUnbondingIndexKey(id))
 	if ubdKey == nil {
@@ -79,7 +79,7 @@ func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx sdk.Context, id uint64) 
 
 // GetRedelegationByUnbondingID returns a unbonding delegation that has an unbonding delegation entry with a certain ID
 func (k Keeper) GetRedelegationByUnbondingID(ctx sdk.Context, id uint64) (red types.Redelegation, found bool) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	redKey := store.Get(types.GetUnbondingIndexKey(id))
 	if redKey == nil {
@@ -102,7 +102,7 @@ func (k Keeper) GetRedelegationByUnbondingID(ctx sdk.Context, id uint64) (red ty
 
 // GetValidatorByUnbondingID returns the validator that is unbonding with a certain unbonding op ID
 func (k Keeper) GetValidatorByUnbondingID(ctx sdk.Context, id uint64) (val types.Validator, found bool) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	valKey := store.Get(types.GetUnbondingIndexKey(id))
 	if valKey == nil {
@@ -126,7 +126,7 @@ func (k Keeper) GetValidatorByUnbondingID(ctx sdk.Context, id uint64) (val types
 // SetUnbondingDelegationByUnbondingID sets an index to look up an UnbondingDelegation by the unbondingID of an UnbondingDelegationEntry that it contains
 // Note, it does not set the unbonding delegation itself, use SetUnbondingDelegation(ctx, ubd) for that
 func (k Keeper) SetUnbondingDelegationByUnbondingID(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	delAddr := sdk.MustAccAddressFromBech32(ubd.DelegatorAddress)
 	valAddr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
 	if err != nil {
@@ -143,7 +143,7 @@ func (k Keeper) SetUnbondingDelegationByUnbondingID(ctx sdk.Context, ubd types.U
 // SetRedelegationByUnbondingID sets an index to look up an Redelegation by the unbondingID of an RedelegationEntry that it contains
 // Note, it does not set the redelegation itself, use SetRedelegation(ctx, red) for that
 func (k Keeper) SetRedelegationByUnbondingID(ctx sdk.Context, red types.Redelegation, id uint64) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	delAddr := sdk.MustAccAddressFromBech32(red.DelegatorAddress)
 
@@ -167,7 +167,7 @@ func (k Keeper) SetRedelegationByUnbondingID(ctx sdk.Context, red types.Redelega
 // SetValidatorByUnbondingID sets an index to look up a Validator by the unbondingID corresponding to its current unbonding
 // Note, it does not set the validator itself, use SetValidator(ctx, val) for that
 func (k Keeper) SetValidatorByUnbondingID(ctx sdk.Context, val types.Validator, id uint64) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
 	if err != nil {

@@ -315,8 +315,8 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metad
 
 // SetDenomMetaData sets the denominations metadata
 func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata) {
-	st := ctx.KVStore(k.storeKey)
-	denomMetaDataStore := store.NewKVStoreWrapper(prefix.NewStore(st, types.DenomMetadataPrefix))
+	store := ctx.KVStore(k.storeKey)
+	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataPrefix)
 
 	m := k.cdc.MustMarshal(&denomMetaData)
 	denomMetaDataStore.Set([]byte(denomMetaData.Base), m)
@@ -487,8 +487,8 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 		panic(fmt.Errorf("unable to marshal amount value %v", err))
 	}
 
-	st := ctx.KVStore(k.storeKey)
-	supplyStore := store.NewKVStoreWrapper(prefix.NewStore(st, types.SupplyKey))
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
 	// Bank invariants and IBC requires to remove zero coins.
 	if coin.IsZero() {

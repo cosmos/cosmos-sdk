@@ -9,7 +9,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -87,13 +86,9 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	k.hooks = sh
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
-	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
-}
-
 // GetLastTotalPower Load the last total validator power.
 func (k Keeper) GetLastTotalPower(ctx sdk.Context) math.Int {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.LastTotalPowerKey)
 
 	if bz == nil {
@@ -108,7 +103,7 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) math.Int {
 
 // SetLastTotalPower Set the last total validator power.
 func (k Keeper) SetLastTotalPower(ctx sdk.Context, power math.Int) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: power})
 	store.Set(types.LastTotalPowerKey, bz)
 }
@@ -120,14 +115,14 @@ func (k Keeper) GetAuthority() string {
 
 // SetValidatorUpdates sets the ABCI validator power updates for the current block.
 func (k Keeper) SetValidatorUpdates(ctx sdk.Context, valUpdates []abci.ValidatorUpdate) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&types.ValidatorUpdates{Updates: valUpdates})
 	store.Set(types.ValidatorUpdatesKey, bz)
 }
 
 // GetValidatorUpdates returns the ABCI validator power updates within the current block.
 func (k Keeper) GetValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.ValidatorUpdatesKey)
 
 	var valUpdates types.ValidatorUpdates

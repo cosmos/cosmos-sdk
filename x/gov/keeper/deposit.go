@@ -21,7 +21,7 @@ func (keeper Keeper) decodeDeposit(bz []byte) (v1.Deposit, bool) {
 
 // GetDeposit gets the deposit of a specific depositor on a specific proposal
 func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) (deposit v1.Deposit, found bool) {
-	st := keeper.getStore(ctx)
+	st := ctx.KVStore(keeper.storeKey)
 	deposit, found = store.GetAndDecodeWithBool(st, keeper.decodeDeposit, types.DepositKey(proposalID, depositorAddr))
 	if !found {
 		return deposit, found
@@ -32,7 +32,7 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 // SetDeposit sets a Deposit to the gov store
 func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit v1.Deposit) {
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshal(&deposit)
 	depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
 
@@ -59,13 +59,9 @@ func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) (deposits v
 	return
 }
 
-func (keeper Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
-	return store.NewKVStoreWrapper(ctx.KVStore(keeper.storeKey))
-}
-
 // DeleteAndBurnDeposits deletes and burn all the deposits on a specific proposal.
 func (keeper Keeper) DeleteAndBurnDeposits(ctx sdk.Context, proposalID uint64) {
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit v1.Deposit) bool {
 		err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, deposit.Amount)
@@ -82,7 +78,7 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx sdk.Context, proposalID uint64) {
 
 // IterateAllDeposits iterates over all the stored deposits and performs a callback function
 func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit v1.Deposit) (stop bool)) {
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKeyPrefix)
 
 	defer iterator.Close()
@@ -100,7 +96,7 @@ func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit v1.Depo
 
 // IterateDeposits iterates over all the proposals deposits and performs a callback function
 func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func(deposit v1.Deposit) (stop bool)) {
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKey(proposalID))
 
 	defer iterator.Close()
@@ -176,7 +172,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 // RefundAndDeleteDeposits refunds and deletes all the deposits on a specific proposal.
 func (keeper Keeper) RefundAndDeleteDeposits(ctx sdk.Context, proposalID uint64) {
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit v1.Deposit) bool {
 		depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)

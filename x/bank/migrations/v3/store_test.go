@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,11 +21,10 @@ func TestMigrateStore(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
-	st := ctx.KVStore(bankKey)
+	store := ctx.KVStore(bankKey)
 
 	addr := sdk.AccAddress([]byte("addr________________"))
-	prefixAccStore := prefix.NewStore(st, v2.CreateAccountBalancesPrefix(addr))
-	newStore := store.NewKVStoreWrapper(prefixAccStore)
+	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
 
 	balances := sdk.NewCoins(
 		sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -37,13 +35,13 @@ func TestMigrateStore(t *testing.T) {
 		bz, err := encCfg.Codec.Marshal(&b)
 		require.NoError(t, err)
 
-		newStore.Set([]byte(b.Denom), bz)
+		prefixAccStore.Set([]byte(b.Denom), bz)
 	}
 
 	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
 
 	for _, b := range balances {
-		addrPrefixStore := prefix.NewStore(st, types.CreateAccountBalancesPrefix(addr))
+		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
 		bz := addrPrefixStore.Get([]byte(b.Denom))
 		var expected math.Int
 		require.NoError(t, expected.Unmarshal(bz))
@@ -51,7 +49,7 @@ func TestMigrateStore(t *testing.T) {
 	}
 
 	for _, b := range balances {
-		denomPrefixStore := prefix.NewStore(st, v3.CreateDenomAddressPrefix(b.Denom))
+		denomPrefixStore := prefix.NewStore(store, v3.CreateDenomAddressPrefix(b.Denom))
 		bz := denomPrefixStore.Get(address.MustLengthPrefix(addr))
 		require.NotNil(t, bz)
 	}
@@ -89,7 +87,6 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		},
 	}
 	denomMetadataStore := prefix.NewStore(st, v2.DenomMetadataPrefix)
-	newDenomMetadataStore := store.NewKVStoreWrapper(prefix.NewStore(st, v2.DenomMetadataPrefix))
 
 	for i := range []int{0, 1} {
 		key := append(v2.DenomMetadataPrefix, []byte(metaData[i].Base)...)
@@ -97,7 +94,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		key = append(key, []byte(metaData[i].Base)...)
 		bz, err := encCfg.Codec.Marshal(&metaData[i])
 		require.NoError(t, err)
-		newDenomMetadataStore.Set(key, bz)
+		denomMetadataStore.Set(key, bz)
 	}
 
 	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))

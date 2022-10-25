@@ -18,7 +18,7 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 	keeper.SetValidator(ctx, validator)
 
 	// Remove any existing power key for validator.
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 	deleted := false
 
 	iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsByPowerIndexKey)

@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -400,16 +399,15 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
 			storeKey := sdk.NewKVStoreKey("test")
-			st := NewMockContext().KVStore(storeKey)
-			newStore := store.NewKVStoreWrapper(st)
-			newStore.Set(presetKey, []byte{})
+			store := NewMockContext().KVStore(storeKey)
+			store.Set(presetKey, []byte{})
 
-			err := uniqueKeysAddFunc(st, spec.srcKey, myRowID)
+			err := uniqueKeysAddFunc(store, spec.srcKey, myRowID)
 			require.True(t, spec.expErr.Is(err))
 			if spec.expErr != nil {
 				return
 			}
-			assert.True(t, newStore.Has(spec.expExistingEntry), "not found")
+			assert.True(t, store.Has(spec.expExistingEntry), "not found")
 		})
 	}
 }
@@ -444,16 +442,15 @@ func TestMultiKeyAddFunc(t *testing.T) {
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
 			storeKey := sdk.NewKVStoreKey("test")
-			st := NewMockContext().KVStore(storeKey)
-			newStore := store.NewKVStoreWrapper(st)
-			newStore.Set(presetKey, []byte{})
+			store := NewMockContext().KVStore(storeKey)
+			store.Set(presetKey, []byte{})
 
-			err := multiKeyAddFunc(st, spec.srcKey, myRowID)
+			err := multiKeyAddFunc(store, spec.srcKey, myRowID)
 			require.True(t, spec.expErr.Is(err))
 			if spec.expErr != nil {
 				return
 			}
-			assert.True(t, newStore.Has(spec.expExistingEntry))
+			assert.True(t, store.Has(spec.expExistingEntry))
 		})
 	}
 }

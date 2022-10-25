@@ -3,7 +3,6 @@ package orm
 import (
 	"encoding/binary"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -26,7 +25,7 @@ func NewSequence(prefix byte) Sequence {
 
 // NextVal increments and persists the counter by one and returns the value.
 func (s Sequence) NextVal(st sdk.KVStore) uint64 {
-	pStore := store.NewKVStoreWrapper(prefix.NewStore(st, []byte{s.prefix}))
+	pStore := prefix.NewStore(st, []byte{s.prefix})
 	v := pStore.Get(sequenceStorageKey)
 	seq := DecodeSequence(v)
 	seq++
@@ -55,7 +54,7 @@ func (s Sequence) PeekNextVal(store sdk.KVStore) uint64 {
 // It is recommended to call this method only for a sequence start value other than `1` as the
 // method consumes unnecessary gas otherwise. A scenario would be an import from genesis.
 func (s Sequence) InitVal(st sdk.KVStore, seq uint64) error {
-	pStore := store.NewKVStoreWrapper(prefix.NewStore(st, []byte{s.prefix}))
+	pStore := prefix.NewStore(st, []byte{s.prefix})
 	if pStore.Has(sequenceStorageKey) {
 		return sdkerrors.Wrap(errors.ErrORMUniqueConstraint, "already initialized")
 	}

@@ -55,7 +55,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 		return err
 	}
 
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(&params)
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 
 // GetParams sets the x/staking module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.ParamsKey)
 	if bz == nil {
 		return params

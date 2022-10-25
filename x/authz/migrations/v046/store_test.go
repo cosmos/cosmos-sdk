@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -99,17 +98,17 @@ func TestMigration(t *testing.T) {
 		},
 	}
 
-	st := store.NewKVStoreWrapper(ctx.KVStore(authzKey))
+	store := ctx.KVStore(authzKey)
 
 	for _, g := range grants {
 		grant := g.authorization()
-		st.Set(v046.GrantStoreKey(g.grantee, g.granter, g.msgType), cdc.MustMarshal(&grant))
+		store.Set(v046.GrantStoreKey(g.grantee, g.granter, g.msgType), cdc.MustMarshal(&grant))
 	}
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(1 * time.Hour))
 	require.NoError(t, v046.MigrateStore(ctx, authzKey, cdc))
 
-	require.NotNil(t, st.Get(v046.GrantStoreKey(grantee1, granter2, genericMsgType)))
-	require.NotNil(t, st.Get(v046.GrantStoreKey(grantee1, granter1, sendMsgType)))
-	require.Nil(t, st.Get(v046.GrantStoreKey(grantee2, granter2, genericMsgType)))
+	require.NotNil(t, store.Get(v046.GrantStoreKey(grantee1, granter2, genericMsgType)))
+	require.NotNil(t, store.Get(v046.GrantStoreKey(grantee1, granter1, sendMsgType)))
+	require.Nil(t, store.Get(v046.GrantStoreKey(grantee2, granter2, genericMsgType)))
 }

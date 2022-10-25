@@ -2,7 +2,6 @@ package v3
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,8 +26,8 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 	return migrateDenomMetadata(store)
 }
 
-func addDenomReverseIndex(st sdk.KVStore, cdc codec.BinaryCodec) error {
-	oldBalancesStore := prefix.NewStore(st, v2.BalancesPrefix)
+func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
+	oldBalancesStore := prefix.NewStore(store, v2.BalancesPrefix)
 
 	oldBalancesIter := oldBalancesStore.Iterator(nil, nil)
 	defer oldBalancesIter.Close()
@@ -56,28 +55,25 @@ func addDenomReverseIndex(st sdk.KVStore, cdc codec.BinaryCodec) error {
 			return err
 		}
 
-		newStore := store.NewKVStoreWrapper(prefix.NewStore(st, types.CreateAccountBalancesPrefix(addr)))
+		newStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
 		newStore.Set([]byte(coin.Denom), bz)
 
 		denomPrefixStore, ok := denomPrefixStores[balance.Denom]
-		newDenomPrefixStore := store.NewKVStoreWrapper(denomPrefixStore)
 		if !ok {
-			denomPrefixStore = prefix.NewStore(st, CreateDenomAddressPrefix(balance.Denom))
-			newDenomPrefixStore = store.NewKVStoreWrapper(prefix.NewStore(st, CreateDenomAddressPrefix(balance.Denom)))
+			denomPrefixStore = prefix.NewStore(store, CreateDenomAddressPrefix(balance.Denom))
 			denomPrefixStores[balance.Denom] = denomPrefixStore
 		}
 
 		// Store a reverse index from denomination to account address with a
 		// sentinel value.
-		newDenomPrefixStore.Set(address.MustLengthPrefix(addr), []byte{0})
+		denomPrefixStore.Set(address.MustLengthPrefix(addr), []byte{0})
 	}
 
 	return nil
 }
 
-func migrateDenomMetadata(st sdk.KVStore) error {
-	newStore := store.NewKVStoreWrapper(st)
-	oldDenomMetaDataStore := store.NewKVStoreWrapper(prefix.NewStore(st, v2.DenomMetadataPrefix))
+func migrateDenomMetadata(store sdk.KVStore) error {
+	oldDenomMetaDataStore := prefix.NewStore(store, v2.DenomMetadataPrefix)
 
 	oldDenomMetaDataIter := oldDenomMetaDataStore.Iterator(nil, nil)
 	defer oldDenomMetaDataIter.Close()
@@ -90,7 +86,7 @@ func migrateDenomMetadata(st sdk.KVStore) error {
 		// old key: prefix_bytes | denom_bytes | denom_bytes
 		copy(newKey, types.DenomMetadataPrefix)
 		copy(newKey[len(types.DenomMetadataPrefix):], oldKey[:l])
-		newStore.Set(newKey, oldDenomMetaDataIter.Value())
+		store.Set(newKey, oldDenomMetaDataIter.Value())
 		oldDenomMetaDataStore.Delete(oldKey)
 	}
 

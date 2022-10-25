@@ -48,7 +48,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 		k.authKeeper.SetAccount(ctx, granteeAcc)
 	}
 
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 
 	var oldExp *time.Time
@@ -125,7 +125,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 
 // UpdateAllowance updates the existing grant.
 func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 
 	_, err := k.getGrant(ctx, granter, grantee)
@@ -156,10 +156,6 @@ func (k Keeper) UpdateAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 	return nil
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
-	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
-}
-
 // revokeAllowance removes an existing grant
 func (k Keeper) revokeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) error {
 	_, err := k.getGrant(ctx, granter, grantee)
@@ -167,7 +163,7 @@ func (k Keeper) revokeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 		return err
 	}
 
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 	store.Delete(key)
 
@@ -203,7 +199,7 @@ func (k Keeper) decodeFeegrant(bz []byte) (*feegrant.Grant, error) {
 
 // getGrant returns entire grant between both accounts
 func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*feegrant.Grant, error) {
-	st := k.getStore(ctx)
+	st := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 	feegrant, err := store.GetAndDecode(st, k.decodeFeegrant, key)
 	if feegrant == nil {
@@ -220,7 +216,7 @@ func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.Ac
 // Callback to get all data, returns true to stop, false to keep reading
 // Calling this without pagination is very expensive and only designed for export genesis
 func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(grant feegrant.Grant) bool) error {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, feegrant.FeeAllowanceKeyPrefix)
 	defer iter.Close()
 
@@ -324,19 +320,19 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (*feegrant.GenesisState, error) {
 
 func (k Keeper) removeFromGrantQueue(ctx sdk.Context, exp *time.Time, allowanceKey []byte) {
 	key := feegrant.FeeAllowancePrefixQueue(exp, allowanceKey)
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	store.Delete(key)
 }
 
 func (k Keeper) addToFeeAllowanceQueue(ctx sdk.Context, grantKey []byte, exp *time.Time) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	store.Set(feegrant.FeeAllowancePrefixQueue(exp, grantKey), []byte{})
 }
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
 func (k Keeper) RemoveExpiredAllowances(ctx sdk.Context) {
 	exp := ctx.BlockTime()
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	iterator := store.Iterator(feegrant.FeeAllowanceQueueKeyPrefix, sdk.InclusiveEndBytes(feegrant.AllowanceByExpTimeKey(&exp)))
 	defer iterator.Close()
 

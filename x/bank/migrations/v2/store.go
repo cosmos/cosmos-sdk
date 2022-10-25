@@ -4,7 +4,6 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,24 +15,23 @@ import (
 // migrateSupply migrates the supply to be stored by denom key instead in a
 // single blob.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7092
-func migrateSupply(st sdk.KVStore, cdc codec.BinaryCodec) error {
+func migrateSupply(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	// Old supply was stored as a single blob under the SupplyKey.
 	var oldSupplyI v1.SupplyI
-	err := cdc.UnmarshalInterface(st.Get(v1.SupplyKey), &oldSupplyI)
+	err := cdc.UnmarshalInterface(store.Get(v1.SupplyKey), &oldSupplyI)
 	if err != nil {
 		return err
 	}
 
-	newStore := store.NewKVStoreWrapper(st)
 	// We delete the single key holding the whole blob.
-	newStore.Delete(v1.SupplyKey)
+	store.Delete(v1.SupplyKey)
 
 	if oldSupplyI == nil {
 		return nil
 	}
 
 	// We add a new key for each denom
-	supplyStore := store.NewKVStoreWrapper(prefix.NewStore(st, SupplyKey))
+	supplyStore := prefix.NewStore(store, SupplyKey)
 
 	// We're sure that SupplyI is a Supply struct, there's no other
 	// implementation.
@@ -53,13 +51,12 @@ func migrateSupply(st sdk.KVStore, cdc codec.BinaryCodec) error {
 
 // migrateBalanceKeys migrate the balances keys to cater for variable-length
 // addresses.
-func migrateBalanceKeys(st sdk.KVStore) {
+func migrateBalanceKeys(store sdk.KVStore) {
 	// old key is of format:
 	// prefix ("balances") || addrBytes (20 bytes) || denomBytes
 	// new key is of format
 	// prefix (0x02) || addrLen (1 byte) || addrBytes || denomBytes
-	newStore := store.NewKVStoreWrapper(st)
-	oldStore := store.NewKVStoreWrapper(prefix.NewStore(st, v1.BalancesPrefix))
+	oldStore := prefix.NewStore(store, v1.BalancesPrefix)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -70,7 +67,7 @@ func migrateBalanceKeys(st sdk.KVStore) {
 		newStoreKey := types.CreatePrefixedAccountStoreKey(addr, denom)
 
 		// Set new key on store. Values don't change.
-		newStore.Set(newStoreKey, oldStoreIter.Value())
+		store.Set(newStoreKey, oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 }
@@ -99,7 +96,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 
 // pruneZeroBalances removes the zero balance addresses from balances store.
 func pruneZeroBalances(st sdk.KVStore, cdc codec.BinaryCodec) error {
-	balancesStore := store.NewKVStoreWrapper(prefix.NewStore(st, BalancesPrefix))
+	balancesStore := prefix.NewStore(st, BalancesPrefix)
 	iterator := balancesStore.Iterator(nil, nil)
 	defer iterator.Close()
 
@@ -118,7 +115,7 @@ func pruneZeroBalances(st sdk.KVStore, cdc codec.BinaryCodec) error {
 
 // pruneZeroSupply removes zero balance denom from supply store.
 func pruneZeroSupply(st sdk.KVStore) error {
-	supplyStore := store.NewKVStoreWrapper(prefix.NewStore(st, SupplyKey))
+	supplyStore := prefix.NewStore(st, SupplyKey)
 	iterator := supplyStore.Iterator(nil, nil)
 	defer iterator.Close()
 

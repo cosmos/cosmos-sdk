@@ -110,7 +110,7 @@ func (keeper Keeper) decodeProposal(bz []byte) (v1.Proposal, bool) {
 // GetProposal gets a proposal from store by ProposalID.
 // Panics if can't unmarshal the proposal.
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
-	st := keeper.getStore(ctx)
+	st := ctx.KVStore(keeper.storeKey)
 
 	proposal, boolVal := store.GetAndDecodeWithBool(st, keeper.decodeProposal, types.ProposalKey(proposalID))
 	if !boolVal {
@@ -128,14 +128,14 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 		panic(err)
 	}
 
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 	store.Set(types.ProposalKey(proposal.Id), bz)
 }
 
 // DeleteProposal deletes a proposal from store.
 // Panics if the proposal doesn't exist.
 func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
 		panic(fmt.Sprintf("couldn't find proposal with id#%d", proposalID))
@@ -154,7 +154,7 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 // IterateProposals iterates over the all the proposals and performs a callback function.
 // Panics when the iterator encounters a proposal which can't be unmarshaled.
 func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal v1.Proposal) (stop bool)) {
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
 	defer iterator.Close()
@@ -237,7 +237,7 @@ func (keeper Keeper) decodeProposalID(bz []byte) (proposalID uint64, err error) 
 
 // GetProposalID gets the highest proposal ID
 func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err error) {
-	st := keeper.getStore(ctx)
+	st := ctx.KVStore(keeper.storeKey)
 	proposalID, err = store.GetAndDecode(st, keeper.decodeProposalID, types.ProposalIDKey)
 	if err != nil {
 		return 0, err
@@ -248,7 +248,7 @@ func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err erro
 
 // SetProposalID sets the new proposal ID to the store
 func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 	store.Set(types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
 }
 

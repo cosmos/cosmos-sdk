@@ -178,7 +178,7 @@ func (k Keeper) Classes(goCtx context.Context, r *nft.QueryClassesRequest) (*nft
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	classStore := prefix.NewStore(store, ClassKey)
 
 	var classes []*nft.Class

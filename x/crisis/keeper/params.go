@@ -29,7 +29,7 @@ func (k *Keeper) SetConstantFee(ctx sdk.Context, constantFee sdk.Coin) error {
 		return errors.Wrapf(errors.ErrInvalidCoins, "negative or invalid constant fee: %s", constantFee)
 	}
 
-	st := store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
+	st := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(&constantFee)
 	if err != nil {
 		return err

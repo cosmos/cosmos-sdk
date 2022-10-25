@@ -102,9 +102,8 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) erro
 
 // SetEvidence sets Evidence by hash in the module's KVStore.
 func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
-	st := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
-	newStore := store.NewKVStoreWrapper(st)
-	newStore.Set(evidence.Hash(), k.MustMarshalEvidence(evidence))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
+	store.Set(evidence.Hash(), k.MustMarshalEvidence(evidence))
 }
 
 func (k Keeper) decodeEvidence(bz []byte) (exported.Evidence, bool) {

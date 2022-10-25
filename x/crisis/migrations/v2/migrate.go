@@ -2,7 +2,6 @@ package v2
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -23,8 +22,7 @@ var (
 // and managed by the x/params module and stores it directly into the x/crisis
 // module state.
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
-	st := ctx.KVStore(storeKey)
-	newStore := store.NewKVStoreWrapper(st)
+	store := ctx.KVStore(storeKey)
 	var currConstantFee sdk.Coin
 	legacySubspace.Get(ctx, ConstantFee, &currConstantFee)
 
@@ -37,7 +35,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace 
 		return err
 	}
 
-	newStore.Set(ConstantFeeKey, bz)
+	store.Set(ConstantFeeKey, bz)
 
 	return nil
 }

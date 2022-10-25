@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,15 +20,14 @@ func TestTypeSafeRowGetter(t *testing.T) {
 	storeKey := sdk.NewKVStoreKey("test")
 	ctx := NewMockContext()
 	prefixKey := [2]byte{0x2}
-	st := prefix.NewStore(ctx.KVStore(storeKey), prefixKey[:])
-	newStore := store.NewKVStoreWrapper(st)
+	store := prefix.NewStore(ctx.KVStore(storeKey), prefixKey[:])
 	md := testdata.TableModel{
 		Id:   1,
 		Name: "some name",
 	}
 	bz, err := md.Marshal()
 	require.NoError(t, err)
-	newStore.Set(EncodeSequence(1), bz)
+	store.Set(EncodeSequence(1), bz)
 
 	specs := map[string]struct {
 		srcRowID     RowID

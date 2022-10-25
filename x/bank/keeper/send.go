@@ -116,13 +116,12 @@ func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 		params = types.NewParams(params.DefaultSendEnabled)
 	}
 
-	st := ctx.KVStore(k.storeKey)
-	newStore := store.NewKVStoreWrapper(st)
+	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(&params)
 	if err != nil {
 		return err
 	}
-	newStore.Set(types.ParamsKey, bz)
+	store.Set(types.ParamsKey, bz)
 	return nil
 }
 
@@ -290,7 +289,7 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 // initBalances sets the balance (multiple coins) for an account by address.
 // An error is returned upon failure.
 func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
-	accountStore := store.NewKVStoreWrapper(k.getAccountStore(ctx, addr))
+	accountStore := k.getAccountStore(ctx, addr)
 	denomPrefixStores := make(map[string]prefix.Store) // memoize prefix stores
 
 	for i := range balances {
@@ -308,10 +307,8 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 			accountStore.Set([]byte(balance.Denom), amount)
 
 			denomPrefixStore, ok := denomPrefixStores[balance.Denom]
-			newDenomPrefixStore := store.NewKVStoreWrapper(denomPrefixStore)
 			if !ok {
 				denomPrefixStore = k.getDenomAddressPrefixStore(ctx, balance.Denom)
-				newDenomPrefixStore = store.NewKVStoreWrapper(denomPrefixStore)
 				denomPrefixStores[balance.Denom] = denomPrefixStore
 
 			}
@@ -320,7 +317,7 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 			// sentinel value.
 			denomAddrKey := address.MustLengthPrefix(addr)
 			if !denomPrefixStore.Has(denomAddrKey) {
-				newDenomPrefixStore.Set(denomAddrKey, []byte{0})
+				denomPrefixStore.Set(denomAddrKey, []byte{0})
 			}
 		}
 	}
@@ -334,8 +331,8 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 	}
 
-	accountStore := store.NewKVStoreWrapper(k.getAccountStore(ctx, addr))
-	denomPrefixStore := store.NewKVStoreWrapper(k.getDenomAddressPrefixStore(ctx, balance.Denom))
+	accountStore := k.getAccountStore(ctx, addr)
+	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, balance.Denom)
 
 	// x/bank invariants prohibit persistence of zero balances
 	if balance.IsZero() {
@@ -430,20 +427,18 @@ func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types
 }
 
 // setSendEnabledEntry sets SendEnabled for the given denom to the give value in the provided store.
-func (k BaseSendKeeper) setSendEnabledEntry(st sdk.KVStore, denom string, value bool) {
+func (k BaseSendKeeper) setSendEnabledEntry(store sdk.KVStore, denom string, value bool) {
 	key := types.CreateSendEnabledKey(denom)
 	val := types.ToBoolB(value)
-	newStore := store.NewKVStoreWrapper(st)
-	newStore.Set(key, []byte{val})
+	store.Set(key, []byte{val})
 }
 
 // DeleteSendEnabled deletes the SendEnabled flags for one or more denoms.
 // If a denom is provided that doesn't have a SendEnabled entry, it is ignored.
 func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denoms ...string) {
-	st := ctx.KVStore(k.storeKey)
-	newStore := store.NewKVStoreWrapper(st)
+	store := ctx.KVStore(k.storeKey)
 	for _, denom := range denoms {
-		newStore.Delete(types.CreateSendEnabledKey(denom))
+		store.Delete(types.CreateSendEnabledKey(denom))
 	}
 }
 

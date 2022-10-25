@@ -3,7 +3,6 @@ package keeper
 import (
 	"github.com/cosmos/gogoproto/grpc"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	v043 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v043"
@@ -60,17 +59,13 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return v4.Migrate(ctx, ctx.KVStore(m.keeper.storeKey), m.legacySubspace, m.keeper.cdc)
 }
 
-func (m Migrator) getStore(ctx sdk.Context) store.KVStoreWrapper {
-	return store.NewKVStoreWrapper(ctx.KVStore(m.keeper.storeKey))
-}
-
 // V45_SetAccount implements V45_SetAccount
 // set the account without map to accAddr to accNumber.
 //
 // NOTE: This is used for testing purposes only.
 func (m Migrator) V45_SetAccount(ctx sdk.Context, acc types.AccountI) error {
 	addr := acc.GetAddress()
-	store := m.getStore(ctx)
+	store := ctx.KVStore(m.keeper.storeKey)
 
 	bz, err := m.keeper.MarshalAccount(acc)
 	if err != nil {

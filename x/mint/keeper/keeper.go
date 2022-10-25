@@ -70,20 +70,16 @@ func (k Keeper) decodeMinter(bz []byte) (types.Minter, error) {
 	return minter, nil
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
-	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
-}
-
 // get the minter
 func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
-	st := k.getStore(ctx)
+	st := ctx.KVStore(k.storeKey)
 	minter, _ = store.GetAndDecode(st, k.decodeMinter, types.MinterKey)
 	return
 }
 
 // set the minter
 func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&minter)
 	store.Set(types.MinterKey, bz)
 }
@@ -94,7 +90,7 @@ func (k Keeper) SetParams(ctx sdk.Context, p types.Params) error {
 		return err
 	}
 
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&p)
 	store.Set(types.ParamsKey, bz)
 
@@ -112,7 +108,7 @@ func (k Keeper) decodeParams(bz []byte) (types.Params, error) {
 
 // GetParams returns the current x/mint module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (p types.Params) {
-	st := k.getStore(ctx)
+	st := ctx.KVStore(k.storeKey)
 	params, _ := store.GetAndDecode(st, k.decodeParams, types.ParamsKey)
 	return params
 }

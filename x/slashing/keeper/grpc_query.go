@@ -54,7 +54,7 @@ func (k Keeper) SigningInfos(c context.Context, req *types.QuerySigningInfosRequ
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	var signInfos []types.ValidatorSigningInfo
 
 	sigInfoStore := prefix.NewStore(store, types.ValidatorSigningInfoKeyPrefix)

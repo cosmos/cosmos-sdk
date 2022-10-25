@@ -12,7 +12,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,13 +71,9 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
-	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
-}
-
 // setProtocolVersion sets the protocol version to state
 func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	versionBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(versionBytes, v)
 	store.Set([]byte{types.ProtocolVersionByte}, versionBytes)
@@ -86,7 +81,7 @@ func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
 
 // getProtocolVersion gets the protocol version from state
 func (k Keeper) getProtocolVersion(ctx sdk.Context) uint64 {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	ok := store.Has([]byte{types.ProtocolVersionByte})
 	if ok {
 		pvBytes := store.Get([]byte{types.ProtocolVersionByte})
@@ -101,8 +96,8 @@ func (k Keeper) getProtocolVersion(ctx sdk.Context) uint64 {
 // SetModuleVersionMap saves a given version map to state
 func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 	if len(vm) > 0 {
-		st := k.getStore(ctx)
-		versionStore := store.NewKVStoreWrapper(prefix.NewStore(st, []byte{types.VersionMapByte}))
+		st := ctx.KVStore(k.storeKey)
+		versionStore := prefix.NewStore(st, []byte{types.VersionMapByte})
 		// Even though the underlying store (cachekv) store is sorted, we still
 		// prefer a deterministic iteration order of the map, to avoid undesired
 		// surprises if we ever change stores.
@@ -126,7 +121,7 @@ func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 // GetModuleVersionMap returns a map of key module name and value module consensus version
 // as defined in ADR-041.
 func (k Keeper) GetModuleVersionMap(ctx sdk.Context) module.VersionMap {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 
 	vm := make(module.VersionMap)
@@ -144,7 +139,7 @@ func (k Keeper) GetModuleVersionMap(ctx sdk.Context) module.VersionMap {
 
 // GetModuleVersions gets a slice of module consensus versions
 func (k Keeper) GetModuleVersions(ctx sdk.Context) []*types.ModuleVersion {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 	defer it.Close()
 
@@ -163,7 +158,7 @@ func (k Keeper) GetModuleVersions(ctx sdk.Context) []*types.ModuleVersion {
 
 // gets the version for a given module, and returns true if it exists, false otherwise
 func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 	defer it.Close()
 
@@ -196,7 +191,7 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
 	}
 
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	// clear any old IBC state stored by previous plan
 	oldPlan, found := k.GetUpgradePlan(ctx)
@@ -212,14 +207,14 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 
 // SetUpgradedClient sets the expected upgraded client for the next version of this chain at the last height the current chain will commit.
 func (k Keeper) SetUpgradedClient(ctx sdk.Context, planHeight int64, bz []byte) error {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	store.Set(types.UpgradedClientKey(planHeight), bz)
 	return nil
 }
 
 // GetUpgradedClient gets the expected upgraded client for the next version of this chain
 func (k Keeper) GetUpgradedClient(ctx sdk.Context, height int64) ([]byte, bool) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UpgradedClientKey(height))
 	if len(bz) == 0 {
 		return nil, false
@@ -231,14 +226,14 @@ func (k Keeper) GetUpgradedClient(ctx sdk.Context, height int64) ([]byte, bool) 
 // SetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
 // using the last height committed on this chain.
 func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, planHeight int64, bz []byte) error {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	store.Set(types.UpgradedConsStateKey(planHeight), bz)
 	return nil
 }
 
 // GetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
 func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]byte, bool) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UpgradedConsStateKey(lastHeight))
 	if len(bz) == 0 {
 		return nil, false
@@ -293,7 +288,7 @@ func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
 // ClearIBCState clears any planned IBC state
 func (k Keeper) ClearIBCState(ctx sdk.Context, lastHeight int64) {
 	// delete IBC client and consensus state from store if this is IBC plan
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.UpgradedClientKey(lastHeight))
 	store.Delete(types.UpgradedConsStateKey(lastHeight))
 }
@@ -306,7 +301,7 @@ func (k Keeper) ClearUpgradePlan(ctx sdk.Context) {
 		k.ClearIBCState(ctx, oldPlan.Height)
 	}
 
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.PlanKey())
 }
 
@@ -318,7 +313,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // GetUpgradePlan returns the currently scheduled Plan if any, setting havePlan to true if there is a scheduled
 // upgrade or false if there is none
 func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.PlanKey())
 	if bz == nil {
 		return plan, false
@@ -330,7 +325,7 @@ func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool)
 
 // setDone marks this upgrade name as being done so the name can't be reused accidentally
 func (k Keeper) setDone(ctx sdk.Context, name string) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	store.Set(encodeDoneKey(name, ctx.BlockHeight()), []byte{1})
 }
 

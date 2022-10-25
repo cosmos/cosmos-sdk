@@ -1,7 +1,6 @@
 package v043
 
 import (
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -12,9 +11,8 @@ import (
 // prefix_bytes | address_bytes
 // into format:
 // prefix_bytes | address_len (1 byte) | address_bytes
-func MigratePrefixAddress(st sdk.KVStore, prefixBz []byte) {
-	oldStore := store.NewKVStoreWrapper(prefix.NewStore(st, prefixBz))
-	newStore := store.NewKVStoreWrapper(st)
+func MigratePrefixAddress(store sdk.KVStore, prefixBz []byte) {
+	oldStore := prefix.NewStore(store, prefixBz)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -25,7 +23,7 @@ func MigratePrefixAddress(st sdk.KVStore, prefixBz []byte) {
 		newStoreKey = append(newStoreKey, address.MustLengthPrefix(addr)...)
 
 		// Set new key on store. Values don't change.
-		newStore.Set(newStoreKey, oldStoreIter.Value())
+		store.Set(newStoreKey, oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 }
@@ -34,9 +32,8 @@ func MigratePrefixAddress(st sdk.KVStore, prefixBz []byte) {
 // prefix_bytes | address_bytes | arbitrary_bytes
 // into format:
 // prefix_bytes | address_len (1 byte) | address_bytes | arbitrary_bytes
-func MigratePrefixAddressBytes(st sdk.KVStore, prefixBz []byte) {
-	oldStore := store.NewKVStoreWrapper(prefix.NewStore(st, prefixBz))
-	newStore := store.NewKVStoreWrapper(st)
+func MigratePrefixAddressBytes(store sdk.KVStore, prefixBz []byte) {
+	oldStore := prefix.NewStore(store, prefixBz)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -47,7 +44,7 @@ func MigratePrefixAddressBytes(st sdk.KVStore, prefixBz []byte) {
 		newStoreKey := append(append(prefixBz, address.MustLengthPrefix(addr)...), endBz...)
 
 		// Set new key on store. Values don't change.
-		newStore.Set(newStoreKey, oldStoreIter.Value())
+		store.Set(newStoreKey, oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 }
@@ -56,9 +53,8 @@ func MigratePrefixAddressBytes(st sdk.KVStore, prefixBz []byte) {
 // prefix_bytes | address_1_bytes | address_2_bytes
 // into format:
 // prefix_bytes | address_1_len (1 byte) | address_1_bytes | address_2_len (1 byte) | address_2_bytes
-func MigratePrefixAddressAddress(st sdk.KVStore, prefixBz []byte) {
-	oldStore := store.NewKVStoreWrapper(prefix.NewStore(st, prefixBz))
-	newStore := store.NewKVStoreWrapper(st)
+func MigratePrefixAddressAddress(store sdk.KVStore, prefixBz []byte) {
+	oldStore := prefix.NewStore(store, prefixBz)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
@@ -69,7 +65,7 @@ func MigratePrefixAddressAddress(st sdk.KVStore, prefixBz []byte) {
 		newStoreKey := append(append(prefixBz, address.MustLengthPrefix(addr1)...), address.MustLengthPrefix(addr2)...)
 
 		// Set new key on store. Values don't change.
-		newStore.Set(newStoreKey, oldStoreIter.Value())
+		store.Set(newStoreKey, oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 }

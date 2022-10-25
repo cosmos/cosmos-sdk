@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -34,7 +33,7 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.ValidatorsKey)
 
 	validators, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, val *types.Validator) (*types.Validator, error) {
@@ -93,7 +92,7 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.DelegationKey)
 	delegations, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, delegation *types.Delegation) (*types.Delegation, error) {
 		valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
@@ -140,7 +139,7 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 	var ubds types.UnbondingDelegations
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 	if err != nil {
@@ -263,7 +262,7 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 		return nil, err
 	}
 
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
 	pageRes, err := query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
@@ -329,7 +328,7 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 	var unbondingDelegations types.UnbondingDelegations
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
@@ -382,7 +381,7 @@ func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsR
 	var err error
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	switch {
 	case req.DelegatorAddr != "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr != "":
 		redels, err = queryRedelegation(ctx, k, req)
@@ -414,7 +413,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 	var validators types.Validators
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
@@ -493,18 +492,17 @@ func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegations
 	return redels, err
 }
 
-func queryRedelegationsFromSrcValidator(st sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
 	valAddr, err := sdk.ValAddressFromBech32(req.SrcValidatorAddr)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	srcValPrefix := types.GetREDsFromValSrcIndexKey(valAddr)
-	redStore := prefix.NewStore(st, srcValPrefix)
+	redStore := prefix.NewStore(store, srcValPrefix)
 	res, err = query.Paginate(redStore, req.Pagination, func(key []byte, value []byte) error {
 		storeKey := types.GetREDKeyFromValSrcIndexKey(append(srcValPrefix, key...))
-		newStore := store.NewKVStoreWrapper(st)
-		storeValue := newStore.Get(storeKey)
+		storeValue := store.Get(storeKey)
 		red, err := types.UnmarshalRED(k.cdc, storeValue)
 		if err != nil {
 			return err

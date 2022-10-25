@@ -47,17 +47,13 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-func (k Keeper) getStore(ctx sdk.Context) store.KVStoreWrapper {
-	return store.NewKVStoreWrapper(ctx.KVStore(k.storeKey))
-}
-
 // AddPubkey sets a address-pubkey relation
 func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
 	bz, err := k.cdc.MarshalInterface(pubkey)
 	if err != nil {
 		return err
 	}
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	key := types.AddrPubkeyRelationKey(pubkey.Address())
 	store.Set(key, bz)
 	return nil
@@ -74,7 +70,7 @@ func (k Keeper) decodePubKey(bz []byte) (cryptotypes.PubKey, error) {
 
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
-	st := k.getStore(ctx)
+	st := ctx.KVStore(k.storeKey)
 	pubkey, err := store.GetAndDecode(st, k.decodePubKey, types.AddrPubkeyRelationKey(a))
 	if pubkey == nil {
 		return pubkey, fmt.Errorf("address %s not found", sdk.ConsAddress(a))
@@ -113,6 +109,6 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.AddrPubkeyRelationKey(addr))
 }

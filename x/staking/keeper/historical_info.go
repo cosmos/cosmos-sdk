@@ -7,7 +7,7 @@ import (
 
 // GetHistoricalInfo gets the historical info at a given height
 func (k Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (types.HistoricalInfo, bool) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	key := types.GetHistoricalInfoKey(height)
 
 	value := store.Get(key)
@@ -20,7 +20,7 @@ func (k Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (types.Historic
 
 // SetHistoricalInfo sets the historical info at a given height
 func (k Keeper) SetHistoricalInfo(ctx sdk.Context, height int64, hi *types.HistoricalInfo) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	key := types.GetHistoricalInfoKey(height)
 	value := k.cdc.MustMarshal(hi)
 	store.Set(key, value)
@@ -28,7 +28,7 @@ func (k Keeper) SetHistoricalInfo(ctx sdk.Context, height int64, hi *types.Histo
 
 // DeleteHistoricalInfo deletes the historical info at a given height
 func (k Keeper) DeleteHistoricalInfo(ctx sdk.Context, height int64) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	key := types.GetHistoricalInfoKey(height)
 
 	store.Delete(key)
@@ -40,7 +40,7 @@ func (k Keeper) DeleteHistoricalInfo(ctx sdk.Context, height int64) {
 //
 // true, the iterator will close and stop.
 func (k Keeper) IterateHistoricalInfo(ctx sdk.Context, cb func(types.HistoricalInfo) bool) {
-	store := k.getStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.HistoricalInfoKey)
 	defer iterator.Close()

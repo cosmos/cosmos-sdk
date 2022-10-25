@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,8 +77,7 @@ func TestKeeper(t *testing.T) {
 
 	cdc, ctx, skey, _, keeper := testComponents()
 
-	st := prefix.NewStore(ctx.KVStore(skey), []byte("test/"))
-	newStore := store.NewKVStoreWrapper(st)
+	store := prefix.NewStore(ctx.KVStore(skey), []byte("test/"))
 	space := keeper.Subspace("test")
 	require.False(t, space.HasKeyTable())
 	space = space.WithKeyTable(table)
@@ -111,7 +109,7 @@ func TestKeeper(t *testing.T) {
 	// Test store.Get equals space.Get
 	for i, kv := range kvs {
 		var param int64
-		bz := newStore.Get([]byte(kv.key))
+		bz := store.Get([]byte(kv.key))
 		require.NotNil(t, bz, "KVStore.Get returns nil, tc #%d", i)
 		err := cdc.UnmarshalJSON(bz, &param)
 		require.NoError(t, err, "UnmarshalJSON returns error, tc #%d", i)

@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -38,8 +37,7 @@ func TestMigrate(t *testing.T) {
 	storeKey := sdk.NewKVStoreKey(v4.ModuleName)
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
-	st := ctx.KVStore(storeKey)
-	newStore := store.NewKVStoreWrapper(st)
+	store := ctx.KVStore(storeKey)
 	duplicateCreationHeight := int64(1)
 
 	accAddrs := sims.CreateIncrementalAccounts(1)
@@ -49,7 +47,7 @@ func TestMigrate(t *testing.T) {
 	valAddr := valAddrs[0]
 
 	// creating 10 ubdEntries with same height and 10 ubdEntries with different creation height
-	err := createOldStateUnbonding(t, duplicateCreationHeight, valAddr, accAddr, cdc, st)
+	err := createOldStateUnbonding(t, duplicateCreationHeight, valAddr, accAddr, cdc, store)
 	require.NoError(t, err)
 
 	legacySubspace := newMockSubspace(types.DefaultParams())
@@ -74,10 +72,10 @@ func TestMigrate(t *testing.T) {
 				require.NoError(t, v4.MigrateStore(ctx, storeKey, cdc, legacySubspace))
 			}
 
-			ubd := getUBD(t, accAddr, valAddr, st, cdc)
+			ubd := getUBD(t, accAddr, valAddr, store, cdc)
 			if tc.doMigration {
 				var res types.Params
-				bz := newStore.Get(v4.ParamsKey)
+				bz := store.Get(v4.ParamsKey)
 				require.NoError(t, cdc.Unmarshal(bz, &res))
 				require.Equal(t, legacySubspace.ps, res)
 
@@ -99,7 +97,7 @@ func TestMigrate(t *testing.T) {
 
 // createOldStateUnbonding will create the ubd entries with duplicate heights
 // 10 duplicate heights and 10 unique ubd with creation height
-func createOldStateUnbonding(t *testing.T, creationHeight int64, valAddr sdk.ValAddress, accAddr sdk.AccAddress, cdc codec.BinaryCodec, st storetypes.KVStore) error {
+func createOldStateUnbonding(t *testing.T, creationHeight int64, valAddr sdk.ValAddress, accAddr sdk.AccAddress, cdc codec.BinaryCodec, store storetypes.KVStore) error {
 	unbondBalance := sdk.NewInt(100)
 	completionTime := time.Now()
 	ubdEntries := make([]types.UnbondingDelegationEntry, 0, 10)
@@ -127,16 +125,14 @@ func createOldStateUnbonding(t *testing.T, creationHeight int64, valAddr sdk.Val
 	// set the unbond delegation with validator and delegator
 	bz := types.MustMarshalUBD(cdc, ubd)
 	key := getUBDKey(accAddr, valAddr)
-	newStore := store.NewKVStoreWrapper(st)
-	newStore.Set(key, bz)
+	store.Set(key, bz)
 	return nil
 }
 
-func getUBD(t *testing.T, accAddr sdk.AccAddress, valAddr sdk.ValAddress, st storetypes.KVStore, cdc codec.BinaryCodec) types.UnbondingDelegation {
+func getUBD(t *testing.T, accAddr sdk.AccAddress, valAddr sdk.ValAddress, store storetypes.KVStore, cdc codec.BinaryCodec) types.UnbondingDelegation {
 	// get the unbonding delegations
 	var ubdRes types.UnbondingDelegation
-	newStore := store.NewKVStoreWrapper(st)
-	ubdbz := newStore.Get(getUBDKey(accAddr, valAddr))
+	ubdbz := store.Get(getUBDKey(accAddr, valAddr))
 	require.NoError(t, cdc.Unmarshal(ubdbz, &ubdRes))
 	return ubdRes
 }

@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -110,7 +109,7 @@ func (a table) Set(st sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) e
 		return err
 	}
 
-	pStore := store.NewKVStoreWrapper(prefix.NewStore(st, a.prefix[:]))
+	pStore := prefix.NewStore(st, a.prefix[:])
 
 	var oldValue codec.ProtoMarshaler
 	if a.Has(st, rowID) {
@@ -148,7 +147,7 @@ func assertValid(obj codec.ProtoMarshaler) error {
 // Delete iterates through the registered callbacks that remove secondary index
 // keys.
 func (a table) Delete(st sdk.KVStore, rowID RowID) error {
-	pStore := store.NewKVStoreWrapper(prefix.NewStore(st, a.prefix[:]))
+	pStore := prefix.NewStore(st, a.prefix[:])
 
 	oldValue := reflect.New(a.model).Interface().(codec.ProtoMarshaler)
 	if err := a.GetOne(st, rowID, oldValue); err != nil {

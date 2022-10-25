@@ -75,7 +75,7 @@ func (keeper Keeper) decodeVote(bz []byte) (vote v1.Vote, found bool) {
 
 // GetVote gets the vote from an address on a specific proposal
 func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote v1.Vote, found bool) {
-	st := keeper.getStore(ctx)
+	st := ctx.KVStore(keeper.storeKey)
 	vote, boolVal := store.GetAndDecodeWithBool(st, keeper.decodeVote, types.VoteKey(proposalID, voterAddr))
 	if !boolVal {
 		return vote, boolVal
@@ -86,7 +86,7 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 
 // SetVote sets a Vote to the gov store
 func (keeper Keeper) SetVote(ctx sdk.Context, vote v1.Vote) {
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshal(&vote)
 	addr := sdk.MustAccAddressFromBech32(vote.Voter)
 
@@ -95,7 +95,7 @@ func (keeper Keeper) SetVote(ctx sdk.Context, vote v1.Vote) {
 
 // IterateAllVotes iterates over all the stored votes and performs a callback function
 func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote v1.Vote) (stop bool)) {
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.VotesKeyPrefix)
 
 	defer iterator.Close()
@@ -111,7 +111,7 @@ func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote v1.Vote) (sto
 
 // IterateVotes iterates over all the proposals votes and performs a callback function
 func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vote v1.Vote) (stop bool)) {
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.VotesKey(proposalID))
 
 	defer iterator.Close()
@@ -127,6 +127,6 @@ func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vo
 
 // deleteVote deletes a vote from a given proposalID and voter from the store
 func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
-	store := keeper.getStore(ctx)
+	store := ctx.KVStore(keeper.storeKey)
 	store.Delete(types.VoteKey(proposalID, voterAddr))
 }

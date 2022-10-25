@@ -41,7 +41,7 @@ func (q Keeper) Proposal(c context.Context, req *v1.QueryProposalRequest) (*v1.Q
 func (q Keeper) Proposals(c context.Context, req *v1.QueryProposalsRequest) (*v1.QueryProposalsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := q.getStore(ctx)
+	store := ctx.KVStore(q.storeKey)
 	proposalStore := prefix.NewStore(store, types.ProposalsKeyPrefix)
 
 	filteredProposals, pageRes, err := query.GenericFilteredPaginate(
@@ -132,7 +132,7 @@ func (q Keeper) Votes(c context.Context, req *v1.QueryVotesRequest) (*v1.QueryVo
 	var votes v1.Votes
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := q.getStore(ctx)
+	store := ctx.KVStore(q.storeKey)
 	votesStore := prefix.NewStore(store, types.VotesKey(req.ProposalId))
 
 	pageRes, err := query.Paginate(votesStore, req.Pagination, func(key []byte, value []byte) error {
@@ -228,7 +228,7 @@ func (q Keeper) Deposits(c context.Context, req *v1.QueryDepositsRequest) (*v1.Q
 	var deposits []*v1.Deposit
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := q.getStore(ctx)
+	store := ctx.KVStore(q.storeKey)
 	depositStore := prefix.NewStore(store, types.DepositsKey(req.ProposalId))
 
 	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {

@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	sdktestuil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,8 +20,7 @@ func TestStoreMigration(t *testing.T) {
 	stakingKey := sdk.NewKVStoreKey("staking")
 	tStakingKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := sdktestuil.DefaultContext(stakingKey, tStakingKey)
-	st := ctx.KVStore(stakingKey)
-	newStore := store.NewKVStoreWrapper(st)
+	store := ctx.KVStore(stakingKey)
 
 	_, pk1, addr1 := testdata.KeyTestPubAddr()
 	valAddr1 := sdk.ValAddress(addr1)
@@ -120,7 +118,7 @@ func TestStoreMigration(t *testing.T) {
 
 	// Set all the old keys to the store
 	for _, tc := range testCases {
-		newStore.Set(tc.oldKey, value)
+		store.Set(tc.oldKey, value)
 	}
 
 	// Run migrations.
@@ -132,9 +130,9 @@ func TestStoreMigration(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			if !bytes.Equal(tc.oldKey, tc.newKey) {
-				require.Nil(t, newStore.Get(tc.oldKey))
+				require.Nil(t, store.Get(tc.oldKey))
 			}
-			require.Equal(t, value, newStore.Get(tc.newKey))
+			require.Equal(t, value, store.Get(tc.newKey))
 		})
 	}
 }

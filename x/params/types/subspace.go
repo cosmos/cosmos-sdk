@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -99,16 +98,12 @@ func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error
 	return nil
 }
 
-func (s Subspace) getStore(ctx sdk.Context) store.KVStoreWrapper {
-	return store.NewKVStoreWrapper(s.kvStore(ctx))
-}
-
 // Get queries for a parameter by key from the Subspace's KVStore and sets the
 // value to the provided pointer. If the value does not exist, it will panic.
 func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	s.checkType(key, ptr)
 
-	store := s.getStore(ctx)
+	store := s.kvStore(ctx)
 	bz := store.Get(key)
 
 	if err := s.legacyAmino.UnmarshalJSON(bz, ptr); err != nil {
@@ -120,7 +115,7 @@ func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 // sets the value to the provided pointer. If the value does not exist, it will
 // perform a no-op.
 func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
-	store := s.getStore(ctx)
+	store := s.kvStore(ctx)
 	bz := store.Get(key)
 	if bz == nil {
 		return
@@ -151,7 +146,7 @@ func (s Subspace) IterateKeys(ctx sdk.Context, cb func(key []byte) bool) {
 
 // GetRaw queries for the raw values bytes for a parameter by key.
 func (s Subspace) GetRaw(ctx sdk.Context, key []byte) []byte {
-	store := s.getStore(ctx)
+	store := s.kvStore(ctx)
 	return store.Get(key)
 }
 
@@ -192,7 +187,7 @@ func (s Subspace) checkType(key []byte, value interface{}) {
 // transient KVStore to mark the parameter as modified.
 func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 	s.checkType(key, value)
-	st := s.getStore(ctx)
+	st := s.kvStore(ctx)
 
 	bz, err := s.legacyAmino.MarshalJSON(value)
 	if err != nil {
@@ -201,7 +196,7 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 
 	st.Set(key, bz)
 
-	tstore := store.NewKVStoreWrapper(s.transientStore(ctx))
+	tstore := s.transientStore(ctx)
 	tstore.Set(key, []byte{})
 }
 

@@ -62,7 +62,7 @@ const (
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
 	FlagStateSyncSnapshotKeepRecent = "state-sync.snapshot-keep-recent"
-	FlagStateSyncRestoreHeight      = "state-sync.restore-height"
+	FlagStateSyncRestoreHeight      = "state-sync.local-restore-height"
 
 	// api-related flags
 	FlagAPIEnable             = "api.enable"
@@ -188,7 +188,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
-	cmd.Flags().Uint64(FlagStateSyncRestoreHeight, 0, "Height of local statesync backup to restore")
+	cmd.Flags().Uint64(FlagStateSyncRestoreHeight, 0, "Height of local State Sync backup to lazy restore (restore based on local snapshots)")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -247,9 +247,17 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	return WaitForQuitSignals()
 }
 
-func restoreLocalSnapshot(ctx *Context, app types.Application, ssRestoreHeight uint64) error {
-	ctx.Logger.Info(fmt.Sprintf("Local Statesync Restore Snapshot With Height: %d", ssRestoreHeight))
-	ctx.Config.StateSync.RestoreHeight = ssRestoreHeight // Should be a one-shot command
+// lazyLoadLocalSnapshot attempts to restore one of the operator's local State Sync
+// snapshots based on the provided State Sync snapshot height, ssRestoreHeight. This
+// should be executed when an operator already has State Sync enabled and does not want
+// to directly rely on the State Sync mechanism via the P2P network. Instead, we load state
+// based on the existing local snapshots. An error is returned if the snapshot does not exist
+// or fails to load.
+func lazyLoadLocalSnapshot(ctx *Context, app types.Application, ssRestoreHeight uint64) error {
+	ctx.Logger.Info("Local State Sync restore snapshot", "height", ssRestoreHeight)
+
+	// StateSync.RestoreHeight  triggers tendermint to restore store and block state
+	ctx.Config.StateSync.RestoreHeight = ssRestoreHeight
 
 	ctx.Logger.Info("Searching local snapshots")
 	resp := app.ListSnapshots(abci.RequestListSnapshots{})
@@ -258,10 +266,9 @@ func restoreLocalSnapshot(ctx *Context, app types.Application, ssRestoreHeight u
 	}
 	var snapshot *abci.Snapshot
 	for i, s := range resp.Snapshots {
-		//fmt.Printf("%+v", s)
-		ctx.Logger.Info(fmt.Sprintf("Found Local Snapshot #%d) Height %d", i, s.Height))
+		ctx.Logger.Info("Found local State Sync snapshot", "snapshot", i, "height", s.Height)
 		if ssRestoreHeight == s.Height {
-			ctx.Logger.Info(fmt.Sprintf("Restoring Selected Local Snapshot #%d) Height %d", i, s.Height))
+			ctx.Logger.Info("Restoring selected local State Sync snapshot", "snapshot", i, "height", s.Height)
 			snapshot = s
 		}
 	}
@@ -284,9 +291,9 @@ func restoreLocalSnapshot(ctx *Context, app types.Application, ssRestoreHeight u
 			Chunk: respChunk.Chunk,
 		})
 		if applyRes.Result != abci.ResponseApplySnapshotChunk_ACCEPT {
-			ctx.Logger.Info(fmt.Sprintf("Local snapshot chunk %d apply fail: %v", index, applyRes))
+			ctx.Logger.Error("Local State Sync snapshot chunk apply Fail", "snapshot", index, "reason", applyRes)
 		} else {
-			ctx.Logger.Info(fmt.Sprintf("Local snapshot chunk %d apply ok", index))
+			ctx.Logger.Info("Local State Sync snapshot chunk apply OK", "snapshot", index)
 		}
 
 	}
@@ -371,7 +378,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			// no restore height specified
 			ctx.Logger.Debug("**** No local snapshot restore height specified")
 		} else {
-			restoreLocalSnapshot(ctx, app, ssRestoreHeight)
+			lazyLoadLocalSnapshot(ctx, app, ssRestoreHeight)
 		}
 
 		ctx.Logger.Info("starting node with ABCI Tendermint in-process")

@@ -15,13 +15,14 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
-type AppConfigService struct {
+// AppQueryService implements the cosmos.app.v1alpha1.Query service
+type AppQueryService struct {
 	appv1alpha1.UnimplementedQueryServer
 	appConfig *appv1alpha1.Config
 	files     *descriptorpb.FileDescriptorSet
 }
 
-func NewAppConfigService(appConfig *appv1alpha1.Config) (*AppConfigService, error) {
+func NewAppQueryService(appConfig *appv1alpha1.Config) (*AppQueryService, error) {
 	fds := &descriptorpb.FileDescriptorSet{}
 
 	// load gogo proto file descriptors
@@ -56,11 +57,11 @@ func NewAppConfigService(appConfig *appv1alpha1.Config) (*AppConfigService, erro
 		return true
 	})
 
-	return &AppConfigService{appConfig: appConfig, files: fds}, nil
+	return &AppQueryService{appConfig: appConfig, files: fds}, nil
 }
 
-func (a *AppConfigService) Config(context.Context, *appv1alpha1.QueryConfigRequest) (*appv1alpha1.QueryConfigResponse, error) {
+func (a *AppQueryService) Config(context.Context, *appv1alpha1.QueryConfigRequest) (*appv1alpha1.QueryConfigResponse, error) {
 	return &appv1alpha1.QueryConfigResponse{Config: a.appConfig}, nil
 }
 
-var _ appv1alpha1.QueryServer = &AppConfigService{}
+var _ appv1alpha1.QueryServer = &AppQueryService{}

@@ -19,6 +19,7 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
+// ReflectionService implements the cosmos.reflection.v1 service.
 type ReflectionService struct {
 	reflectionv1.UnimplementedReflectionServiceServer
 	files *descriptorpb.FileDescriptorSet

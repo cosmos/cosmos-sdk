@@ -9,13 +9,13 @@ import (
 )
 
 func (a *App) registerRuntimeServices() error {
-	appConfigSvc, err := services.NewAppConfigService(a.appConfig)
+	appConfigSvc, err := services.NewAppQueryService(a.appConfig)
 	if err != nil {
 		return err
 	}
 	appv1alpha1.RegisterQueryServer(a.GRPCQueryRouter(), appConfigSvc)
 
-	autocliv1.RegisterQueryServer(a.GRPCQueryRouter(), services.NewAutocliService(a.appModules))
+	autocliv1.RegisterQueryServer(a.GRPCQueryRouter(), services.NewAutoCLIQueryService(a.appModules))
 
 	reflectionSvc, err := services.NewReflectionService()
 	if err != nil {

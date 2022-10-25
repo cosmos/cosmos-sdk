@@ -77,7 +77,7 @@ import (
 
 "context"
 "github.com/coinbase/rosetta-sdk-go/types"
-"github.com/cosmos/cosmos-sdk/rosetta/lib"
+"cosmossdk.io/tools/rosetta/lib"
 )
 
 // CustomClient embeds the standard cosmos client
@@ -103,7 +103,7 @@ Example:
 
 ```go
 package custom_errors
-import crgerrs "github.com/cosmos/cosmos-sdk/rosetta/lib/errors"
+import crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
 
 var customErrRetriable = true
 var CustomError = crgerrs.RegisterError(100, "custom message", customErrRetriable, "description")

@@ -80,3 +80,26 @@ gating 9's selection by rule 1.
 
 ### Case 3 - Priority ties
 
+| Sender | Nonce | Priority |
+|--------|-------|----------|
+| A      | 0     | 5        |
+| A      | 1     | 99       |
+| B      | 0     | 5        |
+| B      | 1     | 20       |
+
+```mermaid
+graph LR
+    subgraph Sender A
+    5a[5]-->99
+    end
+    subgraph Sender B
+    5b[5]-->20
+    99-->5b
+    5a-->5b
+    end
+```
+
+Mempool order: [5, 99, 5, 20]
+
+This case shows how priority ties are handled.  Tx(priority=5 sender=A) is prioritized before tx(priority=5, sender=B) 
+because of the transactions following them, tx (priority=99) must be selected before tx(priority=20) by rule 2.

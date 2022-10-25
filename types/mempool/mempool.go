@@ -2,7 +2,6 @@ package mempool
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -40,15 +39,3 @@ type Mempool interface {
 var ErrTxNotFound = errors.New("tx not found in mempool")
 
 type Factory func() Mempool
-
-func IsEmpty(mempool Mempool) error {
-	smp, ok := mempool.(*nonceMempool)
-	if ok {
-		if smp.txQueue.Len() != 0 {
-			return fmt.Errorf("mempool is not empty")
-		}
-		return nil
-	}
-
-	return fmt.Errorf("unknown mempool type")
-}

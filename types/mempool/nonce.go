@@ -73,8 +73,9 @@ func (sp nonceMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 	for currentTx != nil {
 		mempoolTx := currentTx.Value.(Tx)
 
-		selectedTxs = append(selectedTxs, mempoolTx)
-		if txBytes += mempoolTx.Size(); txBytes >= maxBytes {
+		if txBytes += mempoolTx.Size(); txBytes <= maxBytes {
+			selectedTxs = append(selectedTxs, mempoolTx)
+		} else {
 			return selectedTxs, nil
 		}
 		currentTx = currentTx.Next()

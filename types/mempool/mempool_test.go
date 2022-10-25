@@ -361,8 +361,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 			}
 
 			require.Equal(t, tt.order, txOrder)
-
-			require.NoError(t, mempool.IsEmpty(pool))
+			require.Equal(t, 0, pool.CountTx())
 		})
 	}
 }

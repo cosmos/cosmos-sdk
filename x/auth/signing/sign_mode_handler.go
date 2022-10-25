@@ -21,6 +21,7 @@ type SignModeHandler interface {
 	GetSignBytes(mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error)
 }
 
+// SignerData is the specific information needed to sign a transaction that generally
 // isn't included in the transaction body itself
 type SignerData struct {
 	// The address of the signer.

@@ -1140,8 +1140,18 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 			commitID = store.Commit()
 		}
 
-		storeType := store.GetStoreType()
-		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory {
+	for key, store := range storeMap {
+		last := store.LastCommitID()
+
+		// If a commit event execution is interrupted, a new iavl store's version will be larger than the rootmulti's metadata, when the block is replayed, we should avoid committing that iavl store again.
+		var commitID types.CommitID
+		if last.Version >= version {
+			last.Version = version
+			commitID = last
+		} else {
+			commitID = store.Commit()
+		}
+		if store.GetStoreType() == types.StoreTypeTransient {
 			continue
 		}
 

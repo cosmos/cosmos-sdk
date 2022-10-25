@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## Bug Fixes
 
 * (x/auth/tx) [#12474](https://github.com/cosmos/cosmos-sdk/pull/12474) Remove condition in GetTxsEvent that disallowed multiple equal signs, which would break event queries with base64 strings (i.e. query by signature).
+* (store) [#13530](https://github.com/cosmos/cosmos-sdk/pull/13530) Fix app-hash mismatch if upgrade migration commit is interrupted.
 
 ## [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) - 2022-10-20
 

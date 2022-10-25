@@ -12,6 +12,7 @@ import (
 
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -27,6 +28,7 @@ import (
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"cosmossdk.io/simapp"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -37,7 +39,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -1616,11 +1617,11 @@ func (suite *IntegrationTestSuite) TestGetAllSendEnabledEntries() {
 }
 
 type mockSubspace struct {
-	ps banktypes.Params
+	ps types.Params
 }
 
 func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
-	*ps.(*banktypes.Params) = ms.ps
+	*ps.(*types.Params) = ms.ps
 }
 
 func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
@@ -1632,7 +1633,7 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 		suite.T().Run(fmt.Sprintf("default %t does not change", def), func(t *testing.T) {
 			legacySubspace := func(ps types.Params) mockSubspace {
 				return mockSubspace{ps: ps}
-			}(banktypes.NewParams(def))
+			}(types.NewParams(def))
 			migrator := keeper.NewMigrator(bankKeeper, legacySubspace)
 			require.NoError(t, migrator.Migrate3to4(ctx))
 			actual := bankKeeper.GetParams(ctx)
@@ -1651,7 +1652,7 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 		suite.T().Run(fmt.Sprintf("default %t send enabled info moved to store", def), func(t *testing.T) {
 			legacySubspace := func(ps types.Params) mockSubspace {
 				return mockSubspace{ps: ps}
-			}(banktypes.NewParams(def))
+			}(types.NewParams(def))
 			migrator := keeper.NewMigrator(bankKeeper, legacySubspace)
 			require.NoError(t, migrator.Migrate3to4(ctx))
 			newParams := bankKeeper.GetParams(ctx)

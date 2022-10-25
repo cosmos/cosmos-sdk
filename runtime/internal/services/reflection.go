@@ -79,13 +79,18 @@ func (r ReflectionService) FileDescriptors(_ context.Context, request *reflectio
 
 	n := len(r.files.File)
 	offset := int(pagination.Offset)
+	if offset >= n {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid offset")
+	}
+
 	limit := int(pagination.Limit)
-	if offset >= n || offset+limit >= n {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid limit and offset")
+	extent := offset + limit
+	if extent > n {
+		extent = n
 	}
 
 	return &reflectionv1.FileDescriptorsResponse{
-		File: r.files.File[offset : offset+limit],
+		File: r.files.File[offset:extent],
 		Pagination: &queryv1beta1.PageResponse{
 			Total: uint64(n),
 		},

@@ -3,9 +3,10 @@ package runtime
 import (
 	"testing"
 
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"github.com/cosmos/gogoproto/proto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"gotest.tools/v3/assert"
@@ -30,7 +31,8 @@ import (
 type fixture struct {
 	ctx               sdk.Context
 	appQueryClient    appv1alpha1.QueryClient
-	autocliInfoClient autocliv1.RemoteInfoServiceClient
+	autocliInfoClient autocliv1.QueryClient
+	reflectionClient  reflectionv1.ReflectionServiceClient
 }
 
 func initFixture(t assert.TestingT) *fixture {
@@ -57,7 +59,8 @@ func initFixture(t assert.TestingT) *fixture {
 		Ctx:             f.ctx,
 	}
 	f.appQueryClient = appv1alpha1.NewQueryClient(queryHelper)
-	f.autocliInfoClient = autocliv1.NewRemoteInfoServiceClient(queryHelper)
+	f.autocliInfoClient = autocliv1.NewQueryClient(queryHelper)
+	f.reflectionClient = reflectionv1.NewReflectionServiceClient(queryHelper)
 
 	return f
 }
@@ -86,16 +89,16 @@ func TestQueryAppConfig(t *testing.T) {
 	}
 }
 
-func TestQueryFileDescriptorSet(t *testing.T) {
+func TestReflectionService(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	res, err := f.appQueryClient.FileDescriptorSet(f.ctx, &appv1alpha1.QueryFileDescriptorSetRequest{})
+	res, err := f.reflectionClient.FileDescriptors(f.ctx, &reflectionv1.FileDescriptorsRequest{})
 	assert.NilError(t, err)
-	assert.Assert(t, res != nil && res.Files != nil)
+	assert.Assert(t, res != nil && res.File != nil)
 
 	fdMap := map[string]*descriptorpb.FileDescriptorProto{}
-	for _, descriptorProto := range res.Files.File {
+	for _, descriptorProto := range res.File {
 		fdMap[*descriptorProto.Name] = descriptorProto
 	}
 

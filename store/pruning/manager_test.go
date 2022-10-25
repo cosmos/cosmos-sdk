@@ -11,9 +11,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	db "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/pruning"
-	"github.com/cosmos/cosmos-sdk/pruning/mock"
-	"github.com/cosmos/cosmos-sdk/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/pruning"
+	"github.com/cosmos/cosmos-sdk/store/pruning/mock"
+	"github.com/cosmos/cosmos-sdk/store/pruning/types"
 )
 
 const dbErr = "db error"

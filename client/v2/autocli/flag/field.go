@@ -62,7 +62,6 @@ func (b *Builder) addFieldFlag(ctx context.Context, flagSet *pflag.FlagSet, fiel
 	var val HasValue
 	if field.IsList() {
 		val = bindSimpleListFlag(flagSet, field.Kind(), name, shorthand, usage)
-
 	} else {
 		val = bindSimpleFlag(flagSet, field.Kind(), name, shorthand, usage)
 	}

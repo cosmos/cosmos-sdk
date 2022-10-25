@@ -170,7 +170,7 @@ func isValueEmpty(msg protoreflect.Message, fd protoreflect.FieldDescriptor, v p
 	return proto.Equal(emptyMsg.Interface(), msgWithValue.Interface())
 }
 
-// getHash gets the hash or raw bytes to be signed over.
+// getHash gets the hash of raw bytes to be signed over.
 func getHash(bodyBz, authInfoBz []byte) string {
 	bodyLen, authInfoLen := make([]byte, 8), make([]byte, 8)
 	binary.BigEndian.PutUint64(bodyLen, uint64(len(bodyBz)))

@@ -3,7 +3,7 @@ module cosmossdk.io/core
 go 1.19
 
 require (
-	cosmossdk.io/api v0.2.1
+	cosmossdk.io/api v0.2.2
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.3
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
@@ -14,7 +14,7 @@ require (
 )
 
 require (
-	github.com/cosmos/gogoproto v1.4.1 // indirect
+	github.com/cosmos/gogoproto v1.4.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect

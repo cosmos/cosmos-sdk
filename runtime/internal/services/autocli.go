@@ -1,17 +1,19 @@
 package services
 
 import (
+	"context"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/core/appmodule"
 )
 
-type autocliService struct {
-	autocliv1.UnimplementedRemoteInfoServiceServer
+type AutocliService struct {
+	autocliv1.UnimplementedQueryServer
 
 	moduleOptions map[string]*autocliv1.ModuleOptions
 }
 
-func newAutocliService(appModules map[string]appmodule.AppModule) *autocliService {
+func NewAutocliService(appModules map[string]appmodule.AppModule) *AutocliService {
 	moduleOptions := map[string]*autocliv1.ModuleOptions{}
 	for modName, mod := range appModules {
 		if autoCliMod, ok := mod.(interface {
@@ -20,15 +22,15 @@ func newAutocliService(appModules map[string]appmodule.AppModule) *autocliServic
 			moduleOptions[modName] = autoCliMod.AutoCLIOptions()
 		}
 	}
-	return &autocliService{
+	return &AutocliService{
 		moduleOptions: moduleOptions,
 	}
 }
 
-func (a autocliService) AppOptions(context.Context, *autocliv1.AppOptionsRequest) (*autocliv1.AppOptionsResponse, error) {
+func (a AutocliService) AppOptions(context.Context, *autocliv1.AppOptionsRequest) (*autocliv1.AppOptionsResponse, error) {
 	return &autocliv1.AppOptionsResponse{
 		ModuleOptions: a.moduleOptions,
 	}, nil
 }
 
-var _ autocliv1.RemoteInfoServiceServer = &autocliService{}
+var _ autocliv1.QueryServer = &AutocliService{}

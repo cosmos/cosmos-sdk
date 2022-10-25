@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -83,16 +82,14 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load(loadLatest bool) error {
-	a.configurator = module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
-	a.ModuleManager.RegisterServices(a.configurator)
-
-	// register runtime services
-	appConfigSvc, err := newAppConfigService(a.appConfig)
+	// register runtime module services
+	err := a.registerRuntimeServices()
 	if err != nil {
 		return err
 	}
-	appv1alpha1.RegisterQueryServer(a.GRPCQueryRouter(), appConfigSvc)
-	autocliv1.RegisterRemoteInfoServiceServer(a.GRPCQueryRouter(), newAutocliService(a.appModules))
+
+	a.configurator = module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
+	a.ModuleManager.RegisterServices(a.configurator)
 
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)

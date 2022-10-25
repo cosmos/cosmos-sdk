@@ -3,7 +3,7 @@ module cosmossdk.io/client/v2
 go 1.19
 
 require (
-	cosmossdk.io/api v0.2.1
+	cosmossdk.io/api v0.2.2
 	cosmossdk.io/core v0.3.1
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/iancoleman/strcase v0.2.0

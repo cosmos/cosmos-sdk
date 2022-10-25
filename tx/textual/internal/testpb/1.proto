@@ -56,11 +56,3 @@ message Bar {
   string bar_id = 1;
   bytes data = 2;
 }
-
-message SignerData {
-  string address = 1;
-  string chain_id = 2;
-  uint64 account_number = 3;
-  uint64 sequence = 4;
-  google.protobuf.Any pub_key = 5;
-}

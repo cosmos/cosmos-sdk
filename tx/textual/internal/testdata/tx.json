@@ -44,7 +44,7 @@
 				"@type": "/cosmos.crypto.secp256k1.PubKey",
 				"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
 			},
-			"sequence": "2"
+			"sequence": 2
 		},
 		"screens": [
 			{ "text": "Chain ID: my-chain" },

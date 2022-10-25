@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
 	_ "cosmossdk.io/api/cosmos/crypto/ed25519"
@@ -17,13 +18,20 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/tx/signing"
-	"cosmossdk.io/tx/textual/internal/testpb"
 	"cosmossdk.io/tx/textual/valuerenderer"
 )
 
+type txJsonSignerData struct {
+	Address       string
+	ChainId       string
+	AccountNumber uint64
+	Sequence      uint64
+	PubKey        json.RawMessage
+}
+
 type txJsonTest struct {
 	Proto      json.RawMessage
-	SignerData json.RawMessage
+	SignerData txJsonSignerData
 	Error      bool
 	Screens    []valuerenderer.Screen
 }
@@ -39,16 +47,16 @@ func TestTxJsonTestcases(t *testing.T) {
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 
-			var testSignerData testpb.SignerData
-			err = protojson.Unmarshal(tc.SignerData, &testSignerData)
+			var pk anypb.Any
+			err = protojson.Unmarshal(tc.SignerData.PubKey, &pk)
 			require.NoError(t, err)
 
 			signerData := signing.SignerData{
-				Address:       testSignerData.Address,
-				ChainID:       testSignerData.ChainId,
-				AccountNumber: testSignerData.AccountNumber,
-				Sequence:      testSignerData.Sequence,
-				PubKey:        testSignerData.PubKey,
+				Address:       tc.SignerData.Address,
+				ChainID:       tc.SignerData.ChainId,
+				AccountNumber: tc.SignerData.AccountNumber,
+				Sequence:      tc.SignerData.Sequence,
+				PubKey:        &pk,
 			}
 
 			tr := valuerenderer.NewTextual(EmptyCoinMetadataQuerier, signerData, []byte{02}, []byte{03})

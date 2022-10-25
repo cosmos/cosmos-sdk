@@ -45,7 +45,7 @@ graph TB
 
 Mempool order: [20, 15, 6, 8, 21]
 
-Sender A has 4 txs in the pool and sender B only 1.  tx(priority = 15) is selected before tx(priority = 21) even
+Sender A has 4 txs in the pool and sender B only 1.  tx(priority=15) is selected before tx(priority=21) even
 though it has a lower priority because it would violate either rule 1 or 2.
 
 ### Case 2
@@ -75,7 +75,7 @@ graph LR
 
 Mempool order: [6, 5, 8, 3, 5, 9]
 
-Although tx(priority = 9) has the highest global priority it is selected last.  This is due tx(priority = 3) 
+Although tx(priority=9) has the highest global priority it is selected last.  This is due tx(priority=3) 
 gating 9's selection by rule 1.
 
 ### Case 3 - Priority ties
@@ -101,5 +101,5 @@ graph LR
 
 Mempool order: [5, 99, 5, 20]
 
-This case shows how priority ties are handled.  Tx(priority=5 sender=A) is prioritized before tx(priority=5, sender=B) 
-because of the transactions following them, tx (priority=99) must be selected before tx(priority=20) by rule 2.
+This case shows how priority ties are handled.  Tx(priority=5, sender=A) is prioritized before tx(priority=5, sender=B) 
+because of the transactions following them, tx(priority=99) must be selected before tx(priority=20) by rule 2.

@@ -93,7 +93,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		validator.DelegatorShares = sdk.NewDecFromInt(simState.InitialStake)
 		validator.Commission = commission
 
-		delegation := types.NewDelegation(simState.Accounts[i].Address, valAddr, sdk.NewDecFromInt(simState.InitialStake))
+		delegation := types.NewDelegation(simState.Accounts[i].Address, valAddr, sdk.NewDecFromInt(simState.InitialStake), false)
 
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)

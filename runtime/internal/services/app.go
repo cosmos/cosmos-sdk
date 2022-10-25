@@ -1,4 +1,4 @@
-package runtime
+package services
 
 import (
 	"bytes"
@@ -6,23 +6,22 @@ import (
 	"context"
 	"io"
 
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"
-
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 )
 
-type appConfigService struct {
+type AppConfigService struct {
 	appv1alpha1.UnimplementedQueryServer
 	appConfig *appv1alpha1.Config
 	files     *descriptorpb.FileDescriptorSet
 }
 
-func newAppConfigService(appConfig *appv1alpha1.Config) (*appConfigService, error) {
+func NewAppConfigService(appConfig *appv1alpha1.Config) (*AppConfigService, error) {
 	fds := &descriptorpb.FileDescriptorSet{}
 
 	// load gogo proto file descriptors
@@ -57,13 +56,11 @@ func newAppConfigService(appConfig *appv1alpha1.Config) (*appConfigService, erro
 		return true
 	})
 
-	return &appConfigService{appConfig: appConfig, files: fds}, nil
+	return &AppConfigService{appConfig: appConfig, files: fds}, nil
 }
 
-func (a *appConfigService) Config(context.Context, *appv1alpha1.QueryConfigRequest) (*appv1alpha1.QueryConfigResponse, error) {
+func (a *AppConfigService) Config(context.Context, *appv1alpha1.QueryConfigRequest) (*appv1alpha1.QueryConfigResponse, error) {
 	return &appv1alpha1.QueryConfigResponse{Config: a.appConfig}, nil
 }
 
-func (a *appConfigService) FileDescriptorSet(context.Context, *appv1alpha1.QueryFileDescriptorSetRequest) (*appv1alpha1.QueryFileDescriptorSetResponse, error) {
-	return &appv1alpha1.QueryFileDescriptorSetResponse{Files: a.files}, nil
-}
+var _ appv1alpha1.QueryServer = &AppConfigService{}

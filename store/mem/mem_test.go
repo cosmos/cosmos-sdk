@@ -3,8 +3,8 @@ package mem_test
 import (
 	"testing"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 
 	"github.com/stretchr/testify/require"
 

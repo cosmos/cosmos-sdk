@@ -1021,6 +1021,8 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
 	diff, _ := balRes.Balances.SafeSub(intialCoins...)
+	fmt.Println(diff.AmountOf(s.cfg.BondDenom).Int64())
+	fmt.Println(sendTokens.Amount.Int64())
 	s.Require().Equal(sendTokens.Amount, diff.AmountOf(s.cfg.BondDenom))
 
 	// Generate multisig transaction.

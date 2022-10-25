@@ -27,5 +27,3 @@ require (
 	golang.org/x/text v0.3.8 // indirect
 	google.golang.org/genproto v0.0.0-20221014213838-99cd37c6964a // indirect
 )
-
-replace cosmossdk.io/core => ../../core

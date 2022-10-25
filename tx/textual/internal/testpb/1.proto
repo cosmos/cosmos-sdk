@@ -2,6 +2,7 @@ syntax = "proto3";
 
 option go_package = "cosmossdk.io/tx/textual/internal/testpb";
 
+import "google/protobuf/any.proto";
 import "google/protobuf/descriptor.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -38,4 +39,12 @@ message A {
   fixed64        FIXED64  = 109;
   double         DOUBLE   = 110;
   map<string, A> MAP      = 111;
+}
+
+message SignerData {
+  string address = 1;
+  string chain_id = 2;
+  uint64 account_number = 3;
+  uint64 sequence = 4;
+  google.protobuf.Any pub_key = 5;
 }

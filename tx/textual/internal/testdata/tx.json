@@ -26,12 +26,120 @@
 				}
 			}
 		},
-		"signer_data": {
-			"pubkey": {
+		"signerData": {
+			"chainId": "my-chain",
+			"pubKey": {
 				"@type": "/cosmos.crypto.secp256k1.PubKey",
 				"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
 			}
 		},
-		"text": "0 COSM"
+		"screens": [
+			{ "text": "Chain ID: my-chain" },
+			{ "text": "Account number: 0" },
+			{ "text": "Public key: TODO Any", "expert": true },
+			{ "text": "Fees: 5'000 uatom" },
+			{ "text": "Gas limit: 100'000", "expert": true }
+		]
+	},
+	{
+		"proto": {
+			"body": {
+				"messages": []
+			},
+			"auth_info": {
+				"signer_infos": [
+					{
+						"public_key": {
+							"@type": "/cosmos.crypto.secp256k1.PubKey",
+							"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+						},
+						"mode_info": { "single": { "mode": "SIGN_MODE_TEXTUAL" } },
+						"sequence": 2
+					},
+					{
+						"public_key": {
+							"@type": "/cosmos.crypto.multisig.LegacyAminoPubKey",
+							"threshold": 2,
+							"public_keys": [
+								{
+									"@type": "/cosmos.crypto.secp256k1.PubKey",
+									"key": "AldOvgv8dU9ZZzuhGydQD5FYreLhfhoBgrDKi8ZSTbCQ"
+								},
+								{
+									"@type": "/cosmos.crypto.secp256k1.PubKey",
+									"key": "AxUMR/GKoycWplR+2otzaQZ9zhHRQWJFt3h1bPg1ltha"
+								},
+								{
+									"@type": "/cosmos.crypto.secp256k1.PubKey",
+									"key": "AlI9yVj2Aejow6bYl2nTRylfU+9LjQLEl3keq0sERx9+"
+								},
+								{
+									"@type": "/cosmos.crypto.secp256k1.PubKey",
+									"key": "A0UvHPcvCCaIoFY9Ygh0Pxq9SZTAWtduOyinit/8uo+Q"
+								},
+								{
+									"@type": "/cosmos.crypto.secp256k1.PubKey",
+									"key": "As7R9fDUnwsUVLDr1cxspp+cY9UfXfUf7i9/w+N0EzKA"
+								}
+							]
+						},
+						"mode_info": {
+							"multi": {
+								"bitarray": {
+									"extra_bits_stored": 5,
+									"elems": "SA=="
+								},
+								"mode_infos": [
+									{
+										"single": {
+											"mode": "SIGN_MODE_LEGACY_AMINO_JSON"
+										}
+									},
+									{
+										"single": {
+											"mode": "SIGN_MODE_LEGACY_AMINO_JSON"
+										}
+									}
+								]
+							}
+						},
+						"sequence": "102"
+					}
+				],
+				"fee": {
+					"amount": [
+						{
+							"denom": "uatom",
+							"amount": "5000"
+						}
+					],
+					"gas_limit": 100000,
+					"payer": "cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45",
+					"granter": "cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45"
+				}
+			}
+		},
+		"signerData": {
+			"chainId": "my-chain",
+			"pubKey": {
+				"@type": "/cosmos.crypto.secp256k1.PubKey",
+				"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+			}
+		},
+		"screens": [
+			{ "text": "Chain ID: my-chain" },
+			{ "text": "Account number: 0" },
+			{ "text": "Public key: TODO Any", "expert": true },
+			{ "text": "Fees: 5'000 uatom" },
+			{
+				"text": "Fee payer: cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45",
+				"expert": true
+			},
+			{
+				"text": "Fee granter: cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45",
+				"expert": true
+			},
+			{ "text": "Gas limit: 100'000", "expert": true }
+		]
 	}
 ]

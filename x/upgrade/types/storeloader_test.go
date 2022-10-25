@@ -8,14 +8,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,15 +26,15 @@ func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*ba
 	}
 }
 
-func defaultLogger() log.Logger {
+func defaultLogger() tmlog.Logger {
 	return tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
-	rs := rootmulti.NewStore(db, log.NewNopLogger())
+	rs := rootmulti.NewStore(db, tmlog.NewNopLogger())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := sdk.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
+	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil) 
 	err := rs.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, int64(0), rs.LastCommitID().Version)
@@ -50,7 +49,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 }
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
-	rs := rootmulti.NewStore(db, log.NewNopLogger())
+	rs := rootmulti.NewStore(db, tmlog.NewNopLogger())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := sdk.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)

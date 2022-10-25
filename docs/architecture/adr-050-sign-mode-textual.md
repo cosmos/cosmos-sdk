@@ -229,7 +229,7 @@ When this option is set on a `Msg`, a registered function will transform the `Ms
 
 The `<unique algorithm identifier>` is a string convention chosen by the application developer and is used to identify the custom `Msg` renderer. For example, the documentation or specification of this custom algorithm can reference this identifier. This identifier CAN have a versioned suffix (e.g. `_v1`) to adapt for future changes (which would be consensus-breaking). We also recommend adding Protobuf comments to describe in human language the custom logic used.
 
-Moreover, the renderer must provide 2 functions: one for formatting from Protobuf to string, and one for parsing string to Protobuf. These 2 functions are provided by the application developer. To satisfy point #1, these 2 functions MUST be bijective with each other. Bijectivity of these 2 functions will not be checked by the SDK at runtime. However, we strongly recommend the application developer to include a comprehensive suite in their app repo to test bijectivity, as to not introduce security bugs.
+Moreover, the renderer must provide 2 functions: one for formatting from Protobuf to string, and one for parsing string to Protobuf. These 2 functions are provided by the application developer. To satisfy point #1, the parse function MUST be the inverse of the formatting function. This property will not be checked by the SDK at runtime. However, we strongly recommend the application developer to include a comprehensive suite in their app repo to test invertibility, as to not introduce security bugs.
 
 ### Require signing over the `TxBody` and `AuthInfo` raw bytes
 
@@ -244,7 +244,7 @@ where:
 - `HEX` is the hexadecimal representation of the bytes, all in capital letters, no `0x` prefix,
 - and `len()` is encoded as a Big-Endian uint64.
 
-This is to prevent transaction hash malleability. The point #1 about bijectivity assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could intercept a transaction, modify its transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL (by tweaking the byte ordering inside `body_bytes` or `auth_info_bytes`), and then submit it to Tendermint.
+This is to prevent transaction hash malleability. The point #1 about invertiblity assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could intercept a transaction, modify its transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL (by tweaking the byte ordering inside `body_bytes` or `auth_info_bytes`), and then submit it to Tendermint.
 
 By including this hash in the SIGN_MODE_TEXTUAL signing payload, we keep the same level of guarantees as [SIGN_MODE_DIRECT](./adr-020-protobuf-transaction-encoding.md).
 

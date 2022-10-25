@@ -103,3 +103,43 @@ Mempool order: [5, 99, 5, 20]
 
 This case shows how priority ties are handled.  Tx(priority=5, sender=A) is prioritized before tx(priority=5, sender=B) 
 because of the transactions following them, tx(priority=99) must be selected before tx(priority=20) by rule 2.
+
+### Case 4
+
+| Sender | Nonce | Priority |
+|--------|-------|----------|
+| A      | 0     | 10       |
+| A      | 1     | 15       |
+| A      | 2     | 30       |
+| A      | 3     | 6        |
+| B      | 0     | 8        |
+| B      | 1     | 20       |
+| B      | 3     | 4        |
+| C      | 0     | 2        |
+| C      | 3     | 7        |
+
+```mermaid
+graph LR
+    subgraph Sender A
+    10-->15
+    15-->30
+    30-->6
+    end
+    subgraph Sender B
+    8
+    8-->20
+    10-->8
+    30-->8
+    20-->4
+        20-->6
+
+    end
+    subgraph Sender C
+    2-->7
+    4-->2
+    end
+```
+
+Mempool order: [10, 15, 30, 8, 20, 6, 4, 2, 7]
+
+This case shows how the mempool handles a more complex graph with more priority edges between senders.

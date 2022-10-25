@@ -398,13 +398,14 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				require.NoError(t, err)
 			}
 
-			mempool.DebugPrintKeys(pool)
+			//mempool.DebugPrintKeys(pool)
 
 			orderedTxs, err := pool.Select(nil, 1000)
 			require.NoError(t, err)
 			var txOrder []int
 			for _, tx := range orderedTxs {
 				txOrder = append(txOrder, tx.(testTx).id)
+				fmt.Println(tx)
 			}
 			require.Equal(t, tt.order, txOrder)
 			require.NoError(t, validateOrder(orderedTxs))

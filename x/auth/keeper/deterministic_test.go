@@ -236,51 +236,6 @@ func (suite *DeterministicTestSuite) createAndReturnQueryClient(ak keeper.Accoun
 	return types.NewQueryClient(queryHelper)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCQueryBech32Prefix() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		prefix := rapid.StringMatching(`[a-zA-Z]+[1-9a-zA-Z]*`).Draw(t, "prefix")
-		ak := keeper.NewAccountKeeper(
-			suite.encCfg.Codec,
-			suite.key,
-			types.ProtoBaseAccount,
-			nil,
-			prefix,
-			types.NewModuleAddress("gov").String(),
-		)
-
-		queryClient := suite.createAndReturnQueryClient(ak)
-		req := &types.Bech32PrefixRequest{}
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, queryClient.Bech32Prefix, 0, true)
-	})
-
-	req := &types.Bech32PrefixRequest{}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Bech32Prefix, 0, false)
-}
-
-func (suite *DeterministicTestSuite) TestGRPCQueryAddressBytesToString() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		address := testdata.AddressGenerator(t).Draw(t, "address-bytes")
-
-		req := &types.AddressBytesToStringRequest{AddressBytes: address.Bytes()}
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AddressBytesToString, 0, true)
-	})
-
-	req := &types.AddressBytesToStringRequest{AddressBytes: addr.Bytes()}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AddressBytesToString, 0, false)
-}
-
-func (suite *DeterministicTestSuite) TestGRPCQueryAddressStringToBytes() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		address := testdata.AddressGenerator(t).Draw(t, "address-string")
-
-		req := &types.AddressStringToBytesRequest{AddressString: address.String()}
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AddressStringToBytes, 0, true)
-	})
-
-	req := &types.AddressStringToBytesRequest{AddressString: addr.String()}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AddressStringToBytes, 0, false)
-}
-
 func (suite *DeterministicTestSuite) setModuleAccounts(
 	ctx sdk.Context, ak keeper.AccountKeeper, maccs []string,
 ) []types.AccountI {

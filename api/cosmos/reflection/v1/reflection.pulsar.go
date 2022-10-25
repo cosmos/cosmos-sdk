@@ -16,25 +16,25 @@ import (
 )
 
 var (
-	md_QueryFileDescriptorsRequest            protoreflect.MessageDescriptor
-	fd_QueryFileDescriptorsRequest_pagination protoreflect.FieldDescriptor
+	md_FileDescriptorsRequest            protoreflect.MessageDescriptor
+	fd_FileDescriptorsRequest_pagination protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_reflection_v1_reflection_proto_init()
-	md_QueryFileDescriptorsRequest = File_cosmos_reflection_v1_reflection_proto.Messages().ByName("QueryFileDescriptorsRequest")
-	fd_QueryFileDescriptorsRequest_pagination = md_QueryFileDescriptorsRequest.Fields().ByName("pagination")
+	md_FileDescriptorsRequest = File_cosmos_reflection_v1_reflection_proto.Messages().ByName("FileDescriptorsRequest")
+	fd_FileDescriptorsRequest_pagination = md_FileDescriptorsRequest.Fields().ByName("pagination")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryFileDescriptorsRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_FileDescriptorsRequest)(nil)
 
-type fastReflection_QueryFileDescriptorsRequest QueryFileDescriptorsRequest
+type fastReflection_FileDescriptorsRequest FileDescriptorsRequest
 
-func (x *QueryFileDescriptorsRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryFileDescriptorsRequest)(x)
+func (x *FileDescriptorsRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_FileDescriptorsRequest)(x)
 }
 
-func (x *QueryFileDescriptorsRequest) slowProtoReflect() protoreflect.Message {
+func (x *FileDescriptorsRequest) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_reflection_v1_reflection_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -46,43 +46,43 @@ func (x *QueryFileDescriptorsRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryFileDescriptorsRequest_messageType fastReflection_QueryFileDescriptorsRequest_messageType
-var _ protoreflect.MessageType = fastReflection_QueryFileDescriptorsRequest_messageType{}
+var _fastReflection_FileDescriptorsRequest_messageType fastReflection_FileDescriptorsRequest_messageType
+var _ protoreflect.MessageType = fastReflection_FileDescriptorsRequest_messageType{}
 
-type fastReflection_QueryFileDescriptorsRequest_messageType struct{}
+type fastReflection_FileDescriptorsRequest_messageType struct{}
 
-func (x fastReflection_QueryFileDescriptorsRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryFileDescriptorsRequest)(nil)
+func (x fastReflection_FileDescriptorsRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_FileDescriptorsRequest)(nil)
 }
-func (x fastReflection_QueryFileDescriptorsRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryFileDescriptorsRequest)
+func (x fastReflection_FileDescriptorsRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_FileDescriptorsRequest)
 }
-func (x fastReflection_QueryFileDescriptorsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryFileDescriptorsRequest
+func (x fastReflection_FileDescriptorsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_FileDescriptorsRequest
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryFileDescriptorsRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryFileDescriptorsRequest
+func (x *fastReflection_FileDescriptorsRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_FileDescriptorsRequest
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryFileDescriptorsRequest) Type() protoreflect.MessageType {
-	return _fastReflection_QueryFileDescriptorsRequest_messageType
+func (x *fastReflection_FileDescriptorsRequest) Type() protoreflect.MessageType {
+	return _fastReflection_FileDescriptorsRequest_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryFileDescriptorsRequest) New() protoreflect.Message {
-	return new(fastReflection_QueryFileDescriptorsRequest)
+func (x *fastReflection_FileDescriptorsRequest) New() protoreflect.Message {
+	return new(fastReflection_FileDescriptorsRequest)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryFileDescriptorsRequest) Interface() protoreflect.ProtoMessage {
-	return (*QueryFileDescriptorsRequest)(x)
+func (x *fastReflection_FileDescriptorsRequest) Interface() protoreflect.ProtoMessage {
+	return (*FileDescriptorsRequest)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -90,10 +90,10 @@ func (x *fastReflection_QueryFileDescriptorsRequest) Interface() protoreflect.Pr
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryFileDescriptorsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_FileDescriptorsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Pagination != nil {
 		value := protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
-		if !f(fd_QueryFileDescriptorsRequest_pagination, value) {
+		if !f(fd_FileDescriptorsRequest_pagination, value) {
 			return
 		}
 	}
@@ -110,15 +110,15 @@ func (x *fastReflection_QueryFileDescriptorsRequest) Range(f func(protoreflect.F
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryFileDescriptorsRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_FileDescriptorsRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.reflection.v1.QueryFileDescriptorsRequest.pagination":
+	case "cosmos.reflection.v1.FileDescriptorsRequest.pagination":
 		return x.Pagination != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.QueryFileDescriptorsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.FileDescriptorsRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.reflection.v1.QueryFileDescriptorsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.reflection.v1.FileDescriptorsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -128,15 +128,15 @@ func (x *fastReflection_QueryFileDescriptorsRequest) Has(fd protoreflect.FieldDe
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryFileDescriptorsRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_FileDescriptorsRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.reflection.v1.QueryFileDescriptorsRequest.pagination":
+	case "cosmos.reflection.v1.FileDescriptorsRequest.pagination":
 		x.Pagination = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.QueryFileDescriptorsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.FileDescriptorsRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.reflection.v1.QueryFileDescriptorsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.reflection.v1.FileDescriptorsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -146,16 +146,16 @@ func (x *fastReflection_QueryFileDescriptorsRequest) Clear(fd protoreflect.Field
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryFileDescriptorsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_FileDescriptorsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.reflection.v1.QueryFileDescriptorsRequest.pagination":
+	case "cosmos.reflection.v1.FileDescriptorsRequest.pagination":
 		value := x.Pagination
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.QueryFileDescriptorsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.FileDescriptorsRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.reflection.v1.QueryFileDescriptorsRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.reflection.v1.FileDescriptorsRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -169,15 +169,15 @@ func (x *fastReflection_QueryFileDescriptorsRequest) Get(descriptor protoreflect
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryFileDescriptorsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_FileDescriptorsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.reflection.v1.QueryFileDescriptorsRequest.pagination":
+	case "cosmos.reflection.v1.FileDescriptorsRequest.pagination":
 		x.Pagination = value.Message().Interface().(*v1beta1.PageRequest)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.QueryFileDescriptorsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.FileDescriptorsRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.reflection.v1.QueryFileDescriptorsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.reflection.v1.FileDescriptorsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -191,44 +191,44 @@ func (x *fastReflection_QueryFileDescriptorsRequest) Set(fd protoreflect.FieldDe
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryFileDescriptorsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_FileDescriptorsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.reflection.v1.QueryFileDescriptorsRequest.pagination":
+	case "cosmos.reflection.v1.FileDescriptorsRequest.pagination":
 		if x.Pagination == nil {
 			x.Pagination = new(v1beta1.PageRequest)
 		}
 		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.QueryFileDescriptorsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.FileDescriptorsRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.reflection.v1.QueryFileDescriptorsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.reflection.v1.FileDescriptorsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryFileDescriptorsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_FileDescriptorsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.reflection.v1.QueryFileDescriptorsRequest.pagination":
+	case "cosmos.reflection.v1.FileDescriptorsRequest.pagination":
 		m := new(v1beta1.PageRequest)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.QueryFileDescriptorsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.FileDescriptorsRequest"))
 		}
-		panic(fmt.Errorf("message cosmos.reflection.v1.QueryFileDescriptorsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.reflection.v1.FileDescriptorsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryFileDescriptorsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_FileDescriptorsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.reflection.v1.QueryFileDescriptorsRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.reflection.v1.FileDescriptorsRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -236,7 +236,7 @@ func (x *fastReflection_QueryFileDescriptorsRequest) WhichOneof(d protoreflect.O
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryFileDescriptorsRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_FileDescriptorsRequest) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -247,7 +247,7 @@ func (x *fastReflection_QueryFileDescriptorsRequest) GetUnknown() protoreflect.R
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryFileDescriptorsRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_FileDescriptorsRequest) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -259,7 +259,7 @@ func (x *fastReflection_QueryFileDescriptorsRequest) SetUnknown(fields protorefl
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryFileDescriptorsRequest) IsValid() bool {
+func (x *fastReflection_FileDescriptorsRequest) IsValid() bool {
 	return x != nil
 }
 
@@ -269,9 +269,9 @@ func (x *fastReflection_QueryFileDescriptorsRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryFileDescriptorsRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_FileDescriptorsRequest) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryFileDescriptorsRequest)
+		x := input.Message.Interface().(*FileDescriptorsRequest)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -297,7 +297,7 @@ func (x *fastReflection_QueryFileDescriptorsRequest) ProtoMethods() *protoiface.
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryFileDescriptorsRequest)
+		x := input.Message.Interface().(*FileDescriptorsRequest)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -341,7 +341,7 @@ func (x *fastReflection_QueryFileDescriptorsRequest) ProtoMethods() *protoiface.
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryFileDescriptorsRequest)
+		x := input.Message.Interface().(*FileDescriptorsRequest)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -373,10 +373,10 @@ func (x *fastReflection_QueryFileDescriptorsRequest) ProtoMethods() *protoiface.
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryFileDescriptorsRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: FileDescriptorsRequest: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryFileDescriptorsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: FileDescriptorsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -450,79 +450,79 @@ func (x *fastReflection_QueryFileDescriptorsRequest) ProtoMethods() *protoiface.
 	}
 }
 
-var _ protoreflect.List = (*_QueryFileDescriptorsResponse_1_list)(nil)
+var _ protoreflect.List = (*_FileDescriptorsResponse_1_list)(nil)
 
-type _QueryFileDescriptorsResponse_1_list struct {
+type _FileDescriptorsResponse_1_list struct {
 	list *[]*descriptorpb.FileDescriptorProto
 }
 
-func (x *_QueryFileDescriptorsResponse_1_list) Len() int {
+func (x *_FileDescriptorsResponse_1_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_QueryFileDescriptorsResponse_1_list) Get(i int) protoreflect.Value {
+func (x *_FileDescriptorsResponse_1_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_QueryFileDescriptorsResponse_1_list) Set(i int, value protoreflect.Value) {
+func (x *_FileDescriptorsResponse_1_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*descriptorpb.FileDescriptorProto)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_QueryFileDescriptorsResponse_1_list) Append(value protoreflect.Value) {
+func (x *_FileDescriptorsResponse_1_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*descriptorpb.FileDescriptorProto)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_QueryFileDescriptorsResponse_1_list) AppendMutable() protoreflect.Value {
+func (x *_FileDescriptorsResponse_1_list) AppendMutable() protoreflect.Value {
 	v := new(descriptorpb.FileDescriptorProto)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_QueryFileDescriptorsResponse_1_list) Truncate(n int) {
+func (x *_FileDescriptorsResponse_1_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_QueryFileDescriptorsResponse_1_list) NewElement() protoreflect.Value {
+func (x *_FileDescriptorsResponse_1_list) NewElement() protoreflect.Value {
 	v := new(descriptorpb.FileDescriptorProto)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_QueryFileDescriptorsResponse_1_list) IsValid() bool {
+func (x *_FileDescriptorsResponse_1_list) IsValid() bool {
 	return x.list != nil
 }
 
 var (
-	md_QueryFileDescriptorsResponse            protoreflect.MessageDescriptor
-	fd_QueryFileDescriptorsResponse_file       protoreflect.FieldDescriptor
-	fd_QueryFileDescriptorsResponse_pagination protoreflect.FieldDescriptor
+	md_FileDescriptorsResponse            protoreflect.MessageDescriptor
+	fd_FileDescriptorsResponse_file       protoreflect.FieldDescriptor
+	fd_FileDescriptorsResponse_pagination protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_reflection_v1_reflection_proto_init()
-	md_QueryFileDescriptorsResponse = File_cosmos_reflection_v1_reflection_proto.Messages().ByName("QueryFileDescriptorsResponse")
-	fd_QueryFileDescriptorsResponse_file = md_QueryFileDescriptorsResponse.Fields().ByName("file")
-	fd_QueryFileDescriptorsResponse_pagination = md_QueryFileDescriptorsResponse.Fields().ByName("pagination")
+	md_FileDescriptorsResponse = File_cosmos_reflection_v1_reflection_proto.Messages().ByName("FileDescriptorsResponse")
+	fd_FileDescriptorsResponse_file = md_FileDescriptorsResponse.Fields().ByName("file")
+	fd_FileDescriptorsResponse_pagination = md_FileDescriptorsResponse.Fields().ByName("pagination")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryFileDescriptorsResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_FileDescriptorsResponse)(nil)
 
-type fastReflection_QueryFileDescriptorsResponse QueryFileDescriptorsResponse
+type fastReflection_FileDescriptorsResponse FileDescriptorsResponse
 
-func (x *QueryFileDescriptorsResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryFileDescriptorsResponse)(x)
+func (x *FileDescriptorsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_FileDescriptorsResponse)(x)
 }
 
-func (x *QueryFileDescriptorsResponse) slowProtoReflect() protoreflect.Message {
+func (x *FileDescriptorsResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_reflection_v1_reflection_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -534,43 +534,43 @@ func (x *QueryFileDescriptorsResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryFileDescriptorsResponse_messageType fastReflection_QueryFileDescriptorsResponse_messageType
-var _ protoreflect.MessageType = fastReflection_QueryFileDescriptorsResponse_messageType{}
+var _fastReflection_FileDescriptorsResponse_messageType fastReflection_FileDescriptorsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_FileDescriptorsResponse_messageType{}
 
-type fastReflection_QueryFileDescriptorsResponse_messageType struct{}
+type fastReflection_FileDescriptorsResponse_messageType struct{}
 
-func (x fastReflection_QueryFileDescriptorsResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryFileDescriptorsResponse)(nil)
+func (x fastReflection_FileDescriptorsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_FileDescriptorsResponse)(nil)
 }
-func (x fastReflection_QueryFileDescriptorsResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryFileDescriptorsResponse)
+func (x fastReflection_FileDescriptorsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_FileDescriptorsResponse)
 }
-func (x fastReflection_QueryFileDescriptorsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryFileDescriptorsResponse
+func (x fastReflection_FileDescriptorsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_FileDescriptorsResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryFileDescriptorsResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryFileDescriptorsResponse
+func (x *fastReflection_FileDescriptorsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_FileDescriptorsResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryFileDescriptorsResponse) Type() protoreflect.MessageType {
-	return _fastReflection_QueryFileDescriptorsResponse_messageType
+func (x *fastReflection_FileDescriptorsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_FileDescriptorsResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryFileDescriptorsResponse) New() protoreflect.Message {
-	return new(fastReflection_QueryFileDescriptorsResponse)
+func (x *fastReflection_FileDescriptorsResponse) New() protoreflect.Message {
+	return new(fastReflection_FileDescriptorsResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryFileDescriptorsResponse) Interface() protoreflect.ProtoMessage {
-	return (*QueryFileDescriptorsResponse)(x)
+func (x *fastReflection_FileDescriptorsResponse) Interface() protoreflect.ProtoMessage {
+	return (*FileDescriptorsResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -578,16 +578,16 @@ func (x *fastReflection_QueryFileDescriptorsResponse) Interface() protoreflect.P
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryFileDescriptorsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_FileDescriptorsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if len(x.File) != 0 {
-		value := protoreflect.ValueOfList(&_QueryFileDescriptorsResponse_1_list{list: &x.File})
-		if !f(fd_QueryFileDescriptorsResponse_file, value) {
+		value := protoreflect.ValueOfList(&_FileDescriptorsResponse_1_list{list: &x.File})
+		if !f(fd_FileDescriptorsResponse_file, value) {
 			return
 		}
 	}
 	if x.Pagination != nil {
 		value := protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
-		if !f(fd_QueryFileDescriptorsResponse_pagination, value) {
+		if !f(fd_FileDescriptorsResponse_pagination, value) {
 			return
 		}
 	}
@@ -604,17 +604,17 @@ func (x *fastReflection_QueryFileDescriptorsResponse) Range(f func(protoreflect.
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryFileDescriptorsResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_FileDescriptorsResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.reflection.v1.QueryFileDescriptorsResponse.file":
+	case "cosmos.reflection.v1.FileDescriptorsResponse.file":
 		return len(x.File) != 0
-	case "cosmos.reflection.v1.QueryFileDescriptorsResponse.pagination":
+	case "cosmos.reflection.v1.FileDescriptorsResponse.pagination":
 		return x.Pagination != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.QueryFileDescriptorsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.FileDescriptorsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.reflection.v1.QueryFileDescriptorsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.reflection.v1.FileDescriptorsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -624,17 +624,17 @@ func (x *fastReflection_QueryFileDescriptorsResponse) Has(fd protoreflect.FieldD
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryFileDescriptorsResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_FileDescriptorsResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.reflection.v1.QueryFileDescriptorsResponse.file":
+	case "cosmos.reflection.v1.FileDescriptorsResponse.file":
 		x.File = nil
-	case "cosmos.reflection.v1.QueryFileDescriptorsResponse.pagination":
+	case "cosmos.reflection.v1.FileDescriptorsResponse.pagination":
 		x.Pagination = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.QueryFileDescriptorsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.FileDescriptorsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.reflection.v1.QueryFileDescriptorsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.reflection.v1.FileDescriptorsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -644,22 +644,22 @@ func (x *fastReflection_QueryFileDescriptorsResponse) Clear(fd protoreflect.Fiel
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryFileDescriptorsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_FileDescriptorsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.reflection.v1.QueryFileDescriptorsResponse.file":
+	case "cosmos.reflection.v1.FileDescriptorsResponse.file":
 		if len(x.File) == 0 {
-			return protoreflect.ValueOfList(&_QueryFileDescriptorsResponse_1_list{})
+			return protoreflect.ValueOfList(&_FileDescriptorsResponse_1_list{})
 		}
-		listValue := &_QueryFileDescriptorsResponse_1_list{list: &x.File}
+		listValue := &_FileDescriptorsResponse_1_list{list: &x.File}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.reflection.v1.QueryFileDescriptorsResponse.pagination":
+	case "cosmos.reflection.v1.FileDescriptorsResponse.pagination":
 		value := x.Pagination
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.QueryFileDescriptorsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.FileDescriptorsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.reflection.v1.QueryFileDescriptorsResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.reflection.v1.FileDescriptorsResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -673,19 +673,19 @@ func (x *fastReflection_QueryFileDescriptorsResponse) Get(descriptor protoreflec
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryFileDescriptorsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_FileDescriptorsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.reflection.v1.QueryFileDescriptorsResponse.file":
+	case "cosmos.reflection.v1.FileDescriptorsResponse.file":
 		lv := value.List()
-		clv := lv.(*_QueryFileDescriptorsResponse_1_list)
+		clv := lv.(*_FileDescriptorsResponse_1_list)
 		x.File = *clv.list
-	case "cosmos.reflection.v1.QueryFileDescriptorsResponse.pagination":
+	case "cosmos.reflection.v1.FileDescriptorsResponse.pagination":
 		x.Pagination = value.Message().Interface().(*v1beta1.PageResponse)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.QueryFileDescriptorsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.FileDescriptorsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.reflection.v1.QueryFileDescriptorsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.reflection.v1.FileDescriptorsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -699,53 +699,53 @@ func (x *fastReflection_QueryFileDescriptorsResponse) Set(fd protoreflect.FieldD
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryFileDescriptorsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_FileDescriptorsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.reflection.v1.QueryFileDescriptorsResponse.file":
+	case "cosmos.reflection.v1.FileDescriptorsResponse.file":
 		if x.File == nil {
 			x.File = []*descriptorpb.FileDescriptorProto{}
 		}
-		value := &_QueryFileDescriptorsResponse_1_list{list: &x.File}
+		value := &_FileDescriptorsResponse_1_list{list: &x.File}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.reflection.v1.QueryFileDescriptorsResponse.pagination":
+	case "cosmos.reflection.v1.FileDescriptorsResponse.pagination":
 		if x.Pagination == nil {
 			x.Pagination = new(v1beta1.PageResponse)
 		}
 		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.QueryFileDescriptorsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.FileDescriptorsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.reflection.v1.QueryFileDescriptorsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.reflection.v1.FileDescriptorsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryFileDescriptorsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_FileDescriptorsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.reflection.v1.QueryFileDescriptorsResponse.file":
+	case "cosmos.reflection.v1.FileDescriptorsResponse.file":
 		list := []*descriptorpb.FileDescriptorProto{}
-		return protoreflect.ValueOfList(&_QueryFileDescriptorsResponse_1_list{list: &list})
-	case "cosmos.reflection.v1.QueryFileDescriptorsResponse.pagination":
+		return protoreflect.ValueOfList(&_FileDescriptorsResponse_1_list{list: &list})
+	case "cosmos.reflection.v1.FileDescriptorsResponse.pagination":
 		m := new(v1beta1.PageResponse)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.QueryFileDescriptorsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.reflection.v1.FileDescriptorsResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.reflection.v1.QueryFileDescriptorsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.reflection.v1.FileDescriptorsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryFileDescriptorsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_FileDescriptorsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.reflection.v1.QueryFileDescriptorsResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.reflection.v1.FileDescriptorsResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -753,7 +753,7 @@ func (x *fastReflection_QueryFileDescriptorsResponse) WhichOneof(d protoreflect.
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryFileDescriptorsResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_FileDescriptorsResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -764,7 +764,7 @@ func (x *fastReflection_QueryFileDescriptorsResponse) GetUnknown() protoreflect.
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryFileDescriptorsResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_FileDescriptorsResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -776,7 +776,7 @@ func (x *fastReflection_QueryFileDescriptorsResponse) SetUnknown(fields protoref
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryFileDescriptorsResponse) IsValid() bool {
+func (x *fastReflection_FileDescriptorsResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -786,9 +786,9 @@ func (x *fastReflection_QueryFileDescriptorsResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryFileDescriptorsResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_FileDescriptorsResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryFileDescriptorsResponse)
+		x := input.Message.Interface().(*FileDescriptorsResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -820,7 +820,7 @@ func (x *fastReflection_QueryFileDescriptorsResponse) ProtoMethods() *protoiface
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryFileDescriptorsResponse)
+		x := input.Message.Interface().(*FileDescriptorsResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -880,7 +880,7 @@ func (x *fastReflection_QueryFileDescriptorsResponse) ProtoMethods() *protoiface
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryFileDescriptorsResponse)
+		x := input.Message.Interface().(*FileDescriptorsResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -912,10 +912,10 @@ func (x *fastReflection_QueryFileDescriptorsResponse) ProtoMethods() *protoiface
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryFileDescriptorsResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: FileDescriptorsResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryFileDescriptorsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: FileDescriptorsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -1036,8 +1036,8 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// QueryFileDescriptorsRequest is the Query/FileDescriptorSet request type.
-type QueryFileDescriptorsRequest struct {
+// FileDescriptorsRequest is the Query/FileDescriptors request type.
+type FileDescriptorsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -1046,8 +1046,8 @@ type QueryFileDescriptorsRequest struct {
 	Pagination *v1beta1.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *QueryFileDescriptorsRequest) Reset() {
-	*x = QueryFileDescriptorsRequest{}
+func (x *FileDescriptorsRequest) Reset() {
+	*x = FileDescriptorsRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_reflection_v1_reflection_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1055,26 +1055,26 @@ func (x *QueryFileDescriptorsRequest) Reset() {
 	}
 }
 
-func (x *QueryFileDescriptorsRequest) String() string {
+func (x *FileDescriptorsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryFileDescriptorsRequest) ProtoMessage() {}
+func (*FileDescriptorsRequest) ProtoMessage() {}
 
-// Deprecated: Use QueryFileDescriptorsRequest.ProtoReflect.Descriptor instead.
-func (*QueryFileDescriptorsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use FileDescriptorsRequest.ProtoReflect.Descriptor instead.
+func (*FileDescriptorsRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_reflection_v1_reflection_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *QueryFileDescriptorsRequest) GetPagination() *v1beta1.PageRequest {
+func (x *FileDescriptorsRequest) GetPagination() *v1beta1.PageRequest {
 	if x != nil {
 		return x.Pagination
 	}
 	return nil
 }
 
-// QueryFileDescriptorsResponse is the Query/FileDescriptorSet response type.
-type QueryFileDescriptorsResponse struct {
+// FileDescriptorsResponse is the Query/FileDescriptors response type.
+type FileDescriptorsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -1085,8 +1085,8 @@ type QueryFileDescriptorsResponse struct {
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *QueryFileDescriptorsResponse) Reset() {
-	*x = QueryFileDescriptorsResponse{}
+func (x *FileDescriptorsResponse) Reset() {
+	*x = FileDescriptorsResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_reflection_v1_reflection_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1094,25 +1094,25 @@ func (x *QueryFileDescriptorsResponse) Reset() {
 	}
 }
 
-func (x *QueryFileDescriptorsResponse) String() string {
+func (x *FileDescriptorsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryFileDescriptorsResponse) ProtoMessage() {}
+func (*FileDescriptorsResponse) ProtoMessage() {}
 
-// Deprecated: Use QueryFileDescriptorsResponse.ProtoReflect.Descriptor instead.
-func (*QueryFileDescriptorsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use FileDescriptorsResponse.ProtoReflect.Descriptor instead.
+func (*FileDescriptorsResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_reflection_v1_reflection_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *QueryFileDescriptorsResponse) GetFile() []*descriptorpb.FileDescriptorProto {
+func (x *FileDescriptorsResponse) GetFile() []*descriptorpb.FileDescriptorProto {
 	if x != nil {
 		return x.File
 	}
 	return nil
 }
 
-func (x *QueryFileDescriptorsResponse) GetPagination() *v1beta1.PageResponse {
+func (x *FileDescriptorsResponse) GetPagination() *v1beta1.PageResponse {
 	if x != nil {
 		return x.Pagination
 	}
@@ -1132,47 +1132,46 @@ var file_cosmos_reflection_v1_reflection_proto_rawDesc = []byte{
 	0x2f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x2a, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2f,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x65, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x46, 0x69, 0x6c, 0x65, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x73,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22,
-	0xa1, 0x01, 0x0a, 0x1c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x46, 0x69, 0x6c, 0x65, 0x44, 0x65, 0x73,
-	0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x38, 0x0a, 0x04, 0x66, 0x69, 0x6c, 0x65, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x24,
-	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
-	0x2e, 0x46, 0x69, 0x6c, 0x65, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x52, 0x04, 0x66, 0x69, 0x6c, 0x65, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61,
-	0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x32, 0x94, 0x01, 0x0a, 0x11, 0x52, 0x65, 0x66, 0x6c, 0x65, 0x63, 0x74, 0x69,
-	0x6f, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x7f, 0x0a, 0x0f, 0x46, 0x69, 0x6c,
-	0x65, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x73, 0x12, 0x31, 0x2e, 0x63,
+	0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x60, 0x0a, 0x16, 0x46, 0x69, 0x6c, 0x65,
+	0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a,
+	0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x9c, 0x01, 0x0a, 0x17, 0x46,
+	0x69, 0x6c, 0x65, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x38, 0x0a, 0x04, 0x66, 0x69, 0x6c, 0x65, 0x18, 0x01,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x46, 0x69, 0x6c, 0x65, 0x44, 0x65, 0x73, 0x63, 0x72,
+	0x69, 0x70, 0x74, 0x6f, 0x72, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x52, 0x04, 0x66, 0x69, 0x6c, 0x65,
+	0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
+	0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70,
+	0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x32, 0x8a, 0x01, 0x0a, 0x11, 0x52, 0x65,
+	0x66, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12,
+	0x75, 0x0a, 0x0f, 0x46, 0x69, 0x6c, 0x65, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f,
+	0x72, 0x73, 0x12, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x72, 0x65, 0x66, 0x6c,
+	0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x69, 0x6c, 0x65, 0x44, 0x65,
+	0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x72, 0x65, 0x66, 0x6c, 0x65, 0x63,
+	0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x69, 0x6c, 0x65, 0x44, 0x65, 0x73, 0x63,
+	0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x05, 0x88, 0xe7, 0xb0, 0x2a, 0x00, 0x42, 0xd1, 0x01, 0x0a, 0x18, 0x63, 0x6f, 0x6d, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x72, 0x65, 0x66, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e,
-	0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x46, 0x69, 0x6c, 0x65, 0x44, 0x65, 0x73,
-	0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x72, 0x65, 0x66, 0x6c, 0x65, 0x63, 0x74,
-	0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x46, 0x69, 0x6c, 0x65,
-	0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x05, 0x88, 0xe7, 0xb0, 0x2a, 0x00, 0x42, 0xd1, 0x01, 0x0a, 0x18, 0x63,
-	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x72, 0x65, 0x66, 0x6c, 0x65, 0x63,
-	0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x42, 0x0f, 0x52, 0x65, 0x66, 0x6c, 0x65, 0x63, 0x74,
-	0x69, 0x6f, 0x6e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x32, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2f, 0x72, 0x65, 0x66, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x76,
-	0x31, 0x3b, 0x72, 0x65, 0x66, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x76, 0x31, 0xa2, 0x02,
-	0x03, 0x43, 0x52, 0x58, 0xaa, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x52, 0x65,
-	0x66, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x14, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x52, 0x65, 0x66, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x5c,
-	0x56, 0x31, 0xe2, 0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x52, 0x65, 0x66, 0x6c,
-	0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a,
-	0x52, 0x65, 0x66, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x2e, 0x76, 0x31, 0x42, 0x0f, 0x52, 0x65, 0x66, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x50,
+	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x32, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
+	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
+	0x72, 0x65, 0x66, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x76, 0x31, 0x3b, 0x72, 0x65,
+	0x66, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x52, 0x58,
+	0xaa, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x52, 0x65, 0x66, 0x6c, 0x65, 0x63,
+	0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x5c, 0x52, 0x65, 0x66, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x5c, 0x56, 0x31, 0xe2, 0x02,
+	0x20, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x52, 0x65, 0x66, 0x6c, 0x65, 0x63, 0x74, 0x69,
+	0x6f, 0x6e, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0xea, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x52, 0x65, 0x66, 0x6c,
+	0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -1189,18 +1188,18 @@ func file_cosmos_reflection_v1_reflection_proto_rawDescGZIP() []byte {
 
 var file_cosmos_reflection_v1_reflection_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_cosmos_reflection_v1_reflection_proto_goTypes = []interface{}{
-	(*QueryFileDescriptorsRequest)(nil),      // 0: cosmos.reflection.v1.QueryFileDescriptorsRequest
-	(*QueryFileDescriptorsResponse)(nil),     // 1: cosmos.reflection.v1.QueryFileDescriptorsResponse
+	(*FileDescriptorsRequest)(nil),           // 0: cosmos.reflection.v1.FileDescriptorsRequest
+	(*FileDescriptorsResponse)(nil),          // 1: cosmos.reflection.v1.FileDescriptorsResponse
 	(*v1beta1.PageRequest)(nil),              // 2: cosmos.base.query.v1beta1.PageRequest
 	(*descriptorpb.FileDescriptorProto)(nil), // 3: google.protobuf.FileDescriptorProto
 	(*v1beta1.PageResponse)(nil),             // 4: cosmos.base.query.v1beta1.PageResponse
 }
 var file_cosmos_reflection_v1_reflection_proto_depIdxs = []int32{
-	2, // 0: cosmos.reflection.v1.QueryFileDescriptorsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	3, // 1: cosmos.reflection.v1.QueryFileDescriptorsResponse.file:type_name -> google.protobuf.FileDescriptorProto
-	4, // 2: cosmos.reflection.v1.QueryFileDescriptorsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	0, // 3: cosmos.reflection.v1.ReflectionService.FileDescriptors:input_type -> cosmos.reflection.v1.QueryFileDescriptorsRequest
-	1, // 4: cosmos.reflection.v1.ReflectionService.FileDescriptors:output_type -> cosmos.reflection.v1.QueryFileDescriptorsResponse
+	2, // 0: cosmos.reflection.v1.FileDescriptorsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	3, // 1: cosmos.reflection.v1.FileDescriptorsResponse.file:type_name -> google.protobuf.FileDescriptorProto
+	4, // 2: cosmos.reflection.v1.FileDescriptorsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	0, // 3: cosmos.reflection.v1.ReflectionService.FileDescriptors:input_type -> cosmos.reflection.v1.FileDescriptorsRequest
+	1, // 4: cosmos.reflection.v1.ReflectionService.FileDescriptors:output_type -> cosmos.reflection.v1.FileDescriptorsResponse
 	4, // [4:5] is the sub-list for method output_type
 	3, // [3:4] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -1215,7 +1214,7 @@ func file_cosmos_reflection_v1_reflection_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_cosmos_reflection_v1_reflection_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryFileDescriptorsRequest); i {
+			switch v := v.(*FileDescriptorsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1227,7 +1226,7 @@ func file_cosmos_reflection_v1_reflection_proto_init() {
 			}
 		}
 		file_cosmos_reflection_v1_reflection_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryFileDescriptorsResponse); i {
+			switch v := v.(*FileDescriptorsResponse); i {
 			case 0:
 				return &v.state
 			case 1:

@@ -119,7 +119,7 @@ because of the transactions following them, tx(priority=99) must be selected bef
 | C      | 3     | 7        |
 
 ```mermaid
-graph LR
+graph TD
     subgraph Sender A
     10-->15
     15-->30

@@ -38,7 +38,11 @@
 			{ "text": "Account number: 0" },
 			{ "text": "Public key: TODO Any", "expert": true },
 			{ "text": "Fees: 5'000 uatom" },
-			{ "text": "Gas limit: 100'000", "expert": true }
+			{ "text": "Gas limit: 100'000", "expert": true },
+			{
+				"text": "Hash of raw bytes: 57dc30954c0f3e91cf1c9d64e79c1333033414d9941827330126593bb66511f1",
+				"expert": true
+			}
 		]
 	},
 	{

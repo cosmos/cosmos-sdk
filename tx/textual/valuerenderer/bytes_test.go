@@ -22,7 +22,7 @@ func TestBytesJsonTestCases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier, signing.SignerData{})
+	textual := valuerenderer.NewTextual(nil, signing.SignerData{}, nil, nil)
 
 	for _, tc := range testcases {
 		data, err := base64.StdEncoding.DecodeString(tc.base64)

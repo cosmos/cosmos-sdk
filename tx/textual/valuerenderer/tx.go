@@ -2,6 +2,9 @@ package valuerenderer
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
@@ -127,6 +130,11 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		screens = append(screens, newScreens...)
 	}
 
+	screens = append(screens, Screen{
+		Text:   fmt.Sprintf("Hash of raw bytes: %s", getHash(vr.tr.bodyBz, vr.tr.authInfoBz)),
+		Expert: true,
+	})
+
 	return screens, nil
 }
 
@@ -180,6 +188,23 @@ func isValueEmpty(msg protoreflect.Message, fd protoreflect.FieldDescriptor, v p
 	emptyMsg := msg.New()
 
 	return proto.Equal(emptyMsg.Interface(), msgWithValue.Interface())
+}
+
+// getHash gets the hash or raw bytes to be signed over.
+func getHash(bodyBz, authInfoBz []byte) string {
+	bodyLen, authInfoLen := make([]byte, 8), make([]byte, 8)
+	binary.BigEndian.PutUint64(bodyLen, uint64(len(bodyBz)))
+	binary.BigEndian.PutUint64(authInfoLen, uint64(len(authInfoBz)))
+
+	b := make([]byte, 16+len(bodyBz)+len(authInfoBz))
+	copy(b[:8], bodyLen)
+	copy(b[8:8+len(bodyBz)], bodyBz)
+	copy(b[8+len(bodyBz):16+len(bodyBz)], authInfoLen)
+	copy(b[16+len(bodyBz):], authInfoBz)
+
+	h := sha256.Sum256(b)
+
+	return hex.EncodeToString(h[:])
 }
 
 // Parse implements the ValueRenderer interface.

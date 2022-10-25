@@ -39,12 +39,25 @@ type Textual struct {
 	messages map[protoreflect.FullName]ValueRenderer
 	// signerData defines information on the signer
 	signerData signing.SignerData
+
+	// bodyBz represents the protobuf encoding of TxBody. This should be encoding
+	// from the client using TxRaw if the tx was decoded from the wire
+	bodyBz []byte
+
+	// authInfoBz represents the protobuf encoding of TxBody. This should be encoding
+	// from the client using TxRaw if the tx was decoded from the wire
+	authInfoBz []byte
 }
 
 // NewTextual returns a new Textual which provides
 // value renderers.
-func NewTextual(q CoinMetadataQueryFn, signerData signing.SignerData) Textual {
-	t := Textual{coinMetadataQuerier: q, signerData: signerData}
+func NewTextual(q CoinMetadataQueryFn, signerData signing.SignerData, bodyBz, authInfoBz []byte) Textual {
+	t := Textual{
+		coinMetadataQuerier: q,
+		signerData:          signerData,
+		bodyBz:              bodyBz,
+		authInfoBz:          authInfoBz,
+	}
 	t.init()
 	return t
 }

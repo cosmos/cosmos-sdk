@@ -19,7 +19,7 @@ func TestDecJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := valuerenderer.NewTextual(nil, signing.SignerData{})
+	textual := valuerenderer.NewTextual(nil, signing.SignerData{}, nil, nil)
 
 	for _, tc := range testcases {
 		tc := tc

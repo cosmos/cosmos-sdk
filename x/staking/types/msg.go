@@ -37,6 +37,7 @@ var (
 	_ sdk.Msg                            = &MsgTokenizeShares{}
 	_ sdk.Msg                            = &MsgRedeemTokensforShares{}
 	_ sdk.Msg                            = &MsgTransferTokenizeShareRecord{}
+	_ sdk.Msg                            = &MsgExemptDelegation{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -526,6 +527,47 @@ func (msg MsgTransferTokenizeShareRecord) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.NewOwner); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid new owner address: %s", err)
+	}
+
+	return nil
+}
+
+// NewMsgExemptDelegation creates a new MsgExemptDelegation instance.
+func NewMsgExemptDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgExemptDelegation {
+	return &MsgExemptDelegation{
+		DelegatorAddress: delAddr.String(),
+		ValidatorAddress: valAddr.String(),
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) Type() string { return TypeMsgExemptDelegation }
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) GetSigners() []sdk.AccAddress {
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delegator}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
 	return nil

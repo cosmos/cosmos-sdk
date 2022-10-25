@@ -106,7 +106,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
-	delegation := stakingtypes.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
+	delegation := stakingtypes.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares, false)
 	suite.stakingKeeper.SetDelegation(suite.ctx, delegation)
 	suite.distrKeeper.SetDelegatorStartingInfo(suite.ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 

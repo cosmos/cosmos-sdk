@@ -66,6 +66,11 @@ service Msg {
   // delegated coins from a delegator to a validator.
   // Since: cosmos-sdk 0.47
   rpc ExemptDelegation(MsgExemptDelegation) returns (MsgExemptDelegationResponse);
+
+  // UnbondValidator defines a method for performing the status transition for a validator
+  // from bonded to unbonded
+  // Since: cosmos-sdk 0.47
+  rpc UnbondValidator(MsgUnbondValidator) returns (MsgUnbondValidatorResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -268,3 +273,13 @@ message MsgExemptDelegation {
 
 // Since: cosmos-sdk 0.47
 message MsgExemptDelegationResponse {}
+
+// MsgUnbondValidator defines a method for performing the status transition for
+// a validator from bonded to unbonded
+// Since: cosmos-sdk 0.47
+message MsgUnbondValidator {
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+}
+
+// Since: cosmos-sdk 0.47
+message MsgUnbondValidatorResponse {}

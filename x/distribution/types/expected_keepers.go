@@ -49,7 +49,10 @@ type StakingKeeper interface {
 	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool))
 
+	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
+
 	GetAllSDKDelegations(ctx sdk.Context) []stakingtypes.Delegation
+	GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation
 
 	GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAddress) (tokenizeShareRecords []stakingtypes.TokenizeShareRecord)
 	GetTokenizeShareRecord(ctx sdk.Context, id uint64) (tokenizeShareRecord stakingtypes.TokenizeShareRecord, err error)

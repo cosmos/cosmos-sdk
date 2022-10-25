@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+// nonceMempool is a mempool that keeps transactions sorted by nonce.  txs with the lowest nonce globally
+// are prioritized.  txs with the same nonce are prioritized by sender address.
 type nonceMempool struct {
 	txQueue *huandu.SkipList
 }
@@ -18,6 +20,7 @@ type txKey struct {
 	sender string
 }
 
+// txKeyLessNonce compares two txKeys by nonce then by sender address.
 func txKeyLessNonce(a, b any) int {
 	keyA := a.(txKey)
 	keyB := b.(txKey)
@@ -38,6 +41,8 @@ func NewNonceMempool() Mempool {
 	return sp
 }
 
+// Insert adds a tx to the mempool.  It returns an error if the tx does not have at least one signer.
+// priority is ignored.
 func (sp nonceMempool) Insert(_ sdk.Context, tx Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
@@ -55,7 +60,9 @@ func (sp nonceMempool) Insert(_ sdk.Context, tx Tx) error {
 	return nil
 }
 
-func (sp nonceMempool) Select(txs [][]byte, maxBytes int64) ([]Tx, error) {
+// Select returns txs from the mempool with the lowest nonce globally first.  A sender's txs will always be returned
+// in nonce order.
+func (sp nonceMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
 	var (
 		txBytes     int64
 		selectedTxs []Tx
@@ -74,10 +81,13 @@ func (sp nonceMempool) Select(txs [][]byte, maxBytes int64) ([]Tx, error) {
 	return selectedTxs, nil
 }
 
+// CountTx returns the number of txs in the mempool.
 func (sp nonceMempool) CountTx() int {
 	return sp.txQueue.Len()
 }
 
+// Remove removes a tx from the mempool.  It returns an error if the tx does not have at least one signer or the tx
+// was not found in the pool.
 func (sp nonceMempool) Remove(tx Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {

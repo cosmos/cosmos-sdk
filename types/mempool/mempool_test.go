@@ -218,7 +218,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 21, n: 2, a: sb},
 			},
-			order: []int{2, 1, 0, 3, 4},
+			order: []int{3, 2, 4, 1, 0},
 		},
 		{
 			txs: []txSpec{
@@ -228,7 +228,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 8, n: 2, a: sb},
 			},
-			order: []int{2, 1, 0, 3, 4},
+			order: []int{3, 2, 4, 1, 0},
 		},
 		{
 			txs: []txSpec{
@@ -240,7 +240,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 6, a: sa, n: 3},
 				{p: 4, a: sb, n: 3},
 			},
-			order: []int{3, 2, 0, 5, 4, 1, 6},
+			order: []int{4, 3, 1, 2, 0, 6, 5},
 		},
 		{
 			txs: []txSpec{
@@ -254,7 +254,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 2, a: sc, n: 0},
 				{p: 7, a: sc, n: 3},
 			},
-			order: []int{3, 2, 0, 5, 4, 1, 6, 7, 8},
+			order: []int{4, 3, 7, 1, 2, 0, 6, 5, 8},
 		},
 		{
 			txs: []txSpec{
@@ -263,7 +263,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 5, n: 1, a: sb},
 				{p: 99, n: 2, a: sb},
 			},
-			order: []int{2, 3, 0, 1},
+			order: []int{2, 0, 3, 1},
 		},
 		{
 			// if all txs have the same priority they will be ordered lexically sender address, and nonce with the
@@ -279,7 +279,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 10, n: 5, a: sb},
 				{p: 10, n: 6, a: sb},
 			},
-			order: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+			order: []int{3, 4, 5, 6, 7, 8, 0, 1, 2},
 		},
 		/*
 			The next 4 tests are different permutations of the same set:
@@ -300,7 +300,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 5, n: 1, a: sb},
 				{p: 99, n: 2, a: sb},
 			},
-			order: []int{2, 3, 0, 1},
+			order: []int{2, 0, 3, 1},
 		},
 		{
 			txs: []txSpec{
@@ -311,7 +311,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 99, n: 2, a: sc},
 				{p: 5, n: 1, a: sc},
 			},
-			order: []int{5, 4, 3, 2, 0, 1},
+			order: []int{3, 0, 5, 2, 1, 4},
 		},
 		{
 			txs: []txSpec{
@@ -322,7 +322,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 5, n: 1, a: sc},
 				{p: 99, n: 2, a: sc},
 			},
-			order: []int{4, 5, 2, 3, 0, 1},
+			order: []int{2, 0, 4, 3, 1, 5},
 		},
 		{
 			txs: []txSpec{
@@ -333,7 +333,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 5, n: 1, a: sb},
 				{p: 99, n: 2, a: sb},
 			},
-			order: []int{4, 5, 2, 3, 0, 1},
+			order: []int{4, 0, 2, 5, 1, 3},
 		},
 	}
 	for i, tt := range tests {

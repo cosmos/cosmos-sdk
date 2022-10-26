@@ -19,6 +19,11 @@ class ABCIListenerServiceStub(object):
                 request_serializer=abci__listener__pb2.ListenRequest.SerializeToString,
                 response_deserializer=abci__listener__pb2.Empty.FromString,
                 )
+        self.Stream = channel.stream_unary(
+                '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/Stream',
+                request_serializer=abci__listener__pb2.ListenRequest.SerializeToString,
+                response_deserializer=abci__listener__pb2.Empty.FromString,
+                )
 
 
 class ABCIListenerServiceServicer(object):
@@ -30,11 +35,22 @@ class ABCIListenerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Stream(self, request_iterator, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ABCIListenerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Listen': grpc.unary_unary_rpc_method_handler(
                     servicer.Listen,
+                    request_deserializer=abci__listener__pb2.ListenRequest.FromString,
+                    response_serializer=abci__listener__pb2.Empty.SerializeToString,
+            ),
+            'Stream': grpc.stream_unary_rpc_method_handler(
+                    servicer.Stream,
                     request_deserializer=abci__listener__pb2.ListenRequest.FromString,
                     response_serializer=abci__listener__pb2.Empty.SerializeToString,
             ),
@@ -60,6 +76,23 @@ class ABCIListenerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/Listen',
+            abci__listener__pb2.ListenRequest.SerializeToString,
+            abci__listener__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Stream(request_iterator,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.stream_unary(request_iterator, target, '/cosmos.sdk.grpc.abci.v1.ABCIListenerService/Stream',
             abci__listener__pb2.ListenRequest.SerializeToString,
             abci__listener__pb2.Empty.FromString,
             options, channel_credentials,

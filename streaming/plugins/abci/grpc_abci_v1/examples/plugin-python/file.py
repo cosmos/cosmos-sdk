@@ -22,7 +22,14 @@ class ABCIListenerServiceServicer(abci_listener_pb2_grpc.ABCIListenerServiceServ
         line = "{}:::{}\n".format(request.block_height, request.data)
         with open(filename, 'a') as f:
             f.write(line)
+        return abci_listener_pb2.Empty()
 
+    def Stream(self, request_iterator, context):
+        filename = "{}/{}.{}".format(self.out_dir, "state_change", 'txt').lower()
+        with open(filename, 'a') as f:
+            for request in request_iterator:
+                line = "{}:::{}\n".format(request.block_height, request.data)
+                f.write(line)
         return abci_listener_pb2.Empty()
 
 def serve():

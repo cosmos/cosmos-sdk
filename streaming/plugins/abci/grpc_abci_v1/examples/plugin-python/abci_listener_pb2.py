@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13\x61\x62\x63i_listener.proto\x12\x17\x63osmos.sdk.grpc.abci.v1\"G\n\rListenRequest\x12\x14\n\x0c\x62lock_height\x18\x01 \x01(\x03\x12\x12\n\nevent_type\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\"\x07\n\x05\x45mpty2g\n\x13\x41\x42\x43IListenerService\x12P\n\x06Listen\x12&.cosmos.sdk.grpc.abci.v1.ListenRequest\x1a\x1e.cosmos.sdk.grpc.abci.v1.EmptyBx\n\x1fnetwork.cosmos.sdk.grpc.abci.v1B\x11\x41\x62\x63iListenerProtoP\x01Z@github.com/cosmos/cosmos-sdk/streaming/plugins/abci/grpc_abci_v1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13\x61\x62\x63i_listener.proto\x12\x17\x63osmos.sdk.grpc.abci.v1\"G\n\rListenRequest\x12\x14\n\x0c\x62lock_height\x18\x01 \x01(\x03\x12\x12\n\nevent_type\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\"\x07\n\x05\x45mpty2\xbb\x01\n\x13\x41\x42\x43IListenerService\x12P\n\x06Listen\x12&.cosmos.sdk.grpc.abci.v1.ListenRequest\x1a\x1e.cosmos.sdk.grpc.abci.v1.Empty\x12R\n\x06Stream\x12&.cosmos.sdk.grpc.abci.v1.ListenRequest\x1a\x1e.cosmos.sdk.grpc.abci.v1.Empty(\x01\x42x\n\x1fnetwork.cosmos.sdk.grpc.abci.v1B\x11\x41\x62\x63iListenerProtoP\x01Z@github.com/cosmos/cosmos-sdk/streaming/plugins/abci/grpc_abci_v1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'abci_listener_pb2', globals())
@@ -25,6 +25,6 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _LISTENREQUEST._serialized_end=119
   _EMPTY._serialized_start=121
   _EMPTY._serialized_end=128
-  _ABCILISTENERSERVICE._serialized_start=130
-  _ABCILISTENERSERVICE._serialized_end=233
+  _ABCILISTENERSERVICE._serialized_start=131
+  _ABCILISTENERSERVICE._serialized_end=318
 # @@protoc_insertion_point(module_scope)

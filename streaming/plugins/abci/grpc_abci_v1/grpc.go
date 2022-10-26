@@ -3,20 +3,21 @@ package grpc_abci_v1
 import (
 	"context"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"io"
 )
 
 var (
-	_ baseapp.ABCIListener  = (*GRPCClient)(nil)
-	_ baseapp.StoreListener = (*GRPCClient)(nil)
-	_ ABCIListenerPlugin    = (*GRPCClient)(nil)
+	_ baseapp.ABCIListener = (*GRPCClient)(nil)
+	_ ABCIListenerPlugin   = (*GRPCClient)(nil)
 )
 
 // GRPCClient is an implementation of the ABCIListener and ABCIListenerPlugin interfaces that talks over RPC.
 type GRPCClient struct {
-	client ABCIListenerServiceClient
+	client        ABCIListenerServiceClient
+	stream        ABCIListenerService_StreamClient
+	stopNodeOnErr bool
 }
 
 func (m *GRPCClient) Listen(ctx context.Context, blockHeight int64, eventType string, data []byte) error {
@@ -82,14 +83,24 @@ func (m *GRPCClient) ListenDeliverTx(ctx types.Context, req abci.RequestDeliverT
 	return nil
 }
 
-func (m *GRPCClient) ListenStoreKVPair(ctx types.Context, pair store.StoreKVPair) error {
-	pairbz, err := pair.Marshal()
+func (m *GRPCClient) OnStoreCommit(ctx types.Context, changeSet [][]byte) error {
+	stream, err := m.client.Stream(ctx)
 	if err != nil {
 		return err
 	}
-	if err := m.Listen(ctx, ctx.BlockHeight(), "STATE_CHANGE", pairbz); err != nil {
+	for _, data := range changeSet {
+		if err = stream.Send(&ListenRequest{
+			BlockHeight: ctx.BlockHeight(),
+			EventType:   "STATE_CHANGE",
+			Data:        data,
+		}); err != nil {
+			return err
+		}
+	}
+	if _, err := stream.CloseAndRecv(); err != nil && err != io.EOF {
 		return err
 	}
+
 	return nil
 }
 
@@ -101,4 +112,20 @@ type GRPCServer struct {
 
 func (m *GRPCServer) Listen(ctx context.Context, req *ListenRequest) (*Empty, error) {
 	return &Empty{}, m.Impl.Listen(ctx, req.BlockHeight, req.EventType, req.Data)
+}
+
+func (m *GRPCServer) Stream(stream ABCIListenerService_StreamServer) error {
+	for {
+		recv, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		if err = m.Impl.Listen(context.Background(), recv.BlockHeight, recv.EventType, recv.Data); err != nil {
+			return err
+		}
+	}
+	return nil
 }

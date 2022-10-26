@@ -12,11 +12,6 @@ import (
 // ABCIListenerPlugin is the implementation of the baseapp.ABCIListener interface
 type ABCIListenerPlugin struct{}
 
-func (m *ABCIListenerPlugin) Stream(ctx context.Context, blockHeight int64, eventType string, data []byte) error {
-	fmt.Printf("event-type:%s block_height=%d data=%b", eventType, blockHeight, data)
-	return nil
-}
-
 func (m *ABCIListenerPlugin) Listen(ctx context.Context, blockHeight int64, eventType string, data []byte) error {
 	fmt.Printf("event-type:%s block_height=%d data=%b", eventType, blockHeight, data)
 	return nil

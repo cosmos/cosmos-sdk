@@ -55,8 +55,6 @@ var (
 	KVStorePrefixIterator        = v1.KVStorePrefixIterator
 	KVStoreReversePrefixIterator = v1.KVStoreReversePrefixIterator
 
-	NewStoreKVPairWriteListener = v1.NewStoreKVPairWriteListener
-
 	ProofOpSMTCommitment          = v1.ProofOpSMTCommitment
 	ProofOpSimpleMerkleCommitment = v1.ProofOpSimpleMerkleCommitment
 

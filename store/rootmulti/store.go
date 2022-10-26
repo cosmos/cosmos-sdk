@@ -430,6 +430,13 @@ func (rs *Store) Commit() types.CommitID {
 
 	flushMetadata(rs.db, version, rs.lastCommitInfo, rs.pruneHeights)
 
+	// process captured state changes in listeners
+	for _, lis := range rs.listeners {
+		for _, listener := range lis {
+			listener.OnCommit()
+		}
+	}
+
 	return types.CommitID{
 		Version: version,
 		Hash:    rs.lastCommitInfo.Hash(),

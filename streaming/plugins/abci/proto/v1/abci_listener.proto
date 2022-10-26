@@ -19,4 +19,5 @@ message Empty {}
 
 service ABCIListenerService {
   rpc Listen(ListenRequest) returns (Empty);
+  rpc Stream(stream ListenRequest) returns (Empty);
 }

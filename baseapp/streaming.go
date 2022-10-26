@@ -2,12 +2,14 @@ package baseapp
 
 import (
 	"fmt"
-	"github.com/spf13/cast"
 	"os"
+	"sort"
+	"strings"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -19,69 +21,80 @@ type ABCIListener interface {
 	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
 	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages
 	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
-}
-
-// StoreListener is the interface that we're exposing as a streaming service.
-type StoreListener interface {
-	// ListenStoreKVPair updates the streaming service with the latest state change message
-	ListenStoreKVPair(ctx types.Context, pair store.StoreKVPair) error
-}
-
-// StreamingService for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
-type StreamingService struct {
-	// Listeners returns the streaming service's listeners for the BaseApp to register
-	Listeners map[store.StoreKey][]store.WriteListener
-	// ABCIListener interface for hooking into the ABCI messages from inside the BaseApp
-	ABCIListener ABCIListener
-	// StopNodeOnErr stops the node when true
-	StopNodeOnErr bool
+	// OnStoreCommit updates the steaming service with the latest state changes
+	// It is called once per commit cycle
+	OnStoreCommit(ctx types.Context, changeSet [][]byte) error
 }
 
 var (
-	_ store.WriteListener = (*WriteListener)(nil)
+	_ store.WriteListener = (*MemoryListener)(nil)
 )
 
-// WriteListener writes state changes out to listening service
-type WriteListener struct {
+// MemoryListener listens to the state writes and accumulate the records in memory.
+type MemoryListener struct {
 	bApp          *BaseApp
-	listener      StoreListener
+	listener      ABCIListener
 	stopNodeOnErr bool
+	stateCache    [][]byte
 }
 
-// NewWriteListener create an instance of an NewWriteListener that sends StoreKVPair data to listening service
-func NewWriteListener(
+// NewMemoryListener creates a listener that accumulate the state writes in memory.
+func NewMemoryListener(
 	bApp *BaseApp,
-	listener StoreListener,
+	listener ABCIListener,
 	stopNodeOnErr bool,
-) *WriteListener {
-	return &WriteListener{
+) *MemoryListener {
+	return &MemoryListener{
 		bApp:          bApp,
 		listener:      listener,
 		stopNodeOnErr: stopNodeOnErr,
 	}
 }
 
-// OnWrite satisfies WriteListener.Listen
-func (iw *WriteListener) OnWrite(storeKey store.StoreKey, key []byte, value []byte, delete bool) {
-	ctx := iw.bApp.deliverState.ctx
-	logger := iw.bApp.logger
-	kvPair := new(store.StoreKVPair)
-	kvPair.StoreKey = storeKey.Name()
-	kvPair.Delete = delete
-	kvPair.Key = key
-	kvPair.Value = value
-	if iw.stopNodeOnErr {
-		if err := iw.listener.ListenStoreKVPair(ctx, *kvPair); err != nil {
-			logger.Error(err.Error(), "storeKey", storeKey)
+// OnCommit receives the latest batch of state changes from the store upon Committer.Commit().
+func (fl *MemoryListener) OnCommit() {
+	ctx := fl.bApp.deliverState.ctx
+	blockHeight := ctx.BlockHeight()
+	logger := fl.bApp.logger
+	cache := fl.PopStateCache()
+	if fl.stopNodeOnErr {
+		if err := fl.listener.OnStoreCommit(ctx, cache); err != nil {
+			logger.Error("OnStoreCommit listening hook failed", "blockHeight", blockHeight, "err", err)
 			os.Exit(1)
 		}
 	} else {
 		go func() {
-			if err := iw.listener.ListenStoreKVPair(ctx, *kvPair); err != nil {
-				logger.Error(err.Error(), "storeKey", storeKey)
+			if err := fl.listener.OnStoreCommit(ctx, cache); err != nil {
+				logger.Error("OnStoreCommit listening hook failed", "blockHeight", blockHeight, "err", err)
 			}
 		}()
 	}
+}
+
+// OnWrite implements WriteListener interface
+func (fl *MemoryListener) OnWrite(storeKey store.StoreKey, key []byte, value []byte, delete bool) {
+	logger := fl.bApp.logger
+	kvPair := store.StoreKVPair{
+		StoreKey: storeKey.Name(),
+		Delete:   delete,
+		Key:      key,
+		Value:    value,
+	}
+	bz, err := kvPair.Marshal()
+	if err != nil {
+		logger.Error(err.Error(), "storeKey", kvPair.StoreKey)
+		if fl.stopNodeOnErr {
+			os.Exit(1)
+		}
+	}
+	fl.stateCache = append(fl.stateCache, bz)
+}
+
+// PopStateCache returns the current state caches and set to nil
+func (fl *MemoryListener) PopStateCache() [][]byte {
+	res := fl.stateCache
+	fl.stateCache = nil
+	return res
 }
 
 const (
@@ -92,45 +105,47 @@ const (
 	StreamingStopNodeOnErrTomlKey = "stop-node-on-err"
 )
 
-// RegisterStreamingService registers the ABCI streaming service provided by the streaming plugin.
-func RegisterStreamingService(
+// RegisterStreamingPlugin registers streaming plugins with the App.
+func RegisterStreamingPlugin(
 	bApp *BaseApp,
 	appOpts servertypes.AppOptions,
 	keys map[string]*store.KVStoreKey,
-	streamingService interface{},
+	streamingPlugin interface{},
 ) error {
-	// type checking
-	abciListener, ok := streamingService.(ABCIListener)
-	if !ok {
-		return fmt.Errorf("failed to register streaming service: failed type check %v", streamingService)
+	switch t := streamingPlugin.(type) {
+	case ABCIListener:
+		registerABCIListenerPlugin(bApp, appOpts, keys, t)
+	default:
+		return fmt.Errorf("unexpected plugin type %T", t)
 	}
+	return nil
+}
 
-	// streaming service config
+func registerABCIListenerPlugin(
+	bApp *BaseApp,
+	appOpts servertypes.AppOptions,
+	keys map[string]*store.KVStoreKey,
+	abciListener ABCIListener,
+) {
 	stopNodeOnErrKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingStopNodeOnErrTomlKey)
 	stopNodeOnErr := cast.ToBool(appOpts.Get(stopNodeOnErrKey))
-	var listeners map[store.StoreKey][]store.WriteListener
-
-	// streaming services can choose not to implement store listening
-	storeListener, ok := streamingService.(StoreListener)
-	if ok {
-		keysKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingKeysTomlKey)
-		exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
-		exposeStoreKeys := exposeStoreKeys(exposeKeysStr, keys)
-		listeners = make(map[store.StoreKey][]store.WriteListener, len(exposeStoreKeys))
-		writeListener := NewWriteListener(bApp, storeListener, stopNodeOnErr)
-		for _, key := range exposeStoreKeys {
-			listeners[key] = append(listeners[key], writeListener)
-		}
+	keysKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingKeysTomlKey)
+	exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
+	exposeStoreKeys := exposeStoreKeysSorted(exposeKeysStr, keys)
+	listener := NewMemoryListener(bApp, abciListener, stopNodeOnErr)
+	listeners := make(map[store.StoreKey][]store.WriteListener, len(exposeStoreKeys))
+	for _, key := range exposeStoreKeys {
+		listeners[key] = []store.WriteListener{listener}
 	}
-
-	// register service with the App
-	bApp.SetStreamingService(StreamingService{
-		Listeners:     listeners,
-		ABCIListener:  abciListener,
-		StopNodeOnErr: stopNodeOnErr,
-	})
-
-	return nil
+	// register listeners
+	for key, lis := range listeners {
+		bApp.cms.AddListeners(key, lis)
+	}
+	// register the plugin within the BaseApp
+	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses
+	// to the streaming services to update their ABCI context
+	bApp.abciListener = abciListener
+	bApp.stopNodeOnStreamingErr = stopNodeOnErr
 }
 
 func exposeAll(list []string) bool {
@@ -142,7 +157,7 @@ func exposeAll(list []string) bool {
 	return false
 }
 
-func exposeStoreKeys(keysStr []string, keys map[string]*store.KVStoreKey) []store.StoreKey {
+func exposeStoreKeysSorted(keysStr []string, keys map[string]*store.KVStoreKey) []store.StoreKey {
 	var exposeStoreKeys []store.StoreKey
 	if exposeAll(keysStr) {
 		exposeStoreKeys = make([]store.StoreKey, 0, len(keys))
@@ -157,6 +172,10 @@ func exposeStoreKeys(keysStr []string, keys map[string]*store.KVStoreKey) []stor
 			}
 		}
 	}
+	// sort storeKeys for deterministic output
+	sort.SliceStable(exposeStoreKeys, func(i, j int) bool {
+		return strings.Compare(exposeStoreKeys[i].Name(), exposeStoreKeys[j].Name()) < 0
+	})
 
 	return exposeStoreKeys
 }

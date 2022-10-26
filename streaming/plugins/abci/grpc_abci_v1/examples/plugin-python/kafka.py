@@ -3,6 +3,7 @@ import sys
 import time
 import grpc
 import socket
+import logging
 
 import abci_listener_pb2
 import abci_listener_pb2_grpc
@@ -20,8 +21,30 @@ class ABCIListenerServiceServicer(abci_listener_pb2_grpc.ABCIListenerServiceServ
                          'client.id': socket.gethostname()})
 
     def Listen(self, request, context):
-        topic = "raw_{}".format(request.event_type)
+        topic = "raw_{}".format(request.event_type).lower()
         self.producer.produce(topic, key=str(request.block_height), value=str(request.data))
+        return abci_listener_pb2.Empty()
+
+    def Stream(self, request_iterator, context):
+        topic = "raw_state_change"
+        for request in request_iterator:
+            try:
+                self.producer.produce(
+                    topic=topic,
+                    key=str(request.block_height),
+                    value=str(request.data)
+                )
+            except BufferError:
+                logging.warning('Buffer error, the queue must be full! Flushing...')
+                self.producer.flush()
+
+                logging.info('Queue flushed, will write the message again')
+                self.producer.produce(
+                    topic=topic,
+                    key=str(request.block_height),
+                    value=str(request.data)
+                )
+
         return abci_listener_pb2.Empty()
 
 def serve():

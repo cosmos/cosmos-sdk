@@ -23,21 +23,21 @@ type testPubKey struct {
 	address sdk.AccAddress
 }
 
-func (t testPubKey) Reset() { panic("implement me") }
+func (t testPubKey) Reset() { panic("not implemented") }
 
-func (t testPubKey) String() string { panic("implement me") }
+func (t testPubKey) String() string { panic("not implemented") }
 
-func (t testPubKey) ProtoMessage() { panic("implement me") }
+func (t testPubKey) ProtoMessage() { panic("not implemented") }
 
 func (t testPubKey) Address() cryptotypes.Address { return t.address.Bytes() }
 
-func (t testPubKey) Bytes() []byte { panic("implement me") }
+func (t testPubKey) Bytes() []byte { panic("not implemented") }
 
-func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool { panic("implement me") }
+func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool { panic("not implemented") }
 
-func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("implement me") }
+func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("not implemented") }
 
-func (t testPubKey) Type() string { panic("implement me") }
+func (t testPubKey) Type() string { panic("not implemented") }
 
 // testTx is a dummy implementation of Tx used for testing.
 type testTx struct {
@@ -47,9 +47,9 @@ type testTx struct {
 	address  sdk.AccAddress
 }
 
-func (tx testTx) GetSigners() []sdk.AccAddress { panic("implement me") }
+func (tx testTx) GetSigners() []sdk.AccAddress { panic("not implemented") }
 
-func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }
+func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
 
 func (tx testTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
 	res = append(res, txsigning.SignatureV2{
@@ -347,8 +347,6 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				err := pool.Insert(c, tx)
 				require.NoError(t, err)
 			}
-
-			//mempool.DebugPrintKeys(pool)
 
 			orderedTxs, err := pool.Select(nil, 1000)
 			require.NoError(t, err)

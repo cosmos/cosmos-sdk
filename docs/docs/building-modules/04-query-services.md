@@ -57,20 +57,25 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/bank/keeper/grpc_query.go
 
 ### Calling queries from the State Machine
 
-Introducing `module_query_safe` proto annotation which is used to describe a query is a deterministic (means safe to query), according to ADR-033 a module's Keeper can be called from another module's Keeper and CosmWasm contracts can also directly interact with Query Client.
+The Cosmos SDK v0.47 introduces a new `cosmos.query.v1.module_query_safe` Protobuf annotation which is used to state that a query that is safe to be called from within the state machine, for example:
+- a Keeper's query function can be called from another module's Keeper,
+- ADR-033 intermodule query calls,
+- CosmWasm contracts can also directly interact with these queries.
 
-if the `module_query_safe` annotation set to `true` it means:
- - The query is deterministic, given a block height it will return the same response upon multiple calls (ex: 1000 or more no.of calls), and doesn't introduce any state-machine breaking changes across the SDK patch version.
- - Gas consumption never fluctuate across the patch versions.
+If the `module_query_safe` annotation set to `true`, it means:
+ - The query is deterministic: given a block height it will return the same response upon multiple calls, and doesn't introduce any state-machine breaking changes across SDK patch versions.
+ - Gas consumption never fluctuates across calls and across patch versions.
 
-If you want to use `module_query_safe` annotation for a query, you have to ensure the following things
- - The query is deterministic and won't introduce state-machine-breaking changes
- - has its gas tracked, to avoid the attack vector where no gas is accounted for
+If you are a module developer and want to use `module_query_safe` annotation for your own query, you have to ensure the following things:
+ - the query is deterministic and won't introduce state-machine-breaking changes without coordinated upgrades
+ - it has its gas tracked, to avoid the attack vector where no gas is accounted for
  on potentially high-computation queries.
 
 #### Deterministic and Regression tests	
 
-There are tests written for few modules in SDK (which had `module_query_safe` queries) by using [`rapid`](https://pkg.go.dev/pgregory.net/rapid@v0.5.3) which checks the tests using randomly generated states which each query goes through 1000 calls for every query. Also written regression tests with hardcoded values and gas with 1000 calls.
+Tests are written for queries in the Cosmos SDK which have `module_query_safe`. Each query is tested using 2 methods:
+- we use property-based testing using the [`rapid`](https://pkg.go.dev/pgregory.net/rapid@v0.5.3) library. The property that is tested is that the query response and gas consumption is the same upon 1000 query calls.
+- we write regression tests with hardcoded responses and gas, and make sure they don't change upon 1000 calls and between SDK patch versions.
 
 Here's an example of regression tests:
 

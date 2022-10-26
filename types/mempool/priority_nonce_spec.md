@@ -131,15 +131,16 @@ graph TD
     10-->8
     30-->8
     20-->4
-        20-->6
+    20-->6
 
     end
     subgraph Sender C
-    2-->7
+    2-->90
     4-->2
+    6-->4
     end
 ```
 
-Mempool order: [10, 15, 30, 8, 20, 6, 4, 2, 7]
+Mempool order: [10, 15, 30, 8, 20, 6, 4, 2, 90]
 
-This case shows how the mempool handles a more complex graph with more priority edges between senders.
+This case shows how the mempool handles a more complex graph with more priority edges between senders.  Again we also demonstrate an idiosyncrasy of this nonce/priroity ordering scheme, tx(priority=90) is selected last because it is gated behind tx(priority=2) by nonce ordering. 

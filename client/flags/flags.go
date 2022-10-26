@@ -86,7 +86,7 @@ const (
 
 	// QGB related flags
 	FlagOrchestratorAddress = "orchestrator-address"
-	FlagEthereumAddress     = "ethereum-address"
+	FlagEVMAddress          = "evm-address"
 )
 
 // LineBreak can be included in a command list to provide a blank line

@@ -79,7 +79,7 @@ func NewCreateValidatorCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(flagSetDescriptionCreate())
 	cmd.Flags().AddFlagSet(FlagSetCommissionCreate())
 	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
-	cmd.Flags().AddFlagSet(FlagSetEthereumAddress())
+	cmd.Flags().AddFlagSet(FlagSetEVMAddress())
 	cmd.Flags().AddFlagSet(FlagSetOrchestratorAddress())
 
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
@@ -90,7 +90,7 @@ func NewCreateValidatorCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired(FlagAmount)
 	_ = cmd.MarkFlagRequired(FlagPubKey)
 	_ = cmd.MarkFlagRequired(FlagMoniker)
-	_ = cmd.MarkFlagRequired(flags.FlagEthereumAddress)
+	_ = cmd.MarkFlagRequired(flags.FlagEVMAddress)
 	_ = cmd.MarkFlagRequired(flags.FlagOrchestratorAddress)
 
 	return cmd
@@ -139,7 +139,7 @@ func NewEditValidatorCmd() *cobra.Command {
 			}
 
 			orchAddrString, _ := cmd.Flags().GetString(flags.FlagOrchestratorAddress)
-			evmAddrString, _ := cmd.Flags().GetString(flags.FlagEthereumAddress)
+			evmAddrString, _ := cmd.Flags().GetString(flags.FlagEVMAddress)
 
 			var orchAddr *sdk.AccAddress
 			if orchAddrString != "" {
@@ -153,7 +153,7 @@ func NewEditValidatorCmd() *cobra.Command {
 			var evmAddr *common.Address
 			if evmAddrString != "" {
 				if !common.IsHexAddress(evmAddrString) {
-					return types.ErrEthAddressNotHex
+					return types.ErrEVMAddressNotHex
 				}
 				addr := common.HexToAddress(evmAddrString)
 				evmAddr = &addr
@@ -415,7 +415,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	}
 
 	orchAddrString, _ := fs.GetString(flags.FlagOrchestratorAddress)
-	evmAddrString, _ := fs.GetString(flags.FlagEthereumAddress)
+	evmAddrString, _ := fs.GetString(flags.FlagEVMAddress)
 
 	orchAddr, err := sdk.AccAddressFromBech32(orchAddrString)
 	if err != nil {
@@ -423,7 +423,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	}
 
 	if !common.IsHexAddress(evmAddrString) {
-		return txf, nil, types.ErrEthAddressNotHex
+		return txf, nil, types.ErrEVMAddressNotHex
 	}
 	evmAddr := common.HexToAddress(evmAddrString)
 
@@ -468,7 +468,7 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	fsCreateValidator.AddFlagSet(FlagSetMinSelfDelegation())
 	fsCreateValidator.AddFlagSet(FlagSetAmount())
 	fsCreateValidator.AddFlagSet(FlagSetPublicKey())
-	fsCreateValidator.AddFlagSet(FlagSetEthereumAddress())
+	fsCreateValidator.AddFlagSet(FlagSetEVMAddress())
 	fsCreateValidator.AddFlagSet(FlagSetOrchestratorAddress())
 
 	defaultsDesc = fmt.Sprintf(`
@@ -505,10 +505,10 @@ type TxCreateValidatorConfig struct {
 	Identity        string
 
 	OrchestratorAddress string
-	EthereumAddress     string
+	EVMAddress          string
 }
 
-func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey cryptotypes.PubKey, orchAddr string, ethAddr string) (TxCreateValidatorConfig, error) {
+func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey cryptotypes.PubKey, orchAddr string, evmAddr string) (TxCreateValidatorConfig, error) {
 	c := TxCreateValidatorConfig{}
 
 	ip, err := flagSet.GetString(FlagIP)
@@ -599,7 +599,7 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 		c.MinSelfDelegation = defaultMinSelfDelegation
 	}
 
-	c.EthereumAddress, err = flagSet.GetString(flags.FlagEthereumAddress)
+	c.EVMAddress, err = flagSet.GetString(flags.FlagEVMAddress)
 	if err != nil {
 		return c, err
 	}
@@ -651,10 +651,10 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		return txBldr, nil, sdkerrors.Wrap(err, "orchestrator address")
 	}
 
-	if !common.IsHexAddress(config.EthereumAddress) {
-		return txBldr, nil, types.ErrEthAddressNotHex
+	if !common.IsHexAddress(config.EVMAddress) {
+		return txBldr, nil, types.ErrEVMAddressNotHex
 	}
-	evmAddr := common.HexToAddress(config.EthereumAddress)
+	evmAddr := common.HexToAddress(config.EVMAddress)
 
 	msg, err := types.NewMsgCreateValidator(
 		sdk.ValAddress(valAddr), config.PubKey,

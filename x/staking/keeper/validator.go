@@ -80,12 +80,12 @@ func (k Keeper) GetValidatorByOrchestratorAddress(ctx sdk.Context, orch sdk.AccA
 	return types.Validator{}, false
 }
 
-func (k Keeper) GetValidatorByEthereumAddress(ctx sdk.Context, eth common.Address) (types.Validator, bool) {
+func (k Keeper) GetValidatorByEVMAddress(ctx sdk.Context, evm common.Address) (types.Validator, bool) {
 	// TODO optimise these queries and even add grpc queries for them.
 	// Issue: https://github.com/celestiaorg/cosmos-sdk/issues/129
 	validators := k.GetAllValidators(ctx)
 	for _, val := range validators {
-		if val.EthAddress == eth.Hex() {
+		if val.EvmAddress == evm.Hex() {
 			return val, true
 		}
 	}

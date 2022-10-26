@@ -18,8 +18,8 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 	valPubKey := privKey.PubKey()
 	moniker := "DefaultMoniker"
 	testOrchAddr := "cosmos1qktu8009djs6uym9uwj84ead24exkezsaqrmn5"
-	testEthAddr := "0x91DEd26b5f38B065FC0204c7929Da6b2A21277Cd"
-	mkTxValCfg := func(amount, commission, commissionMax, commissionMaxChange, minSelfDelegation string, orchAddr string, ethAddr string) TxCreateValidatorConfig {
+	testEVMAddr := "0x91DEd26b5f38B065FC0204c7929Da6b2A21277Cd"
+	mkTxValCfg := func(amount, commission, commissionMax, commissionMaxChange, minSelfDelegation string, orchAddr string, evmAddr string) TxCreateValidatorConfig {
 		return TxCreateValidatorConfig{
 			IP:                      ip,
 			ChainID:                 chainID,
@@ -32,7 +32,7 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 			CommissionMaxChangeRate: commissionMaxChange,
 			MinSelfDelegation:       minSelfDelegation,
 			OrchestratorAddress:     orchAddr,
-			EthereumAddress:         ethAddr,
+			EVMAddress:              evmAddr,
 		}
 	}
 
@@ -93,7 +93,7 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 
 			tc.fsModify(fs)
 
-			cvCfg, err := PrepareConfigForTxCreateValidator(fs, moniker, nodeID, chainID, valPubKey, testOrchAddr, testEthAddr)
+			cvCfg, err := PrepareConfigForTxCreateValidator(fs, moniker, nodeID, chainID, valPubKey, testOrchAddr, testEVMAddr)
 			require.NoError(t, err)
 
 			require.Equal(t, tc.expectedCfg, cvCfg)

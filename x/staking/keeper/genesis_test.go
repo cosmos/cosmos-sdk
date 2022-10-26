@@ -172,14 +172,14 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	bondedPoolAmt := sdk.ZeroInt()
 	for i := range validators {
-		randomEthAddress, err := teststaking.RandomEthAddress()
+		randomEVMAddress, err := teststaking.RandomEVMAddress()
 		require.NoError(t, err)
 		validators[i], err = types.NewValidator(
 			sdk.ValAddress(addrs[i]),
 			PKs[i],
 			types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""),
 			sdk.AccAddress(PKs[i].Address()),
-			*randomEthAddress,
+			*randomEVMAddress,
 		)
 		require.NoError(t, err)
 		validators[i].Status = types.Bonded

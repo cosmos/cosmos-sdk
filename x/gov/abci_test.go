@@ -375,12 +375,12 @@ func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sd
 
 	for i := 0; i < len(addrs); i++ {
 		valTokens := sdk.TokensFromConsensusPower(powerAmt[i], sdk.DefaultPowerReduction)
-		randomEthAddress, err := teststaking.RandomEthAddress()
+		randomEVMAddress, err := teststaking.RandomEVMAddress()
 		require.NoError(t, err)
 		valCreateMsg, err := stakingtypes.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			TestDescription, TestCommissionRates, sdk.OneInt(),
-			sdk.AccAddress(pubkeys[i].Address()), *randomEthAddress,
+			sdk.AccAddress(pubkeys[i].Address()), *randomEVMAddress,
 		)
 		require.NoError(t, err)
 		res, err := stakingMsgSvr.CreateValidator(sdk.WrapSDKContext(ctx), valCreateMsg)

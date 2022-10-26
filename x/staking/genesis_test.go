@@ -16,9 +16,9 @@ import (
 func TestValidateGenesis(t *testing.T) {
 	genValidators1 := make([]types.Validator, 1, 5)
 	pk := ed25519.GenPrivKey().PubKey()
-	ethAddress, err := teststaking.RandomEthAddress()
+	evmAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	genValidators1[0] = teststaking.NewValidator(t, sdk.ValAddress(pk.Address()), pk, sdk.AccAddress(pk.Address()), *ethAddress)
+	genValidators1[0] = teststaking.NewValidator(t, sdk.ValAddress(pk.Address()), pk, sdk.AccAddress(pk.Address()), *evmAddress)
 	genValidators1[0].Tokens = sdk.OneInt()
 	genValidators1[0].DelegatorShares = sdk.OneDec()
 

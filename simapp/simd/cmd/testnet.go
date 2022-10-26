@@ -291,7 +291,7 @@ func initTestnetFiles(
 
 		orchAddress := sdk.AccAddress(valPubKeys[i].Address())
 
-		ethAddress, err := teststaking.RandomEthAddress()
+		evmAddress, err := teststaking.RandomEVMAddress()
 		if err != nil {
 			return err
 		}
@@ -303,7 +303,7 @@ func initTestnetFiles(
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-			sdk.OneInt(), orchAddress, *ethAddress,
+			sdk.OneInt(), orchAddress, *evmAddress,
 		)
 		if err != nil {
 			return err

@@ -35,9 +35,9 @@ func TestDelegation(t *testing.T) {
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
 	var validators [3]types.Validator
 	for i, amt := range amts {
-		randomEthAddress, err := teststaking.RandomEthAddress()
+		randomEVMAddress, err := teststaking.RandomEVMAddress()
 		require.NoError(t, err)
-		validators[i] = teststaking.NewValidator(t, valAddrs[i], PKs[i], sdk.AccAddress(PKs[i].Address()), *randomEthAddress)
+		validators[i] = teststaking.NewValidator(t, valAddrs[i], PKs[i], sdk.AccAddress(PKs[i].Address()), *randomEVMAddress)
 		validators[i], _ = validators[i].AddTokensFromDel(amt)
 	}
 
@@ -212,9 +212,9 @@ func TestUnbondDelegation(t *testing.T) {
 
 	// create a validator and a delegator to that validator
 	// note this validator starts not-bonded
-	randomEthAddress, err := teststaking.RandomEthAddress()
+	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator := teststaking.NewValidator(t, valAddrs[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEthAddress)
+	validator := teststaking.NewValidator(t, valAddrs[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress)
 
 	validator, issuedShares := validator.AddTokensFromDel(startTokens)
 	require.Equal(t, startTokens, issuedShares.RoundInt())
@@ -254,9 +254,9 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// create a validator and a delegator to that validator
-	randomEthAddress, err := teststaking.RandomEthAddress()
+	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEthAddress)
+	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress)
 
 	validator, issuedShares := validator.AddTokensFromDel(startTokens)
 	require.Equal(t, startTokens, issuedShares.RoundInt())
@@ -321,8 +321,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
 }
 
-//// test undelegating self delegation from a validator pushing it below MinSelfDelegation
-//// shift it from the bonded to unbonding state and jailed
+// // test undelegating self delegation from a validator pushing it below MinSelfDelegation
+// // shift it from the bonded to unbonding state and jailed
 func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
@@ -332,9 +332,9 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	delCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delTokens))
 
 	// create a validator with a self-delegation
-	randomEthAddress, err := teststaking.RandomEthAddress()
+	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEthAddress)
+	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress)
 
 	validator.MinSelfDelegation = delTokens
 	validator, issuedShares := validator.AddTokensFromDel(delTokens)
@@ -394,9 +394,9 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	// create a validator with a self-delegation
-	randomEthAddress, err := teststaking.RandomEthAddress()
+	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEthAddress)
+	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress)
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
 	validator, issuedShares := validator.AddTokensFromDel(delTokens)
@@ -487,9 +487,9 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// create a validator with a self-delegation
-	randomEthAddress, err := teststaking.RandomEthAddress()
+	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEthAddress)
+	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress)
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
@@ -570,9 +570,9 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// create a validator with a self-delegation
-	randomEthAddress, err := teststaking.RandomEthAddress()
+	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEthAddress)
+	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress)
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
@@ -736,9 +736,9 @@ func TestRedelegateToSameValidator(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// create a validator with a self-delegation
-	randomEthAddress, err := teststaking.RandomEthAddress()
+	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEthAddress)
+	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
@@ -767,9 +767,9 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// create a validator with a self-delegation
-	randomEthAddress, err := teststaking.RandomEthAddress()
+	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEthAddress)
+	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress)
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
@@ -779,9 +779,9 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
 
 	// create a second validator
-	randomEthAddress2, err := teststaking.RandomEthAddress()
+	randomEVMAddress2, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1], sdk.AccAddress(PKs[0].Address()), *randomEthAddress2)
+	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress2)
 	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 
@@ -827,9 +827,9 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// create a validator with a self-delegation
-	randomEthAddress, err := teststaking.RandomEthAddress()
+	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEthAddress)
+	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress)
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
@@ -843,9 +843,9 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
 
 	// create a second validator
-	randomEthAddress2, err := teststaking.RandomEthAddress()
+	randomEVMAddress2, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1], sdk.AccAddress(PKs[1].Address()), *randomEthAddress2)
+	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1], sdk.AccAddress(PKs[1].Address()), *randomEVMAddress2)
 	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator2 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
@@ -887,9 +887,9 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// create a validator with a self-delegation
-	randomEthAddress, err := teststaking.RandomEthAddress()
+	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEthAddress)
+	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress)
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
@@ -910,9 +910,9 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	// create a second validator
-	randomEthAddress2, err := teststaking.RandomEthAddress()
+	randomEVMAddress2, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1], sdk.AccAddress(PKs[1].Address()), *randomEthAddress2)
+	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1], sdk.AccAddress(PKs[1].Address()), *randomEVMAddress2)
 	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator2 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
@@ -973,9 +973,9 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// create a validator with a self-delegation
-	randomEthAddress, err := teststaking.RandomEthAddress()
+	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEthAddress)
+	validator := teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress)
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
@@ -996,9 +996,9 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	// create a second validator
-	randomEthAddress2, err := teststaking.RandomEthAddress()
+	randomEVMAddress2, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1], sdk.AccAddress(PKs[1].Address()), *randomEthAddress2)
+	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1], sdk.AccAddress(PKs[1].Address()), *randomEVMAddress2)
 	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator2 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)

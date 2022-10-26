@@ -53,7 +53,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
     --security-contact="..." \
     --website="..." \
     --orchestrator-address="..." \
-    --ethereum-address="..."
+    --evm-address="..."
 `, defaultsDesc, version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -116,9 +116,9 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return errors.Wrapf(err, "failed to get the orchestrator address")
 			}
 
-			ethereumAddress, err := cmd.Flags().GetString(flags.FlagEthereumAddress)
+			evmAddress, err := cmd.Flags().GetString(flags.FlagEVMAddress)
 			if err != nil {
-				return errors.Wrapf(err, "failed to get the ethereum address")
+				return errors.Wrapf(err, "failed to get the EVM address")
 			}
 
 			// set flags for creating a gentx
@@ -126,7 +126,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				cmd.Flags(), moniker,
 				nodeID, genDoc.ChainID,
 				valPubKey, orchestratorAddress,
-				ethereumAddress,
+				evmAddress,
 			)
 			if err != nil {
 				return errors.Wrap(err, "error creating configuration to create validator msg")

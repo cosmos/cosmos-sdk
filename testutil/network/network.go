@@ -171,8 +171,8 @@ type (
 		grpc    *grpc.Server
 		grpcWeb *http.Server
 
-		EthPrivateKey *ecdsa.PrivateKey
-		EthereumAddr  common.Address
+		EVMPrivateKey *ecdsa.PrivateKey
+		EVMAddr       common.Address
 
 		OrchestratorAddr sdk.AccAddress
 	}
@@ -407,12 +407,12 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			return nil, err
 		}
 
-		ethPrivateKey, err := crypto.GenerateKey()
+		evmPrivateKey, err := crypto.GenerateKey()
 		if err != nil {
 			return nil, err
 		}
-		orchEthPublicKey := ethPrivateKey.Public().(*ecdsa.PublicKey)
-		ethAddr := crypto.PubkeyToAddress(*orchEthPublicKey)
+		orchEVMPublicKey := evmPrivateKey.Public().(*ecdsa.PublicKey)
+		evmAddr := crypto.PubkeyToAddress(*orchEVMPublicKey)
 
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
@@ -422,7 +422,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
 			addr,
-			ethAddr,
+			evmAddr,
 		)
 		if err != nil {
 			return nil, err
@@ -491,8 +491,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			APIAddress:       apiAddr,
 			Address:          addr,
 			ValAddress:       sdk.ValAddress(addr),
-			EthPrivateKey:    ethPrivateKey,
-			EthereumAddr:     ethAddr,
+			EVMPrivateKey:    evmPrivateKey,
+			EVMAddr:          evmAddr,
 			OrchestratorAddr: addr,
 		}
 	}

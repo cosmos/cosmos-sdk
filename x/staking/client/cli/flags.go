@@ -88,10 +88,10 @@ func FlagSetOrchestratorAddress() *flag.FlagSet {
 	return fs
 }
 
-// FlagSetEthereumAddress Returns the flagset for Ethereum address related operations.
-func FlagSetEthereumAddress() *flag.FlagSet {
+// FlagSetEVMAddress Returns the flagset for EVM address related operations.
+func FlagSetEVMAddress() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.String(flags.FlagEthereumAddress, "", "The 0x EVM address of the orchestrator")
+	fs.String(flags.FlagEVMAddress, "", "The 0x EVM address of the orchestrator")
 	return fs
 }
 

@@ -64,10 +64,10 @@ func TestStakingMsgs(t *testing.T) {
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin})
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin})
 
-	ethPrivateKey, err := crypto.GenerateKey()
+	evmPrivateKey, err := crypto.GenerateKey()
 	require.NoError(t, err)
-	orchEthPublicKey := ethPrivateKey.Public().(*ecdsa.PublicKey)
-	evmAddr := crypto.PubkeyToAddress(*orchEthPublicKey)
+	orchEVMPublicKey := evmPrivateKey.Public().(*ecdsa.PublicKey)
+	evmAddr := crypto.PubkeyToAddress(*orchEVMPublicKey)
 
 	// create validator
 	description := types.NewDescription("foo_moniker", "", "", "", "")

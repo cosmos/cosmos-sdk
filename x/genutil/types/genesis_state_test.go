@@ -19,10 +19,10 @@ import (
 
 var (
 	pk1         = ed25519.GenPrivKey().PubKey()
-	ethAddr1, _ = teststaking.RandomEthAddress()
+	evmAddr1, _ = teststaking.RandomEVMAddress()
 
 	pk2         = ed25519.GenPrivKey().PubKey()
-	ethAddr2, _ = teststaking.RandomEthAddress()
+	evmAddr2, _ = teststaking.RandomEVMAddress()
 )
 
 func TestNetGenesisState(t *testing.T) {
@@ -44,14 +44,14 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 	msg1, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()), pk1,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt(),
 		sdk.AccAddress(pk1.Address()),
-		*ethAddr1,
+		*evmAddr1,
 	)
 	require.NoError(t, err)
 
 	msg2, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt(),
 		sdk.AccAddress(pk2.Address()),
-		*ethAddr2,
+		*evmAddr2,
 	)
 	require.NoError(t, err)
 

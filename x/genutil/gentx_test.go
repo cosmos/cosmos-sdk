@@ -31,8 +31,8 @@ var (
 	addr1 = sdk.AccAddress(pk1.Address())
 	addr2 = sdk.AccAddress(pk2.Address())
 
-	ethAddr1, _ = teststaking.RandomEthAddress()
-	ethAddr2, _ = teststaking.RandomEthAddress()
+	evmAddr1, _ = teststaking.RandomEVMAddress()
+	evmAddr2, _ = teststaking.RandomEVMAddress()
 
 	desc = stakingtypes.NewDescription("testname", "", "", "", "")
 	comm = stakingtypes.CommissionRates{}
@@ -62,13 +62,13 @@ func (suite *GenTxTestSuite) SetupTest() {
 	suite.msg1, err = stakingtypes.NewMsgCreateValidator(
 		sdk.ValAddress(pk1.Address()), pk1, amount, desc, comm, one,
 		sdk.AccAddress(pk1.Address()),
-		*ethAddr1,
+		*evmAddr1,
 	)
 	suite.NoError(err)
 	suite.msg2, err = stakingtypes.NewMsgCreateValidator(
 		sdk.ValAddress(pk2.Address()), pk1, amount, desc, comm, one,
 		sdk.AccAddress(pk2.Address()),
-		*ethAddr2,
+		*evmAddr2,
 	)
 	suite.NoError(err)
 }

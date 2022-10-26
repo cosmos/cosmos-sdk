@@ -91,7 +91,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, err
 	}
 
-	evmAddr, err := k.validateEthereumAddress(ctx, msg.EthAddress)
+	evmAddr, err := k.validateEVMAddress(ctx, msg.EvmAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -206,12 +206,12 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		validator.Orchestrator = msg.Orchestrator
 	}
 
-	if msg.EthAddress != "" {
-		_, err := k.validateEthereumAddress(ctx, msg.EthAddress)
+	if msg.EvmAddress != "" {
+		_, err := k.validateEVMAddress(ctx, msg.EvmAddress)
 		if err != nil {
 			return nil, err
 		}
-		validator.EthAddress = msg.EthAddress
+		validator.EvmAddress = msg.EvmAddress
 	}
 
 	k.SetValidator(ctx, validator)
@@ -420,13 +420,13 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	}, nil
 }
 
-func (k msgServer) validateEthereumAddress(ctx sdk.Context, ethAddr string) (common.Address, error) {
-	if !common.IsHexAddress(ethAddr) {
-		return common.Address{}, types.ErrEthAddressNotHex
+func (k msgServer) validateEVMAddress(ctx sdk.Context, evmAddrHex string) (common.Address, error) {
+	if !common.IsHexAddress(evmAddrHex) {
+		return common.Address{}, types.ErrEVMAddressNotHex
 	}
-	evmAddr := common.HexToAddress(ethAddr)
-	if _, found := k.GetValidatorByEthereumAddress(ctx, evmAddr); found {
-		return common.Address{}, types.ErrValidatorEthereumAddressExists
+	evmAddr := common.HexToAddress(evmAddrHex)
+	if _, found := k.GetValidatorByEVMAddress(ctx, evmAddr); found {
+		return common.Address{}, types.ErrValidatorEVMAddressExists
 	}
 	return evmAddr, nil
 }

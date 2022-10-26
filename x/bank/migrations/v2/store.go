@@ -2,6 +2,8 @@ package v2
 
 import (
 	"cosmossdk.io/math"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -50,7 +52,7 @@ func migrateSupply(store sdk.KVStore, cdc codec.BinaryCodec) error {
 
 // migrateBalanceKeys migrate the balances keys to cater for variable-length
 // addresses.
-func migrateBalanceKeys(store sdk.KVStore) {
+func migrateBalanceKeys(store sdk.KVStore, logger log.Logger) {
 	// old key is of format:
 	// prefix ("balances") || addrBytes (20 bytes) || denomBytes
 	// new key is of format
@@ -58,7 +60,7 @@ func migrateBalanceKeys(store sdk.KVStore) {
 	oldStore := prefix.NewStore(store, v1.BalancesPrefix)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
-	defer oldStoreIter.Close()
+	defer sdk.LogDeferred(logger, func() error { return oldStoreIter.Close() })
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		addr := v1.AddressFromBalancesStore(oldStoreIter.Key())
@@ -80,7 +82,7 @@ func migrateBalanceKeys(store sdk.KVStore) {
 // - Prune balances & supply with zero coins (ref: https://github.com/cosmos/cosmos-sdk/pull/9229)
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
-	migrateBalanceKeys(store)
+	migrateBalanceKeys(store, ctx.Logger())
 
 	if err := pruneZeroBalances(store, cdc); err != nil {
 		return err

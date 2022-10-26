@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	log "github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -132,4 +134,11 @@ func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]by
 	byteSlice := key[startIndex:neededLength]
 
 	return byteSlice, endIndex
+}
+
+// LogDeferred logs an error in a deferred function call if the returned error is non-nil.
+func LogDeferred(logger log.Logger, f func() error) {
+	if err := f(); err != nil {
+		logger.Error(err.Error())
+	}
 }

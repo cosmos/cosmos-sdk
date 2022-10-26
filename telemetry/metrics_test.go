@@ -13,8 +13,7 @@ import (
 func TestNew(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
-		M, err := New(OptionWithEnable(true), OptionUseGlobalMetricRegistration(false))
-		require.NoError(t, err)
+		M := initMetric(t)
 		require.NotNil(t, M)
 	})
 	t.Run("option error", func(t *testing.T) {
@@ -29,7 +28,8 @@ func TestNew(t *testing.T) {
 
 func TestInit(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		Init(OptionUseGlobalMetricRegistration(false))
+		M := initMetric(t)
+		require.NotNil(t, M)
 	})
 	t.Run("option error", func(t *testing.T) {
 		Init(func(c *Config) error {
@@ -39,8 +39,9 @@ func TestInit(t *testing.T) {
 }
 
 func TestGather(t *testing.T) {
-	M, err := New(OptionWithEnable(true), OptionUseGlobalMetricRegistration(false))
-	require.NoError(t, err)
+	M := initMetric(t)
+	require.NotNil(t, M)
+	var err error
 	m := M.(*metrics)
 
 	t.Run("prometheus", func(t *testing.T) {
@@ -67,61 +68,59 @@ func TestGather(t *testing.T) {
 }
 
 func TestModuleMeasureSince(t *testing.T) {
-	M, err := New(OptionWithEnable(true), OptionUseGlobalMetricRegistration(false))
-	require.NoError(t, err)
+	M := initMetric(t)
+	require.NotNil(t, M)
 	m := M.(*metrics)
 	m.ModuleMeasureSince("module-module-measure-since", time.Now().Add(-1*time.Minute), "key-module-measure-since")
 }
 
 func TestModuleSetGauge(t *testing.T) {
-	M, err := New(OptionWithEnable(true), OptionUseGlobalMetricRegistration(false))
-	require.NoError(t, err)
+	M := initMetric(t)
+	require.NotNil(t, M)
 	m := M.(*metrics)
 	m.ModuleSetGauge("module-set-gauge-name", 1.234, "key-module-set-gauge")
 }
 
 func TestIncrCounter(t *testing.T) {
-	M, err := New(OptionWithEnable(true), OptionUseGlobalMetricRegistration(false))
-	require.NoError(t, err)
+	M := initMetric(t)
+	require.NotNil(t, M)
 	m := M.(*metrics)
 	m.IncrCounter(1.234)
 }
 
 func TestIncrCounterWithLabels(t *testing.T) {
-	M, err := New(OptionWithEnable(true), OptionUseGlobalMetricRegistration(false))
-	require.NoError(t, err)
+	M := initMetric(t)
+	require.NotNil(t, M)
 	m := M.(*metrics)
 	m.IncrCounterWithLabels([]string{"some-key-counter-with-labels"}, 1.234, []gometrics.Label{})
 }
 
 func TestSetGauge(t *testing.T) {
-	M, err := New(OptionWithEnable(true), OptionUseGlobalMetricRegistration(false))
-	require.NoError(t, err)
+	M := initMetric(t)
+	require.NotNil(t, M)
 	m := M.(*metrics)
 	m.SetGauge(1.234, "key-set-gauge")
 
 }
 
 func TestSetGaugeWithLabels(t *testing.T) {
-	M, err := New(OptionWithEnable(true), OptionUseGlobalMetricRegistration(false), OptionWithGlobalLabels([][]string{
-		{"a1", "a2"}, {"b1", "b2"},
-	}))
-	require.NoError(t, err)
+	M := initMetric(t)
+	require.NotNil(t, M)
 	m := M.(*metrics)
 	m.SetGaugeWithLabels([]string{"some-key-gauge-with-labels"}, 1.234, []gometrics.Label{})
 }
 
 func TestMeasureSince(t *testing.T) {
-	M, err := New(OptionWithEnable(true), OptionUseGlobalMetricRegistration(false))
-	require.NoError(t, err)
+	M := initMetric(t)
+	require.NotNil(t, M)
 	m := M.(*metrics)
 	m.MeasureSince(time.Now().Add(-1 * time.Minute))
 }
 
 func TestGatherPrometheus(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		M, err := New(OptionWithEnable(true), OptionUseGlobalMetricRegistration(false))
-		require.NoError(t, err)
+		M := initMetric(t)
+		require.NotNil(t, M)
 		m := M.(*metrics)
 		m.prometheusEnabled = true
 		res, err := m.gatherPrometheus()
@@ -130,11 +129,11 @@ func TestGatherPrometheus(t *testing.T) {
 	})
 
 	t.Run("not enabled", func(t *testing.T) {
-		M, err := New(OptionWithEnable(true), OptionUseGlobalMetricRegistration(false))
-		require.NoError(t, err)
+		M := initMetric(t)
+		require.NotNil(t, M)
 		m := M.(*metrics)
 		m.prometheusEnabled = false
-		_, err = m.gatherPrometheus()
+		_, err := m.gatherPrometheus()
 		require.Error(t, err)
 	})
 
@@ -142,8 +141,8 @@ func TestGatherPrometheus(t *testing.T) {
 
 func TestGatherGeneric(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		M, err := New(OptionWithEnable(true), OptionUseGlobalMetricRegistration(false))
-		require.NoError(t, err)
+		M := initMetric(t)
+		require.NotNil(t, M)
 		m := M.(*metrics)
 		res, err := m.gatherGeneric()
 		require.NoError(t, err)

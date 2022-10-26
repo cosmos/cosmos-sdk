@@ -70,18 +70,16 @@ func New(opts ...Option) (Metrics, error) {
 	fanout := gometrics.FanoutSink{memSink}
 	var promSink *metricsprom.PrometheusSink
 
-	//Initialize the external library only once.
-	initOnce.Do(func() {
-		if c.PrometheusRetentionTime > 0 {
-			m.prometheusEnabled = true
-			prometheusOpts := metricsprom.PrometheusOpts{
-				Expiration: c.PrometheusRetentionTime,
-			}
-
-			promSink, err = metricsprom.NewPrometheusSinkFrom(prometheusOpts)
-
+	if c.PrometheusRetentionTime > 0 {
+		m.prometheusEnabled = true
+		prometheusOpts := metricsprom.PrometheusOpts{
+			Expiration: c.PrometheusRetentionTime,
 		}
-	})
+
+		promSink, err = metricsprom.NewPrometheusSinkFrom(prometheusOpts)
+
+	}
+
 	if err != nil {
 		return nil, err
 	}

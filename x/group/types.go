@@ -231,16 +231,15 @@ var _ orm.Validateable = GroupPolicyInfo{}
 
 // NewGroupPolicyInfo creates a new GroupPolicyInfo instance
 func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata string,
-	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time, derivationKeys [][]byte,
+	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time,
 ) (GroupPolicyInfo, error) {
 	p := GroupPolicyInfo{
-		Address:        address.String(),
-		GroupId:        group,
-		Admin:          admin.String(),
-		Metadata:       metadata,
-		Version:        version,
-		CreatedAt:      createdAt,
-		DerivationKeys: derivationKeys,
+		Address:   address.String(),
+		GroupId:   group,
+		Admin:     admin.String(),
+		Metadata:  metadata,
+		Version:   version,
+		CreatedAt: createdAt,
 	}
 
 	err := p.SetDecisionPolicy(decisionPolicy)

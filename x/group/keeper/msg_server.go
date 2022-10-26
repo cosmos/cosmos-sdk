@@ -332,13 +332,13 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 	var accountAddr sdk.AccAddress
 	// loop here in the rare case where a ADR-028-derived address creates a
 	// collision with an existing address.
-	var derivationKey []byte
 	for {
 		nextAccVal := k.groupPolicySeq.NextVal(ctx.KVStore(k.key))
-		derivationKey = make([]byte, 8)
-		binary.BigEndian.PutUint64(derivationKey, nextAccVal)
+		buf := make([]byte, 8)
+		binary.BigEndian.PutUint64(buf, nextAccVal)
 
-		accountAddr = address.Module(group.ModuleName, derivationKey)
+		parentAcc := address.Module(group.ModuleName, []byte{GroupPolicyTablePrefix})
+		accountAddr = address.Derive(parentAcc, buf)
 
 		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
 			// handle a rare collision, in which case we just go on to the
@@ -364,7 +364,6 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 		1,
 		policy,
 		ctx.BlockTime(),
-		[][]byte{derivationKey},
 	)
 	if err != nil {
 		return nil, err
@@ -750,11 +749,12 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 		// Caching context so that we don't update the store in case of failure.
 		cacheCtx, flush := ctx.CacheContext()
 
-		router := k.interModuleClient
-		for _, key := range policyInfo.DerivationKeys {
-			router = router.DerivedClient(key)
+		addr, err := sdk.AccAddressFromBech32(policyInfo.Address)
+		if err != nil {
+			return nil, err
 		}
-		if _, err := k.doExecuteMsgs(cacheCtx, router, proposal); err != nil {
+
+		if _, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr); err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", id, err.Error())
 			k.Logger(ctx).Info("proposal execution failed", "cause", err, "proposalID", id)

@@ -1,14 +1,12 @@
 package runtime
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
+	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"golang.org/x/exp/slices"
-
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -100,16 +98,6 @@ func (a *App) Load(loadLatest bool) error {
 	if len(a.config.EndBlockers) != 0 {
 		a.ModuleManager.SetOrderEndBlockers(a.config.EndBlockers...)
 		a.SetEndBlocker(a.EndBlocker)
-	}
-
-	if len(a.config.AdminModules) != 0 {
-		adminModuleMap := map[string]bool{}
-		for _, adminModule := range a.config.AdminModules {
-			adminModuleMap[adminModule] = true
-		}
-		a.SetInterModuleAuthorizer(func(ctx context.Context, methodName string, req interface{}, callingModule string) bool {
-			return adminModuleMap[callingModule]
-		})
 	}
 
 	if loadLatest {

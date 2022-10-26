@@ -5,12 +5,11 @@ import (
 	"encoding/json"
 
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
-
-	"cosmossdk.io/core/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

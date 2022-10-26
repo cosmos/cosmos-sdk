@@ -9,7 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"cosmossdk.io/core/intermodule"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -24,19 +24,19 @@ import (
 const gasCostPerIteration = uint64(20)
 
 type Keeper struct {
-	storeKey          storetypes.StoreKey
-	cdc               codec.BinaryCodec
-	interModuleClient intermodule.Client
-	authKeeper        authz.AccountKeeper
+	storeKey   storetypes.StoreKey
+	cdc        codec.BinaryCodec
+	router     *baseapp.MsgServiceRouter
+	authKeeper authz.AccountKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, router intermodule.Client, ak authz.AccountKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, router *baseapp.MsgServiceRouter, ak authz.AccountKeeper) Keeper {
 	return Keeper{
-		storeKey:          storeKey,
-		cdc:               cdc,
-		interModuleClient: router,
-		authKeeper:        ak,
+		storeKey:   storeKey,
+		cdc:        cdc,
+		router:     router,
+		authKeeper: ak,
 	}
 }
 
@@ -132,36 +132,29 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 			}
 		}
 
-		handler, err := k.interModuleClient.InvokerByRequest(msg)
-		if err != nil {
-			return nil, err
+		handler := k.router.Handler(msg)
+		if handler == nil {
+			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
 		}
 
-		origEvtMgr := ctx.EventManager()
-		evtMgr := sdk.NewEventManager()
-		ctx = ctx.WithEventManager(evtMgr)
-
-		res, err := handler(ctx, msg)
+		msgResp, err := handler(ctx, msg)
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %v", msg)
 		}
 
-		resMsg, ok := res.(codec.ProtoMarshaler)
-		if !ok {
-			return nil, fmt.Errorf("expected a ProtoMarshaler, got %T", res)
-		}
-
-		bz, err := k.cdc.Marshal(resMsg)
-		if err != nil {
-			return nil, err
-		}
-		results[i] = bz
+		results[i] = msgResp.Data
 
 		// emit the events from the dispatched actions
-		for _, event := range evtMgr.Events() {
-			event.Attributes = append(event.Attributes, abci.EventAttribute{Key: "authz_msg_index", Value: strconv.Itoa(i)})
-			origEvtMgr.EmitEvent(event)
+		events := msgResp.Events
+		sdkEvents := make([]sdk.Event, 0, len(events))
+		for _, event := range events {
+			e := event
+			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: "authz_msg_index", Value: strconv.Itoa(i)})
+
+			sdkEvents = append(sdkEvents, sdk.Event(e))
 		}
+
+		ctx.EventManager().EmitEvents(sdkEvents)
 	}
 
 	return results, nil

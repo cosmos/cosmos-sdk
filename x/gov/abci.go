@@ -70,10 +70,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			messages, err := proposal.GetMsgs()
 			if err == nil {
 				for idx, msg = range messages {
-					handler, err := keeper.Router().InvokerByRequest(msg)
-					if err != nil {
-						break
-					}
+					handler := keeper.Router().Handler(msg)
 					_, err = handler(cacheCtx, msg)
 					if err != nil {
 						break

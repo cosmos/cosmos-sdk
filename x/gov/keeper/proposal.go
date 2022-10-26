@@ -42,8 +42,8 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 		}
 
 		// use the msg service router to see that there is a valid route for that message.
-		handler, err := keeper.interModuleClient.InvokerByRequest(msg)
-		if err != nil {
+		handler := keeper.router.Handler(msg)
+		if handler == nil {
 			return v1.Proposal{}, sdkerrors.Wrap(types.ErrUnroutableProposalMsg, sdk.MsgTypeURL(msg))
 		}
 

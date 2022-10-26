@@ -14,11 +14,10 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
-	"cosmossdk.io/depinject"
-
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/intermodule"
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -162,12 +161,12 @@ func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 type GovInputs struct {
 	depinject.In
 
-	Config            *modulev1.Module
-	Cdc               codec.Codec
-	Key               *store.KVStoreKey
-	ModuleKey         depinject.OwnModuleKey
-	InterModuleClient intermodule.Client
-	Authority         map[string]sdk.AccAddress `optional:"true"`
+	Config           *modulev1.Module
+	Cdc              codec.Codec
+	Key              *store.KVStoreKey
+	ModuleKey        depinject.OwnModuleKey
+	MsgServiceRouter *baseapp.MsgServiceRouter
+	Authority        map[string]sdk.AccAddress `optional:"true"`
 
 	AccountKeeper govtypes.AccountKeeper
 	BankKeeper    govtypes.BankKeeper
@@ -202,7 +201,7 @@ func ProvideModule(in GovInputs) GovOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.StakingKeeper,
-		in.InterModuleClient,
+		in.MsgServiceRouter,
 		kConfig,
 		authority.String(),
 	)

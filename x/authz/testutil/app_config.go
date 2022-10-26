@@ -72,7 +72,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
 				},
-				AdminModules: []string{authz.ModuleName},
 			}),
 		},
 		{

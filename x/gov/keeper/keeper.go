@@ -6,7 +6,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"cosmossdk.io/core/intermodule"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,7 +40,7 @@ type Keeper struct {
 	legacyRouter v1beta1.Router
 
 	// Msg server router
-	interModuleClient intermodule.Client
+	router *baseapp.MsgServiceRouter
 
 	config types.Config
 
@@ -61,7 +61,11 @@ func (k Keeper) GetAuthority() string {
 // - and tallying the result of the vote.
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
-func NewKeeper(cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper, router intermodule.Client, config types.Config, authority string) *Keeper {
+func NewKeeper(
+	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper, sk types.StakingKeeper,
+	router *baseapp.MsgServiceRouter, config types.Config, authority string,
+) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -77,14 +81,14 @@ func NewKeeper(cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.
 	}
 
 	return &Keeper{
-		storeKey:          key,
-		authKeeper:        authKeeper,
-		bankKeeper:        bankKeeper,
-		sk:                sk,
-		cdc:               cdc,
-		interModuleClient: router,
-		config:            config,
-		authority:         authority,
+		storeKey:   key,
+		authKeeper: authKeeper,
+		bankKeeper: bankKeeper,
+		sk:         sk,
+		cdc:        cdc,
+		router:     router,
+		config:     config,
+		authority:  authority,
 	}
 }
 
@@ -123,8 +127,8 @@ func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Router returns the gov keeper's router
-func (keeper Keeper) Router() intermodule.Client {
-	return keeper.interModuleClient
+func (keeper Keeper) Router() *baseapp.MsgServiceRouter {
+	return keeper.router
 }
 
 // LegacyRouter returns the gov keeper's legacy router

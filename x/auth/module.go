@@ -105,10 +105,13 @@ type AppModule struct {
 
 var _ appmodule.AppModule = AppModule{}
 
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (am AppModule) IsOnePerModuleType() {}
 
+// IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
+// AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return types.AutoCLIOptions
 }
@@ -235,7 +238,7 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 	}
 
 	k := keeper.NewAccountKeeper(in.Cdc, in.Key, types.ProtoBaseAccount, maccPerms, in.Config.Bech32Prefix, types.NewModuleAddress(govtypes.ModuleName).String())
-	m := NewAppModule(k, simulation.RandomGenesisAccounts, in.LegacySubspace)
+	m := NewAppModule(in.Cdc, k, simulation.RandomGenesisAccounts, in.LegacySubspace)
 
 	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m), NewAppModule: m}
 }

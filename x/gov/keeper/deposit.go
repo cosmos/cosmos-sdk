@@ -162,7 +162,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	return activatedVotingPeriod, nil
 }
 
-// BurnAndSendDepositsToCommunityPool will burn the (deposits * prposal_cancel_burn_rate) amount of proposal deposits
+// BurnAndSendDepositsToCommunityPool will burn the (deposits * proposal_cancel_burn_rate) amount of proposal deposits
 // and send remaining deposits of the proposal to community pool.
 func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposalID uint64, totalDeposits []sdk.Coin) error {
 	store := ctx.KVStore(keeper.storeKey)

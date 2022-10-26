@@ -75,6 +75,9 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 			return NewIntValueRenderer(), nil
 		}
 
+	case fd.Kind() == protoreflect.StringKind:
+		return stringValueRenderer{}, nil
+
 	case fd.Kind() == protoreflect.MessageKind:
 		md := fd.Message()
 		fullName := md.FullName()
@@ -83,8 +86,14 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 		if found {
 			return vr, nil
 		}
-		// TODO default message renderer
-		return nil, fmt.Errorf("no value renderer for message %s", fullName)
+		if fd.IsMap() {
+			return nil, fmt.Errorf("value renderers cannot format value of type map")
+		}
+		if fd.IsList() {
+			// This will be implemented in https://github.com/cosmos/cosmos-sdk/issues/12714
+			return nil, fmt.Errorf("repeated field renderer not yet implemented")
+		}
+		return NewMessageValueRenderer(&r, md), nil
 
 	default:
 		return nil, fmt.Errorf("value renderers cannot format value of type %s", fd.Kind())

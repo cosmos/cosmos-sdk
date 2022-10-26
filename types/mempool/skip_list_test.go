@@ -1,9 +1,10 @@
 package mempool_test
 
 import (
+	"testing"
+
 	huandu "github.com/huandu/skiplist"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 type collisionKey struct {

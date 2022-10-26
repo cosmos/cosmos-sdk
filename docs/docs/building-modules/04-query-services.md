@@ -74,11 +74,11 @@ If you are a module developer and want to use `module_query_safe` annotation for
 #### Deterministic and Regression tests	
 
 Tests are written for queries in the Cosmos SDK which have `module_query_safe`. Each query is tested using 2 methods:
-- we use property-based testing using the [`rapid`](https://pkg.go.dev/pgregory.net/rapid@v0.5.3) library. The property that is tested is that the query response and gas consumption is the same upon 1000 query calls.
+- we use property-based testing using the [`rapid`](https://pkg.go.dev/pgregory.net/rapid@v0.5.3) library. The property that is tested is that the query response and gas consumption are the same upon 1000 query calls.
 - we write regression tests with hardcoded responses and gas, and make sure they don't change upon 1000 calls and between SDK patch versions.
 
 Here's an example of regression tests:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/49ad3b0576f3af6b98e42536acf969792ad7ff98/tests/integration/bank/keeper/deterministic_test.go#L101-L122
+https://github.com/cosmos/cosmos-sdk/blob/9f3575a10f1a6f1315b94a9be783df5156ce2292/tests/integration/bank/keeper/deterministic_test.go#L102-L115
 ```

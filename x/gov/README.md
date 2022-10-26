@@ -15,122 +15,122 @@ system. In this system, holders of the native staking token of the chain can vot
 on proposals on a 1 token 1 vote basis. Next is a list of features the module
 currently supports:
 
-* **Proposal submission:** Users can submit proposals with a deposit. Once the
-minimum deposit is reached, proposal enters voting period
-* **Vote:** Participants can vote on proposals that reached MinDeposit
-* **Inheritance and penalties:** Delegators inherit their validator's vote if
-they don't vote themselves.
-* **Claiming deposit:** Users that deposited on proposals can recover their
-deposits if the proposal was accepted OR if the proposal never entered voting period.
+- **Proposal submission:** Users can submit proposals with a deposit. Once the
+  minimum deposit is reached, proposal enters voting period
+- **Vote:** Participants can vote on proposals that reached MinDeposit
+- **Inheritance and penalties:** Delegators inherit their validator's vote if
+  they don't vote themselves.
+- **Claiming deposit:** Users that deposited on proposals can recover their
+  deposits if the proposal was accepted OR if the proposal never entered voting period.
 
 This module will be used in the Cosmos Hub, the first Hub in the Cosmos network.
 Features that may be added in the future are described in [Future Improvements](#future-improvements).
 
 ## Contents
 
-The following specification uses *ATOM* as the native staking token. The module
-can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the native
+The following specification uses _ATOM_ as the native staking token. The module
+can be adapted to any Proof-Of-Stake blockchain by replacing _ATOM_ with the native
 staking token of the chain.
 
-* [Concepts](#concepts)
-    * [Proposal submission](#proposal-submission)
-        * [Right to submit a proposal](#right-to-submit-a-proposal)
-        * [Proposal Messages](#proposal-messages)
-    * [Deposit](#deposit)
-        * [Deposit refund and burn](#deposit-refund-and-burn)
-    * [Vote](#vote)
-        * [Participants](#participants)
-        * [Voting period](#voting-period)
-        * [Option set](#option-set)
-        * [Weighted Votes](#weighted-votes)
-        * [Quorum](#quorum)
-        * [Threshold](#threshold)
-        * [Inheritance](#inheritance)
-        * [Validator’s punishment for non-voting](#validators-punishment-for-non-voting)
-        * [Governance address](#governance-address)
-    * [Software Upgrade](#software-upgrade)
-        * [Signal](#signal)
-        * [Switch](#switch)
-* [State](#state)
-    * [Proposals](#proposals)
-        * [Writing a module that uses governance](#writing-a-module-that-uses-governance)
-    * [Parameters and base types](#parameters-and-base-types)
-        * [DepositParams](#depositparams)
-        * [VotingParams](#votingparams)
-        * [TallyParams](#tallyparams)
-    * [Deposit](#deposit-1)
-    * [ValidatorGovInfo](#validatorgovinfo)
-    * [Stores](#stores)
-    * [Proposal Processing Queue](#proposal-processing-queue)
-    * [Legacy Proposal](#legacy-proposal)
-* [Messages](#messages)
-    * [Proposal Submission](#proposal-submission-1)
-    * [Deposit](#deposit-2)
-    * [Vote](#vote-1)
-* [Events](#events)
-    * [EndBlocker](#endblocker)
-    * [Handlers](#handlers)
-        * [MsgSubmitProposal](#msgsubmitproposal)
-        * [MsgVote](#msgvote)
-        * [MsgVoteWeighted](#msgvoteweighted)
-        * [MsgDeposit](#msgdeposit)
-* [Future Improvements](#future-improvements)
-* [Parameters](#parameters)
-    * [SubKeys](#subkeys)
-* [Client](#client)
-    * [CLI](#cli)
-        * [Query](#query)
-            * [deposit](#deposit-3)
-            * [deposits](#deposits)
-            * [param](#param)
-            * [params](#params)
-            * [proposal](#proposal)
-            * [proposals](#proposals-1)
-            * [proposer](#proposer)
-            * [tally](#tally)
-            * [vote](#vote-2)
-            * [votes](#votes)
-        * [Transactions](#transactions)
-            * [deposit](#deposit-4)
-            * [draft-proposal](#draft-proposal)
-            * [submit-proposal](#submit-proposal)
-            * [submit-legacy-proposal](#submit-legacy-proposal)
-            * [vote](#vote-3)
-            * [weighted-vote](#weighted-vote)
-    * [gRPC](#grpc)
-        * [Proposal](#proposal-1)
-        * [Proposals](#proposals-2)
-        * [Vote](#vote-4)
-        * [Votes](#votes-1)
-        * [Params](#params-1)
-        * [Deposit](#deposit-5)
-        * [deposits](#deposits-1)
-        * [TallyResult](#tallyresult)
-    * [REST](#rest)
-        * [proposal](#proposal-2)
-        * [proposals](#proposals-3)
-        * [voter vote](#voter-vote)
-        * [votes](#votes-2)
-        * [params](#params-2)
-        * [deposits](#deposits-2)
-        * [proposal deposits](#proposal-deposits)
-        * [tally](#tally-1)
-* [Metadata](#metadata)
-    * [Proposal](#proposal-3)
-    * [Vote](#vote-5)
+- [Concepts](#concepts)
+  - [Proposal submission](#proposal-submission)
+    - [Right to submit a proposal](#right-to-submit-a-proposal)
+    - [Proposal Messages](#proposal-messages)
+  - [Deposit](#deposit)
+    - [Deposit refund and burn](#deposit-refund-and-burn)
+  - [Vote](#vote)
+    - [Participants](#participants)
+    - [Voting period](#voting-period)
+    - [Option set](#option-set)
+    - [Weighted Votes](#weighted-votes)
+    - [Quorum](#quorum)
+    - [Threshold](#threshold)
+    - [Inheritance](#inheritance)
+    - [Validator’s punishment for non-voting](#validators-punishment-for-non-voting)
+    - [Governance address](#governance-address)
+  - [Software Upgrade](#software-upgrade)
+    - [Signal](#signal)
+    - [Switch](#switch)
+- [State](#state)
+  - [Proposals](#proposals)
+    - [Writing a module that uses governance](#writing-a-module-that-uses-governance)
+  - [Parameters and base types](#parameters-and-base-types)
+    - [DepositParams](#depositparams)
+    - [VotingParams](#votingparams)
+    - [TallyParams](#tallyparams)
+  - [Deposit](#deposit-1)
+  - [ValidatorGovInfo](#validatorgovinfo)
+  - [Stores](#stores)
+  - [Proposal Processing Queue](#proposal-processing-queue)
+  - [Legacy Proposal](#legacy-proposal)
+- [Messages](#messages)
+  - [Proposal Submission](#proposal-submission-1)
+  - [Deposit](#deposit-2)
+  - [Vote](#vote-1)
+- [Events](#events)
+  - [EndBlocker](#endblocker)
+  - [Handlers](#handlers)
+    - [MsgSubmitProposal](#msgsubmitproposal)
+    - [MsgVote](#msgvote)
+    - [MsgVoteWeighted](#msgvoteweighted)
+    - [MsgDeposit](#msgdeposit)
+- [Future Improvements](#future-improvements)
+- [Parameters](#parameters)
+  - [SubKeys](#subkeys)
+- [Client](#client)
+  - [CLI](#cli)
+    - [Query](#query)
+      - [deposit](#deposit-3)
+      - [deposits](#deposits)
+      - [param](#param)
+      - [params](#params)
+      - [proposal](#proposal)
+      - [proposals](#proposals-1)
+      - [proposer](#proposer)
+      - [tally](#tally)
+      - [vote](#vote-2)
+      - [votes](#votes)
+    - [Transactions](#transactions)
+      - [deposit](#deposit-4)
+      - [draft-proposal](#draft-proposal)
+      - [submit-proposal](#submit-proposal)
+      - [submit-legacy-proposal](#submit-legacy-proposal)
+      - [vote](#vote-3)
+      - [weighted-vote](#weighted-vote)
+  - [gRPC](#grpc)
+    - [Proposal](#proposal-1)
+    - [Proposals](#proposals-2)
+    - [Vote](#vote-4)
+    - [Votes](#votes-1)
+    - [Params](#params-1)
+    - [Deposit](#deposit-5)
+    - [deposits](#deposits-1)
+    - [TallyResult](#tallyresult)
+  - [REST](#rest)
+    - [proposal](#proposal-2)
+    - [proposals](#proposals-3)
+    - [voter vote](#voter-vote)
+    - [votes](#votes-2)
+    - [params](#params-2)
+    - [deposits](#deposits-2)
+    - [proposal deposits](#proposal-deposits)
+    - [tally](#tally-1)
+- [Metadata](#metadata)
+  - [Proposal](#proposal-3)
+  - [Vote](#vote-5)
 
 # Concepts
 
-*Disclaimer: This is work in progress. Mechanisms are susceptible to change.*
+_Disclaimer: This is work in progress. Mechanisms are susceptible to change._
 
 The governance process is divided in a few steps that are outlined below:
 
-* **Proposal submission:** Proposal is submitted to the blockchain with a
+- **Proposal submission:** Proposal is submitted to the blockchain with a
   deposit.
-* **Vote:** Once deposit reaches a certain value (`MinDeposit`), proposal is
+- **Vote:** Once deposit reaches a certain value (`MinDeposit`), proposal is
   confirmed and vote opens. Bonded Atom holders can then send `TxGovVote`
   transactions to vote on the proposal.
-* **Execution** After a period of time, the votes are tallied and depending
+- **Execution** After a period of time, the votes are tallied and depending
   on the result, the messages in the proposal will be executed.
 
 ## Proposal submission
@@ -158,14 +158,14 @@ the `MinDeposit` param.
 When a proposal is submitted, it has to be accompanied with a deposit that must be
 strictly positive, but can be inferior to `MinDeposit`. The submitter doesn't need
 to pay for the entire deposit on their own. The newly created proposal is stored in
-an *inactive proposal queue* and stays there until its deposit passes the `MinDeposit`.
+an _inactive proposal queue_ and stays there until its deposit passes the `MinDeposit`.
 Other token holders can increase the proposal's deposit by sending a `Deposit`
 transaction. If a proposal doesn't pass the `MinDeposit` before the deposit end time
 (the time when deposits are no longer accepted), the proposal will be destroyed: the
 proposal will be removed from state and the deposit will be burned (see x/gov `EndBlocker`).
 When a proposal deposit passes the `MinDeposit` threshold (even during the proposal
 submission) before the deposit end time, the proposal will be moved into the
-*active proposal queue* and the voting period will begin.
+_active proposal queue_ and the voting period will begin.
 
 The deposit is kept in escrow and held by the governance `ModuleAccount` until the
 proposal is finalized (passed or rejected).
@@ -175,33 +175,33 @@ proposal is finalized (passed or rejected).
 When a proposal is finalized, the coins from the deposit are either refunded or burned
 according to the final tally of the proposal:
 
-* If the proposal is approved or rejected but *not* vetoed, each deposit will be
+- If the proposal is approved or rejected but _not_ vetoed, each deposit will be
   automatically refunded to its respective depositor (transferred from the governance
   `ModuleAccount`).
-* When the proposal is vetoed with greater than 1/3, deposits will be burned from the
+- When the proposal is vetoed with greater than 1/3, deposits will be burned from the
   governance `ModuleAccount` and the proposal information along with its deposit
   information will be removed from state.
-* All refunded or burned deposits are removed from the state. Events are issued when
+- All refunded or burned deposits are removed from the state. Events are issued when
   burning or refunding a deposit.
 
 ## Vote
 
 ### Participants
 
-*Participants* are users that have the right to vote on proposals. On the
+_Participants_ are users that have the right to vote on proposals. On the
 Cosmos Hub, participants are bonded Atom holders. Unbonded Atom holders and
 other users do not get the right to participate in governance. However, they
 can submit and deposit on proposals.
 
-Note that some *participants* can be forbidden to vote on a proposal under a
+Note that some _participants_ can be forbidden to vote on a proposal under a
 certain validator if:
 
-* *participant* bonded or unbonded Atoms to said validator after proposal
+- _participant_ bonded or unbonded Atoms to said validator after proposal
   entered voting period.
-* *participant* became validator after proposal entered voting period.
+- _participant_ became validator after proposal entered voting period.
 
-This does not prevent *participant* to vote with Atoms bonded to other
-validators. For example, if a *participant* bonded some Atoms to validator A
+This does not prevent _participant_ to vote with Atoms bonded to other
+validators. For example, if a _participant_ bonded some Atoms to validator A
 before a proposal entered voting period and other Atoms to validator B after
 proposal entered voting period, only the vote under validator B will be
 forbidden.
@@ -221,10 +221,10 @@ choose from when casting its vote.
 
 The initial option set includes the following options:
 
-* `Yes`
-* `No`
-* `NoWithVeto`
-* `Abstain`
+- `Yes`
+- `No`
+- `NoWithVeto`
+- `Abstain`
 
 `NoWithVeto` counts as `No` but also adds a `Veto` vote. `Abstain` option
 allows voters to signal that they do not intend to vote in favor or against the
@@ -263,25 +263,25 @@ Threshold is defined as the minimum proportion of `Yes` votes (excluding
 
 Initially, the threshold is set at 50% of `Yes` votes, excluding `Abstain`
 votes. A possibility to veto exists if more than 1/3rd of all votes are
-`NoWithVeto` votes.  Note, both of these values are derived from the `TallyParams`
+`NoWithVeto` votes. Note, both of these values are derived from the `TallyParams`
 on-chain parameter, which is modifiable by governance.
 This means that proposals are accepted iff:
 
-* There exist bonded tokens.
-* Quorum has been achieved.
-* The proportion of `Abstain` votes is inferior to 1/1.
-* The proportion of `NoWithVeto` votes is inferior to 1/3, including
+- There exist bonded tokens.
+- Quorum has been achieved.
+- The proportion of `Abstain` votes is inferior to 1/1.
+- The proportion of `NoWithVeto` votes is inferior to 1/3, including
   `Abstain` votes.
-* The proportion of `Yes` votes, excluding `Abstain` votes, at the end of
+- The proportion of `Yes` votes, excluding `Abstain` votes, at the end of
   the voting period is superior to 1/2.
 
 ### Inheritance
 
 If a delegator does not vote, it will inherit its validator vote.
 
-* If the delegator votes before its validator, it will not inherit from the
+- If the delegator votes before its validator, it will not inherit from the
   validator's vote.
-* If the delegator votes after its validator, it will override its validator
+- If the delegator votes after its validator, it will override its validator
   vote with its own. If the proposal is urgent, it is possible
   that the vote will close before delegators have a chance to react and
   override their validator's vote. This is not a problem, as proposals require more than 2/3rd of the total voting power to pass before the end of the voting period. Because as little as 1/3 + 1 validation power could collude to censor transactions, non-collusion is already assumed for ranges exceeding this threshold.
@@ -306,17 +306,17 @@ After a `SoftwareUpgradeProposal` is accepted, validators are expected to
 download and install the new version of the software while continuing to run
 the previous version. Once a validator has downloaded and installed the
 upgrade, it will start signaling to the network that it is ready to switch by
-including the proposal's `proposalID` in its *precommits*.(_Note: Confirmation
+including the proposal's `proposalID` in its _precommits_.(_Note: Confirmation
 that we want it in the precommit?_)
 
-Note: There is only one signal slot per *precommit*. If several
+Note: There is only one signal slot per _precommit_. If several
 `SoftwareUpgradeProposals` are accepted in a short timeframe, a pipeline will
 form and they will be implemented one after the other in the order that they
 were accepted.
 
 ### Switch
 
-Once a block contains more than 2/3rd *precommits* where a common
+Once a block contains more than 2/3rd _precommits_ where a common
 `SoftwareUpgradeProposal` is signaled, all the nodes (including validator
 nodes, non-validating full nodes and light-nodes) are expected to switch to the
 new version of the software.
@@ -450,27 +450,29 @@ This type is used in a temp map when tallying
 
 ## Stores
 
-*Note: Stores are KVStores in the multi-store. The key to find the store is the first parameter in the list*
+_Note: Stores are KVStores in the multi-store. The key to find the store is the first parameter in the list_
 
-We will use one KVStore `Governance` to store two mappings:
+We will use one KVStore `Governance` to store four mappings:
 
-* A mapping from `proposalID|'proposal'` to `Proposal`.
-* A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
+- A mapping from `proposalID|'proposal'` to `Proposal`.
+- A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
   us to query all addresses that voted on the proposal along with their vote by
   doing a range query on `proposalID:addresses`.
-* A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all 
+- A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all
   x/gov params.
-  
+- A mapping from `VotingPeriodProposalKeyPrefix|proposalID` to a single byte. This allows
+  us to know if a proposal is in the voting period or not with very low gas cost.
+
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 
-* `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
-* `store(StoreKey, Key, value)`: Write value `Value` at key `Key` in store found at key `StoreKey` in the multistore
+- `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
+- `store(StoreKey, Key, value)`: Write value `Value` at key `Key` in store found at key `StoreKey` in the multistore
 
 ## Proposal Processing Queue
 
 **Store:**
 
-* `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the
+- `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the
   `ProposalIDs` of proposals that reached `MinDeposit`. During each `EndBlock`,
   all the proposals that have reached the end of their voting period are processed.
   To process a finished proposal, the application tallies the votes, computes the
@@ -567,13 +569,13 @@ must not be larger than the `maxMetadataLen` config passed into the gov keeper.
 
 **State modifications:**
 
-* Generate new `proposalID`
-* Create new `Proposal`
-* Initialise `Proposal`'s attributes
-* Decrease balance of sender by `InitialDeposit`
-* If `MinDeposit` is reached:
-    * Push `proposalID` in `ProposalProcessingQueue`
-* Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
+- Generate new `proposalID`
+- Create new `Proposal`
+- Initialise `Proposal`'s attributes
+- Decrease balance of sender by `InitialDeposit`
+- If `MinDeposit` is reached:
+  - Push `proposalID` in `ProposalProcessingQueue`
+- Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 A `MsgSubmitProposal` transaction can be handled according to the following
 pseudocode.
@@ -633,12 +635,12 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L
 
 **State modifications:**
 
-* Decrease balance of sender by `deposit`
-* Add `deposit` of sender in `proposal.Deposits`
-* Increase `proposal.TotalDeposit` by sender's `deposit`
-* If `MinDeposit` is reached:
-    * Push `proposalID` in `ProposalProcessingQueueEnd`
-* Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
+- Decrease balance of sender by `deposit`
+- Add `deposit` of sender in `proposal.Deposits`
+- Increase `proposal.TotalDeposit` by sender's `deposit`
+- If `MinDeposit` is reached:
+  - Push `proposalID` in `ProposalProcessingQueueEnd`
+- Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 A `MsgDeposit` transaction has to go through a number of checks to be valid.
 These checks are outlined in the following pseudocode.
@@ -701,9 +703,9 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L
 
 **State modifications:**
 
-* Record `Vote` of sender
+- Record `Vote` of sender
 
-*Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker.*
+_Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker._
 
 Next is a pseudocode outline of the way `MsgVote` transactions are
 handled:
@@ -762,7 +764,7 @@ The governance module emits the following events:
 | message             | action              | submit_proposal |
 | message             | sender              | {senderAddress} |
 
-* [0] Event only emitted if the voting period starts during the submission.
+- [0] Event only emitted if the voting period starts during the submission.
 
 ### MsgVote
 
@@ -776,13 +778,13 @@ The governance module emits the following events:
 
 ### MsgVoteWeighted
 
-| Type          | Attribute Key | Attribute Value          |
-| ------------- | ------------- | ------------------------ |
-| proposal_vote | option        | {weightedVoteOptions}    |
-| proposal_vote | proposal_id   | {proposalID}             |
-| message       | module        | governance               |
-| message       | action        | vote                     |
-| message       | sender        | {senderAddress}          |
+| Type          | Attribute Key | Attribute Value       |
+| ------------- | ------------- | --------------------- |
+| proposal_vote | option        | {weightedVoteOptions} |
+| proposal_vote | proposal_id   | {proposalID}          |
+| message       | module        | governance            |
+| message       | action        | vote                  |
+| message       | sender        | {senderAddress}       |
 
 ### MsgDeposit
 
@@ -795,14 +797,14 @@ The governance module emits the following events:
 | message              | action              | deposit         |
 | message              | sender              | {senderAddress} |
 
-* [0] Event only emitted if the voting period starts during the submission.
+- [0] Event only emitted if the voting period starts during the submission.
 
 # Future Improvements
 
 The current documentation only describes the minimum viable product for the
 governance module. Future improvements may include:
 
-* **`BountyProposals`:** If accepted, a `BountyProposal` creates an open
+- **`BountyProposals`:** If accepted, a `BountyProposal` creates an open
   bounty. The `BountyProposal` specifies how many Atoms will be given upon
   completion. These Atoms will be taken from the `reserve pool`. After a
   `BountyProposal` is accepted by governance, anybody can submit a
@@ -814,13 +816,13 @@ governance module. Future improvements may include:
   If a `SoftwareUpgradeProposal` linked to an open bounty is accepted by
   governance, the funds that were reserved are automatically transferred to the
   submitter.
-* **Complex delegation:** Delegators could choose other representatives than
+- **Complex delegation:** Delegators could choose other representatives than
   their validators. Ultimately, the chain of representatives would always end
   up to a validator, but delegators could inherit the vote of their chosen
   representative before they inherit the vote of their validator. In other
   words, they would only inherit the vote of their validator if their other
   appointed representative did not vote.
-* **Better process for proposal review:** There would be two parts to
+- **Better process for proposal review:** There would be two parts to
   `proposal.Deposit`, one for anti-spam (same as in MVP) and an other one to
   reward third party auditors.
 
@@ -829,7 +831,7 @@ governance module. Future improvements may include:
 The governance module contains the following parameters:
 
 | Key           | Type   | Example                                                                                            |
-|---------------|--------|----------------------------------------------------------------------------------------------------|
+| ------------- | ------ | -------------------------------------------------------------------------------------------------- |
 | depositparams | object | {"min_deposit":[{"denom":"uatom","amount":"10000000"}],"max_deposit_period":"172800000000000"}     |
 | votingparams  | object | {"voting_period":"172800000000000"}                                                                |
 | tallyparams   | object | {"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto":"0.334000000000000000"} |
@@ -837,7 +839,7 @@ The governance module contains the following parameters:
 ## SubKeys
 
 | Key                | Type             | Example                                 |
-|--------------------|------------------|-----------------------------------------|
+| ------------------ | ---------------- | --------------------------------------- |
 | min_deposit        | array (coins)    | [{"denom":"uatom","amount":"10000000"}] |
 | max_deposit_period | string (time ns) | "172800000000000"                       |
 | voting_period      | string (time ns) | "172800000000000"                       |
@@ -1227,7 +1229,7 @@ where `proposal.json` contains:
       "@type": "/cosmos.bank.v1beta1.MsgSend",
       "from_address": "cosmos1...", // The gov module module address
       "to_address": "cosmos1...",
-      "amount":[{"denom": "stake","amount": "10"}]
+      "amount": [{ "denom": "stake", "amount": "10" }]
     }
   ],
   "metadata": "AQ==",
@@ -1422,7 +1424,6 @@ Example Output:
   }
 }
 ```
-
 
 ### Proposals
 
@@ -2650,7 +2651,6 @@ Example Output:
 }
 ```
 
-
 # Metadata
 
 The gov module has two locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the gov and group modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure accross chains.
@@ -2666,7 +2666,7 @@ Location: off-chain as json object stored on IPFS (mirrors [group proposal](../g
   "summary": "",
   "details": "",
   "proposal_forum_url": "",
-  "vote_option_context": "",
+  "vote_option_context": ""
 }
 ```
 
@@ -2676,6 +2676,6 @@ Location: on-chain as json within 255 character limit (mirrors [group vote](../g
 
 ```json
 {
-  "justification": "",
+  "justification": ""
 }
 ```

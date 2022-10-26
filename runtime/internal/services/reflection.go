@@ -6,12 +6,9 @@ import (
 	"context"
 	"io"
 
-	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/slices"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -68,33 +65,9 @@ func NewReflectionService() (*ReflectionService, error) {
 
 }
 
-func (r ReflectionService) FileDescriptors(_ context.Context, request *reflectionv1.FileDescriptorsRequest) (*reflectionv1.FileDescriptorsResponse, error) {
-	pagination := request.Pagination
-	if pagination == nil {
-		return &reflectionv1.FileDescriptorsResponse{File: r.files.File}, nil
-	}
-
-	if len(pagination.Key) > 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "key based pagination is not supported")
-	}
-
-	n := len(r.files.File)
-	offset := int(pagination.Offset)
-	if offset >= n {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid offset")
-	}
-
-	limit := int(pagination.Limit)
-	extent := offset + limit
-	if extent > n {
-		extent = n
-	}
-
+func (r ReflectionService) FileDescriptors(_ context.Context, _ *reflectionv1.FileDescriptorsRequest) (*reflectionv1.FileDescriptorsResponse, error) {
 	return &reflectionv1.FileDescriptorsResponse{
-		File: r.files.File[offset:extent],
-		Pagination: &queryv1beta1.PageResponse{
-			Total: uint64(n),
-		},
+		Files: r.files.File,
 	}, nil
 }
 

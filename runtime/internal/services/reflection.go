@@ -62,7 +62,6 @@ func NewReflectionService() (*ReflectionService, error) {
 	})
 
 	return &ReflectionService{files: fds}, nil
-
 }
 
 func (r ReflectionService) FileDescriptors(_ context.Context, _ *reflectionv1.FileDescriptorsRequest) (*reflectionv1.FileDescriptorsResponse, error) {

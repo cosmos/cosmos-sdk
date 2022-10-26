@@ -12,8 +12,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
 
-	"github.com/cosmos/gogoproto/proto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -22,6 +20,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 const (

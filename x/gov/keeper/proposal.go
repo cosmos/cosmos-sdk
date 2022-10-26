@@ -102,6 +102,10 @@ func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer
 		return sdkerrors.Wrapf(types.ErrProposalNotFound, "proposal not found with %d id", proposalID)
 	}
 
+	if proposal.Proposer == "" {
+		return sdkerrors.Wrapf(types.ErrInvalidProposal, "proposal %d does n't have proposer %s, so cannot be canceled", proposalID, proposer)
+	}
+
 	// Check creator of the proposal
 	if proposal.Proposer != proposer {
 		return sdkerrors.Wrapf(types.ErrInvalidProposer, "invalid proposer %s", proposer)

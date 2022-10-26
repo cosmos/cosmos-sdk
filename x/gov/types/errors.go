@@ -26,5 +26,5 @@ var (
 	ErrInvalidProposer         = sdkerrors.Register(ModuleName, 18, "invalid proposer")
 	ErrNoDeposits              = sdkerrors.Register(ModuleName, 19, "no deposits found")
 	ErrVotingPeriodEnded       = sdkerrors.Register(ModuleName, 20, "voting period already ended")
-	ErrInvalidProposal         = sdkerrors.Register(ModuleName, 21, "proposal is already processed")
+	ErrInvalidProposal         = sdkerrors.Register(ModuleName, 21, "invalid proposal")
 )

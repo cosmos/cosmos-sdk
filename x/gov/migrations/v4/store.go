@@ -72,6 +72,12 @@ func AddProposerAddressToProposal(ctx sdk.Context, storeKey storetypes.StoreKey,
 			panic(err)
 		}
 
+		// Check if proposal is active
+		if proposal.Status != govv1.ProposalStatus_PROPOSAL_STATUS_VOTING_PERIOD &&
+			proposal.Status != govv1.ProposalStatus_PROPOSAL_STATUS_DEPOSIT_PERIOD {
+			return fmt.Errorf("invalid proposal : %s, proposal not active", proposals[proposalID])
+		}
+
 		proposal.Proposer = proposals[proposalID]
 
 		// set the new proposal with proposer

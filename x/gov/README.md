@@ -452,7 +452,7 @@ This type is used in a temp map when tallying
 
 *Note: Stores are KVStores in the multi-store. The key to find the store is the first parameter in the list*
 
-We will use one KVStore `Governance` to store two mappings:
+We will use one KVStore `Governance` to store four mappings:
 
 * A mapping from `proposalID|'proposal'` to `Proposal`.
 * A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
@@ -460,6 +460,8 @@ We will use one KVStore `Governance` to store two mappings:
   doing a range query on `proposalID:addresses`.
 * A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all 
   x/gov params.
+* A mapping from `VotingPeriodProposalKeyPrefix|proposalID` to a single byte. This allows
+  us to know if a proposal is in the voting period or not with very low gas cost.
   
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 

@@ -29,10 +29,6 @@ archives:
 checksum:
   name_template: 'SHA256SUMS-{{ replace .Version "cosmovisor/" "cosmovisor-" }}.txt'
   algorithm: sha256
+
 changelog:
   skip: false
-  sort: asc
-  filters:
-    exclude:
-      - "^docs:"
-      - "^test:"

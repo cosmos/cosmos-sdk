@@ -62,7 +62,6 @@ service Query {
   //
   // Since: cosmos-sdk 0.46
   rpc Bech32Prefix(Bech32PrefixRequest) returns (Bech32PrefixResponse) {
-    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }
 
@@ -70,7 +69,6 @@ service Query {
   //
   // Since: cosmos-sdk 0.46
   rpc AddressBytesToString(AddressBytesToStringRequest) returns (AddressBytesToStringResponse) {
-    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32/{address_bytes}";
   }
 
@@ -78,7 +76,6 @@ service Query {
   //
   // Since: cosmos-sdk 0.46
   rpc AddressStringToBytes(AddressStringToBytesRequest) returns (AddressStringToBytesResponse) {
-    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32/{address_string}";
   }
 

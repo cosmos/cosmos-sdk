@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -113,7 +114,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, ss exported.Subspace) AppModule {
+func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, ss exported.Subspace) AppModule {
 	return AppModule{
 		AppModuleBasic:    AppModuleBasic{},
 		accountKeeper:     accountKeeper,

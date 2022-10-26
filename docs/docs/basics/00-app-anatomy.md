@@ -130,13 +130,13 @@ Here are descriptions of what each of the four fields means:
 * `InterfaceRegistry`: The `InterfaceRegistry` is used by the Protobuf codec to handle interfaces that are encoded and decoded (we also say "unpacked") using [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto). `Any` could be thought as a struct that contains a `type_url` (name of a concrete type implementing the interface) and a `value` (its encoded bytes). `InterfaceRegistry` provides a mechanism for registering interfaces and implementations that can be safely unpacked from `Any`. Each application module implements the `RegisterInterfaces` method that can be used to register the module's own interfaces and implementations.
     * You can read more about `Any` in [ADR-019](../architecture/adr-019-protobuf-state-encoding.md).
     * To go more into details, the Cosmos SDK uses an implementation of the Protobuf specification called [`gogoprotobuf`](https://github.com/cosmos/gogoproto). By default, the [gogo protobuf implementation of `Any`](https://pkg.go.dev/github.com/cosmos/gogoproto/types) uses [global type registration](https://github.com/cosmos/gogoproto/blob/master/proto/properties.go#L540) to decode values packed in `Any` into concrete Go types. This introduces a vulnerability where any malicious module in the dependency tree could register a type with the global protobuf registry and cause it to be loaded and unmarshaled by a transaction that referenced it in the `type_url` field. For more information, please refer to [ADR-019](../architecture/adr-019-protobuf-state-encoding.md).
-* `Codec`: the default codec used throughout the Cosmos SDK. It is composed of a `BinaryCodec` used to encode and decode state, and a `JSONCodec` used to output data to the users (for example in the [CLI](#cli)). By default, the SDK uses Protobuf as `Codec`.
+* `Codec`: The default codec used throughout the Cosmos SDK. It is composed of a `BinaryCodec` used to encode and decode state, and a `JSONCodec` used to output data to the users (for example, in the [CLI](#cli)). By default, the SDK uses Protobuf as `Codec`.
 * `TxConfig`: `TxConfig` defines an interface a client can utilize to generate an application-defined concrete transaction type. Currently, the SDK handles two transaction types: `SIGN_MODE_DIRECT` (which uses Protobuf binary as over-the-wire encoding) and `SIGN_MODE_LEGACY_AMINO_JSON` (which depends on Amino). Read more about transactions [here](../core/01-transactions.md).
 * `Amino`: Some legacy parts of the Cosmos SDK still use Amino for backwards-compatibility. Each module exposes a `RegisterLegacyAmino` method to register the module's specific types within Amino. This `Amino` codec should not be used by app developers anymore, and will be removed in future releases.
 
 The Cosmos SDK exposes a `MakeTestEncodingConfig` function used to create an `EncodingConfig` for the app constructor (`NewApp`). It uses Protobuf as a default `Codec`.
 
-NOTE: This function is deprecated and should only be used to create an app or in tests.
+**NOTE:** This function is deprecated and should only be used to create an app or in tests.
 
 See an example of a `MakeTestEncodingConfig` from `simapp`:
 
@@ -195,7 +195,7 @@ Finally, each module should also implement the `RegisterServices` method as part
 
 `Keepers` are generally defined in a file called `keeper.go`. It contains the `keeper`'s type definition and methods.
 
-The `keeper` type definition generally consists of:
+The `keeper` type definition generally consists of the following:
 
 * **Key(s)** to the module's store(s) in the multistore.
 * Reference to **other module's `keepers`**. Only needed if the `keeper` needs to access other module's store(s) (either to read or write from them).
@@ -218,10 +218,10 @@ Generally, the [commands related to a module](../building-modules/09-module-inte
 
 [gRPC](https://grpc.io) is a modern open-source high performance RPC framework that has support in multiple languages. It is the recommended way for external clients (such as wallets, browsers and other backend services) to interact with a node.
 
-Each module can expose gRPC endpoints called [service methods](https://grpc.io/docs/what-is-grpc/core-concepts/#service-definition), which are defined in the [module's Protobuf `query.proto` file](#grpc-query-services). A service method is defined by its name, input arguments, and output response. The module then needs to:
+Each module can expose gRPC endpoints called [service methods](https://grpc.io/docs/what-is-grpc/core-concepts/#service-definition), which are defined in the [module's Protobuf `query.proto` file](#grpc-query-services). A service method is defined by its name, input arguments, and output response. The module then needs to perform the following actions:
 
-* define a `RegisterGRPCGatewayRoutes` method on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
-* for each service method, define a corresponding handler. The handler implements the core logic necessary to serve the gRPC request, and is located in the `keeper/grpc_query.go` file.
+* Define a `RegisterGRPCGatewayRoutes` method on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
+* For each service method, define a corresponding handler. The handler implements the core logic necessary to serve the gRPC request, and is located in the `keeper/grpc_query.go` file.
 
 #### gRPC-gateway REST Endpoints
 
@@ -235,11 +235,11 @@ The Cosmos SDK also provides a development endpoint to generate [Swagger](https:
 
 [Interfaces](#command-line-grpc-services-and-rest-interfaces) let end-users interact with full-node clients. This means querying data from the full-node or creating and sending new transactions to be relayed by the full-node and eventually included in a block.
 
-The main interface is the [Command-Line Interface](../core/07-cli.md). The CLI of a Cosmos SDK application is built by aggregating [CLI commands](#cli) defined in each of the modules used by the application. The CLI of an application is the same as the daemon (e.g. `appd`), and is defined in a file called `appd/main.go`. The file contains:
+The main interface is the [Command-Line Interface](../core/07-cli.md). The CLI of a Cosmos SDK application is built by aggregating [CLI commands](#cli) defined in each of the modules used by the application. The CLI of an application is the same as the daemon (e.g. `appd`), and is defined in a file called `appd/main.go`. The file contains the following:
 
 * **A `main()` function**, which is executed to build the `appd` interface client. This function prepares each command and adds them to the `rootCmd` before building them. At the root of `appd`, the function adds generic commands like `status`, `keys`, and `config`, query commands, tx commands, and `rest-server`.
-* **Query commands** are added by calling the `queryCmd` function. This function returns a Cobra command that contains the query commands defined in each of the application's modules (passed as an array of `sdk.ModuleClients` from the `main()` function), as well as some other lower level query commands such as block or validator queries. Query command are called by using the command `appd query [query]` of the CLI.
-* **Transaction commands** are added by calling the `txCmd` function. Similar to `queryCmd`, the function returns a Cobra command that contains the tx commands defined in each of the application's modules, as well as lower level tx commands like transaction signing or broadcasting. Tx commands are called by using the command `appd tx [tx]` of the CLI.
+* **Query commands**, which are added by calling the `queryCmd` function. This function returns a Cobra command that contains the query commands defined in each of the application's modules (passed as an array of `sdk.ModuleClients` from the `main()` function), as well as some other lower level query commands such as block or validator queries. Query command are called by using the command `appd query [query]` of the CLI.
+* **Transaction commands**, which are added by calling the `txCmd` function. Similar to `queryCmd`, the function returns a Cobra command that contains the tx commands defined in each of the application's modules, as well as lower level tx commands like transaction signing or broadcasting. Tx commands are called by using the command `appd tx [tx]` of the CLI.
 
 See an example of an application's main command-line file from the [Cosmos Hub](https://github.com/cosmos/gaia).
 

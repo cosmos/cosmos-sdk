@@ -57,7 +57,7 @@ The command-line is an easy way to interact with an application, but `Tx` can al
 ## Addition to Mempool
 
 Each full-node (running Tendermint) that receives a `Tx` sends an [ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#messages),
-`CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the nodes'
+`CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the node's
 [**Mempool**](https://docs.tendermint.com/master/tendermint-core/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes discard a `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 
 ### Types of Checks
@@ -93,16 +93,16 @@ To discard obviously invalid messages, the `BaseApp` type calls the `ValidateBas
 
 #### Guideline
 
-Gas is not charged when `ValidateBasic` is executed, so we recommend only performing all necessary stateless checks to enable middleware operations (for example, parsing the required signer accounts to validate a signature by a middleware) and stateless sanity checks not impacting performance of the CheckTx phase.
+Gas is not charged when `ValidateBasic` is executed, so we recommend only performing all necessary stateless checks to enable middleware operations (for example, parsing the required signer accounts to validate a signature by a middleware) and stateless sanity checks not impacting performance of the `CheckTx` phase.
 Other validation operations must be performed when [handling a message](../building-modules/msg-services#Validation) in a module Msg Server.
 
-Example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for non-empty addresses and a non-negative coin amount, but does not require knowledge of state such as the account balance of an address.
+For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for non-empty addresses and a non-negative coin amount, but does not require knowledge of state such as the account balance of an address.
 
 See also [Msg Service Validation](../building-modules/03-msg-services.md#Validation).
 
 ### AnteHandler
 
-After the ValidateBasic checks, the `AnteHandler`s are run. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction and other core operations related to blockchain transactions.
+After the `ValidateBasic` checks, the `AnteHandler`s are run. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction, and other core operations related to blockchain transactions.
 
 A copy of the cached context is provided to the `AnteHandler`, which performs limited checks specified for the transaction type. Using a copy allows the `AnteHandler` to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
@@ -110,7 +110,7 @@ For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/
 
 ### Gas
 
-The [`Context`](../core/02-context.md), which keeps a `GasMeter` that tracks how much gas is used during the execution of `Tx`, is initialized. The user-provided amount of gas for `Tx` is known as `GasWanted`. If `GasConsumed`, the amount of gas consumed so during execution, ever exceeds `GasWanted`, the execution stops and the changes made to the cached copy of the state are not committed. Otherwise, `CheckTx` sets `GasUsed` equal to `GasConsumed` and returns it in the result. After calculating the gas and fee values, validator-nodes check that the user-specified `gas-prices` is greater than their locally defined `min-gas-prices`.
+The [`Context`](../core/02-context.md), which keeps a `GasMeter` that tracks how much gas is used during the execution of `Tx`, is initialized. The user-provided amount of gas for `Tx` is known as `GasWanted`. If `GasConsumed`, the amount of gas consumed during execution, ever exceeds `GasWanted`, the execution stops and the changes made to the cached copy of the state are not committed. Otherwise, `CheckTx` sets `GasUsed` equal to `GasConsumed` and returns it in the result. After calculating the gas and fee values, validator-nodes check that the user-specified `gas-prices` is greater than their locally defined `min-gas-prices`.
 
 ### Discard or Addition to Mempool
 
@@ -133,7 +133,7 @@ disincentivized by the need to pay fees.
 Validator nodes keep a mempool to prevent replay attacks, just as full-nodes do, but also use it as
 a pool of unconfirmed transactions in preparation of block inclusion. Note that even if a `Tx`
 passes all checks at this stage, it is still possible to be found invalid later on, because
-`CheckTx` does not fully validate the transaction (i.e. it does not actually execute the messages).
+`CheckTx` does not fully validate the transaction (that is, it does not actually execute the messages).
 
 ## Inclusion in a Block
 
@@ -205,7 +205,7 @@ Instead of using their `checkState`, full-nodes use `deliverState`:
 * **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
   Nodes first unmarshal the transaction, using the [`TxConfig`](./app-anatomy#register-codec) defined in the app, then call `runTx` in `runTxModeDeliver`, which is very similar to `CheckTx` but also executes and writes state changes.
 
-* **Checks and AnteHandler:** Full-nodes call `validateBasicMsgs` and `AnteHandler` again. This second check
+* **Checks and `AnteHandler`:** Full-nodes call `validateBasicMsgs` and `AnteHandler` again. This second check
   happens because they may not have seen the same transactions during the addition to Mempool stage 
   and a malicious proposer may have included invalid ones. One difference here is that the
   `AnteHandler` does not compare `gas-prices` to the node's `min-gas-prices` since that value is local
@@ -219,7 +219,7 @@ Instead of using their `checkState`, full-nodes use `deliverState`:
   
 * **`Msg` service:** Protobuf `Msg` service is responsible for executing each message in the `Tx` and causes state transitions to persist in `deliverTxState`.
 
-* **PostHandlers:** [`PostHandler`](../core/00-baseapp.md#posthandler)s run after the execution of the message. If they fail, the state change of `runMsgs`, as well of `PostHandlers` are both reverted.
+* **PostHandlers:** [`PostHandler`](../core/00-baseapp.md#posthandler)s run after the execution of the message. If they fail, the state change of `runMsgs`, as well of `PostHandlers`, are both reverted.
 
 * **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much
   gas is being used; if execution completes, `GasUsed` is set and returned in the

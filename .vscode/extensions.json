@@ -1,3 +1,7 @@
 {
-  "recommendations": ["DavidAnson.vscode-markdownlint"]
+  "recommendations": [
+    "golang.go",
+    "bufbuild.vscode-buf",
+    "davidanson.vscode-markdownlint"
+  ]
 }

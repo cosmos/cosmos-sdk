@@ -170,7 +170,7 @@ func NewBaseApp(
 
 	// if execution of options has left certain required fields nil, set them to sane default values
 	if app.mempool == nil {
-		app.mempool = mempool.NewSimpleMempool()
+		app.mempool = mempool.NewNonceMempool()
 	}
 
 	if app.interBlockCache != nil {
@@ -696,6 +696,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	}
 
 	if mode == runTxModeCheck {
+		fmt.Println("inserting tx:", tx.GetMsgs())
 		err = app.mempool.Insert(ctx, tx.(mempool.Tx))
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err
@@ -760,7 +761,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
 		// skip actual execution for (Re)CheckTx mode
-		if mode == runTxModeCheck || mode == runTxModeReCheck {
+		if mode == runTxModeCheck || mode == runTxModeReCheck || mode == runTxPrepareProposal || mode == runTxProcessProposal {
 			break
 		}
 
@@ -843,13 +844,16 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 		panic(selectErr)
 	}
 	var txsBytes [][]byte
+	fmt.Println("memtx", memTxs)
 	for _, memTx := range memTxs {
 		bz, encErr := app.txEncoder(memTx)
 		if encErr != nil {
 			panic(encErr)
 		}
+		fmt.Println("messages:", memTx.GetMsgs())
 		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
 		if err != nil {
+			fmt.Println("error un prepare propossal", memTx)
 			_ = app.mempool.Remove(memTx)
 		} else {
 			txsBytes = append(txsBytes, bz)
@@ -865,9 +869,11 @@ func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {
 		if err != nil {
 			return err
 		}
+		fmt.Println(tx)
 
-		_, _, _, _, err = app.runTx(runTxPrepareProposal, txBytes)
+		_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
 		if err != nil {
+			fmt.Println("error run tx process", tx)
 			_ = app.mempool.Remove(tx.(mempool.Tx))
 		}
 	}

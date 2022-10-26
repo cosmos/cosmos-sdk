@@ -1,8 +1,6 @@
 package v3
 
 import (
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -10,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // MigrateStore performs in-place store migrations from v0.43 to v0.45. The

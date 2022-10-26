@@ -2,8 +2,6 @@ package v2
 
 import (
 	"cosmossdk.io/math"
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -11,6 +9,7 @@ import (
 	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
 	v1 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // migrateSupply migrates the supply to be stored by denom key instead in a

@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.19
 
 require (
-	cosmossdk.io/api v0.2.1
+	cosmossdk.io/api v0.2.2
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.3
 	cosmossdk.io/simapp v0.0.0-20220908203654-84d4bf5accad

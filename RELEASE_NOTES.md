@@ -1,3 +1,16 @@
+## [v0.46.3-pio-2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-2) - 2022-10-26
+
+### Bug Fixes
+
+* (store) [#13530](https://github.com/cosmos/cosmos-sdk/pull/13530) Fix app-hash mismatch if upgrade migration commit is interrupted.
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3-pio-1...v0.46.3-pio-2
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3...v0.46.3-pio-2
+
+---
+
 ## [v0.46.3-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-1) - 2022-10-20
 
 Chains using this version must also apply the following replace line to their `go.mod`:

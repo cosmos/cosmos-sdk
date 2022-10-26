@@ -5,7 +5,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
@@ -20,6 +19,8 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 const (
@@ -56,7 +57,7 @@ type BaseApp struct { //nolint: maligned
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
-	mempool        sdk.Mempool      // application side mempool
+	mempool        mempool.Mempool  // application side mempool
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
 	postHandler    sdk.AnteHandler  // post handler, optional, e.g. for tips
 	initChainer    sdk.InitChainer  // initialize state with validators and state blob
@@ -655,7 +656,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 	// TODO remove nil check when implemented
 	if mode == runTxModeCheck && app.mempool != nil {
-		err = app.mempool.Insert(ctx, tx.(sdk.MempoolTx))
+		err = app.mempool.Insert(ctx, tx.(mempool.Tx))
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err
 		}

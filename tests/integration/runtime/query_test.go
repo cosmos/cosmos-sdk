@@ -95,10 +95,10 @@ func TestReflectionService(t *testing.T) {
 
 	res, err := f.reflectionClient.FileDescriptors(f.ctx, &reflectionv1.FileDescriptorsRequest{})
 	assert.NilError(t, err)
-	assert.Assert(t, res != nil && res.File != nil)
+	assert.Assert(t, res != nil && res.Files != nil)
 
 	fdMap := map[string]*descriptorpb.FileDescriptorProto{}
-	for _, descriptorProto := range res.File {
+	for _, descriptorProto := range res.Files {
 		fdMap[*descriptorProto.Name] = descriptorProto
 	}
 

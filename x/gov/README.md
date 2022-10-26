@@ -321,7 +321,7 @@ Once a block contains more than 2/3rd *precommits* where a common
 nodes, non-validating full nodes and light-nodes) are expected to switch to the
 new version of the software.
 
-Validators and full nodes can use an automation tool, such as [Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/main/cosmovisor/README.md), for automatically switching version of the chain.
+Validators and full nodes can use an automation tool, such as [Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/main/tools/cosmovisor/README.md), for automatically switching version of the chain.
 
 # State
 

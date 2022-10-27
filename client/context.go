@@ -354,7 +354,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool, simulate bool)
 	}
 
 	var info keyring.Info
-	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
+	if err == nil {
 		info, err = kr.KeyByAddress(addr)
 		if err != nil {
 			return nil, "", 0, err

@@ -1,7 +1,6 @@
 package tx
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"

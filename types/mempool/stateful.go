@@ -96,7 +96,6 @@ func (amp *MemPoolI) Insert(ctx sdk.Context, tx Tx) error {
 	amp.accountsHeads.Set(accountMeempool.currentKey, accountMeempool)
 	amp.senders[sender] = accountMeempool
 	return nil
-
 }
 
 func (amp *MemPoolI) Select(_ sdk.Context, _ [][]byte, maxBytes int64) ([]Tx, error) {
@@ -106,7 +105,7 @@ func (amp *MemPoolI) Select(_ sdk.Context, _ [][]byte, maxBytes int64) ([]Tx, er
 	currentAccount := amp.accountsHeads.Front()
 	for currentAccount != nil {
 		accountMemPool := currentAccount.Value.(*AccountMemPool)
-		//currentTx := accountMemPool.transactions.Front()
+
 		prevKey := accountMemPool.currentKey
 		tx := accountMemPool.Pop()
 		if tx == nil {

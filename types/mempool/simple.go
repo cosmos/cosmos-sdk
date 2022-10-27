@@ -12,17 +12,17 @@ type simpleMempool struct {
 	txQueue *huandu.SkipList
 }
 
-type txKey struct {
-	nonce  uint64
-	sender string
-}
-
-func txKeyLessNonce(a, b any) int {
-	keyA := a.(txKey)
-	keyB := b.(txKey)
-
-	return huandu.Uint64.Compare(keyB.nonce, keyA.nonce)
-}
+// type txKey struct {
+//	nonce  uint64
+//	sender string
+//}
+//
+//func txKeyLessNonce(a, b any) int {
+//	keyA := a.(txKey)
+//	keyB := b.(txKey)
+//
+//	return huandu.Uint64.Compare(keyB.nonce, keyA.nonce)
+//}
 
 func DefaultSimpleMempool() Mempool {
 	return NewPriorityMempool()

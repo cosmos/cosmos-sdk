@@ -193,8 +193,9 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				require.NoError(t, err)
 			}
 
-			orderedTxs, err := pool.Select(nil, 1000)
+			selCursor, err := pool.Select(nil)
 			require.NoError(t, err)
+			orderedTxs := fetchTxs(selCursor, 1000)
 			var txOrder []int
 			for _, tx := range orderedTxs {
 				txOrder = append(txOrder, tx.(testTx).id)

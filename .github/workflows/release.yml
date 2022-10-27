@@ -45,6 +45,7 @@ jobs:
           SLACK_ICON: https://avatars.githubusercontent.com/t/5997665?size=64
           SLACK_COLOR: good
           SLACK_TITLE: "Cosmos SDK Release"
-          SLACK_MESSAGE: "@channel ${{ github.ref_name }} has been tagged :tada:"
-          SLACK_FOOTER: "See more at https://github.com/cosmos/cosmos-sdk/releases/tag/${{ github.ref_name }}"
+          SLACK_MESSAGE: "@channel ${{ github.ref_name }} has been tagged :tada: :point_right: https://github.com/cosmos/cosmos-sdk/releases/tag/${{ github.ref_name }}"
+          SLACK_FOOTER: ""
           SLACK_LINK_NAMES: true
+          MSG_MINIMAL: true

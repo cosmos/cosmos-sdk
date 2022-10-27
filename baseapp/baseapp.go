@@ -839,40 +839,35 @@ func createEvents(msg sdk.Msg) sdk.Events {
 }
 
 func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, error) {
-	cursor, selectErr := app.mempool.Select(req.Txs)
-	if selectErr != nil {
-		panic(selectErr)
-	}
+	iterator := app.mempool.Select(req.Txs)
 	var (
 		txsBytes  [][]byte
 		byteCount int64
 	)
-	for cursor != nil {
-		memTx := cursor.Tx()
-
-		if byteCount += memTx.Size(); byteCount > req.MaxTxBytes {
-			break
-		}
+	for iterator != nil {
+		memTx := iterator.Tx()
 
 		bz, encErr := app.txEncoder(memTx)
 		if encErr != nil {
-			panic(encErr)
+			return nil, encErr
 		}
 
 		fmt.Println("messages:", memTx.GetMsgs())
 		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
 		if err != nil {
 			fmt.Println("error un prepare propossal", memTx)
-			_ = app.mempool.Remove(memTx)
-		} else {
+			removeErr := app.mempool.Remove(memTx)
+			if removeErr != nil {
+				return nil, removeErr
+			}
+			continue
+		} else if byteCount += memTx.Size(); byteCount <= req.MaxTxBytes {
 			txsBytes = append(txsBytes, bz)
+		} else {
+			break
 		}
 
-		next, cursorErr := cursor.Next()
-		if cursorErr != nil {
-			panic(cursorErr)
-		}
-		cursor = next
+		iterator = iterator.Next()
 	}
 
 	return txsBytes, nil

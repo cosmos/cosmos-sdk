@@ -134,7 +134,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	require.Equal(t, len(accounts), s.mempool.CountTx())
 
 	// distinct sender-nonce should not overwrite a tx
-	s.resetMempool()
+	s.mempool = mempool.NewNonceMempool()
 	for i, tx := range txs {
 		tx.nonce = uint64(i)
 		err := s.mempool.Insert(ctx, tx)
@@ -159,7 +159,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	require.Error(t, s.mempool.Remove(tx))
 
 	// removing a tx not in the mempool should error
-	s.resetMempool()
+	s.mempool = mempool.NewNonceMempool()
 	require.NoError(t, s.mempool.Insert(ctx, txs[0]))
 	require.ErrorIs(t, s.mempool.Remove(txs[1]), mempool.ErrTxNotFound)
 
@@ -181,15 +181,11 @@ type MempoolTestSuite struct {
 	mempool     mempool.Mempool
 }
 
-func (s *MempoolTestSuite) resetMempool() {
-	s.iterations = 0
-	s.mempool = mempool.NewNonceMempool()
-}
-
 func (s *MempoolTestSuite) SetupTest() {
 	s.numTxs = 1000
 	s.numAccounts = 100
-	s.resetMempool()
+	s.iterations = 0
+	s.mempool = mempool.NewNonceMempool()
 }
 
 func TestMempoolTestSuite(t *testing.T) {
@@ -199,7 +195,7 @@ func TestMempoolTestSuite(t *testing.T) {
 func (s *MempoolTestSuite) TestSampleTxs() {
 	ctxt := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	t := s.T()
-	s.resetMempool()
+	s.mempool = mempool.NewNonceMempool()
 	mp := s.mempool
 	delegatorTx, err := unmarshalTx(msgWithdrawDelegatorReward)
 

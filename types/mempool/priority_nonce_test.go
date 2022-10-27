@@ -274,7 +274,7 @@ func (s *MempoolTestSuite) TestPriorityTies() {
 	}
 
 	for i := 0; i < 100; i++ {
-		s.resetMempool()
+		s.mempool = mempool.NewPriorityMempool()
 		var shuffled []txSpec
 		for _, t := range txSet {
 			tx := txSpec{
@@ -309,11 +309,9 @@ func (s *MempoolTestSuite) TestRandomTxOrderManyTimes() {
 		s.Run("TestRandomGeneratedTxs", func() {
 			s.TestRandomGeneratedTxs()
 		})
-		s.resetMempool()
 		s.Run("TestRandomWalkTxs", func() {
 			s.TestRandomWalkTxs()
 		})
-		s.resetMempool()
 	}
 }
 
@@ -375,6 +373,10 @@ func validateOrder(mtxs []mempool.Tx) error {
 }
 
 func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
+	s.iterations = 0
+	s.mempool = mempool.NewPriorityMempool(mempool.WithOnRead(func(tx mempool.Tx) {
+		s.iterations++
+	}))
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	seed := time.Now().UnixNano()
@@ -402,6 +404,9 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 }
 
 func (s *MempoolTestSuite) TestRandomWalkTxs() {
+	s.iterations = 0
+	s.mempool = mempool.NewPriorityMempool()
+
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 

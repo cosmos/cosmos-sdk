@@ -61,7 +61,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L151-L193
 
 ### Constructor Function
 
-Also defined in `app.go` is the construction function, which constructs a new application of the type defined in the preceding section. The function must fulfill the `AppCreator` signature in order to be used in the [`start` command](../core/03-node.md#start-command) of the application's daemon command.
+Also defined in `app.go` is the constructor function, which constructs a new application of the type defined in the preceding section. The function must fulfill the `AppCreator` signature in order to be used in the [`start` command](../core/03-node.md#start-command) of the application's daemon command.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/server/types/app.go#L57-L59

@@ -168,8 +168,6 @@ type SimApp struct {
 	sm *module.SimulationManager
 }
 
-// test app build duration
-
 func init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {

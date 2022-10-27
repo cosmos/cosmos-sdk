@@ -11,8 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
 )
 
-// test app build duration
-
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(testutil.IntegrationTestSuite))
 }

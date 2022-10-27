@@ -6,26 +6,45 @@ on:
     # Sequence of patterns matched against refs/tags
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+" # Push events to matching v*, i.e. v1.0, v20.15.10
+  pull_request:
 
 permissions:
   contents: read
 
 jobs:
-  release:
-    permissions:
-      contents: write # for goreleaser/goreleaser-action to create a GitHub release
+  # release:
+  #   permissions:
+  #     contents: write # for goreleaser/goreleaser-action to create a GitHub release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Install Go
+  #       uses: actions/setup-go@v3
+  #       with:
+  #         go-version: 1.19.2
+  #     - name: Unshallow
+  #       run: git fetch --prune --unshallow
+  #     - name: Create release
+  #       uses: goreleaser/goreleaser-action@v3
+  #       with:
+  #         args: release --rm-dist --release-notes ./RELEASE_NOTES.md
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-success:
+    # needs: release
+    # if: ${{ success() }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.19.2
-      - name: Unshallow
-        run: git fetch --prune --unshallow
-      - name: Create release
-        uses: goreleaser/goreleaser-action@v3
-        with:
-          args: release --rm-dist --release-notes ./RELEASE_NOTES.md
+      - name: Notify Slack on success
+        uses: rtCamp/action-slack-notify@12e36fc18b0689399306c2e0b3e0f2978b7f1ee7
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: cosmos-sdk-sims
+          SLACK_USERNAME: Cosmos SDK Release Bot
+          SLACK_ICON: https://avatars.githubusercontent.com/t/5997665?size=64
+          SLACK_COLOR: good
+          SLACK_TITLE: "New Cosmos SDK release"
+          SLACK_MESSAGE: "@channel Cosmos SDK ${{ github.ref_name }} has been tagged :tada:"
+          SLACK_FOOTER: ""
+          SLACK_LINK_NAMES: true

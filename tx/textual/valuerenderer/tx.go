@@ -17,8 +17,8 @@ type txValueRenderer struct {
 	tr *Textual
 }
 
-// NewTimestampValueRenderer returns a ValueRenderer for the protobuf Tx type,
-// as called the transaction envelope. It follows the specification defined
+// NewTxValueRenderer returns a ValueRenderer for the protobuf TxRaw type.
+// The reason we create a renderer for TxRaw (and not directly Tx)It follows the specification defined
 // in ADR-050.
 func NewTxValueRenderer(tr *Textual) ValueRenderer {
 	return txValueRenderer{

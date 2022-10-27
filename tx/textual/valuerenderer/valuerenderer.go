@@ -51,12 +51,9 @@ type Textual struct {
 
 // NewTextual returns a new Textual which provides
 // value renderers.
-func NewTextual(q CoinMetadataQueryFn, signerData signing.SignerData, bodyBz, authInfoBz []byte) Textual {
+func NewTextual(q CoinMetadataQueryFn) Textual {
 	t := Textual{
 		coinMetadataQuerier: q,
-		signerData:          signerData,
-		bodyBz:              bodyBz,
-		authInfoBz:          authInfoBz,
 	}
 	t.init()
 	return t

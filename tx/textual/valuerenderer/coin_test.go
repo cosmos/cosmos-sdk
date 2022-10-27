@@ -12,7 +12,6 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/tx/signing"
 	"cosmossdk.io/tx/textual/valuerenderer"
 )
 
@@ -34,7 +33,7 @@ func mockCoinMetadataQuerier(ctx context.Context, denom string) (*bankv1beta1.Me
 
 func TestMetadataQuerier(t *testing.T) {
 	// Errors on nil metadata querier
-	textual := valuerenderer.NewTextual(nil, signing.SignerData{}, nil, nil)
+	textual := valuerenderer.NewTextual(nil)
 	vr, err := textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
 	_, err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()))
@@ -44,7 +43,7 @@ func TestMetadataQuerier(t *testing.T) {
 	expErr := fmt.Errorf("mock error")
 	textual = valuerenderer.NewTextual(func(_ context.Context, _ string) (*bankv1beta1.Metadata, error) {
 		return nil, expErr
-	}, signing.SignerData{}, nil, nil)
+	})
 	vr, err = textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
 	_, err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()))
@@ -60,7 +59,7 @@ func TestCoinJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier, signing.SignerData{}, nil, nil)
+	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
 	vr, err := textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
 

@@ -59,7 +59,7 @@ func TestTxJsonTestcases(t *testing.T) {
 				PubKey:        &pk,
 			}
 
-			tr := valuerenderer.NewTextual(EmptyCoinMetadataQuerier, signerData, []byte{02}, []byte{03})
+			tr := valuerenderer.NewTextual(EmptyCoinMetadataQuerier)
 			rend := valuerenderer.NewTxValueRenderer(&tr)
 
 			var screens []valuerenderer.Screen

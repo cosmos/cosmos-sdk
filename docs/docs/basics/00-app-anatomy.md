@@ -85,7 +85,7 @@ Here are the main actions performed by this function:
 
 Note that the constructor function only creates an instance of the app, while the actual state is either carried over from the `~/.app/data` folder if the node is restarted, or generated from the genesis file if the node is started for the first time.
 
-See an example application constructor from `simapp`:
+See an example of application constructor from `simapp`:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L204-L474

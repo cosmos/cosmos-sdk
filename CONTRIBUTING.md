@@ -64,7 +64,7 @@ To synchronize we have few major meetings:
 * Cosmos SDK Sprint Review on Monday and Thursday at 14:00 UTC (limited participation to core devs).
 * Cosmos SDK Community Call on Thursday at 16:00 UTC.
 
-If you would like to join one of the community call, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Marko (@marbar3778).
+If you would like to join one of the community call, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Marko (@tac0turtle).
 
 ## Architecture Decision Records (ADR)
 

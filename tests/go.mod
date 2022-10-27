@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.19
 
 require (
-	cosmossdk.io/api v0.2.2
+	cosmossdk.io/api v0.2.3
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.3
 	cosmossdk.io/simapp v0.0.0-20220908203654-84d4bf5accad
@@ -13,7 +13,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
-	github.com/tendermint/tendermint v0.37.0-alpha.2
+	github.com/tendermint/tendermint v0.37.0-rc1
 	github.com/tendermint/tm-db v0.6.7
 	pgregory.net/rapid v0.5.3
 )
@@ -98,7 +98,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.15.11 // indirect
-	github.com/lib/pq v1.10.6 // indirect
+	github.com/lib/pq v1.10.7 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect

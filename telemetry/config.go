@@ -39,7 +39,8 @@ type Config struct {
 	// [["chain_id", "cosmoshub-1"]]
 	GlobalLabels [][]string `mapstructure:"global-labels"`
 
-	//Suggestion : use the gometrics.Lable and update the config contract. also provide proper Options for best accessibility.
+	// Suggestion: Use the 'gometrics.Label' and update the config contract.
+	// Also provide proper Options for best accessibility.
 	globalLabels []gometrics.Label
 
 	//useGlobalMetricRegistration: if it be true then it assigns the metrics object to be used globally in github.com/armon/go-metrics package.

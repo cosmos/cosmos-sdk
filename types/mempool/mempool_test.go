@@ -139,6 +139,12 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 		txs = append(txs, tx)
 	}
 
+	// empty mempool behavior
+	require.Equal(t, 0, s.mempool.CountTx())
+	selCursor, err := s.mempool.Select(nil)
+	require.NoError(t, err)
+	require.Nil(t, selCursor)
+
 	// same sender-nonce just overwrites a tx
 	for _, tx := range txs {
 		ctx = ctx.WithPriority(tx.priority)
@@ -156,7 +162,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	}
 	require.Equal(t, txCount, s.mempool.CountTx())
 
-	selCursor, err := s.mempool.Select(nil)
+	selCursor, err = s.mempool.Select(nil)
 	require.NoError(t, err)
 	sel := fetchTxs(selCursor, 13)
 	require.Equal(t, 13, len(sel))

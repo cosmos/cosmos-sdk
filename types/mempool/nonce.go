@@ -88,8 +88,11 @@ func (sp nonceMempool) Insert(_ sdk.Context, tx Tx) error {
 // in nonce order.
 func (sp nonceMempool) Select(_ [][]byte) (SelectCursor, error) {
 	currentTx := sp.txQueue.Front()
-	cursor := &nonceMempoolIterator{currentTx: currentTx}
-	return cursor, nil
+	if currentTx == nil {
+		return nil, nil
+	}
+
+	return &nonceMempoolIterator{currentTx: currentTx}, nil
 }
 
 // CountTx returns the number of txs in the mempool.

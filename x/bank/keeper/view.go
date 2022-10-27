@@ -116,7 +116,7 @@ func (k BaseViewKeeper) IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddr
 	accountStore := k.getAccountStore(ctx, addr)
 
 	iterator := accountStore.Iterator(nil, nil)
-	defer iterator.Close()
+	defer sdk.LogDeferred(ctx.Logger(), func() error { return iterator.Close() })
 
 	for ; iterator.Valid(); iterator.Next() {
 		denom := string(iterator.Key())

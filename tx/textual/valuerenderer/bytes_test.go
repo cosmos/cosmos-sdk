@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"os"
-	"strings"
 	"testing"
 
 	"cosmossdk.io/tx/textual/valuerenderer"
@@ -31,14 +30,13 @@ func TestBytesJsonTestCases(t *testing.T) {
 		valrend, err := textual.GetValueRenderer(fieldDescriptorFromName("BYTES"))
 		require.NoError(t, err)
 
-		b := new(strings.Builder)
-		err = valrend.Format(context.Background(), protoreflect.ValueOfBytes(data), b)
+		screens, err := valrend.Format(context.Background(), protoreflect.ValueOfBytes(data))
 		require.NoError(t, err)
-		require.Equal(t, tc.hex, b.String())
+		require.Equal(t, 1, len(screens))
+		require.Equal(t, tc.hex, screens[0].Text)
 
 		// Round trip
-		r := strings.NewReader(tc.hex)
-		val, err := valrend.Parse(context.Background(), r)
+		val, err := valrend.Parse(context.Background(), screens)
 		require.NoError(t, err)
 		require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
 	}

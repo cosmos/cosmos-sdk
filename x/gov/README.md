@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Gov Overview
-parent:
-  title: "gov"
--->
+---
+sidebar_position: 1
+---
 
 # `x/gov`
 
@@ -27,7 +24,7 @@ they don't vote themselves.
 deposits if the proposal was accepted OR if the proposal never entered voting period.
 
 This module will be used in the Cosmos Hub, the first Hub in the Cosmos network.
-Features that may be added in the future are described in [Future Improvements](05_future_improvements.md).
+Features that may be added in the future are described in [Future Improvements](#future-improvements).
 
 ## Contents
 
@@ -35,9 +32,6 @@ The following specification uses *ATOM* as the native staking token. The module
 can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the native
 staking token of the chain.
 
-* [`x/gov`](#xgov)
-    * [Abstract](#abstract)
-    * [Contents](#contents)
 * [Concepts](#concepts)
     * [Proposal submission](#proposal-submission)
         * [Right to submit a proposal](#right-to-submit-a-proposal)
@@ -124,8 +118,6 @@ staking token of the chain.
 * [Metadata](#metadata)
     * [Proposal](#proposal-3)
     * [Vote](#vote-5)
-
-<!-- order: 1 -->
 
 # Concepts
 
@@ -249,9 +241,13 @@ Often times the entity owning that address might not be a single individual. For
 
 To represent weighted vote on chain, we use the following Protobuf message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L33-L43
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L33-L43
+```
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L136-L150
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L136-L150
+```
 
 For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 
@@ -325,9 +321,7 @@ Once a block contains more than 2/3rd *precommits* where a common
 nodes, non-validating full nodes and light-nodes) are expected to switch to the
 new version of the software.
 
-Validators and full nodes can use an automation tool, such as [Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/main/cosmovisor/README.md), for automatically switching version of the chain.
-
-<!-- order: 2 -->
+Validators and full nodes can use an automation tool, such as [Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/main/tools/cosmovisor/README.md), for automatically switching version of the chain.
 
 # State
 
@@ -339,7 +333,9 @@ to resolve and then execute if the proposal passes. `Proposal`'s are identified 
 unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`,
 `voting_start_time`, `voting_end_time` which track the lifecycle of a proposal
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L42-L59
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L42-L59
+```
 
 A proposal will generally require more than just a set of messages to explain its
 purpose but need some greater justification and allow a means for interested participants
@@ -385,15 +381,21 @@ parameter set has to be created and the previous one rendered inactive.
 
 ### DepositParams
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L102-L112
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L102-L112
+```
 
 ### VotingParams
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L114-L118
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L114-L118
+```
 
 ### TallyParams
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L120-L132
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L120-L132
+```
 
 Parameters are stored in a global `GlobalParams` KVStore.
 
@@ -431,7 +433,9 @@ const (
 
 ## Deposit
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L34-L40
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L34-L40
+```
 
 ## ValidatorGovInfo
 
@@ -448,7 +452,7 @@ This type is used in a temp map when tallying
 
 *Note: Stores are KVStores in the multi-store. The key to find the store is the first parameter in the list*
 
-We will use one KVStore `Governance` to store two mappings:
+We will use one KVStore `Governance` to store four mappings:
 
 * A mapping from `proposalID|'proposal'` to `Proposal`.
 * A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
@@ -456,6 +460,8 @@ We will use one KVStore `Governance` to store two mappings:
   doing a range query on `proposalID:addresses`.
 * A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all 
   x/gov params.
+* A mapping from `VotingPeriodProposalKeyPrefix|proposalID` to a single byte. This allows
+  us to know if a proposal is in the voting period or not with very low gas cost.
   
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 
@@ -543,9 +549,7 @@ These proposal are defined by their types.
 
 While proposals should use the new implementation of the governance proposal, we need still to use legacy proposal in order to submit a `software-upgrade` and a `cancel-software-upgrade` proposal.
 
-More information on how to submit proposals in the [client section](07_client.md).
-
-<!-- order: 3 -->
+More information on how to submit proposals in the [client section](#client).
 
 # Messages
 
@@ -554,7 +558,9 @@ More information on how to submit proposals in the [client section](07_client.md
 Proposals can be submitted by any account via a `MsgSubmitProposal`
 transaction.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L33-L43
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L33-L43
+```
 
 All `sdk.Msgs` passed into the `messages` field of a `MsgSubmitProposal` message
 must be registered in the app's `MsgServiceRouter`. Each of these messages must
@@ -623,7 +629,9 @@ Once a proposal is submitted, if
 `Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
 `MsgDeposit` transactions to increase the proposal's deposit.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L90-L97
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L90-L97
+```
 
 **State modifications:**
 
@@ -689,7 +697,9 @@ Once `ActiveParam.MinDeposit` is reached, voting period starts. From there,
 bonded Atom holders are able to send `MsgVote` transactions to cast their
 vote on the proposal.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L64-L72
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L64-L72
+```
 
 **State modifications:**
 
@@ -726,8 +736,6 @@ handled:
 
         store(Governance, <txGovVote.ProposalID|'addresses'|sender>, txGovVote.Vote)   // Voters can vote multiple times. Re-voting overrides previous vote. This is ok because tallying is done once at the end.
 ```
-
-<!-- order: 4 -->
 
 # Events
 
@@ -791,8 +799,6 @@ The governance module emits the following events:
 
 * [0] Event only emitted if the voting period starts during the submission.
 
-<!-- order: 5 -->
-
 # Future Improvements
 
 The current documentation only describes the minimum viable product for the
@@ -820,8 +826,6 @@ governance module. Future improvements may include:
   `proposal.Deposit`, one for anti-spam (same as in MVP) and an other one to
   reward third party auditors.
 
-<!-- order: 6 -->
-
 # Parameters
 
 The governance module contains the following parameters:
@@ -846,8 +850,6 @@ The governance module contains the following parameters:
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need
 to be included and not the entire parameter object structure.
-
-<!-- order: 7 -->
 
 # Client
 
@@ -2650,7 +2652,6 @@ Example Output:
 }
 ```
 
-<!-- order: 8 -->
 
 # Metadata
 
@@ -2658,7 +2659,7 @@ The gov module has two locations for metadata where users can provide further co
 
 ## Proposal
 
-Location: off-chain as json object stored on IPFS (mirrors [group proposal](../../group/spec/06_metadata.md#proposal))
+Location: off-chain as json object stored on IPFS (mirrors [group proposal](../group/README.md#metadata))
 
 ```json
 {
@@ -2673,7 +2674,7 @@ Location: off-chain as json object stored on IPFS (mirrors [group proposal](../.
 
 ## Vote
 
-Location: on-chain as json within 255 character limit (mirrors [group vote](../../group/spec/06_metadata.md#vote))
+Location: on-chain as json within 255 character limit (mirrors [group vote](../group/README.md#metadata))
 
 ```json
 {

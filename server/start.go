@@ -24,13 +24,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
@@ -50,13 +50,13 @@ const (
 	FlagTrace              = "trace"
 	FlagInvCheckPeriod     = "inv-check-period"
 
-	FlagPruning           = "pruning"
-	FlagPruningKeepRecent = "pruning-keep-recent"
-	FlagPruningInterval   = "pruning-interval"
-	FlagIndexEvents       = "index-events"
-	FlagMinRetainBlocks   = "min-retain-blocks"
-	FlagIAVLCacheSize     = "iavl-cache-size"
-	FlagIAVLFastNode      = "iavl-disable-fastnode"
+	FlagPruning             = "pruning"
+	FlagPruningKeepRecent   = "pruning-keep-recent"
+	FlagPruningInterval     = "pruning-interval"
+	FlagIndexEvents         = "index-events"
+	FlagMinRetainBlocks     = "min-retain-blocks"
+	FlagIAVLCacheSize       = "iavl-cache-size"
+	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
 
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
@@ -187,6 +187,8 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 
+	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
+
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
 	return cmd
@@ -280,6 +282,16 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
+	// Clean up the traceWriter in the cpuProfileCleanup routine that is invoked
+	// when the server is shutting down.
+	fn := cpuProfileCleanup
+	cpuProfileCleanup = func() {
+		if fn != nil {
+			fn()
+		}
+		traceWriter.Close()
+	}
+
 	config, err := serverconfig.GetConfig(ctx.Viper)
 	if err != nil {
 		return err
@@ -332,8 +344,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	// case, because it spawns a new local tendermint RPC client.
 	if (config.API.Enable || config.GRPC.Enable) && tmNode != nil {
 		clientCtx := clientCtx.WithClient(local.New(tmNode))
+
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
+		app.RegisterNodeService(clientCtx)
 	}
 
 	metrics, err := startTelemetry(config)

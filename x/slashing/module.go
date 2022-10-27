@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,7 +35,7 @@ import (
 const ConsensusVersion = 3
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -199,17 +200,17 @@ func init() {
 	appmodule.Register(
 		&modulev1.Module{},
 		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
+			ProvideModuleBasic,
+			ProvideModule,
 		),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type slashingInputs struct {
+type SlashingInputs struct {
 	depinject.In
 
 	ModuleKey   depinject.OwnModuleKey
@@ -226,7 +227,7 @@ type slashingInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-type slashingOutputs struct {
+type SlashingOutputs struct {
 	depinject.Out
 
 	Keeper keeper.Keeper
@@ -234,7 +235,7 @@ type slashingOutputs struct {
 	Hooks  staking.StakingHooksWrapper
 }
 
-func provideModule(in slashingInputs) slashingOutputs {
+func ProvideModule(in SlashingInputs) SlashingOutputs {
 	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
 	if !ok {
 		// default to governance authority if not provided
@@ -243,7 +244,7 @@ func provideModule(in slashingInputs) slashingOutputs {
 
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.Key, in.StakingKeeper, authority.String())
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
-	return slashingOutputs{
+	return SlashingOutputs{
 		Keeper: k,
 		Module: runtime.WrapAppModule(m),
 		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},

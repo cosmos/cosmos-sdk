@@ -89,6 +89,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	"deposit": "-324foocoin"
 }`
 	invalidPropFile := testutil.WriteToNewTempFile(s.T(), invalidProp)
+	defer invalidPropFile.Close()
 
 	// Create a valid new proposal JSON.
 	propMetadata := []byte{42}
@@ -109,6 +110,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	"deposit": "%s"
 }`, authtypes.NewModuleAddress(types.ModuleName), base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
 	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
+	defer validPropFile.Close()
 
 	testCases := []struct {
 		name         string
@@ -168,6 +170,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 	  "deposit": "-324foocoin"
 	}`
 	invalidPropFile := testutil.WriteToNewTempFile(s.T(), invalidProp)
+	defer invalidPropFile.Close()
 	validProp := fmt.Sprintf(`{
 	  "title": "Text Proposal",
 		"description": "Hello, World!",
@@ -175,6 +178,8 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 	  "deposit": "%s"
 	}`, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
 	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
+	defer validPropFile.Close()
+
 	testCases := []struct {
 		name         string
 		args         []string
@@ -355,7 +360,7 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 				fmt.Sprintf("--metadata=%s", "AQ=="),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 2,
+			false, 3,
 		},
 		{
 			"valid vote",
@@ -428,7 +433,7 @@ func (s *IntegrationTestSuite) TestNewCmdWeightedVote() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 2,
+			false, 3,
 		},
 		{
 			"valid vote",

@@ -304,7 +304,7 @@ func TestMsgSendGetSigners(t *testing.T) {
 
 func TestMsgSetSendEnabledGetSignBytes(t *testing.T) {
 	msg := NewMsgSetSendEnabled("cartman", []*SendEnabled{{"casafiestacoin", false}, {"kylecoin", true}}, nil)
-	expected := `{"authority":"cartman","send_enabled":[{"denom":"casafiestacoin"},{"denom":"kylecoin","enabled":true}]}`
+	expected := `{"type":"cosmos-sdk/MsgSetSendEnabled","value":{"authority":"cartman","send_enabled":[{"denom":"casafiestacoin"},{"denom":"kylecoin","enabled":true}]}}`
 	actualBz := msg.GetSignBytes()
 	actual := string(actualBz)
 	assert.Equal(t, expected, actual)

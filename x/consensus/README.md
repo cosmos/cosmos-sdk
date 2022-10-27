@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Consensus Overview
-parent:
-  title: "consensus"
--->
+---
+sidebar_position: 1
+---
 
 # `x/consensus`
 

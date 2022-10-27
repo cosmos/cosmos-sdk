@@ -7,10 +7,10 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -239,4 +239,11 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 // SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
+}
+
+// SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
+func (app *BaseApp) SetQueryMultiStore(ms sdk.MultiStore) {
+	app.qms = ms
 }

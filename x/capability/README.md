@@ -1,9 +1,6 @@
-<!--
-order: 0
-title: Capability Overview
-parent:
-  title: "capability"
--->
+---
+sidebar_position: 1
+---
 
 # `x/capability`
 
@@ -80,8 +77,6 @@ func NewApp(...) *App {
     * [In persisted KV store](#in-persisted-kv-store)
     * [In-memory KV store](#in-memory-kv-store)
 
-<!-- order: 1 -->
-
 # Concepts
 
 ## Capabilities
@@ -113,8 +108,6 @@ not own.
 
 * MemStore
 * KeyStore
-
-<!-- order: 2 -->
 
 # State
 

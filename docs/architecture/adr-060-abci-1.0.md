@@ -2,7 +2,7 @@
 
 ## Changelog
 
-* 2022-08-10: Initial Draft (@alexanderbez, @marbar3778)
+* 2022-08-10: Initial Draft (@alexanderbez, @tac0turtle)
 
 ## Status
 

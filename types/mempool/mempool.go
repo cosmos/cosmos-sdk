@@ -26,7 +26,7 @@ type Mempool interface {
 	// mempool, up to maxBytes or until the mempool is empty. The application can
 	// decide to return transactions from its own mempool, from the incoming
 	// txs, or some combination of both.
-	Select(txs [][]byte, maxBytes int64) ([]Tx, error)
+	Select(txs [][]byte) (SelectCursor, error)
 
 	// CountTx returns the number of transactions currently in the mempool.
 	CountTx() int
@@ -34,6 +34,14 @@ type Mempool interface {
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
 	Remove(Tx) error
+}
+
+type SelectCursor interface {
+	// Next returns the next transaction from the cursor.
+	Next() (SelectCursor, error)
+
+	// Tx returns the transaction from the cursor.
+	Tx() Tx
 }
 
 var ErrTxNotFound = errors.New("tx not found in mempool")

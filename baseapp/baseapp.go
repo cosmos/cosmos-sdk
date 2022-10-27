@@ -839,17 +839,26 @@ func createEvents(msg sdk.Msg) sdk.Events {
 }
 
 func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, error) {
-	memTxs, selectErr := app.mempool.Select(req.Txs, req.MaxTxBytes)
+	cursor, selectErr := app.mempool.Select(req.Txs)
 	if selectErr != nil {
 		panic(selectErr)
 	}
-	var txsBytes [][]byte
-	fmt.Println("memtx", memTxs)
-	for _, memTx := range memTxs {
+	var (
+		txsBytes  [][]byte
+		byteCount int64
+	)
+	for cursor != nil {
+		memTx := cursor.Tx()
+
+		if byteCount += memTx.Size(); byteCount > req.MaxTxBytes {
+			break
+		}
+
 		bz, encErr := app.txEncoder(memTx)
 		if encErr != nil {
 			panic(encErr)
 		}
+
 		fmt.Println("messages:", memTx.GetMsgs())
 		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
 		if err != nil {
@@ -859,7 +868,13 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 			txsBytes = append(txsBytes, bz)
 		}
 
+		next, cursorErr := cursor.Next()
+		if cursorErr != nil {
+			return nil, cursorErr
+		}
+		cursor = next
 	}
+
 	return txsBytes, nil
 }
 

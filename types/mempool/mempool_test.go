@@ -104,6 +104,25 @@ func (tx txSpec) String() string {
 	return fmt.Sprintf("[tx i: %d, a: %s, p: %d, n: %d]", tx.i, tx.a, tx.p, tx.n)
 }
 
+func fetchTxs(cursor mempool.SelectCursor, maxBytes int64) []mempool.Tx {
+	var (
+		txs      []mempool.Tx
+		numBytes int64
+	)
+	for cursor != nil {
+		if numBytes += cursor.Tx().Size(); numBytes > maxBytes {
+			break
+		}
+		txs = append(txs, cursor.Tx())
+		c, err := cursor.Next()
+		if err != nil {
+			panic(err)
+		}
+		cursor = c
+	}
+	return txs
+}
+
 func (s *MempoolTestSuite) TestDefaultMempool() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
@@ -137,8 +156,9 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	}
 	require.Equal(t, txCount, s.mempool.CountTx())
 
-	sel, err := s.mempool.Select(nil, 13)
+	selCursor, err := s.mempool.Select(nil)
 	require.NoError(t, err)
+	sel := fetchTxs(selCursor, 13)
 	require.Equal(t, 13, len(sel))
 
 	// a tx which does not implement SigVerifiableTx should not be inserted

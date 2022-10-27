@@ -870,7 +870,7 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 
 		next, cursorErr := cursor.Next()
 		if cursorErr != nil {
-			return nil, cursorErr
+			panic(cursorErr)
 		}
 		cursor = next
 	}

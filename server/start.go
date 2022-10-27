@@ -459,8 +459,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		// If GRPC is not enabled rosetta cannot work in online mode, so we throw an error.
 		if !config.GRPC.Enable && !offlineMode {
-			return fmt.Errorf("'grpc' must be enable in online mode for Rosetta to work.")
-
+			return fmt.Errorf("'grpc' must be enable in online mode for Rosetta to work")
 		}
 
 		minGasPrices, err := sdktypes.ParseDecCoins(config.MinGasPrices)

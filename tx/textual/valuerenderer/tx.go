@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	textualv1 "cosmossdk.io/api/cosmos/msg/textual/v1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 )
 
@@ -17,9 +18,11 @@ type txValueRenderer struct {
 	tr *Textual
 }
 
-// NewTxValueRenderer returns a ValueRenderer for the protobuf TxRaw type.
-// The reason we create a renderer for TxRaw (and not directly Tx)It follows the specification defined
-// in ADR-050.
+// NewTxValueRenderer returns a ValueRenderer for the protobuf
+// TextualData type. It follows the specification defined in ADR-050.
+// The reason we create a renderer for TextualData (and not directly Tx)
+// is that TextualData is a single place that contains all data needed
+// to create the `[]Screen` SignDoc.
 func NewTxValueRenderer(tr *Textual) ValueRenderer {
 	return txValueRenderer{
 		tr: tr,
@@ -30,71 +33,83 @@ func NewTxValueRenderer(tr *Textual) ValueRenderer {
 func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	// Reify the reflected message as a proto Tx
 	msg := v.Message().Interface()
-	protoTx, ok := msg.(*txv1beta1.Tx)
+	textualData, ok := msg.(*textualv1.TextualData)
 	if !ok {
 		return nil, fmt.Errorf("expected Tx, got %T", msg)
 	}
 
+	txBody := &txv1beta1.TxBody{}
+	txAuthInfo := &txv1beta1.AuthInfo{}
+	err := proto.Unmarshal(textualData.BodyBytes, txBody)
+	if err != nil {
+		return nil, err
+	}
+	err = proto.Unmarshal(textualData.AuthInfoBytes, txAuthInfo)
+	if err != nil {
+		return nil, err
+	}
+	signerData := textualData.SignerData
+
 	screens := make([]Screen, 3)
-	screens[0].Text = fmt.Sprintf("Chain ID: %s", vr.tr.signerData.ChainID)
-	screens[1].Text = fmt.Sprintf("Account number: %d", vr.tr.signerData.AccountNumber)
-	screens[2].Text = fmt.Sprintf("Sequence: %d", vr.tr.signerData.Sequence)
+	screens[0].Text = fmt.Sprintf("Chain ID: %s", signerData.ChainId)
+	screens[1].Text = fmt.Sprintf("Account number: %d", signerData.AccountNumber)
+	screens[2].Text = fmt.Sprintf("Sequence: %d", signerData.Sequence)
 
 	// TODO Public key: needs Any
 	// TODO Body messages: needs repeated
 
-	screens, err := vr.appendScreen(screens, ctx, protoTx.AuthInfo.Fee.ProtoReflect(), "amount", "Fees", false)
+	screens, err = vr.appendScreen(screens, ctx, txAuthInfo.Fee.ProtoReflect(), "amount", "Fees", false)
 	if err != nil {
 		return nil, err
 	}
-	screens, err = vr.appendScreen(screens, ctx, protoTx.AuthInfo.Fee.ProtoReflect(), "payer", "Fee payer", true)
+	screens, err = vr.appendScreen(screens, ctx, txAuthInfo.Fee.ProtoReflect(), "payer", "Fee payer", true)
 	if err != nil {
 		return nil, err
 	}
-	screens, err = vr.appendScreen(screens, ctx, protoTx.AuthInfo.Fee.ProtoReflect(), "granter", "Fee granter", true)
+	screens, err = vr.appendScreen(screens, ctx, txAuthInfo.Fee.ProtoReflect(), "granter", "Fee granter", true)
 	if err != nil {
 		return nil, err
 	}
-	screens, err = vr.appendScreen(screens, ctx, protoTx.Body.ProtoReflect(), "memo", "Memo", false)
+	screens, err = vr.appendScreen(screens, ctx, txBody.ProtoReflect(), "memo", "Memo", false)
 	if err != nil {
 		return nil, err
 	}
-	screens, err = vr.appendScreen(screens, ctx, protoTx.AuthInfo.Fee.ProtoReflect(), "gas_limit", "Gas limit", true)
+	screens, err = vr.appendScreen(screens, ctx, txAuthInfo.Fee.ProtoReflect(), "gas_limit", "Gas limit", true)
 	if err != nil {
 		return nil, err
 	}
-	screens, err = vr.appendScreen(screens, ctx, protoTx.Body.ProtoReflect(), "timeout_height", "Timeout height", true)
+	screens, err = vr.appendScreen(screens, ctx, txBody.ProtoReflect(), "timeout_height", "Timeout height", true)
 	if err != nil {
 		return nil, err
 	}
-	screens, err = vr.appendScreen(screens, ctx, protoTx.AuthInfo.Tip.ProtoReflect(), "tipper", "Tipper", true)
+	screens, err = vr.appendScreen(screens, ctx, txAuthInfo.Tip.ProtoReflect(), "tipper", "Tipper", true)
 	if err != nil {
 		return nil, err
 	}
-	screens, err = vr.appendScreen(screens, ctx, protoTx.AuthInfo.Tip.ProtoReflect(), "amount", "Tip", true)
+	screens, err = vr.appendScreen(screens, ctx, txAuthInfo.Tip.ProtoReflect(), "amount", "Tip", true)
 	if err != nil {
 		return nil, err
 	}
-	// screens, err = vr.appendScreen(screens, ctx, protoTx.Body.ProtoReflect(), "extension_options", "Body extensions", true)
+	// screens, err = vr.appendScreen(screens, ctx, txBody.ProtoReflect(), "extension_options", "Body extensions", true)
 	// if err != nil {
 	// 	return nil, err
 	// }
-	// screens, err = vr.appendScreen(screens, ctx, protoTx.Body.ProtoReflect(), "non_critical_extension_options options", "Non-critical body extensions", true)
+	// screens, err = vr.appendScreen(screens, ctx, txBody.ProtoReflect(), "non_critical_extension_options options", "Non-critical body extensions", true)
 	// if err != nil {
 	// 	return nil, err
 	// }
-	if len(protoTx.AuthInfo.SignerInfos) > 1 {
+	if len(txAuthInfo.SignerInfos) > 1 {
 		// Get all signer infos except the signer's one.
-		otherSigners := make([]*txv1beta1.SignerInfo, 0, len(protoTx.AuthInfo.SignerInfos)-1)
-		for _, si := range protoTx.AuthInfo.SignerInfos {
-			if !proto.Equal(si.PublicKey, vr.tr.signerData.PubKey) {
+		otherSigners := make([]*txv1beta1.SignerInfo, 0, len(txAuthInfo.SignerInfos)-1)
+		for _, si := range txAuthInfo.SignerInfos {
+			if !proto.Equal(si.PublicKey, signerData.PubKey) {
 				otherSigners = append(otherSigners, si)
 			}
 		}
 
-		// Create the same protoTx.AuthInfo.SignerInfos message, but without the signer
-		fd := protoTx.AuthInfo.ProtoReflect().Descriptor().Fields().ByName("signer_infos")
-		newField := protoTx.AuthInfo.ProtoReflect().NewField(fd)
+		// Create the sametxAuthInfo.SignerInfos message, but without the signer
+		fd := txAuthInfo.ProtoReflect().Descriptor().Fields().ByName("signer_infos")
+		newField := txAuthInfo.ProtoReflect().NewField(fd)
 		r, err := vr.tr.GetValueRenderer(fd)
 		if err != nil {
 			return nil, err
@@ -111,7 +126,7 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 	}
 
 	screens = append(screens, Screen{
-		Text:   fmt.Sprintf("Hash of raw bytes: %s", getHash(vr.tr.bodyBz, vr.tr.authInfoBz)),
+		Text:   fmt.Sprintf("Hash of raw bytes: %s", getHash(textualData.BodyBytes, textualData.AuthInfoBytes)),
 		Expert: true,
 	})
 

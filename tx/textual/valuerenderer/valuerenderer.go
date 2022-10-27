@@ -11,8 +11,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/tx/signing"
+	textualv1 "cosmossdk.io/api/cosmos/msg/textual/v1"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
@@ -37,16 +36,6 @@ type Textual struct {
 	// - Protobuf timestamp
 	// - Protobuf duration
 	messages map[protoreflect.FullName]ValueRenderer
-	// signerData defines information on the signer
-	signerData signing.SignerData
-
-	// bodyBz represents the protobuf encoding of TxBody. This should be encoding
-	// from the client using TxRaw if the tx was decoded from the wire
-	bodyBz []byte
-
-	// authInfoBz represents the protobuf encoding of TxBody. This should be encoding
-	// from the client using TxRaw if the tx was decoded from the wire
-	authInfoBz []byte
 }
 
 // NewTextual returns a new Textual which provides
@@ -124,7 +113,7 @@ func (r *Textual) init() {
 		r.messages[(&basev1beta1.Coin{}).ProtoReflect().Descriptor().FullName()] = NewCoinsValueRenderer(r.coinMetadataQuerier)
 		r.messages[(&durationpb.Duration{}).ProtoReflect().Descriptor().FullName()] = NewDurationValueRenderer()
 		r.messages[(&timestamppb.Timestamp{}).ProtoReflect().Descriptor().FullName()] = NewTimestampValueRenderer()
-		r.messages[(&txv1beta1.Tx{}).ProtoReflect().Descriptor().FullName()] = NewTxValueRenderer(r)
+		r.messages[(&textualv1.TextualData{}).ProtoReflect().Descriptor().FullName()] = NewTxValueRenderer(r)
 	}
 }
 

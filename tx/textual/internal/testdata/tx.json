@@ -36,15 +36,15 @@
 					],
 					"gas_limit": 100000
 				}
-			}
-		},
-		"signerData": {
-			"chainId": "my-chain",
-			"pubKey": {
-				"@type": "/cosmos.crypto.secp256k1.PubKey",
-				"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
 			},
-			"sequence": 2
+			"signer_data": {
+				"chainId": "my-chain",
+				"pubKey": {
+					"@type": "/cosmos.crypto.secp256k1.PubKey",
+					"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+				},
+				"sequence": 2
+			}
 		},
 		"screens": [
 			{ "text": "Chain ID: my-chain" },
@@ -53,7 +53,7 @@
 			{ "text": "Fees: 5'000 uatom" },
 			{ "text": "Gas limit: 100'000", "expert": true },
 			{
-				"text": "Hash of raw bytes: 57dc30954c0f3e91cf1c9d64e79c1333033414d9941827330126593bb66511f1",
+				"text": "Hash of raw bytes: e237dc2e3f8f0b1d0310e1cd0b0ab5fc4a59e4bc3454d67eb65c3fdb0fa599c9",
 				"expert": true
 			}
 		]
@@ -134,13 +134,13 @@
 					"payer": "cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45",
 					"granter": "cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45"
 				}
-			}
-		},
-		"signerData": {
-			"chainId": "my-chain",
-			"pubKey": {
-				"@type": "/cosmos.crypto.secp256k1.PubKey",
-				"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+			},
+			"signer_data": {
+				"chainId": "my-chain",
+				"pubKey": {
+					"@type": "/cosmos.crypto.secp256k1.PubKey",
+					"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+				}
 			}
 		},
 		"screens": [

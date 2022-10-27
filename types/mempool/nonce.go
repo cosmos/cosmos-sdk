@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	_ Mempool      = (*nonceMempool)(nil)
-	_ SelectCursor = (*nonceMempoolIterator)(nil)
+	_ Mempool  = (*nonceMempool)(nil)
+	_ Iterator = (*nonceMempoolIterator)(nil)
 )
 
 // nonceMempool is a mempool that keeps transactions sorted by nonce. Transactions with the lowest nonce globally
@@ -25,13 +25,13 @@ type nonceMempoolIterator struct {
 	currentTx *huandu.Element
 }
 
-func (i nonceMempoolIterator) Next() (SelectCursor, error) {
+func (i nonceMempoolIterator) Next() Iterator {
 	if i.currentTx == nil {
-		return nil, nil
+		return nil
 	} else if n := i.currentTx.Next(); n != nil {
-		return nonceMempoolIterator{currentTx: n}, nil
+		return nonceMempoolIterator{currentTx: n}
 	} else {
-		return nil, nil
+		return nil
 	}
 }
 
@@ -86,13 +86,13 @@ func (sp nonceMempool) Insert(_ sdk.Context, tx Tx) error {
 
 // Select returns txs from the mempool with the lowest nonce globally first. A sender's txs will always be returned
 // in nonce order.
-func (sp nonceMempool) Select(_ [][]byte) (SelectCursor, error) {
+func (sp nonceMempool) Select(_ [][]byte) Iterator {
 	currentTx := sp.txQueue.Front()
 	if currentTx == nil {
-		return nil, nil
+		return nil
 	}
 
-	return &nonceMempoolIterator{currentTx: currentTx}, nil
+	return &nonceMempoolIterator{currentTx: currentTx}
 }
 
 // CountTx returns the number of txs in the mempool.

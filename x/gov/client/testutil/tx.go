@@ -461,7 +461,7 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 				fmt.Sprintf("--metadata=%s", "AQ=="),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 2,
+			false, 3,
 		},
 		{
 			"valid vote",
@@ -534,7 +534,7 @@ func (s *IntegrationTestSuite) TestNewCmdWeightedVote() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 2,
+			false, 3,
 		},
 		{
 			"valid vote",

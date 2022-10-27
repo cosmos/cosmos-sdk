@@ -3,7 +3,7 @@ name: Release Cosmovisor
 on:
   push:
     tags:
-      - "cosmovisor/v*.*.*"
+      - "tools/cosmovisor/v*.*.*"
 permissions:
   contents: read
 

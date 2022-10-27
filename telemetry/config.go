@@ -42,6 +42,7 @@ type Config struct {
 	//Suggestion : use the gometrics.Lable and update the config contract. also provide proper Options for best accessibility.
 	globalLabels []gometrics.Label
 
+	//useGlobalMetricRegistration: if it be true then it assigns the metrics object to be used globally in github.com/armon/go-metrics package.
 	useGlobalMetricRegistration bool
 }
 

@@ -25,6 +25,7 @@ require (
 	cloud.google.com/go/storage v1.14.0 // indirect
 	cosmossdk.io/core v0.3.2 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
+	cosmossdk.io/tools/rosetta v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -44,8 +45,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go v0.8.1 // indirect
 	github.com/confio/ics23/go v0.7.0 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
-	github.com/cosmos/cosmos-proto v1.0.0-alpha7 // indirect
-	cosmossdk.io/tools/rosetta v0.0.0-00010101000000-000000000000 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-alpha8 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.3 // indirect
@@ -161,12 +161,12 @@ require (
 replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
+	// We always want to test against the latest version of rosetta.
+	cosmossdk.io/tools/rosetta => ./../tools/rosetta
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	github.com/coinbase/rosetta-sdk-go => github.com/coinbase/rosetta-sdk-go v0.8.2-0.20221007214527-e03849ba430a
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
-	// We always want to test against the latest version of rosetta.
-	cosmossdk.io/tools/rosetta => ./../tools/rosetta
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1

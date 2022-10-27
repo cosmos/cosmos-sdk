@@ -696,7 +696,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	}
 
 	if mode == runTxModeCheck {
-		fmt.Println("inserting tx:", tx.GetMsgs())
 		err = app.mempool.Insert(ctx, tx.(mempool.Tx))
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err
@@ -844,16 +843,13 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 		panic(selectErr)
 	}
 	var txsBytes [][]byte
-	fmt.Println("memtx", memTxs)
 	for _, memTx := range memTxs {
 		bz, encErr := app.txEncoder(memTx)
 		if encErr != nil {
 			panic(encErr)
 		}
-		fmt.Println("messages:", memTx.GetMsgs())
 		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
 		if err != nil {
-			fmt.Println("error un prepare propossal", memTx)
 			_ = app.mempool.Remove(memTx)
 		} else {
 			txsBytes = append(txsBytes, bz)
@@ -869,11 +865,9 @@ func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(tx)
 
 		_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
 		if err != nil {
-			fmt.Println("error run tx process", tx)
 			_ = app.mempool.Remove(tx.(mempool.Tx))
 		}
 	}

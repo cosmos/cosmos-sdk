@@ -169,20 +169,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 			WithBlockHeader(req.Header).
 			WithBlockHeight(req.Header.Height)
 	}
-	if app.prepareProposalState == nil {
-		app.setPrepareProposalState(req.Header)
-	} else {
-		app.prepareProposalState.ctx = app.prepareProposalState.ctx.
-			WithBlockHeader(req.Header).
-			WithBlockHeight(req.Header.Height)
-	}
-	if app.processProposalState == nil {
-		app.setProcessProposalState(req.Header)
-	} else {
-		app.processProposalState.ctx = app.processProposalState.ctx.
-			WithBlockHeader(req.Header).
-			WithBlockHeight(req.Header.Height)
-	}
 
 	// add block gas meter
 	var gasMeter sdk.GasMeter
@@ -199,19 +185,19 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
 
-	app.prepareProposalState.ctx = app.prepareProposalState.ctx.
-		WithBlockGasMeter(gasMeter).
-		WithHeaderHash(req.Hash).
-		WithConsensusParams(app.GetConsensusParams(app.prepareProposalState.ctx))
-
-	app.processProposalState.ctx = app.processProposalState.ctx.
-		WithBlockGasMeter(gasMeter).
-		WithHeaderHash(req.Hash).
-		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx))
-
 	// we
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
+			WithBlockGasMeter(gasMeter).
+			WithHeaderHash(req.Hash)
+	}
+	if app.prepareProposalState != nil {
+		app.prepareProposalState.ctx = app.prepareProposalState.ctx.
+			WithBlockGasMeter(gasMeter).
+			WithHeaderHash(req.Hash)
+	}
+	if app.processProposalState != nil {
+		app.processProposalState.ctx = app.processProposalState.ctx.
 			WithBlockGasMeter(gasMeter).
 			WithHeaderHash(req.Hash)
 	}
@@ -401,11 +387,11 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// NOTE: This is safe because Tendermint holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setCheckState(header)
+	app.setPrepareProposalState(header)
+	app.setProcessProposalState(header)
 
-	// empty/reset the deliver, process and prepare states
+	// empty/reset the deliver
 	app.deliverState = nil
-	app.processProposalState = nil
-	app.prepareProposalState = nil
 
 	var halt bool
 

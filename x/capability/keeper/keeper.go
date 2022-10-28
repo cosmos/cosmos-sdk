@@ -199,11 +199,11 @@ func (k Keeper) GetOwners(ctx sdk.Context, index uint64) (types.CapabilityOwners
 	indexKey := types.IndexToKey(index)
 
 	// get owners for index from persistent store
-	owners, boolVal := store.GetAndDecodeWithBool(prefixStore, k.decodeOwner, indexKey)
-	if !boolVal {
-		return owners, boolVal
+	owners, ok := store.GetAndDecodeWithBool(prefixStore, k.decodeOwner, indexKey)
+	if !ok {
+		return owners, ok
 	}
-	return owners, boolVal
+	return owners, ok
 }
 
 // InitializeCapability takes in an index and an owners array. It creates the capability in memory
@@ -436,12 +436,12 @@ func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.Capabilit
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())
 
-	capOwners, boolVal := store.GetAndDecodeWithBool(prefixStore, sk.decodeOwner, indexKey)
-	if !boolVal {
-		return capOwners, boolVal
+	capOwners, ok := store.GetAndDecodeWithBool(prefixStore, sk.decodeOwner, indexKey)
+	if !ok {
+		return capOwners, ok
 	}
 
-	return capOwners, boolVal
+	return capOwners, ok
 }
 
 // LookupModules returns all the module owners for a given capability
@@ -490,8 +490,8 @@ func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap *types.Capability) *types.
 	prefixStore := prefix.NewStore(ctx.KVStore(sk.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(cap.GetIndex())
 
-	capOwners, boolVal := store.GetAndDecodeWithBool(prefixStore, sk.decodeOwner, indexKey)
-	if !boolVal {
+	capOwners, ok := store.GetAndDecodeWithBool(prefixStore, sk.decodeOwner, indexKey)
+	if !ok {
 		return types.NewCapabilityOwners()
 	}
 

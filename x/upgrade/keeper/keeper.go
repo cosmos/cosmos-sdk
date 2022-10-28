@@ -96,8 +96,8 @@ func (k Keeper) getProtocolVersion(ctx sdk.Context) uint64 {
 // SetModuleVersionMap saves a given version map to state
 func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 	if len(vm) > 0 {
-		st := ctx.KVStore(k.storeKey)
-		versionStore := prefix.NewStore(st, []byte{types.VersionMapByte})
+		store := ctx.KVStore(k.storeKey)
+		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
 		// Even though the underlying store (cachekv) store is sorted, we still
 		// prefer a deterministic iteration order of the map, to avoid undesired
 		// surprises if we ever change stores.

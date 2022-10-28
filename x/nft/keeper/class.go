@@ -47,11 +47,11 @@ func (k Keeper) decodeClass(bz []byte) (nft.Class, bool) {
 // GetClass defines a method for returning the class information of the specified id
 func (k Keeper) GetClass(ctx sdk.Context, classID string) (nft.Class, bool) {
 	st := ctx.KVStore(k.storeKey)
-	class, boolval := store.GetAndDecodeWithBool(st, k.decodeClass, classStoreKey(classID))
-	if !boolval {
-		return class, boolval
+	class, ok := store.GetAndDecodeWithBool(st, k.decodeClass, classStoreKey(classID))
+	if !ok {
+		return class, ok
 	}
-	return class, boolval
+	return class, ok
 }
 
 // GetClasses defines a method for returning all classes information

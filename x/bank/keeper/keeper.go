@@ -267,12 +267,12 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metad
 	st := ctx.KVStore(k.storeKey)
 	st = prefix.NewStore(st, types.DenomMetadataPrefix)
 
-	metadata, boolVal := store.GetAndDecodeWithBool(st, k.decodeMetadata, conv.UnsafeStrToBytes(denom))
-	if !boolVal {
-		return metadata, boolVal
+	metadata, ok := store.GetAndDecodeWithBool(st, k.decodeMetadata, conv.UnsafeStrToBytes(denom))
+	if !ok {
+		return metadata, ok
 	}
 
-	return metadata, boolVal
+	return metadata, ok
 }
 
 // HasDenomMetaData checks if the denomination metadata exists in store.

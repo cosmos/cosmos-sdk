@@ -136,11 +136,11 @@ func (k Keeper) decodeNFT(bz []byte) (nft.NFT, bool) {
 // GetNFT returns the nft information of the specified classID and nftID
 func (k Keeper) GetNFT(ctx sdk.Context, classID, nftID string) (nft.NFT, bool) {
 	st := k.getNFTStore(ctx, classID)
-	nft, boolval := store.GetAndDecodeWithBool(st, k.decodeNFT, []byte(nftID))
-	if !boolval {
-		return nft, boolval
+	nft, ok := store.GetAndDecodeWithBool(st, k.decodeNFT, []byte(nftID))
+	if !ok {
+		return nft, ok
 	}
-	return nft, boolval
+	return nft, ok
 }
 
 // GetNFTsOfClassByOwner returns all nft information of the specified classID under the specified owner

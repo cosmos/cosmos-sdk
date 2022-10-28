@@ -98,7 +98,7 @@ func (a table) Update(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarsha
 //
 // Set iterates through the registered callbacks that may add secondary index
 // keys.
-func (a table) Set(st sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
+func (a table) Set(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
 	if len(rowID) == 0 {
 		return errors.ErrORMEmptyKey
 	}
@@ -109,12 +109,12 @@ func (a table) Set(st sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) e
 		return err
 	}
 
-	pStore := prefix.NewStore(st, a.prefix[:])
+	pStore := prefix.NewStore(store, a.prefix[:])
 
 	var oldValue codec.ProtoMarshaler
-	if a.Has(st, rowID) {
+	if a.Has(store, rowID) {
 		oldValue = reflect.New(a.model).Interface().(codec.ProtoMarshaler)
-		a.GetOne(st, rowID, oldValue)
+		a.GetOne(store, rowID, oldValue)
 	}
 
 	newValueEncoded, err := a.cdc.Marshal(newValue)
@@ -124,7 +124,7 @@ func (a table) Set(st sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) e
 
 	pStore.Set(rowID, newValueEncoded)
 	for i, itc := range a.afterSet {
-		if err := itc(st, rowID, newValue, oldValue); err != nil {
+		if err := itc(store, rowID, newValue, oldValue); err != nil {
 			return sdkerrors.Wrapf(err, "interceptor %d failed", i)
 		}
 	}

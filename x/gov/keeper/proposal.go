@@ -112,12 +112,12 @@ func (keeper Keeper) decodeProposal(bz []byte) (v1.Proposal, bool) {
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {
 	st := ctx.KVStore(keeper.storeKey)
 
-	proposal, boolVal := store.GetAndDecodeWithBool(st, keeper.decodeProposal, types.ProposalKey(proposalID))
-	if !boolVal {
-		return v1.Proposal{}, boolVal
+	proposal, ok := store.GetAndDecodeWithBool(st, keeper.decodeProposal, types.ProposalKey(proposalID))
+	if !ok {
+		return v1.Proposal{}, ok
 	}
 
-	return proposal, boolVal
+	return proposal, ok
 }
 
 // SetProposal sets a proposal to store.

@@ -24,8 +24,8 @@ func NewSequence(prefix byte) Sequence {
 }
 
 // NextVal increments and persists the counter by one and returns the value.
-func (s Sequence) NextVal(st sdk.KVStore) uint64 {
-	pStore := prefix.NewStore(st, []byte{s.prefix})
+func (s Sequence) NextVal(store sdk.KVStore) uint64 {
+	pStore := prefix.NewStore(store, []byte{s.prefix})
 	v := pStore.Get(sequenceStorageKey)
 	seq := DecodeSequence(v)
 	seq++

@@ -119,12 +119,12 @@ func (k Keeper) decodeEvidence(bz []byte) (exported.Evidence, bool) {
 func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Evidence, bool) {
 	st := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 
-	evidence, boolVal := store.GetAndDecodeWithBool(st, k.decodeEvidence, hash)
-	if !boolVal {
-		return evidence, boolVal
+	evidence, ok := store.GetAndDecodeWithBool(st, k.decodeEvidence, hash)
+	if !ok {
+		return evidence, ok
 	}
 
-	return evidence, boolVal
+	return evidence, ok
 }
 
 // IterateEvidence provides an interator over all stored Evidence objects. For

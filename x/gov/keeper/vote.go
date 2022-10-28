@@ -75,12 +75,12 @@ func (keeper Keeper) decodeVote(bz []byte) (vote v1.Vote, found bool) {
 // GetVote gets the vote from an address on a specific proposal
 func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote v1.Vote, found bool) {
 	st := ctx.KVStore(keeper.storeKey)
-	vote, boolVal := store.GetAndDecodeWithBool(st, keeper.decodeVote, types.VoteKey(proposalID, voterAddr))
-	if !boolVal {
-		return vote, boolVal
+	vote, ok := store.GetAndDecodeWithBool(st, keeper.decodeVote, types.VoteKey(proposalID, voterAddr))
+	if !ok {
+		return vote, ok
 	}
 
-	return vote, boolVal
+	return vote, ok
 }
 
 // SetVote sets a Vote to the gov store

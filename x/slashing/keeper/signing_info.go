@@ -23,8 +23,8 @@ func (k Keeper) decodeInfo(bz []byte) (types.ValidatorSigningInfo, bool) {
 // ConsAddress
 func (k Keeper) GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (info types.ValidatorSigningInfo, found bool) {
 	st := ctx.KVStore(k.storeKey)
-	info, boolval := store.GetAndDecodeWithBool(st, k.decodeInfo, types.ValidatorSigningInfoKey(address))
-	if !boolval {
+	info, ok := store.GetAndDecodeWithBool(st, k.decodeInfo, types.ValidatorSigningInfoKey(address))
+	if !ok {
 		found = false
 		return
 	}

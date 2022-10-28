@@ -9,11 +9,34 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+var (
+	_ Mempool      = (*nonceMempool)(nil)
+	_ SelectCursor = (*nonceMempoolIterator)(nil)
+)
+
 // nonceMempool is a mempool that keeps transactions sorted by nonce. Transactions with the lowest nonce globally
 // are prioritized. Transactions with the same nonce are prioritized by sender address. Fee/gas based
 // prioritization is not supported.
 type nonceMempool struct {
 	txQueue *huandu.SkipList
+}
+
+type nonceMempoolIterator struct {
+	currentTx *huandu.Element
+}
+
+func (i nonceMempoolIterator) Next() (SelectCursor, error) {
+	if i.currentTx == nil {
+		return nil, nil
+	} else if n := i.currentTx.Next(); n != nil {
+		return nonceMempoolIterator{currentTx: n}, nil
+	} else {
+		return nil, nil
+	}
+}
+
+func (i nonceMempoolIterator) Tx() Tx {
+	return i.currentTx.Value.(Tx)
 }
 
 type txKey struct {
@@ -63,24 +86,13 @@ func (sp nonceMempool) Insert(_ sdk.Context, tx Tx) error {
 
 // Select returns txs from the mempool with the lowest nonce globally first. A sender's txs will always be returned
 // in nonce order.
-func (sp nonceMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
-	var (
-		txBytes     int64
-		selectedTxs []Tx
-	)
-
+func (sp nonceMempool) Select(_ [][]byte) (SelectCursor, error) {
 	currentTx := sp.txQueue.Front()
-	for currentTx != nil {
-		mempoolTx := currentTx.Value.(Tx)
-
-		if txBytes += mempoolTx.Size(); txBytes <= maxBytes {
-			selectedTxs = append(selectedTxs, mempoolTx)
-		} else {
-			return selectedTxs, nil
-		}
-		currentTx = currentTx.Next()
+	if currentTx == nil {
+		return nil, nil
 	}
-	return selectedTxs, nil
+
+	return &nonceMempoolIterator{currentTx: currentTx}, nil
 }
 
 // CountTx returns the number of txs in the mempool.

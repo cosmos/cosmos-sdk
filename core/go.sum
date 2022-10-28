@@ -1,13 +1,13 @@
-cosmossdk.io/api v0.2.1 h1:4m6vIHKJygrixSIfOsD3Mhij9vZlQC/+BTeb+Un9os0=
-cosmossdk.io/api v0.2.1/go.mod h1:kNpfY0UY7Cz4ZuLJ4hm9auUGfmj23UFpOQ/Bo8IKCFw=
+cosmossdk.io/api v0.2.3 h1:WtjmTmVIC7c/3ZVguaAcuoEQvsOHQjKk/1k1Fbxz9vA=
+cosmossdk.io/api v0.2.3/go.mod h1:7xfxe8ghXHoKj3W2oG/HcuxGVwUHN3q8piiIEiJ3CEU=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 github.com/alecthomas/participle/v2 v2.0.0-alpha7 h1:cK4vjj0VSgb3lN1nuKA5F7dw+1s1pWBe5bx7nNCnN+c=
 github.com/cockroachdb/apd/v3 v3.1.0 h1:MK3Ow7LH0W8zkd5GMKA1PvS9qG3bWFI95WaVNfyZJ/w=
 github.com/cosmos/cosmos-proto v1.0.0-alpha8 h1:d3pCRuMYYvGA5bM0ZbbjKn+AoQD4A7dyNG2wzwWalUw=
 github.com/cosmos/cosmos-proto v1.0.0-alpha8/go.mod h1:6/p+Bc4O8JKeZqe0VqUGTX31eoYqemTT4C1hLCWsO7I=
-github.com/cosmos/gogoproto v1.4.1 h1:WoyH+0/jbCTzpKNvyav5FL1ZTWsp1im1MxEpJEzKUB8=
-github.com/cosmos/gogoproto v1.4.1/go.mod h1:Ac9lzL4vFpBMcptJROQ6dQ4M3pOEK5Z/l0Q9p+LoCr4=
+github.com/cosmos/gogoproto v1.4.2 h1:UeGRcmFW41l0G0MiefWhkPEVEwvu78SZsHBvI78dAYw=
+github.com/cosmos/gogoproto v1.4.2/go.mod h1:cLxOsn1ljAHSV527CHOtaIP91kK6cCrZETRBrkzItWU=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/cucumber/common/gherkin/go/v22 v22.0.0 h1:4K8NqptbvdOrjL9DEea6HFjSpbdT9+Q5kgLpmmsHYl0=
 github.com/cucumber/common/messages/go/v17 v17.1.1 h1:RNqopvIFyLWnKv0LfATh34SWBhXeoFTJnSrgm9cT/Ts=

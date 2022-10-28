@@ -1,5 +1,5 @@
-cosmossdk.io/api v0.2.1 h1:4m6vIHKJygrixSIfOsD3Mhij9vZlQC/+BTeb+Un9os0=
-cosmossdk.io/api v0.2.1/go.mod h1:kNpfY0UY7Cz4ZuLJ4hm9auUGfmj23UFpOQ/Bo8IKCFw=
+cosmossdk.io/api v0.2.3 h1:WtjmTmVIC7c/3ZVguaAcuoEQvsOHQjKk/1k1Fbxz9vA=
+cosmossdk.io/api v0.2.3/go.mod h1:7xfxe8ghXHoKj3W2oG/HcuxGVwUHN3q8piiIEiJ3CEU=
 github.com/cosmos/cosmos-proto v1.0.0-alpha8 h1:d3pCRuMYYvGA5bM0ZbbjKn+AoQD4A7dyNG2wzwWalUw=
 github.com/cosmos/cosmos-proto v1.0.0-alpha8/go.mod h1:6/p+Bc4O8JKeZqe0VqUGTX31eoYqemTT4C1hLCWsO7I=
 github.com/cosmos/gogoproto v1.4.2 h1:UeGRcmFW41l0G0MiefWhkPEVEwvu78SZsHBvI78dAYw=

@@ -696,6 +696,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	}
 
 	if mode == runTxModeCheck {
+		fmt.Println("inserting tx:", tx.GetMsgs())
 		err = app.mempool.Insert(ctx, tx.(mempool.Tx))
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err
@@ -837,17 +838,28 @@ func createEvents(msg sdk.Msg) sdk.Events {
 	return sdk.Events{msgEvent}
 }
 
-func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, error) {
-	memTxs, selectErr := app.mempool.Select(req.Txs, req.MaxTxBytes)
+// prepareProposal default implementation, it selects the
+func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) [][]byte {
+	cursor, selectErr := app.mempool.Select(req.Txs)
 	if selectErr != nil {
 		panic(selectErr)
 	}
-	var txsBytes [][]byte
-	for _, memTx := range memTxs {
+	var (
+		txsBytes  [][]byte
+		byteCount int64
+	)
+	for cursor != nil {
+		memTx := cursor.Tx()
+
+		if byteCount += memTx.Size(); byteCount > req.MaxTxBytes {
+			break
+		}
+
 		bz, encErr := app.txEncoder(memTx)
 		if encErr != nil {
 			panic(encErr)
 		}
+
 		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
 		if err != nil {
 			_ = app.mempool.Remove(memTx)
@@ -855,8 +867,14 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 			txsBytes = append(txsBytes, bz)
 		}
 
+		next, cursorErr := cursor.Next()
+		if cursorErr != nil {
+			panic(cursorErr)
+		}
+		cursor = next
 	}
-	return txsBytes, nil
+
+	return txsBytes
 }
 
 func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {

@@ -250,22 +250,15 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // work in a block before proposing it.
 //
 // Transactions can be modified, removed, or added by the application. Since the
-// application maintains it's own local mempool, it will ignore the transactions
+// application maintains its own local mempool, it will ignore the transactions
 // provided to it in RequestPrepareProposal. Instead, it will determine which
 // transactions to return based on the mempool's semantics and the MaxTxBytes
 // provided by the client's request.
 //
-// Note, there is no need to execute the transactions for validity as they have
-// already passed CheckTx.
-//
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-	txs, err := app.prepareProposal(req)
-	if err != nil {
-		fmt.Println("do something go error en prepare propossal", err)
-	}
-	return abci.ResponsePrepareProposal{Txs: txs}
+	return abci.ResponsePrepareProposal{Txs: app.prepareProposal(req)}
 }
 
 // ProcessProposal implements the ProcessProposal ABCI method and returns a

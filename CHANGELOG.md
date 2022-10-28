@@ -91,7 +91,6 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 
 * https://github.com/provenance-io/cosmos-sdk/compare/v0.46.2-pio-1...v0.46.2-pio-2
 * https://github.com/provenance-io/cosmos-sdk/compare/v0.46.2...v0.46.2-pio-2
->>>>>>> release-pio/v0.46.x
 
 ---
 

@@ -848,3 +848,22 @@ func (k msgServer) ExemptDelegation(goCtx context.Context, msg *types.MsgExemptD
 
 	return &types.MsgExemptDelegationResponse{}, nil
 }
+
+// UnbondValidator defines a method for performing the status transition for
+// a validator from bonded to unbonded
+func (k msgServer) UnbondValidator(goCtx context.Context, msg *types.MsgUnbondValidator) (*types.MsgUnbondValidatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	// validator must already be registered
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	// jail the validator.
+	k.jailValidator(ctx, validator)
+	return &types.MsgUnbondValidatorResponse{}, nil
+}

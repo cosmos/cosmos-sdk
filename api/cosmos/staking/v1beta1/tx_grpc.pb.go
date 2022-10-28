@@ -59,6 +59,10 @@ type MsgClient interface {
 	// delegated coins from a delegator to a validator.
 	// Since: cosmos-sdk 0.47
 	ExemptDelegation(ctx context.Context, in *MsgExemptDelegation, opts ...grpc.CallOption) (*MsgExemptDelegationResponse, error)
+	// UnbondValidator defines a method for performing the status transition for a validator
+	// from bonded to unbonded
+	// Since: cosmos-sdk 0.47
+	UnbondValidator(ctx context.Context, in *MsgUnbondValidator, opts ...grpc.CallOption) (*MsgUnbondValidatorResponse, error)
 }
 
 type msgClient struct {
@@ -168,6 +172,15 @@ func (c *msgClient) ExemptDelegation(ctx context.Context, in *MsgExemptDelegatio
 	return out, nil
 }
 
+func (c *msgClient) UnbondValidator(ctx context.Context, in *MsgUnbondValidator, opts ...grpc.CallOption) (*MsgUnbondValidatorResponse, error) {
+	out := new(MsgUnbondValidatorResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Msg/UnbondValidator", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -209,6 +222,10 @@ type MsgServer interface {
 	// delegated coins from a delegator to a validator.
 	// Since: cosmos-sdk 0.47
 	ExemptDelegation(context.Context, *MsgExemptDelegation) (*MsgExemptDelegationResponse, error)
+	// UnbondValidator defines a method for performing the status transition for a validator
+	// from bonded to unbonded
+	// Since: cosmos-sdk 0.47
+	UnbondValidator(context.Context, *MsgUnbondValidator) (*MsgUnbondValidatorResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -248,6 +265,9 @@ func (UnimplementedMsgServer) TransferTokenizeShareRecord(context.Context, *MsgT
 }
 func (UnimplementedMsgServer) ExemptDelegation(context.Context, *MsgExemptDelegation) (*MsgExemptDelegationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExemptDelegation not implemented")
+}
+func (UnimplementedMsgServer) UnbondValidator(context.Context, *MsgUnbondValidator) (*MsgUnbondValidatorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnbondValidator not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -460,6 +480,24 @@ func _Msg_ExemptDelegation_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UnbondValidator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnbondValidator)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnbondValidator(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Msg/UnbondValidator",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnbondValidator(ctx, req.(*MsgUnbondValidator))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -510,6 +548,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ExemptDelegation",
 			Handler:    _Msg_ExemptDelegation_Handler,
+		},
+		{
+			MethodName: "UnbondValidator",
+			Handler:    _Msg_UnbondValidator_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

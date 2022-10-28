@@ -762,3 +762,33 @@ $ %s tx staking exempt-delegation cosmosvaloper13h5xdxhsdaugwdrkusf8lkgu406h8t62
 
 	return cmd
 }
+
+func NewUnbondValidatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "unbond-validator",
+		Short: "Unbond a validator",
+		Args:  cobra.ExactArgs(0),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Unbond a validator.
+Example:
+$ %s tx staking unbond-validator --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgUnbondValidator(sdk.ValAddress(clientCtx.GetFromAddress()))
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}

@@ -22,6 +22,7 @@ const (
 	TypeMsgRedeemTokensforShares       = "redeem_tokens_for_shares"
 	TypeMsgTransferTokenizeShareRecord = "transfer_tokenize_share_record"
 	TypeMsgExemptDelegation            = "exempt_delegation"
+	TypeMsgUnbondValidator             = "unbond_validator"
 )
 
 var (
@@ -38,6 +39,7 @@ var (
 	_ sdk.Msg                            = &MsgRedeemTokensforShares{}
 	_ sdk.Msg                            = &MsgTransferTokenizeShareRecord{}
 	_ sdk.Msg                            = &MsgExemptDelegation{}
+	_ sdk.Msg                            = &MsgUnbondValidator{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -566,6 +568,43 @@ func (msg MsgExemptDelegation) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
 	}
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+
+	return nil
+}
+
+// NewMsgUnbondValidator creates a new MsgUnbondValidator instance.
+func NewMsgUnbondValidator(valAddr sdk.ValAddress) *MsgUnbondValidator {
+	return &MsgUnbondValidator{
+		ValidatorAddress: valAddr.String(),
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) Type() string { return TypeMsgUnbondValidator }
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) GetSigners() []sdk.AccAddress {
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{valAddr.Bytes()}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) ValidateBasic() error {
 	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}

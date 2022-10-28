@@ -2,7 +2,6 @@ package rosetta
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -335,21 +334,12 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 		isSub             bool
 	)
 
-	attrs := make([]string, len(event.Attributes))
-	for i, att := range event.Attributes {
-		at, err := base64.StdEncoding.DecodeString(string(att.Value))
-		if err != nil {
-			panic(err)
-		}
-		attrs[i] = string(at)
-	}
-
 	switch event.Type {
 	default:
 		return nil, false
 	case banktypes.EventTypeCoinSpent:
-		spender := sdk.MustAccAddressFromBech32(attrs[0])
-		coins, err := sdk.ParseCoinsNormalized(attrs[1])
+		spender := sdk.MustAccAddressFromBech32(string(event.Attributes[0].Value))
+		coins, err := sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
 		if err != nil {
 			panic(err)
 		}
@@ -359,8 +349,8 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 		accountIdentifier = spender.String()
 
 	case banktypes.EventTypeCoinReceived:
-		receiver := sdk.MustAccAddressFromBech32(attrs[0])
-		coins, err := sdk.ParseCoinsNormalized(attrs[1])
+		receiver := sdk.MustAccAddressFromBech32(string(event.Attributes[0].Value))
+		coins, err := sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
 		if err != nil {
 			panic(err)
 		}
@@ -372,7 +362,7 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 	// rosetta does not have the concept of burning coins, so we need to mock
 	// the burn as a send to an address that cannot be resolved to anything
 	case banktypes.EventTypeCoinBurn:
-		coins, err := sdk.ParseCoinsNormalized(attrs[1])
+		coins, err := sdk.ParseCoinsNormalized(string(event.Attributes[1].Value))
 		if err != nil {
 			panic(err)
 		}

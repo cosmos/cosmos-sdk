@@ -912,3 +912,125 @@ func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 	}
 	return sdkmaps.HashFromMap(m)
 }
+
+type MockListener struct {
+	stateCache []types.StoreKVPair
+}
+
+func (tl *MockListener) OnWrite(storeKey types.StoreKey, key []byte, value []byte, delete bool) error {
+	tl.stateCache = append(tl.stateCache, types.StoreKVPair{
+		StoreKey: storeKey.Name(),
+		Key:      key,
+		Value:    value,
+		Delete:   delete,
+	})
+	return nil
+}
+
+func TestStateListeners(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+
+	listener := &MockListener{}
+	ms.AddListeners(testStoreKey1, []types.WriteListener{listener})
+
+	require.NoError(t, ms.LoadLatestVersion())
+	cacheMulti := ms.CacheMultiStore()
+
+	store1 := cacheMulti.GetKVStore(testStoreKey1)
+	store1.Set([]byte{1}, []byte{1})
+	require.Empty(t, listener.stateCache)
+
+	// writes are observed when cache store commit.
+	cacheMulti.Write()
+	require.Equal(t, 1, len(listener.stateCache))
+
+	// test nested cache store
+	listener.stateCache = []types.StoreKVPair{}
+	nested := cacheMulti.CacheMultiStore()
+
+	store1 = nested.GetKVStore(testStoreKey1)
+	store1.Set([]byte{1}, []byte{1})
+	require.Empty(t, listener.stateCache)
+
+	// writes are not observed when nested cache store commit
+	nested.Write()
+	require.Empty(t, listener.stateCache)
+
+	// writes are observed when inner cache store commit
+	cacheMulti.Write()
+	require.Equal(t, 1, len(listener.stateCache))
+}
+
+type commitKVStoreStub struct {
+	types.CommitKVStore
+	Committed int
+}
+
+func (stub *commitKVStoreStub) Commit() types.CommitID {
+	commitID := stub.CommitKVStore.Commit()
+	stub.Committed += 1
+	return commitID
+}
+
+func prepareStoreMap() map[types.StoreKey]types.CommitKVStore {
+	var db dbm.DB = dbm.NewMemDB()
+	store := NewStore(db, log.NewNopLogger())
+	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
+	store.LoadLatestVersion()
+	return map[types.StoreKey]types.CommitKVStore{
+		testStoreKey1: &commitKVStoreStub{
+			CommitKVStore: store.GetStoreByName("iavl1").(types.CommitKVStore),
+		},
+		testStoreKey2: &commitKVStoreStub{
+			CommitKVStore: store.GetStoreByName("iavl2").(types.CommitKVStore),
+		},
+		testStoreKey3: &commitKVStoreStub{
+			CommitKVStore: store.GetStoreByName("trans1").(types.CommitKVStore),
+		},
+	}
+}
+
+func TestCommitStores(t *testing.T) {
+	testCases := []struct {
+		name          string
+		committed     int
+		exptectCommit int
+	}{
+		{
+			"when upgrade not get interrupted",
+			0,
+			1,
+		},
+		{
+			"when upgrade get interrupted once",
+			1,
+			0,
+		},
+		{
+			"when upgrade get interrupted twice",
+			2,
+			0,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			storeMap := prepareStoreMap()
+			store := storeMap[testStoreKey1].(*commitKVStoreStub)
+			for i := tc.committed; i > 0; i-- {
+				store.Commit()
+			}
+			store.Committed = 0
+			var version int64 = 1
+			removalMap := map[types.StoreKey]bool{}
+			res := commitStores(version, storeMap, removalMap)
+			for _, s := range res.StoreInfos {
+				require.Equal(t, version, s.CommitId.Version)
+			}
+			require.Equal(t, version, res.Version)
+			require.Equal(t, tc.exptectCommit, store.Committed)
+		})
+	}
+}

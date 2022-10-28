@@ -40,6 +40,58 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## Unreleased
 
 * Add functionality to update denom metadata via gov proposal [#270](https://github.com/provenance-io/cosmos-sdk/pull/270)
+* nothing
+
+---
+
+## [v0.46.3-pio-2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-2) - 2022-10-26
+
+### Bug Fixes
+
+* (store) [#13530](https://github.com/cosmos/cosmos-sdk/pull/13530) Fix app-hash mismatch if upgrade migration commit is interrupted.
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3-pio-1...v0.46.3-pio-2
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3...v0.46.3-pio-2
+
+---
+
+## [v0.46.3-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-1) - 2022-10-20
+
+Chains using this version must also apply the following replace line to their `go.mod`:
+
+```go
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+```
+
+### Improvements
+
+* Bring in Cosmos-SDK [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) changes [#303](https://github.com/provenance-io/cosmos-sdk/pull/303).
+* Updated the swagger files [#303](https://github.com/provenance-io/cosmos-sdk/pull/303).
+
+### Bug Fixes
+
+* Patch the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702) [#303](https://github.com/provenance-io/cosmos-sdk/pull/303).
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.2-pio-2...v0.46.3-pio-1
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3...v0.46.3-pio-1
+
+---
+
+## [v0.46.2-pio-2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.2-pio-2) - 2022-10-10
+
+### Improvements
+
+* Provide the logger to the store when creating a new BaseApp [#283](https://github.com/provenance-io/cosmos-sdk/pull/283).
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.2-pio-1...v0.46.2-pio-2
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.2...v0.46.2-pio-2
+>>>>>>> release-pio/v0.46.x
 
 ---
 
@@ -47,80 +99,88 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* Bring in Cosmos-SDK v0.46.2 changes. [#269](https://github.com/provenance-io/cosmos-sdk/pull/269)
+* Bring in Cosmos-SDK [v0.46.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.2) changes. [#269](https://github.com/provenance-io/cosmos-sdk/pull/269)
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.1-pio-1...v0.46.2-pio-1
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.2...v0.46.2-pio-1
 
 ---
 
 ## [v0.46.1-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-1) - 2022-09-30
 
-### Improvements
-
-* (baseapp) Add a optional function to baseapp to manipulate events [#1092](https://github.com/provenance-io/provenance/issues/1092)
-
----
-
-## [v0.46.1-pio-1-rc1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-1-rc1) - 2022-09-19
-
-This is the same code as v0.46.0-pio-1-rc5, which was erroneously named.
-
----
-
-## [v0.46.0-pio-1-rc5](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc5) - 2022-08-25
-
-### Improvements
-
-* Bring in Cosmos-SDK v0.46.1 changes. [#235](https://github.com/provenance-io/cosmos-sdk/pull/235)
-
----
-
-## [v0.46.0-pio-1-rc4](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc4) - 2022-08-23
-
-### Improvements
-
-* Add support for event data injection into end block handlers (https://github.com/provenance-io/provenance/issues/626)
-* Updated the swagger files. [#1017](https://github.com/provenance-io/provenance/issues/1017)
-
----
-
-## [v0.46.0-pio-1-rc3](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc3) - 2022-08-18
-
-### Bug Fixes
-
-* (x/auth) Add the missing account number case to the sim state decoder. [#228](https://github.com/provenance-io/cosmos-sdk/pull/228)
-* (x/auth) Handle missing account numbers during InitGenesis. [#228](https://github.com/provenance-io/cosmos-sdk/pull/228)
-
----
-
-## [v0.46.0-pio-1-rc2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc2) - 2022-08-11
-
-### Improvements
-
-* (x/authz) Create the GetAuthorization to replace the previously removed GetCleanAuthorization. [#222](https://github.com/provenance-io/cosmos-sdk/pull/222)
-* (baseapp) Create the IMsgServiceRouter interface and baseapp.SetMsgServiceRouter function [#223](https://github.com/provenance-io/cosmos-sdk/pull/223).
-
----
-
-## [v0.46.0-pio-1-rc1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.0-pio-1-rc1) - 2022-08-04
-
-This release is based on Cosmos-SDK release [v0.46.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0).
-It also contains the customizations that were included in [v0.45.5-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.45.5-pio-1), but weren't included in v0.46.0.
+This release is based on Cosmos-SDK release [v0.46.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.1).
+It also contains the Provenance Blockchain customizations that were part of [v0.45.9-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.45.9-pio-1) ([changes](https://github.com/provenance-io/cosmos-sdk/compare/v0.45.9...v0.45.9-pio-1)), but weren't included in v0.46.1.
 
 ### Features
 
 * (x/authz) [#807](https://github.com/provenance-io/provenance/issues/807) Create a CountAuthorization type.
 * (baseapp) Add custom fee handler [#354](https://github.com/provenance-io/provenance/issues/354)
+* (baseapp) Add a optional function to baseapp to manipulate events [#1092](https://github.com/provenance-io/provenance/issues/1092)
+* (x/authz) Create the GetAuthorization to replace the previously removed GetCleanAuthorization. [#222](https://github.com/provenance-io/cosmos-sdk/pull/222)
+* (baseapp) Create the IMsgServiceRouter interface and baseapp.SetMsgServiceRouter function [#223](https://github.com/provenance-io/cosmos-sdk/pull/223).
 
 ### Improvements
 
+* Bring in Cosmos-SDK [v0.46.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.1) changes. [#235](https://github.com/provenance-io/cosmos-sdk/pull/235)
+* Add support for event data injection into end block handlers (https://github.com/provenance-io/provenance/issues/626)
 * (x/bank) [#208](https://github.com/provenance-io/cosmos-sdk/pull/208) Apply the SendEnabled fix.
+* Updated the swagger files. [#1017](https://github.com/provenance-io/provenance/issues/1017)
 
 ### Bug Fixes
 
+* (x/auth) Add the missing account number case to the sim state decoder. [#228](https://github.com/provenance-io/cosmos-sdk/pull/228)
+* (x/auth) Handle missing account numbers during InitGenesis. [#228](https://github.com/provenance-io/cosmos-sdk/pull/228)
 * (store/rootmulti) [#12487](https://github.com/cosmos/cosmos-sdk/pull/12487) Fix non-deterministic map iteration.
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.1...v0.46.1-pio-1
 
 ---
 
 # Cosmos-SDK releases
+
+## [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) - 2022-10-20
+
+ATTENTION:
+
+This is a security release for the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702). 
+
+All users should upgrade immediately.
+
+Users *must* add a replace directive in their go.mod for the new `ics23` package in the SDK:
+
+```go
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+```
+
+### Features
+
+* [#13435](https://github.com/cosmos/cosmos-sdk/pull/13435) Extend error context when a simulation fails.
+* (grpc) [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485) Implement a new gRPC query, `/cosmos/base/node/v1beta1/config`, which provides operator configuration.
+* (cli) [#13147](https://github.com/cosmos/cosmos-sdk/pull/13147) Add the `--append` flag to the `sign-batch` CLI cmd to combine the messages and sign those txs which are created with `--generate-only`.
+* (cli) [#13454](https://github.com/cosmos/cosmos-sdk/pull/13454) `sign-batch` CLI can now read multiple transaction files.
+
+### Improvements
+
+* [#13586](https://github.com/cosmos/cosmos-sdk/pull/13586) Bump Tendermint to `v0.34.22`.
+* (auth) [#13460](https://github.com/cosmos/cosmos-sdk/pull/13460) The `q auth address-by-id` CLI command has been renamed to `q auth address-by-acc-num` to be more explicit. However, the old `address-by-id` version is still kept as an alias, for backwards compatibility.
+* [#13433](https://github.com/cosmos/cosmos-sdk/pull/13433) Remove dead code in cacheMergeIterator `Domain()`.
+
+### Bug Fixes
+
+* Implement dragonberry security patch.
+    * For applying the patch please refer to the [RELEASE NOTES](./RELEASE_NOTES.md)
+* (store) [#13459](https://github.com/cosmos/cosmos-sdk/pull/13459) Don't let state listener observe the uncommitted writes.
+* [#12548](https://github.com/cosmos/cosmos-sdk/pull/12548) Prevent signing from wrong key while using multisig.
+
+### API Breaking Changes
+
+* (server) [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485) The `Application` service now requires the `RegisterNodeService` method to be implemented.
+
+---
 
 ## [v0.46.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.2) - 2022-10-03
 
@@ -131,6 +191,7 @@ It also contains the customizations that were included in [v0.45.5-pio-1](https:
 
 ### Features
 
+* (baseapp) [#12168](https://github.com/cosmos/cosmos-sdk/pull/12168) Add `SetMsgServiceRouter` to `BaseApp`.
 * (cli) [#13207](https://github.com/cosmos/cosmos-sdk/pull/13207) Reduce user's password prompts when calling keyring `List()` function.
 * (cli) [#13353](https://github.com/cosmos/cosmos-sdk/pull/13353) Add `tx group draft-proposal` command for generating group proposal JSONs (skeleton).
 * (cli) [#13304](https://github.com/cosmos/cosmos-sdk/pull/13304) Add `tx gov draft-proposal` command for generating proposal JSONs (skeleton).
@@ -157,6 +218,8 @@ It also contains the customizations that were included in [v0.45.5-pio-1](https:
 * (grpc) [#13417](https://github.com/cosmos/cosmos-sdk/pull/13417) fix grpc query panic that could crash the node (backport #13352).
 * (grpc) [#13418](https://github.com/cosmos/cosmos-sdk/pull/13418) Add close for grpc only mode.
 
+---
+
 ## [v0.46.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.1) - 2022-08-24
 
 ### Improvements
@@ -175,6 +238,8 @@ It also contains the customizations that were included in [v0.45.5-pio-1](https:
 
 * (x/group) [#12888](https://github.com/cosmos/cosmos-sdk/pull/12888) Fix event propagation to the current context of `x/group` message execution `[]sdk.Result`.
 * (x/upgrade) [#12906](https://github.com/cosmos/cosmos-sdk/pull/12906) Fix upgrade failure by moving downgrade verification logic after store migration.
+
+---
 
 ## [v0.46.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.0) - 2022-07-26
 
@@ -230,7 +295,7 @@ It also contains the customizations that were included in [v0.45.5-pio-1](https:
 * (rosetta) [\#11590](https://github.com/cosmos/cosmos-sdk/pull/11590) Add fee suggestion for rosetta and enable offline mode. Also force set events about Fees to Success to pass reconciliation test.
 * (types) [\#11959](https://github.com/cosmos/cosmos-sdk/pull/11959) Added `sdk.Coins.Find` helper method to find a coin by denom.
 * (upgrade) [#12603](https://github.com/cosmos/cosmos-sdk/pull/12603) feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces
-* (telemetry) [#12405](https://github.com/cosmos/cosmos-sdk/pull/12405) Add _query_ calls metric to telemetry.
+* (telemetry) [#12405](https://github.com/cosmos/cosmos-sdk/pull/12405) Add *query* calls metric to telemetry.
 * (cli) [#12028](https://github.com/cosmos/cosmos-sdk/pull/12028) Add the `tendermint key-migrate` to perform Tendermint v0.35 DB key migration.
 * (query) [#12253](https://github.com/cosmos/cosmos-sdk/pull/12253) Add `GenericFilteredPaginate` to the `query` package to improve UX.
 
@@ -456,7 +521,7 @@ It also contains the customizations that were included in [v0.45.5-pio-1](https:
 
 ### State Machine Breaking
 
-* (baseapp) [\#11985](https://github.com/cosmos/cosmos-sdk/pull/11985) Add a `postHandler` to baseapp. This `postHandler` is like antehandler, but is run _after_ the `runMsgs` execution. It is in the same store branch that `runMsgs`, meaning that both `runMsgs` and `postHandler`
+* (baseapp) [\#11985](https://github.com/cosmos/cosmos-sdk/pull/11985) Add a `postHandler` to baseapp. This `postHandler` is like antehandler, but is run *after* the `runMsgs` execution. It is in the same store branch that `runMsgs`, meaning that both `runMsgs` and `postHandler`
 * (x/gov) [#11998](https://github.com/cosmos/cosmos-sdk/pull/11998) Tweak the `x/gov` `ModuleAccountInvariant` invariant to ensure deposits are `<=` total module account balance instead of strictly equal.
 * (x/upgrade) [\#11800](https://github.com/cosmos/cosmos-sdk/pull/11800) Fix `GetLastCompleteUpgrade` to properly return the latest upgrade.
 * [\#10564](https://github.com/cosmos/cosmos-sdk/pull/10564) Fix bug when updating allowance inside AllowedMsgAllowance
@@ -722,7 +787,7 @@ empty coins slice before it is used to create `banktype.MsgSend`.
 
 ### Improvements
 
-* (types) [\#10630](https://github.com/cosmos/cosmos-sdk/pull/10630) Add an `Events` field to the `TxResponse` type that captures _all_ events emitted by a transaction, unlike `Logs` which only contains events emitted during message execution.
+* (types) [\#10630](https://github.com/cosmos/cosmos-sdk/pull/10630) Add an `Events` field to the `TxResponse` type that captures *all* events emitted by a transaction, unlike `Logs` which only contains events emitted during message execution.
 * (x/upgrade) [\#10532](https://github.com/cosmos/cosmos-sdk/pull/10532)  Add `keeper.DumpUpgradeInfoWithInfoToDisk` to include `Plan.Info` in the upgrade-info file.
 * (store) [\#10544](https://github.com/cosmos/cosmos-sdk/pull/10544) Use the new IAVL iterator structure which significantly improves iterator performance.
 
@@ -1804,7 +1869,7 @@ by the new key store:
     * `file`: use encrypted file-based store.
     * `kwallet`: use [KDE Wallet](https://utils.kde.org/projects/kwalletmanager/) service.
     * `pass`: use the [pass](https://www.passwordstore.org/) command line password manager.
-    * `test`: use password-less key store. _For testing purposes only. Use it at your own risk._
+    * `test`: use password-less key store. *For testing purposes only. Use it at your own risk.*
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
 to the new keyring.
 * (keys) [\#5366](https://github.com/cosmos/cosmos-sdk/pull/5366) `keys list` now accepts a `--list-names` option to list key names only, whilst the `keys delete`
@@ -3311,7 +3376,7 @@ BUG FIXES
 
 ## 0.25.0
 
-_October 24th, 2018_.
+*October 24th, 2018*.
 
 BREAKING CHANGES
 
@@ -3559,7 +3624,7 @@ BUG FIXES
 
 ## 0.24.2
 
-_August 22nd, 2018_.
+*August 22nd, 2018*.
 
 BUG FIXES
 
@@ -3568,7 +3633,7 @@ BUG FIXES
 
 ## 0.24.1
 
-_August 21st, 2018_.
+*August 21st, 2018*.
 
 BUG FIXES
 
@@ -3577,7 +3642,7 @@ BUG FIXES
 
 ## 0.24.0
 
-_August 13th, 2018_.
+*August 13th, 2018*.
 
 BREAKING CHANGES
 
@@ -3693,7 +3758,7 @@ BUG FIXES
 
 ## 0.23.1
 
-_July 27th, 2018_.
+*July 27th, 2018*.
 
 BUG FIXES
 
@@ -3703,7 +3768,7 @@ BUG FIXES
 
 ## 0.23.0
 
-_July 25th, 2018_.
+*July 25th, 2018*.
 
 BREAKING CHANGES
 
@@ -3726,7 +3791,7 @@ BUG FIXES
 
 ## 0.22.0
 
-_July 16th, 2018_.
+*July 16th, 2018*.
 
 BREAKING CHANGES
 
@@ -3745,7 +3810,7 @@ BUG FIXES
 
 ## 0.21.1
 
-_July 14th, 2018_.
+*July 14th, 2018*.
 
 BUG FIXES
 
@@ -3754,7 +3819,7 @@ BUG FIXES
 
 ## 0.21.0
 
-_July 13th, 2018_.
+*July 13th, 2018*.
 
 BREAKING CHANGES
 
@@ -3785,7 +3850,7 @@ BUG FIXES
 
 ## 0.20.0
 
-_July 10th, 2018_.
+*July 10th, 2018*.
 
 BREAKING CHANGES
 
@@ -3929,7 +3994,7 @@ BUG FIXES
 
 ## 0.19.0
 
-_June 13, 2018_.
+*June 13, 2018*.
 
 BREAKING CHANGES
 
@@ -3969,7 +4034,7 @@ FEATURES
 
 ## 0.18.0
 
-_June 9, 2018_.
+*June 9, 2018*.
 
 BREAKING CHANGES
 
@@ -4036,26 +4101,26 @@ BUG FIXES
 
 ## 0.17.5
 
-_June 5, 2018_.
+*June 5, 2018*.
 
 Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
 memory leak)
 
 ## 0.17.4
 
-_May 31, 2018_.
+*May 31, 2018*.
 
 Update to Tendermint v0.19.7 (WAL fixes and more)
 
 ## 0.17.3
 
-_May 29, 2018_.
+*May 29, 2018*.
 
 Update to Tendermint v0.19.6 (fix fast-sync halt)
 
 ## 0.17.2
 
-_May 20, 2018_.
+*May 20, 2018*.
 
 Update to Tendermint v0.19.5 (reduce WAL use, bound the mempool and some rpcs, improve logging)
 

@@ -195,9 +195,12 @@ func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 type AuthInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	Config    *modulev1.Module
+	ModuleKey depinject.OwnModuleKey
+	Key       *store.KVStoreKey
+	Cdc       codec.Codec
+
+	Authority map[string]sdk.AccAddress `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
@@ -216,7 +219,12 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 		maccPerms[permission.Account] = permission.Permissions
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.Key, types.ProtoBaseAccount, maccPerms, in.Config.Bech32Prefix, types.NewModuleAddress(govtypes.ModuleName).String())
+	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
+	if !ok {
+		authority = types.NewModuleAddress(govtypes.ModuleName)
+	}
+
+	k := keeper.NewAccountKeeper(in.Cdc, in.Key, types.ProtoBaseAccount, maccPerms, in.Config.Bech32Prefix, authority.String())
 	m := NewAppModule(in.Cdc, k, simulation.RandomGenesisAccounts, in.LegacySubspace)
 
 	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}

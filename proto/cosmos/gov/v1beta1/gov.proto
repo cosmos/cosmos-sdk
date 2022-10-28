@@ -53,6 +53,32 @@ message TextProposal {
   string description = 2;
 }
 
+// CommunitySpendProposal defines a community spend whose changes will
+// be executed upon vote passing
+message CommunitySpendProposal {
+  option (cosmos_proto.implements_interface) = "Content";
+
+  option (gogoproto.equal) = true;
+
+  string title       = 1;
+  string description = 2;
+  string recipient   = 3;
+  repeated cosmos.base.v1beta1.Coin amount = 4
+    [(gogoproto.nullable)     = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// ParameterChangeProposal defines a parameter change whose changes will
+// be executed upon vote passing
+message ParameterChangeProposal {
+  option (cosmos_proto.implements_interface) = "Content";
+
+  option (gogoproto.equal) = true;
+
+  string key      = 1;
+  string subspace = 2;
+  string value    = 3;
+}
+
 // Deposit defines an amount deposited by an account address to an active
 // proposal.
 message Deposit {

@@ -212,7 +212,7 @@ func TestGetFromFields(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, _, _, err := client.GetFromFields(tc.keyring(), tc.from, tc.clientCtx.GenerateOnly, tc.clientCtx.Simulate)
+		_, _, _, err := client.GetFromFields(tc.clientCtx, tc.keyring(), tc.from)
 		if tc.expectedErr == "" {
 			require.NoError(t, err)
 		} else {

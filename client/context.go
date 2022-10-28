@@ -333,19 +333,19 @@ func (ctx Context) printOutput(out []byte) error {
 // GetFromFields returns a from account address, account name and keyring type, given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
-func GetFromFields(kr keyring.Keyring, from string, genOnly bool, simulate bool) (sdk.AccAddress, string, keyring.KeyType, error) {
+func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccAddress, string, keyring.KeyType, error) {
 	if from == "" {
 		return nil, "", 0, nil
 	}
 
 	addr, err := sdk.AccAddressFromBech32(from)
 	switch {
-	case simulate:
+	case clientCtx.Simulate:
 		if err != nil {
 			return nil, "", 0, errors.Wrap(err, "a valid bech32 address must be provided in simulation mode")
 		}
 		return addr, "", 0, nil
-	case genOnly:
+	case clientCtx.GenerateOnly:
 		if err != nil {
 			return nil, "", 0, errors.Wrap(err, "must provide a valid Bech32 address in generate-only mode")
 		}

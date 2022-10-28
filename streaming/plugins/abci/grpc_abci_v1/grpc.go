@@ -3,6 +3,7 @@ package grpc_abci_v1
 import (
 	"context"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"io"
@@ -83,16 +84,30 @@ func (m *GRPCClient) ListenDeliverTx(ctx types.Context, req abci.RequestDeliverT
 	return nil
 }
 
-func (m *GRPCClient) OnStoreCommit(ctx types.Context, changeSet [][]byte) error {
+func (m *GRPCClient) ListenCommit(ctx types.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
+	blockHeight := ctx.BlockHeight()
+
+	resbz, err := res.Marshal()
+	if err != nil {
+		return err
+	}
+	if err := m.Listen(ctx, blockHeight, "COMMIT", resbz); err != nil {
+		return err
+	}
+
 	stream, err := m.client.Stream(ctx)
 	if err != nil {
 		return err
 	}
-	for _, data := range changeSet {
+	for _, kvPair := range changeSet {
+		bz, err := kvPair.Marshal()
+		if err != nil {
+			return err
+		}
 		if err = stream.Send(&ListenRequest{
 			BlockHeight: ctx.BlockHeight(),
 			EventType:   "STATE_CHANGE",
-			Data:        data,
+			Data:        bz,
 		}); err != nil {
 			return err
 		}

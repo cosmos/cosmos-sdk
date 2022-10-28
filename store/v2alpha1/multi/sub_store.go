@@ -112,6 +112,6 @@ func (s *substore) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.
 	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
 }
 
-func (s *substore) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
-	return cachekv.NewStore(listenkv.NewStore(s, storeKey, listeners))
+func (s *substore) CacheWrapWithListeners(storeKey types.StoreKey, listener *types.MemoryListener) types.CacheWrap {
+	return cachekv.NewStore(listenkv.NewStore(s, storeKey, listener))
 }

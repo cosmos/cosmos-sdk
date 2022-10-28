@@ -87,6 +87,6 @@ func (dsa Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Ca
 }
 
 // CacheWrapWithListeners implements the CacheWrapper interface.
-func (dsa Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
-	return cachekv.NewStore(listenkv.NewStore(dsa, storeKey, listeners))
+func (dsa Store) CacheWrapWithListeners(storeKey types.StoreKey, listener *types.MemoryListener) types.CacheWrap {
+	return cachekv.NewStore(listenkv.NewStore(dsa, storeKey, listener))
 }

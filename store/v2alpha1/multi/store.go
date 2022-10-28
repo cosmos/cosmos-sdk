@@ -139,13 +139,13 @@ type prefixRegistry struct {
 
 // Mixin type that to compose trace & listen state into each root store variant type
 type traceListenMixin struct {
-	listeners    map[string][]types.WriteListener
+	listeners    map[string]*types.MemoryListener
 	TraceWriter  io.Writer
 	TraceContext types.TraceContext
 }
 
 func newTraceListenMixin() *traceListenMixin {
-	return &traceListenMixin{listeners: map[string][]types.WriteListener{}}
+	return &traceListenMixin{listeners: map[string]*types.MemoryListener{}}
 }
 
 // DefaultStoreConfig returns a MultiStore config with an empty schema, a single backing DB,
@@ -861,15 +861,15 @@ func (pr *prefixRegistry) RegisterSubstore(key string, typ types.StoreType) erro
 	return nil
 }
 
-func (tlm *traceListenMixin) AddListeners(skey types.StoreKey, listeners []types.WriteListener) {
+func (tlm *traceListenMixin) AddListener(skey types.StoreKey, listener *types.MemoryListener) {
 	key := skey.Name()
-	tlm.listeners[key] = append(tlm.listeners[key], listeners...)
+	tlm.listeners[key] = listener
 }
 
 // ListeningEnabled returns if listening is enabled for a specific KVStore
 func (tlm *traceListenMixin) ListeningEnabled(key types.StoreKey) bool {
 	if ls, has := tlm.listeners[key.Name()]; has {
-		return len(ls) != 0
+		return ls != nil
 	}
 	return false
 }

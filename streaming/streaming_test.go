@@ -2,6 +2,7 @@ package streaming
 
 import (
 	"fmt"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"os"
 	"testing"
@@ -34,8 +35,7 @@ type PluginTestSuite struct {
 	deliverTxRes  abci.ResponseDeliverTx
 	commitRes     abci.ResponseCommit
 
-	storeKVPair1 []byte
-	storeKVPair2 []byte
+	changeSet []store.StoreKVPair
 }
 
 func (s *PluginTestSuite) SetupTest() {
@@ -84,20 +84,20 @@ func (s *PluginTestSuite) SetupTest() {
 	s.commitRes = abci.ResponseCommit{}
 
 	// test store kv pair types
-	kvPair1 := types.StoreKVPair{
-		StoreKey: "mockStore",
-		Delete:   false,
-		Key:      []byte{1, 2, 3},
-		Value:    []byte{3, 2, 1},
+	s.changeSet = []types.StoreKVPair{
+		{
+			StoreKey: "mockStore",
+			Delete:   false,
+			Key:      []byte{1, 2, 3},
+			Value:    []byte{3, 2, 1},
+		},
+		{
+			StoreKey: "mockStore",
+			Delete:   false,
+			Key:      []byte{3, 4, 5},
+			Value:    []byte{5, 4, 3},
+		},
 	}
-	s.storeKVPair1, _ = kvPair1.Marshal()
-	kvPair2 := types.StoreKVPair{
-		StoreKey: "mockStore",
-		Delete:   false,
-		Key:      []byte{3, 4, 5},
-		Value:    []byte{5, 4, 3},
-	}
-	s.storeKVPair2, err = kvPair2.Marshal()
 }
 
 func TestPluginTestSuite(t *testing.T) {
@@ -132,8 +132,7 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 		assert.NoError(t, err, "ListenDeliverTx")
 
 		// streaming services can choose not to implement store listening
-		changeSet := [][]byte{s.storeKVPair1, s.storeKVPair2}
-		err = abciListener.OnStoreCommit(s.loggerCtx, changeSet)
-		assert.NoError(t, err, "OnStoreCommit")
+		err = abciListener.ListenCommit(s.loggerCtx, s.commitRes, s.changeSet)
+		assert.NoError(t, err, "ListenCommit")
 	})
 }

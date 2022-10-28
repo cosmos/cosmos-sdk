@@ -183,7 +183,10 @@ type CommitMultiStore interface {
 
 	// AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
 	// It appends the listeners to a current set, if one already exists
-	AddListeners(key StoreKey, listeners []WriteListener)
+	AddListener(key StoreKey, listener *MemoryListener)
+
+	// PopStateCache returns the accumulated state change messages from MemoryListener
+	PopStateCache() []StoreKVPair
 }
 
 //---------subsp-------------------------------

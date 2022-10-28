@@ -336,7 +336,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 // defined in config, Commit will execute a deferred function call to check
 // against that height and gracefully halt if it matches the latest committed
 // height.
-func (app *BaseApp) Commit() (res abci.ResponseCommit) {
+func (app *BaseApp) Commit() abci.ResponseCommit {
 
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
@@ -346,6 +346,32 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// MultiStore (app.cms) so when Commit() is called is persists those values.
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
+
+	res := abci.ResponseCommit{
+		Data:         commitID.Hash,
+		RetainHeight: retainHeight,
+	}
+
+	// call the streaming service hook with the EndBlock messages
+	if app.abciListener != nil {
+		ctx := app.deliverState.ctx
+		blockHeight := ctx.BlockHeight()
+		changeSet := app.cms.PopStateCache()
+		if app.stopNodeOnStreamingErr {
+			if err := app.abciListener.ListenCommit(ctx, res, changeSet); err != nil {
+				app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
+				os.Exit(1)
+			}
+		} else {
+			rez := res
+			go func() {
+				if err := app.abciListener.ListenCommit(ctx, rez, changeSet); err != nil {
+					app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
+				}
+			}()
+		}
+	}
+
 	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
 
 	// Reset the Check state to the latest committed.
@@ -379,10 +405,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 		go app.snapshot(header.Height)
 	}
 
-	return abci.ResponseCommit{
-		Data:         commitID.Hash,
-		RetainHeight: retainHeight,
-	}
+	return res
 }
 
 // halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling

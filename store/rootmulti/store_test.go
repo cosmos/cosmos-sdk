@@ -558,18 +558,6 @@ func TestSetInitialVersion(t *testing.T) {
 	require.True(t, iavlStore.VersionExists(5))
 }
 
-var (
-	_ types.WriteListener = (*mockListener)(nil)
-)
-
-type mockListener struct {
-	key types.StoreKey
-}
-
-func (m mockListener) OnCommit() {}
-
-func (m mockListener) OnWrite(_ types.StoreKey, _ []byte, _ []byte, _ bool) {}
-
 func TestAddListenersAndListeningEnabled(t *testing.T) {
 	db := dbm.NewMemDB()
 	multi := newMultiStoreWithMounts(db, types.PruneNothing)
@@ -577,13 +565,8 @@ func TestAddListenersAndListeningEnabled(t *testing.T) {
 	enabled := multi.ListeningEnabled(testKey)
 	require.False(t, enabled)
 
-	multi.AddListeners(testKey, []types.WriteListener{})
-	enabled = multi.ListeningEnabled(testKey)
-	require.False(t, enabled)
-
 	wrongTestKey := types.NewKVStoreKey("wrong_listening_test_key")
-	mockListener := mockListener{key: wrongTestKey}
-	multi.AddListeners(testKey, []types.WriteListener{mockListener})
+	multi.AddListener(testKey, types.NewMemoryListener())
 	enabled = multi.ListeningEnabled(wrongTestKey)
 	require.False(t, enabled)
 

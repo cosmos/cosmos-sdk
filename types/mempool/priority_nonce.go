@@ -10,7 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-var _ Mempool = (*priorityNonceMempool)(nil)
+var (
+	_ Mempool  = (*priorityNonceMempool)(nil)
+	_ Iterator = (*priorityNonceIterator)(nil)
+)
 
 // priorityNonceMempool defines the SDK's default mempool implementation which stores
 // txs in a partially ordered set by 2 dimensions: priority, and sender-nonce
@@ -23,9 +26,14 @@ type priorityNonceMempool struct {
 	priorityIndex  *huandu.SkipList
 	priorityCounts map[int64]int
 	senderIndices  map[string]*huandu.SkipList
-	senderCursors  map[string]*huandu.Element
 	scores         map[txMeta]txMeta
 	onRead         func(tx Tx)
+}
+
+type priorityNonceIterator struct {
+	senderCursors map[string]*huandu.Element
+	priorityNode  *huandu.Element
+	mempool       *priorityNonceMempool
 }
 
 // txMeta stores transaction metadata used in indices
@@ -92,7 +100,6 @@ func NewPriorityMempool(opts ...PriorityNonceMempoolOption) Mempool {
 		priorityIndex:  huandu.New(huandu.LessThanFunc(txMetaLess)),
 		priorityCounts: make(map[int64]int),
 		senderIndices:  make(map[string]*huandu.SkipList),
-		senderCursors:  make(map[string]*huandu.Element),
 		scores:         make(map[txMeta]txMeta),
 	}
 
@@ -166,60 +173,72 @@ func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx Tx) error {
 	return nil
 }
 
+func (i priorityNonceIterator) Next() Iterator {
+	mp := i.mempool
+	priorityKey := i.priorityNode.Key().(txMeta)
+	nextHighestPriority, nextPriorityNode := mp.nextPriority(i.priorityNode)
+	sender := priorityKey.sender
+	senderTx := mp.fetchSenderCursor(sender)
+
+	// iterate through the sender's transactions in nonce order
+	for senderTx != nil {
+		mempoolTx := senderTx.Value.(Tx)
+		if mp.onRead != nil {
+			mp.onRead(mempoolTx)
+		}
+
+		key := senderTx.Key().(txMeta)
+
+		// break if we've reached a transaction with a priority lower than the next highest priority in the pool
+		if key.priority < nextHighestPriority {
+			break
+		} else if key.priority == nextHighestPriority {
+			// weight is incorporated into the priority index key only (not sender index) so we must fetch it here
+			// from the scores map.
+			weight := mp.scores[txMeta{nonce: key.nonce, sender: key.sender}].weight
+			if weight < nextPriorityNode.Key().(txMeta).weight {
+				break
+			}
+		}
+
+		// otherwise, select the transaction and continue iteration
+		selectedTxs = append(selectedTxs, mempoolTx)
+		if txBytes += mempoolTx.Size(); txBytes >= maxBytes {
+			return selectedTxs, nil
+		}
+
+		senderTx = senderTx.Next()
+		mp.senderCursors[sender] = senderTx
+	}
+
+	priorityNode = nextPriorityNode
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p priorityNonceIterator) Tx() Tx {
+	//TODO implement me
+	panic("implement me")
+}
+
 // Select returns a set of transactions from the mempool, ordered by priority
 // and sender-nonce in O(n) time. The passed in list of transactions are ignored.
 // This is a readonly operation, the mempool is not modified.
 //
 // The maxBytes parameter defines the maximum number of bytes of transactions to
 // return.
-func (mp *priorityNonceMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
+func (mp *priorityNonceMempool) Select(_ [][]byte) Iterator {
 	var (
 		selectedTxs []Tx
 		txBytes     int64
 	)
 
-	mp.senderCursors = make(map[string]*huandu.Element)
+	iterator := priorityNonceIterator{senderCursors: make(map[string]*huandu.Element)}
 	mp.reorderPriorityTies()
 
-	priorityNode := mp.priorityIndex.Front()
+	iterator.priorityNode = mp.priorityIndex.Front()
 	for priorityNode != nil {
-		priorityKey := priorityNode.Key().(txMeta)
-		nextHighestPriority, nextPriorityNode := mp.nextPriority(priorityNode)
-		sender := priorityKey.sender
-		senderTx := mp.fetchSenderCursor(sender)
 
-		// iterate through the sender's transactions in nonce order
-		for senderTx != nil {
-			mempoolTx := senderTx.Value.(Tx)
-			if mp.onRead != nil {
-				mp.onRead(mempoolTx)
-			}
-
-			key := senderTx.Key().(txMeta)
-
-			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
-			if key.priority < nextHighestPriority {
-				break
-			} else if key.priority == nextHighestPriority {
-				// weight is incorporated into the priority index key only (not sender index) so we must fetch it here
-				// from the scores map.
-				weight := mp.scores[txMeta{nonce: key.nonce, sender: key.sender}].weight
-				if weight < nextPriorityNode.Key().(txMeta).weight {
-					break
-				}
-			}
-
-			// otherwise, select the transaction and continue iteration
-			selectedTxs = append(selectedTxs, mempoolTx)
-			if txBytes += mempoolTx.Size(); txBytes >= maxBytes {
-				return selectedTxs, nil
-			}
-
-			senderTx = senderTx.Next()
-			mp.senderCursors[sender] = senderTx
-		}
-
-		priorityNode = nextPriorityNode
 	}
 
 	return selectedTxs, nil

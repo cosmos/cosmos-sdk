@@ -943,8 +943,7 @@ func TestListeners(t *testing.T) {
 	require.NoError(t, err)
 
 	for i, tc := range testCases {
-		listener := &types.MemoryListener{}
-		store.AddListener(tc.skey, listener)
+		store.AddListeners([]types.StoreKey{tc.skey})
 		require.True(t, store.ListeningEnabled(tc.skey))
 
 		// Set case
@@ -955,7 +954,7 @@ func TestListeners(t *testing.T) {
 			Delete:   false,
 		}
 		store.GetKVStore(tc.skey).Set(tc.key, tc.value)
-		kvpair := listener.PopStateCache()[0]
+		kvpair := store.PopStateCache()[0]
 		require.Equal(t, expected, kvpair, i)
 
 		// Delete case
@@ -967,7 +966,7 @@ func TestListeners(t *testing.T) {
 		}
 
 		store.GetKVStore(tc.skey).Delete(tc.key)
-		kvpair = listener.PopStateCache()[0]
+		kvpair = store.PopStateCache()[0]
 		require.Equal(t, expected, kvpair, i)
 	}
 	require.NoError(t, store.Close())

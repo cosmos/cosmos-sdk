@@ -58,14 +58,7 @@ func registerABCIListenerPlugin(
 	stopNodeOnErr := cast.ToBool(appOpts.Get(stopNodeOnErrKey))
 	keysKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingKeysTomlKey)
 	exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
-	exposeStoreKeys := exposeStoreKeysSorted(exposeKeysStr, keys)
-	listener := store.NewMemoryListener()
-	for i := range exposeStoreKeys {
-		bApp.cms.AddListener(exposeStoreKeys[i], listener)
-	}
-	// register the plugin within the BaseApp
-	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses
-	// to the streaming services to update their ABCI context
+	bApp.cms.AddListeners(exposeStoreKeysSorted(exposeKeysStr, keys))
 	bApp.abciListener = abciListener
 	bApp.stopNodeOnStreamingErr = stopNodeOnErr
 }

@@ -566,7 +566,7 @@ func TestAddListenersAndListeningEnabled(t *testing.T) {
 	require.False(t, enabled)
 
 	wrongTestKey := types.NewKVStoreKey("wrong_listening_test_key")
-	multi.AddListener(testKey, types.NewMemoryListener())
+	multi.AddListeners([]types.StoreKey{testKey})
 	enabled = multi.ListeningEnabled(wrongTestKey)
 	require.False(t, enabled)
 

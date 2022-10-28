@@ -76,7 +76,7 @@ type rootStoreTraceListen interface {
 	SetTracer(w io.Writer)
 	SetTraceContext(TraceContext)
 	ListeningEnabled(key StoreKey) bool
-	AddListener(key StoreKey, listener *MemoryListener)
+	AddListeners(keys []StoreKey)
 }
 
 // CommitMultiStore defines a complete interface for persistent root state, including

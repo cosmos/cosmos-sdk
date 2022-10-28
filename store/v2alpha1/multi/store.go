@@ -861,9 +861,11 @@ func (pr *prefixRegistry) RegisterSubstore(key string, typ types.StoreType) erro
 	return nil
 }
 
-func (tlm *traceListenMixin) AddListener(skey types.StoreKey, listener *types.MemoryListener) {
-	key := skey.Name()
-	tlm.listeners[key] = listener
+func (tlm *traceListenMixin) AddListeners(keys []types.StoreKey) {
+	listener := &types.MemoryListener{}
+	for i := range keys {
+		tlm.listeners[keys[i].Name()] = listener
+	}
 }
 
 // ListeningEnabled returns if listening is enabled for a specific KVStore
@@ -872,6 +874,14 @@ func (tlm *traceListenMixin) ListeningEnabled(key types.StoreKey) bool {
 		return ls != nil
 	}
 	return false
+}
+
+func (tlm *traceListenMixin) PopStateCache() []types.StoreKVPair {
+	var cache []types.StoreKVPair
+	for _, ls := range tlm.listeners {
+		cache = append(cache, ls.PopStateCache()...)
+	}
+	return cache
 }
 
 func (tlm *traceListenMixin) TracingEnabled() bool {

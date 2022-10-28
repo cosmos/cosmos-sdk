@@ -356,9 +356,12 @@ func (rs *Store) TracingEnabled() bool {
 	return rs.traceWriter != nil
 }
 
-// AddListeners adds listeners for a specific KVStore
-func (rs *Store) AddListener(key types.StoreKey, listener *types.MemoryListener) {
-	rs.listeners[key] = listener
+// AddListeners adds state change listener for a specific KVStore
+func (rs *Store) AddListeners(keys []types.StoreKey) {
+	listener := types.NewMemoryListener()
+	for i := range keys {
+		rs.listeners[keys[i]] = listener
+	}
 }
 
 // ListeningEnabled returns if listening is enabled for a specific KVStore

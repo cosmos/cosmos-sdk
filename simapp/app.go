@@ -207,6 +207,10 @@ func NewSimApp(
 				// map[string]sdk.AccAddress{
 				// 	minttypes.ModuleName: authtypes.NewModuleAddress(authtypes.ModuleName),
 				// },
+
+				// For providing a custom function required in auth to generate custom account types
+				// add it below. By default the auth module uses simulation.RandomGenesisAccounts.
+				// authtypes.RandomGenesisAccountsFn(simulation.RandomGenesisAccounts),
 			),
 		)
 	)

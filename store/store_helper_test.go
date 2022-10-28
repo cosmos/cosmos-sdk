@@ -25,17 +25,21 @@ func TestGetAndDecodeHelpers(t *testing.T) {
 	// testing GetAndDecode
 	accAddr, _ := store.GetAndDecode(cacheKVStore, decodeAcc, key1) // test with valid key
 	require.NotNil(t, accAddr)
+	require.Equal(t, []byte(value1), cacheKVStore.Get(key1))
 
 	accAddr, _ = store.GetAndDecode(cacheKVStore, decodeAcc, invalid_key) // test with invalid key
 	require.Equal(t, accAddr, "")
+	require.Equal(t, []byte(nil), cacheKVStore.Get(invalid_key))
 
 	// testing GetAndDecodeWithBool
 	accAddr, ok := store.GetAndDecodeWithBool(cacheKVStore, decodeAccWithBool, key1) // test with valid key
 	require.NotNil(t, accAddr)
+	require.Equal(t, []byte(value1), cacheKVStore.Get(key1))
 	require.True(t, ok)
 
 	accAddr, ok = store.GetAndDecodeWithBool(cacheKVStore, decodeAccWithBool, invalid_key) // test with invalid key
 	require.Equal(t, accAddr, "")
+	require.Equal(t, []byte(nil), cacheKVStore.Get(invalid_key))
 	require.False(t, ok)
 }
 

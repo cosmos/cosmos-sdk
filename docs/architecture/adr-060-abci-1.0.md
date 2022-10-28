@@ -233,8 +233,6 @@ know them today will still exist and function as they currently do.
   block execution. Albeit, the overhead should be negligible.
 * Not backwards compatible with previous versions of Tendermint and the Cosmos SDK.
 
-### Neutral
-
 ## Further Discussions
 
 It is possible to design the app-side implementation of the `Mempool[T MempoolTx]`

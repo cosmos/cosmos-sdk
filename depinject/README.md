@@ -2,16 +2,16 @@
 sidebar_position: 1
 ---
 
-# Cosmos SDK Dependency Injection `depinject` Framework
+# Cosmos SDK Dependency Injection Framework (`depinject`)
 
 ## Overview
 
 `depinject` is a dependency injection framework for the Cosmos SDK. This module together with `core/appconfig` are meant
-to simplify the definition of a blockchain by replacing most of app.go's boilerplate code with a configuration file (YAML or JSON).
+to simplify the definition of a blockchain by replacing most of `app.go`'s boilerplate code with a configuration file (Go, YAML or JSON).
 
 ## Usage
 
-`depinject` includes an expressive and composable [Configuration API](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/depinject#Config).
+`depinject` includes an expressive and composable [configuration API](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/depinject#Config).
 A core configuration is `Provide`, for example this code snippet
 
 ```go

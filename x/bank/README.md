@@ -504,7 +504,7 @@ parameters.
 
 A user can query and interact with the `bank` module using the CLI.
 
-### Query
+#### Query
 
 The `query` commands allow users to query `bank` state.
 
@@ -512,7 +512,7 @@ The `query` commands allow users to query `bank` state.
 simd query bank --help
 ```
 
-#### balances
+##### balances
 
 The `balances` command allows users to query account balances by address.
 
@@ -537,7 +537,7 @@ pagination:
   total: "0"
 ```
 
-#### denom-metadata
+##### denom-metadata
 
 The `denom-metadata` command allows users to query metadata for coin denominations. A user can query metadata for a single denomination using the `--denom` flag or all denominations without it.
 
@@ -566,7 +566,7 @@ metadata:
   symbol: STK
 ```
 
-#### total
+##### total
 
 The `total` command allows users to query the total supply of coins. A user can query the total supply for a single coin using the `--denom` flag or all coins without it.
 
@@ -587,7 +587,7 @@ amount: "10000000000"
 denom: stake
 ```
 
-#### send-enabled
+##### send-enabled
 
 The `send-enabled` command allows users to query for all or some SendEnabled entries.
 
@@ -613,7 +613,7 @@ pagination:
   total: 2 
 ```
 
-### Transactions
+#### Transactions
 
 The `tx` commands allow users to interact with the `bank` module.
 
@@ -621,7 +621,7 @@ The `tx` commands allow users to interact with the `bank` module.
 simd tx bank --help
 ```
 
-#### send
+##### send
 
 The `send` command allows users to send funds from one account to another.
 

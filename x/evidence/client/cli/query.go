@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"strings"
@@ -71,7 +72,9 @@ func queryEvidence(clientCtx client.Context, hash string) error {
 
 	queryClient := types.NewQueryClient(clientCtx)
 
-	params := &types.QueryEvidenceRequest{EvidenceHash: decodedHash}
+	a, _ := base64.StdEncoding.DecodeString(hash)
+	params := &types.QueryEvidenceRequest{EvidenceHash: a}
+
 	res, err := queryClient.Evidence(context.Background(), params)
 	if err != nil {
 		return err

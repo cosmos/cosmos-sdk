@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Cosmos SDK Dependency Injection `depinject` Module
+# Cosmos SDK Dependency Injection `depinject` Framework
 
 ## Overview
 
@@ -134,40 +134,7 @@ Now `depinject` has enough information to provide `Mallard` as an input to `APon
 ### Full example in real app
 
 ```go
-//go:embed app.yaml
-var appConfigYaml []byte
-
-var appConfig = appconfig.LoadYAML(appConfigYaml)
-
-func NewSimApp(
-	logger log.Logger,
-	db dbm.DB,
-	traceStore io.Writer,
-	loadLatest bool,
-	appOpts servertypes.AppOptions,
-	baseAppOptions ...func(*baseapp.BaseApp),
-) *SimApp {
-	var (
-		app        = &SimApp{}
-		appBuilder *runtime.AppBuilder
-	)
-
-	err := depinject.Inject(AppConfig,
-		&appBuilder,
-		&app.ParamsKeeper,
-		&app.CapabilityKeeper,
-		&app.appCodec,
-		&app.legacyAmino,
-		&app.interfaceRegistry,
-		&app.AccountKeeper,
-		&app.BankKeeper,
-		&app.FeeGrantKeeper,
-		&app.StakingKeeper,
-	)
-	if err != nil {
-		panic(err)
-	}
-...
+https://github.com/cosmos/cosmos-sdk/blob/306a9a7/simapp/app.go#L189-L239
 ```
 
 ## Debugging
@@ -195,3 +162,4 @@ Graphviz DOT files can be converted into SVG's for viewing in a web browser usin
 ```
 
 Many other tools including some IDEs support working with DOT files.
+ 

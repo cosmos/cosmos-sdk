@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Module & App Testing
+# Testing
 
 The Cosmos SDK contains different types of [tests](https://martinfowler.com/articles/practical-test-pyramid.html).
 These tests have different goals and are used at different stages of the development cycle.

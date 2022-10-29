@@ -153,7 +153,8 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context,
 }
 
 func (k Keeper) MustUpdateValidatorCommission(ctx sdk.Context,
-	validator types.Validator, newRate sdk.Dec) (types.Commission, error) {
+	validator types.Validator, newRate sdk.Dec,
+) (types.Commission, error) {
 	commission := validator.Commission
 	blockTime := ctx.BlockHeader().Time
 

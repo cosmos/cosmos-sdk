@@ -67,10 +67,13 @@ func NewBaseSendKeeper(
 	blockedAddrs map[string]bool,
 	authority string,
 ) BaseSendKeeper {
+<<<<<<< Updated upstream
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
+=======
+>>>>>>> Stashed changes
 	return BaseSendKeeper{
 		BaseViewKeeper: NewBaseViewKeeper(cdc, storeKey, ak),
 		cdc:            cdc,
@@ -232,18 +235,34 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, addr, coin.Denom)
-		locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
-		spendable := balance.Sub(locked)
 
+<<<<<<< Updated upstream
 		_, hasNeg := sdk.Coins{spendable}.SafeSub(coin)
+=======
+		// NOTE: denom and amount validation should occur before transfer
+		locked := sdk.Coin{
+			Denom:  coin.Denom,
+			Amount: lockedCoins.AmountOfNoDenomValidation(coin.Denom),
+		}
+
+		spendable, hasNeg := sdk.Coins{balance}.SafeSub(sdk.Coins{locked})
+>>>>>>> Stashed changes
 		if hasNeg {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
+			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds,
+				"locked amount exceeds account balance funds: %s >  %s", locked, balance)
+		}
+
+		if _, hasNeg := spendable.SafeSub(sdk.Coins{coin}); hasNeg {
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInsufficientFunds,
+				"spendable balance %s is smaller than %s",
+				spendable, coin,
+			)
 		}
 
 		newBalance := balance.Sub(coin)
 
-		err := k.setBalance(ctx, addr, newBalance)
-		if err != nil {
+		if err := k.setBalance(ctx, addr, newBalance); err != nil {
 			return err
 		}
 	}

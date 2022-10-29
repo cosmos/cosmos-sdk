@@ -1,4 +1,4 @@
-package testutil
+package distribution
 
 import (
 	"encoding/hex"

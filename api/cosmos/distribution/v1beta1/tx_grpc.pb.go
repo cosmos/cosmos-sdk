@@ -39,14 +39,14 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
-	// WithdrawTokenizeShareRecordReward defines a method to withdraw reward for an owning TokenizeShareRecord
+	// WithdrawShareRecordReward defines a method to withdraw reward for an owning ShareRecord
 	//
 	// Since: cosmos-sdk 0.47
-	WithdrawTokenizeShareRecordReward(ctx context.Context, in *MsgWithdrawTokenizeShareRecordReward, opts ...grpc.CallOption) (*MsgWithdrawTokenizeShareRecordRewardResponse, error)
-	// WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for all owning TokenizeShareRecord
+	WithdrawShareRecordReward(ctx context.Context, in *MsgWithdrawShareRecordReward, opts ...grpc.CallOption) (*MsgWithdrawShareRecordRewardResponse, error)
+	// WithdrawAllShareRecordReward defines a method to withdraw reward for all owning ShareRecord
 	//
 	// Since: cosmos-sdk 0.47
-	WithdrawAllTokenizeShareRecordReward(ctx context.Context, in *MsgWithdrawAllTokenizeShareRecordReward, opts ...grpc.CallOption) (*MsgWithdrawAllTokenizeShareRecordRewardResponse, error)
+	WithdrawAllShareRecordReward(ctx context.Context, in *MsgWithdrawAllShareRecordReward, opts ...grpc.CallOption) (*MsgWithdrawAllShareRecordRewardResponse, error)
 	// CommunityPoolSpend defines a governance operation for sending tokens from
 	// the community pool in the x/distribution module to another account, which
 	// could be the governance module itself. The authority is defined in the
@@ -109,18 +109,18 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
-func (c *msgClient) WithdrawTokenizeShareRecordReward(ctx context.Context, in *MsgWithdrawTokenizeShareRecordReward, opts ...grpc.CallOption) (*MsgWithdrawTokenizeShareRecordRewardResponse, error) {
-	out := new(MsgWithdrawTokenizeShareRecordRewardResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/WithdrawTokenizeShareRecordReward", in, out, opts...)
+func (c *msgClient) WithdrawShareRecordReward(ctx context.Context, in *MsgWithdrawShareRecordReward, opts ...grpc.CallOption) (*MsgWithdrawShareRecordRewardResponse, error) {
+	out := new(MsgWithdrawShareRecordRewardResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/WithdrawShareRecordReward", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) WithdrawAllTokenizeShareRecordReward(ctx context.Context, in *MsgWithdrawAllTokenizeShareRecordReward, opts ...grpc.CallOption) (*MsgWithdrawAllTokenizeShareRecordRewardResponse, error) {
-	out := new(MsgWithdrawAllTokenizeShareRecordRewardResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/WithdrawAllTokenizeShareRecordReward", in, out, opts...)
+func (c *msgClient) WithdrawAllShareRecordReward(ctx context.Context, in *MsgWithdrawAllShareRecordReward, opts ...grpc.CallOption) (*MsgWithdrawAllShareRecordRewardResponse, error) {
+	out := new(MsgWithdrawAllShareRecordRewardResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/WithdrawAllShareRecordReward", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -157,14 +157,14 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
-	// WithdrawTokenizeShareRecordReward defines a method to withdraw reward for an owning TokenizeShareRecord
+	// WithdrawShareRecordReward defines a method to withdraw reward for an owning ShareRecord
 	//
 	// Since: cosmos-sdk 0.47
-	WithdrawTokenizeShareRecordReward(context.Context, *MsgWithdrawTokenizeShareRecordReward) (*MsgWithdrawTokenizeShareRecordRewardResponse, error)
-	// WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for all owning TokenizeShareRecord
+	WithdrawShareRecordReward(context.Context, *MsgWithdrawShareRecordReward) (*MsgWithdrawShareRecordRewardResponse, error)
+	// WithdrawAllShareRecordReward defines a method to withdraw reward for all owning ShareRecord
 	//
 	// Since: cosmos-sdk 0.47
-	WithdrawAllTokenizeShareRecordReward(context.Context, *MsgWithdrawAllTokenizeShareRecordReward) (*MsgWithdrawAllTokenizeShareRecordRewardResponse, error)
+	WithdrawAllShareRecordReward(context.Context, *MsgWithdrawAllShareRecordReward) (*MsgWithdrawAllShareRecordRewardResponse, error)
 	// CommunityPoolSpend defines a governance operation for sending tokens from
 	// the community pool in the x/distribution module to another account, which
 	// could be the governance module itself. The authority is defined in the
@@ -194,11 +194,11 @@ func (UnimplementedMsgServer) FundCommunityPool(context.Context, *MsgFundCommuni
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
 }
-func (UnimplementedMsgServer) WithdrawTokenizeShareRecordReward(context.Context, *MsgWithdrawTokenizeShareRecordReward) (*MsgWithdrawTokenizeShareRecordRewardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WithdrawTokenizeShareRecordReward not implemented")
+func (UnimplementedMsgServer) WithdrawShareRecordReward(context.Context, *MsgWithdrawShareRecordReward) (*MsgWithdrawShareRecordRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawShareRecordReward not implemented")
 }
-func (UnimplementedMsgServer) WithdrawAllTokenizeShareRecordReward(context.Context, *MsgWithdrawAllTokenizeShareRecordReward) (*MsgWithdrawAllTokenizeShareRecordRewardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WithdrawAllTokenizeShareRecordReward not implemented")
+func (UnimplementedMsgServer) WithdrawAllShareRecordReward(context.Context, *MsgWithdrawAllShareRecordReward) (*MsgWithdrawAllShareRecordRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawAllShareRecordReward not implemented")
 }
 func (UnimplementedMsgServer) CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommunityPoolSpend not implemented")
@@ -306,38 +306,38 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_WithdrawTokenizeShareRecordReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgWithdrawTokenizeShareRecordReward)
+func _Msg_WithdrawShareRecordReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawShareRecordReward)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).WithdrawTokenizeShareRecordReward(ctx, in)
+		return srv.(MsgServer).WithdrawShareRecordReward(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.distribution.v1beta1.Msg/WithdrawTokenizeShareRecordReward",
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/WithdrawShareRecordReward",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).WithdrawTokenizeShareRecordReward(ctx, req.(*MsgWithdrawTokenizeShareRecordReward))
+		return srv.(MsgServer).WithdrawShareRecordReward(ctx, req.(*MsgWithdrawShareRecordReward))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_WithdrawAllTokenizeShareRecordReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgWithdrawAllTokenizeShareRecordReward)
+func _Msg_WithdrawAllShareRecordReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawAllShareRecordReward)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).WithdrawAllTokenizeShareRecordReward(ctx, in)
+		return srv.(MsgServer).WithdrawAllShareRecordReward(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.distribution.v1beta1.Msg/WithdrawAllTokenizeShareRecordReward",
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/WithdrawAllShareRecordReward",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).WithdrawAllTokenizeShareRecordReward(ctx, req.(*MsgWithdrawAllTokenizeShareRecordReward))
+		return srv.(MsgServer).WithdrawAllShareRecordReward(ctx, req.(*MsgWithdrawAllShareRecordReward))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -388,12 +388,12 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_UpdateParams_Handler,
 		},
 		{
-			MethodName: "WithdrawTokenizeShareRecordReward",
-			Handler:    _Msg_WithdrawTokenizeShareRecordReward_Handler,
+			MethodName: "WithdrawShareRecordReward",
+			Handler:    _Msg_WithdrawShareRecordReward_Handler,
 		},
 		{
-			MethodName: "WithdrawAllTokenizeShareRecordReward",
-			Handler:    _Msg_WithdrawAllTokenizeShareRecordReward_Handler,
+			MethodName: "WithdrawAllShareRecordReward",
+			Handler:    _Msg_WithdrawAllShareRecordReward_Handler,
 		},
 		{
 			MethodName: "CommunityPoolSpend",

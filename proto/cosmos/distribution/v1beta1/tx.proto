@@ -36,17 +36,17 @@ service Msg {
   // Since: cosmos-sdk 0.47
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 
-  // WithdrawTokenizeShareRecordReward defines a method to withdraw reward for an owning TokenizeShareRecord
+  // WithdrawShareRecordReward defines a method to withdraw reward for an owning ShareRecord
   //
   // Since: cosmos-sdk 0.47
-  rpc WithdrawTokenizeShareRecordReward(MsgWithdrawTokenizeShareRecordReward)
-      returns (MsgWithdrawTokenizeShareRecordRewardResponse);
+  rpc WithdrawShareRecordReward(MsgWithdrawShareRecordReward)
+      returns (MsgWithdrawShareRecordRewardResponse);
 
-  // WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for all owning TokenizeShareRecord
+  // WithdrawAllShareRecordReward defines a method to withdraw reward for all owning ShareRecord
   //
   // Since: cosmos-sdk 0.47
-  rpc WithdrawAllTokenizeShareRecordReward(MsgWithdrawAllTokenizeShareRecordReward)
-      returns (MsgWithdrawAllTokenizeShareRecordRewardResponse);
+  rpc WithdrawAllShareRecordReward(MsgWithdrawAllShareRecordReward)
+      returns (MsgWithdrawAllShareRecordRewardResponse);
 
   // CommunityPoolSpend defines a governance operation for sending tokens from
   // the community pool in the x/distribution module to another account, which
@@ -170,7 +170,7 @@ message MsgCommunityPoolSpend {
 // Since: cosmos-sdk 0.47
 message MsgCommunityPoolSpendResponse {}
 
-message MsgWithdrawTokenizeShareRecordReward {
+message MsgWithdrawShareRecordReward {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -178,13 +178,13 @@ message MsgWithdrawTokenizeShareRecordReward {
   uint64 record_id     = 2;
 }
 
-message MsgWithdrawTokenizeShareRecordRewardResponse {}
+message MsgWithdrawShareRecordRewardResponse {}
 
-message MsgWithdrawAllTokenizeShareRecordReward {
+message MsgWithdrawAllShareRecordReward {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   string owner_address = 1 [(gogoproto.moretags) = "yaml:\"owner_address\""];
 }
 
-message MsgWithdrawAllTokenizeShareRecordRewardResponse {}
+message MsgWithdrawAllShareRecordRewardResponse {}

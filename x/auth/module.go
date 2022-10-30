@@ -202,6 +202,7 @@ type AuthInputs struct {
 
 	Authority               map[string]sdk.AccAddress     `optional:"true"`
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
+	AccountI                func() types.AccountI         `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
@@ -229,7 +230,11 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 		in.RandomGenesisAccountsFn = simulation.RandomGenesisAccounts
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.Key, types.ProtoBaseAccount, maccPerms, in.Config.Bech32Prefix, authority.String())
+	if in.AccountI == nil {
+		in.AccountI = types.ProtoBaseAccount
+	}
+
+	k := keeper.NewAccountKeeper(in.Cdc, in.Key, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
 	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}

@@ -9019,29 +9019,29 @@ func (x *fastReflection_MsgRedeemTokensforSharesResponse) ProtoMethods() *protoi
 }
 
 var (
-	md_MsgTransferTokenizeShareRecord                          protoreflect.MessageDescriptor
-	fd_MsgTransferTokenizeShareRecord_tokenize_share_record_id protoreflect.FieldDescriptor
-	fd_MsgTransferTokenizeShareRecord_sender                   protoreflect.FieldDescriptor
-	fd_MsgTransferTokenizeShareRecord_new_owner                protoreflect.FieldDescriptor
+	md_MsgTransferShareRecord                          protoreflect.MessageDescriptor
+	fd_MsgTransferShareRecord_tokenize_share_record_id protoreflect.FieldDescriptor
+	fd_MsgTransferShareRecord_sender                   protoreflect.FieldDescriptor
+	fd_MsgTransferShareRecord_new_owner                protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_staking_v1beta1_tx_proto_init()
-	md_MsgTransferTokenizeShareRecord = File_cosmos_staking_v1beta1_tx_proto.Messages().ByName("MsgTransferTokenizeShareRecord")
-	fd_MsgTransferTokenizeShareRecord_tokenize_share_record_id = md_MsgTransferTokenizeShareRecord.Fields().ByName("tokenize_share_record_id")
-	fd_MsgTransferTokenizeShareRecord_sender = md_MsgTransferTokenizeShareRecord.Fields().ByName("sender")
-	fd_MsgTransferTokenizeShareRecord_new_owner = md_MsgTransferTokenizeShareRecord.Fields().ByName("new_owner")
+	md_MsgTransferShareRecord = File_cosmos_staking_v1beta1_tx_proto.Messages().ByName("MsgTransferShareRecord")
+	fd_MsgTransferShareRecord_tokenize_share_record_id = md_MsgTransferShareRecord.Fields().ByName("tokenize_share_record_id")
+	fd_MsgTransferShareRecord_sender = md_MsgTransferShareRecord.Fields().ByName("sender")
+	fd_MsgTransferShareRecord_new_owner = md_MsgTransferShareRecord.Fields().ByName("new_owner")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgTransferTokenizeShareRecord)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgTransferShareRecord)(nil)
 
-type fastReflection_MsgTransferTokenizeShareRecord MsgTransferTokenizeShareRecord
+type fastReflection_MsgTransferShareRecord MsgTransferShareRecord
 
-func (x *MsgTransferTokenizeShareRecord) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgTransferTokenizeShareRecord)(x)
+func (x *MsgTransferShareRecord) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgTransferShareRecord)(x)
 }
 
-func (x *MsgTransferTokenizeShareRecord) slowProtoReflect() protoreflect.Message {
+func (x *MsgTransferShareRecord) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_staking_v1beta1_tx_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -9053,43 +9053,43 @@ func (x *MsgTransferTokenizeShareRecord) slowProtoReflect() protoreflect.Message
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgTransferTokenizeShareRecord_messageType fastReflection_MsgTransferTokenizeShareRecord_messageType
-var _ protoreflect.MessageType = fastReflection_MsgTransferTokenizeShareRecord_messageType{}
+var _fastReflection_MsgTransferShareRecord_messageType fastReflection_MsgTransferShareRecord_messageType
+var _ protoreflect.MessageType = fastReflection_MsgTransferShareRecord_messageType{}
 
-type fastReflection_MsgTransferTokenizeShareRecord_messageType struct{}
+type fastReflection_MsgTransferShareRecord_messageType struct{}
 
-func (x fastReflection_MsgTransferTokenizeShareRecord_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgTransferTokenizeShareRecord)(nil)
+func (x fastReflection_MsgTransferShareRecord_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgTransferShareRecord)(nil)
 }
-func (x fastReflection_MsgTransferTokenizeShareRecord_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgTransferTokenizeShareRecord)
+func (x fastReflection_MsgTransferShareRecord_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgTransferShareRecord)
 }
-func (x fastReflection_MsgTransferTokenizeShareRecord_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgTransferTokenizeShareRecord
+func (x fastReflection_MsgTransferShareRecord_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgTransferShareRecord
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgTransferTokenizeShareRecord
+func (x *fastReflection_MsgTransferShareRecord) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgTransferShareRecord
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) Type() protoreflect.MessageType {
-	return _fastReflection_MsgTransferTokenizeShareRecord_messageType
+func (x *fastReflection_MsgTransferShareRecord) Type() protoreflect.MessageType {
+	return _fastReflection_MsgTransferShareRecord_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) New() protoreflect.Message {
-	return new(fastReflection_MsgTransferTokenizeShareRecord)
+func (x *fastReflection_MsgTransferShareRecord) New() protoreflect.Message {
+	return new(fastReflection_MsgTransferShareRecord)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) Interface() protoreflect.ProtoMessage {
-	return (*MsgTransferTokenizeShareRecord)(x)
+func (x *fastReflection_MsgTransferShareRecord) Interface() protoreflect.ProtoMessage {
+	return (*MsgTransferShareRecord)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -9097,22 +9097,22 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) Interface() protoreflect
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgTransferShareRecord) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.TokenizeShareRecordId != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.TokenizeShareRecordId)
-		if !f(fd_MsgTransferTokenizeShareRecord_tokenize_share_record_id, value) {
+		if !f(fd_MsgTransferShareRecord_tokenize_share_record_id, value) {
 			return
 		}
 	}
 	if x.Sender != "" {
 		value := protoreflect.ValueOfString(x.Sender)
-		if !f(fd_MsgTransferTokenizeShareRecord_sender, value) {
+		if !f(fd_MsgTransferShareRecord_sender, value) {
 			return
 		}
 	}
 	if x.NewOwner != "" {
 		value := protoreflect.ValueOfString(x.NewOwner)
-		if !f(fd_MsgTransferTokenizeShareRecord_new_owner, value) {
+		if !f(fd_MsgTransferShareRecord_new_owner, value) {
 			return
 		}
 	}
@@ -9129,19 +9129,19 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) Range(f func(protoreflec
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgTransferShareRecord) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.tokenize_share_record_id":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.tokenize_share_record_id":
 		return x.TokenizeShareRecordId != uint64(0)
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.sender":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.sender":
 		return x.Sender != ""
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.new_owner":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.new_owner":
 		return x.NewOwner != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferShareRecord"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferShareRecord does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9151,19 +9151,19 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) Has(fd protoreflect.Fiel
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgTransferShareRecord) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.tokenize_share_record_id":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.tokenize_share_record_id":
 		x.TokenizeShareRecordId = uint64(0)
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.sender":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.sender":
 		x.Sender = ""
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.new_owner":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.new_owner":
 		x.NewOwner = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferShareRecord"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferShareRecord does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9173,22 +9173,22 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) Clear(fd protoreflect.Fi
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgTransferShareRecord) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.tokenize_share_record_id":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.tokenize_share_record_id":
 		value := x.TokenizeShareRecordId
 		return protoreflect.ValueOfUint64(value)
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.sender":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.sender":
 		value := x.Sender
 		return protoreflect.ValueOfString(value)
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.new_owner":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.new_owner":
 		value := x.NewOwner
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferShareRecord"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferShareRecord does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -9202,19 +9202,19 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) Get(descriptor protorefl
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgTransferShareRecord) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.tokenize_share_record_id":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.tokenize_share_record_id":
 		x.TokenizeShareRecordId = value.Uint()
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.sender":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.sender":
 		x.Sender = value.Interface().(string)
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.new_owner":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.new_owner":
 		x.NewOwner = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferShareRecord"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferShareRecord does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9228,48 +9228,48 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) Set(fd protoreflect.Fiel
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgTransferShareRecord) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.tokenize_share_record_id":
-		panic(fmt.Errorf("field tokenize_share_record_id of message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord is not mutable"))
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.sender":
-		panic(fmt.Errorf("field sender of message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord is not mutable"))
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.new_owner":
-		panic(fmt.Errorf("field new_owner of message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord is not mutable"))
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.tokenize_share_record_id":
+		panic(fmt.Errorf("field tokenize_share_record_id of message cosmos.staking.v1beta1.MsgTransferShareRecord is not mutable"))
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.sender":
+		panic(fmt.Errorf("field sender of message cosmos.staking.v1beta1.MsgTransferShareRecord is not mutable"))
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.new_owner":
+		panic(fmt.Errorf("field new_owner of message cosmos.staking.v1beta1.MsgTransferShareRecord is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferShareRecord"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferShareRecord does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgTransferShareRecord) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.tokenize_share_record_id":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.tokenize_share_record_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.sender":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.sender":
 		return protoreflect.ValueOfString("")
-	case "cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord.new_owner":
+	case "cosmos.staking.v1beta1.MsgTransferShareRecord.new_owner":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferShareRecord"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferShareRecord does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgTransferShareRecord) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.MsgTransferShareRecord", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -9277,7 +9277,7 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) WhichOneof(d protoreflec
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgTransferShareRecord) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -9288,7 +9288,7 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) GetUnknown() protoreflec
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgTransferShareRecord) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -9300,7 +9300,7 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) SetUnknown(fields protor
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) IsValid() bool {
+func (x *fastReflection_MsgTransferShareRecord) IsValid() bool {
 	return x != nil
 }
 
@@ -9310,9 +9310,9 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgTransferTokenizeShareRecord) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgTransferShareRecord) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgTransferTokenizeShareRecord)
+		x := input.Message.Interface().(*MsgTransferShareRecord)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9345,7 +9345,7 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) ProtoMethods() *protoifa
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgTransferTokenizeShareRecord)
+		x := input.Message.Interface().(*MsgTransferShareRecord)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9394,7 +9394,7 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) ProtoMethods() *protoifa
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgTransferTokenizeShareRecord)
+		x := input.Message.Interface().(*MsgTransferShareRecord)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9426,10 +9426,10 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) ProtoMethods() *protoifa
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgTransferTokenizeShareRecord: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgTransferShareRecord: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgTransferTokenizeShareRecord: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgTransferShareRecord: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -9551,23 +9551,23 @@ func (x *fastReflection_MsgTransferTokenizeShareRecord) ProtoMethods() *protoifa
 }
 
 var (
-	md_MsgTransferTokenizeShareRecordResponse protoreflect.MessageDescriptor
+	md_MsgTransferShareRecordResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_cosmos_staking_v1beta1_tx_proto_init()
-	md_MsgTransferTokenizeShareRecordResponse = File_cosmos_staking_v1beta1_tx_proto.Messages().ByName("MsgTransferTokenizeShareRecordResponse")
+	md_MsgTransferShareRecordResponse = File_cosmos_staking_v1beta1_tx_proto.Messages().ByName("MsgTransferShareRecordResponse")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgTransferTokenizeShareRecordResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgTransferShareRecordResponse)(nil)
 
-type fastReflection_MsgTransferTokenizeShareRecordResponse MsgTransferTokenizeShareRecordResponse
+type fastReflection_MsgTransferShareRecordResponse MsgTransferShareRecordResponse
 
-func (x *MsgTransferTokenizeShareRecordResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgTransferTokenizeShareRecordResponse)(x)
+func (x *MsgTransferShareRecordResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgTransferShareRecordResponse)(x)
 }
 
-func (x *MsgTransferTokenizeShareRecordResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgTransferShareRecordResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_staking_v1beta1_tx_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -9579,43 +9579,43 @@ func (x *MsgTransferTokenizeShareRecordResponse) slowProtoReflect() protoreflect
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgTransferTokenizeShareRecordResponse_messageType fastReflection_MsgTransferTokenizeShareRecordResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgTransferTokenizeShareRecordResponse_messageType{}
+var _fastReflection_MsgTransferShareRecordResponse_messageType fastReflection_MsgTransferShareRecordResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgTransferShareRecordResponse_messageType{}
 
-type fastReflection_MsgTransferTokenizeShareRecordResponse_messageType struct{}
+type fastReflection_MsgTransferShareRecordResponse_messageType struct{}
 
-func (x fastReflection_MsgTransferTokenizeShareRecordResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgTransferTokenizeShareRecordResponse)(nil)
+func (x fastReflection_MsgTransferShareRecordResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgTransferShareRecordResponse)(nil)
 }
-func (x fastReflection_MsgTransferTokenizeShareRecordResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgTransferTokenizeShareRecordResponse)
+func (x fastReflection_MsgTransferShareRecordResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgTransferShareRecordResponse)
 }
-func (x fastReflection_MsgTransferTokenizeShareRecordResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgTransferTokenizeShareRecordResponse
+func (x fastReflection_MsgTransferShareRecordResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgTransferShareRecordResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgTransferTokenizeShareRecordResponse
+func (x *fastReflection_MsgTransferShareRecordResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgTransferShareRecordResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgTransferTokenizeShareRecordResponse_messageType
+func (x *fastReflection_MsgTransferShareRecordResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgTransferShareRecordResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgTransferTokenizeShareRecordResponse)
+func (x *fastReflection_MsgTransferShareRecordResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgTransferShareRecordResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgTransferTokenizeShareRecordResponse)(x)
+func (x *fastReflection_MsgTransferShareRecordResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgTransferShareRecordResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -9623,7 +9623,7 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Interface() prot
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgTransferShareRecordResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 }
 
 // Has reports whether a field is populated.
@@ -9637,13 +9637,13 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Range(f func(pro
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgTransferShareRecordResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferShareRecordResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferShareRecordResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9653,13 +9653,13 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Has(fd protorefl
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgTransferShareRecordResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferShareRecordResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferShareRecordResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9669,13 +9669,13 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Clear(fd protore
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgTransferShareRecordResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferShareRecordResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferShareRecordResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -9689,13 +9689,13 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Get(descriptor p
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgTransferShareRecordResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferShareRecordResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferShareRecordResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9709,36 +9709,36 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Set(fd protorefl
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgTransferShareRecordResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferShareRecordResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferShareRecordResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgTransferShareRecordResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.staking.v1beta1.MsgTransferShareRecordResponse"))
 		}
-		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.staking.v1beta1.MsgTransferShareRecordResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgTransferShareRecordResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.staking.v1beta1.MsgTransferShareRecordResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -9746,7 +9746,7 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) WhichOneof(d pro
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgTransferShareRecordResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -9757,7 +9757,7 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) GetUnknown() pro
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgTransferShareRecordResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -9769,7 +9769,7 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) SetUnknown(field
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) IsValid() bool {
+func (x *fastReflection_MsgTransferShareRecordResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -9779,9 +9779,9 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgTransferShareRecordResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgTransferTokenizeShareRecordResponse)
+		x := input.Message.Interface().(*MsgTransferShareRecordResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9803,7 +9803,7 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) ProtoMethods() *
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgTransferTokenizeShareRecordResponse)
+		x := input.Message.Interface().(*MsgTransferShareRecordResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9833,7 +9833,7 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) ProtoMethods() *
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgTransferTokenizeShareRecordResponse)
+		x := input.Message.Interface().(*MsgTransferShareRecordResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9865,10 +9865,10 @@ func (x *fastReflection_MsgTransferTokenizeShareRecordResponse) ProtoMethods() *
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgTransferTokenizeShareRecordResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgTransferShareRecordResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgTransferTokenizeShareRecordResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgTransferShareRecordResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			default:
@@ -12353,7 +12353,7 @@ func (x *MsgRedeemTokensforSharesResponse) GetAmount() *v1beta1.Coin {
 }
 
 // Since: cosmos-sdk 0.47
-type MsgTransferTokenizeShareRecord struct {
+type MsgTransferShareRecord struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -12363,8 +12363,8 @@ type MsgTransferTokenizeShareRecord struct {
 	NewOwner              string `protobuf:"bytes,3,opt,name=new_owner,json=newOwner,proto3" json:"new_owner,omitempty"`
 }
 
-func (x *MsgTransferTokenizeShareRecord) Reset() {
-	*x = MsgTransferTokenizeShareRecord{}
+func (x *MsgTransferShareRecord) Reset() {
+	*x = MsgTransferShareRecord{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_staking_v1beta1_tx_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -12372,32 +12372,32 @@ func (x *MsgTransferTokenizeShareRecord) Reset() {
 	}
 }
 
-func (x *MsgTransferTokenizeShareRecord) String() string {
+func (x *MsgTransferShareRecord) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgTransferTokenizeShareRecord) ProtoMessage() {}
+func (*MsgTransferShareRecord) ProtoMessage() {}
 
-// Deprecated: Use MsgTransferTokenizeShareRecord.ProtoReflect.Descriptor instead.
-func (*MsgTransferTokenizeShareRecord) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgTransferShareRecord.ProtoReflect.Descriptor instead.
+func (*MsgTransferShareRecord) Descriptor() ([]byte, []int) {
 	return file_cosmos_staking_v1beta1_tx_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *MsgTransferTokenizeShareRecord) GetTokenizeShareRecordId() uint64 {
+func (x *MsgTransferShareRecord) GetTokenizeShareRecordId() uint64 {
 	if x != nil {
 		return x.TokenizeShareRecordId
 	}
 	return 0
 }
 
-func (x *MsgTransferTokenizeShareRecord) GetSender() string {
+func (x *MsgTransferShareRecord) GetSender() string {
 	if x != nil {
 		return x.Sender
 	}
 	return ""
 }
 
-func (x *MsgTransferTokenizeShareRecord) GetNewOwner() string {
+func (x *MsgTransferShareRecord) GetNewOwner() string {
 	if x != nil {
 		return x.NewOwner
 	}
@@ -12405,14 +12405,14 @@ func (x *MsgTransferTokenizeShareRecord) GetNewOwner() string {
 }
 
 // Since: cosmos-sdk 0.47
-type MsgTransferTokenizeShareRecordResponse struct {
+type MsgTransferShareRecordResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *MsgTransferTokenizeShareRecordResponse) Reset() {
-	*x = MsgTransferTokenizeShareRecordResponse{}
+func (x *MsgTransferShareRecordResponse) Reset() {
+	*x = MsgTransferShareRecordResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cosmos_staking_v1beta1_tx_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -12420,14 +12420,14 @@ func (x *MsgTransferTokenizeShareRecordResponse) Reset() {
 	}
 }
 
-func (x *MsgTransferTokenizeShareRecordResponse) String() string {
+func (x *MsgTransferShareRecordResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgTransferTokenizeShareRecordResponse) ProtoMessage() {}
+func (*MsgTransferShareRecordResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgTransferTokenizeShareRecordResponse.ProtoReflect.Descriptor instead.
-func (*MsgTransferTokenizeShareRecordResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgTransferShareRecordResponse.ProtoReflect.Descriptor instead.
+func (*MsgTransferShareRecordResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_staking_v1beta1_tx_proto_rawDescGZIP(), []int{19}
 }
 
@@ -12789,18 +12789,17 @@ var file_cosmos_staking_v1beta1_tx_proto_rawDesc = []byte{
 	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
 	0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42,
-	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x98, 0x01,
-	0x0a, 0x1e, 0x4d, 0x73, 0x67, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x54, 0x6f, 0x6b,
-	0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64,
-	0x12, 0x37, 0x0a, 0x18, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x5f, 0x73, 0x68, 0x61,
-	0x72, 0x65, 0x5f, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x04, 0x52, 0x15, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72,
-	0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x49, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x65, 0x6e,
-	0x64, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65,
-	0x72, 0x12, 0x1b, 0x0a, 0x09, 0x6e, 0x65, 0x77, 0x5f, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6e, 0x65, 0x77, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x3a, 0x08,
-	0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0x28, 0x0a, 0x26, 0x4d, 0x73, 0x67, 0x54,
-	0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53,
+	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x90, 0x01,
+	0x0a, 0x16, 0x4d, 0x73, 0x67, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x53, 0x68, 0x61,
+	0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x12, 0x37, 0x0a, 0x18, 0x74, 0x6f, 0x6b, 0x65,
+	0x6e, 0x69, 0x7a, 0x65, 0x5f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x72, 0x65, 0x63, 0x6f, 0x72,
+	0x64, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x15, 0x74, 0x6f, 0x6b, 0x65,
+	0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x49,
+	0x64, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x6e, 0x65, 0x77,
+	0x5f, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6e, 0x65,
+	0x77, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x3a, 0x08, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00,
+	0x22, 0x20, 0x0a, 0x1e, 0x4d, 0x73, 0x67, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x53,
 	0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
 	0x73, 0x65, 0x22, 0x79, 0x0a, 0x13, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x6d, 0x70, 0x74, 0x44,
 	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x2b, 0x0a, 0x11, 0x64, 0x65, 0x6c,
@@ -12819,7 +12818,7 @@ var file_cosmos_staking_v1beta1_tx_proto_rawDesc = []byte{
 	0x22, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72,
 	0x65, 0x73, 0x73, 0x22, 0x1c, 0x0a, 0x1a, 0x4d, 0x73, 0x67, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64,
 	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x32, 0x8a, 0x0b, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x71, 0x0a, 0x0f, 0x43, 0x72, 0x65,
+	0x65, 0x32, 0xf1, 0x0a, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x71, 0x0a, 0x0f, 0x43, 0x72, 0x65,
 	0x61, 0x74, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x2a, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
 	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56,
@@ -12883,45 +12882,44 @@ var file_cosmos_staking_v1beta1_tx_proto_rawDesc = []byte{
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
 	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x54,
 	0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x66, 0x6f, 0x72, 0x53, 0x68, 0x61, 0x72, 0x65, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x95, 0x01, 0x0a, 0x1b, 0x54, 0x72, 0x61, 0x6e, 0x73,
-	0x66, 0x65, 0x72, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65,
-	0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x12, 0x36, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x7d, 0x0a, 0x13, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x66,
+	0x65, 0x72, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x12, 0x2e, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x66,
+	0x65, 0x72, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x1a, 0x36, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x66,
+	0x65, 0x72, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x74, 0x0a, 0x10, 0x45, 0x78, 0x65, 0x6d, 0x70, 0x74, 0x44,
+	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x6d, 0x70, 0x74, 0x44, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x4d, 0x73, 0x67, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x54, 0x6f, 0x6b, 0x65, 0x6e,
-	0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x1a, 0x3e,
+	0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x6d, 0x70, 0x74, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x71, 0x0a, 0x0f, 0x55,
+	0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x2a,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x72, 0x61, 0x6e, 0x73,
-	0x66, 0x65, 0x72, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x69, 0x7a, 0x65, 0x53, 0x68, 0x61, 0x72, 0x65,
-	0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x74,
-	0x0a, 0x10, 0x45, 0x78, 0x65, 0x6d, 0x70, 0x74, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x12, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b,
-	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45,
-	0x78, 0x65, 0x6d, 0x70, 0x74, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a,
-	0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x6d,
-	0x70, 0x74, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x71, 0x0a, 0x0f, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x56, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x1a, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61,
-	0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67,
-	0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xd7,
-	0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74,
-	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x07, 0x54,
-	0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x3b, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0xa2, 0x02, 0x03, 0x43, 0x53, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca,
-	0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
-	0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x5c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18,
-	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x3a,
-	0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x6e, 0x62, 0x6f, 0x6e,
+	0x64, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x1a, 0x32, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05,
+	0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xd7, 0x01, 0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
+	0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70,
+	0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x53, 0x58, 0xaa, 0x02, 0x16,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x56,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
+	0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2,
+	0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x53,
+	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -12938,36 +12936,36 @@ func file_cosmos_staking_v1beta1_tx_proto_rawDescGZIP() []byte {
 
 var file_cosmos_staking_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_cosmos_staking_v1beta1_tx_proto_goTypes = []interface{}{
-	(*MsgCreateValidator)(nil),                     // 0: cosmos.staking.v1beta1.MsgCreateValidator
-	(*MsgCreateValidatorResponse)(nil),             // 1: cosmos.staking.v1beta1.MsgCreateValidatorResponse
-	(*MsgEditValidator)(nil),                       // 2: cosmos.staking.v1beta1.MsgEditValidator
-	(*MsgEditValidatorResponse)(nil),               // 3: cosmos.staking.v1beta1.MsgEditValidatorResponse
-	(*MsgDelegate)(nil),                            // 4: cosmos.staking.v1beta1.MsgDelegate
-	(*MsgDelegateResponse)(nil),                    // 5: cosmos.staking.v1beta1.MsgDelegateResponse
-	(*MsgBeginRedelegate)(nil),                     // 6: cosmos.staking.v1beta1.MsgBeginRedelegate
-	(*MsgBeginRedelegateResponse)(nil),             // 7: cosmos.staking.v1beta1.MsgBeginRedelegateResponse
-	(*MsgUndelegate)(nil),                          // 8: cosmos.staking.v1beta1.MsgUndelegate
-	(*MsgUndelegateResponse)(nil),                  // 9: cosmos.staking.v1beta1.MsgUndelegateResponse
-	(*MsgCancelUnbondingDelegation)(nil),           // 10: cosmos.staking.v1beta1.MsgCancelUnbondingDelegation
-	(*MsgCancelUnbondingDelegationResponse)(nil),   // 11: cosmos.staking.v1beta1.MsgCancelUnbondingDelegationResponse
-	(*MsgUpdateParams)(nil),                        // 12: cosmos.staking.v1beta1.MsgUpdateParams
-	(*MsgUpdateParamsResponse)(nil),                // 13: cosmos.staking.v1beta1.MsgUpdateParamsResponse
-	(*MsgTokenizeShares)(nil),                      // 14: cosmos.staking.v1beta1.MsgTokenizeShares
-	(*MsgTokenizeSharesResponse)(nil),              // 15: cosmos.staking.v1beta1.MsgTokenizeSharesResponse
-	(*MsgRedeemTokensforShares)(nil),               // 16: cosmos.staking.v1beta1.MsgRedeemTokensforShares
-	(*MsgRedeemTokensforSharesResponse)(nil),       // 17: cosmos.staking.v1beta1.MsgRedeemTokensforSharesResponse
-	(*MsgTransferTokenizeShareRecord)(nil),         // 18: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord
-	(*MsgTransferTokenizeShareRecordResponse)(nil), // 19: cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse
-	(*MsgExemptDelegation)(nil),                    // 20: cosmos.staking.v1beta1.MsgExemptDelegation
-	(*MsgExemptDelegationResponse)(nil),            // 21: cosmos.staking.v1beta1.MsgExemptDelegationResponse
-	(*MsgUnbondValidator)(nil),                     // 22: cosmos.staking.v1beta1.MsgUnbondValidator
-	(*MsgUnbondValidatorResponse)(nil),             // 23: cosmos.staking.v1beta1.MsgUnbondValidatorResponse
-	(*Description)(nil),                            // 24: cosmos.staking.v1beta1.Description
-	(*CommissionRates)(nil),                        // 25: cosmos.staking.v1beta1.CommissionRates
-	(*anypb.Any)(nil),                              // 26: google.protobuf.Any
-	(*v1beta1.Coin)(nil),                           // 27: cosmos.base.v1beta1.Coin
-	(*timestamppb.Timestamp)(nil),                  // 28: google.protobuf.Timestamp
-	(*Params)(nil),                                 // 29: cosmos.staking.v1beta1.Params
+	(*MsgCreateValidator)(nil),                   // 0: cosmos.staking.v1beta1.MsgCreateValidator
+	(*MsgCreateValidatorResponse)(nil),           // 1: cosmos.staking.v1beta1.MsgCreateValidatorResponse
+	(*MsgEditValidator)(nil),                     // 2: cosmos.staking.v1beta1.MsgEditValidator
+	(*MsgEditValidatorResponse)(nil),             // 3: cosmos.staking.v1beta1.MsgEditValidatorResponse
+	(*MsgDelegate)(nil),                          // 4: cosmos.staking.v1beta1.MsgDelegate
+	(*MsgDelegateResponse)(nil),                  // 5: cosmos.staking.v1beta1.MsgDelegateResponse
+	(*MsgBeginRedelegate)(nil),                   // 6: cosmos.staking.v1beta1.MsgBeginRedelegate
+	(*MsgBeginRedelegateResponse)(nil),           // 7: cosmos.staking.v1beta1.MsgBeginRedelegateResponse
+	(*MsgUndelegate)(nil),                        // 8: cosmos.staking.v1beta1.MsgUndelegate
+	(*MsgUndelegateResponse)(nil),                // 9: cosmos.staking.v1beta1.MsgUndelegateResponse
+	(*MsgCancelUnbondingDelegation)(nil),         // 10: cosmos.staking.v1beta1.MsgCancelUnbondingDelegation
+	(*MsgCancelUnbondingDelegationResponse)(nil), // 11: cosmos.staking.v1beta1.MsgCancelUnbondingDelegationResponse
+	(*MsgUpdateParams)(nil),                      // 12: cosmos.staking.v1beta1.MsgUpdateParams
+	(*MsgUpdateParamsResponse)(nil),              // 13: cosmos.staking.v1beta1.MsgUpdateParamsResponse
+	(*MsgTokenizeShares)(nil),                    // 14: cosmos.staking.v1beta1.MsgTokenizeShares
+	(*MsgTokenizeSharesResponse)(nil),            // 15: cosmos.staking.v1beta1.MsgTokenizeSharesResponse
+	(*MsgRedeemTokensforShares)(nil),             // 16: cosmos.staking.v1beta1.MsgRedeemTokensforShares
+	(*MsgRedeemTokensforSharesResponse)(nil),     // 17: cosmos.staking.v1beta1.MsgRedeemTokensforSharesResponse
+	(*MsgTransferShareRecord)(nil),               // 18: cosmos.staking.v1beta1.MsgTransferShareRecord
+	(*MsgTransferShareRecordResponse)(nil),       // 19: cosmos.staking.v1beta1.MsgTransferShareRecordResponse
+	(*MsgExemptDelegation)(nil),                  // 20: cosmos.staking.v1beta1.MsgExemptDelegation
+	(*MsgExemptDelegationResponse)(nil),          // 21: cosmos.staking.v1beta1.MsgExemptDelegationResponse
+	(*MsgUnbondValidator)(nil),                   // 22: cosmos.staking.v1beta1.MsgUnbondValidator
+	(*MsgUnbondValidatorResponse)(nil),           // 23: cosmos.staking.v1beta1.MsgUnbondValidatorResponse
+	(*Description)(nil),                          // 24: cosmos.staking.v1beta1.Description
+	(*CommissionRates)(nil),                      // 25: cosmos.staking.v1beta1.CommissionRates
+	(*anypb.Any)(nil),                            // 26: google.protobuf.Any
+	(*v1beta1.Coin)(nil),                         // 27: cosmos.base.v1beta1.Coin
+	(*timestamppb.Timestamp)(nil),                // 28: google.protobuf.Timestamp
+	(*Params)(nil),                               // 29: cosmos.staking.v1beta1.Params
 }
 var file_cosmos_staking_v1beta1_tx_proto_depIdxs = []int32{
 	24, // 0: cosmos.staking.v1beta1.MsgCreateValidator.description:type_name -> cosmos.staking.v1beta1.Description
@@ -12995,7 +12993,7 @@ var file_cosmos_staking_v1beta1_tx_proto_depIdxs = []int32{
 	12, // 22: cosmos.staking.v1beta1.Msg.UpdateParams:input_type -> cosmos.staking.v1beta1.MsgUpdateParams
 	14, // 23: cosmos.staking.v1beta1.Msg.TokenizeShares:input_type -> cosmos.staking.v1beta1.MsgTokenizeShares
 	16, // 24: cosmos.staking.v1beta1.Msg.RedeemTokens:input_type -> cosmos.staking.v1beta1.MsgRedeemTokensforShares
-	18, // 25: cosmos.staking.v1beta1.Msg.TransferTokenizeShareRecord:input_type -> cosmos.staking.v1beta1.MsgTransferTokenizeShareRecord
+	18, // 25: cosmos.staking.v1beta1.Msg.TransferShareRecord:input_type -> cosmos.staking.v1beta1.MsgTransferShareRecord
 	20, // 26: cosmos.staking.v1beta1.Msg.ExemptDelegation:input_type -> cosmos.staking.v1beta1.MsgExemptDelegation
 	22, // 27: cosmos.staking.v1beta1.Msg.UnbondValidator:input_type -> cosmos.staking.v1beta1.MsgUnbondValidator
 	1,  // 28: cosmos.staking.v1beta1.Msg.CreateValidator:output_type -> cosmos.staking.v1beta1.MsgCreateValidatorResponse
@@ -13007,7 +13005,7 @@ var file_cosmos_staking_v1beta1_tx_proto_depIdxs = []int32{
 	13, // 34: cosmos.staking.v1beta1.Msg.UpdateParams:output_type -> cosmos.staking.v1beta1.MsgUpdateParamsResponse
 	15, // 35: cosmos.staking.v1beta1.Msg.TokenizeShares:output_type -> cosmos.staking.v1beta1.MsgTokenizeSharesResponse
 	17, // 36: cosmos.staking.v1beta1.Msg.RedeemTokens:output_type -> cosmos.staking.v1beta1.MsgRedeemTokensforSharesResponse
-	19, // 37: cosmos.staking.v1beta1.Msg.TransferTokenizeShareRecord:output_type -> cosmos.staking.v1beta1.MsgTransferTokenizeShareRecordResponse
+	19, // 37: cosmos.staking.v1beta1.Msg.TransferShareRecord:output_type -> cosmos.staking.v1beta1.MsgTransferShareRecordResponse
 	21, // 38: cosmos.staking.v1beta1.Msg.ExemptDelegation:output_type -> cosmos.staking.v1beta1.MsgExemptDelegationResponse
 	23, // 39: cosmos.staking.v1beta1.Msg.UnbondValidator:output_type -> cosmos.staking.v1beta1.MsgUnbondValidatorResponse
 	28, // [28:40] is the sub-list for method output_type
@@ -13241,7 +13239,7 @@ func file_cosmos_staking_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_staking_v1beta1_tx_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgTransferTokenizeShareRecord); i {
+			switch v := v.(*MsgTransferShareRecord); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -13253,7 +13251,7 @@ func file_cosmos_staking_v1beta1_tx_proto_init() {
 			}
 		}
 		file_cosmos_staking_v1beta1_tx_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgTransferTokenizeShareRecordResponse); i {
+			switch v := v.(*MsgTransferShareRecordResponse); i {
 			case 0:
 				return &v.state
 			case 1:

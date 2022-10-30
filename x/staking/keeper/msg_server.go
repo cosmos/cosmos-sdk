@@ -767,7 +767,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	}, nil
 }
 
-func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types.MsgTransferTokenizeShareRecord) (*types.MsgTransferTokenizeShareRecordResponse, error) {
+func (k msgServer) TransferShareRecord(goCtx context.Context, msg *types.MsgTransferShareRecord) (*types.MsgTransferShareRecordResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	record, err := k.GetTokenizeShareRecord(ctx, msg.TokenizeShareRecordId)
@@ -805,7 +805,7 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 		),
 	)
 
-	return &types.MsgTransferTokenizeShareRecordResponse{}, nil
+	return &types.MsgTransferShareRecordResponse{}, nil
 }
 
 func (k msgServer) ExemptDelegation(goCtx context.Context, msg *types.MsgExemptDelegation) (*types.MsgExemptDelegationResponse, error) {

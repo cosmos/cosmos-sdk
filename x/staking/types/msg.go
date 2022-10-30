@@ -11,18 +11,18 @@ import (
 
 // staking message types
 const (
-	TypeMsgUndelegate                  = "begin_unbonding"
-	TypeMsgCancelUnbondingDelegation   = "cancel_unbond"
-	TypeMsgEditValidator               = "edit_validator"
-	TypeMsgCreateValidator             = "create_validator"
-	TypeMsgDelegate                    = "delegate"
-	TypeMsgBeginRedelegate             = "begin_redelegate"
-	TypeMsgUpdateParams                = "update_params"
-	TypeMsgTokenizeShares              = "tokenize_shares"
-	TypeMsgRedeemTokensforShares       = "redeem_tokens_for_shares"
-	TypeMsgTransferTokenizeShareRecord = "transfer_tokenize_share_record"
-	TypeMsgExemptDelegation            = "exempt_delegation"
-	TypeMsgUnbondValidator             = "unbond_validator"
+	TypeMsgUndelegate                = "begin_unbonding"
+	TypeMsgCancelUnbondingDelegation = "cancel_unbond"
+	TypeMsgEditValidator             = "edit_validator"
+	TypeMsgCreateValidator           = "create_validator"
+	TypeMsgDelegate                  = "delegate"
+	TypeMsgBeginRedelegate           = "begin_redelegate"
+	TypeMsgUpdateParams              = "update_params"
+	TypeMsgTokenizeShares            = "tokenize_shares"
+	TypeMsgRedeemTokensforShares     = "redeem_tokens_for_shares"
+	TypeMsgTransferShareRecord       = "transfer_tokenize_share_record"
+	TypeMsgExemptDelegation          = "exempt_delegation"
+	TypeMsgUnbondValidator           = "unbond_validator"
 )
 
 var (
@@ -37,7 +37,7 @@ var (
 	_ sdk.Msg                            = &MsgUpdateParams{}
 	_ sdk.Msg                            = &MsgTokenizeShares{}
 	_ sdk.Msg                            = &MsgRedeemTokensforShares{}
-	_ sdk.Msg                            = &MsgTransferTokenizeShareRecord{}
+	_ sdk.Msg                            = &MsgTransferShareRecord{}
 	_ sdk.Msg                            = &MsgExemptDelegation{}
 	_ sdk.Msg                            = &MsgUnbondValidator{}
 )
@@ -508,9 +508,9 @@ func (msg MsgRedeemTokensforShares) ValidateBasic() error {
 }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgTransferTokenizeShareRecord) Type() string { return TypeMsgTransferTokenizeShareRecord }
+func (msg MsgTransferShareRecord) Type() string { return TypeMsgTransferShareRecord }
 
-func (msg MsgTransferTokenizeShareRecord) GetSigners() []sdk.AccAddress {
+func (msg MsgTransferShareRecord) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
@@ -518,12 +518,12 @@ func (msg MsgTransferTokenizeShareRecord) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sender}
 }
 
-func (msg MsgTransferTokenizeShareRecord) GetSignBytes() []byte {
+func (msg MsgTransferShareRecord) GetSignBytes() []byte {
 	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg MsgTransferTokenizeShareRecord) ValidateBasic() error {
+func (msg MsgTransferShareRecord) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
 	}

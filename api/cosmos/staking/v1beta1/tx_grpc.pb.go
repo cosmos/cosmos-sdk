@@ -51,10 +51,10 @@ type MsgClient interface {
 	// shares.
 	// Since: cosmos-sdk 0.47
 	RedeemTokens(ctx context.Context, in *MsgRedeemTokensforShares, opts ...grpc.CallOption) (*MsgRedeemTokensforSharesResponse, error)
-	// TransferTokenizeShareRecord defines a method to transfer ownership of
+	// TransferShareRecord defines a method to transfer ownership of
 	// TokenizeShareRecord
 	// Since: cosmos-sdk 0.47
-	TransferTokenizeShareRecord(ctx context.Context, in *MsgTransferTokenizeShareRecord, opts ...grpc.CallOption) (*MsgTransferTokenizeShareRecordResponse, error)
+	TransferShareRecord(ctx context.Context, in *MsgTransferShareRecord, opts ...grpc.CallOption) (*MsgTransferShareRecordResponse, error)
 	// ExemptDelegation defines a method for performing exemption of
 	// delegated coins from a delegator to a validator.
 	// Since: cosmos-sdk 0.47
@@ -154,9 +154,9 @@ func (c *msgClient) RedeemTokens(ctx context.Context, in *MsgRedeemTokensforShar
 	return out, nil
 }
 
-func (c *msgClient) TransferTokenizeShareRecord(ctx context.Context, in *MsgTransferTokenizeShareRecord, opts ...grpc.CallOption) (*MsgTransferTokenizeShareRecordResponse, error) {
-	out := new(MsgTransferTokenizeShareRecordResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Msg/TransferTokenizeShareRecord", in, out, opts...)
+func (c *msgClient) TransferShareRecord(ctx context.Context, in *MsgTransferShareRecord, opts ...grpc.CallOption) (*MsgTransferShareRecordResponse, error) {
+	out := new(MsgTransferShareRecordResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Msg/TransferShareRecord", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -214,10 +214,10 @@ type MsgServer interface {
 	// shares.
 	// Since: cosmos-sdk 0.47
 	RedeemTokens(context.Context, *MsgRedeemTokensforShares) (*MsgRedeemTokensforSharesResponse, error)
-	// TransferTokenizeShareRecord defines a method to transfer ownership of
+	// TransferShareRecord defines a method to transfer ownership of
 	// TokenizeShareRecord
 	// Since: cosmos-sdk 0.47
-	TransferTokenizeShareRecord(context.Context, *MsgTransferTokenizeShareRecord) (*MsgTransferTokenizeShareRecordResponse, error)
+	TransferShareRecord(context.Context, *MsgTransferShareRecord) (*MsgTransferShareRecordResponse, error)
 	// ExemptDelegation defines a method for performing exemption of
 	// delegated coins from a delegator to a validator.
 	// Since: cosmos-sdk 0.47
@@ -260,8 +260,8 @@ func (UnimplementedMsgServer) TokenizeShares(context.Context, *MsgTokenizeShares
 func (UnimplementedMsgServer) RedeemTokens(context.Context, *MsgRedeemTokensforShares) (*MsgRedeemTokensforSharesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RedeemTokens not implemented")
 }
-func (UnimplementedMsgServer) TransferTokenizeShareRecord(context.Context, *MsgTransferTokenizeShareRecord) (*MsgTransferTokenizeShareRecordResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method TransferTokenizeShareRecord not implemented")
+func (UnimplementedMsgServer) TransferShareRecord(context.Context, *MsgTransferShareRecord) (*MsgTransferShareRecordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TransferShareRecord not implemented")
 }
 func (UnimplementedMsgServer) ExemptDelegation(context.Context, *MsgExemptDelegation) (*MsgExemptDelegationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExemptDelegation not implemented")
@@ -444,20 +444,20 @@ func _Msg_RedeemTokens_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_TransferTokenizeShareRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgTransferTokenizeShareRecord)
+func _Msg_TransferShareRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgTransferShareRecord)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).TransferTokenizeShareRecord(ctx, in)
+		return srv.(MsgServer).TransferShareRecord(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.staking.v1beta1.Msg/TransferTokenizeShareRecord",
+		FullMethod: "/cosmos.staking.v1beta1.Msg/TransferShareRecord",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).TransferTokenizeShareRecord(ctx, req.(*MsgTransferTokenizeShareRecord))
+		return srv.(MsgServer).TransferShareRecord(ctx, req.(*MsgTransferShareRecord))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -542,8 +542,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_RedeemTokens_Handler,
 		},
 		{
-			MethodName: "TransferTokenizeShareRecord",
-			Handler:    _Msg_TransferTokenizeShareRecord_Handler,
+			MethodName: "TransferShareRecord",
+			Handler:    _Msg_TransferShareRecord_Handler,
 		},
 		{
 			MethodName: "ExemptDelegation",

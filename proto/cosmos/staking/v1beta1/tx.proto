@@ -56,11 +56,11 @@ service Msg {
   rpc RedeemTokens(MsgRedeemTokensforShares)
       returns (MsgRedeemTokensforSharesResponse);
 
-  // TransferTokenizeShareRecord defines a method to transfer ownership of
+  // TransferShareRecord defines a method to transfer ownership of
   // TokenizeShareRecord
   // Since: cosmos-sdk 0.47
-  rpc TransferTokenizeShareRecord(MsgTransferTokenizeShareRecord)
-      returns (MsgTransferTokenizeShareRecordResponse);
+  rpc TransferShareRecord(MsgTransferShareRecord)
+      returns (MsgTransferShareRecordResponse);
 
   // ExemptDelegation defines a method for performing exemption of
   // delegated coins from a delegator to a validator.
@@ -248,7 +248,7 @@ message MsgRedeemTokensforSharesResponse {
 }
 
 // Since: cosmos-sdk 0.47
-message MsgTransferTokenizeShareRecord {
+message MsgTransferShareRecord {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -258,7 +258,7 @@ message MsgTransferTokenizeShareRecord {
 }
 
 // Since: cosmos-sdk 0.47
-message MsgTransferTokenizeShareRecordResponse {}
+message MsgTransferShareRecordResponse {}
 
 // MsgExemptDelegation defines a SDK message for performing exemption of delegated coins
 // from a delegator to a validator.

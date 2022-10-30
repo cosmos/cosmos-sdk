@@ -713,7 +713,7 @@ $ %s tx staking transfer-tokenize-share-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fx
 				return err
 			}
 
-			msg := &types.MsgTransferTokenizeShareRecord{
+			msg := &types.MsgTransferShareRecord{
 				Sender:                clientCtx.GetFromAddress().String(),
 				TokenizeShareRecordId: uint64(recordId),
 				NewOwner:              ownerAddr.String(),

@@ -58,9 +58,9 @@ MsgTokenizeSharesResponse provides the number of tokens generated and their deno
 
 The MsgRedeemTokensforShares message is used to redeem the delegation from share tokens. This message can be executed by any user who owns share tokens. After execution delegations will appear to the user.
 
-### `MsgTransferTokenizeShareRecord`
+### `MsgTransferShareRecord`
 
-The MsgTransferTokenizeShareRecord message is used to transfer the ownership of rewards generated from the tokenized amount of delegation. The tokenize share record is created when a user tokenize his/her delegation and deleted when the full amount of share tokens are redeemed.
+The MsgTransferShareRecord message is used to transfer the ownership of rewards generated from the tokenized amount of delegation. The tokenize share record is created when a user tokenize his/her delegation and deleted when the full amount of share tokens are redeemed.
 
 This is designed to work with liquid staking designs that do not redeem the tokenized shares and may instead want to keep the shares tokenized.
 

@@ -16,7 +16,7 @@ service Query {
   // Balance queries the balance of a single coin for a single account.
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}/by_denom";
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/balances/{address}/by_denom";
   }
 
   // AllBalances queries the balance of all coins for a single account.
@@ -25,7 +25,7 @@ service Query {
   // gas if the pagination field is incorrectly set.
   rpc AllBalances(QueryAllBalancesRequest) returns (QueryAllBalancesResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}";
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/balances/{address}";
   }
 
   // SpendableBalances queries the spenable balance of all coins for a single
@@ -37,7 +37,7 @@ service Query {
   // Since: cosmos-sdk 0.46
   rpc SpendableBalances(QuerySpendableBalancesRequest) returns (QuerySpendableBalancesResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/bank/v1beta1/spendable_balances/{address}";
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/spendable_balances/{address}";
   }
 
   // TotalSupply queries the total supply of all coins.
@@ -46,7 +46,7 @@ service Query {
   // gas if the pagination field is incorrectly set.
   rpc TotalSupply(QueryTotalSupplyRequest) returns (QueryTotalSupplyResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/bank/v1beta1/supply";
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/supply";
   }
 
   // SupplyOf queries the supply of a single coin.
@@ -55,26 +55,26 @@ service Query {
   // gas if the pagination field is incorrectly set.
   rpc SupplyOf(QuerySupplyOfRequest) returns (QuerySupplyOfResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/bank/v1beta1/supply/by_denom";
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/supply/by_denom";
   }
 
   // Params queries the parameters of x/bank module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/bank/v1beta1/params";
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/params";
   }
 
   // DenomsMetadata queries the client metadata of a given coin denomination.
   rpc DenomMetadata(QueryDenomMetadataRequest) returns (QueryDenomMetadataResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata/{denom}";
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/denoms_metadata/{denom}";
   }
 
   // DenomsMetadata queries the client metadata for all registered coin
   // denominations.
   rpc DenomsMetadata(QueryDenomsMetadataRequest) returns (QueryDenomsMetadataResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata";
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/denoms_metadata";
   }
 
   // DenomOwners queries for all account addresses that own a particular token
@@ -86,7 +86,7 @@ service Query {
   // Since: cosmos-sdk 0.46
   rpc DenomOwners(QueryDenomOwnersRequest) returns (QueryDenomOwnersResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/bank/v1beta1/denom_owners/{denom}";
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/denom_owners/{denom}";
   }
 
   // SendEnabled queries for SendEnabled entries.
@@ -98,7 +98,7 @@ service Query {
   // Since: cosmos-sdk 0.47
   rpc SendEnabled(QuerySendEnabledRequest) returns (QuerySendEnabledResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/bank/v1beta1/send_enabled";
+    option (google.api.http).get               = "/cosmos/bank/v1beta1/send_enabled";
   }
 }
 

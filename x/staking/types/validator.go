@@ -398,6 +398,12 @@ func (v Validator) AddTokensFromDel(amount sdk.Int) (Validator, sdk.Dec) {
 	return v, issuedShares
 }
 
+// AddTokens adds tokens to a validator without issuing new shares
+func (v Validator) AddTokens(amount sdk.Int) (Validator) {
+	v.Tokens = v.Tokens.Add(amount)
+	return v
+}
+
 // RemoveTokens removes tokens from a validator
 func (v Validator) RemoveTokens(tokens sdk.Int) Validator {
 	if tokens.IsNegative() {

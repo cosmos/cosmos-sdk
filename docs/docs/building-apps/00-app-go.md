@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Overview of `app.go` and how to wire it up
+# Overview of `app.go`
 
 This section is intended to provide an overview of the `app.go` file and is still a work in progress.
 For now we invite you to read the [tutorials](https://tutorials.cosmos.network) for a deep dive on how to build a chain.

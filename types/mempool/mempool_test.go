@@ -62,12 +62,9 @@ func (tx testTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
 
 var (
 	_ sdk.Tx                  = (*testTx)(nil)
-	_ mempool.Tx              = (*testTx)(nil)
 	_ signing.SigVerifiableTx = (*testTx)(nil)
 	_ cryptotypes.PubKey      = (*testPubKey)(nil)
 )
-
-func (tx testTx) Size() int64 { return 1 }
 
 func (tx testTx) GetMsgs() []sdk.Msg { return nil }
 
@@ -104,13 +101,14 @@ func (tx txSpec) String() string {
 	return fmt.Sprintf("[tx i: %d, a: %s, p: %d, n: %d]", tx.i, tx.a, tx.p, tx.n)
 }
 
-func fetchTxs(iterator mempool.Iterator, maxBytes int64) []mempool.Tx {
+func fetchTxs(iterator mempool.Iterator, maxBytes int64) []sdk.Tx {
+	const txSize = 1
 	var (
-		txs      []mempool.Tx
+		txs      []sdk.Tx
 		numBytes int64
 	)
 	for iterator != nil {
-		if numBytes += iterator.Tx().Size(); numBytes > maxBytes {
+		if numBytes += txSize; numBytes > maxBytes {
 			break
 		}
 		txs = append(txs, iterator.Tx())

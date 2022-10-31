@@ -3,24 +3,13 @@ package mempool
 import (
 	"errors"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// Tx defines an app-side mempool transaction interface that is as
-// minimal as possible, only requiring applications to define the size of the
-// transaction to be used when inserting, selecting, and deleting the transaction.
-// Interface type casting can be used in the actual app-side mempool implementation.
-type Tx interface {
-	types.Tx
-
-	// Size returns the size of the transaction in bytes.
-	Size() int64
-}
 
 type Mempool interface {
 	// Insert attempts to insert a Tx into the app-side mempool returning
 	// an error upon failure.
-	Insert(types.Context, Tx) error
+	Insert(sdk.Context, sdk.Tx) error
 
 	// Select returns an Iterator over the app-side mempool.  If txs are specified, then they shall be incorporated
 	// into the Iterator.  The Iterator must be closed by the caller.
@@ -31,7 +20,7 @@ type Mempool interface {
 
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
-	Remove(Tx) error
+	Remove(tx sdk.Tx) error
 }
 
 // Iterator defines an app-side mempool iterator interface that is as minimal as possible.  The order of iteration
@@ -41,7 +30,7 @@ type Iterator interface {
 	Next() Iterator
 
 	// Tx returns the transaction at the current position of the iterator.
-	Tx() Tx
+	Tx() sdk.Tx
 }
 
 var ErrTxNotFound = errors.New("tx not found in mempool")

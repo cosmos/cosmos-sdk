@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -74,7 +73,6 @@ func (msg *kvstoreTx) ProtoMessage()  {}
 
 var (
 	_ sdk.Tx                  = &kvstoreTx{}
-	_ mempool.Tx              = &kvstoreTx{}
 	_ sdk.Msg                 = &kvstoreTx{}
 	_ signing.SigVerifiableTx = &kvstoreTx{}
 	_ cryptotypes.PubKey      = &kvstoreTx{}

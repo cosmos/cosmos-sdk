@@ -35,8 +35,8 @@ func (i nonceMempoolIterator) Next() Iterator {
 	}
 }
 
-func (i nonceMempoolIterator) Tx() Tx {
-	return i.currentTx.Value.(Tx)
+func (i nonceMempoolIterator) Tx() sdk.Tx {
+	return i.currentTx.Value.(sdk.Tx)
 }
 
 type txKey struct {
@@ -67,7 +67,7 @@ func NewNonceMempool() Mempool {
 
 // Insert adds a tx to the mempool. It returns an error if the tx does not have at least one signer.
 // priority is ignored.
-func (sp nonceMempool) Insert(_ sdk.Context, tx Tx) error {
+func (sp nonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (sp nonceMempool) CountTx() int {
 
 // Remove removes a tx from the mempool. It returns an error if the tx does not have at least one signer or the tx
 // was not found in the pool.
-func (sp nonceMempool) Remove(tx Tx) error {
+func (sp nonceMempool) Remove(tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err

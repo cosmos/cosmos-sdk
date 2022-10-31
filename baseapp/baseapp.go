@@ -697,12 +697,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 	if mode == runTxModeCheck {
 		fmt.Println("inserting tx:", tx.GetMsgs())
-		err = app.mempool.Insert(ctx, tx.(mempool.Tx))
+		err = app.mempool.Insert(ctx, tx)
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err
 		}
 	} else if mode == runTxModeDeliver {
-		err = app.mempool.Remove(tx.(mempool.Tx))
+		err = app.mempool.Remove(tx)
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 			return gInfo, nil, anteEvents, priority,
 				fmt.Errorf("failed to remove tx from mempool: %w", err)
@@ -848,6 +848,7 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 		memTx := iterator.Tx()
 
 		bz, encErr := app.txEncoder(memTx)
+		txSize := int64(len(bz))
 		if encErr != nil {
 			return nil, encErr
 		}
@@ -861,7 +862,7 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 				return nil, removeErr
 			}
 			continue
-		} else if byteCount += memTx.Size(); byteCount <= req.MaxTxBytes {
+		} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
 			txsBytes = append(txsBytes, bz)
 		} else {
 			break
@@ -884,7 +885,7 @@ func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {
 		_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
 		if err != nil {
 			fmt.Println("error run tx process", tx)
-			_ = app.mempool.Remove(tx.(mempool.Tx))
+			_ = app.mempool.Remove(tx)
 		}
 	}
 	return nil

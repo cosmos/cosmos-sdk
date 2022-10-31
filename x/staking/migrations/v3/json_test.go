@@ -38,10 +38,12 @@ func TestMigrateJSON(t *testing.T) {
 	expected := `{
 	"delegations": [],
 	"exported": false,
+	"last_tokenize_share_record_id": "0",
 	"last_total_power": "0",
 	"last_validator_powers": [],
 	"params": {
 		"bond_denom": "stake",
+		"exemption_factor": "0.000000000000000000",
 		"historical_entries": 10000,
 		"max_entries": 7,
 		"max_validators": 100,
@@ -49,6 +51,7 @@ func TestMigrateJSON(t *testing.T) {
 		"unbonding_time": "1814400s"
 	},
 	"redelegations": [],
+	"tokenize_share_records": [],
 	"unbonding_delegations": [],
 	"validators": []
 }`

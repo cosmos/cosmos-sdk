@@ -19,7 +19,7 @@ const (
 	TypeMsgBeginRedelegate           = "begin_redelegate"
 	TypeMsgUpdateParams              = "update_params"
 	TypeMsgTokenizeShares            = "tokenize_shares"
-	TypeMsgRedeemTokensforShares     = "redeem_tokens_for_shares" //nolint:gosec
+	TypeMsgRedeemTokensforShares     = "redeem_tokens_for_shares"
 	TypeMsgTransferShareRecord       = "transfer_tokenize_share_record"
 	TypeMsgExemptDelegation          = "exempt_delegation"
 	TypeMsgUnbondValidator           = "unbond_validator"
@@ -60,6 +60,7 @@ func NewMsgCreateValidator(
 		DelegatorAddress: sdk.AccAddress(valAddr).String(),
 		ValidatorAddress: valAddr.String(),
 		Pubkey:           pkAny,
+		Value:            selfDelegation,
 		Commission:       commission,
 	}, nil
 }

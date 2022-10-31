@@ -19,7 +19,7 @@ const (
 	TypeMsgBeginRedelegate           = "begin_redelegate"
 	TypeMsgUpdateParams              = "update_params"
 	TypeMsgTokenizeShares            = "tokenize_shares"
-	TypeMsgRedeemTokensforShares     = "redeem_tokens_for_shares"
+	TypeMsgRedeemTokensforShares     = "redeem_tokens_for_shares" //nolint:gosec
 	TypeMsgTransferShareRecord       = "transfer_tokenize_share_record"
 	TypeMsgExemptDelegation          = "exempt_delegation"
 	TypeMsgUnbondValidator           = "unbond_validator"

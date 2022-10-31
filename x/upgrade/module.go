@@ -139,7 +139,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 }
 
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {

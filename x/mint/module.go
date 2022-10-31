@@ -198,7 +198,7 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 }
 
 // ============================================================================
-// New App Wiring Setup
+// App Wiring Setup
 // ============================================================================
 
 func init() {

@@ -398,13 +398,26 @@ func NewSimApp(
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
 	)
-
 	if err != nil {
 		panic(err)
 	}
 
 	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
+
+	// PostHandlers are like antehandlers, but are run AFTER the `runMsgs` execution.
+	// They are also defined as a chain, and have the same signature as antehandlers.
+	//
+	// In baseapp, postHandlers are run in the same store branch as `runMsgs`,
+	// meaning that both `runMsgs` and `postHandler` state will be committed if
+	// both are successful, and both will be reverted if any of the two fails.
+	//
+	// Please note that changing any of the anteHandler or postHandler chain is
+	// likely to be a state-machine breaking change, which needs a coordinated
+	// upgrade.
+	//
+	// Uncomment to enable postHandlers:
+	// app.setPostHandler()
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -538,6 +551,19 @@ func (app *SimApp) RegisterTxService(clientCtx client.Context) {
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
+}
+
+func (app *SimApp) setPostHandler() {
+	// postHandler, err := posthandler.NewPostHandler(
+	// 	posthandler.HandlerOptions{
+	// 		BankKeeper: app.BankKeeper,
+	// 	},
+	// )
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// app.SetPostHandler(postHandler)
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

@@ -59,7 +59,9 @@ type BaseApp struct { // nolint: maligned
 	interfaceRegistry types.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
-	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
+	anteHandler sdk.AnteHandler // ante handler for fee and auth
+	postHandler sdk.AnteHandler // post handler, optional, e.g. for tips
+
 	initChainer    sdk.InitChainer  // initialize state with validators and state blob
 	beginBlocker   sdk.BeginBlocker // logic to run before any txs
 	endBlocker     sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
@@ -693,15 +695,29 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
-	if err == nil && mode == runTxModeDeliver {
-		// When block gas exceeds, it'll panic and won't commit the cached store.
-		consumeBlockGas()
+	if err == nil {
+		// Run optional postHandlers.
+		//
+		// Note: If the postHandler fails, we also revert the runMsgs state!
+		if app.postHandler != nil {
+			newCtx, err := app.postHandler(runMsgCtx, tx, mode == runTxModeSimulate)
+			if err != nil {
+				return gInfo, nil, nil, err
+			}
 
-		msCache.Write()
+			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
+		}
 
-		if len(anteEvents) > 0 {
-			// append the events in the order of occurrence
-			result.Events = append(anteEvents, result.Events...)
+		if mode == runTxModeDeliver {
+			// When block gas exceeds, it'll panic and won't commit the cached store.
+			consumeBlockGas()
+
+			msCache.Write()
+
+			if len(anteEvents) > 0 {
+				// append the events in the order of occurrence
+				result.Events = append(anteEvents, result.Events...)
+			}
 		}
 	}
 

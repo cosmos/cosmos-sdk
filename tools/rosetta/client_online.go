@@ -245,7 +245,7 @@ func (c *Client) coins(ctx context.Context) (sdk.Coins, error) {
 	}
 
 	pages := supply.GetPagination().GetTotal()
-	for i := 0; i < int(pages); i++ {
+	for i := uint64(0); i < pages; i++ {
 		// get next key
 		page := supply.GetPagination()
 		if page == nil {

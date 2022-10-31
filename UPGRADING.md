@@ -26,7 +26,7 @@ The `simapp` package **should not be imported in your own app**. Instead, you sh
 
 #### App Wiring
 
-SimApp's `app.go` is now using [App Wiring](https://docs.cosmos.network/main/building-chain/depinject.html), the dependency injection framework of the Cosmos SDK.
+SimApp's `app.go` is now using [App Wiring](https://docs.cosmos.network/main/building-apps/depinject), the dependency injection framework of the Cosmos SDK.
 This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_config.go).
 The old behavior is preserved and can still be used, without the dependency injection framework, as shows [`app_legacy.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_legacy.go).
 

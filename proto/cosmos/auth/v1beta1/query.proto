@@ -21,13 +21,13 @@ service Query {
   // Since: cosmos-sdk 0.43
   rpc Accounts(QueryAccountsRequest) returns (QueryAccountsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/auth/v1beta1/accounts";
+    option (google.api.http).get               = "/cosmos/auth/v1beta1/accounts";
   }
 
   // Account returns account details based on address.
   rpc Account(QueryAccountRequest) returns (QueryAccountResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
+    option (google.api.http).get               = "/cosmos/auth/v1beta1/accounts/{address}";
   }
 
   // AccountAddressByID returns account address based on account number.
@@ -35,13 +35,13 @@ service Query {
   // Since: cosmos-sdk 0.46.2
   rpc AccountAddressByID(QueryAccountAddressByIDRequest) returns (QueryAccountAddressByIDResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/auth/v1beta1/address_by_id/{id}";
+    option (google.api.http).get               = "/cosmos/auth/v1beta1/address_by_id/{id}";
   }
 
   // Params queries all parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/auth/v1beta1/params";
+    option (google.api.http).get               = "/cosmos/auth/v1beta1/params";
   }
 
   // ModuleAccounts returns all the existing module accounts.
@@ -49,13 +49,13 @@ service Query {
   // Since: cosmos-sdk 0.46
   rpc ModuleAccounts(QueryModuleAccountsRequest) returns (QueryModuleAccountsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/auth/v1beta1/module_accounts";
+    option (google.api.http).get               = "/cosmos/auth/v1beta1/module_accounts";
   }
 
   // ModuleAccountByName returns the module account info by module name
   rpc ModuleAccountByName(QueryModuleAccountByNameRequest) returns (QueryModuleAccountByNameResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/auth/v1beta1/module_accounts/{name}";
+    option (google.api.http).get               = "/cosmos/auth/v1beta1/module_accounts/{name}";
   }
 
   // Bech32Prefix queries bech32Prefix
@@ -79,13 +79,12 @@ service Query {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32/{address_string}";
   }
 
-
   // AccountInfo queries account info which is common to all account types.
   //
   // Since: cosmos-sdk 0.47
   rpc AccountInfo(QueryAccountInfoRequest) returns (QueryAccountInfoResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/auth/v1beta1/account_info/{address}";
+    option (google.api.http).get               = "/cosmos/auth/v1beta1/account_info/{address}";
   }
 }
 

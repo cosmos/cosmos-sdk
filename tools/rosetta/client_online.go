@@ -244,7 +244,8 @@ func (c *Client) coins(ctx context.Context) (sdk.Coins, error) {
 		return nil, crgerrs.FromGRPCToRosettaError(err)
 	}
 
-	for supply.GetPagination().GetNextKey() != nil {
+	pages := supply.GetPagination().GetTotal()
+	for i := 0; i < int(pages); i++ {
 		// get next key
 		page := supply.GetPagination()
 		if page == nil {

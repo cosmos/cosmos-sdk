@@ -124,7 +124,6 @@ func (suite *DeterministicTestSuite) createValidator(t *rapid.T) stakingtypes.Va
 			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "max-rate"), 2),
 			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "max-change-rate"), 2),
 		),
-		MinSelfDelegation: sdk.NewInt(rapid.Int64Min(1).Draw(t, "tokens")),
 	}
 }
 
@@ -184,7 +183,6 @@ func (suite *DeterministicTestSuite) getStaticValidator() stakingtypes.Validator
 			sdk.NewDecWithPrec(5, 2),
 			sdk.NewDecWithPrec(5, 2),
 		),
-		MinSelfDelegation: sdk.NewInt(10),
 	}
 
 	suite.setValidator(validator)
@@ -218,7 +216,6 @@ func (suite *DeterministicTestSuite) getStaticValidator2() stakingtypes.Validato
 			sdk.NewDecWithPrec(59, 2),
 			sdk.NewDecWithPrec(51, 2),
 		),
-		MinSelfDelegation: sdk.NewInt(1),
 	}
 	suite.setValidator(validator)
 

@@ -164,7 +164,7 @@ func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // If the input is a valid address, it returns the address.
 // If the input is a module name, it returns the module address.
 func NewModuleAddressOrBech32Address(input string) sdk.AccAddress {
-	if addr, err := sdk.AccAddressFromBech32(input); err != nil {
+	if addr, err := sdk.AccAddressFromBech32(input); err == nil {
 		return addr
 	}
 

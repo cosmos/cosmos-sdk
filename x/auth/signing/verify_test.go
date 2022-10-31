@@ -82,7 +82,7 @@ func TestVerifySignature(t *testing.T) {
 	handler := MakeTestHandlerMap()
 	stdTx := legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig}, memo)
 	stdTx.TimeoutHeight = 10
-	err = signing.VerifySignature(pubKey, signerData, sigV2.Data, handler, stdTx)
+	err = signing.VerifySignature(nil, pubKey, signerData, sigV2.Data, handler, stdTx)
 	require.NoError(t, err)
 
 	pkSet := []cryptotypes.PubKey{pubKey, pubKey1}
@@ -111,6 +111,6 @@ func TestVerifySignature(t *testing.T) {
 	stdTx = legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig1, stdSig2}, memo)
 	stdTx.TimeoutHeight = 10
 
-	err = signing.VerifySignature(multisigKey, signerData, multisignature, handler, stdTx)
+	err = signing.VerifySignature(nil, multisigKey, signerData, multisignature, handler, stdTx)
 	require.NoError(t, err)
 }

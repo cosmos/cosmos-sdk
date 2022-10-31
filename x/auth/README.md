@@ -88,7 +88,7 @@ account types may do so.
 #### Account Interface
 
 The account interface exposes methods to read and write standard account information.
-Note that all of these methods operate on an account struct confirming to the
+Note that all of these methods operate on an account struct conforming to the
 interface - in order to write the account to the store, the account keeper will
 need to be used.
 

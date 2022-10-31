@@ -52,7 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## API Breaking Changes
 
-* (context) [#13063](https://github.com/cosmos/cosmos-sdk/pull/13063) Update `Context#CacheContext` to automatically emit all events on the parent context's `EventManager`.
+* (context) [#13063](https://github.com/cosmos/cosmos-sdk/pull/13063) Update `Context#CacheContext` to automatically emit all events on the parent context's `EventManager`. Use `Context#CacheContextNoEmitEvent` for keeping the old (yet incorrect) behavior.
 
 ## [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) - 2022-10-20
 

@@ -151,12 +151,7 @@ func ProvideModule(in ConsensusParamInputs) ConsensusParamOutputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
-		// if provided authority is not a valid address, assume it is a module name
-		if addr, err := sdk.AccAddressFromBech32(in.Config.Authority); err == nil {
-			authority = addr
-		} else {
-			authority = authtypes.NewModuleAddress(in.Config.Authority)
-		}
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(in.Cdc, in.Key, authority.String())

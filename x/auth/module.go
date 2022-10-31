@@ -222,12 +222,7 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 	// default to governance authority if not provided
 	authority := types.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
-		// if provided authority is not a valid address, assume it is a module name
-		if addr, err := sdk.AccAddressFromBech32(in.Config.Authority); err == nil {
-			authority = addr
-		} else {
-			authority = types.NewModuleAddress(in.Config.Authority)
-		}
+		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	if in.RandomGenesisAccountsFn == nil {

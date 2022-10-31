@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	distrclitestutil "github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -557,7 +558,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 			clientCtx := val.ClientCtx
 
 			_, _ = s.network.WaitForHeightWithTimeout(10, time.Minute)
-			bz, err := MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
+			bz, err := distrclitestutil.MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

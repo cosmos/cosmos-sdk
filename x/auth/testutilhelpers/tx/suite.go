@@ -134,7 +134,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 		Sequence:      seq1,
 		PubKey:        pubkey,
 	}
-	signBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
+	signBytes, err := signModeHandler.GetSignBytes(nil, signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
 	sigBz, err := privKey.Sign(signBytes)
 	s.Require().NoError(err)
@@ -146,7 +146,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 		Sequence:      mseq,
 		PubKey:        multisigPk,
 	}
-	mSignBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
+	mSignBytes, err := signModeHandler.GetSignBytes(nil, signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
 	mSigBz1, err := privKey.Sign(mSignBytes)
 	s.Require().NoError(err)

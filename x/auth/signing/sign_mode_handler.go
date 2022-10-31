@@ -1,6 +1,8 @@
 package signing
 
 import (
+	"context"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -18,7 +20,7 @@ type SignModeHandler interface {
 
 	// GetSignBytes returns the sign bytes for the provided SignMode, SignerData and Tx,
 	// or an error
-	GetSignBytes(mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error)
+	GetSignBytes(ctx context.Context, mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error)
 }
 
 // SignerData is the specific information needed to sign a transaction that generally

@@ -32,6 +32,9 @@ type priorityNonceMempool struct {
 
 type priorityNonceIterator struct {
 	senderCursors map[string]*huandu.Element
+	nextPriority  int64
+	currentSender string
+	inSender      bool
 	priorityNode  *huandu.Element
 	mempool       *priorityNonceMempool
 }
@@ -173,52 +176,48 @@ func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx Tx) error {
 	return nil
 }
 
-func (i priorityNonceIterator) Next() Iterator {
-	mp := i.mempool
-	priorityKey := i.priorityNode.Key().(txMeta)
-	nextHighestPriority, nextPriorityNode := mp.nextPriority(i.priorityNode)
-	sender := priorityKey.sender
-	senderTx := mp.fetchSenderCursor(sender)
-
-	// iterate through the sender's transactions in nonce order
-	for senderTx != nil {
-		mempoolTx := senderTx.Value.(Tx)
-		if mp.onRead != nil {
-			mp.onRead(mempoolTx)
-		}
-
-		key := senderTx.Key().(txMeta)
-
-		// break if we've reached a transaction with a priority lower than the next highest priority in the pool
-		if key.priority < nextHighestPriority {
-			break
-		} else if key.priority == nextHighestPriority {
-			// weight is incorporated into the priority index key only (not sender index) so we must fetch it here
-			// from the scores map.
-			weight := mp.scores[txMeta{nonce: key.nonce, sender: key.sender}].weight
-			if weight < nextPriorityNode.Key().(txMeta).weight {
-				break
-			}
-		}
-
-		// otherwise, select the transaction and continue iteration
-		selectedTxs = append(selectedTxs, mempoolTx)
-		if txBytes += mempoolTx.Size(); txBytes >= maxBytes {
-			return selectedTxs, nil
-		}
-
-		senderTx = senderTx.Next()
-		mp.senderCursors[sender] = senderTx
-	}
-
-	priorityNode = nextPriorityNode
-	//TODO implement me
-	panic("implement me")
+func (i *priorityNonceIterator) iteratePriority() Iterator {
+	i.priorityNode = i.priorityNode.Next()
+	i.inSender = false
+	return i.Next()
 }
 
-func (p priorityNonceIterator) Tx() Tx {
-	//TODO implement me
-	panic("implement me")
+func (i *priorityNonceIterator) Next() Iterator {
+	if !i.inSender {
+		i.currentSender = i.priorityNode.Value.(txMeta).sender
+		i.inSender = true
+	}
+
+	senderCursor := i.fetchSenderCursor(i.currentSender)
+	senderTx := senderCursor.Next()
+	key := senderTx.Key().(txMeta)
+
+	// we've reached a transaction with a priority lower than the next highest priority in the pool
+	if key.priority < i.nextPriority {
+		return i.iteratePriority()
+	} else if key.priority == i.nextPriority {
+		// weight is incorporated into the priority index key only (not sender index) so we must fetch it here
+		// from the scores map.
+		weight := i.mempool.scores[txMeta{nonce: key.nonce, sender: key.sender}].weight
+		if weight < i.priorityNode.Next().Key().(txMeta).weight {
+			return i.iteratePriority()
+		}
+	}
+
+	i.senderCursors[i.currentSender] = senderTx
+	return i
+}
+
+func (i *priorityNonceIterator) Tx() Tx {
+	return i.senderCursors[i.currentSender].Value.(Tx)
+}
+
+func (i *priorityNonceIterator) fetchSenderCursor(sender string) *huandu.Element {
+	senderTx, ok := i.senderCursors[sender]
+	if !ok {
+		senderTx = i.mempool.senderIndices[sender].Front()
+	}
+	return senderTx
 }
 
 // Select returns a set of transactions from the mempool, ordered by priority
@@ -228,20 +227,13 @@ func (p priorityNonceIterator) Tx() Tx {
 // The maxBytes parameter defines the maximum number of bytes of transactions to
 // return.
 func (mp *priorityNonceMempool) Select(_ [][]byte) Iterator {
-	var (
-		selectedTxs []Tx
-		txBytes     int64
-	)
-
-	iterator := priorityNonceIterator{senderCursors: make(map[string]*huandu.Element)}
 	mp.reorderPriorityTies()
-
-	iterator.priorityNode = mp.priorityIndex.Front()
-	for priorityNode != nil {
-
+	iterator := &priorityNonceIterator{
+		senderCursors: make(map[string]*huandu.Element),
+		priorityNode:  mp.priorityIndex.Front(),
 	}
 
-	return selectedTxs, nil
+	return iterator
 }
 
 type reorderKey struct {
@@ -289,14 +281,6 @@ func senderWeight(senderCursor *huandu.Element) int64 {
 	}
 
 	return weight
-}
-
-func (mp *priorityNonceMempool) fetchSenderCursor(sender string) *huandu.Element {
-	senderTx, ok := mp.senderCursors[sender]
-	if !ok {
-		senderTx = mp.senderIndices[sender].Front()
-	}
-	return senderTx
 }
 
 func (mp *priorityNonceMempool) nextPriority(priorityNode *huandu.Element) (int64, *huandu.Element) {

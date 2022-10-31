@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -78,6 +79,11 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 // SetSnapshot sets the snapshot store.
 func SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetSnapshot(snapshotStore, opts) }
+}
+
+// SetMempool sets the mempool on BaseApp.
+func SetMempool(mempool mempool.Mempool) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetMempool(mempool) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -241,9 +247,19 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
 
+// SetTxEncoder sets the TxEncoder if it wasn't provided in the BaseApp constructor.
+func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
+	app.txEncoder = txEncoder
+}
+
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
 func (app *BaseApp) SetQueryMultiStore(ms sdk.MultiStore) {
 	app.qms = ms
+}
+
+// SetMempool sets the mempool for the BaseApp and is required for the app to start up.
+func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
+	app.mempool = mempool
 }

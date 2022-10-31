@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -12,6 +13,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -28,6 +31,8 @@ const (
 	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
 	runTxModeSimulate                  // Simulate a transaction
 	runTxModeDeliver                   // Deliver a transaction
+	runTxPrepareProposal
+	runTxProcessProposal
 )
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -56,6 +61,7 @@ type BaseApp struct { //nolint: maligned
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
+	txEncoder         sdk.TxEncoder
 
 	mempool        mempool.Mempool  // application side mempool
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
@@ -74,8 +80,10 @@ type BaseApp struct { //nolint: maligned
 	//
 	// checkState is set on InitChain and reset on Commit
 	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
-	checkState   *state // for CheckTx
-	deliverState *state // for DeliverTx
+	checkState           *state // for CheckTx
+	deliverState         *state // for DeliverTx
+	processProposalState *state // for CheckTx
+	prepareProposalState *state // for DeliverTx
 
 	// an inter-block write-through cache provided to the context during deliverState
 	interBlockCache sdk.MultiStorePersistentCache
@@ -159,6 +167,11 @@ func NewBaseApp(
 
 	for _, option := range options {
 		option(app)
+	}
+
+	// if execution of options has left certain required fields nil, set them to sane default values
+	if app.mempool == nil {
+		app.mempool = mempool.NewNonceMempool()
 	}
 
 	if app.interBlockCache != nil {
@@ -401,6 +414,30 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	}
 }
 
+// setPrepareProposalState sets the BaseApp's deliverState with a branched multi-store
+// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
+// and provided header. It is set on InitChain and BeginBlock and set to nil on
+// Commit.
+func (app *BaseApp) setPrepareProposalState(header tmproto.Header) {
+	ms := app.cms.CacheMultiStore()
+	app.prepareProposalState = &state{
+		ms:  ms,
+		ctx: sdk.NewContext(ms, header, false, app.logger),
+	}
+}
+
+// setProcessProposalState sets the BaseApp's deliverState with a branched multi-store
+// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
+// and provided header. It is set on InitChain and BeginBlock and set to nil on
+// Commit.
+func (app *BaseApp) setProcessProposalState(header tmproto.Header) {
+	ms := app.cms.CacheMultiStore()
+	app.processProposalState = &state{
+		ms:  ms,
+		ctx: sdk.NewContext(ms, header, false, app.logger),
+	}
+}
+
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
 func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams {
@@ -507,11 +544,16 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 // Returns the application's deliverState if app is in runTxModeDeliver,
 // otherwise it returns the application's checkstate.
 func (app *BaseApp) getState(mode runTxMode) *state {
-	if mode == runTxModeDeliver {
+	switch mode {
+	case runTxModeDeliver:
 		return app.deliverState
+	case runTxPrepareProposal:
+		return app.prepareProposalState
+	case runTxProcessProposal:
+		return app.processProposalState
+	default:
+		return app.checkState
 	}
-
-	return app.checkState
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
@@ -654,11 +696,17 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		anteEvents = events.ToABCIEvents()
 	}
 
-	// TODO remove nil check when implemented
-	if mode == runTxModeCheck && app.mempool != nil {
-		err = app.mempool.Insert(ctx, tx.(mempool.Tx))
+	if mode == runTxModeCheck {
+		fmt.Println("inserting tx:", tx.GetMsgs())
+		err = app.mempool.Insert(ctx, tx)
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err
+		}
+	} else if mode == runTxModeDeliver {
+		err = app.mempool.Remove(tx)
+		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+			return gInfo, nil, anteEvents, priority,
+				fmt.Errorf("failed to remove tx from mempool: %w", err)
 		}
 	}
 
@@ -714,7 +762,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
 		// skip actual execution for (Re)CheckTx mode
-		if mode == runTxModeCheck || mode == runTxModeReCheck {
+		if mode == runTxModeCheck || mode == runTxModeReCheck || mode == runTxPrepareProposal || mode == runTxProcessProposal {
 			break
 		}
 
@@ -789,4 +837,57 @@ func createEvents(msg sdk.Msg) sdk.Events {
 	}
 
 	return sdk.Events{msgEvent}
+}
+
+func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, error) {
+	iterator := app.mempool.Select(req.Txs)
+	var (
+		txsBytes  [][]byte
+		byteCount int64
+	)
+	for iterator != nil {
+		memTx := iterator.Tx()
+
+		bz, encErr := app.txEncoder(memTx)
+		txSize := int64(len(bz))
+		if encErr != nil {
+			return nil, encErr
+		}
+
+		fmt.Println("messages:", memTx.GetMsgs())
+		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
+		if err != nil {
+			fmt.Println("error un prepare propossal", memTx)
+			removeErr := app.mempool.Remove(memTx)
+			if removeErr != nil {
+				return nil, removeErr
+			}
+			continue
+		} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
+			txsBytes = append(txsBytes, bz)
+		} else {
+			break
+		}
+
+		iterator = iterator.Next()
+	}
+
+	return txsBytes, nil
+}
+
+func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {
+	for _, txBytes := range req.Txs {
+		tx, err := app.txDecoder(txBytes)
+		if err != nil {
+			return err
+		}
+		fmt.Println(tx)
+
+		_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
+		if err != nil {
+			fmt.Println("error run tx process", tx)
+			_ = app.mempool.Remove(tx)
+		}
+	}
+	return nil
 }

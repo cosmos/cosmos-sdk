@@ -283,7 +283,7 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 }
 
 // CacheContextNoEmitEvent preserve the old behavior of CacheContext, before #13063
-// This function will only be present on v0.46 for that need to preserve the old behavior
+// This function will only be present on v0.46 for those who need to preserve the old behavior
 // As the previous behavior was a bug, this function will be removed on v0.47
 func (c Context) CacheContextNoEmitEvent() (cc Context, writeCache func()) {
 	cms := c.MultiStore().CacheMultiStore()

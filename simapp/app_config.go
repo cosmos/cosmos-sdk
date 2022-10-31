@@ -140,6 +140,9 @@ var (
 				Config: appconfig.WrapAny(&authmodulev1.Module{
 					Bech32Prefix:             "cosmos",
 					ModuleAccountPermissions: moduleAccPerms,
+					// By default modules authority is the governance module. However, this can be configured:
+					// Authority: "group", // A custom module authority can be set using a module name
+					// Authority: "cosmos1jv65s3grqf6v6jl3dp4t6c9t9rk99cd88lyufl", // or a specific address
 				}),
 			},
 			{

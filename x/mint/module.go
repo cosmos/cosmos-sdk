@@ -218,7 +218,6 @@ type MintInputs struct {
 	Config                 *modulev1.Module
 	Key                    *store.KVStoreKey
 	Cdc                    codec.Codec
-	Authority              map[string]sdk.AccAddress    `optional:"true"`
 	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
@@ -242,10 +241,15 @@ func ProvideModule(in MintInputs) MintOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		// default to governance authority if not provided
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		// if provided authority is not a valid address, assume it is a module name
+		if addr, err := sdk.AccAddressFromBech32(in.Config.Authority); err == nil {
+			authority = addr
+		} else {
+			authority = authtypes.NewModuleAddress(in.Config.Authority)
+		}
 	}
 
 	k := keeper.NewKeeper(

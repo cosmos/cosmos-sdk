@@ -11,4 +11,7 @@ message Module {
   };
 
   uint64 max_metadata_len = 1;
+
+  // authority defines the custom module authority. It not set, the default is governance.
+  string authority = 2;
 }

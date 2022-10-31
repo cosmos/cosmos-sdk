@@ -15,6 +15,9 @@ message Module {
 
   // module_account_permissions are module account permissions.
   repeated ModuleAccountPermission module_account_permissions = 2;
+
+  // authority defines the custom module authority. It not set, the default is governance.
+  string authority = 3;
 }
 
 // ModuleAccountPermission represents permissions for a module account.

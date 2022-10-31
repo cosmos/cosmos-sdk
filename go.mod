@@ -160,6 +160,9 @@ require (
 )
 
 replace (
+	// TODO to be removed in the PR bumping the API version
+	cosmossdk.io/api => ./api
+
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134

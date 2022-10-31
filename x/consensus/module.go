@@ -134,10 +134,9 @@ func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 type ConsensusParamInputs struct {
 	depinject.In
 
-	Cdc       codec.Codec
-	Key       *store.KVStoreKey
-	ModuleKey depinject.OwnModuleKey
-	Authority map[string]sdk.AccAddress `optional:"true"`
+	Config *modulev1.Module
+	Cdc    codec.Codec
+	Key    *store.KVStoreKey
 }
 
 type ConsensusParamOutputs struct {
@@ -149,10 +148,15 @@ type ConsensusParamOutputs struct {
 }
 
 func ProvideModule(in ConsensusParamInputs) ConsensusParamOutputs {
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		// default to governance authority if not provided
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		// if provided authority is not a valid address, assume it is a module name
+		if addr, err := sdk.AccAddressFromBech32(in.Config.Authority); err == nil {
+			authority = addr
+		} else {
+			authority = authtypes.NewModuleAddress(in.Config.Authority)
+		}
 	}
 
 	k := keeper.NewKeeper(in.Cdc, in.Key, authority.String())

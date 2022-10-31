@@ -205,8 +205,7 @@ type StakingInputs struct {
 	BankKeeper    types.BankKeeper
 	Cdc           codec.Codec
 	Key           *store.KVStoreKey
-	ModuleKey     depinject.OwnModuleKey
-	Authority     map[string]sdk.AccAddress `optional:"true"`
+
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
 }
@@ -220,10 +219,15 @@ type StakingOutputs struct {
 }
 
 func ProvideModule(in StakingInputs) StakingOutputs {
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		// default to governance authority if not provided
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		// if provided authority is not a valid address, assume it is a module name
+		if addr, err := sdk.AccAddressFromBech32(in.Config.Authority); err == nil {
+			authority = addr
+		} else {
+			authority = authtypes.NewModuleAddress(in.Config.Authority)
+		}
 	}
 
 	k := keeper.NewKeeper(

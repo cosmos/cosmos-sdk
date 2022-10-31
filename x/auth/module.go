@@ -195,12 +195,10 @@ func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 type AuthInputs struct {
 	depinject.In
 
-	Config    *modulev1.Module
-	ModuleKey depinject.OwnModuleKey
-	Key       *store.KVStoreKey
-	Cdc       codec.Codec
+	Config *modulev1.Module
+	Key    *store.KVStoreKey
+	Cdc    codec.Codec
 
-	Authority               map[string]sdk.AccAddress     `optional:"true"`
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() types.AccountI         `optional:"true"`
 
@@ -221,9 +219,15 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 		maccPerms[permission.Account] = permission.Permissions
 	}
 
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		authority = types.NewModuleAddress(govtypes.ModuleName)
+	// default to governance authority if not provided
+	authority := types.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		// if provided authority is not a valid address, assume it is a module name
+		if addr, err := sdk.AccAddressFromBech32(in.Config.Authority); err == nil {
+			authority = addr
+		} else {
+			authority = types.NewModuleAddress(in.Config.Authority)
+		}
 	}
 
 	if in.RandomGenesisAccountsFn == nil {

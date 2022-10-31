@@ -199,13 +199,6 @@ func NewSimApp(
 
 				// ADVANCED CONFIGURATION
 
-				// For providing a custom authority to a module simply add it below. By
-				// default the governance module is the default authority.
-				//
-				// map[string]sdk.AccAddress{
-				// 	minttypes.ModuleName: authtypes.NewModuleAddress(authtypes.ModuleName),
-				// },
-
 				//
 				// AUTH
 				//
@@ -227,7 +220,6 @@ func NewSimApp(
 				// For providing a custom inflation function for x/mint add here your
 				// custom function that implements the minttypes.InflationCalculationFn
 				// interface.
-
 			),
 		)
 	)

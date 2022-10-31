@@ -9,4 +9,7 @@ message Module {
   option (cosmos.app.v1alpha1.module) = {
     go_import: "github.com/cosmos/cosmos-sdk/x/slashing"
   };
+
+  // authority defines the custom module authority. It not set, the default is governance.
+  string authority = 1;
 }

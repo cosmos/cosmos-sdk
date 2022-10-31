@@ -242,7 +242,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 		spendable, hasNeg := sdk.Coins{balance}.SafeSub(locked)
 		if hasNeg {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds,
-				"locked amount exceeds account balance funds: %s >  %s", locked, balance)
+				"locked amount exceeds account balance funds: %s > %s", locked, balance)
 		}
 
 		if _, hasNeg := spendable.SafeSub(coin); hasNeg {

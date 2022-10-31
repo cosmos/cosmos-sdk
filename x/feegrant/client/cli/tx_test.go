@@ -271,7 +271,7 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 	s.Require().Equal(fromAddr, granter)
 	s.Require().NoError(err)
 
-	fromAddr, fromName, _, err := client.GetFromFields(clientCtx.Keyring, granter.String(), clientCtx.GenerateOnly)
+	fromAddr, fromName, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, granter.String())
 	s.Require().Equal(fromAddr, granter)
 	s.Require().NoError(err)
 

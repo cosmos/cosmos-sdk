@@ -105,37 +105,25 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-
-			fromAcc, err := txFactory.AccountRetriever().GetAccount(clientCtx, fromAddr)
-			if err != nil {
-				return err
-			}
-
-			txFactory = txFactory.WithAccountNumber(fromAcc.GetAccountNumber()).WithSequence(fromAcc.GetSequence())
-		}
-
-		appendMessagesToSingleTx, _ := cmd.Flags().GetBool(flagAppend)
-		// Combines all tx msgs and create single signed transaction
-		if appendMessagesToSingleTx {
-			var totalFees sdk.Coins
-			txBuilder := txCfg.NewTxBuilder()
-			msgs := make([]sdk.Msg, 0)
-			newGasLimit := uint64(0)
-
-			for scanner.Scan() {
-				unsignedStdTx := scanner.Tx()
-				fe, err := txCfg.WrapTxBuilder(unsignedStdTx)
+			if ms == "" {
+				from, _ := cmd.Flags().GetString(flags.FlagFrom)
+				_, fromName, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), from)
+				if err != nil {
+					return fmt.Errorf("error getting account from keybase: %w", err)
+				}
+				err = authclient.SignTx(txFactory, clientCtx, fromName, txBuilder, true, true)
 				if err != nil {
 					return err
 				}
-				// increment the gas
-				newGasLimit += fe.GetTx().GetGas()
-				// Individual fee values from each transaction need to be
-				// aggregated to calculate the total fee for the batch of transactions.
-				// https://github.com/cosmos/cosmos-sdk/issues/18064
-				unmergedFees := fe.GetTx().GetFee()
-				for _, fee := range unmergedFees {
-					totalFees = totalFees.Add(fee)
+			} else {
+				multisigAddr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), ms)
+				if err != nil {
+					return fmt.Errorf("error getting account from keybase: %w", err)
+				}
+				err = authclient.SignTxWithSignerAddress(
+					txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, true)
+				if err != nil {
+					return err
 				}
 				// append messages
 				msgs = append(msgs, unsignedStdTx.GetMsgs()...)
@@ -428,7 +416,8 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txFactory tx.Factory, 
 		if err != nil {
 			return errorsmod.Wrap(err, "error getting keybase multisig account")
 		}
-		multisigPubKey, err := multisigkey.GetPubKey()
+		from, _ := cmd.Flags().GetString(flags.FlagFrom)
+		_, fromName, _, err := client.GetFromFields(clientCtx, txF.Keybase(), from)
 		if err != nil {
 			return err
 		}
@@ -438,7 +427,7 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txFactory tx.Factory, 
 			multisigAddr, err := sdk.AccAddressFromBech32(multisig)
 			if err != nil {
 				// Bech32 decode error, maybe it's a name, we try to fetch from keyring
-				multisigAddr, _, _, err = client.GetFromFields(txFactory.Keybase(), multisig, clientCtx.GenerateOnly)
+				multisigAddr, _, _, err = client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}

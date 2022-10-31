@@ -428,23 +428,22 @@ func (ctx Context) printOutput(out []byte) error {
 	return nil
 }
 
-// GetFromFields returns a from account address, account name and keyring type, given either an address or key name.
-// If clientCtx.Simulate is true the keystore is not accessed and a valid address must be provided
-// If clientCtx.GenerateOnly is true the keystore is only accessed if a key name is provided
-// If from is empty, the default key if specified in the context will be used
+// GetFromFields returns a from account address, account name and keyring type, given either
+// an address or key name. If genOnly is true, only a valid Bech32 cosmos
+// address is returned.
 func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccAddress, string, keyring.KeyType, error) {
-	if from == "" && clientCtx.KeyringDefaultKeyName != "" {
-		from = clientCtx.KeyringDefaultKeyName
-		_ = clientCtx.PrintString(fmt.Sprintf("No key name or address provided; using the default key: %s\n", clientCtx.KeyringDefaultKeyName))
-	}
-
 	if from == "" {
 		return nil, "", 0, nil
 	}
 
-	addr, err := clientCtx.AddressCodec.StringToBytes(from)
+	addr, err := sdk.AccAddressFromBech32(from)
 	switch {
 	case clientCtx.Simulate:
+		if err != nil {
+			return nil, "", 0, errors.Wrap(err, "a valid bech32 address must be provided in simulation mode")
+		}
+		return addr, "", 0, nil
+	case clientCtx.GenerateOnly:
 		if err != nil {
 			return nil, "", 0, fmt.Errorf("a valid address must be provided in simulation mode: %w", err)
 		}
@@ -457,9 +456,9 @@ func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccA
 		}
 	}
 
-	var k *keyring.Record
+	var info keyring.Info
 	if err == nil {
-		k, err = kr.KeyByAddress(addr)
+		info, err = kr.KeyByAddress(addr)
 		if err != nil {
 			return nil, "", 0, err
 		}
@@ -481,7 +480,7 @@ func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccA
 // NewKeyringFromBackend gets a Keyring object from a backend
 func NewKeyringFromBackend(ctx Context, backend string) (keyring.Keyring, error) {
 	if ctx.Simulate {
-		backend = keyring.BackendMemory
+		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input, ctx.KeyringOptions...)
 	}
 
 	return keyring.New(sdk.KeyringServiceName(), backend, ctx.KeyringDir, ctx.Input, ctx.Codec, ctx.KeyringOptions...)

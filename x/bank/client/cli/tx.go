@@ -39,16 +39,11 @@ func NewTxCmd() *cobra.Command {
 // For a better UX this command is limited to send funds from one account to two or more accounts.
 func NewMultiSendTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "multi-send <from_key_or_address> <to_address_1> <to_address_2>... <amount>",
-		Short: "Send funds from one account to two or more accounts.",
-		Long: `Send funds from one account to two or more accounts.
-By default, sends the [amount] to each address of the list.
-Using the '--split' flag, the [amount] is split equally between the addresses.
-Note, the '--from' flag is ignored as it is implied from [from_key_or_address] and 
-separate addresses with space.
-When using '--dry-run' a key name cannot be used, only a bech32 address.`,
-		Example: fmt.Sprintf("%s tx bank multi-send cosmos1... cosmos1... cosmos1... cosmos1... 10stake", version.AppName),
-		Args:    cobra.MinimumNArgs(4),
+		Use: "send [from_key_or_address] [to_address] [amount]",
+		Short: `Send funds from one account to another. 
+		Note, the'--from' flag is ignored as it is implied from [from_key_or_address].
+		When using '--dry-run' a key name cannot be used, only a bech32 address.`,
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cmd.Flags().Set(flags.FlagFrom, args[0])
 			if err != nil {

@@ -61,7 +61,7 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 			Sequence:      accSeqs[i],
 			PubKey:        p.PubKey(),
 		}
-		signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
+		signBytes, err := txConfig.SignModeHandler().GetSignBytes(nil, signMode, signerData, tx.GetTx())
 		if err != nil {
 			panic(err)
 		}

@@ -316,7 +316,7 @@ func initTestnetFiles(
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
 
-		if err := tx.Sign(txFactory, nodeDirName, txBuilder, true); err != nil {
+		if err := tx.Sign(nil, txFactory, nodeDirName, txBuilder, true); err != nil {
 			return err
 		}
 

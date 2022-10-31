@@ -514,7 +514,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			WithKeybase(kb).
 			WithTxConfig(cfg.TxConfig)
 
-		err = tx.Sign(txFactory, nodeDirName, txBuilder, true)
+		err = tx.Sign(nil, txFactory, nodeDirName, txBuilder, true)
 		if err != nil {
 			return nil, err
 		}

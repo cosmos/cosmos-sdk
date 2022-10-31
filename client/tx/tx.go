@@ -106,7 +106,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	err = Sign(txf, clientCtx.GetFromName(), tx, true)
+	err = Sign(nil, txf, clientCtx.GetFromName(), tx, true)
 	if err != nil {
 		return err
 	}
@@ -149,6 +149,7 @@ func CalculateGas(
 // SignWithPrivKey signs a given tx with the given private key, and returns the
 // corresponding SignatureV2 if the signing is successful.
 func SignWithPrivKey(
+	ctx context.Context,
 	signMode signing.SignMode, signerData authsigning.SignerData,
 	txBuilder client.TxBuilder, priv cryptotypes.PrivKey, txConfig client.TxConfig,
 	accSeq uint64,
@@ -156,7 +157,7 @@ func SignWithPrivKey(
 	var sigV2 signing.SignatureV2
 
 	// Generate the bytes to be signed.
-	signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+	signBytes, err := txConfig.SignModeHandler().GetSignBytes(ctx, signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return sigV2, err
 	}
@@ -227,7 +228,7 @@ func checkMultipleSigners(tx authsigning.Tx) error {
 // Signing a transaction with mutltiple signers in the DIRECT mode is not supprted and will
 // return an error.
 // An error is returned upon failure.
-func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {
+func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {
 	if txf.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -298,7 +299,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 	}
 
 	// Generate the bytes to be signed.
-	bytesToSign, err := txf.txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := txf.txConfig.SignModeHandler().GetSignBytes(ctx, signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}

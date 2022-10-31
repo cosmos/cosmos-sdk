@@ -121,12 +121,14 @@ func TestGetFromFields(t *testing.T) {
 	path := hd.CreateHDPath(118, 0, 0).String()
 
 	testCases := []struct {
+		name        string
 		clientCtx   client.Context
 		keyring     func() keyring.Keyring
 		from        string
 		expectedErr string
 	}{
 		{
+			name: "valid key alice from memory keyring",
 			keyring: func() keyring.Keyring {
 				kb := keyring.NewInMemory()
 
@@ -138,6 +140,7 @@ func TestGetFromFields(t *testing.T) {
 			from: "alice",
 		},
 		{
+			name: "valid key alice from test keyring",
 			keyring: func() keyring.Keyring {
 				kb, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, ctx.KeyringOptions...)
 				require.NoError(t, err)
@@ -150,6 +153,7 @@ func TestGetFromFields(t *testing.T) {
 			from: "alice",
 		},
 		{
+			name: "address not present in memory keyring",
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory()
 			},
@@ -157,6 +161,7 @@ func TestGetFromFields(t *testing.T) {
 			expectedErr: "key with address 8953EB4F1B47C7982A698DEB7C557D6E4F4CD923 not found: key not found",
 		},
 		{
+			name: "key is not from test keyring",
 			keyring: func() keyring.Keyring {
 				kb, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, ctx.KeyringOptions...)
 				require.NoError(t, err)
@@ -166,6 +171,7 @@ func TestGetFromFields(t *testing.T) {
 			expectedErr: "alice.info: key not found",
 		},
 		{
+			name: "valid bech32 address is allowed when simulation is true",
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory()
 			},
@@ -173,6 +179,7 @@ func TestGetFromFields(t *testing.T) {
 			clientCtx: client.Context{}.WithSimulation(true),
 		},
 		{
+			name: "only bech32 address is allowed as from key in simulation mode",
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory()
 			},
@@ -181,6 +188,7 @@ func TestGetFromFields(t *testing.T) {
 			expectedErr: "a valid bech32 address must be provided in simulation mode",
 		},
 		{
+			name: "valid bech32 address is allowed when generate-only is true",
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory()
 			},
@@ -188,6 +196,7 @@ func TestGetFromFields(t *testing.T) {
 			clientCtx: client.Context{}.WithGenerateOnly(true),
 		},
 		{
+			name: "only bech32 address is allowed as from key in generate-only mode",
 			keyring: func() keyring.Keyring {
 				return keyring.NewInMemory()
 			},
@@ -196,6 +205,7 @@ func TestGetFromFields(t *testing.T) {
 			expectedErr: "must provide a valid Bech32 address in generate-only mode",
 		},
 		{
+			name: "only bech32 address is allowed as from key even when key is present in the keyring",
 			keyring: func() keyring.Keyring {
 				kb, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, ctx.KeyringOptions...)
 				require.NoError(t, err)

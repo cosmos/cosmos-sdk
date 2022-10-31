@@ -2,6 +2,7 @@ package tx
 
 import (
 	"bytes"
+	"context"
 
 	"github.com/stretchr/testify/suite"
 
@@ -146,7 +147,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 		Sequence:      mseq,
 		PubKey:        multisigPk,
 	}
-	mSignBytes, err := signModeHandler.GetSignBytes(nil, signModeHandler.DefaultMode(), signerData, sigTx)
+	mSignBytes, err := signModeHandler.GetSignBytes(context.TODO(), signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
 	mSigBz1, err := privKey.Sign(mSignBytes)
 	s.Require().NoError(err)

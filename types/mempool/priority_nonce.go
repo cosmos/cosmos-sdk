@@ -27,7 +27,7 @@ type priorityNonceMempool struct {
 	priorityCounts map[int64]int
 	senderIndices  map[string]*huandu.SkipList
 	scores         map[txMeta]txMeta
-	onRead         func(tx Tx)
+	onRead         func(tx sdk.Tx)
 }
 
 type priorityNonceIterator struct {
@@ -85,7 +85,7 @@ func txMetaLess(a, b any) int {
 type PriorityNonceMempoolOption func(*priorityNonceMempool)
 
 // WithOnRead sets a callback to be called when a tx is read from the mempool.
-func WithOnRead(onRead func(tx Tx)) PriorityNonceMempoolOption {
+func WithOnRead(onRead func(tx sdk.Tx)) PriorityNonceMempoolOption {
 	return func(mp *priorityNonceMempool) {
 		mp.onRead = onRead
 	}
@@ -122,7 +122,7 @@ func NewPriorityMempool(opts ...PriorityNonceMempoolOption) Mempool {
 //
 // Inserting a duplicate tx with a different priority overwrites the existing tx,
 // changing the total order of the mempool.
-func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx Tx) error {
+func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -177,20 +177,40 @@ func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx Tx) error {
 }
 
 func (i *priorityNonceIterator) iteratePriority() Iterator {
-	i.priorityNode = i.priorityNode.Next()
-	i.inSender = false
+	// beginning of iteration
+	if i.priorityNode == nil {
+		i.priorityNode = i.mempool.priorityIndex.Front()
+	} else {
+		i.priorityNode = i.priorityNode.Next()
+	}
+
+	// end of iteration
+	if i.priorityNode == nil {
+		return nil
+	}
+
+	i.currentSender = i.priorityNode.Key().(txMeta).sender
+
+	nextPriorityNode := i.priorityNode.Next()
+	if nextPriorityNode != nil {
+		i.nextPriority = nextPriorityNode.Key().(txMeta).priority
+	} else {
+		i.nextPriority = math.MinInt64
+	}
+
 	return i.Next()
 }
 
 func (i *priorityNonceIterator) Next() Iterator {
-	if !i.inSender {
-		i.currentSender = i.priorityNode.Value.(txMeta).sender
-		i.inSender = true
+	if i.priorityNode == nil {
+		return nil
 	}
 
 	senderCursor := i.fetchSenderCursor(i.currentSender)
-	senderTx := senderCursor.Next()
-	key := senderTx.Key().(txMeta)
+	if senderCursor == nil {
+		return i.iteratePriority()
+	}
+	key := senderCursor.Key().(txMeta)
 
 	// we've reached a transaction with a priority lower than the next highest priority in the pool
 	if key.priority < i.nextPriority {
@@ -204,20 +224,22 @@ func (i *priorityNonceIterator) Next() Iterator {
 		}
 	}
 
-	i.senderCursors[i.currentSender] = senderTx
+	i.senderCursors[i.currentSender] = senderCursor
 	return i
 }
 
-func (i *priorityNonceIterator) Tx() Tx {
-	return i.senderCursors[i.currentSender].Value.(Tx)
+func (i *priorityNonceIterator) Tx() sdk.Tx {
+	return i.senderCursors[i.currentSender].Value.(sdk.Tx)
 }
 
 func (i *priorityNonceIterator) fetchSenderCursor(sender string) *huandu.Element {
-	senderTx, ok := i.senderCursors[sender]
+	cursor, ok := i.senderCursors[sender]
 	if !ok {
-		senderTx = i.mempool.senderIndices[sender].Front()
+		cursor = i.mempool.senderIndices[sender].Front()
+		i.senderCursors[sender] = cursor
+		return cursor
 	}
-	return senderTx
+	return cursor.Next()
 }
 
 // Select returns a set of transactions from the mempool, ordered by priority
@@ -227,19 +249,27 @@ func (i *priorityNonceIterator) fetchSenderCursor(sender string) *huandu.Element
 // The maxBytes parameter defines the maximum number of bytes of transactions to
 // return.
 func (mp *priorityNonceMempool) Select(_ [][]byte) Iterator {
-	mp.reorderPriorityTies()
-	iterator := &priorityNonceIterator{
-		senderCursors: make(map[string]*huandu.Element),
-		priorityNode:  mp.priorityIndex.Front(),
+	if mp.priorityIndex.Len() == 0 {
+		return nil
 	}
 
-	return iterator
+	mp.reorderPriorityTies()
+
+	priorityNode := mp.priorityIndex.Front()
+	iterator := &priorityNonceIterator{
+		mempool:       mp,
+		senderCursors: make(map[string]*huandu.Element),
+		priorityNode:  priorityNode,
+		currentSender: priorityNode.Key().(txMeta).sender,
+	}
+
+	return iterator.iteratePriority()
 }
 
 type reorderKey struct {
 	deleteKey txMeta
 	insertKey txMeta
-	tx        Tx
+	tx        sdk.Tx
 }
 
 func (mp *priorityNonceMempool) reorderPriorityTies() {
@@ -250,7 +280,7 @@ func (mp *priorityNonceMempool) reorderPriorityTies() {
 		if mp.priorityCounts[key.priority] > 1 {
 			newKey := key
 			newKey.weight = senderWeight(key.senderElement)
-			reordering = append(reordering, reorderKey{deleteKey: key, insertKey: newKey, tx: node.Value.(Tx)})
+			reordering = append(reordering, reorderKey{deleteKey: key, insertKey: newKey, tx: node.Value.(sdk.Tx)})
 		}
 		node = node.Next()
 	}
@@ -306,7 +336,7 @@ func (mp *priorityNonceMempool) CountTx() int {
 }
 
 // Remove removes a transaction from the mempool in O(log n) time, returning an error if unsuccessful.
-func (mp *priorityNonceMempool) Remove(tx Tx) error {
+func (mp *priorityNonceMempool) Remove(tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err

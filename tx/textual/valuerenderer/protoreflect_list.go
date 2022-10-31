@@ -1,4 +1,4 @@
-package valuerenderer_test
+package valuerenderer
 
 import (
 	"google.golang.org/protobuf/proto"

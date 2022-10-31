@@ -2,9 +2,11 @@ package valuerenderer
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/math"
 )
 
@@ -27,5 +29,19 @@ func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Sc
 }
 
 func (vr decValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
-	panic("implement me")
+	if len(screens) != 1 {
+		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
+	}
+
+	parsed, err := math.ParseDec(screens[0].Text)
+	if err != nil {
+		return protoreflect.Value{}, err
+	}
+
+	a := basev1beta1.DecProto{
+		Dec: parsed,
+	}
+
+	msg := a.ProtoReflect()
+	return protoreflect.ValueOfMessage(msg), nil
 }

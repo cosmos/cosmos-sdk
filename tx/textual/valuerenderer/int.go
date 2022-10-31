@@ -2,7 +2,9 @@ package valuerenderer
 
 import (
 	"context"
+	"fmt"
 
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/math"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -26,5 +28,19 @@ func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Sc
 }
 
 func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
-	panic("implement me")
+	if len(screens) != 1 {
+		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
+	}
+
+	parsedInt, err := math.ParseInt(screens[0].Text)
+	if err != nil {
+		return protoreflect.Value{}, err
+	}
+
+	i := basev1beta1.IntProto{
+		Int: parsedInt.String(),
+	}
+
+	msg := i.ProtoReflect()
+	return protoreflect.ValueOfMessage(msg), nil
 }

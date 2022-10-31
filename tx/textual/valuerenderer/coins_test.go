@@ -34,7 +34,7 @@ func TestCoinsJsonTestcases(t *testing.T) {
 					ctx = context.WithValue(ctx, mockCoinMetadataKey(coin.Denom), tc.Metadata[coin.Denom])
 				}
 
-				listValue := NewGenericList(tc.Proto)
+				listValue := valuerenderer.NewGenericList(tc.Proto)
 				screens, err := vr.Format(ctx, protoreflect.ValueOf(listValue))
 
 				if tc.Error {

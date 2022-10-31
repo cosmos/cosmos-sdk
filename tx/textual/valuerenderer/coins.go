@@ -77,6 +77,14 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 }
 
 func (vr coinsValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/13153
-	panic("implement me, see #13153")
+	if len(screens) != 1 {
+		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
+	}
+
+	coins, err := corecoins.ParseCoins(screens[0].Text)
+	if err != nil {
+		return protoreflect.Value{}, err
+	}
+
+	return protoreflect.ValueOf(NewGenericList(coins)), nil
 }

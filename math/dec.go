@@ -926,3 +926,25 @@ func FormatDec(v string) (string, error) {
 
 	return intPart + "." + decPart, nil
 }
+
+func ParseDec(v string) (string, error) {
+	parts := strings.Split(v, ".")
+	if len(parts) > 2 {
+		return "", fmt.Errorf("invalid decimal: too many points in %s", v)
+	}
+
+	intPart, err := ParseInt(parts[0])
+	if err != nil {
+		return "", err
+	}
+
+	if !hasOnlyDigits(parts[1]) {
+		return "", fmt.Errorf("non-digits detected after decimal point in: %q", parts[1])
+	}
+
+	if len(parts) == 1 {
+		return intPart.String(), nil
+	}
+
+	return intPart.String() + "." + parts[1], nil
+}

@@ -88,3 +88,25 @@ func FormatCoins(coins []*basev1beta1.Coin, metadata []*bankv1beta1.Metadata) (s
 
 	return strings.Join(formatted, ", "), nil
 }
+
+func ParseCoins(coins string) ([]*basev1beta1.Coin, error) {
+	coinsStr := strings.Split(coins, ", ")
+	parsedCoins := make([]*basev1beta1.Coin, len(coinsStr), 0)
+
+	for _, coinStr := range coinsStr {
+		coinArr := strings.Split(coinStr, " ")
+
+		decStr, err := math.ParseDec(coinArr[0])
+		if err != nil {
+			return []*basev1beta1.Coin{}, err
+		}
+
+		coin := &basev1beta1.Coin{
+			Amount: decStr,
+			Denom:  coinArr[1],
+		}
+		parsedCoins = append(parsedCoins, coin)
+	}
+
+	return parsedCoins, nil
+}

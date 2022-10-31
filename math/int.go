@@ -474,3 +474,28 @@ func FormatInt(v string) (string, error) {
 
 	return sign + v, nil
 }
+
+// ParseInt formats an value-rendered string into an integer
+func ParseInt(v string) (Int, error) {
+	sign := ""
+	if v[0] == '-' {
+		sign = "-"
+		v = v[1:]
+	}
+	if len(v) > 1 {
+		v = strings.TrimLeft(v, "0")
+	}
+
+	startOffset := 3
+	for outputIndex := len(v); outputIndex > startOffset; {
+		outputIndex -= 4
+		v = v[:outputIndex] + v[outputIndex+1:]
+	}
+
+	val, ok := NewIntFromString(sign + v)
+	if !ok {
+		return Int{}, fmt.Errorf("error parsing integer %s", sign+v)
+	}
+
+	return val, nil
+}

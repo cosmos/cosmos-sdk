@@ -517,7 +517,7 @@ type Module struct {
 	unknownFields protoimpl.UnknownFields
 
 	FeeCollectorName string `protobuf:"bytes,1,opt,name=fee_collector_name,json=feeCollectorName,proto3" json:"fee_collector_name,omitempty"`
-	// authority defines the custom module authority. It not set, the default is governance.
+	// authority defines the custom module authority. If not set, defaults to the governance module.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 

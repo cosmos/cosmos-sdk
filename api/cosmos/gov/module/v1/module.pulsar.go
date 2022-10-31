@@ -501,7 +501,7 @@ type Module struct {
 	unknownFields protoimpl.UnknownFields
 
 	MaxMetadataLen uint64 `protobuf:"varint,1,opt,name=max_metadata_len,json=maxMetadataLen,proto3" json:"max_metadata_len,omitempty"`
-	// authority defines the custom module authority. It not set, the default is governance.
+	// authority defines the custom module authority. If not set, defaults to the governance module.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 

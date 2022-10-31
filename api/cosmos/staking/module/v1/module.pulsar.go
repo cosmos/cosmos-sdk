@@ -580,7 +580,7 @@ type Module struct {
 	// of module names which provide a staking hooks instance. If no order is
 	// provided, then hooks will be applied in alphabetical order of module names.
 	HooksOrder []string `protobuf:"bytes,1,rep,name=hooks_order,json=hooksOrder,proto3" json:"hooks_order,omitempty"`
-	// authority defines the custom module authority. It not set, the default is governance.
+	// authority defines the custom module authority. If not set, defaults to the governance module.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 

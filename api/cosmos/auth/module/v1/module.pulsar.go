@@ -1202,7 +1202,7 @@ type Module struct {
 	Bech32Prefix string `protobuf:"bytes,1,opt,name=bech32_prefix,json=bech32Prefix,proto3" json:"bech32_prefix,omitempty"`
 	// module_account_permissions are module account permissions.
 	ModuleAccountPermissions []*ModuleAccountPermission `protobuf:"bytes,2,rep,name=module_account_permissions,json=moduleAccountPermissions,proto3" json:"module_account_permissions,omitempty"`
-	// authority defines the custom module authority. It not set, the default is governance.
+	// authority defines the custom module authority. If not set, defaults to the governance module.
 	Authority string `protobuf:"bytes,3,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 

@@ -71,7 +71,7 @@ func (k Keeper) GetTokenizeShareRecordByDenom(ctx sdk.Context, denom string) (ty
 func (k Keeper) GetAllTokenizeShareRecords(ctx sdk.Context) (tokenizeShareRecords []types.TokenizeShareRecord) {
 	store := ctx.KVStore(k.storeKey)
 
-	var it sdk.Iterator = sdk.KVStorePrefixIterator(store, types.TokenizeShareRecordPrefix)
+	it := sdk.KVStorePrefixIterator(store, types.TokenizeShareRecordPrefix)
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {

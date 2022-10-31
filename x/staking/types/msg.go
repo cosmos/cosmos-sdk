@@ -60,7 +60,6 @@ func NewMsgCreateValidator(
 		DelegatorAddress: sdk.AccAddress(valAddr).String(),
 		ValidatorAddress: valAddr.String(),
 		Pubkey:           pkAny,
-		Value:            selfDelegation,
 		Commission:       commission,
 	}, nil
 }
@@ -128,10 +127,6 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 
 	if err := msg.Commission.Validate(); err != nil {
 		return err
-	}
-
-	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
-		return ErrSelfDelegationBelowMinimum
 	}
 
 	return nil

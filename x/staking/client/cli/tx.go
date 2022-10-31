@@ -26,7 +26,6 @@ var (
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
-	defaultMinSelfDelegation       = "1"
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
@@ -410,10 +409,8 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	commission rate:             %s
 	commission max rate:         %s
 	commission max change rate:  %s
-	minimum self delegation:     %s
 `, defaultAmount, defaultCommissionRate,
-		defaultCommissionMaxRate, defaultCommissionMaxChangeRate,
-		defaultMinSelfDelegation)
+		defaultCommissionMaxRate, defaultCommissionMaxChangeRate)
 
 	return fsCreateValidator, defaultsDesc
 }
@@ -428,7 +425,6 @@ type TxCreateValidatorConfig struct {
 	CommissionRate          string
 	CommissionMaxRate       string
 	CommissionMaxChangeRate string
-	MinSelfDelegation       string
 
 	PubKey cryptotypes.PubKey
 
@@ -525,10 +521,6 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 
 	if c.CommissionMaxChangeRate == "" {
 		c.CommissionMaxChangeRate = defaultCommissionMaxChangeRate
-	}
-
-	if c.MinSelfDelegation == "" {
-		c.MinSelfDelegation = defaultMinSelfDelegation
 	}
 
 	return c, nil

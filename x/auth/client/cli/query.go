@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -43,6 +44,7 @@ func GetQueryCmd() *cobra.Command {
 		GetAccountCmd(),
 		GetAccountsCmd(),
 		QueryParamsCmd(),
+		QueryModuleAccountByNameCmd(),
 	)
 
 	return cmd
@@ -139,6 +141,40 @@ func GetAccountsCmd() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all-accounts")
+
+	return cmd
+}
+
+// QueryModuleAccountByNameCmd returns a command to
+func QueryModuleAccountByNameCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "module-account [module-name]",
+		Short:   "Query module account info by module name",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s q auth module-account auth", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			moduleName := args[0]
+			if len(moduleName) == 0 {
+				return fmt.Errorf("module name should not be empty")
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.ModuleAccountByName(context.Background(), &types.QueryModuleAccountByNameRequest{Name: moduleName})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

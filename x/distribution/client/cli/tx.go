@@ -279,7 +279,7 @@ $ %s tx distribution withdraw-tokenize-share-rewards --from mykey
 				return err
 			}
 
-			msg := types.NewMsgWithdrawAllShareRecordReward(clientCtx.GetFromAddress())
+			msg := types.NewMsgWithdrawAllShareReward(clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -316,7 +316,7 @@ $ %s tx distribution withdraw-tokenize-share-rewards 1 --from mykey
 				return err
 			}
 
-			msg := types.NewMsgWithdrawShareRecordReward(clientCtx.GetFromAddress(), uint64(recordId))
+			msg := types.NewMsgWithdrawShareReward(clientCtx.GetFromAddress(), uint64(recordId))
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

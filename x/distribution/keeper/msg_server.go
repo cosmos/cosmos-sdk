@@ -155,7 +155,7 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommu
 }
 
 // WithdrawTokenizeShareRecordReward defines a method to withdraw reward for owning TokenizeShareRecord
-func (k msgServer) WithdrawShareRecordReward(goCtx context.Context, msg *types.MsgWithdrawShareRecordReward) (*types.MsgWithdrawShareRecordRewardResponse, error) {
+func (k msgServer) WithdrawShareReward(goCtx context.Context, msg *types.MsgWithdrawShareReward) (*types.MsgWithdrawShareRewardResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.OwnerAddress)
@@ -179,11 +179,11 @@ func (k msgServer) WithdrawShareRecordReward(goCtx context.Context, msg *types.M
 		}
 	}()
 
-	return &types.MsgWithdrawShareRecordRewardResponse{}, nil
+	return &types.MsgWithdrawShareRewardResponse{}, nil
 }
 
 // WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for owning TokenizeShareRecord
-func (k msgServer) WithdrawAllShareRecordReward(goCtx context.Context, msg *types.MsgWithdrawAllShareRecordReward) (*types.MsgWithdrawAllShareRecordRewardResponse, error) {
+func (k msgServer) WithdrawAllShareReward(goCtx context.Context, msg *types.MsgWithdrawAllShareReward) (*types.MsgWithdrawAllShareRewardResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.OwnerAddress)
@@ -207,5 +207,5 @@ func (k msgServer) WithdrawAllShareRecordReward(goCtx context.Context, msg *type
 		}
 	}()
 
-	return &types.MsgWithdrawAllShareRecordRewardResponse{}, nil
+	return &types.MsgWithdrawAllShareRewardResponse{}, nil
 }

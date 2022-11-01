@@ -311,12 +311,12 @@ $ %s tx distribution withdraw-tokenize-share-rewards 1 --from mykey
 				return err
 			}
 
-			recordId, err := strconv.Atoi(args[0])
+			recordId, err := strconv.ParseUint(args[0], 10, 0)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgWithdrawShareReward(clientCtx.GetFromAddress(), uint64(recordId))
+			msg := types.NewMsgWithdrawShareReward(clientCtx.GetFromAddress(), recordId)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

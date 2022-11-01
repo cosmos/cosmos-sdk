@@ -773,13 +773,13 @@ func GetCmdQueryTokenizeShareRecordById() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			id, err := strconv.Atoi(args[0])
+			id, err := strconv.ParseUint(args[0], 10, 0)
 			if err != nil {
 				return err
 			}
 
 			res, err := queryClient.TokenizeShareRecordById(cmd.Context(), &types.QueryTokenizeShareRecordByIdRequest{
-				Id: uint64(id),
+				Id: id,
 			})
 			if err != nil {
 				return err

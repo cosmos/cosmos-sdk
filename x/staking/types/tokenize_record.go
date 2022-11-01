@@ -2,7 +2,6 @@ package types
 
 import (
 	fmt "fmt"
-	"strconv"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,5 +13,5 @@ func (r TokenizeShareRecord) GetModuleAddress() sdk.AccAddress {
 }
 
 func (r TokenizeShareRecord) GetShareTokenDenom() string {
-	return fmt.Sprintf("%s/%s", strings.ToLower(r.Validator), strconv.Itoa(int(r.Id)))
+	return fmt.Sprintf("%s/%d", strings.ToLower(r.Validator), r.Id)
 }

@@ -39,7 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Improvements
+
+* Bump github.com/cosmos/iavl to v0.19.4 (from v0.19.3) to prevent possible app-hash mismatch in new IAVL store.
 
 ---
 

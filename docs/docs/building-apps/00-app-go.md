@@ -15,12 +15,8 @@ Since `v0.47.0` the Cosmos SDK have made easier wiring an `app.go` thanks to dep
 https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_config.go
 ```
 
+## `app_config.go`
+
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app.go
-```
-
-## `app_legacy.go`
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_legacy.go
 ```

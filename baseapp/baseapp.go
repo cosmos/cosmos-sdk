@@ -169,7 +169,7 @@ func NewBaseApp(
 
 	// if execution of options has left certain required fields nil, set them to sane default values
 	if app.mempool == nil {
-		app.mempool = mempool.NewNonceMempool()
+		app.SetMempool(mempool.NewNonceMempool())
 	}
 
 	if app.interBlockCache != nil {

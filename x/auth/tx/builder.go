@@ -310,7 +310,6 @@ func (w *wrapper) setSignerInfos(infos []*tx.SignerInfo) {
 	w.tx.AuthInfo.SignerInfos = infos
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
-
 }
 
 func (w *wrapper) setSignerInfoAtIndex(index int, info *tx.SignerInfo) {
@@ -367,7 +366,6 @@ func (w *wrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
 func (w *wrapper) SetExtensionOptions(extOpts ...*codectypes.Any) {
 	w.tx.Body.ExtensionOptions = extOpts
 	w.bodyBz = nil
-
 }
 
 func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {

@@ -72,7 +72,6 @@ func queryEvidence(clientCtx client.Context, hash string) error {
 	queryClient := types.NewQueryClient(clientCtx)
 
 	params := &types.QueryEvidenceRequest{EvidenceHash: decodedHash}
-
 	res, err := queryClient.Evidence(context.Background(), params)
 	if err != nil {
 		return err

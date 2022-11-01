@@ -196,7 +196,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 }
 
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {
@@ -212,11 +212,9 @@ func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 type DistrInputs struct {
 	depinject.In
 
-	ModuleKey depinject.OwnModuleKey
-	Config    *modulev1.Module
-	Key       *store.KVStoreKey
-	Cdc       codec.Codec
-	Authority map[string]sdk.AccAddress `optional:"true"`
+	Config *modulev1.Module
+	Key    *store.KVStoreKey
+	Cdc    codec.Codec
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -240,10 +238,10 @@ func ProvideModule(in DistrInputs) DistrOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		// default to governance authority if not provided
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(

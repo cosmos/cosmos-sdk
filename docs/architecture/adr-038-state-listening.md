@@ -5,6 +5,7 @@
 * 11/23/2020: Initial draft
 * 10/06/2022: Introduce plugin system based on hashicorp/go-plugin
 * 10/30/2022: Updated ADR based on review feedback, move listening to `CommitMultiStore` and add a `MemoryListener` [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516)
+* 11/01/2022: Add gRPC client, server and plugin implementation examples
 
 ## Status
 
@@ -385,27 +386,38 @@ Each plugin must have a struct that implements the `plugin.Plugin` interface and
 Each plugin must also have a message protocol defined for the gRPC service:
 
 ```go
+// streaming/plugins/abci/{plugin_version}/interface.go
+
+// Handshake is a common handshake that is shared by streaming and host.
+// This prevents users from executing bad plugins or executing a plugin
+// directory. It is a UX feature, not a security feature.
+var Handshake = plugin.HandshakeConfig{
+    ProtocolVersion:  1,
+    MagicCookieKey:   "ABCI_LISTENER_PLUGIN",
+    MagicCookieValue: "ef78114d-7bdf-411c-868f-347c99a78345",
+}
+
 // ListenerPlugin is the base struc for all kinds of go-plugin implementations
 // It will be included in interfaces of different Plugins
-type ABCIListenerPlugin interface {
-	// GRPCPlugin must still implement the Plugin interface
-	plugin.Plugin
-	// Concrete implementation, written in Go. This is only used for plugins
-	// that are written in Go.
-	Impl baseapp.ABCIListener
+type ABCIListenerPlugin struct {
+    // GRPCPlugin must still implement the Plugin interface
+    plugin.Plugin
+    // Concrete implementation, written in Go. This is only used for plugins
+    // that are written in Go.
+    Impl baseapp.ABCIListener
 }
 
 func (p *ListenerGRPCPlugin) GRPCServer(_ *plugin.GRPCBroker, s *grpc.Server) error {
-	RegisterABCIListenerServiceServer(s, &GRPCServer{Impl: p.Impl})
-	return nil
+    RegisterABCIListenerServiceServer(s, &GRPCServer{Impl: p.Impl})
+    return nil
 }
 
 func (p *ListenerGRPCPlugin) GRPCClient(
-	_ context.Context,
-	_ *plugin.GRPCBroker,
-	c *grpc.ClientConn,
+    _ context.Context,
+    _ *plugin.GRPCBroker,
+    c *grpc.ClientConn,
 ) (interface{}, error) {
-	return &GRPCClient{client: NewABCIListenerServiceClient(c)}, nil
+    return &GRPCClient{client: NewABCIListenerServiceClient(c)}, nil
 }
 ```
 
@@ -413,42 +425,7 @@ The `plugin.Plugin` interface has two methods `Client` and `Server`. For our GRP
 The `Impl` field holds the concrete implementation of our `baseapp.ABCIListener` interface written in Go.
 Note: this is only used for plugin implementations written in Go.
 
-We will introduce a plugin loading system that will return `(interface{}, error)`.
-This provides the advantage of using versioned plugins where the plugin interface and gRPC protocol change over time.
-In addition, it allows for building independent plugin that can expose different parts of the system over gRPC.
-
-```go
-func NewStreamingPlugin(name string, logLevel string) (interface{}, error) {
-    logger := hclog.New(&hclog.LoggerOptions{
-       Output: hclog.DefaultOutput,
-       Level:  toHclogLevel(logLevel),
-       Name:   fmt.Sprintf("plugin.%s", name),
-    })
-
-    // We're a host. Start by launching the streaming process.
-    env := os.Getenv(GetPluginEnvKey(name))
-    client := plugin.NewClient(&plugin.ClientConfig{
-       HandshakeConfig: HandshakeMap[name],
-       Plugins:         PluginMap,
-       Cmd:             exec.Command("sh", "-c", env),
-       Logger:          logger,
-       AllowedProtocols: []plugin.Protocol{
-           plugin.ProtocolNetRPC, plugin.ProtocolGRPC},
-    })
-
-    // Connect via RPC
-    rpcClient, err := client.Client()
-    if err != nil {
-       return nil, err
-    }
-
-    // Request streaming plugin
-    return rpcClient.Dispense(name)
-}
-
-```
-
-The advantage of having such a plugin system is that within each plugin, authors can define the message protocol in a way that fits their use case.
+The advantage of having such a plugin system is that within each plugin authors can define the message protocol in a way that fits their use case.
 For example, when state change listening is desired, the `ABCIListener` message protocol can be defined as below (*for illustrative purposes only*).
 When state change listening is not desired than `ListenCommit` can be omitted from the protocol.
 
@@ -487,6 +464,137 @@ service ABCIListenerService {
   rpc ListenEndBlock(ListenBeginBlockRequest) returns (Empty);
   rpc ListenDeliverTx(ListenDeliverTxRequest) returns (Empty);
 }
+```
+
+Implementing the service above:
+```go
+// streaming/plugins/abci/{plugin_version}/grpc.go
+
+var (
+    _ baseapp.ABCIListener = (*GRPCClient)(nil)
+)
+
+// GRPCClient is an implementation of the ABCIListener and ABCIListenerPlugin interfaces that talks over RPC.
+type GRPCClient struct {
+    client ABCIListenerServiceClient
+}
+
+func (m *GRPCClient) ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+    _, err := m.client.ListenBeginBlock(ctx, &ListenBeginBlockRequest{Req: req, Res: res})
+    return err
+}
+
+func (m *GRPCClient) ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+    _, err := m.client.ListenEndBlock(ctx, &ListenEndBlockRequest{Req: req, Res: res})
+    return err
+}
+
+func (m *GRPCClient) ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+    _, err := m.client.ListenDeliverTx(ctx, &ListenDeliverTxRequest{Req: req, Res: res})
+    return err
+}
+
+func (m *GRPCClient) ListenCommit(ctx types.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
+    _, err := m.client.ListenCommit(ctx, &ListenCommitRequest{Res: res, ChangeSet: changeSet})
+    return err
+}
+
+// GRPCServer is the gRPC server that GRPCClient talks to.
+type GRPCServer struct {
+    // This is the real implementation
+    Impl baseapp.ABCIListener
+}
+
+func (m *GRPCServer) ListenBeginBlock(ctx context.Context, req *ListenBeginBlockRequest) (*Empty, error) {
+    return &Empty{}, m.Impl.ListenBeginBlock(ctx, req.Req, req.Res)
+}
+
+func (m *GRPCServer) ListenEndBlock(ctx context.Context, req *ListenEndBlockRequest) (*Empty, error) {
+    return &Empty{}, m.Impl.ListenEndBlock(ctx, req.Req, req.Res)
+}
+
+func (m *GRPCServer) ListenDeliverTx(ctx context.Context, req *ListenDeliverTxRequest) (*Empty, error) {
+    return &Empty{}, m.Impl.ListenDeliverTx(ctx, req.Req, req.Res)
+}
+
+func (m *GRPCServer) ListenCommit(ctx context.Context, req *ListenCommitRequest) (*Empty, error) {
+    return &Empty{}, m.Impl.ListenCommit(ctx, req.Res, req.ChangeSet)
+}
+
+```
+
+And the pre-compiled Go plugin `Impl`(*this is only used for plugins that are written in Go*):
+
+```go
+// streaming/plugins/abci/{plugin_version}/impl/plugin.go
+
+// Plugins are pre-compiled and loaded by the plugin system
+
+// ABCIListener is the implementation of the baseapp.ABCIListener interface
+type ABCIListener struct{}
+
+func (m *ABCIListenerPlugin) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+    // send data to external system
+}
+
+func (m *ABCIListenerPlugin) ListenEndBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+    // send data to external system
+}
+
+func (m *ABCIListenerPlugin) ListenDeliverTxBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+    // send data to external system
+}
+
+func (m *ABCIListenerPlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
+    // send data to external system
+}
+
+func main() {
+    plugin.Serve(&plugin.ServeConfig{
+        HandshakeConfig: grpc_abci_v1.Handshake,
+        Plugins: map[string]plugin.Plugin{
+           "grpc_plugin_v1": &grpc_abci_v1.ABCIListenerGRPCPlugin{Impl: &ABCIListenerPlugin{}},
+        },
+
+        // A non-nil value here enables gRPC serving for this streaming...
+        GRPCServer: plugin.DefaultGRPCServer,
+    })
+}
+```
+
+We will introduce a plugin loading system that will return `(interface{}, error)`.
+This provides the advantage of using versioned plugins where the plugin interface and gRPC protocol change over time.
+In addition, it allows for building independent plugin that can expose different parts of the system over gRPC.
+
+```go
+func NewStreamingPlugin(name string, logLevel string) (interface{}, error) {
+    logger := hclog.New(&hclog.LoggerOptions{
+       Output: hclog.DefaultOutput,
+       Level:  toHclogLevel(logLevel),
+       Name:   fmt.Sprintf("plugin.%s", name),
+    })
+
+    // We're a host. Start by launching the streaming process.
+    env := os.Getenv(GetPluginEnvKey(name))
+    client := plugin.NewClient(&plugin.ClientConfig{
+       HandshakeConfig: HandshakeMap[name],
+       Plugins:         PluginMap,
+       Cmd:             exec.Command("sh", "-c", env),
+       Logger:          logger,
+       AllowedProtocols: []plugin.Protocol{
+           plugin.ProtocolNetRPC, plugin.ProtocolGRPC},
+    })
+
+    // Connect via RPC
+    rpcClient, err := client.Client()
+    if err != nil {
+       return nil, err
+    }
+
+    // Request streaming plugin
+    return rpcClient.Dispense(name)
+}
+
 ```
 
 We will expose a `RegisterStreamingPlugin` function for the App to register streaming plugins with the App's BaseApp.

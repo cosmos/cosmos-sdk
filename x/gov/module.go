@@ -166,7 +166,6 @@ type GovInputs struct {
 	Key              *store.KVStoreKey
 	ModuleKey        depinject.OwnModuleKey
 	MsgServiceRouter *baseapp.MsgServiceRouter
-	Authority        map[string]sdk.AccAddress `optional:"true"`
 
 	AccountKeeper govtypes.AccountKeeper
 	BankKeeper    govtypes.BankKeeper
@@ -190,9 +189,10 @@ func ProvideModule(in GovInputs) GovOutputs {
 		kConfig.MaxMetadataLen = in.Config.MaxMetadataLen
 	}
 
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(

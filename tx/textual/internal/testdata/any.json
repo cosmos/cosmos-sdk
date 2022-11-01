@@ -1,15 +1,16 @@
 [
     {
-        "url": "type.googleapis.com/Foo",
-        "msg": {},
+        "proto": {
+            "@type": "type.googleapis.com/Foo"
+        },
         "screens": [
             {"text": "Object: type.googleapis.com/Foo"},
             {"text": "Foo object", "indent": 1}
         ]
     },
     {
-        "url": "type.googleapis.com/Foo",
-        "msg": {
+        "proto": {
+            "@type": "type.googleapis.com/Foo",
             "full_name": "testing"
         },
         "screens": [
@@ -19,9 +20,9 @@
         ]
     },
     {
-        "url": "type.googleapis.com/google.protobuf.Timestamp",
-        "msg": {
-            "seconds": 1136214245
+        "proto": {
+            "@type": "type.googleapis.com/google.protobuf.Timestamp",
+            "value": "2006-01-02T15:04:05Z"
         },
         "screens": [
             {"text": "Object: type.googleapis.com/google.protobuf.Timestamp"},
@@ -29,10 +30,11 @@
         ]
     },
     {
-        "url": "type.googleapis.com/google.protobuf.Any",
-        "msg": {
-            "type_url": "type.googleapis.com/Foo",
-            "value": []
+        "proto": {
+            "@type": "type.googleapis.com/google.protobuf.Any",
+            "value": {
+                "@type": "type.googleapis.com/Foo"
+            }
         },
         "screens": [
             {"text": "Object: type.googleapis.com/google.protobuf.Any"},
@@ -41,10 +43,12 @@
         ]
     },
     {
-        "url": "type.googleapis.com/google.protobuf.Any",
-        "msg": {
-            "type_url": "type.googleapis.com/Foo",
-            "value": [10, 7, 116, 101, 115, 116, 105, 110, 103]
+       "proto": {
+            "@type": "type.googleapis.com/google.protobuf.Any",
+            "value": {
+                "@type": "type.googleapis.com/Foo",
+                "full_name": "testing"
+            }
         },
         "screens": [
             {"text": "Object: type.googleapis.com/google.protobuf.Any"},
@@ -54,11 +58,11 @@
         ]
     },
     {
-        "url": "type.googleapis.com/A",
-        "msg": {
-            "any": {
-                "type_url": "type.googleapis.com/Foo",
-                "value": [10, 7, 116, 101, 115, 116, 105, 110, 103]
+       "proto": {
+            "@type": "type.googleapis.com/A",
+            "ANY": {
+                "@type": "type.googleapis.com/Foo",
+                "full_name": "testing"
             }
         },
         "screens": [

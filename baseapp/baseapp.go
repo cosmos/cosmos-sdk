@@ -839,11 +839,14 @@ func createEvents(msg sdk.Msg) sdk.Events {
 }
 
 func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, error) {
-	iterator := app.mempool.Select(req.Txs)
 	var (
 		txsBytes  [][]byte
 		byteCount int64
 	)
+
+	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
+	iterator := app.mempool.Select(ctx, req.Txs)
+
 	for iterator != nil {
 		memTx := iterator.Tx()
 

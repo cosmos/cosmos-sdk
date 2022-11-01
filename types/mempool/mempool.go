@@ -13,14 +13,14 @@ type Mempool interface {
 
 	// Select returns an Iterator over the app-side mempool.  If txs are specified, then they shall be incorporated
 	// into the Iterator.  The Iterator must be closed by the caller.
-	Select(txs [][]byte) Iterator
+	Select(sdk.Context, [][]byte) Iterator
 
 	// CountTx returns the number of transactions currently in the mempool.
 	CountTx() int
 
 	// Remove attempts to remove a transaction from the mempool, returning an error
 	// upon failure.
-	Remove(tx sdk.Tx) error
+	Remove(sdk.Tx) error
 }
 
 // Iterator defines an app-side mempool iterator interface that is as minimal as possible.  The order of iteration

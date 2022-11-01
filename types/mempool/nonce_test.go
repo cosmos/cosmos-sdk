@@ -193,7 +193,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				require.NoError(t, err)
 			}
 
-			itr := pool.Select(nil)
+			itr := pool.Select(ctx, nil)
 			orderedTxs := fetchTxs(itr, 1000)
 			var txOrder []int
 			for _, tx := range orderedTxs {

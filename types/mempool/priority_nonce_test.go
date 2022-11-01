@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func TestOutOfOrder(t *testing.T) {
@@ -378,6 +379,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	seed := time.Now().UnixNano()
+
 	t.Logf("running with seed: %d", seed)
 	generated := genRandomTxs(seed, s.numTxs, s.numAccounts)
 	mp := s.mempool
@@ -390,6 +392,12 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	}
 
 	selected := fetchTxs(mp.Select(ctx, nil), 100000)
+	for i, tx := range selected {
+		ttx := tx.(testTx)
+		sigs, _ := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+		ttx.strAddress = sigs[0].PubKey.Address().String()
+		selected[i] = ttx
+	}
 	require.Equal(t, len(generated), len(selected))
 
 	start := time.Now()

@@ -253,12 +253,9 @@ func (mp *priorityNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 
 	mp.reorderPriorityTies()
 
-	priorityNode := mp.priorityIndex.Front()
 	iterator := &priorityNonceIterator{
 		mempool:       mp,
 		senderCursors: make(map[string]*huandu.Element),
-		priorityNode:  priorityNode,
-		sender:        priorityNode.Key().(txMeta).sender,
 	}
 
 	return iterator.iteratePriority()

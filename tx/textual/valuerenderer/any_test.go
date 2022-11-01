@@ -9,11 +9,12 @@ import (
 
 	"cosmossdk.io/tx/textual/valuerenderer"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -40,8 +41,6 @@ func TestAny(t *testing.T) {
 			anyMsg := anypb.Any{}
 			err = protojson.Unmarshal(bz, &anyMsg)
 			require.NoError(t, err)
-			internalMsg, err := anyMsg.UnmarshalNew()
-			require.NoError(t, err)
 
 			// Format into screens and check vs expected
 			rend := valuerenderer.NewAnyValueRenderer((&tr))
@@ -55,12 +54,8 @@ func TestAny(t *testing.T) {
 			parsedMsg := val.Message().Interface()
 			require.IsType(t, &anypb.Any{}, parsedMsg)
 			parsedAny := parsedMsg.(*anypb.Any)
-
-			// Check for equality of the internal message of the parsed message,
-			// to avoid sensitivity to the exact proto encoding bytes.
-			parsedInternal, err := parsedAny.UnmarshalNew()
-			require.NoError(t, err)
-			require.True(t, proto.Equal(internalMsg, parsedInternal))
+			diff := cmp.Diff(anyMsg, parsedAny, protocmp.Transform())
+			require.Empty(t, diff)
 		})
 	}
 }

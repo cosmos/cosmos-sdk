@@ -17,7 +17,6 @@ service ReflectionService {
   }
 }
 
-
 // FileDescriptorsRequest is the Query/FileDescriptors request type.
 message FileDescriptorsRequest {}
 

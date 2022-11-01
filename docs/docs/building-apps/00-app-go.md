@@ -4,7 +4,20 @@ sidebar_position: 1
 
 # Overview of `app.go`
 
-Since `v0.47.0` the Cosmos SDK have made much easier wiring an `app.go` thanks to `depinject`.
+:::note Synopsis
+
+Since `v0.47.0`, the Cosmos SDK allows much easier wiring an `app.go`, thanks to [`depinject`](../tooling/02-depinject.md).
+
+:::
+
+:::note
+
+### Pre-requisite Readings
+
+* [Cosmos SDK Dependency Injection Framework](../tooling/02-depinject.md)
+
+:::
+
 This section is intended to provide an overview of the `SimApp` `app.go` file with App Wiring.
 
 ## `app_config.go`

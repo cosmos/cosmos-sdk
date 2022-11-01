@@ -104,21 +104,32 @@ func QueryResult(err error) abci.ResponseQuery {
 	}
 }
 
+// QueryResultWithDebug returns a ResponseQuery from an error. It will try to parse ABCI
+// info from the error. It will use debugErrEncoder if debug parameter is true.
+// Starting from v0.46, this function will be removed, and be replaced by `QueryResult`.
+func QueryResultWithDebug(err error, debug bool) abci.ResponseQuery {
+	space, code, log := ABCIInfo(err, debug)
+	return abci.ResponseQuery{
+		Codespace: space,
+		Code:      code,
+		Log:       log,
+	}
+}
+
 // The debugErrEncoder encodes the error with a stacktrace.
 func debugErrEncoder(err error) string {
 	return fmt.Sprintf("%+v", err)
 }
 
-// The defaultErrEncoder applies Redact on the error before encoding it with its internal error message.
 func defaultErrEncoder(err error) string {
-	return Redact(err).Error()
+	return err.Error()
 }
 
 type coder interface {
 	ABCICode() uint32
 }
 
-// abciCode test if given error contains an ABCI code and returns the value of
+// abciCode tests if given error contains an ABCI code and returns the value of
 // it if available. This function is testing for the causer interface as well
 // and unwraps the error.
 func abciCode(err error) uint32 {
@@ -177,20 +188,4 @@ func errIsNil(err error) bool {
 		return val.IsNil()
 	}
 	return false
-}
-
-var errPanicWithMsg = Wrapf(ErrPanic, "panic message redacted to hide potentially sensitive system info")
-
-// Redact replaces an error that is not initialized as an ABCI Error with a
-// generic internal error instance. If the error is an ABCI Error, that error is
-// simply returned.
-func Redact(err error) error {
-	if ErrPanic.Is(err) {
-		return errPanicWithMsg
-	}
-	if abciCode(err) == internalABCICode {
-		return errInternal
-	}
-
-	return err
 }

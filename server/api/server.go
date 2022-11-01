@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gogo/gateway"
@@ -30,8 +31,13 @@ type Server struct {
 	GRPCGatewayRouter *runtime.ServeMux
 	ClientCtx         client.Context
 
-	logger   log.Logger
-	metrics  *telemetry.Metrics
+	logger  log.Logger
+	metrics *telemetry.Metrics
+	// Start() is blocking and generally called from a separate goroutine.
+	// Close() can be called asynchronously and access shared memory
+	// via the listener. Therefore, we sync access to Start and Close with
+	// this mutex to avoid data races.
+	mtx      sync.Mutex
 	listener net.Listener
 }
 
@@ -83,9 +89,11 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 // and are delegated to the Tendermint JSON RPC server. The process is
 // non-blocking, so an external signal handler must be used.
 func (s *Server) Start(cfg config.Config) error {
+	s.mtx.Lock()
 	if cfg.Telemetry.Enabled {
 		m, err := telemetry.New(cfg.Telemetry)
 		if err != nil {
+			s.mtx.Unlock()
 			return err
 		}
 
@@ -101,6 +109,7 @@ func (s *Server) Start(cfg config.Config) error {
 
 	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg)
 	if err != nil {
+		s.mtx.Unlock()
 		return err
 	}
 
@@ -111,15 +120,19 @@ func (s *Server) Start(cfg config.Config) error {
 
 	if cfg.API.EnableUnsafeCORS {
 		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
+		s.mtx.Unlock()
 		return tmrpcserver.Serve(s.listener, allowAllCORS(h), s.logger, tmCfg)
 	}
 
 	s.logger.Info("starting API server...")
+	s.mtx.Unlock()
 	return tmrpcserver.Serve(s.listener, s.Router, s.logger, tmCfg)
 }
 
 // Close closes the API server.
 func (s *Server) Close() error {
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	return s.listener.Close()
 }
 

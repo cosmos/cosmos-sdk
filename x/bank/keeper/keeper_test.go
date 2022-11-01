@@ -1,13 +1,9 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
-
-	"github.com/cosmos/cosmos-sdk/types/query"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -17,11 +13,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 const (
@@ -96,7 +95,7 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 
 func (suite *IntegrationTestSuite) SetupTest() {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	app.BankKeeper.SetParams(ctx, types.DefaultParams())
@@ -1134,18 +1133,19 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 }
 
 func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
-	return []types.Metadata{{
-		Name:        "Cosmos Hub Atom",
-		Symbol:      "ATOM",
-		Description: "The native staking token of the Cosmos Hub.",
-		DenomUnits: []*types.DenomUnit{
-			{"uatom", uint32(0), []string{"microatom"}},
-			{"matom", uint32(3), []string{"milliatom"}},
-			{"atom", uint32(6), nil},
+	return []types.Metadata{
+		{
+			Name:        "Cosmos Hub Atom",
+			Symbol:      "ATOM",
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*types.DenomUnit{
+				{"uatom", uint32(0), []string{"microatom"}},
+				{"matom", uint32(3), []string{"milliatom"}},
+				{"atom", uint32(6), nil},
+			},
+			Base:    "uatom",
+			Display: "atom",
 		},
-		Base:    "uatom",
-		Display: "atom",
-	},
 		{
 			Name:        "Token",
 			Symbol:      "TOKEN",
@@ -1158,6 +1158,76 @@ func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
 			Base:    "utoken",
 			Display: "token",
 		},
+	}
+}
+
+func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
+	type BankMintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
+
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
+
+	suite.app.AccountKeeper = authkeeper.NewAccountKeeper(
+		suite.app.AppCodec(), suite.app.GetKey(authtypes.StoreKey), suite.app.GetSubspace(authtypes.ModuleName),
+		authtypes.ProtoBaseAccount, maccPerms,
+	)
+	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, multiPermAcc)
+
+	type testCase struct {
+		coinsToTry sdk.Coin
+		expectPass bool
+	}
+
+	tests := []struct {
+		name          string
+		restrictionFn BankMintingRestrictionFn
+		testCases     []testCase
+	}{
+		{
+			"restriction",
+			func(ctx sdk.Context, coins sdk.Coins) error {
+				for _, coin := range coins {
+					if coin.Denom != fooDenom {
+						return fmt.Errorf("Module %s only has perms for minting %s coins, tried minting %s coins", types.ModuleName, fooDenom, coin.Denom)
+					}
+				}
+				return nil
+			},
+			[]testCase{
+				{
+					coinsToTry: newFooCoin(100),
+					expectPass: true,
+				},
+				{
+					coinsToTry: newBarCoin(100),
+					expectPass: false,
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
+			suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil).WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
+		for _, testCase := range test.testCases {
+			if testCase.expectPass {
+				suite.Require().NoError(
+					suite.app.BankKeeper.MintCoins(
+						suite.ctx,
+						multiPermAcc.Name,
+						sdk.NewCoins(testCase.coinsToTry),
+					),
+				)
+			} else {
+				suite.Require().Error(
+					suite.app.BankKeeper.MintCoins(
+						suite.ctx,
+						multiPermAcc.Name,
+						sdk.NewCoins(testCase.coinsToTry),
+					),
+				)
+			}
+		}
 	}
 }
 

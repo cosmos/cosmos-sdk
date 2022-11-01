@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -30,8 +31,14 @@ func (s *decimalTestSuite) mustNewDecFromStr(str string) (d sdk.Dec) {
 }
 
 func (s *decimalTestSuite) TestNewDecFromStr() {
-	largeBigInt, success := new(big.Int).SetString("3144605511029693144278234343371835", 10)
-	s.Require().True(success)
+	largeBigInt, ok := new(big.Int).SetString("3144605511029693144278234343371835", 10)
+	s.Require().True(ok)
+
+	largerBigInt, ok := new(big.Int).SetString("8888888888888888888888888888888888888888888888888888888888888888888844444440", 10)
+	s.Require().True(ok)
+
+	largestBigInt, ok := new(big.Int).SetString("33499189745056880149688856635597007162669032647290798121690100488888732861290034376435130433535", 10)
+	s.Require().True(ok)
 
 	tests := []struct {
 		decimalStr string
@@ -47,17 +54,23 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 		{"0.8", false, sdk.NewDecWithPrec(8, 1)},
 		{"0.11111", false, sdk.NewDecWithPrec(11111, 5)},
 		{"314460551102969.3144278234343371835", true, sdk.NewDec(3141203149163817869)},
-		{"314460551102969314427823434337.1835718092488231350",
-			true, sdk.NewDecFromBigIntWithPrec(largeBigInt, 4)},
-		{"314460551102969314427823434337.1835",
-			false, sdk.NewDecFromBigIntWithPrec(largeBigInt, 4)},
+		{
+			"314460551102969314427823434337.1835718092488231350",
+			true, sdk.NewDecFromBigIntWithPrec(largeBigInt, 4),
+		},
+		{
+			"314460551102969314427823434337.1835",
+			false, sdk.NewDecFromBigIntWithPrec(largeBigInt, 4),
+		},
 		{".", true, sdk.Dec{}},
 		{".0", true, sdk.NewDec(0)},
 		{"1.", true, sdk.NewDec(1)},
 		{"foobar", true, sdk.Dec{}},
 		{"0.foobar", true, sdk.Dec{}},
 		{"0.foobar.", true, sdk.Dec{}},
-		{"88888888888888888888888888888888888888888888888888888888888888888888844444440", true, sdk.Dec{}},
+		{"8888888888888888888888888888888888888888888888888888888888888888888844444440", false, sdk.NewDecFromBigInt(largerBigInt)},
+		{"33499189745056880149688856635597007162669032647290798121690100488888732861290.034376435130433535", false, sdk.NewDecFromBigIntWithPrec(largestBigInt, 18)},
+		{"133499189745056880149688856635597007162669032647290798121690100488888732861291", true, sdk.Dec{}},
 	}
 
 	for tcIndex, tc := range tests {
@@ -156,7 +169,6 @@ func (s *decimalTestSuite) TestEqualities() {
 		s.Require().Equal(tc.lt, tc.d1.LT(tc.d2), "LT result is incorrect, tc %d", tcIndex)
 		s.Require().Equal(tc.eq, tc.d1.Equal(tc.d2), "equality result is incorrect, tc %d", tcIndex)
 	}
-
 }
 
 func (s *decimalTestSuite) TestDecsEqual() {
@@ -200,19 +212,27 @@ func (s *decimalTestSuite) TestArithmetic() {
 		{sdk.NewDec(1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(0), sdk.NewDec(2)},
 		{sdk.NewDec(-1), sdk.NewDec(1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(-1), sdk.NewDec(0), sdk.NewDec(-2)},
 
-		{sdk.NewDec(3), sdk.NewDec(7), sdk.NewDec(21), sdk.NewDec(21),
+		{
+			sdk.NewDec(3), sdk.NewDec(7), sdk.NewDec(21), sdk.NewDec(21),
 			sdk.NewDecWithPrec(428571428571428571, 18), sdk.NewDecWithPrec(428571428571428572, 18), sdk.NewDecWithPrec(428571428571428571, 18),
-			sdk.NewDec(10), sdk.NewDec(-4)},
-		{sdk.NewDec(2), sdk.NewDec(4), sdk.NewDec(8), sdk.NewDec(8), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1),
-			sdk.NewDec(6), sdk.NewDec(-2)},
+			sdk.NewDec(10), sdk.NewDec(-4),
+		},
+		{
+			sdk.NewDec(2), sdk.NewDec(4), sdk.NewDec(8), sdk.NewDec(8), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1),
+			sdk.NewDec(6), sdk.NewDec(-2),
+		},
 
 		{sdk.NewDec(100), sdk.NewDec(100), sdk.NewDec(10000), sdk.NewDec(10000), sdk.NewDec(1), sdk.NewDec(1), sdk.NewDec(1), sdk.NewDec(200), sdk.NewDec(0)},
 
-		{sdk.NewDecWithPrec(15, 1), sdk.NewDecWithPrec(15, 1), sdk.NewDecWithPrec(225, 2), sdk.NewDecWithPrec(225, 2),
-			sdk.NewDec(1), sdk.NewDec(1), sdk.NewDec(1), sdk.NewDec(3), sdk.NewDec(0)},
-		{sdk.NewDecWithPrec(3333, 4), sdk.NewDecWithPrec(333, 4), sdk.NewDecWithPrec(1109889, 8), sdk.NewDecWithPrec(1109889, 8),
+		{
+			sdk.NewDecWithPrec(15, 1), sdk.NewDecWithPrec(15, 1), sdk.NewDecWithPrec(225, 2), sdk.NewDecWithPrec(225, 2),
+			sdk.NewDec(1), sdk.NewDec(1), sdk.NewDec(1), sdk.NewDec(3), sdk.NewDec(0),
+		},
+		{
+			sdk.NewDecWithPrec(3333, 4), sdk.NewDecWithPrec(333, 4), sdk.NewDecWithPrec(1109889, 8), sdk.NewDecWithPrec(1109889, 8),
 			sdk.MustNewDecFromStr("10.009009009009009009"), sdk.MustNewDecFromStr("10.009009009009009010"), sdk.MustNewDecFromStr("10.009009009009009009"),
-			sdk.NewDecWithPrec(3666, 4), sdk.NewDecWithPrec(3, 1)},
+			sdk.NewDecWithPrec(3666, 4), sdk.NewDecWithPrec(3, 1),
+		},
 	}
 
 	for tcIndex, tc := range tests {
@@ -441,6 +461,16 @@ func (s *decimalTestSuite) TestDecSortableBytes() {
 }
 
 func (s *decimalTestSuite) TestDecEncoding() {
+	largestBigInt, ok := new(big.Int).SetString("33499189745056880149688856635597007162669032647290798121690100488888732861290034376435130433535", 10)
+	s.Require().True(ok)
+
+	smallestBigInt, ok := new(big.Int).SetString("-33499189745056880149688856635597007162669032647290798121690100488888732861290034376435130433535", 10)
+	s.Require().True(ok)
+
+	const maxDecBitLen = 315
+	maxInt, ok := new(big.Int).SetString(strings.Repeat("1", maxDecBitLen), 2)
+	s.Require().True(ok)
+
 	testCases := []struct {
 		input   sdk.Dec
 		rawBz   string
@@ -475,6 +505,24 @@ func (s *decimalTestSuite) TestDecEncoding() {
 			"2D31343134323133353632333733303935303439",
 			"\"-1.414213562373095049\"",
 			"\"-1.414213562373095049\"\n",
+		},
+		{
+			sdk.NewDecFromBigIntWithPrec(largestBigInt, 18),
+			"3333343939313839373435303536383830313439363838383536363335353937303037313632363639303332363437323930373938313231363930313030343838383838373332383631323930303334333736343335313330343333353335",
+			"\"33499189745056880149688856635597007162669032647290798121690100488888732861290.034376435130433535\"",
+			"\"33499189745056880149688856635597007162669032647290798121690100488888732861290.034376435130433535\"\n",
+		},
+		{
+			sdk.NewDecFromBigIntWithPrec(smallestBigInt, 18),
+			"2D3333343939313839373435303536383830313439363838383536363335353937303037313632363639303332363437323930373938313231363930313030343838383838373332383631323930303334333736343335313330343333353335",
+			"\"-33499189745056880149688856635597007162669032647290798121690100488888732861290.034376435130433535\"",
+			"\"-33499189745056880149688856635597007162669032647290798121690100488888732861290.034376435130433535\"\n",
+		},
+		{
+			sdk.NewDecFromBigIntWithPrec(maxInt, 18),
+			"3636373439353934383732353238343430303734383434343238333137373938353033353831333334353136333233363435333939303630383435303530323434343434333636343330363435303137313838323137353635323136373637",
+			"\"66749594872528440074844428317798503581334516323645399060845050244444366430645.017188217565216767\"",
+			"\"66749594872528440074844428317798503581334516323645399060845050244444366430645.017188217565216767\"\n",
 		},
 	}
 

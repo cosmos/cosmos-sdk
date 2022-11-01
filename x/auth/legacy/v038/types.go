@@ -19,7 +19,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v034"
 )
 
@@ -134,7 +134,6 @@ func NewBaseAccountWithAddress(addr sdk.AccAddress) BaseAccount {
 func NewBaseAccount(
 	address sdk.AccAddress, coins sdk.Coins, pk cryptotypes.PubKey, accountNumber, sequence uint64,
 ) *BaseAccount {
-
 	return &BaseAccount{
 		Address:       address,
 		Coins:         coins,
@@ -179,7 +178,7 @@ func (acc BaseAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if acc.PubKey != nil {
-		pks, err := legacybech32.MarshalPubKey(legacybech32.AccPK, acc.PubKey)
+		pks, err := legacybech32.MarshalPubKey(legacybech32.AccPK, acc.PubKey) //nolint:staticcheck
 		if err != nil {
 			return nil, err
 		}
@@ -198,7 +197,7 @@ func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
 	}
 
 	if alias.PubKey != "" {
-		pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, alias.PubKey)
+		pk, err := legacybech32.UnmarshalPubKey(legacybech32.AccPK, alias.PubKey) //nolint:staticcheck
 		if err != nil {
 			return err
 		}
@@ -217,7 +216,6 @@ func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
 func NewBaseVestingAccount(
 	baseAccount *BaseAccount, originalVesting, delegatedFree, delegatedVesting sdk.Coins, endTime int64,
 ) *BaseVestingAccount {
-
 	return &BaseVestingAccount{
 		BaseAccount:      baseAccount,
 		OriginalVesting:  originalVesting,
@@ -245,7 +243,7 @@ func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if bva.PubKey != nil {
-		pks, err := legacybech32.MarshalPubKey(legacybech32.AccPK, bva.PubKey)
+		pks, err := legacybech32.MarshalPubKey(legacybech32.AccPK, bva.PubKey) //nolint:staticcheck
 		if err != nil {
 			return nil, err
 		}
@@ -269,7 +267,7 @@ func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
 	)
 
 	if alias.PubKey != "" {
-		pk, err = legacybech32.UnmarshalPubKey(legacybech32.AccPK, alias.PubKey)
+		pk, err = legacybech32.UnmarshalPubKey(legacybech32.AccPK, alias.PubKey) //nolint:staticcheck
 		if err != nil {
 			return err
 		}
@@ -314,7 +312,7 @@ func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if cva.PubKey != nil {
-		pks, err := legacybech32.MarshalPubKey(legacybech32.AccPK, cva.PubKey)
+		pks, err := legacybech32.MarshalPubKey(legacybech32.AccPK, cva.PubKey) //nolint:staticcheck
 		if err != nil {
 			return nil, err
 		}
@@ -338,7 +336,7 @@ func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 	)
 
 	if alias.PubKey != "" {
-		pk, err = legacybech32.UnmarshalPubKey(legacybech32.AccPK, alias.PubKey)
+		pk, err = legacybech32.UnmarshalPubKey(legacybech32.AccPK, alias.PubKey) //nolint:staticcheck
 		if err != nil {
 			return err
 		}
@@ -380,7 +378,7 @@ func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if dva.PubKey != nil {
-		pks, err := legacybech32.MarshalPubKey(legacybech32.AccPK, dva.PubKey)
+		pks, err := legacybech32.MarshalPubKey(legacybech32.AccPK, dva.PubKey) //nolint:staticcheck
 		if err != nil {
 			return nil, err
 		}
@@ -404,7 +402,7 @@ func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
 	)
 
 	if alias.PubKey != "" {
-		pk, err = legacybech32.UnmarshalPubKey(legacybech32.AccPK, alias.PubKey)
+		pk, err = legacybech32.UnmarshalPubKey(legacybech32.AccPK, alias.PubKey) //nolint:staticcheck
 		if err != nil {
 			return err
 		}

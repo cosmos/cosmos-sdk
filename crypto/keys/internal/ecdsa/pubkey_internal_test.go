@@ -59,12 +59,12 @@ func (suite *PKSuite) TestMarshal() {
 	require := suite.Require()
 	const size = 33 // secp256r1 size
 
-	var buffer = make([]byte, size)
+	buffer := make([]byte, size)
 	n, err := suite.pk.MarshalTo(buffer)
 	require.NoError(err)
 	require.Equal(size, n)
 
-	var pk = new(PubKey)
+	pk := new(PubKey)
 	err = pk.Unmarshal(buffer, secp256r1, size)
 	require.NoError(err)
 	require.True(pk.PublicKey.Equal(&suite.pk.PublicKey))

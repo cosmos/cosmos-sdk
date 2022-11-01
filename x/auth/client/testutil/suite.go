@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -108,7 +108,7 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 
 func (s *IntegrationTestSuite) TestCLISignBatch() {
 	val := s.network.Validators[0]
-	var sendTokens = sdk.NewCoins(
+	sendTokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 	)
@@ -148,7 +148,7 @@ func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	require := s.Require()
 	val1 := s.network.Validators[0]
 	txCfg := val1.ClientCtx.TxConfig
-	var sendTokens = sdk.NewCoins(
+	sendTokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 	)
@@ -199,7 +199,7 @@ func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	fileFlag := fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, filenameSigned)
 	_, err = TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, fileFlag, signModeAminoFlag)
 	require.NoError(err)
-	fContent, err := ioutil.ReadFile(filenameSigned)
+	fContent, err := os.ReadFile(filenameSigned)
 	require.NoError(err)
 	require.Equal(res.String(), string(fContent))
 
@@ -811,6 +811,47 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
+func (s *IntegrationTestSuite) TestSignWithMultisig() {
+	val1 := s.network.Validators[0]
+
+	// Generate a account for signing.
+	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+
+	addr1 := account1.GetAddress()
+	s.Require().NoError(err)
+
+	// Create an address that is not in the keyring, will be used to simulate `--multisig`
+	multisig := "cosmos1hd6fsrvnz6qkp87s3u86ludegq97agxsdkwzyh"
+	multisigAddr, err := sdk.AccAddressFromBech32(multisig)
+	s.Require().NoError(err)
+
+	// Generate a transaction for testing --multisig with an address not in the keyring.
+	multisigTx, err := bankcli.MsgSendExec(
+		val1.ClientCtx,
+		val1.Address,
+		val1.Address,
+		sdk.NewCoins(
+			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	// Save multi tx to file
+	multiGeneratedTx2File := testutil.WriteToNewTempFile(s.T(), multisigTx.String())
+
+	// Sign using multisig. We're signing a tx on behalf of the multisig address,
+	// even though the tx signer is NOT the multisig address. This is fine though,
+	// as the main point of this test is to test the `--multisig` flag with an address
+	// that is not in the keyring.
+	_, err = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
+	s.Require().Contains(err.Error(), "tx intended signer does not match the given signer")
+}
+
 func (s *IntegrationTestSuite) TestCLIMultisign() {
 	val1 := s.network.Validators[0]
 
@@ -955,7 +996,6 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 
 	_, err = TxMultiSignExec(val.ClientCtx, multisigInfo.GetName(), filename.Name(), file1.Name(), file2.Name(), file3.Name())
 	s.Require().NoError(err)
-
 }
 
 func (s *IntegrationTestSuite) TestMultisignBatch() {
@@ -1091,9 +1131,57 @@ func (s *IntegrationTestSuite) TestGetAccountsCmd() {
 	s.Require().NotEmpty(res.Accounts)
 }
 
+func (s *IntegrationTestSuite) TestQueryModuleAccountByNameCmd() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name       string
+		moduleName string
+		expectErr  bool
+	}{
+		{
+			"invalid module name",
+			"gover",
+			true,
+		},
+		{
+			"valid module name",
+			"mint",
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, authcli.QueryModuleAccountByNameCmd(), []string{
+				tc.moduleName,
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			})
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
+			} else {
+				var res authtypes.QueryModuleAccountByNameResponse
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
+
+				var account authtypes.AccountI
+				err := val.ClientCtx.InterfaceRegistry.UnpackAny(res.Account, &account)
+				s.Require().NoError(err)
+
+				moduleAccount, ok := account.(authtypes.ModuleAccountI)
+				s.Require().True(ok)
+				s.Require().Equal(tc.moduleName, moduleAccount.GetName())
+			}
+		})
+	}
+}
+
 func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}.WithOffline(true)
-	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig)
+	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig) //nolint:staticcheck
 
 	cmd := authcli.GetBroadcastCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
@@ -1297,7 +1385,8 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 }
 
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {
-	flags := []string{fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+	flags := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees,
 			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

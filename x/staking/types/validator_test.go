@@ -121,7 +121,6 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 }
 
 func TestAddTokensValidatorUnbonded(t *testing.T) {
-
 	validator := newValidator(t, valAddr1, pk1)
 	validator = validator.UpdateStatus(types.Unbonded)
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))

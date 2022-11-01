@@ -38,6 +38,7 @@ var (
 var _ ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
+//
 //nolint:interfacer
 func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, description Description) (Validator, error) {
 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
@@ -407,7 +408,8 @@ func (v Validator) RemoveTokens(tokens sdk.Int) Validator {
 
 // RemoveDelShares removes delegator shares from a validator.
 // NOTE: because token fractions are left in the valiadator,
-//       the exchange rate of future shares of this validator can increase.
+//
+//	the exchange rate of future shares of this validator can increase.
 func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
 	remainingShares := v.DelegatorShares.Sub(delShares)
 
@@ -444,7 +446,6 @@ func (v *Validator) MinEqual(other *Validator) bool {
 		v.Jailed == other.Jailed &&
 		v.MinSelfDelegation.Equal(other.MinSelfDelegation) &&
 		v.ConsensusPubkey.Equal(other.ConsensusPubkey)
-
 }
 
 // Equal checks if the receiver equals the parameter
@@ -476,7 +477,6 @@ func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 	}
 
 	return pk, nil
-
 }
 
 // TmConsPublicKey casts Validator.ConsensusPubkey to tmprotocrypto.PubKey.

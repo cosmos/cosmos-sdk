@@ -22,11 +22,16 @@ const (
 	// number of decimal places
 	Precision = 18
 
-	// bytes required to represent the above precision
-	// Ceiling[Log2[999 999 999 999 999 999]]
+	// bits required to represent the above precision
+	// Ceiling[Log2[10^Precision - 1]]
 	DecimalPrecisionBits = 60
 
-	maxDecBitLen = maxBitLen + DecimalPrecisionBits
+	// decimalTruncateBits is the minimum number of bits removed
+	// by a truncate operation. It is equal to
+	// Floor[Log2[10^Precision - 1]].
+	decimalTruncateBits = DecimalPrecisionBits - 1
+
+	maxDecBitLen = maxBitLen + decimalTruncateBits
 
 	// max number of iterations in ApproxRoot function
 	maxApproxRootIterations = 100
@@ -125,12 +130,15 @@ func NewDecFromIntWithPrec(i Int, prec int64) Dec {
 
 // create a decimal from an input decimal string.
 // valid must come in the form:
-//   (-) whole integers (.) decimal integers
+//
+//	(-) whole integers (.) decimal integers
+//
 // examples of acceptable input include:
-//   -123.456
-//   456.7890
-//   345
-//   -456789
+//
+//	-123.456
+//	456.7890
+//	345
+//	-456789
 //
 // NOTE - An error will return if more decimal places
 // are provided in the string than the constant Precision.
@@ -138,7 +146,7 @@ func NewDecFromIntWithPrec(i Int, prec int64) Dec {
 // CONTRACT - This function does not mutate the input str.
 func NewDecFromStr(str string) (Dec, error) {
 	if len(str) == 0 {
-		return Dec{}, ErrEmptyDecimalStr
+		return Dec{}, fmt.Errorf("%s: %w", str, ErrEmptyDecimalStr)
 	}
 
 	// first extract any negative symbol
@@ -149,7 +157,7 @@ func NewDecFromStr(str string) (Dec, error) {
 	}
 
 	if len(str) == 0 {
-		return Dec{}, ErrEmptyDecimalStr
+		return Dec{}, fmt.Errorf("%s: %w", str, ErrEmptyDecimalStr)
 	}
 
 	strs := strings.Split(str, ".")
@@ -167,7 +175,7 @@ func NewDecFromStr(str string) (Dec, error) {
 	}
 
 	if lenDecs > Precision {
-		return Dec{}, fmt.Errorf("invalid precision; max: %d, got: %d", Precision, lenDecs)
+		return Dec{}, fmt.Errorf("value '%s' exceeds max precision by %d decimal places: max precision %d", str, Precision-lenDecs, Precision)
 	}
 
 	// add some extra zero's to correct to the Precision factor
@@ -177,10 +185,10 @@ func NewDecFromStr(str string) (Dec, error) {
 
 	combined, ok := new(big.Int).SetString(combinedStr, 10) // base 10
 	if !ok {
-		return Dec{}, fmt.Errorf("failed to set decimal string: %s", combinedStr)
+		return Dec{}, fmt.Errorf("failed to set decimal string with base 10: %s", combinedStr)
 	}
-	if combined.BitLen() > maxBitLen {
-		return Dec{}, fmt.Errorf("decimal out of range; bitLen: got %d, max %d", combined.BitLen(), maxBitLen)
+	if combined.BitLen() > maxDecBitLen {
+		return Dec{}, fmt.Errorf("decimal '%s' out of range; bitLen: got %d, max %d", str, combined.BitLen(), maxDecBitLen)
 	}
 	if neg {
 		combined = new(big.Int).Neg(combined)
@@ -744,8 +752,8 @@ func (d *Dec) Unmarshal(data []byte) error {
 		return err
 	}
 
-	if d.i.BitLen() > maxBitLen {
-		return fmt.Errorf("decimal out of range; got: %d, max: %d", d.i.BitLen(), maxBitLen)
+	if d.i.BitLen() > maxDecBitLen {
+		return fmt.Errorf("decimal out of range; got: %d, max: %d", d.i.BitLen(), maxDecBitLen)
 	}
 
 	return nil

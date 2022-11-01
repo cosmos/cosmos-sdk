@@ -50,11 +50,14 @@ type Keeper interface {
 type BaseKeeper struct {
 	BaseSendKeeper
 
-	ak         types.AccountKeeper
-	cdc        codec.BinaryCodec
-	storeKey   sdk.StoreKey
-	paramSpace paramtypes.Subspace
+	ak                     types.AccountKeeper
+	cdc                    codec.BinaryCodec
+	storeKey               sdk.StoreKey
+	paramSpace             paramtypes.Subspace
+	mintCoinsRestrictionFn MintingRestrictionFn
 }
+
+type MintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
 func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
@@ -74,7 +77,6 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 		supply = supply.Add(sdk.NewCoin(string(key), amount))
 		return nil
 	})
-
 	if err != nil {
 		return nil, nil, err
 	}
@@ -95,19 +97,40 @@ func NewBaseKeeper(
 	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
 ) BaseKeeper {
-
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
-		ak:             ak,
-		cdc:            cdc,
-		storeKey:       storeKey,
-		paramSpace:     paramSpace,
+		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
+		ak:                     ak,
+		cdc:                    cdc,
+		storeKey:               storeKey,
+		paramSpace:             paramSpace,
+		mintCoinsRestrictionFn: func(ctx sdk.Context, coins sdk.Coins) error { return nil },
 	}
+}
+
+// WithMintCoinsRestriction restricts the bank Keeper used within a specific module to
+// have restricted permissions on minting via function passed in parameter.
+// Previous restriction functions can be nested as such:
+//
+//	bankKeeper.WithMintCoinsRestriction(restriction1).WithMintCoinsRestriction(restriction2)
+func (k BaseKeeper) WithMintCoinsRestriction(check MintingRestrictionFn) BaseKeeper {
+	oldRestrictionFn := k.mintCoinsRestrictionFn
+	k.mintCoinsRestrictionFn = func(ctx sdk.Context, coins sdk.Coins) error {
+		err := check(ctx, coins)
+		if err != nil {
+			return err
+		}
+		err = oldRestrictionFn(ctx, coins)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	return k
 }
 
 // DelegateCoins performs delegation by deducting amt coins from an account with
@@ -285,7 +308,6 @@ func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metada
 func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
-
 	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
@@ -303,7 +325,6 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 func (k BaseKeeper) SendCoinsFromModuleToModule(
 	ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins,
 ) error {
-
 	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
@@ -322,7 +343,6 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 func (k BaseKeeper) SendCoinsFromAccountToModule(
 	ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
 ) error {
-
 	recipientAcc := k.ak.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
@@ -337,7 +357,6 @@ func (k BaseKeeper) SendCoinsFromAccountToModule(
 func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 	ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
 ) error {
-
 	recipientAcc := k.ak.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
@@ -356,7 +375,6 @@ func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
-
 	acc := k.ak.GetModuleAccount(ctx, senderModule)
 	if acc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
@@ -372,6 +390,11 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 // MintCoins creates new coins from thin air and adds it to the module account.
 // It will panic if the module account does not exist or is unauthorized.
 func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error {
+	err := k.mintCoinsRestrictionFn(ctx, amounts)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
+		return err
+	}
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
 	if acc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
@@ -381,7 +404,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Co
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName))
 	}
 
-	err := k.addCoins(ctx, acc.GetAddress(), amounts)
+	err = k.addCoins(ctx, acc.GetAddress(), amounts)
 	if err != nil {
 		return err
 	}

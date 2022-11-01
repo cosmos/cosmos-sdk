@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -159,6 +160,168 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 				suite.Require().Error(err)
 			}
 			testCase.postTest(result)
+		})
+	}
+}
+
+func (suite *TestSuite) TestGRPCQueryGranterGrants() {
+	require := suite.Require()
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
+
+	testCases := []struct {
+		msg      string
+		preRun   func()
+		expError bool
+		request  authz.QueryGranterGrantsRequest
+		numItems int
+	}{
+		{
+			"fail invalid granter addr",
+			func() {},
+			true,
+			authz.QueryGranterGrantsRequest{},
+			0,
+		},
+		{
+			"valid case, single authorization",
+			func() {
+				now := ctx.BlockHeader().Time
+				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+				authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
+				err := app.AuthzKeeper.SaveGrant(ctx, addrs[1], addrs[0], authorization, now.Add(time.Hour))
+				require.NoError(err)
+			},
+			false,
+			authz.QueryGranterGrantsRequest{
+				Granter: addrs[0].String(),
+			},
+			1,
+		},
+		{
+			"valid case, multiple authorization",
+			func() {
+				now := ctx.BlockHeader().Time
+				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+				authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
+				err := app.AuthzKeeper.SaveGrant(ctx, addrs[2], addrs[0], authorization, now.Add(time.Hour))
+				require.NoError(err)
+			},
+			false,
+			authz.QueryGranterGrantsRequest{
+				Granter: addrs[0].String(),
+			},
+			2,
+		},
+		{
+			"valid case, pagination",
+			func() {
+			},
+			false,
+			authz.QueryGranterGrantsRequest{
+				Granter: addrs[0].String(),
+				Pagination: &query.PageRequest{
+					Limit: 1,
+				},
+			},
+			1,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			tc.preRun()
+			result, err := queryClient.GranterGrants(gocontext.Background(), &tc.request)
+			if tc.expError {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				require.Len(result.Grants, tc.numItems)
+			}
+		})
+	}
+}
+
+func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
+	require := suite.Require()
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
+
+	testCases := []struct {
+		msg      string
+		preRun   func()
+		expError bool
+		request  authz.QueryGranteeGrantsRequest
+		numItems int
+	}{
+		{
+			"fail invalid granter addr",
+			func() {},
+			true,
+			authz.QueryGranteeGrantsRequest{},
+			0,
+		},
+		{
+			"valid case, single authorization",
+			func() {
+				now := ctx.BlockHeader().Time
+				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+				authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
+				err := app.AuthzKeeper.SaveGrant(ctx, addrs[0], addrs[1], authorization, now.Add(time.Hour))
+				require.NoError(err)
+			},
+			false,
+			authz.QueryGranteeGrantsRequest{
+				Grantee: addrs[0].String(),
+			},
+			1,
+		},
+		{
+			"valid case, no authorization found",
+			func() {},
+			false,
+			authz.QueryGranteeGrantsRequest{
+				Grantee: addrs[2].String(),
+			},
+			0,
+		},
+		{
+			"valid case, multiple authorization",
+			func() {
+				now := ctx.BlockHeader().Time
+				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+				authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
+				err := app.AuthzKeeper.SaveGrant(ctx, addrs[0], addrs[2], authorization, now.Add(time.Hour))
+				require.NoError(err)
+			},
+			false,
+			authz.QueryGranteeGrantsRequest{
+				Grantee: addrs[0].String(),
+			},
+			2,
+		},
+		{
+			"valid case, pagination",
+			func() {},
+			false,
+			authz.QueryGranteeGrantsRequest{
+				Grantee: addrs[0].String(),
+				Pagination: &query.PageRequest{
+					Limit: 1,
+				},
+			},
+			1,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			tc.preRun()
+			result, err := queryClient.GranteeGrants(gocontext.Background(), &tc.request)
+			if tc.expError {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				require.Len(result.Grants, tc.numItems)
+			}
 		})
 	}
 }

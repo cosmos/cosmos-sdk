@@ -1,23 +1,23 @@
 package rootmulti
 
 import (
-	"bufio"
-	"compress/zlib"
 	"encoding/binary"
 	"fmt"
 	"io"
 	"math"
 	"sort"
 	"strings"
+	"sync"
 
 	iavltree "github.com/cosmos/iavl"
 	protoio "github.com/gogo/protobuf/io"
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
@@ -35,29 +35,31 @@ const (
 	pruneHeightsKey  = "s/pruneheights"
 	commitInfoKeyFmt = "s/%d" // s/<version>
 
-	// Do not change chunk size without new snapshot format (must be uniform across nodes)
-	snapshotChunkSize   = uint64(10e6)
-	snapshotBufferSize  = int(snapshotChunkSize)
-	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
+	proofsPath = "proofs"
 )
+
+const iavlDisablefastNodeDefault = true
 
 // Store is composed of many CommitStores. Name contrasts with
 // cacheMultiStore which is used for branching other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
-	db             dbm.DB
-	lastCommitInfo *types.CommitInfo
-	pruningOpts    types.PruningOptions
-	iavlCacheSize  int
-	storesParams   map[types.StoreKey]storeParams
-	stores         map[types.StoreKey]types.CommitKVStore
-	keysByName     map[string]types.StoreKey
-	lazyLoading    bool
-	pruneHeights   []int64
-	initialVersion int64
+	db                  dbm.DB
+	logger              log.Logger
+	lastCommitInfo      *types.CommitInfo
+	pruningOpts         types.PruningOptions
+	iavlCacheSize       int
+	iavlDisableFastNode bool
+	storesParams        map[types.StoreKey]storeParams
+	stores              map[types.StoreKey]types.CommitKVStore
+	keysByName          map[string]types.StoreKey
+	lazyLoading         bool
+	pruneHeights        []int64
+	initialVersion      int64
 
-	traceWriter  io.Writer
-	traceContext types.TraceContext
+	traceWriter       io.Writer
+	traceContext      types.TraceContext
+	traceContextMutex sync.Mutex
 
 	interBlockCache types.MultiStorePersistentCache
 
@@ -73,16 +75,18 @@ var (
 // store will be created with a PruneNothing pruning strategy by default. After
 // a store is created, KVStores must be mounted and finally LoadLatestVersion or
 // LoadVersion must be called.
-func NewStore(db dbm.DB) *Store {
+func NewStore(db dbm.DB, logger log.Logger) *Store {
 	return &Store{
-		db:            db,
-		pruningOpts:   types.PruneNothing,
-		iavlCacheSize: iavl.DefaultIAVLCacheSize,
-		storesParams:  make(map[types.StoreKey]storeParams),
-		stores:        make(map[types.StoreKey]types.CommitKVStore),
-		keysByName:    make(map[string]types.StoreKey),
-		pruneHeights:  make([]int64, 0),
-		listeners:     make(map[types.StoreKey][]types.WriteListener),
+		db:                  db,
+		logger:              logger,
+		pruningOpts:         types.PruneNothing,
+		iavlCacheSize:       iavl.DefaultIAVLCacheSize,
+		iavlDisableFastNode: iavlDisablefastNodeDefault,
+		storesParams:        make(map[types.StoreKey]storeParams),
+		stores:              make(map[types.StoreKey]types.CommitKVStore),
+		keysByName:          make(map[string]types.StoreKey),
+		pruneHeights:        make([]int64, 0),
+		listeners:           make(map[types.StoreKey][]types.WriteListener),
 	}
 }
 
@@ -100,6 +104,10 @@ func (rs *Store) SetPruning(pruningOpts types.PruningOptions) {
 
 func (rs *Store) SetIAVLCacheSize(cacheSize int) {
 	rs.iavlCacheSize = cacheSize
+}
+
+func (rs *Store) SetIAVLDisableFastNode(disableFastNode bool) {
+	rs.iavlDisableFastNode = disableFastNode
 }
 
 // SetLazyLoading sets if the iavl store should be loaded lazily or not
@@ -152,9 +160,14 @@ func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
 	return rs.stores[key]
 }
 
+// GetStores returns mounted stores
+func (rs *Store) GetStores() map[types.StoreKey]types.CommitKVStore {
+	return rs.stores
+}
+
 // LoadLatestVersionAndUpgrade implements CommitMultiStore
 func (rs *Store) LoadLatestVersionAndUpgrade(upgrades *types.StoreUpgrades) error {
-	ver := getLatestVersion(rs.db)
+	ver := GetLatestVersion(rs.db)
 	return rs.loadVersion(ver, upgrades)
 }
 
@@ -165,7 +178,7 @@ func (rs *Store) LoadVersionAndUpgrade(ver int64, upgrades *types.StoreUpgrades)
 
 // LoadLatestVersion implements CommitMultiStore.
 func (rs *Store) LoadLatestVersion() error {
-	ver := getLatestVersion(rs.db)
+	ver := GetLatestVersion(rs.db)
 	return rs.loadVersion(ver, nil)
 }
 
@@ -194,7 +207,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	}
 
 	// load each Store (note this doesn't panic on unmounted keys now)
-	var newStores = make(map[types.StoreKey]types.CommitKVStore)
+	newStores := make(map[types.StoreKey]types.CommitKVStore)
 
 	storesKeys := make([]types.StoreKey, 0, len(rs.storesParams))
 
@@ -228,9 +241,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 
 		// If it was deleted, remove all data
 		if upgrades.IsDeleted(key.Name()) {
-			if err := deleteKVStore(store.(types.KVStore)); err != nil {
-				return errors.Wrapf(err, "failed to delete store %s", key.Name())
-			}
+			deleteKVStore(store.(types.KVStore))
 		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
 			// handle renames specially
 			// make an unregistered key to satify loadCommitStore params
@@ -245,9 +256,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			}
 
 			// move all data
-			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
-				return errors.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
-			}
+			moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore))
 		}
 	}
 
@@ -272,7 +281,7 @@ func (rs *Store) getCommitID(infos map[string]types.StoreInfo, name string) type
 	return info.CommitId
 }
 
-func deleteKVStore(kv types.KVStore) error {
+func deleteKVStore(kv types.KVStore) {
 	// Note that we cannot write while iterating, so load all keys here, delete below
 	var keys [][]byte
 	itr := kv.Iterator(nil, nil)
@@ -285,11 +294,10 @@ func deleteKVStore(kv types.KVStore) error {
 	for _, k := range keys {
 		kv.Delete(k)
 	}
-	return nil
 }
 
 // we simulate move by a copy and delete
-func moveKVStoreData(oldDB types.KVStore, newDB types.KVStore) error {
+func moveKVStoreData(oldDB types.KVStore, newDB types.KVStore) {
 	// we read from one and write to another
 	itr := oldDB.Iterator(nil, nil)
 	for itr.Valid() {
@@ -299,7 +307,7 @@ func moveKVStoreData(oldDB types.KVStore, newDB types.KVStore) error {
 	itr.Close()
 
 	// then delete the old store
-	return deleteKVStore(oldDB)
+	deleteKVStore(oldDB)
 }
 
 // SetInterBlockCache sets the Store's internal inter-block (persistent) cache.
@@ -321,6 +329,8 @@ func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
 // be overwritten. It is implied that the caller should update the context when
 // necessary between tracing operations. It returns a modified MultiStore.
 func (rs *Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
+	rs.traceContextMutex.Lock()
+	defer rs.traceContextMutex.Unlock()
 	if rs.traceContext != nil {
 		for k, v := range tc {
 			rs.traceContext[k] = v
@@ -330,6 +340,22 @@ func (rs *Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
 	}
 
 	return rs
+}
+
+func (rs *Store) getTracingContext() types.TraceContext {
+	rs.traceContextMutex.Lock()
+	defer rs.traceContextMutex.Unlock()
+
+	if rs.traceContext == nil {
+		return nil
+	}
+
+	ctx := types.TraceContext{}
+	for k, v := range rs.traceContext {
+		ctx[k] = v
+	}
+
+	return ctx
 }
 
 // TracingEnabled returns if tracing is enabled for the MultiStore.
@@ -358,7 +384,7 @@ func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
 func (rs *Store) LastCommitID() types.CommitID {
 	if rs.lastCommitInfo == nil {
 		return types.CommitID{
-			Version: getLatestVersion(rs.db),
+			Version: GetLatestVersion(rs.db),
 		}
 	}
 
@@ -372,7 +398,6 @@ func (rs *Store) Commit() types.CommitID {
 		// This case means that no commit has been made in the store, we
 		// start from initialVersion.
 		version = rs.initialVersion
-
 	} else {
 		// This case can means two things:
 		// - either there was already a previous commit in the store, in which
@@ -387,7 +412,7 @@ func (rs *Store) Commit() types.CommitID {
 
 	// Determine if pruneHeight height needs to be added to the list of heights to
 	// be pruned, where pruneHeight = (commitHeight - 1) - KeepRecent.
-	if int64(rs.pruningOpts.KeepRecent) < previousHeight {
+	if rs.pruningOpts.Interval > 0 && int64(rs.pruningOpts.KeepRecent) < previousHeight {
 		pruneHeight := previousHeight - int64(rs.pruningOpts.KeepRecent)
 		// We consider this height to be pruned iff:
 		//
@@ -401,7 +426,7 @@ func (rs *Store) Commit() types.CommitID {
 
 	// batch prune if the current height is a pruning interval height
 	if rs.pruningOpts.Interval > 0 && version%int64(rs.pruningOpts.Interval) == 0 {
-		rs.pruneStores()
+		rs.PruneStores(true, nil)
 	}
 
 	flushMetadata(rs.db, version, rs.lastCommitInfo, rs.pruneHeights)
@@ -412,9 +437,14 @@ func (rs *Store) Commit() types.CommitID {
 	}
 }
 
-// pruneStores will batch delete a list of heights from each mounted sub-store.
-// Afterwards, pruneHeights is reset.
-func (rs *Store) pruneStores() {
+// PruneStores will batch delete a list of heights from each mounted sub-store.
+// If clearStorePruningHeihgts is true, store's pruneHeights is appended to the
+// pruningHeights and reset after finishing pruning.
+func (rs *Store) PruneStores(clearStorePruningHeihgts bool, pruningHeights []int64) {
+	if clearStorePruningHeihgts {
+		pruningHeights = append(pruningHeights, rs.pruneHeights...)
+	}
+
 	if len(rs.pruneHeights) == 0 {
 		return
 	}
@@ -425,7 +455,7 @@ func (rs *Store) pruneStores() {
 			// it to get the underlying IAVL store.
 			store = rs.GetCommitKVStore(key)
 
-			if err := store.(*iavl.Store).DeleteVersions(rs.pruneHeights...); err != nil {
+			if err := store.(*iavl.Store).DeleteVersions(pruningHeights...); err != nil {
 				if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
 					panic(err)
 				}
@@ -433,7 +463,9 @@ func (rs *Store) pruneStores() {
 		}
 	}
 
-	rs.pruneHeights = make([]int64, 0)
+	if clearStorePruningHeihgts {
+		rs.pruneHeights = make([]int64, 0)
+	}
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.
@@ -458,7 +490,7 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	for k, v := range rs.stores {
 		stores[k] = v
 	}
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners)
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext(), rs.listeners)
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
@@ -488,7 +520,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		}
 	}
 
-	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners), nil
+	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.getTracingContext(), rs.listeners), nil
 }
 
 // GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
@@ -520,7 +552,7 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	store := s.(types.KVStore)
 
 	if rs.TracingEnabled() {
-		store = tracekv.NewStore(store, rs.traceWriter, rs.traceContext)
+		store = tracekv.NewStore(store, rs.traceWriter, rs.getTracingContext())
 	}
 	if rs.ListeningEnabled(key) {
 		store = listenkv.NewStore(store, key, rs.listeners[key])
@@ -529,11 +561,11 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	return store
 }
 
-// getStoreByName performs a lookup of a StoreKey given a store name typically
+// GetStoreByName performs a lookup of a StoreKey given a store name typically
 // provided in a path. The StoreKey is then used to perform a lookup and return
 // a Store. If the Store is wrapped in an inter-block cache, it will be unwrapped
 // prior to being returned. If the StoreKey does not exist, nil is returned.
-func (rs *Store) getStoreByName(name string) types.Store {
+func (rs *Store) GetStoreByName(name string) types.Store {
 	key := rs.keysByName[name]
 	if key == nil {
 		return nil
@@ -545,22 +577,28 @@ func (rs *Store) getStoreByName(name string) types.Store {
 // Query calls substore.Query with the same `req` where `req.Path` is
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
-// TODO: add proof for `multistore -> substore`.
+// Special case: if `req.Path` is `/proofs`, the commit hash is included
+// as response value. In addition, proofs of every store are appended to the response for
+// the requested height
 func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	path := req.Path
-	storeName, subpath, err := parsePath(path)
+	firstPath, subpath, err := parsePath(path)
 	if err != nil {
 		return sdkerrors.QueryResult(err)
 	}
 
-	store := rs.getStoreByName(storeName)
+	if firstPath == proofsPath {
+		return rs.doProofsQuery(req)
+	}
+
+	store := rs.GetStoreByName(firstPath)
 	if store == nil {
-		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no such store: %s", storeName))
+		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no such store: %s", firstPath))
 	}
 
 	queryable, ok := store.(types.Queryable)
 	if !ok {
-		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "store %s (type %T) doesn't support queries", storeName, store))
+		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "store %s (type %T) doesn't support queries", firstPath, store))
 	}
 
 	// trim the path and make the query
@@ -590,13 +628,14 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	// Restore origin path and append proof op.
-	res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(storeName))
+	res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(firstPath))
 
 	return res
 }
 
 // SetInitialVersion sets the initial version of the IAVL tree. It is used when
 // starting a new chain at an arbitrary height.
+// NOTE: this never errors. Can we fix the function signature ?
 func (rs *Store) SetInitialVersion(version int64) error {
 	rs.initialVersion = version
 
@@ -638,15 +677,12 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 // identical across nodes such that chunks from different sources fit together. If the output for a
 // given format changes (at the byte level), the snapshot format must be bumped - see
 // TestMultistoreSnapshot_Checksum test.
-func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
-	if format != snapshottypes.CurrentFormat {
-		return nil, sdkerrors.Wrapf(snapshottypes.ErrUnknownFormat, "format %v", format)
-	}
+func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	if height == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot snapshot height 0")
+		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot snapshot height 0")
 	}
 	if height > uint64(rs.LastCommitID().Version) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot snapshot future height %v", height)
+		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot snapshot future height %v", height)
 	}
 
 	// Collect stores to snapshot (only IAVL stores are supported)
@@ -663,7 +699,7 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 			// Non-persisted stores shouldn't be snapshotted
 			continue
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic,
+			return sdkerrors.Wrapf(sdkerrors.ErrLogic,
 				"don't know how to snapshot store %q of type %T", key.Name(), store)
 		}
 	}
@@ -671,160 +707,99 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 		return strings.Compare(stores[i].name, stores[j].name) == -1
 	})
 
-	// Spawn goroutine to generate snapshot chunks and pass their io.ReadClosers through a channel
-	ch := make(chan io.ReadCloser)
-	go func() {
-		// Set up a stream pipeline to serialize snapshot nodes:
-		// ExportNode -> delimited Protobuf -> zlib -> buffer -> chunkWriter -> chan io.ReadCloser
-		chunkWriter := snapshots.NewChunkWriter(ch, snapshotChunkSize)
-		defer chunkWriter.Close()
-		bufWriter := bufio.NewWriterSize(chunkWriter, snapshotBufferSize)
-		defer func() {
-			if err := bufWriter.Flush(); err != nil {
-				chunkWriter.CloseWithError(err)
-			}
-		}()
-		zWriter, err := zlib.NewWriterLevel(bufWriter, 7)
+	// Export each IAVL store. Stores are serialized as a stream of SnapshotItem Protobuf
+	// messages. The first item contains a SnapshotStore with store metadata (i.e. name),
+	// and the following messages contain a SnapshotNode (i.e. an ExportNode). Store changes
+	// are demarcated by new SnapshotStore items.
+	for _, store := range stores {
+		exporter, err := store.Export(int64(height))
 		if err != nil {
-			chunkWriter.CloseWithError(sdkerrors.Wrap(err, "zlib failure"))
-			return
+			return err
 		}
-		defer func() {
-			if err := zWriter.Close(); err != nil {
-				chunkWriter.CloseWithError(err)
-			}
-		}()
-		protoWriter := protoio.NewDelimitedWriter(zWriter)
-		defer func() {
-			if err := protoWriter.Close(); err != nil {
-				chunkWriter.CloseWithError(err)
-			}
-		}()
+		defer exporter.Close()
+		err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
+			Item: &snapshottypes.SnapshotItem_Store{
+				Store: &snapshottypes.SnapshotStoreItem{
+					Name: store.name,
+				},
+			},
+		})
+		if err != nil {
+			return err
+		}
 
-		// Export each IAVL store. Stores are serialized as a stream of SnapshotItem Protobuf
-		// messages. The first item contains a SnapshotStore with store metadata (i.e. name),
-		// and the following messages contain a SnapshotNode (i.e. an ExportNode). Store changes
-		// are demarcated by new SnapshotStore items.
-		for _, store := range stores {
-			exporter, err := store.Export(int64(height))
-			if err != nil {
-				chunkWriter.CloseWithError(err)
-				return
+		for {
+			node, err := exporter.Next()
+			if err == iavltree.ExportDone {
+				break
+			} else if err != nil {
+				return err
 			}
-			defer exporter.Close()
-			err = protoWriter.WriteMsg(&types.SnapshotItem{
-				Item: &types.SnapshotItem_Store{
-					Store: &types.SnapshotStoreItem{
-						Name: store.name,
+			err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
+				Item: &snapshottypes.SnapshotItem_IAVL{
+					IAVL: &snapshottypes.SnapshotIAVLItem{
+						Key:     node.Key,
+						Value:   node.Value,
+						Height:  int32(node.Height),
+						Version: node.Version,
 					},
 				},
 			})
 			if err != nil {
-				chunkWriter.CloseWithError(err)
-				return
+				return err
 			}
-
-			for {
-				node, err := exporter.Next()
-				if err == iavltree.ExportDone {
-					break
-				} else if err != nil {
-					chunkWriter.CloseWithError(err)
-					return
-				}
-				err = protoWriter.WriteMsg(&types.SnapshotItem{
-					Item: &types.SnapshotItem_IAVL{
-						IAVL: &types.SnapshotIAVLItem{
-							Key:     node.Key,
-							Value:   node.Value,
-							Height:  int32(node.Height),
-							Version: node.Version,
-						},
-					},
-				})
-				if err != nil {
-					chunkWriter.CloseWithError(err)
-					return
-				}
-			}
-			exporter.Close()
 		}
-	}()
+		exporter.Close()
+	}
 
-	return ch, nil
+	return nil
 }
 
 // Restore implements snapshottypes.Snapshotter.
+// returns next snapshot item and error.
 func (rs *Store) Restore(
-	height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{},
-) error {
-	if format != snapshottypes.CurrentFormat {
-		return sdkerrors.Wrapf(snapshottypes.ErrUnknownFormat, "format %v", format)
-	}
-	if height == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot restore snapshot at height 0")
-	}
-	if height > uint64(math.MaxInt64) {
-		return sdkerrors.Wrapf(snapshottypes.ErrInvalidMetadata,
-			"snapshot height %v cannot exceed %v", height, int64(math.MaxInt64))
-	}
-
-	// Signal readiness. Must be done before the readers below are set up, since the zlib
-	// reader reads from the stream on initialization, potentially causing deadlocks.
-	if ready != nil {
-		close(ready)
-	}
-
-	// Set up a restore stream pipeline
-	// chan io.ReadCloser -> chunkReader -> zlib -> delimited Protobuf -> ExportNode
-	chunkReader := snapshots.NewChunkReader(chunks)
-	defer chunkReader.Close()
-	zReader, err := zlib.NewReader(chunkReader)
-	if err != nil {
-		return sdkerrors.Wrap(err, "zlib failure")
-	}
-	defer zReader.Close()
-	protoReader := protoio.NewDelimitedReader(zReader, snapshotMaxItemSize)
-	defer protoReader.Close()
-
+	height uint64, format uint32, protoReader protoio.Reader,
+) (snapshottypes.SnapshotItem, error) {
 	// Import nodes into stores. The first item is expected to be a SnapshotItem containing
 	// a SnapshotStoreItem, telling us which store to import into. The following items will contain
 	// SnapshotNodeItem (i.e. ExportNode) until we reach the next SnapshotStoreItem or EOF.
 	var importer *iavltree.Importer
+	var snapshotItem snapshottypes.SnapshotItem
+loop:
 	for {
-		item := &types.SnapshotItem{}
-		err := protoReader.ReadMsg(item)
+		snapshotItem = snapshottypes.SnapshotItem{}
+		err := protoReader.ReadMsg(&snapshotItem)
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return sdkerrors.Wrap(err, "invalid protobuf message")
+			return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
 		}
 
-		switch item := item.Item.(type) {
-		case *types.SnapshotItem_Store:
+		switch item := snapshotItem.Item.(type) {
+		case *snapshottypes.SnapshotItem_Store:
 			if importer != nil {
 				err = importer.Commit()
 				if err != nil {
-					return sdkerrors.Wrap(err, "IAVL commit failed")
+					return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "IAVL commit failed")
 				}
 				importer.Close()
 			}
-			store, ok := rs.getStoreByName(item.Store.Name).(*iavl.Store)
+			store, ok := rs.GetStoreByName(item.Store.Name).(*iavl.Store)
 			if !ok || store == nil {
-				return sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot import into non-IAVL store %q", item.Store.Name)
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot import into non-IAVL store %q", item.Store.Name)
 			}
 			importer, err = store.Import(int64(height))
 			if err != nil {
-				return sdkerrors.Wrap(err, "import failed")
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "import failed")
 			}
 			defer importer.Close()
 
-		case *types.SnapshotItem_IAVL:
+		case *snapshottypes.SnapshotItem_IAVL:
 			if importer == nil {
-				return sdkerrors.Wrap(sdkerrors.ErrLogic, "received IAVL node item before store item")
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(sdkerrors.ErrLogic, "received IAVL node item before store item")
 			}
 			if item.IAVL.Height > math.MaxInt8 {
-				return sdkerrors.Wrapf(sdkerrors.ErrLogic, "node height %v cannot exceed %v",
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(sdkerrors.ErrLogic, "node height %v cannot exceed %v",
 					item.IAVL.Height, math.MaxInt8)
 			}
 			node := &iavltree.ExportNode{
@@ -843,24 +818,24 @@ func (rs *Store) Restore(
 			}
 			err := importer.Add(node)
 			if err != nil {
-				return sdkerrors.Wrap(err, "IAVL node import failed")
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "IAVL node import failed")
 			}
 
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown snapshot item %T", item)
+			break loop
 		}
 	}
 
 	if importer != nil {
 		err := importer.Commit()
 		if err != nil {
-			return sdkerrors.Wrap(err, "IAVL commit failed")
+			return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "IAVL commit failed")
 		}
 		importer.Close()
 	}
 
 	flushMetadata(rs.db, int64(height), rs.buildCommitInfo(int64(height)), []int64{})
-	return rs.LoadLatestVersion()
+	return snapshotItem, rs.LoadLatestVersion()
 }
 
 func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (types.CommitKVStore, error) {
@@ -882,9 +857,9 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var err error
 
 		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, id, rs.lazyLoading, rs.iavlCacheSize)
+			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize, rs.iavlDisableFastNode)
 		} else {
-			store, err = iavl.LoadStoreWithInitialVersion(db, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize)
+			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode)
 		}
 
 		if err != nil {
@@ -940,6 +915,29 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 	}
 }
 
+// RollbackToVersion delete the versions after `target` and update the latest version.
+func (rs *Store) RollbackToVersion(target int64) error {
+	if target <= 0 {
+		return fmt.Errorf("invalid rollback height target: %d", target)
+	}
+
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.GetCommitKVStore(key)
+			_, err := store.(*iavl.Store).LoadVersionForOverwriting(target)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	flushMetadata(rs.db, target, rs.buildCommitInfo(target), []int64{})
+
+	return rs.LoadLatestVersion()
+}
+
 type storeParams struct {
 	key            types.StoreKey
 	db             dbm.DB
@@ -947,7 +945,7 @@ type storeParams struct {
 	initialVersion uint64
 }
 
-func getLatestVersion(db dbm.DB) int64 {
+func GetLatestVersion(db dbm.DB) int64 {
 	bz, err := db.Get([]byte(latestVersionKey))
 	if err != nil {
 		panic(err)
@@ -985,6 +983,24 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 		Version:    version,
 		StoreInfos: storeInfos,
 	}
+}
+
+func (rs *Store) doProofsQuery(req abci.RequestQuery) abci.ResponseQuery {
+	commitInfo, err := getCommitInfo(rs.db, req.Height)
+	if err != nil {
+		return sdkerrors.QueryResult(err)
+	}
+	res := abci.ResponseQuery{
+		Height:   req.Height,
+		Key:      []byte(proofsPath),
+		Value:    commitInfo.CommitID().Hash,
+		ProofOps: &crypto.ProofOps{Ops: make([]crypto.ProofOp, 0, len(commitInfo.StoreInfos))},
+	}
+
+	for _, storeInfo := range commitInfo.StoreInfos {
+		res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(storeInfo.Name))
+	}
+	return res
 }
 
 // Gets commitInfo from disk.

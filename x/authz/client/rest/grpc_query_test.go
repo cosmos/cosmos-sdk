@@ -1,10 +1,10 @@
+//go:build norace
 // +build norace
 
 package rest_test
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -30,8 +30,10 @@ type IntegrationTestSuite struct {
 	grantee sdk.AccAddress
 }
 
-var typeMsgSend = banktypes.SendAuthorization{}.MsgTypeURL()
-var typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
+var (
+	typeMsgSend = banktypes.SendAuthorization{}.MsgTypeURL()
+	typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
+)
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
@@ -218,7 +220,9 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 		tc := tc
 		s.Run(tc.name, func() {
 			tc.preRun()
-			resp, _ := rest.GetRequest(tc.url)
+			resp, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errMsg)
 			} else {
@@ -227,11 +231,110 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 				s.Require().NoError(err)
 				tc.postRun(&authorizations)
 			}
-
 		})
 	}
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
+	val := s.network.Validators[0]
+	grantee := s.grantee[1]
+	require := s.Require()
+
+	testCases := []struct {
+		name      string
+		url       string
+		expectErr bool
+		errMsg    string
+		numItems  int
+	}{
+		{
+			"invalid account address",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, "invalid address"),
+			true,
+			"decoding bech32 failed",
+			0,
+		},
+		{
+			"no authorizations found",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, string(grantee)),
+			false,
+			"",
+			0,
+		},
+		{
+			"valid query",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, val.Address.String()),
+			false,
+			"",
+			7,
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			resp, err := rest.GetRequest(tc.url)
+			require.NoError(err)
+
+			if tc.expectErr {
+				require.Contains(string(resp), tc.errMsg)
+			} else {
+				var authorizations authz.QueryGranterGrantsResponse
+				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
+				require.NoError(err)
+				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
+				require.Len(authorizations.Grants, tc.numItems)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
+	val := s.network.Validators[0]
+	grantee := s.grantee[1]
+	require := s.Require()
+
+	testCases := []struct {
+		name      string
+		url       string
+		expectErr bool
+		errMsg    string
+		numItems  int
+	}{
+		{
+			"invalid account address",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, "invalid address"),
+			true,
+			"decoding bech32 failed",
+			0,
+		},
+		{
+			"no authorizations found",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, val.Address.String()),
+			false,
+			"",
+			0,
+		},
+		{
+			"valid query",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, string(grantee)),
+			false,
+			"",
+			1,
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			resp, err := rest.GetRequest(tc.url)
+			require.NoError(err)
+
+			if tc.expectErr {
+				require.Contains(string(resp), tc.errMsg)
+			} else {
+				var authorizations authz.QueryGranteeGrantsResponse
+				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
+				require.NoError(err)
+				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
+				require.Len(authorizations.Grants, tc.numItems)
+			}
+		})
+	}
 }

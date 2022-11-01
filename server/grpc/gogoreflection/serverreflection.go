@@ -23,6 +23,7 @@ The service implemented is defined in:
 https://github.com/grpc/grpc/blob/master/src/proto/grpc/reflection/v1alpha/reflection.proto.
 
 To register server reflection on a gRPC server:
+
 	import "google.golang.org/grpc/reflection"
 
 	s := grpc.NewServer()
@@ -32,7 +33,6 @@ To register server reflection on a gRPC server:
 	reflection.Register(s)
 
 	s.Serve(lis)
-
 */
 package gogoreflection // import "google.golang.org/grpc/reflection"
 
@@ -41,13 +41,12 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"reflect"
 	"sort"
 	"sync"
 
-	// nolint: staticcheck
+	//nolint: staticcheck
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"google.golang.org/grpc"
@@ -219,7 +218,7 @@ func decompress(b []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("bad gzipped descriptor: %v", err)
 	}
-	out, err := ioutil.ReadAll(r)
+	out, err := io.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("bad gzipped descriptor: %v", err)
 	}

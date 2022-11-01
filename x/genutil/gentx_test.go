@@ -3,7 +3,9 @@ package genutil_test
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -64,7 +66,7 @@ func (suite *GenTxTestSuite) setAccountBalance(addr sdk.AccAddress, amount int64
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
-	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)})
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, amount)})
 	suite.Require().NoError(err)
 
 	bankGenesisState := suite.app.BankKeeper.ExportGenesis(suite.ctx)
@@ -197,7 +199,6 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			} else {
 				suite.Require().Error(err)
 			}
-
 		})
 	}
 }
@@ -230,10 +231,11 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 			"success",
 			func() {
 				_ = suite.setAccountBalance(addr1, 50)
-				_ = suite.setAccountBalance(addr2, 0)
+				_ = suite.setAccountBalance(addr2, 1)
 
 				msg := banktypes.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)})
-				tx, err := helpers.GenTx(
+				tx, err := helpers.GenSignedMockTx(
+					rand.New(rand.NewSource(time.Now().UnixNano())),
 					suite.encodingConfig.TxConfig,
 					[]sdk.Msg{msg},
 					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)},

@@ -10,11 +10,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -52,6 +53,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// initialize the deliver state and check state with a correct header
 	app.setDeliverState(initHeader)
 	app.setCheckState(initHeader)
+	app.setPrepareProposalState(initHeader)
+	app.setProcessProposalState(initHeader)
 
 	// Store the consensus params in the BaseApp's paramstore. Note, this must be
 	// done after the deliver state and context have been set as it's persisted
@@ -182,10 +185,19 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
 
-	// we also set block gas meter to checkState in case the application needs to
-	// verify gas consumption during (Re)CheckTx
+	// we
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
+			WithBlockGasMeter(gasMeter).
+			WithHeaderHash(req.Hash)
+	}
+	if app.prepareProposalState != nil {
+		app.prepareProposalState.ctx = app.prepareProposalState.ctx.
+			WithBlockGasMeter(gasMeter).
+			WithHeaderHash(req.Hash)
+	}
+	if app.processProposalState != nil {
+		app.processProposalState.ctx = app.processProposalState.ctx.
 			WithBlockGasMeter(gasMeter).
 			WithHeaderHash(req.Hash)
 	}
@@ -249,8 +261,11 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-	// TODO: Implement.
-	return abci.ResponsePrepareProposal{Txs: req.Txs}
+	txs, err := app.prepareProposal(req)
+	if err != nil {
+		panic(err)
+	}
+	return abci.ResponsePrepareProposal{Txs: txs}
 }
 
 // ProcessProposal implements the ProcessProposal ABCI method and returns a
@@ -266,7 +281,10 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
-	// TODO: Implement.
+	err := app.processProposal(req)
+	if err != nil {
+		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+	}
 	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 }
 
@@ -367,8 +385,10 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// NOTE: This is safe because Tendermint holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setCheckState(header)
+	app.setPrepareProposalState(header)
+	app.setProcessProposalState(header)
 
-	// empty/reset the deliver state
+	// empty/reset the deliver
 	app.deliverState = nil
 
 	var halt bool

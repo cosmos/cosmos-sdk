@@ -10,7 +10,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
@@ -184,7 +183,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			pool := mempool.NewNonceMempool()
+			pool := s.mempool
 
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
@@ -194,8 +193,8 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				require.NoError(t, err)
 			}
 
-			orderedTxs, err := pool.Select(nil, 1000)
-			require.NoError(t, err)
+			itr := pool.Select(ctx, nil)
+			orderedTxs := fetchTxs(itr, 1000)
 			var txOrder []int
 			for _, tx := range orderedTxs {
 				txOrder = append(txOrder, tx.(testTx).id)

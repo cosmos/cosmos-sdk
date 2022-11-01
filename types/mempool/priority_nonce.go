@@ -10,7 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-var _ Mempool = (*priorityNonceMempool)(nil)
+var (
+	_ Mempool  = (*priorityNonceMempool)(nil)
+	_ Iterator = (*priorityNonceIterator)(nil)
+)
 
 // priorityNonceMempool defines the SDK's default mempool implementation which stores
 // txs in a partially ordered set by 2 dimensions: priority, and sender-nonce
@@ -23,9 +26,16 @@ type priorityNonceMempool struct {
 	priorityIndex  *huandu.SkipList
 	priorityCounts map[int64]int
 	senderIndices  map[string]*huandu.SkipList
-	senderCursors  map[string]*huandu.Element
 	scores         map[txMeta]txMeta
-	onRead         func(tx Tx)
+	onRead         func(tx sdk.Tx)
+}
+
+type priorityNonceIterator struct {
+	senderCursors map[string]*huandu.Element
+	nextPriority  int64
+	sender        string
+	priorityNode  *huandu.Element
+	mempool       *priorityNonceMempool
 }
 
 // txMeta stores transaction metadata used in indices
@@ -74,7 +84,7 @@ func txMetaLess(a, b any) int {
 type PriorityNonceMempoolOption func(*priorityNonceMempool)
 
 // WithOnRead sets a callback to be called when a tx is read from the mempool.
-func WithOnRead(onRead func(tx Tx)) PriorityNonceMempoolOption {
+func WithOnRead(onRead func(tx sdk.Tx)) PriorityNonceMempoolOption {
 	return func(mp *priorityNonceMempool) {
 		mp.onRead = onRead
 	}
@@ -92,7 +102,6 @@ func NewPriorityMempool(opts ...PriorityNonceMempoolOption) Mempool {
 		priorityIndex:  huandu.New(huandu.LessThanFunc(txMetaLess)),
 		priorityCounts: make(map[int64]int),
 		senderIndices:  make(map[string]*huandu.SkipList),
-		senderCursors:  make(map[string]*huandu.Element),
 		scores:         make(map[txMeta]txMeta),
 	}
 
@@ -112,7 +121,7 @@ func NewPriorityMempool(opts ...PriorityNonceMempoolOption) Mempool {
 //
 // Inserting a duplicate tx with a different priority overwrites the existing tx,
 // changing the total order of the mempool.
-func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx Tx) error {
+func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -166,69 +175,99 @@ func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx Tx) error {
 	return nil
 }
 
+func (i *priorityNonceIterator) iteratePriority() Iterator {
+	// beginning of priority iteration
+	if i.priorityNode == nil {
+		i.priorityNode = i.mempool.priorityIndex.Front()
+	} else {
+		i.priorityNode = i.priorityNode.Next()
+	}
+
+	// end of priority iteration
+	if i.priorityNode == nil {
+		return nil
+	}
+
+	i.sender = i.priorityNode.Key().(txMeta).sender
+
+	nextPriorityNode := i.priorityNode.Next()
+	if nextPriorityNode != nil {
+		i.nextPriority = nextPriorityNode.Key().(txMeta).priority
+	} else {
+		i.nextPriority = math.MinInt64
+	}
+
+	return i.Next()
+}
+
+func (i *priorityNonceIterator) Next() Iterator {
+	if i.priorityNode == nil {
+		return nil
+	}
+
+	cursor, ok := i.senderCursors[i.sender]
+	if !ok {
+		// beginning of sender iteration
+		cursor = i.mempool.senderIndices[i.sender].Front()
+	} else {
+		// middle of sender iteration
+		cursor = cursor.Next()
+	}
+
+	// end of sender iteration
+	if cursor == nil {
+		return i.iteratePriority()
+	}
+	key := cursor.Key().(txMeta)
+
+	// we've reached a transaction with a priority lower than the next highest priority in the pool
+	if key.priority < i.nextPriority {
+		return i.iteratePriority()
+	} else if key.priority == i.nextPriority {
+		// weight is incorporated into the priority index key only (not sender index) so we must fetch it here
+		// from the scores map.
+		weight := i.mempool.scores[txMeta{nonce: key.nonce, sender: key.sender}].weight
+		if weight < i.priorityNode.Next().Key().(txMeta).weight {
+			return i.iteratePriority()
+		}
+	}
+
+	i.senderCursors[i.sender] = cursor
+	return i
+}
+
+func (i *priorityNonceIterator) Tx() sdk.Tx {
+	return i.senderCursors[i.sender].Value.(sdk.Tx)
+}
+
 // Select returns a set of transactions from the mempool, ordered by priority
 // and sender-nonce in O(n) time. The passed in list of transactions are ignored.
 // This is a readonly operation, the mempool is not modified.
 //
 // The maxBytes parameter defines the maximum number of bytes of transactions to
 // return.
-func (mp *priorityNonceMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
-	var (
-		selectedTxs []Tx
-		txBytes     int64
-	)
+func (mp *priorityNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
+	if mp.priorityIndex.Len() == 0 {
+		return nil
+	}
 
-	mp.senderCursors = make(map[string]*huandu.Element)
 	mp.reorderPriorityTies()
 
 	priorityNode := mp.priorityIndex.Front()
-	for priorityNode != nil {
-		priorityKey := priorityNode.Key().(txMeta)
-		nextHighestPriority, nextPriorityNode := mp.nextPriority(priorityNode)
-		sender := priorityKey.sender
-		senderTx := mp.fetchSenderCursor(sender)
-
-		// iterate through the sender's transactions in nonce order
-		for senderTx != nil {
-			mempoolTx := senderTx.Value.(Tx)
-			if mp.onRead != nil {
-				mp.onRead(mempoolTx)
-			}
-
-			key := senderTx.Key().(txMeta)
-
-			// break if we've reached a transaction with a priority lower than the next highest priority in the pool
-			if key.priority < nextHighestPriority {
-				break
-			} else if key.priority == nextHighestPriority {
-				// weight is incorporated into the priority index key only (not sender index) so we must fetch it here
-				// from the scores map.
-				weight := mp.scores[txMeta{nonce: key.nonce, sender: key.sender}].weight
-				if weight < nextPriorityNode.Key().(txMeta).weight {
-					break
-				}
-			}
-
-			// otherwise, select the transaction and continue iteration
-			selectedTxs = append(selectedTxs, mempoolTx)
-			if txBytes += mempoolTx.Size(); txBytes >= maxBytes {
-				return selectedTxs, nil
-			}
-
-			senderTx = senderTx.Next()
-			mp.senderCursors[sender] = senderTx
-		}
-
-		priorityNode = nextPriorityNode
+	iterator := &priorityNonceIterator{
+		mempool:       mp,
+		senderCursors: make(map[string]*huandu.Element),
+		priorityNode:  priorityNode,
+		sender:        priorityNode.Key().(txMeta).sender,
 	}
 
-	return selectedTxs, nil
+	return iterator.iteratePriority()
 }
 
 type reorderKey struct {
 	deleteKey txMeta
 	insertKey txMeta
-	tx        Tx
+	tx        sdk.Tx
 }
 
 func (mp *priorityNonceMempool) reorderPriorityTies() {
@@ -239,7 +278,7 @@ func (mp *priorityNonceMempool) reorderPriorityTies() {
 		if mp.priorityCounts[key.priority] > 1 {
 			newKey := key
 			newKey.weight = senderWeight(key.senderElement)
-			reordering = append(reordering, reorderKey{deleteKey: key, insertKey: newKey, tx: node.Value.(Tx)})
+			reordering = append(reordering, reorderKey{deleteKey: key, insertKey: newKey, tx: node.Value.(sdk.Tx)})
 		}
 		node = node.Next()
 	}
@@ -272,14 +311,6 @@ func senderWeight(senderCursor *huandu.Element) int64 {
 	return weight
 }
 
-func (mp *priorityNonceMempool) fetchSenderCursor(sender string) *huandu.Element {
-	senderTx, ok := mp.senderCursors[sender]
-	if !ok {
-		senderTx = mp.senderIndices[sender].Front()
-	}
-	return senderTx
-}
-
 func (mp *priorityNonceMempool) nextPriority(priorityNode *huandu.Element) (int64, *huandu.Element) {
 	var nextPriorityNode *huandu.Element
 	if priorityNode == nil {
@@ -303,7 +334,7 @@ func (mp *priorityNonceMempool) CountTx() int {
 }
 
 // Remove removes a transaction from the mempool in O(log n) time, returning an error if unsuccessful.
-func (mp *priorityNonceMempool) Remove(tx Tx) error {
+func (mp *priorityNonceMempool) Remove(tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err

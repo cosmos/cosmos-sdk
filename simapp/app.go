@@ -190,6 +190,7 @@ func NewSimApp(
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
 
+		//mempoolOpt runtime.BaseAppOption = baseapp.SetMempool(mempool.NewPriorityMempool())
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig,
@@ -197,6 +198,7 @@ func NewSimApp(
 				// supply the application options
 				appOpts,
 
+				//mempoolOpt,
 				// For providing a custom inflation function for x/mint add here your
 				// custom function that implements the minttypes.InflationCalculationFn
 				// interface.

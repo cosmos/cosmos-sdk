@@ -38,7 +38,7 @@ func TestOutOfOrder(t *testing.T) {
 		}}
 
 	for _, outOfOrder := range outOfOrders {
-		var mtxs []mempool.Tx
+		var mtxs []sdk.Tx
 		for _, mtx := range outOfOrder {
 			mtxs = append(mtxs, mtx)
 		}
@@ -49,7 +49,7 @@ func TestOutOfOrder(t *testing.T) {
 	seed := time.Now().UnixNano()
 	t.Logf("running with seed: %d", seed)
 	randomTxs := genRandomTxs(seed, 1000, 10)
-	var rmtxs []mempool.Tx
+	var rmtxs []sdk.Tx
 	for _, rtx := range randomTxs {
 		rmtxs = append(rmtxs, rtx)
 	}
@@ -238,8 +238,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 				require.NoError(t, err)
 			}
 
-			orderedTxs, err := pool.Select(nil, 1000)
-			require.NoError(t, err)
+			orderedTxs := fetchTxs(pool.Select(ctx, nil), 1000)
 			var txOrder []int
 			for _, tx := range orderedTxs {
 				txOrder = append(txOrder, tx.(testTx).id)
@@ -292,8 +291,7 @@ func (s *MempoolTestSuite) TestPriorityTies() {
 			err := s.mempool.Insert(c, tx)
 			s.NoError(err)
 		}
-		selected, err := s.mempool.Select(nil, 1000)
-		s.NoError(err)
+		selected := fetchTxs(s.mempool.Select(ctx, nil), 1000)
 		var orderedTxs []txSpec
 		for _, tx := range selected {
 			ttx := tx.(testTx)
@@ -317,7 +315,7 @@ func (s *MempoolTestSuite) TestRandomTxOrderManyTimes() {
 
 // validateOrder checks that the txs are ordered by priority and nonce
 // in O(n^2) time by checking each tx against all the other txs
-func validateOrder(mtxs []mempool.Tx) error {
+func validateOrder(mtxs []sdk.Tx) error {
 	iterations := 0
 	var itxs []txSpec
 	for i, mtx := range mtxs {
@@ -374,7 +372,7 @@ func validateOrder(mtxs []mempool.Tx) error {
 
 func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	s.iterations = 0
-	s.mempool = mempool.NewPriorityMempool(mempool.WithOnRead(func(tx mempool.Tx) {
+	s.mempool = mempool.NewPriorityMempool(mempool.WithOnRead(func(tx sdk.Tx) {
 		s.iterations++
 	}))
 	t := s.T()
@@ -391,9 +389,8 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 		require.NoError(t, err)
 	}
 
-	selected, err := mp.Select(nil, 100000)
+	selected := fetchTxs(mp.Select(ctx, nil), 100000)
 	require.Equal(t, len(generated), len(selected))
-	require.NoError(t, err)
 
 	start := time.Now()
 	require.NoError(t, validateOrder(selected))
@@ -429,7 +426,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 
 	require.Equal(t, s.numTxs, mp.CountTx())
 
-	selected, err := mp.Select(nil, math.MaxInt)
+	selected := fetchTxs(mp.Select(ctx, nil), math.MaxInt)
 	require.Equal(t, len(ordered), len(selected))
 	var orderedStr, selectedStr string
 
@@ -442,7 +439,6 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 			selectedStr, stx.address, stx.priority, stx.nonce, stx.id)
 	}
 
-	require.NoError(t, err)
 	require.Equal(t, s.numTxs, len(selected))
 
 	errMsg := fmt.Sprintf("Expected order: %v\nGot order: %v\nSeed: %v", orderedStr, selectedStr, seed)

@@ -41,7 +41,7 @@ func NewMemoryListener() *MemoryListener {
 	return &MemoryListener{}
 }
 
-// OnWrite implements MemoryListener interface
+// OnWrite writes state change events to the internal cache
 func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) {
 	fl.stateCache = append(fl.stateCache, StoreKVPair{
 		StoreKey: storeKey.Name(),
@@ -97,19 +97,14 @@ func NewStore(parent types.KVStore, psk types.StoreKey, listener *types.MemoryLi
 func (s *Store) Set(key []byte, value []byte) {
     types.AssertValidKey(key)
     s.parent.Set(key, value)
-    s.onWrite(false, key, value)
+    s.listener.OnWrite(s.parentStoreKey, key, value, false)
 }
 
 // Delete implements the KVStore interface. It traces a write operation and
 // delegates the Delete call to the parent KVStore.
 func (s *Store) Delete(key []byte) {
     s.parent.Delete(key)
-    s.onWrite(true, key, nil)
-}
-
-// onWrite writes a KVStore operation to all the WriteListeners
-func (s *Store) onWrite(delete bool, key, value []byte) {
-    s.listener.OnWrite(s.parentStoreKey, key, value, delete)
+    s.listener.OnWrite(s.parentStoreKey, key, nil, true)
 }
 ```
 

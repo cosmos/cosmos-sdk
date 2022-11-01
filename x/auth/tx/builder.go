@@ -257,7 +257,6 @@ func (w *wrapper) SetTip(tip *tx.Tip) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
-
 }
 
 func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
@@ -269,7 +268,6 @@ func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
-
 }
 
 func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
@@ -281,7 +279,6 @@ func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
-
 }
 
 func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
@@ -324,7 +321,6 @@ func (w *wrapper) setSignerInfoAtIndex(index int, info *tx.SignerInfo) {
 	w.tx.AuthInfo.SignerInfos[index] = info
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
-
 }
 
 func (w *wrapper) setSignatures(sigs [][]byte) {

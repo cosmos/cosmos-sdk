@@ -123,7 +123,8 @@ message Validator {
   string min_self_delegation = 11 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    deprecated             = true
   ];
 
   // strictly positive if this validator's unbonding has been stopped by external modules
@@ -131,6 +132,18 @@ message Validator {
 
   // list of unbonding ids, each uniquely identifing an unbonding of this validator
   repeated uint64 unbonding_ids = 13;
+
+  // total shares that are exempt from issuing liquid shares of
+  string total_exempt_shares = 14 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+
+  // total tokenized shares issued by the validator
+  string total_tokenized_shares = 15 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // BondStatus is the status of a validator.
@@ -209,6 +222,10 @@ message Delegation {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+  // has this delegation been marked as exempt.
+  //
+  // Since: cosmos-sdk 0.47
+  bool exempt = 4;
 }
 
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
@@ -223,7 +240,7 @@ message UnbondingDelegation {
   // validator_address is the bech32-encoded address of the validator.
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // entries are the unbonding delegation entries.
-  repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false]; // unbonding delegation entries
+  repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false];  // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry defines an unbonding object with relevant metadata.
@@ -296,7 +313,7 @@ message Redelegation {
   // validator_dst_address is the validator redelegation destination operator address.
   string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // entries are the redelegation entries.
-  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries
+  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false];  // redelegation entries
 }
 
 // Params defines the parameters for the x/staking module.
@@ -316,7 +333,13 @@ message Params {
   string bond_denom = 5;
   // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
   string min_commission_rate = 6 [
-    (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  // exemption_factor is required for tokenize share and undelegation check for network safety
+  //
+  // Since: cosmos-sdk 0.47
+  string exemption_factor = 7 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
@@ -390,4 +413,16 @@ enum Infraction {
 // TODO: explore moving this to proto/cosmos/base to separate modules from tendermint dependence
 message ValidatorUpdates {
   repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false];
+}
+
+// Record of tokenized share
+//
+// Since: cosmos-sdk 0.47
+message TokenizeShareRecord {
+  option (gogoproto.equal) = true;
+
+  uint64 id             = 1;
+  string owner          = 2;
+  string module_account = 3;  // module account take the role of delegator
+  string validator      = 4;  // validator delegated to for tokenize share record creation
 }

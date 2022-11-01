@@ -491,3 +491,27 @@ func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdatePara
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }
+
+func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
+	return &types.MsgTokenizeSharesResponse{Amount: sdk.Coin{}}, nil
+}
+
+func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemTokens) (*types.MsgRedeemTokensResponse, error) {
+	return &types.MsgRedeemTokensResponse{
+		Amount: sdk.Coin{},
+	}, nil
+}
+
+func (k msgServer) TransferShareRecord(goCtx context.Context, msg *types.MsgTransferShareRecord) (*types.MsgTransferShareRecordResponse, error) {
+	return &types.MsgTransferShareRecordResponse{}, nil
+}
+
+func (k msgServer) ExemptDelegation(goCtx context.Context, msg *types.MsgExemptDelegation) (*types.MsgExemptDelegationResponse, error) {
+	return &types.MsgExemptDelegationResponse{}, nil
+}
+
+// UnbondValidator defines a method for performing the status transition for
+// a validator from bonded to unbonded
+func (k msgServer) UnbondValidator(goCtx context.Context, msg *types.MsgUnbondValidator) (*types.MsgUnbondValidatorResponse, error) {
+	return &types.MsgUnbondValidatorResponse{}, nil
+}

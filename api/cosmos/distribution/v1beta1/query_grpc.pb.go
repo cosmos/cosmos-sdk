@@ -43,6 +43,8 @@ type QueryClient interface {
 	DelegatorWithdrawAddress(ctx context.Context, in *QueryDelegatorWithdrawAddressRequest, opts ...grpc.CallOption) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
 	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
+	// TokenizeShareRecordReward queries the tokenize share record rewards
+	TokenizeShareReward(ctx context.Context, in *QueryTokenizeShareRewardRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRewardResponse, error)
 }
 
 type queryClient struct {
@@ -143,6 +145,15 @@ func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolR
 	return out, nil
 }
 
+func (c *queryClient) TokenizeShareReward(ctx context.Context, in *QueryTokenizeShareRewardRequest, opts ...grpc.CallOption) (*QueryTokenizeShareRewardResponse, error) {
+	out := new(QueryTokenizeShareRewardResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/TokenizeShareReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -168,6 +179,8 @@ type QueryServer interface {
 	DelegatorWithdrawAddress(context.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
 	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
+	// TokenizeShareRecordReward queries the tokenize share record rewards
+	TokenizeShareReward(context.Context, *QueryTokenizeShareRewardRequest) (*QueryTokenizeShareRewardResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -204,6 +217,9 @@ func (UnimplementedQueryServer) DelegatorWithdrawAddress(context.Context, *Query
 }
 func (UnimplementedQueryServer) CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommunityPool not implemented")
+}
+func (UnimplementedQueryServer) TokenizeShareReward(context.Context, *QueryTokenizeShareRewardRequest) (*QueryTokenizeShareRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TokenizeShareReward not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -398,6 +414,24 @@ func _Query_CommunityPool_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_TokenizeShareReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTokenizeShareRewardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TokenizeShareReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Query/TokenizeShareReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TokenizeShareReward(ctx, req.(*QueryTokenizeShareRewardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -444,6 +478,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CommunityPool",
 			Handler:    _Query_CommunityPool_Handler,
+		},
+		{
+			MethodName: "TokenizeShareReward",
+			Handler:    _Query_TokenizeShareReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -46,6 +46,14 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.47
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
+	// WithdrawShareReward defines a method to withdraw reward for an owning ShareRecord
+	//
+	// Since: cosmos-sdk 0.47
+	WithdrawShareReward(ctx context.Context, in *MsgWithdrawShareReward, opts ...grpc.CallOption) (*MsgWithdrawShareRewardResponse, error)
+	// WithdrawAllShareReward defines a method to withdraw reward for all owning ShareRecord
+	//
+	// Since: cosmos-sdk 0.47
+	WithdrawAllShareReward(ctx context.Context, in *MsgWithdrawAllShareReward, opts ...grpc.CallOption) (*MsgWithdrawAllShareRewardResponse, error)
 }
 
 type msgClient struct {
@@ -110,6 +118,24 @@ func (c *msgClient) CommunityPoolSpend(ctx context.Context, in *MsgCommunityPool
 	return out, nil
 }
 
+func (c *msgClient) WithdrawShareReward(ctx context.Context, in *MsgWithdrawShareReward, opts ...grpc.CallOption) (*MsgWithdrawShareRewardResponse, error) {
+	out := new(MsgWithdrawShareRewardResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/WithdrawShareReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawAllShareReward(ctx context.Context, in *MsgWithdrawAllShareReward, opts ...grpc.CallOption) (*MsgWithdrawAllShareRewardResponse, error) {
+	out := new(MsgWithdrawAllShareRewardResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/WithdrawAllShareReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -138,6 +164,14 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.47
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
+	// WithdrawShareReward defines a method to withdraw reward for an owning ShareRecord
+	//
+	// Since: cosmos-sdk 0.47
+	WithdrawShareReward(context.Context, *MsgWithdrawShareReward) (*MsgWithdrawShareRewardResponse, error)
+	// WithdrawAllShareReward defines a method to withdraw reward for all owning ShareRecord
+	//
+	// Since: cosmos-sdk 0.47
+	WithdrawAllShareReward(context.Context, *MsgWithdrawAllShareReward) (*MsgWithdrawAllShareRewardResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -162,6 +196,12 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*
 }
 func (UnimplementedMsgServer) CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommunityPoolSpend not implemented")
+}
+func (UnimplementedMsgServer) WithdrawShareReward(context.Context, *MsgWithdrawShareReward) (*MsgWithdrawShareRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawShareReward not implemented")
+}
+func (UnimplementedMsgServer) WithdrawAllShareReward(context.Context, *MsgWithdrawAllShareReward) (*MsgWithdrawAllShareRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawAllShareReward not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -284,6 +324,42 @@ func _Msg_CommunityPoolSpend_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_WithdrawShareReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawShareReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawShareReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/WithdrawShareReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawShareReward(ctx, req.(*MsgWithdrawShareReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawAllShareReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawAllShareReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawAllShareReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/WithdrawAllShareReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawAllShareReward(ctx, req.(*MsgWithdrawAllShareReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -314,6 +390,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CommunityPoolSpend",
 			Handler:    _Msg_CommunityPoolSpend_Handler,
+		},
+		{
+			MethodName: "WithdrawShareReward",
+			Handler:    _Msg_WithdrawShareReward_Handler,
+		},
+		{
+			MethodName: "WithdrawAllShareReward",
+			Handler:    _Msg_WithdrawAllShareReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

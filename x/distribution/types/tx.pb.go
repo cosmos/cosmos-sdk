@@ -527,8 +527,7 @@ func (m *MsgCommunityPoolSpend) GetAmount() github_com_cosmos_cosmos_sdk_types.C
 	return nil
 }
 
-// MsgCommunityPoolSpendResponse defines the response to executing a
-// MsgCommunityPoolSpend message.
+// MsgCommunityPoolSpendResponse defines the response type
 //
 // Since: cosmos-sdk 0.47
 type MsgCommunityPoolSpendResponse struct {
@@ -567,6 +566,167 @@ func (m *MsgCommunityPoolSpendResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCommunityPoolSpendResponse proto.InternalMessageInfo
 
+// MsgWithdrawShareReward defines the request to executing a
+// message MsgWithdrawShareReward
+//
+// Since: cosmos-sdk 0.47
+type MsgWithdrawShareReward struct {
+	OwnerAddress string `protobuf:"bytes,1,opt,name=owner_address,json=ownerAddress,proto3" json:"owner_address,omitempty" yaml:"owner_address"`
+	RecordId     uint64 `protobuf:"varint,2,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
+}
+
+func (m *MsgWithdrawShareReward) Reset()         { *m = MsgWithdrawShareReward{} }
+func (m *MsgWithdrawShareReward) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawShareReward) ProtoMessage()    {}
+func (*MsgWithdrawShareReward) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed4f433d965e58ca, []int{12}
+}
+func (m *MsgWithdrawShareReward) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawShareReward) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawShareReward.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawShareReward) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawShareReward.Merge(m, src)
+}
+func (m *MsgWithdrawShareReward) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawShareReward) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawShareReward.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawShareReward proto.InternalMessageInfo
+
+// MsgWithdrawShareRewardResponse defines the response type
+//
+// Since: cosmos-sdk 0.47
+type MsgWithdrawShareRewardResponse struct {
+}
+
+func (m *MsgWithdrawShareRewardResponse) Reset()         { *m = MsgWithdrawShareRewardResponse{} }
+func (m *MsgWithdrawShareRewardResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawShareRewardResponse) ProtoMessage()    {}
+func (*MsgWithdrawShareRewardResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed4f433d965e58ca, []int{13}
+}
+func (m *MsgWithdrawShareRewardResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawShareRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawShareRewardResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawShareRewardResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawShareRewardResponse.Merge(m, src)
+}
+func (m *MsgWithdrawShareRewardResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawShareRewardResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawShareRewardResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawShareRewardResponse proto.InternalMessageInfo
+
+// MsgWithdrawAllShareReward defines the request to executing a
+// message MsgWithdrawAllShareReward
+//
+// Since: cosmos-sdk 0.47
+type MsgWithdrawAllShareReward struct {
+	OwnerAddress string `protobuf:"bytes,1,opt,name=owner_address,json=ownerAddress,proto3" json:"owner_address,omitempty" yaml:"owner_address"`
+}
+
+func (m *MsgWithdrawAllShareReward) Reset()         { *m = MsgWithdrawAllShareReward{} }
+func (m *MsgWithdrawAllShareReward) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawAllShareReward) ProtoMessage()    {}
+func (*MsgWithdrawAllShareReward) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed4f433d965e58ca, []int{14}
+}
+func (m *MsgWithdrawAllShareReward) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawAllShareReward) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawAllShareReward.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawAllShareReward) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawAllShareReward.Merge(m, src)
+}
+func (m *MsgWithdrawAllShareReward) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawAllShareReward) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawAllShareReward.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawAllShareReward proto.InternalMessageInfo
+
+// MsgWithdrawAllShareRewardResponse defines the response type
+//
+// Since: cosmos-sdk 0.47
+type MsgWithdrawAllShareRewardResponse struct {
+}
+
+func (m *MsgWithdrawAllShareRewardResponse) Reset()         { *m = MsgWithdrawAllShareRewardResponse{} }
+func (m *MsgWithdrawAllShareRewardResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawAllShareRewardResponse) ProtoMessage()    {}
+func (*MsgWithdrawAllShareRewardResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed4f433d965e58ca, []int{15}
+}
+func (m *MsgWithdrawAllShareRewardResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawAllShareRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawAllShareRewardResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawAllShareRewardResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawAllShareRewardResponse.Merge(m, src)
+}
+func (m *MsgWithdrawAllShareRewardResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawAllShareRewardResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawAllShareRewardResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawAllShareRewardResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgSetWithdrawAddress)(nil), "cosmos.distribution.v1beta1.MsgSetWithdrawAddress")
 	proto.RegisterType((*MsgSetWithdrawAddressResponse)(nil), "cosmos.distribution.v1beta1.MsgSetWithdrawAddressResponse")
@@ -580,6 +740,10 @@ func init() {
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "cosmos.distribution.v1beta1.MsgUpdateParamsResponse")
 	proto.RegisterType((*MsgCommunityPoolSpend)(nil), "cosmos.distribution.v1beta1.MsgCommunityPoolSpend")
 	proto.RegisterType((*MsgCommunityPoolSpendResponse)(nil), "cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse")
+	proto.RegisterType((*MsgWithdrawShareReward)(nil), "cosmos.distribution.v1beta1.MsgWithdrawShareReward")
+	proto.RegisterType((*MsgWithdrawShareRewardResponse)(nil), "cosmos.distribution.v1beta1.MsgWithdrawShareRewardResponse")
+	proto.RegisterType((*MsgWithdrawAllShareReward)(nil), "cosmos.distribution.v1beta1.MsgWithdrawAllShareReward")
+	proto.RegisterType((*MsgWithdrawAllShareRewardResponse)(nil), "cosmos.distribution.v1beta1.MsgWithdrawAllShareRewardResponse")
 }
 
 func init() {
@@ -587,54 +751,62 @@ func init() {
 }
 
 var fileDescriptor_ed4f433d965e58ca = []byte{
-	// 746 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0xc1, 0x4f, 0x13, 0x4f,
-	0x14, 0xee, 0xfc, 0xf8, 0xd9, 0x84, 0xc1, 0x08, 0x6c, 0x50, 0x60, 0xc1, 0x2d, 0x59, 0x8d, 0x21,
-	0x44, 0xb6, 0xb6, 0x1a, 0x8d, 0xf5, 0x60, 0x68, 0xc5, 0x5b, 0x23, 0x29, 0x51, 0x13, 0x2f, 0x64,
-	0xdb, 0x9d, 0x2c, 0x13, 0xd9, 0x9d, 0xcd, 0xce, 0x94, 0xc2, 0x4d, 0x8d, 0x89, 0x7a, 0x30, 0x31,
-	0xf1, 0x6a, 0x22, 0x47, 0xe3, 0x89, 0x83, 0xff, 0x81, 0x17, 0x82, 0x17, 0xe2, 0xc9, 0x93, 0x9a,
-	0x72, 0xc0, 0x3f, 0xc3, 0xec, 0xee, 0xec, 0xb4, 0x75, 0xb7, 0x5d, 0x0a, 0xca, 0x69, 0x9b, 0x7d,
-	0xef, 0xfb, 0xe6, 0xfb, 0xde, 0xbc, 0xf7, 0xba, 0xf0, 0x62, 0x8d, 0x50, 0x8b, 0xd0, 0xac, 0x81,
-	0x29, 0x73, 0x71, 0xb5, 0xce, 0x30, 0xb1, 0xb3, 0xeb, 0xb9, 0x2a, 0x62, 0x7a, 0x2e, 0xcb, 0x36,
-	0x34, 0xc7, 0x25, 0x8c, 0x48, 0x53, 0x41, 0x96, 0xd6, 0x9e, 0xa5, 0xf1, 0x2c, 0x79, 0xcc, 0x24,
-	0x26, 0xf1, 0xf3, 0xb2, 0xde, 0xaf, 0x00, 0x22, 0x2b, 0x9c, 0xb8, 0xaa, 0x53, 0x24, 0x08, 0x6b,
-	0x04, 0xdb, 0x3c, 0x3e, 0x19, 0xc4, 0x57, 0x02, 0x20, 0xe7, 0x0f, 0x42, 0xe3, 0x1c, 0x6a, 0x51,
-	0x33, 0xbb, 0x9e, 0xf3, 0x1e, 0x3c, 0xa0, 0xf5, 0x12, 0xdb, 0xa1, 0xcd, 0xcf, 0x57, 0x3f, 0x03,
-	0x78, 0xb6, 0x4c, 0xcd, 0x65, 0xc4, 0x1e, 0x62, 0xb6, 0x6a, 0xb8, 0x7a, 0x63, 0xc1, 0x30, 0x5c,
-	0x44, 0xa9, 0xb4, 0x08, 0x47, 0x0d, 0xb4, 0x86, 0x4c, 0x9d, 0x11, 0x77, 0x45, 0x0f, 0x5e, 0x4e,
-	0x80, 0x19, 0x30, 0x3b, 0x58, 0x9c, 0xf8, 0xfa, 0x69, 0x7e, 0x8c, 0xeb, 0xe1, 0xe9, 0xcb, 0xcc,
-	0xc5, 0xb6, 0x59, 0x19, 0x11, 0x90, 0x90, 0xa6, 0x04, 0x47, 0x1a, 0x9c, 0x59, 0xb0, 0xfc, 0x97,
-	0xc0, 0x32, 0xdc, 0xe8, 0xd4, 0x52, 0x50, 0x5e, 0x6e, 0x65, 0x52, 0xbf, 0xb6, 0x32, 0xa9, 0x67,
-	0x07, 0xdb, 0x73, 0x51, 0x59, 0x6a, 0x06, 0x9e, 0x8f, 0x35, 0x51, 0x41, 0xd4, 0x21, 0x36, 0x45,
-	0xea, 0x2e, 0x80, 0x72, 0x99, 0x9a, 0x61, 0xf8, 0x4e, 0xc8, 0x50, 0x41, 0x0d, 0xdd, 0x35, 0xfe,
-	0x96, 0xd7, 0x45, 0x38, 0xba, 0xae, 0xaf, 0x61, 0xa3, 0x83, 0x26, 0xc9, 0xec, 0x88, 0x80, 0x1c,
-	0xd6, 0xed, 0x2b, 0x00, 0xd5, 0xee, 0x66, 0x42, 0xcf, 0x52, 0x0d, 0xa6, 0x75, 0x8b, 0xd4, 0x6d,
-	0x36, 0x01, 0x66, 0x06, 0x66, 0x87, 0xf2, 0x93, 0xbc, 0x37, 0x34, 0xaf, 0xdf, 0xc2, 0xd6, 0xd4,
-	0x4a, 0x04, 0xdb, 0xc5, 0x2b, 0x3b, 0xdf, 0x33, 0xa9, 0x8f, 0x3f, 0x32, 0xb3, 0x26, 0x66, 0xab,
-	0xf5, 0xaa, 0x56, 0x23, 0x16, 0xef, 0x37, 0xfe, 0x98, 0xa7, 0xc6, 0xe3, 0x2c, 0xdb, 0x74, 0x10,
-	0xf5, 0x01, 0xb4, 0xc2, 0xa9, 0xd5, 0x17, 0x00, 0x2a, 0x6d, 0x5a, 0x1e, 0x84, 0x5e, 0x4a, 0xc4,
-	0xb2, 0x30, 0xa5, 0x98, 0xd8, 0xf1, 0x55, 0x01, 0xc7, 0xac, 0x4a, 0x84, 0x51, 0x7d, 0x0d, 0xe0,
-	0xa5, 0xde, 0x4a, 0x4e, 0xb6, 0x32, 0x5f, 0x00, 0x1c, 0x2b, 0x53, 0xf3, 0x6e, 0xdd, 0x36, 0x3c,
-	0x09, 0x75, 0x1b, 0xb3, 0xcd, 0x25, 0x42, 0xd6, 0x4e, 0xe4, 0x74, 0xe9, 0x3a, 0x1c, 0x34, 0x90,
-	0x43, 0x28, 0x66, 0xc4, 0x4d, 0x6c, 0xc1, 0x56, 0x6a, 0xe1, 0x5c, 0x7b, 0x95, 0x5b, 0xef, 0x55,
-	0x05, 0x4e, 0xc7, 0x99, 0x11, 0x03, 0xf6, 0x0e, 0xc0, 0xe1, 0x32, 0x35, 0xef, 0x3b, 0x86, 0xce,
-	0xd0, 0x92, 0xee, 0xea, 0x16, 0xf5, 0x34, 0xe8, 0x75, 0xb6, 0x4a, 0x5c, 0xcc, 0x36, 0x13, 0x2f,
-	0xbc, 0x95, 0x2a, 0x2d, 0xc0, 0xb4, 0xe3, 0x33, 0xf8, 0xc2, 0x87, 0xf2, 0x17, 0xb4, 0x1e, 0xbb,
-	0x55, 0x0b, 0x0e, 0x2b, 0xfe, 0xef, 0x95, 0xaa, 0xc2, 0x81, 0x85, 0x33, 0xbe, 0x7c, 0x41, 0xa9,
-	0x4e, 0xc2, 0xf1, 0x3f, 0xd4, 0x09, 0xe5, 0xcd, 0x60, 0x03, 0x76, 0xd8, 0x5a, 0x76, 0x90, 0x6d,
-	0x1c, 0x59, 0xff, 0x34, 0x1c, 0x74, 0x51, 0x0d, 0x3b, 0x18, 0xd9, 0x2c, 0xa8, 0x7d, 0xa5, 0xf5,
-	0xa2, 0xed, 0xfa, 0x07, 0xfe, 0xd9, 0xf5, 0x47, 0xfc, 0x07, 0x0b, 0x32, 0xea, 0x31, 0xac, 0x42,
-	0x7e, 0x37, 0x0d, 0x07, 0xca, 0xd4, 0x94, 0x9e, 0x03, 0x28, 0xc5, 0xfc, 0x19, 0xe4, 0x7b, 0x5e,
-	0x41, 0xec, 0xee, 0x95, 0x0b, 0xfd, 0x63, 0xc4, 0x84, 0xbe, 0x05, 0x70, 0xbc, 0xdb, 0xb2, 0xbe,
-	0x91, 0xc4, 0xdb, 0x05, 0x28, 0xdf, 0x3e, 0x22, 0x50, 0xa8, 0x7a, 0x0f, 0xe0, 0x54, 0xaf, 0x4d,
-	0x77, 0xeb, 0xb0, 0x07, 0xc4, 0x80, 0xe5, 0xd2, 0x31, 0xc0, 0x42, 0xe1, 0x53, 0x00, 0x47, 0xa3,
-	0x1b, 0x27, 0x97, 0x44, 0x1d, 0x81, 0xc8, 0x37, 0xfb, 0x86, 0x08, 0x0d, 0x2e, 0x3c, 0xdd, 0xb1,
-	0x06, 0x2e, 0x27, 0x51, 0xb5, 0x67, 0xcb, 0xd7, 0xfa, 0xc9, 0x16, 0x67, 0x7a, 0x6d, 0x1b, 0x33,
-	0xc1, 0x89, 0x6d, 0x1b, 0xc5, 0x24, 0xb7, 0x6d, 0xf7, 0x29, 0x92, 0x4f, 0x3d, 0x39, 0xd8, 0x9e,
-	0x03, 0xc5, 0x7b, 0x1f, 0x9a, 0x0a, 0xd8, 0x69, 0x2a, 0x60, 0xaf, 0xa9, 0x80, 0x9f, 0x4d, 0x05,
-	0xbc, 0xd9, 0x57, 0x52, 0x7b, 0xfb, 0x4a, 0xea, 0xdb, 0xbe, 0x92, 0x7a, 0x94, 0xeb, 0x39, 0xcd,
-	0x1b, 0x9d, 0x9f, 0x6e, 0xfe, 0x70, 0x57, 0xd3, 0xfe, 0xc7, 0xda, 0xd5, 0xdf, 0x01, 0x00, 0x00,
-	0xff, 0xff, 0x0f, 0x5d, 0xcf, 0xc0, 0x8b, 0x0a, 0x00, 0x00,
+	// 876 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x57, 0xcf, 0x6f, 0xe3, 0x44,
+	0x14, 0xce, 0xd0, 0xa5, 0x6a, 0x67, 0x17, 0xb6, 0x35, 0xa1, 0x6d, 0xdc, 0xc5, 0x29, 0x5e, 0x84,
+	0xaa, 0x15, 0x75, 0x48, 0x8a, 0x8a, 0x48, 0x05, 0xa8, 0x09, 0x45, 0xe2, 0x10, 0x51, 0x39, 0x02,
+	0x24, 0x2e, 0x95, 0x93, 0x19, 0x39, 0x23, 0x62, 0x8f, 0xe5, 0x99, 0x34, 0xcd, 0x05, 0x01, 0x42,
+	0x2a, 0x1c, 0x90, 0x2a, 0x71, 0x45, 0xa2, 0x47, 0xc4, 0xa9, 0x07, 0xfe, 0x03, 0x2e, 0x15, 0x5c,
+	0x2a, 0x4e, 0x9c, 0x0a, 0x4a, 0x0f, 0xe5, 0xcc, 0x5f, 0x80, 0xe2, 0x5f, 0xb1, 0xb1, 0x13, 0xa7,
+	0x69, 0xb7, 0x27, 0x27, 0x33, 0xef, 0xfb, 0xe6, 0x7b, 0x6f, 0x9e, 0xbf, 0x97, 0xc0, 0x57, 0x9a,
+	0x94, 0x19, 0x94, 0x15, 0x10, 0x61, 0xdc, 0x26, 0x8d, 0x0e, 0x27, 0xd4, 0x2c, 0x1c, 0x14, 0x1b,
+	0x98, 0x6b, 0xc5, 0x02, 0x3f, 0x54, 0x2c, 0x9b, 0x72, 0x2a, 0xac, 0xba, 0x51, 0x4a, 0x38, 0x4a,
+	0xf1, 0xa2, 0xc4, 0xac, 0x4e, 0x75, 0xea, 0xc4, 0x15, 0x06, 0x9f, 0x5c, 0x88, 0x28, 0x79, 0xc4,
+	0x0d, 0x8d, 0xe1, 0x80, 0xb0, 0x49, 0x89, 0xe9, 0xed, 0xe7, 0xdc, 0xfd, 0x7d, 0x17, 0xe8, 0xf1,
+	0xbb, 0x5b, 0xcb, 0x1e, 0xd4, 0x60, 0x7a, 0xe1, 0xa0, 0x38, 0x78, 0x78, 0x1b, 0xca, 0x38, 0xb1,
+	0x11, 0x6d, 0x4e, 0xbc, 0xfc, 0x2b, 0x80, 0x2f, 0xd6, 0x98, 0x5e, 0xc7, 0xfc, 0x13, 0xc2, 0x5b,
+	0xc8, 0xd6, 0xba, 0x3b, 0x08, 0xd9, 0x98, 0x31, 0x61, 0x17, 0x2e, 0x22, 0xdc, 0xc6, 0xba, 0xc6,
+	0xa9, 0xbd, 0xaf, 0xb9, 0x8b, 0x2b, 0x60, 0x0d, 0xac, 0xcf, 0x57, 0x56, 0xfe, 0xf8, 0x65, 0x23,
+	0xeb, 0xe9, 0xf1, 0xc2, 0xeb, 0xdc, 0x26, 0xa6, 0xae, 0x2e, 0x04, 0x10, 0x9f, 0xa6, 0x0a, 0x17,
+	0xba, 0x1e, 0x73, 0xc0, 0xf2, 0x4c, 0x0a, 0xcb, 0xc3, 0x6e, 0x54, 0x4b, 0x59, 0xfa, 0xe6, 0x24,
+	0x9f, 0xf9, 0xe7, 0x24, 0x9f, 0xf9, 0xea, 0xea, 0xf4, 0x49, 0x5c, 0x96, 0x9c, 0x87, 0x2f, 0x25,
+	0x26, 0xa1, 0x62, 0x66, 0x51, 0x93, 0x61, 0xf9, 0x37, 0x00, 0xc5, 0x1a, 0xd3, 0xfd, 0xed, 0xf7,
+	0x7c, 0x06, 0x15, 0x77, 0x35, 0x1b, 0xdd, 0x56, 0xae, 0xbb, 0x70, 0xf1, 0x40, 0x6b, 0x13, 0x14,
+	0xa1, 0x49, 0x4b, 0x76, 0x21, 0x80, 0x4c, 0x9a, 0xed, 0xb7, 0x00, 0xca, 0xa3, 0x93, 0xf1, 0x73,
+	0x16, 0x9a, 0x70, 0x56, 0x33, 0x68, 0xc7, 0xe4, 0x2b, 0x60, 0x6d, 0x66, 0xfd, 0x7e, 0x29, 0xe7,
+	0xf5, 0x86, 0x32, 0xe8, 0x37, 0xbf, 0x35, 0x95, 0x2a, 0x25, 0x66, 0xe5, 0xf5, 0xb3, 0x8b, 0x7c,
+	0xe6, 0xe7, 0xbf, 0xf2, 0xeb, 0x3a, 0xe1, 0xad, 0x4e, 0x43, 0x69, 0x52, 0xc3, 0xeb, 0x37, 0xef,
+	0xb1, 0xc1, 0xd0, 0x67, 0x05, 0xde, 0xb3, 0x30, 0x73, 0x00, 0x4c, 0xf5, 0xa8, 0xe5, 0x23, 0x00,
+	0xa5, 0x90, 0x96, 0x8f, 0xfd, 0x5c, 0xaa, 0xd4, 0x30, 0x08, 0x63, 0x84, 0x9a, 0xc9, 0x55, 0x01,
+	0x37, 0xac, 0x4a, 0x8c, 0x51, 0xfe, 0x0e, 0xc0, 0x57, 0xc7, 0x2b, 0xb9, 0xdb, 0xca, 0xfc, 0x0e,
+	0x60, 0xb6, 0xc6, 0xf4, 0xf7, 0x3b, 0x26, 0x1a, 0x48, 0xe8, 0x98, 0x84, 0xf7, 0xf6, 0x28, 0x6d,
+	0xdf, 0xc9, 0xe9, 0xc2, 0x16, 0x9c, 0x47, 0xd8, 0xa2, 0x8c, 0x70, 0x6a, 0xa7, 0xb6, 0xe0, 0x30,
+	0xb4, 0xbc, 0x14, 0xae, 0xf2, 0x70, 0x5d, 0x96, 0xe0, 0xa3, 0xa4, 0x64, 0x82, 0x17, 0xec, 0x07,
+	0x00, 0x1f, 0xd6, 0x98, 0xfe, 0x91, 0x85, 0x34, 0x8e, 0xf7, 0x34, 0x5b, 0x33, 0xd8, 0x40, 0x83,
+	0xd6, 0xe1, 0x2d, 0x6a, 0x13, 0xde, 0x4b, 0xbd, 0xf0, 0x61, 0xa8, 0xb0, 0x03, 0x67, 0x2d, 0x87,
+	0xc1, 0x11, 0x7e, 0xbf, 0xf4, 0x58, 0x19, 0xe3, 0xad, 0x8a, 0x7b, 0x58, 0xe5, 0xde, 0xa0, 0x54,
+	0xaa, 0x07, 0x2c, 0x3f, 0xef, 0xc8, 0x0f, 0x28, 0xe5, 0x1c, 0x5c, 0xfe, 0x9f, 0xba, 0x40, 0x79,
+	0xdf, 0x75, 0xc0, 0x48, 0x5a, 0x75, 0x0b, 0x9b, 0x68, 0x6a, 0xfd, 0x8f, 0xe0, 0xbc, 0x8d, 0x9b,
+	0xc4, 0x22, 0xd8, 0xe4, 0x6e, 0xed, 0xd5, 0xe1, 0x42, 0xe8, 0xfa, 0x67, 0x9e, 0xda, 0xf5, 0xc7,
+	0xf2, 0x77, 0x0d, 0x32, 0x9e, 0x63, 0x50, 0x85, 0xcf, 0xe1, 0x52, 0xe8, 0xe5, 0xa9, 0xb7, 0x34,
+	0x1b, 0x7b, 0xde, 0xf8, 0x36, 0x7c, 0x8e, 0x76, 0x4d, 0x1c, 0x7b, 0x75, 0xff, 0xbd, 0xc8, 0x67,
+	0x7b, 0x9a, 0xd1, 0x2e, 0xcb, 0x91, 0x6d, 0x59, 0x7d, 0xe0, 0x7c, 0xf7, 0x3d, 0x71, 0xd5, 0x29,
+	0x06, 0xb5, 0xd1, 0x3e, 0x41, 0x4e, 0x31, 0xee, 0xa9, 0x73, 0xee, 0xc2, 0x07, 0xa8, 0x3c, 0xe7,
+	0x77, 0x9b, 0xbc, 0x16, 0xb1, 0x91, 0xd0, 0xf9, 0x81, 0x42, 0x04, 0x73, 0xa1, 0x88, 0x9d, 0x76,
+	0xfb, 0xf6, 0x44, 0x86, 0x74, 0x3c, 0x86, 0x2f, 0x8f, 0x3c, 0xc5, 0x97, 0x52, 0xba, 0x9a, 0x83,
+	0x33, 0x35, 0xa6, 0x0b, 0x5f, 0x03, 0x28, 0x24, 0x4c, 0xce, 0xd2, 0xd8, 0x7e, 0x4d, 0x1c, 0x54,
+	0x62, 0xf9, 0xfa, 0x98, 0xc0, 0xce, 0xbe, 0x07, 0x70, 0x79, 0xd4, 0x64, 0x7b, 0x33, 0x8d, 0x77,
+	0x04, 0x50, 0x7c, 0x77, 0x4a, 0x60, 0xa0, 0xea, 0x47, 0x00, 0x57, 0xc7, 0x8d, 0x85, 0xed, 0x49,
+	0x0f, 0x48, 0x00, 0x8b, 0xd5, 0x1b, 0x80, 0x03, 0x85, 0x5f, 0x02, 0xb8, 0x18, 0xb7, 0xe7, 0x62,
+	0x1a, 0x75, 0x0c, 0x22, 0xbe, 0x75, 0x6d, 0x48, 0xa0, 0xc1, 0x86, 0x0f, 0x22, 0x9e, 0xf9, 0x5a,
+	0x1a, 0x55, 0x38, 0x5a, 0x7c, 0xe3, 0x3a, 0xd1, 0xc1, 0x99, 0x83, 0xb6, 0x4d, 0xb0, 0xbb, 0xd4,
+	0xb6, 0x8d, 0x63, 0xd2, 0xdb, 0x76, 0xb4, 0xe5, 0x08, 0x47, 0x00, 0xbe, 0x90, 0x64, 0x38, 0x9b,
+	0x93, 0xde, 0x6d, 0x08, 0x24, 0x6e, 0x4f, 0x01, 0x0a, 0x94, 0x1c, 0x03, 0xb8, 0x34, 0xc2, 0x58,
+	0xb6, 0x26, 0xe5, 0x8d, 0xe2, 0xc4, 0x77, 0xa6, 0xc3, 0xf9, 0x92, 0xc4, 0x67, 0xbf, 0xb8, 0x3a,
+	0x7d, 0x02, 0x2a, 0x1f, 0xfe, 0xd4, 0x97, 0xc0, 0x59, 0x5f, 0x02, 0xe7, 0x7d, 0x09, 0xfc, 0xdd,
+	0x97, 0xc0, 0xf1, 0xa5, 0x94, 0x39, 0xbf, 0x94, 0x32, 0x7f, 0x5e, 0x4a, 0x99, 0x4f, 0x8b, 0x63,
+	0xe7, 0xc2, 0x61, 0xf4, 0x4f, 0x80, 0x33, 0x26, 0x1a, 0xb3, 0xce, 0xcf, 0xfe, 0xcd, 0xff, 0x02,
+	0x00, 0x00, 0xff, 0xff, 0x7c, 0x00, 0x56, 0xe4, 0xd5, 0x0c, 0x00, 0x00,
 }
 
 func (this *MsgSetWithdrawAddressResponse) Equal(that interface{}) bool {
@@ -841,6 +1013,48 @@ func (this *MsgCommunityPoolSpendResponse) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *MsgWithdrawShareRewardResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgWithdrawShareRewardResponse)
+	if !ok {
+		that2, ok := that.(MsgWithdrawShareRewardResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	return true
+}
+func (this *MsgWithdrawAllShareRewardResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgWithdrawAllShareRewardResponse)
+	if !ok {
+		that2, ok := that.(MsgWithdrawAllShareRewardResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	return true
+}
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
@@ -878,6 +1092,14 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.47
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
+	// WithdrawShareReward defines a method to withdraw reward for an owning ShareRecord
+	//
+	// Since: cosmos-sdk 0.47
+	WithdrawShareReward(ctx context.Context, in *MsgWithdrawShareReward, opts ...grpc.CallOption) (*MsgWithdrawShareRewardResponse, error)
+	// WithdrawAllShareReward defines a method to withdraw reward for all owning ShareRecord
+	//
+	// Since: cosmos-sdk 0.47
+	WithdrawAllShareReward(ctx context.Context, in *MsgWithdrawAllShareReward, opts ...grpc.CallOption) (*MsgWithdrawAllShareRewardResponse, error)
 }
 
 type msgClient struct {
@@ -942,6 +1164,24 @@ func (c *msgClient) CommunityPoolSpend(ctx context.Context, in *MsgCommunityPool
 	return out, nil
 }
 
+func (c *msgClient) WithdrawShareReward(ctx context.Context, in *MsgWithdrawShareReward, opts ...grpc.CallOption) (*MsgWithdrawShareRewardResponse, error) {
+	out := new(MsgWithdrawShareRewardResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/WithdrawShareReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawAllShareReward(ctx context.Context, in *MsgWithdrawAllShareReward, opts ...grpc.CallOption) (*MsgWithdrawAllShareRewardResponse, error) {
+	out := new(MsgWithdrawAllShareRewardResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/WithdrawAllShareReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// SetWithdrawAddress defines a method to change the withdraw address
@@ -968,6 +1208,14 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.47
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
+	// WithdrawShareReward defines a method to withdraw reward for an owning ShareRecord
+	//
+	// Since: cosmos-sdk 0.47
+	WithdrawShareReward(context.Context, *MsgWithdrawShareReward) (*MsgWithdrawShareRewardResponse, error)
+	// WithdrawAllShareReward defines a method to withdraw reward for all owning ShareRecord
+	//
+	// Since: cosmos-sdk 0.47
+	WithdrawAllShareReward(context.Context, *MsgWithdrawAllShareReward) (*MsgWithdrawAllShareRewardResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -991,6 +1239,12 @@ func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateP
 }
 func (*UnimplementedMsgServer) CommunityPoolSpend(ctx context.Context, req *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommunityPoolSpend not implemented")
+}
+func (*UnimplementedMsgServer) WithdrawShareReward(ctx context.Context, req *MsgWithdrawShareReward) (*MsgWithdrawShareRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawShareReward not implemented")
+}
+func (*UnimplementedMsgServer) WithdrawAllShareReward(ctx context.Context, req *MsgWithdrawAllShareReward) (*MsgWithdrawAllShareRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawAllShareReward not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -1105,6 +1359,42 @@ func _Msg_CommunityPoolSpend_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_WithdrawShareReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawShareReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawShareReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/WithdrawShareReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawShareReward(ctx, req.(*MsgWithdrawShareReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawAllShareReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawAllShareReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawAllShareReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/WithdrawAllShareReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawAllShareReward(ctx, req.(*MsgWithdrawAllShareReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.distribution.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -1132,6 +1422,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CommunityPoolSpend",
 			Handler:    _Msg_CommunityPoolSpend_Handler,
+		},
+		{
+			MethodName: "WithdrawShareReward",
+			Handler:    _Msg_WithdrawShareReward_Handler,
+		},
+		{
+			MethodName: "WithdrawAllShareReward",
+			Handler:    _Msg_WithdrawAllShareReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1543,6 +1841,117 @@ func (m *MsgCommunityPoolSpendResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgWithdrawShareReward) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawShareReward) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawShareReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.RecordId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.RecordId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.OwnerAddress) > 0 {
+		i -= len(m.OwnerAddress)
+		copy(dAtA[i:], m.OwnerAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.OwnerAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawShareRewardResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawShareRewardResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawShareRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawAllShareReward) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawAllShareReward) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawAllShareReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.OwnerAddress) > 0 {
+		i -= len(m.OwnerAddress)
+		copy(dAtA[i:], m.OwnerAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.OwnerAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawAllShareRewardResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawAllShareRewardResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawAllShareRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1716,6 +2125,53 @@ func (m *MsgCommunityPoolSpend) Size() (n int) {
 }
 
 func (m *MsgCommunityPoolSpendResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgWithdrawShareReward) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.OwnerAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.RecordId != 0 {
+		n += 1 + sovTx(uint64(m.RecordId))
+	}
+	return n
+}
+
+func (m *MsgWithdrawShareRewardResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgWithdrawAllShareReward) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.OwnerAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgWithdrawAllShareRewardResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2764,6 +3220,289 @@ func (m *MsgCommunityPoolSpendResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgCommunityPoolSpendResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawShareReward) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawShareReward: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawShareReward: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OwnerAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OwnerAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordId", wireType)
+			}
+			m.RecordId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RecordId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawShareRewardResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawShareRewardResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawShareRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawAllShareReward) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawAllShareReward: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawAllShareReward: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OwnerAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OwnerAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawAllShareRewardResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawAllShareRewardResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawAllShareRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

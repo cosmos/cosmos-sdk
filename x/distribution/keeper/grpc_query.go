@@ -293,3 +293,12 @@ func (k Querier) CommunityPool(c context.Context, req *types.QueryCommunityPoolR
 
 	return &types.QueryCommunityPoolResponse{Pool: pool}, nil
 }
+
+// TokenizeShareRecordReward returns estimated amount of reward from tokenize share record ownership
+func (k Keeper) TokenizeShareReward(c context.Context, req *types.QueryTokenizeShareRewardRequest) (*types.QueryTokenizeShareRewardResponse, error) {
+
+	return &types.QueryTokenizeShareRewardResponse{
+		Rewards: nil,
+		Total:   sdk.DecCoins{},
+	}, nil
+}

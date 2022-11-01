@@ -611,3 +611,33 @@ func RedelegationsToRedelegationResponses(ctx sdk.Context, k *Keeper, redels typ
 
 	return resp, nil
 }
+
+// Query for individual tokenize share record information by share by id
+func (k Querier) TokenizeShareRecordById(c context.Context, req *types.QueryTokenizeShareRecordByIdRequest) (*types.QueryTokenizeShareRecordByIdResponse, error) {
+	return &types.QueryTokenizeShareRecordByIdResponse{Record: nil}, nil
+}
+
+// Query for individual tokenize share record information by share denom
+func (k Querier) TokenizeShareRecordByDenom(c context.Context, req *types.QueryTokenizeShareRecordByDenomRequest) (*types.QueryTokenizeShareRecordByDenomResponse, error) {
+	return &types.QueryTokenizeShareRecordByDenomResponse{Record: nil}, nil
+}
+
+// Query tokenize share records by address
+func (k Querier) TokenizeShareRecordsOwned(c context.Context, req *types.QueryTokenizeShareRecordsOwnedRequest) (*types.QueryTokenizeShareRecordsOwnedResponse, error) {
+	return &types.QueryTokenizeShareRecordsOwnedResponse{Records: nil}, nil
+}
+
+// Query for all tokenize share records
+func (k Querier) AllTokenizeShareRecords(c context.Context, req *types.QueryAllTokenizeShareRecordsRequest) (*types.QueryAllTokenizeShareRecordsResponse, error) {
+	return &types.QueryAllTokenizeShareRecordsResponse{Records: nil}, nil
+}
+
+// Query for last tokenize share record id
+func (k Querier) LastTokenizeShareRecordId(c context.Context, req *types.QueryLastTokenizeShareRecordIdRequest) (*types.QueryLastTokenizeShareRecordIdResponse, error) {
+	return &types.QueryLastTokenizeShareRecordIdResponse{Id: 1}, nil
+}
+
+// Query for total tokenized staked assets
+func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTotalTokenizeSharedAssetsRequest) (*types.QueryTotalTokenizeSharedAssetsResponse, error) {
+	return &types.QueryTotalTokenizeSharedAssetsResponse{Value: nil}, nil
+}

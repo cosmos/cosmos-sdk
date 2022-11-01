@@ -153,3 +153,15 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommu
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
+
+// WithdrawTokenizeShareRecordReward defines a method to withdraw reward for owning TokenizeShareRecord
+func (k msgServer) WithdrawShareReward(goCtx context.Context, msg *types.MsgWithdrawShareReward) (*types.MsgWithdrawShareRewardResponse, error) {
+
+	return &types.MsgWithdrawShareRewardResponse{}, nil
+}
+
+// WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for owning TokenizeShareRecord
+func (k msgServer) WithdrawAllShareReward(goCtx context.Context, msg *types.MsgWithdrawAllShareReward) (*types.MsgWithdrawAllShareRewardResponse, error) {
+
+	return &types.MsgWithdrawAllShareRewardResponse{}, nil
+}

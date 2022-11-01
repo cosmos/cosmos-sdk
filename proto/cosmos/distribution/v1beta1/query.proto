@@ -69,6 +69,13 @@ service Query {
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
   }
+
+  // TokenizeShareRecordReward queries the tokenize share record rewards
+  rpc TokenizeShareReward(QueryTokenizeShareRewardRequest)
+      returns (QueryTokenizeShareRewardResponse) {
+    option (google.api.http).get =
+        "/cosmos/distribution/v1beta1/{owner_address}/tokenize_share_rewards";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -240,4 +247,20 @@ message QueryCommunityPoolResponse {
   // pool defines community pool's coins.
   repeated cosmos.base.v1beta1.DecCoin pool = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+// QueryTokenizeShareRewardRequest is the request type for Query/TokenizeShareReward RPC method.
+message QueryTokenizeShareRewardRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string owner_address = 1 [(gogoproto.moretags) = "yaml:\"owner_address\""];
+}
+
+// QueryTokenizeShareRewardResponse is the response type for Query/TokenizeShareReward RPC method.
+message QueryTokenizeShareRewardResponse {
+  // rewards defines all the rewards accrued by a delegator.
+  repeated TokenizeShareRecordReward rewards = 1;
+  // total defines the sum of all the rewards.
+  repeated cosmos.base.v1beta1.DecCoin total = 2 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }

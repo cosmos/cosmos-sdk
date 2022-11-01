@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/tx/textual/cbor"
+	"cosmossdk.io/tx/textual/internal/cbor"
 	"github.com/stretchr/testify/require"
 )
 

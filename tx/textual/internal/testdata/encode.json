@@ -1,0 +1,34 @@
+[
+    {
+        "screens": [],
+        "encoding": "80"
+    },
+    {
+        "screens": [{}],
+        "encoding": "81a0"
+    },
+    {
+        "screens": [
+            {"text": "a"},
+            {"indent": 1},
+            {"expert": true}
+        ],
+        "encoding": "83a1016161a10201a103f5"
+    },
+    {
+        "screens": [
+            {"text": "", "indent": 4, "expert": true},
+            {"text": "a", "indent": 0, "expert": true},
+            {"text": "b", "indent": 5, "expert": false}
+        ],
+        "encoding": "83a2020403f5a201616103f5a20161620205"
+    },
+    {
+        "screens": [
+            {"text": "start"},
+            {"text": "middle", "indent": 1},
+            {"text": "end"}
+        ],
+        "encoding": "83a101657374617274a201666d6964646c650201a10163656e64"
+    }
+]

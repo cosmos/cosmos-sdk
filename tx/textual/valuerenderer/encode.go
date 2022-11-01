@@ -3,7 +3,7 @@ package valuerenderer
 import (
 	"io"
 
-	"cosmossdk.io/tx/textual/cbor"
+	"cosmossdk.io/tx/textual/internal/cbor"
 )
 
 var (
@@ -12,8 +12,20 @@ var (
 	expertKey = cbor.NewUint(3)
 )
 
-// Encode encodes an array of screens according to the CDDL
-func Encode(screens []Screen, w io.Writer) error {
+// encode encodes an array of screens according to the CDDL:
+//
+//	screens = [* screen]
+//	screen = {
+//	  ? text_key: tstr,
+//	  ? indent_key: uint,
+//	  ? expert_key: bool,
+//	}
+//	text_key = 1
+//	indent_key = 2
+//	expert_key = 3
+//
+// with empty values ("", 0, false) omitted from the screen map.
+func encode(screens []Screen, w io.Writer) error {
 	arr := cbor.NewArray()
 	for _, s := range screens {
 		arr = arr.Append(s.Cbor())

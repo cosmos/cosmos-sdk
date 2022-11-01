@@ -175,7 +175,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
-// New App Wiring Setup
+// App Wiring Setup
 
 func init() {
 	appmodule.Register(
@@ -187,12 +187,10 @@ func init() {
 type CrisisInputs struct {
 	depinject.In
 
-	ModuleKey depinject.OwnModuleKey
-	Config    *modulev1.Module
-	Key       *store.KVStoreKey
-	Cdc       codec.Codec
-	AppOpts   servertypes.AppOptions    `optional:"true"`
-	Authority map[string]sdk.AccAddress `optional:"true"`
+	Config  *modulev1.Module
+	Key     *store.KVStoreKey
+	Cdc     codec.Codec
+	AppOpts servertypes.AppOptions `optional:"true"`
 
 	BankKeeper types.SupplyKeeper
 
@@ -222,10 +220,10 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		// default to governance authority if not provided
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(

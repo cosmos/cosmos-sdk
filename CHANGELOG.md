@@ -39,13 +39,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* nothing
+
+---
+
+## [v0.46.3-pio-3](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.3-pio-3) - 2022-11-01
+
 ### Improvements
 
 * Bump github.com/cosmos/iavl to v0.19.4 (from v0.19.3) to prevent possible app-hash mismatch in new IAVL store.
 
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3-pio-2...v0.46.3-pio-3
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3...v0.46.3-pio-3
+
 ---
 
-## [v0.46.3-pio-2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-2) - 2022-10-26
+## [v0.46.3-pio-2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.3-pio-2) - 2022-10-26
 
 ### Bug Fixes
 
@@ -58,7 +69,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
-## [v0.46.3-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-1) - 2022-10-20
+## [v0.46.3-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.3-pio-1) - 2022-10-20
 
 Chains using this version must also apply the following replace line to their `go.mod`:
 

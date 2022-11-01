@@ -33,8 +33,7 @@ type priorityNonceMempool struct {
 type priorityNonceIterator struct {
 	senderCursors map[string]*huandu.Element
 	nextPriority  int64
-	currentSender string
-	inSender      bool
+	sender        string
 	priorityNode  *huandu.Element
 	mempool       *priorityNonceMempool
 }
@@ -177,19 +176,19 @@ func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx sdk.Tx) error {
 }
 
 func (i *priorityNonceIterator) iteratePriority() Iterator {
-	// beginning of iteration
+	// beginning of priority iteration
 	if i.priorityNode == nil {
 		i.priorityNode = i.mempool.priorityIndex.Front()
 	} else {
 		i.priorityNode = i.priorityNode.Next()
 	}
 
-	// end of iteration
+	// end of priority iteration
 	if i.priorityNode == nil {
 		return nil
 	}
 
-	i.currentSender = i.priorityNode.Key().(txMeta).sender
+	i.sender = i.priorityNode.Key().(txMeta).sender
 
 	nextPriorityNode := i.priorityNode.Next()
 	if nextPriorityNode != nil {
@@ -206,11 +205,20 @@ func (i *priorityNonceIterator) Next() Iterator {
 		return nil
 	}
 
-	senderCursor := i.fetchSenderCursor(i.currentSender)
-	if senderCursor == nil {
+	cursor, ok := i.senderCursors[i.sender]
+	if !ok {
+		// beginning of sender iteration
+		cursor = i.mempool.senderIndices[i.sender].Front()
+	} else {
+		// middle of sender iteration
+		cursor = cursor.Next()
+	}
+
+	// end of sender iteration
+	if cursor == nil {
 		return i.iteratePriority()
 	}
-	key := senderCursor.Key().(txMeta)
+	key := cursor.Key().(txMeta)
 
 	// we've reached a transaction with a priority lower than the next highest priority in the pool
 	if key.priority < i.nextPriority {
@@ -224,22 +232,12 @@ func (i *priorityNonceIterator) Next() Iterator {
 		}
 	}
 
-	i.senderCursors[i.currentSender] = senderCursor
+	i.senderCursors[i.sender] = cursor
 	return i
 }
 
 func (i *priorityNonceIterator) Tx() sdk.Tx {
-	return i.senderCursors[i.currentSender].Value.(sdk.Tx)
-}
-
-func (i *priorityNonceIterator) fetchSenderCursor(sender string) *huandu.Element {
-	cursor, ok := i.senderCursors[sender]
-	if !ok {
-		cursor = i.mempool.senderIndices[sender].Front()
-		i.senderCursors[sender] = cursor
-		return cursor
-	}
-	return cursor.Next()
+	return i.senderCursors[i.sender].Value.(sdk.Tx)
 }
 
 // Select returns a set of transactions from the mempool, ordered by priority
@@ -248,7 +246,7 @@ func (i *priorityNonceIterator) fetchSenderCursor(sender string) *huandu.Element
 //
 // The maxBytes parameter defines the maximum number of bytes of transactions to
 // return.
-func (mp *priorityNonceMempool) Select(_ [][]byte) Iterator {
+func (mp *priorityNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 	if mp.priorityIndex.Len() == 0 {
 		return nil
 	}
@@ -260,7 +258,7 @@ func (mp *priorityNonceMempool) Select(_ [][]byte) Iterator {
 		mempool:       mp,
 		senderCursors: make(map[string]*huandu.Element),
 		priorityNode:  priorityNode,
-		currentSender: priorityNode.Key().(txMeta).sender,
+		sender:        priorityNode.Key().(txMeta).sender,
 	}
 
 	return iterator.iteratePriority()

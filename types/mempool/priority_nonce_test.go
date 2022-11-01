@@ -238,7 +238,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 				require.NoError(t, err)
 			}
 
-			orderedTxs := fetchTxs(pool.Select(nil), 1000)
+			orderedTxs := fetchTxs(pool.Select(ctx, nil), 1000)
 			var txOrder []int
 			for _, tx := range orderedTxs {
 				txOrder = append(txOrder, tx.(testTx).id)
@@ -291,7 +291,7 @@ func (s *MempoolTestSuite) TestPriorityTies() {
 			err := s.mempool.Insert(c, tx)
 			s.NoError(err)
 		}
-		selected := fetchTxs(s.mempool.Select(nil), 1000)
+		selected := fetchTxs(s.mempool.Select(ctx, nil), 1000)
 		var orderedTxs []txSpec
 		for _, tx := range selected {
 			ttx := tx.(testTx)
@@ -389,7 +389,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 		require.NoError(t, err)
 	}
 
-	selected := fetchTxs(mp.Select(nil), 100000)
+	selected := fetchTxs(mp.Select(ctx, nil), 100000)
 	require.Equal(t, len(generated), len(selected))
 
 	start := time.Now()
@@ -426,7 +426,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 
 	require.Equal(t, s.numTxs, mp.CountTx())
 
-	selected := fetchTxs(mp.Select(nil), math.MaxInt)
+	selected := fetchTxs(mp.Select(ctx, nil), math.MaxInt)
 	require.Equal(t, len(ordered), len(selected))
 	var orderedStr, selectedStr string
 

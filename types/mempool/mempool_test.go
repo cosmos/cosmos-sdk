@@ -136,7 +136,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 
 	// empty mempool behavior
 	require.Equal(t, 0, s.mempool.CountTx())
-	itr := s.mempool.Select(nil)
+	itr := s.mempool.Select(ctx, nil)
 	require.Nil(t, itr)
 
 	// same sender-nonce just overwrites a tx
@@ -156,7 +156,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	}
 	require.Equal(t, txCount, s.mempool.CountTx())
 
-	itr = s.mempool.Select(nil)
+	itr = s.mempool.Select(ctx, nil)
 	sel := fetchTxs(itr, 13)
 	require.Equal(t, 13, len(sel))
 

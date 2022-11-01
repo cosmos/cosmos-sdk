@@ -111,7 +111,7 @@ func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMe
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {

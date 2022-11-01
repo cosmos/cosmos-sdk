@@ -190,13 +190,13 @@ func NewSimApp(
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
 
+		//mempoolOpt runtime.BaseAppOption = baseapp.SetMempool(mempool.NewPriorityMempool())
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig,
 			depinject.Supply(
 				// supply the application options
 				appOpts,
-
 				// ADVANCED CONFIGURATION
 
 				//

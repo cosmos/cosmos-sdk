@@ -46,10 +46,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (deps) Bump IAVL version to [v0.19.4](https://github.com/cosmos/iavl/releases/tag/v0.19.4).
 
+### CLI Breaking Changes
+
+* [#13656](https://github.com/cosmos/cosmos-sdk/pull/13660) Rename `server.FlagIAVLFastNode` to `server.FlagDisableIAVLFastNode` for clarity.
+
 ### API Breaking Changes
 
 * [#13673](https://github.com/cosmos/cosmos-sdk/pull/13673) The `GetFromFields` function now takes `Context` as an argument and removes `genOnly`.
-
 
 ## v0.45.10 - 2022-10-24
 

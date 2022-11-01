@@ -94,10 +94,8 @@ message QueryValidatorDistributionInfoResponse {
   repeated cosmos.base.v1beta1.DecCoin self_bond_rewards = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
   // commission defines the commission the validator received.
-  repeated cosmos.base.v1beta1.DecCoin commission = 3 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)     = false
-  ];
+  repeated cosmos.base.v1beta1.DecCoin commission = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
 // QueryValidatorOutstandingRewardsRequest is the request type for the

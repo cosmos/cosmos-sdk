@@ -308,23 +308,6 @@ func senderWeight(senderCursor *huandu.Element) int64 {
 	return weight
 }
 
-func (mp *priorityNonceMempool) nextPriority(priorityNode *huandu.Element) (int64, *huandu.Element) {
-	var nextPriorityNode *huandu.Element
-	if priorityNode == nil {
-		nextPriorityNode = mp.priorityIndex.Front()
-	} else {
-		nextPriorityNode = priorityNode.Next()
-	}
-
-	if nextPriorityNode == nil {
-		return math.MinInt64, nil
-	}
-
-	np := nextPriorityNode.Key().(txMeta).priority
-
-	return np, nextPriorityNode
-}
-
 // CountTx returns the number of transactions in the mempool.
 func (mp *priorityNonceMempool) CountTx() int {
 	return mp.priorityIndex.Len()
@@ -391,14 +374,4 @@ func IsEmpty(mempool Mempool) error {
 	}
 
 	return nil
-}
-
-func DebugPrintKeys(mempool Mempool) {
-	mp := mempool.(*priorityNonceMempool)
-	n := mp.priorityIndex.Front()
-	for n != nil {
-		k := n.Key().(txMeta)
-		fmt.Printf("%s, %d, %d, %d\n", k.sender, k.priority, k.nonce, k.weight)
-		n = n.Next()
-	}
 }

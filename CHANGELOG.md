@@ -38,9 +38,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* [#13673](https://github.com/cosmos/cosmos-sdk/pull/13673) Fix `--dry-run` flag not working when using tx command.
+
 ### Improvements
 
 * (deps) Bump IAVL version to [v0.19.4](https://github.com/cosmos/iavl/releases/tag/v0.19.4).
+
+### API Breaking Changes
+
+* [#13673](https://github.com/cosmos/cosmos-sdk/pull/13673) The `GetFromFields` function now takes `Context` as an argument and removes `genOnly`.
+
 
 ## v0.45.10 - 2022-10-24
 
@@ -113,12 +122,7 @@ Reverted #12437 due to API breaking changes.
 
 ### Bug Fixes
 
-* [#13673](https://github.com/cosmos/cosmos-sdk/pull/13673) Fix `--dry-run` flag not working when using tx command.
 * [#13046](https://github.com/cosmos/cosmos-sdk/pull/13046) Fix missing return statement in BaseApp.Query.
-
-### API Breaking Changes
-
-* [#13673](https://github.com/cosmos/cosmos-sdk/pull/13673) The `GetFromFields` function now takes `Context` as an argument and removes `genOnly`.
 
 ## v0.45.7 - 2022-08-04
 

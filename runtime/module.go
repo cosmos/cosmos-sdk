@@ -5,12 +5,11 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"cosmossdk.io/depinject"
-
-	"cosmossdk.io/core/appmodule"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Depinject
 
-> DISCLAIMER: This is an **experimental feature**. The SDK team is actively working on this feature and we are looking for feedback from the community. Please try it out and let us know what you think.
+> **DISCLAIMER**: This is an **alpha** package. The SDK team is actively working on this feature and we are looking for feedback from the community. Please try it out and let us know what you think.
 
 ## Overview
 

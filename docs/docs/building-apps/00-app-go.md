@@ -6,7 +6,8 @@ sidebar_position: 1
 
 :::note Synopsis
 
-Since `v0.47.0`, the Cosmos SDK allows much easier wiring an `app.go`, thanks to [`depinject`](../tooling/02-depinject.md).
+Since `v0.47.0`, the Cosmos SDK allows much easier wiring an `app.go` with App Wiring and the tool [`depinject`](../tooling/02-depinject.md).
+Learn more about the rationale of App Wiring in [ADR-057](../architecture/adr-057-app-wiring-1.md).
 
 :::
 
@@ -14,7 +15,8 @@ Since `v0.47.0`, the Cosmos SDK allows much easier wiring an `app.go`, thanks to
 
 ### Pre-requisite Readings
 
-* [Cosmos SDK Dependency Injection Framework](../tooling/02-depinject.md)
+* [ADR 057: App Wiring Part I](../architecture/adr-057-app-wiring-1.md)
+* [Depinject Documentation](../tooling/02-depinject.md)
 
 :::
 
@@ -46,11 +48,43 @@ The `app_config.go` file is the single place to configure all modules parameters
     https://github.com/cosmos/cosmos-sdk/blob/0d8787c/simapp/app_config.go#L170-L173
     ```
 
-### Full `app_config.go`
+### Complete `app_config.go`
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/0d8787c/simapp/app_config.go#L52-L233
 ```
+
+### Alternative formats
+
+:::tip
+The example above shows how to create an `AppConfig` using Go. However, it is also possible to create an `AppConfig` using YAML, or JSON, with respectively [`LoadYAML`](https://pkg.go.dev/cosmossdk.io/core/appconfig#LoadYAML) and [`LoadJSON`](https://pkg.go.dev/cosmossdk.io/core/appconfig#LoadJSON) functions.
+:::
+
+```yaml
+modules:
+  - name: runtime
+    config:
+      "@type": cosmos.app.runtime.v1alpha1.Module
+      app_name: SimApp
+      begin_blockers: [staking, auth, bank]
+      end_blockers: [bank, auth, staking]
+      init_genesis: [bank, auth, staking]
+  - name: auth
+    config:
+      "@type": cosmos.auth.module.v1.Module
+      bech32_prefix: cosmos
+  - name: bank
+    config:
+      "@type": cosmos.bank.module.v1.Module
+  - name: staking
+    config:
+      "@type": cosmos.staking.module.v1.Module
+  - name: tx
+    config:
+      "@type": cosmos.tx.module.v1.Module
+```
+
+A more complete example of `app.yaml` can be found [here](https://github.com/cosmos/cosmos-sdk/blob/91b1d83f1339e235a1dfa929ecc00084101a19e3/simapp/app.yaml).
 
 ## `app.go`
 
@@ -71,7 +105,11 @@ More information on how work `depinject.Configs` and `depinject.Supply` can be f
 https://github.com/cosmos/cosmos-sdk/blob/0d8787c/simapp/app.go#L193-L224
 ```
 
-### Full `app.go`
+### Complete `app.go`
+
+:::tip
+Note that in the complete `SimApp` `app.go` file, testing utilities are also defined, but they could as well be defined in a separate file.
+:::
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/0d8787c/simapp/app.go#L94-L427

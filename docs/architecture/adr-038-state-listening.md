@@ -6,6 +6,7 @@
 * 10/06/2022: Introduce plugin system based on hashicorp/go-plugin
 * 10/30/2022: Updated ADR based on review feedback, move listening to `CommitMultiStore` and add a `MemoryListener` [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516)
 * 11/01/2022: Add gRPC client, server and plugin implementation examples
+* 11/02/2022: Update language on `RegisterStreamingPlugin` function
 
 ## Status
 
@@ -597,7 +598,10 @@ func NewStreamingPlugin(name string, logLevel string) (interface{}, error) {
 
 ```
 
-We will expose a `RegisterStreamingPlugin` function for the App to register streaming plugins with the App's BaseApp.
+We propose a `RegisterStreamingPlugin` function for the App to register `NewStreamingPlugin`s with the App's BaseApp.
+Streaming plugins can be of `Any` type; therefore, the function takes in an interface vs a concrete type.
+For example, we could have plugins of `ABCIListener`, `WasmListener` or `IBCListener`. Note that `RegisterStreamingPluing` function
+is helper function and not a requirement. Plugin registration can easily be moved from the App to the BaseApp directly.
 
 ```go
 // baseapp/streaming.go

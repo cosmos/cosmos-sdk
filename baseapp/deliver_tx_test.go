@@ -2007,12 +2007,25 @@ func TestBaseApp_PrepareProposal(t *testing.T) {
 	}
 	app.CheckTx(reqCheckTx)
 
+	badTx := newTxCounter(txConfig, 1, 1)
+
+	_, err = txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	//checkTx := abci.RequestCheckTx{
+	//	Tx:   txBytes,
+	//	Type: abci.CheckTxType_New,
+	//}
+	//app.CheckTx(reqCheckTx)
+	//badTx = setFailOnAnte(txConfig, badTx, true)
+	err = mempool.Insert(sdk.Context{}, badTx)
+	require.NoError(t, err)
 	reqPreparePropossal := abci.RequestPrepareProposal{
 		MaxTxBytes: 1000,
 	}
 	resPreparePropossal := app.PrepareProposal(reqPreparePropossal)
 
-	assert.Equal(t, len(txBytes), len(resPreparePropossal.Txs))
+	assert.Equal(t, 1, len(resPreparePropossal.Txs))
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 
 	require.Empty(t, res.Events)
@@ -2094,6 +2107,7 @@ func setFailOnAnte(cfg client.TxConfig, tx signing.Tx, failOnAnte bool) signing.
 	vals.Set("failOnAnte", strconv.FormatBool(failOnAnte))
 	memo = vals.Encode()
 	builder.SetMemo(memo)
+	setTxSignature(builder, 1)
 
 	return builder.GetTx()
 }

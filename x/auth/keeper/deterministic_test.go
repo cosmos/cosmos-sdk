@@ -33,8 +33,9 @@ type DeterministicTestSuite struct {
 }
 
 var (
-	addr   = sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
-	pub, _ = hex.DecodeString("01090C02812F010C25200ED40E004105160196E801F70005070EA21603FF06001E")
+	addr        = sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
+	pub, _      = hex.DecodeString("01090C02812F010C25200ED40E004105160196E801F70005070EA21603FF06001E")
+	permissions = []string{"burner", "minter", "staking", "random"}
 )
 
 func TestDeterministicTestSuite(t *testing.T) {
@@ -252,8 +253,6 @@ func (suite *DeterministicTestSuite) setModuleAccounts(
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
-	permissions := []string{"burner", "minter", "staking", "random"}
-
 	rapid.Check(suite.T(), func(t *rapid.T) {
 		maccsCount := rapid.IntRange(1, 10).Draw(t, "accounts")
 		maccs := make([]string, maccsCount)
@@ -303,5 +302,51 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 
 	queryClient := suite.createAndReturnQueryClient(suite.accountKeeper)
 	req := &types.QueryModuleAccountsRequest{}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, queryClient.ModuleAccounts, 0x2175, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, queryClient.ModuleAccounts, 8565, false)
+}
+
+func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		mName := rapid.StringMatching(`[a-z]{5,}`).Draw(t, "module-name")
+
+		maccPerms := make(map[string][]string)
+		mPerms := make([]string, 0, 4)
+		for _, permission := range permissions {
+			if rapid.Bool().Draw(t, "permissions") {
+				mPerms = append(mPerms, permission)
+			}
+		}
+
+		if len(mPerms) == 0 {
+			num := rapid.IntRange(0, 3).Draw(t, "num")
+			mPerms = append(mPerms, permissions[num])
+		}
+
+		maccPerms[mName] = mPerms
+
+		ak := keeper.NewAccountKeeper(
+			suite.encCfg.Codec,
+			suite.key,
+			types.ProtoBaseAccount,
+			maccPerms,
+			"cosmos",
+			types.NewModuleAddress("gov").String(),
+		)
+		suite.setModuleAccounts(suite.ctx, ak, []string{mName})
+
+		queryClient := suite.createAndReturnQueryClient(ak)
+		req := &types.QueryModuleAccountByNameRequest{Name: mName}
+		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, queryClient.ModuleAccountByName, 0, true)
+	})
+
+	maccs := make([]string, 0, len(suite.maccPerms))
+	for k := range suite.maccPerms {
+		maccs = append(maccs, k)
+	}
+
+	suite.setModuleAccounts(suite.ctx, suite.accountKeeper, maccs)
+
+	queryClient := suite.createAndReturnQueryClient(suite.accountKeeper)
+	req := &types.QueryModuleAccountByNameRequest{Name: "mint"}
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, queryClient.ModuleAccountByName, 1372, false)
 }

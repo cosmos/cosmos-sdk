@@ -86,7 +86,7 @@ func (sp nonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 
 // Select returns txs from the mempool with the lowest nonce globally first. A sender's txs will always be returned
 // in nonce order.
-func (sp nonceMempool) Select(_ [][]byte) Iterator {
+func (sp nonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 	currentTx := sp.txQueue.Front()
 	if currentTx == nil {
 		return nil

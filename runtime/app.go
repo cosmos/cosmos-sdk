@@ -4,9 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"golang.org/x/exp/slices"
+
+	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	"cosmossdk.io/core/appmodule"
+
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,8 +36,6 @@ import (
 // App can be used to create a hybrid app.go setup where some configuration is
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app.go for an example of this setup.
-//
-//nolint:unused
 type App struct {
 	*baseapp.BaseApp
 
@@ -45,10 +47,10 @@ type App struct {
 	cdc               codec.Codec
 	amino             *codec.LegacyAmino
 	basicManager      module.BasicManager
-	beginBlockers     []func(sdk.Context, abci.RequestBeginBlock)
-	endBlockers       []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
+	appConfig         *appv1alpha1.Config
+	appModules        map[string]appmodule.AppModule
 }
 
 // RegisterModules registers the provided modules with the module manager and
@@ -76,6 +78,12 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load(loadLatest bool) error {
+	// register runtime module services
+	err := a.registerRuntimeServices()
+	if err != nil {
+		return err
+	}
+
 	a.configurator = module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
 	a.ModuleManager.RegisterServices(a.configurator)
 

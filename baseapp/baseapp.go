@@ -170,7 +170,7 @@ func NewBaseApp(
 
 	// if execution of options has left certain required fields nil, set them to sane default values
 	if app.mempool == nil {
-		app.mempool = mempool.NewNonceMempool()
+		app.SetMempool(mempool.NewNonceMempool())
 	}
 
 	if app.interBlockCache != nil {
@@ -839,11 +839,14 @@ func createEvents(msg sdk.Msg) sdk.Events {
 }
 
 func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, error) {
-	iterator := app.mempool.Select(req.Txs)
 	var (
 		txsBytes  [][]byte
 		byteCount int64
 	)
+
+	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
+	iterator := app.mempool.Select(ctx, req.Txs)
+
 	for iterator != nil {
 		memTx := iterator.Tx()
 
@@ -853,12 +856,10 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 			return nil, encErr
 		}
 
-		fmt.Println("messages:", memTx.GetMsgs())
 		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
 		if err != nil {
-			fmt.Println("error un prepare propossal", memTx)
 			removeErr := app.mempool.Remove(memTx)
-			if removeErr != nil {
+			if removeErr != nil && err != mempool.ErrTxNotFound {
 				return nil, removeErr
 			}
 			continue
@@ -880,12 +881,13 @@ func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(tx)
 
 		_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
 		if err != nil {
-			fmt.Println("error run tx process", tx)
-			_ = app.mempool.Remove(tx)
+			err = app.mempool.Remove(tx)
+			if err != nil && err != mempool.ErrTxNotFound {
+				return err
+			}
 		}
 	}
 	return nil

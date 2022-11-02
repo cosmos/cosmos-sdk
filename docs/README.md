@@ -12,7 +12,7 @@ It is built using the following stack:
 * [Algolia DocSearch](https://docsearch.algolia.com/)
 
   ```js
-          algolia: {
+      algolia: {
         appId: "QLS2QSP47E",
         apiKey: "067b84458bfa80c295e1d4f12c461911",
         indexName: "cosmos_network",
@@ -20,9 +20,12 @@ It is built using the following stack:
       },
   ```
 
+* GitHub Pages
+
 ## Docs Build Workflow
 
-// TODO
+The docs are built and deployed automatically on GitHub Pages by a [GitHub Action workflow](../.github/workflows/deploy-docs.yml).
+The workflow is triggered on every push to the `main` and `release/v**` branches, everytime documentations or specs are modified.
 
 ### How It Works
 
@@ -37,7 +40,7 @@ cd docs
 npm install
 ```
 
-For starting only the local documentation, run:
+For starting only the current documentation, run:
 
 ```shell
 npm start
@@ -46,13 +49,31 @@ npm start
 It runs `pre.sh` scripts to get all the docs that are not already in the `docs/docs` folder.
 It also runs `post.sh` scripts to clean up the docs and remove unnecessary files when quitting.
 
-To build documentation as a static website run:
+Note, the command above only build the docs for the current versions.
+With the drawback that none of the redirections works. So, you'll need to go to /main to see the docs.
+
+To build all the docs (including versioned documentation), run:
 
 ```shell
-npm run build
+make build-docs
 ```
 
 ## What to for new major SDK versions
 
 When a new major version of the SDK is released, the following steps should be taken:
 
+* On the `release/vX.Y.Z` branch, remove the deploy action (`.github/workflows/deploy-docs.yml`), for avoiding to deploy the docs from the release branches
+* Each time a new version is released (on docusaurus), drop support from the oldest versions.
+    * If the old version is still running vuepress (v0.45, v0.46), remove its line from `vuepress_versions`
+    * If any, remove the outdated redirections from `docusaurus.config.js` and add the base version rediction to main.
+
+      ```js
+        {
+          from: ["/", "/master", "/v0.43", "/v0.44", "/v0.XX"], // here add the deprecated version
+          to: "/main",
+        },
+      ```
+
+* Add the new version sidebar to the list of versionned sidebar and add the version to `versions`
+
+Learn more about [versioning](https://docusaurus.io/docs/versioning) in Docusaurus.

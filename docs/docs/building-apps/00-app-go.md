@@ -7,7 +7,7 @@ sidebar_position: 1
 :::note Synopsis
 
 Since `v0.47.0`, the Cosmos SDK allows much easier wiring an `app.go` with App Wiring and the tool [`depinject`](../tooling/02-depinject.md).
-Learn more about the rationale of App Wiring in [ADR-057](../architecture/adr-057-app-wiring-1.md).
+Learn more about the rationale of App Wiring in [ADR-057](../architecture/adr-057-app-wiring.md).
 
 :::
 

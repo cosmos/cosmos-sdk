@@ -21,9 +21,10 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
 * After the team feels that the `main` works fine we create a `release/vY` branch (going forward known a release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
     * **PRs targeting this branch can be merged _only_ when exceptional circumstances arise**
     * update the GitHub mergify integration by adding instructions for automatically backporting commits from `main` to the `release/vY` using the `backport/Y` label.
-* In the release branch, prepare a new version section in the `CHANGELOG.md`
+* In the release branch prepare a new version section in the `CHANGELOG.md`
     * All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
     * Create release notes, in `RELEASE_NOTES.md`, highlighting the changes and how to upgrade the SDK. This is needed so the bot knows which entries to add to the release page on GitHub.
+* Remove GitHub workflows that should not be in the release branch (eg: `deploy-docs.yml`).
 * Create a new annotated git tag for a release candidate (eg: `git tag -a v1.1.0-rc1`) in the release branch.
     * from this point we unfreeze main.
     * the SDK teams collaborate and do their best to run testnets in order to validate the release.
@@ -73,8 +74,8 @@ Note: not every Major Release is denoted as stable releases.
 Only the following major release series have a stable release status:
 
 * **0.45** is supported until 6 months after **0.46.0** release. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-* **0.46** is supported until 6 months after **0.47.0** release. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-<!-- * **0.47** is the latest major release and will be supported until 6 months after **0.48.0** release. -->
+* **0.46** is the last major release and will be supportted until 6 months after **0.47.0** release.
+* **0.47** is the next major release and will be supported until 6 months after **0.48.0** release.
 
 ## Stable Release Policy
 
@@ -190,7 +191,7 @@ It's crucial to make the effort of thinking about what could happen in case a re
 ### Stable Release Managers
 
 The **Stable Release Managers** evaluate and approve or reject updates and backports to Cosmos-SDK Stable Release series,
-according to the [stable release policy](#stable-release-policy) and [release procedure](#stable-release-exception-procedure).
+according to the [stable release policy](#stable-release-policy) and [release procedure](#major-release-procedure).
 Decisions are made by consensus.
 
 Their responsibilites include:
@@ -201,6 +202,4 @@ Their responsibilites include:
 
 The Stable Release Managers are appointed by the Interchain Foundation. Currently residing Stable Release Managers:
 
-* @clevinson - Cory Levinson
 * @amaurym - Amaury Martiny
-* @robert-zaremba - Robert Zaremba

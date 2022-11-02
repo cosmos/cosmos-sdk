@@ -1,57 +1,58 @@
 # Updating the docs
 
-If you want to open a PR in Cosmos SDK to update the documentation, please follow the guidelines in [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/main/CONTRIBUTING.md#updating-documentation).
+If you want to open a PR in Cosmos SDK to update the documentation, please follow the guidelines in [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/main/CONTRIBUTING.md#updating-documentation) and the [Documentation Writing Guidelines](./DOC_WRITING_GUIDELINES.md).
+
+## Stack
+
+The documentation for Cosmos SDK is hosted at https://docs.cosmos.network and built from the files in the `/docs` directory.
+It is built using the following stack:
+
+* [Docusaurus 2](https://docusaurus.io)
+* Vuepress (pre v0.47)
+* [Algolia DocSearch](https://docsearch.algolia.com/)
+
+  ```js
+          algolia: {
+        appId: "QLS2QSP47E",
+        apiKey: "067b84458bfa80c295e1d4f12c461911",
+        indexName: "cosmos_network",
+        contextualSearch: false,
+      },
+  ```
 
 ## Docs Build Workflow
 
-The documentation for Cosmos SDK is hosted at https://docs.cosmos.network and built from the files in the `/docs` directory.
-It is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
+// TODO
 
 ### How It Works
 
 There is a GitHub Action listening for changes in the `/docs` directory for the `main` branch and each supported version branch (e.g. `release/v0.46.x`). Any updates to files in the `/docs` directory will automatically trigger a website deployment. Under the hood, the private website repository has a `make build-docs` target consumed by a Github Action within that repository.
 
-## README
+## How to Build the Docs Locally
 
-The [README.md](./README.md) is both the README for the repository and the configuration for the layout of the landing page.
-
-## Links
-
-**NOTE:** Strongly consider the existing links - both within this directory
-and to the website docs - when moving or deleting files.
-
-Relative links should be used nearly everywhere, due to versionning.
-Note that in case of page reshufling, you must update all links references.
-
-### Full
-
-The full GitHub URL to a file or directory. Used occasionally when it makes sense
-to send users to the GitHub.
-
-## Building Locally
-
-Make sure you are in the `docs` directory and run the following commands:
+Go to the `docs` directory and run the following commands:
 
 ```shell
-rm -rf node_modules
-```
-
-This command will remove old version of the visual theme and required packages. This step is optional.
-
-```shell
+cd docs
 npm install
 ```
 
-Install the theme and all dependencies.
+For starting only the local documentation, run:
 
 ```shell
 npm start
 ```
 
-Run `pre` and `post` hooks and start a hot-reloading web-server. See output of this command for the URL (it is often https://localhost:3000).
+It runs `pre.sh` scripts to get all the docs that are not already in the `docs/docs` folder.
+It also runs `post.sh` scripts to clean up the docs and remove unnecessary files when quitting.
 
-To build documentation as a static website run `npm run build`.
+To build documentation as a static website run:
 
-## Search
+```shell
+npm run build
+```
 
-We are using [Algolia](https://www.algolia.com) to power full-text search. This uses a public API search-only key in the `config.js` as well as a [cosmos_network.json](https://github.com/algolia/docsearch-configs/blob/master/configs/cosmos_network.json) configuration file that we can update with PRs.
+## What to for new major SDK versions
+
+When a new major version of the SDK is released, the following steps should be taken:
+

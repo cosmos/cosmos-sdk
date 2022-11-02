@@ -858,9 +858,10 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
 		if err != nil {
 			removeErr := app.mempool.Remove(memTx)
-			if removeErr != nil && err != mempool.ErrTxNotFound {
+			if removeErr != nil && !errors.Is(removeErr, mempool.ErrTxNotFound) {
 				return nil, removeErr
 			}
+			iterator = iterator.Next()
 			continue
 		} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
 			txsBytes = append(txsBytes, bz)

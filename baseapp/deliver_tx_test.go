@@ -1948,7 +1948,7 @@ func TestQuery(t *testing.T) {
 
 func TestBaseApp_PrepareProposal(t *testing.T) {
 	anteKey := []byte("ante-key")
-	mempool := mempool.NewNonceMempool()
+	pool := mempool.NewNonceMempool()
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1966,7 +1966,7 @@ func TestBaseApp_PrepareProposal(t *testing.T) {
 	//}
 	//app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil, anteOpt)
 
-	app := setupBaseApp(t, anteOpt, baseapp.SetMempool(mempool))
+	app := setupBaseApp(t, anteOpt, baseapp.SetMempool(pool))
 	registry := codectypes.NewInterfaceRegistry()
 	cdc = codec.NewProtoCodec(registry)
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
@@ -1981,7 +1981,6 @@ func TestBaseApp_PrepareProposal(t *testing.T) {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	// Begin Block ABCI call
 
-	//err = app.Init()
 	require.NoError(t, err)
 
 	app.InitChain(abci.RequestInitChain{
@@ -2018,21 +2017,18 @@ func TestBaseApp_PrepareProposal(t *testing.T) {
 	//}
 	//app.CheckTx(reqCheckTx)
 	//badTx = setFailOnAnte(txConfig, badTx, true)
-	err = mempool.Insert(sdk.Context{}, badTx)
+	err = pool.Insert(sdk.Context{}, badTx)
 	require.NoError(t, err)
 	reqPreparePropossal := abci.RequestPrepareProposal{
 		MaxTxBytes: 1000,
 	}
 	resPreparePropossal := app.PrepareProposal(reqPreparePropossal)
 
-	assert.Equal(t, 1, len(resPreparePropossal.Txs))
+	assert.Equal(t, 2, len(resPreparePropossal.Txs))
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 
-	require.Empty(t, res.Events)
-	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
-
-	fmt.Println(res)
-
+	require.NotEmpty(t, res.Events)
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 }
 
 func getCheckStateCtx(app *baseapp.BaseApp) sdk.Context {
@@ -2307,5 +2303,11 @@ func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
 func setTxSignature(builder client.TxBuilder, nonce uint64) {
 	privKey := secp256k1.GenPrivKeyFromSecret([]byte("test"))
 	pubKey := privKey.PubKey()
-	builder.SetSignatures(signingtypes.SignatureV2{PubKey: pubKey, Sequence: nonce})
+	err := builder.SetSignatures(
+		signingtypes.SignatureV2{
+			PubKey: pubKey, Sequence: nonce, Data: &signingtypes.SingleSignatureData{},
+		})
+	if err != nil {
+		panic(err)
+	}
 }

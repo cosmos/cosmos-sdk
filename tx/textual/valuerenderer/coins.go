@@ -3,6 +3,7 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -76,15 +77,42 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 	}
 }
 
-func (vr coinsValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
+func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
 	if len(screens) != 1 {
 		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	coins, err := corecoins.ParseCoins(screens[0].Text)
-	if err != nil {
-		return protoreflect.Value{}, err
-	}
+	coins := strings.Split(screens[0].Text, ", ")
+	metadatas := make([]*bankv1beta1.Metadata, len(coins))
 
-	return protoreflect.ValueOf(NewGenericList(coins)), nil
+	if len(coins) > 1 {
+		var err error
+		for i, coin := range coins {
+			coinArr := strings.Split(coin, " ")
+			metadatas[i], err = vr.coinMetadataQuerier(ctx, coinArr[1])
+			if err != nil {
+				return protoreflect.Value{}, err
+			}
+		}
+
+		parsed, err := corecoins.ParseCoins(coins, metadatas)
+		if err != nil {
+			return protoreflect.Value{}, err
+		}
+
+		return protoreflect.ValueOf(NewGenericList(parsed)), err
+	} else {
+		coinArr := strings.Split(coins[0], " ")
+		metadata, err := vr.coinMetadataQuerier(ctx, coinArr[1])
+		if err != nil {
+			return protoreflect.Value{}, err
+		}
+
+		parsed, err := corecoins.ParseCoins(coins, []*bankv1beta1.Metadata{metadata})
+		if err != nil {
+			return protoreflect.Value{}, err
+		}
+
+		return protoreflect.ValueOf(NewGenericList(parsed)), err
+	}
 }

@@ -89,24 +89,73 @@ func FormatCoins(coins []*basev1beta1.Coin, metadata []*bankv1beta1.Metadata) (s
 	return strings.Join(formatted, ", "), nil
 }
 
-func ParseCoins(coins string) ([]*basev1beta1.Coin, error) {
-	coinsStr := strings.Split(coins, ", ")
-	parsedCoins := make([]*basev1beta1.Coin, len(coinsStr), 0)
+func ParseCoins(coins []string, metadata []*bankv1beta1.Metadata) ([]*basev1beta1.Coin, error) {
+	if len(coins) != len(metadata) {
+		return []*basev1beta1.Coin{}, fmt.Errorf("formatCoins expect one metadata for each coin; expected %d, got %d", len(coins), len(metadata))
+	}
 
-	for _, coinStr := range coinsStr {
-		coinArr := strings.Split(coinStr, " ")
-
-		decStr, err := math.ParseDec(coinArr[0])
+	parsedCoins := make([]*basev1beta1.Coin, len(coins), 0)
+	for i, coinStr := range coins {
+		coin, err := parseCoin(coinStr, metadata[i])
 		if err != nil {
 			return []*basev1beta1.Coin{}, err
-		}
-
-		coin := &basev1beta1.Coin{
-			Amount: decStr,
-			Denom:  coinArr[1],
 		}
 		parsedCoins = append(parsedCoins, coin)
 	}
 
 	return parsedCoins, nil
+}
+
+func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coin, error) {
+	coinArr := strings.Split(coinStr, " ")
+	coinDenom := coinArr[1]
+
+	if metadata == nil || metadata.Display == "" || coinArr[1] == metadata.Display {
+		dec, err := math.ParseDec(coinArr[0])
+		return &basev1beta1.Coin{
+			Amount: dec,
+			Denom:  coinDenom,
+		}, err
+	}
+
+	baseDenom := metadata.Display
+
+	// Find exponents of both denoms.
+	foundCoinExp, foundBaseExp := false, false
+	var coinExp, baseExp uint32
+	for _, unit := range metadata.DenomUnits {
+		if coinDenom == unit.Denom {
+			coinExp = unit.Exponent
+			foundCoinExp = true
+		}
+		if baseDenom == unit.Denom {
+			baseExp = unit.Exponent
+			foundBaseExp = true
+		}
+	}
+
+	// If we didn't find either exponent, then we return early.
+	if !foundCoinExp || !foundBaseExp {
+		amt, err := math.ParseInt(coinArr[0])
+		return &basev1beta1.Coin{
+			Amount: amt.String(),
+			Denom:  coinDenom,
+		}, err
+	}
+
+	amt, err := math.LegacyNewDecFromStr(coinArr[0])
+	if err != nil {
+		return &basev1beta1.Coin{}, err
+	}
+
+	if coinExp > baseExp {
+		amt = amt.Mul(math.LegacyNewDec(10).Power(uint64(coinExp - baseExp)))
+	} else {
+		amt = amt.Quo(math.LegacyNewDec(10).Power(uint64(baseExp - coinExp)))
+	}
+
+	return &basev1beta1.Coin{
+		Amount: amt.String(),
+		Denom:  coinDenom,
+	}, nil
 }

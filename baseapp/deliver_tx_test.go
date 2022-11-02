@@ -18,6 +18,7 @@ import (
 	"unsafe"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,8 +28,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"cosmossdk.io/depinject"
 	"github.com/cosmos/gogoproto/jsonpb"
+
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -1946,6 +1948,7 @@ func TestQuery(t *testing.T) {
 
 func TestBaseApp_PrepareProposal(t *testing.T) {
 	anteKey := []byte("ante-key")
+	mempool := mempool.NewNonceMempool()
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
@@ -1963,7 +1966,7 @@ func TestBaseApp_PrepareProposal(t *testing.T) {
 	//}
 	//app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil, anteOpt)
 
-	app := setupBaseApp(t, anteOpt)
+	app := setupBaseApp(t, anteOpt, baseapp.SetMempool(mempool))
 	registry := codectypes.NewInterfaceRegistry()
 	cdc = codec.NewProtoCodec(registry)
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())

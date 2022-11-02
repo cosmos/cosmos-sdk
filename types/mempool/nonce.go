@@ -57,6 +57,7 @@ func txKeyLessNonce(a, b any) int {
 	return huandu.String.Compare(keyB.sender, keyA.sender)
 }
 
+// NewNonceMempool creates a new mempool that prioritizes transactions by nonce, the lowest first.
 func NewNonceMempool() Mempool {
 	sp := &nonceMempool{
 		txQueue: huandu.New(huandu.LessThanFunc(txKeyLessNonce)),
@@ -84,8 +85,8 @@ func (sp nonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	return nil
 }
 
-// Select returns txs from the mempool with the lowest nonce globally first. A sender's txs will always be returned
-// in nonce order.
+// Select returns an iterator ordering transactions the mempool with the lowest nonce globally first. A sender's txs
+// will always be returned in nonce order.
 func (sp nonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 	currentTx := sp.txQueue.Front()
 	if currentTx == nil {

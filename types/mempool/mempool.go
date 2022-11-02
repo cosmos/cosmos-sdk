@@ -34,5 +34,3 @@ type Iterator interface {
 }
 
 var ErrTxNotFound = errors.New("tx not found in mempool")
-
-type Factory func() Mempool

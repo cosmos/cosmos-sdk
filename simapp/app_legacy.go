@@ -502,6 +502,9 @@ func NewSimApp(
 func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 	// Enable textual in TxConfig
 	textual := txmodule.NewTextual(app.BankKeeper)
+	// Optionally, you can define custom field-level and message-level
+	// renderers here, using respectively `textual.DefineScalar` and
+	// `textual.DefineMessageRenderer`.
 	app.txConfig = authtx.NewTxConfigWithTextual(app.appCodec.(codec.ProtoCodecMarshaler), tx.DefaultSignModes, textual)
 
 	anteHandler, err := ante.NewAnteHandler(

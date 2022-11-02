@@ -14,9 +14,9 @@ import (
 
 func TestStore(t *testing.T) {
 	db := mem.NewStore()
-	key, value := []byte("key"), []byte("value")
-
 	require.Equal(t, types.StoreTypeMemory, db.GetStoreType())
+
+	key, value := []byte("key"), []byte("value")
 
 	require.Nil(t, db.Get(key))
 	db.Set(key, value)

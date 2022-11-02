@@ -1,4 +1,4 @@
-//go:build legacy_simapp
+//ago:build legacy_simapp
 
 package simapp
 
@@ -39,7 +39,9 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -706,11 +708,16 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	return paramsKeeper
 }
 
-func makeEncodingConfig() simappparams.EncodingConfig {
+func makeEncodingConfig(bankKeeper bankkeeper.BaseKeeper) simappparams.EncodingConfig {
 	encodingConfig := simappparams.MakeTestEncodingConfig()
 	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+
+	// Replace the TxConfig with one that supports Textual
+	textual := txmodule.NewTextual(bankKeeper)
+	encodingConfig.TxConfig = authtx.NewTxConfigWithTextual(encodingConfig.Codec, tx.DefaultSignModes, textual)
+
 	return encodingConfig
 }

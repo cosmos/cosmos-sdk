@@ -139,8 +139,8 @@ Now `depinject` has enough information to provide `Mallard` as an input to `APon
 When using `depinject.Inject`, the injected types must be pointers.
 :::
 
-```go
-https://github.com/cosmos/cosmos-sdk/blob/306a9a7/simapp/app.go#L189-L239
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/0d8787c/simapp/app.go#L227-L254
 ```
 
 ## Debugging

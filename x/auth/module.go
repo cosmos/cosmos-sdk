@@ -5,12 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"cosmossdk.io/depinject"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/core/appmodule"
+
+	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -99,6 +103,19 @@ type AppModule struct {
 	legacySubspace exported.Subspace
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
+// AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
+func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return types.AutoCLIOptions
+}
+
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, ss exported.Subspace) AppModule {
 	return AppModule{
@@ -184,7 +201,10 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(
+			ProvideModuleBasic,
+			ProvideModule,
+		),
 	)
 }
 
@@ -211,6 +231,7 @@ type AuthOutputs struct {
 
 	AccountKeeper keeper.AccountKeeper
 	Module        runtime.AppModuleWrapper
+	NewAppModule  appmodule.AppModule
 }
 
 func ProvideModule(in AuthInputs) AuthOutputs {
@@ -236,5 +257,5 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 	k := keeper.NewAccountKeeper(in.Cdc, in.Key, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
-	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}
+	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m), NewAppModule: m}
 }

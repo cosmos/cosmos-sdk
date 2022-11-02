@@ -30,10 +30,19 @@ extend google.protobuf.MessageOptions {
   // same name `legacy_amino_encoding`. The cosmos_proto one however is used
   // as a protobuf _field_ annotation, whereas this one operates on a protobuf
   // _message_.
-  string encoding = 11110002;
+  string message_encoding = 11110002;
 }
 
 extend google.protobuf.FieldOptions {
+    // legacy_amino_encoding is an optional string to describe the encoding
+    // format used by Amino. The field type is chosen to be a string for
+    // flexibility, but it should ideally be short and expected to be
+    // machine-readable, for example "base64" or "utf8_json".
+    //
+    // If left empty, then the Amino encoding is expected to be the same as the
+    // Protobuf one.
+    string encoding = 11110003;
+
   // field_name sets a different field name (i.e. key name) in
   // the amino JSON object for the given field.
   //
@@ -45,7 +54,7 @@ extend google.protobuf.FieldOptions {
   //
   // Then the Amino encoding of Foo will be:
   // `{"baz":"some value"}`
-  string field_name = 11110003;
+  string field_name = 11110004;
 
   // dont_omitempty sets the field in the JSON object even if
   // its value is empty, i.e. equal to the Golang zero value. To learn what
@@ -65,5 +74,5 @@ extend google.protobuf.FieldOptions {
   // f := Foo{};
   // out := AminoJSONEncoder(&f);
   // out == {"baz":""}
-  bool dont_omitempty = 11110004;
+  bool dont_omitempty = 11110005;
 }

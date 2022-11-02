@@ -3,6 +3,7 @@ package tx
 import (
 	"fmt"
 
+	"cosmossdk.io/tx/textual/valuerenderer"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,9 +25,22 @@ type config struct {
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
 // NOTE: Use NewTxConfigWithHandler to provide a custom signing handler in case the sign mode
-// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191).
+// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191). Use NewTxConfigWithTextual
+// to enable SIGN_MODE_TEXTUAL.
 func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode) client.TxConfig {
-	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes))
+	for _, m := range enabledSignModes {
+		if m == signingtypes.SignMode_SIGN_MODE_TEXTUAL {
+			panic("cannot use NewTxConfig with SIGN_MODE_TEXTUAL enabled; please use NewTxConfigWithTextual")
+		}
+	}
+
+	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, valuerenderer.NewTextual(nil)))
+}
+
+// NewTxConfigWithTextual is like NewTxConfig with the ability to add
+// a SIGN_MODE_TEXTUAL handler.
+func NewTxConfigWithTextual(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode, textual valuerenderer.Textual) client.TxConfig {
+	return NewTxConfigWithHandler(protoCodec, makeSignModeHandler(enabledSignModes, textual))
 }
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and signing handler.

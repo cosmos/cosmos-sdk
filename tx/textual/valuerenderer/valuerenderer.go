@@ -48,6 +48,21 @@ func NewTextual(q CoinMetadataQueryFn) Textual {
 	return t
 }
 
+// GetSignBytes returns Textual's sign doc as CBOR-encoded bytes.
+func (r Textual) GetSignBytes(ctx context.Context, data *textualv1.TextualData) ([]byte, error) {
+	vr, err := r.GetMessageValueRenderer(data.ProtoReflect().Descriptor())
+	if err != nil {
+		return nil, err
+	}
+
+	screens, err := vr.Format(ctx, protoreflect.ValueOf(data))
+	if err != nil {
+		return nil, err
+	}
+
+	return r.encode(screens)
+}
+
 // GetValueRenderer returns the value renderer for the given FieldDescriptor.
 func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
@@ -121,4 +136,11 @@ func (r *Textual) init() {
 func (r *Textual) DefineScalar(scalar string, vr ValueRenderer) {
 	r.init()
 	r.scalars[scalar] = vr
+}
+
+// DefineMsgRenderer adds a custom message renderer to the given
+// protobuf message.
+func (r *Textual) DefineMsgRenderer(name protoreflect.FullName, vr ValueRenderer) {
+	r.init()
+	r.messages[name] = vr
 }

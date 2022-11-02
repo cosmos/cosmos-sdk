@@ -197,16 +197,29 @@ func NewSimApp(
 				// supply the application options
 				appOpts,
 
+				// ADVANCED CONFIGURATION
+
+				//
+				// AUTH
+				//
+
+				// For providing a custom function required in auth to generate custom account types
+				// add it below. By default the auth module uses simulation.RandomGenesisAccounts.
+				//
+				// authtypes.RandomGenesisAccountsFn(simulation.RandomGenesisAccounts),
+
+				// For providing a custom a base account type add it below.
+				// By default the auth module uses authtypes.ProtoBaseAccount().
+				//
+				// func() authtypes.AccountI { return authtypes.ProtoBaseAccount() },
+
+				//
+				// MINT
+				//
+
 				// For providing a custom inflation function for x/mint add here your
 				// custom function that implements the minttypes.InflationCalculationFn
 				// interface.
-
-				// For providing a custom authority to a module simply add it below. By
-				// default the governance module is the default authority.
-				//
-				// map[string]sdk.AccAddress{
-				// 	minttypes.ModuleName: authtypes.NewModuleAddress(authtypes.ModuleName),
-				// },
 			),
 		)
 	)

@@ -85,6 +85,21 @@ Now the types are injected and we can use them for our tests:
 https://github.com/cosmos/cosmos-sdk/blob/e09516f4795c637ab12b30bf732ce5d86da78424/tests/integration/distribution/keeper/keeper_test.go#L21-L53
 ```
 
+## Deterministic and Regression tests	
+
+Tests are written for queries in the Cosmos SDK which have `module_query_safe` Protobuf annotation.
+
+Each query is tested using 2 methods:
+
+* Use property-based testing with the [`rapid`](https://pkg.go.dev/pgregory.net/rapid@v0.5.3) library. The property that is tested is that the query response and gas consumption are the same upon 1000 query calls.
+* Regression tests are written with hardcoded responses and gas, and verify they don't change upon 1000 calls and between SDK patch versions.
+
+Here's an example of regression tests:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/9f3575a10f1a6f1315b94a9be783df5156ce2292/tests/integration/bank/keeper/deterministic_test.go#L102-L115
+```
+
 ## Simulations
 
 Simulations uses as well a minimal application, built with [`depinject`](../building-apps/01-depinject.md):

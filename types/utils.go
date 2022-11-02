@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	log "github.com/tendermint/tendermint/libs/log"
 )
 
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
@@ -132,4 +133,11 @@ func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]by
 	byteSlice := key[startIndex:neededLength]
 
 	return byteSlice, endIndex
+}
+
+// LogDeferred logs an error in a deferred function call if the returned error is non-nil.
+func LogDeferred(logger log.Logger, f func() error) {
+	if err := f(); err != nil {
+		logger.Error(err.Error())
+	}
 }

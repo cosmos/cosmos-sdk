@@ -15,7 +15,7 @@ Learn more about the rationale of App Wiring in [ADR-057](../architecture/adr-05
 
 ### Pre-requisite Readings
 
-* [ADR 057: App Wiring Part I](../architecture/adr-057-app-wiring-1.md)
+* [ADR 057: App Wiring](../architecture/adr-057-app-wiring.md)
 * [Depinject Documentation](../tooling/02-depinject.md)
 
 :::

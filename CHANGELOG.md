@@ -153,8 +153,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#13160](https://github.com/cosmos/cosmos-sdk/pull/13160) Remove custom marshaling of proposl and voteoption. 
 * (types) [#13430](https://github.com/cosmos/cosmos-sdk/pull/13430) Remove unused code `ResponseCheckTx` and `ResponseDeliverTx`
 * (store) [#13529](https://github.com/cosmos/cosmos-sdk/pull/13529) Add method `LatestVersion` to `MultiStore` interface, add method `SetQueryMultiStore` to baesapp to support alternative `MultiStore` implementation for query service.
-* (pruning) [#13609](https://github.com/cosmos/cosmos-sdk/pull/13609) Move pruning pacakge to be under store pacakge
-* (signing) [#13701](https://github.com/cosmos/cosmos-sdk/pull/) Add a `context.Context` first argument to SignModeHandler's `GetSignBytes` method and and `x/auth/signing.VerifySignature`. You can pass `nil` for now, it will only be used once SIGN_MODE_TEXTUAL is live.
+* (pruning) [#13609](https://github.com/cosmos/cosmos-sdk/pull/13609) Move pruning package to be under store package.
+* (signing) [#13701](https://github.com/cosmos/cosmos-sdk/pull/) Add `context.Context` as an argument to SignModeHandler's `GetSignBytes` method and `x/auth/signing.VerifySignature`. You can pass `nil` for now, it will only be used once SIGN_MODE_TEXTUAL is live.
 
 ### CLI Breaking Changes
 

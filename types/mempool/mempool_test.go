@@ -57,7 +57,8 @@ func (tx testTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
 	res = append(res, txsigning.SignatureV2{
 		PubKey:   testPubKey{address: tx.address},
 		Data:     nil,
-		Sequence: tx.nonce})
+		Sequence: tx.nonce,
+	})
 
 	return res, nil
 }

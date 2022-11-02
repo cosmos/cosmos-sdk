@@ -101,7 +101,7 @@ func TestGetQueryCmd(t *testing.T) {
 			"evidence: []\npagination: null",
 			false,
 		},
-		"all evidence(json output)": {
+		"all evidence (json output)": {
 			[]string{
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},

@@ -80,7 +80,6 @@ func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_HappyPath() {
 	t := s.T()
 
 	tx := newTxCounter(txConfig, 0, 0)
-	//tx = setFailOnAnte(txConfig, tx, true)
 	txBytes, err := txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -95,12 +94,6 @@ func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_HappyPath() {
 	_, err = txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
-	//checkTx := abci.RequestCheckTx{
-	//	Tx:   txBytes,
-	//	Type: abci.CheckTxType_New,
-	//}
-	//app.CheckTx(reqCheckTx)
-	//tx2 = setFailOnAnte(txConfig, tx2, true)
 	err = s.mempool.Insert(sdk.Context{}, tx2)
 	require.NoError(t, err)
 	reqPreparePropossal := abci.RequestPrepareProposal{
@@ -113,4 +106,29 @@ func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_HappyPath() {
 
 	require.NotEmpty(t, res.Events)
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+}
+
+func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_Failures() {
+	tx := newTxCounter(s.txConfig, 0, 0)
+	txBytes, err := s.txConfig.TxEncoder()(tx)
+	s.NoError(err)
+
+	reqCheckTx := abci.RequestCheckTx{
+		Tx:   txBytes,
+		Type: abci.CheckTxType_New,
+	}
+	checkTxRes := s.baseApp.CheckTx(reqCheckTx)
+	s.True(checkTxRes.IsOK())
+
+	failTx := newTxCounter(s.txConfig, 1, 1)
+	failTx = setFailOnAnte(s.txConfig, failTx, true)
+	err = s.mempool.Insert(sdk.Context{}, failTx)
+	s.NoError(err)
+	s.Equal(2, s.mempool.CountTx())
+
+	req := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+	}
+	res := s.baseApp.PrepareProposal(req)
+	s.Equal(1, len(res.Txs))
 }

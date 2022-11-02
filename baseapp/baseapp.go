@@ -697,12 +697,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 	if mode == runTxModeCheck {
 		fmt.Println("inserting tx:", tx.GetMsgs())
-		err = app.mempool.Insert(ctx, tx.(mempool.Tx))
+		err = app.mempool.Insert(ctx, tx)
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err
 		}
 	} else if mode == runTxModeDeliver {
-		err = app.mempool.Remove(tx.(mempool.Tx))
+		err = app.mempool.Remove(tx)
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 			return gInfo, nil, anteEvents, priority,
 				fmt.Errorf("failed to remove tx from mempool: %w", err)
@@ -838,43 +838,40 @@ func createEvents(msg sdk.Msg) sdk.Events {
 	return sdk.Events{msgEvent}
 }
 
-// prepareProposal default implementation, it selects the
-func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) [][]byte {
-	cursor, selectErr := app.mempool.Select(req.Txs)
-	if selectErr != nil {
-		panic(selectErr)
-	}
+func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, error) {
+	iterator := app.mempool.Select(req.Txs)
 	var (
 		txsBytes  [][]byte
 		byteCount int64
 	)
-	for cursor != nil {
-		memTx := cursor.Tx()
+	for iterator != nil {
+		memTx := iterator.Tx()
 
-		if byteCount += memTx.Size(); byteCount > req.MaxTxBytes {
+		bz, encErr := app.txEncoder(memTx)
+		txSize := int64(len(bz))
+		if encErr != nil {
+			return nil, encErr
+		}
+
+		fmt.Println("messages:", memTx.GetMsgs())
+		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
+		if err != nil {
+			fmt.Println("error un prepare propossal", memTx)
+			removeErr := app.mempool.Remove(memTx)
+			if removeErr != nil {
+				return nil, removeErr
+			}
+			continue
+		} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
+			txsBytes = append(txsBytes, bz)
+		} else {
 			break
 		}
 
-		bz, encErr := app.txEncoder(memTx)
-		if encErr != nil {
-			panic(encErr)
-		}
-
-		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
-		if err != nil {
-			_ = app.mempool.Remove(memTx)
-		} else {
-			txsBytes = append(txsBytes, bz)
-		}
-
-		next, cursorErr := cursor.Next()
-		if cursorErr != nil {
-			panic(cursorErr)
-		}
-		cursor = next
+		iterator = iterator.Next()
 	}
 
-	return txsBytes
+	return txsBytes, nil
 }
 
 func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {
@@ -883,10 +880,12 @@ func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {
 		if err != nil {
 			return err
 		}
+		fmt.Println(tx)
 
 		_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
 		if err != nil {
-			_ = app.mempool.Remove(tx.(mempool.Tx))
+			fmt.Println("error run tx process", tx)
+			_ = app.mempool.Remove(tx)
 		}
 	}
 	return nil

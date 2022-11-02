@@ -258,7 +258,8 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-	return abci.ResponsePrepareProposal{Txs: app.prepareProposal(req)}
+	txs, _ := app.prepareProposal(req)
+	return abci.ResponsePrepareProposal{Txs: txs}
 }
 
 // ProcessProposal implements the ProcessProposal ABCI method and returns a

@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	_ Mempool      = (*nonceMempool)(nil)
-	_ SelectCursor = (*nonceMempoolIterator)(nil)
+	_ Mempool  = (*nonceMempool)(nil)
+	_ Iterator = (*nonceMempoolIterator)(nil)
 )
 
 // nonceMempool is a mempool that keeps transactions sorted by nonce. Transactions with the lowest nonce globally
@@ -25,18 +25,18 @@ type nonceMempoolIterator struct {
 	currentTx *huandu.Element
 }
 
-func (i nonceMempoolIterator) Next() (SelectCursor, error) {
+func (i nonceMempoolIterator) Next() Iterator {
 	if i.currentTx == nil {
-		return nil, nil
+		return nil
 	} else if n := i.currentTx.Next(); n != nil {
-		return nonceMempoolIterator{currentTx: n}, nil
+		return nonceMempoolIterator{currentTx: n}
 	} else {
-		return nil, nil
+		return nil
 	}
 }
 
-func (i nonceMempoolIterator) Tx() Tx {
-	return i.currentTx.Value.(Tx)
+func (i nonceMempoolIterator) Tx() sdk.Tx {
+	return i.currentTx.Value.(sdk.Tx)
 }
 
 type txKey struct {
@@ -67,7 +67,7 @@ func NewNonceMempool() Mempool {
 
 // Insert adds a tx to the mempool. It returns an error if the tx does not have at least one signer.
 // priority is ignored.
-func (sp nonceMempool) Insert(_ sdk.Context, tx Tx) error {
+func (sp nonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -86,13 +86,13 @@ func (sp nonceMempool) Insert(_ sdk.Context, tx Tx) error {
 
 // Select returns txs from the mempool with the lowest nonce globally first. A sender's txs will always be returned
 // in nonce order.
-func (sp nonceMempool) Select(_ [][]byte) (SelectCursor, error) {
+func (sp nonceMempool) Select(_ [][]byte) Iterator {
 	currentTx := sp.txQueue.Front()
 	if currentTx == nil {
-		return nil, nil
+		return nil
 	}
 
-	return &nonceMempoolIterator{currentTx: currentTx}, nil
+	return &nonceMempoolIterator{currentTx: currentTx}
 }
 
 // CountTx returns the number of txs in the mempool.
@@ -102,7 +102,7 @@ func (sp nonceMempool) CountTx() int {
 
 // Remove removes a tx from the mempool. It returns an error if the tx does not have at least one signer or the tx
 // was not found in the pool.
-func (sp nonceMempool) Remove(tx Tx) error {
+func (sp nonceMempool) Remove(tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err

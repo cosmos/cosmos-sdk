@@ -62,12 +62,9 @@ func (tx testTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
 
 var (
 	_ sdk.Tx                  = (*testTx)(nil)
-	_ mempool.Tx              = (*testTx)(nil)
 	_ signing.SigVerifiableTx = (*testTx)(nil)
 	_ cryptotypes.PubKey      = (*testPubKey)(nil)
 )
-
-func (tx testTx) Size() int64 { return 1 }
 
 func (tx testTx) GetMsgs() []sdk.Msg { return nil }
 
@@ -104,21 +101,19 @@ func (tx txSpec) String() string {
 	return fmt.Sprintf("[tx i: %d, a: %s, p: %d, n: %d]", tx.i, tx.a, tx.p, tx.n)
 }
 
-func fetchTxs(cursor mempool.SelectCursor, maxBytes int64) []mempool.Tx {
+func fetchTxs(iterator mempool.Iterator, maxBytes int64) []sdk.Tx {
+	const txSize = 1
 	var (
-		txs      []mempool.Tx
+		txs      []sdk.Tx
 		numBytes int64
 	)
-	for cursor != nil {
-		if numBytes += cursor.Tx().Size(); numBytes > maxBytes {
+	for iterator != nil {
+		if numBytes += txSize; numBytes > maxBytes {
 			break
 		}
-		txs = append(txs, cursor.Tx())
-		c, err := cursor.Next()
-		if err != nil {
-			panic(err)
-		}
-		cursor = c
+		txs = append(txs, iterator.Tx())
+		i := iterator.Next()
+		iterator = i
 	}
 	return txs
 }
@@ -141,9 +136,8 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 
 	// empty mempool behavior
 	require.Equal(t, 0, s.mempool.CountTx())
-	selCursor, err := s.mempool.Select(nil)
-	require.NoError(t, err)
-	require.Nil(t, selCursor)
+	itr := s.mempool.Select(nil)
+	require.Nil(t, itr)
 
 	// same sender-nonce just overwrites a tx
 	for _, tx := range txs {
@@ -162,9 +156,8 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	}
 	require.Equal(t, txCount, s.mempool.CountTx())
 
-	selCursor, err = s.mempool.Select(nil)
-	require.NoError(t, err)
-	sel := fetchTxs(selCursor, 13)
+	itr = s.mempool.Select(nil)
+	sel := fetchTxs(itr, 13)
 	require.Equal(t, 13, len(sel))
 
 	// a tx which does not implement SigVerifiableTx should not be inserted

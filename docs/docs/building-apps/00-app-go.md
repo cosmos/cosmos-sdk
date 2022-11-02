@@ -105,6 +105,10 @@ In short `depinject` and the [`runtime` package](https://pkg.go.dev/github.com/c
 https://github.com/cosmos/cosmos-sdk/blob/0d8787c/simapp/app.go#L227-L254
 ```
 
+:::warning
+When using `depinject.Inject`, the injected types must be pointers.
+:::
+
 ### Advanced Configuration
 
 In advanced cases, it is possible to inject extra (module) configuration in a way that is not (yet) supported by `AppConfig`.  

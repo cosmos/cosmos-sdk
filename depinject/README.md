@@ -10,9 +10,11 @@ sidebar_position: 1
 
 `depinject` is a dependency injection framework for the Cosmos SDK. This module together with `core/appconfig` are meant to simplify the definition of a blockchain by replacing most of `app.go`'s boilerplate code with a configuration file (Go, YAML or JSON).
 
+* [Go Doc](https://pkg.go.dev/cosmossdk.io/depinject)
+
 ## Usage
 
-`depinject` includes an expressive and composable [configuration API](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/depinject#Config).
+`depinject` includes an expressive and composable [Configuration API](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/depinject#Config).
 A core configuration is `Provide`, for example this code snippet
 
 ```go
@@ -132,6 +134,10 @@ depinject.Inject(
 Now `depinject` has enough information to provide `Mallard` as an input to `APond`. 
 
 ### Full example in real app
+
+:::warning
+When using `depinject.Inject`, the injected types must be pointers.
+:::
 
 ```go
 https://github.com/cosmos/cosmos-sdk/blob/306a9a7/simapp/app.go#L189-L239

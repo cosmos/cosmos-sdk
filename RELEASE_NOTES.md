@@ -1,3 +1,16 @@
+## [v0.46.3-pio-4](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.3-pio-4) - 2022-11-02
+
+### Imporovements
+
+* (server) [#350](https://github.com/provenance-io/cosmos-sdk/pull/350) Change the default for IAVLDisableFastNode (iavl-disable-fastnode) back to true.
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3-pio-3...v0.46.3-pio-4
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3...v0.46.3-pio-4
+
+---
+
 ## [v0.46.3-pio-3](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.3-pio-3) - 2022-11-01
 
 ### Improvements

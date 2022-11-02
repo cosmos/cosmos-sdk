@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type ReflectionServiceClient interface {
 	// FileDescriptors queries all the file descriptors in the app in order
 	// to enable easier generation of dynamic clients.
-	FileDescriptors(ctx context.Context, in *QueryFileDescriptorsRequest, opts ...grpc.CallOption) (*QueryFileDescriptorsResponse, error)
+	FileDescriptors(ctx context.Context, in *FileDescriptorsRequest, opts ...grpc.CallOption) (*FileDescriptorsResponse, error)
 }
 
 type reflectionServiceClient struct {
@@ -35,8 +35,8 @@ func NewReflectionServiceClient(cc grpc.ClientConnInterface) ReflectionServiceCl
 	return &reflectionServiceClient{cc}
 }
 
-func (c *reflectionServiceClient) FileDescriptors(ctx context.Context, in *QueryFileDescriptorsRequest, opts ...grpc.CallOption) (*QueryFileDescriptorsResponse, error) {
-	out := new(QueryFileDescriptorsResponse)
+func (c *reflectionServiceClient) FileDescriptors(ctx context.Context, in *FileDescriptorsRequest, opts ...grpc.CallOption) (*FileDescriptorsResponse, error) {
+	out := new(FileDescriptorsResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.reflection.v1.ReflectionService/FileDescriptors", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (c *reflectionServiceClient) FileDescriptors(ctx context.Context, in *Query
 type ReflectionServiceServer interface {
 	// FileDescriptors queries all the file descriptors in the app in order
 	// to enable easier generation of dynamic clients.
-	FileDescriptors(context.Context, *QueryFileDescriptorsRequest) (*QueryFileDescriptorsResponse, error)
+	FileDescriptors(context.Context, *FileDescriptorsRequest) (*FileDescriptorsResponse, error)
 	mustEmbedUnimplementedReflectionServiceServer()
 }
 
@@ -58,7 +58,7 @@ type ReflectionServiceServer interface {
 type UnimplementedReflectionServiceServer struct {
 }
 
-func (UnimplementedReflectionServiceServer) FileDescriptors(context.Context, *QueryFileDescriptorsRequest) (*QueryFileDescriptorsResponse, error) {
+func (UnimplementedReflectionServiceServer) FileDescriptors(context.Context, *FileDescriptorsRequest) (*FileDescriptorsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FileDescriptors not implemented")
 }
 func (UnimplementedReflectionServiceServer) mustEmbedUnimplementedReflectionServiceServer() {}
@@ -75,7 +75,7 @@ func RegisterReflectionServiceServer(s grpc.ServiceRegistrar, srv ReflectionServ
 }
 
 func _ReflectionService_FileDescriptors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryFileDescriptorsRequest)
+	in := new(FileDescriptorsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func _ReflectionService_FileDescriptors_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/cosmos.reflection.v1.ReflectionService/FileDescriptors",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ReflectionServiceServer).FileDescriptors(ctx, req.(*QueryFileDescriptorsRequest))
+		return srv.(ReflectionServiceServer).FileDescriptors(ctx, req.(*FileDescriptorsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

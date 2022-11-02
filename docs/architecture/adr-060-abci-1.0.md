@@ -2,7 +2,7 @@
 
 ## Changelog
 
-* 2022-08-10: Initial Draft (@alexanderbez, @marbar3778)
+* 2022-08-10: Initial Draft (@alexanderbez, @tac0turtle)
 
 ## Status
 
@@ -232,8 +232,6 @@ know them today will still exist and function as they currently do.
 * Additional requests between Tendermint and the Cosmos SDK in the context of
   block execution. Albeit, the overhead should be negligible.
 * Not backwards compatible with previous versions of Tendermint and the Cosmos SDK.
-
-### Neutral
 
 ## Further Discussions
 

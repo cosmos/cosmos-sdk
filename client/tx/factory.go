@@ -9,6 +9,8 @@ import (
 	"cosmossdk.io/math"
 	"github.com/spf13/pflag"
 
+	"github.com/cosmos/go-bip39"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -17,7 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/go-bip39"
 )
 
 // Factory defines a client transaction factory that facilitates generating and

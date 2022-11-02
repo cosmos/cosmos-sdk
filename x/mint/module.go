@@ -198,9 +198,9 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 	return nil
 }
 
-// ============================================================================
-// New App Wiring Setup
-// ============================================================================
+//
+// App Wiring Setup
+//
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
@@ -219,7 +219,6 @@ type MintInputs struct {
 	Config                 *modulev1.Module
 	Key                    *store.KVStoreKey
 	Cdc                    codec.Codec
-	Authority              map[string]sdk.AccAddress    `optional:"true"`
 	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
@@ -243,10 +242,10 @@ func ProvideModule(in MintInputs) MintOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		// default to governance authority if not provided
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(

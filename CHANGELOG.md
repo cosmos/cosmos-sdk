@@ -39,7 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Imporovements
+
+* (server) [#350](https://github.com/provenance-io/cosmos-sdk/pull/350) Change the default for IAVLDisableFastNode (iavl-disable-fastnode) back to true.
 
 ---
 

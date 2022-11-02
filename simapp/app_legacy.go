@@ -1,4 +1,4 @@
-//ago:build legacy_simapp
+//go:build legacy_simapp
 
 package simapp
 
@@ -500,6 +500,10 @@ func NewSimApp(
 }
 
 func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
+	// Enable textual in TxConfig
+	textual := txmodule.NewTextual(app.BankKeeper)
+	app.txConfig = authtx.NewTxConfigWithTextual(app.appCodec.(codec.ProtoCodecMarshaler), tx.DefaultSignModes, textual)
+
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
 			AccountKeeper:   app.AccountKeeper,
@@ -708,16 +712,11 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	return paramsKeeper
 }
 
-func makeEncodingConfig(bankKeeper bankkeeper.BaseKeeper) simappparams.EncodingConfig {
+func makeEncodingConfig() simappparams.EncodingConfig {
 	encodingConfig := simappparams.MakeTestEncodingConfig()
 	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
-
-	// Replace the TxConfig with one that supports Textual
-	textual := txmodule.NewTextual(bankKeeper)
-	encodingConfig.TxConfig = authtx.NewTxConfigWithTextual(encodingConfig.Codec, tx.DefaultSignModes, textual)
-
 	return encodingConfig
 }

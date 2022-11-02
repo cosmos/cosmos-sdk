@@ -1,4 +1,4 @@
-//go:build legacy_simapp
+//go:build !legacy_simapp
 
 package simapp
 

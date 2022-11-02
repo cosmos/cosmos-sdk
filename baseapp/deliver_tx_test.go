@@ -18,7 +18,6 @@ import (
 	"unsafe"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/stretchr/testify/assert"
@@ -1944,91 +1943,6 @@ func TestQuery(t *testing.T) {
 	app.Commit()
 	res = app.Query(query)
 	require.Equal(t, value, res.Value)
-}
-
-func TestBaseApp_PrepareProposal(t *testing.T) {
-	anteKey := []byte("ante-key")
-	pool := mempool.NewNonceMempool()
-	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
-	}
-
-	var (
-		appBuilder *runtime.AppBuilder
-		cdc        codec.ProtoCodecMarshaler
-	)
-	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
-	require.NoError(t, err)
-
-	//testCtx := testutil.DefaultContextWithDB(t, capKey1, sdk.NewTransientStoreKey("transient_test"))
-	//csmOpt := func(bapp *baseapp.BaseApp) {
-	//	bapp.SetCMS(testCtx.CMS)
-	//}
-	//app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil, anteOpt)
-
-	app := setupBaseApp(t, anteOpt, baseapp.SetMempool(pool))
-	registry := codectypes.NewInterfaceRegistry()
-	cdc = codec.NewProtoCodec(registry)
-	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
-	app.SetMsgServiceRouter(baseapp.NewMsgServiceRouter())
-	app.SetInterfaceRegistry(registry)
-
-	baseapptestutil.RegisterKeyValueServer(app.MsgServiceRouter(), MsgKeyValueImpl{})
-	//setParamStore
-	//baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
-	deliverKey := []byte("deliver-key")
-	baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
-	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-	// Begin Block ABCI call
-
-	require.NoError(t, err)
-
-	app.InitChain(abci.RequestInitChain{
-		ConsensusParams: &tmproto.ConsensusParams{},
-	})
-
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-	// patch in TxConfig insted of using an output from x/auth/tx
-	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
-
-	app.SetTxDecoder(txConfig.TxDecoder())
-	app.SetTxEncoder(txConfig.TxEncoder())
-
-	tx := newTxCounter(txConfig, 0, 0)
-	//tx = setFailOnAnte(txConfig, tx, true)
-	txBytes, err := txConfig.TxEncoder()(tx)
-	require.NoError(t, err)
-
-	reqCheckTx := abci.RequestCheckTx{
-		Tx:   txBytes,
-		Type: abci.CheckTxType_New,
-	}
-	app.CheckTx(reqCheckTx)
-
-	badTx := newTxCounter(txConfig, 1, 1)
-
-	_, err = txConfig.TxEncoder()(tx)
-	require.NoError(t, err)
-
-	//checkTx := abci.RequestCheckTx{
-	//	Tx:   txBytes,
-	//	Type: abci.CheckTxType_New,
-	//}
-	//app.CheckTx(reqCheckTx)
-	//badTx = setFailOnAnte(txConfig, badTx, true)
-	err = pool.Insert(sdk.Context{}, badTx)
-	require.NoError(t, err)
-	reqPreparePropossal := abci.RequestPrepareProposal{
-		MaxTxBytes: 1000,
-	}
-	resPreparePropossal := app.PrepareProposal(reqPreparePropossal)
-
-	assert.Equal(t, 2, len(resPreparePropossal.Txs))
-	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-
-	require.NotEmpty(t, res.Events)
-	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 }
 
 func getCheckStateCtx(app *baseapp.BaseApp) sdk.Context {

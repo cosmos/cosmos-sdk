@@ -34,14 +34,14 @@ extend google.protobuf.MessageOptions {
 }
 
 extend google.protobuf.FieldOptions {
-    // legacy_amino_encoding is an optional string to describe the encoding
-    // format used by Amino. The field type is chosen to be a string for
-    // flexibility, but it should ideally be short and expected to be
-    // machine-readable, for example "base64" or "utf8_json".
-    //
-    // If left empty, then the Amino encoding is expected to be the same as the
-    // Protobuf one.
-    string encoding = 11110003;
+  // legacy_amino_encoding is an optional string to describe the encoding
+  // format used by Amino. The field type is chosen to be a string for
+  // flexibility, but it should ideally be short and expected to be
+  // machine-readable, for example "base64" or "utf8_json".
+  //
+  // If left empty, then the Amino encoding is expected to be the same as the
+  // Protobuf one.
+  string encoding = 11110003;
 
   // field_name sets a different field name (i.e. key name) in
   // the amino JSON object for the given field.

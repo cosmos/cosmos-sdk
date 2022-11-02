@@ -23,15 +23,15 @@ message PubKey {
   // Then we have:
   // out == `"MQ=="`
   // out != `{"key":"MQ=="}`
-  option (legacy_amino.message_encoding)      = "bytes_field";
-  option (gogoproto.goproto_stringer) = false;
+  option (legacy_amino.message_encoding) = "bytes_field";
+  option (gogoproto.goproto_stringer)    = false;
 
   bytes key = 1;
 }
 
 // PrivKey defines a secp256k1 private key.
 message PrivKey {
-  option (legacy_amino.name)     = "tendermint/PrivKeySecp256k1";
+  option (legacy_amino.name)             = "tendermint/PrivKeySecp256k1";
   option (legacy_amino.message_encoding) = "bytes_field";
 
   bytes key = 1;

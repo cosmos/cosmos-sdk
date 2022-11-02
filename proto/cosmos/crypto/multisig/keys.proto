@@ -22,8 +22,8 @@ message LegacyAminoPubKey {
   // by default marshal uint32 as a number).
   // 2. The `public_keys` field is renamed to `pubkeys`, which is also
   // reflected in the `legacy_amino_field_name` annotation.
-  option (legacy_amino.message_encoding)     = "threshold always as string";
-  option (gogoproto.goproto_getters) = false;
+  option (legacy_amino.message_encoding) = "threshold always as string";
+  option (gogoproto.goproto_getters)     = false;
 
   uint32   threshold                       = 1;
   repeated google.protobuf.Any public_keys = 2

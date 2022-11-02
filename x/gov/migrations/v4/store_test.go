@@ -119,7 +119,6 @@ func TestMigrateStore(t *testing.T) {
 	// Check if proposal 2 is in the new store but not proposal 1
 	require.Nil(t, store.Get(v4.VotingPeriodProposalKey(proposal1.Id)))
 	require.Equal(t, []byte{0x1}, store.Get(v4.VotingPeriodProposalKey(proposal2.Id)))
-
 }
 
 func getTestProposal() []sdk.Msg {

@@ -108,6 +108,24 @@ func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_HappyPath() {
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 }
 
+func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_ReachedMaxBytes() {
+	txConfig := s.txConfig
+	t := s.T()
+
+	for i := 0; i < 100; i++ {
+		tx2 := newTxCounter(txConfig, int64(i), int64(i))
+		err := s.mempool.Insert(sdk.Context{}, tx2)
+		require.NoError(t, err)
+	}
+
+	reqPreparePropossal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1500,
+	}
+	resPreparePropossal := s.baseApp.PrepareProposal(reqPreparePropossal)
+
+	require.Equal(t, 10, len(resPreparePropossal.Txs))
+}
+
 func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_Failures() {
 	tx := newTxCounter(s.txConfig, 0, 0)
 	txBytes, err := s.txConfig.TxEncoder()(tx)

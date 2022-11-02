@@ -282,9 +282,6 @@ they implement the hook interface by the modules exposing hooks. This has the do
 With the approach proposed here, hooks registration will be obviously observable in `app.go` if `depinject` codegen
 (described below) is used.
 
-Note that event listeners, described in [ADR 061: Core Module API](./adr-061-core-module-api.md), are a more
-standardized alternative to hooks with both a simpler declaration and registration system.
-
 ### Code Generation
 
 The `depinject` framework will optionally allow the app configuration and dependency injection wiring to be code

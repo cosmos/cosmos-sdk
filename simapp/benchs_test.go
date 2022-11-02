@@ -1,7 +1,6 @@
 package simapp_test
 
 import (
-	"fmt"
 	"testing"
 
 	"cosmossdk.io/simapp"
@@ -13,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 
@@ -71,26 +69,26 @@ func BenchmarkQueryAllBalances(b *testing.B) {
 	}
 }
 
-func BenchmarkQueryProposals(b *testing.B) {
-	b.StopTimer()
-	if app == nil {
-		setup()
-	}
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
-	// rpc error: code = Internal desc = no concrete type registered for type URL /cosmos.gov.v1beta1.TextProposal against interface *types.Msg
-	app.InterfaceRegistry().RegisterImplementations((*sdk.Msg)(nil), &v1.MsgExecLegacyContent{})
+// func BenchmarkQueryProposals(b *testing.B) {
+// 	b.StopTimer()
+// 	if app == nil {
+// 		setup()
+// 	}
+// 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+// 	// rpc error: code = Internal desc = no concrete type registered for type URL /cosmos.gov.v1beta1.TextProposal against interface *types.Msg
+// 	app.InterfaceRegistry().RegisterImplementations((*sdk.Msg)(nil), &v1.MsgExecLegacyContent{})
 
-	b.StartTimer()
+// 	b.StartTimer()
 
-	for i := 0; i < b.N; i++ {
-		res, err := app.GovKeeper.Proposals(sdk.WrapSDKContext(ctx), &govtypes.QueryProposalsRequest{})
-		if err != nil {
-			b.Fatal(err)
-		}
+// 	for i := 0; i < b.N; i++ {
+// 		res, err := app.GovKeeper.Proposals(sdk.WrapSDKContext(ctx), &govtypes.QueryProposalsRequest{})
+// 		if err != nil {
+// 			b.Fatal(err)
+// 		}
 
-		fmt.Printf("%#v", res)
-	}
-}
+// 		fmt.Printf("%#v", res)
+// 	}
+// }
 
 func BenchmarkQueryVotes(b *testing.B) {
 	b.StopTimer()

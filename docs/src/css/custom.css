@@ -451,7 +451,6 @@ html {
     p,
     ul,
     ol,
-    code,
     blockquote {
       @apply text-[1rem];
     }

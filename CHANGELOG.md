@@ -53,10 +53,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [#11981](https://github.com/cosmos/cosmos-sdk/pull/11981) Create the `SetSendEnabled` endpoint for managing the bank's SendEnabled settings.
 * (x/auth) [#13210](https://github.com/cosmos/cosmos-sdk/pull/13210) Add `Query/AccountInfo` endpoint for simplified access to basic account info.
 * (x/consensus) [#12905](https://github.com/cosmos/cosmos-sdk/pull/12905) Create a new `x/consensus` module that is now responsible for maintaining Tendermint consensus parameters instead of `x/param`. Legacy types remain in order to facilitate parameter migration from the deprecated `x/params`. App developers should ensure that they execute `baseapp.MigrateParams` during their chain upgrade. These legacy types will be removed in a future release.
-* (x/auth) [#13612](https://github.com/cosmos/cosmos-sdk/pull/13612) Add `Query/ModuleAccountByName` endpoint for accessing the module account info by module name.
+* (client/tx) [#13670](https://github.com/cosmos/cosmos-sdk/pull/13670) Add validation in `BuildUnsignedTx` to prevent simple inclusion of valid mnemonics
 
 ### Improvements
 
+* [#13619](https://github.com/cosmos/cosmos-sdk/pull/13619) Add new function called LogDeferred to report errors in defers. Use the function in x/bank files.
 * (tools) [#13603](https://github.com/cosmos/cosmos-sdk/pull/13603) Rename cosmovisor package name to `cosmossdk.io/tools/cosmovisor`. The new tool directory contains Cosmos SDK tools.
 * (deps) [#13397](https://github.com/cosmos/cosmos-sdk/pull/13397) Bump Go version minimum requirement to `1.19`.
 * [#13070](https://github.com/cosmos/cosmos-sdk/pull/13070) Migrate from `gogo/protobuf` to `cosmos/gogoproto`.
@@ -82,6 +83,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#13178](https://github.com/cosmos/cosmos-sdk/pull/13178) Add `cosmos.msg.v1.service` protobuf annotation to allow tooling to distinguish between Msg and Query services via reflection. 
 * [#13236](https://github.com/cosmos/cosmos-sdk/pull/13236) Integrate Filter Logging
 * [#13528](https://github.com/cosmos/cosmos-sdk/pull/13528) Update `ValidateMemoDecorator` to only check memo against `MaxMemoCharacters` param when a memo is present.
+* [#13651](https://github.com/cosmos/cosmos-sdk/pull/13651) Update `server/config/config.GetConfig` function.
 
 ### State Machine Breaking
 
@@ -117,7 +119,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (simapp) [#13378](https://github.com/cosmos/cosmos-sdk/pull/13378) Move `simapp.App` to `runtime.AppI`.
 * (tx) [#12659](https://github.com/cosmos/cosmos-sdk/pull/12659) Remove broadcast mode `block`.
 * (db) [#13370](https://github.com/cosmos/cosmos-sdk/pull/13370) remove storev2alpha1, see also https://github.com/cosmos/cosmos-sdk/pull/13371
-* (context) [#13063](https://github.com/cosmos/cosmos-sdk/pull/13063) Update `Context#CacheContext` to automatically emit all events on the parent context's `EventManager`.
 * (x/bank) [#12706](https://github.com/cosmos/cosmos-sdk/pull/12706) Removed the `testutil` package from the `x/bank/client` package.
 * (simapp) [#12747](https://github.com/cosmos/cosmos-sdk/pull/12747) Remove `simapp.MakeTestEncodingConfig`. Please use `moduletestutil.MakeTestEncodingConfig` (`types/module/testutil`) in tests instead.
 * (x/bank) [#12648](https://github.com/cosmos/cosmos-sdk/pull/12648) `NewSendAuthorization` takes a new argument of an optional list of addresses allowed to receive bank assests via authz MsgSend grant. You can pass `nil` for the same behavior as before, i.e. any recipient is allowed.
@@ -152,6 +153,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#13160](https://github.com/cosmos/cosmos-sdk/pull/13160) Remove custom marshaling of proposl and voteoption. 
 * (types) [#13430](https://github.com/cosmos/cosmos-sdk/pull/13430) Remove unused code `ResponseCheckTx` and `ResponseDeliverTx`
 * (store) [#13529](https://github.com/cosmos/cosmos-sdk/pull/13529) Add method `LatestVersion` to `MultiStore` interface, add method `SetQueryMultiStore` to baesapp to support alternative `MultiStore` implementation for query service.
+* (pruning) [#13609]](https://github.com/cosmos/cosmos-sdk/pull/13609) Move pruning pacakge to be under store pacakge
 
 ### CLI Breaking Changes
 
@@ -167,7 +169,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#12154](https://github.com/cosmos/cosmos-sdk/pull/12154) Add `baseAccountGetter` to avoid invalid account error when create vesting account.
 * (x/authz) [#12184](https://github.com/cosmos/cosmos-sdk/pull/12184) Fix MsgExec not verifying the validity of nested messages.
 * (x/staking) [#12303](https://github.com/cosmos/cosmos-sdk/pull/12303) Use bytes instead of string comparison in delete validator queue
-* (x/auth/tx) [#12474](https://github.com/cosmos/cosmos-sdk/pull/12474) Remove condition in GetTxsEvent that disallowed multiple equal signs, which would break event queries with base64 strings (i.e. query by signature).
 * (store/rootmulti) [#12487](https://github.com/cosmos/cosmos-sdk/pull/12487) Fix non-deterministic map iteration.
 * (sdk/dec_coins) [#12903](https://github.com/cosmos/cosmos-sdk/pull/12903) Fix nil `DecCoin` creation when converting `Coins` to `DecCoins`
 * (store) [#12945](https://github.com/cosmos/cosmos-sdk/pull/12945) Fix nil end semantics in store/cachekv/iterator when iterating a dirty cache.
@@ -182,6 +183,29 @@ Ref: https://keepachangelog.com/en/1.0.0/
   Setting can be done using MsgSetSendEnabled as a governance proposal.
   A SendEnabled query has been added to both GRPC and CLI.
 
+## [v0.46.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.4) - 2022-11-01
+
+### Features
+
+* (x/auth) [#13612](https://github.com/cosmos/cosmos-sdk/pull/13612) Add `Query/ModuleAccountByName` endpoint for accessing the module account info by module name.
+
+### Improvements
+
+* (deps) Bump IAVL version to [v0.19.4](https://github.com/cosmos/iavl/releases/tag/v0.19.4).
+
+### Bug Fixes
+
+* (x/auth/tx) [#12474](https://github.com/cosmos/cosmos-sdk/pull/12474) Remove condition in GetTxsEvent that disallowed multiple equal signs, which would break event queries with base64 strings (i.e. query by signature).
+* (store) [#13530](https://github.com/cosmos/cosmos-sdk/pull/13530) Fix app-hash mismatch if upgrade migration commit is interrupted.
+
+### CLI Breaking Changes
+
+* [#13656](https://github.com/cosmos/cosmos-sdk/pull/13659) Rename `server.FlagIAVLFastNode` to `server.FlagDisableIAVLFastNode` for clarity.
+
+### API Breaking Changes
+
+* (context) [#13063](https://github.com/cosmos/cosmos-sdk/pull/13063) Update `Context#CacheContext` to automatically emit all events on the parent context's `EventManager`.
+
 ## [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) - 2022-10-20
 
 ATTENTION:
@@ -193,7 +217,7 @@ All users should upgrade immediately.
 Users *must* add a replace directive in their go.mod for the new `ics23` package in the SDK:
 
 ```go
-replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v8.0.0
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 ```
 
 ### Features
@@ -320,7 +344,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v8.0
 * (rosetta) [#11590](https://github.com/cosmos/cosmos-sdk/pull/11590) Add fee suggestion for rosetta and enable offline mode. Also force set events about Fees to Success to pass reconciliation test.
 * (types) [#11959](https://github.com/cosmos/cosmos-sdk/pull/11959) Added `sdk.Coins.Find` helper method to find a coin by denom.
 * (upgrade) [#12603](https://github.com/cosmos/cosmos-sdk/pull/12603) feat: Move AppModule.BeginBlock and AppModule.EndBlock to extension interfaces
-* (telemetry) [#12405](https://github.com/cosmos/cosmos-sdk/pull/12405) Add _query_ calls metric to telemetry.
+* (telemetry) [#12405](https://github.com/cosmos/cosmos-sdk/pull/12405) Add *query* calls metric to telemetry.
 * (query) [#12253](https://github.com/cosmos/cosmos-sdk/pull/12253) Add `GenericFilteredPaginate` to the `query` package to improve UX.
 
 ### API Breaking Changes
@@ -533,7 +557,8 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v8.0
 
 ### State Machine Breaking
 
-* (baseapp) [#11985](https://github.com/cosmos/cosmos-sdk/pull/11985) Add a `postHandler` to baseapp. This `postHandler` is like antehandler, but is run _after_ the `runMsgs` execution. It is in the same store branch that `runMsgs`, meaning that both `runMsgs` and `postHandler`
+* (x/gov) [#13576](https://github.com/cosmos/cosmos-sdk/pull/13576) Proposals in voting period are tracked in a separate store.
+* (baseapp) [#11985](https://github.com/cosmos/cosmos-sdk/pull/11985) Add a `postHandler` to baseapp. This `postHandler` is like antehandler, but is run *after* the `runMsgs` execution. It is in the same store branch that `runMsgs`, meaning that both `runMsgs` and `postHandler`
 * (x/gov) [#11998](https://github.com/cosmos/cosmos-sdk/pull/11998) Tweak the `x/gov` `ModuleAccountInvariant` invariant to ensure deposits are `<=` total module account balance instead of strictly equal.
 * (x/upgrade) [#11800](https://github.com/cosmos/cosmos-sdk/pull/11800) Fix `GetLastCompleteUpgrade` to properly return the latest upgrade.
 * [#10564](https://github.com/cosmos/cosmos-sdk/pull/10564) Fix bug when updating allowance inside AllowedMsgAllowance
@@ -559,6 +584,24 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v8.0
 * (x/upgrade) [#9906](https://github.com/cosmos/cosmos-sdk/pull/9906) Deprecate `UpgradeConsensusState` gRPC query since this functionality is only used for IBC, which now has its own [IBC replacement](https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54)
 * (types) [#10948](https://github.com/cosmos/cosmos-sdk/issues/10948) Deprecate the types.DBBackend variable and types.NewLevelDB function. They are replaced by a new entry in `app.toml`: `app-db-backend` and `tendermint/tm-db`s `NewDB` function. If `app-db-backend` is defined, then it is used. Otherwise, if `types.DBBackend` is defined, it is used (until removed: [#11241](https://github.com/cosmos/cosmos-sdk/issues/11241)). Otherwise, Tendermint config's `db-backend` is used.
 
+## [v0.45.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.10) - 2022-10-24
+
+### Features
+
+* (grpc) [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485) Implement a new gRPC query, `/cosmos/base/node/v1beta1/config`, which provides operator configuration. Applications that wish to expose operator minimum gas prices via gRPC should have their application implement the `ApplicationQueryService` interface (see `SimApp#RegisterNodeService` as an example).
+* [#13557](https://github.com/cosmos/cosmos-sdk/pull/#13557) - Add `GenSignedMockTx`. This can be used as workaround for #12437 revertion. `v0.46+` contains as well a `GenSignedMockTx` that behaves the same way.
+* (x/auth) [#13612](https://github.com/cosmos/cosmos-sdk/pull/13612) Add `Query/ModuleAccountByName` endpoint for accessing the module account info by module name.
+
+### Improvements
+
+* [#13585](https://github.com/cosmos/cosmos-sdk/pull/13585) Bump Tendermint to `v0.34.22`.
+
+### Bug Fixes
+
+* [#13588](https://github.com/cosmos/cosmos-sdk/pull/13588) Fix regression in distrubtion.WithdrawDelegationRewards when rewards are zero.
+* [#13564](https://github.com/cosmos/cosmos-sdk/pull/13564) - Fix `make proto-gen`.
+* (server) [#13610](https://github.com/cosmos/cosmos-sdk/pull/13610) Read the pruning-keep-every field again.
+
 ## [v0.45.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.9) - 2022-10-14
 
 ATTENTION:
@@ -567,7 +610,7 @@ This is a security release for the [Dragonberry security advisory](https://forum
 
 All users should upgrade immediately.
 
-Users _must_ add a replace directive in their go.mod for the new `ics23` package in the SDK:
+Users *must* add a replace directive in their go.mod for the new `ics23` package in the SDK:
 
 ```go
 replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
@@ -830,7 +873,7 @@ This is a security release for the [Dragonberry security advisory](https://forum
 
 All users should upgrade immediately.
 
-Users _must_ add a replace directive in their go.mod for the new `ics23` package in the SDK:
+Users *must* add a replace directive in their go.mod for the new `ics23` package in the SDK:
 
 ```go
 replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
@@ -851,7 +894,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 
 ### Improvements
 
-* (types) [#10630](https://github.com/cosmos/cosmos-sdk/pull/10630) Add an `Events` field to the `TxResponse` type that captures _all_ events emitted by a transaction, unlike `Logs` which only contains events emitted during message execution.
+* (types) [#10630](https://github.com/cosmos/cosmos-sdk/pull/10630) Add an `Events` field to the `TxResponse` type that captures *all* events emitted by a transaction, unlike `Logs` which only contains events emitted during message execution.
 * (x/upgrade) [#10532](https://github.com/cosmos/cosmos-sdk/pull/10532) Add `keeper.DumpUpgradeInfoWithInfoToDisk` to include `Plan.Info` in the upgrade-info file.
 * (store) [#10544](https://github.com/cosmos/cosmos-sdk/pull/10544) Use the new IAVL iterator structure which significantly improves iterator performance.
 
@@ -1909,7 +1952,7 @@ sure you are aware of any relevant breaking changes.
   _ `os`: use OS default credentials storage (default).
   _ `file`: use encrypted file-based store.
   _ `kwallet`: use [KDE Wallet](https://utils.kde.org/projects/kwalletmanager/) service.
-  _ `pass`: use the [pass](https://www.passwordstore.org/) command line password manager. \* `test`: use password-less key store. _For testing purposes only. Use it at your own risk._
+  _ `pass`: use the [pass](https://www.passwordstore.org/) command line password manager. \* `test`: use password-less key store. *For testing purposes only. Use it at your own risk.*
 * (keys) [#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
   to the new keyring.
 * (keys) [#5366](https://github.com/cosmos/cosmos-sdk/pull/5366) `keys list` now accepts a `--list-names` option to list key names only, whilst the `keys delete`
@@ -3459,7 +3502,7 @@ BUG FIXES
 
 ## 0.25.0
 
-_October 24th, 2018_.
+*October 24th, 2018*.
 
 BREAKING CHANGES
 
@@ -3718,7 +3761,7 @@ BUG FIXES
 
 ## 0.24.2
 
-_August 22nd, 2018_.
+*August 22nd, 2018*.
 
 BUG FIXES
 
@@ -3727,7 +3770,7 @@ BUG FIXES
 
 ## 0.24.1
 
-_August 21st, 2018_.
+*August 21st, 2018*.
 
 BUG FIXES
 
@@ -3736,7 +3779,7 @@ BUG FIXES
 
 ## 0.24.0
 
-_August 13th, 2018_.
+*August 13th, 2018*.
 
 BREAKING CHANGES
 
@@ -3861,7 +3904,7 @@ BUG FIXES
 
 ## 0.23.1
 
-_July 27th, 2018_.
+*July 27th, 2018*.
 
 BUG FIXES
 
@@ -3871,7 +3914,7 @@ BUG FIXES
 
 ## 0.23.0
 
-_July 25th, 2018_.
+*July 25th, 2018*.
 
 BREAKING CHANGES
 
@@ -3894,7 +3937,7 @@ BUG FIXES
 
 ## 0.22.0
 
-_July 16th, 2018_.
+*July 16th, 2018*.
 
 BREAKING CHANGES
 
@@ -3913,7 +3956,7 @@ BUG FIXES
 
 ## 0.21.1
 
-_July 14th, 2018_.
+*July 14th, 2018*.
 
 BUG FIXES
 
@@ -3922,7 +3965,7 @@ BUG FIXES
 
 ## 0.21.0
 
-_July 13th, 2018_.
+*July 13th, 2018*.
 
 BREAKING CHANGES
 
@@ -3953,7 +3996,7 @@ BUG FIXES
 
 ## 0.20.0
 
-_July 10th, 2018_.
+*July 10th, 2018*.
 
 BREAKING CHANGES
 
@@ -4096,7 +4139,7 @@ BUG FIXES
 
 ## 0.19.0
 
-_June 13, 2018_.
+*June 13, 2018*.
 
 BREAKING CHANGES
 
@@ -4136,7 +4179,7 @@ FEATURES
 
 ## 0.18.0
 
-_June 9, 2018_.
+*June 9, 2018*.
 
 BREAKING CHANGES
 
@@ -4201,26 +4244,26 @@ BUG FIXES
 
 ## 0.17.5
 
-_June 5, 2018_.
+*June 5, 2018*.
 
 Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
 memory leak)
 
 ## 0.17.4
 
-_May 31, 2018_.
+*May 31, 2018*.
 
 Update to Tendermint v0.19.7 (WAL fixes and more)
 
 ## 0.17.3
 
-_May 29, 2018_.
+*May 29, 2018*.
 
 Update to Tendermint v0.19.6 (fix fast-sync halt)
 
 ## 0.17.2
 
-_May 20, 2018_.
+*May 20, 2018*.
 
 Update to Tendermint v0.19.5 (reduce WAL use, bound the mempool and some rpcs, improve logging)
 

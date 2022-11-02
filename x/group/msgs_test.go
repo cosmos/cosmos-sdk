@@ -8,8 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/module"
 )
 
 var (
@@ -1192,4 +1194,15 @@ func TestMsgLeaveGroup(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAmino(t *testing.T) {
+	cdc := testutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+
+	out, err := cdc.Amino.MarshalJSON(group.MsgSubmitProposal{Proposers: []string{member1.String()}})
+	require.NoError(t, err)
+	require.Equal(t,
+		`{"type":"cosmos-sdk/group/MsgSubmitProposal","value":{"proposers":["cosmos1d4jk6cn9wgcsj540xq"]}}`,
+		string(out),
+	)
 }

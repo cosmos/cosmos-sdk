@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"cosmossdk.io/tx/textual/valuerenderer"
@@ -34,19 +33,19 @@ func TestDurationJSON(t *testing.T) {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			rend := valuerenderer.NewDurationValueRenderer()
 
+			var screens []valuerenderer.Screen
 			if tc.Proto != nil {
-				wr := new(strings.Builder)
-				err = rend.Format(context.Background(), protoreflect.ValueOf(tc.Proto.ProtoReflect()), wr)
+				screens, err = rend.Format(context.Background(), protoreflect.ValueOf(tc.Proto.ProtoReflect()))
 				if tc.Error {
 					require.Error(t, err)
 					return
 				}
 				require.NoError(t, err)
-				require.Equal(t, tc.Text, wr.String())
+				require.Equal(t, 1, len(screens))
+				require.Equal(t, tc.Text, screens[0].Text)
 			}
 
-			rd := strings.NewReader(tc.Text)
-			val, err := rend.Parse(context.Background(), rd)
+			val, err := rend.Parse(context.Background(), screens)
 			if tc.Error {
 				require.Error(t, err)
 				return
@@ -56,7 +55,6 @@ func TestDurationJSON(t *testing.T) {
 			require.IsType(t, &dpb.Duration{}, msg)
 			duration := msg.(*dpb.Duration)
 			require.True(t, proto.Equal(duration, tc.Proto), "%v vs %v", duration, tc.Proto)
-
 		})
 	}
 }

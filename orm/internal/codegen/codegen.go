@@ -56,7 +56,7 @@ func QueryProtoPluginRunner(p *protogen.Plugin) error {
 			continue
 		}
 
-		out, err := os.OpenFile(fmt.Sprintf("%s_query.proto", f.GeneratedFilenamePrefix), os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644)
+		out, err := os.OpenFile(fmt.Sprintf("%s_query.proto", f.GeneratedFilenamePrefix), os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0o644)
 		if err != nil {
 			return err
 		}

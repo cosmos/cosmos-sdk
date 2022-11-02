@@ -6,8 +6,8 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	dbm "github.com/tendermint/tm-db"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -149,6 +149,10 @@ func (ms multiStore) Restore(
 }
 
 func (ms multiStore) RollbackToVersion(version int64) error {
+	panic("not implemented")
+}
+
+func (ms multiStore) LatestVersion() int64 {
 	panic("not implemented")
 }
 

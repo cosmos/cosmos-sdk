@@ -410,28 +410,3 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
 	return &tmcrypto.ProofOps{Ops: []tmcrypto.ProofOp{op.ProofOp()}}
 }
-
-//----------------------------------------
-
-// iavlIterator implements types.Iterator.
-type iavlIterator struct {
-	dbm.Iterator
-}
-
-var _ types.Iterator = (*iavlIterator)(nil)
-
-// newIAVLIterator will create a new iavlIterator.
-// CONTRACT: Caller must release the iavlIterator, as each one creates a new
-// goroutine.
-//
-//nolint:deadcode,unused
-func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool) *iavlIterator {
-	iterator, err := tree.Iterator(start, end, ascending)
-	if err != nil {
-		panic(err)
-	}
-	iter := &iavlIterator{
-		Iterator: iterator,
-	}
-	return iter
-}

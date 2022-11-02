@@ -57,7 +57,17 @@ https://github.com/cosmos/cosmos-sdk/blob/0d8787c/simapp/app_config.go#L52-L233
 ### Alternative formats
 
 :::tip
-The example above shows how to create an `AppConfig` using Go. However, it is also possible to create an `AppConfig` using YAML, or JSON, with respectively [`LoadYAML`](https://pkg.go.dev/cosmossdk.io/core/appconfig#LoadYAML) and [`LoadJSON`](https://pkg.go.dev/cosmossdk.io/core/appconfig#LoadJSON) functions.
+The example above shows how to create an `AppConfig` using Go. However, it is also possible to create an `AppConfig` using YAML, or JSON.  
+The configuration can then be embed with `go:embed` and read with [`appconfig.LoadYAML`](https://pkg.go.dev/cosmossdk.io/core/appconfig#LoadYAML), or [`appconfig.LoadJSON`](https://pkg.go.dev/cosmossdk.io/core/appconfig#LoadJSON), in `app.go`.
+
+```go
+//go:embed app_config.yaml
+var (
+    appConfigYaml []byte
+    appConfig = appconfig.LoadYAML(appConfigYaml)
+)
+```
+
 :::
 
 ```yaml

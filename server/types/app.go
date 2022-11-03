@@ -13,7 +13,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/gogoproto/grpc"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"

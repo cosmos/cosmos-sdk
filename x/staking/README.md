@@ -83,7 +83,7 @@ UnbondingID stores the ID of the latest unbonding operation. It enables to creat
 
 * UnbondingID: `0x37 -> uint64`
 
-## Params
+## Parameters
 
 The staking module stores its params in state with the prefix of `0x51`,
 it can be updated with governance or the address with authority.

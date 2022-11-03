@@ -564,17 +564,20 @@ func (s *CLITestSuite) TestNewWithdrawAllRewardsCmd() {
 		name      string
 		args      []string
 		expectErr bool
+		expErrMsg string
 		respType  proto.Message
 	}{
 		{
-			"valid transaction (offline)",
+			"invalid transaction (offline)",
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagOffline),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
 			},
-			true, nil,
+			true,
+			"cannot generate tx in offline mode",
+			nil,
 		},
 		{
 			"valid transaction",
@@ -584,7 +587,7 @@ func (s *CLITestSuite) TestNewWithdrawAllRewardsCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{},
+			false, "", &sdk.TxResponse{},
 		},
 	}
 
@@ -597,6 +600,7 @@ func (s *CLITestSuite) TestNewWithdrawAllRewardsCmd() {
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())

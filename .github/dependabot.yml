@@ -11,7 +11,10 @@ updates:
   - package-ecosystem: npm
     directory: "/docs"
     schedule:
-      interval: daily
+      interval: weekly
+    # DevRel should review docs updates
+    assignees:
+      - "julienrbrt"
 
   - package-ecosystem: gomod
     directory: "/"

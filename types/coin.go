@@ -114,11 +114,7 @@ func (coin Coin) Sub(coinB Coin) Coin {
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 	if res.IsNegative() {
-<<<<<<< HEAD
 		panic("negative coin amount")
-=======
-		return Coin{}, fmt.Errorf("negative coin amount: %s", res)
->>>>>>> 3034a9d54 (fix(bank): fix unhandled error for vesting (#13690))
 	}
 
 	return res

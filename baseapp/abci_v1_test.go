@@ -1,6 +1,8 @@
 package baseapp_test
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,6 +21,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
+
+type NoopCounterServerImpl struct{}
+
+func (m NoopCounterServerImpl) IncrementCounter(
+	_ context.Context,
+	_ *baseapptestutil.MsgCounter,
+) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	return &baseapptestutil.MsgCreateCounterResponse{}, nil
+}
 
 type ABCIv1TestSuite struct {
 	suite.Suite
@@ -54,8 +65,7 @@ func (s *ABCIv1TestSuite) SetupTest() {
 	app.SetInterfaceRegistry(registry)
 
 	baseapptestutil.RegisterKeyValueServer(app.MsgServiceRouter(), MsgKeyValueImpl{})
-	deliverKey := []byte("deliver-key")
-	baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+	baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), NoopCounterServerImpl{})
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 
 	app.InitChain(abci.RequestInitChain{
@@ -118,11 +128,11 @@ func (s *ABCIv1TestSuite) TestABCIv1_HappyPath() {
 	resProcessProposal := s.baseApp.ProcessProposal(reqProcessProposal)
 	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
 
-	//res := s.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	//require.Equal(t, 1, s.mempool.CountTx())
+	res := s.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, 1, s.mempool.CountTx())
 
-	//require.NotEmpty(t, res.Events)
-	//require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+	require.NotEmpty(t, res.Events)
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 }
 
 func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_ReachedMaxBytes() {

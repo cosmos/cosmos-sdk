@@ -153,3 +153,32 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommu
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
+
+func (k msgServer) DepositValidatorRewardsPool(goCtx context.Context, req *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	authority, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	// deposit coins from account to module
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, authority, types.ModuleName, req.Amount); err != nil {
+		return nil, err
+	}
+
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	validator := k.stakingKeeper.Validator(ctx, valAddr)
+
+	// distribute deposited amount to delegators
+	reward := sdk.NewDecCoinsFromCoins(req.Amount...)
+	k.AllocateTokensToValidator(ctx, validator, reward)
+
+	logger := k.Logger(ctx)
+	logger.Info("transferred from rewards to validator rewards pool", "authority", req.Authority, "amount", req.Amount.String(), "validator", req.ValidatorAddress)
+
+	return &types.MsgDepositValidatorRewardsPoolResponse{}, nil
+}

@@ -206,3 +206,5 @@ func (s *KeeperTestSuite) TestCommunityPoolSpend() {
 		})
 	}
 }
+
+// TODO: TestDepositValidatorRewardsPool

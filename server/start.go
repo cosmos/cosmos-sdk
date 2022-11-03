@@ -289,7 +289,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		if fn != nil {
 			fn()
 		}
-		traceWriter.Close()
+
+		if err != nil {
+			traceWriter.Close()
+		}
 	}
 
 	config, err := serverconfig.GetConfig(ctx.Viper)

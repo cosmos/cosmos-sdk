@@ -842,45 +842,6 @@ func createEvents(msg sdk.Msg) sdk.Events {
 	return sdk.Events{msgEvent}
 }
 
-func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, error) {
-	var (
-		txsBytes  [][]byte
-		byteCount int64
-	)
-
-	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
-	iterator := app.mempool.Select(ctx, req.Txs)
-
-	for iterator != nil {
-		memTx := iterator.Tx()
-
-		bz, err := app.txEncoder(memTx)
-		if err != nil {
-			return nil, err
-		}
-
-		txSize := int64(len(bz))
-
-		_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
-		if err != nil {
-			err := app.mempool.Remove(memTx)
-			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-				return nil, err
-			}
-			iterator = iterator.Next()
-			continue
-		} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
-			txsBytes = append(txsBytes, bz)
-		} else {
-			break
-		}
-
-		iterator = iterator.Next()
-	}
-
-	return txsBytes, nil
-}
-
 func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		for _, txBytes := range req.Txs {

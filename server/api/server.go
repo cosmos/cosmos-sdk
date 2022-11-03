@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogo/gateway"
+	gateway "github.com/cosmos/gogogateway"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"

@@ -80,10 +80,7 @@ func (s *CLITestSuite) TestCmdParam() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryParam()
 			cmd.SetArgs(tc.args)
-
-			if len(tc.args) != 0 {
-				s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
-			}
+			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
 		})
 	}
 }
@@ -117,10 +114,7 @@ func (s *CLITestSuite) TestCmdProposer() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryProposer()
 			cmd.SetArgs(tc.args)
-
-			if len(tc.args) != 0 {
-				s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
-			}
+			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
 		})
 	}
 }
@@ -162,10 +156,7 @@ func (s *CLITestSuite) TestCmdTally() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryTally()
 			cmd.SetArgs(tc.args)
-
-			if len(tc.args) != 0 {
-				s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
-			}
+			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
 		})
 	}
 }
@@ -200,10 +191,7 @@ func (s *CLITestSuite) TestCmdGetProposal() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryProposal()
 			cmd.SetArgs(tc.args)
-
-			if len(tc.args) != 0 {
-				s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
-			}
+			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
 		})
 	}
 }
@@ -237,10 +225,7 @@ func (s *CLITestSuite) TestCmdGetProposals() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryProposals()
 			cmd.SetArgs(tc.args)
-
-			if len(tc.args) != 0 {
-				s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
-			}
+			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
 		})
 	}
 }

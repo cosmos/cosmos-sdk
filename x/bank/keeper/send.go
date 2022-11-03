@@ -232,12 +232,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, addr, coin.Denom)
-
-		// NOTE: denom and amount validation should occur before transfer
-		locked := sdk.Coin{
-			Denom:  coin.Denom,
-			Amount: lockedCoins.AmountOfNoDenomValidation(coin.Denom),
-		}
+		locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
 
 		spendable, hasNeg := sdk.Coins{balance}.SafeSub(locked)
 		if hasNeg {

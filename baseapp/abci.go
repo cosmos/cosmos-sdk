@@ -277,11 +277,14 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
-	err := app.processProposal(req)
-	if err != nil {
-		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+	if app.processProposal == nil {
+		panic("app.ProcessProposal is not set")
 	}
-	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+
+	ctx := app.prepareProposalState.ctx.WithVoteInfos(app.voteInfos)
+	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+
+	return app.processProposal(ctx, req)
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In

@@ -60,17 +60,18 @@ type BaseApp struct { //nolint: maligned
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
-	txEncoder         sdk.TxEncoder
+	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
-	mempool        mempool.Mempool  // application side mempool
-	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
-	postHandler    sdk.AnteHandler  // post handler, optional, e.g. for tips
-	initChainer    sdk.InitChainer  // initialize state with validators and state blob
-	beginBlocker   sdk.BeginBlocker // logic to run before any txs
-	endBlocker     sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
-	addrPeerFilter sdk.PeerFilter   // filter peers by address and port
-	idPeerFilter   sdk.PeerFilter   // filter peers by node ID
-	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+	mempool         mempool.Mempool            // application side mempool
+	anteHandler     sdk.AnteHandler            // ante handler for fee and auth
+	postHandler     sdk.AnteHandler            // post handler, optional, e.g. for tips
+	initChainer     sdk.InitChainer            // initialize state with validators and state blob
+	beginBlocker    sdk.BeginBlocker           // logic to run before any txs
+	processProposal sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
+	endBlocker      sdk.EndBlocker             // logic to run after all txs, and to determine valset changes
+	addrPeerFilter  sdk.PeerFilter             // filter peers by address and port
+	idPeerFilter    sdk.PeerFilter             // filter peers by node ID
+	fauxMerkleMode  bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
@@ -171,6 +172,10 @@ func NewBaseApp(
 	// if execution of options has left certain required fields nil, set them to sane default values
 	if app.mempool == nil {
 		app.SetMempool(mempool.NewNonceMempool())
+	}
+
+	if app.processProposal == nil {
+		app.SetProcessProposal(app.DefaultProcessProposal())
 	}
 
 	if app.interBlockCache != nil {
@@ -875,20 +880,22 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 	return txsBytes, nil
 }
 
-func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {
-	for _, txBytes := range req.Txs {
-		tx, err := app.txDecoder(txBytes)
-		if err != nil {
-			return err
-		}
+func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
+	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+		for _, txBytes := range req.Txs {
+			tx, err := app.txDecoder(txBytes)
+			if err != nil {
+				panic(err)
+			}
 
-		_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
-		if err != nil {
-			err = app.mempool.Remove(tx)
-			if err != nil && err != mempool.ErrTxNotFound {
-				return err
+			_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
+			if err != nil {
+				err = app.mempool.Remove(tx)
+				if err != nil && err != mempool.ErrTxNotFound {
+					panic(err)
+				}
 			}
 		}
+		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}
-	return nil
 }

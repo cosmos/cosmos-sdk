@@ -19,9 +19,6 @@
   </a>
 </div>
 <div align="center">
-  <a href="https://github.com/cosmos/cosmos-sdk">
-    <img alt="Lines Of Code" src="https://tokei.rs/b1/github/cosmos/cosmos-sdk" />
-  </a>
   <a href="https://discord.gg/AzefAFd">
     <img alt="Discord" src="https://img.shields.io/discord/669268347736686612.svg" />
   </a>

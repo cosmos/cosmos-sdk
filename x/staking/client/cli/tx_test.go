@@ -163,13 +163,6 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 			},
 			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.2", "0.55", "1"),
 		},
-		{
-			name: "Custom min self delegations",
-			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(cli.FlagMinSelfDelegation, "0.33")
-			},
-			expectedCfg: mkTxValCfg(cli.DefaultTokens.String()+sdk.DefaultBondDenom, "0.1", "0.2", "0.01", "0.33"),
-		},
 	}
 
 	for _, tc := range tests {
@@ -214,7 +207,6 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
 				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
 				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -233,7 +225,6 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
 				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
 				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -253,7 +244,6 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
 				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
 				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -274,7 +264,6 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
 				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
 				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
-				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),

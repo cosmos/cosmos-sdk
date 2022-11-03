@@ -858,9 +858,9 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 
 		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
 		if err != nil {
-			removeErr := app.mempool.Remove(memTx)
-			if removeErr != nil && !errors.Is(removeErr, mempool.ErrTxNotFound) {
-				return nil, removeErr
+			err := app.mempool.Remove(memTx)
+			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+				return nil, err
 			}
 			iterator = iterator.Next()
 			continue

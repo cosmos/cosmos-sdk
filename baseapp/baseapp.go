@@ -849,11 +849,12 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 	for iterator != nil {
 		memTx := iterator.Tx()
 
-		bz, encErr := app.txEncoder(memTx)
-		txSize := int64(len(bz))
-		if encErr != nil {
-			return nil, encErr
+		bz, err := app.txEncoder(memTx)
+		if err != nil {
+			return nil, err
 		}
+
+		txSize := int64(len(bz))
 
 		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
 		if err != nil {

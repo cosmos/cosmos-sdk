@@ -567,6 +567,25 @@ func (suite *KeeperTestSuite) TestSendCoins() {
 	require.Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
 }
 
+func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
+	balances := sdk.NewCoins(newFooCoin(50))
+
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
+
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+
+	suite.mockFundAccount(accAddrs[1])
+	suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, suite.ctx, accAddrs[1], balances))
+
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(vacc)
+	suite.Require().Error(suite.bankKeeper.SendCoins(suite.ctx, accAddrs[0], accAddrs[1], sendCoins))
+}
+
 func (suite *KeeperTestSuite) TestValidateBalance() {
 	ctx := suite.ctx
 	require := suite.Require()

@@ -289,7 +289,13 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		if fn != nil {
 			fn()
 		}
-		traceWriter.Close()
+
+		// if flagTraceStore is not used then traceWriter is nil
+		if traceWriter != nil {
+			if err = traceWriter.Close(); err != nil {
+				ctx.Logger.Error("failed to close trace writer", "err", err)
+			}
+		}
 	}
 
 	config, err := serverconfig.GetConfig(ctx.Viper)

@@ -26,6 +26,7 @@ type ABCIv1TestSuite struct {
 	baseApp  *baseapp.BaseApp
 	mempool  mempool.Mempool
 	txConfig client.TxConfig
+	cdc      codec.ProtoCodecMarshaler
 }
 
 func TestABCIv1TestSuite(t *testing.T) {
@@ -73,6 +74,7 @@ func (s *ABCIv1TestSuite) SetupTest() {
 	s.baseApp = app
 	s.mempool = pool
 	s.txConfig = txConfig
+	s.cdc = cdc
 }
 
 func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_HappyPath() {
@@ -124,6 +126,23 @@ func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_ReachedMaxBytes() {
 	resPreparePropossal := s.baseApp.PrepareProposal(reqPreparePropossal)
 
 	require.Equal(t, 10, len(resPreparePropossal.Txs))
+}
+
+func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_BadEncoding() {
+	txConfig := authtx.NewTxConfig(s.cdc, authtx.DefaultSignModes)
+
+	t := s.T()
+
+	tx := newTxCounter(txConfig, 0, 0)
+	err := s.mempool.Insert(sdk.Context{}, tx)
+	require.NoError(t, err)
+
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+	}
+	resPrepareProposal := s.baseApp.PrepareProposal(reqPrepareProposal)
+
+	require.Equal(t, 1, len(resPrepareProposal.Txs))
 }
 
 func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_Failures() {

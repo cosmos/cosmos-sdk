@@ -1,12 +1,13 @@
-# ADR 057: App Wiring Part I
+# ADR 057: App Wiring
 
 ## Changelog
 
 * 2022-05-04: Initial Draft
+* 2022-08-19: Updates
 
 ## Status
 
-PROPOSED Partially Implemented
+PROPOSED Implemented
 
 ## Abstract
 
@@ -54,7 +55,7 @@ features:
 
 * dependency resolution and provision through functional constructors, ex: `func(need SomeDep) (AnotherDep, error)`
 * dependency injection `In` and `Out` structs which support `optional` dependencies
-* grouped-dependencies (many-per-container) through the `AutoGroupType` tag interface
+* grouped-dependencies (many-per-container) through the `ManyPerContainerType` tag interface
 * module-scoped dependencies via `ModuleKey`s (where each module gets a unique dependency)
 * one-per-module dependencies through the `OnePerModuleType` tag interface
 * sophisticated debugging information and container visualization via GraphViz
@@ -63,7 +64,7 @@ Here are some examples of how these would be used in an SDK module:
 
 * `StoreKey` could be a module-scoped dependency which is unique per module
 * a module's `AppModule` instance (or the equivalent) could be a `OnePerModuleType`
-* CLI commands could be provided with `AutoGroupType`s
+* CLI commands could be provided with `ManyPerContainerType`s
 
 Note that even though dependency resolution is dynamic and based on reflection, which could be considered a pitfall
 of this approach, the entire dependency graph should be resolved immediately on app startup and only gets resolved
@@ -94,7 +95,9 @@ message ModuleConfig {
 The configuration for every module is itself a protobuf message and modules will be identified and loaded based
 on the protobuf type URL of their config object (ex. `cosmos.bank.module.v1.Module`). Modules are given a unique short `name`
 to share resources across different versions of the same module which might have a different protobuf package
-versions (ex. `cosmos.bank.module.v2.Module`).
+versions (ex. `cosmos.bank.module.v2.Module`). All module config objects should define the `cosmos.app.v1alpha1.module`
+descriptor option which will provide additional useful metadata for the framework and which can also be indexed
+in module registries.
 
 An example app config in YAML might look like this:
 
@@ -178,35 +181,36 @@ Ex:
 
 ```go
 func init() {
-	module.Register("cosmos.bank.module.v1.Module",
-		module.Types(
+	appmodule.Register("cosmos.bank.module.v1.Module",
+		appmodule.Types(
 			types.Types_tx_proto,
             types.Types_query_proto,
             types.Types_types_proto,
 	    ),
-	    module.Provide(
+	    appmodule.Provide(
 			provideBankModule,
 	    )
 	)
 }
 
-type inputs struct {
+type Inputs struct {
 	container.In
 	
 	AuthKeeper auth.Keeper
 	DB ormdb.ModuleDB
 }
 
-type outputs struct {
+type Outputs struct {
 	Keeper bank.Keeper
-	Handler app.Handler // app.Handler is a hypothetical type which replaces the current AppModule
+	AppModule appmodule.AppModule
 }
 
-func provideBankModule(config types.Module, inputs) (outputs, error) { ... }
+func ProvideBankModule(config *bankmodulev1.Module, Inputs) (Outputs, error) { ... }
 ```
 
-Note that in this module, a module configuration object *cannot* register different dependency providers based on the
-configuration. This is intentional because it allows us to know globally which modules provide which dependencies. This
+Note that in this module, a module configuration object *cannot* register different dependency providers at runtime
+based on the configuration. This is intentional because it allows us to know globally which modules provide which
+dependencies, and it will also allow us to do code generation of the whole app initialization. This
 can help us figure out issues with missing dependencies in an app config if the needed modules are loaded at runtime.
 In cases where required modules are not loaded at runtime, it may be possible to guide users to the correct module if
 through a global Cosmos SDK module registry.
@@ -241,8 +245,51 @@ So far we have described a system which is largely agnostic to the specifics of 
 `BaseApp`, etc. A second app wiring ADR will be created which outlines the details of how this app wiring system will
 be applied to the existing SDK in a way that:
 
-1. is as easy to apply to existing modules as possible,
-2. while also making it possible to improve existing APIs and minimize long-term technical debt
+### Registration of Inter-Module Hooks
+
+Some modules define a hooks interface (ex. `StakingHooks`) which allows one module to call back into another module
+when certain events happen.
+
+With the app wiring framework, these hooks interfaces can be defined as a `OnePerModuleType`s and then the module
+which consumes these hooks can collect these hooks as a map of module name to hook type (ex. `map[string]FooHooks`). Ex:
+```go
+func init() {
+    appmodule.Register(
+        &foomodulev1.Module{},
+        appmodule.Invoke(InvokeSetFooHooks),
+	    ...
+    )
+}
+func InvokeSetFooHooks(
+    keeper *keeper.Keeper,
+    fooHooks map[string]FooHooks,
+) error {
+	for k in sort.Strings(maps.Keys(fooHooks)) {
+		keeper.AddFooHooks(fooHooks[k])
+    }
+}
+```
+
+Optionally, the module consuming hooks can allow app's to define an order for calling these hooks based on module name
+in its config object.
+
+An alternative way for registering hooks via reflection was considered where all keeper types are inspected to see if
+they implement the hook interface by the modules exposing hooks. This has the downsides of:
+* needing to expose all the keepers of all modules to the module providing hooks,
+* not allowing for encapsulating hooks on a different type which doesn't expose all keeper methods,
+* harder to know statically which module expose hooks or are checking for them.
+
+With the approach proposed here, hooks registration will be obviously observable in `app.go` if `depinject` codegen
+(described below) is used.
+
+### Code Generation
+
+The `depinject` framework will optionally allow the app configuration and dependency injection wiring to be code
+generated. This will allow:
+* dependency injection wiring to be inspected as regular go code just like the existing `app.go`,
+* dependency injection to be opt-in with manual wiring 100% still possible.
+
+Code generation requires that all providers and invokers and their parameters are exported and in non-internal packages.
 
 ## Consequences
 
@@ -272,8 +319,8 @@ registration paradigms. These two methods can live side-by-side for as long as i
 
 ## Further Discussions
 
-As mentioned above, a second app wiring ADR will be created to describe more specifics than there is space to go
-into here. Further discussions will also happen within the Cosmos SDK Framework Working Group and in https://github.com/cosmos/cosmos-sdk/discussions/10582.
+The protobuf type registration system described in this ADR has not been implemented and may need to be reconsidered in
+light of code generation. It may be better to do this type registration with a DI provider.
 
 ## References
 

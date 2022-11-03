@@ -109,10 +109,6 @@ func (tx *kvstoreTx) GetSigners() []sdk.AccAddress {
 	return nil
 }
 
-func (tx *kvstoreTx) Size() int64 {
-	return int64(len(tx.bytes))
-}
-
 func (tx *kvstoreTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }
 
 // takes raw transaction bytes and decodes them into an sdk.Tx. An sdk.Tx has

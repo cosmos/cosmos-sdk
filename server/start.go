@@ -292,7 +292,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		// if flagTraceStore is not used then traceWriter is nil
 		if traceWriter != nil {
-			_ = traceWriter.Close()
+			if err = traceWriter.Close(); err != nil {
+				ctx.Logger.Error("failed to close trace writer", "err", err)
+			}
 		}
 	}
 

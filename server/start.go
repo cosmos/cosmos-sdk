@@ -290,7 +290,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			fn()
 		}
 
-		if err != nil {
+		// if --trace-store is not used then traceWriter is nil
+		if traceWriter != nil {
 			traceWriter.Close()
 		}
 	}

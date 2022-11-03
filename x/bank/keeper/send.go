@@ -180,11 +180,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
 
-<<<<<<< HEAD
-		_, hasNeg := sdk.Coins{spendable}.SafeSub(sdk.Coins{coin})
-=======
 		spendable, hasNeg := sdk.Coins{balance}.SafeSub(locked)
->>>>>>> 3034a9d54 (fix(bank): fix unhandled error for vesting (#13690))
 		if hasNeg {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds,
 				"locked amount exceeds account balance funds: %s > %s", locked, balance)

@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -453,33 +454,8 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 	suite.Require().Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
 }
 
-<<<<<<< HEAD
 func (suite *IntegrationTestSuite) TestValidateBalance() {
 	app, ctx := suite.app, suite.ctx
-=======
-func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
-	balances := sdk.NewCoins(newFooCoin(50))
-
-	now := tmtime.Now()
-	endTime := now.Add(24 * time.Hour)
-
-	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
-
-	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
-	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
-
-	suite.mockFundAccount(accAddrs[1])
-	suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, suite.ctx, accAddrs[1], balances))
-
-	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(vacc)
-	suite.Require().Error(suite.bankKeeper.SendCoins(suite.ctx, accAddrs[0], accAddrs[1], sendCoins))
-}
-
-func (suite *KeeperTestSuite) TestValidateBalance() {
-	ctx := suite.ctx
-	require := suite.Require()
->>>>>>> 3034a9d54 (fix(bank): fix unhandled error for vesting (#13690))
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
@@ -502,6 +478,26 @@ func (suite *KeeperTestSuite) TestValidateBalance() {
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr2, balances))
 	suite.Require().Error(app.BankKeeper.ValidateBalance(ctx, addr2))
+}
+
+func (suite *IntegrationTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
+	app, ctx := suite.app, suite.ctx
+	balances := sdk.NewCoins(newFooCoin(50))
+	addr := sdk.AccAddress([]byte("addr1_______________"))
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
+
+	acc0 := authtypes.NewBaseAccountWithAddress(addr)
+	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	app.AccountKeeper.SetAccount(ctx, vacc)
+
+	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, suite.ctx, addr2, balances))
+	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr, addr2, sendCoins))
 }
 
 func (suite *IntegrationTestSuite) TestSendEnabled() {

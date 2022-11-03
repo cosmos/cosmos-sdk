@@ -14,8 +14,8 @@
 
 **NOTE:** Strongly consider the existing links - both within this directory and to the website docs - when moving or deleting files.
 
-Relative links should be used nearly everywhere, due to versionning. Note that in case of page reshufling, you must update all links references.
-When deleting a link, redirects must be created in `docusaurus.config.js` to preserve the userflow.
+Relative links should be used nearly everywhere, due to versioning. Note that in case of page reshuffling, you must update all links references.
+When deleting a link, redirects must be created in `docusaurus.config.js` to preserve the user flow.
 
 ### Code Snippets
 

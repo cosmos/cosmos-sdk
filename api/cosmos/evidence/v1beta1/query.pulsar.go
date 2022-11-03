@@ -1964,12 +1964,14 @@ type QueryEvidenceRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Deprecated: Prefer to use hash instead.
 	// evidence_hash defines the hash of the requested evidence.
+	// Deprecated: Use hash, a HEX encoded string, instead.
 	//
 	// Deprecated: Do not use.
 	EvidenceHash []byte `protobuf:"bytes,1,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
 	// hash defines the evidence hash of the requested evidence.
+	//
+	// Since: cosmos-sdk 0.47
 	Hash string `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
 }
 

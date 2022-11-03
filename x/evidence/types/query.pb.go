@@ -34,10 +34,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // QueryEvidenceRequest is the request type for the Query/Evidence RPC method.
 type QueryEvidenceRequest struct {
-	// Deprecated: Prefer to use hash instead.
 	// evidence_hash defines the hash of the requested evidence.
+	// Deprecated: Use hash, a HEX encoded string, instead.
 	EvidenceHash github_com_tendermint_tendermint_libs_bytes.HexBytes `protobuf:"bytes,1,opt,name=evidence_hash,json=evidenceHash,proto3,casttype=github.com/tendermint/tendermint/libs/bytes.HexBytes" json:"evidence_hash,omitempty"` // Deprecated: Do not use.
 	// hash defines the evidence hash of the requested evidence.
+	//
+	// Since: cosmos-sdk 0.47
 	Hash string `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
 }
 

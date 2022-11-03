@@ -23,11 +23,13 @@ service Query {
 
 // QueryEvidenceRequest is the request type for the Query/Evidence RPC method.
 message QueryEvidenceRequest {
-  // Deprecated: Prefer to use hash instead.
   // evidence_hash defines the hash of the requested evidence.
+  // Deprecated: Use hash, a HEX encoded string, instead.
   bytes evidence_hash = 1 [deprecated = true, (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"];
 
   // hash defines the evidence hash of the requested evidence.
+  //
+  // Since: cosmos-sdk 0.47
   string hash = 2;
 }
 

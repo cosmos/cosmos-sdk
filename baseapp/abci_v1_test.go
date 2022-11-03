@@ -1,7 +1,6 @@
 package baseapp_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -77,11 +76,11 @@ func (s *ABCIv1TestSuite) SetupTest() {
 	s.cdc = cdc
 }
 
-func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_HappyPath() {
+func (s *ABCIv1TestSuite) TestABCIv1_HappyPath() {
 	txConfig := s.txConfig
 	t := s.T()
 
-	tx := newTxCounter(txConfig, 0, 0)
+	tx := newTxCounter(txConfig, 0, 1)
 	txBytes, err := txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -93,7 +92,7 @@ func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_HappyPath() {
 
 	tx2 := newTxCounter(txConfig, 1, 1)
 
-	_, err = txConfig.TxEncoder()(tx)
+	tx2Bytes, err := txConfig.TxEncoder()(tx2)
 	require.NoError(t, err)
 
 	err = s.mempool.Insert(sdk.Context{}, tx2)
@@ -104,10 +103,26 @@ func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_HappyPath() {
 	resPreparePropossal := s.baseApp.PrepareProposal(reqPreparePropossal)
 
 	require.Equal(t, 2, len(resPreparePropossal.Txs))
-	res := s.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 
-	require.NotEmpty(t, res.Events)
-	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+	var reqProposalTxBytes [2][]byte
+	reqProposalTxBytes[0] = txBytes
+	reqProposalTxBytes[1] = tx2Bytes
+	reqProcessProposal := abci.RequestProcessProposal{
+		Txs: reqProposalTxBytes[:],
+	}
+
+	s.baseApp.SetProcessProposal(nil)
+	require.Panics(t, func() { s.baseApp.ProcessProposal(reqProcessProposal) })
+	s.baseApp.SetProcessProposal(s.baseApp.DefaultProcessProposal())
+
+	resProcessProposal := s.baseApp.ProcessProposal(reqProcessProposal)
+	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+
+	//res := s.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	//require.Equal(t, 1, s.mempool.CountTx())
+
+	//require.NotEmpty(t, res.Events)
+	//require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 }
 
 func (s *ABCIv1TestSuite) TestABCIv1_PrepareProposal_ReachedMaxBytes() {

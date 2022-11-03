@@ -86,6 +86,11 @@ func SetMempool(mempool mempool.Mempool) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetMempool(mempool) }
 }
 
+// SetProcessProposal sets the ProcessProposal handler.
+func SetProcessProposal(proposalHandler sdk.ProcessProposalHandler) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetProcessProposal(proposalHandler) }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")
@@ -262,4 +267,8 @@ func (app *BaseApp) SetQueryMultiStore(ms sdk.MultiStore) {
 // SetMempool sets the mempool for the BaseApp and is required for the app to start up.
 func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
 	app.mempool = mempool
+}
+
+func (app *BaseApp) SetProcessProposal(handler sdk.ProcessProposalHandler) {
+	app.processProposal = handler
 }

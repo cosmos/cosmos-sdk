@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // Supported ABCI Query prefixes
@@ -257,11 +258,42 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-	txs, err := app.prepareProposal(req)
-	if err != nil {
-		panic(err)
+	var (
+		txsBytes  [][]byte
+		byteCount int64
+	)
+
+	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
+	iterator := app.mempool.Select(ctx, req.Txs)
+
+	for iterator != nil {
+		memTx := iterator.Tx()
+
+		bz, err := app.txEncoder(memTx)
+		if err != nil {
+			panic(err)
+		}
+
+		txSize := int64(len(bz))
+
+		_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
+		if err != nil {
+			err := app.mempool.Remove(memTx)
+			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+				panic(err)
+			}
+			iterator = iterator.Next()
+			continue
+		} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
+			txsBytes = append(txsBytes, bz)
+		} else {
+			break
+		}
+
+		iterator = iterator.Next()
 	}
-	return abci.ResponsePrepareProposal{Txs: txs}
+
+	return abci.ResponsePrepareProposal{Txs: txsBytes}
 }
 
 // ProcessProposal implements the ProcessProposal ABCI method and returns a
@@ -277,11 +309,14 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
-	err := app.processProposal(req)
-	if err != nil {
-		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+	if app.processProposal == nil {
+		panic("app.ProcessProposal is not set")
 	}
-	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+
+	ctx := app.prepareProposalState.ctx.WithVoteInfos(app.voteInfos)
+	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+
+	return app.processProposal(ctx, req)
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In

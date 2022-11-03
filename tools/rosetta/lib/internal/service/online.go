@@ -10,6 +10,7 @@ import (
 
 	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
 	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // genesisBlockFetchTimeout defines a timeout to fetch the genesis block
@@ -20,7 +21,7 @@ const (
 
 // NewOnlineNetwork builds a single network adapter.
 // It will get the Genesis block on the beginning to avoid calling it everytime.
-func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client) (crgtypes.API, error) {
+func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client, logger log.Logger) (crgtypes.API, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), genesisBlockFetchTimeout)
 	defer cancel()
 
@@ -34,7 +35,7 @@ func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client) 
 	// using tendermint API
 	genesisHash := os.Getenv(genesisHashEnv)
 	if genesisHash == "" {
-		_ = fmt.Sprintf("[Warning]- Genesis hash env '%s' is not properly set!", genesisHashEnv)
+		logger.Error(fmt.Sprintf("Genesis hash env '%s' is not properly set!", genesisHashEnv))
 	}
 
 	block.Block.Hash = genesisHash

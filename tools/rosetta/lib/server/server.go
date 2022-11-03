@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	assert "github.com/coinbase/rosetta-sdk-go/asserter"
@@ -11,6 +12,7 @@ import (
 
 	"cosmossdk.io/tools/rosetta/lib/internal/service"
 	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 const (
@@ -36,12 +38,13 @@ type Settings struct {
 }
 
 type Server struct {
-	h    http.Handler
-	addr string
+	h      http.Handler
+	addr   string
+	logger log.Logger
 }
 
 func (h Server) Start() error {
-	fmt.Printf("Rosetta server listening on add %s", h.addr)
+	h.logger.Info(fmt.Sprintf("Rosetta server listening on add %s", h.addr))
 	return http.ListenAndServe(h.addr, h.h) //nolint:gosec
 }
 
@@ -58,12 +61,14 @@ func NewServer(settings Settings) (Server, error) {
 		return Server{}, fmt.Errorf("cannot build asserter: %w", err)
 	}
 
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+
 	var adapter crgtypes.API
 	switch settings.Offline {
 	case true:
 		adapter, err = newOfflineAdapter(settings)
 	case false:
-		adapter, err = newOnlineAdapter(settings)
+		adapter, err = newOnlineAdapter(settings, logger)
 	}
 	if err != nil {
 		return Server{}, err
@@ -77,8 +82,9 @@ func NewServer(settings Settings) (Server, error) {
 	)
 
 	return Server{
-		h:    h,
-		addr: settings.Listen,
+		h:      h,
+		addr:   settings.Listen,
+		logger: logger,
 	}, nil
 }
 
@@ -89,7 +95,7 @@ func newOfflineAdapter(settings Settings) (crgtypes.API, error) {
 	return service.NewOffline(settings.Network, settings.Client)
 }
 
-func newOnlineAdapter(settings Settings) (crgtypes.API, error) {
+func newOnlineAdapter(settings Settings, logger log.Logger) (crgtypes.API, error) {
 	if settings.Client == nil {
 		return nil, fmt.Errorf("client is nil")
 	}
@@ -109,11 +115,11 @@ func newOnlineAdapter(settings Settings) (crgtypes.API, error) {
 	for i := 0; i < settings.Retries; i++ {
 		err = settings.Client.Ready()
 		if err != nil {
-			fmt.Printf("[Rosetta]- Client is not ready: %s. Retrying ...", err.Error())
+			logger.Error(fmt.Sprintf("[Rosetta]- Client is not ready: %s. Retrying ...", err.Error()))
 			time.Sleep(settings.RetryWait)
 			continue
 		}
-		return service.NewOnlineNetwork(settings.Network, settings.Client)
+		return service.NewOnlineNetwork(settings.Network, settings.Client, logger)
 	}
 	return nil, fmt.Errorf("maximum number of retries exceeded, last error: %w", err)
 }

@@ -335,18 +335,6 @@ func (s *CLITestSuite) TestNewCmdDeposit() {
 			},
 			false,
 		},
-		{
-			"deposit on non existing proposal",
-			[]string{
-				"1",
-				sdk.NewCoin("stake", sdk.NewInt(10)).String(), // 10stake
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
-			},
-			false,
-		},
 	}
 
 	for _, tc := range testCases {

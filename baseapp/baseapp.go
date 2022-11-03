@@ -856,7 +856,7 @@ func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, 
 
 		txSize := int64(len(bz))
 
-		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
+		_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
 		if err != nil {
 			err := app.mempool.Remove(memTx)
 			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {

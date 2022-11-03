@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -496,7 +495,7 @@ func (suite *IntegrationTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
 	app.AccountKeeper.SetAccount(ctx, vacc)
 
-	suite.Require().NoError(testutil.FundAccount(app.BankKeeper, suite.ctx, addr2, balances))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, suite.ctx, addr2, balances))
 	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr, addr2, sendCoins))
 }
 

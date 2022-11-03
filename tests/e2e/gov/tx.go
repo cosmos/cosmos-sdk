@@ -1,4 +1,4 @@
-package testutil
+package gov
 
 import (
 	"encoding/base64"
@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govclitestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -42,32 +43,32 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val := s.network.Validators[0]
 
 	// create a proposal with deposit
-	_, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+	_, err = govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 1", "Where is the title!?", v1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// vote for proposal
-	_, err = MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
+	_, err = govclitestutil.MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// create a proposal without deposit
-	_, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+	_, err = govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 2", "Where is the title!?", v1beta1.ProposalTypeText)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// create a proposal3 with deposit
-	_, err = MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+	_, err = govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 3", "Where is the title!?", v1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// vote for proposal3 as val
-	_, err = MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
+	_, err = govclitestutil.MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 }

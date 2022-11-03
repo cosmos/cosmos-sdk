@@ -23,6 +23,8 @@ network.
 * [State](#state)
     * [Pool](#pool)
     * [LastTotalPower](#lasttotalpower)
+    * [ValidatorUpdates](#validatorupdates)
+    * [UnbondingID](#unbondingid)
     * [Params](#params)
     * [Validator](#validator)
     * [Delegation](#delegation)
@@ -47,6 +49,7 @@ network.
     * [Historical Info Tracking](#historical-info-tracking)
 * [End-Block](#end-block)
     * [Validator Set Changes](#validator-set-changes)
+    * [Queues](#queues-1)
 * [Hooks](#hooks)
 * [Events](#events)
     * [EndBlocker](#endblocker)
@@ -83,7 +86,7 @@ UnbondingID stores the ID of the latest unbonding operation. It enables to creat
 
 * UnbondingID: `0x37 -> uint64`
 
-## Parameters
+## Params
 
 The staking module stores its params in state with the prefix of `0x51`,
 it can be updated with governance or the address with authority.

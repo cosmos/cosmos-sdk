@@ -64,4 +64,7 @@ func checkNumberTest(t *testing.T, r valuerenderer.ValueRenderer, pv protoreflec
 	require.Equal(t, false, screens[0].Expert)
 
 	require.Equal(t, expected, screens[0].Text)
+	value, err := r.Parse(context.Background(), screens)
+	require.NoError(t, err)
+	require.Equal(t, value, pv)
 }

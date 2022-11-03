@@ -47,8 +47,6 @@ func TestCoinsJsonTestcases(t *testing.T) {
 				require.Equal(t, tc.Text, screens[0].Text)
 			}
 
-			// TODO Add parsing tests
-			// https://github.com/cosmos/cosmos-sdk/issues/13153
 		})
 	}
 }

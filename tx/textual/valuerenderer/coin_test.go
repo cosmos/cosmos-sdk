@@ -77,10 +77,16 @@ func TestCoinJsonTestcases(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, 1, len(screens))
 				require.Equal(t, tc.Text, screens[0].Text)
-			}
 
-			// TODO Add parsing tests
-			// https://github.com/cosmos/cosmos-sdk/issues/13153
+				value, err := vr.Parse(ctx, screens)
+				if tc.Error {
+					require.Error(t, err)
+					return
+				}
+
+				require.NoError(t, err)
+				require.Equal(t, tc.Proto, value)
+			}
 		})
 	}
 }

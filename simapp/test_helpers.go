@@ -185,6 +185,36 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 	return genesisState
 }
 
+// AddTestAddrsIncremental constructs and returns accNum amount of accounts with an
+// initial balance of accAmt in random order
+func AddTestAddrsIncremental(app *SimApp, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
+	return addTestAddrs(app, ctx, accNum, accAmt, simtestutil.CreateIncrementalAccounts)
+}
+
+func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt math.Int, strategy simtestutil.GenerateAccountStrategy) []sdk.AccAddress {
+	testAddrs := strategy(accNum)
+
+	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
+
+	for _, addr := range testAddrs {
+		initAccountWithCoins(app, ctx, addr, initCoins)
+	}
+
+	return testAddrs
+}
+
+func initAccountWithCoins(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
+	if err != nil {
+		panic(err)
+	}
+
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, coins)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // ModuleAccountAddrs provides a list of blocked module accounts from configuration in AppConfig
 //
 // Ported from SimApp
@@ -219,35 +249,5 @@ func NewTestNetworkFixture() network.TestFixture {
 			TxConfig:          app.TxConfig(),
 			Amino:             app.LegacyAmino(),
 		},
-	}
-}
-
-// AddTestAddrsIncremental constructs and returns accNum amount of accounts with an
-// initial balance of accAmt in random order
-func AddTestAddrsIncremental(app *SimApp, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
-	return addTestAddrs(app, ctx, accNum, accAmt, simtestutil.CreateIncrementalAccounts)
-}
-
-func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt math.Int, strategy simtestutil.GenerateAccountStrategy) []sdk.AccAddress {
-	testAddrs := strategy(accNum)
-
-	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
-
-	for _, addr := range testAddrs {
-		initAccountWithCoins(app, ctx, addr, initCoins)
-	}
-
-	return testAddrs
-}
-
-func initAccountWithCoins(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
-	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
-	if err != nil {
-		panic(err)
-	}
-
-	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, coins)
-	if err != nil {
-		panic(err)
 	}
 }

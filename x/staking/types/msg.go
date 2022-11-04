@@ -77,9 +77,12 @@ func (msg MsgCreateValidator) Type() string { return TypeMsgCreateValidator }
 // sign the msg as well.
 func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 	// delegator is first signer so delegator pays fees
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 	addrs := []sdk.AccAddress{delegator}
-	valAddr, _ := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
 
 	valAccAddr := sdk.AccAddress(valAddr)
 	if !delegator.Equals(valAccAddr) {
@@ -206,7 +209,7 @@ func (msg MsgDelegate) Type() string { return TypeMsgDelegate }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 	return []sdk.AccAddress{delegator}
 }
 
@@ -257,7 +260,7 @@ func (msg MsgBeginRedelegate) Type() string { return TypeMsgBeginRedelegate }
 
 // GetSigners implements the sdk.Msg interface
 func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 	return []sdk.AccAddress{delegator}
 }
 
@@ -308,7 +311,7 @@ func (msg MsgUndelegate) Type() string { return TypeMsgUndelegate }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 	return []sdk.AccAddress{delegator}
 }
 
@@ -429,10 +432,7 @@ func NewMsgTokenizeShares(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount
 func (msg MsgTokenizeShares) Type() string { return TypeMsgTokenizeShares }
 
 func (msg MsgTokenizeShares) GetSigners() []sdk.AccAddress {
-	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
+	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 	return []sdk.AccAddress{delegator}
 }
 
@@ -476,10 +476,7 @@ func NewMsgRedeemTokensforShares(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 func (msg MsgRedeemTokens) Type() string { return TypeMsgRedeemTokens }
 
 func (msg MsgRedeemTokens) GetSigners() []sdk.AccAddress {
-	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
+	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 	return []sdk.AccAddress{delegator}
 }
 
@@ -507,10 +504,7 @@ func (msg MsgRedeemTokens) ValidateBasic() error {
 func (msg MsgTransferShareRecord) Type() string { return TypeMsgTransferShareRecord }
 
 func (msg MsgTransferShareRecord) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
+	sender := sdk.MustAccAddressFromBech32(msg.Sender)
 	return []sdk.AccAddress{sender}
 }
 
@@ -546,10 +540,7 @@ func (msg MsgExemptDelegation) Type() string { return TypeMsgExemptDelegation }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgExemptDelegation) GetSigners() []sdk.AccAddress {
-	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
+	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 	return []sdk.AccAddress{delegator}
 }
 
@@ -595,8 +586,7 @@ func (msg MsgUnbondValidator) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgUnbondValidator) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic implements the sdk.Msg interface.

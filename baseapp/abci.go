@@ -303,7 +303,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.Respon
 		panic("app.ProcessProposal is not set")
 	}
 
-	ctx := app.prepareProposalState.ctx.WithVoteInfos(app.voteInfos)
+	ctx := app.processProposalState.ctx.WithVoteInfos(app.voteInfos)
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 
 	return app.processProposal(ctx, req)

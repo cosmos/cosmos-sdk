@@ -184,7 +184,6 @@ jobs:
             go.mod
             go.sum
       - name: Get data from Go build cache
-        # if: env.GIT_DIFF
         if: ${{ false }}
         uses: actions/cache@v3
         with:
@@ -195,8 +194,8 @@ jobs:
           key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
       - name: test rosetta
         run: |
+          make test-rosetta-unit
           make test-rosetta
-        # if: env.GIT_DIFF
 
   liveness-test:
     runs-on: ubuntu-latest

@@ -38,4 +38,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## v0.1.0 2022-11-04
 
-* [#13583](https://github.com/cosmos/cosmos-sdk/pull/13583) Migrate rosetta to its own go.mod.
+**From `v0.1.0` the minimum version of Tendermint is `v0.37+`, due event type changes.**
+
+### Improvements
+
+* [#13583](https://github.com/cosmos/cosmos-sdk/pull/13583) Extract rosetta to its own go.mod.

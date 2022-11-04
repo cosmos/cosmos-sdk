@@ -115,7 +115,7 @@ func newOnlineAdapter(settings Settings, logger log.Logger) (crgtypes.API, error
 	for i := 0; i < settings.Retries; i++ {
 		err = settings.Client.Ready()
 		if err != nil {
-			logger.Error(fmt.Sprintf("[Rosetta]- Client is not ready: %s. Retrying ...", err.Error()))
+			logger.Error(fmt.Sprintf("[Rosetta]- Client is not ready: %v. Retrying ...", err))
 			time.Sleep(settings.RetryWait)
 			continue
 		}

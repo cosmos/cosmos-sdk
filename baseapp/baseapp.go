@@ -6,14 +6,13 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
-
-	"github.com/cosmos/gogoproto/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -82,8 +81,8 @@ type BaseApp struct { //nolint: maligned
 	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
 	checkState           *state // for CheckTx
 	deliverState         *state // for DeliverTx
-	processProposalState *state // for CheckTx
-	prepareProposalState *state // for DeliverTx
+	processProposalState *state // for PrepareProposal
+	prepareProposalState *state // for ProcessProposal
 
 	// an inter-block write-through cache provided to the context during deliverState
 	interBlockCache sdk.MultiStorePersistentCache

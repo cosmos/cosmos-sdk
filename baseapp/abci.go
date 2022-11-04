@@ -409,7 +409,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	app.setPrepareProposalState(header)
 	app.setProcessProposalState(header)
 
-	// empty/reset the deliver
+	// empty/reset the deliver state
 	app.deliverState = nil
 
 	var halt bool

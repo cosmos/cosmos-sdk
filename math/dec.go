@@ -938,12 +938,12 @@ func ParseDec(v string) (string, error) {
 		return "", err
 	}
 
-	if !hasOnlyDigits(parts[1]) {
-		return "", fmt.Errorf("non-digits detected after decimal point in: %q", parts[1])
-	}
-
 	if len(parts) == 1 {
 		return intPart.String(), nil
+	}
+
+	if !hasOnlyDigits(parts[1]) {
+		return "", fmt.Errorf("non-digits detected after decimal point in: %q", parts[1])
 	}
 
 	return intPart.String() + "." + parts[1], nil

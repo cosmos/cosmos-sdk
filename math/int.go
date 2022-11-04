@@ -486,12 +486,8 @@ func ParseInt(v string) (Int, error) {
 		v = strings.TrimLeft(v, "0")
 	}
 
-	startOffset := 3
-	for outputIndex := len(v); outputIndex > startOffset; {
-		outputIndex -= 4
-		v = v[:outputIndex] + v[outputIndex+1:]
-	}
-
+	// remove the 1000 separators (ex: 1'000'000 -> 1000000)
+	v = strings.Replace(v, "'", "", -1)
 	val, ok := NewIntFromString(sign + v)
 	if !ok {
 		return Int{}, fmt.Errorf("error parsing integer %s", sign+v)

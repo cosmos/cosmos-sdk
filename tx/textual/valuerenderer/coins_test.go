@@ -45,6 +45,19 @@ func TestCoinsJsonTestcases(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, 1, len(screens))
 				require.Equal(t, tc.Text, screens[0].Text)
+
+				for _, v := range tc.Metadata {
+					ctx = context.WithValue(ctx, mockCoinMetadataKey(v.Display), v)
+				}
+
+				value, err := vr.Parse(ctx, screens)
+				if tc.Error {
+					require.Error(t, err)
+					return
+				}
+
+				require.NoError(t, err)
+				require.Equal(t, protoreflect.ValueOf(listValue).String(), value.String())
 			}
 
 		})

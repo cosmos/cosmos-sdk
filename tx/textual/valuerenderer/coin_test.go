@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -78,6 +79,14 @@ func TestCoinJsonTestcases(t *testing.T) {
 				require.Equal(t, 1, len(screens))
 				require.Equal(t, tc.Text, screens[0].Text)
 
+				var baseDenom string
+				if tc.Metadata != nil {
+					baseDenom = tc.Metadata.Display
+				} else {
+					baseDenom = strings.Split(screens[0].Text, " ")[1]
+				}
+
+				ctx = context.WithValue(context.Background(), mockCoinMetadataKey(baseDenom), tc.Metadata)
 				value, err := vr.Parse(ctx, screens)
 				if tc.Error {
 					require.Error(t, err)
@@ -85,7 +94,7 @@ func TestCoinJsonTestcases(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				require.Equal(t, tc.Proto, value)
+				require.Equal(t, protoreflect.ValueOf(tc.Proto.ProtoReflect()).String(), value.String())
 			}
 		})
 	}

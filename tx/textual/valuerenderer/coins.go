@@ -103,7 +103,13 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 		return protoreflect.ValueOf(NewGenericList(parsed)), err
 	} else {
 		coinArr := strings.Split(coins[0], " ")
-		metadata, err := vr.coinMetadataQuerier(ctx, coinArr[1])
+		if len(coinArr) != 2 {
+			return protoreflect.Value{}, fmt.Errorf("invalid coin %s", coins)
+		}
+
+		denom := coinArr[1]
+		metadata, err := vr.coinMetadataQuerier(ctx, denom)
+
 		if err != nil {
 			return protoreflect.Value{}, err
 		}

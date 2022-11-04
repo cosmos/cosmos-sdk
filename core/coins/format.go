@@ -94,13 +94,13 @@ func ParseCoins(coins []string, metadata []*bankv1beta1.Metadata) ([]*basev1beta
 		return []*basev1beta1.Coin{}, fmt.Errorf("formatCoins expect one metadata for each coin; expected %d, got %d", len(coins), len(metadata))
 	}
 
-	parsedCoins := make([]*basev1beta1.Coin, len(coins), 0)
+	parsedCoins := make([]*basev1beta1.Coin, len(coins))
 	for i, coinStr := range coins {
 		coin, err := parseCoin(coinStr, metadata[i])
 		if err != nil {
 			return []*basev1beta1.Coin{}, err
 		}
-		parsedCoins = append(parsedCoins, coin)
+		parsedCoins[i] = coin
 	}
 
 	return parsedCoins, nil
@@ -108,17 +108,17 @@ func ParseCoins(coins []string, metadata []*bankv1beta1.Metadata) ([]*basev1beta
 
 func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coin, error) {
 	coinArr := strings.Split(coinStr, " ")
+	amt1 := coinArr[0]
 	coinDenom := coinArr[1]
 
-	if metadata == nil || metadata.Display == "" || coinArr[1] == metadata.Display {
-		dec, err := math.ParseDec(coinArr[0])
+	if metadata == nil || metadata.Base == "" || coinArr[1] == metadata.Base {
+		dec, err := math.ParseDec(amt1)
 		return &basev1beta1.Coin{
 			Amount: dec,
 			Denom:  coinDenom,
 		}, err
 	}
-
-	baseDenom := metadata.Display
+	baseDenom := metadata.Base
 
 	// Find exponents of both denoms.
 	foundCoinExp, foundBaseExp := false, false
@@ -136,14 +136,16 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 
 	// If we didn't find either exponent, then we return early.
 	if !foundCoinExp || !foundBaseExp {
-		amt, err := math.ParseInt(coinArr[0])
+		amt, err := math.ParseDec(amt1)
 		return &basev1beta1.Coin{
-			Amount: amt.String(),
-			Denom:  coinDenom,
+			Amount: amt,
+			Denom:  baseDenom,
 		}, err
 	}
 
-	amt, err := math.LegacyNewDecFromStr(coinArr[0])
+	// remove 1000 separators, (ex: 1'000'000 -> 1000000)
+	amt1 = strings.Replace(amt1, "'", "", -1)
+	amt, err := math.LegacyNewDecFromStr(amt1)
 	if err != nil {
 		return &basev1beta1.Coin{}, err
 	}
@@ -156,6 +158,6 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 
 	return &basev1beta1.Coin{
 		Amount: amt.String(),
-		Denom:  coinDenom,
+		Denom:  baseDenom,
 	}, nil
 }

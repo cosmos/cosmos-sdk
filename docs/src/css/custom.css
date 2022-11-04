@@ -443,7 +443,13 @@ html {
       @apply text-6 font-bold leading-9 tracking-tight;
     }
     h3 {
-      @apply text-4 font-semibold leading-7 tracking-tight;
+      @apply text-4 font-semibold leading-8 tracking-tight;
+    }
+    h4 {
+      @apply text-3 font-semibold leading-7 tracking-tight;
+    }
+    h5 {
+      @apply text-3 font-semibold leading-6 tracking-wide;
     }
     p {
       @apply leading-relaxed;

@@ -6,8 +6,8 @@ require (
 	cosmossdk.io/api v0.2.4
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.3
-	cosmossdk.io/simapp v0.0.0-20220908203654-84d4bf5accad
-	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
+	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
+	github.com/cosmos/cosmos-sdk v0.46.1
 	github.com/cosmos/gogoproto v1.4.2
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
@@ -27,6 +27,7 @@ require (
 	cloud.google.com/go/storage v1.14.0 // indirect
 	cosmossdk.io/core v0.3.2 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
+	cosmossdk.io/tools/rosetta v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -163,6 +164,8 @@ replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	// Update to rosetta-sdk-go temporarly to have `check:spec` passing. See https://github.com/coinbase/rosetta-sdk-go/issues/449
+	github.com/coinbase/rosetta-sdk-go => github.com/coinbase/rosetta-sdk-go v0.8.2-0.20221007214527-e03849ba430a
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

@@ -19,7 +19,7 @@ import (
 )
 
 type anyJsonTest struct {
-	Proto   map[string]interface{}
+	Proto   json.RawMessage
 	Screens []valuerenderer.Screen
 }
 
@@ -34,12 +34,8 @@ func TestAny(t *testing.T) {
 	tr := valuerenderer.NewTextual(EmptyCoinMetadataQuerier)
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			// Must marshal the proto object back into JSON,
-			// then unmarshal with protojson into an Any.
-			bz, err := json.Marshal(tc.Proto)
-			require.NoError(t, err)
 			anyMsg := anypb.Any{}
-			err = protojson.Unmarshal(bz, &anyMsg)
+			err = protojson.Unmarshal(tc.Proto, &anyMsg)
 			require.NoError(t, err)
 
 			// Format into screens and check vs expected

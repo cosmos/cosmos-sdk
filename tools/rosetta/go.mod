@@ -9,7 +9,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20220909113810-4882f933b1a1
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.37.0-alpha.2
 	google.golang.org/grpc v1.49.0
 )

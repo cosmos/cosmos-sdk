@@ -333,8 +333,16 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
-	// increment sequence of all signers
-	for _, addr := range sigTx.GetSigners() {
+	feeTx, isFeeTx := tx.(sdk.FeeTx)
+	signers := sigTx.GetSigners()
+
+	// increment sequence of all signers, except for fee payers
+	for _, addr := range signers {
+		// skip sequence increment of fee payer, when multiple signers exist
+		if isFeeTx && len(signers) > 1 && feeTx.FeePayer().Equals(addr) {
+			continue
+		}
+
 		acc := isd.ak.GetAccount(ctx, addr)
 		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
 			panic(err)

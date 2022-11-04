@@ -2,7 +2,6 @@ package cli_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -11,11 +10,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -32,30 +27,6 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
-
-var _ client.TendermintRPC = (*mockTendermintRPC)(nil)
-
-type mockTendermintRPC struct {
-	rpcclientmock.Client
-
-	responseQuery abci.ResponseQuery
-}
-
-func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
-	return mockTendermintRPC{responseQuery: respQuery}
-}
-
-func (mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
-	return &coretypes.ResultBroadcastTx{Code: 0}, nil
-}
-
-func (m mockTendermintRPC) ABCIQueryWithOptions(
-	_ context.Context,
-	_ string, _ tmbytes.HexBytes,
-	_ rpcclient.ABCIQueryOptions,
-) (*coretypes.ResultABCIQuery, error) {
-	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
-}
 
 type CLITestSuite struct {
 	suite.Suite
@@ -77,7 +48,7 @@ func (s *CLITestSuite) SetupSuite() {
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
-		WithClient(mockTendermintRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockTendermintRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
@@ -85,7 +56,7 @@ func (s *CLITestSuite) SetupSuite() {
 	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := newMockTendermintRPC(abci.ResponseQuery{
+		c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 			Value: bz,
 		})
 		return s.baseCtx.WithClient(c)

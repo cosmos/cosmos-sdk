@@ -2,20 +2,26 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
-	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
+	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
+	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // genesisBlockFetchTimeout defines a timeout to fetch the genesis block
-const genesisBlockFetchTimeout = 15 * time.Second
+const (
+	genesisBlockFetchTimeout = 15 * time.Second
+	genesisHashEnv           = "GENESIS_HASH"
+)
 
 // NewOnlineNetwork builds a single network adapter.
 // It will get the Genesis block on the beginning to avoid calling it everytime.
-func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client) (crgtypes.API, error) {
+func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client, logger log.Logger) (crgtypes.API, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), genesisBlockFetchTimeout)
 	defer cancel()
 
@@ -24,6 +30,15 @@ func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client) 
 	if err != nil {
 		return OnlineNetwork{}, err
 	}
+
+	// Get genesis hash from ENV. It should be set by an external script since is not possible to get
+	// using tendermint API
+	genesisHash := os.Getenv(genesisHashEnv)
+	if genesisHash == "" {
+		logger.Error(fmt.Sprintf("Genesis hash env '%s' is not properly set!", genesisHashEnv))
+	}
+
+	block.Block.Hash = genesisHash
 
 	return OnlineNetwork{
 		client:                 client,

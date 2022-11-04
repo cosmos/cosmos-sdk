@@ -8,12 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/bytes"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -27,26 +22,6 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
-var _ client.TendermintRPC = (*mockTendermintRPC)(nil)
-
-type mockTendermintRPC struct {
-	rpcclientmock.Client
-
-	responseQuery abci.ResponseQuery
-}
-
-func (mockTendermintRPC) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
-	return &coretypes.ResultBroadcastTx{}, nil
-}
-
-func (m mockTendermintRPC) ABCIQueryWithOptions(
-	_ context.Context,
-	_ string, _ bytes.HexBytes,
-	_ rpcclient.ABCIQueryOptions,
-) (*coretypes.ResultABCIQuery, error) {
-	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
-}
-
 func TestGetCmdQueryParams(t *testing.T) {
 	encCfg := testutilmod.MakeTestEncodingConfig(mint.AppModuleBasic{})
 	kr := keyring.NewInMemory(encCfg.Codec)
@@ -54,7 +29,7 @@ func TestGetCmdQueryParams(t *testing.T) {
 		WithKeyring(kr).
 		WithTxConfig(encCfg.TxConfig).
 		WithCodec(encCfg.Codec).
-		WithClient(mockTendermintRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockTendermintRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
@@ -119,7 +94,7 @@ func TestGetCmdQueryInflation(t *testing.T) {
 		WithKeyring(kr).
 		WithTxConfig(encCfg.TxConfig).
 		WithCodec(encCfg.Codec).
-		WithClient(mockTendermintRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockTendermintRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
@@ -179,7 +154,7 @@ func TestGetCmdQueryAnnualProvisions(t *testing.T) {
 		WithKeyring(kr).
 		WithTxConfig(encCfg.TxConfig).
 		WithCodec(encCfg.Codec).
-		WithClient(mockTendermintRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockTendermintRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")

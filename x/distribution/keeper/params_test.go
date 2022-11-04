@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -19,7 +18,7 @@ import (
 
 func TestParams(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	key := sdk.NewKVStoreKey(disttypes.StoreKey)
+	key := sdk.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})

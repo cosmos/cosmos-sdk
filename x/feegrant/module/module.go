@@ -3,6 +3,7 @@ package module
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -56,7 +57,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	m := keeper.NewMigrator(am.keeper)
 	err := cfg.RegisterMigration(feegrant.ModuleName, 1, m.Migrate1to2)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/feegrant from version 1 to 2: %v", err))
 	}
 }
 

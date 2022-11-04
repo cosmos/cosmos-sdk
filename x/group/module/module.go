@@ -22,6 +22,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
@@ -137,6 +138,11 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	group.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 	group.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+
+	m := keeper.NewMigrator(am.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

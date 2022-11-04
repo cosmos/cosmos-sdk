@@ -1,4 +1,4 @@
-package v043_test
+package v2_test
 
 import (
 	"bytes"
@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v042distribution "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v042"
-	v043distribution "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v043"
+	v1 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v1"
+	v2 "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -32,47 +32,47 @@ func TestStoreMigration(t *testing.T) {
 	}{
 		{
 			"FeePoolKey",
-			v042distribution.FeePoolKey,
+			v1.FeePoolKey,
 			types.FeePoolKey,
 		},
 		{
 			"ProposerKey",
-			v042distribution.ProposerKey,
+			v1.ProposerKey,
 			types.ProposerKey,
 		},
 		{
 			"ValidatorOutstandingRewards",
-			v042distribution.GetValidatorOutstandingRewardsKey(valAddr),
+			v1.GetValidatorOutstandingRewardsKey(valAddr),
 			types.GetValidatorOutstandingRewardsKey(valAddr),
 		},
 		{
 			"DelegatorWithdrawAddr",
-			v042distribution.GetDelegatorWithdrawAddrKey(addr2),
+			v1.GetDelegatorWithdrawAddrKey(addr2),
 			types.GetDelegatorWithdrawAddrKey(addr2),
 		},
 		{
 			"DelegatorStartingInfo",
-			v042distribution.GetDelegatorStartingInfoKey(valAddr, addr2),
+			v1.GetDelegatorStartingInfoKey(valAddr, addr2),
 			types.GetDelegatorStartingInfoKey(valAddr, addr2),
 		},
 		{
 			"ValidatorHistoricalRewards",
-			v042distribution.GetValidatorHistoricalRewardsKey(valAddr, 6),
+			v1.GetValidatorHistoricalRewardsKey(valAddr, 6),
 			types.GetValidatorHistoricalRewardsKey(valAddr, 6),
 		},
 		{
 			"ValidatorCurrentRewards",
-			v042distribution.GetValidatorCurrentRewardsKey(valAddr),
+			v1.GetValidatorCurrentRewardsKey(valAddr),
 			types.GetValidatorCurrentRewardsKey(valAddr),
 		},
 		{
 			"ValidatorAccumulatedCommission",
-			v042distribution.GetValidatorAccumulatedCommissionKey(valAddr),
+			v1.GetValidatorAccumulatedCommissionKey(valAddr),
 			types.GetValidatorAccumulatedCommissionKey(valAddr),
 		},
 		{
 			"ValidatorSlashEvent",
-			v042distribution.GetValidatorSlashEventKey(valAddr, 6, 8),
+			v1.GetValidatorSlashEventKey(valAddr, 6, 8),
 			types.GetValidatorSlashEventKey(valAddr, 6, 8),
 		},
 	}
@@ -83,7 +83,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v043distribution.MigrateStore(ctx, distributionKey)
+	err := v2.MigrateStore(ctx, distributionKey)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

@@ -47,6 +47,7 @@ const (
 
 type Keeper struct {
 	key storetypes.StoreKey
+	cdc codec.Codec
 
 	accKeeper group.AccountKeeper
 
@@ -84,6 +85,7 @@ type Keeper struct {
 func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router *baseapp.MsgServiceRouter, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
 		key:       storeKey,
+		cdc:       cdc,
 		router:    router,
 		accKeeper: accKeeper,
 	}

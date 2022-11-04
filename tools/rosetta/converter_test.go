@@ -1,6 +1,7 @@
 package rosetta_test
 
 import (
+	"cosmossdk.io/tools/rosetta"
 	"encoding/hex"
 	"encoding/json"
 	"testing"
@@ -16,8 +17,7 @@ import (
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
+	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"

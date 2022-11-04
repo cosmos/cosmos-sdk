@@ -39,6 +39,8 @@ func (s Screen) Cbor() cbor.Cbor {
 		m = m.Add(textKey, cbor.NewText(s.Text))
 	}
 	if s.Indent > 0 {
+		// #nosec G701
+		// Since we've excluded negatives, int widening is safe.
 		m = m.Add(indentKey, cbor.NewUint(uint64(s.Indent)))
 	}
 	if s.Expert {

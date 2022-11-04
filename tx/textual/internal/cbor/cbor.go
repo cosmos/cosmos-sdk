@@ -39,12 +39,16 @@ func encode_prefix(major byte, arg uint64, w io.Writer) error {
 		if err != nil {
 			return err
 		}
+		// #nosec G701
+		// Since we're under the limit, narrowing is safe.
 		return binary.Write(w, binary.BigEndian, uint16(arg))
 	case arg <= math.MaxUint32:
 		_, err := w.Write([]byte{encode_first_byte(major, 26)})
 		if err != nil {
 			return err
 		}
+		// #nosec G701
+		// Since we're under the limit, narrowing is safe.
 		return binary.Write(w, binary.BigEndian, uint32(arg))
 	}
 	_, err := w.Write([]byte{encode_first_byte(major, 27)})
@@ -72,6 +76,8 @@ var _ Cbor = NewUint(0)
 
 // Encode implements the Cbor interface.
 func (n Uint) Encode(w io.Writer) error {
+	// #nosec G701
+	// Widening is safe.
 	return encode_prefix(major_uint, uint64(n), w)
 }
 
@@ -208,6 +214,8 @@ const (
 )
 
 func encodeSimple(b byte, w io.Writer) error {
+	// #nosec G701
+	// Widening is safe.
 	return encode_prefix(major_simple, uint64(b), w)
 }
 

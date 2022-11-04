@@ -27,7 +27,7 @@ func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*t
 	}
 
 	if req.Hash == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request\nhash is empty")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request; hash is empty")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

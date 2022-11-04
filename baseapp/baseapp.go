@@ -851,7 +851,7 @@ func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
 		for _, txBytes := range req.Txs {
 			tx, err := app.txDecoder(txBytes)
 			if err != nil {
-				panic(err)
+				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}
 
 			_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)

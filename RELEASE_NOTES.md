@@ -1,4 +1,30 @@
-## [v0.46.3-pio-2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-2) - 2022-10-26
+## [v0.46.3-pio-4](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.3-pio-4) - 2022-11-02
+
+### Imporovements
+
+* (server) [#350](https://github.com/provenance-io/cosmos-sdk/pull/350) Change the default for IAVLDisableFastNode (iavl-disable-fastnode) back to true.
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3-pio-3...v0.46.3-pio-4
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3...v0.46.3-pio-4
+
+---
+
+## [v0.46.3-pio-3](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.3-pio-3) - 2022-11-01
+
+### Improvements
+
+* Bump github.com/cosmos/iavl to v0.19.4 (from v0.19.3) to prevent possible app-hash mismatch in new IAVL store.
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3-pio-2...v0.46.3-pio-3
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3...v0.46.3-pio-3
+
+---
+
+## [v0.46.3-pio-2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.3-pio-2) - 2022-10-26
 
 ### Bug Fixes
 
@@ -11,7 +37,7 @@
 
 ---
 
-## [v0.46.3-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.1-pio-1) - 2022-10-20
+## [v0.46.3-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.3-pio-1) - 2022-10-20
 
 Chains using this version must also apply the following replace line to their `go.mod`:
 

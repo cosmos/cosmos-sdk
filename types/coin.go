@@ -134,7 +134,7 @@ func (coin Coin) SafeSub(coinB Coin) (Coin, error) {
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 	if res.IsNegative() {
-		return Coin{}, fmt.Errorf("negative coin amount")
+		return Coin{}, fmt.Errorf("negative coin amount: %s", res)
 	}
 
 	return res, nil

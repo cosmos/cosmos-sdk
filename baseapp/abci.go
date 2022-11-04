@@ -199,7 +199,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	if app.processProposalState != nil {
 		app.processProposalState.ctx = app.processProposalState.ctx.
 			WithBlockGasMeter(gasMeter).
-			WithHeaderHash(req.Hash)
+			WithHeaderHash(req.Hash).
+			WithBlockHeight(req.Header.Height)
 	}
 
 	if app.beginBlocker != nil {

@@ -13,12 +13,10 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/math"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
@@ -30,7 +28,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 // SetupOptions defines arguments that are passed into `Simapp` constructor.
@@ -156,104 +153,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	return app
 }
 
-// SetupWithGenesisAccounts initializes a new SimApp with the provided genesis
-// accounts and possible balances.
-func SetupWithGenesisAccounts(t *testing.T, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
-	t.Helper()
-
-	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
-	require.NoError(t, err)
-
-	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-
-	return SetupWithGenesisValSet(t, valSet, genAccs, balances...)
-}
-
-// GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
-// that also act as delegators.
-func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
-	t.Helper()
-
-	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
-	require.NoError(t, err)
-
-	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-
-	// generate genesis account
-	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
-	balances := []banktypes.Balance{
-		{
-			Address: acc.GetAddress().String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
-		},
-	}
-
-	genesisState := NewDefaultGenesisState(app.appCodec)
-	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balances...)
-	require.NoError(t, err)
-
-	return genesisState
-}
-
-// AddTestAddrsFromPubKeys adds the addresses into the SimApp providing only the public keys.
-func AddTestAddrsFromPubKeys(app *SimApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt math.Int) {
-	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
-
-	for _, pk := range pubKeys {
-		initAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
-	}
-}
-
-// AddTestAddrs constructs and returns accNum amount of accounts with an
-// initial balance of accAmt in random order
-func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
-	return addTestAddrs(app, ctx, accNum, accAmt, simtestutil.CreateRandomAccounts)
-}
-
-// AddTestAddrsIncremental constructs and returns accNum amount of accounts with an
-// initial balance of accAmt in random order
-func AddTestAddrsIncremental(app *SimApp, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
-	return addTestAddrs(app, ctx, accNum, accAmt, simtestutil.CreateIncrementalAccounts)
-}
-
-func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt math.Int, strategy simtestutil.GenerateAccountStrategy) []sdk.AccAddress {
-	testAddrs := strategy(accNum)
-
-	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
-
-	for _, addr := range testAddrs {
-		initAccountWithCoins(app, ctx, addr, initCoins)
-	}
-
-	return testAddrs
-}
-
-func initAccountWithCoins(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
-	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
-	if err != nil {
-		panic(err)
-	}
-
-	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, coins)
-	if err != nil {
-		panic(err)
-	}
-}
-
-// CheckBalance checks the balance of an account.
-func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.Coins) {
-	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
-	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
-}
-
-// ModuleAccountAddrs provides a list of blocked module accounts from configuration in app.yaml
+// ModuleAccountAddrs provides a list of blocked module accounts from configuration in AppConfig
 //
 // Ported from SimApp
 func ModuleAccountAddrs() map[string]bool {

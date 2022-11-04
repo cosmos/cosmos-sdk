@@ -159,7 +159,6 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
-
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
 	minDeposit := suite.app.GovKeeper.GetDepositParams(suite.ctx).MinDeposit
 
@@ -417,7 +416,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 			metadata: "",
 			expErr:   false,
 		},
-		"all good - fee denom propsal": {
+		"all good - fee denom proposal": {
 			preRun: func() uint64 {
 				msg, err := v1.NewMsgSubmitProposal(
 					[]sdk.Msg{updateFeeDenomMsg},

@@ -214,9 +214,9 @@ build-docs:
 
 test: test-unit
 test-e2e:
-	make -C tests test-e2e
+	$(MAKE) -C tests test-e2e
 test-integration:
-	make -C tests test-integration
+	$(MAKE) -C tests test-integration
 test-all: test-unit test-e2e test-integration test-ledger-mock test-race test-cover
 
 TEST_PACKAGES=./...
@@ -339,6 +339,9 @@ test-sim-profile:
 test-cover:
 	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 .PHONY: test-cover
+
+test-rosetta-unit:
+	$(MAKE) -C tools/rosetta test
 
 test-rosetta:
 	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .

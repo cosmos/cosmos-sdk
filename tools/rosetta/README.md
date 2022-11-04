@@ -4,18 +4,18 @@ sidebar_position: 1
 
 # Rosetta
 
-The `rosetta` package implements Coinbase's [Rosetta API](https://www.rosetta-api.org). This document provides instructions on how to use the Rosetta API integration. For information about the motivation and design choices, refer to [ADR 035](../architecture/adr-035-rosetta-api-support.md).
+The `rosetta` package implements Coinbase's [Rosetta API](https://www.rosetta-api.org). This document provides instructions on how to use the Rosetta API integration. For information about the motivation and design choices, refer to [ADR 035](https://docs.cosmos.network/main/architecture/adr-035-rosetta-api-support).
 
 ## Add Rosetta Command
 
 The Rosetta API server is a stand-alone server that connects to a node of a chain developed with Cosmos SDK.
 
-To enable Rosetta API support, it's required to add the `RosettaCommand` to your application's root command file (e.g. `appd/cmd/root.go`).
+To enable Rosetta API support, it's required to add the `RosettaCommand` to your application's root command file (e.g. `simd/cmd/root.go`).
 
 Import the `server` package:
 
 ```go
-    "github.com/cosmos/cosmos-sdk/server"
+import "github.com/cosmos/cosmos-sdk/server"
 ```
 
 Find the following line:
@@ -43,13 +43,13 @@ An implementation example can be found in `simapp` package.
 To run Rosetta in your application CLI, use the following command:
 
 ```shell
-appd rosetta --help
+simd rosetta --help
 ```
 
 To test and run Rosetta API endpoints for applications that are running and exposed, use the following command:
 
 ```shell
-appd rosetta
+simd rosetta
      --blockchain "your application name (ex: gaia)"
      --network "your chain identifier (ex: testnet-1)"
      --tendermint "tendermint endpoint (ex: localhost:26657)"

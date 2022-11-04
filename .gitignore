@@ -18,7 +18,8 @@ docs/_build
 docs/tutorial
 docs/node_modules
 docs/modules
-docs/run-node/cosmovisor.md
+docs/tools/cosmovisor.md
+# docs/run-node/04-rosetta.md
 dist
 tools-stamp
 buf-stamp

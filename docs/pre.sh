@@ -23,8 +23,11 @@ cat ../x/README.md | sed 's/\.\.\/docs\/building-modules\/README\.md/\/building-
 ## Add Cosmovisor documentation
 cp ../tools/cosmovisor/README.md ./docs/tooling/01-cosmovisor.md
 
-## Add depinject documentation
+## Add Depinject documentation
 cp ../depinject/README.md ./docs/building-apps/01-depinject.md
+
+## Add Rosetta documentation
+cp ../rosetta/README.md ./docs/run-node/04-rosetta.md
 
 ## Add architecture documentation
 cp -r ./architecture ./docs

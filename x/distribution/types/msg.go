@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -13,6 +14,8 @@ const (
 	TypeMsgFundCommunityPool           = "fund_community_pool"
 	TypeMsgUpdateParams                = "update_params"
 	TypeMsgCommunityPoolSpend          = "community_pool_spend"
+	TypeMsgWithdrawShareReward         = "withdraw_share_reward"
+	TypeMsgWithdrawAllShareReward      = "withdraw_all_share_reward"
 )
 
 // Verify interface at compile time
@@ -22,6 +25,8 @@ var (
 	_ sdk.Msg = (*MsgWithdrawValidatorCommission)(nil)
 	_ sdk.Msg = (*MsgUpdateParams)(nil)
 	_ sdk.Msg = (*MsgCommunityPoolSpend)(nil)
+	_ sdk.Msg = (*MsgWithdrawAllShareReward)(nil)
+	_ sdk.Msg = (*MsgWithdrawShareReward)(nil)
 )
 
 func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithdrawAddress {
@@ -216,4 +221,69 @@ func (msg MsgCommunityPoolSpend) ValidateBasic() error {
 	}
 
 	return msg.Amount.Validate()
+}
+
+func NewMsgWithdrawShareReward(ownerAddr sdk.AccAddress, recordId uint64) *MsgWithdrawShareReward {
+	return &MsgWithdrawShareReward{
+		OwnerAddress: ownerAddr.String(),
+		RecordId:     recordId,
+	}
+}
+
+func (msg MsgWithdrawShareReward) Route() string { return ModuleName }
+func (msg MsgWithdrawShareReward) Type() string {
+	return TypeMsgWithdrawShareReward
+}
+
+// Return address that must sign over msg.GetSignBytes()
+func (msg MsgWithdrawShareReward) GetSigners() []sdk.AccAddress {
+	owner := sdk.MustAccAddressFromBech32(msg.OwnerAddress)
+
+	return []sdk.AccAddress{owner}
+}
+
+// get the bytes for the message signer to sign on
+func (msg MsgWithdrawShareReward) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// quick validity check
+func (msg MsgWithdrawShareReward) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.OwnerAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err)
+	}
+	return nil
+}
+
+func NewMsgWithdrawAllTokenizeShareRecordReward(ownerAddr sdk.AccAddress) *MsgWithdrawAllShareReward {
+	return &MsgWithdrawAllShareReward{
+		OwnerAddress: ownerAddr.String(),
+	}
+}
+
+func (msg MsgWithdrawAllShareReward) Route() string { return ModuleName }
+func (msg MsgWithdrawAllShareReward) Type() string {
+	return TypeMsgWithdrawAllShareReward
+}
+
+// Return address that must sign over msg.GetSignBytes()
+func (msg MsgWithdrawAllShareReward) GetSigners() []sdk.AccAddress {
+	owner := sdk.MustAccAddressFromBech32(msg.OwnerAddress)
+
+	return []sdk.AccAddress{owner}
+}
+
+// get the bytes for the message signer to sign on
+func (msg MsgWithdrawAllShareReward) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// quick validity check
+func (msg MsgWithdrawAllShareReward) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.OwnerAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err)
+	}
+	return nil
 }

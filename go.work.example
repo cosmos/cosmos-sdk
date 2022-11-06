@@ -13,4 +13,5 @@ use (
 	./tx
 	./simapp
 	./tests
+	./tools/rosetta
 )

@@ -21,6 +21,10 @@ COPY --from=build /simd/simapp/simd/simd /bin/simd
 
 WORKDIR /rosetta
 COPY ./contrib/rosetta/configuration ./
+
+# Set GENESIS_HASH env needed for api correctness
+ENV GENESIS_HASH "01331100220a94b9acc0ceef697a6db44ba70fc61e9e6c24802974a0b6cba29b"
+
 RUN chmod +x run_tests.sh
 RUN chmod +x send_funds.sh
 RUN chmod +x faucet.py

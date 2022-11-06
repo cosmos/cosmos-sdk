@@ -1,4 +1,4 @@
-package testutil
+package gov
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govclitestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -72,7 +73,7 @@ func (s *DepositTestSuite) submitProposal(val *network.Validator, initialDeposit
 		exactArgs = append(exactArgs, fmt.Sprintf("--%s=%s", cli.FlagDeposit, initialDeposit.String()))
 	}
 
-	_, err := MsgSubmitLegacyProposal(
+	_, err := govclitestutil.MsgSubmitLegacyProposal(
 		val.ClientCtx,
 		val.Address.String(),
 		fmt.Sprintf("Text Proposal %d", id),
@@ -96,7 +97,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 
 	// deposit amount
 	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String()
-	_, err := MsgDeposit(clientCtx, val.Address.String(), proposalID, depositAmount)
+	_, err := govclitestutil.MsgDeposit(clientCtx, val.Address.String(), proposalID, depositAmount)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 

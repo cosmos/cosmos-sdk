@@ -183,20 +183,13 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: Get data from Go build cache
-        # if: env.GIT_DIFF
-        if: ${{ false }}
-        uses: actions/cache@v3
+      - uses: actions/setup-go@v3
         with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/golangci-lint
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
+          go-version: 1.19.2
       - name: test rosetta
         run: |
+          make test-rosetta-unit
           make test-rosetta
-        # if: env.GIT_DIFF
 
   liveness-test:
     runs-on: ubuntu-latest

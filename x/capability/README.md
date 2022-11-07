@@ -77,9 +77,9 @@ func NewApp(...) *App {
     * [In persisted KV store](#in-persisted-kv-store)
     * [In-memory KV store](#in-memory-kv-store)
 
-# Concepts
+## Concepts
 
-## Capabilities
+### Capabilities
 
 Capabilities are multi-owner. A scoped keeper can create a capability via `NewCapability`
 which creates a new unique, unforgeable object-capability reference. The newly
@@ -104,14 +104,14 @@ with which the calling module previously associated it.
 claimed by name. The module is not allowed to retrieve capabilities which it does
 not own.
 
-## Stores
+### Stores
 
 * MemStore
 * KeyStore
 
-# State
+## State
 
-## In persisted KV store
+### In persisted KV store
 
 1. Global unique capability index
 2. Capability owners
@@ -121,7 +121,7 @@ Indexes:
 * Unique index: `[]byte("index") -> []byte(currentGlobalIndex)`
 * Capability Index: `[]byte("capability_index") | []byte(index) -> ProtocolBuffer(CapabilityOwners)`
 
-## In-memory KV store
+### In-memory KV store
 
 1. Initialized flag
 2. Mapping between the module and capability tuple and the capability name

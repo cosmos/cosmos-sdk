@@ -94,7 +94,7 @@ to set up a script to periodically withdraw and rebond rewards.
     * [CLI](#cli)
     * [gRPC](#grpc)
 
-# Concepts
+## Concepts
 
 In Proof of Stake (PoS) blockchains, rewards gained from transaction fees are paid to validators. The fee distribution module fairly distributes the rewards to the validators' constituent delegators.
 
@@ -108,7 +108,7 @@ The commission is calculated and incremented at every `BeginBlock` operation to 
 The rewards to a delegator are distributed when the delegation is changed or removed, or a withdrawal is requested.
 Before rewards are distributed, all slashes to the validator that occurred during the current delegation are applied.
 
-## Reference Counting in F1 Fee Distribution
+### Reference Counting in F1 Fee Distribution
 
 In F1 fee distribution, the rewards a delegator receives are calculated when their delegation is withdrawn. This calculation must read the terms of the summation of rewards divided by the share of tokens from the period which they ended when they delegated, and the final period that was created for the withdrawal.
 
@@ -125,9 +125,9 @@ is created which might need to reference the historical record, the reference co
 Each time one object which previously needed to reference the historical record is deleted, the reference
 count is decremented. If the reference count hits zero, the historical record is deleted.
 
-# State
+## State
 
-## FeePool
+### FeePool
 
 All globally tracked parameters for distribution are stored within
 `FeePool`. Rewards are collected and added to the reward pool and
@@ -154,7 +154,7 @@ type DecCoin struct {
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
 ```
 
-## Validator Distribution
+### Validator Distribution
 
 Validator distribution information for the relevant validator is updated each time:
 
@@ -172,7 +172,7 @@ type ValidatorDistInfo struct {
 }
 ```
 
-## Delegation Distribution
+### Delegation Distribution
 
 Each delegation distribution only needs to record the height at which it last
 withdrew fees. Because a delegation must withdraw fees each time it's
@@ -188,7 +188,7 @@ type DelegationDistInfo struct {
 }
 ```
 
-## Params
+### Params
 
 The distribution module stores it's params in state with the prefix of `0x09`, 
 it can be updated with governance or the address with authority.
@@ -199,7 +199,7 @@ it can be updated with governance or the address with authority.
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30
 ```
 
-# Begin Block
+## Begin Block
 
 At each `BeginBlock`, all fees received in the previous block are transferred to
 the distribution `ModuleAccount` account. When a delegator or validator
@@ -209,7 +209,7 @@ block, the different claims on the fees collected are updated as follows:
 * The reserve community tax is charged.
 * The remainder is distributed proportionally by voting power to all bonded validators
 
-## The Distribution Scheme
+### The Distribution Scheme
 
 See [params](#params) for description of parameters.
 
@@ -221,13 +221,13 @@ rewards each account is entitled to are stored, and withdrawals can be triggered
 through the messages `FundCommunityPool`, `WithdrawValidatorCommission` and
 `WithdrawDelegatorReward`.
 
-### Reward to the Community Pool
+#### Reward to the Community Pool
 
 The community pool gets `community_tax * fees`, plus any remaining dust after
 validators get their rewards that are always rounded down to the nearest
 integer value.
 
-### Reward To the Validators
+#### Reward To the Validators
 
 The proposer receives no extra rewards. All fees are distributed among all the
 bonded validators, including the proposer, in proportion to their consensus power.
@@ -239,7 +239,7 @@ voteMul = 1 - community_tax
 
 All validators receive `fees * voteMul * powFrac`.
 
-### Rewards to Delegators
+#### Rewards to Delegators
 
 Each validator's rewards are distributed to its delegators. The validator also
 has a self-delegation that is treated like a regular delegation in
@@ -253,7 +253,7 @@ The outstanding rewards that the operator is entitled to are stored in
 to are stored in `ValidatorCurrentRewards`. The [F1 fee distribution scheme](#concepts) is used to calculate the rewards per delegator as they
 withdraw or update their delegation, and is thus not handled in `BeginBlock`.
 
-### Example Distribution
+#### Example Distribution
 
 For this example distribution, the underlying consensus engine selects block proposers in
 proportion to their power relative to the entire bonded power.
@@ -270,9 +270,9 @@ the total rewards. Consequently, the reward for a single delegator is:
 community tax rate) * (1 - validator commission rate)
 ```
 
-# Messages
+## Messages
 
-## MsgSetWithdrawAddress
+### MsgSetWithdrawAddress
 
 By default, the withdraw address is the delegator address. To change its withdraw address, a delegator must send a `MsgSetWithdrawAddress` message.
 Changing the withdraw address is possible only if the parameter `WithdrawAddrEnabled` is set to `true`.
@@ -298,7 +298,7 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 ```
 
-## MsgWithdrawDelegatorReward
+### MsgWithdrawDelegatorReward
 
 A delegator can withdraw its rewards.
 Internally in the distribution module, this transaction simultaneously removes the previous delegation with associated rewards, the same as if the delegator simply started a new delegation of the same value.
@@ -337,14 +337,14 @@ Response:
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L46-L56
 ```
 
-## WithdrawValidatorCommission
+### WithdrawValidatorCommission
 
 The validator can send the WithdrawValidatorCommission message to withdraw their accumulated commission.
 The commission is calculated in every block during `BeginBlock`, so no iteration is required to withdraw.
 The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable for the validator.
 Only integer amounts can be sent. If the accumulated awards have decimals, the amount is truncated before the withdrawal is sent, and the remainder is left to be withdrawn later.
 
-## FundCommunityPool
+### FundCommunityPool
 
 This message sends coins directly from the sender to the community pool.
 
@@ -364,11 +364,11 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 }
 ```
 
-## Common distribution operations
+### Common distribution operations
 
 These operations take place during many different messages.
 
-### Initialize delegation
+#### Initialize delegation
 
 Each time a delegation is changed, the rewards are withdrawn and the delegation is reinitialized.
 Initializing a delegation increments the validator period and keeps track of the starting period of the delegation.
@@ -393,7 +393,7 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 }
 ```
 
-## MsgUpdateParams
+### MsgUpdateParams
 
 Distribution module params can be updated through `MsgUpdateParams`, which can be done using governance proposal and the signer will always be gov module account address. 
 
@@ -405,15 +405,15 @@ The message handling can fail if:
 
 * signer is not the gov module account address.
 
-# Hooks
+## Hooks
 
 Available hooks that can be called by and from this module.
 
-## Create or modify delegation distribution
+### Create or modify delegation distribution
 
 * triggered-by: `staking.MsgDelegate`, `staking.MsgBeginRedelegate`, `staking.MsgUndelegate`
 
-### Before
+#### Before
 
 * The delegation rewards are withdrawn to the withdraw address of the delegator.
   The rewards include the current period and exclude the starting period.
@@ -421,12 +421,12 @@ Available hooks that can be called by and from this module.
   The validator period is incremented because the validator's power and share distribution might have changed.
 * The reference count for the delegator's starting period is decremented.
 
-### After
+#### After
 
 The starting height of the delegation is set to the previous period.
 Because of the `Before`-hook, this period is the last period for which the delegator was rewarded.
 
-## Validator created
+### Validator created
 
 * triggered-by: `staking.MsgCreateValidator`
 
@@ -440,7 +440,7 @@ When a validator is created, the following validator variables are initialized:
 
 By default, all values are set to a `0`, except period, which is set to `1`.
 
-## Validator removed
+### Validator removed
 
 * triggered-by: `staking.RemoveValidator`
 
@@ -451,7 +451,7 @@ Note: The validator gets removed only when it has no remaining delegations.
 At that time, all outstanding delegator rewards will have been withdrawn.
 Any remaining rewards are dust amounts.
 
-## Validator is slashed
+### Validator is slashed
 
 * triggered-by: `staking.Slash`
   
@@ -461,11 +461,11 @@ Any remaining rewards are dust amounts.
 * The slash event is stored for later use.
   The slash event will be referenced when calculating delegator rewards.
 
-# Events
+## Events
 
 The distribution module emits the following events:
 
-## BeginBlocker
+### BeginBlocker
 
 | Type            | Attribute Key | Attribute Value    |
 |-----------------|---------------|--------------------|
@@ -476,9 +476,9 @@ The distribution module emits the following events:
 | rewards         | amount        | {rewardAmount}     |
 | rewards         | validator     | {validatorAddress} |
 
-## Handlers
+### Handlers
 
-### MsgSetWithdrawAddress
+#### MsgSetWithdrawAddress
 
 | Type                 | Attribute Key    | Attribute Value      |
 |----------------------|------------------|----------------------|
@@ -487,7 +487,7 @@ The distribution module emits the following events:
 | message              | action           | set_withdraw_address |
 | message              | sender           | {senderAddress}      |
 
-### MsgWithdrawDelegatorReward
+#### MsgWithdrawDelegatorReward
 
 | Type    | Attribute Key | Attribute Value           |
 |---------|---------------|---------------------------|
@@ -497,7 +497,7 @@ The distribution module emits the following events:
 | message          | action        | withdraw_delegator_reward |
 | message          | sender        | {senderAddress}           |
 
-### MsgWithdrawValidatorCommission
+#### MsgWithdrawValidatorCommission
 
 | Type       | Attribute Key | Attribute Value               |
 |------------|---------------|-------------------------------|
@@ -506,7 +506,7 @@ The distribution module emits the following events:
 | message    | action        | withdraw_validator_commission |
 | message    | sender        | {senderAddress}               |
 
-# Parameters
+## Parameters
 
 The distribution module contains the following parameters:
 
@@ -520,13 +520,13 @@ The distribution module contains the following parameters:
 * [0] `communitytax`, `baseproposerreward` and `bonusproposerreward` must be
   positive and their sum cannot exceed 1.00.
 
-# Client
+## Client
 
 ## CLI
 
 A user can query and interact with the `distribution` module using the CLI.
 
-### Query
+#### Query
 
 The `query` commands allow users to query `distribution` state.
 
@@ -534,7 +534,7 @@ The `query` commands allow users to query `distribution` state.
 simd query distribution --help
 ```
 
-#### commission
+##### commission
 
 The `commission` command allows users to query validator commission rewards by address.
 
@@ -556,7 +556,7 @@ commission:
   denom: stake
 ```
 
-#### community-pool
+##### community-pool
 
 The `community-pool` command allows users to query all coin balances within the community pool.
 
@@ -578,7 +578,7 @@ pool:
   denom: stake
 ```
 
-#### params
+##### params
 
 The `params` command allows users to query the parameters of the `distribution` module.
 
@@ -601,7 +601,7 @@ community_tax: "0.020000000000000000"
 withdraw_addr_enabled: true
 ```
 
-#### rewards
+##### rewards
 
 The `rewards` command allows users to query delegator rewards. Users can optionally include the validator address to query rewards earned from a specific validator.
 
@@ -628,7 +628,7 @@ total:
   denom: stake
 ```
 
-#### slashes
+##### slashes
 
 The `slashes` command allows users to query all slashes for a given block range.
 
@@ -653,7 +653,7 @@ slashes:
   fraction: "0.009999999999999999"
 ```
 
-#### validator-outstanding-rewards
+##### validator-outstanding-rewards
 
 The `validator-outstanding-rewards` command allows users to query all outstanding (un-withdrawn) rewards for a validator and all their delegations.
 
@@ -675,7 +675,7 @@ rewards:
   denom: stake
 ```
 
-### Transactions
+#### Transactions
 
 The `tx` commands allow users to interact with the `distribution` module.
 
@@ -683,7 +683,7 @@ The `tx` commands allow users to interact with the `distribution` module.
 simd tx distribution --help
 ```
 
-#### fund-community-pool
+##### fund-community-pool
 
 The `fund-community-pool` command allows users to send funds to the community pool.
 
@@ -697,7 +697,7 @@ Example:
 simd tx distribution fund-community-pool 100stake --from cosmos1..
 ```
 
-#### set-withdraw-addr
+##### set-withdraw-addr
 
 The `set-withdraw-addr` command allows users to set the withdraw address for rewards associated with a delegator address.
 
@@ -711,7 +711,7 @@ Example:
 simd tx distribution set-withdraw-addr cosmos1.. --from cosmos1..
 ```
 
-#### withdraw-all-rewards
+##### withdraw-all-rewards
 
 The `withdraw-all-rewards` command allows users to withdraw all rewards for a delegator.
 
@@ -725,7 +725,7 @@ Example:
 simd tx distribution withdraw-all-rewards --from cosmos1..
 ```
 
-#### withdraw-rewards
+##### withdraw-rewards
 
 The `withdraw-rewards` command allows users to withdraw all rewards from a given delegation address,
 and optionally withdraw validator commission if the delegation address given is a validator operator and the user proves the `--commision` flag.
@@ -740,11 +740,11 @@ Example:
 simd tx distribution withdraw-rewards cosmosvaloper1.. --from cosmos1.. --commision
 ```
 
-## gRPC
+### gRPC
 
 A user can query the `distribution` module using gRPC endpoints.
 
-### Params
+#### Params
 
 The `Params` endpoint allows users to query parameters of the `distribution` module.
 
@@ -769,7 +769,7 @@ Example Output:
 }
 ```
 
-### ValidatorOutstandingRewards
+#### ValidatorOutstandingRewards
 
 The `ValidatorOutstandingRewards` endpoint allows users to query rewards of a validator address.
 
@@ -797,7 +797,7 @@ Example Output:
 }
 ```
 
-### ValidatorCommission
+#### ValidatorCommission
 
 The `ValidatorCommission` endpoint allows users to query accumulated commission for a validator.
 
@@ -825,7 +825,7 @@ Example Output:
 }
 ```
 
-### ValidatorSlashes
+#### ValidatorSlashes
 
 The `ValidatorSlashes` endpoint allows users to query slash events of a validator.
 
@@ -854,7 +854,7 @@ Example Output:
 }
 ```
 
-### DelegationRewards
+#### DelegationRewards
 
 The `DelegationRewards` endpoint allows users to query the total rewards accrued by a delegation.
 
@@ -880,7 +880,7 @@ Example Output:
 }
 ```
 
-### DelegationTotalRewards
+#### DelegationTotalRewards
 
 The `DelegationTotalRewards` endpoint allows users to query the total rewards accrued by each validator.
 
@@ -917,7 +917,7 @@ Example Output:
 }
 ```
 
-### DelegatorValidators
+#### DelegatorValidators
 
 The `DelegatorValidators` endpoint allows users to query all validators for given delegator.
 
@@ -940,7 +940,7 @@ Example Output:
 }
 ```
 
-### DelegatorWithdrawAddress
+#### DelegatorWithdrawAddress
 
 The `DelegatorWithdrawAddress` endpoint allows users to query the withdraw address of a delegator.
 
@@ -961,7 +961,7 @@ Example Output:
 }
 ```
 
-### CommunityPool
+#### CommunityPool
 
 The `CommunityPool` endpoint allows users to query the community pool coins.
 

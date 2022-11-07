@@ -67,7 +67,9 @@ jq '.app_state.mint.minter.inflation = "0.300000000000000000"' genesis.json > te
 
 When instantiating a node, GRPC and REST are defaulted to localhost to avoid unknown exposure of your node to the public. It is recommended to not expose these endpoints without a proxy that can handle load balancing or authentication is setup between your node and the public. 
 
-> A commonly used tool for this is [nginx](https://nginx.org)
+:::tip
+A commonly used tool for this is [nginx](https://nginx.org).
+:::
 
 
 ## Adding Genesis Accounts

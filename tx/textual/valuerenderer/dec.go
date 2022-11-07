@@ -6,7 +6,6 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/math"
 )
 
@@ -38,10 +37,5 @@ func (vr decValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 		return protoreflect.Value{}, err
 	}
 
-	a := basev1beta1.DecProto{
-		Dec: parsed,
-	}
-
-	msg := a.ProtoReflect()
-	return protoreflect.ValueOfMessage(msg), nil
+	return protoreflect.ValueOfString(parsed), nil
 }

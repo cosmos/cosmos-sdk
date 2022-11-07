@@ -1,4 +1,4 @@
-package v043_test
+package v2_test
 
 import (
 	"bytes"
@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040slashing "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v042"
-	v043slashing "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v043"
+	v1 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v1"
+	v2 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -31,17 +31,17 @@ func TestStoreMigration(t *testing.T) {
 	}{
 		{
 			"ValidatorSigningInfoKey",
-			v040slashing.ValidatorSigningInfoKey(consAddr),
+			v1.ValidatorSigningInfoKey(consAddr),
 			types.ValidatorSigningInfoKey(consAddr),
 		},
 		{
 			"ValidatorMissedBlockBitArrayKey",
-			v040slashing.ValidatorMissedBlockBitArrayKey(consAddr, 2),
+			v1.ValidatorMissedBlockBitArrayKey(consAddr, 2),
 			types.ValidatorMissedBlockBitArrayKey(consAddr, 2),
 		},
 		{
 			"AddrPubkeyRelationKey",
-			v040slashing.AddrPubkeyRelationKey(consAddr),
+			v1.AddrPubkeyRelationKey(consAddr),
 			types.AddrPubkeyRelationKey(consAddr),
 		},
 	}
@@ -52,7 +52,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v043slashing.MigrateStore(ctx, slashingKey)
+	err := v2.MigrateStore(ctx, slashingKey)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

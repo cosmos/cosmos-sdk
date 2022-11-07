@@ -1,10 +1,10 @@
-package v043
+package v2
 
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
+	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
 )
 
 // MigratePrefixAddress is a helper function that migrates all keys of format:
@@ -39,8 +39,8 @@ func MigratePrefixAddressBytes(store sdk.KVStore, prefixBz []byte) {
 	defer oldStoreIter.Close()
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
-		addr := oldStoreIter.Key()[:v042auth.AddrLen]
-		endBz := oldStoreIter.Key()[v042auth.AddrLen:]
+		addr := oldStoreIter.Key()[:v1auth.AddrLen]
+		endBz := oldStoreIter.Key()[v1auth.AddrLen:]
 		newStoreKey := append(append(prefixBz, address.MustLengthPrefix(addr)...), endBz...)
 
 		// Set new key on store. Values don't change.
@@ -60,8 +60,8 @@ func MigratePrefixAddressAddress(store sdk.KVStore, prefixBz []byte) {
 	defer oldStoreIter.Close()
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
-		addr1 := oldStoreIter.Key()[:v042auth.AddrLen]
-		addr2 := oldStoreIter.Key()[v042auth.AddrLen:]
+		addr1 := oldStoreIter.Key()[:v1auth.AddrLen]
+		addr2 := oldStoreIter.Key()[v1auth.AddrLen:]
 		newStoreKey := append(append(prefixBz, address.MustLengthPrefix(addr1)...), address.MustLengthPrefix(addr2)...)
 
 		// Set new key on store. Values don't change.

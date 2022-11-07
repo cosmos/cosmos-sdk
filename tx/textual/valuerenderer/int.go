@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/math"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -37,10 +36,5 @@ func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 		return protoreflect.Value{}, err
 	}
 
-	i := basev1beta1.IntProto{
-		Int: parsedInt.String(),
-	}
-
-	msg := i.ProtoReflect()
-	return protoreflect.ValueOfMessage(msg), nil
+	return protoreflect.ValueOfString(parsedInt.String()), nil
 }

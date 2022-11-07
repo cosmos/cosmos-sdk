@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -13,6 +15,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -127,6 +130,17 @@ func (am AppModule) ExportGenesis(_ sdk.Context, _ codec.JSONCodec) json.RawMess
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
+// AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
+func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return proposal.AutoCLIOptions
+}
 
 //
 // App Wiring Setup

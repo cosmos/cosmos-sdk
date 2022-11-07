@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -14,6 +15,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 
 	"cosmossdk.io/depinject"
+
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -168,6 +170,17 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
+}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
+// AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
+func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return feegrant.AutoCLIOptions
 }
 
 func init() {

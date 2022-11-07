@@ -23,7 +23,7 @@ service Msg {
 // Evidence of misbehavior such as equivocation or counterfactual signing.
 message MsgSubmitEvidence {
   option (cosmos.msg.v1.signer) = "submitter";
-  option (amino.name)    = "cosmos-sdk/MsgSubmitEvidence";
+  option (amino.name)           = "cosmos-sdk/MsgSubmitEvidence";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;

@@ -43,12 +43,11 @@ service Msg {
 // proposal Content.
 message MsgSubmitProposal {
   option (cosmos.msg.v1.signer) = "proposer";
-  option (amino.name)    = "cosmos-sdk/v1/MsgSubmitProposal";
+  option (amino.name)           = "cosmos-sdk/v1/MsgSubmitProposal";
 
   repeated google.protobuf.Any messages             = 1;
-  repeated cosmos.base.v1beta1.Coin initial_deposit = 2
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  string proposer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  string                            proposer        = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // metadata is any arbitrary metadata attached to the proposal.
   string metadata = 4;
 }
@@ -62,7 +61,7 @@ message MsgSubmitProposalResponse {
 // This ensures backwards compatibility with v1beta1.MsgSubmitProposal.
 message MsgExecLegacyContent {
   option (cosmos.msg.v1.signer) = "authority";
-  option (amino.name)    = "cosmos-sdk/v1/MsgExecLegacyContent";
+  option (amino.name)           = "cosmos-sdk/v1/MsgExecLegacyContent";
 
   // content is the proposal's content.
   google.protobuf.Any content = 1 [(cosmos_proto.accepts_interface) = "Content"];
@@ -76,7 +75,7 @@ message MsgExecLegacyContentResponse {}
 // MsgVote defines a message to cast a vote.
 message MsgVote {
   option (cosmos.msg.v1.signer) = "voter";
-  option (amino.name)    = "cosmos-sdk/v1/MsgVote";
+  option (amino.name)           = "cosmos-sdk/v1/MsgVote";
 
   uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (amino.dont_omitempty) = true];
   string     voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -90,12 +89,12 @@ message MsgVoteResponse {}
 // MsgVoteWeighted defines a message to cast a vote.
 message MsgVoteWeighted {
   option (cosmos.msg.v1.signer) = "voter";
-  option (amino.name)    = "cosmos-sdk/v1/MsgVoteWeighted";
+  option (amino.name)           = "cosmos-sdk/v1/MsgVoteWeighted";
 
-  uint64 proposal_id                   = 1 [(gogoproto.jsontag) = "proposal_id", (amino.dont_omitempty) = true];
-  string voter                         = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  repeated WeightedVoteOption options  = 3;
-  string                      metadata = 4;
+  uint64                      proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (amino.dont_omitempty) = true];
+  string                      voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated WeightedVoteOption options     = 3;
+  string                      metadata    = 4;
 }
 
 // MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
@@ -104,10 +103,10 @@ message MsgVoteWeightedResponse {}
 // MsgDeposit defines a message to submit a deposit to an existing proposal.
 message MsgDeposit {
   option (cosmos.msg.v1.signer) = "depositor";
-  option (amino.name)    = "cosmos-sdk/v1/MsgDeposit";
+  option (amino.name)           = "cosmos-sdk/v1/MsgDeposit";
 
-  uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (amino.dont_omitempty) = true];
-  string   depositor   = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64   proposal_id                     = 1 [(gogoproto.jsontag) = "proposal_id", (amino.dont_omitempty) = true];
+  string   depositor                       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
@@ -119,7 +118,7 @@ message MsgDepositResponse {}
 // Since: cosmos-sdk 0.47
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
-  option (amino.name)    = "cosmos-sdk/x/gov/v1/MsgUpdateParams";
+  option (amino.name)           = "cosmos-sdk/x/gov/v1/MsgUpdateParams";
 
   // authority is the address of the governance account.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];

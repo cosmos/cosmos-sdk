@@ -16,15 +16,15 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant";
 // that optionally expires. The grantee can use up to SpendLimit to cover fees.
 message BasicAllowance {
   option (cosmos_proto.implements_interface) = "FeeAllowanceI";
-  option (amino.name)                 = "cosmos-sdk/BasicAllowance";
+  option (amino.name)                        = "cosmos-sdk/BasicAllowance";
 
   // spend_limit specifies the maximum amount of coins that can be spent
   // by this allowance and will be updated as coins are spent. If it is
   // empty, there is no spend limit and any amount of coins can be spent.
   repeated cosmos.base.v1beta1.Coin spend_limit = 1 [
-    (gogoproto.nullable)          = false,
-    (amino.dont_omitempty) = true,
-    (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.Coins"
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
   // expiration specifies an optional time when this allowance expires
@@ -35,7 +35,7 @@ message BasicAllowance {
 // as well as a limit per time period.
 message PeriodicAllowance {
   option (cosmos_proto.implements_interface) = "FeeAllowanceI";
-  option (amino.name)                 = "cosmos-sdk/PeriodicAllowance";
+  option (amino.name)                        = "cosmos-sdk/PeriodicAllowance";
 
   // basic specifies a struct of `BasicAllowance`
   BasicAllowance basic = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
@@ -48,16 +48,16 @@ message PeriodicAllowance {
   // period_spend_limit specifies the maximum number of coins that can be spent
   // in the period
   repeated cosmos.base.v1beta1.Coin period_spend_limit = 3 [
-    (gogoproto.nullable)          = false,
-    (amino.dont_omitempty) = true,
-    (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.Coins"
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
   // period_can_spend is the number of coins left to be spent before the period_reset time
   repeated cosmos.base.v1beta1.Coin period_can_spend = 4 [
-    (gogoproto.nullable)          = false,
-    (amino.dont_omitempty) = true,
-    (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.Coins"
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
   // period_reset is the time at which this period resets and a new one begins,
@@ -71,7 +71,7 @@ message PeriodicAllowance {
 message AllowedMsgAllowance {
   option (gogoproto.goproto_getters)         = false;
   option (cosmos_proto.implements_interface) = "FeeAllowanceI";
-  option (amino.name)                 = "cosmos-sdk/AllowedMsgAllowance";
+  option (amino.name)                        = "cosmos-sdk/AllowedMsgAllowance";
 
   // allowance can be any of basic and periodic fee allowance.
   google.protobuf.Any allowance = 1 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];

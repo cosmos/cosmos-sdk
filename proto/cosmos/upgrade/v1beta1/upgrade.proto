@@ -12,7 +12,7 @@ option (gogoproto.goproto_getters_all) = false;
 
 // Plan specifies information about a planned upgrade and when it should occur.
 message Plan {
-  option (amino.name)          = "cosmos-sdk/Plan";
+  option (amino.name)                 = "cosmos-sdk/Plan";
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
@@ -28,12 +28,8 @@ message Plan {
   // Deprecated: Time based upgrades have been deprecated. Time based upgrade logic
   // has been removed from the SDK.
   // If this field is not empty, an error will be thrown.
-  google.protobuf.Timestamp time = 2 [
-    deprecated                    = true,
-    (gogoproto.stdtime)           = true,
-    (gogoproto.nullable)          = false,
-    (amino.dont_omitempty) = true
-  ];
+  google.protobuf.Timestamp time = 2
+      [deprecated = true, (gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // The height at which the upgrade must be performed.
   // Only used if Time is not set.
@@ -56,7 +52,7 @@ message Plan {
 message SoftwareUpgradeProposal {
   option deprecated                          = true;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
-  option (amino.name)                 = "cosmos-sdk/SoftwareUpgradeProposal";
+  option (amino.name)                        = "cosmos-sdk/SoftwareUpgradeProposal";
   option (gogoproto.equal)                   = true;
   option (gogoproto.goproto_stringer)        = false;
 
@@ -72,7 +68,7 @@ message SoftwareUpgradeProposal {
 message CancelSoftwareUpgradeProposal {
   option deprecated                          = true;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
-  option (amino.name)                 = "cosmos-sdk/CancelSoftwareUpgradeProposal";
+  option (amino.name)                        = "cosmos-sdk/CancelSoftwareUpgradeProposal";
   option (gogoproto.equal)                   = true;
   option (gogoproto.goproto_stringer)        = false;
 

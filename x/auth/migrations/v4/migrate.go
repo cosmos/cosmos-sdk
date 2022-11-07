@@ -7,10 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-const (
-	ModuleName = "auth"
-)
-
 var ParamsKey = []byte{0x01}
 
 // Migrate migrates the x/auth module state from the consensus version 3 to

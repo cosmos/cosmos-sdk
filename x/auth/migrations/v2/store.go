@@ -1,4 +1,4 @@
-// Package v043 creates in-place store migrations for fixing tracking
+// Package v2 creates in-place store migrations for fixing tracking
 // delegations with vesting accounts.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/8601
 // ref: https://github.com/cosmos/cosmos-sdk/issues/8812
@@ -15,7 +15,7 @@
 // https://github.com/cosmos/cosmos-sdk/issues/9070
 // The preferred solution is to use inter-module communication (ADR-033), and
 // this file will be refactored to use ADR-033 once it's ready.
-package v043
+package v2
 
 import (
 	"errors"

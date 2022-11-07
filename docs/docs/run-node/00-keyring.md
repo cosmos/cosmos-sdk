@@ -24,7 +24,7 @@ securely. Typically, an operating system's credential sub-system handles passwor
 private keys storage, and user sessions according to the user's password policies. Here
 is a list of the most popular operating systems and their respective passwords manager:
 
-* macOS (since macOS 8.6): [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)
+* macOS: [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)
 * Windows: [Credentials Management API](https://docs.microsoft.com/en-us/windows/win32/secauthn/credentials-management)
 * GNU/Linux:
     * [libsecret](https://gitlab.gnome.org/GNOME/libsecret)

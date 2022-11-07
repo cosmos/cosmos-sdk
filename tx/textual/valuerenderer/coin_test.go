@@ -94,7 +94,7 @@ func TestCoinJsonTestcases(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				require.Equal(t, protoreflect.ValueOf(tc.Proto.ProtoReflect()).String(), value.String())
+				require.Equal(t, protoreflect.ValueOfMessage(tc.Proto.ProtoReflect()).String(), value.String())
 			}
 		})
 	}

@@ -156,8 +156,9 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 		amt = amt.Quo(math.LegacyNewDec(10).Power(uint64(baseExp - coinExp)))
 	}
 
+	amtStr, err := math.ParseDec(amt.String())
 	return &basev1beta1.Coin{
-		Amount: amt.String(),
+		Amount: amtStr,
 		Denom:  baseDenom,
-	}, nil
+	}, err
 }

@@ -119,6 +119,6 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 			return protoreflect.Value{}, err
 		}
 
-		return protoreflect.ValueOf(NewGenericList(parsed)), err
+		return protoreflect.ValueOfMessage(parsed[0].ProtoReflect()), err
 	}
 }

@@ -36,5 +36,5 @@ func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 		return protoreflect.Value{}, err
 	}
 
-	return protoreflect.ValueOfString(parsedInt.String()), nil
+	return protoreflect.ValueOfString(parsedInt), nil
 }

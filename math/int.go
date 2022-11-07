@@ -476,7 +476,7 @@ func FormatInt(v string) (string, error) {
 }
 
 // ParseInt formats an value-rendered string into an integer
-func ParseInt(v string) (Int, error) {
+func ParseInt(v string) (string, error) {
 	sign := ""
 	if v[0] == '-' {
 		sign = "-"
@@ -485,13 +485,16 @@ func ParseInt(v string) (Int, error) {
 	if len(v) > 1 {
 		v = strings.TrimLeft(v, "0")
 	}
+	if v == "" {
+		return "0", nil
+	}
 
 	// remove the 1000 separators (ex: 1'000'000 -> 1000000)
 	v = strings.Replace(v, "'", "", -1)
-	val, ok := NewIntFromString(sign + v)
-	if !ok {
-		return Int{}, fmt.Errorf("error parsing integer %s", sign+v)
-	}
+	// val, ok := NewIntFromString(sign + v)
+	// if !ok {
+	// return "", fmt.Errorf("error parsing integer %s", sign+v)
+	// }
 
-	return val, nil
+	return sign + v, nil
 }

@@ -85,7 +85,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#13236](https://github.com/cosmos/cosmos-sdk/pull/13236) Integrate Filter Logging
 * [#13528](https://github.com/cosmos/cosmos-sdk/pull/13528) Update `ValidateMemoDecorator` to only check memo against `MaxMemoCharacters` param when a memo is present.
 * [#13651](https://github.com/cosmos/cosmos-sdk/pull/13651) Update `server/config/config.GetConfig` function.
-* [#xxxxx](https://github.com/cosmos/cosmos-sdk/pull/xxxxx) `int64` type for `id` in `AccountAddressByID` grpc query is now deprecated, update to use account-id(type of uint64) to request `AccountAddressByID`.
+* [#13780](https://github.com/cosmos/cosmos-sdk/pull/13780) `int64` type for `id` in `AccountAddressByID` grpc query is now deprecated, update to use account-id(type of uint64) to request `AccountAddressByID`.
 
 ### State Machine Breaking
 

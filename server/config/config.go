@@ -18,13 +18,13 @@ const (
 	defaultMinGasPrices = ""
 
 	// DefaultAPIAddress defines the default address to bind the API server to.
-	DefaultAPIAddress = "tcp://0.0.0.0:1317"
+	DefaultAPIAddress = "tcp://localhost:1317"
 
 	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
-	DefaultGRPCAddress = "0.0.0.0:9090"
+	DefaultGRPCAddress = "localhost:9090"
 
 	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
-	DefaultGRPCWebAddress = "0.0.0.0:9091"
+	DefaultGRPCWebAddress = "localhost:9091"
 
 	// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
 	// bytes the server can receive.

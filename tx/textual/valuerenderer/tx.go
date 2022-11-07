@@ -204,5 +204,7 @@ func getHash(bodyBz, authInfoBz []byte) string {
 
 // Parse implements the ValueRenderer interface.
 func (vr txValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
-	panic("TODO")
+	tx := &txv1beta1.Tx{}
+
+	return protoreflect.ValueOfMessage(tx.ProtoReflect()), nil
 }

@@ -15,7 +15,8 @@ sidebar_position: 1
 ## Usage
 
 `depinject` includes an expressive and composable [Configuration API](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/depinject#Config).
-A core configuration is `Provide`, for example this code snippet
+A core configuration function is `Provide`. The example below demonstrates the registration of free **provider functions** via the `Provide` API.
+
 
 ```go
 package main
@@ -47,7 +48,7 @@ func main() {
 }
 ```
 
-demonstrates the registration of free **provider functions** via the `Provide` API. Provider functions form the basis of the dependency tree, they are introspected then their inputs identified as dependencies and outputs as dependants, either for another provider function or state stored outside the DI container, as is the case of `&x` and `&y` above.
+Provider functions form the basis of the dependency tree, they are introspected then their inputs identified as dependencies and outputs as dependants, either for another provider function or state stored outside the DI container, as is the case of `&x` and `&y` above.
 
 ### Interface type resolution
 

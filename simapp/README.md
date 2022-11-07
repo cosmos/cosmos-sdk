@@ -51,3 +51,33 @@ Now you have a small testnet that you can use to try out changes to the Cosmos S
 NOTE: Sometimes creating the network through the `collect-gentxs` will fail, and validators will start
 in a funny state (and then panic). If this happens, you can try to create and start the network first
 with a single validator and then add additional validators using a `create-validator` transaction.
+
+## Using simd as a chain template
+
+This is mainly scripted, starting from the root of this repo. 
+
+If you want to use the 46 branch for example, do like:
+
+```bash
+git clone https://github.com/cosmos/cosmos-sdk --branch release/v0.46.x
+```
+
+instead, at the first line. 
+
+
+```bash
+git clone https://github.com/cosmos/cosmos-sdk
+cp -r cosmos-sdk/simapp testy
+cd testy
+## MANUAL ACTION NEEDED ## remove the line in go.mod that replaces the sdk with ../. ## 
+go get github.com/cosmos/cosmos-sdk@main
+go mod tidy -go=1.19
+go install ./...
+simd testnet start --enable-logging
+```
+
+At the time of this writing there is no compatible ibc-go implementation for cosmos-sdk `v0.47.x`.  The latest fully supported ibc-go implementation uses `v0.46.x` and   there is a compatible cosmwasm here:
+
+https://github.com/CosmWasm/wasmd/pull/938/
+
+Please note that the CW implementation for sdk v0.46.x is maintained on a best effort basis. 

@@ -168,7 +168,6 @@ func NewBaseApp(
 		option(app)
 	}
 
-	// if execution of options has left certain required fields nil, set them to sane default values
 	if app.mempool == nil {
 		app.SetMempool(mempool.NewNonceMempool())
 	}

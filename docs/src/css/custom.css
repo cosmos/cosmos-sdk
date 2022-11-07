@@ -426,7 +426,7 @@ html {
 
   /* MARKDOWN */
   .theme-code-block {
-    @apply font-jetbrain;
+    @apply font-jetbrain mt-3;
   }
 
   .markdown {
@@ -508,9 +508,6 @@ html {
       & > ul,
       & > ol {
         @apply my-5;
-      }
-      & > p + .theme-code-block {
-        @apply mt-3;
       }
     }
   }

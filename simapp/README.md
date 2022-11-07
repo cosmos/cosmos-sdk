@@ -76,7 +76,10 @@ go install ./...
 simd testnet start --enable-logging
 ```
 
-At the time of this writing there is no compatible ibc-go implementation for cosmos-sdk `v0.47.x`.  The latest fully supported ibc-go implementation uses `v0.46.x` and   there is a compatible cosmwasm here:
+At the time of this writing there's [work on ibc-go for v0.47.x here](https://github.com/cosmos/ibc-go/pull/2672).
+
+
+The latest fully supported ibc-go implementation uses `v0.46.x` and   there is a compatible cosmwasm here:
 
 https://github.com/CosmWasm/wasmd/pull/938/
 

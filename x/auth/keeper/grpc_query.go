@@ -28,8 +28,17 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 		return nil, status.Error(codes.InvalidArgument, "invalid account number")
 	}
 
+	var accId uint64
+	if req.AccountId > 0 && req.Id > 0 && req.AccountId != uint64(req.Id) {
+		return nil, status.Errorf(codes.InvalidArgument, "different values passed for id (%d) & account-id (%d)", req.Id, req.AccountId)
+	} else if req.AccountId > 0 {
+		accId = req.AccountId
+	} else if req.Id > 0 {
+		accId = uint64(req.Id)
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
-	address := ak.GetAccountAddressByID(ctx, uint64(req.GetId()))
+	address := ak.GetAccountAddressByID(ctx, accId)
 	if len(address) == 0 {
 		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
 	}

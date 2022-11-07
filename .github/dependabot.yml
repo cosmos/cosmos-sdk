@@ -100,3 +100,10 @@ updates:
     labels:
       - "A:automerge"
       - dependencies
+  - package-ecosystem: gomod
+    directory: "/tools/rosetta"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies

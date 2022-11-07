@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
+	"cosmossdk.io/tools/rosetta/lib/errors"
+	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
-	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
 )
 
 // AccountBalance retrieves the account balance of an address
@@ -19,7 +19,11 @@ func (on OnlineNetwork) AccountBalance(ctx context.Context, request *types.Accou
 
 	switch {
 	case request.BlockIdentifier == nil:
-		block, err = on.client.BlockByHeight(ctx, nil)
+		syncStatus, err := on.client.Status(ctx)
+		if err != nil {
+			return nil, errors.ToRosetta(err)
+		}
+		block, err = on.client.BlockByHeight(ctx, syncStatus.CurrentIndex)
 		if err != nil {
 			return nil, errors.ToRosetta(err)
 		}
@@ -152,17 +156,17 @@ func (on OnlineNetwork) NetworkOptions(_ context.Context, _ *types.NetworkReques
 }
 
 func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
-	block, err := on.client.BlockByHeight(ctx, nil)
+	syncStatus, err := on.client.Status(ctx)
+	if err != nil {
+		return nil, errors.ToRosetta(err)
+	}
+
+	block, err := on.client.BlockByHeight(ctx, syncStatus.CurrentIndex)
 	if err != nil {
 		return nil, errors.ToRosetta(err)
 	}
 
 	peers, err := on.client.Peers(ctx)
-	if err != nil {
-		return nil, errors.ToRosetta(err)
-	}
-
-	syncStatus, err := on.client.Status(ctx)
 	if err != nil {
 		return nil, errors.ToRosetta(err)
 	}

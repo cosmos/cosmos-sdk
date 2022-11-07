@@ -1,4 +1,4 @@
-package v046_test
+package v3_test
 
 import (
 	"math/rand"
@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	v1 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
 	v4 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v4"
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -38,7 +39,7 @@ func TestMigrateMapAccAddressToAccNumberKey(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := sdk.NewKVStoreKey(v4.ModuleName)
+	storeKey := sdk.NewKVStoreKey(v1.ModuleName)
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)

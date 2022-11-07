@@ -167,6 +167,7 @@ func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx sdk.Tx) error {
 			priority: oldScore.priority,
 			weight:   oldScore.weight,
 		})
+		mp.priorityCounts[oldScore.priority]--
 	}
 
 	mp.scores[sk] = txMeta{priority: priority}

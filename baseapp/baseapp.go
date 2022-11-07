@@ -416,10 +416,9 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	}
 }
 
-// setPrepareProposalState sets the BaseApp's deliverState with a branched multi-store
-// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
-// and provided header. It is set on InitChain and BeginBlock and set to nil on
-// Commit.
+// setPrepareProposalState sets the BaseApp's prepareProposalState with a
+// branched multi-store (i.e. a CacheMultiStore) and a new Context with the
+// same multi-store branch, and provided header. It is set on InitChain and Commit.
 func (app *BaseApp) setPrepareProposalState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.prepareProposalState = &state{
@@ -428,10 +427,9 @@ func (app *BaseApp) setPrepareProposalState(header tmproto.Header) {
 	}
 }
 
-// setProcessProposalState sets the BaseApp's deliverState with a branched multi-store
-// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
-// and provided header. It is set on InitChain and BeginBlock and set to nil on
-// Commit.
+// setProcessProposalState sets the BaseApp's processProposalState with a
+// branched multi-store (i.e. a CacheMultiStore) and a new Context with the
+// same multi-store branch, and provided header. It is set on InitChain and Commit.
 func (app *BaseApp) setProcessProposalState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.processProposalState = &state{

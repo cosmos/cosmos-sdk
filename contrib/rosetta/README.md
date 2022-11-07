@@ -17,7 +17,7 @@ Contains the required files to set up rosetta cli and make it work against its w
 
 ## Rosetta-ci
 
-Contains the files for a deterministic network, with fixed keys and some actions on there, to test parsing of msgs and historical balances.  This image is used to run a simapp node and to run the rosetta server.
+Contains the files for a deterministic network, with fixed keys and some actions on there, to test parsing of msgs and historical balances.  This image is used to run a simapp node and to run the rosetta server and the rosetta-cli.
 
 ## Rosetta-cli
 

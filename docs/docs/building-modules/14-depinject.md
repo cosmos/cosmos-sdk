@@ -24,7 +24,7 @@ In brief, as a module developer, the following steps are required:
 
 A chain developer can then use the module by following these two steps:
 
-1. Configure the module in `app_config.go`
+1. Configure the module in `app_config.go` or `app.yaml`
 2. Inject the module in `app.go`
 
 ## Module Configuration
@@ -46,11 +46,16 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/group/module/v1/modu
 
 That message is generated using [`pulsar`](https://github.com/cosmos/cosmos-sdk/blob/main/scripts/protocgen-pulsar.sh) (by running `make proto-gen`).
 In the case of the `group` module, this file is generated here: https://github.com/cosmos/cosmos-sdk/blob/main/api/cosmos/group/module/v1/module.pulsar.go.
+
 The part that is relevant for the module configuration is:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/0d8787c/api/cosmos/group/module/v1/module.pulsar.go#L514-L526
 ```
+
+:::note
+Pulsar is totally optional. The official [`protoc-gen-go`](https://developers.google.com/protocol-buffers/docs/reference/go-generated) can be used as well.
+:::
 
 ## Dependency Definition
 

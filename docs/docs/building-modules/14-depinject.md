@@ -15,7 +15,7 @@ sidebar_position: 1
 [`depinject`](../tooling/02-depinject.md) is used to wire any module in `app.go`.
 All core modules are already configured to support dependency injection.
 
-Modules, to work with `depinject`, must defines its configuration and its requirements so that `depinject` can provide the right dependencies.
+To work with `depinject` a module must define its configuration and requirements so that `depinject` can provide the right dependencies.
 
 In brief, as a module developer, the following steps are required:
 
@@ -36,9 +36,9 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/group/module/v1/modu
 ```
 
 * `go_import` must point to the Go package of the custom module.
-* Message fields defines the module configuration.
+* Message fields define the module configuration.
   That configuration can be set in the `app_config.go` / `app.yaml` file for a chain developer to configure the module.  
-  Taking `group` as example, a chain developer is able to decide, thanks to `uint64 max_metadata_len`, what is the maximum metatada length allowed for a group porposal.
+  Taking `group` as example, a chain developer is able to decide, thanks to `uint64 max_metadata_len`, what the maximum metatada length allowed for a group porposal is.
 
   ```go reference
     https://github.com/cosmos/cosmos-sdk/blob/0d8787c/simapp/app_config.go#L202-L206
@@ -117,4 +117,4 @@ The module is now ready to be used with `depinject` by a chain developer.
 
 ## App Wiring
 
-The App Wiring is done in `app_config.go` / `app.yaml` and `app.go` and is explained in details in the [overview of `app.go`](../building-apps/00-app-go.md).
+The App Wiring is done in `app_config.go` / `app.yaml` and `app.go` and is explained in detail in the [overview of `app.go`](../building-apps/00-app-go.md).

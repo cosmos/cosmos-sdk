@@ -23,7 +23,7 @@ message PubKey {
   // Then we have:
   // out == `"MQ=="`
   // out != `{"key":"MQ=="}`
-  option (amino.message_encoding) = "bytes_field";
+  option (amino.message_encoding) = "key_field";
   option (gogoproto.goproto_stringer)    = false;
 
   bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
@@ -33,7 +33,7 @@ message PubKey {
 // NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 message PrivKey {
   option (amino.name)             = "tendermint/PrivKeyEd25519";
-  option (amino.message_encoding) = "bytes_field";
+  option (amino.message_encoding) = "key_field";
 
   bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PrivateKey"];
 }

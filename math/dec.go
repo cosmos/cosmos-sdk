@@ -920,35 +920,8 @@ func FormatDec(v string) (string, error) {
 
 	// Ensure that the decimal part has only digits.
 	// https://github.com/cosmos/cosmos-sdk/issues/12811
-	if !hasOnlyDigits(decPart) {
+	if !HasOnlyDigits(decPart) {
 		return "", fmt.Errorf("non-digits detected after decimal point in: %q", decPart)
-	}
-
-	return intPart + "." + decPart, nil
-}
-
-func ParseDec(v string) (string, error) {
-	parts := strings.Split(v, ".")
-	if len(parts) > 2 {
-		return "", fmt.Errorf("invalid decimal: too many points in %s", v)
-	}
-
-	intPart, err := ParseInt(parts[0])
-	if err != nil {
-		return "", err
-	}
-
-	if len(parts) == 1 {
-		return intPart, nil
-	}
-
-	decPart := strings.TrimRight(parts[1], "0")
-	if len(decPart) == 0 {
-		return intPart, nil
-	}
-
-	if !hasOnlyDigits(decPart) {
-		return "", fmt.Errorf("non-digits detected after decimal point in: %q", parts[1])
 	}
 
 	return intPart + "." + decPart, nil

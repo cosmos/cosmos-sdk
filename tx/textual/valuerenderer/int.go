@@ -3,6 +3,7 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"cosmossdk.io/math"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -31,10 +32,29 @@ func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	parsedInt, err := math.ParseInt(screens[0].Text)
+	parsedInt, err := parseInt(screens[0].Text)
 	if err != nil {
 		return protoreflect.Value{}, err
 	}
 
 	return protoreflect.ValueOfString(parsedInt), nil
+}
+
+// parseInt formats an value-rendered string into an integer
+func parseInt(v string) (string, error) {
+	sign := ""
+	if v[0] == '-' {
+		sign = "-"
+		v = v[1:]
+	}
+
+	v = strings.TrimLeft(v, "0")
+	if v == "" {
+		return "0", nil
+	}
+
+	// remove the 1000 separators (ex: 1'000'000 -> 1000000)
+	v = strings.Replace(v, "'", "", -1)
+
+	return sign + v, nil
 }

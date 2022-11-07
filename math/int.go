@@ -434,7 +434,7 @@ func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
-func hasOnlyDigits(s string) bool {
+func HasOnlyDigits(s string) bool {
 	if s == "" {
 		return false
 	}
@@ -462,7 +462,7 @@ func FormatInt(v string) (string, error) {
 	}
 
 	// Ensure that the string contains only digits at this point.
-	if !hasOnlyDigits(v) {
+	if !HasOnlyDigits(v) {
 		return "", fmt.Errorf("expecting only digits 0-9, but got non-digits in %q", v)
 	}
 
@@ -471,30 +471,6 @@ func FormatInt(v string) (string, error) {
 		outputIndex -= 3
 		v = v[:outputIndex] + thousandSeparator + v[outputIndex:]
 	}
-
-	return sign + v, nil
-}
-
-// ParseInt formats an value-rendered string into an integer
-func ParseInt(v string) (string, error) {
-	sign := ""
-	if v[0] == '-' {
-		sign = "-"
-		v = v[1:]
-	}
-	if len(v) > 1 {
-		v = strings.TrimLeft(v, "0")
-	}
-	if v == "" {
-		return "0", nil
-	}
-
-	// remove the 1000 separators (ex: 1'000'000 -> 1000000)
-	v = strings.Replace(v, "'", "", -1)
-	// val, ok := NewIntFromString(sign + v)
-	// if !ok {
-	// return "", fmt.Errorf("error parsing integer %s", sign+v)
-	// }
 
 	return sign + v, nil
 }

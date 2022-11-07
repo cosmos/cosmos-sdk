@@ -10,6 +10,7 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	corecoins "cosmossdk.io/core/coins"
+	"cosmossdk.io/math"
 )
 
 // NewCoinsValueRenderer returns a ValueRenderer for SDK Coin and Coins.
@@ -85,40 +86,100 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 	coins := strings.Split(screens[0].Text, ", ")
 	metadatas := make([]*bankv1beta1.Metadata, len(coins))
 
-	if len(coins) > 1 {
-		var err error
-		for i, coin := range coins {
-			coinArr := strings.Split(coin, " ")
-			metadatas[i], err = vr.coinMetadataQuerier(ctx, coinArr[1])
-			if err != nil {
-				return protoreflect.Value{}, err
-			}
-		}
-
-		parsed, err := corecoins.ParseCoins(coins, metadatas)
-		if err != nil {
-			return protoreflect.Value{}, err
-		}
-
-		return protoreflect.ValueOf(NewGenericList(parsed)), err
-	} else {
-		coinArr := strings.Split(coins[0], " ")
+	var err error
+	for i, coin := range coins {
+		coinArr := strings.Split(coin, " ")
 		if len(coinArr) != 2 {
 			return protoreflect.Value{}, fmt.Errorf("invalid coin %s", coins)
 		}
-
-		denom := coinArr[1]
-		metadata, err := vr.coinMetadataQuerier(ctx, denom)
-
+		metadatas[i], err = vr.coinMetadataQuerier(ctx, coinArr[1])
 		if err != nil {
 			return protoreflect.Value{}, err
 		}
+	}
 
-		parsed, err := corecoins.ParseCoins(coins, []*bankv1beta1.Metadata{metadata})
-		if err != nil {
-			return protoreflect.Value{}, err
-		}
+	parsed, err := parseCoins(coins, metadatas)
+	if err != nil {
+		return protoreflect.Value{}, err
+	}
 
+	if len(parsed) > 1 {
+		return protoreflect.ValueOf(NewGenericList(parsed)), err
+	} else {
 		return protoreflect.ValueOfMessage(parsed[0].ProtoReflect()), err
 	}
+}
+
+func parseCoins(coins []string, metadata []*bankv1beta1.Metadata) ([]*basev1beta1.Coin, error) {
+	if len(coins) != len(metadata) {
+		return []*basev1beta1.Coin{}, fmt.Errorf("formatCoins expect one metadata for each coin; expected %d, got %d", len(coins), len(metadata))
+	}
+
+	parsedCoins := make([]*basev1beta1.Coin, len(coins))
+	for i, coinStr := range coins {
+		coin, err := parseCoin(coinStr, metadata[i])
+		if err != nil {
+			return []*basev1beta1.Coin{}, err
+		}
+		parsedCoins[i] = coin
+	}
+
+	return parsedCoins, nil
+}
+
+func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coin, error) {
+	coinArr := strings.Split(coinStr, " ")
+	amt1 := coinArr[0]
+	coinDenom := coinArr[1]
+
+	if metadata == nil || metadata.Base == "" || coinArr[1] == metadata.Base {
+		dec, err := parseDec(amt1)
+		return &basev1beta1.Coin{
+			Amount: dec,
+			Denom:  coinDenom,
+		}, err
+	}
+	baseDenom := metadata.Base
+
+	// Find exponents of both denoms.
+	foundCoinExp, foundBaseExp := false, false
+	var coinExp, baseExp uint32
+	for _, unit := range metadata.DenomUnits {
+		if coinDenom == unit.Denom {
+			coinExp = unit.Exponent
+			foundCoinExp = true
+		}
+		if baseDenom == unit.Denom {
+			baseExp = unit.Exponent
+			foundBaseExp = true
+		}
+	}
+
+	// If we didn't find either exponent, then we return early.
+	if !foundCoinExp || !foundBaseExp {
+		amt, err := parseDec(amt1)
+		return &basev1beta1.Coin{
+			Amount: amt,
+			Denom:  baseDenom,
+		}, err
+	}
+
+	// remove 1000 separators, (ex: 1'000'000 -> 1000000)
+	amt1 = strings.Replace(amt1, "'", "", -1)
+	amt, err := math.LegacyNewDecFromStr(amt1)
+	if err != nil {
+		return &basev1beta1.Coin{}, err
+	}
+
+	if coinExp > baseExp {
+		amt = amt.Mul(math.LegacyNewDec(10).Power(uint64(coinExp - baseExp)))
+	} else {
+		amt = amt.Quo(math.LegacyNewDec(10).Power(uint64(baseExp - coinExp)))
+	}
+
+	amtStr, err := parseDec(amt.String())
+	return &basev1beta1.Coin{
+		Amount: amtStr,
+		Denom:  baseDenom,
+	}, err
 }

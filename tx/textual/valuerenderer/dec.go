@@ -3,6 +3,7 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -32,10 +33,37 @@ func (vr decValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	parsed, err := math.ParseDec(screens[0].Text)
+	parsed, err := parseDec(screens[0].Text)
 	if err != nil {
 		return protoreflect.Value{}, err
 	}
 
 	return protoreflect.ValueOfString(parsed), nil
+}
+
+func parseDec(v string) (string, error) {
+	parts := strings.Split(v, ".")
+	if len(parts) > 2 {
+		return "", fmt.Errorf("invalid decimal: too many points in %s", v)
+	}
+
+	intPart, err := parseInt(parts[0])
+	if err != nil {
+		return "", err
+	}
+
+	if len(parts) == 1 {
+		return intPart, nil
+	}
+
+	decPart := strings.TrimRight(parts[1], "0")
+	if len(decPart) == 0 {
+		return intPart, nil
+	}
+
+	if !math.HasOnlyDigits(decPart) {
+		return "", fmt.Errorf("non-digits detected after decimal point in: %q", parts[1])
+	}
+
+	return intPart + "." + decPart, nil
 }

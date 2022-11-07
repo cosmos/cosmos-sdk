@@ -6,7 +6,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
-import "legacy_amino/amino.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
@@ -38,7 +38,7 @@ service Msg {
 // MsgSend represents a message to send coins from one account to another.
 message MsgSend {
   option (cosmos.msg.v1.signer) = "from_address";
-  option (legacy_amino.name)    = "cosmos-sdk/MsgSend";
+  option (amino.name)    = "cosmos-sdk/MsgSend";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -47,7 +47,7 @@ message MsgSend {
   string   to_address                      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)          = false,
-    (legacy_amino.dont_omitempty) = true,
+    (amino.dont_omitempty) = true,
     (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -58,14 +58,14 @@ message MsgSendResponse {}
 // MsgMultiSend represents an arbitrary multi-in, multi-out send message.
 message MsgMultiSend {
   option (cosmos.msg.v1.signer) = "inputs";
-  option (legacy_amino.name)    = "cosmos-sdk/MsgMultiSend";
+  option (amino.name)    = "cosmos-sdk/MsgMultiSend";
 
   option (gogoproto.equal) = false;
 
   // Inputs, despite being `repeated`, only allows one sender input. This is
   // checked in MsgMultiSend's ValidateBasic.
-  repeated Input  inputs  = 1 [(gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true];
-  repeated Output outputs = 2 [(gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true];
+  repeated Input  inputs  = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated Output outputs = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgMultiSendResponse defines the Msg/MultiSend response type.
@@ -79,12 +79,12 @@ message MsgUpdateParams {
 
   // authority is the address of the governance account.
   string authority           = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  option (legacy_amino.name) = "cosmos-sdk/x/bank/MsgUpdateParams";
+  option (amino.name) = "cosmos-sdk/x/bank/MsgUpdateParams";
 
   // params defines the x/bank parameters to update.
   //
   // NOTE: All parameters must be supplied.
-  Params params = 2 [(gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true];
+  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a
@@ -102,7 +102,7 @@ message MsgUpdateParamsResponse {}
 // Since: cosmos-sdk 0.47
 message MsgSetSendEnabled {
   option (cosmos.msg.v1.signer) = "authority";
-  option (legacy_amino.name)    = "cosmos-sdk/MsgSetSendEnabled";
+  option (amino.name)    = "cosmos-sdk/MsgSetSendEnabled";
 
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 

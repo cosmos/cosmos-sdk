@@ -1,12 +1,12 @@
 syntax = "proto3";
 
-package legacy_amino;
+package amino;
 
 import "google/protobuf/descriptor.proto";
 
 // TODO(fdymylja): once we fully migrate to protov2 the go_package needs to be updated.
 // We need this right now because gogoproto codegen needs to import the extension.
-option go_package = "github.com/cosmos/cosmos-sdk/types/tx/legacy_amino";
+option go_package = "github.com/cosmos/cosmos-sdk/types/tx/amino";
 
 extend google.protobuf.MessageOptions {
   // name is the string used when registering a concrete
@@ -50,7 +50,7 @@ extend google.protobuf.FieldOptions {
   // Example:
   //
   // message Foo {
-  //   string bar = 1 [(legacy_amino.field_name) = "baz"];
+  //   string bar = 1 [(amino.field_name) = "baz"];
   // }
   //
   // Then the Amino encoding of Foo will be:
@@ -69,7 +69,7 @@ extend google.protobuf.FieldOptions {
   //
   // message Foo {
   //   string bar = 1;
-  //   string baz = 2 [(legacy_amino.dont_omitempty) = true];
+  //   string baz = 2 [(amino.dont_omitempty) = true];
   // }
   //
   // f := Foo{};

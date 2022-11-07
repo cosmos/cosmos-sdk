@@ -5,13 +5,13 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
-import "legacy_amino/amino.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // Params defines the parameters for the bank module.
 message Params {
-  option (legacy_amino.name)          = "cosmos-sdk/x/bank/Params";
+  option (amino.name)          = "cosmos-sdk/x/bank/Params";
   option (gogoproto.goproto_stringer) = false;
   // Deprecated: Use of SendEnabled in params is deprecated.
   // For genesis, use the newly added send_enabled field in the genesis object.
@@ -41,7 +41,7 @@ message Input {
   string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin coins = 2 [
     (gogoproto.nullable)          = false,
-    (legacy_amino.dont_omitempty) = true,
+    (amino.dont_omitempty) = true,
     (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -54,7 +54,7 @@ message Output {
   string   address                        = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin coins = 2 [
     (gogoproto.nullable)          = false,
-    (legacy_amino.dont_omitempty) = true,
+    (amino.dont_omitempty) = true,
     (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -72,7 +72,7 @@ message Supply {
 
   repeated cosmos.base.v1beta1.Coin total = 1 [
     (gogoproto.nullable)          = false,
-    (legacy_amino.dont_omitempty) = true,
+    (amino.dont_omitempty) = true,
     (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

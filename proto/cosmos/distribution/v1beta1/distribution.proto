@@ -7,11 +7,11 @@ option (gogoproto.equal_all) = true;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
-import "legacy_amino/amino.proto";
+import "amino/amino.proto";
 
 // Params defines the set of params for the distribution module.
 message Params {
-  option (legacy_amino.name)          = "cosmos-sdk/x/distribution/Params";
+  option (amino.name)          = "cosmos-sdk/x/distribution/Params";
   option (gogoproto.goproto_stringer) = false;
 
   string community_tax = 1 [
@@ -54,7 +54,7 @@ message ValidatorHistoricalRewards {
   repeated cosmos.base.v1beta1.DecCoin cumulative_reward_ratio = 1 [
     (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)          = false,
-    (legacy_amino.dont_omitempty) = true
+    (amino.dont_omitempty) = true
   ];
   uint32 reference_count = 2;
 }
@@ -66,7 +66,7 @@ message ValidatorCurrentRewards {
   repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
     (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)          = false,
-    (legacy_amino.dont_omitempty) = true
+    (amino.dont_omitempty) = true
   ];
   uint64 period = 2;
 }
@@ -77,7 +77,7 @@ message ValidatorAccumulatedCommission {
   repeated cosmos.base.v1beta1.DecCoin commission = 1 [
     (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)          = false,
-    (legacy_amino.dont_omitempty) = true
+    (amino.dont_omitempty) = true
   ];
 }
 
@@ -87,7 +87,7 @@ message ValidatorOutstandingRewards {
   repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
     (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)          = false,
-    (legacy_amino.dont_omitempty) = true
+    (amino.dont_omitempty) = true
   ];
 }
 
@@ -108,14 +108,14 @@ message ValidatorSlashEvent {
 message ValidatorSlashEvents {
   option (gogoproto.goproto_stringer)                 = false;
   repeated ValidatorSlashEvent validator_slash_events = 1
-      [(gogoproto.nullable) = false, (legacy_amino.dont_omitempty) = true];
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // FeePool is the global fee pool for distribution.
 message FeePool {
   repeated cosmos.base.v1beta1.DecCoin community_pool = 1 [
     (gogoproto.nullable)          = false,
-    (legacy_amino.dont_omitempty) = true,
+    (amino.dont_omitempty) = true,
     (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.DecCoins"
   ];
 }
@@ -140,7 +140,7 @@ message CommunityPoolSpendProposal {
   string   recipient                       = 3;
   repeated cosmos.base.v1beta1.Coin amount = 4 [
     (gogoproto.nullable)          = false,
-    (legacy_amino.dont_omitempty) = true,
+    (amino.dont_omitempty) = true,
     (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -160,8 +160,8 @@ message DelegatorStartingInfo {
   ];
   uint64 height = 3 [
     (gogoproto.jsontag)           = "creation_height",
-    (legacy_amino.field_name)     = "creation_height",
-    (legacy_amino.dont_omitempty) = true
+    (amino.field_name)     = "creation_height",
+    (amino.dont_omitempty) = true
   ];
 }
 
@@ -176,7 +176,7 @@ message DelegationDelegatorReward {
   repeated cosmos.base.v1beta1.DecCoin reward = 2 [
     (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)          = false,
-    (legacy_amino.dont_omitempty) = true
+    (amino.dont_omitempty) = true
   ];
 }
 

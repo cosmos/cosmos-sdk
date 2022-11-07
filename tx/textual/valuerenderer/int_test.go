@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -68,5 +69,5 @@ func checkNumberTest(t *testing.T, r valuerenderer.ValueRenderer, pv protoreflec
 	require.Equal(t, expected, screens[0].Text)
 	value, err := r.Parse(context.Background(), screens)
 	require.NoError(t, err)
-	require.Equal(t, value, pv)
+	require.Equal(t, strings.Replace(screens[0].Text, "'", "", -1), value.String())
 }

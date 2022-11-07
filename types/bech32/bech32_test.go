@@ -26,7 +26,7 @@ func TestEncodeAndDecode(t *testing.T) {
 
 func FuzzDecodeAndConvert(f *testing.F) {
 	if testing.Short() {
-		t.Skip()
+		f.Skip()
 	}
 	f.Add("shasum149yfqne0parehrupja55kvqcfvxja5wpe54pas8mshffngvj53rs93fk75")
 	f.Add("bech321er8m900ayvv9rg5r6ush4nzvqhj4p9tqnxqkxaaxrs4ueuvhurcs4x3j4j")

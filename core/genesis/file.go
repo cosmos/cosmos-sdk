@@ -13,7 +13,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var _ GenesisSource = &FileGenesisSource{}
 
 type FileGenesisSource struct {
 	sourceDir  string

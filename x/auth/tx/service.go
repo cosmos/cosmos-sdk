@@ -252,6 +252,22 @@ func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxReque
 	return client.TxServiceBroadcast(ctx, s.clientCtx, req)
 }
 
+func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
+	if req.TxBytes == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
+	}
+
+	txb, err := s.clientCtx.TxConfig.TxDecoder()(req.TxBytes)
+	if err != nil {
+		return nil, err
+	}
+	resp := txb.(*txtypes.Tx)
+
+	return &txtypes.TxDecodeResponse{
+		Tx: resp,
+	}, nil
+}
+
 // RegisterTxService registers the tx service on the gRPC router.
 func RegisterTxService(
 	qrt gogogrpc.Server,

@@ -40,6 +40,18 @@ service Service {
   rpc GetBlockWithTxs(GetBlockWithTxsRequest) returns (GetBlockWithTxsResponse) {
     option (google.api.http).get = "/cosmos/tx/v1beta1/txs/block/{height}";
   }
+  rpc TxDecode(TxDecodeRequest) returns (TxDecodeResponse) {
+    option (google.api.http) = {
+      post: "/cosmos/tx/v1beta1/txs/decode"
+      body: "*"
+    };
+  }
+  // rpc TxEncode(TxEncodeRequest) returns (TxEncodeResponse) {
+  //   option (google.api.http) = {
+  //     post: "/cosmos/tx/v1beta1/txs/encode"
+  //     body: "*"
+  //   };
+  // }
 }
 
 // GetTxsEventRequest is the request type for the Service.TxsByEvents
@@ -170,4 +182,12 @@ message GetBlockWithTxsResponse {
   .tendermint.types.Block       block    = 3;
   // pagination defines a pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 4;
+}
+
+message TxDecodeRequest {
+  bytes tx_bytes = 1;
+}
+
+message TxDecodeResponse {
+  cosmos.tx.v1beta1.Tx tx = 1;
 }

@@ -20,7 +20,7 @@ is typically found in `RegisterAPIRoutes`.
 
 The `AppModule` interface is being refactored into `cosmossdk.io/core` and is now fully composed of extension interfaces
 based off of the `cosmossdk.io/core/appmodule.AppModule` tag interface. All `AppModule` implementations must now implement
-this tag interface which very simply of the following code:
+this tag interface which consists of the following code:
 
 ```go
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.

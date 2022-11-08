@@ -62,7 +62,7 @@ type AppModuleBasic interface {
 
 // HasName allows the module to provide its own name for legacy purposes.
 // Newer apps should specify the name for their modules using a map
-// (see NewManagerFromMap).
+// using NewManagerFromMap.
 type HasName interface {
 	Name() string
 }
@@ -168,7 +168,7 @@ type LegacyGenesis interface {
 
 // Deprecated: AppModule is the legacy form for an application module. Most of
 // its functionality has been moved to extension interfaces based off of
-// appmodule.AppModule.
+// cosmossdk.io/core/appmodule.AppModule.
 type AppModule interface {
 	appmodule.AppModule
 
@@ -276,7 +276,7 @@ func NewManager(modules ...AppModule) *Manager {
 	}
 }
 
-// NewManagerFromMap creates a new Manager object from a map of modules. It
+// NewManagerFromMap creates a new Manager object from a map of module names to module implementations. It
 // should be used instead of NewManager for new apps.
 func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	modulesStr := make([]string, 0, len(moduleMap))

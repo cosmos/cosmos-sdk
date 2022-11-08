@@ -14,6 +14,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -28,6 +29,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
+
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -93,6 +95,14 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 		keeper:         keeper,
 	}
 }
+
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
 
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
@@ -167,7 +177,7 @@ type UpgradeOutputs struct {
 	depinject.Out
 
 	UpgradeKeeper keeper.Keeper
-	Module        runtime.AppModuleWrapper
+	Module        appmodule.AppModule
 	GovHandler    govv1beta1.HandlerRoute
 }
 
@@ -196,5 +206,5 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	m := NewAppModule(k)
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
-	return UpgradeOutputs{UpgradeKeeper: k, Module: runtime.WrapAppModule(m), GovHandler: gh}
+	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh}
 }

@@ -128,6 +128,14 @@ func NewAppModule(
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // Name returns the staking module's name.
 func (AppModule) Name() string {
 	return types.ModuleName
@@ -215,7 +223,7 @@ type StakingOutputs struct {
 	depinject.Out
 
 	StakingKeeper *keeper.Keeper
-	Module        runtime.AppModuleWrapper
+	Module        appmodule.AppModule
 }
 
 func ProvideModule(in StakingInputs) StakingOutputs {
@@ -233,7 +241,7 @@ func ProvideModule(in StakingInputs) StakingOutputs {
 		authority.String(),
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
-	return StakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
+	return StakingOutputs{StakingKeeper: k, Module: m}
 }
 
 func InvokeSetStakingHooks(

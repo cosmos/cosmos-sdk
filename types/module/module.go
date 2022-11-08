@@ -33,6 +33,7 @@ import (
 	"fmt"
 	"sort"
 
+	"cosmossdk.io/core/appmodule"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -47,17 +48,25 @@ import (
 
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
 type AppModuleBasic interface {
-	Name() string
+	HasName
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(codectypes.InterfaceRegistry)
 
-	DefaultGenesis(codec.JSONCodec) json.RawMessage
-	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
+	HasGenesisBasics
 
 	// client functionality
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 	GetTxCmd() *cobra.Command
 	GetQueryCmd() *cobra.Command
+}
+
+type HasName interface {
+	Name() string
+}
+
+type HasGenesisBasics interface {
+	DefaultGenesis(codec.JSONCodec) json.RawMessage
+	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
 }
 
 // BasicManager is a collection of AppModuleBasic
@@ -143,21 +152,38 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 // AppModuleGenesis is the standard form for an application module genesis functions
 type AppModuleGenesis interface {
 	AppModuleBasic
+	HasGenesis
+}
 
+type HasGenesis interface {
+	HasGenesisBasics
 	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
 }
 
-// AppModule is the standard form for an application module
+// Deprecated: AppModule is the legacy form for an application module. Most of
+// its functionality has been moved to extension interfaces based off of
+// appmodule.AppModule.
 type AppModule interface {
-	AppModuleGenesis
+	appmodule.AppModule
 
+	// HasName allows the module to provide its own name for legacy purposes.
+	// Newer apps should specify the name for their modules using a map
+	// (see NewManagerFromMap).
+	HasName
+}
+
+type HasRegisterInvariants interface {
 	// registers
 	RegisterInvariants(sdk.InvariantRegistry)
+}
 
+type HasRegisterServices interface {
 	// RegisterServices allows a module to register services
 	RegisterServices(Configurator)
+}
 
+type HasConsensusVersion interface {
 	// ConsensusVersion is a sequence number for state-breaking change of the
 	// module. It should be incremented on each consensus-breaking change
 	// introduced by the module. To avoid wrong/empty versions, the initial version
@@ -189,6 +215,12 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
 	}
 }
 
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (GenesisOnlyAppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (GenesisOnlyAppModule) IsAppModule() {}
+
 // RegisterInvariants is a placeholder function register no invariants
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
@@ -212,7 +244,7 @@ func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []ab
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
 type Manager struct {
-	Modules            map[string]AppModule
+	Modules            map[string]appmodule.AppModule
 	OrderInitGenesis   []string
 	OrderExportGenesis []string
 	OrderBeginBlockers []string
@@ -220,13 +252,29 @@ type Manager struct {
 	OrderMigrations    []string
 }
 
-// NewManager creates a new Manager object
+// Deprecated: NewManager creates a new Manager object
 func NewManager(modules ...AppModule) *Manager {
-	moduleMap := make(map[string]AppModule)
+	moduleMap := make(map[string]appmodule.AppModule)
 	modulesStr := make([]string, 0, len(modules))
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
 		modulesStr = append(modulesStr, module.Name())
+	}
+
+	return &Manager{
+		Modules:            moduleMap,
+		OrderInitGenesis:   modulesStr,
+		OrderExportGenesis: modulesStr,
+		OrderBeginBlockers: modulesStr,
+		OrderEndBlockers:   modulesStr,
+	}
+}
+
+// NewManager creates a new Manager object
+func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
+	modulesStr := make([]string, 0, len(moduleMap))
+	for name := range moduleMap {
+		modulesStr = append(modulesStr, name)
 	}
 
 	return &Manager{
@@ -273,7 +321,9 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 	modules := maps.Values(m.Modules)
 	for _, module := range modules {
-		module.RegisterInvariants(ir)
+		if module, ok := module.(HasRegisterInvariants); ok {
+			module.RegisterInvariants(ir)
+		}
 	}
 }
 
@@ -281,7 +331,9 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 func (m *Manager) RegisterServices(cfg Configurator) {
 	modules := maps.Values(m.Modules)
 	for _, module := range modules {
-		module.RegisterServices(cfg)
+		if module, ok := module.(HasRegisterServices); ok {
+			module.RegisterServices(cfg)
+		}
 	}
 }
 
@@ -295,17 +347,20 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 		if genesisData[moduleName] == nil {
 			continue
 		}
-		ctx.Logger().Debug("running initialization for module", "module", moduleName)
 
-		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, cdc, genesisData[moduleName])
+		if module, ok := m.Modules[moduleName].(HasGenesis); ok {
+			ctx.Logger().Debug("running initialization for module", "module", moduleName)
 
-		// use these validator updates if provided, the module manager assumes
-		// only one module will update the validator set
-		if len(moduleValUpdates) > 0 {
-			if len(validatorUpdates) > 0 {
-				panic("validator InitGenesis updates already set by a previous module")
+			moduleValUpdates := module.InitGenesis(ctx, cdc, genesisData[moduleName])
+
+			// use these validator updates if provided, the module manager assumes
+			// only one module will update the validator set
+			if len(moduleValUpdates) > 0 {
+				if len(validatorUpdates) > 0 {
+					panic("validator InitGenesis updates already set by a previous module")
+				}
+				validatorUpdates = moduleValUpdates
 			}
-			validatorUpdates = moduleValUpdates
 		}
 	}
 
@@ -329,7 +384,9 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	genesisData := make(map[string]json.RawMessage)
 	if len(modulesToExport) == 0 {
 		for _, moduleName := range m.OrderExportGenesis {
-			genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
+			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
+				genesisData[moduleName] = module.ExportGenesis(ctx, cdc)
+			}
 		}
 
 		return genesisData
@@ -341,7 +398,9 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	}
 
 	for _, moduleName := range modulesToExport {
-		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
+		if module, ok := m.Modules[moduleName].(HasGenesis); ok {
+			genesisData[moduleName] = module.ExportGenesis(ctx, cdc)
+		}
 	}
 
 	return genesisData
@@ -450,7 +509,10 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 	for _, moduleName := range modules {
 		module := m.Modules[moduleName]
 		fromVersion, exists := fromVM[moduleName]
-		toVersion := module.ConsensusVersion()
+		toVersion := uint64(0)
+		if module, ok := module.(HasConsensusVersion); ok {
+			toVersion = module.ConsensusVersion()
+		}
 
 		// We run migration if the module is specified in `fromVM`.
 		// Otherwise we run InitGenesis.
@@ -467,11 +529,13 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 			}
 		} else {
 			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
-			// The module manager assumes only one module will update the
-			// validator set, and it can't be a new module.
-			if len(moduleValUpdates) > 0 {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "validator InitGenesis update is already set by another module")
+			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
+				moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
+				// The module manager assumes only one module will update the
+				// validator set, and it can't be a new module.
+				if len(moduleValUpdates) > 0 {
+					return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "validator InitGenesis update is already set by another module")
+				}
 			}
 		}
 
@@ -533,9 +597,12 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 // GetVersionMap gets consensus version from all modules
 func (m *Manager) GetVersionMap() VersionMap {
 	vermap := make(VersionMap)
-	for _, v := range m.Modules {
-		version := v.ConsensusVersion()
-		name := v.Name()
+	for name, v := range m.Modules {
+		version := uint64(0)
+		if v, ok := v.(HasConsensusVersion); ok {
+			version = v.ConsensusVersion()
+		}
+		name := name
 		vermap[name] = version
 	}
 

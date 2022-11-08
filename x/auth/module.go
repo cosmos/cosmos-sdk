@@ -230,8 +230,7 @@ type AuthOutputs struct {
 	depinject.Out
 
 	AccountKeeper keeper.AccountKeeper
-	Module        runtime.AppModuleWrapper
-	NewAppModule  appmodule.AppModule
+	Module        appmodule.AppModule
 }
 
 func ProvideModule(in AuthInputs) AuthOutputs {
@@ -257,5 +256,5 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 	k := keeper.NewAccountKeeper(in.Cdc, in.Key, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
-	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m), NewAppModule: m}
+	return AuthOutputs{AccountKeeper: k, Module: m}
 }

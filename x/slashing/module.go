@@ -120,6 +120,14 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper,
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // Name returns the slashing module's name.
 func (AppModule) Name() string {
 	return types.ModuleName
@@ -230,7 +238,7 @@ type SlashingOutputs struct {
 	depinject.Out
 
 	Keeper keeper.Keeper
-	Module runtime.AppModuleWrapper
+	Module appmodule.AppModule
 	Hooks  staking.StakingHooksWrapper
 }
 
@@ -245,7 +253,7 @@ func ProvideModule(in SlashingInputs) SlashingOutputs {
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
 	return SlashingOutputs{
 		Keeper: k,
-		Module: runtime.WrapAppModule(m),
+		Module: m,
 		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
 	}
 }

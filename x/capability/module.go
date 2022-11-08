@@ -104,6 +104,14 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sealKeeper bool) AppMod
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // Name returns the capability module's name.
 func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
@@ -200,7 +208,7 @@ type CapabilityOutputs struct {
 	depinject.Out
 
 	CapabilityKeeper *keeper.Keeper
-	Module           runtime.AppModuleWrapper
+	Module           appmodule.AppModule
 }
 
 func ProvideModule(in CapabilityInputs) CapabilityOutputs {
@@ -209,6 +217,6 @@ func ProvideModule(in CapabilityInputs) CapabilityOutputs {
 
 	return CapabilityOutputs{
 		CapabilityKeeper: k,
-		Module:           runtime.WrapAppModule(m),
+		Module:           m,
 	}
 }

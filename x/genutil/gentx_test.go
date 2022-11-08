@@ -17,7 +17,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -181,7 +180,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 			cdc := suite.encodingConfig.Codec
 
 			suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
-			stakingGenesisState := staking.ExportGenesis(suite.ctx, suite.app.StakingKeeper)
+			stakingGenesisState := suite.app.StakingKeeper.ExportGenesis(suite.ctx)
 			suite.Require().Equal(stakingGenesisState.Params, stakingtypes.DefaultParams())
 			stakingGenesis, err := cdc.MarshalJSON(stakingGenesisState) // TODO switch this to use Marshaler
 			suite.Require().NoError(err)

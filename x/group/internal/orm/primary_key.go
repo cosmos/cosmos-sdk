@@ -33,9 +33,9 @@ type PrimaryKeyed interface {
 	// the primary key. The PrimaryKey function will encode and concatenate
 	// the fields to build the primary key.
 	//
-	// PrimaryKey parts can be []byte, string, and integer types. []byte is
+	// PrimaryKey parts can be []byte, string, and uint64 types. []byte is
 	// encoded with a length prefix, strings are null-terminated, and
-	// integers are encoded using 8 byte big endian.
+	// uint64 are encoded using 8 byte big endian.
 	//
 	// IMPORTANT: []byte parts are encoded with a single byte length prefix,
 	// so cannot be longer than 255 bytes.

@@ -166,7 +166,7 @@ func (coin Coin) IsNegative() bool {
 
 // IsNil returns true if the coin amount is nil and false otherwise.
 func (coin Coin) IsNil() bool {
-	return coin.Amount.i == nil
+	return coin.Amount.BigInt() == nil
 }
 
 //-----------------------------------------------------------------------------
@@ -408,6 +408,71 @@ func (coins Coins) Sub(coinsB ...Coin) Coins {
 func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
 	diff := coins.safeAdd(NewCoins(coinsB...).negative())
 	return diff, diff.IsAnyNegative()
+}
+
+// MulInt performs the scalar multiplication of coins with a `multiplier`
+// All coins are multipled by x
+// e.g.
+// {2A, 3B} * 2 = {4A, 6B}
+// {2A} * 0 panics
+// Note, if IsValid was true on Coins, IsValid stays true.
+func (coins Coins) MulInt(x Int) Coins {
+	coins, ok := coins.SafeMulInt(x)
+	if !ok {
+		panic("multiplying by zero is an invalid operation on coins")
+	}
+
+	return coins
+}
+
+// SafeMulInt performs the same arithmetic as MulInt but returns false
+// if the `multiplier` is zero because it makes IsValid return false.
+func (coins Coins) SafeMulInt(x Int) (Coins, bool) {
+	if x.IsZero() {
+		return nil, false
+	}
+
+	res := make(Coins, len(coins))
+	for i, coin := range coins {
+		coin := coin
+		res[i] = NewCoin(coin.Denom, coin.Amount.Mul(x))
+	}
+
+	return res, true
+}
+
+// QuoInt performs the scalar division of coins with a `divisor`
+// All coins are divided by x and trucated.
+// e.g.
+// {2A, 30B} / 2 = {1A, 15B}
+// {2A} / 2 = {1A}
+// {4A} / {8A} = {0A}
+// {2A} / 0 = panics
+// Note, if IsValid was true on Coins, IsValid stays true,
+// unless the `divisor` is greater than the smallest coin amount.
+func (coins Coins) QuoInt(x Int) Coins {
+	coins, ok := coins.SafeQuoInt(x)
+	if !ok {
+		panic("dividing by zero is an invalid operation on coins")
+	}
+
+	return coins
+}
+
+// SafeQuoInt performs the same arithmetic as QuoInt but returns an error
+// if the division cannot be done.
+func (coins Coins) SafeQuoInt(x Int) (Coins, bool) {
+	if x.IsZero() {
+		return nil, false
+	}
+
+	var res Coins
+	for _, coin := range coins {
+		coin := coin
+		res = append(res, NewCoin(coin.Denom, coin.Amount.Quo(x)))
+	}
+
+	return res, true
 }
 
 // Max takes two valid Coins inputs and returns a valid Coins result

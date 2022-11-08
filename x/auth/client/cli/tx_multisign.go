@@ -32,8 +32,9 @@ type BroadcastReq struct {
 // GetSignCommand returns the sign command
 func GetMultiSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "multisign [file] [name] [[signature]...]",
-		Short: "Generate multisig signatures for transactions generated offline",
+		Use:     "multi-sign [file] [name] [[signature]...]",
+		Aliases: []string{"multisign"},
+		Short:   "Generate multisig signatures for transactions generated offline",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Sign transactions created with the --generate-only flag that require multisig signatures.
 

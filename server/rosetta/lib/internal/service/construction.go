@@ -4,7 +4,10 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"strconv"
 	"strings"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -69,9 +72,43 @@ func (on OnlineNetwork) ConstructionMetadata(ctx context.Context, request *types
 		return nil, errors.ToRosetta(err)
 	}
 
-	return &types.ConstructionMetadataResponse{
+	response := &types.ConstructionMetadataResponse{
 		Metadata: metadata,
-	}, nil
+	}
+
+	if metadata["gas_price"] != nil && metadata["gas_limit"] != nil {
+		gasPrice, ok := metadata["gas_price"].(string)
+		if !ok {
+			return nil, errors.ToRosetta(errors.WrapError(errors.ErrBadArgument, "invalid gas_price"))
+		}
+		if gasPrice == "" { // gas_price is unset. skip fee suggestion
+			return response, nil
+		}
+		price, err := sdk.ParseDecCoin(gasPrice)
+		if err != nil {
+			return nil, errors.ToRosetta(err)
+		}
+
+		gasLimit, ok := metadata["gas_limit"].(float64)
+		if !ok {
+			return nil, errors.ToRosetta(errors.WrapError(errors.ErrBadArgument, "invalid gas_limit"))
+		}
+		if gasLimit == 0 { // gas_limit is unset. skip fee suggestion
+			return response, nil
+		}
+		gas := sdk.NewIntFromUint64(uint64(gasLimit))
+
+		suggestedFee := types.Amount{
+			Value: strconv.FormatInt(price.Amount.MulInt64(gas.Int64()).Ceil().TruncateInt64(), 10),
+			Currency: &(types.Currency{
+				Symbol:   price.Denom,
+				Decimals: 0,
+			}),
+		}
+		response.SuggestedFee = []*types.Amount{&suggestedFee}
+	}
+
+	return response, nil
 }
 
 // ConstructionParse Parse is called on both unsigned and signed transactions to understand the

@@ -52,7 +52,7 @@ type AppModuleBasic interface {
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(codectypes.InterfaceRegistry)
 
-	HasGenesisBasics
+	LegacyGenesisBasics
 
 	// client functionality
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
@@ -67,7 +67,8 @@ type HasName interface {
 	Name() string
 }
 
-type HasGenesisBasics interface {
+// LegacyGenesisBasics is the legacy interface for stateless genesis methods.
+type LegacyGenesisBasics interface {
 	DefaultGenesis(codec.JSONCodec) json.RawMessage
 	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
 }
@@ -155,11 +156,12 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 // AppModuleGenesis is the standard form for an application module genesis functions
 type AppModuleGenesis interface {
 	AppModuleBasic
-	HasGenesis
+	LegacyGenesis
 }
 
-type HasGenesis interface {
-	HasGenesisBasics
+// LegacyGenesis is the legacy interface for stateful genesis methods.
+type LegacyGenesis interface {
+	LegacyGenesisBasics
 	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
 }
@@ -173,16 +175,19 @@ type AppModule interface {
 	AppModuleBasic
 }
 
+// HasRegisterInvariants is the interface for registering invariants.
 type HasRegisterInvariants interface {
-	// registers
+	// RegisterInvariants registers module invariants.
 	RegisterInvariants(sdk.InvariantRegistry)
 }
 
-type HasRegisterServices interface {
-	// RegisterServices allows a module to register services
+// LegacyRegisterServices is the legacy method for modules to register services.
+type LegacyRegisterServices interface {
+	// RegisterServices allows a module to register services.
 	RegisterServices(Configurator)
 }
 
+// HasConsensusVersion is the interface for declaring a module consensus version.
 type HasConsensusVersion interface {
 	// ConsensusVersion is a sequence number for state-breaking change of the
 	// module. It should be incremented on each consensus-breaking change
@@ -252,7 +257,8 @@ type Manager struct {
 	OrderMigrations    []string
 }
 
-// Deprecated: NewManager creates a new Manager object
+// Deprecated: NewManager creates a new Manager object. NewManagerFromMap should
+// be preferred.
 func NewManager(modules ...AppModule) *Manager {
 	moduleMap := make(map[string]appmodule.AppModule)
 	modulesStr := make([]string, 0, len(modules))
@@ -270,7 +276,8 @@ func NewManager(modules ...AppModule) *Manager {
 	}
 }
 
-// NewManager creates a new Manager object
+// NewManagerFromMap creates a new Manager object from a map of modules. It
+// should be used instead of NewManager for new apps.
 func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	modulesStr := make([]string, 0, len(moduleMap))
 	for name := range moduleMap {
@@ -331,7 +338,7 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 func (m *Manager) RegisterServices(cfg Configurator) {
 	modules := maps.Values(m.Modules)
 	for _, module := range modules {
-		if module, ok := module.(HasRegisterServices); ok {
+		if module, ok := module.(LegacyRegisterServices); ok {
 			module.RegisterServices(cfg)
 		}
 	}
@@ -348,7 +355,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			continue
 		}
 
-		if module, ok := m.Modules[moduleName].(HasGenesis); ok {
+		if module, ok := m.Modules[moduleName].(LegacyGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
 
 			moduleValUpdates := module.InitGenesis(ctx, cdc, genesisData[moduleName])
@@ -384,7 +391,7 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	genesisData := make(map[string]json.RawMessage)
 	if len(modulesToExport) == 0 {
 		for _, moduleName := range m.OrderExportGenesis {
-			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
+			if module, ok := m.Modules[moduleName].(LegacyGenesis); ok {
 				genesisData[moduleName] = module.ExportGenesis(ctx, cdc)
 			}
 		}
@@ -398,7 +405,7 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	}
 
 	for _, moduleName := range modulesToExport {
-		if module, ok := m.Modules[moduleName].(HasGenesis); ok {
+		if module, ok := m.Modules[moduleName].(LegacyGenesis); ok {
 			genesisData[moduleName] = module.ExportGenesis(ctx, cdc)
 		}
 	}
@@ -529,7 +536,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 			}
 		} else {
 			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
+			if module, ok := m.Modules[moduleName].(LegacyGenesis); ok {
 				moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
 				// The module manager assumes only one module will update the
 				// validator set, and it can't be a new module.

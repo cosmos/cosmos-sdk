@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -30,7 +31,7 @@ func printKeyringRecord(w io.Writer, k *cryptokeyring.Record, bechKeyOut bechKey
 		}
 
 	case OutputFormatJSON:
-		out, err := KeysCdc.MarshalJSON(ko)
+		out, err := json.Marshal(ko)
 		if err != nil {
 			return err
 		}
@@ -57,8 +58,7 @@ func printKeyringRecords(w io.Writer, records []*cryptokeyring.Record, output st
 
 	case OutputFormatJSON:
 		// TODO https://github.com/cosmos/cosmos-sdk/issues/8046
-		// Replace AminoCdc with Proto JSON
-		out, err := KeysCdc.MarshalJSON(kos)
+		out, err := json.Marshal(kos)
 		if err != nil {
 			return err
 		}

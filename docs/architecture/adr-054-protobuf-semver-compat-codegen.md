@@ -91,9 +91,88 @@ however, would likely be highly unpopular.
 
 ### A) API Module Approach
 
-The first proposed solution was to generate a separate API go module (see
-https://github.com/cosmos/cosmos-sdk/discussions/10582). This solution alone,
-however, introduces other complexities:
+One solution (first proposed in https://github.com/cosmos/cosmos-sdk/discussions/10582) is to isolate all protobuf generated code into a separate module
+from the state machine module. This would mean that we could have state machine
+go modules `foo` and `foo/v2` which could use a types or API go module say
+`foo/api`. This `foo/api` go module would be perpetually on `v1.x` and only
+accept non-breaking changes. This would then allow other modules to be
+compatible with either `foo` or `foo/v2` as long as the inter-module API only
+depends on the types in `foo/api`.
+
+This approach introduces two complexities which need to be dealt with:
+1. if `foo/api` includes any state machine breaking code then this situation is unworkable
+because it means that changes to the state machine logic bleed across two go modules
+in a hard to reason about manner. Currently, interfaces (such as `sdk.Msg`
+or `authz.Authorization` are implemented directly on generated types and these
+almost always include state machine breaking logic.
+2. the version the protobuf files in `foo/api` at runtime may be different from
+the version `foo` or `foo/v2` were built with which could introduce subtle bugs.
+For instance, if a field is added to a message in `foo/api` for `foo/v2` but
+the original `foo` module doesn't use it, then there may be important data in
+that new field which silently gets ignored.
+
+#### Migrate all interface methods on API types to handlers 
+
+To solve 1), we need to remove all interface implementations from generated
+types and start using a handler approach which essentially means that given
+a type `X`, we have some sort of router which allows us to resolve some interface
+implementation for that type (say `sdk.Msg` or `authz.Authorization`).
+
+In the case of some methods on `sdk.Msg`, we can replace them with declarative
+annotations. For instance, `GetSigners` can already be replaced by the protobuf
+annotation `cosmos.msg.v1.signer`. In the future, we may consider some sort
+of protobuf validation framework (like https://github.com/bufbuild/protoc-gen-validate
+but more Cosmos-specific) to replace `ValidateBasic`.
+
+#### Pinning State Machine API Compatibility
+
+One consequence of bundling protobuf types separate from state machine logic is how it affects API forwards
+compatibility. By default, protobuf as we're using it is forwards compatible - meaning that newer clients can talk to
+older state machines. This can cause problems, however, if fields are added to older messages and clients try to use
+these new fields against older state machines.
+
+For example, say someone adds a field to a message to set an optional expiration time on some operation. If the newer
+client sends a message an older state machine with this new expiration field set, the state machine will reject it
+based on [ADR 020 Unknown Field Filtering](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-020-protobuf-transaction-encoding.md#unknown-field-filtering).
+
+This will break down, however, if we package API types separately because an app developer may use an API version that's
+newer that the state machine version and then clients can send a message with an expiration time, the state machine will
+accept it but ignore it, which is a bug. This isn't a problem now because the protobuf types are codegen'ed directly
+into the state machine code so there can be no discrepancy.
+
+If we migrate to an API module, we will need to pin the API compatibility version in the state machine. Here are two
+potential ways to do this:
+
+##### "Since" Annotations
+
+In the [Protobuf package versioning discussion](https://github.com/cosmos/cosmos-sdk/discussions/10406) we agreed to
+take [approach 2: annotations using "Since" comments](https://github.com/cosmos/cosmos-sdk/pull/10434) to help clients
+deal with forwards compatibility gracefully by only enabling newer API features when they know they're talking to a
+newer chain. We could use these same annotations in state machines and instruct unknown field filtering to reject
+fields in newer API versions if they are present in protobuf generated code.
+
+
+##### Embed raw proto files in state machines
+
+This would involve using [golang embed](https://pkg.go.dev/embed) to force state machines to embed the proto files they
+intended to use in the binary and registering them with the `InterfaceRegistry` which will use them for unknown field
+filtering. By using the `embed.FS` type we can force module developers to copy .proto files into the module path and
+update them when they want to support newer APIs. A warning could be emitted if an older API verison is registered and
+a newer one is available in generated code, alerting modular developers and/or apps to upgrade.
+
+This second approach is probably less fragile than the "Since" annotations because it could be easy to mess up API
+versions with annotations. While these annotations are a good solution for clients like CosmJs which want to support
+multiple chains, we need things to be a little stricter inside state machines.
+
+
+To solve 2), state machine modules must be able to specify what the version of
+the protobuf files was that they were built against. The simplest way to
+do this may be to embed the protobuf `FileDescriptor`s into the module itself
+so that these `FileDescriptor`s are used at runtime rather than the ones that
+are built into the `foo/api` which may be different. This would involve the
+following steps:
+1. a build step executed during `make proto-gen` that runs `buf build` to pack the `FileDescriptor`s into an image file
+2. a go embed directive to embed the image file
 
 ### B) Changes to Generated Code
 

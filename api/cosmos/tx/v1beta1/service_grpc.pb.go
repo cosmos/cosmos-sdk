@@ -34,7 +34,10 @@ type ServiceClient interface {
 	//
 	// Since: cosmos-sdk 0.45.2
 	GetBlockWithTxs(ctx context.Context, in *GetBlockWithTxsRequest, opts ...grpc.CallOption) (*GetBlockWithTxsResponse, error)
+	// TxDecode decodes the transaction.
 	TxDecode(ctx context.Context, in *TxDecodeRequest, opts ...grpc.CallOption) (*TxDecodeResponse, error)
+	// TxEncode encodes the transaction.
+	TxEncode(ctx context.Context, in *TxEncodeRequest, opts ...grpc.CallOption) (*TxEncodeResponse, error)
 }
 
 type serviceClient struct {
@@ -99,6 +102,15 @@ func (c *serviceClient) TxDecode(ctx context.Context, in *TxDecodeRequest, opts 
 	return out, nil
 }
 
+func (c *serviceClient) TxEncode(ctx context.Context, in *TxEncodeRequest, opts ...grpc.CallOption) (*TxEncodeResponse, error) {
+	out := new(TxEncodeResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/TxEncode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceServer is the server API for Service service.
 // All implementations must embed UnimplementedServiceServer
 // for forward compatibility
@@ -115,7 +127,10 @@ type ServiceServer interface {
 	//
 	// Since: cosmos-sdk 0.45.2
 	GetBlockWithTxs(context.Context, *GetBlockWithTxsRequest) (*GetBlockWithTxsResponse, error)
+	// TxDecode decodes the transaction.
 	TxDecode(context.Context, *TxDecodeRequest) (*TxDecodeResponse, error)
+	// TxEncode encodes the transaction.
+	TxEncode(context.Context, *TxEncodeRequest) (*TxEncodeResponse, error)
 	mustEmbedUnimplementedServiceServer()
 }
 
@@ -140,6 +155,9 @@ func (UnimplementedServiceServer) GetBlockWithTxs(context.Context, *GetBlockWith
 }
 func (UnimplementedServiceServer) TxDecode(context.Context, *TxDecodeRequest) (*TxDecodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TxDecode not implemented")
+}
+func (UnimplementedServiceServer) TxEncode(context.Context, *TxEncodeRequest) (*TxEncodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TxEncode not implemented")
 }
 func (UnimplementedServiceServer) mustEmbedUnimplementedServiceServer() {}
 
@@ -262,6 +280,24 @@ func _Service_TxDecode_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Service_TxEncode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TxEncodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).TxEncode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.tx.v1beta1.Service/TxEncode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).TxEncode(ctx, req.(*TxEncodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Service_ServiceDesc is the grpc.ServiceDesc for Service service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -292,6 +328,10 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TxDecode",
 			Handler:    _Service_TxDecode_Handler,
+		},
+		{
+			MethodName: "TxEncode",
+			Handler:    _Service_TxEncode_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

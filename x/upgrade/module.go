@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -16,7 +14,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,7 +28,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
-
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -141,17 +137,6 @@ func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 // CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(am.keeper, ctx, req)
-}
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
-// IsAppModule implements the appmodule.AppModule interface.
-func (am AppModule) IsAppModule() {}
-
-// AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
-func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	return types.AutoCLIOptions
 }
 
 //

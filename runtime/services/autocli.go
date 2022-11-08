@@ -4,6 +4,8 @@ import (
 	"context"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -22,6 +24,26 @@ func NewAutoCLIQueryService(appModules map[string]module.AppModule) *AutoCLIQuer
 			AutoCLIOptions() *autocliv1.ModuleOptions
 		}); ok {
 			moduleOptions[modName] = autoCliMod.AutoCLIOptions()
+		} else {
+			// try to auto-discover options based on the last msg and query
+			// services registered for the module
+			cfg := &autocliConfigurator{}
+			mod.RegisterServices(cfg)
+			modOptions := &autocliv1.ModuleOptions{}
+
+			if cfg.msgServer.serviceName != "" {
+				modOptions.Tx = &autocliv1.ServiceCommandDescriptor{
+					Service: cfg.msgServer.serviceName,
+				}
+			}
+
+			if cfg.queryServer.serviceName != "" {
+				modOptions.Query = &autocliv1.ServiceCommandDescriptor{
+					Service: cfg.msgServer.serviceName,
+				}
+			}
+
+			moduleOptions[modName] = modOptions
 		}
 	}
 	return &AutoCLIQueryService{
@@ -33,6 +55,27 @@ func (a AutoCLIQueryService) AppOptions(context.Context, *autocliv1.AppOptionsRe
 	return &autocliv1.AppOptionsResponse{
 		ModuleOptions: a.moduleOptions,
 	}, nil
+}
+
+type autocliConfigurator struct {
+	msgServer   autocliServiceRegistrar
+	queryServer autocliServiceRegistrar
+}
+
+type autocliServiceRegistrar struct {
+	serviceName string
+}
+
+func (a *autocliServiceRegistrar) RegisterService(sd *grpc.ServiceDesc, _ interface{}) {
+	a.serviceName = sd.ServiceName
+}
+
+func (a *autocliConfigurator) MsgServer() gogogrpc.Server { return &a.msgServer }
+
+func (a *autocliConfigurator) QueryServer() gogogrpc.Server { return &a.queryServer }
+
+func (a *autocliConfigurator) RegisterMigration(string, uint64, module.MigrationHandler) error {
+	return nil
 }
 
 var _ autocliv1.QueryServer = &AutoCLIQueryService{}

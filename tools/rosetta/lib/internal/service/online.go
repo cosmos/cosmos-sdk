@@ -58,12 +58,6 @@ type OnlineNetwork struct {
 	genesisBlockIdentifier *types.BlockIdentifier // identifies genesis block, it's static
 }
 
-// AccountsCoins - relevant only for UTXO based chain
-// see https://www.rosetta-api.org/docs/AccountApi.html#accountcoins
-func (o OnlineNetwork) AccountCoins(_ context.Context, _ *types.AccountCoinsRequest) (*types.AccountCoinsResponse, *types.Error) {
-	return nil, crgerrs.ToRosetta(crgerrs.ErrOffline)
-}
-
 // networkOptionsFromClient builds network options given the client
 func networkOptionsFromClient(client crgtypes.Client, genesisBlock *types.BlockIdentifier) *types.NetworkOptionsResponse {
 	var tsi *int64

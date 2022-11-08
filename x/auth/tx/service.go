@@ -261,18 +261,13 @@ func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	p, ok := txb.(intoAny)
-	if !ok {
-		return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
+	txWrapper, ok := txb.(*wrapper)
+	if ok {
+		return &txtypes.TxDecodeResponse{
+			Tx: txWrapper.tx,
+		}, nil
 	}
-	any := p.AsAny()
-	resp, ok := any.GetCachedValue().(*txtypes.Tx)
-	if !ok {
-		return nil, status.Errorf(codes.Internal, "expected %T, got %T", txtypes.Tx{}, any.GetCachedValue())
-	}
-	return &txtypes.TxDecodeResponse{
-		Tx: resp,
-	}, nil
+	return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, txb)
 }
 
 func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {

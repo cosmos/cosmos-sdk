@@ -851,7 +851,7 @@ func createEvents(msg sdk.Msg) sdk.Events {
 func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		for _, txBytes := range req.Txs {
-			tx, err := app.txDecoder(txBytes)
+			_, err := app.txDecoder(txBytes)
 			if err != nil {
 				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}

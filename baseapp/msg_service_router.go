@@ -6,15 +6,18 @@ import (
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/tendermint/tendermint/libs/log"
 	"google.golang.org/grpc"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {
+	logger            log.Logger
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
 }
@@ -22,7 +25,7 @@ type MsgServiceRouter struct {
 var _ gogogrpc.Server = &MsgServiceRouter{}
 
 // NewMsgServiceRouter creates a new MsgServiceRouter.
-func NewMsgServiceRouter() *MsgServiceRouter {
+func NewMsgServiceRouter(logger log.Logger) *MsgServiceRouter {
 	return &MsgServiceRouter{
 		routes: map[string]MsgServiceHandler{},
 	}
@@ -50,6 +53,12 @@ func (msr *MsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler 
 //     RegisterInterfaces,
 //   - or if a service is being registered twice.
 func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
+	err := msgservice.ValidateServiceAnnotations(sd.ServiceName)
+	if err != nil {
+		// We might panic here in the future, instead of logging.
+		msr.logger.Info(fmt.Sprintf("The SDK is requiring protobuf annotation on Msgs; %+v", err))
+	}
+
 	// Adds a top-level query handler based on the gRPC service name.
 	for _, method := range sd.Methods {
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
@@ -67,6 +76,12 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				// this should only happen if there is a problem with code generation in which case the app won't
 				// work correctly anyway.
 				panic(fmt.Errorf("unable to register service method %s: %T does not implement sdk.Msg", fqMethod, i))
+			}
+
+			err := msgservice.ValidateMsgAnnotations(proto.MessageName(msg))
+			if err != nil {
+				// We might panic here in the future, instead of logging.
+				msr.logger.Info(fmt.Sprintf("The SDK is requiring protobuf annotation on sdMsgs; %+v", err))
 			}
 
 			requestTypeName = sdk.MsgTypeURL(msg)

@@ -97,7 +97,7 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*baseapp.Base
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
-	app.SetMsgServiceRouter(baseapp.NewMsgServiceRouter())
+	app.SetMsgServiceRouter(baseapp.NewMsgServiceRouter(nil))
 	app.SetInterfaceRegistry(registry)
 
 	baseapptestutil.RegisterKeyValueServer(app.MsgServiceRouter(), MsgKeyValueImpl{})

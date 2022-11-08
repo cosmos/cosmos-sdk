@@ -143,7 +143,7 @@ func NewFileGenesisTarget(targetDir, moduleName string) *FileGenesisTarget {
 
 // NewFileGenesisTargetWithIndent returns GenesisTarget implementation with given target directory,
 // the given module name, and enabled the indent option for JSON raw data.
-func NewFileGenesisTargetWithIndent(targetDir, moduleName string) *FileGenesisTarget {
+func NewFileGenesisTargetWithIndent(targetDir, moduleName string) GenesisTarget {
 	return &FileGenesisTarget{
 		targetDir:  filepath.Clean(targetDir),
 		moduleName: moduleName,

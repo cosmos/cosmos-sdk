@@ -107,7 +107,7 @@ func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*r
 }
 
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
-// appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
+// appConfig defines the application configuration (f.e. app_config.go).
 // extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
 func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupConfig, extraOutputs ...interface{}) (*runtime.App, error) {
 	// create the app with depinject

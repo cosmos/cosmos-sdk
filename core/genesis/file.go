@@ -29,7 +29,7 @@ const (
 // NewFileGenesisSource returns a new GenesisSource for the provided
 // source directory and the provided module name where it is assumed
 // that the encoded json data of file.
-func NewFileGenesisSource(sourceDir, moduleName string) *FileGenesisSource {
+func NewFileGenesisSource(sourceDir, moduleName string) GenesisSource {
 	return &FileGenesisSource{sourceDir: filepath.Clean(sourceDir), moduleName: moduleName}
 }
 
@@ -134,7 +134,7 @@ type FileGenesisTarget struct {
 
 // NewFileGenesisTarget returns GenesisTarget implementation with given target directory
 // and the given module name.
-func NewFileGenesisTarget(targetDir, moduleName string) *FileGenesisTarget {
+func NewFileGenesisTarget(targetDir, moduleName string) GenesisTarget {
 	return &FileGenesisTarget{
 		targetDir:  filepath.Clean(targetDir),
 		moduleName: moduleName,

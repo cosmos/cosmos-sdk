@@ -1,8 +1,21 @@
 package keeper_test
 
 import (
+	"testing"
+
+	"cosmossdk.io/math"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func (s *KeeperTestSuite) TestMsgUpdateParams() {
@@ -207,4 +220,48 @@ func (s *KeeperTestSuite) TestCommunityPoolSpend() {
 	}
 }
 
-// TODO: TestDepositValidatorRewardsPool
+func TestDepositValidatorRewardsPool(t *testing.T) {
+	var (
+		bankKeeper    bankkeeper.Keeper
+		distrKeeper   keeper.Keeper
+		stakingKeeper *stakingkeeper.Keeper
+	)
+
+	app, err := simtestutil.Setup(testutil.AppConfig,
+		&bankKeeper,
+		&distrKeeper,
+		&stakingKeeper,
+	)
+	require.NoError(t, err)
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000))
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
+
+	addrVal1 := valAddrs[0]
+
+	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
+
+	// Create Validators and Delegation
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(valAddrs[0], valConsPk0, sdk.NewInt(100), true)
+
+	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000))
+	err = bankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
+	require.NoError(t, err)
+	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addrs[0], coins)
+	require.NoError(t, err)
+
+	msgServer := keeper.NewMsgServerImpl(distrKeeper)
+	_, err = msgServer.DepositValidatorRewardsPool(sdk.WrapSDKContext(ctx), &types.MsgDepositValidatorRewardsPool{
+		Authority:        addrs[0].String(),
+		ValidatorAddress: addrVal1.String(),
+		Amount:           coins,
+	})
+	require.NoError(t, err)
+
+	// check validator outstanding rewards
+	outstandingRewards := distrKeeper.GetValidatorOutstandingRewards(ctx, addrVal1)
+	require.Equal(t, outstandingRewards.Rewards, sdk.NewDecCoinsFromCoins(coins...))
+}

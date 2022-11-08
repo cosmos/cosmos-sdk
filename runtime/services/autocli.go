@@ -62,17 +62,10 @@ func (a AutoCLIQueryService) AppOptions(context.Context, *autocliv1.AppOptionsRe
 	}, nil
 }
 
+// autocliConfigurator allows us to call RegisterServices and introspect the services
 type autocliConfigurator struct {
 	msgServer   autocliServiceRegistrar
 	queryServer autocliServiceRegistrar
-}
-
-type autocliServiceRegistrar struct {
-	serviceName string
-}
-
-func (a *autocliServiceRegistrar) RegisterService(sd *grpc.ServiceDesc, _ interface{}) {
-	a.serviceName = sd.ServiceName
 }
 
 func (a *autocliConfigurator) MsgServer() gogogrpc.Server { return &a.msgServer }
@@ -81,6 +74,15 @@ func (a *autocliConfigurator) QueryServer() gogogrpc.Server { return &a.querySer
 
 func (a *autocliConfigurator) RegisterMigration(string, uint64, module.MigrationHandler) error {
 	return nil
+}
+
+// autocliServiceRegistrar is used to capture the service name for registered services
+type autocliServiceRegistrar struct {
+	serviceName string
+}
+
+func (a *autocliServiceRegistrar) RegisterService(sd *grpc.ServiceDesc, _ interface{}) {
+	a.serviceName = sd.ServiceName
 }
 
 var _ autocliv1.QueryServer = &AutoCLIQueryService{}

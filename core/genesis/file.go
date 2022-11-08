@@ -20,7 +20,7 @@ type FileGenesisSource struct {
 	moduleName string
 }
 
-var (
+const (
 	fileOpenflag  = os.O_CREATE | os.O_WRONLY
 	flieOpenMode  = fs.FileMode(0o600)
 	dirCreateMode = fs.FileMode(0o700)

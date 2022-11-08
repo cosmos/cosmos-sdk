@@ -11,7 +11,8 @@ RUN apk add --no-cache \
   nodejs \
   npm \
   git \
-  make
+  make \
+  clang-extra-tools
 
 ENV GOLANG_PROTOBUF_VERSION=1.28.1 \
   GRPC_GATEWAY_VERSION=1.16.0

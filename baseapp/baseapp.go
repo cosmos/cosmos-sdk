@@ -343,8 +343,14 @@ func (app *BaseApp) Init() error {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
 
+	emptyHeader := tmproto.Header{}
+
 	// needed for the export command which inits from store but never calls initchain
-	app.setCheckState(tmproto.Header{})
+	app.setCheckState(emptyHeader)
+
+	// needed for ABCI Replay Blocks mode which calls Prepare/Process proposal (InitChain is not called)
+	app.setPrepareProposalState(emptyHeader)
+	app.setProcessProposalState(emptyHeader)
 	app.Seal()
 
 	rms, ok := app.cms.(*rootmulti.Store)

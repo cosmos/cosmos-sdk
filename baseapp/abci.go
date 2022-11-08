@@ -39,6 +39,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// req.InitialHeight is 1 by default.
 	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
 
+	app.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
+
 	// If req.InitialHeight is > 1, then we set the initial version in the
 	// stores.
 	if req.InitialHeight > 1 {
@@ -50,7 +52,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		}
 	}
 
-	// initialize the deliver state and check state with a correct header
+	// initialize states with a correct header
 	app.setDeliverState(initHeader)
 	app.setCheckState(initHeader)
 	app.setPrepareProposalState(initHeader)
@@ -252,11 +254,6 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 		byteCount int64
 	)
 
-	// this state may occur when the application is replaying consensus messages after a crash
-	if app.prepareProposalState == nil {
-		app.setPrepareProposalState(tmproto.Header{Height: req.Height, Time: req.Time})
-	}
-
 	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
 	iterator := app.mempool.Select(ctx, req.Txs)
 
@@ -304,12 +301,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 	if app.processProposal == nil {
-		panic("app.ProcessProposal handler is not set")
-	}
-
-	// this state may occur when the application is replaying consensus messages after a crash
-	if app.processProposalState == nil {
-		app.setProcessProposalState(tmproto.Header{Height: req.Height, Time: req.Time})
+		panic("app.ProcessProposal is not set")
 	}
 
 	ctx := app.processProposalState.ctx.

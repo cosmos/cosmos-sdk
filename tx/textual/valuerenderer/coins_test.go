@@ -9,10 +9,8 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/tx/textual/valuerenderer"
-	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestCoinsJsonTestcases(t *testing.T) {
@@ -67,9 +65,20 @@ func TestCoinsJsonTestcases(t *testing.T) {
 
 func checkListsEqual(t *testing.T, l1, l2 protoreflect.List) {
 	require.Equal(t, l1.Len(), l2.Len())
+	var coinsMap = make(map[string]*basev1beta1.Coin, l1.Len())
+
 	for i := 0; i < l1.Len(); i++ {
-		diff := cmp.Diff(l1.Get(i).Message().Interface(), l2.Get(i).Message().Interface(), protocmp.Transform())
-		require.Empty(t, diff)
+		coin, ok := l1.Get(i).Message().Interface().(*basev1beta1.Coin)
+		require.True(t, ok)
+		coinsMap[coin.Denom] = coin
+	}
+
+	for i := 0; i < l2.Len(); i++ {
+		require.Equal(t, l1.Len(), l2.Len())
+		coin, ok := l1.Get(i).Message().Interface().(*basev1beta1.Coin)
+		require.True(t, ok)
+
+		require.Equal(t, coinsMap[coin.Denom], coin)
 	}
 }
 

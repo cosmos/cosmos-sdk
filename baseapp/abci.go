@@ -252,6 +252,11 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 		byteCount int64
 	)
 
+	// this state may occur when the application is replaying consensus messages after a crash
+	if app.prepareProposalState == nil {
+		app.setPrepareProposalState(tmproto.Header{Height: req.Height, Time: req.Time})
+	}
+
 	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
 	iterator := app.mempool.Select(ctx, req.Txs)
 
@@ -299,7 +304,12 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 	if app.processProposal == nil {
-		panic("app.ProcessProposal is not set")
+		panic("app.ProcessProposal handler is not set")
+	}
+
+	// this state may occur when the application is replaying consensus messages after a crash
+	if app.processProposalState == nil {
+		app.setProcessProposalState(tmproto.Header{Height: req.Height, Time: req.Time})
 	}
 
 	ctx := app.processProposalState.ctx.

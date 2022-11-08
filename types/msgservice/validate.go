@@ -34,7 +34,10 @@ import (
 func ValidateServiceAnnotations(serviceName string) error {
 	sd, err := protoregistry.GlobalFiles.FindDescriptorByName(protoreflect.FullName(serviceName))
 	if err != nil {
-		return fmt.Errorf("error with Msg service %s; %+v", serviceName, err)
+		// If we don't find the pulsar-generated descriptors, we just skip
+		// validation. This allows chain developers to migrate to pulsar at
+		// their own pace.
+		return nil
 	}
 
 	ext := proto.GetExtension(sd.Options(), msg.E_Service)
@@ -55,7 +58,10 @@ func ValidateServiceAnnotations(serviceName string) error {
 func ValidateMsgAnnotations(fqName string) error {
 	d, err := protoregistry.GlobalFiles.FindDescriptorByName(protoreflect.FullName(fqName))
 	if err != nil {
-		return fmt.Errorf("error with sdk.Msg %s; %+v", fqName, err)
+		// If we don't find the pulsar-generated descriptors, we just skip
+		// validation. This allows chain developers to migrate to pulsar at
+		// their own pace.
+		return nil
 	}
 	md := d.(protoreflect.MessageDescriptor)
 

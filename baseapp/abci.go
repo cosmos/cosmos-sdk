@@ -267,6 +267,8 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 
 		txSize := int64(len(bz))
 
+		// NOTE: runTx was already run in CheckTx which calls mempool.  Insert so ideally everything in the pool
+		// should be valid. But some mempool implementations may provide invalid txs so we check again.
 		_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
 		if err != nil {
 			err := app.mempool.Remove(memTx)

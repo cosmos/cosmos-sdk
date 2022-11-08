@@ -848,6 +848,13 @@ func createEvents(msg sdk.Msg) sdk.Events {
 	return sdk.Events{msgEvent}
 }
 
+// DefaultProcessProposal returns the default implementation for processing an ABCI proposal.
+// Every transaction in the proposal must pass 2 conditions:
+//
+// 1. The transaction bytes must decode to a valid transaction.
+// 2. The transaction must be valid (i.e. pass runTx)
+//
+// If any transaction fails to pass either condition, the proposal is rejected.
 func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		for _, txBytes := range req.Txs {

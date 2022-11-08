@@ -20,7 +20,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "AccountAddressByID",
 					Use:            "address-by-id [acc-num]",
-					Short:          "query account address by account ID",
+					Short:          "query account address by account number",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}},
 				},
 			},

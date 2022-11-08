@@ -858,10 +858,7 @@ func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
 
 			_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
 			if err != nil {
-				err = app.mempool.Remove(tx)
-				if err != nil && err != mempool.ErrTxNotFound {
-					panic(err)
-				}
+				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}
 		}
 		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}

@@ -311,8 +311,8 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.Respon
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
-		WithProposer(req.ProposerAddress)
-	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+		WithProposer(req.ProposerAddress).
+		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx))
 
 	return app.processProposal(ctx, req)
 }

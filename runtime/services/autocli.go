@@ -30,20 +30,25 @@ func NewAutoCLIQueryService(appModules map[string]module.AppModule) *AutoCLIQuer
 			cfg := &autocliConfigurator{}
 			mod.RegisterServices(cfg)
 			modOptions := &autocliv1.ModuleOptions{}
+			haveServices := false
 
 			if cfg.msgServer.serviceName != "" {
+				haveServices = true
 				modOptions.Tx = &autocliv1.ServiceCommandDescriptor{
 					Service: cfg.msgServer.serviceName,
 				}
 			}
 
 			if cfg.queryServer.serviceName != "" {
+				haveServices = true
 				modOptions.Query = &autocliv1.ServiceCommandDescriptor{
-					Service: cfg.msgServer.serviceName,
+					Service: cfg.queryServer.serviceName,
 				}
 			}
 
-			moduleOptions[modName] = modOptions
+			if haveServices {
+				moduleOptions[modName] = modOptions
+			}
 		}
 	}
 	return &AutoCLIQueryService{
